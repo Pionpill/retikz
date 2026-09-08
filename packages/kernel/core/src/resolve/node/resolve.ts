@@ -149,19 +149,21 @@ const expandNodeLabels = (
 
 /** 将 Node 的持久化紧凑字段展开为布局可直接消费的完整形态 */
 const canonicalizeNode = (node: ResolvedNodeSource): CanonicalNode => {
-  const { dashed, dotted, ...source } = node;
+  const { style, layout, ...structure } = node;
+  const { dashed, dotted, ...visual } = style ?? {};
+  const source = { ...structure, ...visual, ...layout };
   return {
     ...source,
-    padding: expandBoxSpacing(node.padding, DEFAULT_NODE_PADDING),
-    margin: expandBoxSpacing(node.margin, 0),
-    minimumSize: expandBoxSize(node.minimumSize),
+    padding: expandBoxSpacing(source.padding, DEFAULT_NODE_PADDING),
+    margin: expandBoxSpacing(source.margin, 0),
+    minimumSize: expandBoxSize(source.minimumSize),
     scale: expandAxisScale(node.scale),
     text: expandNodeText(node.text),
     label: node.label,
-    align: node.align ?? 'middle',
+    align: source.align ?? 'middle',
     rotate: node.rotate ?? 0,
-    dashPattern: resolveDashPattern(node.dashPattern, dashed, dotted),
-    shadow: resolveDropShadow(node.shadow),
+    dashPattern: resolveDashPattern(source.dashPattern, dashed, dotted),
+    shadow: resolveDropShadow(source.shadow),
   };
 };
 
@@ -181,7 +183,7 @@ const resolveNodePaint = (
     ? resolveContextualColor(value, {
         masterColor,
         mode: context.mode,
-        fieldPath: `${context.irPath}.${field}`,
+        fieldPath: `${context.irPath}.style.${field}`,
       })
     : value;
 
@@ -190,20 +192,24 @@ const resolveNodePrimaryColors = (
   node: MaterializedNodeSource,
   context: NodeColorContext,
 ): PrimaryColorResolvedMaterializedNode => {
-  const { fill, stroke, textColor, ...source } = node;
+  const { style, ...source } = node;
+  const { fill, stroke, textColor, ...visual } = style ?? {};
   return {
     ...source,
-    ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, node.color, context, 'fill') }),
-    ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, node.color, context, 'stroke') }),
-    ...(textColor === undefined
-      ? {}
-      : {
-          textColor: resolveContextualColor(textColor, {
-            masterColor: node.color,
-            mode: context.mode,
-            fieldPath: `${context.irPath}.textColor`,
+    style: {
+      ...visual,
+      ...(fill === undefined ? {} : { fill: resolveNodePaint(fill, node.style?.color, context, 'fill') }),
+      ...(stroke === undefined ? {} : { stroke: resolveNodePaint(stroke, node.style?.color, context, 'stroke') }),
+      ...(textColor === undefined
+        ? {}
+        : {
+            textColor: resolveContextualColor(textColor, {
+              masterColor: node.style?.color,
+              mode: context.mode,
+              fieldPath: `${context.irPath}.style.textColor`,
+            }),
           }),
-        }),
+    },
   };
 };
 
@@ -312,7 +318,7 @@ const resolveNodeDependentColors = (
   labelWasArray: boolean,
 ): ResolvedNodeSource => {
   const { text, label, ...source } = node;
-  const textMaster = node.textColor;
+  const textMaster = node.style?.textColor;
   return {
     ...source,
     ...(text === undefined
@@ -331,7 +337,7 @@ const resolveNodeDependentColors = (
           label: (Array.isArray(label) ? label : [label]).map((item, index) =>
             resolveNodeLabelColors(
               item,
-              labelDefault.color ?? node.color,
+              labelDefault.color ?? node.style?.color,
               textMaster,
               context.mode,
               labelWasArray ? `${context.irPath}.label[${index}]` : `${context.irPath}.label`,

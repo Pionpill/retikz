@@ -31,37 +31,42 @@ const positionOf = (values: NodePositionValues): NodeProps['position'] => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={229} viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
+    <Layout viewBox={{ x: -280, y: -160, width: 560, height: 320 }}>
       <Draw
         way={[
           [-240, 0],
           [240, 0],
         ]}
-        stroke="lightgray"
         arrow="->"
+        style={{ stroke: 'lightgray' }}
       />
       <Draw
         way={[
           [0, 130],
           [0, -130],
         ]}
-        stroke="lightgray"
         arrow="->"
+        style={{ stroke: 'lightgray' }}
       />
 
-      <Node id="A" position={[-130, 0]} shape="circle" padding={5} stroke="gray" dashed>
+      <Node id="A" position={[-130, 0]} shape="circle" style={{ stroke: 'gray', dashed: true }} layout={{ padding: 5 }}>
         a
       </Node>
-      <Node id="B" position={[130, 0]} shape="circle" padding={5} stroke="gray" dashed>
+      <Node id="B" position={[130, 0]} shape="circle" style={{ stroke: 'gray', dashed: true }} layout={{ padding: 5 }}>
         b
       </Node>
-      <Draw way={['A', 'B']} stroke="lightgray" dashPattern={[4, 3]} />
+      <Draw way={['A', 'B']} style={{ stroke: 'lightgray', dashPattern: [4, 3] }} />
 
-      <Node id="Q" position={positionOf(values)} fill="#f97316" textColor="white" padding={8}>
+      <Node
+        id="Q"
+        position={positionOf(values)}
+        style={{ fill: '#f97316', textColor: 'white' }}
+        layout={{ padding: 8 }}
+      >
         q
       </Node>
-      <Draw way={['A', 'Q']} stroke="gray" dashPattern={[4, 3]} />
-      <Draw way={['B', 'Q']} stroke="gray" dashPattern={[4, 3]} />
+      <Draw way={['A', 'Q']} style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+      <Draw way={['B', 'Q']} style={{ stroke: 'gray', dashPattern: [4, 3] }} />
     </Layout>
   );
 });

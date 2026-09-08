@@ -7,7 +7,7 @@ import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react
 
 /** 展示 Diagram Framework 对 Presentation、绘图核心、图例与外框的统一装配 */
 const Demo: FC = () => (
-  <Layout width={640} height={350} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Surface
       id="diagram-frame"
       padding={{ x: 28, y: 24 }}
@@ -26,8 +26,7 @@ const Demo: FC = () => (
                 id="diagram-title"
                 position={[0, 0]}
                 text="系统流程图"
-                stroke="none"
-                font={{ size: 18, weight: 'bold' }}
+                style={{ stroke: 'none', font: { size: 18, weight: 'bold' } }}
               />
             </LayoutItem>
             <LayoutItem kind="flex" itemKey="description">
@@ -35,9 +34,7 @@ const Demo: FC = () => (
                 id="diagram-description"
                 position={[0, 0]}
                 text="Presentation：标题、说明与显式图例"
-                stroke="none"
-                textColor="gray"
-                font={{ size: 13 }}
+                style={{ stroke: 'none', textColor: 'gray', font: { size: 13 } }}
               />
             </LayoutItem>
           </FlexLayout>
@@ -52,15 +49,9 @@ const Demo: FC = () => (
               <Node
                 id="drawing-core"
                 position={[0, 0]}
-                minimumSize={{ width: 350, height: 142 }}
-                padding={{ x: 18, y: 14 }}
-                fill="lightgray"
-                fillOpacity={0.45}
-                stroke="gray"
-                strokeWidth={1.5}
-                dashPattern={[7, 5]}
                 cornerRadius={4}
-                lineHeight={19}
+                style={{ fill: 'lightgray', fillOpacity: 0.45, stroke: 'gray', strokeWidth: 1.5, dashPattern: [7, 5] }}
+                layout={{ minimumSize: { width: 350, height: 142 }, padding: { x: 18, y: 14 }, lineHeight: 19 }}
               >
                 <Text font={{ size: 14, weight: 'bold' }}>Drawing Core</Text>
                 <Text font={{ size: 13 }}>由具体 Diagram 类型提供</Text>
@@ -73,8 +64,7 @@ const Demo: FC = () => (
                     id="legend-title"
                     position={[0, 0]}
                     text="图例"
-                    stroke="none"
-                    font={{ size: 14, weight: 'bold' }}
+                    style={{ stroke: 'none', font: { size: 14, weight: 'bold' } }}
                   />
                 </LegendTitle>
                 <LegendItem
@@ -83,14 +73,18 @@ const Demo: FC = () => (
                     <Node
                       id="legend-content-sample"
                       position={[0, 0]}
-                      minimumSize={{ width: 22, height: 12 }}
-                      fill="lightgray"
-                      stroke="gray"
                       cornerRadius={4}
+                      style={{ fill: 'lightgray', stroke: 'gray' }}
+                      layout={{ minimumSize: { width: 22, height: 12 } }}
                     />
                   }
                 >
-                  <Node id="legend-content-label" position={[0, 0]} text="领域内容" stroke="none" font={{ size: 13 }} />
+                  <Node
+                    id="legend-content-label"
+                    position={[0, 0]}
+                    text="领域内容"
+                    style={{ stroke: 'none', font: { size: 13 } }}
+                  />
                 </LegendItem>
               </Legend>
             </LayoutItem>

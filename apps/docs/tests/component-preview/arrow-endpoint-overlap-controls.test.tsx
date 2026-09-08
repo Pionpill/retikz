@@ -82,7 +82,7 @@ describe('Arrow endpoint-overlap controlled demo', () => {
         type: 'node',
         id: 'B',
         shape: 'rectangle',
-        fill: { kind: 'pattern' },
+        style: { fill: { kind: 'pattern' } },
       },
       {
         type: 'path',

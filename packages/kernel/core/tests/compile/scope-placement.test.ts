@@ -21,9 +21,7 @@ const node = (id: string, position: [number, number]) => ({
   type: 'node' as const,
   id,
   position,
-  minimumSize: { width: 20, height: 10 },
-  padding: 0,
-  margin: 0,
+  layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 0 },
 });
 
 describe('Scope placement 两阶段布局', () => {
@@ -48,7 +46,7 @@ describe('Scope placement 两阶段布局', () => {
         {
           type: 'scope',
           placement: { target: [100, 50], selfAnchor: 'top-left' },
-          children: [{ ...node('inside', [10, 20]), margin: 2 }],
+          children: [{ ...node('inside', [10, 20]), layout: { ...node('inside', [10, 20]).layout, margin: 2 } }],
         },
       ]),
     ).scene;

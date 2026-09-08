@@ -166,14 +166,18 @@ const isOriginLabelObject = (
 ): label is Extract<AxesOriginLabel, { text: IRTextBlock; offset: number }> =>
   typeof label === 'object' && !Array.isArray(label) && 'text' in label;
 
-const createLinePath = (from: IRPosition, to: IRPosition, style: IRStandardPathStrokeStyle | undefined): IRPath => ({
-  ...style,
-  type: 'path',
-  children: [
-    { type: 'step', kind: 'move', to: from },
-    { type: 'step', kind: 'line', to },
-  ],
-});
+const createLinePath = (from: IRPosition, to: IRPosition, style: IRStandardPathStrokeStyle | undefined): IRPath => {
+  const { zIndex, ...appearance } = style ?? {};
+  return {
+    ...(zIndex === undefined ? {} : { zIndex }),
+    ...(style === undefined ? {} : { style: appearance }),
+    type: 'path',
+    children: [
+      { type: 'step', kind: 'move', to: from },
+      { type: 'step', kind: 'line', to },
+    ],
+  };
+};
 
 const createAxisPath = (from: IRPosition, to: IRPosition, line: Exclude<AxesAxis['line'], false>): IRPath => {
   const createArrowMark = (endpoint: 'start' | 'end'): NonNullable<IRPath['marks']>[number]['mark'] => {
@@ -202,11 +206,10 @@ const createAxisPath = (from: IRPosition, to: IRPosition, line: Exclude<AxesAxis
 };
 
 const createTextNode = (position: IRPosition, text: IRTextBlock, style: AxesTextStyle | undefined): IRNode => ({
-  ...style,
   type: 'node',
   position,
   text,
-  strokeWidth: 0,
-  padding: 0,
   zIndex: 1,
+  style: { ...style, strokeWidth: 0 },
+  layout: { padding: 0 },
 });

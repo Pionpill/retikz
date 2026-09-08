@@ -43,12 +43,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       : resolvedValues.cap;
 
   return (
-    <Layout
-      width={400}
-      height={200}
-      viewBox={{ x: -260, y: -130, width: 520, height: 260 }}
-      pathKinds={[RibbonPathKindDefinition]}
-    >
+    <Layout viewBox={{ x: -260, y: -130, width: 520, height: 260 }} pathKinds={[RibbonPathKindDefinition]}>
       <Path
         kind="ribbon"
         kindOptions={{
@@ -64,10 +59,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           },
           samples: 64,
         }}
-        fill="#8ac926"
-        fillOpacity={0.75}
-        stroke="#386641"
-        strokeWidth={1}
+        style={{ fill: '#8ac926', fillOpacity: 0.75, stroke: '#386641', strokeWidth: 1 }}
       >
         <Step kind="move" to={[-190, 20]} />
         <Step kind="curve" control={[0, -115]} to={[190, 20]} />

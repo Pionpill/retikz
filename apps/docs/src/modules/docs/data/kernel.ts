@@ -12,19 +12,17 @@ const extensionGuide = (capability: string): DocPageMetadataOverride => ({
 
 export const kernelSection: Array<Section> = [
   {
+    id: 'components',
+    label: 'kernel.components',
+    navigationDescription: 'kernel.componentsNavigationDescription',
+    document: true,
     pages: [
       { id: 'introduction', label: 'kernel.introduction', difficulty: DocDifficulty.Beginner },
       { id: 'get-start', label: 'kernel.getStart', difficulty: DocDifficulty.Beginner },
-    ],
-  },
-  {
-    id: 'concepts',
-    label: 'kernel.concepts',
-    document: true,
-    pages: [
       {
         id: 'basic',
         label: 'kernel.basicConcepts',
+        sidebarGroup: 'kernel.concepts',
         children: [
           { id: 'coordinate-system', label: 'kernel.coordinateSystem', difficulty: DocDifficulty.Beginner },
           { id: 'position', label: 'kernel.positioning', difficulty: DocDifficulty.Beginner },
@@ -33,6 +31,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'core',
         label: 'kernel.coreConcepts',
+        sidebarGroup: 'kernel.concepts',
         children: [
           { id: 'primitive-model', label: 'kernel.primitiveModel', difficulty: DocDifficulty.Advanced },
           { id: 'primitive-relations', label: 'kernel.primitiveRelations', difficulty: DocDifficulty.Advanced },
@@ -41,6 +40,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'design',
         label: 'kernel.design',
+        sidebarGroup: 'kernel.concepts',
         children: [
           { id: 'layers', label: 'kernel.layers', difficulty: DocDifficulty.Internals },
           { id: 'composite', label: 'kernel.refComposite', difficulty: DocDifficulty.Internals },
@@ -57,16 +57,10 @@ export const kernelSection: Array<Section> = [
           },
         ],
       },
-    ],
-  },
-  {
-    id: 'components',
-    label: 'kernel.components',
-    document: true,
-    pages: [
       {
         id: 'layout',
         label: 'kernel.layout',
+        sidebarGroup: 'kernel.components',
         children: [
           { id: 'overview', label: 'kernel.layoutOverview', difficulty: DocDifficulty.Beginner },
           { id: 'scope', label: 'kernel.layoutScope', difficulty: DocDifficulty.Advanced },
@@ -81,6 +75,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'node',
         label: 'kernel.node',
+        sidebarGroup: 'kernel.components',
         children: [
           { id: 'overview', label: 'kernel.nodeOverview', difficulty: DocDifficulty.Beginner },
           { id: 'text', label: 'kernel.text', difficulty: DocDifficulty.Advanced },
@@ -96,6 +91,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'draw',
         label: 'kernel.draw',
+        sidebarGroup: 'kernel.components',
         children: [
           { id: 'overview', label: 'kernel.drawOverview', difficulty: DocDifficulty.Beginner },
           { id: 'way', label: 'kernel.drawWay', difficulty: DocDifficulty.Advanced },
@@ -125,6 +121,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'shapes',
         label: 'kernel.shapes',
+        sidebarGroup: 'kernel.components',
         children: [
           { id: 'circle-ellipse', label: 'kernel.shapesCircleEllipse', difficulty: DocDifficulty.Beginner },
           { id: 'arc-sector', label: 'kernel.shapesArcSector', difficulty: DocDifficulty.Beginner },
@@ -143,6 +140,7 @@ export const kernelSection: Array<Section> = [
       {
         id: 'effects',
         label: 'kernel.effects',
+        sidebarGroup: 'kernel.components',
         children: [
           { id: 'shadow', label: 'kernel.effectsShadow', difficulty: DocDifficulty.Beginner },
           { id: 'blend', label: 'kernel.effectsBlend', difficulty: DocDifficulty.Beginner },
@@ -167,6 +165,7 @@ export const kernelSection: Array<Section> = [
   {
     id: 'reference',
     label: 'kernel.reference',
+    navigationOrder: 2,
     document: true,
     pages: [
       {
@@ -212,6 +211,8 @@ export const kernelSection: Array<Section> = [
   {
     id: 'packages',
     label: 'kernel.packages',
+    navigationDescription: 'kernel.packagesNavigationDescription',
+    navigationOrder: 1,
     document: true,
     pages: [
       {
@@ -269,23 +270,6 @@ export const kernelSection: Array<Section> = [
           { id: 'render-hydration', label: 'kernel.pkgHydration', difficulty: DocDifficulty.Internals },
         ],
       },
-    ],
-  },
-  {
-    id: 'examples',
-    label: 'kernel.examples',
-    document: true,
-    pages: [
-      { id: 'karl-circle', label: 'kernel.examplesKarlCircle', difficulty: DocDifficulty.Beginner },
-      { id: 'learning-path', label: 'kernel.examplesLearningPath', difficulty: DocDifficulty.Advanced },
-      { id: 'ohms-law-circuit', label: 'kernel.examplesOhmsLawCircuit', difficulty: DocDifficulty.Advanced },
-    ],
-  },
-  {
-    id: 'releases',
-    label: 'kernel.releases',
-    document: true,
-    pages: [
       {
         id: 'changelog',
         label: 'kernel.changelog',
@@ -296,7 +280,24 @@ export const kernelSection: Array<Section> = [
           { id: 'v0-2', label: 'kernel.changelogV02' },
           { id: 'v0-1', label: 'kernel.changelogV01' },
         ],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'kernel.release',
+          sourceOfTruth: 'changelog',
+        },
       },
+    ],
+  },
+  {
+    id: 'galleries',
+    label: 'kernel.gallery',
+    navigationDescription: 'kernel.galleryNavigationDescription',
+    document: true,
+    pages: [
+      { id: 'karl-circle', label: 'kernel.galleryKarlCircle', difficulty: DocDifficulty.Beginner },
+      { id: 'learning-path', label: 'kernel.galleryLearningPath', difficulty: DocDifficulty.Advanced },
+      { id: 'ohms-law-circuit', label: 'kernel.galleryOhmsLawCircuit', difficulty: DocDifficulty.Advanced },
     ],
   },
 ];

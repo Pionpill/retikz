@@ -29,7 +29,7 @@ export const resolveChartFromProvider = (
   return resolveSelectedChart(source, {
     theme: context.theme,
     recipe,
-    themeDefinitions: chartThemeDefinitionsOf(source, context.theme, context.registry.themes),
+    themeDefinitions: chartThemeDefinitionsOf(context.theme, context.registry.themes),
     runtime: context.registry.runtime,
   });
 };

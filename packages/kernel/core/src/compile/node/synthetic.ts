@@ -1,9 +1,11 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import { circle } from '@retikz/math';
 
 import type { BoundaryDefinition, ShapeDefinition, Transform } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry/index';
 import type { PositionTargetResolveContext } from '../../resolve/position';
-import type { IRJsonObject, IRNode, IRPosition } from '../../schemas';
+import type { IRNode, IRPosition } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
@@ -64,7 +66,7 @@ export type ScopeCircleLayoutInput = {
 const syntheticNode = (
   input: SyntheticRectangleLayoutInput,
   shape: 'rectangle' | 'ellipse',
-  shapeParams: IRJsonObject = {},
+  shapeParams: JsonObject = {},
 ): IRNode => {
   const rect = input.rect;
   return {
@@ -72,9 +74,7 @@ const syntheticNode = (
     id: input.id,
     shape: Object.keys(shapeParams).length === 0 ? shape : { type: shape, params: shapeParams },
     position: [rect.x, rect.y],
-    minimumSize: { width: rect.width, height: rect.height },
-    padding: 0,
-    margin: 0,
+    layout: { minimumSize: { width: rect.width, height: rect.height }, padding: 0, margin: 0 },
     rotate: ((rect.rotate ?? 0) * 180) / Math.PI,
   };
 };
@@ -84,7 +84,7 @@ const resolveSyntheticLayout = (
   input: SyntheticRectangleLayoutInput,
   shape: 'rectangle' | 'ellipse',
   context: SyntheticLayoutRegistryContext,
-  shapeParams: IRJsonObject = {},
+  shapeParams: JsonObject = {},
 ): NodeLayout => {
   const shapes = context.shapes ?? BUILTIN_SHAPES;
   const boundaries = context.boundaries ?? BUILTIN_BOUNDARIES;

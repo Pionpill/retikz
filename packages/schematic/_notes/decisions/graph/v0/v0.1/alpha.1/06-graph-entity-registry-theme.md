@@ -6,6 +6,8 @@
 - 关联：[Entity contract](./07-entity-data-geometry.md) · [Relation contract](./08-relation-data-geometry.md) · [Graph context](./09-composable-graph-context.md)
 - 替代：[GraphNode Variant ADR](./02-graph-node-variants.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](../alpha.2/07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Entity 与 Relation 需要开放的语义词汇、可替换的结构 Definition，以及随 Core Theme 变化的领域外观默认。Graph 因此拥有 role、kind、predicate、direction 等领域语义和按这些 Canonical 语义匹配的 Theme rules；Core、Scene 与 renderer 不解释 Graph 词汇

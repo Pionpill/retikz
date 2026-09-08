@@ -1,7 +1,8 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
 
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
-import type { IRBoundary, IRJsonObject } from '../../schemas';
+import type { IRBoundary } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
 
@@ -16,7 +17,7 @@ import { snapshotProviderPosition } from '../scene-primitive';
 import { fallbackBoundaryAnchor, resolveBoundary as resolveBoundaryGeometry } from './boundary';
 
 /** 空 shape params */
-const EMPTY_SHAPE_PARAMS: IRJsonObject = {};
+const EMPTY_SHAPE_PARAMS: JsonObject = {};
 
 /** 保留合法 undefined fallback，并校验 provider 实际返回的二维坐标 */
 const snapshotOptionalProviderPosition = (owner: string, value: unknown): Position | undefined =>

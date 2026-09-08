@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { infer as ZodInfer, ZodType } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
@@ -8,9 +8,9 @@ import type { TableLegendDescriptorSchema } from './schema';
 /** Visual scale 解析时可用的同次 Table style palette */
 export type CellVisualScaleResolveContext = Readonly<{
   /** 分类颜色序列 */
-  categoricalColors: ReadonlyArray<string>;
+  categoricalColors?: ReadonlyArray<string>;
   /** 连续颜色端点 */
-  sequentialColors: readonly [string, string];
+  sequentialColors?: readonly [string, string];
 }>;
 
 /** 单个 visual scale 的运行时解析结果 */
@@ -28,7 +28,7 @@ export type CellVisualScaleResolution = Readonly<{
 }>;
 
 /** Table Cell visual scale 作者契约 */
-export type CellVisualScaleDefinition<TOptions extends IRJsonObject = IRJsonObject> = Readonly<{
+export type CellVisualScaleDefinition<TOptions extends JsonObject = JsonObject> = Readonly<{
   /** 稳定 registry 名称 */
   name: string;
   /** definition 自有 JSON options schema */

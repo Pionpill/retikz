@@ -12,7 +12,7 @@ import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 ```
 
 ```tsx
-<Graph width={360} height={160}>
+<Graph>
   <Group id="runtime">
     <Entity id="compiler" role="activity" position={[110, 100]}>
       Compile
@@ -70,9 +70,10 @@ Group style adjustments focus on the shell background, border, line style, corne
 ### Arbitrary children and Graph Theme
 
 - `children` directly uses Core `IRChild`: Entity, Relation, Group, Node, Path, Scope, Layout, Plot, or any registered composite
-- `nodeDefault`, `pathDefault`, `labelDefault`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
+- `defaults.node`, `defaults.path`, `defaults.label`, Core `theme`, transforms, placement, clipping, and namespaces retain Scope semantics
 - A named Graph Theme supplies the Group root shell `background`, `border`, and `cornerRadius` baseline. Explicit Source fields win and use complete top-level field replacement instead of deep-merging inside `border` or `background`
-- `graphTheme` affects only visible Entity / Relation descendants, never the shell, caption, boundary labels, or ordinary Core children
+- `graphDefaults` affects visible Entity / Relation descendants and descendant Group / Block shells; `graphRules` matches only descendant Entities and Relations. Neither affects this Group’s own shell, caption, boundary labels, or ordinary Core children
+- Changing the content `theme` or setting Core `defaults.reset` preserves author defaults and rules. This shell uses the incoming theme and ancestor defaults
 - Group does not stack children automatically and owns no routing, obstacle avoidance, or label collision. Put FlexLayout, GridLayout, or OverlayLayout inside when ordinary arrangement is required
 - An explicit Group `id` names the shell envelope and remains targetable through Core `IRNodeTarget`
 
@@ -98,7 +99,7 @@ Group lowering combines the caption and authored children into the single Surfac
 
 React, IR, and Vanilla Group entry points share the same JSON-safe fields. The table lists fields added or redefined by Group; the remaining Core Scope properties retain the Core contract
 
-The shell defaults in the table are the Neutral Graph Theme baseline. After selecting a same-name Graph Theme Definition, omitted `background`, `border`, and `cornerRadius` fields use its Group tokens; explicit Source values still win
+The shell defaults in the table are the Neutral Graph Theme baseline. After selecting a same-name Graph Theme Definition, omitted `background`, `border`, and `cornerRadius` fields use its Group defaults; explicit Source values still win
 
 | Prop                 | Type                                   | Default                  | Description                                                                                                                                                                                                           |
 | -------------------- | -------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -114,6 +115,8 @@ The shell defaults in the table are the Neutral Graph Theme baseline. After sele
 | `border?`            | `SurfaceInput['border']`               | `lightgray / 1 + [4, 3]` | Gray dashed Surface border                                                                                                                                                                                            |
 | `cornerRadius?`      | `number`                               | `4`                      | Shell corner radius                                                                                                                                                                                                   |
 | `overflow?`          | `'visible' \| 'clip'`                  | `'visible'`              | Surface content overflow; outside labels remain unclipped                                                                                                                                                             |
+| `graphDefaults?`     | `IRGraphDefaults`                      | —                        | Sparse defaults for visible descendants                                                                                                                                                                               |
+| `graphRules?`        | `Array<IRGraphRule>`                   | —                        | Ordered rules for visible Entities and Relations                                                                                                                                                                      |
 | `children?`          | `ReadonlyArray<IRChild>` / `ReactNode` | —                        | Arbitrary embeddable content                                                                                                                                                                                          |
 
 ## Related

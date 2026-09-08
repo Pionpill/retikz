@@ -1,3 +1,4 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import type {
@@ -7,7 +8,7 @@ import type {
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '../../contract';
-import type { IRComposite, JsonValue } from '../../schemas';
+import type { IRComposite } from '../../schemas';
 
 /** 已完成 composite key 与 provider lookup 的绑定结果 */
 export type CompositeBinding =

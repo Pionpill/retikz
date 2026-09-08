@@ -1,5 +1,5 @@
-import type { IRJsonObject, JsonValue } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 /**
  * provenance 下沉上下文：贯穿 expand -> mark -> guide，承载 plotId / dataReference / 各开关。
@@ -49,7 +49,7 @@ const toJsonValue = (value: unknown): JsonValue => {
 };
 
 /** mark 图层来源 meta，写在每个 mark 的图层 Scope */
-export const markLayerMeta = (markType: string, markIndex: number): IRJsonObject => ({
+export const markLayerMeta = (markType: string, markIndex: number): JsonObject => ({
   source: PLOT_SOURCE,
   layer: 'mark',
   mark: markType,
@@ -57,20 +57,20 @@ export const markLayerMeta = (markType: string, markIndex: number): IRJsonObject
 });
 
 /** guide 图层来源 meta，写在轴 / 网格 Scope */
-export const guideLayerMeta = (layer: 'axis' | 'grid', dimension: string): IRJsonObject => ({
+export const guideLayerMeta = (layer: 'axis' | 'grid', dimension: string): JsonObject => ({
   source: PLOT_SOURCE,
   layer,
   dimension,
 });
 
 /** root 来源 meta，写在外层 plot Scope */
-export const rootMeta = (dataReference: string): IRJsonObject => ({
+export const rootMeta = (dataReference: string): JsonObject => ({
   source: PLOT_SOURCE,
   dataReference,
 });
 
 /** series Path 来源 meta，写在每条 series Path */
-export const seriesPathMeta = (markType: string, markIndex: number, series: unknown): IRJsonObject => ({
+export const seriesPathMeta = (markType: string, markIndex: number, series: unknown): JsonObject => ({
   source: PLOT_SOURCE,
   layer: 'mark',
   mark: markType,
@@ -87,8 +87,8 @@ export const datumMeta = (
   sourceIndex: number | undefined,
   series: unknown,
   sourceIndices?: Array<number>,
-): IRJsonObject => {
-  const meta: IRJsonObject = {
+): JsonObject => {
+  const meta: JsonObject = {
     source: PLOT_SOURCE,
     dataReference: context.dataReference,
     mark: markType,

@@ -2,6 +2,6 @@
 export const TableBorderContributionOrigin = {
   /** 显式 Table、Cell 或 rule border */
   Explicit: 'explicit',
-  /** resolved style token border */
-  StyleToken: 'styleToken',
+  /** Table Source defaults 产生的 border */
+  Defaults: 'defaults',
 } as const;

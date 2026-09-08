@@ -7,4 +7,4 @@ export type InputConnectedScatterChart = InputTypedChart<IRConnectedScatterChart
 
 /** Connected Scatter factory 的 typed authoring 输入 */
 export type CreateConnectedScatterChartInput = TypedChartCommonInput<IRConnectedScatterChart> &
-  Pick<InputConnectedScatterChart, 'encodings' | 'properties' | 'marks'>;
+  Pick<InputConnectedScatterChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

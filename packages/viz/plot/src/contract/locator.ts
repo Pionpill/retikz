@@ -1,5 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
-
+import type { JsonObject } from '@retikz/foundation';
 /**
  * 逻辑地址解析结果。
  * @description position 与 lowering 摆放一致；meta 与 per-datum meta 同构；id 仅在 datumIdField 命中并已绑定具名 id 时回填
@@ -8,7 +7,7 @@ export type PlotAnchorResolution = {
   /** 该 datum / series 的锚点屏幕位置（user units） */
   position: [number, number];
   /** 来源 meta */
-  meta: IRJsonObject;
+  meta: JsonObject;
   /** 若给该元素绑定了具名 id，则回填；否则省略 */
   id?: string;
 };

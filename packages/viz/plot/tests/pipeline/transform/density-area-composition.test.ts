@@ -60,9 +60,9 @@ describe('density area composition (contract)', () => {
           series: 'group',
           order: 'densityX',
           closure: { kind: 'baseline', baseline: 0 },
+          encoding: { x: { field: 'densityX' }, y: { field: 'density' }, color: { field: 'group', scale: 'color' } },
           fill: { kind: 'constant', value: '#60a5fa' },
           fillOpacity: { kind: 'constant', value: 0.28 },
-          encoding: { x: { field: 'densityX' }, y: { field: 'density' }, color: { field: 'group', scale: 'color' } },
         },
       ],
     });

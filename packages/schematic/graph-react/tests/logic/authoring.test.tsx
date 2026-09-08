@@ -1,3 +1,4 @@
+import type { InputGraph } from '@retikz/graph-vanilla';
 import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import type { FC } from 'react';
 
@@ -7,8 +8,10 @@ import {
   defineRelationRole,
   EntityProviderKey,
   GraphProviderKey,
+  GraphSchema,
   RelationProviderKey,
 } from '@retikz/graph';
+import { normalizeGraph } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';
@@ -226,7 +229,6 @@ const hostPropKeys = [
   'height',
   'viewBox',
   'className',
-  'style',
   'renderer',
   'animate',
   'snapshotAt',
@@ -340,8 +342,8 @@ describe('Entity and Relation React authoring', () => {
           status: 'warning',
           source: { id: 'source' },
           target: { id: 'target' },
-          dashPattern: [6, 2],
           labels: [{ text: 'precise', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+          style: { dashPattern: [6, 2] },
         }),
       ),
     );
@@ -365,8 +367,8 @@ describe('Entity and Relation React authoring', () => {
         status: 'warning',
         source: { id: 'source' },
         target: { id: 'target' },
-        dashPattern: [6, 2],
         labels: [{ text: 'precise', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
+        style: { dashPattern: [6, 2] },
       },
     ]);
     expect(result.ir.children[2]).not.toHaveProperty('id');
@@ -433,6 +435,51 @@ describe('Entity and Relation React authoring', () => {
 });
 
 describe('Graph Source and child authoring', () => {
+  it('keeps graphDefaults and graphRules identical to Direct and Vanilla Source IR', () => {
+    const input = {
+      id: 'parity',
+      graphDefaults: {
+        entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
+        relation: { style: { stroke: '#222222' } },
+      },
+      graphRules: [{ type: 'entity' as const, selector: { role: 'activity' }, style: { fill: '#ff0000' } }],
+      children: [
+        { type: 'entity' as const, id: 'source', role: 'activity', position: [0, 0] as const, text: 'Source' },
+        { type: 'entity' as const, id: 'target', role: 'resource', position: [100, 0] as const, text: 'Target' },
+        {
+          type: 'relation' as const,
+          role: 'dependency',
+          source: { id: 'source' },
+          target: { id: 'target' },
+        },
+      ],
+    } satisfies InputGraph;
+    const direct = GraphSchema.parse({
+      namespace: 'graph',
+      type: 'graph',
+      ...input,
+      children: input.children.map(child => ({ namespace: 'graph' as const, ...child })),
+    });
+
+    const vanilla = normalizeGraph(input);
+    const react = normalizeReact(
+      createElement(
+        Graph,
+        { ...input, children: undefined },
+        createElement(Entity, { id: 'source', role: 'activity', position: [0, 0] }, 'Source'),
+        createElement(Entity, { id: 'target', role: 'resource', position: [100, 0] }, 'Target'),
+        createElement(Relation, {
+          role: 'dependency',
+          source: { id: 'source' },
+          target: { id: 'target' },
+        }),
+      ),
+    );
+
+    expect(vanilla).toEqual(direct);
+    expect(react.ir.children[0]).toEqual(direct);
+  });
+
   it('preserves the complete Graph Scope surface and keeps Theme fields disjoint', () => {
     const result = normalizeReact(
       createElement(
@@ -440,35 +487,41 @@ describe('Graph Source and child authoring', () => {
         {
           id: 'architecture',
           theme: { mode: 'dark' },
-          graphTheme: {
-            rules: [
-              {
-                type: 'entity',
-                selector: { role: 'participant' },
-                appearance: { fill: '#eef6ff' },
-              },
-            ],
-          },
+          graphRules: [
+            {
+              type: 'entity',
+              selector: { role: 'participant' },
+              style: { fill: '#eef6ff' },
+            },
+          ],
           localNamespace: true,
           transforms: [{ kind: 'translate', x: 10, y: 20 }],
           placement: { target: [30, 40], selfAnchor: 'center' },
-          color: '#0f172a',
-          stroke: '#334155',
-          fill: '#e2e8f0',
-          strokeWidth: 2,
-          opacity: 0.8,
-          fillOpacity: 0.7,
-          strokeOpacity: 0.9,
-          nodeDefault: { fill: 'white' },
-          pathDefault: { stroke: 'green' },
-          labelDefault: { font: { size: 10 } },
-          arrowDefault: { shape: 'stealth', scale: 1.5 },
-          resetStyle: ['path'],
           zIndex: 2,
           clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
           boundingShape: 'circle',
           meta: { source: 'architecture-catalog' },
           animations: [],
+          style: {
+            color: '#0f172a',
+            stroke: '#334155',
+            fill: '#e2e8f0',
+            strokeWidth: 2,
+            opacity: 0.8,
+            fillOpacity: 0.7,
+            strokeOpacity: 0.9,
+          },
+          defaults: {
+            node: {
+              style: { fill: 'white' },
+            },
+            path: {
+              style: { stroke: 'green' },
+            },
+            label: { font: { size: 10 } },
+            arrow: { shape: 'stealth', scale: 1.5 },
+            reset: ['path'],
+          },
         },
         createElement(Node, { id: 'child', position: [0, 0] }),
       ),
@@ -480,36 +533,42 @@ describe('Graph Source and child authoring', () => {
         type: 'graph',
         id: 'architecture',
         theme: { mode: 'dark' },
-        graphTheme: {
-          rules: [
-            {
-              type: 'entity',
-              selector: { role: 'participant' },
-              appearance: { fill: '#eef6ff' },
-            },
-          ],
-        },
+        graphRules: [
+          {
+            type: 'entity',
+            selector: { role: 'participant' },
+            style: { fill: '#eef6ff' },
+          },
+        ],
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
         placement: { target: [30, 40], selfAnchor: 'center' },
-        color: '#0f172a',
-        stroke: '#334155',
-        fill: '#e2e8f0',
-        strokeWidth: 2,
-        opacity: 0.8,
-        fillOpacity: 0.7,
-        strokeOpacity: 0.9,
-        nodeDefault: { fill: 'white' },
-        pathDefault: { stroke: 'green' },
-        labelDefault: { font: { size: 10 } },
-        arrowDefault: { shape: 'stealth', scale: 1.5 },
-        resetStyle: ['path'],
         zIndex: 2,
         clip: { kind: 'rect', x: 0, y: 0, width: 220, height: 120 },
         boundingShape: 'circle',
         meta: { source: 'architecture-catalog' },
         animations: [],
         children: [{ type: 'node', id: 'child', position: [0, 0] }],
+        style: {
+          color: '#0f172a',
+          stroke: '#334155',
+          fill: '#e2e8f0',
+          strokeWidth: 2,
+          opacity: 0.8,
+          fillOpacity: 0.7,
+          strokeOpacity: 0.9,
+        },
+        defaults: {
+          node: {
+            style: { fill: 'white' },
+          },
+          path: {
+            style: { stroke: 'green' },
+          },
+          label: { font: { size: 10 } },
+          arrow: { shape: 'stealth', scale: 1.5 },
+          reset: ['path'],
+        },
       },
     ]);
   });
@@ -589,6 +648,13 @@ describe('Graph standalone and embedded host classification', () => {
     expect(markup.match(/<svg/g)).toHaveLength(1);
   });
 
+  it('standalone Graph 将 style 级联到绘图内容', () => {
+    const markup = renderToStaticMarkup(
+      createElement(Graph, { style: { fill: '#123456' } }, createElement(Node, { position: [0, 0] })),
+    );
+    expect(markup).toContain('fill="#123456"');
+  });
+
   it('forwards the complete standalone host surface without consuming Source fields', () => {
     const props = {
       authoring: undefined,
@@ -599,7 +665,7 @@ describe('Graph standalone and embedded host classification', () => {
       height: undefined,
       viewBox: undefined,
       className: undefined,
-      style: undefined,
+      style: { fill: '#123456' },
       renderer: undefined,
       animate: undefined,
       snapshotAt: undefined,
@@ -629,6 +695,7 @@ describe('Graph standalone and embedded host classification', () => {
     const hostProps = graphLayoutHostPropsOf(props);
     expect(Object.keys(hostProps)).toEqual(hostPropKeys);
     for (const key of hostPropKeys) expect(hostProps[key]).toBe(props[key]);
+    expect(hostProps).not.toHaveProperty('style');
     expect(hostProps).not.toHaveProperty('theme');
     expect(hostProps).not.toHaveProperty('animations');
   });
@@ -734,7 +801,7 @@ describe('GraphThemeProvider', () => {
     const ambient = defineGraphThemeStyle({ name: 'ambient', resolve: () => ({}) });
     const brand = defineGraphThemeStyle({
       name: 'brand',
-      resolve: () => ({ entity: { tokens: { stroke: '#2563eb', textColor: '#2563eb' } } }),
+      resolve: () => ({ defaults: { entity: { style: { stroke: '#2563eb', textColor: '#2563eb' } } } }),
     });
     const coreBrand = {
       name: 'brand',

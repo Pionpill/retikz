@@ -15,8 +15,14 @@ const bounceTrack = {
 
 /** 三个绝对值关键帧组成一条可序列化轨道，末帧回到静止值 */
 const Demo: FC = () => (
-  <Layout width={220} height={150} viewBox={{ x: -110, y: -90, width: 220, height: 150 }}>
-    <Node position={[0, 16]} shape="circle" minimumSize={70} fill="#f97316" animations={[bounceTrack]}>
+  <Layout viewBox={{ x: -110, y: -90, width: 220, height: 150 }}>
+    <Node
+      position={[0, 16]}
+      shape="circle"
+      animations={[bounceTrack]}
+      style={{ fill: '#f97316' }}
+      layout={{ minimumSize: 70 }}
+    >
       track
     </Node>
   </Layout>

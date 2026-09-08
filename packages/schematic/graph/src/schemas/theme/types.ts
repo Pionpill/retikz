@@ -1,32 +1,56 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type {
-  GraphEntityAppearanceTokenOverridesSchema,
-  GraphEntityThemeRuleSchema,
+  GraphDefaultsSchema,
+  GraphEntityDefaultsLayoutSchema,
+  GraphEntityDefaultsSchema,
+  GraphEntityDefaultsStyleSchema,
+  GraphEntityRuleSchema,
+  GraphEntityRuleStyleSchema,
   GraphEntityThemeSelectorSchema,
-  GraphRelationThemeRuleSchema,
+  GraphRelationDefaultsSchema,
+  GraphRelationDefaultsStyleSchema,
+  GraphRelationRuleSchema,
   GraphRelationThemeSelectorSchema,
-  GraphThemeLayerSchema,
-  GraphThemeRuleSchema,
+  GraphRuleSchema,
+  GraphSurfaceDefaultsSchema,
 } from './schema';
 
-/** Entity 非结构化 appearance 字段的非空覆盖集合 */
-export type IRGraphEntityAppearanceTokenOverrides = ZodInfer<typeof GraphEntityAppearanceTokenOverridesSchema>;
+/** Entity defaults 的正式 Source style 片段 */
+export type IRGraphEntityDefaultsStyle = ZodInfer<typeof GraphEntityDefaultsStyleSchema>;
 
-/** 匹配 Entity Canonical 语义的 Theme selector */
+/** Entity rules 的正式 Source style 片段 */
+export type IRGraphEntityRuleStyle = ZodInfer<typeof GraphEntityRuleStyleSchema>;
+
+/** Entity defaults 的正式 Source layout 片段 */
+export type IRGraphEntityDefaultsLayout = ZodInfer<typeof GraphEntityDefaultsLayoutSchema>;
+
+/** Entity defaults 的正式 Source 片段 */
+export type IRGraphEntityDefaults = ZodInfer<typeof GraphEntityDefaultsSchema>;
+
+/** Relation defaults 的正式 Source 片段 */
+export type IRGraphRelationDefaults = ZodInfer<typeof GraphRelationDefaultsSchema>;
+
+/** Relation defaults/rules 的正式 Source path style 片段 */
+export type IRGraphRelationDefaultsStyle = ZodInfer<typeof GraphRelationDefaultsStyleSchema>;
+
+/** Group / Block defaults 的正式 Surface 根片段 */
+export type IRGraphSurfaceDefaults = ZodInfer<typeof GraphSurfaceDefaultsSchema>;
+
+/** Graph defaults 的正式 Source fragments */
+export type IRGraphDefaults = ZodInfer<typeof GraphDefaultsSchema>;
+
+/** Entity Theme/Graph semantic selector */
 export type IRGraphEntityThemeSelector = ZodInfer<typeof GraphEntityThemeSelectorSchema>;
 
-/** Entity appearance rule */
-export type IRGraphEntityThemeRule = ZodInfer<typeof GraphEntityThemeRuleSchema>;
+/** Entity ordered Source rule */
+export type IRGraphEntityRule = ZodInfer<typeof GraphEntityRuleSchema>;
 
-/** 匹配 Relation Canonical 语义与方向的 Theme selector */
+/** Relation Theme/Graph semantic selector */
 export type IRGraphRelationThemeSelector = ZodInfer<typeof GraphRelationThemeSelectorSchema>;
 
-/** Relation appearance rule */
-export type IRGraphRelationThemeRule = ZodInfer<typeof GraphRelationThemeRuleSchema>;
+/** Relation ordered Source rule */
+export type IRGraphRelationRule = ZodInfer<typeof GraphRelationRuleSchema>;
 
-/** Graph Theme rule 判别联合 */
-export type IRGraphThemeRule = ZodInfer<typeof GraphThemeRuleSchema>;
-
-/** 至少包含一条 appearance rule 的 Graph-local Theme layer */
-export type IRGraphThemeLayer = ZodInfer<typeof GraphThemeLayerSchema>;
+/** Graph ordered Source rule */
+export type IRGraphRule = ZodInfer<typeof GraphRuleSchema>;

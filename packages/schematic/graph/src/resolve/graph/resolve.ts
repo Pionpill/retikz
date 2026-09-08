@@ -8,17 +8,18 @@ import type {
   IRGraph,
   IRGraphEntity,
   IRGraphRelation,
-  IRGraphThemeLayer,
   IRGroup,
 } from '../../schemas';
+import type { GraphAuthorLayer } from '../theme';
 import type { GraphResolveContext } from './types';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { resolveEntity, resolveEntityGraphThemeOverrides } from '../entity';
-import { resolveRelation, resolveRelationGraphThemeOverrides } from '../relation';
+import { projectEntityGraphLayers, resolveEntity } from '../entity';
+import { projectRelationGraphLayers, resolveRelation } from '../relation';
+import { resolveGraphAuthorSurfaceDefaults } from '../theme';
 
 type GraphProjectionContext = Readonly<{
-  layers: ReadonlyArray<IRGraphThemeLayer>;
+  layers: ReadonlyArray<GraphAuthorLayer>;
 }>;
 
 const isGraphComposite = (child: IRChild, type: string): boolean =>
@@ -42,12 +43,33 @@ const isBlockRow = (child: IRChild): child is IRBlockRow => isGraphComposite(chi
 
 const isScope = (child: IRChild): child is IRScope => !('namespace' in child) && child.type === 'scope';
 
-type GraphContextSource = Pick<IRBlock | IRGraph | IRGroup, 'theme' | 'graphTheme'>;
+type GraphContextSource = Pick<IRBlock | IRGraph | IRGroup, 'graphDefaults' | 'graphRules'>;
 
 const graphContext = (source: GraphContextSource, inherited: GraphProjectionContext): GraphProjectionContext => {
-  const parentLayers = source.theme === undefined ? inherited.layers : [];
+  if (source.graphDefaults === undefined && source.graphRules === undefined) return inherited;
+  const layer: GraphAuthorLayer = {
+    ...(source.graphDefaults === undefined ? {} : { defaults: source.graphDefaults }),
+    ...(source.graphRules === undefined ? {} : { rules: source.graphRules }),
+  };
+  return { layers: [...inherited.layers, layer] };
+};
+
+type GraphSurfaceSource = Pick<IRBlock | IRGroup, 'background' | 'border' | 'cornerRadius'>;
+
+const incomingSurfaceDefaults = (
+  source: GraphSurfaceSource,
+  context: GraphProjectionContext,
+  target: 'group' | 'block',
+): Partial<GraphSurfaceSource> => {
+  const defaults = resolveGraphAuthorSurfaceDefaults(context.layers, target);
   return {
-    layers: source.graphTheme === undefined ? parentLayers : [...parentLayers, source.graphTheme],
+    ...(source.background === undefined && defaults?.background !== undefined
+      ? { background: defaults.background }
+      : {}),
+    ...(source.border === undefined && defaults?.border !== undefined ? { border: defaults.border } : {}),
+    ...(source.cornerRadius === undefined && defaults?.cornerRadius !== undefined
+      ? { cornerRadius: defaults.cornerRadius }
+      : {}),
   };
 };
 
@@ -55,29 +77,21 @@ const projectEntity = (
   source: IRGraphEntity,
   context: GraphProjectionContext,
   options: GraphResolveContext,
-): IRGraphEntity => {
-  const entity = resolveEntity(source, options);
-  const appearance = resolveEntityGraphThemeOverrides(entity, {
-    ...options,
-    layers: context.layers,
-  });
-  return { ...appearance, ...source };
-};
+): IRGraphEntity => projectEntityGraphLayers(resolveEntity(source, options), { ...options, layers: context.layers });
 
 const projectRelation = (
   source: IRGraphRelation,
   context: GraphProjectionContext,
   options: GraphResolveContext,
-): IRGraphRelation => {
-  const relation = resolveRelation(source, options);
-  const appearance = resolveRelationGraphThemeOverrides(relation, { ...options, layers: context.layers });
-  return { ...appearance, ...source };
-};
+): IRGraphRelation =>
+  projectRelationGraphLayers(resolveRelation(source, options), { ...options, layers: context.layers });
 
 const projectBlock = (source: IRBlock, context: GraphProjectionContext, options: GraphResolveContext): IRBlock => {
+  const nestedContext = graphContext(source, context);
   return {
     ...source,
-    ...(source.children === undefined ? {} : { children: projectChildren(source.children, context, options) }),
+    ...incomingSurfaceDefaults(source, context, 'block'),
+    ...(source.children === undefined ? {} : { children: projectChildren(source.children, nestedContext, options) }),
   };
 };
 
@@ -95,20 +109,13 @@ const projectBlockHeader = (
   };
 };
 
-const scopeProjectionContext = (
-  source: Pick<IRBlockRow | IRBlockSection, 'theme'>,
-  inherited: GraphProjectionContext,
-): GraphProjectionContext => ({ layers: source.theme === undefined ? inherited.layers : [] });
-
 const projectBlockSection = (
   source: IRBlockSection,
   context: GraphProjectionContext,
   options: GraphResolveContext,
 ): IRBlockSection => ({
   ...source,
-  ...(source.children === undefined
-    ? {}
-    : { children: projectChildren(source.children, scopeProjectionContext(source, context), options) }),
+  ...(source.children === undefined ? {} : { children: projectChildren(source.children, context, options) }),
 });
 
 const projectBlockRow = (
@@ -119,10 +126,25 @@ const projectBlockRow = (
   ...source,
   ...(!('children' in source) || source.children === undefined
     ? {}
-    : {
-        children: projectChildren(source.children, scopeProjectionContext(source, context), options),
-      }),
+    : { children: projectChildren(source.children, context, options) }),
 });
+
+const projectGraph = (source: IRGraph, context: GraphProjectionContext, options: GraphResolveContext): IRGraph => {
+  const nestedContext = graphContext(source, context);
+  return {
+    ...source,
+    ...(source.children === undefined ? {} : { children: projectChildren(source.children, nestedContext, options) }),
+  };
+};
+
+const projectGroup = (source: IRGroup, context: GraphProjectionContext, options: GraphResolveContext): IRGroup => {
+  const nestedContext = graphContext(source, context);
+  return {
+    ...source,
+    ...incomingSurfaceDefaults(source, context, 'group'),
+    ...(source.children === undefined ? {} : { children: projectChildren(source.children, nestedContext, options) }),
+  };
+};
 
 const projectChildren = (
   children: ReadonlyArray<IRChild>,
@@ -132,36 +154,24 @@ const projectChildren = (
   children.map(child => {
     if (isEntity(child)) return projectEntity(child, context, options);
     if (isRelation(child)) return projectRelation(child, context, options);
-    if (isBlock(child)) {
-      return projectBlock(child, graphContext(child, context), options);
-    }
+    if (isBlock(child)) return projectBlock(child, context, options);
     if (isBlockHeader(child)) return projectBlockHeader(child, context, options);
     if (isBlockSection(child)) return projectBlockSection(child, context, options);
     if (isBlockRow(child)) return projectBlockRow(child, context, options);
-    if (isGraph(child) || isGroup(child)) {
-      const nestedContext = graphContext(child, context);
-      return {
-        ...child,
-        ...(child.children === undefined ? {} : { children: projectChildren(child.children, nestedContext, options) }),
-      };
-    }
-    if (isScope(child)) {
-      const nestedContext: GraphProjectionContext = {
-        layers: child.theme === undefined ? context.layers : [],
-      };
-      return { ...child, children: projectChildren(child.children, nestedContext, options) };
-    }
+    if (isGraph(child)) return projectGraph(child, context, options);
+    if (isGroup(child)) return projectGroup(child, context, options);
+    if (isScope(child)) return { ...child, children: projectChildren(child.children, context, options) };
     return child;
   });
 
-/** 把 Graph-local context 投影到 schema 可见的语义后代，并保留完整有序 Core child tree */
+/** 把 Graph-local author layers 投影到 schema 可见的语义后代，并保留完整有序 Core child tree */
 export const resolveGraph = (source: IRGraph, options: GraphResolveContext): Array<IRChild> =>
   projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options);
 
-/** 把 Graph-local context 投影到一个 Group 的 schema 可见后代 */
+/** 把 Graph-local author layers 投影到一个 Group 的 schema 可见后代 */
 export const resolveGroupChildren = (source: IRGroup, options: GraphResolveContext): Array<IRChild> =>
   projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options);
 
-/** 把 Graph-local context 投影到一个 Block 的开放内容树 */
+/** 把 Graph-local author layers 投影到一个 Block 的开放内容树 */
 export const resolveBlockSource = (source: IRBlock, options: GraphResolveContext): IRBlock =>
-  projectBlock(source, graphContext(source, { layers: [] }), options);
+  projectBlock(source, { layers: [] }, options);

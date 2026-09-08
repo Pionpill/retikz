@@ -178,7 +178,9 @@ export const resolvePointScaleDefaults = (
   for (const [role, scaleName] of Object.entries(context.encodings.positionScales)) {
     if (role === 'x' || role === 'y') roleByScaleName.set(scaleName, role);
   }
-  const extensionScaleNames = new Set(context.source.plotExtension?.scales?.map(scale => scale.name) ?? []);
+  const extensionScaleNames = new Set(
+    (context.encodings.extensionScales ?? context.source.plotExtension?.scales ?? []).map(scale => scale.name),
+  );
   return context.scales.map(scale => {
     const role = roleByScaleName.get(scale.name);
     if (
@@ -215,21 +217,18 @@ export const pointCartesian2DOf = (
   };
 };
 
-/** 依据 Point recipe theme 创建默认轴 guide */
-export const pointAxisGuidesOf = (
-  chartType: string,
-  theme: Readonly<{ axisEnabled: boolean; axisGridEnabled: boolean }>,
-): ReadonlyArray<IRPlotGuide> => {
-  if (!theme.axisEnabled) return [];
-  return [
-    {
-      type: PlotGuide.Axis,
-      dimension: 'x',
-    },
-    {
-      type: PlotGuide.Axis,
-      dimension: 'y',
-      ...(theme.axisGridEnabled ? { grid: true } : {}),
-    },
-  ];
-};
+/** 创建 Point recipe 的默认轴 guide
+ *
+ * guide 的生成开关由 Source recipe.guides 在 resolve 阶段应用
+ */
+export const pointAxisGuidesOf = (): ReadonlyArray<IRPlotGuide> => [
+  {
+    type: PlotGuide.Axis,
+    dimension: 'x',
+  },
+  {
+    type: PlotGuide.Axis,
+    dimension: 'y',
+    grid: true,
+  },
+];

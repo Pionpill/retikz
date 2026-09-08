@@ -39,7 +39,14 @@ describe('compile font size presets and relative units', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: 'web', font: { size: 'sm' } }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'web',
+          style: { font: { size: 'sm' } },
+        },
+      ],
     };
 
     expect(findText(compileToScene(ir).scene, 'web').fontSize).toBe(14);
@@ -50,8 +57,18 @@ describe('compile font size presets and relative units', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', position: [0, 0], text: 'web', font: { size: 'sm' } },
-        { type: 'node', position: [40, 0], text: 'tikz', font: { size: 'small' } },
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'web',
+          style: { font: { size: 'sm' } },
+        },
+        {
+          type: 'node',
+          position: [40, 0],
+          text: 'tikz',
+          style: { font: { size: 'small' } },
+        },
       ],
     };
     expect(() => compileToScene(ir).scene).toThrow();
@@ -61,7 +78,14 @@ describe('compile font size presets and relative units', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: 'rem', font: { size: '1.25rem' } }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'rem',
+          style: { font: { size: '1.25rem' } },
+        },
+      ],
     };
 
     expect(findText(compileToScene(ir, { fontSize: 20 }).scene, 'rem').fontSize).toBe(25);
@@ -94,7 +118,7 @@ describe('compile font size presets and relative units', () => {
           type: 'node',
           position: [0, 0],
           text: [{ text: 'line', font: { size: '0.5em' } }],
-          font: { size: 'lg' },
+          style: { font: { size: 'lg' } },
         },
       ],
     };
@@ -107,7 +131,15 @@ describe('compile font size presets and relative units', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: 'scaled', font: { size: 'lg' }, scale: 2 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'scaled',
+          scale: 2,
+          style: { font: { size: 'lg' } },
+        },
+      ],
     };
 
     expect(findText(compileToScene(ir).scene, 'scaled').fontSize).toBe(36);
@@ -118,7 +150,14 @@ describe('compile font size presets and relative units', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: [{ runs: [{ tex: 'x' }] }], font: { size: 'sm' } }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: [{ runs: [{ tex: 'x' }] }],
+          style: { font: { size: 'sm' } },
+        },
+      ],
     };
 
     compileToScene(ir, {

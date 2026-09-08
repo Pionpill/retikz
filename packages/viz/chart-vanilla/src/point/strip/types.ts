@@ -7,4 +7,4 @@ export type InputStripChart = InputTypedChart<IRStripChart>;
 
 /** StripChart factory 的完整输入 */
 export type CreateStripChartInput = TypedChartCommonInput<IRStripChart> &
-  Pick<InputStripChart, 'encodings' | 'properties' | 'marks'>;
+  Pick<InputStripChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

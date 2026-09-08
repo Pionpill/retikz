@@ -14,7 +14,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     width={260}
     height={220}
     coordinate={{ type: 'polar2D', innerRadius: values[BAR_RADIAL_INNER_RADIUS_ID] }}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <IntervalMark x="month" y="value" color="month" />
     <PlotScale

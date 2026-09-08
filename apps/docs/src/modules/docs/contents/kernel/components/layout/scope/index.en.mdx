@@ -3,6 +3,8 @@ title: Scope
 description: "Scope is Kernel's local-context container: a group shares coordinate transforms, style defaults, namespaces, group references, and clipping without gaining drawing or automatic-layout behavior."
 ---
 
+`style` supplies cascading visual values; `defaults.node` / `path` / `label` / `arrow` provide host-specific defaults and `defaults.reset` sets inheritance barriers. Node defaults reuse `style` / `layout`, Path defaults reuse `style`, and label / arrow leaf contracts retain their existing shape.
+
 `<Scope>` places a group of children in one local context. It does not draw a new primitive or calculate plot / table layout; it controls how the group transforms, aligns by its own envelope, can be referenced, and enters Scene.
 
 Treat Scope as a _sub-figure boundary_. Use it only when the group genuinely shares geometry or runtime semantics. For JSX organization alone, extract an ordinary React component.
@@ -108,11 +110,11 @@ The base `<Scope>` has no inspection prop. The example uses the optional `Layout
 
 `<Scope theme>` writes sparse `style` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. During compilation, Core regenerates shared colors through the current style registry; an unregistered style fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
 
-Theme and style defaults are independent channels. `resetStyle` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
+Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
 
 ### Style defaults
 
-Scope also exposes `color`, shared graphic state, and `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`. Values cascade per field, explicit element values win, and `resetStyle` cuts only selected outer channels.
+Scope also exposes `color`, shared graphic state, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
 
 Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the API below for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
 
@@ -130,7 +132,7 @@ Style is a supporting responsibility and does not alter local coordinates, refer
   description="Return when you hit transform projection, id conflicts, envelope, or clipping edge cases."
 />
 
-This section covers only Scope behavior visible to users. See [Architecture](/kernel/concepts/design/principles) for the complete JSX → IR → Scene pipeline.
+This section covers only Scope behavior visible to users. See [Architecture](/kernel/components/design/principles) for the complete JSX → IR → Scene pipeline.
 
 ### Transforms and relative positions
 
@@ -268,13 +270,13 @@ Inspection support comes from `LayoutInspectScope` in `@retikz/layout-react/insp
 
 ### Style defaults
 
-| Prop                                                            | Type                               | Default | Description                               |
-| --------------------------------------------------------------- | ---------------------------------- | ------- | ----------------------------------------- |
-| `color`                                                         | `string`                           | —       | Primary color cascaded across elements    |
-| `stroke` / `fill`                                               | `string` \| `IRPaint`              | —       | Per-field stroke and fill cascade         |
-| `strokeWidth` / opacity fields                                  | `number`                           | —       | Stroke width and per-field opacity        |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault` | default objects                    | —       | Four independent element-default channels |
-| `resetStyle`                                                    | `boolean` \| `Array<StyleChannel>` | `false` | Cut all or selected outer Scope channels  |
+| Prop                                                                    | Type                               | Default | Description                               |
+| ----------------------------------------------------------------------- | ---------------------------------- | ------- | ----------------------------------------- |
+| `style.color`                                                           | `string`                           | —       | Primary color cascaded across elements    |
+| `style.stroke` / `style.fill`                                           | `string` \| `IRPaint`              | —       | Per-field stroke and fill cascade         |
+| `style.strokeWidth` / opacity fields                                    | `number`                           | —       | Stroke width and per-field opacity        |
+| `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow` | default objects                    | —       | Four independent element-default channels |
+| `defaults.reset`                                                        | `boolean` \| `Array<StyleChannel>` | `false` | Cut all or selected outer Scope channels  |
 
 ## Related
 

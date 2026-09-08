@@ -19,12 +19,7 @@ export const previewControls = customCoordinateControls;
 
 /** 使用 bridgeCoordinate 投影规则 (x,y) 网格：固定相机下，点随 x 位置产生竖直拱形偏移 */
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={480}
-    height={250}
-    viewBox={{ x: -30, y: -80, width: 480, height: 340 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout viewBox={{ x: -30, y: -80, width: 480, height: 340 }}>
     <Plot
       data={grid}
       width={420}

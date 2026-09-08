@@ -3,15 +3,14 @@ import type { infer as ZodInfer } from 'zod';
 import { JitterPositionAdjustmentSchema } from '@retikz/plot';
 import { array, literal, strictObject } from 'zod';
 
-import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
+import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
   PointMarkEncodingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesSchema,
-  PointRecipeThemeOverridesSchema,
-  PointRecipeThemeResolutionSchema,
+  PointRecipeGuidesSchema,
 } from '../shared';
 import { StripChartEncodingsSchema } from './encoding-schema';
 
@@ -43,25 +42,14 @@ export const StripChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Strip).describe('Globally unique Strip recipe key'),
   encodings: StripChartEncodingsSchema,
   properties: StripChartPropertiesSchema.optional(),
+  guides: PointRecipeGuidesSchema.optional(),
   marks: array(StripChartMarkSchema).optional(),
 }).describe('Strip Chart recipe payload');
 
-/** Strip recipe 的稀疏主题 schema */
-export const StripChartThemeOverridesSchema = PointRecipeThemeOverridesSchema.describe(
-  'Strip Chart recipe theme overrides',
-);
-
-/** Strip recipe 的完整主题 schema */
-export const StripChartThemeResolutionSchema = PointRecipeThemeResolutionSchema.describe(
-  'Strip Chart recipe theme resolution',
-);
-
 /** Strip Chart 精确 Source schema */
-export const StripChartSchema = createChartSourceSchema(
-  ChartFamily.Point,
-  StripChartRecipeSchema,
-  createChartThemeSchema(StripChartThemeOverridesSchema).optional(),
-).describe('Strip Chart Source IR');
+export const StripChartSchema = createChartSourceSchema(ChartFamily.Point, StripChartRecipeSchema).describe(
+  'Strip Chart Source IR',
+);
 
 export type IRStripChart = ZodInfer<typeof StripChartSchema>;
 export type IRStripChartRecipe = ZodInfer<typeof StripChartRecipeSchema>;

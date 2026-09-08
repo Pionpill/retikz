@@ -8,18 +8,23 @@ import { Layout, Node, Path, Step } from '@retikz/react';
  *   右：无 preset 的完整显式对象作用于 Path 主路径。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={170}>
+  <Layout>
     {/* preset 出默认 offset/blur，color 覆盖成蓝色调 */}
     <Node
       position={[-110, 0]}
       shape="circle"
-      fill="white"
-      padding={16}
-      shadow={{ preset: 'md', color: '#3b82f6', opacity: 0.6 }}
+      style={{ fill: 'white', shadow: { preset: 'md', color: '#3b82f6', opacity: 0.6 } }}
+      layout={{ padding: 16 }}
     />
 
     {/* 无 preset：完整显式 offsetX / offsetY / blur / color */}
-    <Path stroke="steelblue" strokeWidth={4} shadow={{ offsetX: 2, offsetY: 2, blur: 3, color: 'rgba(0,0,0,0.4)' }}>
+    <Path
+      style={{
+        stroke: 'steelblue',
+        strokeWidth: 4,
+        shadow: { offsetX: 2, offsetY: 2, blur: 3, color: 'rgba(0,0,0,0.4)' },
+      }}
+    >
       <Step kind="move" to={[60, -30]} />
       <Step kind="line" to={[140, -30]} />
       <Step kind="line" to={[140, 40]} />

@@ -27,7 +27,9 @@ const labeledBox = defineComposite({
         position: [0, 0],
         shape: 'rectangle',
         text: node.text,
-        fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+        style: {
+          fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+        },
       },
     ],
     spatialHandles: [{ key: 'body', role: 'labeled-box', bounds: { x: -5, y: -5, width: 10, height: 10 } }],

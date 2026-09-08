@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,7 @@ import { array, strictObject, string } from 'zod';
 
 import type { AnyCellVisualScaleDefinition } from '../../src';
 
-import { defineCellVisualScale, resolveCellVisualScaleRegistry } from '../../src';
+import { defineCellVisualScale, resolveCellVisualScaleRegistry, RetikzTableErrorCode } from '../../src';
 import { resolveCellVisualScale } from '../../src/providers/encoding';
 
 const context = { categoricalColors: ['red', 'blue'], sequentialColors: ['white', 'black'] } as const;
@@ -21,7 +21,7 @@ const runCustom = (definition: AnyCellVisualScaleDefinition, values: ReadonlyArr
   });
 
 describe('Cell visual scale runtime guard', () => {
-  it('passes detached recursively frozen options and validates transformed JSON safety', () => {
+  it('passes detached recursively frozen options and trusts the exact schema transform output', () => {
     const input = { nested: { colors: ['red'] } };
     let observed: unknown;
     const inspect = defineCellVisualScale({
@@ -44,12 +44,18 @@ describe('Cell visual scale runtime guard', () => {
     expect(Object.isFrozen(observed)).toBe(true);
     expect(Object.isFrozen((observed as typeof input).nested.colors)).toBe(true);
 
-    const invalid = defineCellVisualScale<IRJsonObject>({
+    let transformedOptions: unknown;
+    const transformed = defineCellVisualScale<JsonObject>({
       name: 'non-json-options',
-      optionsSchema: strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as ZodType<IRJsonObject>,
-      resolve: () => undefined,
+      optionsSchema: strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as ZodType<JsonObject>,
+      resolve: options => {
+        transformedOptions = options;
+        return undefined;
+      },
     });
-    expect(() => runCustom(invalid)).toThrow(/JSON/i);
+    expect(runCustom(transformed)).toBeUndefined();
+    expect((transformedOptions as { run: () => string }).run()).toBe('x');
+    expect(Object.isFrozen(transformedOptions)).toBe(true);
   });
 
   it('detaches and freezes resolution arrays without probing the evaluator', () => {
@@ -102,6 +108,23 @@ describe('Cell visual scale runtime guard', () => {
     expect(scale?.of(1)).toBe('red');
     expect(scale?.of(2)).toBe('blue');
     expect(evaluatorReads).toBe(1);
+  });
+
+  it('lets the scalar owner schema reject invalid callback domain values with a Table error', () => {
+    const domain: Array<IRDataScalarValue> = [1];
+    Object.defineProperty(domain, 0, { value: () => 1 });
+    const definition = defineCellVisualScale({
+      name: 'invalid-domain-owner',
+      optionsSchema: strictObject({}),
+      resolve: () => ({ of: () => 'red', legendForm: 'swatch', domain, range: ['red'] }),
+    });
+
+    expect(() => runCustom(definition)).toThrowError(
+      expect.objectContaining({
+        code: RetikzTableErrorCode.Default,
+        message: expect.stringMatching(/domain 0.*JSON scalar/i),
+      }),
+    );
   });
 
   it.each([

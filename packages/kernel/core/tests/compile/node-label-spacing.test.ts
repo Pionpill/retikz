@@ -29,9 +29,9 @@ const sceneWithLabel = (label: IRNodeLabel, node: Partial<IRNode> = {}): IRScene
     {
       type: 'node',
       position: [0, 0],
-      minimumSize: { width: 100, height: 60 },
       ...node,
       label,
+      layout: { minimumSize: { width: 100, height: 60 }, ...node.layout },
     },
   ],
 });
@@ -95,7 +95,9 @@ describe('Node label visual-box spacing', () => {
     const scene = compileToScene(
       sceneWithLabel(
         { text: 'L', position: 'center', distance: 999 },
-        { padding: { left: 0, right: 20, top: 0, bottom: 0 }, minimumSize: 0 },
+        {
+          layout: { padding: { left: 0, right: 20, top: 0, bottom: 0 }, minimumSize: 0 },
+        },
       ),
       { measureText: fixedMeasure, padding: 0 },
     ).scene;
@@ -109,7 +111,9 @@ describe('Node label visual-box spacing', () => {
     const scene = compileToScene(
       sceneWithLabel(
         { text: 'L', position: 'right', distance: 8 },
-        { padding: { left: 0, right: 20, top: 0, bottom: 0 }, minimumSize: 0 },
+        {
+          layout: { padding: { left: 0, right: 20, top: 0, bottom: 0 }, minimumSize: 0 },
+        },
       ),
       { measureText: fixedMeasure, padding: 0 },
     ).scene;
@@ -126,8 +130,8 @@ describe('Node label visual-box spacing', () => {
         {
           type: 'node',
           position: { kind: 'anchor', target: { id: 'target' } },
-          minimumSize: { width: 100, height: 60 },
           label: { text: 'L', position: 'right', distance: 8 },
+          layout: { minimumSize: { width: 100, height: 60 } },
         },
       ],
     };
@@ -318,8 +322,8 @@ describe('Node label pin and bounds', () => {
             {
               type: 'node',
               position: [0, 0],
-              minimumSize: { width: 100, height: 60 },
               label: { text: 'L', position: 'right', distance: 100, pin: true },
+              layout: { minimumSize: { width: 100, height: 60 } },
             },
           ],
         },
@@ -327,8 +331,7 @@ describe('Node label pin and bounds', () => {
           type: 'node',
           id: 'marker',
           position: { kind: 'anchor', target: { id: 'cluster', anchor: 'right' } },
-          minimumSize: 0,
-          padding: 0,
+          layout: { minimumSize: 0, padding: 0 },
         },
       ],
     };

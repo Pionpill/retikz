@@ -41,51 +41,40 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const arcBoundsRect = boundsToRect(arcBounds);
 
   return (
-    <Layout width={400} height={280} viewBox={{ x: -150, y: -105, width: 300, height: 220 }}>
+    <Layout viewBox={{ x: -150, y: -105, width: 300, height: 220 }}>
       <Draw
         way={[
           [-145, 0],
           [145, 0],
         ]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <EllipseShape
         center={ellipse.center(ellipseValue)}
         radius={{ x: ellipseValue.rx, y: ellipseValue.ry }}
-        stroke="darkorange"
-        strokeWidth={2}
-        fill="none"
+        style={{ stroke: 'darkorange', strokeWidth: 2, fill: 'none' }}
       />
       <Arc
         center={ARC_CENTER}
         radius={values.arcRadius}
         startAngle={values.arcStartAngle}
         endAngle={values.arcEndAngle}
-        stroke="dodgerblue"
-        strokeWidth={2}
+        style={{ stroke: 'dodgerblue', strokeWidth: 2 }}
       />
       <Rectangle
         center={centerOfBounds(ellipseBounds)}
         width={ellipseBoundsRect.width}
         height={ellipseBoundsRect.height}
-        stroke="gray"
-        strokeOpacity={0.8}
-        dashPattern={[4, 4]}
-        fill="none"
+        style={{ stroke: 'gray', strokeOpacity: 0.8, dashPattern: [4, 4], fill: 'none' }}
       />
       <Rectangle
         center={centerOfBounds(arcBounds)}
         width={arcBoundsRect.width}
         height={arcBoundsRect.height}
-        stroke="gray"
-        strokeOpacity={0.8}
-        dashPattern={[4, 4]}
-        fill="none"
+        style={{ stroke: 'gray', strokeOpacity: 0.8, dashPattern: [4, 4], fill: 'none' }}
       />
-      <Circle center={ELLIPSE_CENTER} radius={3} fill="darkorange" stroke="none" />
-      <Circle center={ARC_CENTER} radius={3} fill="dodgerblue" stroke="none" />
+      <Circle center={ELLIPSE_CENTER} radius={3} style={{ fill: 'darkorange', stroke: 'none' }} />
+      <Circle center={ARC_CENTER} radius={3} style={{ fill: 'dodgerblue', stroke: 'none' }} />
     </Layout>
   );
 });

@@ -11,6 +11,8 @@ The preview below uses the same shared IR as the [Canvas page](/kernel/packages/
 
 <ComponentPreview files="shared-scene" size="sm" hideCode />
 
+SVG string output defaults to the dimensions of Scene.layout. Usually omit output width / height; when one numeric axis is provided, the other follows the content aspect ratio.
+
 ## How to use it
 
 **React** — `<Layout>` defaults to SVG, so `renderer` is optional:

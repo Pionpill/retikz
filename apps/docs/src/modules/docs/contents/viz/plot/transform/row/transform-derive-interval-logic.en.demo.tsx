@@ -4,16 +4,13 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** derive-interval 的英文模式优先级、逐行派生与错误出口 */
 const Demo: FC = () => (
-  <Layout width={820} height={240} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="explicit-mode"
       position={[-300, -45]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>① Explicit bounds</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -23,12 +20,9 @@ const Demo: FC = () => (
     <Node
       id="baseline-mode"
       position={[-300, 85]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>② Baseline to value</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -38,12 +32,9 @@ const Demo: FC = () => (
     <Node
       id="resolve-mode"
       position={[-100, 35]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Resolve active mode</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -53,12 +44,9 @@ const Demo: FC = () => (
     <Node
       id="error"
       position={[-100, -55]}
-      stroke="red"
-      fill="red"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Incomplete config</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -68,12 +56,9 @@ const Demo: FC = () => (
     <Node
       id="rows"
       position={[100, -55]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Input rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -83,12 +68,9 @@ const Demo: FC = () => (
     <Node
       id="derive"
       position={[100, 35]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Derive each interval</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -98,12 +80,9 @@ const Demo: FC = () => (
     <Node
       id="output"
       position={[300, 35]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Write interval fields</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -111,9 +90,9 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['explicit-mode', 'resolve-mode']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['baseline-mode', 'resolve-mode']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['resolve-mode', 'error']} arrow="->" stroke="red" />
+    <Draw way={['explicit-mode', 'resolve-mode']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['baseline-mode', 'resolve-mode']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['resolve-mode', 'error']} arrow="->" style={{ stroke: 'red' }} />
     <Draw
       way={[
         'resolve-mode',
@@ -130,8 +109,7 @@ const Demo: FC = () => (
         'derive',
       ]}
       arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     />
     <Draw way={['rows', 'derive']} arrow="->" />
     <Draw way={['derive', 'output']} arrow="->" />

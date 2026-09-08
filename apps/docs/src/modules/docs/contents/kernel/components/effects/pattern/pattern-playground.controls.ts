@@ -205,7 +205,7 @@ export const previewControlContract = {
     'IRPatternPaint.horizontalStyle',
     'IRPatternPaint.verticalStyle',
     'IRPatternPaint.lineStyleCycle',
-    'Node.fill',
-    'Path.fill',
+    'Node.style.fill',
+    'Path.style.fill',
   ],
 } satisfies PreviewControlContract;

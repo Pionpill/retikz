@@ -1,5 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
 export const GraphPredicateRefSchema = strictObject({

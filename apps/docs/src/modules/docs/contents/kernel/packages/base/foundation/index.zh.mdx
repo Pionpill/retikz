@@ -18,6 +18,8 @@ import {
   compositeOpaqueColor,
   createOpenStringSchema,
   createReadonlyMap,
+  JsonObjectSchema,
+  JsonValueSchema,
   NonBlankStringSchema,
   NormalizedFractionSchema,
   parseStaticCssColor,
@@ -27,6 +29,8 @@ import {
 } from '@retikz/foundation';
 import type {
   AssertEqual,
+  JsonObject,
+  JsonValue,
   NonEmptyReadonlyArray,
   OpenString,
   ParsedCssColor,
@@ -44,13 +48,13 @@ import type {
       label: 'Foundation 根入口',
       path: 'packages/kernel/foundation/src/index.ts',
       startLine: 1,
-      endLine: 6,
+      endLine: 7,
     },
     {
       label: '根入口与 subpath 契约测试',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
       startLine: 1,
-      endLine: 44,
+      endLine: 66,
     },
   ]}
 />
@@ -59,7 +63,7 @@ import type {
 
 ### 类型工具
 
-这五个工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
+这些工具只在编译期工作，不产生运行时代码，也不表达任何 IR 或领域模型。
 
 | 导出                              | 语义                                             |
 | --------------------------------- | ------------------------------------------------ |
@@ -68,6 +72,8 @@ import type {
 | `OpenString<T>`                   | 保留内置字面量提示，同时接受自定义字符串         |
 | `WithRequiredProperties<T, TKey>` | 只把指定 key 收窄为必填，保留其余属性及 readonly |
 | `NonEmptyReadonlyArray<T>`        | 至少包含一个元素的只读数组                       |
+| `JsonValue`                       | 任意递归 JSON value                              |
+| `JsonObject`                      | 字符串键与递归 JSON value 组成的对象             |
 
 例如，下面的 `name` 会变为必填，而 `note` 仍保持可选：
 
@@ -88,6 +94,20 @@ source.clear();
 definitions.has('point'); // true
 ```
 
+<span id="jsonobject"></span>
+
+### 通用 JSON schema
+
+`JsonObjectSchema` 表示字符串键与递归 JSON value 组成的对象，`JsonValueSchema` 接受 string、有限 number、boolean、null、数组或对象。它们由 Foundation 统一提供，供 `meta`、自定义 provider 参数与开放 composite 字段复用：
+
+<ZodSchema name="JsonObjectSchema" />
+
+<span id="jsonvalue"></span>
+
+<ZodSchema name="JsonValueSchema" />
+
+这两个 schema 直接使用 Zod 的递归 JSON 校验；`JsonValue` 的数组分支使用 readonly 类型，因此 `as const` Source 也能直接进入 unknown parse 边界。校验前后不会增加 walker、`undefined` 过滤、结构优化、clone、freeze 或第二次通用校验。领域 Source 仍应使用自己的精确 owner schema，不能用通用 JSON schema 代替。
+
 ### JSON 数据快照
 
 `cloneAndFreezeJson(value, path)` 校验 JSON-safe plain data，并返回与原输入脱离的深冻结副本。循环引用、访问器、symbol key、稀疏数组、数组额外属性、非有限数和 class 实例都会抛出 `RetikzFoundationError`：
@@ -99,15 +119,15 @@ Object.isFrozen(snapshot); // true
 Object.isFrozen(snapshot.filters); // true
 ```
 
-`assertPlainDataContainers(value, path)` 只检查容器结构，不复制数据，也不读取访问器。它用于 owner 在 schema 之前拒绝 class 实例、Promise、异常属性描述符、symbol key、异常数组和循环引用；字符串、数字、`undefined` 等叶子值仍由 owner schema 校验：
+`assertPlainDataContainers(value, path)` 只检查容器结构，不复制数据，也不读取访问器。它用于没有持久化 schema、但仍需隔离 runtime Definition 容器的边界；已有 owner schema 的 Source 输入直接消费 Zod `parse()` 结果，不再把该断言作为通用前置校验。字符串、数字、`undefined` 等叶子值不属于这个断言的职责：
 
 ```ts
-assertPlainDataContainers({ tokens: { color: undefined } }, 'Theme provider output');
+assertPlainDataContainers({ supportsRouting: true }, 'Flow Layout Definition capabilities');
 ```
 
 ### 通用契约
 
-六个固定 schema 只校验标量，不 coercion、不 trim、不填默认值。完整对象、数组、领域区间和跨字段关系仍由消费包组合：
+六个固定标量 schema 不 coercion、不 trim、不填默认值。领域对象、领域区间和跨字段关系仍由消费包组合：
 
 | 导出                       | 接受范围                                 |
 | -------------------------- | ---------------------------------------- |
@@ -276,7 +296,7 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
 3. 已被至少两个独立包以同义方式消费，或属于 Foundation 最小错误、类型、断言协议
 4. 不迫使上层包经由 Foundation 获得本应由 Core、Math、Runtime 或领域 owner 承担的能力
 
-`createOpenStringSchema(values)` 是唯一允许的参数化 schema factory，只组合 const object enum 与 Foundation 已有的非空白字符串边界。其它 helper、对象 / 数组 schema、range factory、几何算法、Diagnostic、错误目录和领域 resolver 应留在当前 owner。重复出现时先重新判断语义 owner，而不是把逻辑汇总进 Foundation。
+`createOpenStringSchema(values)` 是唯一允许的参数化 schema factory，只组合 const object enum 与 Foundation 已有的非空白字符串边界。除无领域的通用 JSON value / object schema 外，其它对象 / 数组 schema、range factory、几何算法、Diagnostic、错误目录和领域 resolver 应留在当前 owner。重复出现时先重新判断语义 owner，而不是把逻辑汇总进 Foundation。
 
 ## 相关
 

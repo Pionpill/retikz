@@ -18,30 +18,24 @@ const Demo: FC = () => (
       <Node
         id="chart-type"
         position={[-110, -50]}
-        stroke="seagreen"
-        fill="seagreen"
-        fillOpacity={0.08}
         cornerRadius={4}
+        style={{ stroke: 'seagreen', fill: 'seagreen', fillOpacity: 0.08 }}
       >
         family + chart
       </Node>
       <Node
         id="chart-presentation"
         position={[-110, 0]}
-        stroke="seagreen"
-        fill="seagreen"
-        fillOpacity={0.08}
         cornerRadius={4}
+        style={{ stroke: 'seagreen', fill: 'seagreen', fillOpacity: 0.08 }}
       >
         presentation
       </Node>
       <Node
         id="chart-canvas"
         position={[-110, 50]}
-        stroke="seagreen"
-        fill="seagreen"
-        fillOpacity={0.08}
         cornerRadius={4}
+        style={{ stroke: 'seagreen', fill: 'seagreen', fillOpacity: 0.08 }}
       >
         layout + Chart Theme
       </Node>
@@ -51,30 +45,24 @@ const Demo: FC = () => (
       <Node
         id="plot-data"
         position={[110, -50]}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
       >
         data + transform
       </Node>
       <Node
         id="plot-grammar"
         position={[110, 0]}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
       >
         scales + coordinates
       </Node>
       <Node
         id="plot-content"
         position={[110, 50]}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
       >
         marks + guides
       </Node>

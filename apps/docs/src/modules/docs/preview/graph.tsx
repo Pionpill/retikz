@@ -18,13 +18,12 @@ const graphCanonicalRender = (node: ReactNode): ReactNode => {
   if (node.type === Layout) return node;
 
   const element = node as ReactElement<GraphPreviewRootProps>;
-  const { children, width, height, viewBox, className, style, renderer, themeStyles, ...graphProps } = element.props;
+  const { children, width, height, viewBox, className, renderer, themeStyles, ...graphProps } = element.props;
   const hostProps: GraphLayoutHostProps = {
     ...(width === undefined ? {} : { width }),
     ...(height === undefined ? {} : { height }),
     ...(viewBox === undefined ? {} : { viewBox }),
     ...(className === undefined ? {} : { className }),
-    ...(style === undefined ? {} : { style }),
     ...(renderer === undefined ? {} : { renderer }),
     ...(themeStyles === undefined ? {} : { themeStyles }),
   };

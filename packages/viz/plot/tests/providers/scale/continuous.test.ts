@@ -89,7 +89,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
     const paths = collectPaths(layer);
     expect(paths).toHaveLength(1);
     const path = paths[0];
-    const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
+    const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
     expect(fill).toBeUndefined();
   });
 
@@ -100,7 +100,7 @@ describe('lowerPlots 笛卡尔面积路径', () => {
       cartOpts,
     );
     const path = collectPaths(layer)[0];
-    const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
+    const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
     expect(fill).toBe('rgba(14, 165, 233, 0.22)');
     expect(isClosedSteps(path.children)).toBe(true);
   });
@@ -323,7 +323,7 @@ describe('lowerPlots path closure cartesian', () => {
       cartOpts,
     );
     const [path] = collectPaths(layer);
-    const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
+    const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
     expect(fill).toBeTruthy();
     expect(isClosedSteps(path.children)).toBe(true);
     const ys = path.children.filter(s => s.kind === 'move' || s.kind === 'line').map(s => stepPoint(s)[1]);
@@ -337,7 +337,7 @@ describe('lowerPlots path closure cartesian', () => {
       cartOpts,
     );
     const path = collectPaths(layer)[0];
-    expect(path.stroke ?? layer.pathDefault?.stroke).toBe('none');
+    expect(path.style?.stroke ?? layer.defaults?.path?.style?.stroke).toBe('none');
     expect(isClosedSteps(path.children)).toBe(true);
   });
 
@@ -374,10 +374,7 @@ describe('lowerPlots path closure cartesian', () => {
     expect(paths).toHaveLength(2);
     for (const path of paths) expect(isClosedSteps(path.children)).toBe(true);
     expect(
-      paths.every(
-        path =>
-          (path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill) === 'rgba(14, 165, 233, 0.22)',
-      ),
+      paths.every(path => (path.style?.fill ?? layer.defaults?.path?.style?.fill) === 'rgba(14, 165, 233, 0.22)'),
     ).toBe(true);
   });
 
@@ -683,7 +680,7 @@ describe('lowerPlots 极坐标面积路径', () => {
     const path = collectPaths(layer)[0];
     expect(path.children[0].kind).toBe('move');
     expect(isClosedSteps(path.children)).toBe(true);
-    const fill = path.fill ?? (layer.pathDefault as { fill?: unknown } | undefined)?.fill;
+    const fill = path.style?.fill ?? layer.defaults?.path?.style?.fill;
     expect(fill).toBe('rgba(16, 185, 129, 0.22)');
   });
 

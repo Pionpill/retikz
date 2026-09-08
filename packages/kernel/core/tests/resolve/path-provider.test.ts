@@ -63,21 +63,30 @@ describe('resolve/path provider bindings', () => {
 
   it('reports filled Stroke interruption requests at the host-array and step-label locators', () => {
     expect(() =>
-      resolvePathWithBuiltinProviders(path({ fill: 'gold', label: [{ text: 'host', interrupt: true }] })),
+      resolvePathWithBuiltinProviders(
+        path({
+          label: [{ text: 'host', interrupt: true }],
+          style: { fill: 'gold' },
+        }),
+      ),
     ).toThrow(/label\[0\]\.interrupt.*filled stroke path/i);
 
     expect(() =>
       resolvePathWithBuiltinProviders(
         path({
-          fill: 'gold',
           children: [steps[0], { type: 'step', kind: 'line', to: [10, 0], label: { text: 'step', interrupt: true } }],
+          style: { fill: 'gold' },
         }),
       ),
     ).toThrow(/children\[1\]\.label\.interrupt.*filled stroke path/i);
 
     expect(
-      resolvePathWithBuiltinProviders(path({ fill: 'gold', label: { text: 'continuous', interrupt: false } })).path
-        .label,
+      resolvePathWithBuiltinProviders(
+        path({
+          label: { text: 'continuous', interrupt: false },
+          style: { fill: 'gold' },
+        }),
+      ).path.label,
     ).toMatchObject([{ text: 'continuous', interrupt: false }]);
   });
 

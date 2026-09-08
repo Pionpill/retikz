@@ -126,20 +126,22 @@ plotExtension: {
 
 `presentation` contains four optional slots. Resolution always creates the fixed `title → subtitle → plot → note → source` content order; JSON property order, Vanilla object construction order, and React marker order have no semantic meaning. Free composition requires a later explicit capability and is not inferred from Source ordering.
 
-The Theme input can be a registered name such as `'clean'`, or an authored object with `base` and owner slices:
+The Core Theme input selects a style and mode. Chart-owned and Plot-owned defaults stay in their Source groups:
 
 ```ts
 theme: {
-  base: 'clean',
-  tokens: {
-    chart: { 'chart.gap': 12 },
-    plot: { /* consumed by Plot */ },
-    recipe: { axisGridEnabled: false },
-  },
+  style: 'clean',
+  mode: 'dark',
+},
+chartDefaults: {
+  layout: { gap: 12 },
+},
+plotExtension: {
+  plotDefaults: { palette: { series: ['#2563EB'] } },
 }
 ```
 
-The Chart-shell cascade is mode fallback → Core style chain → authored named/base chain → inline `tokens.chart`. The current recipe cascade is recipe fallback → Core style chain → authored chain → inline `tokens.recipe` → `properties` → `encodings`. Chart resolves canvas, padding, and presentation tokens; Plot owns its Plot slice, and the current chartType's exact schema validates its recipe slice. The complete resolved map is never written back into Source.
+The Chart-shell cascade is mode fallback → registered Chart definitions → local `chartDefaults`. Plot defaults forwarded by Chart follow the Plot cascade, and recipe controls remain in the exact `recipe` schema. Chart resolves its canvas, layout, and presentation defaults; Plot resolves `plotExtension.plotDefaults` and `plotExtension.plotRules`. Complete resolved values are never written back into Source.
 
 ## Related pages
 

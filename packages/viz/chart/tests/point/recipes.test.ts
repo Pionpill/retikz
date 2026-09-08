@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
 
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
@@ -35,7 +35,6 @@ import {
 import { StripChartDefinition } from '../../src/point/strip/recipe';
 import { StripChartSchema } from '../../src/point/strip/schema';
 
-const theme = { axisEnabled: true, axisGridEnabled: true, legendEnabled: true };
 const runtime = resolveChartProviderRegistry([
   { family: 'point', recipe: ScatterChartDefinition, themeDefinitions: [] },
 ]).runtime;
@@ -57,14 +56,13 @@ const stripRuntime = resolveChartProviderRegistry([
 
 const resolve = <TSource extends IRChartSource>(
   definition: ChartRecipeDefinition<TSource>,
-  encodings: IRJsonObject,
-  properties: IRJsonObject = {},
+  encodings: JsonObject,
+  properties: JsonObject = {},
 ) =>
   definition.resolve({
     data: { reference: 'rows' },
     encodings,
     properties,
-    recipeThemeTokens: theme,
   });
 
 const resolveChart = <TSource extends IRChartSource>(
@@ -156,6 +154,58 @@ describe('Point Chart recipe Definitions', () => {
     ]);
     expect(resolveChart(explicit, StripChartDefinition, stripRuntime).plot.guides).toEqual([
       { type: 'axis', dimension: 'y', grid: true },
+    ]);
+  });
+
+  it('applies sparse Scatter recipe guide controls to the resolved Plot', () => {
+    const hidden = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+        guides: { axis: false, grid: false, legend: false },
+      },
+    });
+    const noGridOrLegend = ScatterChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'scatter',
+        encodings: { x: 'x', y: 'y', size: 'size' },
+        guides: { grid: false, legend: false },
+      },
+    });
+
+    expect(hidden.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
+    expect(resolveChart(hidden, ScatterChartDefinition, runtime).plot.guides).toEqual([]);
+    expect(resolveChart(noGridOrLegend, ScatterChartDefinition, runtime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
+    ]);
+  });
+
+  it('applies sparse Strip grid controls after moving the default grid to the continuous role', () => {
+    const source = StripChartSchema.parse({
+      namespace: 'chart',
+      type: 'point',
+      data: { reference: 'rows' },
+      recipe: {
+        chartType: 'strip',
+        encodings: {
+          x: { field: 'category', scale: { operation: { type: 'point', name: 'category' } } },
+          y: { field: 'value', scale: { operation: { type: 'linear', name: 'value' } } },
+        },
+        guides: { grid: false },
+      },
+    });
+
+    expect(source.recipe.guides).toEqual({ grid: false });
+    expect(resolveChart(source, StripChartDefinition, stripRuntime).plot.guides).toEqual([
+      { type: 'axis', dimension: 'x' },
+      { type: 'axis', dimension: 'y' },
     ]);
   });
 
@@ -411,8 +461,8 @@ describe('Point Chart recipe Definitions', () => {
     ],
   ])('uses the maximum final radius for %s', (_name, recipeOptions, radius) => {
     const options = recipeOptions as {
-      properties?: IRJsonObject;
-      encodings?: IRJsonObject;
+      properties?: JsonObject;
+      encodings?: JsonObject;
     };
     const source = ScatterChartSchema.parse({
       namespace: 'chart',
@@ -863,7 +913,7 @@ describe('Point Chart recipe Definitions', () => {
               stroke: { kind: 'constant', value: '#64748b' },
               strokeWidth: { kind: 'constant', value: 2 },
             }),
-            path: { options: { dashPattern: [4, 2] } },
+            path: { options: { style: { dashPattern: [4, 2] } } },
             endpoints: {
               source: expect.objectContaining({
                 color: { kind: 'constant', value: '#2563eb' },
@@ -1407,7 +1457,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
         properties: {},
       },
-      recipeThemeTokens: theme,
     });
 
     expect(result.marks[0]).toMatchObject({
@@ -1429,7 +1478,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'income', y: 'lifeExpectancy', size: 'population' },
         properties: {},
       },
-      recipeThemeTokens: theme,
     });
 
     expect(result.marks[0]).toMatchObject({
@@ -1447,7 +1495,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'amount', y: 'margin', opacity: 'opacityField' },
         properties: { opacity: 0.5 },
       },
-      recipeThemeTokens: theme,
     });
     expect(result.marks[0]).toMatchObject({
       type: 'point',
@@ -1468,7 +1515,6 @@ describe('Point Chart marks', () => {
         encodings: { x: 'amount', y: 'margin', opacity: 'inheritedOpacity' },
         properties: { opacity: 0.5 },
       },
-      recipeThemeTokens: theme,
     });
 
     expect(result.marks[0]).toMatchObject({

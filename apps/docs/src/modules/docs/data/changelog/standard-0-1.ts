@@ -29,6 +29,26 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-05',
+          summary: {
+            zh: 'Ribbon profile 参数只由命中的精确 schema 解析，未声明 schema 时继续使用 JSON object fallback。',
+            en: 'Ribbon profile parameters are parsed only by the matched exact schema, with the JSON-object fallback retained when no schema is declared.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：profile transform 结果直接消费',
+                en: 'BREAKING: profile transform results are consumed directly',
+              },
+              content: {
+                zh: '自定义 Ribbon width profile 的 `paramsSchema` transform 结果直接进入 resolver，不再被第二道通用 JSON schema 复核；没有 `paramsSchema` 的 Definition 仍以 `JsonObjectSchema` 作为唯一输入边界。',
+                en: 'A custom Ribbon width profile now passes its `paramsSchema` transform result directly to the resolver without a second generic JSON-schema check. Definitions without `paramsSchema` continue to use `JsonObjectSchema` as their sole input boundary.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.4',
           date: '2026-08-28',
           summary: {

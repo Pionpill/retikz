@@ -23,6 +23,7 @@ import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RuntimeDiagnostic } from '@retikz/runtime';
 import type {
   InputScene,
+  InputScope,
   ProcessingController,
   ProcessingOptions,
   ProcessingResult,
@@ -35,7 +36,6 @@ import { resolveAnimationEnabled } from '@retikz/render/animation';
 import { createProcessingController, prepareStaticProcessing } from '@retikz/vanilla';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
-import type { ScopeStyleProps } from '../protocol';
 import type { LayoutRuntimeOptions } from './runtime-options';
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
@@ -139,7 +139,9 @@ const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: str
 };
 
 /** React Layout 的公开属性 */
-export type LayoutProps = ScopeStyleProps & {
+export type LayoutProps = {
+  /** JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 */
+  rootScope?: Pick<InputScope, 'style' | 'defaults'>;
   /** 直接传入持久化 Source IR，与 children 二选一 */
   ir?: IRScene;
   /** 写入 Scene 根并由后代 Composite 继承的 Theme */
@@ -154,9 +156,9 @@ export type LayoutProps = ScopeStyleProps & {
   handlers?: HydrationHandlers;
   /** retained 或 static processing 模式 */
   runtime?: LayoutRuntimeOptions;
-  /** SVG 或 Canvas CSS 宽度 */
+  /** SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 */
   width?: number | string;
-  /** SVG 或 Canvas CSS 高度 */
+  /** SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版 */
   height?: number | string;
   /** 显式视框 */
   viewBox?: IRViewBox;
@@ -336,17 +338,7 @@ export const Layout: FC<LayoutProps> = props => {
     artifacts,
     onArtifacts,
     onCompileResult,
-    color,
-    stroke,
-    fill,
-    strokeWidth,
-    opacity,
-    fillOpacity,
-    strokeOpacity,
-    nodeDefault,
-    pathDefault,
-    labelDefault,
-    arrowDefault,
+    rootScope,
   } = props;
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const stableShapes = canonicalizeDefinitionArray(shapes);
@@ -370,37 +362,10 @@ export const Layout: FC<LayoutProps> = props => {
   );
   const renderer = rendererProp ?? contextRenderer ?? 'svg';
   const ambientTheme = useTheme();
-  const scopeStyle = useMemo<ScopeStyleProps>(
-    () => ({
-      color,
-      stroke,
-      fill,
-      strokeWidth,
-      opacity,
-      fillOpacity,
-      strokeOpacity,
-      nodeDefault,
-      pathDefault,
-      labelDefault,
-      arrowDefault,
-    }),
-    [
-      color,
-      stroke,
-      fill,
-      strokeWidth,
-      opacity,
-      fillOpacity,
-      strokeOpacity,
-      nodeDefault,
-      pathDefault,
-      labelDefault,
-      arrowDefault,
-    ],
-  );
+  const scopeStyle = useMemo(() => rootScope ?? {}, [rootScope]);
   const hasScopeStyle = Object.keys(pickScopeStyle(scopeStyle)).length > 0;
   if (process.env.NODE_ENV !== 'production' && irFromProp !== undefined && hasScopeStyle) {
-    warnOnce('[retikz] <Layout>：同时提供 `ir` 与级联样式 props 时，样式 props 被忽略——`ir` 已是完整 IR');
+    warnOnce('[retikz] <Layout>：同时提供 `ir` 与 `rootScope` 时，`rootScope` 被忽略，`ir` 已是完整 IR');
   }
 
   const reactInput = useMemo(() => {

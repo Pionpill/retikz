@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MarkOperationSchema, PointMarkSchema } from '../../src/schemas';
+import { CustomPositionAdjustmentSchema, MarkOperationSchema, PointMarkSchema } from '../../src/schemas';
 
 const point = {
   type: 'point',
@@ -15,6 +15,33 @@ describe('Position Adjustment schema', () => {
     ];
     const parsed = PointMarkSchema.parse({ ...point, placement: { adjustments: operations } });
     expect(JSON.parse(JSON.stringify(parsed.placement?.adjustments))).toEqual(operations);
+  });
+
+  it('accepts uniform and normal jitter distributions as JSON-safe values', () => {
+    const operations = [
+      { kind: 'jitter', role: 'x', distribution: { kind: 'uniform' } },
+      { kind: 'jitter', role: 'x', distribution: { kind: 'normal' } },
+      { kind: 'jitter', role: 'x', distribution: { kind: 'normal', sigma: 0.75 } },
+    ];
+    const parsed = PointMarkSchema.parse({ ...point, placement: { adjustments: operations } });
+
+    expect(JSON.parse(JSON.stringify(parsed.placement?.adjustments))).toEqual(operations);
+  });
+
+  it('rejects unknown distribution fields, kinds, and invalid normal sigma', () => {
+    const invalidOperations = [
+      { kind: 'jitter', distribution: { kind: 'uniform', sigma: 0.5 } },
+      { kind: 'jitter', distribution: { kind: 'normal', extra: true } },
+      { kind: 'jitter', distribution: { kind: 'exponential' } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: 0 } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: -1 } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: Number.NaN } },
+      { kind: 'jitter', distribution: { kind: 'normal', sigma: Number.POSITIVE_INFINITY } },
+    ];
+
+    for (const operation of invalidOperations) {
+      expect(() => PointMarkSchema.parse({ ...point, placement: { adjustments: [operation] } })).toThrow();
+    }
   });
 
   it('rejects invalid ratio and extra built-in fields', () => {
@@ -44,6 +71,16 @@ describe('Position Adjustment schema', () => {
         placement: { adjustments: [{ kind: 'screen-nudge', callback: () => 1 }] },
       }),
     ).toThrow();
+  });
+
+  it('reports a custom non-JSON leaf through the native Zod catchall path', () => {
+    const result = CustomPositionAdjustmentSchema.safeParse({
+      kind: 'screen-nudge',
+      payload: { nested: [0, { bad: BigInt(1) }] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 
   it('does not add placement to unsupported built-in marks', () => {

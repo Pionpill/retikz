@@ -7,8 +7,8 @@ import { Layout, Node, Text } from '@retikz/react';
  * @description 按 JSX 顺序排成多行：字符串子项按 '\n' 拆纯样式行，<Text> 一个就是一行带覆盖样式。
  */
 const Demo: FC = () => (
-  <Layout width={320} height={140}>
-    <Node id="mix" position={[0, 0]} align="start">
+  <Layout>
+    <Node id="mix" position={[0, 0]} layout={{ align: 'start' }}>
       {'before\nplain1'}
       <Text fill="red" font={{ weight: 'bold' }}>
         RED + BOLD

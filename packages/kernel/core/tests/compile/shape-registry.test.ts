@@ -406,7 +406,13 @@ describe('Shape registry — interaction', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', shape: 'hexagon', position: [0, 0], margin: 10 },
+        {
+          type: 'node',
+          id: 'A',
+          shape: 'hexagon',
+          position: [0, 0],
+          layout: { margin: 10 },
+        },
         {
           type: 'path',
           children: [

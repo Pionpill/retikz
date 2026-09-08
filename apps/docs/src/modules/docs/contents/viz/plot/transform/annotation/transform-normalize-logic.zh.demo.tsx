@@ -4,16 +4,13 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** normalize 的分组求和、零和保护与逐行占比写回 */
 const Demo: FC = () => (
-  <Layout width={750} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-305, 20]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>输入明细行</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -23,12 +20,9 @@ const Demo: FC = () => (
     <Node
       id="group"
       position={[-185, 20]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>构造分组键</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -38,12 +32,9 @@ const Demo: FC = () => (
     <Node
       id="sum"
       position={[-35, 20]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>计算组内总和</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -53,12 +44,9 @@ const Demo: FC = () => (
     <Node
       id="negative"
       position={[-35, -65]}
-      stroke="red"
-      fill="red"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>发现有限负值</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -68,12 +56,9 @@ const Demo: FC = () => (
     <Node
       id="zero"
       position={[125, -65]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>零和保护</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -83,12 +68,9 @@ const Demo: FC = () => (
     <Node
       id="share"
       position={[125, 20]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>逐行计算占比</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -98,12 +80,9 @@ const Demo: FC = () => (
     <Node
       id="config"
       position={[125, 105]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>输出配置</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -113,12 +92,9 @@ const Demo: FC = () => (
     <Node
       id="output"
       position={[285, 20]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>写回占比字段</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -130,9 +106,9 @@ const Demo: FC = () => (
     <Draw way={['group', 'sum']} arrow="->" />
     <Draw way={['sum', 'share']} arrow="->" />
     <Draw way={['share', 'output']} arrow="->" />
-    <Draw way={['sum', 'negative']} arrow="->" stroke="red" />
-    <Draw way={['zero', 'share']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['config', 'share']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['sum', 'negative']} arrow="->" style={{ stroke: 'red' }} />
+    <Draw way={['zero', 'share']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['config', 'share']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

@@ -60,7 +60,8 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
 };
 
 /** 读取 Node.minimumSize；它等于逐节点半径乘以 √2 */
-const sizeOf = (node: IRNode): number | undefined => (node as { minimumSize?: number }).minimumSize;
+const sizeOf = (node: IRNode): number | undefined =>
+  typeof node.layout?.minimumSize === 'number' ? node.layout.minimumSize : undefined;
 const radiusOf = (node: IRNode): number | undefined => {
   const ms = sizeOf(node);
   return ms === undefined ? undefined : ms / Math.SQRT2;

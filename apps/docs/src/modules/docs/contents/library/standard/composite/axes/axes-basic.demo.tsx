@@ -4,7 +4,7 @@ import { Layout } from '@retikz/react';
 import { Axes } from '@retikz/standard-react';
 
 const Demo: FC = () => (
-  <Layout width={280} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Axes
       origin={{ position: [140, 90], label: { text: '0', style: { font: { size: 10 }, textColor: 'gray' } } }}
       x={{

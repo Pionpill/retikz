@@ -25,6 +25,8 @@ import {
 } from '@retikz/render/hydration';
 import { useEffect, useReducer, useRef } from 'react';
 
+import { computeDisplaySize } from '../display-size';
+
 /** 按 href 缓存的图片加载态（image paint server 用；跨 CanvasHost 实例共享去重） */
 type ImageEntry = { img: HTMLImageElement; loaded: boolean; failed: boolean; waiters: Set<() => void> };
 const imageCache = new Map<string, ImageEntry>();
@@ -98,15 +100,6 @@ const devicePixelRatio = (): number => {
   return typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0 ? ratio : 1;
 };
 
-const displayStyle = (
-  width: number | string | undefined,
-  height: number | string | undefined,
-  style: CSSProperties | undefined,
-): CSSProperties | undefined => {
-  if (width === undefined && height === undefined) return style;
-  return { width, height, ...style };
-};
-
 const canvasFontFamily = (canvas: HTMLCanvasElement): string | undefined => {
   if (typeof getComputedStyle === 'undefined') return undefined;
   const fontFamily = getComputedStyle(canvas).fontFamily.trim();
@@ -153,10 +146,14 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
   } = props;
   const scene = frame.primary;
   const initialRatio = devicePixelRatio();
-  const hasInitialNominalSize =
-    typeof width === 'number' && Number.isFinite(width) && typeof height === 'number' && Number.isFinite(height);
-  const initialBitmapWidth = hasInitialNominalSize ? width : scene.layout.width;
-  const initialBitmapHeight = hasInitialNominalSize ? height : scene.layout.height;
+  const displaySize = computeDisplaySize(scene.layout, width, height);
+  const bitmapSize = computeDisplaySize(
+    scene.layout,
+    typeof width === 'number' ? width : undefined,
+    typeof height === 'number' ? height : undefined,
+  );
+  const initialBitmapWidth = Number(bitmapSize.width);
+  const initialBitmapHeight = Number(bitmapSize.height);
   const ref = useRef<HTMLCanvasElement>(null);
   // rAF 时钟句柄：render effect 写、hydration effect 的 context.animation 读 live，update 后自动跟随
   const clockRef = useRef<AnimationControls | null>(null);
@@ -183,17 +180,14 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
     const canvas = ref.current;
     if (!canvas) return;
     const ratio = devicePixelRatio();
-    // 位图按「名义显示尺寸」width/height 开（两者均为有限数值时），renderToCanvas 再把 Scene 内容 meet-fit 进去——
-    // 完全镜像 SVG：`<svg width height viewBox=scene.layout preserveAspectRatio=meet>`。二者 intrinsic 宽高比一致，
-    // 故 CSS `height:auto` / `maxWidth` 等响应式写法下 canvas 与 svg 显示尺寸严格一致（否则位图取内容比时，
-    // height:auto 会让 canvas 跟随内容比、与 svg 的名义比不符而偏大/偏小）。还顺带消除名义盒 >> 内容时的上采样模糊。
-    // 未给数值尺寸时回退内容边界——此时 svg 也无 width/height attr、intrinsic 取 viewBox 比，仍然对齐。
-    const hasNominalSize =
-      typeof width === 'number' && Number.isFinite(width) && typeof height === 'number' && Number.isFinite(height);
-    const bitmapWidth = hasNominalSize ? width : scene.layout.width;
-    const bitmapHeight = hasNominalSize ? height : scene.layout.height;
-    canvas.width = Math.max(1, Math.round(bitmapWidth * ratio));
-    canvas.height = Math.max(1, Math.round(bitmapHeight * ratio));
+    // CSS 尺寸与设备像素分离；单轴数值尺寸按内容比例补齐
+    const bitmapSize = computeDisplaySize(
+      scene.layout,
+      typeof width === 'number' ? width : undefined,
+      typeof height === 'number' ? height : undefined,
+    );
+    canvas.width = Math.max(1, Math.round(Number(bitmapSize.width) * ratio));
+    canvas.height = Math.max(1, Math.round(Number(bitmapSize.height) * ratio));
     const baseOptions = {
       devicePixelRatio: ratio,
       defaultFontFamily: canvasFontFamily(canvas),
@@ -326,7 +320,7 @@ export const CanvasHost: FC<CanvasHostProps> = props => {
       width={Math.max(1, Math.round(initialBitmapWidth * initialRatio))}
       height={Math.max(1, Math.round(initialBitmapHeight * initialRatio))}
       className={className}
-      style={{ objectFit: 'contain', ...displayStyle(width, height, style) }}
+      style={{ objectFit: 'contain', ...displaySize, ...style }}
     />
   );
 };

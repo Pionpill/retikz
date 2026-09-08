@@ -34,15 +34,15 @@ describe('Flow Diagram documentation', () => {
       expect(basic).not.toContain('layout-group');
       expect(basic).toContain(
         lang === 'zh'
-          ? '`flowTheme` 让 Flow 根为全部同类对象提供统一默认样式'
-          : '`flowTheme` supplies one shared default style for each Flow object category at the root',
+          ? '`flowDefaults` 让 Flow 根为全部同类对象提供统一默认样式'
+          : '`flowDefaults` supplies one shared default style for each Flow object category at the root',
       );
       expect(basic).toContain('relation.style');
     },
   );
 
   it.each(['zh', 'en'] as const)('%s migrates the IR-centric figure to automatic Flow layout', lang => {
-    const demo = readContent(`src/modules/docs/contents/kernel/introduction/ir-centric.${lang}.demo.tsx`);
+    const demo = readContent(`src/modules/docs/contents/kernel/components/introduction/ir-centric.${lang}.demo.tsx`);
 
     expect(demo).toContain('FlowDiagram');
     expect(demo).toContain('FlowEntity');

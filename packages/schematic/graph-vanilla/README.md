@@ -46,7 +46,7 @@ const children = [
 const adapters = createGraphVanillaAdapters();
 ```
 
-`graph()` accepts the complete Core Scope authoring surface directly. Use `theme` for Core Theme overrides and `graphTheme` for Graph-local Entity and Relation rules. It does not create a panel Scope or a Scene host.
+`graph()` accepts the complete Core Scope authoring surface directly. Use `theme` for Core Theme overrides, `graphDefaults` for sparse descendant defaults, and `graphRules` for Graph-local Entity and Relation rules. It does not create a panel Scope or a Scene host.
 
 `entity()` and `relation()` can be used anywhere a Vanilla `InputChild` is accepted. Their authored `id` is optional; the first builder argument is only embed traversal identity and is never copied into Source or Core identity. Relation endpoints use Core `NodeTarget`, so `{ id, anchor, offset, boundary }` remains available without a Graph parent.
 

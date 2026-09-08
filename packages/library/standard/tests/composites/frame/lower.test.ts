@@ -75,9 +75,9 @@ describe('Frame layout compile', () => {
     const result = compileFrameScene({
       ...fullScopeProps,
       id: 'frame-root',
-      stroke: '#0f172a',
       border: { style: { stroke: '#0284c7', strokeWidth: 2, fill: '#e0f2fe' }, cornerRadius: 4 },
       children: [{ ...body, id: 'body' }],
+      style: { ...fullScopeProps.style, stroke: '#0f172a' },
     });
     const root = groupsOf(result.scene.primitives).find(group => group.id === 'frame-root');
     const border = pathsOf(root?.children ?? [])[0];
@@ -93,7 +93,12 @@ describe('Frame layout compile', () => {
     const result = compileFrameScene(
       {
         gap: 5,
-        title: { id: 'title', text: 'A long title', padding: 3, scale: 1.2 },
+        title: {
+          id: 'title',
+          text: 'A long title',
+          scale: 1.2,
+          layout: { padding: 3 },
+        },
         description: { id: 'description', text: 'Description' },
         children: [{ ...body, id: 'body' }],
       },
@@ -146,10 +151,8 @@ describe('Frame layout compile', () => {
         id: 'custom-title',
         text: 'Contract',
         shape: 'circle',
-        stroke: '#334155',
-        fill: '#f8fafc',
-        padding: 5,
-        font: { family: 'serif' },
+        style: { stroke: '#334155', fill: '#f8fafc', font: { family: 'serif' } },
+        layout: { padding: 5 },
       },
       children: [body],
     });

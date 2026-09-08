@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../../src/contract';
 import type { IRScene } from '../../../src/schemas';
@@ -176,12 +176,12 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          strokeWidth: 4,
           marks: arrowMarks('->', { shape: 'normal' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { strokeWidth: 4 },
         },
       ],
     };
@@ -237,13 +237,13 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           marks: arrowMarks('<->'),
           label: { text: 'gap', sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };
@@ -270,7 +270,6 @@ describe('compile path: arrow 箭头', () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           marks: arrowMarks('<->'),
           label: [
             { text: 'start', position: 0, sloped: true },
@@ -280,6 +279,7 @@ describe('compile path: arrow 箭头', () => {
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };

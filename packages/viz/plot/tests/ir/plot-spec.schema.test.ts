@@ -182,7 +182,7 @@ describe('PlotSchema (contract)', () => {
     expect(
       PlotSchema.safeParse({
         ...baseLine,
-        plotTheme: { labelText: { textColor: '#111111', font: { size: 14 } } },
+        plotDefaults: { labelText: { textColor: '#111111', font: { size: 14 } } },
       }).success,
     ).toBe(false);
   });

@@ -16,7 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const labelSide = values[RELATION_PATH_CONTROL_IDS.labelSide];
 
   return (
-    <Plot data={pathExtremeRelations} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={pathExtremeRelations} width={620} height={320}>
       <PathMark
         x="x"
         y="y"

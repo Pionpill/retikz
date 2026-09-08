@@ -64,12 +64,11 @@ const resolvedAxis = (
 
 const pathForVisualBounds = (node: ZodInfer<typeof ProbeLeafSchema>): IRChild => ({
   type: 'path',
-  stroke: 'currentColor',
-  strokeWidth: 1,
   children: [
     { type: 'step', kind: 'move', to: [node.visualX, node.visualY] },
     { type: 'step', kind: 'line', to: [node.visualX + node.visualWidth, node.visualY + node.visualHeight] },
   ],
+  style: { stroke: 'currentColor', strokeWidth: 1 },
 });
 
 export const createProbeLeaf = (

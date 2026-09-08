@@ -6,7 +6,7 @@ import { TablePresentationFlow } from './table-presentation-flow';
 
 /** 英文 Presentation 流程图文本 */
 const LABELS = {
-  style: { title: 'preset < user tokens', detail: 'appearance baseline' },
+  style: { title: 'preset < Source defaults', detail: 'appearance baseline' },
   cell: { title: 'Cell configuration', detail: 'formatter · presentation · appearance' },
   encoding: { title: 'visual encodings', detail: 'raw-value color channels' },
   rules: { title: 'ordered rules', detail: 'final matching override' },

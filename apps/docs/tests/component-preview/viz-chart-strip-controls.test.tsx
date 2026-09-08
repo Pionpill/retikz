@@ -94,7 +94,7 @@ describe('Strip Chart controls', () => {
     }
   });
 
-  it('中英文 controls 保持相同结构并覆盖离散角色、scale、坐标、宽度、种子和点尺寸', () => {
+  it('中英文 controls 保持相同结构并覆盖离散角色、scale、坐标、宽度、分布、种子和点尺寸', () => {
     const expectedIds = Object.values(STRIP_BASIC_CONTROL_IDS);
     for (const contract of [zhContract, enContract]) {
       expect(getPreviewControlFields(contract.controls).map(control => control.id)).toEqual(expectedIds);
@@ -103,6 +103,8 @@ describe('Strip Chart controls', () => {
         [STRIP_BASIC_CONTROL_IDS.discreteScale]: 'point',
         [STRIP_BASIC_CONTROL_IDS.coordinateSystem]: 'cartesian2D',
         [STRIP_BASIC_CONTROL_IDS.jitterSpan]: 0.3,
+        [STRIP_BASIC_CONTROL_IDS.distribution]: 'uniform',
+        [STRIP_BASIC_CONTROL_IDS.normalSigma]: 0.5,
         [STRIP_BASIC_CONTROL_IDS.seed]: 0,
         [STRIP_BASIC_CONTROL_IDS.pointSize]: 5,
       });
@@ -113,6 +115,28 @@ describe('Strip Chart controls', () => {
         'StripProperties.jitter',
         'StripProperties.size',
       ]);
+    }
+  });
+
+  it('normal 分布下显示 sigma 并改变 Strip 的确定性位置', () => {
+    for (const [Demo, contract] of [
+      [ZhDemo, zhContract],
+      [EnDemo, enContract],
+    ] as const) {
+      const canonical = contract.canonicalValues as PreviewControlValues;
+      const normalValues = {
+        ...canonical,
+        [STRIP_BASIC_CONTROL_IDS.distribution]: 'normal',
+        [STRIP_BASIC_CONTROL_IDS.normalSigma]: 1,
+      };
+      const uniform = renderDemo(Demo, canonical, canonical);
+      const normal = renderDemo(Demo, canonical, normalValues);
+
+      expect(getPreviewControlFields(contract.controls).map(control => control.id)).toContain(
+        STRIP_BASIC_CONTROL_IDS.normalSigma,
+      );
+      expect(normal).not.toBe(uniform);
+      expect(normal).not.toMatch(/NaN|Infinity/);
     }
   });
 

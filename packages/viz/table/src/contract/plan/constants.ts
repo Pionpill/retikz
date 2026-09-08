@@ -2,10 +2,10 @@
 export const TableCellPlanSourceKind = {
   /** 内置默认值 */
   Default: 'default',
+  /** 正式 Source defaults 来源 */
+  Defaults: 'defaults',
   /** Structure 显式 Cell 值 */
   Structure: 'structure',
-  /** Resolved style token */
-  StyleToken: 'styleToken',
   /** Ordered visual encoding */
   Encoding: 'encoding',
   /** 按声明顺序应用的 root rule */
@@ -19,147 +19,147 @@ export const TableCellAppearanceTracePath = {
   /** Cell 背景填充不透明度 */
   BackgroundFillOpacity: '/background/fillOpacity',
   /** Cell 内容主颜色 */
-  ContentColor: '/content/color',
+  ContentColor: '/content/style/color',
   /** Cell 内容填充 */
-  ContentFill: '/content/fill',
+  ContentFill: '/content/style/fill',
   /** Cell 内容填充不透明度 */
-  ContentFillOpacity: '/content/fillOpacity',
+  ContentFillOpacity: '/content/style/fillOpacity',
   /** Cell 内容描边 */
-  ContentStroke: '/content/stroke',
+  ContentStroke: '/content/style/stroke',
   /** Cell 内容描边宽度 */
-  ContentStrokeWidth: '/content/strokeWidth',
+  ContentStrokeWidth: '/content/style/strokeWidth',
   /** Cell 内容描边不透明度 */
-  ContentStrokeOpacity: '/content/strokeOpacity',
+  ContentStrokeOpacity: '/content/style/strokeOpacity',
   /** Cell 内容整体不透明度 */
-  ContentOpacity: '/content/opacity',
+  ContentOpacity: '/content/style/opacity',
   /** Cell 内容样式重置配置 */
-  ContentResetStyle: '/content/resetStyle',
+  ContentResetStyle: '/content/defaults/reset',
   /** Node 默认主颜色 */
-  ContentNodeDefaultColor: '/content/nodeDefault/color',
+  ContentNodeDefaultColor: '/content/defaults/node/style/color',
   /** Node 默认填充 */
-  ContentNodeDefaultFill: '/content/nodeDefault/fill',
+  ContentNodeDefaultFill: '/content/defaults/node/style/fill',
   /** Node 默认填充不透明度 */
-  ContentNodeDefaultFillOpacity: '/content/nodeDefault/fillOpacity',
+  ContentNodeDefaultFillOpacity: '/content/defaults/node/style/fillOpacity',
   /** Node 默认描边 */
-  ContentNodeDefaultStroke: '/content/nodeDefault/stroke',
+  ContentNodeDefaultStroke: '/content/defaults/node/style/stroke',
   /** Node 默认描边宽度 */
-  ContentNodeDefaultStrokeWidth: '/content/nodeDefault/strokeWidth',
+  ContentNodeDefaultStrokeWidth: '/content/defaults/node/style/strokeWidth',
   /** Node 默认描边不透明度 */
-  ContentNodeDefaultStrokeOpacity: '/content/nodeDefault/strokeOpacity',
+  ContentNodeDefaultStrokeOpacity: '/content/defaults/node/style/strokeOpacity',
   /** Node 默认整体不透明度 */
-  ContentNodeDefaultOpacity: '/content/nodeDefault/opacity',
+  ContentNodeDefaultOpacity: '/content/defaults/node/style/opacity',
   /** Node 默认阴影 */
-  ContentNodeDefaultShadow: '/content/nodeDefault/shadow',
+  ContentNodeDefaultShadow: '/content/defaults/node/style/shadow',
   /** Node 默认混合模式 */
-  ContentNodeDefaultBlendMode: '/content/nodeDefault/blendMode',
+  ContentNodeDefaultBlendMode: '/content/defaults/node/style/blendMode',
   /** Node 默认形状 */
-  ContentNodeDefaultShape: '/content/nodeDefault/shape',
+  ContentNodeDefaultShape: '/content/defaults/node/shape',
   /** Node 默认边界 */
-  ContentNodeDefaultBoundary: '/content/nodeDefault/boundary',
+  ContentNodeDefaultBoundary: '/content/defaults/node/boundary',
   /** Node 默认旋转角度 */
-  ContentNodeDefaultRotate: '/content/nodeDefault/rotate',
+  ContentNodeDefaultRotate: '/content/defaults/node/rotate',
   /** Node 默认对齐方式 */
-  ContentNodeDefaultAlign: '/content/nodeDefault/align',
+  ContentNodeDefaultAlign: '/content/defaults/node/layout/align',
   /** Node 默认行高 */
-  ContentNodeDefaultLineHeight: '/content/nodeDefault/lineHeight',
+  ContentNodeDefaultLineHeight: '/content/defaults/node/layout/lineHeight',
   /** Node 默认文本最大宽度 */
-  ContentNodeDefaultMaxTextWidth: '/content/nodeDefault/maxTextWidth',
+  ContentNodeDefaultMaxTextWidth: '/content/defaults/node/layout/maxTextWidth',
   /** Node 默认虚线开关 */
-  ContentNodeDefaultDashed: '/content/nodeDefault/dashed',
+  ContentNodeDefaultDashed: '/content/defaults/node/style/dashed',
   /** Node 默认点线开关 */
-  ContentNodeDefaultDotted: '/content/nodeDefault/dotted',
+  ContentNodeDefaultDotted: '/content/defaults/node/style/dotted',
   /** Node 默认虚线图案 */
-  ContentNodeDefaultDashPattern: '/content/nodeDefault/dashPattern',
+  ContentNodeDefaultDashPattern: '/content/defaults/node/style/dashPattern',
   /** Node 默认虚线偏移 */
-  ContentNodeDefaultDashOffset: '/content/nodeDefault/dashOffset',
+  ContentNodeDefaultDashOffset: '/content/defaults/node/style/dashOffset',
   /** Node 默认圆角半径 */
-  ContentNodeDefaultCornerRadius: '/content/nodeDefault/cornerRadius',
+  ContentNodeDefaultCornerRadius: '/content/defaults/node/cornerRadius',
   /** Node 默认最小尺寸 */
-  ContentNodeDefaultMinimumSize: '/content/nodeDefault/minimumSize',
+  ContentNodeDefaultMinimumSize: '/content/defaults/node/layout/minimumSize',
   /** Node 默认缩放 */
-  ContentNodeDefaultScale: '/content/nodeDefault/scale',
+  ContentNodeDefaultScale: '/content/defaults/node/scale',
   /** Node 默认文本颜色 */
-  ContentNodeDefaultTextColor: '/content/nodeDefault/textColor',
+  ContentNodeDefaultTextColor: '/content/defaults/node/style/textColor',
   /** Node 默认内边距 */
-  ContentNodeDefaultPadding: '/content/nodeDefault/padding',
+  ContentNodeDefaultPadding: '/content/defaults/node/layout/padding',
   /** Node 默认外边距 */
-  ContentNodeDefaultMargin: '/content/nodeDefault/margin',
+  ContentNodeDefaultMargin: '/content/defaults/node/layout/margin',
   /** Node 默认字体族 */
-  ContentNodeDefaultFontFamily: '/content/nodeDefault/font/family',
+  ContentNodeDefaultFontFamily: '/content/defaults/node/style/font/family',
   /** Node 默认字体大小 */
-  ContentNodeDefaultFontSize: '/content/nodeDefault/font/size',
+  ContentNodeDefaultFontSize: '/content/defaults/node/style/font/size',
   /** Node 默认字体粗细 */
-  ContentNodeDefaultFontWeight: '/content/nodeDefault/font/weight',
+  ContentNodeDefaultFontWeight: '/content/defaults/node/style/font/weight',
   /** Node 默认字体样式 */
-  ContentNodeDefaultFontStyle: '/content/nodeDefault/font/style',
+  ContentNodeDefaultFontStyle: '/content/defaults/node/style/font/style',
   /** Path 默认主颜色 */
-  ContentPathDefaultColor: '/content/pathDefault/color',
+  ContentPathDefaultColor: '/content/defaults/path/style/color',
   /** Path 默认填充 */
-  ContentPathDefaultFill: '/content/pathDefault/fill',
+  ContentPathDefaultFill: '/content/defaults/path/style/fill',
   /** Path 默认填充不透明度 */
-  ContentPathDefaultFillOpacity: '/content/pathDefault/fillOpacity',
+  ContentPathDefaultFillOpacity: '/content/defaults/path/style/fillOpacity',
   /** Path 默认描边 */
-  ContentPathDefaultStroke: '/content/pathDefault/stroke',
+  ContentPathDefaultStroke: '/content/defaults/path/style/stroke',
   /** Path 默认描边宽度 */
-  ContentPathDefaultStrokeWidth: '/content/pathDefault/strokeWidth',
+  ContentPathDefaultStrokeWidth: '/content/defaults/path/style/strokeWidth',
   /** Path 默认描边不透明度 */
-  ContentPathDefaultStrokeOpacity: '/content/pathDefault/strokeOpacity',
+  ContentPathDefaultStrokeOpacity: '/content/defaults/path/style/strokeOpacity',
   /** Path 默认整体不透明度 */
-  ContentPathDefaultOpacity: '/content/pathDefault/opacity',
+  ContentPathDefaultOpacity: '/content/defaults/path/style/opacity',
   /** Path 默认阴影 */
-  ContentPathDefaultShadow: '/content/pathDefault/shadow',
+  ContentPathDefaultShadow: '/content/defaults/path/style/shadow',
   /** Path 默认混合模式 */
-  ContentPathDefaultBlendMode: '/content/pathDefault/blendMode',
+  ContentPathDefaultBlendMode: '/content/defaults/path/style/blendMode',
   /** Path 默认虚线图案 */
-  ContentPathDefaultDashPattern: '/content/pathDefault/dashPattern',
+  ContentPathDefaultDashPattern: '/content/defaults/path/style/dashPattern',
   /** Path 默认虚线偏移 */
-  ContentPathDefaultDashOffset: '/content/pathDefault/dashOffset',
+  ContentPathDefaultDashOffset: '/content/defaults/path/style/dashOffset',
   /** Path 默认填充规则 */
-  ContentPathDefaultFillRule: '/content/pathDefault/fillRule',
+  ContentPathDefaultFillRule: '/content/defaults/path/style/fillRule',
   /** Path 默认线帽 */
-  ContentPathDefaultLineCap: '/content/pathDefault/lineCap',
+  ContentPathDefaultLineCap: '/content/defaults/path/style/lineCap',
   /** Path 默认线连接 */
-  ContentPathDefaultLineJoin: '/content/pathDefault/lineJoin',
+  ContentPathDefaultLineJoin: '/content/defaults/path/style/lineJoin',
   /** Path 默认圆角 */
-  ContentPathDefaultRoundedCorners: '/content/pathDefault/roundedCorners',
+  ContentPathDefaultRoundedCorners: '/content/defaults/path/roundedCorners',
   /** Path 默认旋转角度 */
-  ContentPathDefaultRotate: '/content/pathDefault/rotate',
+  ContentPathDefaultRotate: '/content/defaults/path/rotate',
   /** Path 默认缩放 */
-  ContentPathDefaultScale: '/content/pathDefault/scale',
+  ContentPathDefaultScale: '/content/defaults/path/scale',
   /** Label 默认主颜色 */
-  ContentLabelDefaultColor: '/content/labelDefault/color',
+  ContentLabelDefaultColor: '/content/defaults/label/color',
   /** Label 默认文本颜色 */
-  ContentLabelDefaultTextColor: '/content/labelDefault/textColor',
+  ContentLabelDefaultTextColor: '/content/defaults/label/textColor',
   /** Label 默认整体不透明度 */
-  ContentLabelDefaultOpacity: '/content/labelDefault/opacity',
+  ContentLabelDefaultOpacity: '/content/defaults/label/opacity',
   /** Label 默认字体族 */
-  ContentLabelDefaultFontFamily: '/content/labelDefault/font/family',
+  ContentLabelDefaultFontFamily: '/content/defaults/label/font/family',
   /** Label 默认字体大小 */
-  ContentLabelDefaultFontSize: '/content/labelDefault/font/size',
+  ContentLabelDefaultFontSize: '/content/defaults/label/font/size',
   /** Label 默认字体粗细 */
-  ContentLabelDefaultFontWeight: '/content/labelDefault/font/weight',
+  ContentLabelDefaultFontWeight: '/content/defaults/label/font/weight',
   /** Label 默认字体样式 */
-  ContentLabelDefaultFontStyle: '/content/labelDefault/font/style',
+  ContentLabelDefaultFontStyle: '/content/defaults/label/font/style',
   /** Arrow 默认形状 */
-  ContentArrowDefaultShape: '/content/arrowDefault/shape',
+  ContentArrowDefaultShape: '/content/defaults/arrow/shape',
   /** Arrow 默认缩放 */
-  ContentArrowDefaultScale: '/content/arrowDefault/scale',
+  ContentArrowDefaultScale: '/content/defaults/arrow/scale',
   /** Arrow 默认长度 */
-  ContentArrowDefaultLength: '/content/arrowDefault/length',
+  ContentArrowDefaultLength: '/content/defaults/arrow/length',
   /** Arrow 默认宽度 */
-  ContentArrowDefaultWidth: '/content/arrowDefault/width',
+  ContentArrowDefaultWidth: '/content/defaults/arrow/width',
   /** Arrow 默认主颜色 */
-  ContentArrowDefaultColor: '/content/arrowDefault/color',
+  ContentArrowDefaultColor: '/content/defaults/arrow/color',
   /** Arrow 默认填充 */
-  ContentArrowDefaultFill: '/content/arrowDefault/fill',
+  ContentArrowDefaultFill: '/content/defaults/arrow/fill',
   /** Arrow 默认整体不透明度 */
-  ContentArrowDefaultOpacity: '/content/arrowDefault/opacity',
+  ContentArrowDefaultOpacity: '/content/defaults/arrow/opacity',
   /** Arrow 默认线宽 */
-  ContentArrowDefaultLineWidth: '/content/arrowDefault/lineWidth',
+  ContentArrowDefaultLineWidth: '/content/defaults/arrow/lineWidth',
   /** Arrow 默认起点配置 */
-  ContentArrowDefaultStart: '/content/arrowDefault/start',
+  ContentArrowDefaultStart: '/content/defaults/arrow/start',
   /** Arrow 默认终点配置 */
-  ContentArrowDefaultEnd: '/content/arrowDefault/end',
+  ContentArrowDefaultEnd: '/content/defaults/arrow/end',
   /** Cell 上侧边框 */
   BorderTop: '/borders/top',
   /** Cell 右侧边框 */

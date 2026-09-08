@@ -16,6 +16,7 @@ import { buildSvgFrameDocument } from '@retikz/render/svg';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { CanvasHost } from './canvas';
+import { computeDisplaySize } from './display-size';
 import { svgToReact } from './svg';
 
 /** Vanilla processing result 的 React 宿主属性 */
@@ -176,5 +177,6 @@ export const ProcessingResultHost: FC<ProcessingResultHostProps> = props => {
   }
 
   const svg = svgToReact(document as NonNullable<typeof document>) as ReactElement;
-  return cloneElement(svg, { width, height, className, style, ref: setRoot });
+  const size = computeDisplaySize(result.scene.layout, width, height);
+  return cloneElement(svg, { ...size, className, style, ref: setRoot });
 };

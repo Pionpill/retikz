@@ -26,6 +26,24 @@ description: 新增、移动、拆分或审查 Retikz 源码目录、文件、�
 
 通用可读性参考 [Google TypeScript](https://google.github.io/styleguide/tsguide.html#identifiers)、[Microsoft TypeScript](https://github.com/microsoft/TypeScript/wiki/Coding-guidelines#names)、[Airbnb JavaScript](https://github.com/airbnb/javascript#naming-conventions)、[Angular](https://angular.dev/style-guide) 与 [typescript-eslint](https://typescript-eslint.io/rules/naming-convention/)；具体动词、阶段和角色以本规范为准
 
+## Source IR 一级语义分组
+
+Source IR 需要收敛同类字段时使用下列固定一级属性名；只有存在对应语义时才建立分组，不创建空对象或通用包装层。
+
+| 属性名         | 固定语义                                                        | 边界                                                                                      |
+| -------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `style`        | 当前实例的直接视觉覆盖，如 paint、stroke、字体、透明度与效果    | 不承载继承 Theme、数据通道映射、布局策略或已解析 appearance                               |
+| `layout`       | 当前对象的尺寸、间距、排列与布局策略                            | `position`、`shape`、`coordinate`、显式路径等主要领域事实保持独立                         |
+| `theme`        | 可继承的视觉环境选择，经 definition 生成默认值                  | Core 环境只含 style / mode；显式领域默认用 `xxxDefaults`，条件规则独立，不另设 flat token |
+| `presentation` | title、subtitle、description、note、source 等外围内容与展示结构 | 不承载 drawing core、数据 encoding 或底层图元样式                                         |
+| `encoding`     | 数据字段、常量或派生值到视觉通道的映射                          | 直接实例样式进入 `style`，数据处理进入 `transform`                                        |
+| `defaults`     | 容器向后代提供的具名默认值通道                                  | 不与当前实例 `style` 混合，不使用 `default` / `defaultStyle` 等平行总分组名               |
+| `routing`      | 自动或半自动关系路由的策略与覆盖                                | 已确定的显式线路使用准确的 `route` 或路径结构；不得借用 `layout` 表达 relation routing    |
+
+`appearance` 只命名 resolve、manifest、inspection 等已确定的视觉结果；可持久化 Source 中的作者视觉覆盖统一使用 `style`。同一对象不得并存同义的 `style` / `appearance`、`layout` / `routing` 或其它别名分组。
+
+领域显式默认使用复数 `xxxDefaults`，规则使用 owner 的独立规则入口（如 `graphRules`）；裸 `defaults` 保留既有 Core 通道。不得用 `xxxTheme`、`xxxDefault` 或 `xxxDefaultStyle` 命名同义默认入口；Theme definition 的生成值与作者 defaults 复用 Source 片段，但保留各自来源和优先级。
+
 ## 函数命名规范
 
 函数名使用 camelCase 和完整语义词。语义准确优先于套模板；普通函数使用动宾结构，纯投影、表示转换和完整调用表达式可以使用下表中的稳定形式。
@@ -146,14 +164,15 @@ package-public / owner-visible 名称必须独立表达领域与角色；文件�
 
 1. 选定的 owner 是否匹配数据或行为，而不是当前 caller？
 2. 具名结构是否显式带有 `Context` / `Schema` / `Diagnostic` / `Options` 等真实角色后缀？
-3. 每个新增目录 / 文件名是否在分层表内，或存在更明确的领域名？
-4. Input / IR / Canonical / Definition 的命名是否匹配实际阶段与持久化边界？
-5. `parse`、Vanilla API `normalize` 与纵向领域 `resolve` 是否明确区分，且只有 resolver 产出 Canonical / Resolution？
-6. enum、provider collection、barrel、组件和 helper 是否符合规定形式？
-7. 函数名是否与创建、读取、查找、抛错、写 cache 和返回值行为一致，`validate` / `assert` 是否严格分离？
-8. 关系谓词是否区分 equal、match、contain、overlap，布尔变量是否使用 `is` / `has` / `can` / `should`？
-9. 变量、参数和属性是否以语义类别结尾，并补足来源、阶段、生命周期、身份或单位？
-10. 局部别名、泛化 helper、旧名或平行类型是否掩盖了 owner 问题？
+3. Source IR 一级语义分组是否使用固定属性名且符合对应边界？
+4. 每个新增目录 / 文件名是否在分层表内，或存在更明确的领域名？
+5. Input / IR / Canonical / Definition 的命名是否匹配实际阶段与持久化边界？
+6. `parse`、Vanilla API `normalize` 与纵向领域 `resolve` 是否明确区分，且只有 resolver 产出 Canonical / Resolution？
+7. enum、provider collection、barrel、组件和 helper 是否符合规定形式？
+8. 函数名是否与创建、读取、查找、抛错、写 cache 和返回值行为一致，`validate` / `assert` 是否严格分离？
+9. 关系谓词是否区分 equal、match、contain、overlap，布尔变量是否使用 `is` / `has` / `can` / `should`？
+10. 变量、参数和属性是否以语义类别结尾，并补足来源、阶段、生命周期、身份或单位？
+11. 局部别名、泛化 helper、旧名或平行类型是否掩盖了 owner 问题？
 
 ## 常见错误
 

@@ -32,7 +32,7 @@ const collectNodes = (layer: IRScope): Array<IRNode> => {
   return out;
 };
 
-const opacityOf = (node: IRNode): number | undefined => (node as { opacity?: number }).opacity;
+const opacityOf = (node: IRNode): number | undefined => node.style?.opacity;
 
 const pointSpec = (opacity: Record<string, unknown> | undefined): IRPlot =>
   PlotSchema.parse({
@@ -99,7 +99,7 @@ describe('opacity channel (contract)', () => {
       { x: 1, y: 1 },
     ];
     const layer = firstLayer(pointSpec({ kind: 'constant', value: 0.4 }), { d: data });
-    expect(layer.nodeDefault?.opacity).toBeCloseTo(0.4, 6);
+    expect(layer.defaults?.node?.style?.opacity).toBeCloseTo(0.4, 6);
     expect(collectNodes(layer).every(n => opacityOf(n) === undefined)).toBe(true);
   });
 
@@ -161,8 +161,6 @@ describe('opacity channel (contract)', () => {
       { x: 1, y: 1, p: 4, d: 8 },
     ];
     const nodes = collectNodes(firstLayer(spec, { d: data }));
-    expect(
-      nodes.every(n => opacityOf(n) !== undefined && (n as { minimumSize?: number }).minimumSize !== undefined),
-    ).toBe(true);
+    expect(nodes.every(n => opacityOf(n) !== undefined && n.layout?.minimumSize !== undefined)).toBe(true);
   });
 });

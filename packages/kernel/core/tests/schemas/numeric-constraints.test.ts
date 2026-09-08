@@ -4,30 +4,54 @@ import { CoordinateSchema, NodeSchema, PathSchema, ScopeSchema, TargetSchema } f
 
 describe('IR numeric constraints', () => {
   it('node/path/scope strokeWidth 拒绝非有限数和负数', () => {
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], strokeWidth: Infinity }).success).toBe(false);
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], strokeWidth: -1 }).success).toBe(false);
     expect(
-      PathSchema.safeParse({
-        type: 'path',
-        strokeWidth: NaN,
-        children: [
-          { type: 'step', kind: 'move', to: [0, 0] },
-          { type: 'step', kind: 'line', to: [1, 1] },
-        ],
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        style: { strokeWidth: Infinity },
+      }).success,
+    ).toBe(false);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        style: { strokeWidth: -1 },
       }).success,
     ).toBe(false);
     expect(
       PathSchema.safeParse({
         type: 'path',
-        strokeWidth: -1,
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [1, 1] },
         ],
+        style: { strokeWidth: NaN },
       }).success,
     ).toBe(false);
-    expect(ScopeSchema.safeParse({ type: 'scope', strokeWidth: Infinity, children: [] }).success).toBe(false);
-    expect(ScopeSchema.safeParse({ type: 'scope', strokeWidth: -1, children: [] }).success).toBe(false);
+    expect(
+      PathSchema.safeParse({
+        type: 'path',
+        children: [
+          { type: 'step', kind: 'move', to: [0, 0] },
+          { type: 'step', kind: 'line', to: [1, 1] },
+        ],
+        style: { strokeWidth: -1 },
+      }).success,
+    ).toBe(false);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { strokeWidth: Infinity },
+      }).success,
+    ).toBe(false);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { strokeWidth: -1 },
+      }).success,
+    ).toBe(false);
   });
 
   it('node rotate 拒绝非有限数', () => {
@@ -43,18 +67,31 @@ describe('IR numeric constraints', () => {
   });
 
   it('合法的零宽描边、有限旋转和相对坐标仍被接受', () => {
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], strokeWidth: 0, rotate: -45 }).success).toBe(true);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        rotate: -45,
+        style: { strokeWidth: 0 },
+      }).success,
+    ).toBe(true);
     expect(
       PathSchema.safeParse({
         type: 'path',
-        strokeWidth: 0,
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: { relative: [1, -1] } },
         ],
+        style: { strokeWidth: 0 },
       }).success,
     ).toBe(true);
-    expect(ScopeSchema.safeParse({ type: 'scope', strokeWidth: 0, children: [] }).success).toBe(true);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { strokeWidth: 0 },
+      }).success,
+    ).toBe(true);
   });
 
   it('bend step 的 bendAngle 限定开区间 (-180, 180)：±180 被拒、179 接受', () => {

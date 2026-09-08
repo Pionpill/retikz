@@ -123,13 +123,13 @@ const renderFlowNode = (node: FlowNode) => (
     key={node.id}
     id={node.id}
     position={node.position}
-    minimumSize={{ width: node.width, height: node.height ?? 44 }}
-    stroke={node.color}
-    fill={node.color}
-    fillOpacity={0.08}
     cornerRadius={4}
-    align="middle"
-    lineHeight={node.lineHeight ?? 15}
+    style={{ stroke: node.color, fill: node.color, fillOpacity: 0.08 }}
+    layout={{
+      minimumSize: { width: node.width, height: node.height ?? 44 },
+      align: 'middle',
+      lineHeight: node.lineHeight ?? 15,
+    }}
   >
     <Text font={{ size: 14, weight: 'bold' }}>{node.title}</Text>
     <Text fill="gray" font={{ size: 12 }}>
@@ -142,7 +142,7 @@ const renderFlowNode = (node: FlowNode) => (
 const Demo: FC = () => (
   <>
     <div className="hidden sm:block">
-      <Layout width={860} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {desktopNodes.map(renderFlowNode)}
         <Draw way={['relation-rows', 'relation-transform']} arrow="->" />
         <Draw way={['relation-transform', 'relation-targets']} arrow="->" />
@@ -154,7 +154,7 @@ const Demo: FC = () => (
     </div>
 
     <div className="sm:hidden">
-      <Layout width={360} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Layout>
         {mobileNodes.map(renderFlowNode)}
         <Draw way={['mobile-relation-rows', 'mobile-relation-targets']} arrow="->" />
         <Draw way={['mobile-relation-targets', 'mobile-relation-route']} arrow="->" />

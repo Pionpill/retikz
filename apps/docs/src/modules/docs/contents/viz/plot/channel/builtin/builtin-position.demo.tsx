@@ -24,7 +24,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     coordinate={{ type: 'cartesian2D' }}
     width={400}
     height={260}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x={values.xField} y={values.yField} size={8} fill="#2563eb" />
     <PlotAxis dimension="x" />

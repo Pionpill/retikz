@@ -4,7 +4,7 @@
 
 Graph, Group, Entity, and Relation are independent public semantic composites:
 
-- Graph is an optional thin shell over the complete Core Scope surface, adding local Graph Theme rules
+- Graph is an optional thin shell over the complete Core Scope surface, adding local `graphDefaults` and `graphRules`
 - Group is a nestable arbitrary-content boundary with a Standard Surface shell, structured caption, and Core Node boundary labels
 - Entity optionally stores identity together with Node semantics, text, and Core-compatible placement fields; without identity it lowers as drawable-only Core content
 - Relation stores Core NodeTarget endpoints, direction, relationship semantics, labels, and an optional route; without a route it lowers to a direct Core Path
@@ -50,13 +50,13 @@ import { createGraphDefinitions, defineGraphThemeStyle } from '@retikz/graph';
 const compact = defineGraphThemeStyle({
   name: 'compact',
   resolve: () => ({
-    entity: { tokens: { strokeWidth: 1.5 } },
+    defaults: { entity: { style: { strokeWidth: 1.5 } } },
   }),
 });
 
 const composites = createGraphDefinitions({ graphThemeStyles: [compact] });
 ```
 
-The resolver applies the default preset, sparse style tokens, default rules, custom style rules, Graph-local rules, and explicit Entity / Relation appearance in that order. Custom style rules append after defaults; omitting rules or returning `rules: []` does not clear the built-in rules.
+The resolver applies the Neutral defaults, sparse named-style defaults, built-in rules, named-style rules, Graph-local defaults and rules, and explicit Entity / Relation style in that order. Named-style rules append after built-in rules; omitting rules or returning `rules: []` does not clear the built-in rules.
 
 See the [Graph documentation](https://pionpill.github.io/retikz/schematic/graph) for components, Source schemas, and extension examples.

@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -171,13 +171,13 @@ describe('sugar 派发等价（手写 IR）', () => {
     const ir = scene([
       {
         type: 'path',
-        fill: '#eee',
         children: [
           { type: 'step', kind: 'move', to: [10, 0] }, // arcStart
           { type: 'step', kind: 'arc', startAngle: 0, endAngle: 90, radius: 10, center: [0, 0] },
           { type: 'step', kind: 'line', to: [0, 0] }, // → center
           { type: 'step', kind: 'cycle' },
         ],
+        style: { fill: '#eee' },
       },
     ]);
     // M arcStart, arc(center), L center, Z —— 干净闭合扇形（用 close 收口）

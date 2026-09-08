@@ -1,11 +1,17 @@
 import type { ResolvedTheme } from '@retikz/core';
 
-import type { TableThemeStyleTokenOverrides } from '../../schemas';
+import type { IRTableDefaults } from '../../schemas';
 
-/** 为完整 Core Theme 解析 Table-owned 稀疏 token 覆盖的运行时定义 */
+/** 当前 Core Theme 下由 Table style 生成的稀疏 Source defaults */
+export type TableThemeStyleSource = Readonly<{
+  /** 可选的 Table Source defaults 覆盖 */
+  defaults?: IRTableDefaults;
+}>;
+
+/** 为完整 Core Theme 解析 Table-owned 稀疏 defaults 的运行时定义 */
 export type TableThemeStyleDefinition = Readonly<{
   /** 与 Core effective style 同名的稳定名称 */
   name: string;
-  /** 解析相对默认 preset 且不含 Core categorical projection 的稀疏覆盖 */
-  resolve: (theme: ResolvedTheme) => TableThemeStyleTokenOverrides;
+  /** 从当前位置完整 Core Theme 解析 Table defaults 稀疏片段 */
+  resolve: (theme: ResolvedTheme) => TableThemeStyleSource;
 }>;

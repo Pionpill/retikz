@@ -130,8 +130,8 @@ describe('Graph Group shell composition', () => {
       resolve: () => {
         resolutionCount += 1;
         return {
-          group: {
-            tokens: {
+          defaults: {
+            group: {
               background: { fill: '#ede9fe' },
               border: { stroke: '#6d28d9', strokeWidth: 5 },
               cornerRadius: 20,

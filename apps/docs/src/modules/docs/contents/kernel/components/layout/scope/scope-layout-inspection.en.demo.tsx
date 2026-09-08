@@ -12,20 +12,20 @@ const SceneContents: FC = () => (
     <Scope transforms={[{ kind: 'translate', x: 20, y: 34 }]}>
       <InspectFlexLayout size={{ x: { kind: 'fixed', value: 220 }, y: { kind: 'fixed', value: 110 } }} padding={12}>
         <LayoutItem kind="flex" itemKey="enabled-a" grow={1}>
-          <Node position={[0, 0]} text="A1" fill="#dbeafe" stroke="#2563eb" />
+          <Node position={[0, 0]} text="A1" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
         </LayoutItem>
         <LayoutItem kind="flex" itemKey="enabled-b" grow={1}>
-          <Node position={[0, 0]} text="A2" fill="#dcfce7" stroke="#16a34a" />
+          <Node position={[0, 0]} text="A2" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
         </LayoutItem>
       </InspectFlexLayout>
     </Scope>
     <LayoutInspectScope request={false} transforms={[{ kind: 'translate', x: 280, y: 34 }]}>
       <InspectFlexLayout size={{ x: { kind: 'fixed', value: 220 }, y: { kind: 'fixed', value: 110 } }} padding={12}>
         <LayoutItem kind="flex" itemKey="blocked-a" grow={1}>
-          <Node position={[0, 0]} text="B1" fill="#dbeafe" stroke="#2563eb" />
+          <Node position={[0, 0]} text="B1" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
         </LayoutItem>
         <LayoutItem kind="flex" itemKey="blocked-b" grow={1}>
-          <Node position={[0, 0]} text="B2" fill="#dcfce7" stroke="#16a34a" />
+          <Node position={[0, 0]} text="B2" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
         </LayoutItem>
       </InspectFlexLayout>
     </LayoutInspectScope>
@@ -34,12 +34,7 @@ const SceneContents: FC = () => (
 
 /** Compare inherited whole-figure layout inspection with a Scope barrier */
 const Demo: FC = () => (
-  <LayoutInspectLayout
-    request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }}
-    width={520}
-    height={190}
-    viewBox={{ x: 0, y: 0, width: 520, height: 190 }}
-  >
+  <LayoutInspectLayout request={{ inspector: FLEX_LAYOUT_INSPECTOR_KEY, options: true }}>
     <SceneContents />
   </LayoutInspectLayout>
 );
@@ -48,7 +43,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={520} height={190} viewBox={{ x: 0, y: 0, width: 520, height: 190 }}>
+    <Layout>
       <SceneContents />
     </Layout>
   ),

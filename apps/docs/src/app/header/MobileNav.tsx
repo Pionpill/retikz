@@ -1,30 +1,25 @@
 import type { FC } from 'react';
 
 import { Menu } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useState } from 'react';
+import { useLocation } from 'react-router';
 
 import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { modules } from '@/modules/docs/data';
+import { resolveDocNavigationContext } from '@/modules/docs/layout';
 import { AppSidebar } from '@/modules/docs/layout';
+
+import { HeaderNavigation } from './HeaderNavigation';
 
 /**
  * 移动端汉堡按钮 + Sheet 抽屉
- * @description 抽屉内 SheetHeader（brand + 模块 ToggleGroup） + AppSidebar；挂在 Header 里位置在 `<Routes>` 外，moduleId 直接从 pathname 首段解析
+ * @description 首页与 About 页面展示 retikz 模块选择器和完整导航；模块文档展示当前 section 导航与 scoped Sidebar
  */
 export const MobileNav: FC = () => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
-
-  const moduleId = useMemo(() => {
-    const first = pathname.split('/').filter(Boolean)[0];
-    return modules.some(m => m.id === first) ? first : modules[0]?.id;
-  }, [pathname]);
+  const navigation = resolveDocNavigationContext(pathname);
+  const close = () => setOpen(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -38,28 +33,14 @@ export const MobileNav: FC = () => {
       >
         <Menu className="size-4" />
       </SheetTrigger>
-      <SheetContent side="left" className="w-80 p-0 flex flex-col gap-0">
-        <SheetHeader className="border-b px-4 py-3 shrink-0 gap-2">
-          <SheetTitle asChild>
-            <Link to="/" className="text-foreground hover:opacity-80 transition-opacity" aria-label="retikz home">
-              <span className="text-base font-semibold tracking-tight">retikz.doc</span>
-            </Link>
-          </SheetTitle>
-          <ToggleGroup
-            type="single"
-            value={moduleId}
-            onValueChange={value => {
-              if (value) navigate(`/${value}`);
-            }}
-          >
-            {modules.map(m => (
-              <ToggleGroupItem key={m.id} value={m.id} className="flex-1 text-xs">
-                {t(m.label)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+      <SheetContent side="left" className="flex w-80 flex-col gap-0 p-0">
+        <SheetHeader className="shrink-0 gap-2 border-b px-4 py-3">
+          <SheetTitle className="sr-only">Docs navigation</SheetTitle>
+          <HeaderNavigation navigation={navigation} mobile onNavigate={close} />
         </SheetHeader>
-        <AppSidebar className="flex-1 min-h-0 w-full shrink-0" moduleId={moduleId} onNavigate={() => setOpen(false)} />
+        {navigation.location && (
+          <AppSidebar className="min-h-0 w-full shrink-0 flex-1" location={navigation.location} onNavigate={close} />
+        )}
       </SheetContent>
     </Sheet>
   );

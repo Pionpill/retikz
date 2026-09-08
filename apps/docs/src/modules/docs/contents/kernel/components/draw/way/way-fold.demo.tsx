@@ -34,17 +34,17 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       : values.direction;
 
   return (
-    <Layout width={400} height={220} viewBox={{ x: -170, y: -110, width: 340, height: 220 }}>
-      <Node id="A" position={Start} stroke="gray" dashed>
+    <Layout viewBox={{ x: -170, y: -110, width: 340, height: 220 }}>
+      <Node id="A" position={Start} style={{ stroke: 'gray', dashed: true }}>
         a
       </Node>
-      <Node id="B" position={End} stroke="gray" dashed>
+      <Node id="B" position={End} style={{ stroke: 'gray', dashed: true }}>
         b
       </Node>
-      <Draw way={['A.center', 'B.center']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
-      <Draw way={['A.center', fold, 'B.center']} stroke="dodgerblue" strokeWidth={2} />
+      <Draw way={['A.center', 'B.center']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
+      <Draw way={['A.center', fold, 'B.center']} style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
       {corners.map((corner, index) => (
-        <Circle key={index} center={corner} radius={4} fill="white" stroke="gray" />
+        <Circle key={index} center={corner} radius={4} style={{ fill: 'white', stroke: 'gray' }} />
       ))}
     </Layout>
   );

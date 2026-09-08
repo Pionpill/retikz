@@ -1,5 +1,6 @@
-import type { IRChild, IRJsonObject } from '@retikz/core';
+import type { IRChild } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import type { IRTableCellAppearance } from '../../schemas';
@@ -19,7 +20,7 @@ export type CellPresentationInput = Readonly<{
 }>;
 
 /** Cell presentation provider 定义 */
-export type CellPresentationDefinition<TOptions extends IRJsonObject = IRJsonObject> = {
+export type CellPresentationDefinition<TOptions extends JsonObject = JsonObject> = {
   /** provider 注册名 */
   name: string;
   /** provider options 的精确运行时 schema */

@@ -1,12 +1,12 @@
-﻿import { describe, expect, it } from 'vitest';
-import { any, number, object, strictObject, string } from 'zod';
+import { describe, expect, it } from 'vitest';
+import { number, object, strictObject, string } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract';
-import { JsonObjectSchema, PathSchema } from '../../src/schemas';
+import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取首个非 close 的 path primitive（generator 产的折线 / 曲线主体） */
@@ -253,14 +253,17 @@ describe('Path generator 注册面 — 错误路径', () => {
     expect(() => compileToScene(ir, { pathGenerators: [customQuad] }).scene).toThrow(/customQuad/);
   });
 
-  it('params_non_json_rejected：params 含 function → 编译期被拒（双 parse 第二道）', () => {
-    const passthrough = definePathGenerator({
-      name: 'passthrough',
-      // 宽松 schema 放行任意值，逼 compile 用 JsonObjectSchema 第二道护栏拦
-      paramsSchema: any(),
-      generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
+  it('paramsSchema 的 transform 输出直接作为 generator callback 参数', () => {
+    let observed: unknown;
+    const transformed = definePathGenerator({
+      name: 'transformed',
+      paramsSchema: strictObject({ value: number() }).transform(() => ({ value: Number.NaN })),
+      generate: ({ from, to, params }) => {
+        observed = params.value;
+        return [{ kind: 'line', to: to ?? from }];
+      },
     });
-    const ir = {
+    const ir: IRScene = {
       version: 1,
       type: 'scene',
       children: [
@@ -268,13 +271,14 @@ describe('Path generator 注册面 — 错误路径', () => {
           type: 'path',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
-            // params 含 function：schema 层 / compile 层都应拒
-            { type: 'step', kind: 'generator', name: 'passthrough', params: { fn: () => 1 } },
+            { type: 'step', kind: 'generator', name: 'transformed', params: { value: 7 } },
           ],
         },
       ],
-    } as unknown as IRScene;
-    expect(() => compileToScene(ir, { pathGenerators: [passthrough] }).scene).toThrow();
+    };
+
+    expect(() => compileToScene(ir, { pathGenerators: [transformed] }).scene).not.toThrow();
+    expect(observed).toBeNaN();
   });
 
   it('custom_generator_params_error_contains_provider_and_ir_path', () => {
@@ -301,34 +305,6 @@ describe('Path generator 注册面 — 错误路径', () => {
     expect(() => compileToScene(ir, { pathGenerators: [strictGen] }).scene).toThrow(
       /children\[0\]\.path\.children\[1\]\.params/,
     );
-  });
-
-  it('any_schema_output_caught_at_compile：paramsSchema=z.any() 时 compile 对 parse 结果跑 JsonObjectSchema → 非 JSON 输出被第二道拦', () => {
-    // paramsSchema 是 z.any()（放行 function），单靠注册时自省无法证明 JSON-safe；
-    // 真正护栏在 compile：paramsSchema.parse(params) 后再 JsonObjectSchema.parse(parsed)。
-    const anyGen = definePathGenerator({
-      name: 'anyGen',
-      paramsSchema: any(),
-      generate: ({ from, to }) => [{ kind: 'line', to: to ?? from }],
-    });
-    const ir = {
-      version: 1,
-      type: 'scene',
-      children: [
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [0, 0] },
-            { type: 'step', kind: 'generator', name: 'anyGen', params: { fn: () => 2, ok: 1 } },
-          ],
-        },
-      ],
-    } as unknown as IRScene;
-    // z.any() 第一道放行 { fn }，但 compile 第二道 JsonObjectSchema.parse 必须拦下 function
-    expect(() => compileToScene(ir, { pathGenerators: [anyGen] }).scene).toThrow();
-    // 同时直接证明第二道护栏对 z.any() 放行后的对象有效（护栏逻辑可独立验证）
-    const passedByAny = any().parse({ fn: () => 2, ok: 1 });
-    expect(JsonObjectSchema.safeParse(passedByAny).success).toBe(false);
   });
 
   it('nested_target_param_unsupported：targetParams 指向嵌套路径不解析（仅顶层 key）', () => {
@@ -413,7 +389,6 @@ describe('Path generator 注册面 — 交互', () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             {
@@ -425,6 +400,7 @@ describe('Path generator 注册面 — 交互', () => {
               label: { text: 'generated', position: 0.5, sloped: true },
             },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };

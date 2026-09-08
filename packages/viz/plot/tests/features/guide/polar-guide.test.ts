@@ -62,7 +62,9 @@ const segmentsOfAxis = (axisLayer: IRScope): Array<[[number, number], [number, n
 const layersOf = (outer: IRScope): { children: Array<IRChild>; markIndex: number } => {
   const children = outer.children;
   const markIndex = children.findIndex(
-    child => isScope(child) && (child.nodeDefault?.shape !== undefined || child.pathDefault?.strokeWidth !== undefined),
+    child =>
+      isScope(child) &&
+      (child.defaults?.node?.shape !== undefined || child.defaults?.path?.style?.strokeWidth !== undefined),
   );
   return { children, markIndex };
 };
@@ -153,6 +155,24 @@ describe('lowerPlots polar guide — angular axis (contract)', () => {
     const labels = nodesOf(axisLayer);
     expect(labels).toHaveLength(4);
     expect(labels.map(n => n.text).sort()).toEqual(['A', 'B', 'C', 'D']);
+  });
+
+  it('keeps authored text layout when angular labels choose automatic alignment', () => {
+    const outer = expandOf(
+      polarSpec([{ type: 'axis', dimension: 'x', tickLabels: { lineHeight: 24, maxTextWidth: 80, layout: false } }], {
+        interpolation: 'polar',
+      }),
+      { d: ROWS },
+      opts,
+    );
+    const { children, markIndex } = layersOf(outer);
+    const axisLayer = children.slice(markIndex + 1).find(isScope) as IRScope;
+    const labels = nodesOf(axisLayer);
+    expect(labels).toHaveLength(4);
+    for (const label of labels) {
+      expect(label.layout).toMatchObject({ lineHeight: 24, maxTextWidth: 80 });
+      expect(label.layout?.align).toBeDefined();
+    }
   });
 
   it('angular_axis_labels_outside_arc', () => {
@@ -387,7 +407,7 @@ describe('lowerPlots polar guide — z-order (contract)', () => {
     const after = children.slice(markIndex + 1);
     expect(before.length).toBeGreaterThanOrEqual(1);
     expect(after.length).toBeGreaterThanOrEqual(1);
-    expect(before.every(child => isScope(child) && child.nodeDefault?.shape === undefined)).toBe(true);
+    expect(before.every(child => isScope(child) && child.defaults?.node?.shape === undefined)).toBe(true);
   });
 });
 

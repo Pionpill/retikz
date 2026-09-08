@@ -1,4 +1,4 @@
-import type { IRNode, IRPath, IRScope, IRShapeValue, JsonValue } from '@retikz/core';
+import type { IRNode, IRPath, IRScope, IRShapeValue } from '@retikz/core';
 import type {
   DataFieldTypeMap,
   DataFieldTypeValue,
@@ -6,13 +6,13 @@ import type {
   IRDataFieldDefinition,
   IRDataScalarValue,
 } from '@retikz/data';
-import type { ValueOf } from '@retikz/foundation';
+import type { JsonValue, ValueOf } from '@retikz/foundation';
 
 import type { IRPlot, IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, LegendChannelValue } from '../schemas';
 import type { DimensionRole } from './coordinate';
 import type { ChannelScaleResolution, ChannelScaleResolveContext } from './scale';
 
-/** 通道解析可见的 palette 默认值；由 IRPlot.plotTheme 在 lowering 前解析 */
+/** 通道解析可见的 palette 默认值；由 IRPlot.plotDefaults 在 lowering 前解析 */
 export type ChannelPaletteContext = {
   /** 分类 scale 默认颜色 */
   categorical: ReadonlyArray<string>;

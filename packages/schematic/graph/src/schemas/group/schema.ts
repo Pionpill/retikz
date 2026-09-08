@@ -4,17 +4,17 @@ import { SurfaceInputSchema } from '@retikz/standard';
 import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { GraphThemeLayerSchema } from '../theme';
+import { GraphDefaultsSchema, GraphRuleSchema } from '../theme';
 
 /** Group caption 文本可复用的 Core Node 文字字段 */
 export const GroupCaptionTextSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this caption item.'),
-  align: NodeSchema.shape.align,
-  lineHeight: NodeSchema.shape.lineHeight,
-  maxTextWidth: NodeSchema.shape.maxTextWidth,
-  textColor: NodeSchema.shape.textColor,
-  font: NodeSchema.shape.font,
-  opacity: NodeSchema.shape.opacity,
+  align: NodeSchema.shape.layout.unwrap().shape.align,
+  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight,
+  maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth,
+  textColor: NodeSchema.shape.style.unwrap().shape.textColor,
+  font: NodeSchema.shape.style.unwrap().shape.font,
+  opacity: NodeSchema.shape.style.unwrap().shape.opacity,
 }).describe('A Group caption text item composed only from the Core Node text surface.');
 
 /** Group caption 的上下位置 */
@@ -46,7 +46,8 @@ export const GroupSchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Group).describe('Group Source composite discriminator.'),
   ...ScopePropsSchema.shape,
-  graphTheme: GraphThemeLayerSchema.optional().describe('Optional Graph-local appearance rule layer.'),
+  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   caption: GroupCaptionSchema.optional(),
   labels: array(NodeLabelSchema)
     .nonempty()

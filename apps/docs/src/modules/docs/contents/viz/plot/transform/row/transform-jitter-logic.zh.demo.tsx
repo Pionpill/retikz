@@ -4,16 +4,13 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** jitter 的字段选择、确定性偏移与 pre-scale 数据流 */
 const Demo: FC = () => (
-  <Layout width={820} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-350, 40]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>输入行</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -23,12 +20,9 @@ const Demo: FC = () => (
     <Node
       id="select"
       position={[-225, 40]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>选择目标字段</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -38,12 +32,9 @@ const Demo: FC = () => (
     <Node
       id="rng"
       position={[-40, -50]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>mulberry32(seed)</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -53,12 +44,9 @@ const Demo: FC = () => (
     <Node
       id="perturb"
       position={[-40, 40]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>数据空间偏移</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -68,12 +56,9 @@ const Demo: FC = () => (
     <Node
       id="output"
       position={[170, 40]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>写回新行</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -83,12 +68,9 @@ const Demo: FC = () => (
     <Node
       id="scale"
       position={[350, 40]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Scale</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -98,7 +80,7 @@ const Demo: FC = () => (
 
     <Draw way={['rows', 'select']} arrow="->" />
     <Draw way={['select', 'perturb']} arrow="->" />
-    <Draw way={['rng', 'perturb']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['rng', 'perturb']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
     <Draw way={['perturb', 'output']} arrow="->" />
     <Draw way={['output', 'scale']} arrow="->" />
   </Layout>

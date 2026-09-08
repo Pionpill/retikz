@@ -1,6 +1,11 @@
-﻿import { CssColorSchema, GeometryLabelSchema, JsonValueSchema, NodeLabelSchema } from '@retikz/core';
+import { CssColorSchema, GeometryLabelSchema, NodeLabelSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  JsonValueSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { array, number, object, record, strictObject, union, unknown } from 'zod';
 
 export const ChannelSchema = object({

@@ -11,11 +11,8 @@ const node: IRChild = {
   type: 'node',
   id: 'content',
   position: [0, 0],
-  minimumSize: { width: 20, height: 10 },
-  padding: 0,
-  margin: 0,
-  fill: '#cbd5e1',
-  stroke: 'none',
+  style: { fill: '#cbd5e1', stroke: 'none' },
+  layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 0 },
 };
 
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>
@@ -125,7 +122,6 @@ describe('Surface appearance, Scope, and spatial identity', () => {
       id: 'styled-surface',
       child: node,
       border: { stroke: '#000' },
-      pathDefault: { strokeWidth: 3 },
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
       meta: { owner: 'standard' },
       animations: [
@@ -138,6 +134,11 @@ describe('Surface appearance, Scope, and spatial identity', () => {
           ],
         },
       ],
+      defaults: {
+        path: {
+          style: { strokeWidth: 3 },
+        },
+      },
     });
     const result = compileToScene(
       { type: 'scene', version: 1, children: [surface] },

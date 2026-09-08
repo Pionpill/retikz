@@ -5,6 +5,8 @@
 - 修订日期：2026-08-28
 - 关联：[alpha.1 roadmap](./roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](../alpha.2/07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 图式实体、关系和可见分组表达的是 Schematic 领域语义，而不是移除领域词汇后仍成立的通用绘图能力。它们应复用 Core、Layout 与 Standard 的公开契约，但不能让底层包反向拥有 Graph role、relation、group 或未来 Diagram 的自动布局语义

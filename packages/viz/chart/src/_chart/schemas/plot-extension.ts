@@ -7,9 +7,8 @@ import { strictObject } from 'zod';
 export const ChartPlotExtensionSchema = strictObject({
   transform: PlotSchema.shape.transform,
   scales: PlotSchema.shape.scales.optional(),
-  plotThemeTokens: PlotSchema.shape.plotThemeTokens,
-  plotThemeTokenRules: PlotSchema.shape.plotThemeTokenRules,
-  plotTheme: PlotSchema.shape.plotTheme,
+  plotDefaults: PlotSchema.shape.plotDefaults,
+  plotRules: PlotSchema.shape.plotRules,
   composition: PlotSchema.shape.composition,
   marks: PlotSchema.shape.marks.optional(),
   guides: PlotSchema.shape.guides,

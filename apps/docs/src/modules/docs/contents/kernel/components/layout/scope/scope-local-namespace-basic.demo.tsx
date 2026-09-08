@@ -13,7 +13,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const innerNodeId = values.nodeId;
 
   return (
-    <Layout width={400} height={117} viewBox={{ x: -100, y: -70, width: 480, height: 140 }}>
+    <Layout viewBox={{ x: -100, y: -70, width: 480, height: 140 }}>
       <Node id="A" position={[0, 0]}>
         outer A
       </Node>

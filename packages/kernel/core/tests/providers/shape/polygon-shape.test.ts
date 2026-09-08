@@ -79,7 +79,7 @@ describe('polygon — happy path 几何', () => {
           id: 'diamond',
           position: [0, 0],
           shape: { type: 'diamond', params: { aspectRatio: 1.8 } },
-          minimumSize: { width: 252, height: 140 },
+          layout: { minimumSize: { width: 252, height: 140 } },
         },
       ]),
       { precision: 6 },

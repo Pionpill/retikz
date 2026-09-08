@@ -7,4 +7,4 @@ export type InputRangedDotChart = InputTypedChart<IRRangedDotChart>;
 
 /** Ranged Dot factory 的 typed authoring 输入 */
 export type CreateRangedDotChartInput = TypedChartCommonInput<IRRangedDotChart> &
-  Pick<InputRangedDotChart, 'encodings' | 'properties' | 'marks'>;
+  Pick<InputRangedDotChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

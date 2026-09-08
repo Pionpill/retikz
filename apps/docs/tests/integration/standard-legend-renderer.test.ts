@@ -46,12 +46,11 @@ const compileLegendScene = (): Scene =>
                 key: 'line',
                 sample: {
                   type: 'path',
-                  stroke: 'currentColor',
-                  strokeWidth: 2,
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [28, 0] },
                   ],
+                  style: { stroke: 'currentColor', strokeWidth: 2 },
                 },
                 label: { type: 'node', position: [0, 0], text: 'Flow' },
               },

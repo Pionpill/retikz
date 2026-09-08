@@ -2,15 +2,14 @@ import type { infer as ZodInfer } from 'zod';
 
 import { array, literal, strictObject } from 'zod';
 
-import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
+import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
 import {
   createPointChartMarkSchema,
   PointMarkEncodingSchema,
   PointPositionDomainPaddingSchema,
   PointPropertiesSchema,
-  PointRecipeThemeOverridesSchema,
-  PointRecipeThemeResolutionSchema,
+  PointRecipeGuidesSchema,
 } from '../shared';
 import { ScatterChartEncodingsSchema } from './encoding-schema';
 
@@ -31,25 +30,14 @@ export const ScatterChartRecipeSchema = strictObject({
   chartType: literal(ChartType.Scatter).describe('Globally unique Scatter recipe key'),
   encodings: ScatterChartEncodingsSchema,
   properties: ScatterChartPropertiesSchema.optional(),
+  guides: PointRecipeGuidesSchema.optional(),
   marks: array(ScatterChartMarkSchema).optional(),
 }).describe('Scatter Chart recipe payload');
 
-/** Scatter recipe 的稀疏主题 schema */
-export const ScatterChartThemeOverridesSchema = PointRecipeThemeOverridesSchema.describe(
-  'Scatter Chart recipe theme overrides',
-);
-
-/** Scatter recipe 的完整主题 schema */
-export const ScatterChartThemeResolutionSchema = PointRecipeThemeResolutionSchema.describe(
-  'Scatter Chart recipe theme resolution',
-);
-
 /** Scatter Chart 精确 Source schema */
-export const ScatterChartSchema = createChartSourceSchema(
-  ChartFamily.Point,
-  ScatterChartRecipeSchema,
-  createChartThemeSchema(ScatterChartThemeOverridesSchema).optional(),
-).describe('Scatter Chart Source IR');
+export const ScatterChartSchema = createChartSourceSchema(ChartFamily.Point, ScatterChartRecipeSchema).describe(
+  'Scatter Chart Source IR',
+);
 
 export type IRScatterChart = ZodInfer<typeof ScatterChartSchema>;
 export type IRScatterChartRecipe = ZodInfer<typeof ScatterChartRecipeSchema>;

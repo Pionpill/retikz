@@ -1,4 +1,3 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
 import type { DeepReadonly } from '../../shared';
@@ -11,17 +10,14 @@ import type {
   TableBorderManifestEntrySchema,
   TableBorderPathMetaSchema,
   TableBorderSourceSchema,
-  TableBorderStyleTokenKeySchema,
   TableCellManifestEntrySchema,
   TableLayoutManifestSchema,
   TableTrackManifestEntrySchema,
 } from './schema';
 
-/** Border Graph style token provenance key */
-export type TableBorderStyleTokenKey = ZodInfer<typeof TableBorderStyleTokenKeySchema>;
-
 /** Table border contribution 的闭合来源类型值 */
-export type TableBorderContributionOriginValue = ValueOf<typeof TableBorderContributionOrigin>;
+export type TableBorderContributionOriginValue =
+  (typeof TableBorderContributionOrigin)[keyof typeof TableBorderContributionOrigin];
 
 /** Border Graph candidate 的几何来源 */
 export type TableBorderSource = DeepReadonly<ZodInfer<typeof TableBorderSourceSchema>>;

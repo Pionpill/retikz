@@ -38,7 +38,12 @@ describe('[blend] Happy', () => {
 
   it('all-16-modes-accepted：16 个值 schema 全过', () => {
     for (const mode of Object.values(BlendMode)) {
-      const parsed = NodeSchema.safeParse({ type: 'node', position: [0, 0], shape: 'rectangle', blendMode: mode });
+      const parsed = NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        shape: 'rectangle',
+        style: { blendMode: mode },
+      });
       expect(parsed.success, mode).toBe(true);
     }
   });
@@ -66,7 +71,12 @@ describe('[blend] 边界', () => {
 // ════════════════ 错误路径（schema 拒，PASS now） ════════════════
 
 describe('[blend] 错误路径（schema 拒）', () => {
-  const node = (blendMode: unknown): unknown => ({ type: 'node', position: [0, 0], shape: 'rectangle', blendMode });
+  const node = (blendMode: unknown): unknown => ({
+    type: 'node',
+    position: [0, 0],
+    shape: 'rectangle',
+    style: { blendMode },
+  });
 
   it('reject-unknown-mode：blendMode="glow" → 枚举外拒', () => {
     expect(NodeSchema.safeParse(node('glow')).success).toBe(false);
@@ -114,10 +124,10 @@ describe('[blend] round-trip', () => {
       id: 'n',
       position: [0, 0] as [number, number],
       shape: 'rectangle',
-      blendMode: 'multiply',
+      style: { blendMode: 'multiply' },
     };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
-    expect(round.blendMode).toBe(parsed.blendMode);
+    expect(round.style?.blendMode).toBe(parsed.style?.blendMode);
   });
 });

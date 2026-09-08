@@ -12,7 +12,7 @@ import type { LegendItemsFormProps, LegendProps, LegendRampFormProps } from '../
 import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '../../src';
 
 const itemSample = (
-  <Path stroke="currentColor" strokeWidth={2}>
+  <Path style={{ stroke: 'currentColor', strokeWidth: 2 }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="line" to={[24, 0]} />
   </Path>
@@ -72,7 +72,7 @@ describe('<Legend>', () => {
       children: (
         <>
           <LegendRamp>
-            <Path stroke="#777" strokeWidth={8}>
+            <Path style={{ stroke: '#777', strokeWidth: 8 }}>
               <Step kind="move" to={[0, 0]} />
               <Step kind="line" to={[80, 0]} />
             </Path>
@@ -99,12 +99,11 @@ describe('<Legend>', () => {
               key: 'active',
               sample: {
                 type: 'path',
-                stroke: 'currentColor',
-                strokeWidth: 2,
                 children: [
                   { type: 'step', kind: 'move', to: [0, 0] },
                   { type: 'step', kind: 'line', to: [24, 0] },
                 ],
+                style: { stroke: 'currentColor', strokeWidth: 2 },
               },
               label: { type: 'node', position: [0, 0], text: 'Active' },
             },
@@ -119,12 +118,11 @@ describe('<Legend>', () => {
           direction: 'horizontal',
           sample: {
             type: 'path',
-            stroke: '#777',
-            strokeWidth: 8,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [80, 0] },
             ],
+            style: { stroke: '#777', strokeWidth: 8 },
           },
           ticks: [
             { key: 'low', offset: 0, label: { type: 'node', position: [0, 0], text: 'Low' } },

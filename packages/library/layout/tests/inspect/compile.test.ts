@@ -25,9 +25,7 @@ const node = (id: string): IRChild => ({
   type: 'node',
   id,
   position: [0, 0],
-  minimumSize: { width: 20, height: 10 },
-  padding: 0,
-  margin: 0,
+  layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 0 },
 });
 
 const children: IRScene['children'] = [

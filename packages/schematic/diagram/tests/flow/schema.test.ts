@@ -17,10 +17,9 @@ const completeFlow = {
       style: {
         fill: '#eff6ff',
         textColor: '#1e3a8a',
-        align: 'middle',
         font: { size: 14, weight: 600 },
       },
-      layout: { minimumSize: { width: 96, height: 40 }, margin: { x: 4, y: 2 } },
+      layout: { align: 'middle', minimumSize: { width: 96, height: 40 }, margin: { x: 4, y: 2 } },
     },
     {
       id: 'ir',
@@ -32,22 +31,20 @@ const completeFlow = {
   groups: [
     {
       id: 'compile',
-      label: 'Compile',
+      caption: { title: { text: 'Compile', textColor: '#334155', opacity: 0.9, font: { weight: 600 } } },
       rank: 1,
       layout: {
         direction: 'down',
         nodeGap: 12,
         rankGap: 24,
-        routing: { kind: 'orthogonal', cornerRadius: 6 },
       },
-      style: {
-        padding: 12,
-        background: { fill: '#f8fafc' },
-        border: { stroke: '#cbd5e1', strokeWidth: 1 },
-        cornerRadius: 8,
-        overflow: 'visible',
-        label: { textColor: '#334155', opacity: 0.9, font: { weight: 600 } },
-      },
+      routing: { kind: 'orthogonal', cornerRadius: 6 },
+      padding: 12,
+      background: { fill: '#f8fafc' },
+      border: { stroke: '#cbd5e1', strokeWidth: 1 },
+      cornerRadius: 8,
+      overflow: 'visible',
+
       children: ['pipeline'],
     },
   ],
@@ -74,28 +71,19 @@ const completeFlow = {
         stroke: '#475569',
         strokeWidth: 2,
         dashPattern: [4, 2],
-        targetMarker: { fill: '#475569', opacity: 1 },
-        labelTextForeground: '#334155',
       },
-      layout: { routing: { kind: 'orthogonal', cornerRadius: 4 } },
+      targetMarker: { fill: '#475569', opacity: 1 },
+      labelTextForeground: '#334155',
+      routing: { kind: 'orthogonal', cornerRadius: 4 },
     },
   ],
-  flowThemeTokens: {
-    'flow.layout.direction': 'right',
-    'flow.layout.nodeGap': 16,
-    'flow.layout.rankGap': 32,
-    'flow.routing.kind': 'orthogonal',
-    'flow.routing.cornerRadius': 8,
-    'flow.entity.fill': '#ffffff',
-    'flow.entity.minimumSize': 48,
-    'flow.group.padding': 10,
-    'flow.relation.strokeWidth': 2,
-  },
-  flowTheme: {
-    layout: { direction: 'right', nodeGap: 18 },
-    entity: { style: { opacity: 0.95 }, layout: { margin: 4 } },
-    group: { style: { padding: 12 } },
-    relation: { style: { strokeOpacity: 0.8 }, layout: { routing: { kind: 'straight' } } },
+  layout: { direction: 'right', nodeGap: 18 },
+  routing: { kind: 'orthogonal', cornerRadius: 8 },
+  flowDefaults: {
+    layout: { nodeGap: 16, rankGap: 32 },
+    entity: { style: { fill: '#ffffff', opacity: 0.95 }, layout: { minimumSize: 48, margin: 4 } },
+    group: { padding: 12 },
+    relation: { style: { strokeWidth: 2, strokeOpacity: 0.8 } },
   },
 } as const;
 
@@ -136,7 +124,7 @@ describe('Flow Source schema', () => {
         {
           id: 'form',
           text,
-          style: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
         },
       ],
       groups: [],
@@ -147,7 +135,7 @@ describe('Flow Source schema', () => {
     expect(parsed.entities[0]).toMatchObject({
       id: 'form',
       text,
-      style: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+      layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
     });
   });
 
@@ -276,7 +264,7 @@ describe('Flow Source schema', () => {
         entities: [{ id: 'entity', text: 'Entity' }],
         groups: [],
         layouts: [],
-        blocks: [{ id: 'block', title: 'Block' }],
+        blocks: [{ id: 'block', title: { text: 'Block' } }],
         children: ['entity'],
       }).success,
     ).toBe(false);
@@ -294,31 +282,21 @@ describe('Flow Source schema', () => {
     {
       source: 'sugar',
       target: 'ir',
-      style: { targetMarker: { shape: 'stealth' } },
+      targetMarker: { shape: 'stealth' },
     },
   ])('rejects Graph-only route and marker recipe fields on root relations: %j', relation => {
     expect(FlowDiagramSchema.safeParse({ ...completeFlow, relations: [relation] }).success).toBe(false);
   });
 
   it.each([
-    { 'flow.entity.shape': 'circle' },
-    { 'flow.block.minWidth': 160 },
-    { 'flow.relation.targetMarker.shape': 'stealth' },
-    { 'flow.layout.nodeGap': -1 },
-    { 'flow.routing.kind': 'straight', 'flow.routing.cornerRadius': 4 },
-    { 'flow.relation.routing.kind': 'straight', 'flow.relation.routing.cornerRadius': 4 },
-  ])('rejects unknown, structural or invalid Flow token entries: %j', flowThemeTokens => {
-    expect(
-      FlowDiagramSchema.safeParse({
-        namespace: 'diagram',
-        type: 'flow',
-        entities: [{ id: 'entity', text: 'Entity' }],
-        groups: [],
-        layouts: [],
-        children: ['entity'],
-        flowThemeTokens,
-      }).success,
-    ).toBe(false);
+    { entity: { style: { shape: 'circle' } } },
+    { block: { layout: { minWidth: 160 } } },
+    { relation: { targetMarker: { shape: 'stealth' } } },
+    { layout: { nodeGap: -1 } },
+    { layout: { direction: 'right' } },
+    { relation: { routing: { kind: 'straight' } } },
+  ])('rejects structural or invalid Flow defaults: %j', flowDefaults => {
+    expect(FlowDiagramSchema.safeParse({ ...completeFlow, flowDefaults }).success).toBe(false);
   });
 
   it('rejects the unsupported structured Flow Block theme slice', () => {
@@ -330,7 +308,7 @@ describe('Flow Source schema', () => {
         groups: [],
         layouts: [],
         children: ['entity'],
-        flowTheme: { block: { layout: { minWidth: 160 } } },
+        flowDefaults: { block: { layout: { minWidth: 160 } } },
       }).success,
     ).toBe(false);
   });

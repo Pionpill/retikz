@@ -15,10 +15,14 @@ describe('Node auto-contrast textColor keyword', () => {
       NodeSchema.safeParse({
         type: 'node',
         position: [0, 0],
-        textColor: CONTRAST,
+        style: { textColor: CONTRAST },
       }).success,
     ).toBe(true);
-    expect(NodeDefaultSchema.safeParse({ textColor: CONTRAST }).success).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { textColor: CONTRAST },
+      }).success,
+    ).toBe(true);
   });
 
   it('Node、正文、run、label 与 pin 接受归一化派生颜色', () => {
@@ -26,10 +30,6 @@ describe('Node auto-contrast textColor keyword', () => {
       NodeSchema.safeParse({
         type: 'node',
         position: [0, 0],
-        color: 'darkorange',
-        fill: 0.08,
-        stroke: 1,
-        textColor: 0.7,
         text: [
           { text: 'line', fill: 0.6 },
           {
@@ -40,6 +40,7 @@ describe('Node auto-contrast textColor keyword', () => {
           },
         ],
         label: { text: 'label', textColor: 0.3, pin: { stroke: 0.2 } },
+        style: { color: 'darkorange', fill: 0.08, stroke: 1, textColor: 0.7 },
       }).success,
     ).toBe(true);
   });
@@ -49,12 +50,12 @@ describe('Node auto-contrast textColor keyword', () => {
       NodeSchema.safeParse({
         type: 'node',
         position: [0, 0],
-        textColor: { kind: 'contrast' },
+        style: { textColor: { kind: 'contrast' } },
       }).success,
     ).toBe(false);
     expect(
       NodeDefaultSchema.safeParse({
-        textColor: { kind: 'contrast', backdrop: '#ffffff', fallback: 'navy' },
+        style: { textColor: { kind: 'contrast', backdrop: '#ffffff', fallback: 'navy' } },
       }).success,
     ).toBe(false);
   });
@@ -65,7 +66,7 @@ describe('Node auto-contrast textColor keyword', () => {
       id: 'status',
       position: [0, 0],
       text: 'Status',
-      textColor: CONTRAST,
+      style: { textColor: CONTRAST },
     });
     expect(NodeSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });

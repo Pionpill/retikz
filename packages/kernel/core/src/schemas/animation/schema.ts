@@ -1,5 +1,6 @@
 import {
   createOpenStringSchema,
+  JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
@@ -8,7 +9,6 @@ import {
 import { array, enum as zodEnum, literal, number, object, tuple, union } from 'zod';
 
 import { Anchor, CenterAnchor } from '../../shared';
-import { JsonValueSchema } from '../json';
 import { AnimationDirection, AnimationEasing, AnimationFill, AnimationProperty, AnimationTrigger } from './constants';
 
 const AnimationEasingNameSchema = createOpenStringSchema(AnimationEasing);

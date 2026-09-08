@@ -62,12 +62,10 @@ export type PlotCommonProps = PlotStandaloneProps & PlotPanelProps & LowerPlotsO
 
 /** Plot-owned theme 输入 */
 export type PlotThemeProps = {
-  /** Plot-owned canonical theme token 稀疏覆盖 */
-  plotThemeTokens?: IRPlot['plotThemeTokens'];
-  /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
-  plotThemeTokenRules?: IRPlot['plotThemeTokenRules'];
-  /** Plot theme 的 JSON-safe 默认值 */
-  plotTheme?: IRPlot['plotTheme'];
+  /** Plot Source 的稀疏默认片段 */
+  plotDefaults?: IRPlot['plotDefaults'];
+  /** 按 Axis dimension 应用的有序 Plot Source 规则 */
+  plotRules?: IRPlot['plotRules'];
 };
 
 /** 已构造 Plot Source IR 的薄包装入口 */
@@ -182,7 +180,7 @@ type InputEmbeddablePlotComponent = FC<PlotProps> & {
 
 /** Plot React 组件 */
 const PlotComponent: FC<PlotProps> = props => {
-  const { width, height, className, style, renderer, themeStyles, onLineage } = props;
+  const { className, style, renderer, themeStyles, onLineage } = props;
   const ambientPlotThemeStyles = usePlotThemeStyles();
   const effectiveProps = useMemo(() => {
     if (ambientPlotThemeStyles === undefined) return props;
@@ -202,14 +200,7 @@ const PlotComponent: FC<PlotProps> = props => {
   }, [lineage, lineageKey, onLineage]);
 
   return (
-    <Layout
-      width={width}
-      height={height}
-      className={className}
-      style={style}
-      renderer={renderer}
-      themeStyles={themeStyles}
-    >
+    <Layout className={className} style={style} renderer={renderer} themeStyles={themeStyles}>
       <PlotComponent {...contentProps} />
     </Layout>
   );

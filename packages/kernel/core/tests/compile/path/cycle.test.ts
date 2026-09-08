@@ -148,7 +148,6 @@ describe("compile path: 'cycle' 闭合", () => {
       children: [
         {
           type: 'path',
-          stroke: '#13579b',
           marks: arrowMarks('->'),
           label: { text: 'close', position: 0.9, sloped: true },
           children: [
@@ -157,6 +156,7 @@ describe("compile path: 'cycle' 闭合", () => {
             { type: 'step', kind: 'line', to: [100, 100] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { stroke: '#13579b' },
         },
       ],
     };

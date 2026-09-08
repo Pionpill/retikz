@@ -18,7 +18,9 @@ Position Adjustment 适合无法在数据变换中完整决定的位置逻辑。
 - 会增删行、改写字段或影响 lineage 的计算仍属于 [Data transform](/viz/plot/transform)。
 - Stack 改变区间基线与上下界，不属于 additive Position Adjustment。
 
-当前内置算法只有 `jitter`，Point 是唯一内置 placement-capable Mark。Screen-space initializer 已可执行，但没有内置 collision、beeswarm 或标签避让算法；renderer 与 Core IR 只接收最终几何。
+当前内置算法只有 `jitter`，Point 是唯一内置 placement-capable Mark。`jitter` 默认使用 `uniform`，也可使用 `normal`：它以零为中心，并在归一化 `[-1, 1]` 支持域内截断；`sigma` 相对于 jitter 半宽，控制点靠近中心的程度。Screen-space initializer 已可执行，但没有内置 collision、beeswarm 或标签避让算法；renderer 与 Core IR 只接收最终几何。
+
+这两种分布都属于 placement jitter：只调整 scale 映射后的 role 位置，不改写数据行。若需求是派生新字段再参与比例尺，应使用 [Data transform](/viz/plot/transform) 中的 `jitter`。
 
 ## 定义能力
 

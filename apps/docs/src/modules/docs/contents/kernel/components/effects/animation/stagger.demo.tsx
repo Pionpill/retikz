@@ -7,14 +7,14 @@ import { Layout, Node } from '@retikz/react';
 const [a, b, c] = stagger([fadeIn(), fadeIn(), fadeIn()], 150);
 
 const Demo: FC = () => (
-  <Layout width={260} height={100}>
-    <Node id="a" position={[0, 0]} fill="#3b82f6" animations={[a]}>
+  <Layout>
+    <Node id="a" position={[0, 0]} animations={[a]} style={{ fill: '#3b82f6' }}>
       1
     </Node>
-    <Node id="b" position={[80, 0]} fill="#3b82f6" animations={[b]}>
+    <Node id="b" position={[80, 0]} animations={[b]} style={{ fill: '#3b82f6' }}>
       2
     </Node>
-    <Node id="c" position={[160, 0]} fill="#3b82f6" animations={[c]}>
+    <Node id="c" position={[160, 0]} animations={[c]} style={{ fill: '#3b82f6' }}>
       3
     </Node>
   </Layout>

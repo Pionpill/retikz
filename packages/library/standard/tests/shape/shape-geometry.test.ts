@@ -1,4 +1,5 @@
-import type { IRJsonObject, PathPrim, Rect, ShapeDefinition } from '@retikz/core';
+import type { PathPrim, Rect, ShapeDefinition } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import { describe, expect, it } from 'vitest';
 
@@ -12,7 +13,7 @@ import {
 
 const identity = (value: number): number => value;
 
-const pathOf = (definition: ShapeDefinition, rect: Rect, params: IRJsonObject): PathPrim => {
+const pathOf = (definition: ShapeDefinition, rect: Rect, params: JsonObject): PathPrim => {
   const primitive = [...definition.emit(rect, {}, identity, params)][0];
   if (primitive.type !== 'path') throw new Error(`Expected '${definition.name}' to emit one path`);
   return primitive;

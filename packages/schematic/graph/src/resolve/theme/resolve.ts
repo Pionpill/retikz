@@ -1,183 +1,134 @@
-import type { IRJsonObject, JsonValue, ResolvedTheme } from '@retikz/core';
+import type { ResolvedTheme } from '@retikz/core';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 
-import { assertPlainDataContainers } from '@retikz/foundation';
-import { SurfaceInputSchema } from '@retikz/standard';
-import { array, custom, strictObject } from 'zod';
+import { array, strictObject } from 'zod';
 
+import type { GraphThemeStyleDefinition, GraphThemeStyleSource } from '../../contract';
 import type {
-  GraphRelationThemeStyleTokens,
-  GraphThemeStyleDefinition,
-  GraphThemeStyleOverrides,
-  GraphThemeStyleResolution,
-} from '../../contract';
-import type {
-  IRGraphEntityThemeRule,
+  IRGraphDefaults,
+  IRGraphEntityDefaults,
+  IRGraphEntityDefaultsLayout,
+  IRGraphEntityDefaultsStyle,
   IRGraphEntityThemeSelector,
-  IRGraphRelationAppearanceTokenOverrides,
-  IRGraphRelationThemeRule,
+  IRGraphRelationDefaults,
+  IRGraphRelationDefaultsStyle,
   IRGraphRelationThemeSelector,
+  IRGraphRule,
+  IRGraphSurfaceDefaults,
 } from '../../schemas';
-import type { GraphThemeResolution } from './types';
+import type { GraphAuthorLayer, GraphThemeResolution } from './types';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { getDefaultGraphThemePreset } from '../../providers';
-import {
-  GraphEntityAppearanceTokenOverridesSchema,
-  GraphEntityThemeRuleSchema,
-  GraphRelationAppearanceTokenOverridesSchema,
-  GraphRelationThemeRuleSchema,
-} from '../../schemas';
+import { GraphDefaultsSchema, GraphRuleSchema } from '../../schemas';
 
-const GraphThemeStyleOverridesSchema = strictObject({
-  entity: strictObject({
-    tokens: GraphEntityAppearanceTokenOverridesSchema.optional(),
-    rules: array(GraphEntityThemeRuleSchema).optional(),
-  }).optional(),
-  relation: strictObject({
-    tokens: GraphRelationAppearanceTokenOverridesSchema.optional(),
-    rules: array(GraphRelationThemeRuleSchema).optional(),
-  }).optional(),
-  group: strictObject({
-    tokens: strictObject({
-      background: SurfaceInputSchema.shape.background,
-      border: SurfaceInputSchema.shape.border,
-      cornerRadius: SurfaceInputSchema.shape.cornerRadius,
-    }).refine(tokens => Object.keys(tokens).length > 0, {
-      message: 'Graph Group theme style tokens require at least one field.',
-    }),
-  }).optional(),
-  block: strictObject({
-    tokens: strictObject({
-      background: SurfaceInputSchema.shape.background,
-      border: SurfaceInputSchema.shape.border,
-      cornerRadius: SurfaceInputSchema.shape.cornerRadius,
-    }).refine(tokens => Object.keys(tokens).length > 0, {
-      message: 'Graph Block theme style tokens require at least one field.',
-    }),
-  }).optional(),
-});
+/** 只保留这一层明确提供的字段，不展开复合叶子 */
+const definedFields = <T extends object>(value: T | undefined): Partial<T> =>
+  value === undefined
+    ? {}
+    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
 
-const graphThemeStyleKeys = new Set(['entity', 'relation', 'group', 'block']);
-const graphThemeStyleLayerKeys = new Set(['tokens', 'rules']);
-const graphEntityThemeTokenKeys = new Set<string>(Object.keys(GraphEntityAppearanceTokenOverridesSchema.shape));
-const graphRelationThemeTokenKeys = new Set<string>(Object.keys(GraphRelationAppearanceTokenOverridesSchema.shape));
-const graphSurfaceThemeTokenKeys = new Set(['background', 'border', 'cornerRadius']);
-
-const GraphThemeStylePlainDataSchema = custom<unknown>(
-  value => {
-    try {
-      assertPlainDataContainers(value, 'Graph theme style definition output');
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  { error: 'Graph theme style definition must return plain data containers.' },
-);
-
-/** 判断 runtime provider 输出是否为可枚举的普通对象 */
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
+/** 按字段覆盖一个已选定的命名组，空组不物化 */
+const mergeFields = <T extends object>(current: T | undefined, override: T | undefined): T | undefined => {
+  const merged = { ...definedFields(current), ...definedFields(override) };
+  return Object.keys(merged).length === 0 ? undefined : (merged as T);
 };
 
-/** 只把 runtime style definition 中已知且显式为 undefined 的字段规范化为省略 */
-const omitKnownUndefinedProperties = (value: unknown, knownKeys: ReadonlySet<string>): unknown => {
-  if (!isPlainRecord(value)) return value;
-  return Object.fromEntries(Object.entries(value).filter(([key, item]) => item !== undefined || !knownKeys.has(key)));
+/** 空 font 不提供默认值；非空 font 保持 Node Source 的整体覆盖粒度 */
+const definedEntityStyle = (style: IRGraphEntityDefaultsStyle | undefined): IRGraphEntityDefaultsStyle | undefined => {
+  if (style === undefined) return undefined;
+  const { font, ...fields } = definedFields(style);
+  const definedFont = mergeFields(undefined, font);
+  return { ...fields, ...(definedFont === undefined ? {} : { font: definedFont }) };
 };
 
-const normalizeGraphThemeStyleLayer = (value: unknown, tokenKeys: ReadonlySet<string>): unknown => {
-  const normalized = omitKnownUndefinedProperties(value, graphThemeStyleLayerKeys);
-  if (!isPlainRecord(normalized) || !Object.hasOwn(normalized, 'tokens')) return normalized;
-  const rawTokens = normalized.tokens;
-  const tokens = omitKnownUndefinedProperties(rawTokens, tokenKeys);
-  return isPlainRecord(rawTokens) &&
-    Object.keys(rawTokens).length > 0 &&
-    isPlainRecord(tokens) &&
-    Object.keys(tokens).length === 0
-    ? Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== 'tokens'))
-    : { ...normalized, tokens };
-};
-
-const normalizeGraphThemeStyleOverrides = (overrides: unknown): unknown => {
-  const normalized = omitKnownUndefinedProperties(overrides, graphThemeStyleKeys);
-  if (!isPlainRecord(normalized)) return normalized;
-  const normalizeSurfaceLayer = (key: 'group' | 'block'): unknown => {
-    const rawLayer = normalized[key];
-    const layer = normalizeGraphThemeStyleLayer(rawLayer, graphSurfaceThemeTokenKeys);
-    if (!isPlainRecord(rawLayer) || !isPlainRecord(rawLayer.tokens)) return layer;
-    return Object.keys(rawLayer.tokens).length > 0 && isPlainRecord(layer) && Object.keys(layer).length === 0
-      ? undefined
-      : layer;
-  };
-  const group = Object.hasOwn(normalized, 'group') ? normalizeSurfaceLayer('group') : undefined;
-  const block = Object.hasOwn(normalized, 'block') ? normalizeSurfaceLayer('block') : undefined;
+/** 合并 Entity 的 style/layout 命名组 */
+const mergeEntityDefaults = (
+  current: IRGraphEntityDefaults | undefined,
+  override: IRGraphEntityDefaults | undefined,
+): IRGraphEntityDefaults | undefined => {
+  if (current === undefined && override === undefined) return undefined;
+  const style = mergeFields(definedEntityStyle(current?.style), definedEntityStyle(override?.style));
+  const layout = mergeFields<IRGraphEntityDefaultsLayout>(current?.layout, override?.layout);
   return {
-    ...Object.fromEntries(Object.entries(normalized).filter(([key]) => key !== 'group' && key !== 'block')),
-    ...(Object.hasOwn(normalized, 'entity')
-      ? { entity: normalizeGraphThemeStyleLayer(normalized.entity, graphEntityThemeTokenKeys) }
-      : {}),
-    ...(Object.hasOwn(normalized, 'relation')
-      ? { relation: normalizeGraphThemeStyleLayer(normalized.relation, graphRelationThemeTokenKeys) }
-      : {}),
+    ...(style === undefined ? {} : { style }),
+    ...(layout === undefined ? {} : { layout }),
+  };
+};
+
+/** 按 Relation Source 的粒度合并路径外观、marker 与标签字体 */
+const mergeRelationDefaults = (
+  current: IRGraphRelationDefaults | undefined,
+  override: IRGraphRelationDefaults | undefined,
+): IRGraphRelationDefaults | undefined => {
+  if (current === undefined && override === undefined) return undefined;
+  const style = mergeFields<IRGraphRelationDefaultsStyle>(current?.style, override?.style);
+  const sourceMarker = mergeFields(current?.sourceMarker, override?.sourceMarker);
+  const targetMarker = mergeFields(current?.targetMarker, override?.targetMarker);
+  const labelFont = mergeFields(current?.labelFont, override?.labelFont);
+  const labelTextForeground = override?.labelTextForeground ?? current?.labelTextForeground;
+  const labelOpacity = override?.labelOpacity ?? current?.labelOpacity;
+  return {
+    ...(labelTextForeground === undefined ? {} : { labelTextForeground }),
+    ...(labelOpacity === undefined ? {} : { labelOpacity }),
+    ...(style === undefined ? {} : { style }),
+    ...(sourceMarker === undefined ? {} : { sourceMarker }),
+    ...(targetMarker === undefined ? {} : { targetMarker }),
+    ...(labelFont === undefined ? {} : { labelFont }),
+  };
+};
+
+/** 合并一层 Graph Surface defaults，并按字段跳过 undefined */
+export const mergeGraphSurfaceDefaults = (
+  current: IRGraphSurfaceDefaults | undefined,
+  override: IRGraphSurfaceDefaults | undefined,
+): IRGraphSurfaceDefaults | undefined => {
+  if (current === undefined && override === undefined) return undefined;
+  return { ...definedFields(current), ...definedFields(override) };
+};
+
+/** 合并一层 Graph defaults，并保持各目标字段的 Source 覆盖粒度 */
+export const mergeGraphDefaults = (
+  current: IRGraphDefaults | undefined,
+  override: IRGraphDefaults | undefined,
+): IRGraphDefaults | undefined => {
+  if (current === undefined && override === undefined) return undefined;
+  const entity = mergeEntityDefaults(current?.entity, override?.entity);
+  const relation = mergeRelationDefaults(current?.relation, override?.relation);
+  const group = mergeGraphSurfaceDefaults(current?.group, override?.group);
+  const block = mergeGraphSurfaceDefaults(current?.block, override?.block);
+  return {
+    ...definedFields(current),
+    ...definedFields(override),
+    ...(entity === undefined ? {} : { entity }),
+    ...(relation === undefined ? {} : { relation }),
     ...(group === undefined ? {} : { group }),
     ...(block === undefined ? {} : { block }),
   };
 };
 
-const mergeRules = <TRule>(
-  defaults: ReadonlyArray<TRule> | undefined,
-  overrides: ReadonlyArray<TRule> | undefined,
-): ReadonlyArray<TRule> | undefined => {
-  const rules = [...(defaults ?? []), ...(overrides ?? [])];
-  return rules.length === 0 ? undefined : rules;
-};
+/** 按作用域顺序提取作者层对一个容器 shell 的 Surface defaults */
+export const resolveGraphAuthorSurfaceDefaults = (
+  layers: ReadonlyArray<GraphAuthorLayer>,
+  target: 'group' | 'block',
+): IRGraphSurfaceDefaults | undefined =>
+  layers.reduce<IRGraphSurfaceDefaults | undefined>(
+    (current, layer) => mergeGraphSurfaceDefaults(current, layer.defaults?.[target]),
+    undefined,
+  );
 
-const mergeMarkerAppearance = (
-  defaults: IRGraphRelationAppearanceTokenOverrides['sourceMarker'],
-  overrides: IRGraphRelationAppearanceTokenOverrides['sourceMarker'],
-): IRGraphRelationAppearanceTokenOverrides['sourceMarker'] =>
-  defaults === undefined && overrides === undefined ? undefined : { ...defaults, ...overrides };
-
-const mergeRelationTokens = (
-  defaults: GraphRelationThemeStyleTokens,
-  overrides: IRGraphRelationAppearanceTokenOverrides | undefined,
-): GraphRelationThemeStyleTokens => ({
+const mergeRules = (defaults: ReadonlyArray<IRGraphRule>, overrides: ReadonlyArray<IRGraphRule> | undefined) => [
   ...defaults,
-  ...overrides,
-  ...(defaults.sourceMarker === undefined && overrides?.sourceMarker === undefined
-    ? {}
-    : { sourceMarker: mergeMarkerAppearance(defaults.sourceMarker, overrides?.sourceMarker) }),
-  ...(defaults.targetMarker === undefined && overrides?.targetMarker === undefined
-    ? {}
-    : { targetMarker: mergeMarkerAppearance(defaults.targetMarker, overrides?.targetMarker) }),
+  ...(overrides ?? []),
+];
+
+const GraphThemeStyleSourceSchema = strictObject({
+  defaults: GraphDefaultsSchema.optional(),
+  rules: array(GraphRuleSchema).optional(),
 });
 
-const mergeGraphThemeStyle = (
-  defaults: GraphThemeStyleResolution,
-  overrides: GraphThemeStyleOverrides,
-): GraphThemeStyleResolution => {
-  const entityRules = mergeRules<IRGraphEntityThemeRule>(defaults.entity.rules, overrides.entity?.rules);
-  const relationRules = mergeRules<IRGraphRelationThemeRule>(defaults.relation.rules, overrides.relation?.rules);
-  return {
-    entity: {
-      tokens: { ...defaults.entity.tokens, ...overrides.entity?.tokens },
-      ...(entityRules === undefined ? {} : { rules: entityRules }),
-    },
-    relation: {
-      tokens: mergeRelationTokens(defaults.relation.tokens, overrides.relation?.tokens),
-      ...(relationRules === undefined ? {} : { rules: relationRules }),
-    },
-    group: {
-      tokens: { ...defaults.group.tokens, ...overrides.group?.tokens },
-    },
-    block: {
-      tokens: { ...defaults.block.tokens, ...overrides.block?.tokens },
-    },
-  };
-};
+const parseGraphThemeStyleSource = (source: GraphThemeStyleSource): GraphThemeStyleSource =>
+  GraphThemeStyleSourceSchema.parse(source);
 
 const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
   if (Array.isArray(left) || Array.isArray(right)) {
@@ -189,8 +140,8 @@ const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
     );
   }
   if (typeof left === 'object' && left !== null && typeof right === 'object' && right !== null) {
-    const leftObject = left as IRJsonObject;
-    const rightObject = right as IRJsonObject;
+    const leftObject = left as JsonObject;
+    const rightObject = right as JsonObject;
     const keys = Object.keys(leftObject);
     return (
       keys.length === Object.keys(rightObject).length && keys.every(key => jsonEqual(leftObject[key], rightObject[key]))
@@ -199,19 +150,15 @@ const jsonEqual = (left: JsonValue, right: JsonValue): boolean => {
   return left === right;
 };
 
+const isJsonObject = (value: JsonValue): value is JsonObject =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
 /** 判断 selector params 是否为 Canonical params 的递归子集 */
-export const matchesGraphPredicateParams = (selector: IRJsonObject, params: IRJsonObject): boolean =>
+export const matchesGraphPredicateParams = (selector: JsonObject, params: JsonObject): boolean =>
   Object.entries(selector).every(([key, expected]) => {
     if (!Object.hasOwn(params, key)) return false;
     const actual = params[key];
-    if (
-      typeof expected === 'object' &&
-      expected !== null &&
-      !Array.isArray(expected) &&
-      typeof actual === 'object' &&
-      actual !== null &&
-      !Array.isArray(actual)
-    ) {
+    if (isJsonObject(expected) && isJsonObject(actual)) {
       return matchesGraphPredicateParams(expected, actual);
     }
     return jsonEqual(expected, actual);
@@ -224,12 +171,12 @@ const selectorIncludes = (selector: string | ReadonlyArray<string> | undefined, 
 type CanonicalSelectorSubject = Readonly<{
   role: string;
   kind?: string;
-  predicate?: Readonly<{ name: string; params: IRJsonObject }>;
+  predicate?: Readonly<{ name: string; params: JsonObject }>;
   status?: string;
   direction?: string;
 }>;
 
-/** 判断完整 Canonical 成员语义是否匹配一条 Graph Theme selector */
+/** 判断完整 Canonical 成员语义是否匹配一条 Graph selector */
 export const matchesGraphThemeSelector = (
   selector: IRGraphEntityThemeSelector | IRGraphRelationThemeSelector | undefined,
   subject: CanonicalSelectorSubject,
@@ -291,13 +238,13 @@ export const validateGraphThemeSelector = (
   );
 };
 
-/** 按当前 Core Theme style 解析完整 Graph baseline 与有序规则 */
+/** 按当前 Core Theme style 解析 Graph defaults 与有序 rules */
 export const resolveGraphTheme = (
   theme: ResolvedTheme,
   styles: ReadonlyMap<string, GraphThemeStyleDefinition>,
 ): GraphThemeResolution => {
-  const defaults = getDefaultGraphThemePreset(theme);
-  if (theme.style === undefined) return defaults;
+  const baseline = getDefaultGraphThemePreset(theme);
+  if (theme.style === undefined) return baseline;
   const definition = styles.get(theme.style);
   if (definition === undefined) {
     throw new RetikzGraphError({
@@ -307,10 +254,11 @@ export const resolveGraphTheme = (
     });
   }
   try {
-    const rawOverrides = definition.resolve(theme);
-    GraphThemeStylePlainDataSchema.parse(rawOverrides);
-    const overrides = GraphThemeStyleOverridesSchema.parse(normalizeGraphThemeStyleOverrides(rawOverrides));
-    return mergeGraphThemeStyle(defaults, overrides);
+    const source = parseGraphThemeStyleSource(definition.resolve(theme));
+    return {
+      defaults: mergeGraphDefaults(baseline.defaults, source.defaults) ?? baseline.defaults,
+      rules: mergeRules(baseline.rules, source.rules),
+    };
   } catch (cause) {
     throw new RetikzGraphError({
       code: RetikzGraphErrorCode.DefinitionCallbackFailed,

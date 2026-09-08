@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import { PlotMark, PointMarkSchema } from '@retikz/plot';
@@ -9,11 +9,7 @@ import type { IRPointEncoding, IRPointProperties } from './schema';
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
 
 /** 将 Chart 字段 / 常量 slot 转为 Plot mark style value */
-export const markValueOf = (
-  encodings: IRJsonObject,
-  properties: IRJsonObject,
-  name: string,
-): IRJsonObject | undefined => {
+export const markValueOf = (encodings: JsonObject, properties: JsonObject, name: string): JsonObject | undefined => {
   if (Object.hasOwn(encodings, name)) {
     const mapping = pointFieldMappingOf(encodings[name], ['recipe', 'encodings', name]);
     return { kind: 'field', value: mapping.field, ...(mapping.scale === undefined ? {} : { scale: mapping.scale }) };
@@ -22,11 +18,11 @@ export const markValueOf = (
   return undefined;
 };
 
-const copyConstantProperty = (target: IRJsonObject, properties: IRJsonObject, name: string): void => {
+const copyConstantProperty = (target: JsonObject, properties: JsonObject, name: string): void => {
   if (Object.hasOwn(properties, name)) target[name] = { kind: 'constant', value: properties[name] };
 };
 
-const copyRawProperty = (target: IRJsonObject, properties: IRJsonObject, name: string): void => {
+const copyRawProperty = (target: JsonObject, properties: JsonObject, name: string): void => {
   if (Object.hasOwn(properties, name)) target[name] = properties[name];
 };
 
@@ -60,6 +56,9 @@ const pointConstantPropertySlots: ReadonlyArray<keyof IRPointProperties> = [
 
 const pointRawPropertySlots: ReadonlyArray<keyof IRPointProperties> = ['dx', 'dy', 'label'];
 
+const isJsonObject = (value: JsonValue): value is JsonObject =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
 /** Plot Point mark resolver 实际读取的 encoding slots */
 export const pointEncodingSlots: ReadonlyArray<keyof IRPointEncoding> = ['x', 'y', ...pointVisualSlots];
 
@@ -75,13 +74,13 @@ export const pointPropertySlotsWithoutSize = pointPropertySlots.filter(slot => s
 
 /** 把 Chart Point slots 解析为 Plot Point mark */
 export const resolvePointMark = (
-  encodings: IRJsonObject,
-  properties: IRJsonObject,
+  encodings: JsonObject,
+  properties: JsonObject,
   options: Readonly<{ coordinateView?: string }> = {},
 ): IRPlotMarkOperation => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
-  const mark: IRJsonObject = {
+  const mark: JsonObject = {
     type: PlotMark.Point,
     encoding: { x: { field: x }, y: { field: y } },
   };
@@ -96,17 +95,16 @@ export const resolvePointMark = (
   return PointMarkSchema.parse(mark);
 };
 
-const objectOf = (source: IRJsonObject, key: string): IRJsonObject => {
+const objectOf = (source: JsonObject, key: string): JsonObject => {
   if (!Object.hasOwn(source, key)) return {};
   const value = source[key];
-  if (value === null || Array.isArray(value) || typeof value !== 'object') return {};
-  return value;
+  return isJsonObject(value) ? value : {};
 };
 
 /** 由 authored mark context 合并继承与显式 slot；显式值优先 */
 export const markSlotsOf = (
   context: ChartMarkResolveContext,
-): Readonly<{ encodings: IRJsonObject; properties: IRJsonObject }> => {
+): Readonly<{ encodings: JsonObject; properties: JsonObject }> => {
   const explicitEncodings = objectOf(context.source, 'encodings');
   const explicitProperties = objectOf(context.source, 'properties');
   const encodings = { ...context.inherited.encodings };

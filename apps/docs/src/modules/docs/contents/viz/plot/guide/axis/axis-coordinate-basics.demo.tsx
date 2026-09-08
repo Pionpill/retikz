@@ -19,12 +19,7 @@ const renderCoordinateBasics = (values: AxisCoordinateBasicsValues) => {
   const isPolar = values.coordinate === 'polar2D';
 
   return (
-    <Layout
-      width={340}
-      height={260}
-      viewBox={{ x: 0, y: 0, width: 340, height: 260 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: 0, y: 0, width: 340, height: 260 }}>
       <Plot data={axisCoordinateBasicsRows} width={340} height={260} coordinate={isPolar ? 'polar2D' : undefined}>
         <PathMark x="dimension" y="value" order="order" closed={isPolar} stroke="#2563eb" />
         {values.showX ? <PlotAxis dimension="x" /> : null}

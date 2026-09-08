@@ -329,7 +329,7 @@ describe('lowerPlots sector mark pie / donut (contract)', () => {
     const layer = firstLayer(spec, { share: SHARE });
     // 每片颜色由 color 编码 → 3 子 Scope
     expect(layer.children).toHaveLength(3);
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe('#a');
+    expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#a');
     expect(sectorNodes(layer)).toHaveLength(3);
   });
 

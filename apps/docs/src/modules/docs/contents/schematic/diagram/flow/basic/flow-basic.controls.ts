@@ -169,7 +169,7 @@ export const defineFlowBasicControlContract = (copy: FlowBasicControlCopy) => {
       'FlowEntity.role',
       'FlowEntity.status',
       'FlowEntity.text',
-      'FlowEntity.style',
+      'FlowEntity.layout',
       'FlowRelation.role',
       'FlowRelation.status',
     ],

@@ -36,11 +36,11 @@ describe('@retikz/table public API', () => {
     expect(Table).toHaveProperty('TableLegendDescriptorSchema');
     expect(Table).toHaveProperty('defineCellVisualScale');
     expect(Table).toHaveProperty('defineTableThemeStyle');
-    expect(Table).toHaveProperty('TableThemeTokenKeySchema');
-    expect(Table).toHaveProperty('TableThemeTokenBorderSchema');
-    expect(Table).toHaveProperty('TableThemeTokenOverridesSchema');
-    expect(Table).toHaveProperty('TableThemeTokenMapSchema');
-    expect(Table).toHaveProperty('getDefaultTableThemePreset');
+    expect(Table).toHaveProperty('TableDefaultsSchema');
+    expect(Table).toHaveProperty('TableAppearanceDefaultsSchema');
+    expect(Table).toHaveProperty('TableVisualDefaultsSchema');
+    expect(Table).toHaveProperty('getDefaultTableDefaults');
+    expect(Table).toHaveProperty('resolveTableThemeDefaults');
     expect(Table).not.toHaveProperty('BUILTIN_TABLE_THEME_TOKENS');
     expect(Table).not.toHaveProperty('TableStyle');
     expect(Table).not.toHaveProperty('TableThemeMode');
@@ -69,7 +69,6 @@ describe('@retikz/table public API', () => {
     expect(Table).not.toHaveProperty('matchesTableCellSelector');
     expect(Table).not.toHaveProperty('matchesTableValuePredicate');
     expect(Table).not.toHaveProperty('resolveTableCellPlans');
-    expect(Table).toHaveProperty('resolveTableThemeTokens');
     expect(Table).not.toHaveProperty('resolveCellVisualScale');
   });
 
@@ -96,8 +95,8 @@ describe('@retikz/table public API', () => {
       ],
     });
     expect(parsed).toMatchObject({ kind: 'manual', rows: [[{ span: { columns: 2 } }, null]] });
-    expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { kind: 'line' } } })).toEqual({
-      borders: { mode: 'collapse', outer: { kind: 'line' } },
+    expect(Table.TableLayoutSchema.parse({ borders: { mode: 'collapse', outer: { top: { kind: 'line' } } } })).toEqual({
+      borders: { mode: 'collapse', outer: { top: { kind: 'line' } } },
     });
   });
 });

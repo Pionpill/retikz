@@ -5,16 +5,16 @@ import { SurfaceInputSchema } from '@retikz/standard';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
-import { GraphThemeLayerSchema } from '../theme';
+import { GraphDefaultsSchema, GraphRuleSchema } from '../theme';
 
 const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
-  align: NodeSchema.shape.align,
-  lineHeight: NodeSchema.shape.lineHeight,
-  maxTextWidth: NodeSchema.shape.maxTextWidth,
-  textColor: NodeSchema.shape.textColor,
-  font: NodeSchema.shape.font,
-  opacity: NodeSchema.shape.opacity,
+  align: NodeSchema.shape.layout.unwrap().shape.align,
+  lineHeight: NodeSchema.shape.layout.unwrap().shape.lineHeight,
+  maxTextWidth: NodeSchema.shape.layout.unwrap().shape.maxTextWidth,
+  textColor: NodeSchema.shape.style.unwrap().shape.textColor,
+  font: NodeSchema.shape.style.unwrap().shape.font,
+  opacity: NodeSchema.shape.style.unwrap().shape.opacity,
 });
 
 export const BlockTextSchema = union([string(), BlockTextObjectSchema]).describe(
@@ -91,7 +91,8 @@ export const BlockSchema = strictObject({
   type: literal(GraphType.Block).describe('Block Source composite discriminator.'),
   ...ScopePropsSchema.shape,
   ...BlockSurfaceFields,
-  graphTheme: GraphThemeLayerSchema.optional().describe('Optional Graph-local appearance rule layer.'),
+  graphDefaults: GraphDefaultsSchema.optional().describe('Optional sparse Graph defaults for visible descendants.'),
+  graphRules: array(GraphRuleSchema).optional().describe('Optional ordered Graph rules for visible descendants.'),
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
   width: NonNegativeNumberSchema.optional().describe('Optional fixed outer Block width including horizontal padding.'),
   minWidth: NonNegativeNumberSchema.optional().describe(

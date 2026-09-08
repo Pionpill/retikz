@@ -65,13 +65,9 @@ const Stage: FC<StageProps> = props => {
     <Node
       id={id}
       position={[x, y]}
-      minimumSize={{ width, height: 48 }}
-      stroke={color}
-      fill={color}
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: color, fill: color, fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width, height: 48 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>{label.title}</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -85,7 +81,7 @@ const Stage: FC<StageProps> = props => {
 export const TablePresentationFlow: FC<TablePresentationFlowProps> = props => {
   const { labels } = props;
   return (
-    <Layout width={540} height={620} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Stage id="style" y={-280} label={labels.style} />
       <Stage id="cell" y={-210} label={labels.cell} />
       <Stage id="encoding" y={-140} label={labels.encoding} />
@@ -105,15 +101,19 @@ export const TablePresentationFlow: FC<TablePresentationFlowProps> = props => {
       <Draw way={['encoding', 'rules']} arrow="->" />
       <Draw way={['rules', 'plan']} arrow="->" />
 
-      <Draw way={['plan', 'formatter']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+      <Draw way={['plan', 'formatter']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
       <Draw way={['raw', 'formatter']} arrow="->" />
       <Draw way={['formatter', 'presentation']} arrow="->" />
       <Draw way={['raw', [-100, 150], 'presentation']} arrow="->" />
-      <Draw way={['plan', [95, 50], [95, 160], 'presentation']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+      <Draw
+        way={['plan', [95, 50], [95, 160], 'presentation']}
+        arrow="->"
+        style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      />
       <Draw way={['presentation', 'styled']} arrow="->" />
 
       <Draw way={['content', 'content-style']} arrow="->" />
-      <Draw way={['plan', 'content-style']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+      <Draw way={['plan', 'content-style']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
       <Draw way={['content-style', 'styled']} arrow="->" />
     </Layout>
   );

@@ -6,16 +6,13 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Plot 从 authoring 到 renderer 的主流程与运行时旁路 */
 const Demo: FC = () => (
-  <Layout width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="authoring"
       position={[-350, -12]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Authoring</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -27,12 +24,9 @@ const Demo: FC = () => (
       <Node
         id="plot-ir"
         position={[-200, -12]}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Plot IR</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -42,12 +36,9 @@ const Demo: FC = () => (
       <Node
         id="lower"
         position={[-64, -12]}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>lowerPlots</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -58,12 +49,9 @@ const Demo: FC = () => (
     <Node
       id="core-ir"
       position={[72, -12]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Core IR</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -73,12 +61,9 @@ const Demo: FC = () => (
     <Node
       id="scene"
       position={[202, -12]}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Scene</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -88,12 +73,9 @@ const Demo: FC = () => (
     <Node
       id="renderers"
       position={[322, -12]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Renderers</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -104,22 +86,16 @@ const Demo: FC = () => (
     <Node
       id="datasets"
       position={[-64, 78]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 12 } }}
     >
       external datasets
     </Node>
     <Node
       id="runtime-info"
       position={[90, 78]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 12 }}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 12 } }}
     >
       lineage · locator · diagnostics
     </Node>
@@ -129,8 +105,8 @@ const Demo: FC = () => (
     <Draw way={['lower', 'core-ir']} arrow="->" />
     <Draw way={['core-ir', 'scene']} arrow="->" />
     <Draw way={['scene', 'renderers']} arrow="->" />
-    <Draw way={['datasets', 'lower']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['lower', 'runtime-info']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['datasets', 'lower']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['lower', 'runtime-info']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

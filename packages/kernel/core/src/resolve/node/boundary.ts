@@ -1,6 +1,8 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
-import type { IRBoundary, IRJsonObject } from '../../schemas';
+import type { IRBoundary } from '../../schemas';
 import type { BoundaryReferenceResolution } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -14,7 +16,7 @@ export type BoundaryReferenceResolveContext = {
   /** 节点视觉形状 definition */
   visualDef: ShapeDefinition;
   /** 节点视觉形状参数 */
-  visualParams: IRJsonObject;
+  visualParams: JsonObject;
   /** shape 注册表 */
   shapeRegistry: ProviderCollection<ShapeDefinition>;
   /** boundary 注册表 */

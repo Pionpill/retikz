@@ -11,22 +11,28 @@ describe('Graph Scope lowering', () => {
       localNamespace: true,
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
       placement: { target: [30, 40], selfAnchor: 'center' },
-      fill: 'lightblue',
-      nodeDefault: { dashed: true },
-      pathDefault: { lineCap: 'round' },
-      labelDefault: { font: { size: 11 } },
-      arrowDefault: { length: 12 },
-      resetStyle: ['path'],
       zIndex: 2,
       clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
       boundingShape: 'circle',
       meta: { owner: 'graph' },
       animations: [],
-      graphTheme: { rules: [{ type: 'entity', appearance: { opacity: 0.5 } }] },
+      graphRules: [{ type: 'entity', style: { opacity: 0.5 } }],
       children: [
         { namespace: 'graph', type: 'entity', id: 'first', role: 'activity', position: [0, 0] },
         { type: 'node', id: 'plain', position: [50, 0] },
       ],
+      style: { fill: 'lightblue' },
+      defaults: {
+        node: {
+          style: { dashed: true },
+        },
+        path: {
+          style: { lineCap: 'round' },
+        },
+        label: { font: { size: 11 } },
+        arrow: { length: 12 },
+        reset: ['path'],
+      },
     });
 
     expect(Graph.lowerGraph(source, Graph.resolveGraphDefinitionOptions())).toEqual({
@@ -35,12 +41,6 @@ describe('Graph Scope lowering', () => {
       localNamespace: true,
       transforms: [{ kind: 'translate', x: 10, y: 20 }],
       placement: { target: [30, 40], selfAnchor: 'center' },
-      fill: 'lightblue',
-      nodeDefault: { dashed: true },
-      pathDefault: { lineCap: 'round' },
-      labelDefault: { font: { size: 11 } },
-      arrowDefault: { length: 12 },
-      resetStyle: ['path'],
       zIndex: 2,
       clip: { kind: 'rect', x: 0, y: 0, width: 200, height: 100 },
       boundingShape: 'circle',
@@ -53,10 +53,22 @@ describe('Graph Scope lowering', () => {
           id: 'first',
           role: 'activity',
           position: [0, 0],
-          opacity: 0.5,
+          style: { opacity: 0.5 },
         },
         { type: 'node', id: 'plain', position: [50, 0] },
       ],
+      style: { fill: 'lightblue' },
+      defaults: {
+        node: {
+          style: { dashed: true },
+        },
+        path: {
+          style: { lineCap: 'round' },
+        },
+        label: { font: { size: 11 } },
+        arrow: { length: 12 },
+        reset: ['path'],
+      },
     });
   });
 

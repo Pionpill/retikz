@@ -1,7 +1,8 @@
-﻿import type { Position } from '@retikz/math';
+import type { JsonObject } from '@retikz/foundation';
+import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRGraphicStyle, IRJsonObject, IRPathBase, ResolvedDropShadow } from '../../schemas';
+import type { IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
 import type { AnchorValue, Rect, SideValue } from '../../shared';
 import type { PaintValue, ScenePrimitive } from '../scene';
 
@@ -65,7 +66,7 @@ export type ResolvedShapeStyle = {
    * 描边虚线起始偏移；缺省为 0
    * @default 0
    */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 圆角半径
    * @default 0
@@ -93,7 +94,7 @@ export type ResolvedShapeStyle = {
  * @description 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
  *   每个能力函数都以实例级 `params` 作为末位参数
  */
-export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
+export type ShapeDefinitionInput<TParams extends JsonObject> = {
   /** shape 名称，由 IR `node.shape` 引用 */
   name: string;
   /**
@@ -154,7 +155,7 @@ export type ShapeDefinitionInput<TParams extends IRJsonObject> = {
 
 /**
  * shape 定义的擦除形态：registry 存这个
- * @description 所有函数收 `IRJsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
+ * @description 所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构
  *   不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全
  */
-export type ShapeDefinition = ShapeDefinitionInput<IRJsonObject>;
+export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;

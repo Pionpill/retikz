@@ -47,6 +47,8 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;
+  /** 是否显示缩放、下载、渲染器等预览宿主工具栏，默认显示。 */
+  showTools?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
   caption?: ReactNode;
 };
@@ -63,6 +65,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     size = 'md',
     previewClassName,
     hideCode = false,
+    showTools = true,
     caption,
   } = props;
   const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
@@ -153,7 +156,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     ],
   );
 
-  if (!loc) return null;
   if (!segments) return null;
 
   if (resourcesState.status === 'idle') return null;
@@ -223,6 +225,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       previewClassName={previewClassName}
+      showTools={showTools}
       controlContract={controlContract}
       controlDefinition={controlDefinition}
       controlPanelDefaultOpen={controlPanelDefaultOpen}

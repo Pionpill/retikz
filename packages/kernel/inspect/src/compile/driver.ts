@@ -7,8 +7,8 @@ import type {
   CompileOptions,
   CompileResult,
   IRScene,
-  JsonValue,
 } from '@retikz/core';
+import type { JsonValue } from '@retikz/foundation';
 
 import {
   categoricalColorAt,

@@ -36,13 +36,14 @@ const Demo: FC = () => {
   return (
     <div className="flex flex-col items-center gap-3">
       <AnimationModeProvider mode="enabled">
-        <Layout
-          animationRef={animationRef}
-          width={280}
-          height={120}
-          viewBox={{ x: -140, y: -60, width: 280, height: 120 }}
-        >
-          <Node position={[0, 0]} shape="circle" minimumSize={58} fill="#2563eb" animations={[manualTrack]}>
+        <Layout animationRef={animationRef} viewBox={{ x: -140, y: -60, width: 280, height: 120 }}>
+          <Node
+            position={[0, 0]}
+            shape="circle"
+            animations={[manualTrack]}
+            style={{ fill: '#2563eb' }}
+            layout={{ minimumSize: 58 }}
+          >
             manual
           </Node>
         </Layout>

@@ -4,14 +4,16 @@ import type { InputEmbedContext } from '@retikz/vanilla';
 
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import {
+  compileTable,
   createDetailTableIR,
   createManualTableIR,
   defineCellFormatter,
   defineCellPresentation,
   defineTableStructure,
   defineTableThemeStyle,
+  TableSchema,
 } from '@retikz/table';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import { manualTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -240,6 +242,26 @@ describe('Table React composition authoring collectors', () => {
 });
 
 describe('Table React composition root integration', () => {
+  it('keeps one sparse defaults fixture equivalent across Direct, Vanilla, and React authoring', () => {
+    const input = {
+      id: 'sparse-defaults-parity',
+      rows: [[1]],
+      tableDefaults: { appearanceDefaults: { body: { content: { style: { color: '#111111' } } } } },
+      appearanceDefaults: { body: { background: { fill: '#f8fafc', fillOpacity: 0 } } },
+      layout: { borders: { horizontal: { kind: 'line' as const, stroke: '#cbd5e1', width: 1 } } },
+      visualDefaults: { categorical: ['#2563eb'], sequential: ['#eff6ff', '#1d4ed8'] as [string, string] },
+    };
+    const direct = createManualTableIR(input);
+    const vanilla = manualTable(input);
+    const react = TableSchema.parse(contributionOf(ManualTable, input, 'sparse-defaults-parity').node);
+
+    expect(vanilla).toEqual(direct);
+    expect(react).toEqual(direct);
+    const directResult = compileTable(direct, {}, { compile: { padding: 0 } });
+    expect(compileTable(vanilla, {}, { compile: { padding: 0 } })).toEqual(directResult);
+    expect(compileTable(react, {}, { compile: { padding: 0 } })).toEqual(directResult);
+  });
+
   it('exports composition markers from the package root without exposing collectors', () => {
     expect(TableReact.DetailColumn).toBe(DetailColumn);
     expect(TableReact.Row).toBe(Row);
@@ -351,7 +373,7 @@ describe('Table React composition root integration', () => {
       encodings,
       theme: { style: 'academic', mode: 'dark' },
       themeStyles,
-      tableThemeTokens: { 'cell.content.color': '#fafafa' },
+      appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
       children: <DetailColumn id="name" field="name" formatter={{ name: 'root-props-formatter' }} />,
       structureDefinitions,
       formatterDefinitions,
@@ -384,7 +406,7 @@ describe('Table React composition root integration', () => {
         meta: { source: 'root-props-test' },
         rules,
         encodings,
-        tableThemeTokens: { 'cell.content.color': '#fafafa' },
+        appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
       },
     });
     expect(runtime.table).not.toHaveProperty('namespace');
@@ -451,7 +473,7 @@ describe('Table React composition root integration', () => {
   it('preserves every ManualTable root authoring field in rows and marker modes', () => {
     const root = {
       id: 'manual-root-fields',
-      rules: [{ selector: { locations: ['body' as const] }, appearance: { content: { color: '#b91c1c' } } }],
+      rules: [{ selector: { locations: ['body' as const] }, appearance: { content: { style: { color: '#b91c1c' } } } }],
       encodings: [
         {
           id: 'score-color',
@@ -461,7 +483,7 @@ describe('Table React composition root integration', () => {
           legend: false as const,
         },
       ],
-      tableThemeTokens: { 'cell.content.color': '#fafafa' },
+      appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
     };
     const propsRuntime = resolveReactTableRuntime(ReactTableRuntimeKind.Manual, {
       ...root,

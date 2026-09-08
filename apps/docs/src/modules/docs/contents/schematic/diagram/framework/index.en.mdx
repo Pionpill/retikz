@@ -21,7 +21,7 @@ The layers remain orthogonal: Frame spacing does not become node spacing inside 
 
 ## Presentation
 
-Titles and descriptions reuse Core `TextBlock`, including multiple lines, line-level and run-level styling, and mixed text / TeX runs. Legends reuse an explicit Standard Legend instead of introducing a Diagram-specific legend model.
+Titles and descriptions use `{ text, style?, layout? }`: `text` reuses Core `TextBlock`, including multiple lines, line-level and run-level styling, and mixed text / TeX runs. Legends reuse an explicit Standard Legend instead of introducing a Diagram-specific legend model.
 
 Titles, descriptions, and legends are all optional regions. When a region is absent, its container and spacing collapse completely and leave no empty allocation in the final layout.
 
@@ -45,3 +45,7 @@ Framework retains only independent facts and neither reads, changes, nor persist
 - Flow owns Graph measurement, automatic layout, routing, orchestration, and `FlowDiagramArtifact`
 
 These boundaries keep Framework as the shared foundation for concrete Diagrams, while [Flow Diagram](/schematic/diagram/flow) exposes only the domain contracts required for its complete loop.
+
+## Explicit defaults
+
+`diagramDefaults.presentation.title/description` follows formal Presentation paths and contains only `style.textColor/font/opacity` and `layout.align/lineHeight/maxTextWidth`, without `text`. `diagramDefaults.frame` contains padding, the three gaps, background, border, and cornerRadius; Legend placement and overflow belong to formal Frame. Theme Definitions return the same sparse structure, with instance fields taking final precedence. Fonts replace as a whole.

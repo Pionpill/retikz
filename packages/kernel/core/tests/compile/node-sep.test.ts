@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -27,7 +27,14 @@ describe('Node spacing（CSS-like padding / margin）', () => {
     const a: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], padding: 12 }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { padding: 12 },
+        },
+      ],
     };
     const b: IRScene = {
       version: 1,
@@ -37,7 +44,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          padding: { default: 12 },
+          layout: { padding: { default: 12 } },
         },
       ],
     } as unknown as IRScene;
@@ -53,7 +60,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          padding: { x: 30, y: 4 },
+          layout: { padding: { x: 30, y: 4 } },
         },
       ],
     } as unknown as IRScene;
@@ -65,7 +72,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          padding: { x: 4, y: 30 },
+          layout: { padding: { x: 4, y: 30 } },
         },
       ],
     } as unknown as IRScene;
@@ -87,7 +94,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          padding: { default: 8, x: 20, left: 30 },
+          layout: { padding: { default: 8, x: 20, left: 30 } },
         },
       ],
     } as unknown as IRScene;
@@ -99,7 +106,7 @@ describe('Node spacing（CSS-like padding / margin）', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          padding: { left: 30, right: 20, top: 8, bottom: 8 },
+          layout: { padding: { left: 30, right: 20, top: 8, bottom: 8 } },
         },
       ],
     } as unknown as IRScene;
@@ -110,7 +117,14 @@ describe('Node spacing（CSS-like padding / margin）', () => {
     const ir = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], padding: { left: 30, right: 10 } }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { padding: { left: 30, right: 10 } },
+        },
+      ],
     } as unknown as IRScene;
     const rect = findRect(compileToScene(ir).scene.primitives);
     expect(
@@ -123,7 +137,12 @@ describe('Node spacing（CSS-like padding / margin）', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], margin: { x: 10, y: 4 } },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { margin: { x: 10, y: 4 } },
+        },
         {
           type: 'path',
           children: [
@@ -145,7 +164,12 @@ describe('Node spacing（CSS-like padding / margin）', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], margin: { default: 4, x: 6, right: 10 } },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { margin: { default: 4, x: 6, right: 10 } },
+        },
         {
           type: 'path',
           children: [

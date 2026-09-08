@@ -1,6 +1,6 @@
 import type { IRChild } from '@retikz/core';
 
-import { ChildSchema, JsonObjectSchema } from '@retikz/core';
+import { ChildSchema } from '@retikz/core';
 
 import type { AnyCellPresentationDefinition, CellPresentationInput } from '../../contract';
 import type { IRTableCellContentStyle, IRTablePresentationRef } from '../../schemas';
@@ -14,18 +14,22 @@ const errorMessageOf = (error: unknown): string => (error instanceof Error ? err
 
 /** 把未知内容收窄为 detached、递归冻结的 Core child */
 export const parsePresentedChild = (value: unknown): IRChild => {
-  const json = JsonObjectSchema.parse(value);
-  const child = ChildSchema.parse(json);
-  JsonObjectSchema.parse(child);
-  return deepFreeze(child);
+  return deepFreeze(ChildSchema.parse(value));
 };
 
-/** 把非空 content style 应用为单层匿名 Core Scope */
+/** 把有实际效果的 content style 应用为单层匿名 Core Scope */
 export const applyTableCellContentStyle = (
   child: IRChild,
   style: DeepReadonly<IRTableCellContentStyle> | undefined,
 ): IRChild => {
   if (style === undefined || Object.keys(style).length === 0) return child;
+  if (
+    Object.keys(style).length === 1 &&
+    Object.keys(style.style ?? {}).length === 1 &&
+    style.style?.color === 'currentColor'
+  ) {
+    return child;
+  }
   return parsePresentedChild({ type: 'scope', ...style, children: [child] });
 };
 
@@ -43,10 +47,8 @@ export const presentCellValue = (
   const prefix = `table: presentation "${name}" for cell ${cellLabel}`;
   try {
     const definition = cellPresentationDefinitionOf(name, registry);
-    const rawOptions = JsonObjectSchema.parse(presentation.options ?? {});
-    const parsedOptions = definition.optionsSchema.parse(rawOptions);
-    const guardedOptions = deepFreeze(JsonObjectSchema.parse(parsedOptions));
-    return parsePresentedChild(definition.present(input, guardedOptions as never));
+    const parsedOptions = deepFreeze(definition.optionsSchema.parse(presentation.options ?? {}));
+    return parsePresentedChild(definition.present(input, parsedOptions as never));
   } catch (error) {
     throw new RetikzTableError(`${prefix}: ${errorMessageOf(error)}`, { cause: error });
   }

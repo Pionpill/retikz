@@ -21,7 +21,6 @@ export const renderCoordinateCartesian = (values: CoordinateCartesianValues) => 
       bottom: values.marginBottom,
       left: values.marginLeft,
     }}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PlotScale dimension="y" type="linear" domainPadding={0} />
     {values.markType === 'point' ? (

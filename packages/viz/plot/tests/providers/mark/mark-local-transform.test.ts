@@ -3,7 +3,7 @@ import type { ExternalRow } from '@retikz/data';
 import type { infer as ZodInfer } from 'zod';
 
 import { defineTransform } from '@retikz/data';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { array, literal, looseObject, object } from 'zod';
 
@@ -22,7 +22,7 @@ const DotMarkSchema = looseObject({
   type: literal('dot'),
   encoding: EncodingSchema.optional(),
   transform: array(TransformSchema).optional(),
-});
+}).catchall(JsonValueSchema);
 
 type DotMark = ZodInfer<typeof DotMarkSchema>;
 

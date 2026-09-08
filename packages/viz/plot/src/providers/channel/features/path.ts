@@ -1,10 +1,12 @@
-import type { IRPathScale, JsonValue } from '@retikz/core';
+import type { IRPathScale } from '@retikz/core';
 import type { PathThicknessValue } from '@retikz/core';
 import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
-import { DropShadowSchema, JsonValueSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
+import { DropShadowSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
+import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
@@ -143,7 +145,7 @@ const pathNumericChannels: {
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.strokeWidth = value;
+      path.style = { ...path.style, strokeWidth: value };
     },
   }),
   opacity: definePathChannel<number>({
@@ -156,7 +158,7 @@ const pathNumericChannels: {
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.opacity = value;
+      path.style = { ...path.style, opacity: value };
     },
   }),
   fillOpacity: definePathChannel<number>({
@@ -168,7 +170,7 @@ const pathNumericChannels: {
         clamp: true,
       }),
     deliver: (path, value) => {
-      path.fillOpacity = value;
+      path.style = { ...path.style, fillOpacity: value };
     },
   }),
   roundedCorners: definePathChannel<number>({
@@ -222,7 +224,7 @@ const directPathChannels = {
     { outputKind: 'number', range: [0.2, 1], clamp: true },
     opacityNumber,
     (path, value) => {
-      path.strokeOpacity = value;
+      path.style = { ...path.style, strokeOpacity: value };
     },
   ),
   zIndex: defineSimplePathChannel<number>(
@@ -254,7 +256,7 @@ const directPathChannels = {
     { outputKind: 'symbol', palette: [...fillRuleValues] },
     value => (typeof value === 'string' && fillRuleValues.has(value) ? (value as 'nonzero' | 'evenodd') : undefined),
     (path, value) => {
-      path.fillRule = value;
+      path.style = { ...path.style, fillRule: value };
     },
   ),
   thickness: defineSimplePathChannel<PathThicknessValue>(
@@ -262,7 +264,7 @@ const directPathChannels = {
     { outputKind: 'symbol', palette: [...thicknessValues] },
     pathThicknessValue,
     (path, value) => {
-      if (path.strokeWidth === undefined) path.strokeWidth = THICKNESS_TO_WIDTH[value];
+      if (path.style?.strokeWidth === undefined) path.style = { ...path.style, strokeWidth: THICKNESS_TO_WIDTH[value] };
     },
   ),
   dashPattern: defineSimplePathChannel<Array<number>>(
@@ -270,7 +272,7 @@ const directPathChannels = {
     { outputKind: 'array' },
     dashPatternValue,
     (path, value) => {
-      path.dashPattern = value;
+      path.style = { ...path.style, dashPattern: value };
     },
   ),
   shadow: defineSimplePathChannel<JsonValue>(
@@ -283,7 +285,7 @@ const directPathChannels = {
           ? jsonValue(value)
           : undefined,
     (path, value) => {
-      path.shadow = value as never;
+      path.style = { ...path.style, shadow: value as never };
     },
   ),
   blendMode: defineSimplePathChannel<string>(
@@ -291,7 +293,7 @@ const directPathChannels = {
     { outputKind: 'symbol', palette: [...blendModeValues] },
     value => (typeof value === 'string' && blendModeValues.has(value) ? value : undefined),
     (path, value) => {
-      path.blendMode = value as never;
+      path.style = { ...path.style, blendMode: value as never };
     },
   ),
 };
@@ -315,7 +317,7 @@ export const BUILTIN_PATH_CHANNELS = {
       );
     },
     deliver: (path, value) => {
-      path.lineCap = value;
+      path.style = { ...path.style, lineCap: value };
     },
   }),
   lineJoin: definePathChannel<'miter' | 'round' | 'bevel'>({
@@ -333,7 +335,7 @@ export const BUILTIN_PATH_CHANNELS = {
       );
     },
     deliver: (path, value) => {
-      path.lineJoin = value;
+      path.style = { ...path.style, lineJoin: value };
     },
   }),
 };

@@ -3,13 +3,16 @@ import type { LucideIcon } from 'lucide-react';
 
 import { ChartScatter } from 'lucide-react';
 
-import type { DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
+import type { DocNavigationAreaId, DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';
 
 import type { SidebarCategoryData, SidebarModuleData, SidebarSubModuleData } from './sidebar';
 import type { DocLocation, LeafNode } from './types';
 
 /** Viz 内拥有独立更新日志的分区 */
-const VIZ_CHANGELOG_SECTIONS = new Set(['data', 'table', 'plot']);
+const VIZ_CHANGELOG_SECTIONS = new Set(['data', 'chart', 'table', 'plot']);
+
+/** Schematic 内拥有独立更新日志的分区 */
+const SCHEMATIC_CHANGELOG_SECTIONS = new Set(['graph', 'diagram']);
 
 /** Library 内拥有独立更新日志的分区 */
 const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'layout']);
@@ -22,15 +25,19 @@ const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, LucideIcon> = {
 /** 是否为数据驱动渲染的 changelog 页面 */
 export const isChangelogLocation = (loc: DocLocation | null): boolean =>
   loc?.pageId === 'changelog' &&
-  (loc.moduleId === 'viz'
-    ? loc.sectionId !== null && VIZ_CHANGELOG_SECTIONS.has(loc.sectionId)
-    : loc.moduleId === 'library'
-      ? loc.sectionId !== null && LIBRARY_CHANGELOG_SECTIONS.has(loc.sectionId)
-      : loc.sectionId === 'releases');
+  (loc.moduleId === 'kernel'
+    ? loc.sectionId === 'packages'
+    : loc.moduleId === 'schematic'
+      ? loc.sectionId !== null && SCHEMATIC_CHANGELOG_SECTIONS.has(loc.sectionId)
+      : loc.moduleId === 'viz'
+        ? loc.sectionId !== null && VIZ_CHANGELOG_SECTIONS.has(loc.sectionId)
+        : loc.moduleId === 'library'
+          ? loc.sectionId !== null && LIBRARY_CHANGELOG_SECTIONS.has(loc.sectionId)
+          : false);
 
 /** location 到 URL / 文件路径所需的 segment 数组 */
 export const docPathSegments = (loc: DocLocation): Array<string> => {
-  const parts = [loc.moduleId];
+  const parts: Array<string> = [loc.moduleId];
   if (loc.sectionId) parts.push(loc.sectionId);
   if (loc.pageId !== null) parts.push(loc.pageId);
   if (loc.subPageId) parts.push(loc.subPageId);
@@ -39,14 +46,14 @@ export const docPathSegments = (loc: DocLocation): Array<string> => {
 
 /** 组装文档页面 URL path */
 export const buildDocPath = (
-  moduleId: string,
+  moduleId: DocNavigationAreaId,
   sectionId: string | null,
   pageId: string | null,
   subPageId?: string,
 ): string => '/' + docPathSegments({ moduleId, sectionId, pageId, subPageId }).join('/');
 
 const collectFromSubPage = (
-  moduleId: string,
+  moduleId: DocNavigationAreaId,
   sectionId: string | null,
   pageId: string,
   subPage: SubPage,
@@ -68,7 +75,12 @@ const collectFromSubPage = (
   });
 };
 
-const collectFromPage = (moduleId: string, sectionId: string | null, page: Page, acc: Array<LeafNode>): void => {
+const collectFromPage = (
+  moduleId: DocNavigationAreaId,
+  sectionId: string | null,
+  page: Page,
+  acc: Array<LeafNode>,
+): void => {
   if (page.children) {
     for (const child of page.children) {
       collectFromSubPage(moduleId, sectionId, page.id, child, acc);
@@ -85,7 +97,7 @@ const collectFromPage = (moduleId: string, sectionId: string | null, page: Page,
 };
 
 /** 按 sidebar 展示顺序拍平 sections 中的所有叶子节点 */
-export const flattenLeaves = (moduleId: string, sections: Array<Section>): Array<LeafNode> => {
+export const flattenLeaves = (moduleId: DocNavigationAreaId, sections: Array<Section>): Array<LeafNode> => {
   const acc: Array<LeafNode> = [];
   for (const section of sections) {
     const sectionId = section.label ? (section.id ?? null) : null;
@@ -117,13 +129,14 @@ const mapSidebarPage = (t: TFunction, page: Page): SidebarModuleData => ({
   label: t(page.label),
   ...(page.difficulty === undefined ? {} : { difficulty: page.difficulty }),
   ...(page.icon === undefined ? {} : { Icon: DOC_SIDEBAR_ICONS[page.icon] }),
+  ...(page.sidebarGroup === undefined ? {} : { sidebarGroup: t(page.sidebarGroup) }),
   children: mapSidebarChildren(t, page.children),
 });
 
 /** 从 docs data 构建 sidebar 视图数据 */
 export const buildSidebarCategories = (
   t: TFunction,
-  moduleId: string,
+  moduleId: DocNavigationAreaId,
   sections: Array<Section>,
 ): Array<SidebarCategoryData> =>
   sections.map((section, index) => ({

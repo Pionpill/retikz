@@ -76,8 +76,20 @@ const imageReadonlyLayers = (href: string): ReadonlyArray<RenderReadonlyLayer> =
 
 const scene = (fill: string, reversed = false): IRScene => {
   const children: IRScene['children'] = [
-    { type: 'node', id: 'node-a', position: [0, 0], text: 'A', fill },
-    { type: 'node', id: 'node-b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+    {
+      type: 'node',
+      id: 'node-a',
+      position: [0, 0],
+      text: 'A',
+      style: { fill },
+    },
+    {
+      type: 'node',
+      id: 'node-b',
+      position: [80, 0],
+      text: 'B',
+      style: { fill: '#3b82f6' },
+    },
   ];
   return { version: 1, type: 'scene', children: reversed ? [...children].reverse() : children };
 };
@@ -91,7 +103,6 @@ const animatedScene = (fill: string, trigger: 'manual' | 'visible' | Readonly<{ 
       id: 'node-a',
       position: [0, 0],
       text: 'A',
-      fill,
       animations: [
         {
           property: 'opacity',
@@ -103,6 +114,7 @@ const animatedScene = (fill: string, trigger: 'manual' | 'visible' | Readonly<{ 
           trigger,
         },
       ],
+      style: { fill },
     },
   ],
 });
@@ -419,9 +431,6 @@ describe('builtin retained renderers', () => {
             id: 'animated-group',
             position: [0, 0],
             shape: 'rectangle',
-            fill: '#f97316',
-            textColor: 'white',
-            padding: { x: 28, y: 18 },
             text: 'animated',
             animations: [
               {
@@ -435,6 +444,8 @@ describe('builtin retained renderers', () => {
                 origin: 'center',
               },
             ],
+            style: { fill: '#f97316', textColor: 'white' },
+            layout: { padding: { x: 28, y: 18 } },
           },
         ],
       },
@@ -3598,9 +3609,17 @@ describe('builtin retained renderers', () => {
           id: 'node-a',
           position: [0, 0],
           text: 'A',
-          fill: gradient ? { kind: 'linearGradient', angle: 0, stops: [{ offset: 0, color: '#ef4444' }] } : '#ef4444',
+          style: {
+            fill: gradient ? { kind: 'linearGradient', angle: 0, stops: [{ offset: 0, color: '#ef4444' }] } : '#ef4444',
+          },
         },
-        { type: 'node', id: 'node-b', position: [80, 0], text: 'B', fill: '#3b82f6' },
+        {
+          type: 'node',
+          id: 'node-b',
+          position: [80, 0],
+          text: 'B',
+          style: { fill: '#3b82f6' },
+        },
       ];
       return {
         version: 1,
@@ -3887,8 +3906,20 @@ describe('builtin retained renderers', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'bottom', position: [40, 40], text: 'bottom', fill },
-        { type: 'node', id: 'top', position: [40, 40], text: 'top', fill: '#3b82f6' },
+        {
+          type: 'node',
+          id: 'bottom',
+          position: [40, 40],
+          text: 'bottom',
+          style: { fill },
+        },
+        {
+          type: 'node',
+          id: 'top',
+          position: [40, 40],
+          text: 'top',
+          style: { fill: '#3b82f6' },
+        },
       ],
     });
     const pair = createCorePair(overlapScene('#ef4444'), overlapScene('#22c55e'));
@@ -3941,8 +3972,22 @@ describe('builtin retained renderers', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'changed', position: [20, 20], width: 10, height: 10, fill },
-        { type: 'node', id: 'stable', position: [80, 20], width: 10, height: 10, fill: '#3b82f6' },
+        {
+          type: 'node',
+          id: 'changed',
+          position: [20, 20],
+          width: 10,
+          height: 10,
+          style: { fill },
+        },
+        {
+          type: 'node',
+          id: 'stable',
+          position: [80, 20],
+          width: 10,
+          height: 10,
+          style: { fill: '#3b82f6' },
+        },
       ],
     });
     const pair = createCorePair(simpleScene('#ef4444'), simpleScene('#22c55e'));
@@ -4013,7 +4058,16 @@ describe('builtin retained renderers', () => {
     const offscreenScene = (fill: string): IRScene => ({
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'offscreen', position: [1_000, 1_000], width: 10, height: 10, fill }],
+      children: [
+        {
+          type: 'node',
+          id: 'offscreen',
+          position: [1_000, 1_000],
+          width: 10,
+          height: 10,
+          style: { fill },
+        },
+      ],
     });
     const pair = createCorePair(offscreenScene('#ef4444'), offscreenScene('#22c55e'));
     const layout = Object.freeze({ x: 0, y: 0, width: 100, height: 100 });
@@ -5297,7 +5351,14 @@ describe('builtin retained renderers', () => {
       ir: {
         version: 1,
         type: 'scene',
-        children: [{ type: 'node', id: 'image', position: [0, 0], fill: { kind: 'image', href: 'pic.png' } }],
+        children: [
+          {
+            type: 'node',
+            id: 'image',
+            position: [0, 0],
+            style: { fill: { kind: 'image', href: 'pic.png' } },
+          },
+        ],
       },
     });
     const image = TestImage.latest;
@@ -5341,7 +5402,14 @@ describe('builtin retained renderers', () => {
     const imageScene: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'image', position: [0, 0], fill: { kind: 'image', href: 'race.png' } }],
+      children: [
+        {
+          type: 'node',
+          id: 'image',
+          position: [0, 0],
+          style: { fill: { kind: 'image', href: 'race.png' } },
+        },
+      ],
     };
     const { current, next, patch } = createCorePair(scene('#ef4444'), imageScene);
     const host = document.createElement('canvas');
@@ -5398,7 +5466,14 @@ describe('builtin retained renderers', () => {
     const imageScene: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'image', position: [0, 0], fill: { kind: 'image', href: 'candidate.png' } }],
+      children: [
+        {
+          type: 'node',
+          id: 'image',
+          position: [0, 0],
+          style: { fill: { kind: 'image', href: 'candidate.png' } },
+        },
+      ],
     };
     const failure = defineRuntimeCommitParticipant<Readonly<{ ok: true }>>({
       key: 'z:image-failure',
@@ -5463,7 +5538,14 @@ describe('builtin retained renderers', () => {
     const imageScene: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'image', position: [0, 0], fill: { kind: 'image', href: 'prepare.png' } }],
+      children: [
+        {
+          type: 'node',
+          id: 'image',
+          position: [0, 0],
+          style: { fill: { kind: 'image', href: 'prepare.png' } },
+        },
+      ],
     };
     const snapshot = createCorePair(scene('#ef4444'), imageScene).next;
     const host = document.createElement('canvas');
@@ -5503,8 +5585,18 @@ describe('builtin retained renderers', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'first', position: [0, 0], fill: { kind: 'image', href: 'first.png' } },
-        { type: 'node', id: 'second', position: [80, 0], fill: { kind: 'image', href: 'second.png' } },
+        {
+          type: 'node',
+          id: 'first',
+          position: [0, 0],
+          style: { fill: { kind: 'image', href: 'first.png' } },
+        },
+        {
+          type: 'node',
+          id: 'second',
+          position: [80, 0],
+          style: { fill: { kind: 'image', href: 'second.png' } },
+        },
       ],
     };
     const snapshot = createCorePair(scene('#ef4444'), imageScene).next;

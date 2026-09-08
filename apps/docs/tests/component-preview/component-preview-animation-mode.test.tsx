@@ -34,13 +34,13 @@ const controlState: PreviewControlState = {
 
 const ExplicitlyEnabledDemo: FC = () => (
   <Layout animate={true} width={100} height={100}>
-    <Node id="enabled" position={[0, 0]} minimumSize={2} animations={FADE} />
+    <Node id="enabled" position={[0, 0]} animations={FADE} layout={{ minimumSize: 2 }} />
   </Layout>
 );
 
 const ExplicitlyDisabledDemo: FC = () => (
   <Layout animate={false} width={100} height={100}>
-    <Node id="disabled" position={[0, 0]} minimumSize={2} animations={FADE} />
+    <Node id="disabled" position={[0, 0]} animations={FADE} layout={{ minimumSize: 2 }} />
   </Layout>
 );
 

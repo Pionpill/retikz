@@ -37,12 +37,14 @@ describe('Core isolated observation fragments', () => {
             id: 'fragment-node',
             position: [0, 0],
             text: 'fragment',
-            fill: {
-              kind: 'linearGradient',
-              stops: [
-                { offset: 0, color: '#111111' },
-                { offset: 1, color: '#eeeeee' },
-              ],
+            style: {
+              fill: {
+                kind: 'linearGradient',
+                stops: [
+                  { offset: 0, color: '#111111' },
+                  { offset: 1, color: '#eeeeee' },
+                ],
+              },
             },
           });
           expect(fragment.scene.primitives).toHaveLength(1);

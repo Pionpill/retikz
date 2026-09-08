@@ -15,7 +15,7 @@ describe('<Layout> 单个自包含 rectangle step', () => {
   it('lone rounded rectangle（demo 形态）→ 渲染出 <path>，不抛错', () => {
     const svg = renderToStaticMarkup(
       <Layout width={260} height={140}>
-        <Path fill="lightgray" stroke="currentColor">
+        <Path style={{ fill: 'lightgray', stroke: 'currentColor' }}>
           <Step kind="rectangle" from={[-80, -40]} to={[80, 40]} cornerRadius={10} />
         </Path>
       </Layout>,

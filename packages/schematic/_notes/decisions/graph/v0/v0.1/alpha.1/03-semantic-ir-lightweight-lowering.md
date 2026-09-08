@@ -5,6 +5,8 @@
 - 修订日期：2026-08-28
 - 关联：[Graph package family](./01-graph-package-family.md) · [Entity 命名](./05-graph-element-naming.md) · [Entity contract](./07-entity-data-geometry.md) · [Relation contract](./08-relation-data-geometry.md) · [Graph context](./09-composable-graph-context.md) · [Group contract](./10-group-composition.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](../alpha.2/07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Graph 语义需要在持久化、LLM / 工具处理和跨 adapter 交换时保留，但 Core、Scene 与 renderer 不应解释 Graph 的 role、kind、predicate、direction 或 grouping 词汇。Graph Source 因此只保存领域事实与适用的 Core lower-facing 字段，并在 Graph owner 的 Definition / resolve / lowering 边界消费领域语义

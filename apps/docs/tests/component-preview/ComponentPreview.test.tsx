@@ -33,25 +33,25 @@ const renderAtRoute = (path: string, node: ReactNode): string =>
 
 describe('ComponentPreview demo 目录解析（切页失步回归）', () => {
   it('无 DemoLocationContext 时按实时路由目录解析（基线）', () => {
-    const html = renderAtRoute('/core/components/pageA', <ComponentPreview files={MISSING} />);
-    expect(html).toContain(`contents/core/components/pageA/${MISSING}.demo.tsx`);
+    const html = renderAtRoute('/kernel/components/pageA', <ComponentPreview files={MISSING} />);
+    expect(html).toContain(`contents/kernel/components/pageA/${MISSING}.demo.tsx`);
   });
 
   it('有 DemoLocationContext 时优先用配对 segments，即便实时路由已是新页', () => {
     const html = renderAtRoute(
-      '/core/components/pageA',
-      <DemoLocationContext.Provider value={['core', 'components', 'pageB']}>
+      '/kernel/components/pageA',
+      <DemoLocationContext.Provider value={['kernel', 'components', 'pageB']}>
         <ComponentPreview files={MISSING} />
       </DemoLocationContext.Provider>,
     );
     // 内容属于 pageB、路由已切到 pageA：目录必须取 context 的 pageB
-    expect(html).toContain(`contents/core/components/pageB/${MISSING}.demo.tsx`);
-    expect(html).not.toContain(`contents/core/components/pageA/${MISSING}.demo.tsx`);
+    expect(html).toContain(`contents/kernel/components/pageB/${MISSING}.demo.tsx`);
+    expect(html).not.toContain(`contents/kernel/components/pageA/${MISSING}.demo.tsx`);
   });
 
   it('在预览正下方渲染 caption 说明', () => {
     const html = renderAtRoute(
-      '/core/components/pageA',
+      '/kernel/components/pageA',
       <ComponentPreview files={MISSING} caption="调整参数后观察主体边界。" />,
     );
 

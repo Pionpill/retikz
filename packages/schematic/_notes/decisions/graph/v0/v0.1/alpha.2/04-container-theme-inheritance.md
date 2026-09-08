@@ -4,6 +4,8 @@
 - 决策日期：2026-08-31
 - 关联：[Graph v0.1 alpha.2 roadmap](./roadmap.md) · [Graph 语义注册与主题样式](../alpha.1/06-graph-entity-registry-theme.md) · [Block 开放内容与布局容器](./03-block-open-content.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](./07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Graph Theme 已经用当前 Core `theme.style` 的同名 Definition 为 Entity 与 Relation 提供领域外观默认，Flow compile 也在测量和最终物化阶段传递同一个 Core Theme 与 Graph definitions。然而 Docs 的 Flow reference definitions 仍把 Academic、Vibrant、Clean 的 Entity / Relation 外观复制为显式 Flow token；这些字段会以作者覆盖优先级遮蔽 Graph reference style，使同名主题存在两套数值真源

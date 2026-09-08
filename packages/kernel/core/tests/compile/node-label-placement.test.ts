@@ -25,8 +25,8 @@ const sceneWithLabel = (label: IRNodeLabel, shape: IRNode['shape'] = 'rectangle'
       id: 'A',
       position: [0, 0],
       shape,
-      minimumSize: { width: 100, height: 60 },
       label,
+      layout: { minimumSize: { width: 100, height: 60 } },
     },
   ],
 });

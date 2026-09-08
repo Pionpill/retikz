@@ -23,21 +23,18 @@ const Curve: FC<{ inspect?: boolean }> = props => {
         inspector: STROKE_PATH_INSPECTOR_KEY,
         options: { controlPoints: true, labels: true },
       }}
-      stroke="dodgerblue"
-      strokeWidth={3}
+      style={{ stroke: 'dodgerblue', strokeWidth: 3 }}
     >
       {children}
     </InspectPath>
   ) : (
-    <Path stroke="dodgerblue" strokeWidth={3}>
-      {children}
-    </Path>
+    <Path style={{ stroke: 'dodgerblue', strokeWidth: 3 }}>{children}</Path>
   );
 };
 
 /** 使用内置 Path Inspector 显示三次贝塞尔控制点 */
 const Demo: FC = () => (
-  <InspectLayout registry={registry} width={360} height={180} viewBox={{ x: -180, y: -90, width: 360, height: 180 }}>
+  <InspectLayout registry={registry}>
     <Curve inspect />
   </InspectLayout>
 );
@@ -46,7 +43,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={360} height={180} viewBox={{ x: -180, y: -90, width: 360, height: 180 }}>
+    <Layout>
       <Curve />
     </Layout>
   ),

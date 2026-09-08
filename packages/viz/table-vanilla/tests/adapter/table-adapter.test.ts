@@ -47,7 +47,16 @@ describe('Table Vanilla adapter', () => {
     const spec = createManualTableIR({
       id: 'scores',
       rows: [[98]],
-      rules: [{ selector: { cellIds: ['cell.r0.c0'] }, appearance: { content: { color: '#b91c1c' } } }],
+      rules: [
+        {
+          selector: { cellIds: ['cell.r0.c0'] },
+          appearance: {
+            content: {
+              style: { color: '#b91c1c' },
+            },
+          },
+        },
+      ],
       encodings: [
         {
           id: 'score-color',
@@ -57,7 +66,7 @@ describe('Table Vanilla adapter', () => {
           legend: false,
         },
       ],
-      tableThemeTokens: { 'cell.content.color': '#fafafa' },
+      appearanceDefaults: { body: { content: { style: { color: '#fafafa' } } } },
     });
 
     const lowered = TableSchema.parse(
@@ -67,7 +76,7 @@ describe('Table Vanilla adapter', () => {
     expect(lowered).toEqual(spec);
     expect(lowered.rules).toEqual(spec.rules);
     expect(lowered.encodings).toEqual(spec.encodings);
-    expect(lowered.tableThemeTokens).toEqual(spec.tableThemeTokens);
+    expect(lowered.appearanceDefaults).toEqual(spec.appearanceDefaults);
   });
 
   it('returns table.table roots and the shared stable provider maker for every lower call', () => {

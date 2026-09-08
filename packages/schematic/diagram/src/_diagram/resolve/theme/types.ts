@@ -14,12 +14,12 @@ export type EffectiveDiagramThemeFrame = Readonly<{
 
 /** Diagram Theme 解析后的完整 presentation 文本 baseline */
 export type EffectiveDiagramTextAppearance = Readonly<{
-  textColor: NonNullable<IRNode['textColor']>;
-  opacity: NonNullable<IRNode['opacity']>;
-  font: NonNullable<IRNode['font']>;
-  align: NonNullable<IRNode['align']>;
-  lineHeight: NonNullable<IRNode['lineHeight']>;
-  maxTextWidth?: IRNode['maxTextWidth'];
+  textColor: NonNullable<NonNullable<IRNode['style']>['textColor']>;
+  opacity: NonNullable<NonNullable<IRNode['style']>['opacity']>;
+  font: NonNullable<NonNullable<IRNode['style']>['font']>;
+  align: NonNullable<NonNullable<IRNode['layout']>['align']>;
+  lineHeight: NonNullable<NonNullable<IRNode['layout']>['lineHeight']>;
+  maxTextWidth?: NonNullable<IRNode['layout']>['maxTextWidth'];
 }>;
 
 /** 当前 Core Theme 下解析完成的 Diagram Theme */

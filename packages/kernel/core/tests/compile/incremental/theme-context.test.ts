@@ -33,7 +33,7 @@ const themedComposite = defineComposite({
         type: 'node',
         id: 'box',
         position: [0, 0],
-        fill: context.theme.mode === ThemeMode.Dark ? '#111111' : '#eeeeee',
+        style: { fill: context.theme.mode === ThemeMode.Dark ? '#111111' : '#eeeeee' },
       },
     ],
   }),

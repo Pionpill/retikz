@@ -1,50 +1,33 @@
-import type { ComponentType } from 'react';
-
-import { createElement, isValidElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlValues } from '../../src/modules/docs/components/component-preview';
 import type { PreviewControlContract, PreviewSourceConfig } from '../../src/modules/docs/preview';
 
-import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as bubbleZh } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.controls';
 import { previewControlContract as bubbleEn } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.controls';
-import BubbleEnDemo from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.demo';
 import { previewSource as bubbleEnSource } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.demo';
-import BubbleZhDemo from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.zh.demo';
 import { previewSource as bubbleZhSource } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.zh.demo';
 import { previewControlContract as connectedZh } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.controls';
 import { previewControlContract as connectedEn } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.controls';
-import ConnectedEnDemo from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.demo';
 import { previewSource as connectedEnSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.demo';
-import ConnectedZhDemo from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.zh.demo';
 import { previewSource as connectedZhSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.zh.demo';
 import { previewControlContract as rangedDotZh } from '../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-basic.controls';
 import { previewControlContract as rangedDotEn } from '../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-basic.en.controls';
-import RangedDotEnDemo from '../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-basic.en.demo';
 import { previewSource as rangedDotEnSource } from '../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-basic.en.demo';
-import RangedDotZhDemo from '../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-basic.zh.demo';
 import { previewSource as rangedDotZhSource } from '../../src/modules/docs/contents/viz/chart/points/ranged-dot/ranged-dot-basic.zh.demo';
 import { previewControlContract as regressionZh } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.controls';
 import { previewControlContract as regressionEn } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.controls';
-import RegressionEnDemo from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.demo';
 import { previewSource as regressionEnSource } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.en.demo';
-import RegressionZhDemo from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.zh.demo';
 import { previewSource as regressionZhSource } from '../../src/modules/docs/contents/viz/chart/points/regression/regression-basic.zh.demo';
 import { previewControlContract as fertilityZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
 import { previewControlContract as fertilityEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.controls';
-import FertilityEnDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import { previewSource as fertilityEnSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
-import FertilityZhDemo from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewSource as fertilityZhSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewControlContract as worldCupZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.controls';
 import { previewControlContract as stripZh } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.controls';
 import { previewControlContract as stripEn } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.controls';
-import StripEnDemo from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.demo';
 import { previewSource as stripEnSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.demo';
-import StripZhDemo from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.zh.demo';
 import { previewSource as stripZhSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.zh.demo';
 
 type PointCoordinateScenario = Readonly<{
@@ -52,9 +35,7 @@ type PointCoordinateScenario = Readonly<{
   relatedApi: string;
   zh: PreviewControlContract;
   en: PreviewControlContract;
-  demos: readonly [ComponentType, ComponentType];
   sources: readonly [PreviewSourceConfig, PreviewSourceConfig];
-  hasFacet?: boolean;
 }>;
 
 const scenarios: ReadonlyArray<PointCoordinateScenario> = [
@@ -63,7 +44,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     relatedApi: 'BubbleChart.coordinate',
     zh: bubbleZh,
     en: bubbleEn,
-    demos: [BubbleZhDemo, BubbleEnDemo],
     sources: [bubbleZhSource, bubbleEnSource],
   },
   {
@@ -71,7 +51,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     relatedApi: 'RegressionChart.coordinate',
     zh: regressionZh,
     en: regressionEn,
-    demos: [RegressionZhDemo, RegressionEnDemo],
     sources: [regressionZhSource, regressionEnSource],
   },
   {
@@ -79,7 +58,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     relatedApi: 'ConnectedScatterChart.coordinate',
     zh: connectedZh,
     en: connectedEn,
-    demos: [ConnectedZhDemo, ConnectedEnDemo],
     sources: [connectedZhSource, connectedEnSource],
   },
   {
@@ -87,7 +65,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     relatedApi: 'RangedDotChart.coordinate',
     zh: rangedDotZh,
     en: rangedDotEn,
-    demos: [RangedDotZhDemo, RangedDotEnDemo],
     sources: [rangedDotZhSource, rangedDotEnSource],
   },
   {
@@ -95,7 +72,6 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     relatedApi: 'ScatterChart.coordinate',
     zh: fertilityZh,
     en: fertilityEn,
-    demos: [FertilityZhDemo, FertilityEnDemo],
     sources: [fertilityZhSource, fertilityEnSource],
   },
   {
@@ -103,46 +79,9 @@ const scenarios: ReadonlyArray<PointCoordinateScenario> = [
     relatedApi: 'StripChart.coordinate',
     zh: stripZh,
     en: stripEn,
-    demos: [StripZhDemo, StripEnDemo],
     sources: [stripZhSource, stripEnSource],
   },
 ];
-
-const svgSizeOf = (markup: string): { width: number; height: number } => {
-  const svg = markup.match(/<svg\b[^>]*>/)?.[0];
-  const width = svg?.match(/\bwidth="([\d.]+)"/)?.[1];
-  const height = svg?.match(/\bheight="([\d.]+)"/)?.[1];
-  if (width === undefined || height === undefined) {
-    throw new Error('Point Chart preview must render an explicitly sized SVG');
-  }
-  return { width: Number(width), height: Number(height) };
-};
-
-const renderDemo = (
-  Demo: ComponentType,
-  contract: PreviewControlContract,
-  coordinateId: string,
-  coordinate: 'cartesian2D' | 'polar2D',
-): string => {
-  const canonicalValues = contract.canonicalValues as PreviewControlValues;
-  const values = { ...canonicalValues, [coordinateId]: coordinate };
-
-  return renderToStaticMarkup(
-    createElement(
-      PreviewControlStateContext.Provider,
-      {
-        value: {
-          canonicalValues,
-          values,
-          setValue: () => undefined,
-          applyValues: () => undefined,
-          reset: () => undefined,
-        },
-      },
-      createElement(Demo),
-    ),
-  );
-};
 
 const canonicalCoordinateProps = (source: PreviewSourceConfig): Record<string, unknown> => {
   const chart = source.canonicalRender?.();
@@ -178,16 +117,5 @@ describe('Viz Chart Point family coordinate controls', () => {
       'scatter-world-cup-shots-coordinate-system',
     );
     expect(worldCupZh.relatedApis).not.toContain('ScatterChart.coordinate');
-  });
-
-  it.each(scenarios)('$coordinateId 按坐标系与分面状态选择预览尺寸', scenario => {
-    for (const [index, Demo] of scenario.demos.entries()) {
-      const contract = index === 0 ? scenario.zh : scenario.en;
-      const cartesian = renderDemo(Demo, contract, scenario.coordinateId, 'cartesian2D');
-      const polar = renderDemo(Demo, contract, scenario.coordinateId, 'polar2D');
-
-      expect(svgSizeOf(cartesian)).toEqual({ width: 800, height: 500 });
-      expect(svgSizeOf(polar)).toEqual(scenario.hasFacet ? { width: 800, height: 400 } : { width: 400, height: 500 });
-    }
   });
 });

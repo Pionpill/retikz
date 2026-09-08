@@ -11,8 +11,8 @@ const circleNode = (id: string, position: [number, number], minimumSize = 40): I
   id,
   shape: 'circle',
   position,
-  minimumSize,
-  fill: '#2563eb',
+  style: { fill: '#2563eb' },
+  layout: { minimumSize },
 });
 
 /** 手搓一个带 / 不带 viewBox 的 Scene IR */

@@ -420,7 +420,7 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
       { d: rows },
       opts,
     );
-    expect(layer.nodeDefault?.shape).toBe('circle');
+    expect(layer.defaults?.node?.shape).toBe('circle');
     expect(positionsOf(layer)).toHaveLength(3);
     expect(positionsOf(layer).every(p => Number.isFinite(p[0]) && Number.isFinite(p[1]))).toBe(true);
   });
@@ -452,8 +452,8 @@ describe('lowerPlots polar 投影几何 (contract)', () => {
     ];
     const layer = firstLayer(spec, { d: rows }, opts);
     expect(layer.children).toHaveLength(2); // 2 类别 → 2 子 Scope
-    expect((layer.children[0] as IRScope).nodeDefault?.fill).toBe('#aa');
-    expect((layer.children[1] as IRScope).nodeDefault?.fill).toBe('#bb');
+    expect((layer.children[0] as IRScope).defaults?.node?.style?.fill).toBe('#aa');
+    expect((layer.children[1] as IRScope).defaults?.node?.style?.fill).toBe('#bb');
   });
 
   // 错误路径

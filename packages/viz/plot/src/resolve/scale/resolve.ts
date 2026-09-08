@@ -1,6 +1,5 @@
 import type { DataFieldTypeValue, IRDataFieldDefinition } from '@retikz/data';
 
-import { JsonObjectSchema } from '@retikz/core';
 import { coerceTimestamp, DataFieldType, FieldOrderMode, inferCategoryDomain } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
@@ -39,10 +38,7 @@ export const resolveScaleDefinition = (
 
 const parseScaleOperation = (def: AnyScaleDefinition, operation: IRPlotScaleOperation): never => {
   if (isBuiltinScaleOperation(operation)) return operation as never;
-  JsonObjectSchema.parse(operation);
-  const parsed = def.schema.parse(operation) as never;
-  JsonObjectSchema.parse(parsed);
-  return parsed;
+  return def.schema.parse(operation) as never;
 };
 
 /**

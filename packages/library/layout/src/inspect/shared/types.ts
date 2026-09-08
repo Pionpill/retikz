@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { InspectionSelection, InspectionSelectionTarget, InspectorKey } from '@retikz/inspect';
 import type { input as ZodInput, output as ZodOutput } from 'zod';
 
@@ -14,7 +14,7 @@ export type ResolvedBaseLayoutInspectOptions = ZodOutput<typeof BaseLayoutInspec
 export type LayoutInspectionSelectionScope = InspectionSelectionTarget;
 
 /** 构造一个布局检查器选择结果所需的输入 */
-export type CreateLayoutInspectionSelectionInput<TOptions extends IRJsonObject = BaseLayoutInspectOptions> = Readonly<{
+export type CreateLayoutInspectionSelectionInput<TOptions extends JsonObject = BaseLayoutInspectOptions> = Readonly<{
   /** 目标检查器的注册键 */
   inspector: InspectorKey;
   /** 整张图、子树或组件自身 */

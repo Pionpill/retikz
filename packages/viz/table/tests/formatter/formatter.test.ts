@@ -1,5 +1,4 @@
-﻿import type { IRJsonObject } from '@retikz/core';
-import type { ZodType } from 'zod';
+import type { JsonObject } from '@retikz/foundation';
 
 import { formatDefaultLocale } from 'd3-format';
 import { describe, expect, it } from 'vitest';
@@ -31,7 +30,7 @@ const layout = {
   overflow: 'visible',
 } as const;
 
-const modelOf = (value: string | number | boolean | null, formatter?: { name: string; options?: IRJsonObject }) =>
+const modelOf = (value: string | number | boolean | null, formatter?: { name: string; options?: JsonObject }) =>
   ({
     rows: [{ id: 'row.0', index: 0, kind: TableRowKind.Body }],
     columns: [{ id: 'amount', index: 0, field: 'amount' }],
@@ -187,10 +186,10 @@ describe('formatted Table model', () => {
     expect(Object.isFrozen(observed)).toBe(true);
     expect(Object.isFrozen((observed as { roles: Array<string> }).roles)).toBe(true);
 
-    const nonJsonOptions = defineCellFormatter<IRJsonObject>({
-      name: 'non-json-options',
-      optionsSchema: strictObject({}).transform(() => ({ run: () => 'x' })) as unknown as ZodType<IRJsonObject>,
-      format: ({ value }) => value,
+    const transformedOptions = defineCellFormatter({
+      name: 'transformed-options',
+      optionsSchema: strictObject({}).transform(() => ({ value: Number.NaN })),
+      format: (_input, options) => (Number.isNaN(options.value) ? 'transformed' : 'unexpected'),
     });
     const invalidOutput = defineCellFormatter({
       name: 'invalid-output',
@@ -198,9 +197,9 @@ describe('formatted Table model', () => {
       format: () => ({ invalid: true }) as unknown as string,
     });
 
-    expect(() => formatDefaultTable(modelOf(1, { name: 'non-json-options' }), [nonJsonOptions])).toThrow(
-      /formatter "non-json-options".*cell "cell\.0"/i,
-    );
+    expect(
+      formatDefaultTable(modelOf(1, { name: 'transformed-options' }), [transformedOptions]).cells[0],
+    ).toMatchObject({ value: 'transformed' });
     expect(() => formatDefaultTable(modelOf(1, { name: 'invalid-output' }), [invalidOutput])).toThrow(
       /formatter "invalid-output".*cell "cell\.0"/i,
     );

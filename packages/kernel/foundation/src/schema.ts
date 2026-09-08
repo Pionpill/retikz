@@ -1,8 +1,18 @@
 import type { ZodType } from 'zod';
 
-import { enum as zodEnum, number, string, union } from 'zod';
+import { enum as zodEnum, json, number, record, string, union } from 'zod';
 
-import type { OpenString, ValueOf } from './types';
+import type { JsonValue, OpenString, ValueOf } from './types';
+
+/** 递归 JSON 值 schema */
+export const JsonValueSchema: ZodType<JsonValue, unknown> = json().describe(
+  'Recursive JSON value: string, finite number, boolean, null, array, or object.',
+);
+
+/** 字符串键 JSON 对象 schema */
+export const JsonObjectSchema = record(string(), JsonValueSchema).describe(
+  'JSON object with string keys and recursive JSON values.',
+);
 
 /** 非空白字符串 schema */
 export const NonBlankStringSchema = string()

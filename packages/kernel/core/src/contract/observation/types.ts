@@ -1,7 +1,8 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRChild, JsonValue } from '../../schemas';
+import type { IRChild } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { CompileOccurrenceLocator } from '../occurrence';
 import type { Scene } from '../scene';

@@ -456,7 +456,11 @@ describe('Scatter Chart encoding resolution', () => {
     });
     const mono = defineScale({
       family: 'channel',
-      schema: strictObject({ type: literal('mono-chart'), name: NonBlankStringSchema }),
+      schema: strictObject({
+        type: literal('mono-chart'),
+        name: NonBlankStringSchema,
+        tone: literal('mono').default('mono'),
+      }),
       isFieldCompatible: () => true,
       resolve: () => ({
         of: () => '#111111',
@@ -497,7 +501,20 @@ describe('Scatter Chart encoding resolution', () => {
       customRegistry.runtime,
     );
     expect(transformed.plot.transform).toEqual([{ kind: 'copy-chart-field', field: 'amount', as: 'copiedAmount' }]);
-    expect(transformed.plot.scales).toContainEqual({ type: 'mono-chart', name: 'groupMono' });
+    expect(transformed.plot.scales).toContainEqual({ type: 'mono-chart', name: 'groupMono', tone: 'mono' });
+
+    const extended = resolveScatter(
+      {
+        encodings: {
+          x: 'amount',
+          y: 'margin',
+          color: { field: 'group', scale: { reference: 'extensionMono' } },
+        },
+      },
+      { scales: [{ type: 'mono-chart', name: 'extensionMono' }] },
+      customRegistry.runtime,
+    );
+    expect(extended.plot.scales).toContainEqual({ type: 'mono-chart', name: 'extensionMono', tone: 'mono' });
 
     const aggregated = resolveScatter(
       {
@@ -517,6 +534,61 @@ describe('Scatter Chart encoding resolution', () => {
         metrics: [{ kind: 'range-chart-value', field: 'amount', as: 'amountRange' }],
       },
     ]);
+  });
+
+  it('rejects Scale Definition schemas that rewrite the registered operation identity', () => {
+    const renamed = defineScale({
+      family: 'channel',
+      schema: strictObject({
+        type: literal('renamed-chart'),
+        name: NonBlankStringSchema.transform(name => `${name}.parsed`),
+      }),
+      isFieldCompatible: () => true,
+      resolve: () => ({
+        of: () => '#111111',
+        legendForm: 'swatch',
+        domain: [],
+        range: ['#111111'],
+        scaleType: 'renamed-chart',
+      }),
+    });
+    const customRegistry = resolveChartProviderRegistry([
+      {
+        family: 'point',
+        recipe: ScatterChartDefinition,
+        themeDefinitions: [],
+        runtimeDefinitions: { scaleDefinitions: [renamed] },
+      },
+    ]);
+
+    for (const [recipe, plotExtension, path] of [
+      [
+        {
+          encodings: {
+            x: 'amount',
+            y: 'margin',
+            color: { field: 'group', scale: { operation: { type: 'renamed-chart', name: 'direct' } } },
+          },
+        },
+        undefined,
+        ['recipe', 'encodings', 'color', 'scale'],
+      ],
+      [
+        {
+          encodings: {
+            x: 'amount',
+            y: 'margin',
+            color: { field: 'group', scale: { reference: 'extension' } },
+          },
+        },
+        { scales: [{ type: 'renamed-chart', name: 'extension' }] },
+        ['recipe', 'encodings', 'color', 'scale'],
+      ],
+    ] as const) {
+      expect(() => resolveScatter(recipe, plotExtension, customRegistry.runtime)).toThrowError(
+        expect.objectContaining({ details: expect.objectContaining({ path }) }),
+      );
+    }
   });
 
   it('locates unregistered custom operations at the concrete encoding mapping', () => {

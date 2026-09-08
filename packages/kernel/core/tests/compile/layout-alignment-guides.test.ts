@@ -204,7 +204,12 @@ describe('layout alignment guide ownership', () => {
     const one = probeGuidesOf({
       type: 'scope',
       children: [
-        { type: 'node', position: [0, 0], text: 'A', padding: 0, margin: 0 },
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'A',
+          layout: { padding: 0, margin: 0 },
+        },
         {
           type: 'path',
           children: [
@@ -217,8 +222,18 @@ describe('layout alignment guide ownership', () => {
     const duplicate = probeGuidesOf({
       type: 'scope',
       children: [
-        { type: 'node', position: [0, 0], text: 'A', padding: 0, margin: 0 },
-        { type: 'node', position: [20, 0], text: 'B', padding: 0, margin: 0 },
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'A',
+          layout: { padding: 0, margin: 0 },
+        },
+        {
+          type: 'node',
+          position: [20, 0],
+          text: 'B',
+          layout: { padding: 0, margin: 0 },
+        },
       ],
     });
 
@@ -239,12 +254,16 @@ describe('layout alignment guide ownership', () => {
           type: 'node',
           position: [0, 0],
           text: 'A',
-          padding: 0,
-          margin: 0,
+          layout: { padding: 0, margin: 0 },
         });
         if (child === undefined) throw new Error('expected child baseline guides');
         const laid = context.layoutChild(
-          { type: 'node', position: [0, 0], text: 'A', padding: 0, margin: 0 },
+          {
+            type: 'node',
+            position: [0, 0],
+            text: 'A',
+            layout: { padding: 0, margin: 0 },
+          },
           NaturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);
@@ -263,7 +282,12 @@ describe('layout alignment guide ownership', () => {
       }),
       compile: (_node, context) => {
         const laid = context.layoutChild(
-          { type: 'node', position: [0, 0], text: 'A', padding: 0, margin: 0 },
+          {
+            type: 'node',
+            position: [0, 0],
+            text: 'A',
+            layout: { padding: 0, margin: 0 },
+          },
           NaturalLayoutProposal,
         );
         if (laid.kind === LayoutChildProbeKind.Failed) return context.raise(laid.failure);

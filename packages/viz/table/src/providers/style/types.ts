@@ -1,26 +1,32 @@
-import type { ResolvedTheme, ThemeTokenSourceValue } from '@retikz/core';
+import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 
-import type { IRTableThemeTokenOverrides, TableThemeTokenKey, TableThemeTokenMap } from '../../schemas';
+import type { IRTableDefaults } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 
-/** 单个 Table token 的最终来源 */
-export type TableThemeTokenSource = DeepReadonly<{
-  /** 最终来源与 Table owner 的关系 */
-  kind: ThemeTokenSourceValue;
-  /** 可诊断的输入路径 */
-  path: string;
-}>;
-
-/** Table resolver 使用的 Core effective Theme 形态 */
+/** Table style resolver 使用的 Core effective Theme 形态 */
 export type TableThemeContext = Pick<ResolvedTheme, 'style' | 'mode' | 'colors'>;
 
-/** Table resolver 产出的完整 token map 与逐 key 来源 */
-export type ResolvedTableThemeTokens = DeepReadonly<{
-  /** 完整 19 项 Table token map */
-  tokens: TableThemeTokenMap;
-  /** 每个 token 的最终 cascade winner */
-  sources: Record<TableThemeTokenKey, TableThemeTokenSource>;
+/** Table defaults 来源在 resolver inspection 中的稳定分类 */
+export type TableThemeDefaultsLayerKind = 'neutral' | 'style';
+
+/** 一个实际参与 Table defaults cascade 的来源层 */
+export type TableThemeDefaultsSource = DeepReadonly<{
+  /** 来源分类 */
+  kind: TableThemeDefaultsLayerKind;
+  /** 稳定来源路径 */
+  path: string;
+  /** 该来源贡献的稀疏 defaults */
+  defaults?: IRTableDefaults;
 }>;
 
-/** Table resolver 接收的 local sparse token overlay */
-export type ResolveTableThemeTokenOverlay = DeepReadonly<IRTableThemeTokenOverrides>;
+/** Table defaults resolver 的完整环境与来源结果 */
+export type TableThemeDefaultsResolution = DeepReadonly<{
+  /** 可选的有效 Core style 名称 */
+  style?: string;
+  /** 有效 Core Theme mode */
+  mode: ThemeModeValue;
+  /** baseline 与 style definition 合并后的 defaults */
+  defaults: IRTableDefaults;
+  /** 按实际级联顺序排列的 defaults 来源 */
+  layers: ReadonlyArray<TableThemeDefaultsSource>;
+}>;

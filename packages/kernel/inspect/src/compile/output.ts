@@ -30,8 +30,8 @@ export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<
   }
   return Object.freeze(
     outputValues.map((outputValue, index) => {
-      const detachedOutput = cloneAndFreezeInspectionJson(outputValue, `Inspector output ${index}`);
-      return cloneAndFreezeInspectionJson(ChildSchema.parse(detachedOutput), `Inspector output ${index}`);
+      const parsedOutput = ChildSchema.parse(outputValue);
+      return cloneAndFreezeInspectionJson(parsedOutput, `Inspector output ${index}`);
     }),
   );
 };

@@ -56,7 +56,9 @@ Strip Chart 用一个离散位置角色组织类别，再在该刻度附近散�
 
 `x` 与 `y` 只接受 direct field mapping。scale 可以直接写 operation，也可以引用 `plotExtension.scales` 中的命名 scale；Chart 通过 Scale Definition 的 `continuity` 判断拓扑，因此自定义离散 scale 与内建 scale 走同一 registry 路径。
 
-`jitter.span` 是**总散布宽度**。数字直接使用当前位置角色的输出单位；`{ kind: 'ratio', value }` 使用离散刻度间距的 `0..1` 比例。省略时由 Plot 使用 `0.3`，`seed` 省略时为 `0`。相同有序数据、scale、span 与 seed 会得到相同位置。
+`jitter.span` 是**总散布宽度**。数字直接使用当前位置角色的输出单位；`{ kind: 'ratio', value }` 使用离散刻度间距的 `0..1` 比例。`distribution` 默认是 `{ kind: 'uniform' }`；切换为 `{ kind: 'normal', sigma }` 后，偏移仍以类别中心为零点，但会更集中在中心，并在 `[-span / 2, span / 2]` 内截断。`sigma` 相对于散布半宽，默认 `0.5`。省略时由 Plot 使用 `0.3`，`seed` 省略时为 `0`。相同有序数据、scale、span、distribution 与 seed 会得到相同位置。
+
+Strip 使用的是 placement jitter：它只改变离散 role 上的绘制位置，不修改 rows 或连续值。若要在比例尺前派生字段，应使用 [Data transform](/viz/plot/transform) 的 `jitter`；Strip 不把两者混为一个配置。
 
 默认 grid 只跟随连续角色。`domainPadding` 也只应用于连续位置 scale；离散边界的安全距离由 Plot placement 根据半个散布宽度与实际 glyph 外扩共同收窄 range，点不会被 clamp、缩小或绘制到坐标边界外。空间不足时会明确报错。
 
@@ -76,11 +78,14 @@ Strip Chart 用一个离散位置角色组织类别，再在该刻度附近散�
 
 ### `StripPropertiesProps`
 
-| 属性             | 类型                                                                    | 默认值                          | 描述                                                          |
-| ---------------- | ----------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------- |
-| `jitter?`        | `{ span?: number \| { kind: 'ratio'; value: number }; seed?: number }`  | `{ span: ratio(0.3), seed: 0 }` | 沿唯一离散位置角色确定性散布；Chart 不接受手写 `role`         |
-| `domainPadding?` | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径             | 只配置连续位置 scale；离散 containment 由 Plot placement 负责 |
-| Point 外观       | `IRPointProperties`                                                     | Point 默认                      | `size`、`shape`、颜色、描边、透明度等常量外观                 |
+| 属性                         | 类型                                                                    | 默认值                                                 | 描述                                                          |
+| ---------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------- |
+| `jitter?`                    | `IRStripChartJitter`                                                    | `{ span: ratio(0.3), distribution: uniform, seed: 0 }` | 沿唯一离散位置角色确定性散布；Chart 不接受手写 `role`         |
+| `jitter.distribution?`       | `IRPlotRandomDistribution`                                              | `{ kind: 'uniform' }`                                  | 选择均匀散布或集中于中心的截断正态分布                        |
+| `jitter.distribution.kind`   | `'uniform' \| 'normal'`                                                 | `uniform`                                              | 随机分布判别值                                                |
+| `jitter.distribution.sigma?` | `number`                                                                | `0.5`                                                  | 仅 normal 使用；相对于 jitter 半宽的标准差，必须大于 `0`      |
+| `domainPadding?`             | `number` \| `{ kind?, default?, x?, y?, left?, right?, top?, bottom? }` | 最终最大 Point 半径                                    | 只配置连续位置 scale；离散 containment 由 Plot placement 负责 |
+| Point 外观                   | `IRPointProperties`                                                     | Point 默认                                             | `size`、`shape`、颜色、描边、透明度等常量外观                 |
 
 ### `StripMarkProps`
 

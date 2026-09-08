@@ -1,0 +1,378 @@
+---
+title: Tier 2 Composites
+description: Composites preserve serializable Tier 2 intent, then lower through either lightweight-context expansion or layout-aware compile into core Tier 1 primitives.
+---
+
+retikz IR has two child tiers: **Tier 1** is core's built-in `node` / `path` / `coordinate` / `scope`; a **Tier 2 composite** is a high-level node supplied by a domain package, such as a complete chart spec from `@retikz/plot`.
+
+A Tier 2 node is discriminated by `namespace + type`, owns a complete schema, and is handled by the same composite registry during compile. Use `expand` for structural transformation and layout-aware `compile` when parent layout depends on real child content. Both paths eventually emit Tier 1, so layout, anchors, zIndex, and renderers reuse core capabilities while core remains unaware of table, chart, tree, or other domain semantics.
+
+<ComponentAlert
+  type="tip"
+  title="First-time readers can skip this"
+  description="This page only establishes the Tier 2 mental model. You do not write composites when using ready-made components; return when persisting high-level IR, integrating a domain package, or authoring an extension."
+/>
+
+## Why composites exist
+
+Saving dozens of rectangles and lines loses the higher-level fact that the result is a chart or a tree. A composite preserves domain fields in serializable IR, then delays concrete geometry until compilation:
+
+<ComponentPreview files="composite-pipeline" size="xs" hideCode />
+
+The `lower` edge in the figure is the key boundary. Upstream systems can store, transfer, diff, or generate a high-level node; downstream systems receive uniform Tier 1 output, so every renderer shares one canonical Core compile result.
+
+A capability usually belongs in a composite when all three are true:
+
+- one high-level node generates a data- or algorithm-dependent number of Tier 1 primitives;
+- the domain schema expresses user intent better than expanded geometry;
+- React, Vanilla, SVG, Canvas, and other entries should share the same result.
+
+## Two mutually exclusive branches
+
+`defineComposite` registers a schema and one processing branch as a single definition. A definition must provide exactly one of `expand` or `compile`. `schema` may be one object or a direct object union whose branches share the same `namespace` / `type` literals. Every schema branch must match the definition key; non-object branches, blank literals, and mixed keys fail immediately.
+
+Core routes composites only by the top-level `namespace + type`; it does not interpret discriminators inside a domain schema. Table, for example, can define several spec branches under one `table.table` composite, while the Table package remains responsible for interpreting and narrowing `structure.kind`.
+
+<ComponentPreview files="composite-basic" size="sm" />
+
+| Field            | Responsibility                                         | Constraint                                        |
+| ---------------- | ------------------------------------------------------ | ------------------------------------------------- |
+| `namespace`      | Partition the domain                                   | Matches the schema literal                        |
+| `type`           | Identify a node type inside the domain                 | Matches the schema literal                        |
+| `schema`         | Validate the full node and apply defaults              | Object or direct object union with one shared key |
+| `expand`         | Emit Tier 1 or nested Tier 2 from the effective Theme  | Exclusive with `compile`; must reach Tier 1       |
+| `compile`        | Measure, constrain, and place children in full compile | Exclusive with `expand`                           |
+| `artifactSchema` | Validate a domain artifact returned by `compile`       | Required when the definition has an artifact type |
+
+The compiler looks up `${namespace}.${type}`, validates the node, and calls the selected branch. Nested composites continue until final output contains only Tier 1 and committed replay results. An unregistered node warns and is skipped; cycles or excess depth throw. See [Compile](/kernel/reference/runtime/compile) for complete fields, diagnostics, and standalone lowering behavior.
+
+## Theme context
+
+Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style?, mode, colors }` value. Core starts at its default light baseline, then inherits selectors through Scene → outer Scope → inner Scope and generates `colors` from the default palette or the current style resolver. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
+
+The composite maps shared `colors` and the domain tokens, palettes, or defaults produced by its style resolver into already-materialized IR. Core does not interpret Tier 2 tokens or own Plot, Chart, or Table tokens; neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed. A custom style must be injected into both Core and every Tier 2 resolver that consumes it; a missing registry entry fails loudly.
+
+## Spatial transparency and qualified handles
+
+Some composites must expose a domain-meaningful region after nested Scopes, layout replay, and transforms, in addition to generating visible primitives. `expand` therefore always returns a structured result, and a layout-aware `compile` can declare local rectangles in the same result:
+
+```ts
+return {
+  children: [{ type: 'node', position: [0, 0], text: 'Card' }],
+  spatialHandles: [
+    {
+      key: 'body',
+      role: 'card',
+      bounds: { x: -40, y: -20, width: 80, height: 40 },
+      tags: ['content'],
+      payload: { itemId: 'card-a' },
+    },
+  ],
+};
+```
+
+The declared `bounds` use the current composite allocation coordinate. After final traversal, Scope transforms, and replay settlement, Core projects them to world-space rectangular AABBs and publishes them in `CompileResult.spatialHandles`. `ownerPath` preserves every outer-to-inner composite `namespace`, `type`, explicit `id`, and occurrence.
+
+| Layer                   | What it stores                                          | What it never enters                  |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------- |
+| callback declaration    | owner-local `key` / `role` / local rectangle            | IR schema or Scene                    |
+| qualified compile index | `ownerPath` / world AABB / origin and final occurrences | SVG attributes or Canvas draw state   |
+| query                   | exact owner, ancestor path, key, role, and all tags     | renderer DOM lookup or geometry tests |
+
+`selectSpatialHandles()` returns zero or more entries, while `resolveSpatialHandle()` requires exactly one. An underspecified cross-owner query reports a miss or ambiguity instead of guessing the “nearest” node. The index is still present and empty when no declaration exists.
+
+`lowerIRToKernel()` cannot settle world geometry. It still lowers absent or empty declarations, but a non-empty `spatialHandles` array fails synchronously and directs the caller to `compileToScene()`. This prevents local rectangles from being silently discarded or presented as settled spatial results.
+
+## Layout-aware compile
+
+`CompositeDefinition.expand()` has no text measurement, providers, reference environment, or parent availability, so it cannot express “query child contribution → solve parent layout → allocate the child slot.” `compile(node, context)` closes that loop inside one Core compile. A root composite receives the frozen `NaturalLayoutProposal`; a nested composite receives the complete two-axis `context.proposal` sent to that occurrence by its parent.
+
+A proposal is a **parent-provided availability condition**, not the child's real size or the slot itself. `LayoutProposal` always contains both `x` and `y`:
+
+| Axis proposal         | Meaning                                                                   |
+| --------------------- | ------------------------------------------------------------------------- |
+| `intrinsic.minimum`   | Query the minimum contribution while the other-axis proposal stays active |
+| `intrinsic.natural`   | Query the natural contribution while the other-axis proposal stays active |
+| `range { min, max? }` | Resolve a slot in the interval; an omitted `max` is unbounded             |
+| `exact { value }`     | Require a fixed parent slot without forcing child geometry to scale       |
+
+<ComponentPreview files="layout-aware-compile" size="xl" hideCode />
+
+Every probe in the figure first returns a `resolved` or `failed` outcome. A resolved result then keeps five independent fields that cannot be inferred from one another:
+
+| Field              | Meaning                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `slotSize`         | Origin-free allocation slot resolved from the proposal                           |
+| `allocationBounds` | Real child-local layout occupancy, which may be larger or smaller than the slot  |
+| `visualBounds`     | Final static ink envelope; it describes visual contribution, not slot evaluation |
+| `alignmentGuides?` | One-dimensional child-local guides; Core defines first / last baseline           |
+| `replay`           | Opaque, one-use token for this isolated transaction                              |
+
+An `exact` slot axis equals `value`; a `range` axis lies in `[min, max]`, or is at least `min` when unbounded; an intrinsic slot is the size resolved by that contribution probe. `slotSize` has width and height but no origin. The parent solver creates a slot rect in its own coordinate system, then uses real bounds and guides for alignment, overflow, and clipping.
+
+Plain text uses the widest unbreakable unit for x minimum, natural line width for x natural, and can reflow under finite range / exact proposals. Its y contribution is the actual height after applying the complete x proposal. Mixed runs, TeX, Path, Coordinate, and ordinary Scope have no general reflow contract, so they may retain natural allocation while only their slot responds to range / exact. Core does not read dimensions back from DOM, SVG / Canvas, or a renderer, and does not own Box / Flex / Grid / Overlay line, track, or slot policy.
+
+### Selection, failure, and commit
+
+Each `layoutChild()` runs in an isolated transaction. A parent solver may compare several minimum / natural / range / exact candidates. Discarded resolved results and failed outcomes leak no primitives, resources, warnings, artifacts, namespaces, identities, or observations. Select success with `context.replay(result)`; select failure with `context.raise(failure)`, which preserves the original provider, source path, cause, and complete nested probe occurrence.
+
+Failures, results, replays, and output children are governed by callback-local, compile-local identity. They cannot be forged, reused after copying, passed across callbacks / compiles, or committed twice. An occurrence's `probe[index]` records candidate child dispatch, while `replay[index]` records final output commit; these are different stages.
+
+This complete third-party layout-aware Composite first queries contribution, then sends an allocation proposal. It aligns real allocation inside the slot, projects guides into composite coordinates, and commits only the final result:
+
+```ts
+import { ChildSchema, CompositeBaseSchema, defineComposite } from '@retikz/core';
+import { z } from 'zod';
+
+export const cardComposite = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CompositeBaseSchema.extend({
+    namespace: z.literal('demo'),
+    type: z.literal('card'),
+    child: ChildSchema,
+    width: z.number().nonnegative(),
+    height: z.number().nonnegative(),
+  }),
+  compile: (node, context) => {
+    const contribution = context.layoutChild(node.child, {
+      x: { kind: 'intrinsic', mode: 'minimum' },
+      y: { kind: 'intrinsic', mode: 'natural' },
+    });
+    if (contribution.kind === 'failed') return context.raise(contribution.failure);
+
+    const final = context.layoutChild(node.child, {
+      x: { kind: 'exact', value: Math.max(node.width, contribution.result.slotSize.width) },
+      y: { kind: 'range', min: 0, max: node.height },
+    });
+    if (final.kind === 'failed') return context.raise(final.failure);
+
+    const { slotSize, allocationBounds } = final.result;
+    const x = 8 + (slotSize.width - allocationBounds.width) / 2 - allocationBounds.x;
+    const y = 8 + (slotSize.height - allocationBounds.height) / 2 - allocationBounds.y;
+
+    return {
+      allocationBounds: { x: 0, y: 0, width: slotSize.width + 16, height: slotSize.height + 16 },
+      alignmentGuides: final.result.alignmentGuides?.map(guide => ({
+        ...guide,
+        position: guide.position + (guide.dimension === 'x' ? x : y),
+      })),
+      children: [
+        context.replay(final.result, {
+          transforms: [{ kind: 'translate', x, y }],
+          clip: { kind: 'rect', x: 8, y: 8, width: slotSize.width, height: slotSize.height },
+        }),
+      ],
+    };
+  },
+});
+```
+
+A replay wrapper first places the child with `transforms`, then applies `clip` in the parent allocation coordinate system. It does not rewrite the original `LayoutChildResult`; clipping only tightens the final committed Scene visual contribution. Use `context.scope()` when identity, a local namespace, metadata, zIndex, or recursive structure is needed. Scope may compose ordinary `IRChild`, replay children, and nested scope children without introducing a new IR or Scene-primitive kind, renderer contract, or second compile pipeline.
+
+### Typed artifacts from the same compile
+
+A layout-aware definition can declare `artifactSchema` and return a JSON-safe `artifact` from `compile`. Core wraps it in `CompileResult.artifacts` with `namespace`, `type`, and an occurrence locator. The locator combines the original `sourcePath` with structured expansion / output / replay segments, without a global Map, callback capture, or second traversal. Hosts therefore receive the Scene and domain artifacts from one canonical compile.
+
+The same artifact can be a stable owner output for an external observer. This Card Inspector is defined independently in `@retikz/inspect`; `compileCard` still only returns an artifact accepted by `CardArtifactSchema`.
+
+```ts
+const CardArtifactSchema = z.strictObject({
+  bounds: z.strictObject({
+    x: z.number(),
+    y: z.number(),
+    width: z.number().nonnegative(),
+    height: z.number().nonnegative(),
+  }),
+});
+
+type CardArtifact = z.infer<typeof CardArtifactSchema>;
+
+const CardInspector = defineInspector({
+  namespace: 'demo',
+  type: 'card-bounds',
+  owner: { kind: 'composite', namespace: 'demo', type: 'card' },
+  subjectSchema: CardArtifactSchema,
+  optionsInputSchema: z.strictObject({}),
+  optionsSchema: z.strictObject({}),
+  inspect: (artifact: CardArtifact, context) => ({
+    type: 'path',
+    children: [
+      { type: 'step', kind: 'move', to: [artifact.bounds.x, artifact.bounds.y] },
+      {
+        type: 'step',
+        kind: 'rectangle',
+        to: [artifact.bounds.x + artifact.bounds.width, artifact.bounds.y + artifact.bounds.height],
+      },
+    ],
+    style: { stroke: context.appearance.scopeColor },
+  }),
+});
+
+export const CardDefinition = defineComposite({
+  namespace: 'demo',
+  type: 'card',
+  schema: CardSchema,
+  compile: compileCard,
+  artifactSchema: CardArtifactSchema,
+});
+
+const inspectorRegistry = createInspectorRegistry([CardInspector]);
+```
+
+`inspect()` returns an ordinary `IRChild` or dense readonly array and declares no `outputSchema`. Core publishes only the validated artifact for a final occurrence; `@retikz/inspect` validates `subjectSchema` again and compiles auxiliary output in an isolated environment that does not recursively notify observers. Selection and registration do not enter the Composite Definition. See [`@retikz/inspect`](/kernel/packages/extension/inspect).
+
+`lowerIRToKernel()` only supports independently executable `expand` branches. It fails explicitly on a layout-aware composite because the correct result depends on the full compile environment.
+
+## Compared with Sugar
+
+|         | Sugar (such as `<Draw>`)  | Tier 2 composite                                            |
+| ------- | ------------------------- | ----------------------------------------------------------- |
+| In IR   | Already flattened         | Preserves the high-level node                               |
+| Lowered | During adapter building   | During core compilation                                     |
+| For     | Directly mapped shorthand | Structural generation or content-aware layout / aggregation |
+
+<Comparison target="tikz" title="Tier 2 and PGFPlots">
+
+PGFPlots sits above TikZ primitives; similarly, `@retikz/plot` uses composites to lower a grammar-of-graphics spec into core primitives. retikz keeps that high-level node as validated, serializable IR and makes lowering a compile step shared by every backend.
+
+</Comparison>
+
+## Using it inside React `<Layout>`
+
+Ordinary users only place a supported domain component inside `<Layout>`. Its package contributes the high-level node and composite definition, and `<Layout>` sends both through the same core lowering path without teaching core about that domain.
+
+If you are implementing a domain InputEmbedAdapter, registering `adapters`, or debugging dataset aggregation and host behavior, go directly to [Layout: Higher-Level Capabilities and Host Integration](/kernel/components/layout/overview#higher-level-capabilities-and-host-integration) and [Runtime Extensions](/kernel/reference/runtime/extensions). This concept page intentionally omits React Input collection and Vanilla-processing aggregation internals.
+
+## Provider roots and transitive dependencies
+
+An embedded adapter does not assemble a Definition array itself. It returns the high-level `node` and uses `CoreProviderContribution` to declare the `roots` required by that node plus the `providers` already imported into the current program. A regular provider key uses `capability + name`; a composite key uses `capability: 'composite' + namespace + type`. Each provider also declares ordered direct dependencies, runtime-only datasets, and one stable `makeDefinition` function.
+
+<ComponentPreview files="embeddable-flow" size="xl" hideCode />
+
+Core computes the reachable closure from the roots, then materializes every Definition once in dependency-first, first-reachable order. This third-party `third.card` depends on Standard Frame. Both use the same graph; there is no built-in allowlist:
+
+```ts
+import type { CoreDependencyProvider } from '@retikz/core';
+
+import { resolveCoreProviderDependencies } from '@retikz/core';
+import { FrameProvider } from '@retikz/standard';
+
+const CardProvider = {
+  key: { capability: 'composite', namespace: 'third', type: 'card' },
+  dependencies: [FrameProvider.key],
+  datasets: {},
+  makeDefinition: () => CardDefinition,
+} satisfies CoreDependencyProvider;
+
+const definitions = resolveCoreProviderDependencies({
+  contributions: [
+    {
+      roots: [CardProvider.key],
+      providers: [CardProvider, FrameProvider],
+    },
+  ],
+});
+```
+
+`datasets` merge by provider key and reference before maker execution; they never enter IR, Scene, or manifests. A repeated reference deduplicates only when its value is the same by `Object.is`. Conflicting maker references, ordered dependencies, or dataset identities fail before any maker runs. Missing dependencies and cycles also report the complete key chain during preflight.
+
+The provider graph assembles which Definitions reusable modules require. `resolveCoreProviderDependencies()` returns options grouped by Core capability: direct-IR authors may pass complete Definition collections explicitly, while React, Vanilla, and other toolchains resolve contributions first. Provider results come first and explicit Definitions append afterward; a repeated key deduplicates only the same Definition object, while a different object fails loudly.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Provider graph contract and runtime-only datasets',
+      path: 'packages/kernel/core/src/contract/provider/dependency-provider.ts',
+      startLine: 1,
+      endLine: 37,
+    },
+    {
+      label: 'Reachable closure, topology, and conflict preflight',
+      path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts',
+      startLine: 69,
+      endLine: 209,
+    },
+    {
+      label: 'Validate the definition key against schema literals',
+      path: 'packages/kernel/core/src/contract/composite/define.ts',
+      startLine: 30,
+      endLine: 89,
+    },
+    {
+      label: 'Public proposal, probe, guide, and callback contracts',
+      path: 'packages/kernel/core/src/contract/composite/types.ts',
+      startLine: 20,
+      endLine: 214,
+    },
+    {
+      label: 'Spatial declaration, qualified owner, and selector contracts',
+      path: 'packages/kernel/core/src/contract/spatial-handle/types.ts',
+      startLine: 7,
+      endLine: 85,
+    },
+    {
+      label: 'Exact spatial-handle selection and unique resolution',
+      path: 'packages/kernel/core/src/contract/spatial-handle/query.ts',
+      startLine: 48,
+      endLine: 63,
+    },
+    {
+      label: 'Validate and freeze proposals and resolve slots',
+      path: 'packages/kernel/core/src/compile/orchestration/layout-proposal.ts',
+      startLine: 15,
+      endLine: 148,
+    },
+    {
+      label: 'Build compile-local replay and Scope children',
+      path: 'packages/kernel/core/src/compile/orchestration/composite-output.ts',
+      startLine: 214,
+      endLine: 218,
+    },
+    {
+      label: 'Place replay roots and commit their transaction sinks',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1019,
+      endLine: 1165,
+    },
+    {
+      label: 'Preflight the complete runtime handle tree before consuming tokens',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1182,
+      endLine: 1257,
+    },
+    {
+      label: 'Isolate child probes, failures, and resolved results',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1511,
+      endLine: 1558,
+    },
+    {
+      label: 'Own failures and raise selected failures',
+      path: 'packages/kernel/core/src/compile/probe-failure.ts',
+      startLine: 62,
+      endLine: 115,
+    },
+  ]}
+/>
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/components/design/layers">
+    <span className="font-semibold">Layers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      The DSL, IR, and Scene model and where lowering occurs
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/reference/runtime/extensions">
+    <span className="font-semibold">Runtime Extensions</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Registry injection and extension diagnostic conventions
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/viz/plot">
+    <span className="font-semibold">@retikz/plot</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">A composite used in a charting domain</span>
+  </LinkedCard>
+</div>

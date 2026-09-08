@@ -189,9 +189,7 @@ describe('Node layout alignment baselines', () => {
           type: 'node',
           position: [4, 10],
           text: 'A',
-          lineHeight: 20,
-          padding: 0,
-          margin: 0,
+          layout: { lineHeight: 20, padding: 0, margin: 0 },
         },
         measureText,
       ),
@@ -216,9 +214,7 @@ describe('Node layout alignment baselines', () => {
           type: 'node',
           position: [4, 10],
           text: ['A', 'B'],
-          lineHeight: 20,
-          padding: 0,
-          margin: 0,
+          layout: { lineHeight: 20, padding: 0, margin: 0 },
         },
         measureText,
       ),
@@ -242,7 +238,16 @@ describe('Node layout alignment baselines', () => {
         fixedMeasurer,
       ),
     ).toBeUndefined();
-    expect(probeGuidesOf({ type: 'node', position: [0, 0], padding: 0, margin: 0 }, fixedMeasurer)).toBeUndefined();
+    expect(
+      probeGuidesOf(
+        {
+          type: 'node',
+          position: [0, 0],
+          layout: { padding: 0, margin: 0 },
+        },
+        fixedMeasurer,
+      ),
+    ).toBeUndefined();
   });
 
   it('uses the same authoritative baseline for the guide and emitted single physical line', () => {
@@ -251,9 +256,7 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 10],
         text: 'A',
-        lineHeight: 20,
-        padding: 0,
-        margin: 0,
+        layout: { lineHeight: 20, padding: 0, margin: 0 },
       },
       fixedMeasurer,
     );
@@ -267,9 +270,7 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 10],
         text: ['A', 'B'],
-        lineHeight: 20,
-        padding: 0,
-        margin: 0,
+        layout: { lineHeight: 20, padding: 0, margin: 0 },
       },
       text => ({ width: text.length * 10, height: 24, ascent: 16, descent: 8 }),
     );
@@ -288,11 +289,8 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 10],
         text: ['A', 'B'],
-        lineHeight: 20,
-        padding: 0,
-        margin: 0,
-        fillOpacity: 0,
-        strokeOpacity: 0,
+        style: { fillOpacity: 0, strokeOpacity: 0 },
+        layout: { lineHeight: 20, padding: 0, margin: 0 },
       },
       text => ({
         width: text.length * 10,
@@ -318,11 +316,8 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 10],
         text: ['A', 'B'],
-        lineHeight: 20.26,
-        padding: 0,
-        margin: 0,
-        fillOpacity: 0,
-        strokeOpacity: 0,
+        style: { fillOpacity: 0, strokeOpacity: 0 },
+        layout: { lineHeight: 20.26, padding: 0, margin: 0 },
       },
       text => ({
         width: text.length * 10,
@@ -349,9 +344,7 @@ describe('Node layout alignment baselines', () => {
         type: 'node',
         position: [4, 7.04],
         text: [{ runs: [{ text: 'A' }, { tex: 'x' }] }, { runs: [{ text: 'B' }, { tex: 'x' }] }],
-        lineHeight: 20,
-        padding: 0,
-        margin: 0,
+        layout: { lineHeight: 20, padding: 0, margin: 0 },
       },
       text =>
         text === 'A'

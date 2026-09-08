@@ -3,7 +3,7 @@ title: 扩展机制
 description: 查询 Definition、registry 与 host lowerer 的能力族、注入入口、选择键和具体扩展指南。
 ---
 
-本页是扩展点词典：用于快速判断一个自定义能力属于哪种机制、从哪里注入、IR 保存什么。完整实现步骤放在对应能力分组末尾的扩展指南；能力归属和完备性判断见[架构](/kernel/concepts/design/principles)。
+本页是扩展点词典：用于快速判断一个自定义能力属于哪种机制、从哪里注入、IR 保存什么。完整实现步骤放在对应能力分组末尾的扩展指南；能力归属和完备性判断见[架构](/kernel/components/design/principles)。
 
 > 扩展函数和 registry 不写进 IR。IR 只保存可序列化的 key 与参数，宿主在编译或运行时注入实际行为。
 
@@ -92,7 +92,7 @@ Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `
       RibbonPathKindDefinition 与 provider contribution：可选的带状路径
     </span>
   </LinkedCard>
-  <LinkedCard href="/kernel/concepts/design/composite">
+  <LinkedCard href="/kernel/components/design/composite">
     <span className="font-semibold">复合</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       CompositeDefinition：轻量 Theme 上下文展开或 layout-aware compile

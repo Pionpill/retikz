@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   ArrowDefaultSchema,
@@ -18,15 +18,19 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
         localNamespace: true,
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
         placement: { target: [30, 40], selfAnchor: 'center' },
-        fill: 'lightblue',
-        opacity: 0.8,
-        nodeDefault: { shape: 'circle', fill: 'white' },
-        resetStyle: ['path'],
         zIndex: 2,
         clip: { kind: 'rect', x: 0, y: 0, width: 20, height: 10 },
         boundingShape: 'circle',
         meta: { role: 'wrapper' },
         animations: [],
+        style: { fill: 'lightblue', opacity: 0.8 },
+        defaults: {
+          node: {
+            shape: 'circle',
+            style: { fill: 'white' },
+          },
+          reset: ['path'],
+        },
       }).success,
     ).toBe(true);
     expect(ScopePropsSchema.safeParse({ type: 'scope' }).success).toBe(false);
@@ -35,11 +39,10 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
 
   it('与完整 Scope 共享字段校验并保持 JSON round-trip', () => {
     const props = {
-      fill: 'lightblue',
+      style: { fill: 'lightblue' },
       transforms: [{ kind: 'scale' as const, x: 1.5, pivot: [2, 3] as [number, number] }],
       placement: { target: [10, 20] as [number, number] },
-      nodeDefault: { fill: 'white' },
-      resetStyle: ['label' as const],
+      defaults: { node: { style: { fill: 'white' } }, reset: ['label' as const] },
     };
     const parsed = ScopePropsSchema.parse(JSON.parse(JSON.stringify(props)));
     expect(parsed).toEqual(props);
@@ -58,7 +61,12 @@ describe('ScopePropsSchema 可复用 Scope authored fragment', () => {
 
 describe('NodeDefaultSchema（every node 默认）', () => {
   it('接受 node 样式字段子集', () => {
-    expect(NodeDefaultSchema.safeParse({ shape: 'circle', fill: 'lightblue' }).success).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        shape: 'circle',
+        style: { fill: 'lightblue' },
+      }).success,
+    ).toBe(true);
   });
 
   it('接受空对象（nodeDefault={{}} 无效果但合法）', () => {
@@ -66,16 +74,32 @@ describe('NodeDefaultSchema（every node 默认）', () => {
   });
 
   it('接受 color 主色字段', () => {
-    expect(NodeDefaultSchema.safeParse({ color: 'red' }).success).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { color: 'red' },
+      }).success,
+    ).toBe(true);
   });
 
   it('接受数值派生 paint 与文字色，但拒绝数值主色', () => {
-    expect(NodeDefaultSchema.safeParse({ fill: 0.08, stroke: 1, textColor: 0.7 }).success).toBe(true);
-    expect(NodeDefaultSchema.safeParse({ color: 0.5 }).success).toBe(false);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { fill: 0.08, stroke: 1, textColor: 0.7 },
+      }).success,
+    ).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { color: 0.5 },
+      }).success,
+    ).toBe(false);
   });
 
   it('接受嵌套 font 字段', () => {
-    expect(NodeDefaultSchema.safeParse({ font: { size: 12, family: 'serif' } }).success).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { font: { size: 12, family: 'serif' } },
+      }).success,
+    ).toBe(true);
   });
 
   it('拒被排除字段 position（strict）', () => {
@@ -98,34 +122,48 @@ describe('PathDefaultSchema（every path 默认）', () => {
   it('接受完整 path 默认原子字段集合（不含 children）', () => {
     expect(
       PathDefaultSchema.safeParse({
-        color: 'crimson',
-        fill: '#fee2e2',
-        fillOpacity: 0.4,
-        stroke: 'red',
-        strokeWidth: 2,
-        strokeOpacity: 0.7,
-        opacity: 0.8,
-        shadow: 'sm',
-        blendMode: 'multiply',
-        dashPattern: [4, 2],
-        dashOffset: -1,
-        lineCap: 'round',
-        lineJoin: 'bevel',
-        fillRule: 'evenodd',
         roundedCorners: 3,
         rotate: 30,
         scale: { x: 1.5, y: 2 },
+        style: {
+          color: 'crimson',
+          fill: '#fee2e2',
+          fillOpacity: 0.4,
+          stroke: 'red',
+          strokeWidth: 2,
+          strokeOpacity: 0.7,
+          opacity: 0.8,
+          shadow: 'sm',
+          blendMode: 'multiply',
+          dashPattern: [4, 2],
+          dashOffset: -1,
+          lineCap: 'round',
+          lineJoin: 'bevel',
+          fillRule: 'evenodd',
+        },
       }).success,
     ).toBe(true);
   });
 
   it('接受 color 主色字段', () => {
-    expect(PathDefaultSchema.safeParse({ color: 'crimson' }).success).toBe(true);
+    expect(
+      PathDefaultSchema.safeParse({
+        style: { color: 'crimson' },
+      }).success,
+    ).toBe(true);
   });
 
   it('接受数值派生 fill / stroke，但拒绝数值主色', () => {
-    expect(PathDefaultSchema.safeParse({ fill: 0.1, stroke: 0.9 }).success).toBe(true);
-    expect(PathDefaultSchema.safeParse({ color: 0.5 }).success).toBe(false);
+    expect(
+      PathDefaultSchema.safeParse({
+        style: { fill: 0.1, stroke: 0.9 },
+      }).success,
+    ).toBe(true);
+    expect(
+      PathDefaultSchema.safeParse({
+        style: { color: 0.5 },
+      }).success,
+    ).toBe(false);
   });
 
   it('拒被排除字段 arrow（走 arrowDefault 通道）', () => {
@@ -224,32 +262,58 @@ describe('ArrowDefaultSchema（every arrow 默认）', () => {
 
 describe('ScopeSchema 级联 graphic state', () => {
   it('接受 color 主色', () => {
-    expect(ScopeSchema.safeParse({ type: 'scope', color: 'blue', children: [] }).success).toBe(true);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { color: 'blue' },
+      }).success,
+    ).toBe(true);
   });
 
   it('接受全部级联分项', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        color: 'blue',
-        stroke: 'red',
-        fill: 'yellow',
-        strokeWidth: 2,
-        opacity: 0.5,
-        fillOpacity: 0.4,
-        strokeOpacity: 0.3,
         children: [],
+        style: {
+          color: 'blue',
+          stroke: 'red',
+          fill: 'yellow',
+          strokeWidth: 2,
+          opacity: 0.5,
+          fillOpacity: 0.4,
+          strokeOpacity: 0.3,
+        },
       }).success,
     ).toBe(true);
   });
 
   it('接受数值派生级联 paint，并保持 Scope color string-only', () => {
-    expect(ScopeSchema.safeParse({ type: 'scope', fill: 0.08, stroke: 1, children: [] }).success).toBe(true);
-    expect(ScopeSchema.safeParse({ type: 'scope', color: 0.4, children: [] }).success).toBe(false);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { fill: 0.08, stroke: 1 },
+      }).success,
+    ).toBe(true);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { color: 0.4 },
+      }).success,
+    ).toBe(false);
   });
 
   it('级联 opacity 越界拒', () => {
-    expect(ScopeSchema.safeParse({ type: 'scope', opacity: 1.5, children: [] }).success).toBe(false);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        style: { opacity: 1.5 },
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -258,11 +322,18 @@ describe('ScopeSchema 四通道 every-X', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        nodeDefault: { shape: 'circle', fill: 'lightblue' },
-        pathDefault: { stroke: 'green' },
-        labelDefault: { font: { size: 10 } },
-        arrowDefault: { shape: 'stealth', scale: 1.5 },
         children: [],
+        defaults: {
+          node: {
+            shape: 'circle',
+            style: { fill: 'lightblue' },
+          },
+          path: {
+            style: { stroke: 'green' },
+          },
+          label: { font: { size: 10 } },
+          arrow: { shape: 'stealth', scale: 1.5 },
+        },
       }).success,
     ).toBe(true);
   });
@@ -271,8 +342,8 @@ describe('ScopeSchema 四通道 every-X', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        nodeDefault: { position: [0, 0] },
         children: [],
+        defaults: { node: { position: [0, 0] } },
       }).success,
     ).toBe(false);
   });
@@ -281,8 +352,8 @@ describe('ScopeSchema 四通道 every-X', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        pathDefault: { arrow: '->' },
         children: [],
+        defaults: { path: { arrow: '->' } },
       }).success,
     ).toBe(false);
   });
@@ -290,15 +361,21 @@ describe('ScopeSchema 四通道 every-X', () => {
 
 describe('ScopeSchema resetStyle 屏障', () => {
   it('接受 resetStyle: true', () => {
-    expect(ScopeSchema.safeParse({ type: 'scope', resetStyle: true, children: [] }).success).toBe(true);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        defaults: { reset: true },
+      }).success,
+    ).toBe(true);
   });
 
   it('接受 resetStyle 通道数组', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        resetStyle: ['node', 'path', 'label', 'arrow'],
         children: [],
+        defaults: { reset: ['node', 'path', 'label', 'arrow'] },
       }).success,
     ).toBe(true);
   });
@@ -307,14 +384,20 @@ describe('ScopeSchema resetStyle 屏障', () => {
     expect(
       ScopeSchema.safeParse({
         type: 'scope',
-        resetStyle: ['nope'],
         children: [],
+        defaults: { reset: ['nope'] },
       }).success,
     ).toBe(false);
   });
 
   it('resetStyle 为数字拒', () => {
-    expect(ScopeSchema.safeParse({ type: 'scope', resetStyle: 1, children: [] }).success).toBe(false);
+    expect(
+      ScopeSchema.safeParse({
+        type: 'scope',
+        children: [],
+        defaults: { reset: 1 },
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -322,14 +405,26 @@ describe('Scope 样式 JSON round-trip', () => {
   it('级联 + 四通道 + resetStyle scope 序列化往返语义等价', () => {
     const ir = {
       type: 'scope' as const,
-      color: 'blue',
-      strokeWidth: 2,
-      nodeDefault: { shape: 'circle' as const, fill: 'lightblue' },
-      pathDefault: { stroke: 'green' },
-      labelDefault: { font: { size: 10 } },
-      arrowDefault: { shape: 'stealth' as const, scale: 1.5 },
-      resetStyle: ['label' as const],
-      children: [{ type: 'node' as const, position: [0, 0] as [number, number], color: 'red' }],
+      children: [
+        {
+          type: 'node' as const,
+          position: [0, 0] as [number, number],
+          style: { color: 'red' },
+        },
+      ],
+      style: { color: 'blue', strokeWidth: 2 },
+      defaults: {
+        node: {
+          shape: 'circle' as const,
+          style: { fill: 'lightblue' },
+        },
+        path: {
+          style: { stroke: 'green' },
+        },
+        label: { font: { size: 10 } },
+        arrow: { shape: 'stealth' as const, scale: 1.5 },
+        reset: ['label' as const],
+      },
     };
     const restored = ScopeSchema.parse(JSON.parse(JSON.stringify(ir)));
     expect(restored).toEqual(ir);
@@ -339,7 +434,13 @@ describe('Scope 样式 JSON round-trip', () => {
 describe('Node / Path 主色 color 字段', () => {
   it('Node 接受 color', async () => {
     const { NodeSchema } = await import('../../src/schemas');
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], color: 'blue' }).success).toBe(true);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        style: { color: 'blue' },
+      }).success,
+    ).toBe(true);
   });
 
   it('Path 接受 color', async () => {
@@ -347,11 +448,11 @@ describe('Node / Path 主色 color 字段', () => {
     expect(
       PathSchema.safeParse({
         type: 'path',
-        color: 'crimson',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [10, 0] },
         ],
+        style: { color: 'crimson' },
       }).success,
     ).toBe(true);
   });

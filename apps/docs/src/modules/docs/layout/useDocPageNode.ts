@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import type { Page, Section, SubPage } from '@/modules/docs/data';
 
-import { getSectionsByModule } from '@/modules/docs/data';
+import { getSectionsByArea } from '@/modules/docs/data';
 
 import type { DocLocation } from './types';
 
@@ -21,7 +21,7 @@ export type DocPageNode = {
 /** 从文档路由位置解析当前 section / page / target。 */
 export const resolveDocPageNode = (loc: DocLocation | null): DocPageNode => {
   if (!loc) return { sections: [] };
-  const sections = getSectionsByModule(loc.moduleId);
+  const sections = getSectionsByArea(loc.moduleId);
   const section = loc.sectionId ? sections.find(item => item.id === loc.sectionId) : sections.find(item => !item.label);
   if (loc.pageId === null) {
     const target =

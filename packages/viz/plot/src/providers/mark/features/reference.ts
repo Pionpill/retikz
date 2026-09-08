@@ -354,9 +354,9 @@ const lowerReference = (
       const cellNode = cellGeometryNode(geometry);
       if (cellNode === null) continue;
       const fill = fillOf?.(row);
-      if (fill !== undefined) cellNode.fill = fill;
+      if (fill !== undefined) cellNode.style = { ...cellNode.style, fill };
       const stroke = strokeOf?.(row);
-      if (stroke !== undefined) cellNode.stroke = stroke;
+      if (stroke !== undefined) cellNode.style = { ...cellNode.style, stroke };
       const label = resolveNodeMarkLabels(
         mark.label as IRPlotMarkNodeLabel | ReadonlyArray<IRPlotMarkNodeLabel> | undefined,
         row,
@@ -373,8 +373,8 @@ const lowerReference = (
       const fill = colorValue !== undefined ? String(colorValue) : defaultFill;
       return {
         type: 'scope',
-        nodeDefault: styleForGeometry(kind, mark)(fill, channelDefaultOf<MarkPaint>(channels, 'stroke')),
         children: placed.map(p => p.node),
+        defaults: { node: styleForGeometry(kind, mark)(fill, channelDefaultOf<MarkPaint>(channels, 'stroke')) },
       };
     }
     return cellLayer(placed, kind, mark, colorOf, undefined, channelDefaultOf<MarkPaint>(channels, 'stroke'));
@@ -397,7 +397,6 @@ const lowerReference = (
     const stroke = colorValue !== undefined ? String(colorValue) : defaultStroke;
     return {
       type: 'scope',
-      pathDefault: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH },
       children: placed.map(p => {
         const label = resolveGeometryMarkLabels(
           mark.label as IRPlotMarkGeometryLabel | ReadonlyArray<IRPlotMarkGeometryLabel> | undefined,
@@ -411,6 +410,11 @@ const lowerReference = (
           channels,
         );
       }),
+      defaults: {
+        path: {
+          style: { stroke, strokeWidth: REFERENCE_STROKE_WIDTH },
+        },
+      },
     };
   }
   const groups = new Map<string, Array<IRChild>>();
@@ -426,7 +430,11 @@ const lowerReference = (
       {
         type: 'path',
         ...referencePathOptions(mark),
-        ...(directStroke !== undefined ? { stroke: directStroke } : {}),
+        ...(directStroke !== undefined
+          ? {
+              style: { stroke: directStroke },
+            }
+          : {}),
         ...(label !== undefined ? { label } : {}),
         children: steps,
       },
@@ -440,10 +448,22 @@ const lowerReference = (
   }
   const children: Array<IRChild> = [...groups].map(([stroke, paths]) => ({
     type: 'scope',
-    pathDefault: { stroke },
     children: paths,
+    defaults: {
+      path: {
+        style: { stroke },
+      },
+    },
   }));
-  return { type: 'scope', pathDefault: { strokeWidth: REFERENCE_STROKE_WIDTH }, children };
+  return {
+    type: 'scope',
+    children,
+    defaults: {
+      path: {
+        style: { strokeWidth: REFERENCE_STROKE_WIDTH },
+      },
+    },
+  };
 };
 
 /** reference 图层下沉：line 走 core Path、band 走 projectCell；本轮仅 cartesian2D / polar2D，其余坐标系 fail-loud + attachMarkLayer。 */

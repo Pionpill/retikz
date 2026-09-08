@@ -9,18 +9,20 @@ import { entityStyleControls, previewControlContract } from './entity-style.cont
 export const previewControls = entityStyleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Graph width={360} height={180} viewBox={{ x: 0, y: 0, width: 360, height: 180 }}>
+  <Graph viewBox={{ x: 0, y: 0, width: 360, height: 180 }}>
     <Entity
       id="entity-style"
       role={values.role}
       status={values.status || undefined}
       position={[180, 90]}
-      fill={values.fill}
-      stroke={values.stroke}
-      strokeWidth={values.strokeWidth}
-      dashed={values.dashed}
-      opacity={values.opacity}
-      textColor={values.textColor}
+      style={{
+        fill: values.fill,
+        stroke: values.stroke,
+        strokeWidth: values.strokeWidth,
+        dashed: values.dashed,
+        opacity: values.opacity,
+        textColor: values.textColor,
+      }}
     >
       {values.content}
     </Entity>

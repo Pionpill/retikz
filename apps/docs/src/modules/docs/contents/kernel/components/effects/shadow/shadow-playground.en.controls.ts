@@ -71,5 +71,5 @@ export const previewControlContract = {
       values: { offsetX: 0, offsetY: 14, blur: 28, color: '#2563eb', opacity: 0.45 },
     },
   ],
-  relatedApis: ['Node.shadow', 'Path.shadow'],
+  relatedApis: ['Node.style.shadow', 'Path.style.shadow'],
 } satisfies PreviewControlContract;

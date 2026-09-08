@@ -12,5 +12,5 @@ export {
 } from './pipeline';
 export * from './providers';
 export type { PlotFacetCompositionResolveContext } from './resolve';
-export { resolvePlotFacetComposition, resolvePlotTheme } from './resolve';
+export { mergePlotDefaults, resolvePlotFacetComposition, resolvePlotTheme } from './resolve';
 export * from './schemas';

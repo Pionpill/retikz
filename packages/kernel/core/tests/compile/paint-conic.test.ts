@@ -25,7 +25,15 @@ describe('conicGradient IRPaint compile', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: conicGrad }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: conicGrad },
+        },
+      ],
     };
 
     const scene = compileToScene(ir).scene;

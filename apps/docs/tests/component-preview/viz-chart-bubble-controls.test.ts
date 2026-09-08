@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { ChartExtension, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartExtension, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -149,7 +149,6 @@ describe('Viz Chart Bubble controls', () => {
       expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('stroke');
       expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('fillOpacity');
       expect(canonicalDeclarationProps(source, BubbleProperties)).not.toHaveProperty('opacity');
-      expect(canonicalDeclarationProps(source, ChartLayout)).toMatchObject({ width: 800, height: 500 });
       expect(source.datasetImports).toEqual({
         'chart.data': { name: 'gapminderBubbleData', from: './bubble-basic.data' },
       });

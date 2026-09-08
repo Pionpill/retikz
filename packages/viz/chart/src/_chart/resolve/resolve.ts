@@ -1,5 +1,3 @@
-import type { IRPlotThemeTokenOverrides } from '@retikz/plot';
-
 import type { ChartSlotConsumption } from '../contract/recipe';
 import type { ChartRecipeDefinition } from '../contract/recipe';
 import type { IRChartSource } from '../schemas';
@@ -30,22 +28,13 @@ const assertConsumedSlots = (
   }
 };
 
-const plotThemeTokensOf = (
-  theme: ReturnType<typeof resolveChartTheme>,
-  source: IRChartSource,
-): IRPlotThemeTokenOverrides | undefined => {
-  const authored = source.plotExtension?.plotThemeTokens;
-  if (theme.plot === undefined && authored === undefined) return undefined;
-  return { ...(theme.plot ?? {}), ...(authored ?? {}) };
-};
-
 /** 将 typed Chart Source 解析为唯一完整 Plot 与固定 presentation 结果 */
 export const resolveSelectedChart = <TSource extends IRChartSource>(
   source: TSource,
   context: SelectedChartResolveContext<TSource>,
 ): ChartResolution => {
   const recipe = context.recipe;
-  const theme = resolveChartTheme(source, recipe, context);
+  const theme = resolveChartTheme(source, context);
   const encodingResolution = recipe.resolveEncodings({
     source,
     encodings: source.recipe.encodings,
@@ -56,7 +45,6 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     data: source.data,
     encodings: encodingResolution.encodings,
     properties: source.recipe.properties ?? {},
-    recipeThemeTokens: theme.recipe,
   });
   if (recipeResolution.semanticMarks.length === 0) {
     throw new RetikzChartError({
@@ -66,7 +54,7 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     });
   }
 
-  const markResolution = resolveChartMarks(source, recipe, encodingResolution.encodings, theme.recipe);
+  const markResolution = resolveChartMarks(source, recipe, encodingResolution.encodings);
   assertConsumedSlots(source, recipe, markResolution.consumption);
   const semanticMarkResolution = resolveChartSemanticMarks(recipeResolution, markResolution);
   const plot = resolveChartPlot(
@@ -75,9 +63,9 @@ export const resolveSelectedChart = <TSource extends IRChartSource>(
     recipeResolution,
     encodingResolution,
     semanticMarkResolution.marks,
-    plotThemeTokensOf(theme, source),
     context.runtime,
+    theme.plotDefaults,
   );
-  const presentation = resolveChartPresentation(source, plot, theme.chart);
+  const presentation = resolveChartPresentation(source, plot, theme.defaults);
   return { source, theme, plot, warnings: semanticMarkResolution.warnings, presentation };
 };

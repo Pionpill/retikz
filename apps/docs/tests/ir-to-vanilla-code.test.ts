@@ -303,7 +303,16 @@ describe('irToVanillaCode', () => {
   });
 
   it('format-js：key 不加引号、字符串单引号、短数组内联', () => {
-    const code = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], fill: '#f00' }]));
+    const code = irToVanillaCode(
+      ir([
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          style: { fill: '#f00' },
+        },
+      ]),
+    );
     expect(code).toContain("fill: '#f00'");
     expect(code).toContain('position: [0, 0]');
     expect(code).not.toContain('"position"');
@@ -321,8 +330,8 @@ describe('irToVanillaCode fallback', () => {
       ir([
         {
           type: 'path',
-          stroke: '#333',
           children: [{ type: 'step', kind: 'rectangle', from: [0, 0], to: [20, 10], cornerRadius: 2 }],
+          style: { stroke: '#333' },
         },
       ]),
     );

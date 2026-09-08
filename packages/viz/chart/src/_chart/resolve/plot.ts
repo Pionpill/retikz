@@ -1,7 +1,14 @@
-import type { AnyCoordinateDefinition, IRPlot, IRPlotCoordinateOperation, IRPlotScaleOperation } from '@retikz/plot';
+import type {
+  AnyCoordinateDefinition,
+  IRPlot,
+  IRPlotCoordinateOperation,
+  IRPlotDefaults,
+  IRPlotScaleOperation,
+} from '@retikz/plot';
 
 import {
   bindCoordinateScaleNames,
+  mergePlotDefaults,
   PlotSchema,
   readCoordinateScaleNames,
   resolvePlotFacetComposition,
@@ -51,7 +58,7 @@ export const resolveChartPlotScales = (
   encodings: ChartEncodingResolution,
   extension: IRChartPlotExtension | undefined,
 ): ReadonlyArray<IRPlotScaleOperation> => {
-  const authored = extension?.scales ?? [];
+  const authored = encodings.extensionScales ?? extension?.scales ?? [];
   scaleNamesOf(authored, ['plotExtension', 'scales']);
   const recipeEntries = recipe.scaffold.scales.filter(entry => !encodings.removedRecipeScales.has(entry.value.name));
   const recipeScales = recipeEntries.map(({ value }) => value);
@@ -251,8 +258,8 @@ export const resolveChartPlot = (
   recipe: ChartRecipeResolution,
   encodings: ChartEncodingResolution,
   chartMarks: ReadonlyArray<IRPlot['marks'][number]>,
-  plotThemeTokens: IRPlot['plotThemeTokens'],
   runtime: ChartEncodingRuntime,
+  themePlotDefaults: IRPlotDefaults | undefined,
 ): IRPlot => {
   const extension = source.plotExtension;
   const spatial = resolveChartPlotSpatial(recipe, encodings, source.coordinate, extension, runtime);
@@ -286,9 +293,10 @@ export const resolveChartPlot = (
     data: source.data,
     ...(transforms.length === 0 ? {} : { transform: transforms }),
     scales,
-    ...(plotThemeTokens === undefined ? {} : { plotThemeTokens }),
-    ...(extension?.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: extension.plotThemeTokenRules }),
-    ...(extension?.plotTheme === undefined ? {} : { plotTheme: extension.plotTheme }),
+    ...(themePlotDefaults === undefined && extension?.plotDefaults === undefined
+      ? {}
+      : { plotDefaults: mergePlotDefaults(themePlotDefaults, extension?.plotDefaults) }),
+    ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
     ...spatial,
     marks,
     ...(guides === undefined ? {} : { guides }),

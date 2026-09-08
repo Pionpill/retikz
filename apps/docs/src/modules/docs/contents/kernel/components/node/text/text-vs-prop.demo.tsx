@@ -7,8 +7,8 @@ import { Layout, Node, Text } from '@retikz/react';
  * @description 左 <Text> Sugar、右 text prop 数组里写 IRLine 对象，编译产物完全相同。
  */
 const Demo: FC = () => (
-  <Layout width={420} height={140}>
-    <Node id="sugar" position={[-100, 0]} align="start">
+  <Layout>
+    <Node id="sugar" position={[-100, 0]} layout={{ align: 'start' }}>
       <Text fill="red" font={{ weight: 'bold', size: 16 }}>
         Heading
       </Text>
@@ -21,12 +21,12 @@ const Demo: FC = () => (
     <Node
       id="prop"
       position={[100, 0]}
-      align="start"
       text={[
         { text: 'Heading', fill: 'red', font: { weight: 'bold', size: 16 } },
         'body line 1',
         { text: 'note', font: { style: 'italic' }, opacity: 0.6 },
       ]}
+      layout={{ align: 'start' }}
     />
   </Layout>
 );

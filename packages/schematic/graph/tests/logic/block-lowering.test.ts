@@ -24,8 +24,7 @@ const textNode = (text: string) => ({
   type: 'node' as const,
   position: [0, 0] as const,
   text,
-  padding: 0,
-  margin: 0,
+  layout: { padding: 0, margin: 0 },
 });
 
 const textValues = (primitives: ReturnType<typeof primitivesOf>): Array<string> =>
@@ -78,13 +77,13 @@ describe('Block-family layout-aware lowering', () => {
     );
   });
 
-  it('applies named Graph Theme tokens to the Block root shell', () => {
+  it('applies named Graph Theme defaults to the Block root shell', () => {
     const styleName = 'block-shell';
     const graphStyle = Graph.defineGraphThemeStyle({
       name: styleName,
       resolve: () => ({
-        block: {
-          tokens: {
+        defaults: {
+          block: {
             background: { fill: '#dbeafe', fillOpacity: 0.7 },
             border: { stroke: '#1d4ed8', strokeWidth: 3 },
             cornerRadius: 7,
@@ -125,8 +124,8 @@ describe('Block-family layout-aware lowering', () => {
     const graphStyle = Graph.defineGraphThemeStyle({
       name: styleName,
       resolve: () => ({
-        block: {
-          tokens: {
+        defaults: {
+          block: {
             background: { fill: '#ecfccb' },
             border: { stroke: '#3f6212', strokeWidth: 4, strokeOpacity: 0.25, dashPattern: [3, 1] },
             cornerRadius: 9,
@@ -631,8 +630,7 @@ describe('Block-family layout-aware lowering', () => {
   it('projects Graph Theme through open Block-family content boundaries only', () => {
     const { output } = compileInHarness(
       Graph.createBlock({
-        graphTheme: { rules: [{ type: 'entity', appearance: { fill: '#ef4444' } }] },
-        nodeDefault: { fill: '#2563eb' },
+        graphRules: [{ type: 'entity', style: { fill: '#ef4444' } }],
         children: [
           Graph.createBlockHeader({
             title: { text: 'Header' },
@@ -650,6 +648,11 @@ describe('Block-family layout-aware lowering', () => {
             ],
           }),
         ],
+        defaults: {
+          node: {
+            style: { fill: '#2563eb' },
+          },
+        },
       }),
       naturalProposal,
       Graph.createGraphDefinitions(),

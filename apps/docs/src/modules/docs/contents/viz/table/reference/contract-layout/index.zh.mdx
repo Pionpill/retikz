@@ -188,6 +188,19 @@ border 候选类型为 <ApiValues name="TableBorderKind" />；全表拓扑模式
   }}
 />
 
+### TableOuterBordersSchema
+
+<ZodSchema
+  name="TableOuterBordersSchema"
+  description="Table 外框四个物理方向的稀疏默认候选。"
+  descriptions={{
+    top: '可选顶边候选。',
+    right: '可选右边候选。',
+    bottom: '可选底边候选。',
+    left: '可选左边候选。',
+  }}
+/>
+
 ### TableBordersSchema
 
 <ZodSchema
@@ -195,7 +208,7 @@ border 候选类型为 <ApiValues name="TableBorderKind" />；全表拓扑模式
   description="全表 border 拓扑与外框、横向内线、纵向内线默认候选。"
   descriptions={{
     mode: '共享边 collapse 或逐 Cell separate 模式；省略时为 collapse。',
-    outer: '可选外边界默认候选。',
+    outer: '可选外边界四侧物理方向候选对象。',
     horizontal: '可选内部行边界默认候选。',
     vertical: '可选内部列边界默认候选。',
   }}

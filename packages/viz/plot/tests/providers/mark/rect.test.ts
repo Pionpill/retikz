@@ -56,13 +56,13 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
 };
 
 const nodeWidth = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.width ?? size?.default ?? 0;
 };
 
 const nodeHeight = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.height ?? size?.default ?? 0;
 };
@@ -236,8 +236,8 @@ describe('rect 值 → color', () => {
     const nodes = nodesOf(layer);
     expect(nodes).toHaveLength(4);
     // 按色分子 Scope：每个子 Scope nodeDefault 含 fill；不同值 → 不同 fill 串
-    const fills = (layer.children as Array<{ nodeDefault?: { fill?: string } }>)
-      .map(c => c.nodeDefault?.fill)
+    const fills = (layer.children as Array<{ defaults?: { node?: { style?: { fill?: string } } } }>)
+      .map(c => c.defaults?.node?.style?.fill)
       .filter((f): f is string => f !== undefined);
     expect(fills.length).toBeGreaterThan(1);
     expect(new Set(fills).size).toBeGreaterThan(1);
@@ -290,9 +290,9 @@ describe('rect 缺 color', () => {
     ];
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
     // 单图层：nodeDefault 含 rectangle barStyle + 单一默认填充（图层级，无分色子 Scope）
-    expect(layer.nodeDefault).toBeDefined();
-    expect((layer.nodeDefault as { shape?: string }).shape).toBe('rectangle');
-    expect((layer.nodeDefault as { fill?: string }).fill).toBeTruthy();
+    expect(layer.defaults?.node).toBeDefined();
+    expect((layer.defaults?.node as { shape?: string }).shape).toBe('rectangle');
+    expect(layer.defaults?.node?.style?.fill).toBeTruthy();
     // 缺 color → 不分色子 Scope（children 直接是 node，非 scope）
     expect((layer.children as Array<{ type?: string }>).every(c => c.type === 'node')).toBe(true);
     expect(nodesOf(layer)).toHaveLength(2);

@@ -4,7 +4,7 @@
 
 ## 目标
 
-Graph v0 当前范围是 Schematic 领域的可复用关系与图式 foundation：Entity 与 Relation 表达普通节点和关系，Group 表达任意内容的可见包含，Block 表达具有固定内部层次和局部可寻址区域的结构化图节点；Graph 是可选的 `graphTheme` 与局部 Scope 上下文。Relation endpoint 复用 Core NodeTarget、namespace 与 anchor，Graph 不建立成员集合、私有引用索引、平行 Port / geometry / appearance model 或 Variant 视觉轴，也不拥有 Diagram 自动布局或 Editor document。
+Graph v0 当前范围是 Schematic 领域的可复用关系与图式 foundation：Entity 与 Relation 表达普通节点和关系，Group 表达任意内容的可见包含，Block 表达具有固定内部层次和局部可寻址区域的结构化图节点；Graph 是可选的 `graphDefaults` / `graphRules` 与局部 Scope 上下文。Relation endpoint 复用 Core NodeTarget、namespace 与 anchor，Graph 不建立成员集合、私有引用索引、平行 Port / geometry / appearance model 或 Variant 视觉轴，也不拥有 Diagram 自动布局或 Editor document。
 
 ## 版本方向
 

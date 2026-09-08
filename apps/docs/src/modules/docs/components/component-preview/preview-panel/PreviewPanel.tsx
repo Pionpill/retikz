@@ -81,7 +81,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
       <div
         ref={renderPaneRef}
         className={cn(
-          'flex h-full w-full max-h-full max-w-full items-center justify-center [&>canvas]:max-h-full [&>canvas]:max-w-full [&>svg]:max-h-full [&>svg]:max-w-full',
+          'flex h-full w-full items-center justify-center [&_canvas]:shrink-0 [&_canvas]:max-h-none [&_canvas]:max-w-none [&_svg]:shrink-0 [&_svg]:max-h-none [&_svg]:max-w-none',
           !isDragging && 'transition-transform duration-150',
           renderPaneClassName,
         )}

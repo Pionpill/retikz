@@ -6,6 +6,7 @@
 - 替代：ADR-01 的封闭 recipe 目录与无 Chart registry 决策；ADR-02 的 `chartThemeTokens` / Plot theme 转发字段；ADR-03 的公开 Base Chart、可编排 presentation children 与旧 Source shell
 - 保留：Chart 确定性 lower 到 Plot 正式主链、Vanilla 拥有 authoring normalize、React 复用 Vanilla、presentation 复用 Standard / Layout 的既有边界
 - 重审：ADR-04～08 在接受或实现前必须改用本 ADR 的 family / chartType、精确 schema、semantic mark、Theme 与 Plot 出口契约
+- 后续演进：[ADR-15：Chart Source 默认片段与 Plot 转发](./15-theme-source-fragments.md) 取代本 ADR 的 Chart Source `theme`、flat token、recipe Theme slice 与旧 Plot token forwarding；family / chartType、精确 schema、semantic mark、Chart → Plot 正式出口与 adapter 边界继续有效
 
 > **后续演进：** [ADR-12](./12-chart-react-declaration-authoring.md) 将高频 coordinate 选择从 `plotExtension.coordinate` 提升为 Chart 根级 `coordinate` 与公共 `ChartCoordinate` declaration。本文关于 Plot coordinate owner、recipe spatial replaceable、角色匹配与正式 Plot resolve 的约束继续有效；`plotExtension` 字段集合和 coordinate 来源位置以 ADR-12 为准。
 

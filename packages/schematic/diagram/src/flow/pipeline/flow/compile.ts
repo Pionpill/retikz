@@ -22,28 +22,30 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
     type: _type,
     presentation: _presentation,
     frame: _frame,
-    diagramTheme: _diagramTheme,
+    diagramDefaults: _diagramDefaults,
+    flowDefaults: _flowDefaults,
+    layout: _layout,
+    routing: _routing,
     entities: _entities,
     groups: _groups,
     layouts: _layouts,
     children: _children,
     relations: _relations,
-    flowThemeTokens: _flowThemeTokens,
-    flowTheme: _flowTheme,
     ...scope
   } = source;
   void _namespace;
   void _type;
   void _presentation;
   void _frame;
-  void _diagramTheme;
+  void _diagramDefaults;
+  void _flowDefaults;
+  void _layout;
+  void _routing;
   void _entities;
   void _groups;
   void _layouts;
   void _children;
   void _relations;
-  void _flowThemeTokens;
-  void _flowTheme;
   return scope;
 };
 
@@ -121,7 +123,7 @@ export const createCompileFlowDiagram =
       {
         ...(source.presentation === undefined ? {} : { presentation: source.presentation }),
         ...(source.frame === undefined ? {} : { frame: source.frame }),
-        ...(source.diagramTheme === undefined ? {} : { diagramTheme: source.diagramTheme }),
+        ...(source.diagramDefaults === undefined ? {} : { diagramDefaults: source.diagramDefaults }),
       },
       { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
     );

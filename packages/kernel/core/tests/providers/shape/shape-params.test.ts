@@ -1,3 +1,4 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
@@ -5,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { number, object, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
-import type { IRJsonObject, IRScene } from '../../../src/schemas';
+import type { IRScene } from '../../../src/schemas';
 import type { Rect } from '../../../src/shared/geometry';
 
 import { compileToScene } from '../../../src/compile/compile';
@@ -41,16 +42,11 @@ const ringShape = (): ShapeDefinition =>
     },
   });
 
-/**
- * 宽松 paramsSchema（passthrough 放过 `undefined` 值）——验证第二道 JsonObjectSchema 护栏
- * @description `z.object({}).passthrough()` 不校验值形态，会让 `{ v: undefined }` 原样通过第一道，
- *   交给编译期第二道 `JsonObjectSchema.parse` 拦下。类型层标 `ZodType<IRJsonObject>` 是定义点契约
- *   （第二道 parse 才是真正护栏，与 path generator 同构）
- */
+/** 宽松 paramsSchema，用于验证精确 Definition schema 的返回值直接进入 callback */
 const looseShape = (): ShapeDefinition =>
   defineShape({
     name: 'loose',
-    paramsSchema: object({}).passthrough() as unknown as ZodType<IRJsonObject>,
+    paramsSchema: object({}).passthrough() as unknown as ZodType<JsonObject>,
     circumscribe: (hw, hh) => ({ halfWidth: hw, halfHeight: hh }),
     boundaryPoint: (rect: Rect): Position => [rect.x, rect.y],
     anchor: (rect: Rect, name) => (name === 'center' ? [rect.x, rect.y] : undefined),
@@ -147,13 +143,11 @@ describe('shape 错误路径', () => {
     expect(() => compileToScene(ir, { shapes: [{ ...ringShape(), name: 'ring' }] }).scene).toThrow();
   });
 
-  it('non_json_params_caught_by_second_guard：宽松 paramsSchema 放过 undefined → 第二道 JsonObjectSchema.parse 拦下', () => {
-    // params.v = undefined 是运行时注入的非 JSON 值：IRChild 静态类型不允许 undefined，
-    // 这里在运行时把键置为 undefined（模拟 LLM / 外部传入的脏 JSON），交给第二道护栏拦截。
-    const dirtyParams: IRJsonObject = {};
+  it('definition_schema_result_reaches_callback：宽松 paramsSchema 放过 undefined 后不再执行通用 JSON 复核', () => {
+    const dirtyParams: JsonObject = {};
     (dirtyParams as Record<string, unknown>).v = undefined;
     const ir = scene([{ type: 'node', id: 'A', position: [0, 0], shape: { type: 'loose', params: dirtyParams } }]);
-    expect(() => compileToScene(ir, { shapes: [{ ...looseShape(), name: 'loose' }] }).scene).toThrow();
+    expect(() => compileToScene(ir, { shapes: [{ ...looseShape(), name: 'loose' }] }).scene).not.toThrow();
   });
 
   it('strict_params_reject_extra_field：无参形状给 {params:{foo:1}} → strictObject reject', () => {

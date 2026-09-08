@@ -6,19 +6,15 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Axis tick and major / minor grid position-source flow */
 const Demo: FC = () => (
-  <Layout width={760} height={225} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="axis-tick-group">
       <LogicFigureFrameTitle>Axis tick</LogicFigureFrameTitle>
       <Node
         id="axis-source"
         position={[-280, -55]}
-        minimumSize={{ width: 176, height: 50 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 176, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Axis tick source</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -28,13 +24,9 @@ const Demo: FC = () => (
       <Node
         id="axis-candidates"
         position={[-75, -55]}
-        minimumSize={{ width: 154, height: 50 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Candidate ticks</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -44,13 +36,9 @@ const Demo: FC = () => (
       <Node
         id="axis-visible"
         position={[110, -55]}
-        minimumSize={{ width: 146, height: 50 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 146, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Visible ticks</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -64,13 +52,9 @@ const Demo: FC = () => (
       <Node
         id="grid-source"
         position={[285, -55]}
-        minimumSize={{ width: 154, height: 50 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Major-grid source</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -80,13 +64,9 @@ const Demo: FC = () => (
       <Node
         id="grid-visible"
         position={[475, -55]}
-        minimumSize={{ width: 154, height: 50 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Major-grid positions</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -96,13 +76,9 @@ const Demo: FC = () => (
       <Node
         id="minor-source"
         position={[285, 20]}
-        minimumSize={{ width: 154, height: 50 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Minor-grid source</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -112,13 +88,9 @@ const Demo: FC = () => (
       <Node
         id="minor-visible"
         position={[475, 20]}
-        minimumSize={{ width: 154, height: 50 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        align="middle"
-        lineHeight={16}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 154, height: 50 }, align: 'middle', lineHeight: 16 }}
       >
         <Text font={{ size: 14, weight: 'bold' }}>Minor-grid positions</Text>
         <Text fill="gray" font={{ size: 12 }}>
@@ -132,7 +104,7 @@ const Demo: FC = () => (
     <Draw way={['axis-visible', 'grid-source']} arrow="->" />
     <Draw way={['grid-source', 'grid-visible']} arrow="->" />
     <Draw way={['minor-source', 'minor-visible']} arrow="->" />
-    <Draw way={['grid-visible', 'minor-visible']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['grid-visible', 'minor-visible']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

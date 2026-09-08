@@ -170,7 +170,7 @@ describe('resolve theme', () => {
     }
   });
 
-  it('rejects non-plain external style color outputs without enumerable fields', () => {
+  it('projects external style color object outputs through the owner schema', () => {
     class EmptyStyleOutput {}
 
     const getterOutput = Object.defineProperty({}, 'semantic', {
@@ -180,32 +180,52 @@ describe('resolve theme', () => {
     const symbolOutput = { semantic: { error: '#aa0000' }, [Symbol('metadata')]: true };
     const hiddenOutput = Object.defineProperty({}, 'hidden', { value: true });
 
-    const invalidDefinitions = [
-      { name: 'date-output', resolve: () => new Date(0) },
-      { name: 'class-output', resolve: () => new EmptyStyleOutput() },
-      { name: 'promise-output', resolve: () => Promise.resolve({}) },
-      { name: 'semantic-date-output', resolve: () => ({ semantic: new Date(0) }) },
-      { name: 'semantic-class-output', resolve: () => ({ semantic: new EmptyStyleOutput() }) },
-      { name: 'semantic-promise-output', resolve: () => ({ semantic: Promise.resolve({}) }) },
-      { name: 'getter-output', resolve: () => getterOutput },
-      { name: 'symbol-output', resolve: () => symbolOutput },
-      { name: 'hidden-output', resolve: () => hiddenOutput },
+    const definitions = [
+      { name: 'date-output', resolve: () => new Date(0), expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error },
+      {
+        name: 'class-output',
+        resolve: () => new EmptyStyleOutput(),
+        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
+      },
+      {
+        name: 'promise-output',
+        resolve: () => Promise.resolve({}),
+        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
+      },
+      {
+        name: 'semantic-date-output',
+        resolve: () => ({ semantic: new Date(0) }),
+        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
+      },
+      {
+        name: 'semantic-class-output',
+        resolve: () => ({ semantic: new EmptyStyleOutput() }),
+        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
+      },
+      {
+        name: 'semantic-promise-output',
+        resolve: () => ({ semantic: Promise.resolve({}) }),
+        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
+      },
+      { name: 'getter-output', resolve: () => getterOutput, expectedError: '#aa0000' },
+      { name: 'symbol-output', resolve: () => symbolOutput, expectedError: '#aa0000' },
+      {
+        name: 'hidden-output',
+        resolve: () => hiddenOutput,
+        expectedError: DEFAULT_RESOLVED_THEME.colors.semantic.error,
+      },
     ];
 
-    for (const definition of invalidDefinitions) {
-      expect(() =>
+    for (const definition of definitions) {
+      expect(
         Reflect.apply(resolveTheme, undefined, [
           DEFAULT_RESOLVED_THEME,
           { style: definition.name },
           'scene.theme',
           new Map([[definition.name, definition]]),
-        ]),
-      ).toThrowError(
-        expect.objectContaining({
-          code: RetikzCoreErrorCode.Resolve,
-          cause: expect.any(ZodError),
-        }),
-      );
+        ]).colors.semantic.error,
+        definition.name,
+      ).toBe(definition.expectedError);
     }
   });
 

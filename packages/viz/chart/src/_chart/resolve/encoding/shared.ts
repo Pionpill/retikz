@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../../error';
 
@@ -19,9 +19,9 @@ export const invalidEncoding = (
 export const mappingPathOf = (slot: string): ReadonlyArray<string | number> => ['recipe', 'encodings', slot];
 
 /** 把 JSON object value 收窄为 Chart resolver 可读对象 */
-export const objectValueOf = (value: unknown): IRJsonObject | undefined => {
+export const objectValueOf = (value: unknown): JsonObject | undefined => {
   if (value === null || Array.isArray(value) || typeof value !== 'object') return undefined;
-  return value as IRJsonObject;
+  return value as JsonObject;
 };
 
 /** 递归读取 direct field shorthand 或 direct mapping 中的字段 */
@@ -44,7 +44,7 @@ export const mappingKindOf = (value: unknown): 'direct' | 'aggregate' | 'derived
 };
 
 /** 读取 mapping 的 scale binding 对象 */
-export const mappingScaleOf = (value: unknown): IRJsonObject | undefined => {
+export const mappingScaleOf = (value: unknown): JsonObject | undefined => {
   const mapping = objectValueOf(value);
   return mapping === undefined ? undefined : objectValueOf(mapping.scale);
 };

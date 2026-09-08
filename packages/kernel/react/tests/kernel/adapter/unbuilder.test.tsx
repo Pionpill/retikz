@@ -47,11 +47,11 @@ const pathComposite = defineComposite({
     children: [
       {
         type: 'path',
-        stroke: '#123456',
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [10, 20] },
         ],
+        style: { stroke: '#123456' },
       },
     ],
   }),
@@ -130,9 +130,7 @@ describe('convertIRToReactNode', () => {
           id: 'A',
           position: [10, 20],
           text: 'Hi',
-          fill: '#fff',
-          stroke: '#000',
-          strokeWidth: 2,
+          style: { fill: '#fff', stroke: '#000', strokeWidth: 2 },
         },
       ],
     };
@@ -142,9 +140,7 @@ describe('convertIRToReactNode', () => {
       id: 'A',
       position: [10, 20],
       text: 'Hi',
-      fill: '#fff',
-      stroke: '#000',
-      strokeWidth: 2,
+      style: { fill: '#fff', stroke: '#000', strokeWidth: 2 },
     });
   });
 
@@ -184,17 +180,17 @@ describe('convertIRToReactNode', () => {
       children: [
         {
           type: 'path',
-          stroke: 'red',
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: [100, 100] },
           ],
+          style: { stroke: 'red' },
         },
       ],
     };
     const [pathEl] = toElements(convertIRToReactNode(ir));
     expect((pathEl.type as { displayName?: string }).displayName).toBe(TIKZ_PATH);
-    expect(pathEl.props).toMatchObject({ stroke: 'red' });
+    expect(pathEl.props).toMatchObject({ style: { stroke: 'red' } });
 
     const stepEls = toElements(pathEl.props.children as ReturnType<typeof convertIRToReactNode>);
     expect(stepEls).toHaveLength(2);
@@ -212,12 +208,11 @@ describe('convertIRToReactNode', () => {
         { type: 'node', id: 'B', position: [50, 0], text: 'B' },
         {
           type: 'path',
-          stroke: 'blue',
-          strokeWidth: 1,
           children: [
             { type: 'step', kind: 'move', to: { id: 'A' } },
             { type: 'step', kind: 'line', to: { id: 'B' } },
           ],
+          style: { stroke: 'blue', strokeWidth: 1 },
         },
       ],
     };
@@ -238,11 +233,11 @@ describe('convertIRToReactNode', () => {
             end: { width: 2, direction: [1, 0] },
             samples: true,
           },
-          fill: 'steelblue',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { fill: 'steelblue' },
         },
       ],
     };
@@ -259,7 +254,6 @@ describe('convertIRToReactNode', () => {
         {
           type: 'path',
           kind: 'ribbon',
-          fill: '#bfdbfe',
           kindOptions: {
             mode: 'boundary',
             upper: [
@@ -271,6 +265,7 @@ describe('convertIRToReactNode', () => {
               { type: 'step', kind: 'line', to: [10, 4] },
             ],
           },
+          style: { fill: '#bfdbfe' },
         },
       ],
     };
@@ -280,7 +275,7 @@ describe('convertIRToReactNode', () => {
   });
 
   it('Sugar 降级：<Draw> → IR → React 还原成 <Path>，二次 round-trip IR 稳定', () => {
-    const ir1 = normalizeReactInput(<Draw way={['A', [10, 0]]} stroke="red" />);
+    const ir1 = normalizeReactInput(<Draw way={['A', [10, 0]]} style={{ stroke: 'red' }} />);
     const ir2 = normalizeReactInput(convertIRToReactNode(ir1));
     expect(ir2).toEqual(ir1);
 
@@ -314,13 +309,12 @@ describe('convertIRToReactNode', () => {
       children: [
         {
           type: 'path',
-          fill: '#3b82f6',
-          fillRule: 'evenodd',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { fill: '#3b82f6', fillRule: 'evenodd' },
         },
       ],
     };
@@ -660,13 +654,12 @@ describe('convertIRToReactNode', () => {
         children: [
           {
             type: 'path',
-            lineCap: 'round',
-            lineJoin: 'bevel',
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
               { type: 'step', kind: 'line', to: [10, 10] },
             ],
+            style: { lineCap: 'round', lineJoin: 'bevel' },
           },
         ],
       };
@@ -680,11 +673,11 @@ describe('convertIRToReactNode', () => {
         children: [
           {
             type: 'path',
-            strokeWidth: 3,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
             ],
+            style: { strokeWidth: 3 },
           },
         ],
       };
@@ -698,16 +691,13 @@ describe('convertIRToReactNode', () => {
         children: [
           {
             type: 'path',
-            fill: 'red',
-            opacity: 0.8,
-            fillOpacity: 0.4,
-            strokeOpacity: 0.6,
             children: [
               { type: 'step', kind: 'move', to: [0, 0] },
               { type: 'step', kind: 'line', to: [10, 0] },
               { type: 'step', kind: 'line', to: [10, 10] },
               { type: 'step', kind: 'cycle' },
             ],
+            style: { fill: 'red', opacity: 0.8, fillOpacity: 0.4, strokeOpacity: 0.6 },
           },
         ],
       };
@@ -1020,32 +1010,16 @@ describe('convertIRToReactNode', () => {
         children: [
           {
             type: 'scope',
-            color: 'blue',
-            stroke: 'red',
-            strokeWidth: 2,
-            opacity: 0.8,
-            nodeDefault: {
-              shape: 'circle',
-              fill: 'lightblue',
-              textColor: NodeTextColor.Contrast,
-              font: { size: 12 },
-            },
-            pathDefault: { stroke: 'green', dashPattern: [4, 2] },
-            labelDefault: { textColor: 'gray', font: { size: 10 } },
-            arrowDefault: { shape: 'stealth', scale: 1.5 },
-            resetStyle: ['label', 'arrow'],
             children: [
               {
                 type: 'node',
                 id: 'A',
                 position: [0, 0],
                 text: 'A',
-                color: 'navy',
-                textColor: NodeTextColor.Contrast,
+                style: { color: 'navy', textColor: NodeTextColor.Contrast },
               },
               {
                 type: 'path',
-                color: 'crimson',
                 children: [
                   { type: 'step', kind: 'move', to: { id: 'A' } },
                   {
@@ -1055,8 +1029,22 @@ describe('convertIRToReactNode', () => {
                     label: { text: 'e', textColor: 'orange', opacity: 0.6, font: { size: 9 } },
                   },
                 ],
+                style: { color: 'crimson' },
               },
             ],
+            style: { color: 'blue', stroke: 'red', strokeWidth: 2, opacity: 0.8 },
+            defaults: {
+              node: {
+                shape: 'circle',
+                style: { fill: 'lightblue', textColor: NodeTextColor.Contrast, font: { size: 12 } },
+              },
+              path: {
+                style: { stroke: 'green', dashPattern: [4, 2] },
+              },
+              label: { textColor: 'gray', font: { size: 10 } },
+              arrow: { shape: 'stealth', scale: 1.5 },
+              reset: ['label', 'arrow'],
+            },
           },
         ],
       };
@@ -1152,7 +1140,15 @@ describe('convertIRToReactNode', () => {
         const ir: IRScene = {
           version: CURRENT_IR_VERSION,
           type: 'scene',
-          children: [{ type: 'node', id: 'A', position: [0, 0], shape: 'rectangle', fill }],
+          children: [
+            {
+              type: 'node',
+              id: 'A',
+              position: [0, 0],
+              shape: 'rectangle',
+              style: { fill },
+            },
+          ],
         };
         expect(normalizeReactInput(convertIRToReactNode(ir))).toEqual(ir);
       }
@@ -1168,11 +1164,11 @@ describe('convertIRToReactNode', () => {
             id: 'A',
             position: [0, 0],
             text: 'long text wraps',
-            maxTextWidth: 60,
             label: [
               { text: 'p1', pin: true },
               { text: 'p2', position: 'right', pin: { stroke: 'red', strokeWidth: 2, dashPattern: [2, 2] } },
             ],
+            layout: { maxTextWidth: 60 },
           },
         ],
       };
@@ -1323,8 +1319,8 @@ describe('convertIRToReactNode', () => {
         {
           type: 'scope',
           id: 'group',
-          color: '#abcdef',
           children: [{ namespace: 'demo', type: 'path' }],
+          style: { color: '#abcdef' },
         },
       ],
     };

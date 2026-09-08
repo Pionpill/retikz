@@ -1,4 +1,5 @@
-import type { IRChild, IRJsonObject, ResolvedTheme } from '@retikz/core';
+import type { IRChild, ResolvedTheme } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlot } from '@retikz/plot';
 import type { IRSurface } from '@retikz/standard';
 
@@ -61,6 +62,6 @@ export type SelectedChartResolveContext<TSource extends IRChartSource = IRChartS
 
 /** Mark slot 继承后的值；显式 mark payload 由 mark resolver 自己覆盖 */
 export type InheritedChartMarkSlots = Readonly<{
-  encodings: IRJsonObject;
-  properties: IRJsonObject;
+  encodings: JsonObject;
+  properties: JsonObject;
 }>;

@@ -24,25 +24,26 @@ Chart 在本 milestone 中只作为消费者。若 Chart 需求暴露通用映�
 
 完整 milestone 的 ADR-01 是同目录已接受的 Plot theme token ownership 与 Chart consumption boundary，ADR-02 冻结 inherited Theme token scope 与 Plot owner contribution。ADR-03 收敛 Plot 绘图边界并把 presentation 完全交由 Chart；Spatial Mapping 候选从 ADR-04 顺延编号。
 
-| ADR | 主题                                                                                                                                                            | Level | 依赖                                      | 状态     |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ----------------------------------------- | -------- |
-| 01  | **Plot 主题 token 所有权与 Chart 消费边界**：Plot 拥有领域 token / preset / resolver，Chart 只组合或转发 Plot 公开 contract                                     | red   | Core effective Theme、plot v0.1 theme     | Accepted |
-| 02  | **继承 Theme Token Scope 与 Plot owner contribution**：消费 Core namespace context，冻结 Plot 局部输入、shared categorical projection 与 Plot-owned scheme 边界 | red   | Core ADR-13、ADR-01                       | Accepted |
-| 03  | **Plot 绘图边界与 Chart presentation 归属**：删除 Plot static labels、专用 layout 与对应 theme contract，单图 presentation 统一交由 Chart                       | red   | ADR-01、Chart presentation                | Accepted |
-| 04  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系                           | red   | plot v0.1 coordinate / transform registry | 待起草   |
-| 05  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性                                     | red   | ADR-04、data view / lineage               | 待起草   |
-| 06  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界                                | red   | ADR-04、plot v0.1 coordinate registry     | 待起草   |
-| 07  | **Plot area background**：把既有 background 与 flat token 限定为每个有效绘图区背景，外围 Chart canvas 保持独立                                                  | red   | ADR-01、ADR-03、既有 Plot area lowering   | Proposed |
-| 08  | **Axis 主题 Token 作用域规则**：保持基础 token 扁平，通过 dimension rule 统一覆盖 line、tick、tick label、title 与 grid                                         | red   | ADR-01、ADR-02、既有 guide lowering       | Proposed |
-| 09  | **Axis grid 值域端点**：允许主网格在常规 tick source 与 density 之外显式包含 effective scale domain 首尾位置                                                    | red   | plot v0.1 Axis grid、既有 PositionScale   | Accepted |
-| 10  | **Axis grid 值域端点主题默认**：把端点策略纳入 Axis token cascade，并让 Neutral x / y 网格默认覆盖 effective domain 两端                                        | red   | ADR-08、ADR-09、Plot Theme resolver       | Accepted |
-| 11  | **Domain padding 单位**：把连续位置 scale 的留白明确拆分为 range 单位与 domain-span ratio，省略 `kind` 时使用 range                                             | red   | plot v0.1 ADR-01、既有 PositionScale      | Accepted |
-| 12  | **Polar2D 插值模式与继承**：连续角轴默认走极坐标曲线、离散角轴默认走弦，coordinate 为 Grid 与插值敏感 Mark 提供共享默认并允许局部覆盖                           | red   | plot v0.1 Polar coordinate / Mark / Guide | Accepted |
-| 13  | **Mark Placement 与 Position Adjustment**：在 scale 与 mark geometry 之间统一 role-space adjustment、coordinate projection 与 screen-space initializer          | red   | 既有 position scale / coordinate / mark   | Accepted |
+| ADR | 主题                                                                                                                                                            | Level | 依赖                                        | 状态     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------- | -------- |
+| 01  | **Plot 主题 token 所有权与 Chart 消费边界**：Plot 拥有领域 token / preset / resolver，Chart 只组合或转发 Plot 公开 contract                                     | red   | Core effective Theme、plot v0.1 theme       | Accepted |
+| 02  | **继承 Theme Token Scope 与 Plot owner contribution**：消费 Core namespace context，冻结 Plot 局部输入、shared categorical projection 与 Plot-owned scheme 边界 | red   | Core ADR-13、ADR-01                         | Accepted |
+| 03  | **Plot 绘图边界与 Chart presentation 归属**：删除 Plot static labels、专用 layout 与对应 theme contract，单图 presentation 统一交由 Chart                       | red   | ADR-01、Chart presentation                  | Accepted |
+| 04  | **Spatial Mapping 抽象与所有权**：统一映射逻辑概念，划分 Coordinate Mapping / Structured Mapping 的职责、输入输出边界与 registry 关系                           | red   | plot v0.1 coordinate / transform registry   | 待起草   |
+| 05  | **Structured Mapping 内容契约**：命名内容端口、任意 JSON-safe 集合 / 关系、多输出空间化结果、identity / provenance 与确定性                                     | red   | ADR-04、data view / lineage                 | 待起草   |
+| 06  | **通用局部坐标与自定义坐标扩展**：局部 frame、维度 / 轴粒度、切向 / 法向组合、coordinate / mark / guide / locator 的共同消费边界                                | red   | ADR-04、plot v0.1 coordinate registry       | 待起草   |
+| 07  | **Plot area background**：把既有 background 与 flat token 限定为每个有效绘图区背景，外围 Chart canvas 保持独立                                                  | red   | ADR-01、ADR-03、既有 Plot area lowering     | Proposed |
+| 08  | **Axis 主题 Token 作用域规则**：保持基础 token 扁平，通过 dimension rule 统一覆盖 line、tick、tick label、title 与 grid                                         | red   | ADR-01、ADR-02、既有 guide lowering         | Proposed |
+| 09  | **Axis grid 值域端点**：允许主网格在常规 tick source 与 density 之外显式包含 effective scale domain 首尾位置                                                    | red   | plot v0.1 Axis grid、既有 PositionScale     | Accepted |
+| 10  | **Axis grid 值域端点主题默认**：把端点策略纳入 Axis token cascade，并让 Neutral x / y 网格默认覆盖 effective domain 两端                                        | red   | ADR-08、ADR-09、Plot Theme resolver         | Accepted |
+| 11  | **Domain padding 单位**：把连续位置 scale 的留白明确拆分为 range 单位与 domain-span ratio，省略 `kind` 时使用 range                                             | red   | plot v0.1 ADR-01、既有 PositionScale        | Accepted |
+| 12  | **Polar2D 插值模式与继承**：连续角轴默认走极坐标曲线、离散角轴默认走弦，coordinate 为 Grid 与插值敏感 Mark 提供共享默认并允许局部覆盖                           | red   | plot v0.1 Polar coordinate / Mark / Guide   | Accepted |
+| 13  | **Mark Placement 与 Position Adjustment**：在 scale 与 mark geometry 之间统一 role-space adjustment、coordinate projection 与 screen-space initializer          | red   | 既有 position scale / coordinate / mark     | Accepted |
+| 14  | **Plot Source 默认片段与 Axis 规则**：用 Source-shaped defaults / rules 取代 token、native theme 与无消费者 sector palette，保持 Plot owner 消费                | red   | Core ADR-05、ADR-07 / 08 / 10、Chart ADR-15 | Proposed |
 
 ADR-01～03 已冻结并交付 Plot 的主题所有权、inherited scope、owner contribution、shared categorical projection、跨入口等价性与 presentation 边界。Chart type / recipe / presentation 继续由 chart v0.1 路线维护。Spatial Mapping ADR-04～06 仍为待起草，不因本次边界收口而改变状态。
 
-ADR-07～13 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 coordinate / mark 协作契约：Plot area background、Axis theme dimension rule、Axis grid domain endpoint、连续 position domain padding、Polar interpolation 与 Mark Placement 都由 Plot owner 解析，不进入 Chart presentation、Core Theme 或 renderer 私有分支。ADR-10 窄化调整 ADR-08～09 的 Theme 边界，使端点策略能够复用 Axis token cascade；ADR-11 扩展 v0.1 ADR-01 的单位语义；ADR-12 让 Polar coordinate frame 成为 Grid 与插值敏感 Mark 的共享几何事实源；ADR-13 再把 scale 后的位置调整、coordinate projection 与屏幕空间 initializer 收进统一管线，避免 Point 或 renderer 私有分支。
+ADR-07～13 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 coordinate / mark 协作契约：Plot area background、Axis theme dimension rule、Axis grid domain endpoint、连续 position domain padding、Polar interpolation 与 Mark Placement 都由 Plot owner 解析，不进入 Chart presentation、Core Theme 或 renderer 私有分支。ADR-10 窄化调整 ADR-08～09 的 Theme 边界，使端点策略能够复用 Axis token cascade；ADR-11 扩展 v0.1 ADR-01 的单位语义；ADR-12 让 Polar coordinate frame 成为 Grid 与插值敏感 Mark 的共享几何事实源；ADR-13 再把 scale 后的位置调整、coordinate projection 与屏幕空间 initializer 收进统一管线，避免 Point 或 renderer 私有分支。ADR-14 进一步以 Source-shaped `plotDefaults` 与窄化 `plotRules` 取代这些决策中的 token / native-theme 输入形态，保留既有 Plot owner、Axis 规则、grid endpoint 和实际 lowering 语义，并删除无消费者 sector palette。
 
 ## 前置
 
@@ -79,9 +80,9 @@ ADR-07～13 在既有 Plot 主链上继续收敛绘图区、guide、scale 与 co
 
 ## 退出条件
 
-- Plot 直接使用与 Chart 内部使用都从 Core effective Theme 解析同一 Plot preset / token / native theme 主链；Chart 不复制 Plot token、preset、resolver 或 merge。
-- `plotThemeTokens` 与 `plotTheme` 作为 Plot 局部输入，继承的 Plot namespace 通过 `theme.tokens` 进入同一 resolver；shared categorical projection 与 Plot-owned sequential / diverging scheme 保持清晰分界。
-- IRPlot 不再承载 Chart-level title、caption、note、source 或 custom presentation，Plot theme 不再保留 `plot.label.*` 与 `labelText`；Axis、Legend、Facet、datum / mark / reference / annotation text 继续由 Plot owner 表达。
+- Plot 直接使用与 Chart 内部使用都从 Core effective Theme 解析同一 Plot defaults / rules / style-definition 主链；Chart 不复制 Plot vocabulary、preset、resolver 或 merge。
+- `plotDefaults` 与仅 Axis dimension 的 `plotRules` 作为 Plot 局部输入，Core style / mode 进入同一 owner resolver；shared categorical baseline、Plot-owned sequential / diverging scheme 与实际 scale / mark / guide consumer 保持清晰分界。
+- IRPlot 不再承载 Chart-level title、caption、note、source 或 custom presentation，Plot defaults 不再保留 `plot.label.*`、`labelText` 或无消费者 sector palette；Axis、Legend、Facet、datum / mark / reference / annotation text 继续由 Plot owner 表达。
 - Plot 可以用统一的 Spatial Mapping 语言描述 coordinate mapping 与 structured mapping 的关系，同时保留两类专门契约。
 - `nodes`、`links` 等命名内容可以作为结构化输入，不再被 rows-only transform 模型限制。
 - 映射可以改变数量、顺序或拓扑时，identity、provenance、失败语义和确定性边界仍然清楚。

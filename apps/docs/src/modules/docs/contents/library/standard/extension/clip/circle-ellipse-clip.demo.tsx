@@ -13,9 +13,8 @@ const clippedContent = (centerX: number) => (
   <Node
     position={[centerX, 0]}
     shape="rectangle"
-    minimumSize={{ width: 170, height: 150 }}
-    stroke="none"
-    fill={{ kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 }}
+    style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+    layout={{ minimumSize: { width: 170, height: 150 } }}
   />
 );
 
@@ -23,21 +22,13 @@ const sourceBoundary = (centerX: number) => (
   <Node
     position={[centerX, 0]}
     shape="rectangle"
-    minimumSize={{ width: 170, height: 150 }}
-    fill="none"
-    stroke="lightgray"
-    strokeWidth={1}
-    dashPattern={[6, 4]}
+    style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
+    layout={{ minimumSize: { width: 170, height: 150 } }}
   />
 );
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={440}
-    height={220}
-    viewBox={{ x: -220, y: -110, width: 440, height: 220 }}
-    clips={[CircleClipDefinition, EllipseClipDefinition]}
-  >
+  <Layout viewBox={{ x: -220, y: -110, width: 440, height: 220 }} clips={[CircleClipDefinition, EllipseClipDefinition]}>
     {sourceBoundary(-105)}
     <Scope clip={{ kind: 'circle', cx: -105, cy: 0, r: values.circleRadius }}>{clippedContent(-105)}</Scope>
     {sourceBoundary(105)}
@@ -52,10 +43,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     >
       {clippedContent(105)}
     </Scope>
-    <Node position={[-105, 90]} fill="none" stroke="none" font={{ size: 12 }} textColor="gray">
+    <Node position={[-105, 90]} style={{ fill: 'none', stroke: 'none', font: { size: 12 }, textColor: 'gray' }}>
       circle
     </Node>
-    <Node position={[105, 90]} fill="none" stroke="none" font={{ size: 12 }} textColor="gray">
+    <Node position={[105, 90]} style={{ fill: 'none', stroke: 'none', font: { size: 12 }, textColor: 'gray' }}>
       ellipse
     </Node>
   </Layout>

@@ -2,12 +2,12 @@ import type { ResolvedTheme } from '@retikz/core';
 
 import { ThemeMode } from '@retikz/core';
 
-import type { EffectiveDiagramTheme } from '../../resolve/theme';
+import type { IRDiagramDefaults } from '../../schemas';
 
-/** 解析 Diagram Neutral Theme baseline */
-export const getDefaultDiagramTheme = (theme: ResolvedTheme): EffectiveDiagramTheme => ({
+/** 从当前 Core Theme 建立 Diagram Neutral defaults */
+export const getDefaultDiagramTheme = (theme: ResolvedTheme): IRDiagramDefaults => ({
   frame: {
-    padding: { top: 16, right: 16, bottom: 16, left: 16 },
+    padding: 16,
     titleDescriptionGap: 6,
     headingMainGap: 16,
     drawingLegendGap: 16,
@@ -15,18 +15,20 @@ export const getDefaultDiagramTheme = (theme: ResolvedTheme): EffectiveDiagramTh
   },
   presentation: {
     title: {
-      textColor: theme.mode === ThemeMode.Dark ? '#ffffff' : '#000000',
-      opacity: 1,
-      font: { size: 18, weight: 600 },
-      align: 'start',
-      lineHeight: 22,
+      style: {
+        textColor: theme.mode === ThemeMode.Dark ? '#ffffff' : '#000000',
+        opacity: 1,
+        font: { size: 18, weight: 600 },
+      },
+      layout: { align: 'start', lineHeight: 22 },
     },
     description: {
-      textColor: theme.colors.semantic.guide,
-      opacity: 1,
-      font: { size: 14, weight: 400 },
-      align: 'start',
-      lineHeight: 20,
+      style: {
+        textColor: theme.colors.semantic.guide,
+        opacity: 1,
+        font: { size: 14, weight: 400 },
+      },
+      layout: { align: 'start', lineHeight: 20 },
     },
   },
 });

@@ -4,16 +4,13 @@ import type {
   IRAxisScale,
   IRBetweenPosition,
   IRBoundary,
-  IRBoxSize,
-  IRBoxSpacing,
-  IRFont,
   IRLine,
   IRNode,
   IROffsetPosition,
   IRPosition,
-  NodeTextAlignValue,
   PolarPosition,
 } from '@retikz/core';
+import type { InputNode } from '@retikz/vanilla';
 import type { InputAtPosition, InputNodeLabel } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
@@ -22,6 +19,10 @@ import type { HydrationEventProps } from '../protocol';
 import { TIKZ_NODE } from '../protocol';
 
 export type NodeProps = HydrationEventProps & {
+  /** 实例视觉覆盖，逐字段覆盖继承默认值 */
+  style?: InputNode['style'];
+  /** 节点尺寸、间距与文本布局 */
+  layout?: InputNode['layout'];
   /** 节点 id；其他 Path/Draw 通过这个 id 引用本节点 */
   id?: string;
   /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */
@@ -58,55 +59,10 @@ export type NodeProps = HydrationEventProps & {
    *   或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）
    */
   text?: string | Array<IRLine>;
-  /** 多行文本对齐：left / center（默认）/ right；只影响多行块内各行的水平对齐 */
-  align?: NodeTextAlignValue;
-  /** 行高（user units）；不填走 `font.size × 1.2` 默认 */
-  lineHeight?: number;
-  /** 折行阈值（user units）：超过才折行、短文本盒收缩（非固定段落宽）；西文按词、CJK 按字。不填 = 不自动折行 */
-  maxTextWidth?: number;
-  /** 字体规格：family / size / weight / style 全部可选；不填走渲染端默认值 */
-  font?: IRFont;
-  /** 内边距；数字作用于四边，对象按 left/right/top/bottom > x/y > default 解析 */
-  padding?: number | IRBoxSpacing;
-  /** 外边距；数字作用于四边，对象按 left/right/top/bottom > x/y > default 解析 */
-  margin?: number | IRBoxSpacing;
-  /** 主色（TikZ `color=`）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label */
-  color?: IRNode['color'];
-  /** 背景色 */
-  fill?: IRNode['fill'];
-  /** 填充透明度 0~1 */
-  fillOpacity?: number;
-  /** 描边色 */
-  stroke?: IRNode['stroke'];
-  /** 描边透明度 0~1（TikZ `stroke opacity`） */
-  strokeOpacity?: number;
-  /** 描边宽度 */
-  strokeWidth?: number;
-  /** 描边虚线预设：等价于 dashPattern={[4, 2]}；与 `dotted` / `dashPattern` 优先级：dashPattern > dashed > dotted */
-  dashed?: boolean;
-  /** 描边点线预设：等价于 dashPattern={[1, 2]} */
-  dotted?: boolean;
-  /** 显式 dash pattern（如 [4, 2]）；优先级最高 */
-  dashPattern?: IRNode['dashPattern'];
-  /** 描边 dash offset */
-  dashOffset?: IRNode['dashOffset'];
   /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
   cornerRadius?: number;
-  /** 最小 border 宽度（user units）；不足时撑开 bbox */
-  /** 最小 border 尺寸；数字作用于宽高，对象按 width/height > default 解析 */
-  minimumSize?: number | IRBoxSize;
   /** 均匀缩放因子；同时影响 bbox / 字号 / padding / margin / 路径附着点（与 TikZ scale 一致） */
   scale?: number | IRAxisScale;
-  /** 横向缩放，优先于 `scale` */
-  /** 纵向缩放，优先于 `scale` */
-  /** 文字颜色（块级默认；行级 IRLine.fill 可覆盖）；`NodeTextColor.Contrast` 按静态不透明 fill 选黑 / 白，不填走 `currentColor` */
-  textColor?: IRNode['textColor'];
-  /** 整节点透明度 0~1（同时作用于 shape 与 text） */
-  opacity?: number;
-  /** 主形状投影（仅作用于 shape 几何，不含 text / label / pin）；预设字符串（`sm`/`md`/`lg`/`xl`/`2xl`/`none`）或对象 `{ preset?, offsetX?, offsetY?, blur?, color?, opacity? }`（显式字段覆盖 preset） */
-  shadow?: IRNode['shadow'];
-  /** 主形状混合模式（与下方已绘内容混合，W3C 分离模式）；不含 text / label / pin。省略 / `normal` = 普通 source-over */
-  blendMode?: IRNode['blendMode'];
   /**
    * 节点附属标签——TikZ `[label=top:foo]` 同义
    * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'top'，distance 缺省 12

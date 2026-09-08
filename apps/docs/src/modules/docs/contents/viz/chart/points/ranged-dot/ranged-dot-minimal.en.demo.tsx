@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <RangedDotChart
     rows={rangedDotMinimalData}
     presentation={{
-      title: 'The first 20 daily temperature ranges in Seattle',
-      subtitle: 'One row per day; degrees Celsius on x, with minimum and maximum temperature endpoints',
-      source: 'Vega Datasets seattle-weather.csv; accessed 2026-09-01',
+      title: { text: 'The first 20 daily temperature ranges in Seattle' },
+      subtitle: { text: 'One row per day; degrees Celsius on x, with minimum and maximum temperature endpoints' },
+      source: { text: 'Vega Datasets seattle-weather.csv; accessed 2026-09-01' },
     }}
     recipe={{
       encodings: { category: 'day', start: 'minimumTemperature', end: 'maximumTemperature' },

@@ -1,4 +1,4 @@
-import { ChartThemeToken, defineChartTheme } from '@retikz/chart';
+import { defineChartTheme } from '@retikz/chart';
 import { defineThemeStyle } from '@retikz/core';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -13,6 +13,7 @@ import {
   createRangedDotChart,
   createRegressionChart,
   createScatterChart,
+  createStripChart,
 } from '../src/point';
 
 const rows = [
@@ -122,7 +123,7 @@ describe('Chart Vanilla authoring', () => {
   });
 
   it('forwards named Theme definitions and Plot lowering options without putting them in Source', () => {
-    const themeDefinitions = [defineChartTheme({ name: 'scatter-theme', tokens: { chart: {} } })];
+    const themeDefinitions = [defineChartTheme({ name: 'scatter-theme', defaults: { layout: { gap: 8 } } })];
     const lowerOptions = { fieldMaps: { rows: { x: 'x' } } } as const;
     const result = createScatterChart({
       data: rows,
@@ -149,7 +150,7 @@ describe('Chart Vanilla authoring', () => {
       themeDefinitions: [
         defineChartTheme({
           name: 'host-style',
-          tokens: { chart: { [ChartThemeToken.CanvasFill]: '#ffffff' } },
+          defaults: { background: { fill: '#ffffff' } },
         }),
       ],
       lowerOptions: {
@@ -164,26 +165,34 @@ describe('Chart Vanilla authoring', () => {
     expect(renderChart(result).svg).toContain('#123456');
   });
 
-  it('keeps named and inline Chart Themes in Source instead of treating them as Core host Themes', () => {
-    const named = createScatterChart({
+  it('writes explicit Chart defaults into Source while keeping Core theme in the host result', () => {
+    const result = createScatterChart({
       data: rows,
       encodings: { x: 'x', y: 'y' },
-      theme: 'scatter-theme',
-      themeDefinitions: [defineChartTheme({ name: 'scatter-theme', tokens: { chart: {} } })],
-    });
-    const inlineTheme = {
-      tokens: { chart: { [ChartThemeToken.CanvasFill]: '#abcdef' } },
-    } as const;
-    const inline = createScatterChart({
-      data: rows,
-      encodings: { x: 'x', y: 'y' },
-      theme: inlineTheme,
+      chartDefaults: { background: { fill: '#abcdef' } },
     });
 
-    expect(named.source.theme).toBe('scatter-theme');
-    expect(named).not.toHaveProperty('theme');
-    expect(inline.source.theme).toEqual(inlineTheme);
-    expect(inline).not.toHaveProperty('theme');
+    expect(result.source.chartDefaults).toEqual({ background: { fill: '#abcdef' } });
+    expect(result).not.toHaveProperty('theme');
+  });
+
+  it('forwards sparse Point recipe guide controls through concrete factories', () => {
+    const scatter = createScatterChart({
+      data: rows,
+      encodings: { x: 'x', y: 'y', size: 'size' },
+      guides: { axis: false, grid: false, legend: false },
+    });
+    const strip = createStripChart({
+      data: rows,
+      encodings: {
+        x: { field: 'x', scale: { operation: { type: 'point', name: 'x' } } },
+        y: { field: 'y', scale: { operation: { type: 'linear', name: 'y' } } },
+      },
+      guides: { grid: false },
+    });
+
+    expect(scatter.source.recipe.guides).toEqual({ axis: false, grid: false, legend: false });
+    expect(strip.source.recipe.guides).toEqual({ grid: false });
   });
 
   it('routes Core host Theme metadata through the shared helper for every Point factory', () => {

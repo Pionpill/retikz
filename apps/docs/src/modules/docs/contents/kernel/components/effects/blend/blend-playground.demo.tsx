@@ -12,23 +12,24 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const blendMode = values.mode;
 
   return (
-    <Layout width={260} height={200}>
+    <Layout>
       <Node
         position={[0, 0]}
         shape="rectangle"
-        fill={values.background}
-        minimumSize={{ width: 220, height: 160 }}
-        stroke="none"
+        style={{ fill: values.background, stroke: 'none' }}
+        layout={{ minimumSize: { width: 220, height: 160 } }}
       />
-      <Node position={[-26, 0]} shape="circle" fill={values.sourceA} minimumSize={100} stroke="none" />
+      <Node
+        position={[-26, 0]}
+        shape="circle"
+        style={{ fill: values.sourceA, stroke: 'none' }}
+        layout={{ minimumSize: 100 }}
+      />
       <Node
         position={[26, 0]}
         shape="circle"
-        fill={values.sourceB}
-        minimumSize={100}
-        stroke="none"
-        blendMode={blendMode}
-        opacity={values.opacity}
+        style={{ fill: values.sourceB, stroke: 'none', blendMode, opacity: values.opacity }}
+        layout={{ minimumSize: 100 }}
       />
     </Layout>
   );

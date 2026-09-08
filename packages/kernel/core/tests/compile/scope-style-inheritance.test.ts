@@ -73,7 +73,6 @@ describe('Happy: 主色级联 / 四通道', () => {
       children: [
         {
           type: 'scope',
-          color: 'blue',
           children: [
             { type: 'node', id: 'A', position: [0, 0], text: 'A' },
             {
@@ -85,6 +84,7 @@ describe('Happy: 主色级联 / 四通道', () => {
               ],
             },
           ],
+          style: { color: 'blue' },
         },
       ],
     };
@@ -106,8 +106,13 @@ describe('Happy: 主色级联 / 四通道', () => {
       children: [
         {
           type: 'scope',
-          nodeDefault: { shape: 'circle', fill: 'lightblue' },
           children: [{ type: 'node', position: [0, 0] }],
+          defaults: {
+            node: {
+              shape: 'circle',
+              style: { fill: 'lightblue' },
+            },
+          },
         },
       ],
     };
@@ -121,12 +126,12 @@ describe('Happy: 主色级联 / 四通道', () => {
       children: [
         {
           type: 'path',
-          color: 'crimson',
           marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [80, 40], label: { text: 'sin' } },
           ],
+          style: { color: 'crimson' },
         },
       ],
     };
@@ -142,7 +147,6 @@ describe('Happy: 主色级联 / 四通道', () => {
       children: [
         {
           type: 'scope',
-          arrowDefault: { shape: 'stealth', scale: 1.5 },
           children: [
             {
               type: 'path',
@@ -153,6 +157,7 @@ describe('Happy: 主色级联 / 四通道', () => {
               ],
             },
           ],
+          defaults: { arrow: { shape: 'stealth', scale: 1.5 } },
         },
       ],
     };
@@ -171,7 +176,14 @@ describe('边界: 缺省 / 显式 / 内置', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: 'x', color: 'blue', stroke: 'red' }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'x',
+          style: { color: 'blue', stroke: 'red' },
+        },
+      ],
     };
     expect(rectOf(ir)?.stroke).toBe('red');
     expect(rectOf(ir)?.fill).toBe('blue');
@@ -185,8 +197,8 @@ describe('边界: 缺省 / 显式 / 内置', () => {
       children: [
         {
           type: 'scope',
-          color: 'white',
           children: [{ type: 'node', position: [0, 0], text: 'x' }],
+          style: { color: 'white' },
         },
       ],
     };
@@ -213,8 +225,8 @@ describe('边界: 缺省 / 显式 / 内置', () => {
       children: [
         {
           type: 'scope',
-          nodeDefault: {},
           children: [{ type: 'node', position: [0, 0], text: 'x' }],
+          defaults: { node: {} },
         },
       ],
     };
@@ -235,8 +247,15 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          color: 'white',
-          children: [{ type: 'node', position: [0, 0], text: 'x', stroke: 'none' }],
+          children: [
+            {
+              type: 'node',
+              position: [0, 0],
+              text: 'x',
+              style: { stroke: 'none' },
+            },
+          ],
+          style: { color: 'white' },
         },
       ],
     };
@@ -251,14 +270,14 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          color: 'red',
           children: [
             {
               type: 'scope',
-              color: 'blue',
               children: [{ type: 'node', position: [0, 0], text: 'x' }],
+              style: { color: 'blue' },
             },
           ],
+          style: { color: 'red' },
         },
       ],
     };
@@ -272,9 +291,13 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          stroke: 'red',
-          nodeDefault: { stroke: 'green' },
           children: [{ type: 'node', position: [0, 0] }],
+          style: { stroke: 'red' },
+          defaults: {
+            node: {
+              style: { stroke: 'green' },
+            },
+          },
         },
       ],
     };
@@ -288,15 +311,15 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          color: 'red',
           children: [
             {
               type: 'scope',
-              resetStyle: true,
-              color: 'white',
               children: [{ type: 'node', position: [0, 0], text: 'x' }],
+              style: { color: 'white' },
+              defaults: { reset: true },
             },
           ],
+          style: { color: 'red' },
         },
       ],
     };
@@ -311,24 +334,24 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          arrowDefault: { shape: 'circle', scale: 2 },
           children: [
             {
               type: 'scope',
-              resetStyle: ['arrow'],
               children: [
                 {
                   type: 'path',
-                  color: 'red',
                   marks: arrowMarks('->'),
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [40, 0] },
                   ],
+                  style: { color: 'red' },
                 },
               ],
+              defaults: { reset: ['arrow'] },
             },
           ],
+          defaults: { arrow: { shape: 'circle', scale: 2 } },
         },
       ],
     };
@@ -344,23 +367,23 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          labelDefault: { textColor: 'gray' },
           children: [
             {
               type: 'scope',
-              resetStyle: ['label'],
               children: [
                 {
                   type: 'path',
-                  color: 'red',
                   children: [
                     { type: 'step', kind: 'move', to: [0, 0] },
                     { type: 'step', kind: 'line', to: [40, 0], label: { text: 'x' } },
                   ],
+                  style: { color: 'red' },
                 },
               ],
+              defaults: { reset: ['label'] },
             },
           ],
+          defaults: { label: { textColor: 'gray' } },
         },
       ],
     };
@@ -374,14 +397,14 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          opacity: 0.5,
           children: [
             {
               type: 'scope',
-              opacity: 0.5,
               children: [{ type: 'node', position: [0, 0], text: 'x' }],
+              style: { opacity: 0.5 },
             },
           ],
+          style: { opacity: 0.5 },
         },
       ],
     };
@@ -396,8 +419,8 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         {
           type: 'scope',
           transforms: [{ kind: 'scale', x: 2 }],
-          strokeWidth: 3,
           children: [{ type: 'node', position: [0, 0] }],
+          style: { strokeWidth: 3 },
         },
       ],
     };
@@ -412,8 +435,8 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
         {
           type: 'scope',
           localNamespace: true,
-          color: 'red',
           children: [{ type: 'node', position: [0, 0], text: 'x' }],
+          style: { color: 'red' },
         },
       ],
     };
@@ -427,27 +450,27 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          arrowDefault: { color: 'green' },
           children: [
             {
               type: 'path',
-              color: 'red',
               marks: arrowMarks('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
               ],
+              style: { color: 'red' },
             },
             {
               type: 'path',
-              color: 'blue',
               marks: arrowMarks('->', { color: 'purple' }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 50] },
                 { type: 'step', kind: 'line', to: [40, 50] },
               ],
+              style: { color: 'blue' },
             },
           ],
+          defaults: { arrow: { color: 'green' } },
         },
       ],
     };
@@ -465,27 +488,27 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          arrowDefault: { end: { color: 'green' } },
           children: [
             {
               type: 'path',
-              color: 'red',
               marks: arrowMarks('->'),
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [40, 0] },
               ],
+              style: { color: 'red' },
             },
             {
               type: 'path',
-              color: 'blue',
               marks: arrowMarks('->', { end: { color: 'purple' } }),
               children: [
                 { type: 'step', kind: 'move', to: [0, 50] },
                 { type: 'step', kind: 'line', to: [40, 50] },
               ],
+              style: { color: 'blue' },
             },
           ],
+          defaults: { arrow: { end: { color: 'green' } } },
         },
       ],
     };
@@ -503,11 +526,9 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
       children: [
         {
           type: 'scope',
-          arrowDefault: { end: { color: 'red', shape: 'normal' } },
           children: [
             {
               type: 'scope',
-              arrowDefault: { end: { shape: 'stealth' } },
               children: [
                 {
                   type: 'path',
@@ -518,8 +539,10 @@ describe('交互: 优先级 / resetStyle / opacity / 正交', () => {
                   ],
                 },
               ],
+              defaults: { arrow: { end: { shape: 'stealth' } } },
             },
           ],
+          defaults: { arrow: { end: { color: 'red', shape: 'normal' } } },
         },
       ],
     };

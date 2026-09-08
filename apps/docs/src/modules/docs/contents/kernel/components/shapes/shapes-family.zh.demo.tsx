@@ -9,41 +9,44 @@ import { ContourShapeDefinition, StarShapeDefinition } from '@retikz/standard/sh
  *   左侧灰标点出两副面相，下排一条灰箭头示意 Node 形状可被连接。caption / 行标用 stroke/fill none 的灰字。
  */
 const Demo: FC = () => (
-  <Layout
-    width={660}
-    height={240}
-    style={{ maxWidth: '100%', height: 'auto' }}
-    shapes={[StarShapeDefinition, ContourShapeDefinition]}
-  >
+  <Layout shapes={[StarShapeDefinition, ContourShapeDefinition]}>
     {/* 行标 */}
-    <Node id="rowPath" position={[-235, -55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="rowPath"
+      position={[-235, -55]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+    >
       Path 线
     </Node>
-    <Node id="rowNode" position={[-235, 55]} stroke="none" fill="none" textColor="gray" font={{ size: 12 }}>
+    <Node
+      id="rowNode"
+      position={[-235, 55]}
+      style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
+    >
       Node 边界
     </Node>
 
     {/* 上排：作为 Path 图形（Sugar）——纯轮廓线 */}
-    <Circle center={[-120, -55]} radius={24} fill="none" />
-    <Rectangle center={[-25, -55]} width={52} height={40} fill="none" />
-    <RegularPolygon center={[75, -55]} radius={26} sides={6} fill="none" />
-    <Star center={[175, -55]} outerRadius={26} innerRadius={11} points={5} fill="none" />
+    <Circle center={[-120, -55]} radius={24} style={{ fill: 'none' }} />
+    <Rectangle center={[-25, -55]} width={52} height={40} style={{ fill: 'none' }} />
+    <RegularPolygon center={[75, -55]} radius={26} sides={6} style={{ fill: 'none' }} />
+    <Star center={[175, -55]} outerRadius={26} innerRadius={11} points={5} style={{ fill: 'none' }} />
 
     {/* 下排：作为 Node 形状——有边界、能装文字、能连线 */}
-    <Node id="nc" position={[-120, 55]} shape="circle" fill="aliceblue">
+    <Node id="nc" position={[-120, 55]} shape="circle" style={{ fill: 'aliceblue' }}>
       圆
     </Node>
-    <Node id="nr" position={[-25, 55]} fill="aliceblue">
+    <Node id="nr" position={[-25, 55]} style={{ fill: 'aliceblue' }}>
       矩形
     </Node>
-    <Node id="np" position={[75, 55]} shape={{ type: 'polygon', params: { sides: 6 } }} fill="aliceblue">
+    <Node id="np" position={[75, 55]} shape={{ type: 'polygon', params: { sides: 6 } }} style={{ fill: 'aliceblue' }}>
       多边形
     </Node>
     <Node
       id="ns"
       position={[175, 55]}
       shape={{ type: 'star', params: { points: 5, innerRadius: 11, outerRadius: 26 } }}
-      fill="gold"
+      style={{ fill: 'gold' }}
     />
     <Node
       id="ncontour"
@@ -60,11 +63,11 @@ const Demo: FC = () => (
           cornerRadius: 5,
         },
       }}
-      fill="lavender"
+      style={{ fill: 'lavender' }}
     >
       轮廓
     </Node>
-    <Draw way={['nc', 'nr']} arrow="->" stroke="gray" />
+    <Draw way={['nc', 'nr']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

@@ -69,8 +69,8 @@ describe('NodeLayout boundary / shapes', () => {
       id: 'circle-boundary',
       shape: 'rectangle',
       boundary: 'circle',
-      minimumSize: { width: 40, height: 20 },
       position: [0, 0],
+      layout: { minimumSize: { width: 40, height: 20 } },
     });
     const toward = [100, 0] as [number, number];
     const clipped = boundaryPointOf(layout, toward, layout.boundary);

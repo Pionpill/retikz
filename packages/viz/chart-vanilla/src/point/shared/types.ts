@@ -21,8 +21,12 @@ export type TypedChartCommonInput<TSource extends IRChartSource> = InputChartPre
     coordinate?: InputChartCoordinate;
     /** Chart Source 身份 */
     id?: string;
-    /** Source-owned named / inline Chart Theme；Core host Theme 仍可使用同名字段的 Core 形态 */
-    theme?: TSource['theme'] | IRScene['theme'];
+    /** Chart surface background */
+    background?: TSource['background'];
+    /** Chart Source-shaped sparse defaults */
+    chartDefaults?: TSource['chartDefaults'];
+    /** Core host Theme 环境 */
+    theme?: IRScene['theme'];
     /** 当前编译边界可见的命名 Chart Theme Definition */
     themeDefinitions?: ReadonlyArray<ChartThemeDefinition>;
     /** Plot lowering 的运行时选项 */

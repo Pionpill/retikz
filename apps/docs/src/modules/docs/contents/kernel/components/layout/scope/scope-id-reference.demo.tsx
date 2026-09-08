@@ -24,7 +24,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const anchor = values.anchor === 'angle' ? values.angleDegrees : values.anchor;
 
   return (
-    <Layout width={400} height={200} viewBox={{ x: -240, y: -120, width: 480, height: 240 }}>
+    <Layout viewBox={{ x: -240, y: -120, width: 480, height: 240 }}>
       <Node id="source" position={[-150, 0]}>
         source
       </Node>
@@ -39,7 +39,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           C
         </Node>
       </Scope>
-      <Draw way={boundary} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
+      <Draw way={boundary} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
       <Draw way={['source', `cluster.${anchor}`]} arrow="->" />
     </Layout>
   );

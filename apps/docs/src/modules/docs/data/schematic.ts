@@ -5,11 +5,9 @@ import { DocDifficulty } from './types';
 /** Schematic 图式元素与后续图结构能力的文档导航 */
 export const schematicSection: Array<Section> = [
   {
-    pages: [{ id: 'introduction', label: 'schematic.introduction', difficulty: DocDifficulty.Beginner }],
-  },
-  {
     id: 'graph',
     label: 'schematic.graph',
+    navigationDescription: 'schematic.graphNavigationDescription',
     document: true,
     pages: [
       {
@@ -51,19 +49,27 @@ export const schematicSection: Array<Section> = [
       {
         id: 'block',
         label: 'schematic.block',
-        children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          { id: 'builtin', label: 'schematic.builtinImplementation', difficulty: DocDifficulty.Internals },
-          { id: 'extension', label: 'schematic.extensionUsage', difficulty: DocDifficulty.Advanced },
-        ],
+        children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
       },
       { id: 'group', label: 'schematic.group', difficulty: DocDifficulty.Beginner },
       { id: 'api-reference', label: 'schematic.graphApiReference' },
+      {
+        id: 'changelog',
+        label: 'schematic.changelog',
+        children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'graph.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
     ],
   },
   {
     id: 'diagram',
     label: 'schematic.diagram',
+    navigationDescription: 'schematic.diagramNavigationDescription',
     document: true,
     pages: [
       { id: 'framework', label: 'schematic.diagramFramework' },
@@ -72,16 +78,16 @@ export const schematicSection: Array<Section> = [
         label: 'schematic.flowDiagram',
         children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
       },
-    ],
-  },
-  {
-    id: 'releases',
-    label: 'schematic.releases',
-    pages: [
       {
         id: 'changelog',
         label: 'schematic.changelog',
         children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'diagram.release',
+          sourceOfTruth: 'changelog',
+        },
       },
     ],
   },

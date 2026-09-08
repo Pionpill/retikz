@@ -337,25 +337,29 @@ describe('stroke IRPaint schema', () => {
   it('path-stroke-paint：PathSchema 接受 IRPaint stroke', () => {
     const parsed = PathSchema.parse({
       type: 'path',
-      stroke: strokePaint,
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [10, 0] },
       ],
+      style: { stroke: strokePaint },
     });
-    expect(parsed.stroke).toEqual(strokePaint);
+    expect(parsed.style?.stroke).toEqual(strokePaint);
   });
 
   it('node-stroke-paint：NodeSchema 接受 IRPaint stroke', () => {
-    const parsed = NodeSchema.parse({ type: 'node', position: [0, 0], stroke: strokePaint });
-    expect(parsed.stroke).toEqual(strokePaint);
+    const parsed = NodeSchema.parse({
+      type: 'node',
+      position: [0, 0],
+      style: { stroke: strokePaint },
+    });
+    expect(parsed.style?.stroke).toEqual(strokePaint);
   });
 
   it('scope-stroke-paint：ScopeSchema 接受 IRPaint stroke 并保持 JSON round-trip', () => {
     const input = {
       type: 'scope',
-      stroke: strokePaint,
       children: [{ type: 'node', position: [0, 0], text: 'A' }],
+      style: { stroke: strokePaint },
     };
     const parsed = ScopeSchema.parse(JSON.parse(JSON.stringify(input)));
     expect(parsed).toEqual(input);
@@ -365,16 +369,22 @@ describe('stroke IRPaint schema', () => {
     expect(() =>
       PathSchema.parse({
         type: 'path',
-        stroke: { kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] },
         children: [
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [10, 0] },
         ],
+        style: { stroke: { kind: 'linearGradient', stops: [{ offset: 0, color: 'red' }] } },
       }),
     ).toThrow();
   });
 
   it('invalid-stroke-type：非字符串且非 IRPaint 的 stroke 被 schema 拒绝', () => {
-    expect(() => NodeSchema.parse({ type: 'node', position: [0, 0], stroke: 123 })).toThrow();
+    expect(() =>
+      NodeSchema.parse({
+        type: 'node',
+        position: [0, 0],
+        style: { stroke: 123 },
+      }),
+    ).toThrow();
   });
 });

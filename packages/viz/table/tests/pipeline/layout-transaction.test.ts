@@ -25,7 +25,7 @@ import {
   TableSchema,
 } from '../../src';
 import { resolveTableTransaction } from '../../src/pipeline/layout';
-import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
+import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
 
 const tableArtifactsOf = (artifacts: ReturnType<typeof compileTable>['artifacts']): Array<TableCompileArtifact> =>
   artifacts.filter(
@@ -79,7 +79,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -119,7 +119,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -131,8 +131,7 @@ describe('Table layout transaction', () => {
                 id: 'probe-node',
                 position: [10, 5],
                 shape: 'rectangle',
-                minimumSize: { width: 100, height: 20 },
-                padding: 0,
+                layout: { minimumSize: { width: 100, height: 20 }, padding: 0 },
               },
             },
           ],
@@ -201,7 +200,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -318,7 +317,17 @@ describe('Table layout transaction', () => {
       type: TableComposite.Table,
       structure: {
         kind: 'manual',
-        rows: [[{ content: { type: 'node', position: [0, 0], minimumSize: 20, padding: 0 } }]],
+        rows: [
+          [
+            {
+              content: {
+                type: 'node',
+                position: [0, 0],
+                layout: { minimumSize: 20, padding: 0 },
+              },
+            },
+          ],
+        ],
       },
       layout: {
         columnSize: { kind: 'fraction' },
@@ -344,7 +353,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -352,7 +361,12 @@ describe('Table layout transaction', () => {
             {
               id: 'zero',
               layout: { overflow: 'clip' },
-              content: { type: 'node', id: 'discarded', position: [0, 0], minimumSize: 20, padding: 0 },
+              content: {
+                type: 'node',
+                id: 'discarded',
+                position: [0, 0],
+                layout: { minimumSize: 20, padding: 0 },
+              },
             },
           ],
         ],
@@ -480,7 +494,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'intrinsic-failure' } }]],
@@ -554,7 +568,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ id: 'total', content: { namespace: 'fixture', type: 'nested-table-failure' } }]],
@@ -624,7 +638,7 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [
@@ -681,7 +695,7 @@ describe('Table layout transaction', () => {
     const spec: IRTable = {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       structure: {
         kind: 'manual',
         rows: [[{ layout: { wrap: true }, content: { namespace: 'fixture', type: 'anonymous-constrained-failure' } }]],
@@ -700,11 +714,11 @@ describe('Table layout transaction', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'orders',
-      structure: { kind: 'manual', rows: [[null]] },
+      structure: { kind: 'manual', rows: [['border fixture']] },
       layout: {
         columnSize: { kind: 'fixed', value: 40 },
         rowSize: { kind: 'fixed', value: 20 },
-        borders: { outer: { kind: 'line' } },
+        borders: { outer: { top: { kind: 'line' } } },
       },
     };
     const failing = defineComposite({
@@ -739,7 +753,10 @@ describe('Table layout transaction', () => {
         expectedFailure = failedProbe.failure;
         const tableContext: LayoutCompositeCompileContext = {
           ...context,
-          layoutChild: (_child, proposal) => {
+          layoutChild: (child, proposal) => {
+            if (child.type !== 'scope' || Reflect.get(child.meta ?? {}, 'role') !== 'tableBorders') {
+              return context.layoutChild(child, proposal);
+            }
             borderLayoutCalls += 1;
             expect(proposal).toEqual(NaturalLayoutProposal);
             return failedProbe;
