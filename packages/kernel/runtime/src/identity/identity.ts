@@ -15,14 +15,14 @@ type MutableIdentityTrieNode = {
 };
 
 const assertValidIdentity = (owner: string, path: ReadonlyArray<string>): void => {
-  assertNonEmptyString(owner, 'Runtime identity owner');
+  assertNonEmptyString(owner, 'Runtime identity owner', identityError(owner, owner));
   if (path.length === 0) {
     throw identityError(owner, path);
   }
   for (let index = 0; index < path.length; index += 1) {
     if (!(index in path)) throw identityError(owner, path);
     const segment = path[index];
-    assertNonEmptyString(segment, `Runtime identity path segment ${index}`);
+    assertNonEmptyString(segment, `Runtime identity path segment ${index}`, identityError(owner, path));
   }
 };
 
@@ -77,7 +77,7 @@ export const createRuntimeIdentityLookup = (
   owner: string,
   identities: ReadonlyArray<RuntimeIdentity>,
 ): RuntimeIdentityLookup => {
-  assertNonEmptyString(owner, 'Runtime identity lookup owner');
+  assertNonEmptyString(owner, 'Runtime identity lookup owner', identityError(owner, owner));
   const root: MutableIdentityTrieNode = { terminal: false, children: new Map() };
   const copied: Array<RuntimeIdentity> = [];
   for (const oriIdentity of identities) {

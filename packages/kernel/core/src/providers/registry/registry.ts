@@ -65,7 +65,11 @@ export const defineKeyedProviderArray = <TDefinition, TKey extends string = stri
   );
 
 const assertProviderKey = (capability: string, key: string): void => {
-  assertNonEmptyString(key, `${capability} provider key`);
+  assertNonEmptyString(
+    key,
+    `${capability} provider key`,
+    new RetikzCoreError(RetikzCoreErrorCode.Provider, `${capability} provider key must be a non-empty string.`),
+  );
 };
 
 const registeredNames = <TDefinition>(registry: ProviderCollection<TDefinition>): string => {

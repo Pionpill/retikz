@@ -35,10 +35,14 @@ const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {
   });
 };
 
-/** 校验 schema literal 字符串并直接保留 Foundation 原子错误 */
+/** 校验 schema literal 字符串 */
 const isNonEmptyLiteralString = (value: unknown, label: string): value is string => {
   if (typeof value !== 'string') return false;
-  assertNonEmptyString(value, label);
+  assertNonEmptyString(
+    value,
+    label,
+    new RetikzCoreError(RetikzCoreErrorCode.CompositeContractViolation, `${label} must be a non-empty string.`),
+  );
   return true;
 };
 

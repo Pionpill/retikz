@@ -7,6 +7,7 @@ import { embed } from '@retikz/vanilla';
 
 import type { InputTable, InputTableVariant } from '../normalize/table';
 
+import { RetikzTableVanillaError } from '../error';
 import { inputTableFromIR } from '../normalize/table';
 
 /** 从 plain detail 输入构造 Table spec */
@@ -21,7 +22,11 @@ export const embedTable = (
   spec: IRTable,
   options: Omit<InputTable, 'table'> = {},
 ): InputEmbed<InputTable> => {
-  assertNonEmptyString(id, 'table vanilla embed id');
+  assertNonEmptyString(
+    id,
+    'table vanilla embed id',
+    new RetikzTableVanillaError('table vanilla embed id must be a non-empty string.'),
+  );
   const table: InputTableVariant = inputTableFromIR(spec);
   return embed(TABLE_NAMESPACE, id, { table, ...options });
 };

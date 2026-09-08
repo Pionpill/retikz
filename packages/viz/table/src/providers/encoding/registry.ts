@@ -11,7 +11,11 @@ export const resolveCellVisualScaleRegistry = (
 ): ReadonlyMap<string, AnyCellVisualScaleDefinition> => {
   const registry = new Map<string, AnyCellVisualScaleDefinition>();
   for (const definition of [...BUILTIN_CELL_VISUAL_SCALES, ...(custom ?? [])]) {
-    assertNonEmptyString(definition.name, 'cell visual scale provider key');
+    assertNonEmptyString(
+      definition.name,
+      'cell visual scale provider key',
+      new RetikzTableError('cell visual scale provider key must be a non-empty string.'),
+    );
     if (registry.has(definition.name)) {
       throw new RetikzTableError(`duplicate cell visual scale registration: "${definition.name}"`);
     }

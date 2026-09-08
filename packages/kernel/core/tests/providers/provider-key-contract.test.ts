@@ -1,10 +1,9 @@
 import type { ZodType } from 'zod';
 
-import { RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, number, object, string, union } from 'zod';
 
-import type { IRScene } from '../../src';
+import type { IRScene, RetikzCoreErrorCodeValue } from '../../src';
 
 import {
   BUILTIN_PATH_KINDS,
@@ -16,21 +15,21 @@ import {
   definePathKind,
   defineShape,
   PathSchema,
+  RetikzCoreError,
+  RetikzCoreErrorCode,
 } from '../../src';
 
-const expectFoundationNonEmptyError = (action: () => unknown, label: string, value: string): void => {
+const expectCoreNonEmptyError = (action: () => unknown, code: RetikzCoreErrorCodeValue, label: string): void => {
   let caught: unknown;
   try {
     action();
   } catch (error) {
     caught = error;
   }
-  expect(caught).toBeInstanceOf(RetikzFoundationError);
+  expect(caught).toBeInstanceOf(RetikzCoreError);
   expect(caught).toMatchObject({
-    code: RetikzFoundationErrorCode.NonEmptyStringRequired,
+    code,
     message: `${label} must be a non-empty string.`,
-    details: { label, value },
-    cause: value,
   });
 };
 
@@ -107,15 +106,15 @@ describe('provider key contract', () => {
   it.each(['', ' ', '\u2003', '\ufeff'])(
     'path generator rejects a blank name with the established error (%j)',
     name => {
-      expectFoundationNonEmptyError(
+      expectCoreNonEmptyError(
         () =>
           definePathGenerator({
             name,
             paramsSchema: object({}),
             generate: () => [],
           }),
+        RetikzCoreErrorCode.Contract,
         'definePathGenerator: name',
-        name,
       );
     },
   );
@@ -127,15 +126,15 @@ describe('provider key contract', () => {
   });
 
   it.each(['', ' ', '\u2003', '\ufeff'])('path kind rejects a blank name (%j)', name => {
-    expectFoundationNonEmptyError(
+    expectCoreNonEmptyError(
       () =>
         definePathKind({
           name,
           schema: PathSchema.extend({ kind: literal('custom') }),
           compile: () => null,
         }),
+      RetikzCoreErrorCode.Contract,
       'definePathKind: name',
-      name,
     );
   });
 
@@ -172,7 +171,7 @@ describe('provider key contract', () => {
   });
 
   it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank namespace literal (%j)', namespace => {
-    expectFoundationNonEmptyError(
+    expectCoreNonEmptyError(
       () =>
         defineComposite({
           namespace: 'demo',
@@ -183,13 +182,13 @@ describe('provider key contract', () => {
           }),
           expand: () => ({ children: [] }),
         }),
+      RetikzCoreErrorCode.CompositeContractViolation,
       'defineComposite: schema.namespace',
-      namespace,
     );
   });
 
   it.each(['', ' ', '\u2003', '\ufeff'])('composite rejects a blank type literal (%j)', type => {
-    expectFoundationNonEmptyError(
+    expectCoreNonEmptyError(
       () =>
         defineComposite({
           namespace: 'demo',
@@ -200,8 +199,8 @@ describe('provider key contract', () => {
           }),
           expand: () => ({ children: [] }),
         }),
+      RetikzCoreErrorCode.CompositeContractViolation,
       'defineComposite: schema.type',
-      type,
     );
   });
 

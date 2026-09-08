@@ -37,7 +37,11 @@ const snapshotLowerOptions = (input: LowerTablesOptions): LowerTablesOptions =>
 
 /** 创建供 React 与 Vanilla 宿主统一聚合的 Table runtime contribution */
 export const createTableRuntimeContribution = (input: TableRuntimeContributionInput): TableRuntimeContribution => {
-  assertNonEmptyString(input.reference, 'table runtime contribution reference');
+  assertNonEmptyString(
+    input.reference,
+    'table runtime contribution reference',
+    new RetikzTableError('table runtime contribution reference must be a non-empty string.'),
+  );
   const runtimeReference = `@@retikz/table/runtime/${encodeRuntimeReference(input.reference)}`;
   const data = input.data ?? {};
   if (Object.hasOwn(data, runtimeReference)) {
