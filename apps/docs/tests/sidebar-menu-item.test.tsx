@@ -166,6 +166,7 @@ describe('<AppSidebarMenu>', () => {
     expect(introDifficultySlot?.classList.contains('size-6')).toBe(true);
     expect(groupExpandButton?.classList.contains('size-6')).toBe(true);
     expect(introDifficultySlot?.classList.contains('ml-1')).toBe(true);
+    expect(introDifficultySlot?.classList.contains('opacity-100')).toBe(true);
     expect(groupExpandButton?.classList.contains('ml-1')).toBe(true);
     expect(api?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
     expect(group?.querySelector('[data-doc-difficulty-dot]')).toBeNull();
@@ -255,25 +256,26 @@ describe('<AppSidebar>', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/packages/base/foundation']}>
+        <MemoryRouter initialEntries={['/kernel/packages/foundation/overview']}>
           <AppSidebar
             location={{
               moduleId: 'kernel',
               sectionId: 'packages',
-              pageId: 'base',
-              subPageId: 'foundation',
+              pageId: 'foundation',
+              subPageId: 'overview',
             }}
           />
         </MemoryRouter>,
       );
     });
 
-    expect(findButton(container, 'kernel.pkgGroupBase')).toBeDefined();
+    expect(container.textContent).toContain('kernel.pkgGroupBase');
     expect(findButton(container, 'kernel.pkgFoundation')).toBeDefined();
-    expect(findButton(container, 'kernel.pkgGroupCore')).toBeDefined();
-    expect(findButton(container, 'kernel.pkgGroupExtension')).toBeDefined();
-    expect(findButton(container, 'kernel.pkgGroupFramework')).toBeDefined();
-    expect(findButton(container, 'kernel.pkgGroupRender')).toBeDefined();
-    expect(findButton(container, 'kernel.changelog')).toBeDefined();
+    expect(findButton(container, 'kernel.pkgMath')).toBeDefined();
+    expect(container.textContent).toContain('kernel.pkgGroupCore');
+    expect(container.textContent).toContain('kernel.pkgGroupExtension');
+    expect(container.textContent).toContain('kernel.pkgGroupFramework');
+    expect(container.textContent).toContain('kernel.pkgGroupRender');
+    expect(findButton(container, 'kernel.changelog')).toBeUndefined();
   });
 });

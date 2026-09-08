@@ -84,7 +84,7 @@ import { LayoutInspectLayout } from '@retikz/layout-react/inspect';
 </LayoutInspectLayout>;
 ```
 
-Use `LayoutInspectScope` for one authored subtree, or `InspectFlexLayout`, `InspectGridLayout`, or `InspectOverlayLayout` for one Layout occurrence. See [`@retikz/inspect`](/kernel/packages/extension/inspect) for the general mechanism and [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for layout options and selection rules.
+Use `LayoutInspectScope` for one authored subtree, or `InspectFlexLayout`, `InspectGridLayout`, or `InspectOverlayLayout` for one Layout occurrence. See [`@retikz/inspect`](/kernel/packages/inspect/overview) for the general mechanism and [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for layout options and selection rules.
 
 ### Output Boundary
 
@@ -295,7 +295,7 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | `pathGenerators` | `ReadonlyArray`<br />`<PathGeneratorDefinition>` | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)                                                        |
 | `pathKinds`      | `ReadonlyArray`<br />`<PathKindDefinition>`      | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path) or optional [Standard Ribbon](/library/standard/extension/ribbon) |
 | `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/components/design/composite)                                              |
-| `lowerTex`       | `LowerTex`                                       | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                                                                           |
+| `lowerTex`       | `LowerTex`                                       | —       | Inject formula lowering; see [TeX](/kernel/packages/tex/overview)                                                                           |
 
 ### Whole-figure defaults
 
@@ -323,7 +323,7 @@ Omission, empty groups, optional undefined-only overrides and isolated `defaults
 | `className`              | `string`                                         | —                 | Forwarded to the SVG / Canvas root                                                      |
 | `style`                  | `CSSProperties`                                  | —                 | Forwarded to the SVG / Canvas root                                                      |
 | `idPrefix`               | `string`                                         | —                 | Overrides resource ids for multi-instance or SSR hydration stability                    |
-| `handlers`               | `LayoutProps['handlers']`                        | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/render-hydration) |
+| `handlers`               | `LayoutProps['handlers']`                        | —                 | Event registry for `ir` mode; see [Hydration](/kernel/packages/render/hydration) |
 | `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | Selects retained / static processing and an auto / full Program update strategy         |
 | `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | Retained creates a Vanilla controller; static materializes fully without rollback       |
 | `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | Uses retained automatic incremental / fallback dispatch or forces full execution        |

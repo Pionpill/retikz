@@ -119,6 +119,7 @@
     "pkgRenderSvg": "render · SVG",
     "pkgRenderCanvas": "render · Canvas",
     "pkgHydration": "render · Hydration",
+    "pkgOverview": "Overview",
     "basicConcepts": "Basic Concepts",
     "coreConcepts": "Core Concepts",
     "design": "Design Philosophy",

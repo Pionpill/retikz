@@ -184,6 +184,11 @@ describe('layout utils', () => {
     expect(isChangelogLocation({ moduleId: 'viz', sectionId, pageId: 'changelog' })).toBe(true);
   });
 
+  it('将 Kernel 更新日志归入参考分区', () => {
+    expect(isChangelogLocation({ moduleId: 'kernel', sectionId: 'reference', pageId: 'changelog' })).toBe(true);
+    expect(isChangelogLocation({ moduleId: 'kernel', sectionId: 'packages', pageId: 'changelog' })).toBe(false);
+  });
+
   it('不再识别旧 Viz 发布更新日志路由', () => {
     expect(isChangelogLocation({ moduleId: 'viz', sectionId: 'releases', pageId: 'changelog' })).toBe(false);
   });

@@ -9,7 +9,7 @@ const readContent = (relativePath: string, lang: 'zh' | 'en') => readFileSync(co
 
 describe('provider graph documentation', () => {
   it.each(['zh', 'en'] as const)('%s Kernel 页面说明 rooted closure、冲突与最终 Definition 边界', lang => {
-    const concept = readContent('kernel/concepts/design/composite', lang);
+    const concept = readContent('kernel/components/design/composite', lang);
     const compile = readContent('kernel/reference/runtime/compile', lang);
 
     for (const contract of [
@@ -71,11 +71,11 @@ describe('provider graph documentation', () => {
 
   it('删除公开文档与演示中的 namespace-local maker 旧协议', () => {
     const files = [
-      'kernel/packages/framework/vanilla/index.zh.mdx',
-      'kernel/packages/framework/vanilla/index.en.mdx',
+      'kernel/packages/vanilla/overview/index.zh.mdx',
+      'kernel/packages/vanilla/overview/index.en.mdx',
       'kernel/components/layout/overview/theme-inheritance.zh.demo.tsx',
       'kernel/components/layout/overview/theme-inheritance.en.demo.tsx',
-      'kernel/concepts/design/composite/embeddable-flow.demo.tsx',
+      'kernel/components/design/composite/embeddable-flow.demo.tsx',
     ];
 
     for (const file of files) {

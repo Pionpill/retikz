@@ -59,12 +59,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   JsonObjectSchema: {
     schema: JsonObjectSchema,
     label: 'JsonObject',
-    url: '/kernel/packages/base/foundation#jsonobject',
+    url: '/kernel/packages/foundation/overview#jsonobject',
   },
   JsonValueSchema: {
     schema: JsonValueSchema,
     label: 'JsonValue',
-    url: '/kernel/packages/base/foundation#jsonvalue',
+    url: '/kernel/packages/foundation/overview#jsonvalue',
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },

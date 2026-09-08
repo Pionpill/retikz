@@ -8,7 +8,7 @@ import { buildSidebarCategories } from '@/modules/docs/layout';
 const identityT = ((key: string) => key) as TFunction;
 
 describe('Kernel 包侧栏数据', () => {
-  it('按分组保留 URL 层级，并将多篇包文档展开为扁平 slug', () => {
+  it('保留各包及其文档 URL 层级，不将更新日志混入开发包', () => {
     const packages = buildSidebarCategories(identityT, 'kernel', kernelSection).find(
       category => category.value === 'packages',
     );
@@ -20,60 +20,37 @@ describe('Kernel 包侧栏数据', () => {
         module.children?.map(child => [child.value, child.label]),
       ]),
     ).toEqual([
+      ['foundation', 'kernel.pkgFoundation', [['overview', 'kernel.pkgOverview']]],
       [
-        'base',
-        'kernel.pkgGroupBase',
+        'math',
+        'kernel.pkgMath',
         [
-          ['foundation', 'kernel.pkgFoundation'],
-          ['math-transforms', 'kernel.pkgMathTransforms'],
-          ['math-primitives', 'kernel.pkgMathPrimitives'],
-          ['math-algorithms', 'kernel.pkgMathAlgorithms'],
+          ['transforms', 'kernel.pkgMathTransforms'],
+          ['primitives', 'kernel.pkgMathPrimitives'],
+          ['algorithms', 'kernel.pkgMathAlgorithms'],
         ],
       ],
+      ['core', 'kernel.pkgCore', [['overview', 'kernel.pkgOverview']]],
       [
-        'core',
-        'kernel.pkgGroupCore',
+        'runtime',
+        'kernel.pkgRuntime',
         [
-          ['core', 'kernel.pkgCore'],
-          ['runtime', 'kernel.pkgRuntime'],
-          ['runtime-session', 'kernel.pkgRuntimeSession'],
+          ['overview', 'kernel.pkgOverview'],
+          ['session', 'kernel.pkgRuntimeSession'],
         ],
       ],
-      [
-        'extension',
-        'kernel.pkgGroupExtension',
-        [
-          ['tex', 'kernel.pkgTex'],
-          ['inspect', 'kernel.pkgInspect'],
-        ],
-      ],
-      [
-        'framework',
-        'kernel.pkgGroupFramework',
-        [
-          ['vanilla', 'kernel.pkgVanilla'],
-          ['react', 'kernel.pkgReact'],
-        ],
-      ],
+      ['tex', 'kernel.pkgTex', [['overview', 'kernel.pkgOverview']]],
+      ['inspect', 'kernel.pkgInspect', [['overview', 'kernel.pkgOverview']]],
+      ['vanilla', 'kernel.pkgVanilla', [['overview', 'kernel.pkgOverview']]],
+      ['react', 'kernel.pkgReact', [['overview', 'kernel.pkgOverview']]],
       [
         'render',
-        'kernel.pkgGroupRender',
+        'kernel.pkgRender',
         [
-          ['render', 'kernel.pkgRender'],
-          ['render-svg', 'kernel.pkgRenderSvg'],
-          ['render-canvas', 'kernel.pkgRenderCanvas'],
-          ['render-hydration', 'kernel.pkgHydration'],
-        ],
-      ],
-      [
-        'changelog',
-        'kernel.changelog',
-        [
-          ['v0-5', 'kernel.changelogV05'],
-          ['v0-4', 'kernel.changelogV04'],
-          ['v0-3', 'kernel.changelogV03'],
-          ['v0-2', 'kernel.changelogV02'],
-          ['v0-1', 'kernel.changelogV01'],
+          ['overview', 'kernel.pkgOverview'],
+          ['svg', 'kernel.pkgRenderSvg'],
+          ['canvas', 'kernel.pkgRenderCanvas'],
+          ['hydration', 'kernel.pkgHydration'],
         ],
       ],
     ]);
