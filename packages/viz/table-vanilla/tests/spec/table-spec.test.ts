@@ -13,7 +13,7 @@ describe('Table Vanilla plain authoring', () => {
       columns: [{ id: 'name', field: 'name', header: 'Name' }],
     };
     const manualInput = {
-      tableThemeTokens: { 'data.categorical': ['#123456'] },
+      visualDefaults: { categorical: ['#123456'] },
       encodings: [
         {
           id: 'score',

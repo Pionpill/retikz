@@ -1,8 +1,8 @@
-import type { ValueOf } from '@retikz/foundation';
+import type { JsonValue, ValueOf } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRChild, IRClip, IRScopeProps, JsonValue } from '../../schemas';
+import type { IRChild, IRClip, IRScopeProps } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { Transform } from '../scene';
 import type { SpatialHandleDeclaration } from '../spatial-handle';

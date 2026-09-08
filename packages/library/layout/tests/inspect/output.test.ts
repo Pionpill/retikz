@@ -1,4 +1,5 @@
-import type { IRChild, IRJsonObject } from '@retikz/core';
+import type { IRChild } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { InspectorContext } from '@retikz/inspect';
 
 import { describe, expect, it } from 'vitest';
@@ -33,7 +34,7 @@ const container = {
   visibleBounds: rect(9, 9, 82, 42),
 } as const;
 
-const contextOf = <TOptions extends IRJsonObject>(
+const contextOf = <TOptions extends JsonObject>(
   options: TOptions,
   owner: InspectorContext<TOptions>['owner'],
 ): InspectorContext<TOptions> =>

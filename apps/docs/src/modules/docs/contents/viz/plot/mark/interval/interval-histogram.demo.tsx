@@ -35,12 +35,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   };
 
   return (
-    <Layout
-      width={360}
-      height={280}
-      viewBox={{ x: -16, y: -16, width: 392, height: 312 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: -16, y: -16, width: 392, height: 312 }}>
       {values[INTERVAL_CONTINUOUS_MODE_ID] === 'histogram' ? (
         <Plot data={measurements} width={360} height={280} coordinate={coordinate}>
           <PlotTransform {...intervalHistogramOperationOf(values)} />

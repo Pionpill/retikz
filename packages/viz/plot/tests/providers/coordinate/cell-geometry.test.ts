@@ -61,13 +61,13 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
 };
 
 const nodeWidth = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.width ?? size?.default ?? 0;
 };
 
 const nodeHeight = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.height ?? size?.default ?? 0;
 };
@@ -588,7 +588,16 @@ describe('densifyCellContour + 曲线 frame → contour 全链路', () => {
       version: 1 as const,
       type: 'scene' as const,
       children: [
-        { type: 'scope' as const, nodeDefault: { padding: 0, strokeWidth: 0 }, children: [node] },
+        {
+          type: 'scope' as const,
+          children: [node],
+          defaults: {
+            node: {
+              style: { strokeWidth: 0 },
+              layout: { padding: 0 },
+            },
+          },
+        },
         {
           type: 'path' as const,
           children: [

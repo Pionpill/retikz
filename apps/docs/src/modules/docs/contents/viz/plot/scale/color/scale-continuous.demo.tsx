@@ -50,9 +50,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     ],
   };
 
-  return (
-    <Plot spec={spec} data={{ d: colorValues }} width={400} height={280} style={{ maxWidth: '100%', height: 'auto' }} />
-  );
+  return <Plot spec={spec} data={{ d: colorValues }} width={400} height={280} />;
 });
 
 /** canonical 状态派生的稳定源码配置 */

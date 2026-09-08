@@ -59,13 +59,13 @@ React `<Path thickness>` is component / builder sugar that becomes `strokeWidth`
 
 ## DrawableStyle
 
-`DrawableStyleSchema` is the shared geometry-style field set for Path kinds. The default `stroke` kind maps `color` to stroke; the optional Standard Ribbon definition maps its `color` to fill. `pathDefault` also uses this subset when it styles path-like drawables.
+`DrawableStyleSchema` is the shared geometry-style field set for Path kinds. The default `stroke` kind maps `color` to stroke; the optional Standard Ribbon definition maps its `color` to fill. `defaults.path` also uses this subset when it styles path-like drawables.
 
 <ZodSchema name="DrawableStyleSchema" />
 
 ## DrawableInstance
 
-`DrawableInstanceSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `pathDefault`; `zIndex` participates in sibling ordering but is not inherited as a default style.
+`DrawableInstanceSchema` groups shared identity, provenance, animation, and stacking fields for Path. `id` / `meta` / `animations` are instance metadata and do not enter `defaults.path`; `zIndex` participates in sibling ordering but is not inherited as a default style.
 
 <ZodSchema name="DrawableInstanceSchema" />
 
@@ -197,7 +197,7 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 
 ## ArrowDetail
 
-`ArrowDetailSchema` is the visual configuration used by React `arrowDetail` sugar and `arrowDefault`. Core Path IR no longer stores `arrow` / `arrowDetail`; endpoint arrows are `ArrowMark` entries in `marks`.
+`ArrowDetailSchema` is the visual configuration used by React `arrowDetail` sugar and `defaults.arrow`. Core Path IR no longer stores `arrow` / `arrowDetail`; endpoint arrows are `ArrowMark` entries in `marks`.
 
 <ZodSchema name="ArrowDetailSchema" />
 

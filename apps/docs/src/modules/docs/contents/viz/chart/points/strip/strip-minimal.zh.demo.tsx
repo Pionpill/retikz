@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <StripChart
     rows={stripPalmerPenguinsData}
     presentation={{
-      title: '三种企鹅的鳍长分布',
-      subtitle: 'Palmer 群岛 90 只企鹅；每个物种 30 只，鳍长单位为毫米',
-      source: 'Palmer Penguins（CC0）；移除鳍长缺失值后，每个物种按原始顺序取前 30 条',
+      title: { text: '三种企鹅的鳍长分布' },
+      subtitle: { text: 'Palmer 群岛 90 只企鹅；每个物种 30 只，鳍长单位为毫米' },
+      source: { text: 'Palmer Penguins（CC0）；移除鳍长缺失值后，每个物种按原始顺序取前 30 条' },
     }}
     recipe={{
       encodings: {

@@ -13,14 +13,9 @@ const extensionGuide = (capability: string): DocPageMetadataOverride => ({
 /** viz module sections + pages tree. */
 export const vizSection: Array<Section> = [
   {
-    pages: [
-      { id: 'introduction', label: 'viz.introduction', difficulty: DocDifficulty.Beginner },
-      { id: 'get-start', label: 'viz.getStart', difficulty: DocDifficulty.Beginner },
-    ],
-  },
-  {
     id: 'data',
     label: 'viz.data',
+    navigationDescription: 'viz.dataNavigationDescription',
     document: true,
     pages: [
       {
@@ -112,7 +107,10 @@ export const vizSection: Array<Section> = [
       {
         id: 'changelog',
         label: 'viz.changelog',
-        children: [{ id: 'v0-1', label: 'viz.changelogV01' }],
+        children: [
+          { id: 'v0-2', label: 'viz.changelogV02' },
+          { id: 'v0-1', label: 'viz.changelogV01' },
+        ],
         meta: {
           pageType: 'release',
           audience: 'user',
@@ -125,6 +123,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'chart',
     label: 'viz.chart',
+    navigationDescription: 'viz.chartNavigationDescription',
     document: true,
     pages: [
       {
@@ -280,6 +279,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'table',
     label: 'viz.table',
+    navigationDescription: 'viz.tableNavigationDescription',
     document: true,
     pages: [
       { id: 'detail', label: 'viz.detailTable', difficulty: DocDifficulty.Beginner },
@@ -326,6 +326,7 @@ export const vizSection: Array<Section> = [
   {
     id: 'plot',
     label: 'viz.drawingGrammar',
+    navigationDescription: 'viz.plotNavigationDescription',
     document: true,
     pages: [
       {

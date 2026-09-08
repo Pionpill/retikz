@@ -14,13 +14,9 @@ import {
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
-import { createChartSourceSchema, createChartThemeSchema } from '../../_chart/schemas';
+import { createChartSourceSchema } from '../../_chart/schemas';
 import { ChartFamily, ChartType } from '../constants';
-import {
-  PointPositionDomainPaddingSchema,
-  PointRecipeThemeOverridesSchema,
-  PointRecipeThemeResolutionSchema,
-} from '../shared';
+import { PointPositionDomainPaddingSchema, PointRecipeGuidesSchema } from '../shared';
 import { RangedDotChartEncodingsSchema } from './encoding-schema';
 
 /** Ranged Dot endpoint 允许的常量 Point 表现 */
@@ -84,21 +80,14 @@ export const RangedDotChartRecipeSchema = strictObject({
   chartType: literal(ChartType.RangedDot),
   encodings: RangedDotChartEncodingsSchema,
   properties: RangedDotChartPropertiesSchema.optional(),
+  guides: PointRecipeGuidesSchema.optional(),
   marks: array(RangedDotChartMarkSchema).optional(),
 }).describe('Ranged Dot Chart recipe payload');
 
-/** Ranged Dot recipe 稀疏主题 */
-export const RangedDotChartThemeOverridesSchema = PointRecipeThemeOverridesSchema;
-
-/** Ranged Dot recipe 完整主题 */
-export const RangedDotChartThemeResolutionSchema = PointRecipeThemeResolutionSchema;
-
 /** Ranged Dot exact Source schema */
-export const RangedDotChartSchema = createChartSourceSchema(
-  ChartFamily.Point,
-  RangedDotChartRecipeSchema,
-  createChartThemeSchema(RangedDotChartThemeOverridesSchema).optional(),
-).describe('Ranged Dot Chart Source IR');
+export const RangedDotChartSchema = createChartSourceSchema(ChartFamily.Point, RangedDotChartRecipeSchema).describe(
+  'Ranged Dot Chart Source IR',
+);
 
 /** Ranged Dot exact Source IR */
 export type IRRangedDotChart = ZodInfer<typeof RangedDotChartSchema>;

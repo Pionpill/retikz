@@ -35,30 +35,32 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           };
 
   return (
-    <Layout width={280} height={190} viewBox={{ x: -140, y: -95, width: 280, height: 190 }}>
+    <Layout viewBox={{ x: -140, y: -95, width: 280, height: 190 }}>
       <Node
         position={[0, 0]}
         shape="rectangle"
-        minimumSize={{ width: 210, height: 125 }}
-        fill={{
-          kind: 'pattern',
-          shape: values.shape,
-          size: values.size,
-          lineWidth: values.lineWidth,
-          ...lineStyle,
-          ...lineCap,
-          ...(values.shape === 'grid'
-            ? {
-                horizontalStyle: lineStyleOverrideOf(values.gridHorizontalStyle),
-                verticalStyle: lineStyleOverrideOf(values.gridVerticalStyle),
-              }
-            : {}),
-          ...(lineStyleCycle === undefined ? {} : { lineStyleCycle }),
-          rotation: values.rotation,
-          color: values.color,
-          ...(background === undefined ? {} : { background }),
+        style={{
+          fill: {
+            kind: 'pattern',
+            shape: values.shape,
+            size: values.size,
+            lineWidth: values.lineWidth,
+            ...lineStyle,
+            ...lineCap,
+            ...(values.shape === 'grid'
+              ? {
+                  horizontalStyle: lineStyleOverrideOf(values.gridHorizontalStyle),
+                  verticalStyle: lineStyleOverrideOf(values.gridVerticalStyle),
+                }
+              : {}),
+            ...(lineStyleCycle === undefined ? {} : { lineStyleCycle }),
+            rotation: values.rotation,
+            color: values.color,
+            ...(background === undefined ? {} : { background }),
+          },
+          stroke: values.color,
         }}
-        stroke={values.color}
+        layout={{ minimumSize: { width: 210, height: 125 } }}
       >
         {values.shape}
       </Node>

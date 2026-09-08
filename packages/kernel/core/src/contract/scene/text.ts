@@ -1,4 +1,6 @@
-import type { IRAnimationTrack, IRFont, IRGraphicStyle, IRJsonObject, IRTextRun } from '../../schemas';
+import type { JsonObject } from '@retikz/foundation';
+
+import type { IRAnimationTrack, IRFont, IRGraphicStyle, IRTextRun } from '../../schemas';
 
 type SceneFontWeight = NonNullable<IRFont['weight']> | (string & {});
 
@@ -47,7 +49,7 @@ export type TextPrim = {
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
   /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
   animations?: Array<IRAnimationTrack>;
   /** 锚点横坐标（具体含义由 align 决定） */

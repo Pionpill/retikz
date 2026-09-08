@@ -1,20 +1,29 @@
-import { ThemeMode } from '@retikz/core';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultPlotThemePreset, PlotThemeToken } from '../../src';
+import { getNeutralPlotDefaults } from '../../src/providers/theme';
 
-describe('default Plot theme monochrome paint', () => {
+describe('default Plot defaults monochrome paint', () => {
   it.each(Object.values(ThemeMode))('%s 的文本与结构继承 currentColor', mode => {
-    expect(getDefaultPlotThemePreset(mode)).toMatchObject({
-      [PlotThemeToken.PlotTypographyForeground]: 'currentColor',
-      [PlotThemeToken.AxisLineStroke]: 'currentColor',
-      [PlotThemeToken.AxisTickLabelForeground]: 'currentColor',
-      [PlotThemeToken.AxisTitleForeground]: 'currentColor',
-      [PlotThemeToken.LegendTitleForeground]: 'currentColor',
-      [PlotThemeToken.LegendLabelForeground]: 'currentColor',
-      [PlotThemeToken.PlotAreaFill]: 'none',
-      [PlotThemeToken.AxisGridStroke]: 'currentColor',
-      [PlotThemeToken.AxisGridDrawOpacity]: 0.15,
+    const defaults = getNeutralPlotDefaults(mode, resolveDefaultCoreThemeColors(mode).categorical);
+
+    expect(defaults).toMatchObject({
+      plotArea: { fill: 'none' },
+      typography: {
+        font: { family: 'sans-serif', size: 12 },
+        textColor: 'currentColor',
+      },
+      axis: {
+        line: { stroke: 'currentColor' },
+        tickLabels: { textColor: 'currentColor' },
+        title: { textColor: 'currentColor' },
+        grid: false,
+      },
+      legend: {
+        title: { textColor: 'currentColor' },
+        label: { textColor: 'currentColor' },
+      },
     });
+    expect(defaults.axis?.grid).toBe(false);
   });
 });

@@ -14,19 +14,19 @@ export const pickDefinedKeys = <T extends object>(src: T): Partial<T> => {
 /** 从 IRScope 抽取样式解析 frame */
 export const createStyleResolveFrame = (scope: IRScope): StyleResolveFrame => {
   const cascade: CascadeState = {};
-  if (scope.color !== undefined) cascade.color = scope.color;
-  if (scope.stroke !== undefined) cascade.stroke = scope.stroke;
-  if (scope.fill !== undefined) cascade.fill = scope.fill;
-  if (scope.strokeWidth !== undefined) cascade.strokeWidth = scope.strokeWidth;
-  if (scope.opacity !== undefined) cascade.opacity = scope.opacity;
-  if (scope.fillOpacity !== undefined) cascade.fillOpacity = scope.fillOpacity;
-  if (scope.strokeOpacity !== undefined) cascade.strokeOpacity = scope.strokeOpacity;
+  if (scope.style?.color !== undefined) cascade.color = scope.style.color;
+  if (scope.style?.stroke !== undefined) cascade.stroke = scope.style.stroke;
+  if (scope.style?.fill !== undefined) cascade.fill = scope.style.fill;
+  if (scope.style?.strokeWidth !== undefined) cascade.strokeWidth = scope.style.strokeWidth;
+  if (scope.style?.opacity !== undefined) cascade.opacity = scope.style.opacity;
+  if (scope.style?.fillOpacity !== undefined) cascade.fillOpacity = scope.style.fillOpacity;
+  if (scope.style?.strokeOpacity !== undefined) cascade.strokeOpacity = scope.style.strokeOpacity;
   const frame: StyleResolveFrame = { cascade };
-  if (scope.nodeDefault) frame.nodeDefault = scope.nodeDefault;
-  if (scope.pathDefault) frame.pathDefault = scope.pathDefault;
-  if (scope.labelDefault) frame.labelDefault = scope.labelDefault;
-  if (scope.arrowDefault) frame.arrowDefault = scope.arrowDefault;
-  if (scope.resetStyle !== undefined) frame.resetStyle = scope.resetStyle;
+  if (scope.defaults?.node) frame.nodeDefault = scope.defaults.node;
+  if (scope.defaults?.path) frame.pathDefault = scope.defaults.path;
+  if (scope.defaults?.label) frame.labelDefault = scope.defaults.label;
+  if (scope.defaults?.arrow) frame.arrowDefault = scope.defaults.arrow;
+  if (scope.defaults?.reset !== undefined) frame.resetStyle = scope.defaults.reset;
   return frame;
 };
 

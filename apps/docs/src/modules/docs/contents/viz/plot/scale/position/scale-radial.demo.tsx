@@ -19,13 +19,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <figcaption className="text-center text-xs text-muted-foreground">
           <code>linear</code> · r ∝ value
         </figcaption>
-        <Plot
-          data={data}
-          width={190}
-          height={190}
-          coordinate={{ type: 'polar2D' }}
-          style={{ maxWidth: '100%', height: 'auto' }}
-        >
+        <Plot data={data} width={190} height={190} coordinate={{ type: 'polar2D' }}>
           <IntervalMark x="category" y="value" color="category" />
           <PlotScale dimension="y" type="linear" domainPadding={0} />
         </Plot>
@@ -34,13 +28,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <figcaption className="text-center text-xs text-muted-foreground">
           <code>radial</code> · r² ∝ value
         </figcaption>
-        <Plot
-          data={data}
-          width={190}
-          height={190}
-          coordinate={{ type: 'polar2D' }}
-          style={{ maxWidth: '100%', height: 'auto' }}
-        >
+        <Plot data={data} width={190} height={190} coordinate={{ type: 'polar2D' }}>
           <IntervalMark x="category" y="value" color="category" />
           <PlotScale dimension="y" type="radial" domainPadding={0} />
         </Plot>

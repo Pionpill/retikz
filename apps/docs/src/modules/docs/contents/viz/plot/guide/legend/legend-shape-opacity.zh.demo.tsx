@@ -19,7 +19,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     ]}
     width={380}
     height={280}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PointMark x="lng" y="lat" shape="region" opacity="pop" />
     {values.showShape ? <PlotLegend channel="shape" position={values.shapePosition} title="区域" /> : null}

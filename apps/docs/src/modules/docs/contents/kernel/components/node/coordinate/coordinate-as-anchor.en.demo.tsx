@@ -11,13 +11,17 @@ export const previewControls = coordinateAsAnchorControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout
-      width={coordinateAsAnchorFrame.width}
-      height={coordinateAsAnchorFrame.height}
-      viewBox={coordinateAsAnchorFrame.viewBox}
-    >
-      <Draw way={coordinateAsAnchorFrame.xAxis} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-1} />
-      <Draw way={coordinateAsAnchorFrame.yAxis} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-1} />
+    <Layout viewBox={coordinateAsAnchorFrame.viewBox}>
+      <Draw
+        way={coordinateAsAnchorFrame.xAxis}
+        zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
+      <Draw
+        way={coordinateAsAnchorFrame.yAxis}
+        zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       {/* Named virtual center — invisible, but the four `of` references all rely on it */}
       <Coordinate id="hub" position={[values.positionX, values.positionY]} />
       <Node id="N" position={{ direction: 'top', of: 'hub', distance: values.verticalDistance }}>
@@ -33,10 +37,10 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         West
       </Node>
       {/* Four paths converge at hub — visually meeting at a center point with no drawn shape */}
-      <Draw way={['N', 'hub']} arrow="->" stroke="gray" />
-      <Draw way={['S', 'hub']} arrow="->" stroke="gray" />
-      <Draw way={['E', 'hub']} arrow="->" stroke="gray" />
-      <Draw way={['W', 'hub']} arrow="->" stroke="gray" />
+      <Draw way={['N', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['S', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['E', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['W', 'hub']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

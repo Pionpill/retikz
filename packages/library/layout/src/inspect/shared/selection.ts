@@ -1,10 +1,10 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { InspectionSelectionRule } from '@retikz/inspect';
 
 import type { CreateLayoutInspectionSelectionInput, LayoutInspectionSelection } from './types';
 
 /** 为整张图、作用域子树或组件自身创建一个布局检查请求 */
-export const createLayoutInspectionSelection = <TOptions extends IRJsonObject>(
+export const createLayoutInspectionSelection = <TOptions extends JsonObject>(
   input: CreateLayoutInspectionSelectionInput<TOptions>,
 ): LayoutInspectionSelection =>
   Object.freeze({

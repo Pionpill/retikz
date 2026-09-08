@@ -44,12 +44,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   };
 
   return (
-    <Layout
-      width={450}
-      height={250}
-      viewBox={{ x: -15, y: -15, width: 450, height: 290 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: -15, y: -15, width: 450, height: 290 }}>
       <Plot spec={spec} data={{ glyphs: glyphRows }} width={420} height={260} markDefinitions={[diamondMark]} />
     </Layout>
   );

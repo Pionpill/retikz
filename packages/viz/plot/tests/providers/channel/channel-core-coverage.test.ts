@@ -81,11 +81,8 @@ describe('channel core coverage (contract)', () => {
       ],
     });
     expect(firstLayer(spec, { d: [{ x: 0, y: 0 }] })).toMatchObject({
-      strokeWidth: 2,
-      opacity: 0.7,
-      fillOpacity: 0.5,
-      strokeOpacity: 0.4,
       zIndex: 0,
+      style: { strokeWidth: 2, opacity: 0.7, fillOpacity: 0.5, strokeOpacity: 0.4 },
     });
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0 }] }));
     expect(node).toMatchObject({
@@ -106,12 +103,12 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'path',
+          roundedCorners: { kind: 'constant', value: 4 },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
           strokeWidth: { kind: 'constant', value: 3 },
           opacity: { kind: 'constant', value: 0.6 },
           lineCap: { kind: 'constant', value: 'round' },
           lineJoin: { kind: 'constant', value: 'bevel' },
-          roundedCorners: { kind: 'constant', value: 4 },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
       ],
     });
@@ -124,11 +121,8 @@ describe('channel core coverage (contract)', () => {
       }),
     );
     expect(path).toMatchObject({
-      strokeWidth: 3,
-      opacity: 0.6,
-      lineCap: 'round',
-      lineJoin: 'bevel',
       roundedCorners: 4,
+      style: { strokeWidth: 3, opacity: 0.6, lineCap: 'round', lineJoin: 'bevel' },
     });
   });
 
@@ -160,13 +154,13 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     );
-    expect(nodes[0].strokeWidth).toBeCloseTo(0.5, 6);
-    expect(nodes[1].strokeWidth).toBeCloseTo(4, 6);
-    expect(nodes[0].fillOpacity).toBeCloseTo(0.2, 6);
-    expect(nodes[1].fillOpacity).toBeCloseTo(1, 6);
-    expect((firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).nodeDefault as IRNode).opacity).toBe(
-      0.9,
-    );
+    expect(nodes[0].style?.strokeWidth).toBeCloseTo(0.5, 6);
+    expect(nodes[1].style?.strokeWidth).toBeCloseTo(4, 6);
+    expect(nodes[0].style?.fillOpacity).toBeCloseTo(0.2, 6);
+    expect(nodes[1].style?.fillOpacity).toBeCloseTo(1, 6);
+    expect(
+      (firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).defaults?.node as IRNode).style?.opacity,
+    ).toBe(0.9);
   });
 
   it('datum_label_style_fields_deliver_to_core_node_label', () => {
@@ -237,7 +231,7 @@ describe('channel core coverage (contract)', () => {
         ],
       }),
     );
-    expect(nodes.map(node => node.textColor)).toEqual(['#ef4444', '#2563eb']);
+    expect(nodes.map(node => node.style?.textColor)).toEqual(['#ef4444', '#2563eb']);
   });
 
   it('node_scalar_and_enum_channels_deliver_to_core_node', () => {
@@ -269,16 +263,17 @@ describe('channel core coverage (contract)', () => {
     });
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, label: 'A', align: 'start' }] }));
     expect(node).toMatchObject({
-      align: 'start',
-      lineHeight: 18,
-      maxTextWidth: 72,
       cornerRadius: 4,
       scale: { default: 1.1, x: 1.2, y: 0.9 },
-      minimumSize: { default: 14, width: 16 },
-      padding: { x: 3, y: 5 },
-      margin: { default: 1, right: 2 },
-      shadow: 'md',
-      blendMode: 'multiply',
+      style: { shadow: 'md', blendMode: 'multiply' },
+      layout: {
+        align: 'start',
+        lineHeight: 18,
+        maxTextWidth: 72,
+        minimumSize: { default: 14, width: 16 },
+        padding: { x: 3, y: 5 },
+        margin: { default: 1, right: 2 },
+      },
     });
   });
 
@@ -308,11 +303,11 @@ describe('channel core coverage (contract)', () => {
           { x: 1, y: 1, group: 'B' },
         ],
       }),
-    ).map(scope => scope.nodeDefault);
+    ).map(scope => scope.defaults?.node);
     expect(nodeDefaults).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ color: '#ef4444', fill: '#ef4444' }),
-        expect.objectContaining({ color: '#2563eb', fill: '#2563eb' }),
+        expect.objectContaining({ style: expect.objectContaining({ color: '#ef4444', fill: '#ef4444' }) }),
+        expect.objectContaining({ style: expect.objectContaining({ color: '#2563eb', fill: '#2563eb' }) }),
       ]),
     );
   });
@@ -343,13 +338,15 @@ describe('channel core coverage (contract)', () => {
     });
     const [node] = collectNodes(firstLayer(spec, { d: [{ x: 0, y: 0, dashed: true }] }));
     expect(node).toMatchObject({
-      dashed: true,
-      dotted: false,
-      dashPattern: [6, 2],
-      font: { family: 'serif', size: 14, weight: 'bold' },
       boundary: 'shape',
       shape: { type: 'rectangle', params: { cornerRadius: 8 } },
-      shadow: { preset: 'sm', offsetX: 2, offsetY: 3 },
+      style: {
+        dashed: true,
+        dotted: false,
+        dashPattern: [6, 2],
+        font: { family: 'serif', size: 14, weight: 'bold' },
+        shadow: { preset: 'sm', offsetX: 2, offsetY: 3 },
+      },
     });
   });
 
@@ -366,16 +363,16 @@ describe('channel core coverage (contract)', () => {
       marks: [
         {
           type: 'path',
-          strokeOpacity: { kind: 'constant', value: 0.45 },
           zIndex: { kind: 'constant', value: 7 },
           rotate: { kind: 'constant', value: 15 },
           scale: { kind: 'constant', value: { x: 1.2, y: 0.8 } },
-          fillRule: { kind: 'constant', value: 'evenodd' },
           thickness: { kind: 'constant', value: 'thick' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+          strokeOpacity: { kind: 'constant', value: 0.45 },
+          fillRule: { kind: 'constant', value: 'evenodd' },
           dashPattern: { kind: 'constant', value: [4, 2] },
           shadow: { kind: 'constant', value: { preset: 'md', offsetX: 1, offsetY: 2 } },
           blendMode: { kind: 'constant', value: 'screen' },
-          encoding: { x: { field: 'x' }, y: { field: 'y' } },
         },
       ],
     });
@@ -388,15 +385,17 @@ describe('channel core coverage (contract)', () => {
       }),
     );
     expect(path).toMatchObject({
-      strokeOpacity: 0.45,
       zIndex: 7,
       rotate: 15,
       scale: { x: 1.2, y: 0.8 },
-      fillRule: 'evenodd',
-      strokeWidth: 2,
-      dashPattern: [4, 2],
-      shadow: { preset: 'md', offsetX: 1, offsetY: 2 },
-      blendMode: 'screen',
+      style: {
+        strokeOpacity: 0.45,
+        fillRule: 'evenodd',
+        strokeWidth: 2,
+        dashPattern: [4, 2],
+        shadow: { preset: 'md', offsetX: 1, offsetY: 2 },
+        blendMode: 'screen',
+      },
     });
     expect(path.marks).toBeUndefined();
   });

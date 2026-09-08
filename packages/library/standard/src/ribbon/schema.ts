@@ -1,11 +1,11 @@
 import type { ZodType } from 'zod';
 
-import { JsonObjectSchema } from '@retikz/core';
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '@retikz/core';
 import { AngleDegreesSchema } from '@retikz/core';
 import { StepSchema } from '@retikz/core';
 import {
   createOpenStringSchema,
+  JsonObjectSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,

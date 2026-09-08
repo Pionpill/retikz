@@ -10,7 +10,7 @@ import { POINT_COORDINATE_1D_CONTROL_IDS, previewControlContract } from './point
 import { samples } from './point-coordinates.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={620} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Plot data={samples} width={300} height={150} coordinate="cartesian1D" x={0} y={40}>
       <PointMark x={values[POINT_COORDINATE_1D_CONTROL_IDS.xField]} color="group" />
       <PlotAxis dimension="x" />

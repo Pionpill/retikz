@@ -101,10 +101,10 @@ export const previewControlContract = {
   relatedApis: [
     'Path.kind',
     'Path.kindOptions',
-    'Path.fill',
-    'Path.fillOpacity',
-    'Path.stroke',
-    'Path.strokeWidth',
-    'Path.shadow',
+    'Path.style.fill',
+    'Path.style.fillOpacity',
+    'Path.style.stroke',
+    'Path.style.strokeWidth',
+    'Path.style.shadow',
   ],
 } satisfies PreviewControlContract;

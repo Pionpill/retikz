@@ -1,6 +1,7 @@
 import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { ChartAuthoringResult, ChartInput } from '@retikz/chart-vanilla';
 import type { InputChartCoordinate } from '@retikz/chart-vanilla';
+import type { IRScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type { FC, ReactNode } from 'react';
 
@@ -33,8 +34,10 @@ import { lowerOptionsWithAmbientThemeOf, lowerOptionsWithPlotRuntimeOf } from '.
 /** Point family concrete Chart 共用的 React 根属性 */
 export type TypedChartCommonProps<TSource extends IRChartSource> = ChartPanelProps &
   ChartThemeDefinitionsProps &
-  Pick<TSource, 'id' | 'theme'> &
+  Pick<TSource, 'id' | 'background' | 'chartDefaults'> &
   Readonly<{
+    /** Core host Theme 环境 */
+    theme?: IRScene['theme'];
     /** 运行时数据行；不写入 Chart Source */
     rows?: Array<ExternalRow>;
     /** Chart Source 数据配置 */
@@ -58,6 +61,7 @@ type PointFactoryInput = Readonly<{
   coordinate?: InputChartCoordinate;
   encodings: unknown;
   properties?: unknown;
+  guides?: unknown;
   marks?: ReadonlyArray<unknown>;
 }>;
 
@@ -74,6 +78,7 @@ type TypedPointChartDeclarations<TInput extends PointFactoryInput> = CollectedCh
 type TypedChartRootRecipe<TInput extends PointFactoryInput> = Readonly<{
   encodings?: TInput['encodings'];
   properties?: TInput['properties'];
+  guides?: TInput['guides'];
   marks?: TInput['marks'];
 }>;
 
@@ -111,9 +116,8 @@ const plotExtensionOf = (
 ): IRChartPlotExtension | undefined => {
   if (fragment === undefined) return extension;
   const passive = {
-    ...(extension?.plotThemeTokens === undefined ? {} : { plotThemeTokens: extension.plotThemeTokens }),
-    ...(extension?.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: extension.plotThemeTokenRules }),
-    ...(extension?.plotTheme === undefined ? {} : { plotTheme: extension.plotTheme }),
+    ...(extension?.plotDefaults === undefined ? {} : { plotDefaults: extension.plotDefaults }),
+    ...(extension?.plotRules === undefined ? {} : { plotRules: extension.plotRules }),
     ...(extension?.meta === undefined ? {} : { meta: extension.meta }),
   };
   const combined = { ...passive, ...fragment };
@@ -182,6 +186,8 @@ export const createTypedChartInput = <
 ): ChartInput<TSource> => {
   const {
     id,
+    background,
+    chartDefaults,
     theme,
     rows: rootRows,
     data: rootData,
@@ -258,6 +264,7 @@ export const createTypedChartInput = <
     );
   }
   const properties = hasRootProperties ? rootRecipe.properties : declarations.properties?.props;
+  const guides = rootRecipe?.guides;
   const marks = hasRootMarks ? rootRecipe.marks : declarations.marks;
   const extensionParts = extensionPartsOf(declarations.extension);
   assertChartExtensionChildren(extensionParts.children);
@@ -281,6 +288,8 @@ export const createTypedChartInput = <
     ...(effectiveLayout === undefined ? {} : { layout: effectiveLayout }),
     ...(effectiveCoordinate === undefined ? {} : { coordinate: effectiveCoordinate }),
     ...(id === undefined ? {} : { id }),
+    ...(background === undefined ? {} : { background }),
+    ...(chartDefaults === undefined ? {} : { chartDefaults }),
     ...(theme === undefined ? {} : { theme }),
     ...(effectivePlotExtension === undefined ? {} : { plotExtension: effectivePlotExtension }),
     ...(panel === undefined ? {} : { panel }),
@@ -292,6 +301,7 @@ export const createTypedChartInput = <
     ...(presentation.source === undefined ? {} : { source: presentation.source }),
     encodings,
     ...(properties === undefined ? {} : { properties }),
+    ...(guides === undefined ? {} : { guides }),
     ...(marks === undefined ? {} : { marks }),
   } as TInput;
   return factory(input).input;

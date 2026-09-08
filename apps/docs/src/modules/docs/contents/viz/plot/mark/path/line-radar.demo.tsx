@@ -16,7 +16,7 @@ import { team } from './line-radar.data';
 
 /** 几何属性：两个极坐标对比闭合路径与不闭合路径。 */
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout width={620} height={300} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Plot
       data={team}
       width={280}

@@ -108,7 +108,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [100, 0],
           text: ['line one', 'line two'],
-          align: 'start',
+          layout: { align: 'start' },
         },
       ],
     };
@@ -128,7 +128,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [100, 0],
           text: ['ab', 'cdefg'],
-          align: 'end',
+          layout: { align: 'end' },
         },
       ],
     };
@@ -158,7 +158,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [0, 0],
           text: ['x', 'y'],
-          font: { size: 20 },
+          style: { font: { size: 20 } },
         },
       ],
     };
@@ -176,7 +176,7 @@ describe('Node multi-line text', () => {
           id: 'A',
           position: [0, 0],
           text: ['x', 'y'],
-          lineHeight: 30,
+          layout: { lineHeight: 30 },
         },
       ],
     };
@@ -237,8 +237,8 @@ describe('Node multi-line text', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          font: { size: 12, family: 'monospace' },
           text: [{ text: 'big', font: { size: 20, weight: 'bold' } }, 'normal'],
+          style: { font: { size: 12, family: 'monospace' } },
         },
       ],
     };
@@ -265,11 +265,11 @@ describe('Node multi-line text', () => {
           type: 'node',
           id: 'A',
           position: [0, 0],
-          font: { size: 10 },
           text: [
             'aaaa', // 10 × 4 × 0.55 = 22
             { text: 'aaaa', font: { size: 30 } }, // 30 × 4 × 0.55 = 66
           ],
+          style: { font: { size: 10 } },
         },
       ],
     };

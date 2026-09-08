@@ -10,6 +10,7 @@
     "build": "pnpm -r --if-present run build",
     "check": "pnpm run check:full",
     "check:apps": "pnpm run lint:apps && pnpm run typecheck:apps",
+    "check:docs": "pnpm --filter @retikz/docs run check:site",
     "check:deprecations": "node scripts/check-deprecations.mjs",
     "check:full": "pnpm run lint && pnpm run typecheck:full && pnpm run check:release-groups && pnpm run check:deprecations && pnpm run check:test-boundaries",
     "check:kernel": "pnpm run lint:kernel && pnpm run typecheck:kernel",

@@ -6,18 +6,15 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** Layout 在 React、Vanilla processing、Core 与渲染宿主之间的职责边界 */
 const Demo: FC = () => (
-  <Layout width={800} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="react-adapter-group">
       <LogicFigureFrameTitle>@retikz/react</LogicFigureFrameTitle>
       <Node
         id="react-input"
         position={[-278, -15]}
-        minimumSize={{ width: 112, height: 38 }}
-        stroke="dimgray"
-        fill="lightgray"
-        fillOpacity={0.16}
         cornerRadius={4}
-        font={{ size: 13 }}
+        style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 112, height: 38 } }}
       >
         JSX children / ir prop
       </Node>
@@ -28,23 +25,16 @@ const Demo: FC = () => (
           { text: 'Input 收集与结果宿主', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-135, -15]}
-        minimumSize={{ width: 104, height: 48 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 104, height: 48 }, lineHeight: 15 }}
       />
       <Node
         id="definitions"
         position={[-135, 42]}
-        minimumSize={{ width: 132, height: 36 }}
-        stroke="dimgray"
-        fill="lightgray"
-        fillOpacity={0.16}
         cornerRadius={4}
-        font={{ size: 12 }}
+        style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
+        layout={{ minimumSize: { width: 132, height: 36 } }}
       >
         definitions / options
       </Node>
@@ -57,13 +47,9 @@ const Demo: FC = () => (
         { text: 'Input → IR · Core Program', fill: 'gray', font: { size: 11 } },
       ]}
       position={[35, -15]}
-      minimumSize={{ width: 150, height: 48 }}
-      stroke="mediumseagreen"
-      fill="mediumseagreen"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'mediumseagreen', fill: 'mediumseagreen', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 150, height: 48 }, lineHeight: 15 }}
     />
 
     <Node
@@ -73,13 +59,9 @@ const Demo: FC = () => (
         { text: '@retikz/core · IR → Scene', fill: 'gray', font: { size: 11 } },
       ]}
       position={[210, -15]}
-      minimumSize={{ width: 150, height: 48 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 150, height: 48 }, lineHeight: 15 }}
     />
 
     <Node
@@ -89,20 +71,16 @@ const Demo: FC = () => (
         { text: 'SVG / Canvas', fill: 'gray', font: { size: 11 } },
       ]}
       position={[385, -15]}
-      minimumSize={{ width: 118, height: 48 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 118, height: 48 }, lineHeight: 15 }}
     />
 
-    <Draw way={['react-input', 'layout']} arrow="->" stroke="gray" />
-    <Draw way={['definitions', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['layout', 'vanilla-processing']} arrow="->" stroke="gray" />
-    <Draw way={['vanilla-processing', 'core-compile']} arrow="->" stroke="gray" />
-    <Draw way={['core-compile', 'render-host']} arrow="->" stroke="gray" />
+    <Draw way={['react-input', 'layout']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['definitions', 'layout']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw way={['layout', 'vanilla-processing']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['vanilla-processing', 'core-compile']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['core-compile', 'render-host']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

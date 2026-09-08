@@ -4,6 +4,8 @@
 - 决策日期：2026-08-26
 - 关联：[Graph alpha.1 roadmap](./roadmap.md) · [Graph context](./09-composable-graph-context.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](../alpha.2/07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Graph 需要一种可持久化的包含语义，表达“这些内容共同属于一个可见分组”。代码结构图、流程图、系统架构图和未来 Diagram compound layout 都需要可嵌套边界；它不能退化为纯视觉矩形，也不能重新建立 Graph-root 成员数据库

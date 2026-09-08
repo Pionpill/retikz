@@ -36,18 +36,11 @@ const presetPoints: Record<string, Array<Position>> = {
 };
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={320}
-    height={220}
-    viewBox={{ x: -110, y: -90, width: 220, height: 180 }}
-    shapes={[ContourShapeDefinition]}
-  >
+  <Layout viewBox={{ x: -110, y: -90, width: 220, height: 180 }} shapes={[ContourShapeDefinition]}>
     <Node
       position={[0, 0]}
       shape={{ type: 'contour', params: { points: presetPoints[values.preset], cornerRadius: values.cornerRadius } }}
-      fill="#ffedd5"
-      stroke="darkorange"
-      strokeWidth={1.5}
+      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
     />
   </Layout>
 ));

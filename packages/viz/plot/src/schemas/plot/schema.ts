@@ -1,8 +1,13 @@
 import type { infer as ZodInfer, RefinementCtx } from 'zod';
 
-import { CompositeBaseSchema, JsonObjectSchema } from '@retikz/core';
+import { CompositeBaseSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  JsonObjectSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, record, strictObject, union } from 'zod';
 
 import { CoordinateOperationSchema } from '../coordinate';
@@ -10,7 +15,7 @@ import { GuideSchema, GuideTextStyleSchema } from '../guide';
 import { BoxPaddingSchema } from '../layout';
 import { MarkOperationSchema } from '../mark';
 import { ScaleOperationSchema } from '../scale';
-import { PlotAxisThemeTokenRulesSchema, PlotThemeSchema, PlotThemeTokenOverridesSchema } from '../theme';
+import { PlotAxisRulesSchema, PlotDefaultsSchema } from '../theme';
 import { TransformSchema } from '../transform';
 import {
   CompositionAxisResolve,
@@ -394,14 +399,11 @@ export const PlotSchema = CompositeBaseSchema.extend({
   scales: array(ScaleOperationSchema).describe(
     'Named scale ops; built-ins are statically validated, custom types are validated at lowering against runtime scale definitions. Referenced by coordinate roles and non-positional channels by name',
   ),
-  plotThemeTokens: PlotThemeTokenOverridesSchema.optional().describe(
-    'Sparse canonical Plot theme token overrides applied after the Plot style baseline and before plotTheme',
+  plotDefaults: PlotDefaultsSchema.optional().describe(
+    'Sparse Plot Source visual defaults for existing plot area, typography, axes, legends, and palettes',
   ),
-  plotThemeTokenRules: PlotAxisThemeTokenRulesSchema.optional().describe(
-    'Ordered Axis dimension rules applied after Plot theme token overrides and before plotTheme',
-  ),
-  plotTheme: PlotThemeSchema.optional().describe(
-    'JSON-safe plot theme for background, typography, axis, legend, and palette defaults; consumed during lowering and never passed through as opaque core IR',
+  plotRules: PlotAxisRulesSchema.optional().describe(
+    'Ordered Plot Source Axis rules for existing axes selected by dimension',
   ),
   width: PositiveNumberSchema.optional().describe(
     "The panel's intrinsic width in user units, used as the plot area sizing basis when this node is composed alongside others. Omit to fall back to the lowerPlots global width, then the built-in default.",

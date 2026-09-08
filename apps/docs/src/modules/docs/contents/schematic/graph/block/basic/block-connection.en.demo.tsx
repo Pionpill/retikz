@@ -14,7 +14,7 @@ const sectionBoundaryPoint: IRPosition = [232.5, 80.4];
 
 /** Relations targeting the whole Block and one concrete Section host */
 const Demo: FC = () => (
-  <Graph width={760} height={250} viewBox={{ x: -240, y: -66, width: 760, height: 250 }}>
+  <Graph>
     <Block id="user" width={240}>
       <BlockHeader title="User" description="Data structure" />
       <BlockSection id="user.fields" title="Fields">

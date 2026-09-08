@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -11,20 +11,19 @@ import { previewControlContract } from './scatter-world-cup-shots.en.controls';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <ScatterChart
-    theme={{
-      tokens: {
-        plot: {
-          'plot.area.fill': {
+    plotExtension={{
+      plotDefaults: {
+        plotArea: {
+          fill: {
             kind: 'image',
             href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
           },
         },
-        recipe: { axisEnabled: false },
       },
     }}
+    recipe={{ guides: { axis: false } }}
   >
     <ChartData data={messiWorldCupShots} />
-    <ChartLayout width={800} height={500} />
     <ScatterEncodings x="x" y="y" color="outcome" />
     <ChartTitle>Lionel Messi's 2022 World Cup shot map</ChartTitle>
     <ChartSubtitle>

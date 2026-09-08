@@ -129,15 +129,17 @@ node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope <
 
 脚本检查普通页面双语配对、双语标题层级、站内路由与锚点、`SourceLinks` 文件/行号、`ComponentPreview` 主 demo 文件；它不能判断 API 描述是否符合实现、SourceLinks 是否真正支撑结论、demo 是否可读，因此不能替代源码核对和浏览器检查。
 
+每次提交 Docs 改动前必须运行 `pnpm --filter @retikz/docs run check:static`。完成后提示用户是否运行 `check:build` 和 `check:runtime`；只有用户明确要求才执行。用户明确要求运行时巡检时，包含其依赖的生产构建。
+
 按改动范围选择最小有效验证：
 
-| 改动                                    | 最小验证                                                   |
-| --------------------------------------- | ---------------------------------------------------------- |
-| 纯 MDX 正文、表格、站内链接             | 完整性脚本 + Prettier + `git diff --check` + 关键页面/链接 |
-| frontmatter、标题、MDX 组件、LinkedCard | 上述检查 + 浏览器确认 zh/en、TOC、菜单                     |
-| demo、data、helper、MDX import          | 上述检查 + docs `tsc --noEmit` + 浏览器确认 demo           |
-| docs data、i18n、schema registry        | 上述检查 + docs `tsc --noEmit` + 对应路由/Schema           |
-| CI 或产物等价验证                       | docs build                                                 |
+| 改动                                    | 最小验证                                                       |
+| --------------------------------------- | -------------------------------------------------------------- |
+| 纯 MDX 正文、表格、站内链接             | `check:static` + Prettier + `git diff --check` + 关键页面/链接 |
+| frontmatter、标题、MDX 组件、LinkedCard | 上述检查 + 浏览器确认 zh/en、TOC、菜单                         |
+| demo、data、helper、MDX import          | 上述检查 + docs `tsc --noEmit` + 浏览器确认 demo               |
+| docs data、i18n、schema registry        | 上述检查 + docs `tsc --noEmit` + 对应路由/Schema               |
+| 用户明确要求 CI 或产物等价验证          | `check:build`；如明确要求，再执行 `check:runtime`              |
 
 新建 `*.demo.tsx` 时按 [`ComponentPreview 按需契约`](references/component-preview.md) 的新文件规则验证，不依赖旧 dev session 的热更新状态。
 

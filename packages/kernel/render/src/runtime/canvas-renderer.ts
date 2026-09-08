@@ -31,7 +31,7 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '../hydration';
-import { pathBounds } from '../shared';
+import { computeDisplaySize, pathBounds } from '../shared';
 import { mergeRenderHandlers } from './handlers';
 import { validateReadonlyLayers } from './readonly-layer';
 import { defineRetainedRenderer } from './renderer';
@@ -534,9 +534,10 @@ const resolveCanvasBitmapSize = (
   options: RetainedCanvasRendererImmutableOptions,
 ): CanvasBitmapSize => {
   const ratio = resolvedDevicePixelRatio(options);
+  const size = computeDisplaySize(snapshot.scene.layout, config.canvas?.width, config.canvas?.height);
   return Object.freeze({
-    width: Math.max(1, Math.round((config.canvas?.width ?? snapshot.scene.layout.width) * ratio)),
-    height: Math.max(1, Math.round((config.canvas?.height ?? snapshot.scene.layout.height) * ratio)),
+    width: Math.max(1, Math.round(size.width * ratio)),
+    height: Math.max(1, Math.round(size.height * ratio)),
   });
 };
 

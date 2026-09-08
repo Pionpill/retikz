@@ -11,6 +11,29 @@ const sceneOf = (primitives: Scene['primitives'], resources?: Scene['resources']
 });
 
 describe('renderToSvgString —— SvgNode → 字符串', () => {
+  it.each([
+    [{}, 240, 120],
+    [{ width: 480 }, 480, 240],
+    [{ height: 60 }, 120, 60],
+    [{ width: 400, height: 300 }, 400, 300],
+  ])('显示尺寸默认取内容边界，单轴按比例推导：%j', (size, width, height) => {
+    const scene: Scene = { primitives: [], layout: { x: -20, y: -10, width: 240, height: 120 } };
+    const svg = renderToSvgString(scene, { idPrefix: 'size', ...size });
+    expect(svg).toContain(`width="${width}"`);
+    expect(svg).toContain(`height="${height}"`);
+    expect(svg).toContain('viewBox="-20 -10 240 120"');
+  });
+
+  it('正数亚像素内容保持原尺寸，退化轴使用最小宿主尺寸', () => {
+    const scene: Scene = { primitives: [], layout: { x: 0, y: 0, width: 0.25, height: 0.5 } };
+    const svg = renderToSvgString(scene, { idPrefix: 'subpixel' });
+    expect(svg).toContain('width="0.25"');
+    expect(svg).toContain('height="0.5"');
+    const empty = renderToSvgString({ ...scene, layout: { ...scene.layout, width: 0 } }, { idPrefix: 'zero' });
+    expect(empty).toContain('width="1"');
+    expect(empty).toContain('height="0.5"');
+  });
+
   it('rect → 逐字 kebab / SVG 真名属性，无 React camelCase', () => {
     const rect: RectPrim = {
       type: 'rect',

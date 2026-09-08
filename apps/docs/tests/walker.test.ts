@@ -219,13 +219,13 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     });
   });
 
-  it('unwraps a top-level pipe while preserving its description', async () => {
+  it('walks a top-level owner schema while preserving its description', async () => {
     const { ThemeSchema } = await import('@retikz/core');
     const r = walk(ThemeSchema);
 
     expect(r.kind).toBe('object');
     if (r.kind !== 'object') throw new Error('expected object');
-    expect(r.description).toMatch(/JSON-serializable Theme/);
+    expect(r.description).toMatch(/Sparse Theme override/);
     expect(r.fields.map(field => field.name)).toEqual(['style', 'mode']);
   });
 

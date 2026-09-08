@@ -19,19 +19,15 @@ const FlowNode: FC<FlowNodeProps> = ({ id, position, title, detail, stroke }) =>
       { text: title, font: { size: 14, weight: 'bold' } },
       { text: detail, fill: 'gray', font: { size: 13 } },
     ]}
-    stroke={stroke}
-    fill={stroke}
-    fillOpacity={0.08}
     cornerRadius={4}
-    minimumSize={{ width: 160, height: 52 }}
-    padding={{ x: 8, y: 6 }}
-    lineHeight={17}
+    style={{ stroke, fill: stroke, fillOpacity: 0.08 }}
+    layout={{ minimumSize: { width: 160, height: 52 }, padding: { x: 8, y: 6 }, lineHeight: 17 }}
   />
 );
 
 /** Text 行颜色覆盖与 Node contrast 解析路径 */
 const Demo: FC = () => (
-  <Layout width={560} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <FlowNode
       id="explicit-input"
       position={[-195, -65]}
@@ -68,12 +64,12 @@ const Demo: FC = () => (
       stroke="dodgerblue"
     />
 
-    <Draw way={['explicit-input', 'explicit-step']} stroke="gray" arrow="->" />
-    <Draw way={['explicit-step', 'explicit-output']} stroke="gray" arrow="->" />
-    <Draw way={['opaque-input', 'opaque-step']} stroke="gray" arrow="->" />
-    <Draw way={['opaque-step', 'opaque-output']} stroke="gray" arrow="->" />
-    <Draw way={['fallback-input', 'fallback-step']} stroke="gray" arrow="->" />
-    <Draw way={['fallback-step', 'fallback-output']} stroke="gray" arrow="->" />
+    <Draw way={['explicit-input', 'explicit-step']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['explicit-step', 'explicit-output']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['opaque-input', 'opaque-step']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['opaque-step', 'opaque-output']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['fallback-input', 'fallback-step']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['fallback-step', 'fallback-output']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

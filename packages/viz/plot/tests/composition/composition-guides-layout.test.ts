@@ -371,15 +371,13 @@ describe('composition guides layout lowering', () => {
     const spec = {
       ...facetSpec,
       guides: facetSpec.guides.map(guide => ({ ...guide, grid: undefined })),
-      plotThemeTokens: {
-        'axis.grid.enabled': false,
-        'axis.grid.stroke': '#ffffff',
-        'axis.grid.drawOpacity': 0.15,
+      plotDefaults: {
+        axis: { grid: false },
       },
-      plotThemeTokenRules: [
+      plotRules: [
         {
           select: { dimension: 'y' },
-          tokens: { 'axis.grid.enabled': true },
+          axis: { grid: { stroke: '#ffffff', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true } },
         },
       ],
     };
@@ -387,7 +385,7 @@ describe('composition guides layout lowering', () => {
     const panels = panelScopesOf(outer);
 
     expect(panels.map(panel => gridLayersOf(panel).map(layer => layer.meta?.dimension))).toEqual([['y'], ['y']]);
-    expect(panels.flatMap(gridLayersOf).every(layer => firstPathOf(layer).stroke === '#ffffff')).toBe(true);
+    expect(panels.flatMap(gridLayersOf).every(layer => firstPathOf(layer).style?.stroke === '#ffffff')).toBe(true);
   });
 
   it('facet_outer_shared_axes_can_keep_per_panel_grids', () => {

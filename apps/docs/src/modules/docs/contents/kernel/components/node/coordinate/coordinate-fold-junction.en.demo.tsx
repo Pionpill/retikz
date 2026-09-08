@@ -11,11 +11,7 @@ export const previewControls = coordinateFoldJunctionControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout
-      width={coordinateFoldJunctionFrame.width}
-      height={coordinateFoldJunctionFrame.height}
-      viewBox={coordinateFoldJunctionFrame.viewBox}
-    >
+    <Layout viewBox={coordinateFoldJunctionFrame.viewBox}>
       <Node id="A" position={[-120, -55]}>
         A
       </Node>
@@ -27,8 +23,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         merged
       </Node>
       {/* Two lines first reach junction, then merge into out */}
-      <Draw way={['A', 'junction', 'out']} arrow="->" stroke="gray" />
-      <Draw way={['B', 'junction']} stroke="gray" />
+      <Draw way={['A', 'junction', 'out']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['B', 'junction']} style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

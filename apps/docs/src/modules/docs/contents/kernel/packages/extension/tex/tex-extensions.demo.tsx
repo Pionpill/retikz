@@ -42,9 +42,7 @@ const resolveExtensions = (values: TexExtensionsValues): Array<MathJaxExtensionV
     .map(({ value }) => value);
 
 /** 在 MathJax 配置切换期间保留稳定取景，不把原始 TeX 当普通文本显示 */
-const renderTexExtensionsLoading = () => (
-  <Layout width={420} height={260} viewBox={{ x: -220, y: -135, width: 440, height: 270 }} />
-);
+const renderTexExtensionsLoading = () => <Layout viewBox={{ x: -220, y: -135, width: 440, height: 270 }} />;
 
 /** 根据 profile、extensions 和公式示例展示 MathJax 配置效果 */
 const renderTexExtensions = (values: TexExtensionsValues, lowerTex?: LowerTex) => {
@@ -69,9 +67,14 @@ const renderTexExtensions = (values: TexExtensionsValues, lowerTex?: LowerTex) =
   ];
 
   return (
-    <Layout width={420} height={260} viewBox={{ x: -220, y: -135, width: 440, height: 270 }} lowerTex={lowerTex}>
-      <Node position={[0, -78]} stroke="none" padding={0} font={{ size: 14 }} text={extensionStatus} />
-      <Node position={[0, 20]} stroke="none" padding={0} font={{ size: 22 }}>
+    <Layout viewBox={{ x: -220, y: -135, width: 440, height: 270 }} lowerTex={lowerTex}>
+      <Node
+        position={[0, -78]}
+        text={extensionStatus}
+        style={{ stroke: 'none', font: { size: 14 } }}
+        layout={{ padding: 0 }}
+      />
+      <Node position={[0, 20]} style={{ stroke: 'none', font: { size: 22 } }} layout={{ padding: 0 }}>
         {`$$${source}$$`}
       </Node>
     </Layout>

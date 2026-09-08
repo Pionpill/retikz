@@ -3,7 +3,7 @@ title: 契约 - 明细表
 description: 查询外部数据引用、detail columns 与 record-per-row Structure 的精确 JSON schema。
 ---
 
-明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings 与 `tableThemeTokens`。Core Theme 的 `style` / `mode` 由宿主 Scene / Scope 提供，不写入 IRDetailTable。
+明细表契约把“每条外部记录生成一行”保存为可序列化规则，而不把记录本身写进 IR。`data.reference` 指向运行时 dataset，`structure.columns` 决定字段读取、列顺序、列头与正文 formatter/presentation；共享根字段再承载 rules、encodings、`appearanceDefaults`、`visualDefaults` 与 `tableDefaults`。Core Theme 的 `style` / `mode` 由宿主 Scene / Scope 提供，不写入 IRDetailTable。
 
 ## IRDetailTable
 
@@ -26,7 +26,9 @@ description: 查询外部数据引用、detail columns 与 record-per-row Struct
     layout: '轨道、gap 与 border 布局配置；省略字段使用 pipeline 默认值。',
     rules: '按声明顺序应用的 Cell formatter、presentation 与外观覆盖。',
     encodings: '按声明顺序把匹配 value Cell 的原始值映射到闭合颜色通道。',
-    tableThemeTokens: '当前 IRDetailTable 的严格稀疏 Table token 覆盖；Table style baseline 优先级更低。',
+    appearanceDefaults: '已存在 body / columnHeader Cell 的稀疏外观默认值。',
+    visualDefaults: '已存在 visual encoding 的分类色与连续色默认值。',
+    tableDefaults: '稀疏 Table defaults 片段；同级显式 Source 字段优先。',
     meta: '由 lowering 原样保留的 JSON-safe 元数据。',
     data: '明细表必需的外部数据引用；实际记录不写入 IR。',
     structure: '每条源记录生成一行的 detail Structure。',

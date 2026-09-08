@@ -8,59 +8,59 @@ import { Draw, Layout, Node } from '@retikz/react';
  *   已落地的部分用默认色（currentColor），规划中 / 未实现的（Text DSL、React 以外的 adapter）用灰色弱化。
  */
 const Demo: FC = () => (
-  <Layout width={640} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node id="sugar" position={[-160, -54]} stroke="none">
+  <Layout>
+    <Node id="sugar" position={[-160, -54]} style={{ stroke: 'none' }}>
       Sugar JSX
     </Node>
-    <Node id="kernel" position={[-160, -18]} stroke="none">
+    <Node id="kernel" position={[-160, -18]} style={{ stroke: 'none' }}>
       Kernel JSX
     </Node>
-    <Node id="dsl" position={[-160, 18]} stroke="none" textColor="gray">
+    <Node id="dsl" position={[-160, 18]} style={{ stroke: 'none', textColor: 'gray' }}>
       Text DSL*
     </Node>
-    <Node id="ai" position={[-160, 54]} stroke="none">
+    <Node id="ai" position={[-160, 54]} style={{ stroke: 'none' }}>
       AI / LLM
     </Node>
 
-    <Node id="ir" position={[-40, 0]} stroke="none">
+    <Node id="ir" position={[-40, 0]} style={{ stroke: 'none' }}>
       IR (JSON)
     </Node>
-    <Node id="scene" position={[60, 0]} stroke="none">
+    <Node id="scene" position={[60, 0]} style={{ stroke: 'none' }}>
       Scene
     </Node>
 
-    <Node id="react" position={[200, -54]} stroke="none">
+    <Node id="react" position={[200, -54]} style={{ stroke: 'none' }}>
       React + SVG
     </Node>
-    <Node id="svg" position={[200, -18]} stroke="none" textColor="gray">
+    <Node id="svg" position={[200, -18]} style={{ stroke: 'none', textColor: 'gray' }}>
       pure SVG 字符串
     </Node>
-    <Node id="canvas" position={[200, 18]} stroke="none" textColor="gray">
+    <Node id="canvas" position={[200, 18]} style={{ stroke: 'none', textColor: 'gray' }}>
       Canvas
     </Node>
-    <Node id="raster" position={[350, 18]} stroke="none" textColor="gray">
+    <Node id="raster" position={[350, 18]} style={{ stroke: 'none', textColor: 'gray' }}>
       PNG/JPEG/WebP
     </Node>
-    <Node id="native" position={[200, 54]} stroke="none" textColor="gray">
+    <Node id="native" position={[200, 54]} style={{ stroke: 'none', textColor: 'gray' }}>
       Native (Skia/RN) / PDF
     </Node>
 
-    <Node id="persist" position={[-40, 80]} stroke="none">
+    <Node id="persist" position={[-40, 80]} style={{ stroke: 'none' }}>
       持久化 / 编辑
     </Node>
 
     <Draw way={['sugar', 'ir']} arrow="->" />
     <Draw way={['kernel', 'ir']} arrow="->" />
-    <Draw way={['dsl', 'ir']} arrow="->" stroke="gray" />
+    <Draw way={['dsl', 'ir']} arrow="->" style={{ stroke: 'gray' }} />
     <Draw way={['ai', 'ir']} arrow="->" />
 
     <Draw way={['ir', 'scene']} arrow="->" />
 
     <Draw way={['scene', 'react']} arrow="->" />
-    <Draw way={['scene', 'svg']} arrow="->" stroke="gray" />
-    <Draw way={['scene', 'canvas']} arrow="->" stroke="gray" />
-    <Draw way={['canvas', 'raster']} arrow="->" stroke="gray" />
-    <Draw way={['scene', 'native']} arrow="->" stroke="gray" />
+    <Draw way={['scene', 'svg']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['scene', 'canvas']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['canvas', 'raster']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['scene', 'native']} arrow="->" style={{ stroke: 'gray' }} />
 
     <Draw way={['ir', 'persist']} arrow="<->" />
   </Layout>

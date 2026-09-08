@@ -66,7 +66,7 @@ import { Draw } from '@retikz/react';
   description="需要排查算子顺序、label 挂载或相对坐标累积时再回来读。"
 />
 
-本节只放大 `way` 到 `<Path>` / `<Step>` 的局部展开；完整的 JSX → IR（中间表示） → Scene 编译管线见[架构](/kernel/concepts/design/principles)。
+本节只放大 `way` 到 `<Path>` / `<Step>` 的局部展开；完整的 JSX → IR（中间表示） → Scene 编译管线见[架构](/kernel/components/design/principles)。
 
 ### WayItem 如何变成 Step
 
@@ -104,8 +104,8 @@ import { Draw } from '@retikz/react';
     {
       label: 'Draw 将输入透传给 Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 50,
-      endLine: 54,
+      startLine: 29,
+      endLine: 33,
     },
   ]}
 />
@@ -132,9 +132,9 @@ import { Draw } from '@retikz/react';
     },
     {
       label: '相对坐标求值与 prevEnd 更新',
-      path: 'packages/kernel/core/src/compile/path/host/relative.ts',
-      startLine: 77,
-      endLine: 95,
+      path: 'packages/kernel/core/src/resolve/path/resolve.ts',
+      startLine: 365,
+      endLine: 461,
     },
   ]}
 />
@@ -148,7 +148,7 @@ import { Draw } from '@retikz/react';
 | 节点 id            | `'a'`                                                                                           | 引用同一张图内的 Node；端点自动贴 border                   |
 | 显式锚点           | `{ id: 'a', anchor: 'top' }` 或 `'a.top'`                                                       | 锁定命名 anchor / 角度 / 边上比例点；对象形态是 IR 主契约  |
 | 笛卡尔             | `[120, 0]`                                                                                      | 直接给坐标                                                 |
-| 极坐标             | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | 极坐标，详见 [定位](/kernel/concepts/basic/position)       |
+| 极坐标             | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | 极坐标，详见 [定位](/kernel/components/basic/position)       |
 | 偏移定位           | `{ of: 'a', offset: [10, 5] }`                                                                  | 基准 + `(dx, dy)`，与 `<Node position>` 的 offset 形态一致 |
 | 比例定位           | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                        | A 到 B 连线上的比例点                                      |
 | Relative           | `{ position: [10, 0], type: DrawWay.Relative }` 或 `'+10,0'`                                    | 基于前一 step 终点偏移，不更新 prevEnd                     |

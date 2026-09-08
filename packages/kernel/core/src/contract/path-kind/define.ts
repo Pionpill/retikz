@@ -1,6 +1,8 @@
+import type { JsonValue } from '@retikz/foundation';
+
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { IRPathBase, JsonValue } from '../../schemas';
+import type { IRPathBase } from '../../schemas';
 import type { AnyPathKindDefinition, PathKindDefinition } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';

@@ -29,20 +29,19 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
   });
 
   return (
-    <Layout width={400} height={240} viewBox={{ x: -185, y: -110, width: 370, height: 220 }}>
-      <Circle center={CENTER} radius={RADIUS} stroke="lightgray" dashPattern={[4, 3]} fill="none" />
-      <Path stroke="darkorange" strokeWidth={2}>
+    <Layout viewBox={{ x: -185, y: -110, width: 370, height: 220 }}>
+      <Circle center={CENTER} radius={RADIUS} style={{ stroke: 'lightgray', dashPattern: [4, 3], fill: 'none' }} />
+      <Path style={{ stroke: 'darkorange', strokeWidth: 2 }}>
         <Step kind="move" to={pointAtArcAngle(CENTER, RADIUS, values.startAngle)} />
         <Step kind="arc" center={CENTER} radius={RADIUS} startAngle={values.startAngle} endAngle={values.endAngle} />
       </Path>
-      <Draw way={[ORIGIN, [170, 0]]} stroke="dodgerblue" strokeWidth={2} arrow="->" />
+      <Draw way={[ORIGIN, [170, 0]]} arrow="->" style={{ stroke: 'dodgerblue', strokeWidth: 2 }} />
       {parameters.map(parameter => (
         <Circle
           key={parameter}
           center={[ORIGIN[0] + DIR[0] * parameter, ORIGIN[1] + DIR[1] * parameter]}
           radius={5}
-          fill="darkviolet"
-          stroke="none"
+          style={{ fill: 'darkviolet', stroke: 'none' }}
         />
       ))}
     </Layout>

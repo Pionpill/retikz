@@ -18,7 +18,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     width={400}
     height={280}
     coordinate={values[RULE_BAND_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PlotScale dimension="x" type="linear" domain={[0, 120]} />
     <PlotScale dimension="y" type="linear" domain={[0, 100]} />

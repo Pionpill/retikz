@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useSearchParams } from 'react-router';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getSectionsByModule } from '@/modules/docs/data';
+import { getSectionsByArea } from '@/modules/docs/data';
 
 import type { ShowcasePageEntry } from './types';
 
@@ -72,7 +72,7 @@ export const ShowcaseTabs: FC<ShowcaseTabsProps> = props => {
 
   const familyPages = useMemo(() => {
     if (!moduleId) return [];
-    const pages = collectShowcasePages(moduleId, getSectionsByModule(moduleId));
+    const pages = collectShowcasePages(moduleId, getSectionsByArea(moduleId));
     const current = pages.find(page => page.path.toLowerCase() === pathname.toLowerCase());
     if (!current) return [];
 

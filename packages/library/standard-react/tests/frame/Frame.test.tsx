@@ -27,9 +27,9 @@ describe('<Frame>', () => {
     const result = normalizeReactInput(
       <Frame
         id="root"
-        stroke="#0f172a"
         meta={{ source: 'react' }}
         border={{ style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 }}
+        style={{ stroke: '#0f172a' }}
       >
         <Node position={[0, 0]} />
       </Frame>,
@@ -37,7 +37,7 @@ describe('<Frame>', () => {
 
     expect(result.ir.children[0]).toMatchObject({
       id: 'root',
-      stroke: '#0f172a',
+      style: { stroke: '#0f172a' },
       meta: { source: 'react' },
       border: { style: { stroke: '#0284c7', zIndex: 4 }, cornerRadius: 3 },
     });
@@ -51,10 +51,10 @@ describe('<Frame>', () => {
       headerDirection: 'vertical' as const,
       children: (
         <>
-          <FrameTitle text="Explicit title" font={{ family: 'serif' }}>
+          <FrameTitle text="Explicit title" style={{ font: { family: 'serif' } }}>
             Ignored title
           </FrameTitle>
-          <FrameDescription maxTextWidth={220}>One registry contract.</FrameDescription>
+          <FrameDescription layout={{ maxTextWidth: 220 }}>One registry contract.</FrameDescription>
           <Node position={[0, 0]} text="A" />
         </>
       ),
@@ -68,8 +68,14 @@ describe('<Frame>', () => {
         padding: 12,
         border: { cornerRadius: 6 },
         headerDirection: 'vertical',
-        title: { text: 'Explicit title', font: { family: 'serif' } },
-        description: { text: 'One registry contract.', maxTextWidth: 220 },
+        title: {
+          text: 'Explicit title',
+          style: { font: { family: 'serif' } },
+        },
+        description: {
+          text: 'One registry contract.',
+          layout: { maxTextWidth: 220 },
+        },
         children: [{ type: 'node', position: [0, 0], text: 'A' }],
       }),
     );
@@ -95,11 +101,11 @@ describe('<Frame>', () => {
           <FrameTitle
             id="heading"
             shape="circle"
-            fill="#fff"
-            padding={3}
             label={{ text: 'stable', position: 'right' }}
             meta={{ role: 'title' }}
             animations={animations}
+            style={{ fill: '#fff' }}
+            layout={{ padding: 3 }}
           >
             Contract
           </FrameTitle>
@@ -113,8 +119,8 @@ describe('<Frame>', () => {
         id: 'heading',
         text: 'Contract',
         shape: 'circle',
-        fill: '#fff',
-        padding: 3,
+        style: { fill: '#fff' },
+        layout: { padding: 3 },
         label: { text: 'stable', position: 'right' },
         meta: { role: 'title' },
         animations,

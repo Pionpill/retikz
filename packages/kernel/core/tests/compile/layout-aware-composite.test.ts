@@ -169,10 +169,8 @@ describe('layout-aware composite', () => {
           type: 'node',
           position: [0, 0],
           text: 'aa aa',
-          padding: 0,
-          margin: 0,
-          fill: 'transparent',
-          stroke: 'transparent',
+          style: { fill: 'transparent', stroke: 'transparent' },
+          layout: { padding: 0, margin: 0 },
         },
       }),
       { composites: [definition], measureText, padding: 0 },
@@ -191,7 +189,7 @@ describe('layout-aware composite', () => {
     expect(measureText).toHaveBeenCalledTimes(4);
   });
 
-  it('does not broadcast a range Scope proposal to nested layout-aware composites', () => {
+  it('forwards a range Scope proposal to nested layout-aware composites', () => {
     const nested = defineComposite({
       namespace: 'test',
       type: 'nestedConstraint',
@@ -200,21 +198,22 @@ describe('layout-aware composite', () => {
         type: literal('nestedConstraint'),
       }),
       artifactSchema: strictObject({
-        xMode: literal('natural'),
+        xKind: literal(LayoutAxisProposalKind.Range),
         yMode: literal('natural'),
       }),
       compile: (_node, { proposal }) => {
         if (
-          proposal.x.kind !== LayoutAxisProposalKind.Intrinsic ||
-          proposal.x.mode !== LayoutIntrinsicMode.Natural ||
+          proposal.x.kind !== LayoutAxisProposalKind.Range ||
+          proposal.x.min !== 0 ||
+          proposal.x.max !== 40 ||
           proposal.y.kind !== LayoutAxisProposalKind.Intrinsic ||
           proposal.y.mode !== LayoutIntrinsicMode.Natural
         ) {
-          throw new Error('Expected natural proposal inside structural Scope');
+          throw new Error('Expected parent proposal inside structural Scope');
         }
         return {
           children: [],
-          artifact: { xMode: proposal.x.mode, yMode: proposal.y.mode },
+          artifact: { xKind: proposal.x.kind, yMode: proposal.y.mode },
         };
       },
     });
@@ -257,7 +256,7 @@ describe('layout-aware composite', () => {
             { kind: 'scopeChild', index: 0 },
           ],
         },
-        value: { xMode: 'natural', yMode: 'natural' },
+        value: { xKind: 'range', yMode: 'natural' },
       },
     ]);
   });

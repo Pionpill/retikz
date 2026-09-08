@@ -3,7 +3,7 @@ title: Contract - Detail Table
 description: Look up the precise JSON schemas for external data references, detail columns, and the record-per-row Structure.
 ---
 
-Detail Table contracts persist “one external record becomes one row” as a serializable rule without copying records into IR. `data.reference` points to a runtime dataset, while `structure.columns` controls field access, column order, headers, and body formatter/presentation references. Shared root fields carry rules, encodings, and `tableThemeTokens`. Core Theme `style` / `mode` comes from the host Scene / Scope and does not enter IRDetailTable.
+Detail Table contracts persist “one external record becomes one row” as a serializable rule without copying records into IR. `data.reference` points to a runtime dataset, while `structure.columns` controls field access, column order, headers, and body formatter/presentation references. Shared root fields carry rules, encodings, `appearanceDefaults`, `visualDefaults`, and `tableDefaults`. Core Theme `style` / `mode` comes from the host Scene / Scope and does not enter IRDetailTable.
 
 ## IRDetailTable
 
@@ -11,7 +11,7 @@ Detail Table contracts persist “one external record becomes one row” as a se
 
 | Field       | Type                                                                                                                                                   | Default                                    | Description                                                                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`      | `IRDetailTable['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                    | —<br />- —<br />- —                        | Required external dataset reference<br />- Runtime dataset name<br />- Optional data model                                                        |
+| `data`      | `IRDetailTable['data']`<br />- `reference: string`<br />- `model?: IRDataModel`                                                                        | —<br />- —<br />- —                        | Required external dataset reference<br />- Runtime dataset name<br />- Optional data model                                                        |
 | `structure` | `IRDetailTableStructure`<br />- `kind:` <ApiValues name="TableStructureKind" /><br />- `columns: Array<IRTableDetailColumn>`<br />- `header?: boolean` | —<br />- `'detail'`<br />- —<br />- `true` | Record-per-row Structure<br />- Structure discriminator<br />- At least one column with unique ids<br />- Whether to generate a column-header row |
 
 ### DetailTableSchema

@@ -27,7 +27,7 @@ description: Use when an approved large retikz task is functionally or architect
 - 发布：`package-publish`
 - 分层、schema、contract、providers、pipeline、compile：按 `standard-structure` 读取对应 `standard-*`
 
-主模型为 Sol 且执行计划已授权多 agent 分工时，再读取 `codex-develop-flow`；该 skill 只映射模型角色，不新增 gate。
+主模型为 Astra / Sol 且执行计划已授权多 agent 分工时，再读取 `codex-develop-flow`；该 skill 只映射模型角色，不新增 gate。
 
 ## 状态文件
 

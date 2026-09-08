@@ -31,13 +31,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           };
 
   return (
-    <Plot
-      data={coordinate1DCompositionRows}
-      coordinate="cartesian1D"
-      width={560}
-      height={250}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Plot data={coordinate1DCompositionRows} coordinate="cartesian1D" width={560} height={250}>
       <PlotScale dimension="x" type="linear" domain={[0, 12.5]} />
       <PointMark
         x="thingX"

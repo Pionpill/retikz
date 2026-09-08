@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import type { ChartMarkBinding } from '../contract/mark';
@@ -48,16 +48,16 @@ const invalidMark = (message: string, path: ReadonlyArray<string | number>, caus
     ...(cause === undefined ? {} : { cause }),
   });
 
-const pickSlots = (values: IRJsonObject, names?: ReadonlyArray<string>): IRJsonObject => {
+const pickSlots = (values: JsonObject, names?: ReadonlyArray<string>): JsonObject => {
   if (names === undefined) return {};
-  const picked: IRJsonObject = {};
+  const picked: JsonObject = {};
   for (const name of names) if (Object.hasOwn(values, name)) picked[name] = structuredClone(values[name]);
   return picked;
 };
 
 const inheritedSlotsOf = (
   source: IRChartSource,
-  resolvedEncodings: IRJsonObject,
+  resolvedEncodings: JsonObject,
   binding: ChartMarkBinding,
 ): InheritedChartMarkSlots => ({
   encodings: pickSlots(resolvedEncodings, binding.inherit.encodings),
@@ -67,16 +67,14 @@ const inheritedSlotsOf = (
 const resolveOneMark = (
   source: IRChartSource,
   index: number,
-  mark: IRJsonObject,
+  mark: JsonObject,
   binding: ChartMarkBinding,
-  resolvedEncodings: IRJsonObject,
-  recipeTokens: IRJsonObject,
+  resolvedEncodings: JsonObject,
 ): ReadonlyArray<IRPlotMarkOperation> => {
   const resolution = binding.definition.resolve({
     chartType: source.recipe.chartType,
     source: mark,
     inherited: inheritedSlotsOf(source, resolvedEncodings, binding),
-    recipeThemeTokens: recipeTokens,
   });
   if (resolution.marks.length === 0) {
     throw invalidMark('Chart mark resolver must produce at least one Plot mark', ['recipe', 'marks', index]);
@@ -88,8 +86,7 @@ const resolveOneMark = (
 export const resolveChartMarks = (
   source: IRChartSource,
   recipe: Pick<ChartRecipeDefinition, 'chartType' | 'marks'>,
-  resolvedEncodings: IRJsonObject,
-  recipeTokens: IRJsonObject,
+  resolvedEncodings: JsonObject,
 ): ChartMarksResolution => {
   const authoredMarks = source.recipe.marks ?? [];
   const marks: Array<AuthoredChartMarkResolution> = [];
@@ -128,7 +125,7 @@ export const resolveChartMarks = (
       kind,
       index,
       override,
-      plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings, recipeTokens),
+      plotMarks: resolveOneMark(source, index, mark, binding, resolvedEncodings),
     });
   }
   return {

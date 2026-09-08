@@ -13,7 +13,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const smoothTransform = smoothOperationsOf(values);
 
   return (
-    <Plot data={trendSamples} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={trendSamples} width={440} height={260}>
       <PlotScale dimension="x" type="linear" domain={[-1, 5]} />
       <PlotScale dimension="y" type="linear" domain={[0, 10]} />
       <PointMark color="series" fillOpacity={0.72} x="time" y="value" />

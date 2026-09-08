@@ -47,7 +47,7 @@ export const BlockStylePreview = (values: PreviewControlValuesFor<typeof blockSt
   const rowContentOpacity = typeof values.rowContentOpacity === 'number' ? values.rowContentOpacity : 0.8;
 
   return (
-    <Graph width={420} height={230} viewBox={{ x: -90, y: padding - 68, width: 420, height: 230 }}>
+    <Graph viewBox={{ x: -90, y: padding - 68, width: 420, height: 230 }}>
       <Block
         padding={padding}
         cornerRadius={cornerRadius}

@@ -1,4 +1,4 @@
-﻿import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
+import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
 
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
@@ -23,11 +23,9 @@ const contentNode = (id: string, fill: string, text = id): IRChild => ({
   id,
   position: [0, 0],
   shape: 'rectangle',
-  minimumSize: { width: 4, height: 4 },
-  padding: 0,
   text,
-  fill,
-  stroke: 'none',
+  style: { fill, stroke: 'none' },
+  layout: { minimumSize: { width: 4, height: 4 }, padding: 0 },
 });
 
 describe('Presented Table layout transaction', () => {
@@ -149,8 +147,7 @@ describe('Presented Table layout transaction', () => {
               position: [0, 0],
               shape: 'rectangle',
               text: 'wrapped cell content',
-              fill: '#111111',
-              stroke: 'none',
+              style: { fill: '#111111', stroke: 'none' },
             },
           ],
         };
@@ -180,7 +177,14 @@ describe('Presented Table layout transaction', () => {
           cellId: 'left',
           appearance: {
             background: { fill: '#ff0000' },
-            content: { nodeDefault: { font: { size: 40 }, padding: 20 } },
+            content: {
+              defaults: {
+                node: {
+                  style: { font: { size: 40 } },
+                  layout: { padding: 20 },
+                },
+              },
+            },
             borders: { bottom: { kind: 'line', stroke: '#0000ff', width: 2 } },
           },
         },
@@ -230,9 +234,8 @@ describe('Presented Table layout transaction', () => {
         children: [
           {
             type: 'scope',
-            stroke: '#f97316',
-            strokeWidth: 12,
             children: [{ namespace: 'fixture', type: 'presented-table-transaction' }],
+            style: { stroke: '#f97316', strokeWidth: 12 },
           },
         ],
       },
@@ -342,11 +345,8 @@ describe('Presented Table layout transaction', () => {
       id,
       position: [0, 0],
       shape: 'rectangle',
-      minimumSize: 0,
-      padding: 0,
-      fill: 'none',
-      stroke: 'none',
-      opacity: 0,
+      style: { fill: 'none', stroke: 'none', opacity: 0 },
+      layout: { minimumSize: 0, padding: 0 },
     });
     const semantic = normalizeTableStructure({
       kind: 'manual',

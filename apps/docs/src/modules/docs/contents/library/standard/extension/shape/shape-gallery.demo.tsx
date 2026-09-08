@@ -16,7 +16,9 @@ import {
 /** 分三行展示 Standard 的九个可选节点形状 */
 const Demo: FC = () => {
   const radius = 34;
-  const style = { fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 };
+  const style = {
+    style: { fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 },
+  };
   const labels: Array<{ position: [number, number]; text: string }> = [
     { position: [-150, -42], text: 'cross' },
     { position: [0, -42], text: 'sector' },
@@ -31,9 +33,6 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      width={620}
-      height={410}
-      viewBox={{ x: -240, y: -145, width: 480, height: 330 }}
       shapes={[
         ContourShapeDefinition,
         CrossShapeDefinition,
@@ -46,7 +45,12 @@ const Demo: FC = () => {
         EllipticCapsuleShapeDefinition,
       ]}
     >
-      <Node position={[-150, -90]} shape="cross" minimumSize={{ width: radius, height: radius }} {...style} />
+      <Node
+        position={[-150, -90]}
+        shape="cross"
+        {...style}
+        layout={{ minimumSize: { width: radius, height: radius } }}
+      />
       <Node
         position={[0, -90]}
         shape={{
@@ -76,13 +80,22 @@ const Demo: FC = () => {
         }}
         {...style}
       />
-      <Node position={[0, 20]} shape="trapezoid" minimumSize={{ width: 70, height: 48 }} {...style} />
-      <Node position={[150, 20]} shape="parallelogram" minimumSize={{ width: 64, height: 48 }} {...style} />
-      <Node position={[-150, 130]} shape="hexagon" minimumSize={{ width: 72, height: 48 }} {...style} />
-      <Node position={[0, 130]} shape="cylinder" minimumSize={{ width: 70, height: 48 }} {...style} />
-      <Node position={[150, 130]} shape="ellipticCapsule" minimumSize={{ width: 70, height: 48 }} {...style} />
+      <Node position={[0, 20]} shape="trapezoid" {...style} layout={{ minimumSize: { width: 70, height: 48 } }} />
+      <Node position={[150, 20]} shape="parallelogram" {...style} layout={{ minimumSize: { width: 64, height: 48 } }} />
+      <Node position={[-150, 130]} shape="hexagon" {...style} layout={{ minimumSize: { width: 72, height: 48 } }} />
+      <Node position={[0, 130]} shape="cylinder" {...style} layout={{ minimumSize: { width: 70, height: 48 } }} />
+      <Node
+        position={[150, 130]}
+        shape="ellipticCapsule"
+        {...style}
+        layout={{ minimumSize: { width: 70, height: 48 } }}
+      />
       {labels.map(label => (
-        <Node key={label.text} position={label.position} fill="none" stroke="none" textColor="gray" font={{ size: 12 }}>
+        <Node
+          key={label.text}
+          position={label.position}
+          style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+        >
           {label.text}
         </Node>
       ))}

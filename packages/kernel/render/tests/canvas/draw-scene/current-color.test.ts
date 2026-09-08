@@ -11,7 +11,13 @@ describe('drawScene currentColor 解析', () => {
     const ir: IRScene = {
       type: 'scene',
       version: 1,
-      children: [{ type: 'node', position: [0, 0], color: '#336699', fill: 0.2 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { color: '#336699', fill: 0.2 },
+        },
+      ],
     };
     const scene = compileToScene(ir).scene;
     const context = createSpyCanvasContext();

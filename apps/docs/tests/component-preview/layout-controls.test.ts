@@ -32,18 +32,14 @@ const extractLightgrayGuidePath = (markup: string): string => {
 };
 
 describe('Layout controls', () => {
-  it('makes display and viewBox boundaries independently observable', () => {
+  it('changing viewBox keeps display dimensions equal to the frame', () => {
     const canonical = renderLayoutViewboxDemo({
-      width: 300,
-      height: 200,
       viewBoxX: -120,
       viewBoxY: -120,
       viewBoxWidth: 240,
       viewBoxHeight: 240,
     });
     const widerViewBox = renderLayoutViewboxDemo({
-      width: 300,
-      height: 200,
       viewBoxX: -120,
       viewBoxY: -120,
       viewBoxWidth: 400,
@@ -51,6 +47,10 @@ describe('Layout controls', () => {
     });
 
     expect(canonical).toMatch(/^<svg[^>]*style="[^"]*outline:1px dashed gray/);
+    expect(canonical).toContain('width="240"');
+    expect(canonical).toContain('height="240"');
+    expect(widerViewBox).toContain('width="400"');
+    expect(widerViewBox).toContain('height="240"');
     expect(extractLightgrayGuidePath(widerViewBox)).not.toBe(extractLightgrayGuidePath(canonical));
   });
 });

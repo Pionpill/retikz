@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -52,17 +52,6 @@ const expectCompletePanel = (contract: PreviewControlContract): void => {
       /^(?:ChartCoordinate|ChartExtension|Plot[A-Z]\w*|Plot|PointMark|Scatter[A-Z]\w*)(?:\.|$)/u.test(api),
     ),
   ).toBe(true);
-};
-
-const canonicalChartSize = (source: PreviewSourceConfig): { width?: number; height?: number } => {
-  const layout = canonicalDeclarationProps(source, ChartLayout);
-  return { width: layout.width as number | undefined, height: layout.height as number | undefined };
-};
-
-const canonicalChartLayout = (source: PreviewSourceConfig): { width?: number; height?: number } => {
-  const layout = canonicalDeclarationProps(source, ChartLayout);
-  const explicit = layout.layout as { width?: number; height?: number } | undefined;
-  return explicit ?? { width: layout.width as number | undefined, height: layout.height as number | undefined };
 };
 
 const canonicalScatterProps = (source: PreviewSourceConfig): Record<string, unknown> => {
@@ -230,15 +219,10 @@ describe('Viz Chart scatter controls', () => {
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('shape');
       expect(canonicalScatterPropertiesProps(source)).not.toHaveProperty('stroke');
       expect(canonicalScatterProps(source)).toMatchObject({
-        theme: {
-          tokens: {
-            plot: {
-              'plot.palette.shape': [
-                'circle',
-                'rectangle',
-                'diamond',
-                { type: 'polygon', params: { sides: 3, rotate: -90 } },
-              ],
+        plotExtension: {
+          plotDefaults: {
+            palette: {
+              shape: ['circle', 'rectangle', 'diamond', { type: 'polygon', params: { sides: 3, rotate: -90 } }],
             },
           },
         },
@@ -281,21 +265,21 @@ describe('Viz Chart scatter controls', () => {
   it('世界杯射门示例仅在 Plot area 使用外部球场背景图', () => {
     for (const source of [worldCupZhPreviewSource, worldCupEnPreviewSource]) {
       expect(canonicalScatterProps(source)).toMatchObject({
-        theme: {
-          tokens: {
-            plot: {
-              'plot.area.fill': {
+        plotExtension: {
+          plotDefaults: {
+            plotArea: {
+              fill: {
                 kind: 'image',
                 href: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Football_pitch_metric_tr.svg',
               },
             },
-            recipe: { axisEnabled: false },
           },
         },
+        recipe: { guides: { axis: false } },
       });
-      expect(canonicalScatterProps(source)).not.toHaveProperty(['theme', 'tokens', 'plot', 'plot.area.fill', 'fit']);
-      expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.recipe.axisGridEnabled');
-      expect(canonicalScatterProps(source)).not.toHaveProperty('theme.tokens.chart.chart.canvas.fill');
+      expect(canonicalScatterProps(source)).not.toHaveProperty(['plotExtension', 'plotDefaults', 'plotArea', 'fit']);
+      expect(canonicalScatterProps(source)).not.toHaveProperty('recipe.guides.axisGridEnabled');
+      expect(canonicalScatterProps(source)).not.toHaveProperty('plotExtension.plotDefaults.chart.canvas.fill');
       expect(canonicalScatterPropertiesProps(source)).toMatchObject({
         size: 5,
         shape: 'circle',
@@ -322,13 +306,6 @@ describe('Viz Chart scatter controls', () => {
       expect(source).not.toContain("type: 'polar2D'");
       expect(source).not.toContain('<ChartExtension');
       expect(source).toContain('Football_pitch_metric_tr.svg');
-    }
-  });
-
-  it('为预览宿主与 Source layout 同时声明 800x500 画布', () => {
-    for (const source of [fertilityWorkZhPreviewSource, fertilityWorkEnPreviewSource]) {
-      expect(canonicalChartSize(source)).toEqual({ width: 800, height: 500 });
-      expect(canonicalChartLayout(source)).toEqual({ width: 800, height: 500 });
     }
   });
 

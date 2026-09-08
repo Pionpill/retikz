@@ -49,7 +49,11 @@ const makeBareMark = () =>
     schema: BareMarkSchema,
     lower: (mark, rows, _frame, channels) => {
       const row = rows[0] ?? {};
-      const node: IRNode = { type: 'node', position: [0, 0], minimumSize: 1 };
+      const node: IRNode = {
+        type: 'node',
+        position: [0, 0],
+        layout: { minimumSize: 1 },
+      };
       for (const entry of channels.nodeDeliveries ?? []) {
         const value = entry.resolver(row);
         if (value !== undefined) entry.deliver(node, value, { mark, row, nodeKind: 'pointGlyph' });

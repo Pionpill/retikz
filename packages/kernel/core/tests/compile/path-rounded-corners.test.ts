@@ -285,7 +285,10 @@ describe('roundedCorners 交互', () => {
 
   it('roundedCorners + centered label keeps its rounded arc while emitting split stroke fragments', () => {
     const ir = pathWith(
-      { roundedCorners: 12, stroke: '#13579b' },
+      {
+        roundedCorners: 12,
+        style: { stroke: '#13579b' },
+      },
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'line', to: [100, 0], label: { text: 'turn', position: 0.9, sloped: true } },
       { type: 'step', kind: 'line', to: [100, 100] },
@@ -320,7 +323,11 @@ describe('roundedCorners 交互', () => {
     const roundedMidpointAngle = -45;
     const compiledScene = compileToScene(
       pathWith(
-        { roundedCorners: 30, stroke: '#13579b', label },
+        {
+          roundedCorners: 30,
+          label,
+          style: { stroke: '#13579b' },
+        },
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
         { type: 'step', kind: 'line', to: [100, 100] },

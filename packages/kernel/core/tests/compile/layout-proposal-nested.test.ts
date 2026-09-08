@@ -116,12 +116,11 @@ const runNestedFixture = (): FixtureRun => {
       const pathProbe = context.layoutChild(
         {
           type: 'path',
-          stroke: '#000',
-          strokeWidth: 4,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [40, 10] },
           ],
+          style: { stroke: '#000', strokeWidth: 4 },
         },
         context.proposal,
       );
@@ -136,7 +135,7 @@ const runNestedFixture = (): FixtureRun => {
               id: 'shared-identity',
               position: [200, 0],
               text: [{ runs: [{ tex: 'x' }] }],
-              fill: failedPaint,
+              style: { fill: failedPaint },
             },
             { namespace: 'nested-gate', type: 'failing' },
           ],
@@ -155,12 +154,12 @@ const runNestedFixture = (): FixtureRun => {
           position: context.proposal.x.kind === LayoutAxisProposalKind.Exact ? [0, 0] : [100, 0],
           shape: 'rectangle',
           text: 'aa bb cc',
-          font: { size: 10 },
-          lineHeight: 10,
-          padding: 0,
-          margin: 0,
-          fill: context.proposal.x.kind === LayoutAxisProposalKind.Exact ? selectedPaint : discardedPaint,
-          stroke: 'transparent',
+          style: {
+            font: { size: 10 },
+            fill: context.proposal.x.kind === LayoutAxisProposalKind.Exact ? selectedPaint : discardedPaint,
+            stroke: 'transparent',
+          },
+          layout: { lineHeight: 10, padding: 0, margin: 0 },
         },
         context.proposal,
       );

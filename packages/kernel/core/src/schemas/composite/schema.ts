@@ -1,7 +1,5 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { object, strictObject } from 'zod';
-
-import { JsonValueSchema } from '../json';
 
 const compositeBaseShape = {
   namespace: NonBlankStringSchema.describe('Tier 2 domain namespace that selects the registered definition.'),

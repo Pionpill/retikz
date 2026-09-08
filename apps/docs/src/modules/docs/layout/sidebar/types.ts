@@ -23,6 +23,8 @@ export type SidebarSubModuleData = {
 export type SidebarModuleData = SidebarSubModuleData & {
   /** 显示图标，可选 */
   Icon?: ComponentType<{ className?: string }>;
+  /** 同一栏目内的侧栏视觉分组标题（已通过 t()） */
+  sidebarGroup?: string;
 };
 
 /** 侧栏分组（一个 SidebarGroup） */

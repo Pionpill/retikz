@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
 
 import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
@@ -16,17 +16,14 @@ const invalidPoint = (message: string, path: ReadonlyArray<string | number>): Re
     details: { path },
   });
 
+const isJsonObject = (value: JsonValue): value is JsonObject =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
 /** 从已 parse 的 owner slice 读取必需字段 */
-export const requiredFieldOf = (values: IRJsonObject, name: string, path: ReadonlyArray<string | number>): string => {
+export const requiredFieldOf = (values: JsonObject, name: string, path: ReadonlyArray<string | number>): string => {
   const value = values[name];
   if (typeof value === 'string' && value.length > 0) return value;
-  if (
-    value !== null &&
-    !Array.isArray(value) &&
-    typeof value === 'object' &&
-    typeof value.field === 'string' &&
-    value.field.length > 0
-  ) {
+  if (isJsonObject(value) && typeof value.field === 'string' && value.field.length > 0) {
     return value.field;
   }
   throw invalidPoint(`Chart field "${name}" is required`, path);
@@ -108,11 +105,8 @@ export const pointFieldConsumersOf = (
 ];
 
 /** 生成尺寸图例；size field 不存在时不创建 guide */
-export const sizeGuideOf = (
-  theme: Readonly<{ legendEnabled: boolean }>,
-  encodings: IRJsonObject,
-): IRPlotGuide | undefined => {
-  if (!theme.legendEnabled || !Object.hasOwn(encodings, 'size')) return undefined;
+export const sizeGuideOf = (encodings: JsonObject): IRPlotGuide | undefined => {
+  if (!Object.hasOwn(encodings, 'size')) return undefined;
   pointFieldMappingOf(encodings.size, ['recipe', 'encodings', 'size']);
   return { type: PlotGuide.Legend, channel: 'size' };
 };

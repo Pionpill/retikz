@@ -1,0 +1,65 @@
+---
+title: 简介
+description: AI 原生的通用绘图库——用 React 组件或 Vanilla InputScene 描述图形，以 JSON IR 连接生成、持久化与渲染。
+---
+
+retikz 是一套面向浏览器与 Node.js 的通用绘图库。你可以先描述图里有哪些对象，再用命名、定位和路径关系把它们组合起来；`@retikz/plot` 等上层模块也复用同一套绘图语义。
+
+## 核心概念
+
+这张图只做一件最小的事：放两个命名节点，再用一条带箭头的 `Draw` 把它们连起来。它说明 retikz 的基本顺序是先摆可引用的点，再用路径关系把图元串起来。
+
+<ComponentPreview files="minimal-example" size="xs" />
+
+retikz 最重要的入门心智模型只有两层：先描述**图元是什么**，再描述**图元之间的连接与几何关系**。`Node` 是可见对象，`Draw` 则用命名引用把对象连起来。
+
+## AI 友好的共享格式
+
+<ComponentPreview files="ir-centric" hideCode />
+
+React、Vanilla 和 AI 生成结果最终都归一为同一份 IR。IR 是普通 JSON，因此可以被 schema 校验、保存、传输和修改，再交给 SVG 或 Canvas 等 renderer 使用。
+
+共享格式带来的好处很直接：
+
+- 你只需要围绕同一份 IR 维护保存、编辑和渲染逻辑。
+- 不必为 JSX、AI 输出和不同 renderer 分别维护图形格式。
+- 同一份图形数据可以跨入口、跨运行时复用。
+
+需要了解 IR 如何形成 Scene、各包如何协作时，继续阅读[分层](/kernel/components/design/layers)；需要判断能力应落在哪一层时，再读[设计原则](/kernel/components/design/principles)。
+
+## 通用图元，任意组合
+
+retikz 用一组职责明确的组件描述图形。它们既可以直接使用，也可以通过嵌套、命名引用和简写组件组合成更复杂的结构。
+
+| 关注点       | 常用组件                                     | 负责什么                                       |
+| ------------ | -------------------------------------------- | ---------------------------------------------- |
+| **画布与组** | `<Layout>` `<Scope>`                         | 承载整张图，对局部图元分组并应用样式或变换     |
+| **对象与点** | `<Node>` `<Coordinate>`                      | 描述可见对象，或声明供定位与引用的命名坐标     |
+| **路径关系** | `<Path>` `<Step>`                            | 精确描述完整路径及其中的直线、曲线与圆弧动作   |
+| **常用简写** | `<Draw>` `<Arc>` `<Circle>` `<Rectangle>` 等 | 用更紧凑的参数组合基础图元，不增加新的绘图语义 |
+
+## 与 TikZ 的关系
+
+<Comparison target="tikz" title="与 TikZ 的关系">
+
+retikz 的命名 / 路径动作 / anchor 体系直接致敬 LaTeX 的 TikZ 包。
+
+| 维度     | LaTeX TikZ      | retikz                            |
+| -------- | --------------- | --------------------------------- |
+| 运行环境 | LaTeX 编译器    | 浏览器 / Node                     |
+| 语法     | `\node` `\draw` | `<Node>` `<Draw>`                 |
+| 输出     | PDF / SVG       | SVG / Canvas；PDF / Native 计划中 |
+| 交互     | 无              | React / runtime 事件              |
+| 持久化   | `.tex` 源码     | JSON IR                           |
+
+IR ↔ TikZ 源码转换属于后续 codec 方向：目标是在浏览器里编辑后能进入 LaTeX 工作流，或把已有 `.tex` 中的 TikZ 图迁移到 retikz 的 IR / React 表达里。
+
+不需要先懂 TikZ 才能使用 retikz。retikz 借用的是命名词汇（node / path / anchor / step），可以使用 React 组件或 Vanilla `InputScene` 描述图形。
+
+</Comparison>
+
+<ComponentAlert
+  type="tip"
+  title="文档中的图也是 retikz"
+  description="本站所有示意图都由 retikz 自身绘制。你看到的节点、连线、布局与动画，都是这些底层组件组合后的实际效果。"
+/>

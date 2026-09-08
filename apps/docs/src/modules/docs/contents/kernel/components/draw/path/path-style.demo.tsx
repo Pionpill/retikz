@@ -12,17 +12,19 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const thickness = values.thickness === 'custom' ? undefined : values.thickness;
 
   return (
-    <Layout width={400} height={218} viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
+    <Layout viewBox={{ x: -220, y: -120, width: 440, height: 240 }}>
       <Path
-        stroke={values.stroke}
-        strokeWidth={values.thickness === 'custom' ? values.strokeWidth : undefined}
         thickness={thickness}
-        dashPattern={values.dashed ? [18, 10] : undefined}
-        dashOffset={values.dashOffset}
-        lineCap={values.lineCap}
-        lineJoin={values.lineJoin}
-        opacity={values.opacity}
-        strokeOpacity={values.strokeOpacity}
+        style={{
+          stroke: values.stroke,
+          ...(values.thickness === 'custom' ? { strokeWidth: values.strokeWidth } : {}),
+          ...(values.dashed ? { dashPattern: [18, 10] } : {}),
+          dashOffset: values.dashOffset,
+          lineCap: values.lineCap,
+          lineJoin: values.lineJoin,
+          opacity: values.opacity,
+          strokeOpacity: values.strokeOpacity,
+        }}
       >
         <Step kind="move" to={[-175, 55]} />
         <Step to={[-80, -60]} />
@@ -30,7 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         <Step to={[110, -50]} />
         <Step to={[175, 35]} />
       </Path>
-      <Path fill="#ffb703" opacity={values.opacity} fillOpacity={values.fillOpacity} stroke="none">
+      <Path style={{ fill: '#ffb703', opacity: values.opacity, fillOpacity: values.fillOpacity, stroke: 'none' }}>
         <Step kind="move" to={[-45, 90]} />
         <Step to={[0, 55]} />
         <Step to={[45, 90]} />

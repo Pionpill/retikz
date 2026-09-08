@@ -37,5 +37,5 @@ export const pathStructureControls = definePreviewControls({
 export const previewControlContract = {
   controls: pathStructureControls,
   canonicalValues: { structure: 'polyline', fill: '#1e90ff' },
-  relatedApis: ['Path.children', 'Path.fill'],
+  relatedApis: ['Path.children', 'Path.style.fill'],
 } satisfies PreviewControlContract;

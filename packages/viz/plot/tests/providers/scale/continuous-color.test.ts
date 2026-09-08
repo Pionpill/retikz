@@ -64,11 +64,12 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
       const node = child as {
         type?: string;
         children?: ReadonlyArray<unknown>;
-        nodeDefault?: { fill?: string };
-        fill?: string;
+        defaults?: { node?: { style?: { fill?: string } } };
+        style?: { fill?: string };
       };
-      if (node.type === 'node') out.push(node.fill ?? inheritedFill);
-      else if (node.type === 'scope' && node.children) walk(node.children, node.nodeDefault?.fill ?? inheritedFill);
+      if (node.type === 'node') out.push(node.style?.fill ?? inheritedFill);
+      else if (node.type === 'scope' && node.children)
+        walk(node.children, node.defaults?.node?.style?.fill ?? inheritedFill);
     }
   };
   walk(layer.children, undefined);
@@ -76,7 +77,7 @@ const nodeFills = (layer: IRScope): Array<string | undefined> => {
 };
 
 /** 建单 point mark 的 cartesian spec，x/y linear + 给定连续色 scale，color 引用之 */
-const pointSpec = (colorScale: Record<string, unknown>, plotTheme?: IRPlot['plotTheme']): IRPlot =>
+const pointSpec = (colorScale: Record<string, unknown>, plotDefaults?: IRPlot['plotDefaults']): IRPlot =>
   PlotSchema.parse({
     namespace: 'plot',
     type: 'plot',
@@ -94,7 +95,7 @@ const pointSpec = (colorScale: Record<string, unknown>, plotTheme?: IRPlot['plot
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
       },
     ],
-    plotTheme,
+    plotDefaults,
   });
 
 describe('连续色 · sequential 求值（contract）', () => {

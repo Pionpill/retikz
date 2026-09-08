@@ -15,7 +15,7 @@ import { DetailTable } from '@retikz/table-react';
   dataRef="scores"
   data={rows}
   theme={{ mode: 'light' }}
-  tableThemeTokens={{ 'cell.content.color': '#1e3a8a' }}
+  appearanceDefaults={{ body: { content: { style: { color: '#1e3a8a' } } } }}
   columns={[
     { id: 'name', field: 'name', header: 'Name', bodyLayout: { padding: 6, wrap: true } },
     {
@@ -73,11 +73,12 @@ formatter/presentation references, semantic fields, or direct Core/Tier 2 conten
 presentation references only apply to scalar value Cells; content Cells reject both because they
 already carry renderable children.
 
-Detail and manual roots forward the JSON-safe `rules`, `encodings`, and `tableThemeTokens` fields
-to the same IRTable contract as plain authoring. Core `theme.style` / `theme.mode` selects the
-Table preset, while inherited `theme.tokens.table` and local `tableThemeTokens` form the sparse
-Table token cascade. Standalone host CSS uses `containerStyle`; embedded Tables receive Theme and
-other host capabilities from the outer `Layout` and reject standalone-only host props.
+Detail and manual roots forward the JSON-safe `rules`, `encodings`, `appearanceDefaults`,
+`visualDefaults`, `tableDefaults`, and `layout` fields to the same IRTable contract as plain
+authoring. Core `theme.style` / `theme.mode` selects the Table baseline, while the sparse Source
+defaults fields form the Table defaults cascade. Standalone host CSS uses `containerStyle`; embedded
+Tables receive Theme and other host capabilities from the outer `Layout` and reject standalone-only
+host props.
 
 All three root components work standalone or as Tier 2 children of `@retikz/react` `Layout`.
 Standalone roots reuse the supported `Layout` host surface and observe `onManifest` from the same

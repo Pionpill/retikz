@@ -14,7 +14,7 @@ describe('FontSchema.size', () => {
       type: 'node',
       position: [0, 0],
       text: 'A',
-      font: { size: 'sm' },
+      style: { font: { size: 'sm' } },
     });
 
     expect(NodeSchema.parse(JSON.parse(JSON.stringify(node)))).toEqual(node);

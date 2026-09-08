@@ -23,9 +23,9 @@ import { literal } from 'zod';
 import type { DiagramDefinitionOptions, ResolvedDiagramDefinitionOptions } from '../src/_diagram';
 
 import {
+  DiagramDefaultsSchema,
   DiagramFrameSchema,
   DiagramPresentationSchema,
-  DiagramThemeSchema,
   lowerDiagramFoundation,
   resolveDiagramDefinitionOptions,
   resolveDiagramFoundation,
@@ -36,7 +36,7 @@ const TestDiagramFoundationSchema = CompositeBaseSchema.extend({
   type: literal('foundation'),
   presentation: DiagramPresentationSchema.optional(),
   frame: DiagramFrameSchema.optional(),
-  diagramTheme: DiagramThemeSchema.optional(),
+  diagramDefaults: DiagramDefaultsSchema.optional(),
   drawing: ChildSchema,
 });
 
@@ -59,7 +59,7 @@ const createTestDiagramFoundationDefinition = (
         {
           ...(source.presentation === undefined ? {} : { presentation: source.presentation }),
           ...(source.frame === undefined ? {} : { frame: source.frame }),
-          ...(source.diagramTheme === undefined ? {} : { diagramTheme: source.diagramTheme }),
+          ...(source.diagramDefaults === undefined ? {} : { diagramDefaults: source.diagramDefaults }),
         },
         { theme: context.theme, diagramThemeStyles: options.diagramThemeStyles },
       );
@@ -87,11 +87,11 @@ const createTestDiagramFoundationProvider = (
 type TestFoundationSource = Readonly<{
   presentation?: ReturnType<typeof DiagramPresentationSchema.parse>;
   frame?: ReturnType<typeof DiagramFrameSchema.parse>;
-  diagramTheme?: ReturnType<typeof DiagramThemeSchema.parse>;
+  diagramDefaults?: ReturnType<typeof DiagramDefaultsSchema.parse>;
   drawing: IRChild;
 }>;
 
-type TestFoundationHost = Pick<IRScope, 'theme' | 'nodeDefault' | 'clip'>;
+type TestFoundationHost = Pick<IRScope, 'theme' | 'defaults' | 'clip'>;
 
 /** test-only Foundation compile 选项 */
 export type TestFoundationCompileOptions = Readonly<{

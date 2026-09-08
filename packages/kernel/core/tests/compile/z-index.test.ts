@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -79,11 +79,23 @@ describe('compile zIndex 稳定排序', () => {
   // =========================================================================
 
   it('nodeDefault.zIndex 被 ScopeSchema 拒（strict + omit）', () => {
-    expect(() => ScopeSchema.parse({ type: 'scope', nodeDefault: { zIndex: 1 }, children: [] })).toThrow();
+    expect(() =>
+      ScopeSchema.parse({
+        type: 'scope',
+        children: [],
+        defaults: { node: { zIndex: 1 } },
+      }),
+    ).toThrow();
   });
 
   it('pathDefault.zIndex 被 ScopeSchema 拒', () => {
-    expect(() => ScopeSchema.parse({ type: 'scope', pathDefault: { zIndex: 1 }, children: [] })).toThrow();
+    expect(() =>
+      ScopeSchema.parse({
+        type: 'scope',
+        children: [],
+        defaults: { path: { zIndex: 1 } },
+      }),
+    ).toThrow();
   });
 
   it('非整数 / 非有限 zIndex 被 NodeSchema 拒', () => {

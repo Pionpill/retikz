@@ -72,21 +72,21 @@ React only collects JSX / props and dispatches Plot Vanilla; it owns no parallel
 
 `<Plot>` is already a complete standalone entry. Rendering it directly creates one internal `Layout`, so callers do not add another host. Inside an existing `<Layout>`, the same component degrades to one Plot Scope/composite: it shares the outer Scene, renderer, and effective Theme and does not create a nested SVG.
 
-Plot `width` / `height` and panel fields such as `x` / `y`, transforms, and clip remain valid embedded inputs. `className`, `style`, `renderer`, and Core `themeStyles` control only the standalone host and belong on the outer `<Layout>`; `lineage`, `hostLineageMetadata`, and `onLineage` depend on the standalone React lifecycle and must be omitted when embedded. An embedded Plot fails loudly when it owns any of those fields—even an explicit `undefined`. This keeps host or observer configuration from being ignored and does not generate an extra model id for an embedded Plot.
+Plot `width` / `height` define plot-area geometry only. Standalone display dimensions follow the full content bounds, including axes, labels, and padding, without scaling. These dimensions and panel fields such as `x` / `y`, transforms, and clip remain valid embedded inputs. `className`, `style`, `renderer`, and Core `themeStyles` control only the standalone host and belong on the outer `<Layout>`; `lineage`, `hostLineageMetadata`, and `onLineage` depend on the standalone React lifecycle and must be omitted when embedded. An embedded Plot fails loudly when it owns any of those fields—even an explicit `undefined`. This keeps host or observer configuration from being ignored and does not generate an extra model id for an embedded Plot.
 
 ## What Plot owns—and what it does not
 
 | Plot owns                                                   | Owned elsewhere                                                                                       |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Plot IR, domain theme tokens, and graphic-grammar contracts | Field models, parsing, general transforms, and provenance belong to [Data](/viz/data)                 |
-| Channels, scales, coordinates, marks, and guides            | Core IR, layout, reference resolution, and Scene compilation belong to [Kernel](/kernel/introduction) |
+| Channels, scales, coordinates, marks, and guides            | Core IR, layout, reference resolution, and Scene compilation belong to [Kernel](/kernel/components/introduction) |
 | Composition and Plot-to-Core lowering                       | SVG / Canvas output belongs to renderers                                                              |
 | Definitions, registries, resolvers, and diagnostics         | React / Vanilla lifecycles and host wiring belong to adapters                                         |
 | Chart-oriented semantic mapping and theme lowering          | Row / column structure, Cell semantics, and table layout belong to [Table](/viz/table)                |
 
 If a capability does not depend on chart field mapping—general data transforms, low-level geometry, or table Cells, for example—it should not enter Plot. Conversely, a new scale, coordinate, mark, or guide should first become a registerable Definition, then use the same path as built-ins.
 
-Plot also owns canonical theme tokens for its Plot area, guides, and palettes. It consumes the Core effective Theme to select the same-named domain preset, then maps local `plotThemeTokens`, Axis `plotThemeTokenRules`, and native `plotTheme` into the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the complete key set and precedence.
+Plot also owns sparse defaults for its Plot area, guides, palettes, and existing axes. It consumes the Core effective Theme to select the same-named domain preset, then applies local `plotDefaults` and ordered `plotRules` through the same lowering path. Built-in and custom presets use the same `definePlotThemeStyle` / `plotThemeStyles` resolver. See the [theme contract](/viz/plot/reference/theme) for the Source-shaped fields and cascade.
 
 ## Pages
 

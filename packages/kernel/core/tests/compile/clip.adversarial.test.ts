@@ -273,13 +273,25 @@ describe('clip + paint 资源命名空间：大量混合不撞、稳定', () => 
       ],
     };
     const ir = scene([
-      { type: 'node', id: 'G1', position: [0, 0], text: 'G1', fill: grad },
+      {
+        type: 'node',
+        id: 'G1',
+        position: [0, 0],
+        text: 'G1',
+        style: { fill: grad },
+      },
       {
         type: 'scope',
         clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 },
         children: [{ type: 'node', id: 'A', position: [40, 0], text: 'A' }],
       },
-      { type: 'node', id: 'G2', position: [80, 0], text: 'G2', fill: grad2 },
+      {
+        type: 'node',
+        id: 'G2',
+        position: [80, 0],
+        text: 'G2',
+        style: { fill: grad2 },
+      },
       {
         type: 'scope',
         clip: { kind: 'rect', x: 1, y: 1, width: 5, height: 5 },

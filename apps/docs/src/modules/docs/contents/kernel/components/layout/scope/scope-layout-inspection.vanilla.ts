@@ -18,13 +18,23 @@ const flexInput = (first: string, second: string): InputFlexLayout => ({
       kind: 'flex',
       key: `${first}-item`,
       grow: 1,
-      child: { type: 'node', position: [0, 0], text: first, fill: '#dbeafe', stroke: '#2563eb' },
+      child: {
+        type: 'node',
+        position: [0, 0],
+        text: first,
+        style: { fill: '#dbeafe', stroke: '#2563eb' },
+      },
     },
     {
       kind: 'flex',
       key: `${second}-item`,
       grow: 1,
-      child: { type: 'node', position: [0, 0], text: second, fill: '#dcfce7', stroke: '#16a34a' },
+      child: {
+        type: 'node',
+        position: [0, 0],
+        text: second,
+        style: { fill: '#dcfce7', stroke: '#16a34a' },
+      },
     },
   ],
 });

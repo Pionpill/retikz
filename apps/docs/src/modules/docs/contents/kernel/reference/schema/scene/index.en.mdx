@@ -36,13 +36,3 @@ Compilation gives each Composite a complete frozen `ResolvedTheme`: inherited `s
 `CompositeNodeSchema` fixes only the cross-domain `namespace` and `type`. The selected Tier 2 Definition validates the remaining JSON fields and lowers the composite into Tier 1 children during compile.
 
 <ZodSchema name="CompositeNodeSchema" />
-
-<span id="jsonobject"></span>
-
-## JSON object
-
-`JsonObjectSchema` is a string-keyed object of recursive JSON values. It is used by `meta`, custom-provider parameters, and composite extension fields; runtime values such as functions, class instances, and ReactNode do not belong in IR.
-
-<span id="jsonvalue"></span>
-
-`JsonValueSchema` is the recursive union of string, number, boolean, null, arrays of JsonValue, and JsonObject.

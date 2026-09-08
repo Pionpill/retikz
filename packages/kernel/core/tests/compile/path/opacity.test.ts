@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../src/schemas';
 
@@ -13,11 +13,11 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
       children: [
         {
           type: 'path',
-          opacity: 0.5,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { opacity: 0.5 },
         },
       ],
     };
@@ -31,14 +31,13 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
       children: [
         {
           type: 'path',
-          fill: 'red',
-          fillOpacity: 0.3,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { fill: 'red', fillOpacity: 0.3 },
         },
       ],
     };
@@ -52,11 +51,11 @@ describe('path 级 opacity / fillOpacity / strokeOpacity', () => {
       children: [
         {
           type: 'path',
-          strokeOpacity: 0.7,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { strokeOpacity: 0.7 },
         },
       ],
     };

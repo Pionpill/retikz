@@ -1,7 +1,6 @@
-import { createOpenStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema, JsonObjectSchema } from '@retikz/foundation';
 import { strictObject, union } from 'zod';
 
-import { JsonObjectSchema } from '../json';
 import { BuiltinShape } from './constants';
 
 /** Core 内置 shape 与自定义注册名共享的开放名称 schema */

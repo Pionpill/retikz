@@ -45,13 +45,15 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
     <Node
       position={position}
       shape={{ type: boundaryGuideShape.name, params: { shape, boundary, fit, gap } }}
-      fill="none"
-      stroke="#94a3b8"
-      strokeOpacity={0.6}
-      strokeWidth={1}
-      dashPattern={[1, 4]}
-      textColor="transparent"
       zIndex={1}
+      style={{
+        fill: 'none',
+        stroke: '#94a3b8',
+        strokeOpacity: 0.6,
+        strokeWidth: 1,
+        dashPattern: [1, 4],
+        textColor: 'transparent',
+      }}
     >
       {children}
     </Node>
@@ -61,8 +63,6 @@ const BoundaryGuide: FC<BoundaryGuideProps> = props => {
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
-      width={400}
-      height={185}
       viewBox={{ x: -260, y: -120, width: 520, height: 240 }}
       shapes={[boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}
     >
@@ -71,9 +71,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         position={[-150, 0]}
         shape={nodeShapeOf(values.shapeA)}
         boundary={boundaryOf(values.boundaryA, values.fitA, values.gapA)}
-        fill="#fbbf24"
-        stroke="#b45309"
-        textColor="#78350f"
+        style={{ fill: '#fbbf24', stroke: '#b45309', textColor: '#78350f' }}
       >
         a
       </Node>
@@ -82,9 +80,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         position={[150, 0]}
         shape={nodeShapeOf(values.shapeB)}
         boundary={boundaryOf(values.boundaryB, values.fitB, values.gapB)}
-        fill="#93c5fd"
-        stroke="#1d4ed8"
-        textColor="#1e3a8a"
+        style={{ fill: '#93c5fd', stroke: '#1d4ed8', textColor: '#1e3a8a' }}
       >
         b
       </Node>
@@ -106,7 +102,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       >
         b
       </BoundaryGuide>
-      <Draw way={[targetOf('A', values.anchorA), targetOf('B', values.anchorB)]} arrow="->" stroke="gray" zIndex={-1} />
+      <Draw
+        way={[targetOf('A', values.anchorA), targetOf('B', values.anchorB)]}
+        arrow="->"
+        zIndex={-1}
+        style={{ stroke: 'gray' }}
+      />
     </Layout>
   );
 });

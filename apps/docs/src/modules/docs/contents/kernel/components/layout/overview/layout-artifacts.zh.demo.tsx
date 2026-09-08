@@ -35,7 +35,7 @@ const Demo: FC = () => {
 
   return (
     <div className="grid gap-3">
-      <Layout ir={scene} width={300} height={120} artifacts={artifactOptions} onArtifacts={handleArtifacts} />
+      <Layout ir={scene} artifacts={artifactOptions} onArtifacts={handleArtifacts} />
       <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
         Node 产物：{nodeLayouts.length} 个；正文宽度：
         {measuredNode === undefined ? '等待编译' : `${measuredNode.value.content.size.width.toFixed(1)} units`}

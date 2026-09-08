@@ -222,7 +222,7 @@ describe('@retikz/vanilla InputScene', () => {
             [24, 0],
           ],
           thickness: 'thick',
-          strokeWidth: 0,
+          style: { strokeWidth: 0 },
         }),
       ]),
     );
@@ -235,7 +235,7 @@ describe('@retikz/vanilla InputScene', () => {
           { type: 'step', kind: 'move', to: [0, 0] },
           { type: 'step', kind: 'line', to: [24, 0] },
         ],
-        strokeWidth: 0,
+        style: { strokeWidth: 0 },
       },
     ]);
   });

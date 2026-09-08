@@ -34,11 +34,11 @@ const source: IRScene = {
       type: 'path',
       kind: 'ribbon',
       kindOptions: { width: 12 },
-      fill: '#60a5fa',
       children: [
         { type: 'step', kind: 'move', to: [-60, 40] },
         { type: 'step', kind: 'line', to: [60, 40] },
       ],
+      style: { fill: '#60a5fa' },
     },
   ],
 };

@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { ChartMarkDefinition } from '../../_chart/contract';
 
@@ -6,13 +6,13 @@ import { defineChartMark } from '../../_chart/contract';
 import { markSlotsOf, resolvePointMark } from '../shared';
 import { BubbleChartMarkSchema } from './schema';
 
-const bubbleDefaultProperties: IRJsonObject = {
+const bubbleDefaultProperties: JsonObject = {
   fillOpacity: 0.7,
   strokeWidth: 1,
 };
 
 /** 解析 Bubble Point mark，并在显式 properties 之前应用类型默认外观 */
-export const resolveBubbleMark = (encodings: IRJsonObject, properties: IRJsonObject) =>
+export const resolveBubbleMark = (encodings: JsonObject, properties: JsonObject) =>
   resolvePointMark(encodings, { ...bubbleDefaultProperties, ...properties });
 
 /** Bubble Chart 的 authored mark Definition */

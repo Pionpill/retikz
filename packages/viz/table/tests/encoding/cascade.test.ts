@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
-import { defineCellVisualScale, resolveTableThemeTokens } from '../../src';
+import { defineCellVisualScale, resolveTableThemeDefaults } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 
-const tableThemeTokens = resolveTableThemeTokens();
+const tableDefaults = resolveTableThemeDefaults();
+const sequential = tableDefaults.defaults.visualDefaults?.sequential;
+if (sequential === undefined || sequential === null)
+  throw new Error('test fixture requires the default sequential palette');
 const scaleContext = {
-  categoricalColors: tableThemeTokens.tokens['data.categorical'],
-  sequentialColors: [
-    tableThemeTokens.tokens['data.sequential'][0],
-    tableThemeTokens.tokens['data.sequential'][1],
-  ] as const,
+  categoricalColors: tableDefaults.defaults.visualDefaults?.categorical ?? [],
+  sequentialColors: [sequential[0], sequential[1]] as const,
 };
 
 describe('Table visual encoding cascade', () => {
@@ -40,7 +40,7 @@ describe('Table visual encoding cascade', () => {
       },
     });
     const result = resolveTableCellPlans(model, {
-      tableThemeTokens,
+      tableDefaults,
       scaleContext,
       visualScaleDefinitions: [custom],
       encodings: [
@@ -67,15 +67,15 @@ describe('Table visual encoding cascade', () => {
         range: ['#123456'],
       },
     ]);
-    expect(result.cells[0].appearance.content?.color).toBe('#123456');
-    expect(result.cells[1].appearance.content?.color).toBe('#18181b');
+    expect(result.cells[0].appearance.content?.style?.color).toBe('#123456');
+    expect(result.cells[1].appearance.content?.style?.color).toBe('#18181b');
     expect(result.cells[3].trace).not.toHaveProperty('encodingIds');
   });
 
   it('applies style, ordered owned channels, then ordered root rules', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[1]] });
     const result = resolveTableCellPlans(model, {
-      tableThemeTokens,
+      tableDefaults,
       scaleContext,
       encodings: [
         {
@@ -102,7 +102,7 @@ describe('Table visual encoding cascade', () => {
     expect(result.cells[0]).toMatchObject({
       appearance: {
         background: { fill: 'green' },
-        content: { color: '#18181b' },
+        content: { style: { color: '#18181b' } },
       },
       trace: {
         encodingIds: ['first', 'second'],
@@ -114,7 +114,7 @@ describe('Table visual encoding cascade', () => {
   it('treats undefined resolution as no patch, trace, descriptor, or evaluator call', () => {
     const model = normalizeTableStructure({ kind: 'manual', rows: [[{ value: null }]] });
     const result = resolveTableCellPlans(model, {
-      tableThemeTokens,
+      tableDefaults,
       scaleContext,
       encodings: [
         {

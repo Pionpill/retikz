@@ -17,8 +17,7 @@ describe('toSceneResult runtime metadata', () => {
     const child: IRNode = {
       type: 'node',
       position: [0, 0],
-      color: '#336699',
-      fill: 0.2,
+      style: { color: '#336699', fill: 0.2 },
     };
     const vanilla = toSceneResult(inputScene({ theme, children: [child] }), {});
     const direct = toSceneResult({ type: 'scene', version: 1, theme, children: [child] }, {});
@@ -41,7 +40,9 @@ describe('toSceneResult runtime metadata', () => {
           {
             type: 'node',
             position: [0, 0],
-            fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+            style: {
+              fill: context.theme.style === 'academic' && context.theme.mode === ThemeMode.Dark ? '#123456' : '#abcdef',
+            },
           },
         ],
       }),

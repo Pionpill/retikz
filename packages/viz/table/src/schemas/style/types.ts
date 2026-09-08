@@ -1,33 +1,24 @@
-import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer } from 'zod';
 
-import type { TableThemeToken } from './constants';
 import type {
-  TableThemeStyleTokenOverridesSchema,
-  TableThemeTokenBorderSchema,
-  TableThemeTokenKeySchema,
-  TableThemeTokenMapSchema,
-  TableThemeTokenOverridesSchema,
-  TableThemeTokenPresetMapSchema,
+  TableCategoricalPaletteSchema,
+  TableDefaultsSchema,
+  TableLayoutDefaultsSchema,
+  TableSequentialPaletteSchema,
+  TableVisualDefaultsSchema,
 } from './schema';
 
-/** Table 主题 token key */
-export type TableThemeTokenKey = ZodInfer<typeof TableThemeTokenKeySchema>;
+/** Table Source 的分类颜色默认序列 */
+export type IRTableCategoricalPalette = ZodInfer<typeof TableCategoricalPaletteSchema>;
 
-/** Table 主题 token 中的 border 值 */
-export type IRTableThemeTokenBorder = ZodInfer<typeof TableThemeTokenBorderSchema>;
+/** Table Source 的连续颜色端点默认序列 */
+export type IRTableSequentialPalette = ZodInfer<typeof TableSequentialPaletteSchema>;
 
-/** Table root 或 inherited Theme 的 partial token overlay */
-export type IRTableThemeTokenOverrides = ZodInfer<typeof TableThemeTokenOverridesSchema>;
+/** Table Source 的 visual encoding 默认片段 */
+export type IRTableVisualDefaults = ZodInfer<typeof TableVisualDefaultsSchema>;
 
-/** 完整 19 项 Table theme token map */
-export type TableThemeTokenMap = ZodInfer<typeof TableThemeTokenMapSchema>;
+/** Table Source 的 layout 默认片段 */
+export type IRTableLayoutDefaults = ZodInfer<typeof TableLayoutDefaultsSchema>;
 
-/** 不含 shared categorical projection 的 Table preset map */
-export type TableThemeTokenPresetMap = ZodInfer<typeof TableThemeTokenPresetMapSchema>;
-
-/** 自定义 Table Theme style 相对默认 preset 的稀疏 token 覆盖 */
-export type TableThemeStyleTokenOverrides = ZodInfer<typeof TableThemeStyleTokenOverridesSchema>;
-
-/** Table theme token 的 canonical key value */
-export type TableThemeTokenValue = ValueOf<typeof TableThemeToken>;
+/** Table Source 的稀疏 Table defaults 聚合片段 */
+export type IRTableDefaults = ZodInfer<typeof TableDefaultsSchema>;

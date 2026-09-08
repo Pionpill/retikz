@@ -28,7 +28,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       width={400}
       height={280}
       coordinate={values[RULE_PER_DATUM_COORDINATE_ID] === 'polar2D' ? 'polar2D' : undefined}
-      style={{ maxWidth: '100%', height: 'auto' }}
     >
       <ReferenceMark y="threshold" color="tier" />
       <PlotAxis dimension="y" grid />

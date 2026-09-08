@@ -130,7 +130,7 @@ const allPaths = (child: IRChild): Array<IRPath> => {
 };
 
 const nodeHeight = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.height ?? size?.default ?? 0;
 };

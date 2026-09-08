@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** 从宿主适配到渲染后端的运行时主链，并标明 Parser 只是 IR 输入旁路 */
 const Demo: FC = () => (
-  <Layout width={760} height={170} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="host-group">
       <LogicFigureFrameTitle>Host adapters</LogicFigureFrameTitle>
       <Node
@@ -16,13 +16,9 @@ const Demo: FC = () => (
           { text: 'authoring adapters', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-290, -23]}
-        minimumSize={{ width: 132, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 132, height: 46 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
 
@@ -35,13 +31,9 @@ const Demo: FC = () => (
           { text: 'serializable input', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-125, -23]}
-        minimumSize={{ width: 104, height: 46 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 104, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="compile"
@@ -50,13 +42,9 @@ const Demo: FC = () => (
           { text: 'layout · resolve', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, -23]}
-        minimumSize={{ width: 120, height: 46 }}
-        stroke="dimgray"
-        fill="dimgray"
-        fillOpacity={0.06}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 120, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="scene"
@@ -65,13 +53,9 @@ const Demo: FC = () => (
           { text: 'resolved primitives', fill: 'gray', font: { size: 11 } },
         ]}
         position={[125, -23]}
-        minimumSize={{ width: 104, height: 46 }}
-        stroke="darkorange"
-        fill="darkorange"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 104, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="parser"
@@ -80,13 +64,9 @@ const Demo: FC = () => (
           { text: 'sugar → IR fragment', fill: 'gray', font: { size: 11 } },
         ]}
         position={[-125, 36]}
-        minimumSize={{ width: 132, height: 44 }}
-        stroke="gray"
-        fill="gray"
-        fillOpacity={0.06}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 132, height: 44 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
 
@@ -99,21 +79,17 @@ const Demo: FC = () => (
           { text: 'SVG · Canvas', fill: 'gray', font: { size: 11 } },
         ]}
         position={[290, -23]}
-        minimumSize={{ width: 132, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 132, height: 46 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
 
-    <Draw way={['adapters', 'ir']} arrow="->" stroke="gray" />
-    <Draw way={['ir', 'compile']} arrow="->" stroke="gray" />
-    <Draw way={['compile', 'scene']} arrow="->" stroke="gray" />
-    <Draw way={['scene', 'render']} arrow="->" stroke="gray" />
-    <Draw way={['parser', 'ir']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['adapters', 'ir']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['ir', 'compile']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['compile', 'scene']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['scene', 'render']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['parser', 'ir']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

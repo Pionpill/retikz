@@ -18,7 +18,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     width={400}
     height={280}
     coordinate={values[RULE_REGION_CONTROL_IDS.coordinate] === 'polar2D' ? 'polar2D' : undefined}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <ReferenceMark
       kind="region"

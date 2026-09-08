@@ -74,7 +74,7 @@ describe('Path kind full-subject contract', () => {
           typeof context.emitStroke === 'function' &&
           typeof context.emitHostLabels === 'function' &&
           typeof context.round === 'function' &&
-          context.path.color === 'red' &&
+          context.path.style?.color === 'red' &&
           context.appearance.color === 'red' &&
           context.appearance.fill === 'blue' &&
           context.appearance.blendMode === 'multiply' &&
@@ -91,13 +91,10 @@ describe('Path kind full-subject contract', () => {
           {
             type: 'path',
             kind: 'service-probe',
-            color: 'red',
-            fill: 'blue',
-            blendMode: 'multiply',
-            dashPattern: [2, 1],
             label: { text: 'host label' },
             marks: [{ pos: 0.5, mark: { kind: 'arrow', shape: 'missing-for-materialization' } }],
             children: steps,
+            style: { color: 'red', fill: 'blue', blendMode: 'multiply', dashPattern: [2, 1] },
           },
         ],
       },
@@ -111,7 +108,13 @@ describe('Path kind full-subject contract', () => {
     const compiled = compileToScene({
       version: 1,
       type: 'scene',
-      children: [{ type: 'path', color: 'crimson', children: steps }],
+      children: [
+        {
+          type: 'path',
+          children: steps,
+          style: { color: 'crimson' },
+        },
+      ],
     }).scene;
     const primitive = compiled.primitives.find(value => value.type === 'path');
 

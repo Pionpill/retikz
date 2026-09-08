@@ -1,6 +1,6 @@
 import type { IRDataScalarValue } from '@retikz/data';
 
-import { CssColorSchema, JsonObjectSchema } from '@retikz/core';
+import { CssColorSchema } from '@retikz/core';
 import { ScalarValueSchema } from '@retikz/data';
 import { array, enum as zodEnum, number } from 'zod';
 
@@ -39,7 +39,7 @@ export type ResolveCellVisualScaleInput = Readonly<{
 /** 收窄自定义 definition 返回的 resolution，并包装自然调用的 evaluator 输出 */
 const guardResolution = (name: string, resolution: CellVisualScaleResolution): CellVisualScaleResolution => {
   const domain = resolution.domain.map((value, index) => {
-    const result = ScalarValueSchema.safeParse(structuredClone(value));
+    const result = ScalarValueSchema.safeParse(value);
     if (!result.success)
       throw new RetikzTableError(`table: visual scale "${name}" domain ${index} must be a JSON scalar`);
     return result.data;
@@ -108,11 +108,8 @@ const guardResolution = (name: string, resolution: CellVisualScaleResolution): C
 /** 解析一次 visual scale definition 并守卫 options、resolution 与 evaluator */
 export const resolveCellVisualScale = (input: ResolveCellVisualScaleInput): CellVisualScaleResolution | undefined => {
   const definition = cellVisualScaleDefinitionOf(input.ref.name, input.registry);
-  const parsedOptions = definition.optionsSchema.parse(structuredClone(input.ref.options ?? {}));
-  const jsonOptions = JsonObjectSchema.safeParse(parsedOptions);
-  if (!jsonOptions.success)
-    throw new RetikzTableError(`table: visual scale "${definition.name}" options must remain JSON-safe`);
-  const options = deepFreeze(structuredClone(jsonOptions.data));
+  const parsedOptions = definition.optionsSchema.parse(input.ref.options ?? {});
+  const options = deepFreeze(parsedOptions);
   const resolution = definition.resolve(
     options as never,
     deepFreeze([...input.values]),

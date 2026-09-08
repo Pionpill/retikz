@@ -49,6 +49,44 @@ afterEach(() => {
 });
 
 describe('Layout retained renderer 规格', () => {
+  it('默认 SVG 显示尺寸等于取景框，单轴保持比例', () => {
+    const ir = {
+      version: 1,
+      type: 'scene',
+      children: [],
+      viewBox: { x: -20, y: -10, width: 240, height: 120 },
+    } as const;
+    const svg = renderToStaticMarkup(<Layout ir={{ ...ir, children: [] }} />);
+    expect(svg).toContain('width="240"');
+    expect(svg).toContain('height="120"');
+    const scaled = renderToStaticMarkup(<Layout ir={{ ...ir, children: [] }} width={480} />);
+    expect(scaled).toContain('width="480"');
+    expect(scaled).toContain('height="240"');
+  });
+
+  it('Canvas 默认 CSS 尺寸不乘 DPR，更新后跟随内容边界', async () => {
+    const recorded = createTestCanvasContext();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => recorded.context);
+    vi.stubGlobal('devicePixelRatio', 2);
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    try {
+      await act(() => root.render(<Layout renderer="canvas" viewBox={{ x: -20, y: -10, width: 240, height: 120 }} />));
+      const canvas = container.querySelector('canvas');
+      expect(canvas?.style.width).toBe('240px');
+      expect(canvas?.style.height).toBe('120px');
+      expect(canvas?.width).toBe(480);
+      expect(canvas?.height).toBe(240);
+      await act(() => root.render(<Layout renderer="canvas" viewBox={{ x: 0, y: 0, width: 300, height: 100 }} />));
+      expect(container.querySelector('canvas')).toBe(canvas);
+      expect(canvas?.style.width).toBe('300px');
+      expect(canvas?.width).toBe(600);
+    } finally {
+      await act(() => root.unmount());
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('react-canvas-mode-mounts：renderer="canvas" 挂载并绘制当前 Scene', async () => {
     const recorded = createTestCanvasContext();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => recorded.context);

@@ -1,3 +1,5 @@
+import type { ThemeModeValue } from '@retikz/core';
+
 import type {
   AnyCellVisualScaleDefinition,
   CellVisualScaleResolveContext,
@@ -5,16 +7,38 @@ import type {
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
-import type { ResolvedTableThemeTokens } from '../../providers/style';
 import type {
   IRTableCellAppearance,
   IRTableCellRule,
   IRTableCellVisualEncoding,
+  IRTableDefaults,
   IRTableFormatterRef,
   IRTablePresentationRef,
   TableVisualChannelValue,
 } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
+
+/** Table defaults cascade 中的实际 Source 来源层 */
+export type TableDefaultsLayer = DeepReadonly<{
+  /** 来源层类别 */
+  kind: 'neutral' | 'style' | 'source';
+  /** 稳定 Source 路径 */
+  path: string;
+  /** 该层贡献的稀疏 defaults */
+  defaults?: IRTableDefaults;
+}>;
+
+/** 同次 Table compile 使用的完整 defaults resolution */
+export type ResolvedTableDefaults = DeepReadonly<{
+  /** 可选 Core style 名称 */
+  style?: string;
+  /** 有效 Core Theme mode */
+  mode: ThemeModeValue;
+  /** 已按来源顺序合并的 defaults */
+  defaults: IRTableDefaults;
+  /** 实际参与 cascade 的 defaults 来源层 */
+  layers: ReadonlyArray<TableDefaultsLayer>;
+}>;
 
 /** Cell appearance winner 的逐叶来源 */
 export type TableCellAppearanceTrace = DeepReadonly<
@@ -74,8 +98,8 @@ export type ResolveTableCellPlansOptions = Readonly<{
   visualScaleDefinitions?: ReadonlyArray<AnyCellVisualScaleDefinition>;
   /** 同次 Table theme resolution 产生的 required palette */
   scaleContext: CellVisualScaleResolveContext;
-  /** 同次 Table theme resolution 产生的完整 Cell/token seeds */
-  tableThemeTokens?: ResolvedTableThemeTokens;
+  /** 同次 Table defaults resolution 产生的完整 Cell defaults */
+  tableDefaults?: ResolvedTableDefaults;
 }>;
 
 /** manifest 消费的单个 encoding 解析摘要 */

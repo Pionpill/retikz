@@ -1,5 +1,5 @@
-import { JsonObjectSchema } from '@retikz/core';
 import {
+  JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
@@ -85,22 +85,15 @@ export const BuiltinSelectorOperationSchemas = Object.freeze({
 });
 
 /** 外部 row selector operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
-export const ExternalSelectorOperationSchema = looseObject({
+const ExternalSelectorOperationObjectSchema = looseObject({
   kind: SelectorOperationKindSchema.refine(operationKind => !RESERVED_SELECTOR_OPERATION_KINDS.has(operationKind), {
     message: 'external selector kind must not collide with a built-in selector kind',
   }).describe('Discriminator: custom selector kind'),
-})
-  .superRefine((operation, ctx) => {
-    const result = JsonObjectSchema.safeParse(operation);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'external selector operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
-      });
-    }
-  })
-  .describe('Custom selector operation with JSON config');
+});
+
+export const ExternalSelectorOperationSchema = ExternalSelectorOperationObjectSchema.catchall(JsonValueSchema).describe(
+  'Custom selector operation with JSON config',
+);
 
 /** 内置 row selector operation schema */
 export const BuiltinSelectorOperationSchema = union([

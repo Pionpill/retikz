@@ -1,15 +1,11 @@
-import type { IRArrowMark, IRPathBase } from '@retikz/core';
+import type { IRArrowMark, IRPathBase, IRPathStyle } from '@retikz/core';
 
 import type { CanonicalRelation, EffectiveRelationAppearance, EffectiveRelationStructure } from '../../resolve';
-import type {
-  IRGraphRelation,
-  IRGraphRelationMarkerAppearanceTokenOverrides,
-  IRGraphRelationMarkerRecipe,
-} from '../../schemas';
+import type { IRGraphRelation, IRGraphRelationMarkerAppearance, IRGraphRelationMarkerRecipe } from '../../schemas';
 
 const marker = (
   recipe: false | IRGraphRelationMarkerRecipe,
-  appearance: IRGraphRelationMarkerAppearanceTokenOverrides | undefined,
+  appearance: IRGraphRelationMarkerAppearance | undefined,
 ): IRArrowMark | undefined => (recipe === false ? undefined : { kind: 'arrow', ...recipe, ...appearance });
 
 const RELATION_ONLY_FIELDS = new Set<keyof IRGraphRelation>([
@@ -38,20 +34,8 @@ const isDefinedPathField = ([key, value]: [string, unknown]): boolean =>
 const definedPathFields = (source: IRGraphRelation): Partial<IRPathBase> =>
   Object.fromEntries(Object.entries(source).filter(isDefinedPathField));
 
-const RELATION_ONLY_APPEARANCE_FIELDS = new Set<keyof EffectiveRelationAppearance>([
-  'sourceMarker',
-  'targetMarker',
-  'labelTextForeground',
-  'labelFont',
-  'labelOpacity',
-]);
-
-const isPathAppearanceField = ([key]: [string, unknown]): boolean =>
-  !RELATION_ONLY_APPEARANCE_FIELDS.has(key as keyof EffectiveRelationAppearance);
-
 /** 从有效 Relation appearance 中投影 Core Path appearance */
-const pathAppearanceOf = (appearance: EffectiveRelationAppearance): Partial<IRPathBase> =>
-  Object.fromEntries(Object.entries(appearance).filter(isPathAppearanceField));
+const pathAppearanceOf = (appearance: EffectiveRelationAppearance): IRPathStyle => appearance.style ?? {};
 
 /** 把 Canonical Relation、确定 structure / appearance 与唯一 route 下沉为一个 Core Path */
 export const lowerRelation = (
@@ -75,10 +59,19 @@ export const lowerRelation = (
   const labels = source.labels?.map(label => {
     const textColor = label.textColor ?? appearance.labelTextForeground;
     const opacity = label.opacity ?? appearance.labelOpacity;
+    const family = label.font?.family ?? appearance.labelFont?.family;
+    const size = label.font?.size ?? appearance.labelFont?.size;
+    const weight = label.font?.weight ?? appearance.labelFont?.weight;
+    const fontStyle = label.font?.style ?? appearance.labelFont?.style;
     const font =
       label.font === undefined && appearance.labelFont === undefined
         ? undefined
-        : { ...appearance.labelFont, ...label.font };
+        : {
+            ...(family === undefined ? {} : { family }),
+            ...(size === undefined ? {} : { size }),
+            ...(weight === undefined ? {} : { weight }),
+            ...(fontStyle === undefined ? {} : { style: fontStyle }),
+          };
     return {
       ...label,
       textColor,
@@ -86,14 +79,19 @@ export const lowerRelation = (
       opacity,
     };
   });
-  const dashPattern = source.dashPattern ?? structure.dashPattern;
+  const dashPattern = source.style?.dashPattern ?? structure.dashPattern;
   return {
     type: 'path',
     ...definedPathFields(source),
-    ...pathAppearanceOf(appearance),
+    style: {
+      ...pathAppearanceOf(appearance),
+      ...Object.fromEntries(
+        Object.entries(source.style ?? {}).filter(([, value]: [string, unknown]) => value !== undefined),
+      ),
+      ...(dashPattern === false ? {} : { dashPattern }),
+    },
     children: route,
     ...(marks.length === 0 ? {} : { marks }),
     ...(labels === undefined || labels.length === 0 ? {} : { label: labels.length === 1 ? labels[0] : labels }),
-    ...(dashPattern === false ? {} : { dashPattern }),
   };
 };

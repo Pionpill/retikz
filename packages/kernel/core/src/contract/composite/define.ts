@@ -1,9 +1,9 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import { assertNonEmptyString } from '@retikz/foundation';
 import { ZodLiteral, ZodObject, ZodUnion } from 'zod';
 
-import type { JsonValue } from '../../schemas';
 import type { CompositeDefinition } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';

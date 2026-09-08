@@ -26,12 +26,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   };
 
   return (
-    <Layout
-      width={420}
-      height={260}
-      viewBox={{ x: 0, y: 0, width: 420, height: 260 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: 0, y: 0, width: 420, height: 260 }}>
       <Frame
         id="frame-playground"
         padding={{ x: values.paddingX, y: values.paddingY }}
@@ -40,20 +35,22 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         border={{ style: borderStyle, cornerRadius: values.borderCornerRadius }}
       >
         <FrameTitle
-          padding={values.titlePadding}
-          fill="dodgerblue"
-          fillOpacity={values.titleFillOpacity}
-          font={{ size: values.titleFontSize, weight: values.titleFontWeight }}
+          style={{
+            fill: 'dodgerblue',
+            fillOpacity: values.titleFillOpacity,
+            font: { size: values.titleFontSize, weight: values.titleFontWeight },
+          }}
+          layout={{ padding: values.titlePadding }}
         >
           FrameTitle
         </FrameTitle>
-        <FrameDescription font={{ size: values.descriptionFontSize }} opacity={values.descriptionOpacity}>
+        <FrameDescription style={{ font: { size: values.descriptionFontSize }, opacity: values.descriptionOpacity }}>
           FrameDescription
         </FrameDescription>
         <Node id="A" position={[130, 165]} text={values.nodeAText} />
         <Node id="B" position={[290, 165]} text={values.nodeBText} />
       </Frame>
-      {values.connected ? <Draw way={['A', 'B']} stroke="gray" /> : null}
+      {values.connected ? <Draw way={['A', 'B']} style={{ stroke: 'gray' }} /> : null}
     </Layout>
   );
 });

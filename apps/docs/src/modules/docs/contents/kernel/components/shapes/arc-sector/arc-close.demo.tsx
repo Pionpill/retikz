@@ -7,19 +7,17 @@ import { Arc, Layout } from '@retikz/react';
  * 后两者闭合成区域，可直接 fill。
  */
 const Demo: FC = () => (
-  <Layout width={360} height={140}>
+  <Layout>
     {/* 默认：开放弧，不闭合、不填充 */}
-    <Arc center={[60, 70]} radius={50} startAngle={-50} endAngle={50} strokeWidth={2} />
+    <Arc center={[60, 70]} radius={50} startAngle={-50} endAngle={50} style={{ strokeWidth: 2 }} />
     {/* 弦闭合：两端点连直线成弓形 */}
     <Arc
       center={[180, 70]}
       radius={50}
       startAngle={-50}
       endAngle={50}
-      strokeWidth={2}
       close="chord"
-      fill="dodgerblue"
-      fillOpacity={0.3}
+      style={{ strokeWidth: 2, fill: 'dodgerblue', fillOpacity: 0.3 }}
     />
     {/* 扇形闭合：两端连回圆心 */}
     <Arc
@@ -27,10 +25,8 @@ const Demo: FC = () => (
       radius={50}
       startAngle={-50}
       endAngle={50}
-      strokeWidth={2}
       close="sector"
-      fill="darkorange"
-      fillOpacity={0.4}
+      style={{ strokeWidth: 2, fill: 'darkorange', fillOpacity: 0.4 }}
     />
   </Layout>
 );

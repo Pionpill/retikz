@@ -109,7 +109,7 @@ describe('Flow Source resolve', () => {
           id: 'form',
           text,
           status: 'success',
-          style: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
+          layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
         },
         { id: 'target', text: 'Target', status: 'disabled' },
       ],
@@ -125,9 +125,7 @@ describe('Flow Source resolve', () => {
       id: 'form',
       text,
       status: 'success',
-      align: 'start',
-      lineHeight: 18,
-      maxTextWidth: 160,
+      layout: { align: 'start', lineHeight: 18, maxTextWidth: 160 },
     });
     expect(resolved.elements[1]).toMatchObject({ type: 'entity', graph: { status: 'disabled' } });
     expect(resolved.relations[0]?.graph.status).toBe('warning');

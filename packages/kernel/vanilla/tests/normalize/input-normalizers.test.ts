@@ -39,7 +39,7 @@ describe('Vanilla Input normalizers', () => {
         [24, 0],
       ],
       thickness: 'thick',
-      strokeWidth: 0,
+      style: { strokeWidth: 0 },
     };
 
     expect(normalizePath(input)).toEqual({
@@ -49,7 +49,7 @@ describe('Vanilla Input normalizers', () => {
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [24, 0] },
       ],
-      strokeWidth: 0,
+      style: { strokeWidth: 0 },
     });
   });
 

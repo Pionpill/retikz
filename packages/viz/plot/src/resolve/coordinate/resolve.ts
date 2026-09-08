@@ -1,6 +1,5 @@
 import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
 
-import { JsonObjectSchema } from '@retikz/core';
 import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
@@ -451,9 +450,7 @@ export const resolveCoordinateFrame = (
   ): IRPlotScaleOperation => resolveScaleForRole(role, scaleName, roleChannelOf(role), values);
 
   // legend 预留：按 position 在对应边让出带宽，plotArea 据此收窄（决策 ⑩）
-  JsonObjectSchema.parse(coordinateOperation);
   const parsedCoordinateOperation = coordinateDefinition.schema.parse(coordinateOperation) as never;
-  JsonObjectSchema.parse(parsedCoordinateOperation);
   const resolution = coordinateDefinition.resolve(parsedCoordinateOperation, {
     width,
     height,

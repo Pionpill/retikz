@@ -32,7 +32,7 @@ describe('Data transform overview', () => {
     expect(figureSource).toContain("fill: 'lightgray'");
     expect(figureSource).toContain("font: { size: 12, weight: 'bold' }");
     expect(figureSource).toContain('id="source-caption"');
-    expect(figureSource).toContain('textColor="gray"');
+    expect(figureSource).toContain("textColor: 'gray'");
     expect(figureSource).not.toContain('id="source-title"');
     expect(figureSource).toContain('summarize');
   });

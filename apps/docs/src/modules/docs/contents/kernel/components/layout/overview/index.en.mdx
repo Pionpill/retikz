@@ -9,7 +9,7 @@ It converges two input modes: the React collector turns children into an `InputS
 
 `<Layout>` owns React-side construction, capability injection, and host wiring. It does not own IR / Scene semantics, geometry rules, or automatic layout algorithms. Core expresses generic positioning and constraints; plot and table layouts belong to their respective higher-level capabilities.
 
-`width` / `height` only control the rendered output's displayed size in the page; internal coordinates stay in retikz user units, and the visible range is auto-computed from layout bounds at compile time.
+Start with `<Layout>` alone: visible bounds include content and padding, and the display size follows those bounds at 1 user unit per CSS pixel. Ordinary figures need no `width`, `height`, or `viewBox`.
 
 ## Usage
 
@@ -18,7 +18,7 @@ import { Draw, Layout, Node } from '@retikz/react';
 ```
 
 ```tsx
-<Layout width={300} height={80}>
+<Layout>
   <Node id="A" position={[0, 0]}>
     A
   </Node>
@@ -45,7 +45,7 @@ For everyday authoring, pass children directly. `<Layout>` collects the componen
 
 <ComponentPreview files="layout-from-ir" size="sm" />
 
-`ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/concepts/design/principles) and [Composite](/kernel/concepts/design/composite).
+`ir` and `children` are two entry modes; if both are present, `ir` is used. For IR generation, persistence, and conversion, continue with [Architecture](/kernel/components/design/principles) and [Composite](/kernel/components/design/composite).
 
 ### Inherited Theme
 
@@ -88,12 +88,12 @@ Use `LayoutInspectScope` for one authored subtree, or `InspectFlexLayout`, `Insp
 
 ### Output Boundary
 
-`viewBox` controls the internal coordinate range, while `width` / `height` control display size. Use the panel to vary these two output boundaries without changing the JSX structure.
+Set `viewBox` for fixed framing, whitespace, or cropping. Display dimensions default to the frame dimensions. In this panel the circles keep their size while the visible range changes.
 
 <ComponentPreview
   files="layout-viewbox"
   size="md"
-  caption="The outer gray dashed border marks the SVG display size; the inner light-gray dotted border marks the viewBox. The default aspect-ratio fit preserves any necessary letterboxing."
+  caption="The gray dashed border marks the display boundary and the light-gray dotted border marks the viewBox. Both use the same size, so changing the frame does not scale the circles."
 />
 
 ### Capability Injection
@@ -122,7 +122,7 @@ The default `retained + auto` combines local updates with transactional rollback
   description="Revisit when you hit input, viewport, or host-policy edge cases."
 />
 
-This section zooms in on React wiring, viewport, and host-policy decisions owned by `<Layout>`. See [Architecture Principles](/kernel/concepts/design/principles) for package-level responsibilities.
+This section zooms in on React wiring, viewport, and host-policy decisions owned by `<Layout>`. See [Architecture Principles](/kernel/components/design/principles) for package-level responsibilities.
 
 ### How Responsibilities Close the Loop
 
@@ -193,7 +193,7 @@ Semantic ownership does not drift with the entry point: React declares only a st
 
 ### How the viewport is chosen
 
-The upper track resolves the internal coordinate range: an explicit `viewBox` prop wins, then an IR-owned `viewBox`, then content bounds plus padding. The lower `width` / `height` track controls only the CSS display size and never participates in the internal coordinate calculation.
+The upper track resolves the internal coordinate range: an explicit `viewBox` prop wins, then an IR-owned `viewBox`, then content bounds plus padding. The lower display-size track follows the content bounds by default. Explicit numeric `width` / `height` request scaling: one axis derives the other proportionally, while two axes use an aspect-ratio fit. CSS string dimensions are laid out by the browser; additional CSS constraints can also change the displayed scale.
 
 <ComponentPreview files="layout-viewbox-resolution" size="sm" hideCode />
 
@@ -257,15 +257,15 @@ The renderer Provider fills only an omitted renderer, so an explicit descendant 
 
 ### Input and Viewport
 
-| Prop          | Type                                  | Default | Description                                                  |
-| ------------- | ------------------------------------- | ------- | ------------------------------------------------------------ |
-| `children`    | `ReactNode`                           | —       | Kernel / Sugar tree, used when `ir` is omitted               |
-| `ir`          | `IRScene`                             | —       | Pre-built Core IR; wins when children also exist             |
-| `theme`       | `IRTheme`                             | —       | Sparse root Theme; overrides `ir.theme` per field in IR mode |
-| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | —       | Runtime Core style resolvers; never written to IR or JSON    |
-| `width`       | `number` \| `string`                  | —       | SVG / Canvas display width                                   |
-| `height`      | `number` \| `string`                  | —       | SVG / Canvas display height                                  |
-| `viewBox`     | `IRViewBox`                           | —       | Internal range; overrides IR and automatic layout            |
+| Prop          | Type                                  | Default        | Description                                                          |
+| ------------- | ------------------------------------- | -------------- | -------------------------------------------------------------------- |
+| `children`    | `ReactNode`                           | —              | Kernel / Sugar tree, used when `ir` is omitted                       |
+| `ir`          | `IRScene`                             | —              | Pre-built Core IR; wins when children also exist                     |
+| `theme`       | `IRTheme`                             | —              | Sparse root Theme; overrides `ir.theme` per field in IR mode         |
+| `themeStyles` | `ReadonlyArray<ThemeStyleDefinition>` | —              | Runtime Core style resolvers; never written to IR or JSON            |
+| `width`       | `number` \| `string`                  | Content width  | CSS display width; one numeric axis derives the other proportionally |
+| `height`      | `number` \| `string`                  | Content height | CSS display height; DPR changes Canvas bitmap resolution only        |
+| `viewBox`     | `IRViewBox`                           | —              | Internal range; overrides IR and automatic layout                    |
 
 ### Compile Basics
 
@@ -294,17 +294,26 @@ These props enter `CompileOptions` together. See each extension guide for defini
 | ---------------- | ------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pathGenerators` | `ReadonlyArray`<br />`<PathGeneratorDefinition>` | —       | Inject path generators; see [Path Generators](/kernel/components/draw/path-generator)                                                        |
 | `pathKinds`      | `ReadonlyArray`<br />`<PathKindDefinition>`      | —       | Inject Path kinds; see [Custom Paths](/kernel/components/draw/custom-path) or optional [Standard Ribbon](/library/standard/extension/ribbon) |
-| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/concepts/design/composite)                                              |
+| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —       | Inject Tier 2 expand / layout-aware compile; see [Composite](/kernel/components/design/composite)                                              |
 | `lowerTex`       | `LowerTex`                                       | —       | Inject formula lowering; see [TeX](/kernel/packages/extension/tex)                                                                           |
 
-### Whole-Figure Defaults
+### Whole-figure defaults
 
-These props reuse the [`<Scope>`](/kernel/components/layout/scope) cascade contract rather than defining another style system. In children mode, values synthesize a root Scope; direct `ir` input ignores them with a development warning.
+`rootScope` reuses the `style` and `defaults` contract of [Scope](/kernel/components/layout/scope). It creates an implicit root Scope only for JSX children. Complete `ir` takes precedence; effective authoring overrides are ignored with a development warning.
 
-| Prop                                                                                      | Type              | Default | Description                          |
-| ----------------------------------------------------------------------------------------- | ----------------- | ------- | ------------------------------------ |
-| `color` / `stroke` / `fill` / `strokeWidth` / `opacity` / `fillOpacity` / `strokeOpacity` | same as `<Scope>` | —       | Whole-figure graphic-state defaults  |
-| `nodeDefault` / `pathDefault` / `labelDefault` / `arrowDefault`                           | same as `<Scope>` | —       | Node / path / label / arrow defaults |
+| Property    | Type                                      | Description                                                                |
+| ----------- | ----------------------------------------- | -------------------------------------------------------------------------- |
+| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | Figure-wide visual cascade, four default channels and inheritance barriers |
+
+```tsx
+<Layout rootScope={{ style: { stroke: 'gray' }, defaults: { node: { layout: { padding: 12 } } } }}>
+  <Node position={[0, 0]} style={{ fill: 'white' }}>
+    A
+  </Node>
+</Layout>
+```
+
+Omission, empty groups, optional undefined-only overrides and isolated `defaults.reset: false` / `[]` create no wrapper or identity. Existing `font: {}` follows its font-field override contract. Explicit Scopes retain their structure; `Layout.style` always means host CSS.
 
 ### Rendering and Host Runtime
 

@@ -32,5 +32,5 @@ export const pathRoundedCornersControls = definePreviewControls({
 export const previewControlContract = {
   controls: pathRoundedCornersControls,
   canonicalValues: { radius: 28, strokeWidth: 18, lineJoin: 'round' },
-  relatedApis: ['Path.roundedCorners', 'Path.strokeWidth', 'Path.lineJoin'],
+  relatedApis: ['Path.roundedCorners', 'Path.style.strokeWidth', 'Path.style.lineJoin'],
 } satisfies PreviewControlContract;

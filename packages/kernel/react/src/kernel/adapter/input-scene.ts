@@ -526,12 +526,26 @@ export const createInputScene = (children: ReactNode, options: CreateInputSceneO
   });
 };
 
-/** 拣出真正携带样式指令的根样式字段 */
-export const pickScopeStyle = (style: ScopeStyleProps): Partial<ScopeStyleProps> => {
-  const picked = pickDefined(style, SCOPE_STYLE_FIELDS);
-  for (const key of SCOPE_STYLE_FIELDS) {
-    const value = picked[key];
-    if (typeof value === 'object' && Object.keys(value).length === 0) delete picked[key];
+/** 检查一个已类型化的叶子字段集合是否贡献覆盖，不递归清理复合叶子 */
+const hasDefinedFields = (fields: object | undefined): boolean =>
+  fields !== undefined && Object.values(fields).some(value => value !== undefined);
+
+/** 仅检查新增命名空间，已有 font、paint 等复合叶子保持自身语义 */
+export const pickScopeStyle = (scope: ScopeStyleProps): Partial<ScopeStyleProps> => {
+  const picked = pickDefined(scope, SCOPE_STYLE_FIELDS);
+  if (!hasDefinedFields(picked.style)) delete picked.style;
+  const defaults = picked.defaults;
+  if (defaults !== undefined) {
+    const { style: nodeStyle, layout: nodeLayout, ...nodeGeometry } = defaults.node ?? {};
+    const { style: pathStyle, ...pathGeometry } = defaults.path ?? {};
+    const reset = defaults.reset;
+    const hasReset = reset === true || (Array.isArray(reset) && reset.length > 0);
+    const hasDefaults =
+      hasReset ||
+      [nodeStyle, nodeLayout, nodeGeometry, pathStyle, pathGeometry, defaults.label, defaults.arrow].some(
+        hasDefinedFields,
+      );
+    if (!hasDefaults) delete picked.defaults;
   }
   return picked;
 };

@@ -1,9 +1,10 @@
+import type { JsonObject } from '@retikz/foundation';
+
 import type { ClipDefinition, ClipShape } from '../../contract';
-import type { IRClip, IRJsonObject } from '../../schemas';
+import type { IRClip } from '../../schemas';
 import type { ClipResolution, ClipShapeResolution } from './types';
 
 import { providerDefinitionOf } from '../../providers/registry';
-import { JsonObjectSchema } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../provider-validation';
@@ -28,14 +29,7 @@ export const resolveClip = (clip: IRClip, context: ClipResolveContext): ClipReso
     schema: definition.schema,
     value: clip,
   });
-  let params: IRJsonObject;
-  try {
-    params = JsonObjectSchema.parse(parsed);
-  } catch (cause) {
-    throw createCompositeContractError(`Clip provider 'clip:${kind}' schema returned a non-JSON payload.`, {
-      cause,
-    });
-  }
+  const params = parsed as JsonObject;
   if (params.kind !== kind) {
     throw createCompositeContractError(
       `Clip provider 'clip:${kind}' schema returned kind '${String(params.kind)}' instead of '${kind}'.`,
@@ -59,14 +53,7 @@ export const resolveClipShape = (shape: ClipShape, context: ClipResolveContext):
       value: shape,
     }),
   );
-  let params: IRJsonObject;
-  try {
-    params = JsonObjectSchema.parse(parsed);
-  } catch (cause) {
-    throw createCompositeContractError(`Clip provider 'clip:${kind}' shapeSchema returned a non-JSON payload.`, {
-      cause,
-    });
-  }
+  const params = parsed as JsonObject;
   if (params.kind !== kind) {
     throw createCompositeContractError(
       `Clip provider 'clip:${kind}' shapeSchema returned kind '${String(params.kind)}' instead of '${kind}'.`,

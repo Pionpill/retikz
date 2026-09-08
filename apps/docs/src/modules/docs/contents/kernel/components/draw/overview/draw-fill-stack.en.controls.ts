@@ -44,5 +44,5 @@ export const drawFillStackEnControls = definePreviewControls({
 export const previewControlContract = {
   controls: drawFillStackEnControls,
   canonicalValues: { fillA: '#1e90ff', fillB: '#ef4444', fillOpacity: 0.7, zIndexA: 0 },
-  relatedApis: ['Draw.fill', 'Draw.fillOpacity', 'Draw.zIndex'],
+  relatedApis: ['Draw.style.fill', 'Draw.style.fillOpacity', 'Draw.zIndex'],
 } satisfies PreviewControlContract;

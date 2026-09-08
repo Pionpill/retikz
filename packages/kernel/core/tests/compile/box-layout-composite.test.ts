@@ -60,12 +60,8 @@ const boxNode = (text = ''): IRChild => ({
   type: 'node',
   position: [0, 0],
   text,
-  padding: 0,
-  margin: 0,
-  minimumSize: 10,
-  fill: 'transparent',
-  stroke: 'transparent',
-  strokeWidth: 0,
+  style: { fill: 'transparent', stroke: 'transparent', strokeWidth: 0 },
+  layout: { padding: 0, margin: 0, minimumSize: 10 },
 });
 
 describe('Box Layout Composite contract', () => {

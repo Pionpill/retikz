@@ -145,5 +145,5 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['Node.position', 'Node.margin', 'Node.scale', 'Node.rotate'],
+  relatedApis: ['Node.position', 'Node.layout.margin', 'Node.scale', 'Node.rotate'],
 } satisfies PreviewControlContract;

@@ -15,11 +15,8 @@ export const previewControls = flowThemeControls;
 /** Renders the English Flow global configuration with the supplied controls */
 export const renderFlowThemePreview = (values: PreviewControlValuesFor<typeof flowThemeControls>): ReactElement => (
   <FlowDiagram
-    width={420}
-    height={240}
     viewBox={{ x: -11.25, y: -64, width: 420, height: 240 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-    flowTheme={{
+    flowDefaults={{
       entity: {
         style: {
           color: values.entityColor,

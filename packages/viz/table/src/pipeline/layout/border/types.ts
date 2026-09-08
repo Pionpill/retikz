@@ -1,21 +1,18 @@
-import type { ThemeTokenSourceValue } from '@retikz/core';
-
-import type {
-  ResolvedTableBorderLine,
-  TableBorderContribution,
-  TableBorderSource,
-  TableBorderStyleTokenKey,
-} from '../../../contract/manifest';
+import type { ResolvedTableBorderLine, TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
 import type { TableTrackLayout } from '../types';
 
 /** resolved Border Graph 输入候选 */
 export type ResolvedTableBorderCandidate =
-  | Readonly<{ kind: 'none'; priority: number }>
+  | Readonly<{
+      kind: 'none';
+      priority: number;
+      defaults?: Readonly<{ path: string }>;
+    }>
   | Readonly<{
       kind: 'line';
       priority: number;
       line: ResolvedTableBorderLine;
-      styleToken?: Readonly<{ key: TableBorderStyleTokenKey; source: ThemeTokenSourceValue; path: string }>;
+      defaults?: Readonly<{ path: string }>;
     }>;
 
 /** Border Graph 支持的物理 Cell side */

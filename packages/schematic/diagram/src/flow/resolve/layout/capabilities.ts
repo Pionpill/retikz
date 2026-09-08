@@ -70,6 +70,21 @@ const pushEvidence = (evidence: Array<CapabilityEvidence>, name: string, related
   evidence.push({ name, relatedIds });
 };
 
+const inheritedRoutingForScope = (
+  diagram: CanonicalFlowDiagram,
+  scopeId: string | undefined,
+  sourceScopes: ReadonlyArray<string>,
+  elementsById: ReadonlyMap<string, CanonicalFlowElement>,
+) => {
+  if (scopeId === undefined) return diagram.routing;
+  const scopeIndex = sourceScopes.indexOf(scopeId);
+  for (let index = scopeIndex; index >= 0; index -= 1) {
+    const element = elementsById.get(sourceScopes[index]);
+    if (element?.type === 'group' && element.routing !== undefined) return element.routing;
+  }
+  return diagram.routing;
+};
+
 /** 从 Canonical Flow 推导当前调用真正需要的布局能力 */
 export const deriveFlowLayoutCapabilities = (
   definition: FlowLayoutDefinition,
@@ -104,12 +119,8 @@ export const deriveFlowLayoutCapabilities = (
       pushEvidence(evidence, `direction:${direction}`, relationEndpointIds);
     }
     const scopeId = commonScope(sourceScopes, targetScopes);
-    const scopeElement = scopeId === undefined ? undefined : index.elementsById.get(scopeId);
-    const scopeRouting =
-      scopeElement !== undefined && scopeElement.type !== 'entity'
-        ? scopeElement.layout.routing
-        : diagram.layout.routing;
-    const routingKind = relation.layout.routing?.kind ?? scopeRouting?.kind ?? definition.defaults.routing.kind;
+    const scopeRouting = inheritedRoutingForScope(diagram, scopeId, sourceScopes, index.elementsById);
+    const routingKind = relation.routing?.kind ?? scopeRouting?.kind ?? definition.defaults.routing.kind;
     if (!definition.capabilities.routingKinds.includes(routingKind)) {
       pushEvidence(evidence, `routing:${routingKind}`, relationEndpointIds);
     }

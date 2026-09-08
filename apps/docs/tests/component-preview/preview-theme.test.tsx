@@ -23,6 +23,8 @@ import {
   PreviewThemeStyle,
   resolvePreviewTheme,
 } from '../../src/modules/docs/components/component-preview/theme';
+import ThemeInheritanceEn from '../../src/modules/docs/contents/kernel/components/layout/overview/theme-inheritance.en.demo';
+import ThemeInheritanceZh from '../../src/modules/docs/contents/kernel/components/layout/overview/theme-inheritance.zh.demo';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
@@ -36,6 +38,19 @@ afterEach(() => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 describe('ComponentPreview global theme', () => {
+  it('renders both theme inheritance demos with the ambient preview definitions', () => {
+    for (const Demo of [ThemeInheritanceZh, ThemeInheritanceEn]) {
+      const markup = renderToStaticMarkup(
+        <PreviewThemeProvider>
+          <Demo />
+        </PreviewThemeProvider>,
+      );
+      expect(markup).toContain('<svg');
+      expect(markup).toContain('#fae8ff');
+      expect(markup).toContain('#1e3a8a');
+    }
+  });
+
   it('writes the selected ThemeStyle and ThemeMode as a Core selector', () => {
     expect(resolvePreviewTheme(PreviewThemeStyle.Academic, ThemeMode.Dark)).toEqual({
       style: PreviewThemeStyle.Academic,

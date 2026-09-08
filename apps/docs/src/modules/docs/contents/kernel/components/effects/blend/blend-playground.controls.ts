@@ -90,5 +90,5 @@ export const previewControlContract = {
       },
     },
   ],
-  relatedApis: ['Node.blendMode', 'Path.blendMode'],
+  relatedApis: ['Node.style.blendMode', 'Path.style.blendMode'],
 } satisfies PreviewControlContract;

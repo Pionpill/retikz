@@ -14,8 +14,8 @@ export const EntityRoleControlId = {
 } as const;
 
 /** 只在用户选择具体颜色时写入单个 Entity 的精确 appearance */
-export const defineEntityAppearanceProps = (color: string): Pick<EntityProps, 'color' | 'stroke'> =>
-  color === 'currentColor' ? {} : { color, stroke: color };
+export const defineEntityAppearanceProps = (color: string): Pick<EntityProps, 'style'> =>
+  color === 'currentColor' ? {} : { style: { color, stroke: color } };
 
 type EntityRoleControlCopy = Readonly<{
   title: string;

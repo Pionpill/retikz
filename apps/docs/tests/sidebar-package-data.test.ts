@@ -65,6 +65,17 @@ describe('Kernel 包侧栏数据', () => {
           ['render-hydration', 'kernel.pkgHydration'],
         ],
       ],
+      [
+        'changelog',
+        'kernel.changelog',
+        [
+          ['v0-5', 'kernel.changelogV05'],
+          ['v0-4', 'kernel.changelogV04'],
+          ['v0-3', 'kernel.changelogV03'],
+          ['v0-2', 'kernel.changelogV02'],
+          ['v0-1', 'kernel.changelogV01'],
+        ],
+      ],
     ]);
   });
 });

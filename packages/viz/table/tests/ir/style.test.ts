@@ -1,120 +1,57 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  TableSchema,
-  TableThemeStyleTokenOverridesSchema,
-  TableThemeTokenBorderSchema,
-  TableThemeTokenKeySchema,
-  TableThemeTokenMapSchema,
-  TableThemeTokenOverridesSchema,
-} from '../../src';
+import { TableDefaultsSchema, TableSchema, TableVisualDefaultsSchema } from '../../src';
 
-const completeTokens = {
-  'cell.background.fill': '#ffffff',
-  'cell.background.fillOpacity': 1,
-  'cell.content.color': '#111111',
-  'cell.content.font.family': 'sans-serif',
-  'cell.content.font.weight': 400,
-  'columnHeader.background.fill': '#f5f5f5',
-  'columnHeader.background.fillOpacity': 1,
-  'columnHeader.content.color': '#222222',
-  'columnHeader.content.font.family': 'sans-serif',
-  'columnHeader.content.font.weight': 600,
-  'table.border.top': null,
-  'table.border.right': null,
-  'table.border.bottom': null,
-  'table.border.left': null,
-  'table.border.horizontal': { kind: 'line', stroke: '#dddddd', width: 1 },
-  'table.border.vertical': null,
-  'columnHeader.border.bottom': { kind: 'line', stroke: '#cccccc', width: 1 },
-  'data.categorical': ['#ff0000', '#00ff00'],
-  'data.sequential': ['#ffffff', '#000000'],
+const validDefaults = {
+  appearanceDefaults: {
+    body: {
+      background: { fill: 0.2, fillOpacity: 0.5 },
+      content: { style: { color: '#334155' } },
+    },
+    columnHeader: {
+      background: { fill: '#f8fafc' },
+      borders: { bottom: { kind: 'line', stroke: 0.8 } },
+    },
+  },
+  layout: {
+    borders: {
+      outer: { top: { kind: 'line', stroke: 0.6, width: 2 } },
+      horizontal: { kind: 'line', stroke: '#cbd5e1' },
+    },
+  },
+  visualDefaults: { categorical: ['#fff', '#000'], sequential: ['#eff6ff', '#1d4ed8'] },
 } as const;
 
-describe('Table theme token schema', () => {
-  it('uses one closed 19-token vocabulary for required maps and partial overlays', () => {
-    const required = TableThemeTokenMapSchema.parse(completeTokens);
-    const partial = TableThemeTokenOverridesSchema.parse({ 'cell.content.color': '#334155' });
-    expect(Object.keys(required)).toHaveLength(19);
-    expect(TableThemeTokenKeySchema.options).toHaveLength(19);
-    expect(partial).toEqual({ 'cell.content.color': '#334155' });
-    expect(() => TableThemeTokenMapSchema.parse({ ...completeTokens, 'data.sequential': undefined })).toThrow(
-      /data\.sequential/i,
+describe('Table Source defaults schema', () => {
+  it('accepts sparse appearance, border, and visual defaults', () => {
+    expect(TableDefaultsSchema.parse(validDefaults)).toEqual(validDefaults);
+    expect(TableVisualDefaultsSchema.parse(validDefaults.visualDefaults)).toEqual(validDefaults.visualDefaults);
+  });
+
+  it('rejects unknown fields and invalid values through the strict owner schemas', () => {
+    expect(() => TableDefaultsSchema.parse({ unknown: true })).toThrow(/unknown/i);
+    expect(() => TableDefaultsSchema.parse({ visualDefaults: { categorical: [] } })).toThrow(/categorical/i);
+    expect(() => TableDefaultsSchema.parse({ visualDefaults: { sequential: ['#fff'] } })).toThrow(/sequential/i);
+    expect(() => TableDefaultsSchema.parse({ appearanceDefaults: { body: { content: { children: [] } } } })).toThrow(
+      /children|unrecognized/i,
+    );
+    expect(() => TableDefaultsSchema.parse({ layout: { borders: { outer: { kind: 'line' } } } })).toThrow(
+      /outer|unrecognized/i,
     );
   });
 
-  it('reports every unknown token at its own stable key path', () => {
-    const invalid = { zUnknown: true, aUnknown: true };
-    for (const schema of [TableThemeTokenOverridesSchema, TableThemeTokenMapSchema]) {
-      const result = schema.safeParse(invalid);
-      expect(result.success).toBe(false);
-      if (result.success) continue;
-      expect(result.error.issues.slice(0, 2).map(issue => issue.path)).toEqual([['aUnknown'], ['zUnknown']]);
-      expect(result.error.issues.slice(0, 2).map(issue => issue.message)).toEqual([
-        'Unknown table theme token "aUnknown"',
-        'Unknown table theme token "zUnknown"',
-      ]);
-    }
-  });
-
-  it('keeps Table style overlays sparse, strict, and separate from Core categorical colors', () => {
-    expect(TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': '#334155' })).toEqual({
-      'cell.content.color': '#334155',
-    });
-    expect(() => TableThemeStyleTokenOverridesSchema.parse({ unknown: true })).toThrow(/unrecognized key/i);
-    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'cell.content.color': undefined })).toThrow(
-      /omit unset values/i,
-    );
-    expect(() => TableThemeStyleTokenOverridesSchema.parse({ 'data.categorical': ['#ff0000'] })).toThrow(
-      /data\.categorical/i,
-    );
-  });
-
-  it('reuses authoritative value boundaries and forbids public border priority', () => {
-    expect(TableThemeTokenBorderSchema.parse({ kind: 'line', stroke: 'currentColor', width: 0 })).toEqual({
-      kind: 'line',
-      stroke: 'currentColor',
-      width: 0,
-    });
-    expect(() => TableThemeTokenBorderSchema.parse({ kind: 'line', priority: 1 })).toThrow(/priority/i);
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.background.fillOpacity': 2 })).toThrow();
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.font.weight': 'heavy' })).toThrow();
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.color': '  ' })).toThrow(
-      'String must contain at least one non-whitespace character.',
-    );
-    expect(TableThemeTokenOverridesSchema.parse({ 'data.categorical': ['#fff', '#fff'] })).toEqual({
-      'data.categorical': ['#fff', '#fff'],
-    });
-  });
-
-  it('accepts contextual weights only for derived background and border colors', () => {
-    expect(
-      TableThemeTokenOverridesSchema.parse({
-        'cell.background.fill': 0.2,
-        'columnHeader.background.fill': 0.4,
-        'table.border.horizontal': { kind: 'line', stroke: 0.6 },
-        'columnHeader.border.bottom': { kind: 'line', stroke: 0.8 },
-      }),
-    ).toEqual({
-      'cell.background.fill': 0.2,
-      'columnHeader.background.fill': 0.4,
-      'table.border.horizontal': { kind: 'line', stroke: 0.6 },
-      'columnHeader.border.bottom': { kind: 'line', stroke: 0.8 },
-    });
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'cell.content.color': 0.8 })).toThrow();
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'columnHeader.content.color': 0.8 })).toThrow();
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'data.categorical': [0.8] })).toThrow();
-    expect(() => TableThemeTokenOverridesSchema.parse({ 'data.sequential': [0.2, '#000000'] })).toThrow();
-  });
-
-  it('adds JSON-safe root Table tokens without materializing runtime defaults', () => {
+  it('accepts JSON-safe root Source fragments without materializing runtime defaults', () => {
     const base = { namespace: 'table', type: 'table', structure: { kind: 'manual', rows: [[1]] } };
     expect(TableSchema.parse(base)).toEqual(base);
     const styled = TableSchema.parse({
       ...base,
-      tableThemeTokens: { 'cell.content.color': '#f5f5f5' },
+      appearanceDefaults: validDefaults.appearanceDefaults,
+      layout: validDefaults.layout,
+      visualDefaults: validDefaults.visualDefaults,
+      tableDefaults: { visualDefaults: validDefaults.visualDefaults },
     });
     expect(JSON.parse(JSON.stringify(styled))).toEqual(styled);
+    expect(() => TableSchema.parse({ ...base, tableThemeTokens: { 'cell.content.color': '#f5f5f5' } })).toThrow();
     expect(() => TableSchema.parse({ ...base, style: 'striped' })).toThrow();
     expect(() => TableSchema.parse({ ...base, themeMode: 'system' })).toThrow();
     expect(() => TableSchema.parse({ ...base, styleTokens: { callback: () => null } })).toThrow();

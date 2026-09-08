@@ -31,13 +31,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         };
 
   return (
-    <Plot
-      data={oneDimensionalEvents}
-      coordinate={coordinate}
-      width={270}
-      height={270}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Plot data={oneDimensionalEvents} coordinate={coordinate} width={270} height={270}>
       <PlotScale dimension="x" type="linear" domain={[0, 24]} />
       <PointMark
         x="hour"

@@ -162,12 +162,14 @@ const compileGeometryNode = (
           id: 'Q',
           position: [...nodeGeometryFrame.subjectPosition],
           text: 'q',
-          padding: { x: values.paddingX, y: values.paddingY },
-          margin: values.margin,
-          minimumSize: { width: values.minimumWidth, height: values.minimumHeight },
           cornerRadius: values.cornerRadius,
           scale: values.scale,
           rotate: values.rotate,
+          layout: {
+            padding: { x: values.paddingX, y: values.paddingY },
+            margin: values.margin,
+            minimumSize: { width: values.minimumWidth, height: values.minimumHeight },
+          },
         },
       ],
     } satisfies IRScene,
@@ -211,10 +213,8 @@ const compileBuiltinText = (
           type: 'node',
           position: [0, 0],
           text,
-          align: values.align,
-          font: { size: values.fontSize, weight: 'bold' },
-          lineHeight: values.lineHeight,
-          maxTextWidth: values.maxTextWidth,
+          style: { font: { size: values.fontSize, weight: 'bold' } },
+          layout: { align: values.align, lineHeight: values.lineHeight, maxTextWidth: values.maxTextWidth },
         },
       ],
     } satisfies IRScene,
@@ -351,18 +351,18 @@ describe('preview controls registry', () => {
 
     expect(source).toContain('id="Q"');
     expect(source).toContain('position={[30, -20]}');
-    expect(source).toContain('minimumSize={{ width: 80, height: 80 }}');
+    expect(source).toContain('minimumSize: { width: 80, height: 80 }');
     expect(source).toContain('<Circle center={[0, 0]} radius={3}');
     expect(source).not.toMatch(/<Node id="[ABCPXY]"/);
     expect(source).not.toContain('arrow="->"');
-    expect(source?.match(/dashPattern=\{\[1, 4\]\}/g)).toHaveLength(3);
-    expect(source?.match(/lineCap="round"/g)).toHaveLength(3);
-    expect(source?.match(/stroke="gray"/g)).toHaveLength(3);
-    expect(source).not.toContain('stroke="lightgray"');
+    expect(source?.match(/dashPattern: \[1, 4\]/g)).toHaveLength(3);
+    expect(source?.match(/lineCap: 'round'/g)).toHaveLength(3);
+    expect(source?.match(/stroke: 'gray'/g)).toHaveLength(3);
+    expect(source).not.toContain("stroke: 'lightgray'");
     expect(source).toContain('target: { id: values.placementTarget }');
     expect(source).not.toContain('[45, 0]');
     expect(source).not.toContain('[0, -40]');
-    expect(source).not.toContain('dashPattern={[4, 3]}');
+    expect(source).not.toContain('dashPattern: [4, 3]');
   });
 
   it('Layout 与 Scope 的几何辅助边界使用 dotted', () => {
@@ -372,9 +372,9 @@ describe('preview controls registry', () => {
     const scopeReferenceSource = demoSources[buildKey(scopeSegments, 'scope-id-reference')];
 
     for (const source of [viewBoxSource, scopeReferenceSource]) {
-      expect(source).toContain('dashPattern={[1, 4]}');
-      expect(source).toContain('lineCap="round"');
-      expect(source).not.toContain('dashPattern={[4, 3]}');
+      expect(source).toContain('dashPattern: [1, 4]');
+      expect(source).toContain("lineCap: 'round'");
+      expect(source).not.toContain('dashPattern: [4, 3]');
     }
   });
 
@@ -1107,8 +1107,8 @@ describe('preview controls registry', () => {
 
       expect(source, language).toContain('way={coordinateOffsetChainFrame.xAxis}');
       expect(source, language).toContain('way={coordinateOffsetChainFrame.yAxis}');
-      expect(source?.match(/dashPattern=\{\[1, 4\]\}/g), language).toHaveLength(2);
-      expect(source?.match(/lineCap="round"/g), language).toHaveLength(2);
+      expect(source?.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
+      expect(source?.match(/lineCap: 'round'/g), language).toHaveLength(2);
     }
   });
 
@@ -1120,8 +1120,8 @@ describe('preview controls registry', () => {
 
       expect(source, language).toContain('way={coordinateAsAnchorFrame.xAxis}');
       expect(source, language).toContain('way={coordinateAsAnchorFrame.yAxis}');
-      expect(source?.match(/dashPattern=\{\[1, 4\]\}/g), language).toHaveLength(2);
-      expect(source?.match(/lineCap="round"/g), language).toHaveLength(2);
+      expect(source?.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
+      expect(source?.match(/lineCap: 'round'/g), language).toHaveLength(2);
     }
   });
 
@@ -1288,7 +1288,7 @@ describe('preview controls registry', () => {
 
     expect(source).toContain('shapes={[boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}');
     expect(source?.match(/^\s*<BoundaryGuide$/gm)).toHaveLength(2);
-    expect(source).toContain('dashPattern={[1, 4]}');
+    expect(source).toContain('dashPattern: [1, 4]');
     expect(demoSources[buildKey(segments, 'node-boundary-surfaces')]).toBeUndefined();
     expect(demoSources[buildKey(segments, 'node-boundary')]).toBeUndefined();
   });
@@ -1305,15 +1305,15 @@ describe('preview controls registry', () => {
   });
 
   it('Primitive Model playground 用同源虚线轮廓显示规则 boundary', () => {
-    const segments = ['kernel', 'concepts', 'core', 'primitive-model'];
-    const contentRoot = resolve('src/modules/docs/contents/kernel/concepts/core/primitive-model');
+    const segments = ['kernel', 'components', 'core', 'primitive-model'];
+    const contentRoot = resolve('src/modules/docs/contents/kernel/components/core/primitive-model');
     const helperPath = resolve(contentRoot, 'primitive-model-playground-boundary.ts');
     const source = demoSources[buildKey(segments, 'primitive-model-playground')];
     const helperSource = existsSync(helperPath) ? readFileSync(helperPath, 'utf8') : '';
 
     expect(source).toContain('shapes={[primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}');
     expect(source).toContain('<BoundaryGuide shape=');
-    expect(source).toContain('dashPattern={[6, 4]}');
+    expect(source).toContain('dashPattern: [6, 4]');
     expect(helperSource).toContain("if (params.boundary === 'shape') return;");
     expect(helperSource).toContain('visual.definition.connectionEnvelope?.');
     expect(helperSource).toContain('boundsConnectionEnvelope');
@@ -1539,7 +1539,8 @@ describe('preview controls registry', () => {
       expect(previewNames).toEqual(['grid-basic', 'grid-variants', 'grid-playground', 'grid-lowering']);
       expect(pageSource).toContain('<ComponentPreview files="grid-variants" size="sm" />');
       expect(pageSource).toContain('<ComponentPreview files="grid-lowering" hideCode');
-      expect(variantsSource).toContain('<Layout width={760} height={145}');
+      expect(variantsSource).toContain('<Layout>');
+      expect(variantsSource).not.toMatch(/<Layout\b[^>]*\b(?:width|height)=/);
       expect(variantsSource?.match(/position=\{\[\d+, 18\]\}/gu)).toHaveLength(4);
     }
 
@@ -1835,8 +1836,7 @@ describe('preview controls registry', () => {
                 type: 'node',
                 position: [0, 0],
                 shape: 'rectangle',
-                padding: paddingValue,
-                minimumSize: minimumSize.defaultValue,
+                layout: { padding: paddingValue, minimumSize: minimumSize.defaultValue },
               },
             ],
           } satisfies IRScene,

@@ -7,4 +7,4 @@ export type InputScatterChart = InputTypedChart<IRScatterChart>;
 
 /** ScatterChart factory 的完整输入 */
 export type CreateScatterChartInput = TypedChartCommonInput<IRScatterChart> &
-  Pick<InputScatterChart, 'encodings' | 'properties' | 'marks'>;
+  Pick<InputScatterChart, 'encodings' | 'properties' | 'guides' | 'marks'>;

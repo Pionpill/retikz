@@ -33,18 +33,32 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const sourcePosition = sourcePositionOf(values.sourceAngle, values.sourceDistance);
 
   return (
-    <Layout width={400} height={430} viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
-      <Draw way={[[0, 0], sourcePosition]} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" zIndex={-2} />
+    <Layout viewBox={{ x: -215, y: -215, width: 430, height: 430 }}>
+      <Draw
+        way={[[0, 0], sourcePosition]}
+        zIndex={-2}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       <Node
         id="target"
         position={[0, 0]}
-        minimumSize={{ width: 96, height: 56 }}
         cornerRadius={values.cornerRadius}
-        fill="#bfdbfe"
-        stroke="#2563eb"
+        style={{ fill: '#bfdbfe', stroke: '#2563eb' }}
+        layout={{ minimumSize: { width: 96, height: 56 } }}
       />
-      <Node id="source" position={sourcePosition} shape="circle" minimumSize={18} fill="gray" stroke="none" />
-      <Draw way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]} arrow="->" stroke="gray" zIndex={-1} />
+      <Node
+        id="source"
+        position={sourcePosition}
+        shape="circle"
+        style={{ fill: 'gray', stroke: 'none' }}
+        layout={{ minimumSize: 18 }}
+      />
+      <Draw
+        way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]}
+        arrow="->"
+        zIndex={-1}
+        style={{ stroke: 'gray' }}
+      />
     </Layout>
   );
 });

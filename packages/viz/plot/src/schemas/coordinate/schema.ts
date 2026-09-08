@@ -1,5 +1,4 @@
-﻿import { JsonObjectSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { discriminatedUnion, enum as zodEnum, literal, looseObject, number, object, union } from 'zod';
 
 import { BUILTIN_COORDINATE_TYPES, Cartesian1DOrientation, PlotCoordinate, PolarInterpolation } from './constants';
@@ -88,26 +87,17 @@ export const Polar1DSchema = object({
 
 const RESERVED_CUSTOM_COORDINATE_TYPES = new Set<string>([...BUILTIN_COORDINATE_TYPES, 'custom']);
 
-export const CustomCoordinateSchema = looseObject({
+const CustomCoordinateObjectSchema = looseObject({
   type: NonBlankStringSchema.refine(type => !RESERVED_CUSTOM_COORDINATE_TYPES.has(type), {
     message: 'custom coordinate type must not collide with a built-in or reserved coordinate type',
   }).describe(
     'Discriminator: custom coordinate operation type; must be a non-blank, non-built-in identifier registered through options.coordinates',
   ),
-})
-  .superRefine((operation, ctx) => {
-    const result = JsonObjectSchema.safeParse(operation);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'custom coordinate operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
-      });
-    }
-  })
-  .describe(
-    'Custom coordinate operation: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the operation.',
-  );
+});
+
+export const CustomCoordinateSchema = CustomCoordinateObjectSchema.catchall(JsonValueSchema).describe(
+  'Custom coordinate operation: type is any non-built-in identifier; its config is validated at lowering time against the matching CoordinateDefinition supplied via options.coordinates. Position roles come from the definition, not the operation.',
+);
 
 export const CoordinateSchema = discriminatedUnion('type', [
   Cartesian2DSchema,

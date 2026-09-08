@@ -108,7 +108,7 @@ describe('Flow Layout capability preflight', () => {
     const source = parseTestFlowDiagram({
       namespace: 'diagram',
       type: 'flow',
-      flowTheme: { layout: { routing: { kind: 'orthogonal', cornerRadius: 4 } } },
+      routing: { kind: 'orthogonal', cornerRadius: 4 },
       entities: [
         { id: 'a', text: 'A' },
         { id: 'b', text: 'B' },

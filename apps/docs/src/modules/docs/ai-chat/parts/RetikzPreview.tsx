@@ -54,7 +54,7 @@ const resolveIr = (source: string): Resolved => {
     };
   }
   const ir: IRScene = parsed.data;
-  const Component: FC = () => <Layout ir={ir} width={DEFAULT_TIKZ_WIDTH} height={DEFAULT_TIKZ_HEIGHT} />;
+  const Component: FC = () => <Layout ir={ir} />;
   return {
     ok: true,
     Component,

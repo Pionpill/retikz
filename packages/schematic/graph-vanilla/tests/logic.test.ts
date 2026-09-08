@@ -9,6 +9,7 @@ import {
   defineRelationRole,
   EntityProviderKey,
   GraphProviderKey,
+  GraphSchema,
   GroupProviderKey,
   RelationProviderKey,
 } from '@retikz/graph';
@@ -254,30 +255,33 @@ describe('normalizeGraph', () => {
     const input: InputGraph = {
       id: 'architecture',
       theme: { mode: 'dark' as const },
-      graphTheme: {
-        rules: [
-          {
-            type: 'entity' as const,
-            selector: { role: 'participant' },
-            appearance: { fill: '#eef6ff' },
-          },
-        ],
-      },
+      graphRules: [
+        {
+          type: 'entity' as const,
+          selector: { role: 'participant' },
+          style: { fill: '#eef6ff' },
+        },
+      ],
       localNamespace: true,
       transforms: [{ kind: 'translate' as const, x: 10, y: 20 }],
       placement: { target: [30, 40], selfAnchor: 'center' },
-      fill: 'lightblue',
-      opacity: 0.8,
-      nodeDefault: { fill: 'white' },
-      pathDefault: { stroke: 'green' },
-      labelDefault: { font: { size: 10 } },
-      arrowDefault: { shape: 'stealth', scale: 1.5 },
-      resetStyle: ['path' as const],
       zIndex: 2,
       clip: { kind: 'rect' as const, x: 0, y: 0, width: 220, height: 120 },
       boundingShape: 'circle',
       animations: [],
       meta: { source: 'architecture-catalog' },
+      style: { fill: 'lightblue', opacity: 0.8 },
+      defaults: {
+        node: {
+          style: { fill: 'white' },
+        },
+        path: {
+          style: { stroke: 'green' },
+        },
+        label: { font: { size: 10 } },
+        arrow: { shape: 'stealth', scale: 1.5 },
+        reset: ['path' as const],
+      },
     };
 
     expect(normalizeGraph(input)).toEqual({
@@ -287,18 +291,48 @@ describe('normalizeGraph', () => {
     });
   });
 
+  it('keeps graphDefaults and graphRules identical to Direct Source IR', () => {
+    const input: InputGraph = {
+      id: 'parity',
+      graphDefaults: {
+        entity: { style: { fill: '#111111' }, layout: { align: 'middle' } },
+        relation: { style: { stroke: '#222222' } },
+      },
+      graphRules: [{ type: 'entity', selector: { role: 'activity' }, style: { fill: '#ff0000' } }],
+      children: [
+        { type: 'entity', id: 'source', role: 'activity', position: [0, 0], text: 'Source' },
+        { type: 'entity', id: 'target', role: 'resource', position: [100, 0], text: 'Target' },
+        {
+          type: 'relation',
+          role: 'dependency',
+          source: { id: 'source' },
+          target: { id: 'target' },
+        },
+      ],
+    };
+
+    expect(normalizeGraph(input)).toEqual(
+      GraphSchema.parse({
+        namespace: 'graph',
+        type: 'graph',
+        ...input,
+        children: input.children?.map(child => ({ namespace: 'graph', ...child })),
+      }),
+    );
+  });
+
   it('normalizes only Entity, Relation and Way authoring sugar', () => {
     expect(
       normalizeGraph({
         children: [
-          { type: 'entity', role: 'participant', text: '', dashed: true },
+          { type: 'entity', role: 'participant', text: '', style: { dashed: true } },
           {
             type: 'relation',
             source: { id: 'service' },
             target: { id: 'database' },
             role: 'dependency',
             kind: 'uml.dependency',
-            dashPattern: [6, 2],
+            style: { dashPattern: [6, 2] },
             labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
             way: ['service', { id: 'database' }],
           },
@@ -314,7 +348,7 @@ describe('normalizeGraph', () => {
           type: 'entity',
           role: 'participant',
           text: '',
-          dashed: true,
+          style: { dashed: true },
         },
         {
           namespace: 'graph',
@@ -323,12 +357,12 @@ describe('normalizeGraph', () => {
           target: { id: 'database' },
           role: 'dependency',
           kind: 'uml.dependency',
-          dashPattern: [6, 2],
           labels: [{ text: 'reads', textColor: '#dc2626', font: { weight: 'bold' }, opacity: 0.5 }],
           route: [
             { type: 'step', kind: 'move', to: { id: 'service' } },
             { type: 'step', kind: 'line', to: { id: 'database' } },
           ],
+          style: { dashPattern: [6, 2] },
         },
         { type: 'node', position: [0, 120], text: 'Legend' },
       ],

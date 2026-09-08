@@ -1,6 +1,5 @@
 import type {
   IRChild,
-  IRJsonObject,
   IRNode,
   IRScope,
   LayoutAxisProposal,
@@ -8,6 +7,7 @@ import type {
   ResolvedTheme,
 } from '@retikz/core';
 import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 
 import {
   categoricalColorAt,
@@ -84,7 +84,6 @@ import { orderedCategoryDomain, resolveChannelScale, resolvePositionScaleContinu
 import {
   resolveAxisGuideTokens,
   resolvePlotAxisGuideTheme,
-  resolvePlotAxisThemeTokens,
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../resolve/theme';
@@ -173,7 +172,7 @@ const defaultColorPaletteIndicesOf = (marks: ReadonlyArray<IRPlotMarkOperation>)
 const plotBackgroundNode = (
   plotArea: Rect,
   frame: CoordinateFrame | undefined,
-  fill: IRNode['fill'] | undefined,
+  fill: NonNullable<IRNode['style']>['fill'] | undefined,
   masterColor: string,
 ): IRNode | null => {
   if (!supportsPlotArea(frame) || fill === undefined || fill === 'none') return null;
@@ -187,18 +186,22 @@ const plotBackgroundNode = (
         };
   return {
     type: 'node',
-    ...geometry,
-    padding: 0,
-    strokeWidth: 0,
-    color: masterColor,
-    fill,
+    position: geometry.position,
+    shape: geometry.shape,
     zIndex: PlotLayerZIndex.Background,
+    style: { strokeWidth: 0, color: masterColor, fill },
+    layout: { minimumSize: geometry.minimumSize, padding: 0 },
   };
 };
 
 /** 只把 Plot typography 主色投影到 presentation guide 图层，不污染数据 mark 图层 */
 const withGuideMasterColor = (layer: IRScope, masterColor: string): IRScope =>
-  layer.color === undefined ? { ...layer, color: masterColor } : layer;
+  layer.style?.color === undefined
+    ? {
+        ...layer,
+        style: { ...layer.style, color: masterColor },
+      }
+    : layer;
 
 const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
   child.type === 'coordinate' ? child : { ...child, zIndex };
@@ -206,7 +209,7 @@ const withLayerZIndex = (child: IRChild, zIndex: number): IRChild =>
 /** 把复制进 facet panel 的 guide 图层收进 panel-local identity，避免各 panel 复用同一顶层 scope id */
 const withFacetGuideContext = (
   layer: IRScope,
-  context: IRJsonObject,
+  context: JsonObject,
   plotId: string | undefined,
   panelId: string,
 ): IRScope => {
@@ -375,18 +378,16 @@ export const lowerPlotWithDataArtifact = (
   const themeResolution = resolvePlotTheme(
     effectiveTheme,
     {
-      plotThemeTokens: node.plotThemeTokens,
-      plotThemeTokenRules: node.plotThemeTokenRules,
-      plotTheme: node.plotTheme,
+      plotDefaults: node.plotDefaults,
+      plotRules: node.plotRules,
     },
     options.plotThemeStyles,
   );
-  const resolvedTheme = resolvePlotGuideTheme(themeResolution.plotTheme, themeResolution.palette);
+  const resolvedTheme = resolvePlotGuideTheme(themeResolution);
   const defaultColorPaletteIndices = defaultColorPaletteIndicesOf(node.marks);
   const themedGuides: Array<IRPlotGuide> = (node.guides ?? []).map(guide => {
     if (!isAxisGuide(guide)) return guide;
-    const axisTokens = resolvePlotAxisThemeTokens(themeResolution, guide.dimension);
-    return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(resolvedTheme, axisTokens), guide);
+    return resolveAxisGuideTokens(resolvePlotAxisGuideTheme(themeResolution, guide.dimension), guide);
   });
   const allGuides: Array<IRPlotGuide> = themedGuides;
   const allGuidesWithCompositionGap = withAxisGapOffsets(allGuides, compositionLayout?.axisGap);
@@ -709,12 +710,12 @@ export const lowerPlotWithDataArtifact = (
           ? { font: { ...(resolvedTheme.typography.font ?? {}), ...(localStyle?.font ?? {}) } }
           : {}),
       };
+      const { align, lineHeight, maxTextWidth: authoredMaxTextWidth, ...nodeStyle } = style;
       const rotate = facetHeaderLabelRotateOf(facet, dimension);
-      const maxTextWidth = style.maxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
+      const maxTextWidth = authoredMaxTextWidth ?? Math.max(1, ((rotate ?? 0) === 0 ? rect.width : rect.height) - 8);
       const position: [number, number] = [rect.x + rect.width / 2, rect.y + rect.height / 2];
       return {
         type: 'scope',
-        color: resolvedTheme.typography.textColor ?? 'currentColor',
         zIndex: PlotLayerZIndex.FacetLabel,
         meta: {
           source: 'plot',
@@ -726,17 +727,27 @@ export const lowerPlotWithDataArtifact = (
           startIndex,
           span,
         },
-        nodeDefault: { fill: 'none', stroke: 'none', padding: 0 },
         children: [
           {
             type: 'node',
             position,
             text: facetLabelTextOf(facet, dimension, level, value),
-            ...style,
+            style: nodeStyle,
             ...(rotate !== undefined ? { rotate } : {}),
-            maxTextWidth,
+            layout: {
+              ...(align === undefined ? {} : { align }),
+              ...(lineHeight === undefined ? {} : { lineHeight }),
+              maxTextWidth,
+            },
           },
         ],
+        style: { color: resolvedTheme.typography.textColor ?? 'currentColor' },
+        defaults: {
+          node: {
+            style: { fill: 'none', stroke: 'none' },
+            layout: { padding: 0 },
+          },
+        },
       };
     };
     const facetLabelScopes: Array<IRScope> = facetLabelsEnabled
@@ -999,10 +1010,10 @@ export const lowerPlotWithDataArtifact = (
               }),
             )
           : undefined;
-      const facetContext: IRJsonObject = { id: panel.facet.id };
+      const facetContext: JsonObject = { id: panel.facet.id };
       if (panel.row !== undefined) facetContext.row = panel.row;
       if (panel.column !== undefined) facetContext.column = panel.column;
-      const panelContext: IRJsonObject = { coordinateView: panel.id, facet: facetContext };
+      const panelContext: JsonObject = { coordinateView: panel.id, facet: facetContext };
       const backgroundNode = plotBackgroundNode(
         frameResolution.plotArea,
         frameResolution.frame,
@@ -1042,7 +1053,7 @@ export const lowerPlotWithDataArtifact = (
           return layer === null ? null : withScopeContext(layer, panelContext);
         })
         .filter((layer): layer is IRChild => layer !== null);
-      const meta: IRJsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
+      const meta: JsonObject = { source: 'plot', layer: 'facetPanel', facet: panel.facet.id };
       if (panel.row !== undefined) meta.row = panel.row;
       if (panel.column !== undefined) meta.column = panel.column;
       const base: IRScope = {
@@ -1099,9 +1110,8 @@ export const lowerPlotWithDataArtifact = (
       id: `${node.id}.plotArea`,
       position: [facetContentWidth / 2, facetContentHeight / 2],
       shape: 'rectangle',
-      minimumSize: { width: facetContentWidth, height: facetContentHeight },
-      padding: 0,
-      opacity: 0,
+      style: { opacity: 0 },
+      layout: { minimumSize: { width: facetContentWidth, height: facetContentHeight }, padding: 0 },
     };
     return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
   }
@@ -1214,9 +1224,8 @@ export const lowerPlotWithDataArtifact = (
     id: `${node.id}.plotArea`,
     position: [plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height / 2],
     shape: 'rectangle',
-    minimumSize: { width: plotArea.width, height: plotArea.height },
-    padding: 0,
-    opacity: 0,
+    style: { opacity: 0 },
+    layout: { minimumSize: { width: plotArea.width, height: plotArea.height }, padding: 0 },
   };
   return { child: { type: 'scope', id: node.id, children: [innerContent, plotAreaCarrier] }, dataArtifact };
 };

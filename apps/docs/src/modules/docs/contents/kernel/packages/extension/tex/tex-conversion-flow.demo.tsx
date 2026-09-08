@@ -21,20 +21,15 @@ const renderFlowNode = ({ id, position, title, detail, color, width = 136 }: Flo
       { text: title, font: { weight: 'bold' } },
       { text: detail, fill: 'gray', font: { size: 10 } },
     ]}
-    minimumSize={{ width, height: 48 }}
-    stroke={color}
-    fill={color}
-    fillOpacity={0.08}
-    align="middle"
-    font={{ size: 12 }}
-    lineHeight={14}
     cornerRadius={4}
+    style={{ stroke: color, fill: color, fillOpacity: 0.08, font: { size: 12 } }}
+    layout={{ minimumSize: { width, height: 48 }, align: 'middle', lineHeight: 14 }}
   />
 );
 
 /** 展示公式在 Core 与 Tex 之间往返一次的完整 lowering 链路 */
 const DesktopFigure: FC = () => (
-  <Layout width={640} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="core-boundary-group">
       <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
       {renderFlowNode({
@@ -85,17 +80,21 @@ const DesktopFigure: FC = () => (
       })}
     </LogicFigureFrame>
 
-    <Draw way={['core-text-pipeline', 'lower-tex-adapter']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-    <Draw way={['lower-tex-adapter', 'mathjax-svg-engine']} arrow="->" stroke="gray" />
-    <Draw way={['mathjax-svg-engine', 'svg-lowerer']} arrow="->" stroke="gray" />
-    <Draw way={['svg-lowerer', 'lowered-tex']} arrow="->" stroke="gray" />
-    <Draw way={['lowered-tex', 'core-scene-output']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw
+      way={['core-text-pipeline', 'lower-tex-adapter']}
+      arrow="->"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Draw way={['lower-tex-adapter', 'mathjax-svg-engine']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['mathjax-svg-engine', 'svg-lowerer']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['svg-lowerer', 'lowered-tex']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['lowered-tex', 'core-scene-output']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 
 /** 在窄屏上用两列蛇形布局保留可读字号与短连接线 */
 const MobileFigure: FC = () => (
-  <Layout width={360} height={230} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     {renderFlowNode({
       id: 'mobile-core-text-pipeline',
       position: [-86, -82],
@@ -150,13 +149,16 @@ const MobileFigure: FC = () => (
     <Draw
       way={['mobile-core-text-pipeline', 'mobile-lower-tex-adapter']}
       arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     />
-    <Draw way={['mobile-lower-tex-adapter', 'mobile-mathjax-svg-engine']} arrow="->" stroke="gray" />
-    <Draw way={['mobile-mathjax-svg-engine', 'mobile-svg-lowerer']} arrow="->" stroke="gray" />
-    <Draw way={['mobile-svg-lowerer', 'mobile-lowered-tex']} arrow="->" stroke="gray" />
-    <Draw way={['mobile-lowered-tex', 'mobile-core-scene-output']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['mobile-lower-tex-adapter', 'mobile-mathjax-svg-engine']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['mobile-mathjax-svg-engine', 'mobile-svg-lowerer']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['mobile-svg-lowerer', 'mobile-lowered-tex']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw
+      way={['mobile-lowered-tex', 'mobile-core-scene-output']}
+      arrow="->"
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
   </Layout>
 );
 

@@ -27,7 +27,7 @@ type FramePaddingInsets = {
 type FrameHeaderInput = IRFrameTitle | IRFrameDescription;
 
 type FrameHeaderOptions = {
-  font: NonNullable<IRNode['font']>;
+  font: NonNullable<NonNullable<IRNode['style']>['font']>;
   opacity?: number;
 };
 
@@ -57,19 +57,22 @@ const normalizeFramePadding = (value: number | IRBoxSpacing | undefined, fallbac
 
 /** 把 Node-like Frame header 补全为可独立 probe 的普通 Core Node */
 const frameHeaderNodeOf = (header: FrameHeaderInput, options: FrameHeaderOptions): IRNode => {
-  const { text, font, ...nodeFields } = header;
+  const { text, style, layout, ...nodeFields } = header;
   return {
     type: 'node',
     shape: 'rectangle',
-    stroke: 'none',
-    fill: 'none',
-    padding: 0,
     zIndex: 1,
-    ...(options.opacity !== undefined ? { opacity: options.opacity } : {}),
     ...omitUndefined(nodeFields),
     text,
     position: [0, 0],
-    font: { ...options.font, ...omitUndefined(font ?? {}) },
+    style: {
+      stroke: 'none',
+      fill: 'none',
+      ...(options.opacity === undefined ? {} : { opacity: options.opacity }),
+      ...omitUndefined(style ?? {}),
+      font: { ...options.font, ...omitUndefined(style?.font ?? {}) },
+    },
+    layout: { padding: 0, ...omitUndefined(layout ?? {}) },
   };
 };
 
@@ -219,10 +222,11 @@ export const compileFrame = (frame: IRFrame, context: LayoutCompositeCompileCont
     width: contentBounds.width + insets.left + insets.right,
     height: contentBounds.height + insets.top + insets.bottom,
   };
+  const { zIndex: borderZIndex, ...borderStyle } = frame.border.style;
   const border: IRPath = {
-    ...frame.border.style,
+    style: borderStyle,
     type: 'path',
-    zIndex: frame.border.style.zIndex ?? -1,
+    zIndex: borderZIndex ?? -1,
     children: [
       {
         type: 'step',

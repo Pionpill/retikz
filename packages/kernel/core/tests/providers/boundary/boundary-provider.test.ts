@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
 import type { CompileOptions } from '../../../src/compile/compile';
@@ -16,8 +16,8 @@ const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, 
     type: 'node',
     id: 'a',
     position: [0, 0],
-    minimumSize: 40,
     boundary,
+    layout: { minimumSize: 40 },
   } satisfies IRScene['children'][number];
   const ir: IRScene = {
     version: 1,

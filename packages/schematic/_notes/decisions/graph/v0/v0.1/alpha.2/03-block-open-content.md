@@ -4,6 +4,8 @@
 - 决策日期：2026-08-30
 - 关联：[Graph v0.1 alpha.2 roadmap](./roadmap.md) · [被替代的固定结构决策](./01-block-composition.md) · [Block 整体宽度约束](./02-block-sizing.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md) · [Group 通用包含与边界呈现](../alpha.1/10-group-composition.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](./07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Graph 需要一种可以作为关系节点使用、同时允许作者自由组织内部视觉内容的结构容器。代码、工程和节点图中的对象通常共享“外层边界内按稳定方向排列内容”的基本形态，但 Header、Section、Row 只是一种常见写法，并不是所有 Block 都必须保存的领域事实。若把这一写法固化为 Block Source grammar，用户必须先把任意内容改写成预设层级，官方类图等更高层封装也会与基础容器争夺同一语义真源

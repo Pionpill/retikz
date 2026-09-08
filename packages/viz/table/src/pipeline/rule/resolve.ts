@@ -1,5 +1,3 @@
-import { ThemeTokenSource } from '@retikz/core';
-
 import type {
   SemanticTableCell,
   SemanticTableModel,
@@ -8,15 +6,12 @@ import type {
   TableLegendDescriptor,
 } from '../../contract';
 import type {
-  IRTableBorder,
   IRTableCellAppearance,
   IRTableCellRule,
   IRTableCellVisualEncoding,
   IRTableFormatterRef,
   IRTablePresentationRef,
-  IRTableThemeTokenBorder,
 } from '../../schemas';
-import type { DeepReadonly } from '../../shared';
 import type {
   ResolvedTableCellPlan,
   ResolvedTablePlan,
@@ -24,19 +19,22 @@ import type {
   TableCellAppearanceTrace,
 } from './types';
 
-import { TableCellPlanSourceKind, TableCellPlanSourceSchema, TableLegendDescriptorSchema } from '../../contract';
+import {
+  TableCellAppearanceTracePathSchema,
+  TableCellPlanSourceKind,
+  TableCellPlanSourceSchema,
+  TableLegendDescriptorSchema,
+} from '../../contract';
 import { RetikzTableError } from '../../error';
 import { resolveCellVisualScaleRegistry } from '../../providers';
 import { resolveCellVisualScale } from '../../providers/encoding';
 import {
-  TableBorderSchema,
   TableCellAppearanceSchema,
+  TableCellContentStyleSchema,
   TableCellFormatter,
   TableCellLocation,
   TableCellPayloadKind,
   TableCellPresentation,
-  TableCellRuleSchema,
-  TableCellVisualEncodingSchema,
   TableFormatterRefSchema,
   TablePresentationRefSchema,
   TableVisualChannel,
@@ -72,89 +70,89 @@ type MutableContentPlan = {
 
 type MutablePlan = MutableValuePlan | MutableContentPlan;
 
-type AppearanceStyleTokenKey =
-  | 'cell.background.fill'
-  | 'cell.background.fillOpacity'
-  | 'cell.content.color'
-  | 'cell.content.font.family'
-  | 'cell.content.font.weight'
-  | 'columnHeader.background.fill'
-  | 'columnHeader.background.fillOpacity'
-  | 'columnHeader.content.color'
-  | 'columnHeader.content.font.family'
-  | 'columnHeader.content.font.weight'
-  | 'columnHeader.border.bottom';
+const hasOwnPath = (value: unknown, path: ReadonlyArray<string>): boolean => {
+  let current: unknown = value;
+  for (const segment of path) {
+    if (current === null || typeof current !== 'object' || !Object.hasOwn(current, segment)) return false;
+    current = Reflect.get(current, segment);
+  }
+  return current !== undefined;
+};
 
-/** 构造单个 appearance style token winner source */
-const themeTokenSourceOf = (key: AppearanceStyleTokenKey, options: ResolveTableCellPlansOptions): TableCellPlanSource =>
-  TableCellPlanSourceSchema.parse({
-    kind: TableCellPlanSourceKind.StyleToken,
-    tokenKey: key,
-    tokenSource: options.tableThemeTokens?.sources[key].kind ?? ThemeTokenSource.Local,
-    tokenPath: options.tableThemeTokens?.sources[key].path ?? `$default/light/${key}`,
-  });
+/** 找到某个 defaults Source 字段最终采用的来源层 */
+const defaultsSourceOf = (options: ResolveTableCellPlansOptions, path: ReadonlyArray<string>): TableCellPlanSource => {
+  const layers = options.tableDefaults?.layers ?? [];
+  for (let index = layers.length - 1; index >= 0; index -= 1) {
+    const layer = layers[index];
+    if (layer.defaults !== undefined && hasOwnPath(layer.defaults, path)) {
+      return TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Defaults, path: layer.path });
+    }
+  }
+  return DEFAULT_SOURCE;
+};
 
-/** 把 style border token 物化为固定低优先级 Cell candidate */
-const themeBorderOf = (border: DeepReadonly<IRTableThemeTokenBorder>): IRTableBorder =>
-  TableBorderSchema.parse({ ...structuredClone(border), priority: -100 });
+/** 将 defaults appearance 的具体叶写入 trace */
+const traceAppearanceLeaves = (
+  value: unknown,
+  appearancePath: ReadonlyArray<string>,
+  defaultsPath: ReadonlyArray<string>,
+  options: ResolveTableCellPlansOptions,
+  trace: Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>>,
+): void => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    const path = '/' + appearancePath.join('/');
+    const parsedPath = TableCellAppearanceTracePathSchema.safeParse(path);
+    if (parsedPath.success) trace[parsedPath.data] = defaultsSourceOf(options, defaultsPath);
+    return;
+  }
+  Object.entries(value).forEach(([key, child]) =>
+    traceAppearanceLeaves(child, [...appearancePath, key], [...defaultsPath, key], options, trace),
+  );
+};
 
-/** 从 resolved style tokens 构造 Cell appearance 与逐叶 winner */
+/** 从 resolved Table defaults 构造 Cell appearance 与逐叶 winner */
 const styleAppearanceOf = (
   cell: SemanticTableCell,
   options: ResolveTableCellPlansOptions,
 ): Readonly<{ appearance: IRTableCellAppearance; trace: TableCellAppearanceTrace }> => {
-  const resolved = options.tableThemeTokens;
-  if (resolved === undefined) return { appearance: {}, trace: {} };
-  const tokens = resolved.tokens;
-  const header = cell.location === TableCellLocation.ColumnHeader;
-  const fillKey = header ? 'columnHeader.background.fill' : 'cell.background.fill';
-  const opacityKey = header ? 'columnHeader.background.fillOpacity' : 'cell.background.fillOpacity';
-  const colorKey = header ? 'columnHeader.content.color' : 'cell.content.color';
-  const familyKey = header ? 'columnHeader.content.font.family' : 'cell.content.font.family';
-  const weightKey = header ? 'columnHeader.content.font.weight' : 'cell.content.font.weight';
-  const fill = tokens[fillKey];
-  const opacity = tokens[opacityKey];
-  const color = tokens[colorKey];
-  const family = tokens[familyKey];
-  const weight = tokens[weightKey];
+  const location = cell.location === TableCellLocation.ColumnHeader ? 'columnHeader' : 'body';
+  const defaults = options.tableDefaults?.defaults.appearanceDefaults?.[location];
   const trace: Partial<Record<TableCellAppearanceTracePathValue, TableCellPlanSource>> = {};
   const appearance: IRTableCellAppearance = {};
 
-  if (fill !== null) {
+  if (defaults?.background?.fill !== undefined) {
     appearance.background = TableCellAppearanceSchema.shape.background.unwrap().parse({
-      fill: structuredClone(fill),
-      ...(opacity === null ? {} : { fillOpacity: opacity }),
+      fill: defaults.background.fill,
+      fillOpacity: defaults.background.fillOpacity ?? 1,
     });
-    trace['/background/fill'] = themeTokenSourceOf(fillKey, options);
-    if (opacity !== null) trace['/background/fillOpacity'] = themeTokenSourceOf(opacityKey, options);
   }
-  if (color !== null || family !== null || weight !== null) {
-    appearance.content = {
-      ...(color === null ? {} : { color }),
-      ...(family === null && weight === null
-        ? {}
-        : {
-            nodeDefault: { font: { ...(family === null ? {} : { family }), ...(weight === null ? {} : { weight }) } },
-            labelDefault: {
-              font: { ...(family === null ? {} : { family }), ...(weight === null ? {} : { weight }) },
-            },
-          }),
-    };
-    if (color !== null) trace['/content/color'] = themeTokenSourceOf(colorKey, options);
-    if (family !== null) {
-      trace['/content/nodeDefault/font/family'] = themeTokenSourceOf(familyKey, options);
-      trace['/content/labelDefault/font/family'] = themeTokenSourceOf(familyKey, options);
-    }
-    if (weight !== null) {
-      trace['/content/nodeDefault/font/weight'] = themeTokenSourceOf(weightKey, options);
-      trace['/content/labelDefault/font/weight'] = themeTokenSourceOf(weightKey, options);
-    }
+  if (defaults?.content !== undefined) {
+    appearance.content = TableCellContentStyleSchema.parse(defaults.content);
   }
-  const headerBorder = header ? tokens['columnHeader.border.bottom'] : null;
-  if (headerBorder !== null) {
-    appearance.borders = { bottom: themeBorderOf(headerBorder) };
-    trace['/borders/bottom'] = themeTokenSourceOf('columnHeader.border.bottom', options);
+  if (defaults?.borders !== undefined) {
+    appearance.borders = TableCellAppearanceSchema.shape.borders.unwrap().parse(defaults.borders);
   }
+  if (appearance.background !== undefined)
+    traceAppearanceLeaves(
+      appearance.background,
+      ['background'],
+      ['appearanceDefaults', location, 'background'],
+      options,
+      trace,
+    );
+  if (defaults?.background?.fillOpacity === undefined) {
+    delete trace['/background/fillOpacity'];
+  }
+  if (appearance.content !== undefined)
+    traceAppearanceLeaves(appearance.content, ['content'], ['appearanceDefaults', location, 'content'], options, trace);
+  if (appearance.borders !== undefined)
+    Object.keys(appearance.borders).forEach(side => {
+      const path = `/${['borders', side].join('/')}`;
+      const parsedPath = TableCellAppearanceTracePathSchema.safeParse(path);
+      if (parsedPath.success) {
+        trace[parsedPath.data] = defaultsSourceOf(options, ['appearanceDefaults', location, 'borders', side]);
+      }
+    });
   return { appearance: TableCellAppearanceSchema.parse(appearance), trace };
 };
 
@@ -204,7 +202,7 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
   const source = { kind: TableCellPlanSourceKind.Encoding, encodingId: encoding.id } as const;
   if (encoding.channel === TableVisualChannel.BackgroundFill) {
     plan.appearance = TableCellAppearanceSchema.parse({
-      ...structuredClone(plan.appearance),
+      ...plan.appearance,
       background: {
         fill: color,
         ...(plan.appearance.background?.fillOpacity === undefined
@@ -215,10 +213,10 @@ const applyEncodingColor = (plan: MutableValuePlan, encoding: IRTableCellVisualE
     plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/background/fill': source };
   } else {
     plan.appearance = TableCellAppearanceSchema.parse({
-      ...structuredClone(plan.appearance),
-      content: { ...structuredClone(plan.appearance.content ?? {}), color },
+      ...plan.appearance,
+      content: { ...plan.appearance.content, style: { ...plan.appearance.content?.style, color } },
     });
-    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/color': source };
+    plan.trace.appearance = { ...structuredClone(plan.trace.appearance), '/content/style/color': source };
   }
   plan.trace.encodingIds ??= [];
   plan.trace.encodingIds.push(encoding.id);
@@ -261,10 +259,8 @@ export const resolveTableCellPlans = (
   model: SemanticTableModel,
   options: ResolveTableCellPlansOptions,
 ): ResolvedTablePlan => {
-  const parsedRules = (options.rules ?? []).map(rule => TableCellRuleSchema.parse(structuredClone(rule)));
-  const parsedEncodings = (options.encodings ?? []).map(encoding =>
-    TableCellVisualEncodingSchema.parse(structuredClone(encoding)),
-  );
+  const parsedRules = options.rules ?? [];
+  const parsedEncodings = options.encodings ?? [];
   const registry = resolveCellVisualScaleRegistry(options.visualScaleDefinitions);
   const plans = model.cells.map(cell => initialPlanOf(cell, options));
   const legendDescriptors: Array<TableLegendDescriptor> = [];

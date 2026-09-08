@@ -16,19 +16,20 @@ are derived by Table. Scalar entries are value shorthands, `null` leaves a coord
 sharing structure normalization, presentation, layout, and lowering.
 
 Table first resolves one deterministic Cell plan: the Core host Theme selects a same-named style definition,
-shared categorical colors project into the Table data channel, and local `tableThemeTokens` provides
-a sparse Table token overlay. Cell-local formatter/presentation/appearance, ordered visual
-encodings, and ordered root rules then contribute in increasing priority. Value Cells run the
-winning formatter and presentation with that final appearance.
-The default baseline provides complete light/dark token maps when `style` is omitted. Named styles use the
-same public Core and Table definition registries; `theme.style` / `theme.mode` select the matching
-definitions, while `tableThemeTokens` is the local IRTable overlay. Unknown token keys fail
-loudly. Content Cells already own renderable children and therefore bypass formatter and
-presentation dispatch.
+shared categorical colors project into the Table data channel, and sparse Source fragments provide
+Table defaults. `appearanceDefaults`, `visualDefaults`, and `tableDefaults` follow the Table Source
+shape, while `layout.borders.outer` keeps the four physical sides. Cell-local
+formatter/presentation/appearance, ordered visual encodings, and ordered root rules then contribute
+in increasing priority. Value Cells run the winning formatter and presentation with that final appearance.
+The mode baseline and named styles use the same public Core and Table definition registries. Their
+defaults are resolved before `tableDefaults`, then explicit Source fragments; omitted fields remain
+absent and defaults never create Cells, borders, encodings, or Legend descriptors. Content Cells
+already own renderable children and therefore bypass formatter and presentation dispatch.
 
-`compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. `tableThemeTokens` stays
-in the JSON-safe IRTable and is resolved by the Table owner. The resolved `TableLayoutManifest`
-records effective `style`, `themeMode`, complete tokens, and per-token sources as output metadata.
+`compileTable(spec, datasets, { theme })` accepts a sparse root Core Theme. Table default fragments
+stay in the JSON-safe `IRTable` and are resolved by the Table owner. The resolved
+`TableLayoutManifest` records effective `style`, `themeMode`, and resolved Source-field provenance
+as output metadata.
 Custom styles register the same name in Core through `compile.themeStyles` and in Table through
 `lower.tableThemeStyles`; a consumed style without its Table definition fails loudly.
 

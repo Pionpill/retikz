@@ -21,7 +21,7 @@ const DocumentNavigator = () => {
   const navigate = useNavigate();
 
   return (
-    <button type="button" onClick={() => navigate('/kernel/concepts/design/layers')}>
+    <button type="button" onClick={() => navigate('/kernel/components/design/layers')}>
       Navigate to layers
     </button>
   );
@@ -43,7 +43,7 @@ describe('<DocLayout>', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/concepts/design/principles']}>
+        <MemoryRouter initialEntries={['/kernel/components/design/principles']}>
           <Routes>
             <Route element={<DocLayout />}>
               <Route path="*" element={<DocumentNavigator />} />

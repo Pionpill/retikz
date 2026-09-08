@@ -36,13 +36,13 @@ const expandOf = (spec: IRPlot, options?: LowerPlotsOptions): IRScope => {
 };
 
 const nodeWidth = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.width ?? size?.default ?? 0;
 };
 
 const nodeHeight = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.height ?? size?.default ?? 0;
 };
@@ -94,7 +94,7 @@ describe('contract L1-b · 外部可见面板 anchor（gated on id）', () => {
     expect(carrier).toBeTruthy();
     expect(carrier!.type).toBe('node');
     expect(carrier!.shape).toBe('rectangle');
-    expect(carrier!.opacity).toBe(0);
+    expect(carrier!.style?.opacity).toBe(0);
     expect(nodeWidth(carrier!)).toBeGreaterThan(0);
     expect(nodeHeight(carrier!)).toBeGreaterThan(0);
   });

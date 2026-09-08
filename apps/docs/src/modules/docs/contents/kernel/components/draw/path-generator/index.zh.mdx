@@ -117,7 +117,7 @@ Core 默认不携带路径生成器。宿主注入的自定义生成器进入 re
 | 字段           | 类型                          | 默认值 | 描述                                       |
 | -------------- | ----------------------------- | ------ | ------------------------------------------ |
 | `name`         | `string`                      | —      | registry key，也是 generator Step 的引用名 |
-| `paramsSchema` | `ZodType<IRJsonObject>`       | —      | 校验实例参数；输出必须仍是 JSON 对象       |
+| `paramsSchema` | `ZodType<JsonObject>`         | —      | 校验实例参数；输出必须仍是 JSON 对象       |
 | `targetParams` | `Array<string>`               | `[]`   | 需要预先解析为局部坐标的顶层参数 key       |
 | `generate`     | `(ctx) => Array<PathCommand>` | —      | 根据局部上下文生成路径命令                 |
 

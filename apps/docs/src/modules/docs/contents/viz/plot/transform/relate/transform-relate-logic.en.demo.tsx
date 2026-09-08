@@ -4,16 +4,13 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** relate grouping, dual endpoint selection, projection, and relation-row output */
 const Demo: FC = () => (
-  <Layout width={780} height={190} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="rows"
       position={[-330, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Detail rows</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -23,12 +20,9 @@ const Demo: FC = () => (
     <Node
       id="group"
       position={[-195, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Group by groupBy</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -38,12 +32,9 @@ const Demo: FC = () => (
     <Node
       id="source"
       position={[-25, -42]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Select source</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -53,12 +44,9 @@ const Demo: FC = () => (
     <Node
       id="target"
       position={[-25, 42]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Select target</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -68,12 +56,9 @@ const Demo: FC = () => (
     <Node
       id="config"
       position={[155, 78]}
-      stroke="gray"
-      fill="gray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'gray', fill: 'gray', fillOpacity: 0.06 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Projection and measures</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -83,12 +68,9 @@ const Demo: FC = () => (
     <Node
       id="project"
       position={[155, 0]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Join and derive fields</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -98,12 +80,9 @@ const Demo: FC = () => (
     <Node
       id="output"
       position={[325, 0]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Emit relation row</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -117,7 +96,7 @@ const Demo: FC = () => (
     <Draw way={['source', 'project']} arrow="->" />
     <Draw way={['target', 'project']} arrow="->" />
     <Draw way={['project', 'output']} arrow="->" />
-    <Draw way={['config', 'project']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['config', 'project']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
   </Layout>
 );
 

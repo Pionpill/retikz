@@ -34,11 +34,11 @@ const flowLayoutAlignmentOf = (value: string): FlowLayoutAlignmentValue => {
 export const renderFlowCompoundPreview = (
   values: PreviewControlValuesFor<typeof flowCompoundControls>,
 ): ReactElement => (
-  <FlowDiagram width={400} height={460} viewBox={{ x: -100, y: -86, width: 400, height: 460 }}>
+  <FlowDiagram viewBox={{ x: -100, y: -86, width: 400, height: 460 }}>
     <FlowLayout id="sections" direction="down" gap={28} align="center">
       <FlowGroup
         id="service"
-        label="服务入口"
+        caption={{ title: { text: '服务入口' } }}
         layout={{
           direction: flowDirectionOf(values.groupDirection),
           nodeGap: values.groupNodeGap,

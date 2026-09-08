@@ -28,13 +28,21 @@ const compilePath = (extra: Record<string, unknown>): ReturnType<typeof compileT
 
 describe('[path-blend] Happy', () => {
   it('path-blend：Path + blendMode="screen" → 主 PathPrim 带 blendMode', () => {
-    const prim = findPathPrim(compilePath({ stroke: 'cyan', blendMode: 'screen' }).primitives);
+    const prim = findPathPrim(
+      compilePath({
+        style: { stroke: 'cyan', blendMode: 'screen' },
+      }).primitives,
+    );
     expect(prim.blendMode).toBe('screen');
   });
 
   it('all-16-modes-accepted：16 个值 schema 全过', () => {
     for (const mode of Object.values(BlendMode)) {
-      const parsed = PathSchema.safeParse({ type: 'path', children: [move([0, 0]), line([10, 0])], blendMode: mode });
+      const parsed = PathSchema.safeParse({
+        type: 'path',
+        children: [move([0, 0]), line([10, 0])],
+        style: { blendMode: mode },
+      });
       expect(parsed.success, mode).toBe(true);
     }
   });
@@ -48,7 +56,11 @@ describe('[path-blend] 边界', () => {
   });
 
   it('blend-normal-equals-omitted：blendMode="normal" 与省略编译等价', () => {
-    const withNormal = findPathPrim(compilePath({ blendMode: 'normal' }).primitives);
+    const withNormal = findPathPrim(
+      compilePath({
+        style: { blendMode: 'normal' },
+      }).primitives,
+    );
     const omitted = findPathPrim(compilePath({}).primitives);
     expect(withNormal.blendMode ?? 'normal').toBe(omitted.blendMode ?? 'normal');
   });
@@ -60,7 +72,7 @@ describe('[path-blend] 错误路径（schema 拒）', () => {
   const path = (blendMode: unknown): unknown => ({
     type: 'path',
     children: [move([0, 0]), line([10, 0])],
-    blendMode,
+    style: { blendMode },
   });
 
   it('reject-unknown-mode：blendMode="glow" → 拒', () => {
@@ -78,7 +90,10 @@ describe('[path-blend] 错误路径（schema 拒）', () => {
 describe('[path-blend] 交互', () => {
   it('blend-text-not-inherited（path 类比）：带 arrow 的 path + blendMode → arrow spec 不带 blendMode', () => {
     const prim = findPathPrim(
-      compilePath({ stroke: 'cyan', marks: arrowMarks('->'), blendMode: 'multiply' }).primitives,
+      compilePath({
+        marks: arrowMarks('->'),
+        style: { stroke: 'cyan', blendMode: 'multiply' },
+      }).primitives,
     );
     expect(prim.blendMode).toBe('multiply');
     expect(prim.arrowEnd).toBeDefined();
@@ -86,7 +101,11 @@ describe('[path-blend] 交互', () => {
   });
 
   it('blend-with-opacity-shadow：blendMode + opacity + shadow 三者共存正确', () => {
-    const prim = findPathPrim(compilePath({ opacity: 0.7, shadow: 'md', blendMode: 'multiply' }).primitives);
+    const prim = findPathPrim(
+      compilePath({
+        style: { opacity: 0.7, shadow: 'md', blendMode: 'multiply' },
+      }).primitives,
+    );
     expect(prim.opacity).toBe(0.7);
     expect(prim.blendMode).toBe('multiply');
     expect(prim.shadow).toBeDefined();
@@ -97,9 +116,13 @@ describe('[path-blend] 交互', () => {
 
 describe('[path-blend] round-trip', () => {
   it('含 blendMode 的 IRPath JSON 往返 parse 深等', () => {
-    const path = { type: 'path', children: [move([0, 0]), line([10, 0])], blendMode: 'screen' };
+    const path = {
+      type: 'path',
+      children: [move([0, 0]), line([10, 0])],
+      style: { blendMode: 'screen' },
+    };
     const parsed = PathSchema.parse(path);
     const round = PathSchema.parse(JSON.parse(JSON.stringify(parsed)));
-    expect(round.blendMode).toBe(parsed.blendMode);
+    expect(round.style?.blendMode).toBe(parsed.style?.blendMode);
   });
 });

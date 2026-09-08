@@ -311,6 +311,16 @@ export const vizV01: Release = {
                 en: '`@retikz/chart/point/strip` adds direct-only x/y exact schemas, deterministic jitter shorthand, sole-discrete-role validation, and a continuous-only grid. React and Vanilla entries produce the same Source, while Plot placement handles spread and glyph containment in Cartesian and Polar coordinates.',
               },
             },
+            {
+              label: {
+                zh: 'BREAKING：Theme owner slice 由精确 schema 接纳',
+                en: 'BREAKING: Exact schemas own Chart theme slices',
+              },
+              content: {
+                zh: 'Chart 命名 Theme 的 envelope 先校验 `name`、`base` 与 owner slices，再由 Chart、Plot 和 active recipe 的精确 schema 分别接纳对应 token，并把解析结果用于后续 cascade。非法 slice 统一保留 Zod cause 并报告 Chart registry 错误；optional 字段中的显式 `undefined` 完全遵循所属 schema，不再由额外 JSON 预处理拒绝或删除。',
+                en: 'Named Chart themes first validate the `name`, `base`, and owner-slice envelope, then pass each token slice to the exact Chart, Plot, or active-recipe schema and use that parsed result in the cascade. Invalid slices consistently retain the Zod cause inside a Chart registry error, while explicit `undefined` in optional fields follows the owning schema instead of a separate JSON preprocessor.',
+              },
+            },
           ],
         },
       ],
@@ -1270,6 +1280,13 @@ export const vizV01: Release = {
           },
           items: [
             {
+              label: { zh: 'BREAKING：内容 Scope 语义分组', en: 'BREAKING: grouped content Scope fields' },
+              content: {
+                zh: 'Cell appearance.content 统一使用 style 与 defaults，Node/Path 默认值进一步沿用 Core 分组，winner trace 同步指向分组后的叶子路径；背景、边框和 Table Theme token 保持原语义。',
+                en: 'Cell appearance.content now uses style and defaults, with grouped Core Node/Path defaults and matching winner-trace leaf paths. Backgrounds, borders, and Table Theme tokens retain their semantics.',
+              },
+            },
+            {
               label: { zh: 'Formatter 与 Presentation 分层', en: 'Formatter and Presentation layers' },
               content: {
                 zh: 'value Cell 先通过可注册 formatter 得到显示 scalar，再把 `rawValue`、`value`、`context` 与最终 `appearance` 交给 Presentation；content Cell fail-loud 拒绝 formatter/presentation。',
@@ -1279,8 +1296,8 @@ export const vizV01: Release = {
             {
               label: { zh: '确定性视觉级联', en: 'Deterministic visual cascade' },
               content: {
-                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core preset < shared categorical < local `tableThemeTokens` < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
-                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core preset < shared categorical < local `tableThemeTokens` < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
+                zh: '闭合 selector、ordinal/threshold/sequential scale 与单通道 encoding 使用 canonical raw value；Core baseline < style definition < `tableDefaults` < 正式 Source defaults < Cell < encodings < ordered rules，manifest 保留 winner/source trace。',
+                en: 'Closed selectors, ordinal/threshold/sequential scales, and single-channel encodings use canonical raw values. Core baseline < style definition < `tableDefaults` < formal Source defaults < Cell < encodings < ordered rules, with winner/source trace retained in manifests.',
               },
             },
             {
@@ -1296,8 +1313,8 @@ export const vizV01: Release = {
                 en: 'BREAKING: Table visuals move to Core Theme',
               },
               content: {
-                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 preset，`tableThemeTokens` 提供 local overlay。未知 token key/value 仍会按 owner schema fail-loud。',
-                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the preset, and `tableThemeTokens` supplies the local overlay. Unknown token keys/values still fail loudly through the owner schema.',
+                zh: 'IRTable 与 Detail/Manual React props 不再接收旧的 preset、mode 或 flat token 字段；Core host `theme.style` / `theme.mode` 选择 style definition，`tableDefaults` 与正式 Source defaults 提供稀疏覆盖。未知字段仍会按 owner schema fail-loud。',
+                en: 'IRTable and Detail/Manual React props no longer accept the former preset, mode, or flat-token fields. Core host `theme.style` / `theme.mode` selects the style definition, while `tableDefaults` and formal Source defaults provide sparse overrides. Unknown fields still fail loudly through the owner schema.',
               },
             },
             {
@@ -1312,6 +1329,16 @@ export const vizV01: Release = {
               content: {
                 zh: '本阶段在 JSON-safe encoding descriptor seed 处闭环，不提供 Table-local Legend、`legendLayout` 或最终 joined manifest；Standard Legend/Flex 组合计划在 Table alpha.6 接入。',
                 en: 'This phase closes at the JSON-safe encoding descriptor seed and does not expose a Table-local Legend, `legendLayout`, or final joined manifest; Standard Legend/Flex composition is planned for Table alpha.6.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：Source 与 artifact 使用各自唯一 schema 边界',
+                en: 'BREAKING: Source and artifacts use one owning schema boundary each',
+              },
+              content: {
+                zh: 'Table 根 Source 只在 Composite Definition 的 `TableSchema` 入口解析一次，内部 typed 阶段不再重复 parse；动态 formatter、presentation、structure 与 encoding 继续只运行匹配 Definition 的精确 schema。Theme optional `undefined` 遵循所属 schema；manifest builder 只构造 candidate，最终由 Core 的 `artifactSchema` 边界统一校验、脱离输入并冻结。',
+                en: 'A Table root Source is parsed once by the Composite Definition `TableSchema`, and typed internal stages no longer parse it again. Dynamic formatter, presentation, structure, and encoding values still use only the matching Definition schema. Optional `undefined` in themes follows its owning schema, while the manifest builder emits a candidate that Core validates, detaches, and freezes at the single `artifactSchema` boundary.',
               },
             },
           ],
@@ -1436,22 +1463,22 @@ export const vizV01: Release = {
           version: 'alpha.3',
           date: '2026-08-03',
           summary: {
-            zh: 'Detail/Manual React authoring 补齐 formatter、rules/encodings 与 namespaced Table token 字段，并把 Core Theme、Table overlay 与宿主 CSS 明确拆开。',
-            en: 'Completes Detail/Manual React authoring for formatter, rules/encodings, and namespaced Table tokens while separating Core Theme, Table overlays, and host CSS.',
+            zh: 'Detail/Manual React authoring 补齐 formatter、rules/encodings 与稀疏 Table Source defaults，并把 Core Theme、Table defaults 与宿主 CSS 明确拆开。',
+            en: 'Completes Detail/Manual React authoring for formatter, rules/encodings, and sparse Table Source defaults while separating Core Theme, Table defaults, and host CSS.',
           },
           items: [
             {
               label: { zh: 'BREAKING：Theme 与宿主 CSS 分层', en: 'BREAKING: Theme and host CSS are separated' },
               content: {
-                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`tableThemeTokens` 只属于 IRTable local overlay。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
-                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `tableThemeTokens` remains a IRTable-local overlay. Host capabilities continue through the same Layout runtime.',
+                zh: '三个 standalone root 用 `containerStyle` 承载宿主 CSS；standalone `theme` 写入根 Core Scene，embedded Table 从外层 `Layout` 继承 Theme，`tableDefaults` 与正式 Source defaults 属于 IRTable 的稀疏默认片段。三种 root 的宿主能力仍在同一 Layout runtime 中透传。',
+                en: 'All three standalone roots use `containerStyle` for host CSS. Standalone `theme` writes the root Core Scene, embedded Tables inherit Theme from the outer `Layout`, and `tableDefaults` plus formal Source defaults are IRTable sparse default fragments. Host capabilities continue through the same Layout runtime.',
               },
             },
             {
               label: { zh: '完整 root 与 Cell authoring', en: 'Complete root and Cell authoring' },
               content: {
-                zh: 'DetailColumn 与 value/children Cell 转发 formatter；Detail/Manual 两种模式均转发 `rules`、`encodings` 与 `tableThemeTokens`。content Cell 在类型和 runtime 同时拒绝 formatter/presentation。',
-                en: 'DetailColumn and value/children Cells forward formatters. Both Detail/Manual modes forward `rules`, `encodings`, and `tableThemeTokens`; content Cells reject formatter/presentation in types and runtime.',
+                zh: 'DetailColumn 与 value/children Cell 转发 formatter；Detail/Manual 两种模式均转发 `rules`、`encodings` 与稀疏默认片段。content Cell 在类型和 runtime 同时拒绝 formatter/presentation。',
+                en: 'DetailColumn and value/children Cells forward formatters. Both Detail/Manual modes forward `rules`, `encodings`, and sparse default fragments; content Cells reject formatter/presentation in types and runtime.',
               },
             },
             {
@@ -1569,8 +1596,8 @@ export const vizV01: Release = {
             {
               label: { zh: 'spec fidelity', en: 'Spec fidelity' },
               content: {
-                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings、`tableThemeTokens` 与可选根 id；embedded contextualization 不再生成或改写模型 id，也不重排这些字段，Core host Theme 仍由外层宿主提供。',
-                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, `tableThemeTokens`, and the optional root id. Embedded contextualization no longer generates or rewrites model ids or reorders these fields, while the Core host Theme still comes from the outer host.',
+                zh: '`detailTable()` / `manualTable()` 保留 formatter、rules/encodings、稀疏默认片段与可选根 id；embedded contextualization 不再生成或改写模型 id，也不重排这些字段，Core host Theme 仍由外层宿主提供。',
+                en: '`detailTable()` / `manualTable()` preserve formatter, rules/encodings, sparse default fragments, and the optional root id. Embedded contextualization no longer generates or rewrites model ids or reorders these fields, while the Core host Theme still comes from the outer host.',
               },
             },
             {

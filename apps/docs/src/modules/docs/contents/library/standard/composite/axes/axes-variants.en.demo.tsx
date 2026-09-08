@@ -5,8 +5,8 @@ import { Axes } from '@retikz/standard-react';
 
 /** Side-by-side comparison of common Axes semantics in English */
 const Demo: FC = () => (
-  <Layout width={760} height={145} style={{ maxWidth: '100%', height: 'auto' }}>
-    <Node position={[95, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+  <Layout>
+    <Node position={[95, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Positive half-axes
     </Node>
     <Axes
@@ -23,7 +23,7 @@ const Demo: FC = () => (
       }}
     />
 
-    <Node position={[285, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[285, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Two-ended number line
     </Node>
     <Axes
@@ -37,7 +37,7 @@ const Demo: FC = () => (
       y={{ extent: 20, line: false, ticks: false, grid: false, label: false }}
     />
 
-    <Node position={[475, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[475, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Asymmetric extents
     </Node>
     <Axes
@@ -54,7 +54,7 @@ const Demo: FC = () => (
       }}
     />
 
-    <Node position={[665, 18]} stroke="none" fill="none" padding={0} font={{ size: 12 }}>
+    <Node position={[665, 18]} style={{ stroke: 'none', fill: 'none', font: { size: 12 } }} layout={{ padding: 0 }}>
       Ticks without a line
     </Node>
     <Axes

@@ -54,15 +54,24 @@ const DEG_TO_RAD = Math.PI / 180;
 type Segment = [readonly [number, number], readonly [number, number]];
 
 type GuideLineStyle = Partial<
-  Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
+  Pick<
+    NonNullable<IRPath['style']>,
+    'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
+  >
 > & {
   drawOpacity?: number;
 };
 type GuidePathStyle = Partial<
-  Pick<IRPath, 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'>
+  Pick<
+    NonNullable<IRPath['style']>,
+    'stroke' | 'strokeWidth' | 'strokeOpacity' | 'dashPattern' | 'dashOffset' | 'lineCap'
+  >
 >;
 type GuideTextStyle = Partial<
-  Pick<IRNode, 'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'>
+  Pick<
+    NonNullable<IRNode['style']> & NonNullable<IRNode['layout']> & Pick<IRNode, 'rotate'>,
+    'font' | 'textColor' | 'opacity' | 'align' | 'lineHeight' | 'maxTextWidth' | 'rotate'
+  >
 >;
 
 const lineStyleProps = (style: GuideLineStyle | undefined): GuidePathStyle => ({
@@ -85,6 +94,20 @@ const textStyleProps = (style: GuideTextStyle | undefined): GuideTextStyle => ({
   ...(style?.maxTextWidth !== undefined ? { maxTextWidth: style.maxTextWidth } : {}),
   ...(style?.rotate !== undefined ? { rotate: style.rotate } : {}),
 });
+
+/** 把 guide 文本外观投影为 Core Node 的分组字段 */
+const guideTextSourceProps = (value: GuideTextStyle): Pick<IRNode, 'style' | 'layout' | 'rotate'> => {
+  const { rotate, align, lineHeight, maxTextWidth, ...style } = value;
+  return {
+    style,
+    layout: {
+      ...(align === undefined ? {} : { align }),
+      ...(lineHeight === undefined ? {} : { lineHeight }),
+      ...(maxTextWidth === undefined ? {} : { maxTextWidth }),
+    },
+    ...(rotate === undefined ? {} : { rotate }),
+  };
+};
 
 const axisLineStyleOf = (guide: IRPlotAxisGuide): GuidePathStyle | false =>
   guide.line === false ? false : lineStyleProps(guide.line);
@@ -358,14 +381,18 @@ const axisTickShapeNodesOf = (guide: IRPlotAxisGuide, placements: ReadonlyArray<
       type: 'node',
       position: [placement.point[0] + placement.normal[0] * offset, placement.point[1] + placement.normal[1] * offset],
       shape: axisTickShapeRefOf(mark),
-      padding: 0,
-      minimumSize: { width, height },
-      fill: mark.fill ?? 'currentColor',
-      ...(mark.stroke !== undefined ? { stroke: mark.stroke } : {}),
-      ...(mark.strokeWidth !== undefined ? { strokeWidth: mark.strokeWidth } : {}),
-      ...(mark.opacity !== undefined ? { opacity: mark.opacity } : {}),
-      ...(mark.drawOpacity !== undefined ? { strokeOpacity: mark.drawOpacity } : {}),
       ...(rotate !== undefined ? { rotate } : {}),
+      style: {
+        fill: mark.fill ?? 'currentColor',
+        ...(mark.stroke !== undefined ? { stroke: mark.stroke } : {}),
+        ...(mark.strokeWidth !== undefined ? { strokeWidth: mark.strokeWidth } : {}),
+        ...(mark.opacity !== undefined ? { opacity: mark.opacity } : {}),
+        ...(mark.drawOpacity !== undefined ? { strokeOpacity: mark.drawOpacity } : {}),
+      },
+      layout: {
+        padding: 0,
+        minimumSize: { width, height },
+      },
     };
   });
 };
@@ -405,14 +432,17 @@ const axisTickLabelsTokenOf = (guide: IRPlotAxisGuide): AxisTickLabelsToken | un
 const labelTextOf = (node: IRNode): string => textBlockMeasureText(node.text);
 
 const labelFontSizeOf = (node: IRNode, fallback: number): number => {
-  const size = node.font?.size;
+  const size = node.style?.font?.size;
   return typeof size === 'number' && Number.isFinite(size) && size > 0 ? size : fallback;
 };
 
 const rotatedLabelSizeOf = (node: IRNode, fontSize: number, rotate: number): { width: number; height: number } => {
   const size = labelFontSizeOf(node, fontSize);
-  const width = Math.min(estimateLabelWidth(labelTextOf(node), size), node.maxTextWidth ?? Number.POSITIVE_INFINITY);
-  const height = node.lineHeight ?? size;
+  const width = Math.min(
+    estimateLabelWidth(labelTextOf(node), size),
+    node.layout?.maxTextWidth ?? Number.POSITIVE_INFINITY,
+  );
+  const height = node.layout?.lineHeight ?? size;
   const radians = Math.abs(rotate) * DEG_TO_RAD;
   const cos = Math.abs(Math.cos(radians));
   const sin = Math.abs(Math.sin(radians));
@@ -738,7 +768,7 @@ const segmentsToPath = (segments: Array<Segment>, style?: GuideLineStyle): IRPat
     { type: 'step', kind: 'move', to: [from[0], from[1]] },
     { type: 'step', kind: 'line', to: [to[0], to[1]] },
   ]);
-  return { type: 'path', ...lineStyleProps(style), children: steps };
+  return { type: 'path', style: lineStyleProps(style), children: steps };
 };
 
 /** 某 dimension 是否为 primary 角色（cartesian x / polar angle）；否则 secondary（y / radius） */
@@ -958,7 +988,7 @@ const lowerCartesianGuide = (
               ? [p, axisY + tickDirection * (tickLength + tickLabelGap + fontSize / 2)]
               : [axisX + tickDirection * (tickLength + tickLabelGap + estimateLabelWidth(text, fontSize) / 2), p];
           })();
-          const node: IRNode = { type: 'node', position, text, ...tickLabelStyle };
+          const node: IRNode = { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
           if (isCornerLabel) {
             cornerLabels.push(node);
             return [];
@@ -1000,7 +1030,13 @@ const lowerCartesianGuide = (
     const position = shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift);
     const rotate = axisTitleRotateOf(title, isX ? undefined : cartesianYAxisTitleRotateOf(side), axisTangent);
     const titleStyle = axisTitleTextStyleOf(title, axisTangent);
-    return { type: 'node', position, text: title.text, ...titleStyle, ...(rotate !== undefined ? { rotate } : {}) };
+    return {
+      type: 'node',
+      position,
+      text: title.text,
+      ...guideTextSourceProps(titleStyle),
+      ...(rotate !== undefined ? { rotate } : {}),
+    };
   })();
   const axisChildren: Array<IRPath | IRNode> = [
     ...([axisLinePath, tickPath].filter(Boolean) as Array<IRPath>),
@@ -1014,9 +1050,16 @@ const lowerCartesianGuide = (
           return {
             type: 'scope',
             ...guideScopeProps(guide, 'axis', context),
-            pathDefault: { stroke: 'currentColor' },
-            nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
             children: axisChildren,
+            defaults: {
+              path: {
+                style: { stroke: 'currentColor' },
+              },
+              node: {
+                style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+                layout: { padding: 0 },
+              },
+            },
           };
         })()
       : null;
@@ -1072,8 +1115,12 @@ const lowerCartesianGuide = (
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor' },
         children: gridChildren,
+        defaults: {
+          path: {
+            style: { stroke: 'currentColor' },
+          },
+        },
       };
     }
   }
@@ -1127,7 +1174,7 @@ const lowerAngularAxis = (
   const axisChildren: Array<IRPath | IRNode> =
     axisLineStyle === false || fixedRadiusAxis === null
       ? []
-      : [{ ...fixedRadiusAxis, ...lineStyleProps(axisLineStyle) }];
+      : [{ ...fixedRadiusAxis, style: { ...fixedRadiusAxis.style, ...lineStyleProps(axisLineStyle) } }];
   if (tickPath) axisChildren.push(tickPath);
   axisChildren.push(...tickShapeNodes);
   const labels: Array<IRNode> = showLabels
@@ -1147,8 +1194,7 @@ const lowerAngularAxis = (
             type: 'node',
             position: labelLayout.position,
             text,
-            ...tickLabelStyle,
-            ...(tickLabelStyle.align === undefined ? { align: labelLayout.align } : {}),
+            ...guideTextSourceProps({ ...tickLabelStyle, align: tickLabelStyle.align ?? labelLayout.align }),
           };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
@@ -1173,7 +1219,7 @@ const lowerAngularAxis = (
       type: 'node',
       position: shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift),
       text: title.text,
-      ...titleStyle,
+      ...guideTextSourceProps(titleStyle),
       ...(rotate !== undefined ? { rotate } : {}),
     });
   }
@@ -1181,9 +1227,16 @@ const lowerAngularAxis = (
   const axisLayer: IRScope = {
     type: 'scope',
     ...guideScopeProps(guide, 'axis', context),
-    pathDefault: { stroke: 'currentColor' },
-    nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
     children: [...axisChildren, ...labels],
+    defaults: {
+      path: {
+        style: { stroke: 'currentColor' },
+      },
+      node: {
+        style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+        layout: { padding: 0 },
+      },
+    },
   };
 
   // ---- 网格层（grid:true → 每角向刻度一条圆心→外圆辐条）----
@@ -1224,8 +1277,12 @@ const lowerAngularAxis = (
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor' },
         children: gridChildren,
+        defaults: {
+          path: {
+            style: { stroke: 'currentColor' },
+          },
+        },
       };
     }
   }
@@ -1291,7 +1348,7 @@ const lowerRadialAxis = (
           // 标签在刻度外侧（与刻度同侧、沿 -tangent），偏移 = 刻度长 + gap + 半字高
           const offset = tickLength + tickLabelGap + fontSize / 2;
           const position: [number, number] = [point[0] - tangent[0] * offset, point[1] - tangent[1] * offset];
-          return { type: 'node', position, text, ...tickLabelStyle };
+          return { type: 'node', position, text, ...guideTextSourceProps(tickLabelStyle) };
         }),
         { fontSize, mode: 'generic', axis: 'both' },
       )
@@ -1314,7 +1371,7 @@ const lowerRadialAxis = (
       type: 'node',
       position: shiftedAxisTitlePosition(basePosition, axisTangent, axisNormal, title.shift),
       text: title.text,
-      ...titleStyle,
+      ...guideTextSourceProps(titleStyle),
       ...(rotate !== undefined ? { rotate } : {}),
     });
   }
@@ -1329,9 +1386,16 @@ const lowerRadialAxis = (
       ? {
           type: 'scope',
           ...guideScopeProps(guide, 'axis', context),
-          pathDefault: { stroke: 'currentColor' },
-          nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
           children: axisChildren,
+          defaults: {
+            path: {
+              style: { stroke: 'currentColor' },
+            },
+            node: {
+              style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+              layout: { padding: 0 },
+            },
+          },
         }
       : null;
 
@@ -1347,7 +1411,9 @@ const lowerRadialAxis = (
       .filter(radius => Number.isFinite(radius) && radius > 0)
       .flatMap(radius => {
         const path = fixedRadiusPath(frame, radius);
-        return path === null ? [] : [{ ...path, ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) }];
+        return path === null
+          ? []
+          : [{ ...path, style: { ...path.style, ...lineStyleProps({ drawOpacity: 0.15, ...axisGridStyleOf(grid) }) } }];
       });
     const minorGrid = axisMinorGridTokenOf(grid);
     const minorBandPosition = minorGrid?.bandPosition ?? majorBandPosition;
@@ -1369,15 +1435,24 @@ const lowerRadialAxis = (
               const path = fixedRadiusPath(frame, radius);
               return path === null
                 ? []
-                : [{ ...path, ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }) }];
+                : [
+                    {
+                      ...path,
+                      style: { ...path.style, ...lineStyleProps({ drawOpacity: 0.08, ...axisGridStyleOf(minorGrid) }) },
+                    },
+                  ];
             });
     const gridChildren = [...rings, ...minorRings];
     if (gridChildren.length > 0) {
       gridLayer = {
         type: 'scope',
         ...guideScopeProps(guide, 'grid', context),
-        pathDefault: { stroke: 'currentColor' },
         children: gridChildren,
+        defaults: {
+          path: {
+            style: { stroke: 'currentColor' },
+          },
+        },
       };
     }
   }
@@ -1482,7 +1557,7 @@ export const lowerCustomAxis = (
         type: 'node',
         position: [point[0] + normal[0] * offset, point[1] + normal[1] * offset],
         text: tick.label,
-        ...tickLabelStyle,
+        ...guideTextSourceProps(tickLabelStyle),
       });
     }
   }
@@ -1508,7 +1583,7 @@ export const lowerCustomAxis = (
         type: 'node',
         position: shiftedAxisTitlePosition(basePosition, unitTangent, normal, title.shift),
         text: title.text,
-        ...titleStyle,
+        ...guideTextSourceProps(titleStyle),
         ...(rotate !== undefined ? { rotate } : {}),
       });
     }
@@ -1516,7 +1591,8 @@ export const lowerCustomAxis = (
 
   const lineChildren: Array<IRPath> = [];
   const axisLineStyle = axisLineStyleOf(guide);
-  if (axisLinePath && axisLineStyle !== false) lineChildren.push({ ...axisLinePath, ...lineStyleProps(axisLineStyle) });
+  if (axisLinePath && axisLineStyle !== false)
+    lineChildren.push({ ...axisLinePath, style: { ...axisLinePath.style, ...lineStyleProps(axisLineStyle) } });
   const tickLineStyle = axisTickLineStyleOf(guide);
   const tickPath = tickLineStyle === false ? null : segmentsToPath(tickSegments, tickLineStyle);
   if (tickPath) lineChildren.push(tickPath);
@@ -1527,9 +1603,16 @@ export const lowerCustomAxis = (
   const axisLayer: IRScope = {
     type: 'scope',
     ...guideScopeProps(guide, 'axis', context),
-    pathDefault: { stroke: 'currentColor' },
-    nodeDefault: { font: { size: fontSize }, stroke: 'none', fill: 'none', padding: 0 },
     children: axisChildren,
+    defaults: {
+      path: {
+        style: { stroke: 'currentColor' },
+      },
+      node: {
+        style: { font: { size: fontSize }, stroke: 'none', fill: 'none' },
+        layout: { padding: 0 },
+      },
+    },
   };
   return { gridLayer: null, axisLayer };
 };
@@ -1626,7 +1709,7 @@ export type LowerLegendOptions = {
   id?: string;
   /** legend 语义图层的 core zIndex */
   zIndex?: number;
-  /** 已按 built-in plotTheme < IRPlot.plotTheme < LegendGuide.style 合并的视觉 token */
+  /** 已按 resolved Plot defaults < LegendGuide.style 合并的视觉 token */
   style: EffectiveLegendGuideTokens;
 };
 
@@ -1640,16 +1723,14 @@ const rectNode = (x: number, y: number, width: number, height: number): IRNode =
   type: 'node',
   position: [x + width / 2, y + height / 2],
   shape: 'rectangle',
-  minimumSize: { width, height },
-  padding: 0,
+  layout: { minimumSize: { width, height }, padding: 0 },
 });
 
 /** legend 文本节点默认只绘制文字，不继承外部节点描边或填充 */
 const legendTextNode = (node: IRNode): IRNode => ({
   ...node,
-  stroke: 'none',
-  fill: 'none',
-  padding: 0,
+  style: { ...node.style, stroke: 'none', fill: 'none' },
+  layout: { ...node.layout, padding: 0 },
 });
 
 /**
@@ -1681,7 +1762,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
         type: 'node',
         position: [band.x + estimateLabelWidth(titleText, fontSize) / 2, cursorY + fontSize / 2],
         text: options.title,
-        ...titleStyle,
+        ...guideTextSourceProps(titleStyle),
       }),
     );
     cursorY += fontSize + titleGap;
@@ -1697,7 +1778,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
       : rectNode(rampX, rampY, rampLength, rampThickness);
     // 垂直色带：offset 0 在顶（小值上 / 大值下，与轴一致需翻转）；这里 0 在带起点，stops 直接用
     const angle = vertical ? 90 : 0;
-    ramp.fill = { kind: 'linearGradient', stops: options.ramp.stops, angle };
+    ramp.style = { ...ramp.style, fill: { kind: 'linearGradient', stops: options.ramp.stops, angle } };
     children.push(ramp);
     // 沿带刻度标签
     for (const tick of options.ramp.ticks) {
@@ -1707,7 +1788,7 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
             rampY + tick.offset * rampLength,
           ]
         : [rampX + tick.offset * rampLength, rampY + rampThickness + swatchGap + fontSize / 2];
-      children.push(legendTextNode({ type: 'node', position, text: tick.label, ...labelStyle }));
+      children.push(legendTextNode({ type: 'node', position, text: tick.label, ...guideTextSourceProps(labelStyle) }));
     }
   } else {
     // 离散 swatch：逐条目堆叠（vertical 自上而下、horizontal 自左而右）
@@ -1728,10 +1809,8 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
           type: 'node',
           position: symbolCenter,
           shape: entry.shape,
-          minimumSize: entry.symbolSize ?? swatchSize,
-          fill: entry.color ?? 'currentColor',
-          stroke: 'none',
-          strokeWidth: 0,
+          style: { fill: entry.color ?? 'currentColor', stroke: 'none', strokeWidth: 0 },
+          layout: { minimumSize: entry.symbolSize ?? swatchSize },
         });
       } else if (entry.radius !== undefined) {
         // size 图例：只画代表半径的圆点，不额外画矩形 swatch
@@ -1739,26 +1818,31 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
           type: 'node',
           position: symbolCenter,
           shape: 'circle',
-          minimumSize: entry.radius * Math.SQRT2,
-          fill: entry.color ?? 'currentColor',
-          stroke: 'none',
-          strokeWidth: 0,
+          style: { fill: entry.color ?? 'currentColor', stroke: 'none', strokeWidth: 0 },
+          layout: { minimumSize: entry.radius * Math.SQRT2 },
         });
       } else {
         // color / 分箱 / opacity：矩形色块
         const swatchOffset = (symbolSide - swatchSize) / 2;
         const swatch = rectNode(cursorX + swatchOffset, rowY + swatchOffset, swatchSize, swatchSize);
-        if (entry.color !== undefined) swatch.fill = entry.color;
+        if (entry.color !== undefined) swatch.style = { ...swatch.style, fill: entry.color };
         if (entry.opacity !== undefined) {
-          swatch.fill = 'currentColor';
-          swatch.fillOpacity = entry.opacity;
+          swatch.style = { ...swatch.style, fill: 'currentColor' };
+          swatch.style = { ...swatch.style, fillOpacity: entry.opacity };
         }
         children.push(swatch);
       }
       // 标签：swatch 右侧
       const labelX = cursorX + symbolSide + swatchGap + estimateLabelWidth(entry.label, fontSize) / 2;
       const labelY = rowY + symbolSide / 2;
-      children.push(legendTextNode({ type: 'node', position: [labelX, labelY], text: entry.label, ...labelStyle }));
+      children.push(
+        legendTextNode({
+          type: 'node',
+          position: [labelX, labelY],
+          text: entry.label,
+          ...guideTextSourceProps(labelStyle),
+        }),
+      );
       if (vertical) {
         rowY += symbolSide + entryGap;
       } else {
@@ -1772,9 +1856,12 @@ export const lowerLegend = (options: LowerLegendOptions): IRScope => {
     ...(options.id !== undefined ? { id: options.id } : {}),
     zIndex: options.zIndex ?? PlotLayerZIndex.Legend,
     meta: { source: 'plot', layer: 'legend', channel: options.channel },
-    // 标签字号 + 默认无描边（swatch / ramp / glyph / 标签都不要描边边框）；不写 nodeDefault.shape（每个 swatch / glyph Node 自带 shape，避免整层被当成 mark 层）
-    // 用 strokeWidth: 0 而非 stroke: 'none'——后者是 axis 层的判别特征，会让 legend 层被误判为 axis
-    nodeDefault: { font: { size: fontSize }, padding: 0, strokeWidth: 0 },
     children,
+    defaults: {
+      node: {
+        style: { font: { size: fontSize }, strokeWidth: 0 },
+        layout: { padding: 0 },
+      },
+    },
   };
 };

@@ -11,11 +11,15 @@ describe('Block-family Source schemas', () => {
       id: 'service',
       localNamespace: true,
       transforms: [{ kind: 'translate', x: 12, y: 8 }],
-      nodeDefault: { fill: '#eef2ff' },
-      resetStyle: ['path'],
       zIndex: 2,
       boundingShape: 'rectangle',
       meta: { domain: 'billing' },
+      defaults: {
+        node: {
+          style: { fill: '#eef2ff' },
+        },
+        reset: ['path'],
+      },
     });
 
     expect(block).toEqual({
@@ -24,11 +28,15 @@ describe('Block-family Source schemas', () => {
       id: 'service',
       localNamespace: true,
       transforms: [{ kind: 'translate', x: 12, y: 8 }],
-      nodeDefault: { fill: '#eef2ff' },
-      resetStyle: ['path'],
       zIndex: 2,
       boundingShape: 'rectangle',
       meta: { domain: 'billing' },
+      defaults: {
+        node: {
+          style: { fill: '#eef2ff' },
+        },
+        reset: ['path'],
+      },
     });
     expect(block).not.toHaveProperty('gap');
     expect(block).not.toHaveProperty('padding');

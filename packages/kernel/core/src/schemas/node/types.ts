@@ -10,7 +10,9 @@ import type {
   BoxSpacingSchema,
   NodeLabelBoundaryPositionSchema,
   NodeLabelSchema,
+  NodeLayoutSchema,
   NodeSchema,
+  NodeStyleSchema,
 } from './schema';
 
 /** CSS-like 四边 spacing 对象，供 Node padding / margin 复用 */
@@ -46,3 +48,6 @@ export type NodeLabelPlacementValue = ValueOf<typeof NodeLabelPlacement>;
 
 /** 节点标签自身旋转模式取值 */
 export type NodeLabelRotateModeValue = ValueOf<typeof NodeLabelRotateMode>;
+
+export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
+export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;

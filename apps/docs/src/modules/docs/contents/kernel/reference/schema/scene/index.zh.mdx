@@ -71,13 +71,3 @@ description: IR 根 —— 一份 retikz 绘制的 JSON 化描述
     type: '该命名空间内的 composite 类型名',
   }}
 />
-
-<span id="jsonobject"></span>
-
-## JSON 对象
-
-`JsonObjectSchema` 表示键为字符串、值为递归 JSON value 的对象。它用于 `meta`、自定义 provider 参数与 composite 扩展字段；函数、class 实例、ReactNode 等运行时值不属于 IR。
-
-<span id="jsonvalue"></span>
-
-`JsonValueSchema` 是递归联合：string、number、boolean、null、JsonValue 数组或 JsonObject。

@@ -1,11 +1,13 @@
+import type { JsonObject, JsonValue } from '@retikz/foundation';
+
 import type { ShapeDefinition } from '../../contract';
 import type { ProviderCollection } from '../../providers/registry';
-import type { IRJsonObject, IRNode, IRShapeRef, JsonValue } from '../../schemas';
+import type { IRNode, IRShapeRef } from '../../schemas';
 import type { ShapeResolution } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers/registry';
-import { BuiltinShape, JsonObjectSchema } from '../../schemas';
+import { BuiltinShape } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../provider-validation';
 
@@ -28,7 +30,7 @@ type NodeShapePresetResolution = {
   /** 实际查询的 shape provider 名称 */
   type: string;
   /** 传给 provider 的 JSON-safe 参数对象 */
-  params: IRJsonObject;
+  params: JsonObject;
 };
 
 /** 将 Node shape preset 展开为实际 provider 名称和参数 */
@@ -53,16 +55,20 @@ const resolveNodeShapePreset = (shape: IRNode['shape']): NodeShapePresetResoluti
 };
 
 /** 递归将 JSON 值里的数值叶子乘以 factor */
-const scaleJsonNumbers = <T extends JsonValue>(value: T, factor: number): T => {
-  if (typeof value === 'number') return (value * factor) as T;
-  if (Array.isArray(value)) return value.map(v => scaleJsonNumbers(v, factor)) as T;
+const scaleJsonNumbers = (value: JsonValue, factor: number): JsonValue => {
+  if (typeof value === 'number') return value * factor;
+  if (Array.isArray(value)) return value.map(childValue => scaleJsonNumbers(childValue, factor));
   if (value !== null && typeof value === 'object') {
     const out: Record<string, JsonValue> = {};
     for (const [key, childValue] of Object.entries(value)) out[key] = scaleJsonNumbers(childValue, factor);
-    return out as T;
+    return out;
   }
   return value;
 };
+
+/** 递归缩放 JSON 对象中的数值叶子 */
+const scaleJsonObjectNumbers = (value: JsonObject, factor: number): JsonObject =>
+  Object.fromEntries(Object.entries(value).map(([key, childValue]) => [key, scaleJsonNumbers(childValue, factor)]));
 
 /** 解析节点 shape definition 与随节点缩放后的 params */
 export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution => {
@@ -70,15 +76,7 @@ export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution 
   const { type: shapeName, params: rawShapeParams } = resolveNodeShapePreset(node.shape);
   const shapeParamsPath = `${irPath}.shape.params`;
   const shapeDefinition = providerDefinitionOf(shapes, shapeName, { capability: 'shape', optionName: 'shapes' });
-  parseProviderPayload({
-    capability: 'shape',
-    providerName: shapeName,
-    irPath: shapeParamsPath,
-    payloadName: 'params',
-    schema: JsonObjectSchema,
-    value: rawShapeParams,
-  });
-  const parsedShapeParams: IRJsonObject = parseProviderPayload({
+  const parsedShapeParams: JsonObject = parseProviderPayload({
     capability: 'shape',
     providerName: shapeName,
     irPath: shapeParamsPath,
@@ -86,24 +84,23 @@ export const resolveNodeShape = (input: NodeShapeResolveInput): ShapeResolution 
     schema: shapeDefinition.paramsSchema,
     value: rawShapeParams,
   });
-  const mergedShapeParams: IRJsonObject =
+  const mergedShapeParams: JsonObject =
     shapeName === 'rectangle' && node.cornerRadius !== undefined && !('cornerRadius' in parsedShapeParams)
       ? { ...parsedShapeParams, cornerRadius: node.cornerRadius }
       : parsedShapeParams;
 
   const shapeScale = Math.sqrt(scaleX * scaleY);
   const noScale = scaleX === 1 && scaleY === 1;
-  let shapeParams: IRJsonObject;
+  let shapeParams: JsonObject;
   if (noScale) {
     shapeParams = mergedShapeParams;
   } else if (shapeDefinition.scaleParams === undefined) {
-    shapeParams = scaleJsonNumbers(mergedShapeParams, shapeScale);
+    shapeParams = scaleJsonObjectNumbers(mergedShapeParams, shapeScale);
   } else {
     const rawScaledParams = shapeDefinition.scaleParams(mergedShapeParams, scaleX, scaleY);
-    shapeParams = withProviderOutputValidationBoundary(`Shape '${shapeName}' scaleParams`, () => {
-      const parsedScaledParams = shapeDefinition.paramsSchema.parse(rawScaledParams);
-      return JsonObjectSchema.parse(parsedScaledParams);
-    });
+    shapeParams = withProviderOutputValidationBoundary(`Shape '${shapeName}' scaleParams`, () =>
+      shapeDefinition.paramsSchema.parse(rawScaledParams),
+    );
   }
 
   return { name: shapeName, definition: shapeDefinition, params: shapeParams };

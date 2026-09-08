@@ -12,7 +12,7 @@ import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node fill={{ kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 }} />
+<Node style={{ fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } }} />
 ```
 
 Pass the pattern object to `fill` on a Node or Path; a closed Path fills its interior. The same object can also be used as `stroke` when you need patterned outlines.
@@ -91,9 +91,9 @@ Compile resolves the base style in `dashPattern > dashed > dotted` order. Direct
     },
     {
       label: 'Inherit and expand directional and cyclic styles',
-      path: 'packages/kernel/core/src/compile/resource/pattern-style.ts',
-      startLine: 35,
-      endLine: 108,
+      path: 'packages/kernel/core/src/resolve/resource/pattern.ts',
+      startLine: 33,
+      endLine: 94,
     },
     {
       label: 'Resolve instance options into a Scene resource',
@@ -120,8 +120,8 @@ Compile resolves the base style in `dashPattern > dashed > dotted` order. Direct
 
 ### Primitive props
 
-| Prop     | Type                      | Default | Description                     |
-| -------- | ------------------------- | ------- | ------------------------------- |
+| Prop     | Type                  | Default | Description                     |
+| -------- | --------------------- | ------- | ------------------------------- |
 | `fill`   | `string` \| `IRPaint` | —       | Fill a Node or closed Path      |
 | `stroke` | `string` \| `IRPaint` | —       | Stroke with the same paint spec |
 

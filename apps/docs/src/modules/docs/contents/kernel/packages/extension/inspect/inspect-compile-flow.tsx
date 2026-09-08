@@ -32,14 +32,9 @@ const renderFlowNode = ({ id, position, title, detail, color, width = 132 }: Flo
       { text: title, font: { weight: 'bold' } },
       { text: detail, fill: 'gray', font: { size: 10 } },
     ]}
-    minimumSize={{ width, height: 48 }}
-    stroke={color}
-    fill={color}
-    fillOpacity={0.08}
-    align="middle"
-    font={{ size: 12 }}
-    lineHeight={14}
     cornerRadius={4}
+    style={{ stroke: color, fill: color, fillOpacity: 0.08, font: { size: 12 } }}
+    layout={{ minimumSize: { width, height: 48 }, align: 'middle', lineHeight: 14 }}
   />
 );
 
@@ -47,7 +42,7 @@ const renderFlowNode = ({ id, position, title, detail, color, width = 132 }: Flo
 const DesktopFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
   const { labels } = props;
   return (
-    <Layout width={680} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <LogicFigureFrame id="inspect-core-group">
         <LogicFigureFrameTitle>@retikz/core</LogicFigureFrameTitle>
         {renderFlowNode({
@@ -102,13 +97,17 @@ const DesktopFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
         width: 148,
       })}
 
-      <Draw way={['observed-compile', 'owner-output']} arrow="->" stroke="gray" />
-      <Draw way={['observed-compile', 'primary-scene']} arrow="->" stroke="gray" />
-      <Draw way={['owner-output', 'inspector-callback']} arrow="->" stroke="gray" />
-      <Draw way={['inspection-inputs', 'inspector-callback']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
-      <Draw way={['inspector-callback', 'sealed-fragment']} arrow="->" stroke="gray" />
-      <Draw way={['primary-scene', 'atomic-frame']} arrow="->" stroke="gray" />
-      <Draw way={['sealed-fragment', 'atomic-frame']} arrow="->" stroke="gray" />
+      <Draw way={['observed-compile', 'owner-output']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['observed-compile', 'primary-scene']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['owner-output', 'inspector-callback']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw
+        way={['inspection-inputs', 'inspector-callback']}
+        arrow="->"
+        style={{ stroke: 'gray', dashPattern: [4, 3] }}
+      />
+      <Draw way={['inspector-callback', 'sealed-fragment']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['primary-scene', 'atomic-frame']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['sealed-fragment', 'atomic-frame']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 };
@@ -117,7 +116,7 @@ const DesktopFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
 const MobileFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
   const { labels } = props;
   return (
-    <Layout width={360} height={390} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       {renderFlowNode({
         id: 'mobile-observed-compile',
         position: [0, -155],
@@ -170,17 +169,16 @@ const MobileFigure: FC<{ labels: InspectCompileFlowLabels }> = props => {
         width: 104,
       })}
 
-      <Draw way={['mobile-observed-compile', 'mobile-owner-output']} arrow="->" stroke="gray" />
-      <Draw way={['mobile-owner-output', 'mobile-inspector-callback']} arrow="->" stroke="gray" />
+      <Draw way={['mobile-observed-compile', 'mobile-owner-output']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['mobile-owner-output', 'mobile-inspector-callback']} arrow="->" style={{ stroke: 'gray' }} />
       <Draw
         way={['mobile-inspection-inputs', 'mobile-inspector-callback']}
         arrow="->"
-        stroke="gray"
-        dashPattern={[4, 3]}
+        style={{ stroke: 'gray', dashPattern: [4, 3] }}
       />
-      <Draw way={['mobile-inspector-callback', 'mobile-sealed-fragment']} arrow="->" stroke="gray" />
-      <Draw way={['mobile-sealed-fragment', 'mobile-atomic-frame']} arrow="->" stroke="gray" />
-      <Draw way={['mobile-primary-scene', 'mobile-atomic-frame']} arrow="->" stroke="gray" />
+      <Draw way={['mobile-inspector-callback', 'mobile-sealed-fragment']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['mobile-sealed-fragment', 'mobile-atomic-frame']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['mobile-primary-scene', 'mobile-atomic-frame']} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 };

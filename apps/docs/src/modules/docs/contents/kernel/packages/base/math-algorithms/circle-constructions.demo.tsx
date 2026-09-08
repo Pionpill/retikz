@@ -23,31 +23,34 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const isTriangleScheme = values.scheme === 'circumcircle' || values.scheme === 'incircle';
 
   return (
-    <Layout width={400} height={260} viewBox={{ x: -165, y: -115, width: 330, height: 230 }}>
-      {isTriangleScheme ? <Draw way={[...vertices, vertices[0]]} stroke="darkorange" strokeWidth={2} /> : null}
+    <Layout viewBox={{ x: -165, y: -115, width: 330, height: 230 }}>
+      {isTriangleScheme ? (
+        <Draw way={[...vertices, vertices[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
+      ) : null}
       {isTriangleScheme
         ? vertices.map((point, index) => (
-            <Circle key={`triangle-${index}`} center={point} radius={4} fill="darkorange" stroke="none" />
+            <Circle
+              key={`triangle-${index}`}
+              center={point}
+              radius={4}
+              style={{ fill: 'darkorange', stroke: 'none' }}
+            />
           ))
         : points.map((point, index) => (
-            <Circle key={`point-${index}`} center={point} radius={4} fill="darkorange" stroke="none" />
+            <Circle key={`point-${index}`} center={point} radius={4} style={{ fill: 'darkorange', stroke: 'none' }} />
           ))}
       {triangleCircle && (
         <Circle
           center={triangleCircle.center}
           radius={triangleCircle.radius}
-          stroke="dodgerblue"
-          strokeWidth={2}
-          fill="none"
+          style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: 'none' }}
         />
       )}
       {enclosingCircle && (
         <Circle
           center={enclosingCircle.center}
           radius={enclosingCircle.radius}
-          stroke="dodgerblue"
-          strokeWidth={2}
-          fill="none"
+          style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: 'none' }}
         />
       )}
     </Layout>

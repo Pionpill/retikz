@@ -9,11 +9,11 @@ Chart reuses Plot instead of wrapping a closed drawing result. A packaged type's
 
 <ComponentPreview files="chart-plot-ownership" hideCode size="md" />
 
-| Chart owns                                 | Plot owns                                                 |
-| ------------------------------------------ | --------------------------------------------------------- |
-| `namespace`, family, and `recipe` envelope | data, transforms, scales, and coordinates                 |
-| title, subtitle, note, and source          | marks, axes, legends, and other guides                    |
-| canvas, chart Surface, and Chart tokens    | Plot theme, grammar resolution, lowering, and diagnostics |
+| Chart owns                                 | Plot owns                                                    |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `namespace`, family, and `recipe` envelope | data, transforms, scales, and coordinates                    |
+| title, subtitle, note, and source          | marks, axes, legends, and other guides                       |
+| canvas, chart Surface, and Chart defaults  | Plot defaults, grammar resolution, lowering, and diagnostics |
 
 When the Scatter recipe creates a primary Point mark from `recipe.encodings`, it is constructing Plot rather than implementing another Point system inside Chart. The recipe also emits a built-in semantic mark. `recipe.marks` add marks that inherit Chart context, while the `plotExtension` fragment remains independent; each side is consumed by its own schemas, providers, and pipeline.
 
@@ -28,7 +28,7 @@ This boundary prevents Chart types from copying the entire Plot API as the gramm
 
 ## Runtime Theme cooperation
 
-Core, Chart, Plot, and the current recipe own separate Theme slices. A Source Theme may provide `tokens.chart`, `tokens.plot`, and `tokens.recipe`; each owner consumes only its own slice, and shared names only coordinate selection without merging ownership.
+Core, Chart, Plot, and the current recipe own separate contracts. Core `theme` selects style and mode; Chart definitions provide Chart `defaults` and forwarded Plot `plotDefaults`; local Chart Source uses `chartDefaults` and `plotExtension`. Each owner consumes only its own fields, and shared names only coordinate selection without merging ownership.
 
 In React, Source `theme` carries persisted owner slices. `ChartThemeProvider` injects the current concrete chartType provider through `themeDefinitions`, while `PlotThemeProvider` injects Plot definitions through `plotThemeStyles`. Vanilla factories preserve `themeDefinitions` and `lowerOptions.plotThemeStyles` separately and consume them in one compilation. When embedded in `<Layout>`, Core definitions come from the parent Layout while Chart and Plot definitions are still contributed by their matching providers.
 

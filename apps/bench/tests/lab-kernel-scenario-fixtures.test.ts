@@ -70,7 +70,7 @@ describe('Kernel Performance Lab 场景 fixture', () => {
     const changes = changedIndexes(first.children, second.children);
 
     expect(changes).toEqual([2_500]);
-    expect(second.children[2_500]).toMatchObject({ fill: '#f59e0b', stroke: '#fef3c7', strokeWidth: 3 });
+    expect(second.children[2_500]).toMatchObject({ style: { fill: '#f59e0b', stroke: '#fef3c7', strokeWidth: 3 } });
   });
 
   it('节点增删保留未变化节点 identity，并替换一个稳定 ID', () => {

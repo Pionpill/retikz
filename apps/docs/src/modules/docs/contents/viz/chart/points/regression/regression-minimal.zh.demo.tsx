@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <RegressionChart
     rows={regressionMinimalData}
     presentation={{
-      title: '航程与到达延误的线性关系',
-      subtitle: '100 个航班；横轴为航程（英里），纵轴为到达延误（分钟）',
-      source: 'Vega Datasets flights-2k.json；访问于 2026-09-01',
+      title: { text: '航程与到达延误的线性关系' },
+      subtitle: { text: '100 个航班；横轴为航程（英里），纵轴为到达延误（分钟）' },
+      source: { text: 'Vega Datasets flights-2k.json；访问于 2026-09-01' },
     }}
     recipe={{ encodings: { x: 'distanceMiles', y: 'delayMinutes' } }}
   />

@@ -84,7 +84,7 @@ See [Node geometry](/kernel/components/node/overview) for shared sizing, boundar
   description="Revisit when you want to understand vertex expansion, content circumscription, or the diamond preset."
 />
 
-This section zooms in only on the two local mechanisms owned by Polygon. See [Architecture Principles](/kernel/concepts/design/principles) for the full JSX → IR → Scene pipeline.
+This section zooms in only on the two local mechanisms owned by Polygon. See [Architecture Principles](/kernel/components/design/principles) for the full JSX → IR → Scene pipeline.
 
 ### Props become a closed Path (sugar)
 
@@ -129,9 +129,9 @@ Text and `padding` first form the inner box. The polygon provider then derives t
   sources={[
     {
       label: 'diamond preset normalization',
-      path: 'packages/kernel/core/src/compile/node/shape.ts',
-      startLine: 43,
-      endLine: 55,
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 36,
+      endLine: 107,
     },
     {
       label: 'Circumradius calculation for the inner box',
@@ -143,7 +143,7 @@ Text and `padding` first form the inner box. The polygon provider then derives t
       label: 'Contour output, connection hit, and directional anchors',
       path: 'packages/kernel/core/src/providers/shape/polygon.ts',
       startLine: 128,
-      endLine: 188,
+      endLine: 185,
     },
   ]}
 />

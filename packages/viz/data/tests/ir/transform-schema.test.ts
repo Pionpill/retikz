@@ -6,6 +6,9 @@ import {
   AnnotateSelectorSchema,
   AnnotateTransformSchema,
   DataScalarReducerOperationSchema,
+  ExternalReducerOperationSchema,
+  ExternalSelectorOperationSchema,
+  ExternalTransformSchema,
   OrderBySchema,
   OutsideQuantileBandBoundarySchema,
   OutsideQuantileBandSelectorOperationSchema,
@@ -181,6 +184,21 @@ describe('transform schema', () => {
       kind: 'host-transform',
       extra: { enabled: true },
     });
+  });
+
+  it.each([
+    ['function', () => true],
+    ['symbol', Symbol('invalid')],
+    ['bigint', BigInt(1)],
+    ['NaN', Number.NaN],
+    ['Infinity', Number.POSITIVE_INFINITY],
+  ])('reports a custom %s leaf through the native Zod catchall path', (_name, value) => {
+    for (const schema of [ExternalTransformSchema, ExternalReducerOperationSchema, ExternalSelectorOperationSchema]) {
+      const result = schema.safeParse({ kind: 'host-operation', payload: { nested: [0, { bad: value }] } });
+
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
+    }
   });
 
   it.each(closedObjectSchemaCases)('$name survives JSON round-trip and rejects extra fields', ({ schema, value }) => {

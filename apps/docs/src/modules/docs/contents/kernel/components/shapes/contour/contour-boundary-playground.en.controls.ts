@@ -128,7 +128,7 @@ export const previewControlContract = {
     'ShapeDefinition.boundaryPoint',
     'Draw.way',
     'IRNodeTarget.anchor',
-    'Node.fill',
-    'Node.stroke',
+    'Node.style.fill',
+    'Node.style.stroke',
   ],
 } satisfies PreviewControlContract;

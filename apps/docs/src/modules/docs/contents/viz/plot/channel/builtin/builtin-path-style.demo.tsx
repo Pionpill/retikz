@@ -23,7 +23,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       ]}
       width={440}
       height={280}
-      style={{ maxWidth: '100%', height: 'auto' }}
     >
       <PathMark
         x="step"

@@ -1,4 +1,4 @@
-import { NodeSchema } from '@retikz/core';
+import { NodeLayoutSchema, NodeSchema } from '@retikz/core';
 import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { literal, strictObject } from 'zod';
 
@@ -14,7 +14,7 @@ const EntityNodeShape = NodeSchema.omit({
   type: true,
   shape: true,
   boundary: true,
-  padding: true,
+  layout: true,
   cornerRadius: true,
 }).shape;
 
@@ -26,5 +26,8 @@ export const EntitySchema = strictObject({
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   ...EntityNodeShape,
+  layout: NodeLayoutSchema.omit({ padding: true })
+    .optional()
+    .describe('Node layout overrides without role-owned padding.'),
   position: EntityNodeShape.position.optional().describe('Optional Core Node placement.'),
 }).describe('JSON-safe Graph Entity with role-owned structure and the non-structural Core Node surface.');

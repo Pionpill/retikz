@@ -44,25 +44,21 @@ const availabilityPredicate = defineEntityPredicate({
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Graph
-    width={420}
-    height={170}
     viewBox={{ x: 0, y: 0, width: 420, height: 170 }}
     entityRoles={[serviceRole]}
     entityKinds={[gatewayKind]}
     entityPredicates={[availabilityPredicate]}
-    graphTheme={{
-      rules: [
-        {
-          type: 'entity',
-          selector: { predicate: { name: 'service.availability' } },
-          appearance: {
-            color: statusColors[values.status],
-            stroke: statusColors[values.status],
-            strokeWidth: values.critical ? 3 : 1.5,
-          },
+    graphRules={[
+      {
+        type: 'entity',
+        selector: { predicate: { name: 'service.availability' } },
+        style: {
+          color: statusColors[values.status],
+          stroke: statusColors[values.status],
+          strokeWidth: values.critical ? 3 : 1.5,
         },
-      ],
-    }}
+      },
+    ]}
   >
     <Entity
       id="gateway"

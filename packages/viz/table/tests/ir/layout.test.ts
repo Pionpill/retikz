@@ -23,7 +23,7 @@ describe('Table layout schema', () => {
       rowGap: 2,
       borders: {
         mode: 'collapse',
-        outer: { kind: 'line', width: 2 },
+        outer: { top: { kind: 'line', width: 2 } },
         horizontal: { kind: 'none', priority: 1 },
       },
     } as const;

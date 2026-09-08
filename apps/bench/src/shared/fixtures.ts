@@ -1,4 +1,4 @@
-import type { IRScene } from '@retikz/core';
+import type { IRNode, IRScene } from '@retikz/core';
 
 /** 创建具有稳定 identity 的简单节点 benchmark Scene */
 export const createSimpleNodeScene = (count: number): IRScene => {
@@ -12,9 +12,8 @@ export const createSimpleNodeScene = (count: number): IRScene => {
       type: 'node' as const,
       id: `entity-${index.toString().padStart(5, '0')}`,
       position: [(index % 100) * 12, Math.floor(index / 100) * 12] as [number, number],
-      width: 8,
-      height: 8,
-      fill: index % 2 === 0 ? '#2563eb' : '#7c3aed',
+      layout: { minimumSize: { width: 8, height: 8 } },
+      style: { fill: index % 2 === 0 ? '#2563eb' : '#7c3aed' },
     })),
   };
 };
@@ -28,7 +27,9 @@ export const updateSimpleNodeFill = (scene: IRScene, index: number, fill: string
   if (child.type !== 'node') throw new Error('updateSimpleNodeFill: target child must be a node');
   return {
     ...scene,
-    children: scene.children.map((candidate, childIndex) => (childIndex === index ? { ...child, fill } : candidate)),
+    children: scene.children.map((candidate, childIndex) =>
+      childIndex === index ? { ...child, style: { ...(child as IRNode).style, fill } } : candidate,
+    ),
   };
 };
 
@@ -46,10 +47,9 @@ export const createStableGroupScene = (primitiveCount: number): IRScene => {
         type: 'node',
         id: 'stable-group',
         position: [0, 0],
-        width: 8,
-        height: 8,
-        fill: '#2563eb',
+        layout: { minimumSize: { width: 8, height: 8 } },
         text: 'G',
+        style: { fill: '#2563eb' },
       },
       ...children,
     ],
@@ -62,5 +62,8 @@ export const updateStableGroupFill = (scene: IRScene, fill: string): IRScene => 
   if (group.type !== 'node' || group.id !== 'stable-group' || group.text === undefined) {
     throw new Error('updateStableGroupFill: scene must contain the stable-group fixture root');
   }
-  return { ...scene, children: [{ ...group, fill }, ...scene.children.slice(1)] };
+  return {
+    ...scene,
+    children: [{ ...group, style: { ...(group as IRNode).style, fill } }, ...scene.children.slice(1)],
+  };
 };

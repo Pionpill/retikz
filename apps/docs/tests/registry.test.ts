@@ -20,10 +20,10 @@ import {
   EncodingSchema,
   GuideSchema,
   MarkSchema,
-  PlotAreaThemeSchema,
+  PlotDefaultsSchema,
   PlotLayerSchema,
   PlotSchema,
-  PlotThemeSchema,
+  PlotThemeResolutionSchema,
   ScaleSchema,
   TransformSchema,
 } from '@retikz/plot';
@@ -54,8 +54,8 @@ describe('SCHEMA_REGISTRY', () => {
       PlotCoordinateSchema: { schema: PlotCoordinateSchema },
       GuideSchema: { schema: GuideSchema },
       PlotLayerSchema: { schema: PlotLayerSchema },
-      PlotAreaThemeSchema: { schema: PlotAreaThemeSchema },
-      PlotThemeSchema: { schema: PlotThemeSchema },
+      PlotDefaultsSchema: { schema: PlotDefaultsSchema },
+      PlotThemeResolutionSchema: { schema: PlotThemeResolutionSchema },
       LegendSchema: {
         schema: LegendSchema,
         url: '/library/standard/composite/legend#legendschema',
@@ -82,7 +82,7 @@ describe('SCHEMA_REGISTRY', () => {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
       expect(entry.url, name).toMatch(
-        /^\/.+\/(?:(?:reference|contract|composite|extension|graph)\/.+|flow\/basic(?:#.+)?)$/,
+        /^\/.+\/(?:(?:reference|contract|composite|extension|graph|packages)\/.+|flow\/basic(?:#.+)?)$/,
       );
     }
   });

@@ -9,12 +9,14 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## 节点
 
-`NodeSchema` 描述一个被定位的视觉原件。它是 IR 里字段最多的实体 —— 30+ 字段覆盖形状、填充 / 描边、padding、文本、字体、缩放、附加标签。
+`NodeSchema` 描述带位置与边界的视觉实体。`style` 收纳视觉覆盖，`layout` 收纳尺寸、间距和文本排布；位置、形状、变换、文本与标签保持根层。
 
 <ZodSchema
   name="NodeSchema"
   description="节点图元：带位置、形状和可选文本的可引用实体。"
   descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
+    layout: '尺寸、间距与文本排布参数',
     type: '判别字段，标记此子节点为 node',
     id: '可选唯一 id；当其它 path 需要按字符串引用本 node 时必填',
     shape:
@@ -23,33 +25,34 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
       '节点内容盒中心点；笛卡尔 [x,y]、极坐标、`at`-风格相对定位（`{ direction, of, distance? }`）、偏移定位（`{ of, offset }`）、或比例定位（`{ between: [A, B], fraction }`）；非笛卡尔形态编译期解析',
     rotate: '绕节点中心顺时针旋转角度（°）',
     text: '节点内文本：单字符串，或由字符串、行级样式对象、`{ runs }` 混合文本 / 公式行组成的多行数组',
-    align: '多行文本块内对齐，默认 `middle`',
-    lineHeight: '行高（用户单位）；未填时取 `font.size × 1.2`',
-    color: '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
-    fill: '形状背景填充：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）',
-    fillOpacity: '填充不透明度 0..1，只影响形状背景',
-    stroke: '形状边框 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
-    strokeOpacity: '描边不透明度 0..1，只影响边框',
-    strokeWidth: '边框宽度（用户单位），默认 1',
-    dashed: '边框样式：虚线预设；被 dashPattern 覆盖',
-    dotted: '边框样式：点线预设；被 dashPattern / dashed 覆盖',
-    dashPattern: 'dash/gap 长度序列，盖过 dashed / dotted',
-    dashOffset: '边框虚线起点偏移（用户单位），可为正数、0 或负数',
+    'layout.align': '多行文本块内对齐，默认 `middle`',
+    'layout.lineHeight': '行高（用户单位）；未填时取 `font.size × 1.2`',
+    'style.color': '主色（TikZ color=）；stroke / fill / textColor 未单设则随它，并级联到内部文字与边 label',
+    'style.fill': '形状背景填充：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）',
+    'style.fillOpacity': '填充不透明度 0..1，只影响形状背景',
+    'style.stroke':
+      '形状边框 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
+    'style.strokeOpacity': '描边不透明度 0..1，只影响边框',
+    'style.strokeWidth': '边框宽度（用户单位），默认 1',
+    'style.dashed': '边框样式：虚线预设；被 dashPattern 覆盖',
+    'style.dotted': '边框样式：点线预设；被 dashPattern / dashed 覆盖',
+    'style.dashPattern': 'dash/gap 长度序列，盖过 dashed / dotted',
+    'style.dashOffset': '边框虚线起点偏移（用户单位），可为正数、0 或负数',
     cornerRadius: '迁移期顶层圆角半径（用户单位），仅对 rectangle 生效；推荐写在形状 params 内',
-    minimumSize: '形状最小可视尺寸：数字表示宽高相同；对象按 width/height > default 解析',
+    'layout.minimumSize': '形状最小可视尺寸：数字表示宽高相同；对象按 width/height > default 解析',
     scale: '缩放：数字表示等比缩放；对象按 x/y > default 解析，作用到边框 / padding / text / fontSize',
-    textColor:
+    'style.textColor':
       '文本颜色，任意 CSS color；保留关键字 NodeTextColor.Contrast 按静态不透明 fill 选择黑 / 白；默认 currentColor',
-    opacity: '整节点不透明度 0..1，同时作用于形状与文本',
-    padding:
+    'style.opacity': '整节点不透明度 0..1，同时作用于形状与文本',
+    'layout.padding':
       '内部 padding：可写数字，或写 { default, x, y, left, right, top, bottom }；按单边 > x/y > default > 默认 8 解析',
-    margin:
+    'layout.margin':
       '外部 margin：可写数字，或写 { default, x, y, left, right, top, bottom }；按单边 > x/y > default > 默认 0 解析；外推连接锚点并计入布局占位',
-    font: '节点内文本的字体规格（family / size / weight / style，均可选）',
+    'style.font': '节点内文本的字体规格（family / size / weight / style，均可选）',
     label: '节点外围附加文本，单对象或数组',
     boundary:
       '连接面：path 端点贴边与 Web 方位 / 角度锚点走哪条边界——`shape`（视觉形状自身，默认）/ `circle`（外接圆）/ 任意注册 shape 名 / `{ type, params }`；可被边端点的 `boundary` 单边覆盖，不改节点占位',
-    maxTextWidth: '文本自动换行的最大宽度（用户单位）；超出按词折行，缺省不自动换行',
+    'layout.maxTextWidth': '文本自动换行的最大宽度（用户单位）；超出按词折行，缺省不自动换行',
     meta: 'provenance 元数据：原样透传进本节点 emit 的 Scene 图元，renderer 忽略、不参与布局 / 连接 / 样式 / 包围盒；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象，不跨 scope 继承、不进 every-X 默认',
     animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
     zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
@@ -66,7 +69,7 @@ description: 在 scene 中被命名的成员 —— Node 与 Coordinate
 
 ## Node 文字颜色关键字
 
-`NodeSchema.textColor` 保持普通字符串契约。`NodeTextColor.Contrast` 是 Node 宿主保留关键字，也可用于由 Node schema 派生的 `Scope.nodeDefault.textColor`；它按最终静态不透明 fill 选择纯黑或纯白。
+`NodeSchema.style.textColor` 保持普通字符串契约。`NodeTextColor.Contrast` 是 Node 宿主保留关键字，也可用于由 Node schema 派生的 `Scope.defaults.node.style.textColor`；它按最终静态不透明 fill 选择纯黑或纯白。
 
 Core 只解析确定的 named / hex / `rgb()` / `hsl()` 颜色，不读取 DOM 或 renderer 状态。透明 / 缺省 fill、gradient、pattern、image 或动态 CSS color 使用固定 `currentColor`，同时发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`。
 

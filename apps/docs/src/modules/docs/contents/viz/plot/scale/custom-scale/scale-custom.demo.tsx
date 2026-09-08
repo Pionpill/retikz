@@ -46,7 +46,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       scaleDefinitions={[easePositionScale, brandColorScale]}
       width={420}
       height={220}
-      style={{ maxWidth: '100%', height: 'auto' }}
     />
   );
 });

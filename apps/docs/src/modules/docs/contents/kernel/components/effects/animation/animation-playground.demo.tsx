@@ -21,14 +21,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const replayKey = `${values.from}-${values.duration}-${values.delay}-${values.easing}-${values.origin}`;
 
   return (
-    <Layout key={replayKey} width={220} height={150} viewBox={{ x: -110, y: -75, width: 220, height: 150 }}>
+    <Layout key={replayKey} viewBox={{ x: -110, y: -75, width: 220, height: 150 }}>
       <Node
         position={[0, 0]}
         shape="rectangle"
-        fill="#f97316"
-        textColor="white"
-        padding={{ x: 28, y: 18 }}
         animations={[animation]}
+        style={{ fill: '#f97316', textColor: 'white' }}
+        layout={{ padding: { x: 28, y: 18 } }}
       >
         scaleIn
       </Node>

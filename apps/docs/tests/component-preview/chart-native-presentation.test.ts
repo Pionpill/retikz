@@ -100,7 +100,7 @@ describe('Chart-native Scatter presentation', () => {
     expect(preview.ir.viewBox).toBeUndefined();
   });
 
-  it('uses the shared host size and stable framing for the presentation visibility playground', () => {
+  it('uses stable framing for the presentation visibility playground', () => {
     const preview = buildPreviewIR(() =>
       createElement(ChartPresentationVisibilityPreview, {
         copy: {
@@ -116,7 +116,6 @@ describe('Chart-native Scatter presentation', () => {
       }),
     );
 
-    expect(preview).toMatchObject({ width: 440, height: 360 });
     expect(preview.ir.viewBox).toEqual({ x: -10, y: -10, width: 393.4, height: 345.2 });
   });
 

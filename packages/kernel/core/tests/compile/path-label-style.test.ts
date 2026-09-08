@@ -51,7 +51,16 @@ describe('Happy: StepLabel 样式字段落地', () => {
   });
 
   it('step_label_inherits_host_path_color：<Path color="crimson"> + label 无 textColor → fill=crimson', () => {
-    expect(labelOf(pathWithLabel({ color: 'crimson' }, {}))?.fill).toBe('crimson');
+    expect(
+      labelOf(
+        pathWithLabel(
+          {
+            style: { color: 'crimson' },
+          },
+          {},
+        ),
+      )?.fill,
+    ).toBe('crimson');
   });
 });
 
@@ -65,7 +74,16 @@ describe('边界: 回退链 / 不跟 stroke', () => {
   });
 
   it('step_label_stroke_only_does_not_follow：<Path stroke="crimson">（只 stroke）→ label currentColor（不跟 stroke）', () => {
-    expect(labelOf(pathWithLabel({ stroke: 'crimson' }, {}))?.fill).toBe('currentColor');
+    expect(
+      labelOf(
+        pathWithLabel(
+          {
+            style: { stroke: 'crimson' },
+          },
+          {},
+        ),
+      )?.fill,
+    ).toBe('currentColor');
   });
 
   it('step_label_font_partial_fallback：font.size=10 无 family → size=10、family 走 renderer 默认（undefined）', () => {
@@ -91,7 +109,6 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
       children: [
         {
           type: 'scope',
-          labelDefault: { textColor: 'gray' },
           children: [
             {
               type: 'path',
@@ -101,6 +118,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
               ],
             },
           ],
+          defaults: { label: { textColor: 'gray' } },
         },
       ],
     };
@@ -114,17 +132,17 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
       children: [
         {
           type: 'scope',
-          labelDefault: { textColor: 'gray' },
           children: [
             {
               type: 'path',
-              color: 'crimson',
               children: [
                 { type: 'step', kind: 'move', to: [0, 0] },
                 { type: 'step', kind: 'line', to: [80, 0], label: { text: 'x' } },
               ],
+              style: { color: 'crimson' },
             },
           ],
+          defaults: { label: { textColor: 'gray' } },
         },
       ],
     };
@@ -138,7 +156,6 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
       children: [
         {
           type: 'scope',
-          labelDefault: { font: { size: 10 } },
           children: [
             {
               type: 'path',
@@ -148,6 +165,7 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
               ],
             },
           ],
+          defaults: { label: { font: { size: 10 } } },
         },
       ],
     };
@@ -155,7 +173,16 @@ describe('交互: labelDefault / 相乘 / 零破坏', () => {
   });
 
   it('step_label_opacity_multiplies_with_path：path opacity 0.5 + label opacity 0.5 → 0.25', () => {
-    expect(labelOf(pathWithLabel({ opacity: 0.5 }, { opacity: 0.5 }))?.opacity).toBe(0.25);
+    expect(
+      labelOf(
+        pathWithLabel(
+          {
+            style: { opacity: 0.5 },
+          },
+          { opacity: 0.5 },
+        ),
+      )?.opacity,
+    ).toBe(0.25);
   });
 
   it('step_label_zero_break：既有无样式 label → currentColor + 默认字号 16', () => {

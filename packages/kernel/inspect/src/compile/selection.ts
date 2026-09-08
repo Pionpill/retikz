@@ -3,9 +3,9 @@ import type {
   CompileObservationOwner,
   CompileOccurrenceLocator,
   IRChild,
-  IRJsonObject,
   IRScene,
 } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 
 import { compareCompileOccurrences, isCompileObservationOwnerEqual, isCompileOccurrenceEqual } from '@retikz/core';
 
@@ -247,7 +247,7 @@ export const resolveInspectionSelection = ({
         });
       if (definition.owner.kind === 'pathKind' && !requests.some(entry => entry.rule.target.kind === 'self')) continue;
       let isRequestActive = false;
-      let mergedOptionsInput: IRJsonObject = {};
+      let mergedOptionsInput: JsonObject = {};
       for (const entry of requests) {
         try {
           if (entry.rule.options === false) {
@@ -259,7 +259,7 @@ export const resolveInspectionSelection = ({
             entry.rule.options === true ? {} : entry.rule.options,
           );
           const mergeOptionsInput = definition.mergeOptionsInput as
-            | ((inheritedOptionsInput: IRJsonObject, localOptionsInput: IRJsonObject) => IRJsonObject)
+            | ((inheritedOptionsInput: JsonObject, localOptionsInput: JsonObject) => JsonObject)
             | undefined;
           mergedOptionsInput =
             isRequestActive && mergeOptionsInput !== undefined
@@ -272,7 +272,7 @@ export const resolveInspectionSelection = ({
         }
       }
       if (!isRequestActive) continue;
-      let options: IRJsonObject;
+      let options: JsonObject;
       try {
         options = cloneAndFreezeInspectionJson(
           definition.optionsSchema.parse(mergedOptionsInput),

@@ -45,6 +45,8 @@ export type ComponentPreviewCardProps = {
   previewClassName?: string;
   /** 是否显示右侧工具栏的 Ask AI 按钮。 */
   showAskAi?: boolean;
+  /** 是否显示缩放、下载、渲染器等预览宿主工具栏。 */
+  showTools?: boolean;
   /** 当前 demo 的声明式 controls definition */
   controlDefinition?: PreviewControlsDefinition;
   /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
@@ -79,6 +81,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     size = 'md',
     previewClassName,
     showAskAi = true,
+    showTools = true,
     controlDefinition,
     controlPanelDefaultOpen,
     controlContract,
@@ -143,26 +146,28 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   }, [aiCurrentPage, fillAiDraft, name, setAiOpen]);
   const handleShowCode = useCallback(() => setLocalIsCodeVisible(true), []);
 
-  const previewToolSlots = buildPreviewToolSlots({
-    transform: previewState.transform,
-    isTransformed: previewState.isTransformed,
-    zoomBy: previewState.zoomBy,
-    resetTransform: previewState.resetTransform,
-    dragEnabled: previewState.dragEnabled,
-    toggleDrag: previewState.toggleDrag,
-    onMaximize: () => setIsMaximized(true),
-    size: previewState.size,
-    onSizeChange: previewState.setSize,
-    name,
-    rendererMode: previewState.rendererMode,
-    rendererModeFixed: previewState.rendererModeFixed,
-    toggleRendererMode: previewState.toggleRendererMode,
-  });
+  const previewToolSlots = showTools
+    ? buildPreviewToolSlots({
+        transform: previewState.transform,
+        isTransformed: previewState.isTransformed,
+        zoomBy: previewState.zoomBy,
+        resetTransform: previewState.resetTransform,
+        dragEnabled: previewState.dragEnabled,
+        toggleDrag: previewState.toggleDrag,
+        onMaximize: () => setIsMaximized(true),
+        size: previewState.size,
+        onSizeChange: previewState.setSize,
+        name,
+        rendererMode: previewState.rendererMode,
+        rendererModeFixed: previewState.rendererModeFixed,
+        toggleRendererMode: previewState.toggleRendererMode,
+      })
+    : [];
   const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
 
   return (
     <div ref={containerRef} className="my-6">
-      <div className="overflow-hidden rounded-xl border">
+      <div data-slot="component-preview-frame" className="overflow-hidden rounded-xl border">
         <PreviewWorkspace
           definition={resolvedControlDefinition}
           controlContract={controlContract}

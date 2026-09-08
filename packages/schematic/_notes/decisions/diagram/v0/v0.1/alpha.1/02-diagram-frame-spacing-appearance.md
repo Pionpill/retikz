@@ -4,6 +4,8 @@
 - 决策日期：2026-08-29
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [ADR-01：Diagram Assembly 与 Presentation](./01-diagram-assembly-presentation.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
+> Theme 修订：本文的文本区域、显式默认值和 Flow layout/routing 契约以 [Diagram / Flow Defaults 与 Theme 来源](./08-theme-source-fragments.md) 为准；其余装配与能力边界继续成立。
+
 ## 背景与目标
 
 ADR-01 已确定完整 Diagram 由 title、description、drawing core 与 legend 固定槽位组成，所有存在区域进入同一 Scene、bounds、Inspect 与 export。它尚未决定这些区域如何物理排列，也未冻结完整外壳、padding、区块间距、Legend 方位、Diagram 专属 Theme、块级文字 appearance 与 Core Scope 的组合语义

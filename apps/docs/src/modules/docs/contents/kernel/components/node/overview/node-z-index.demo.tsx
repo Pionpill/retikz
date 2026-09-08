@@ -10,15 +10,33 @@ export const previewControls = nodeZIndexControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={300} height={190}>
+    <Layout>
       {/* 声明顺序固定为 a → b → c；面板只改变显式层级 */}
-      <Node id="a" position={[-32, -22]} fill="red" stroke="red" minimumSize={90} zIndex={values.zIndexA}>
+      <Node
+        id="a"
+        position={[-32, -22]}
+        zIndex={values.zIndexA}
+        style={{ fill: 'red', stroke: 'red' }}
+        layout={{ minimumSize: 90 }}
+      >
         a · z={values.zIndexA}
       </Node>
-      <Node id="b" position={[0, 0]} fill="dodgerblue" stroke="dodgerblue" minimumSize={90} zIndex={values.zIndexB}>
+      <Node
+        id="b"
+        position={[0, 0]}
+        zIndex={values.zIndexB}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue' }}
+        layout={{ minimumSize: 90 }}
+      >
         b · z={values.zIndexB}
       </Node>
-      <Node id="c" position={[32, 22]} fill="green" stroke="green" minimumSize={90} zIndex={values.zIndexC}>
+      <Node
+        id="c"
+        position={[32, 22]}
+        zIndex={values.zIndexC}
+        style={{ fill: 'green', stroke: 'green' }}
+        layout={{ minimumSize: 90 }}
+      >
         c · z={values.zIndexC}
       </Node>
     </Layout>

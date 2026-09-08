@@ -67,6 +67,17 @@ describe('@retikz/graph package boundary', () => {
       type: 'blockRow',
     });
     expect(graphExports.GraphSchema).toBeDefined();
+    expect(graphExports.GraphDefaultsSchema).toBeDefined();
+    expect(graphExports.GraphRuleSchema).toBeDefined();
+    expect(graphExports.GraphEntityDefaultsSchema).toBeDefined();
+    expect(graphExports.GraphEntityDefaultsStyleSchema).toBeDefined();
+    expect(graphExports.GraphEntityDefaultsLayoutSchema).toBeDefined();
+    expect(graphExports.GraphEntityRuleSchema).toBeDefined();
+    expect(graphExports.GraphEntityRuleStyleSchema).toBeDefined();
+    expect(graphExports.GraphRelationDefaultsSchema).toBeDefined();
+    expect(graphExports.GraphRelationDefaultsStyleSchema).toBeDefined();
+    expect(graphExports.GraphRelationRuleSchema).toBeDefined();
+    expect(graphExports.GraphSurfaceDefaultsSchema).toBeDefined();
     expect(graphExports.EntitySchema).toBeDefined();
     expect(graphExports.RelationSchema).toBeDefined();
     expect(graphExports.BlockSchema).toBeDefined();
@@ -127,10 +138,14 @@ describe('@retikz/graph package boundary', () => {
     expect(graphExports.defineEntityPredicate).toBeTypeOf('function');
     expect(graphExports.defineRelationPredicate).toBeTypeOf('function');
     expect(graphExports.defineGraphThemeStyle).toBeTypeOf('function');
-    expect(graphExports.GraphEntityAppearanceTokenOverridesSchema).toBeDefined();
     expect(graphExports.GraphRelationStructureTokenOverridesSchema).toBeDefined();
-    expect(graphExports.GraphRelationAppearanceTokenOverridesSchema).toBeDefined();
     for (const name of [
+      'GraphEntityAppearanceTokenOverridesSchema',
+      'GraphRelationAppearanceTokenOverridesSchema',
+      'GraphEntityThemeRuleSchema',
+      'GraphRelationThemeRuleSchema',
+      'GraphThemeRuleSchema',
+      'GraphThemeLayerSchema',
       'EntityVariant',
       'EntityVariantSchema',
       'EntityVariantValue',

@@ -42,7 +42,7 @@ import { Layout } from '@retikz/react';
 </Layout>;
 ```
 
-`theme`, Scope defaults, transforms, placement, clip, z-index, namespace and animations always belong to Graph Source. `graphTheme` carries Graph-local Entity and Relation rules. An embedded Graph rejects standalone-only fields such as `width`, renderer/runtime options and Definition arrays instead of ignoring them.
+`theme`, Scope defaults, transforms, placement, clip, z-index, namespace and animations always belong to Graph Source. `graphDefaults` carries sparse descendant defaults and `graphRules` carries ordered Graph-local Entity and Relation rules. An embedded Graph rejects standalone-only fields such as `width`, renderer/runtime options and Definition arrays instead of ignoring them.
 
 Entity and Relation can also be direct Layout or Scope children. Their `id` is optional; omitting it draws the element without registering a Core reference target. Relation endpoints use Core `NodeTarget`, including `anchor`, `offset` and `boundary`.
 

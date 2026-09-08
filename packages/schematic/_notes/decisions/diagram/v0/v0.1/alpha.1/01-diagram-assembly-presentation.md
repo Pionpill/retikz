@@ -4,6 +4,8 @@
 - 决策日期：2026-08-29
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
+> Theme 修订：本文的文本区域、显式默认值和 Flow layout/routing 契约以 [Diagram / Flow Defaults 与 Theme 来源](./08-theme-source-fragments.md) 为准；其余装配与能力边界继续成立。
+
 ## 背景与目标
 
 Graph 已能用 JSON-safe 的 Graph、Group、Block、Entity 与 Relation composite 表达关系语义和可独立绘制的内容，但它不拥有完整图示的外围说明、自动布局或 routing。具体 Diagram 类型需要把 title、description、legend 与自己的 drawing core 组织为一个可独立编译、测量、检查和导出的完整输出

@@ -4,7 +4,7 @@
 >
 > 关联：[`table v0.1 roadmap`](../roadmap.md) · [`table-design.md`](../../../../../architecture/table-design.md) · [`table completeness`](../../../../../architecture/table-visualization-complete.md) · [`alpha.6 Legend composition`](../alpha.6/roadmap.md)
 
-- 状态：实现已完成、治理收口中；ADR-05 已 Accepted，其余 ADR 状态不变
+- 状态：实现已完成、Theme/Defaults 治理收口中；ADR-07 Proposed，将替换 ADR-05 的 flat token 契约
 - 启动日期：2026-07-31
 
 ## 目标
@@ -23,15 +23,15 @@ Table 继续拥有 visual encoding、descriptor seed 与领域 lineage；Standar
 
 ## ADR 与依赖
 
-| ADR                                                        | 主题                                                                                | 依赖                                                              | 状态     |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------- |
-| [01](./01-cell-formatter-and-formatted-value.md)           | Formatter Definition 与 formatted value                                             | alpha.2 canonical model                                           | Proposed |
-| [02](./02-presentation-context-and-cell-appearance.md)     | Presentation context 与 Cell appearance                                             | ADR-01、Core Scope style                                          | Proposed |
-| [03](./03-cell-selector-and-rule-cascade.md)               | Cell selector、predicate 与 ordered rule cascade                                    | ADR-01～02                                                        | Proposed |
-| [04](./04-conditional-visual-encoding-and-scale.md)        | Conditional color scale、encoding 与 Legend descriptor                              | ADR-02～03；Core gradient-stop gate；与 ADR-05 的主题消费同批验证 | Proposed |
-| [05](./05-style-preset-and-token-resolution.md)            | Table style preset、`tableThemeTokens`、shared categorical projection 与 precedence | Core ADR-13、ADR-02～04；与 ADR-04 的主题消费同批验证             | Accepted |
-| [06](./06-standard-legend-consumption-and-traceability.md) | Standard Legend、外围 Box Layout 与 artifact lineage                                | ADR-04～05；Standard ADR-09；Core artifact-link hard gate         | Proposed |
-| [07](./07-react-vanilla-authoring-and-documentation.md)    | React/Vanilla/SSR 与文档闭环                                                        | ADR-01～06                                                        | Proposed |
+| ADR                                                        | 主题                                                                                | 依赖                                                              | 状态       |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| [01](./01-cell-formatter-and-formatted-value.md)           | Formatter Definition 与 formatted value                                             | alpha.2 canonical model                                           | Proposed   |
+| [02](./02-presentation-context-and-cell-appearance.md)     | Presentation context 与 Cell appearance                                             | ADR-01、Core Scope style                                          | Proposed   |
+| [03](./03-cell-selector-and-rule-cascade.md)               | Cell selector、predicate 与 ordered rule cascade                                    | ADR-01～02                                                        | Proposed   |
+| [04](./04-conditional-visual-encoding-and-scale.md)        | Conditional color scale、encoding 与 Legend descriptor                              | ADR-02～03；Core gradient-stop gate；与 ADR-05 的主题消费同批验证 | Proposed   |
+| [05](./05-style-preset-and-token-resolution.md)            | Table style preset、`tableThemeTokens`、shared categorical projection 与 precedence | Core ADR-13、ADR-02～04；由 ADR-07 替换                           | Superseded |
+| [06](./06-standard-legend-consumption-and-traceability.md) | Standard Legend、外围 Box Layout 与 artifact lineage                                | ADR-04～05；Standard ADR-09；Core artifact-link hard gate         | Proposed   |
+| [07](./07-table-source-default-fragments.md)               | Source-shaped Table defaults、style definition 与 adapter parity                    | ADR-02～05；Core 默认协议                                         | Proposed   |
 
 依赖主链：
 
@@ -51,7 +51,7 @@ ADR-04/05 的共享主题消费部分必须作为同一产品单元实施、验�
 
 ## 当前进度
 
-- ADR-05 已完成 Table owner definition、preset、resolver、shared categorical projection、正式 appearance / border / encoding / manifest / Legend descriptor 消费，以及跨入口和旧字段失败语义闭环，现已 Accepted。
+- ADR-05 的实现已完成 Table owner definition、preset、resolver、shared categorical projection、正式 appearance / border / encoding / manifest / Legend descriptor 消费，但 flat token 公开契约由 ADR-07 替换。ADR-07 保留同一消费链，将默认值改为 Source-shaped fragments。
 - 本次收口不改变 ADR-01～04、06～07 的 Proposed 状态，也不代表 alpha.3 milestone 已完成；其余能力仍按各自 gate 独立收口。
 
 ADR-04 的 ordinal/threshold mapping 属于 Table；continuous mapping 必须消费 Core 冻结的 context-free canonical RGBA 与 gradient-stop 求值语义。ADR-05 还依赖 Core ADR-13 的 inherited namespace、owner validation 与 shared categorical projection；ADR-06 只有在当前分支能从 Standard package root 消费 Accepted Legend/Flex schema、Definition、artifact 与 direct Definition contract，Table body 已能通过 lowering-only composite boundary 表达为 JSON-safe `IRChild`，且 Core/Standard 能把 Flex authored item key 穿过 nested replay 关联到最终 child occurrence 后才能实现。Gate 未满足时不建立 Table-local Legend、外围 solver、placeholder API，也不预测 child occurrence path。

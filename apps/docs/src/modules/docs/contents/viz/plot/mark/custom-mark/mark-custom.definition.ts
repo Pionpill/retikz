@@ -31,10 +31,8 @@ export const diamondMark = defineMark<DiamondMark>({
         type: 'node',
         position: point,
         shape: 'diamond',
-        minimumSize: mark.minimumSize ?? 16,
-        padding: 0,
-        fill: mark.fill ?? '#f59e0b',
-        strokeWidth: 0,
+        style: { fill: mark.fill ?? '#f59e0b', strokeWidth: 0 },
+        layout: { minimumSize: mark.minimumSize ?? 16, padding: 0 },
       });
     }
     return nodes.length === 0 ? null : ({ type: 'scope', children: nodes } satisfies IRChild);

@@ -50,28 +50,24 @@ export const renderPathLabelRoutePlayground = (
   values: PathLabelRoutePlaygroundValues,
   copy: PathLabelRoutePlaygroundCopy,
 ): ReactNode => (
-  <Layout width={420} height={300} viewBox={{ x: -210, y: -140, width: 420, height: 280 }}>
+  <Layout viewBox={{ x: -210, y: -140, width: 420, height: 280 }}>
     <Node
       id="A"
       position={SourcePosition}
-      fill="transparent"
-      minimumSize={{ width: 48, height: 32 }}
-      stroke="currentColor"
-      textColor="currentColor"
+      style={{ fill: 'transparent', stroke: 'currentColor', textColor: 'currentColor' }}
+      layout={{ minimumSize: { width: 48, height: 32 } }}
     >
       {copy.source}
     </Node>
     <Node
       id="B"
       position={TargetPosition}
-      fill="transparent"
-      minimumSize={{ width: 48, height: 32 }}
-      stroke="currentColor"
-      textColor="currentColor"
+      style={{ fill: 'transparent', stroke: 'currentColor', textColor: 'currentColor' }}
+      layout={{ minimumSize: { width: 48, height: 32 } }}
     >
       {copy.target}
     </Node>
-    <Path label={labelOf(values, copy.label)} stroke="currentColor">
+    <Path label={labelOf(values, copy.label)} style={{ stroke: 'currentColor' }}>
       <Step kind="move" to="A" />
       {routeStepOf(values.route)}
     </Path>

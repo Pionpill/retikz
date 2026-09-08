@@ -15,12 +15,7 @@ import {
 import { matrix } from './rect-heatmap.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={380}
-    height={280}
-    viewBox={{ x: -16, y: -16, width: 412, height: 312 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout viewBox={{ x: -16, y: -16, width: 412, height: 312 }}>
     <Plot
       data={matrix}
       model={[

@@ -19,6 +19,7 @@ export const createRegressionChart = (input: CreateRegressionChartInput): ChartA
     ...(input.source === undefined ? {} : { source: input.source }),
     encodings: input.encodings,
     ...(input.properties === undefined ? {} : { properties: input.properties }),
+    ...(input.guides === undefined ? {} : { guides: input.guides }),
     ...(input.marks === undefined ? {} : { marks: input.marks }),
   });
   return createPointChart(

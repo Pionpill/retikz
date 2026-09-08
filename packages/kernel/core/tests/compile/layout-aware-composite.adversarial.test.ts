@@ -1,6 +1,8 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { RuntimeRevision } from '@retikz/runtime';
 
 import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
+import { JsonObjectSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { array, boolean, custom, enum as zodEnum, intersection, literal, number, object, strictObject } from 'zod';
 
@@ -10,7 +12,6 @@ import type {
   CompositeReplay,
   IRChild,
   IRScene,
-  JsonValue,
   LayoutChildFailure,
   LayoutChildResult,
   LayoutCompositeCompileContext,
@@ -35,7 +36,6 @@ import {
   definePathKind,
   definePattern,
   defineShape,
-  JsonObjectSchema,
   LayoutAxisProposalKind,
   LayoutChildProbeKind,
   LayoutIntrinsicMode,
@@ -129,18 +129,18 @@ describe('layout-aware composite constraints and bounds', () => {
         child: {
           type: 'node',
           position: [0, 0],
-          minimumSize: { width: 20, height: 10 },
-          padding: 0,
-          margin: 5,
-          fill: '#f00',
-          stroke: '#000',
-          strokeOpacity: 0,
-          shadow: {
-            offsetX: 10,
-            offsetY: -8,
-            blur: 2,
-            color: '#000',
+          style: {
+            fill: '#f00',
+            stroke: '#000',
+            strokeOpacity: 0,
+            shadow: {
+              offsetX: 10,
+              offsetY: -8,
+              blur: 2,
+              color: '#000',
+            },
           },
+          layout: { minimumSize: { width: 20, height: 10 }, padding: 0, margin: 5 },
         },
       }),
       { composites: [definition], padding: 0 },
@@ -178,10 +178,8 @@ describe('layout-aware composite constraints and bounds', () => {
           type: 'node',
           position: [0, 0],
           text: '',
-          padding: 0,
-          margin: 0,
-          fillOpacity: 0,
-          strokeOpacity: 0,
+          style: { fillOpacity: 0, strokeOpacity: 0 },
+          layout: { padding: 0, margin: 0 },
         },
       }),
       { composites: [definition], measureText: fixedMeasurer, padding: 0 },
@@ -214,11 +212,8 @@ describe('layout-aware composite constraints and bounds', () => {
               {
                 type: 'node',
                 position: [10, 20],
-                minimumSize: 10,
-                padding: 0,
-                margin: 0,
-                fill: '#f00',
-                strokeOpacity: 0,
+                style: { fill: '#f00', strokeOpacity: 0 },
+                layout: { minimumSize: 10, padding: 0, margin: 0 },
               },
             ],
           },
@@ -320,11 +315,11 @@ describe('layout-aware composite constraints and bounds', () => {
         child: {
           type: 'path',
           marks: arrowMarks('->'),
-          lineJoin: 'bevel',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { lineJoin: 'bevel' },
         },
       }),
       { composites: [definition], measureText: fixedMeasurer },
@@ -708,7 +703,12 @@ describe('layout-aware composite constraints and bounds', () => {
       compileToScene(
         sceneOf(
           { namespace: 'test', type: 'forwardReference' },
-          { type: 'node', id: 'later', position: [20, 20], minimumSize: 10 },
+          {
+            type: 'node',
+            id: 'later',
+            position: [20, 20],
+            layout: { minimumSize: 10 },
+          },
         ),
         { composites: [definition] },
       ),
@@ -2247,7 +2247,7 @@ describe('layout-aware composite constraints and bounds', () => {
                 ? {
                     type: 'node',
                     position: [0, 0],
-                    fill: { kind: 'pattern', shape: 'badEmitPattern' },
+                    style: { fill: { kind: 'pattern', shape: 'badEmitPattern' } },
                   }
                 : value.variant === 'clip'
                   ? {
@@ -2739,7 +2739,7 @@ describe('layout-aware composite constraints and bounds', () => {
             type: 'node',
             position: [0, 0],
             shape: { type: 'nonFiniteVisualBoundsShape', params: {} },
-            fill: '#000',
+            style: { fill: '#000' },
           },
           NaturalLayoutProposal,
         );
@@ -2889,8 +2889,8 @@ describe('layout-aware composite constraints and bounds', () => {
       sceneOf({
         type: 'node',
         position: [0, 0],
-        padding: 0,
         shape: { type: 'dynamicLayoutGeometryShape', params: {} },
+        layout: { padding: 0 },
       }),
       { shapes: [dynamicShape] },
     );
@@ -3473,9 +3473,7 @@ describe('layout-aware composite replay ownership', () => {
           type: 'node',
           id: 'moved-node',
           position: [0, 0],
-          minimumSize: 10,
-          padding: 0,
-          margin: 0,
+          layout: { minimumSize: 10, padding: 0, margin: 0 },
         });
         return {
           children: [context.replay(child, { transforms: [{ kind: 'translate', x: 20, y: 30 }] })],

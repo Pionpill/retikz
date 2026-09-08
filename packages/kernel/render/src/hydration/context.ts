@@ -6,7 +6,8 @@
  *   （vanilla / react）经 `createContextBuilder` 注入 renderer 专有片段（element 定位 / 指针逆映射 / 动画句柄），
  *   Scene-派生字段（meta / geometry / scene）在无 scene 时缺省、animation 在无 runtime 时 no-op
  */
-import type { IRJsonObject, Scene, ScenePrimitive } from '@retikz/core';
+import type { Scene, ScenePrimitive } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { AffineMatrix, BoundsRect } from '@retikz/math';
 
 import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
@@ -51,7 +52,7 @@ export type HydrationContext = {
   /** 命中的语义元素 id（user id）；同 id 的多个平铺图元聚合视为「一个元素」 */
   id: string;
   /** provenance：同 id 图元共享的 meta（认 datum / series / layer）；无 / 无 scene 时 undefined */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** 渲染后端 */
   renderer: 'svg' | 'canvas';
   /** 命中 DOM 元素：SVG = 被点中的那片 `data-retikz-id` 图元；Canvas → null（无逐元素 DOM，用 `root` + `point`） */
@@ -83,8 +84,8 @@ export const noopAnimationControls: HydrationAnimationControls = {
 // ── Scene 按 id 聚合查询（meta / geometry，renderer 无关） ──────────────────────
 
 /** 深度优先找首个匹配 id 的图元的 meta（同 id 共享）；无则 undefined */
-export const metaOf = (scene: Scene, id: string): IRJsonObject | undefined => {
-  const walk = (prims: ReadonlyArray<ScenePrimitive>): IRJsonObject | undefined => {
+export const metaOf = (scene: Scene, id: string): JsonObject | undefined => {
+  const walk = (prims: ReadonlyArray<ScenePrimitive>): JsonObject | undefined => {
     for (const prim of prims) {
       if (prim.id === id && prim.meta !== undefined) return prim.meta;
       if (prim.type === 'group') {
@@ -269,7 +270,7 @@ const primitiveAtPath = (
 };
 
 /** 按 topology 选定的 occurrence paths 读取首个 provenance */
-const metaAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): IRJsonObject | undefined => {
+const metaAtPaths = (scene: Scene, paths: ReadonlyArray<ReadonlyArray<number>>): JsonObject | undefined => {
   for (const path of paths) {
     const meta = primitiveAtPath(scene, path)?.primitive.meta;
     if (meta !== undefined) return meta;

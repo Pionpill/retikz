@@ -2,6 +2,7 @@ import type { infer as ZodInfer } from 'zod';
 
 import {
   createOpenStringSchema,
+  JsonObjectSchema,
   NonNegativeNumberSchema,
   NormalizedFractionSchema,
   PositiveNumberSchema,
@@ -9,7 +10,6 @@ import {
 import { array, enum as zodEnum, literal, object, strictObject, union, unknown } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';
-import { JsonObjectSchema } from '../../json';
 import { AngleDegreesSchema } from '../../scalar';
 import { PathLineCapSchema, PathLineJoinSchema, StrokeStyleSchema } from '../../stroke';
 import { ArrowEndDetailSchema } from '../arrow';
@@ -102,14 +102,21 @@ export const PathStructureSchema = strictObject({
   ),
 }).describe('Path structure fields selecting an open path kind provider.');
 
-export const PathBaseSchema = strictObject({
-  ...PathStructureSchema.shape,
-  ...DrawableInstanceSchema.shape,
+/** 路径实例视觉覆盖 */
+export const PathStyleSchema = strictObject({
   ...DrawableStyleSchema.shape,
   ...PathStrokeSchema.shape,
   ...PathFillSchema.shape,
+}).describe('Path visual overrides; fields independently override inherited defaults.');
+
+export const PathBaseSchema = strictObject({
+  ...PathStructureSchema.shape,
+  ...DrawableInstanceSchema.shape,
   ...PathGeometrySchema.shape,
   ...PathDecorationSchema.shape,
+  style: PathStyleSchema.optional().describe(
+    'Path visual overrides; fields independently override inherited defaults.',
+  ),
 }).describe('Base fields for a path-like relation before kind-specific structural refinement.');
 
 export const PathSchema = PathBaseSchema.describe(

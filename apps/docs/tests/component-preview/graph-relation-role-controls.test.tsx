@@ -343,12 +343,10 @@ describe('Graph Relation style playground', () => {
       type: 'relation',
       id: 'relation-style',
       role: 'flow',
-      stroke: '#2563eb',
-      strokeWidth: 2,
-      opacity: 1,
       labelTextForeground: '#334155',
       labelOpacity: 1,
       labels: [{ text: 'Next step', position: 0.5 }],
+      style: { stroke: '#2563eb', strokeWidth: 2, opacity: 1 },
     });
   });
 });

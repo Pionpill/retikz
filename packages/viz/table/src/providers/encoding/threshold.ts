@@ -27,7 +27,11 @@ export const THRESHOLD_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
     values.forEach(value => {
       if (typeof value !== 'number') throw new RetikzTableError('threshold-color selected values must be numbers');
     });
-    const range = [...(options.range ?? context.categoricalColors.slice(0, options.thresholds.length + 1))];
+    const defaults = context.categoricalColors;
+    if (options.range === undefined && defaults === undefined) {
+      throw new RetikzTableError('threshold-color requires a range or categorical Table defaults');
+    }
+    const range = [...(options.range ?? defaults?.slice(0, options.thresholds.length + 1) ?? [])];
     if (range.length !== options.thresholds.length + 1) {
       throw new RetikzTableError(`threshold-color range must contain ${options.thresholds.length + 1} colors`);
     }

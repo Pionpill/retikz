@@ -102,7 +102,7 @@ Draw 里的曲线分两类：`curve` / `cubic` / `bend` 连接前后两个目标
 
 <ComponentAlert type="tip" title="日常使用可以跳过本节" description="需要排查 way 的展开结果或结构错误时再回来读。" />
 
-`<Draw>` 只负责把便于书写的 `way` 转成底层组件树。本节停在 `<Path>` + `<Step>` 这一职责边界；完整的 JSX → IR（中间表示）→ Scene（渲染场景）管线见[架构](/kernel/concepts/design/principles)。
+`<Draw>` 只负责把便于书写的 `way` 转成底层组件树。本节停在 `<Path>` + `<Step>` 这一职责边界；完整的 JSX → IR（中间表示）→ Scene（渲染场景）管线见[架构](/kernel/components/design/principles)。
 
 ### 从路径写法到步骤序列
 
@@ -154,8 +154,8 @@ Draw 把 `way` 与描边、填充、箭头和层级等整条路径属性透传�
     {
       label: 'Draw 将输入透传给 Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 50,
-      endLine: 54,
+      startLine: 29,
+      endLine: 33,
     },
   ]}
 />
@@ -167,7 +167,7 @@ Draw 把 `way` 与描边、填充、箭头和层级等整条路径属性透传�
 | 属性             | 类型                                                | 默认值         | 描述                                                                                                                                       |
 | ---------------- | --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `way`            | `Array<WayItem>`                                    | —              | 至少 2 个点；首项总是 `move`，其余按 item 形态决定 `line` / `fold` / `cycle` 等动作                                                        |
-| `stroke`         | `string` \| `IRPaint`                           | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / 图案 / 图片）；使用 IRPaint 时需给箭头显式 CSS 颜色                                         |
+| `stroke`         | `string` \| `IRPaint`                               | `currentColor` | 描边 paint：CSS 颜色或 IRPaint（渐变 / 图案 / 图片）；使用 IRPaint 时需给箭头显式 CSS 颜色                                                 |
 | `strokeWidth`    | `number`                                            | `1`            | 描边宽度                                                                                                                                   |
 | `dashPattern`    | `Array<number>`                                     | —              | dash / gap 长度序列，如 `[4, 2]`                                                                                                           |
 | `dashOffset`     | `number`                                            | —              | 虚线起点偏移，单位同路径 user units                                                                                                        |
@@ -177,7 +177,7 @@ Draw 把 `way` 与描边、填充、箭头和层级等整条路径属性透传�
 | `thickness`      | <ApiValues name="PathThickness" />                  | —              | 语义化 stroke 档位；显式 `strokeWidth` 优先                                                                                                |
 | `arrow`          | `'none'` \| `'->'` \| `'<-'` \| `'<->'`             | —              | 路径级箭头方向                                                                                                                             |
 | `arrowDetail`    | `IRArrowDetail`                                     | —              | 箭头详细配置；详见 [Arrow](/kernel/components/draw/arrow)                                                                                  |
-| `fill`           | `string` \| `IRPaint`                           | `'none'`       | 闭合区域填充色：纯色或 IRPaint（渐变 / 图案 / 图片）                                                                                   |
+| `fill`           | `string` \| `IRPaint`                               | `'none'`       | 闭合区域填充色：纯色或 IRPaint（渐变 / 图案 / 图片）                                                                                       |
 | `fillRule`       | <ApiValues name="PathFillRule" />                   | `'nonzero'`    | 填充规则                                                                                                                                   |
 | `opacity`        | `number`                                            | —              | 整 path 透明度 0..1                                                                                                                        |
 | `fillOpacity`    | `number`                                            | —              | 仅 fill 透明度 0..1                                                                                                                        |
@@ -213,7 +213,7 @@ Draw 把 `way` 与描边、填充、箭头和层级等整条路径属性透传�
 | `position`  | <ApiValues name="GeometryLabelPosition" /> \| `number` | `'midway'` | 段上归一化位置 t；keyword 是 t 的语义糖（at-start=0 / very-near-start=0.125 / near-start=0.25 / midway=0.5 / near-end=0.75 / very-near-end=0.875 / at-end=1） |
 | `side`      | <ApiValues name="Side" />                              | `'top'`    | 边标注相对段方向的侧；也接受 compass 别名 `north` / `south` / `east` / `west`                                                                                 |
 | `sloped`    | `boolean`                                              | `false`    | 是否沿切线旋转贴线                                                                                                                                            |
-| `textColor` | `string`                                               | —          | 标签文字色；缺省回退 scope `labelDefault` → 宿主 path 主色 → currentColor                                                                                     |
+| `textColor` | `string`                                               | —          | 标签文字色；缺省回退 scope `defaults.label` → 宿主 path 主色 → currentColor                                                                                   |
 | `opacity`   | `number`                                               | —          | 标签独立透明度 0..1；与所属 path opacity 相乘                                                                                                                 |
 | `font`      | `IRFont`                                               | —          | 标签字体覆盖（family / size / weight / style）                                                                                                                |
 

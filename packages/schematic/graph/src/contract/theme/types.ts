@@ -1,86 +1,27 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { WithRequiredProperties } from '@retikz/foundation';
-import type { SurfaceInput } from '@retikz/standard';
 
-import type {
-  IRGraphEntityAppearanceTokenOverrides,
-  IRGraphEntityThemeRule,
-  IRGraphRelationAppearanceTokenOverrides,
-  IRGraphRelationThemeRule,
-} from '../../schemas';
+import type { IRGraphDefaults, IRGraphRule } from '../../schemas';
 
-/** Graph Theme style 的完整 Entity 基础 appearance 与可选效果字段 */
-export type GraphEntityThemeStyleTokens = WithRequiredProperties<
-  IRGraphEntityAppearanceTokenOverrides,
-  'color' | 'textColor' | 'fill' | 'stroke' | 'fillOpacity' | 'strokeWidth' | 'strokeOpacity' | 'opacity'
->;
-
-/** Graph Theme style 的完整 Relation appearance baseline */
-export type GraphRelationThemeStyleTokens = WithRequiredProperties<
-  IRGraphRelationAppearanceTokenOverrides,
-  'color' | 'stroke' | 'strokeWidth' | 'strokeOpacity' | 'opacity' | 'labelTextForeground' | 'labelOpacity'
->;
-
-/** Graph Theme style 的完整 Group / Block 根 Surface appearance baseline */
-export type GraphSurfaceThemeStyleTokens = WithRequiredProperties<
-  Pick<SurfaceInput, 'background' | 'border' | 'cornerRadius'>,
-  'background' | 'border' | 'cornerRadius'
->;
-
-/** Graph Theme style 解析后的成员 appearance baseline 与有序规则 */
+/** 当前 Core Theme 下确定的 Graph defaults 与 ordered rules */
 export type GraphThemeStyleResolution = Readonly<{
-  /** Entity-owned style baseline 与规则 */
-  entity: Readonly<{
-    tokens: GraphEntityThemeStyleTokens;
-    rules?: ReadonlyArray<IRGraphEntityThemeRule>;
-  }>;
-  /** Relation-owned style baseline 与规则 */
-  relation: Readonly<{
-    tokens: GraphRelationThemeStyleTokens;
-    rules?: ReadonlyArray<IRGraphRelationThemeRule>;
-  }>;
-  /** Group 根 Surface 的完整 appearance baseline */
-  group: Readonly<{
-    tokens: GraphSurfaceThemeStyleTokens;
-  }>;
-  /** Block 根 Surface 的完整 appearance baseline */
-  block: Readonly<{
-    tokens: GraphSurfaceThemeStyleTokens;
-  }>;
+  /** 已确定的稀疏 Graph Source defaults */
+  defaults: IRGraphDefaults;
+  /** Neutral 与 named definition 生成的有序 Graph rules */
+  rules: ReadonlyArray<IRGraphRule>;
 }>;
 
-/** Graph Theme style 作者相对默认 preset 提供的稀疏覆盖 */
-export type GraphThemeStyleOverrides = Readonly<{
-  /** 可选 Entity appearance 与追加规则 */
-  entity?: Readonly<{
-    /** 相对默认 Entity tokens 的稀疏覆盖 */
-    tokens?: IRGraphEntityAppearanceTokenOverrides;
-    /** 追加在默认 Entity rules 后的有序规则 */
-    rules?: ReadonlyArray<IRGraphEntityThemeRule>;
-  }>;
-  /** 可选 Relation appearance 与追加规则 */
-  relation?: Readonly<{
-    /** 相对默认 Relation tokens 的稀疏覆盖 */
-    tokens?: IRGraphRelationAppearanceTokenOverrides;
-    /** 追加在默认 Relation rules 后的有序规则 */
-    rules?: ReadonlyArray<IRGraphRelationThemeRule>;
-  }>;
-  /** 可选 Group 根 Surface appearance 覆盖 */
-  group?: Readonly<{
-    /** 相对默认 Group tokens 的非空稀疏覆盖 */
-    tokens: Readonly<Partial<GraphSurfaceThemeStyleTokens>>;
-  }>;
-  /** 可选 Block 根 Surface appearance 覆盖 */
-  block?: Readonly<{
-    /** 相对默认 Block tokens 的非空稀疏覆盖 */
-    tokens: Readonly<Partial<GraphSurfaceThemeStyleTokens>>;
-  }>;
+/** Graph Theme style 作者相对 Neutral preset 提供的稀疏 defaults/rules */
+export type GraphThemeStyleSource = Readonly<{
+  /** 可选稀疏 Graph Source defaults */
+  defaults?: IRGraphDefaults;
+  /** 可选有序 Graph Source rules */
+  rules?: ReadonlyArray<IRGraphRule>;
 }>;
 
-/** 为一个 Core Theme style 解析 Graph-owned 稀疏覆盖的运行时定义 */
+/** 为一个 Core Theme style 解析 Graph-owned defaults/rules 的运行时定义 */
 export type GraphThemeStyleDefinition = Readonly<{
   /** 与 Core Theme style 对齐的开放名称 */
   name: string;
-  /** 从当前位置完整 Core Theme 解析 Graph style 稀疏覆盖 */
-  resolve: (theme: ResolvedTheme) => GraphThemeStyleOverrides;
+  /** 从当前位置完整 Core Theme 解析 Graph defaults/rules 稀疏片段 */
+  resolve: (theme: ResolvedTheme) => GraphThemeStyleSource;
 }>;

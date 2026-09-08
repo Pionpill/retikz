@@ -44,31 +44,27 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   ];
 
   return (
-    <Layout
-      width={400}
-      height={430}
-      viewBox={{ x: -215, y: -215, width: 430, height: 430 }}
-      shapes={[ContourShapeDefinition]}
-    >
+    <Layout viewBox={{ x: -215, y: -215, width: 430, height: 430 }} shapes={[ContourShapeDefinition]}>
       <Rectangle
         center={[0, 0]}
         width={84}
         height={94}
-        stroke="lightgray"
-        strokeOpacity={0.55}
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', strokeOpacity: 0.55, dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Node
         id="shape"
         position={[0, 0]}
         shape={{ type: 'contour', params: { points, cornerRadius: values.cornerRadius } }}
-        fill={values.fill}
-        stroke={values.stroke}
-        strokeWidth={2.5}
+        style={{ fill: values.fill, stroke: values.stroke, strokeWidth: 2.5 }}
       />
-      <Node id="source" position={sourcePosition} shape="circle" minimumSize={18} fill="gray" stroke="none" />
-      <Draw way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]} arrow="->" stroke="gray" />
+      <Node
+        id="source"
+        position={sourcePosition}
+        shape="circle"
+        style={{ fill: 'gray', stroke: 'none' }}
+        layout={{ minimumSize: 18 }}
+      />
+      <Draw way={[sourceTarget, targetOf(values.anchor, values.anchorAngle)]} arrow="->" style={{ stroke: 'gray' }} />
     </Layout>
   );
 });

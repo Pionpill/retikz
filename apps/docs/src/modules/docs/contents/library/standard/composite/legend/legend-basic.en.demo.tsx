@@ -6,48 +6,49 @@ import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
 
 /** 使用真实线型样本解释关系语义 */
 const Demo: FC = () => (
-  <Layout
-    width={360}
-    height={190}
-    viewBox={{ x: -93.4, y: -16, width: 360, height: 190 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     <Legend kind={LegendContentKind.Items} gap={{ row: 10, column: 8 }} padding={12} sampleGap={12}>
       <LegendTitle>
-        <Node id="relation-title" position={[0, 0]} text="Relationships" stroke="none" />
+        <Node id="relation-title" position={[0, 0]} text="Relationships" style={{ stroke: 'none' }} />
       </LegendTitle>
       <LegendItem
         itemKey="direct"
         sample={
-          <Path id="direct-line" stroke="dodgerblue" strokeWidth={2} lineCap="round">
+          <Path id="direct-line" style={{ stroke: 'dodgerblue', strokeWidth: 2, lineCap: 'round' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[42, 0]} />
           </Path>
         }
       >
-        <Node id="direct-label" position={[0, 0]} text="Direct" stroke="none" />
+        <Node id="direct-label" position={[0, 0]} text="Direct" style={{ stroke: 'none' }} />
       </LegendItem>
       <LegendItem
         itemKey="indirect"
         sample={
-          <Path id="indirect-line" stroke="dodgerblue" strokeWidth={2} lineCap="round" dashPattern={[7, 5]}>
+          <Path
+            id="indirect-line"
+            style={{ stroke: 'dodgerblue', strokeWidth: 2, lineCap: 'round', dashPattern: [7, 5] }}
+          >
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[42, 0]} />
           </Path>
         }
       >
-        <Node id="indirect-label" position={[0, 0]} text="Indirect" stroke="none" />
+        <Node id="indirect-label" position={[0, 0]} text="Indirect" style={{ stroke: 'none' }} />
       </LegendItem>
       <LegendItem
         itemKey="reference"
         sample={
-          <Path id="reference-line" stroke="dodgerblue" strokeWidth={2} lineCap="round" dashPattern={[1, 5]}>
+          <Path
+            id="reference-line"
+            style={{ stroke: 'dodgerblue', strokeWidth: 2, lineCap: 'round', dashPattern: [1, 5] }}
+          >
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[42, 0]} />
           </Path>
         }
       >
-        <Node id="reference-label" position={[0, 0]} text="Reference" stroke="none" />
+        <Node id="reference-label" position={[0, 0]} text="Reference" style={{ stroke: 'none' }} />
       </LegendItem>
     </Legend>
   </Layout>

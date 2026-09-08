@@ -1,21 +1,15 @@
-import { resolveDefaultCoreThemeColors, ThemeMode, ThemeTokenSource } from '@retikz/core';
-import { assertPlainDataContainers } from '@retikz/foundation';
-import { custom } from 'zod';
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
+import { strictObject } from 'zod';
 
 import type { TableThemeStyleDefinition } from '../../contract';
-import type { IRTableThemeTokenOverrides, TableThemeTokenKey } from '../../schemas';
-import type { ResolvedTableThemeTokens, TableThemeContext } from './types';
+import type { IRTableDefaults } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
+import type { TableThemeContext, TableThemeDefaultsResolution, TableThemeDefaultsSource } from './types';
 
 import { RetikzTableError } from '../../error';
-import {
-  TableThemeStyleTokenOverridesSchema,
-  TableThemeTokenKeySchema,
-  TableThemeTokenMapSchema,
-  TableThemeTokenOverridesSchema,
-  TableThemeTokenPresetMapSchema,
-} from '../../schemas';
+import { TableDefaultsSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
-import { getDefaultTableThemePreset } from './presets';
+import { getDefaultTableDefaults } from './presets';
 import { resolveTableThemeStyleRegistry } from './registry';
 
 const defaultTheme: TableThemeContext = {
@@ -23,96 +17,143 @@ const defaultTheme: TableThemeContext = {
   colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
 };
 
-const tableThemeStyleTokenKeys = new Set<string>(Object.keys(TableThemeTokenPresetMapSchema.shape));
+const TableThemeStyleSourceSchema = strictObject({
+  defaults: TableDefaultsSchema.optional(),
+}).describe('Table Theme style source containing sparse Source defaults.');
 
-/** 判断 runtime provider 输出是否为可枚举的普通对象 */
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const clone = <T>(value: T): T => structuredClone(value);
+
+/** 删除 defaults overlay 中的 null 清除标记与由此产生的空嵌套分组 */
+const pruneClearedRecords = (value: unknown, preserveRoot = false): unknown => {
+  if (value === null || value === undefined) return undefined;
+  if (Array.isArray(value)) return value.map(item => clone(item));
+  if (!isRecord(value)) return clone(value);
+
+  const result: Record<string, unknown> = {};
+  Object.entries(value).forEach(([field, child]) => {
+    const pruned = pruneClearedRecords(child);
+    if (pruned === undefined) return;
+    if (isRecord(pruned) && Object.keys(pruned).length === 0) return;
+    result[field] = pruned;
+  });
+  return preserveRoot || Object.keys(result).length > 0 ? result : undefined;
 };
 
-const TableThemeStyleProviderOutputSchema = custom<Record<string, unknown>>(isPlainRecord, {
-  error: 'Table theme style definition must return a plain object.',
-}).pipe(TableThemeStyleTokenOverridesSchema);
-
-const TableThemeStylePlainDataSchema = custom<unknown>(
-  value => {
-    try {
-      assertPlainDataContainers(value, 'Table theme style definition output');
-      return true;
-    } catch {
-      return false;
+const mergeRecord = (current: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> => {
+  const result = clone(current);
+  Object.entries(patch).forEach(([field, value]) => {
+    if (value === undefined) return;
+    if (value === null) {
+      delete result[field];
+      return;
     }
-  },
-  { error: 'Table theme style definition must return JSON-safe plain data.' },
-);
-
-/** 只把 runtime style definition 中已知且显式为 undefined 的字段规范化为省略 */
-const omitKnownUndefinedProperties = (value: unknown, knownKeys: ReadonlySet<string>): unknown => {
-  if (!isPlainRecord(value)) return value;
-  return Object.fromEntries(Object.entries(value).filter(([key, item]) => item !== undefined || !knownKeys.has(key)));
+    if (
+      isRecord(result[field]) &&
+      isRecord(value) &&
+      (Object.hasOwn(result[field], 'kind') || Object.hasOwn(value, 'kind'))
+    ) {
+      result[field] = clone(value);
+      return;
+    }
+    if (isRecord(result[field]) && isRecord(value) && field !== 'background') {
+      result[field] = mergeRecord(result[field], value);
+      return;
+    }
+    result[field] = clone(value);
+  });
+  return result;
 };
 
-/** 解析 preset、shared categorical、inherited 与 local Table token cascade */
-export const resolveTableThemeTokens = (
+const mergeAppearanceDefaults = (
+  current: Record<string, unknown> | undefined,
+  patch: Record<string, unknown>,
+): Record<string, unknown> => mergeRecord(current ?? {}, patch);
+
+const mergeLayoutDefaults = (
+  current: Record<string, unknown> | undefined,
+  patch: Record<string, unknown>,
+): Record<string, unknown> => mergeRecord(current ?? {}, patch);
+
+/** 按正式 Table Source 粒度合并两个 defaults 片段 */
+export const mergeTableDefaults = (
+  current: IRTableDefaults | undefined,
+  patch: DeepReadonly<IRTableDefaults> | undefined,
+): IRTableDefaults => {
+  if (patch === undefined) return clone(current ?? {});
+  const result: Record<string, unknown> = clone(current ?? {});
+  if (patch.appearanceDefaults === null) {
+    delete result.appearanceDefaults;
+  } else if (isRecord(patch.appearanceDefaults)) {
+    result.appearanceDefaults = mergeAppearanceDefaults(
+      isRecord(result.appearanceDefaults) ? result.appearanceDefaults : undefined,
+      patch.appearanceDefaults,
+    );
+  }
+  if (patch.layout === null) {
+    delete result.layout;
+  } else if (isRecord(patch.layout)) {
+    result.layout = mergeLayoutDefaults(isRecord(result.layout) ? result.layout : undefined, patch.layout);
+  }
+  if (patch.visualDefaults === null) {
+    delete result.visualDefaults;
+  } else if (isRecord(patch.visualDefaults)) {
+    result.visualDefaults = mergeRecord(
+      isRecord(result.visualDefaults) ? result.visualDefaults : {},
+      patch.visualDefaults,
+    );
+  }
+  return TableDefaultsSchema.parse(pruneClearedRecords(result, true));
+};
+
+const sourceRecordsOf = (layers: ReadonlyArray<TableThemeDefaultsSource>): ReadonlyArray<TableThemeDefaultsSource> =>
+  layers.map(layer => ({
+    kind: layer.kind,
+    path: layer.path,
+    ...(layer.defaults === undefined ? {} : { defaults: clone(layer.defaults) }),
+  }));
+
+/** 按 Core Theme、Table style 与 style definition 解析 Table defaults */
+export const resolveTableThemeDefaults = (
   effectiveTheme: TableThemeContext = defaultTheme,
-  local: IRTableThemeTokenOverrides = {},
   tableThemeStyles: ReadonlyArray<TableThemeStyleDefinition> | undefined = undefined,
-): ResolvedTableThemeTokens => {
-  const parsedLocal = TableThemeTokenOverridesSchema.parse(structuredClone(local));
-  const style = effectiveTheme.style;
+): TableThemeDefaultsResolution => {
+  const { style, mode } = effectiveTheme;
   const styles = resolveTableThemeStyleRegistry(tableThemeStyles);
   const definition = style === undefined ? undefined : styles.get(style);
-  if (style !== undefined && definition === undefined)
+  if (style !== undefined && definition === undefined) {
     throw new RetikzTableError(`Table theme style '${style}' is not registered.`);
-  const defaultTokens = getDefaultTableThemePreset(effectiveTheme.mode);
-  const styleTokens = (() => {
-    if (definition === undefined) return {};
+  }
+
+  const neutralDefaults = mergeTableDefaults(getDefaultTableDefaults(mode), {
+    visualDefaults: { categorical: [...effectiveTheme.colors.categorical] },
+  });
+  const layers: Array<TableThemeDefaultsSource> = [
+    { kind: 'neutral', path: `$default/${mode}`, defaults: neutralDefaults },
+  ];
+  if (definition !== undefined) {
     try {
-      const rawStyleTokens = definition.resolve(effectiveTheme);
-      TableThemeStylePlainDataSchema.parse(rawStyleTokens);
-      const normalizedStyleTokens = omitKnownUndefinedProperties(rawStyleTokens, tableThemeStyleTokenKeys);
-      return TableThemeStyleProviderOutputSchema.parse(normalizedStyleTokens);
+      const source = TableThemeStyleSourceSchema.parse(definition.resolve(effectiveTheme));
+      layers.push({
+        kind: 'style',
+        path: `$style/${style}/${mode}`,
+        ...(source.defaults === undefined ? {} : { defaults: source.defaults }),
+      });
     } catch (cause) {
       throw new RetikzTableError(`Table theme style '${style}' resolution failed.`, { cause });
     }
-  })();
-  const baseline = { ...defaultTokens, ...styleTokens };
-  const sharedCategorical = [...effectiveTheme.colors.categorical];
-  const tokens = TableThemeTokenMapSchema.parse({
-    ...structuredClone(baseline),
-    'data.categorical': sharedCategorical,
-    ...structuredClone(parsedLocal),
-  });
-  const sources = Object.fromEntries(
-    TableThemeTokenKeySchema.options.map(key => {
-      if (Object.hasOwn(parsedLocal, key)) {
-        return [
-          key,
-          {
-            kind: ThemeTokenSource.Local,
-            path: `$spec/tableThemeTokens/${key}`,
-          },
-        ];
-      }
-      if (key === 'data.categorical') {
-        return [key, { kind: ThemeTokenSource.Inherit, path: '$theme/colors/categorical' }];
-      }
-      if (style !== undefined && Object.hasOwn(styleTokens, key)) {
-        return [key, { kind: ThemeTokenSource.Local, path: `$style/${style}/${effectiveTheme.mode}/${key}` }];
-      }
-      return [
-        key,
-        {
-          kind: ThemeTokenSource.Local,
-          path: `$default/${effectiveTheme.mode}/${key}`,
-        },
-      ];
-    }),
-  ) as Record<TableThemeTokenKey, ResolvedTableThemeTokens['sources'][TableThemeTokenKey]>;
-  return deepFreeze({ tokens, sources });
-};
+  }
 
-/** 断言 Table token source 的 canonical key 集合保持稳定 */
-export const tableThemeTokenKeys = (): ReadonlyArray<TableThemeTokenKey> => [...TableThemeTokenKeySchema.options];
+  const defaults = layers.reduce<IRTableDefaults>(
+    (resolvedDefaults, layer) => mergeTableDefaults(resolvedDefaults, layer.defaults),
+    {},
+  );
+  return deepFreeze({
+    ...(style === undefined ? {} : { style }),
+    mode,
+    defaults,
+    layers: sourceRecordsOf(layers),
+  });
+};

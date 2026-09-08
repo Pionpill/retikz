@@ -23,7 +23,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
     ]}
     width={520}
     height={360}
-    style={{ maxWidth: '100%', height: 'auto' }}
   >
     <PlotScale dimension="x" type="linear" domain={[0.5, 3.5]} domainPadding={0} />
     <PlotScale dimension="y" type="linear" domain={[8, 24]} domainPadding={0} />
