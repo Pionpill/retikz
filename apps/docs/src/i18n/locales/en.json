@@ -62,7 +62,7 @@
     "changelogV01": "v0.1",
     "components": "Components",
     "componentsNavigationDescription": "Core primitives, layout, and drawing effects",
-    "packages": "Development Packages",
+    "packages": "Packages",
     "packagesNavigationDescription": "Explore the @retikz kernel packages and extensions",
     "concepts": "Concepts",
     "layout": "Layout",

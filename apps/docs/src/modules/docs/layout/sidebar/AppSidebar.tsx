@@ -5,11 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib';
 import { getSectionsByArea } from '@/modules/docs/data';
-import { useDocDifficultyStore } from '@/modules/docs/store';
 
 import type { DocLocation } from '../types';
 
-import { filterSectionsByDifficulty } from '../filter-doc-sections';
 import { useDocLocation } from '../useDocLocation';
 import { buildSidebarCategories } from '../utils';
 import { AppSidebarMenu } from './AppSidebarMenu';
@@ -28,7 +26,6 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
   const { t } = useTranslation();
   const currentLocation = useDocLocation();
   const location = locationProp === undefined ? currentLocation : locationProp;
-  const maximumDifficulty = useDocDifficultyStore(state => state.maximumDifficulty);
   const areaId = location?.moduleId;
   const sections = useMemo(() => (areaId ? getSectionsByArea(areaId) : []), [areaId]);
   const selectedSection = location
@@ -36,18 +33,14 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
       ? sections.find(section => section.id === location.sectionId)
       : sections.find(section => !section.label)
     : undefined;
-  const visibleSections = useMemo(
-    () =>
-      filterSectionsByDifficulty(
-        areaId === 'about' ? sections : selectedSection ? [selectedSection] : [],
-        maximumDifficulty,
-      ),
-    [areaId, maximumDifficulty, sections, selectedSection],
+  const sidebarSections = useMemo(
+    () => (areaId === 'about' ? sections : selectedSection ? [selectedSection] : []),
+    [areaId, sections, selectedSection],
   );
 
   const categories = useMemo(
-    () => (areaId ? buildSidebarCategories(t, areaId, visibleSections) : []),
-    [areaId, t, visibleSections],
+    () => (areaId ? buildSidebarCategories(t, areaId, sidebarSections) : []),
+    [areaId, sidebarSections, t],
   );
 
   if (!location || !areaId || !selectedSection || categories.length === 0) return null;
