@@ -15,12 +15,7 @@ import type {
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers/registry';
-import {
-  ARROW_MARKER_DEFAULT_SIZE,
-  ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH,
-  DEFAULT_ARROW_SHAPE,
-  JsonObjectSchema,
-} from '../../schemas';
+import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
 
@@ -58,21 +53,13 @@ export const resolvePathGenerator = (
     optionName: 'pathGenerators',
   });
   const paramsPath = `${irPath}.params`;
-  const parsed = parseProviderPayload({
+  const params = parseProviderPayload({
     capability: 'path generator',
     providerName: step.name,
     irPath: paramsPath,
     payloadName: 'params',
     schema: definition.paramsSchema,
     value: step.params,
-  });
-  const params = parseProviderPayload({
-    capability: 'path generator',
-    providerName: step.name,
-    irPath: paramsPath,
-    payloadName: 'params',
-    schema: JsonObjectSchema,
-    value: parsed,
   });
   return { stepIndex, name: step.name, definition, params, irPath };
 };

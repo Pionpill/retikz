@@ -160,7 +160,10 @@ describe('ComponentPreview Vanilla source', () => {
   });
 
   it('viz 文档按内容路由自动开启单预览主题切换', async () => {
-    const vizProps = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+    const vizProps = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview files="coordinate-cartesian" />,
+    );
     const kernelProps = await renderPreview(
       ['kernel', 'components', 'node', 'overview'],
       <ComponentPreview files="node-styled" />,
@@ -171,16 +174,22 @@ describe('ComponentPreview Vanilla source', () => {
   });
 
   it('Tier 2 Plot composite 自动生成 Vanilla 源码与真实 SVG', async () => {
-    const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="time-axis" />);
+    const props = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview files="coordinate-cartesian" />,
+    );
 
     expect(props.source?.vanilla?.files[0]?.code).toContain("from '@retikz/plot-vanilla'");
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
 
   it('原手写 Plot 示例改由统一管线自动生成 Vanilla', async () => {
-    const props = await renderPreview(['viz', 'get-start'], <ComponentPreview files="line-scatter" />);
+    const props = await renderPreview(
+      ['viz', 'plot', 'coordinate', '2d'],
+      <ComponentPreview files="coordinate-cartesian" />,
+    );
 
-    expect(props.source?.vanilla?.files[0].filename).toBe('line-scatter.vanilla.ts');
+    expect(props.source?.vanilla?.files[0].filename).toBe('coordinate-cartesian.vanilla.ts');
     expect(props.source?.vanilla?.files[0].code).toContain("import { renderPlot } from '@retikz/plot-vanilla'");
     expect(props.source?.vanilla?.render).toBeTypeOf('function');
   });
@@ -510,7 +519,7 @@ describe('ComponentPreview localized controls', () => {
 describe('ComponentPreview files source', () => {
   it('将主文件对象的 diffFrom 用作 React 主源码 baseline', async () => {
     const props = await renderPreview(
-      ['kernel', 'examples', 'learning-path'],
+      ['kernel', 'galleries', 'learning-path'],
       <ComponentPreview files={{ file: 'learning-path-02-spine', diffFrom: 'learning-path-01-title' }} />,
     );
 
@@ -524,7 +533,7 @@ describe('ComponentPreview files source', () => {
 
   it('将附加文件对象的 diffFrom 用作该文件自己的 baseline', async () => {
     const props = await renderPreview(
-      ['kernel', 'examples', 'ohms-law-circuit'],
+      ['kernel', 'galleries', 'ohms-law-circuit'],
       <ComponentPreview
         files={['circuit-01-meters', { file: 'circuit-01-meters.meter.tsx', diffFrom: 'circuit-01-meters.meter.tsx' }]}
       />,
@@ -538,7 +547,7 @@ describe('ComponentPreview files source', () => {
 
   it('主文件有 baseline 时继续为同前缀附加文件推导 baseline 文件名', async () => {
     const props = await renderPreview(
-      ['kernel', 'examples', 'ohms-law-circuit'],
+      ['kernel', 'galleries', 'ohms-law-circuit'],
       <ComponentPreview
         files={[{ file: 'circuit-01-meters', diffFrom: 'circuit-01-meters' }, 'circuit-01-meters.meter.tsx']}
       />,

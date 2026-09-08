@@ -2,18 +2,26 @@ import { describe, expect, it } from 'vitest';
 
 import { compileTable } from '../../src';
 
-describe('style token Border Graph integration', () => {
-  it('maps per-side academic outer tokens and injects priority -100 with provenance', () => {
+const sourceBorders = {
+  layout: {
+    borders: {
+      outer: {
+        top: { kind: 'line', stroke: '#111111', width: 1.2 },
+        bottom: { kind: 'line', stroke: '#111111', width: 1.2 },
+      },
+      horizontal: { kind: 'none' },
+    },
+  },
+} as const;
+
+describe('Source defaults Border Graph integration', () => {
+  it('maps per-side outer defaults and injects priority -100 with provenance', () => {
     const result = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'academic',
-        tableThemeTokens: {
-          'table.border.top': { kind: 'line', stroke: '#111111', width: 1.2 },
-          'table.border.bottom': { kind: 'line', stroke: '#111111', width: 1.2 },
-          'table.border.horizontal': null,
-        },
+        tableDefaults: sourceBorders,
         structure: { kind: 'manual', rows: [['x']] },
       },
       {},
@@ -25,30 +33,29 @@ describe('style token Border Graph integration', () => {
       const winner = border.atoms[0].winner;
       expect(winner).toMatchObject({
         kind: 'line',
+        origin: 'defaults',
         priority: -100,
         source: { kind: 'default', scope: 'outer' },
-        styleToken: { source: 'local' },
+        defaults: { path: '$spec/tableDefaults' },
       });
-      if (winner.kind !== 'line' || winner.origin !== 'styleToken') {
-        throw new Error('expected style token line winner');
-      }
-      expect(['table.border.top', 'table.border.bottom']).toContain(winner.styleToken.key);
+      expect(winner).not.toHaveProperty('styleToken');
     }
   });
 
-  it('lets explicit Table defaults replace token slots before graph construction', () => {
+  it('lets explicit Table layout border candidates replace Source defaults before graph construction', () => {
     const result = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'explicit',
-        tableThemeTokens: {
-          'table.border.top': { kind: 'line', stroke: '#111111', width: 1.2 },
-          'table.border.bottom': { kind: 'line', stroke: '#111111', width: 1.2 },
-          'table.border.horizontal': null,
-        },
+        tableDefaults: sourceBorders,
         structure: { kind: 'manual', rows: [['x'], ['y']] },
-        layout: { borders: { outer: { kind: 'none' }, horizontal: { kind: 'line', stroke: 'red', width: 2 } } },
+        layout: {
+          borders: {
+            outer: { top: { kind: 'none' }, bottom: { kind: 'none' } },
+            horizontal: { kind: 'line', stroke: 'red', width: 2 },
+          },
+        },
       },
       {},
       { theme: { mode: 'light' }, compile: { padding: 0 } },
@@ -57,21 +64,28 @@ describe('style token Border Graph integration', () => {
     expect(result.manifest.borders).toHaveLength(1);
     expect(result.manifest.borders[0].atoms[0].winner).toMatchObject({
       kind: 'line',
+      line: { stroke: 'red', width: 2 },
+      origin: 'explicit',
       priority: 0,
       source: { kind: 'default', scope: 'horizontal' },
     });
-    expect(result.manifest.borders[0].atoms[0].winner).not.toHaveProperty('styleToken');
+    expect(result.manifest.borders[0].atoms[0].winner).not.toHaveProperty('defaults');
   });
 
-  it('lets a header Cell-side token win over the same-priority horizontal token', () => {
+  it('lets a header Cell-side default win over the same-priority horizontal default', () => {
     const result = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'vibrant',
-        tableThemeTokens: {
-          'table.border.horizontal': { kind: 'line', stroke: '#ffffff', width: 1 },
-          'columnHeader.border.bottom': { kind: 'line', stroke: '#ffffff', width: 1 },
+        tableDefaults: {
+          ...sourceBorders,
+          layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } },
+          appearanceDefaults: {
+            columnHeader: {
+              borders: { bottom: { kind: 'line', stroke: '#ffffff', width: 1 } },
+            },
+          },
         },
         data: { reference: 'rows' },
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
@@ -80,28 +94,29 @@ describe('style token Border Graph integration', () => {
       { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
     const headerBoundary = result.manifest.borders.find(border =>
-      border.atoms.some(
-        atom =>
-          atom.winner.kind === 'line' &&
-          atom.winner.origin === 'styleToken' &&
-          atom.winner.styleToken.key === 'columnHeader.border.bottom',
-      ),
+      border.atoms.some(atom => atom.winner.source.kind === 'cell' && atom.winner.source.side === 'bottom'),
     );
 
     expect(headerBoundary?.atoms[0].winner).toMatchObject({
       source: { kind: 'cell', side: 'bottom' },
       priority: -100,
       specificity: 1,
-      styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'local' }),
+      origin: 'defaults',
+      defaults: { path: '$spec/tableDefaults' },
     });
   });
 
-  it('keeps a spanning column header token on the span perimeter', () => {
+  it('keeps a spanning column header default on the span perimeter', () => {
     const result = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'spanning-header',
+        tableDefaults: {
+          appearanceDefaults: {
+            columnHeader: { borders: { bottom: { kind: 'line', stroke: '#ffffff', width: 1 } } },
+          },
+        },
         structure: {
           kind: 'manual',
           rows: [[{ id: 'heading', value: 'Heading', span: { columns: 2 } }, null]],
@@ -118,22 +133,22 @@ describe('style token Border Graph integration', () => {
     expect(result.manifest.borders[0].atoms.map(atom => atom.winner)).toEqual([
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'local' }),
+        defaults: { path: '$spec/tableDefaults' },
       }),
       expect.objectContaining({
         source: expect.objectContaining({ kind: 'cell', cellId: 'heading', side: 'bottom' }),
-        styleToken: expect.objectContaining({ key: 'columnHeader.border.bottom', source: 'local' }),
+        defaults: { path: '$spec/tableDefaults' },
       }),
     ]);
   });
 
-  it('lets a root rule replace explicit Cell and style token border slots without duplicate keys', () => {
+  it('lets a root rule replace explicit Cell and Source default border slots without duplicate keys', () => {
     const result = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'border-precedence',
-        tableThemeTokens: { 'table.border.horizontal': { kind: 'line', stroke: '#ffffff', width: 1 } },
+        tableDefaults: { layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } } },
         structure: {
           kind: 'manual',
           rows: [
@@ -166,6 +181,7 @@ describe('style token Border Graph integration', () => {
       kind: 'line',
       line: { stroke: 'red', width: 3 },
       priority: 0,
+      origin: 'explicit',
       source: { kind: 'cell', cellId: 'target', side: 'bottom' },
     });
     expect(atom?.winner).not.toHaveProperty('styleToken');
@@ -173,7 +189,8 @@ describe('style token Border Graph integration', () => {
       expect.arrayContaining([
         expect.objectContaining({
           priority: -100,
-          styleToken: expect.objectContaining({ key: 'table.border.horizontal', source: 'local' }),
+          origin: 'defaults',
+          defaults: { path: '$spec/tableDefaults' },
         }),
         expect.objectContaining({ priority: 0, source: expect.objectContaining({ cellId: 'target' }) }),
       ]),

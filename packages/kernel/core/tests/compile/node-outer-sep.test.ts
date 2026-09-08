@@ -70,7 +70,12 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], margin: 10 },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { margin: 10 },
+        },
         {
           type: 'path',
           children: [
@@ -88,7 +93,14 @@ describe('margin：border 类 anchor 外扩（happy）', () => {
     const mk = (margin: number): IRScene => ({
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], margin }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          layout: { margin },
+        },
+      ],
     });
     const l0 = compileToScene(mk(0)).scene.layout;
     const l10 = compileToScene(mk(10)).scene.layout;
@@ -122,9 +134,19 @@ describe('margin：边界', () => {
 
 describe('margin：不外扩护栏 + 校验', () => {
   it('negative-margin-rejected：margin=-1 被 schema 拒绝（.nonnegative）', () => {
-    const ok = NodeSchema.safeParse({ type: 'node', id: 'A', position: [0, 0], margin: 0 });
+    const ok = NodeSchema.safeParse({
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      layout: { margin: 0 },
+    });
     expect(ok.success).toBe(true);
-    const bad = NodeSchema.safeParse({ type: 'node', id: 'A', position: [0, 0], margin: -1 });
+    const bad = NodeSchema.safeParse({
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      layout: { margin: -1 },
+    });
     expect(bad.success).toBe(false);
   });
 
@@ -145,8 +167,8 @@ describe('margin：不外扩护栏 + 校验', () => {
           id: 'A',
           position: [0, 0],
           text: 'A',
-          margin,
           label: { text: 'L', position: 'top' },
+          layout: { margin },
         },
       ],
     });
@@ -181,7 +203,15 @@ describe('margin：交互', () => {
     const mk = (boundary: 'shape' | 'circle'): IRScene => ({
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], margin: 10, boundary }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          boundary,
+          layout: { margin: 10 },
+        },
+      ],
     });
     // 借用连接面只改连接点求交，绝不改布局占位。
     expect(compileToScene(mk('circle')).scene.layout).toEqual(compileToScene(mk('shape')).scene.layout);

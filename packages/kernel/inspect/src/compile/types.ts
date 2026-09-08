@@ -3,9 +3,9 @@ import type {
   CompileOccurrenceLocator,
   CompileResult,
   CompileWarning,
-  IRJsonObject,
   Scene,
 } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
 
 import type { InspectorKey } from '../contract';
@@ -43,7 +43,7 @@ export type InspectionSelectionRule =
       /** 请求生效的 scene、subtree 或 self 范围 */
       target: InspectionSelectionTarget;
       /** false 关闭该 Inspector，true 使用默认 options，对象提供 sparse options */
-      options: boolean | IRJsonObject;
+      options: boolean | JsonObject;
     }>
   | Readonly<{
       /** 封锁目标范围内的全部 Inspector，并阻止后代规则重新开启 */
@@ -69,7 +69,7 @@ export type ResolvedInspectionRequest = Readonly<{
   /** probe/replay 来源 */
   provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
   /** canonical options */
-  options: IRJsonObject;
+  options: JsonObject;
   /** request 级连续颜色序号 */
   colorScope: number;
 }>;

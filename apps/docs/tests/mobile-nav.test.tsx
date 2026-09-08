@@ -5,10 +5,11 @@ import type { Root } from 'react-dom/client';
 
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
-import { MemoryRouter, Navigate, Route, Routes, useNavigate } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, useLocation } from 'react-router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MobileNav } from '../src/app/header/MobileNav';
+import { useDocModuleStore } from '../src/modules/docs/store';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -52,59 +53,55 @@ vi.mock('@/components/ui/sheet', async () => {
     SheetHeader: (props: { children: ReactNode; className?: string }) => (
       <div className={props.className}>{props.children}</div>
     ),
-    SheetTitle: (props: { children: ReactNode }) => <div>{props.children}</div>,
-  };
-});
-
-vi.mock('@/components/ui/toggle-group', async () => {
-  const { createContext, useContext } = await import('react');
-  const ToggleValueContext = createContext<(value: string) => void>(() => undefined);
-
-  return {
-    ToggleGroup: (props: { children: ReactNode; onValueChange: (value: string) => void }) => (
-      <ToggleValueContext.Provider value={props.onValueChange}>
-        <div>{props.children}</div>
-      </ToggleValueContext.Provider>
+    SheetTitle: (props: { children: ReactNode; className?: string; asChild?: boolean }) => (
+      <div className={props.className}>{props.children}</div>
     ),
-    ToggleGroupItem: (props: { children: ReactNode; value: string; className?: string }) => {
-      const onValueChange = useContext(ToggleValueContext);
-      return (
-        <button
-          type="button"
-          className={props.className}
-          data-module-id={props.value}
-          onClick={() => onValueChange(props.value)}
-        >
-          {props.children}
-        </button>
-      );
-    },
   };
 });
+
+vi.mock('../src/app/header/HeaderNavigation', () => ({
+  HeaderNavigation: (props: { navigation: { areaId: string | null; moduleId: string | null }; mobile?: boolean }) =>
+    props.navigation.areaId === null ? (
+      <div data-header-navigation>
+        <button data-module-picker="home">Module picker</button>
+        <button data-module-nav={String(props.mobile)}>Modules</button>
+        <button data-about-nav={String(props.mobile)}>About</button>
+      </div>
+    ) : (
+      <div data-header-navigation>
+        <button data-module-picker={props.navigation.moduleId ?? 'home'}>Module picker</button>
+        <button data-section-nav={props.navigation.areaId}>Section navigation</button>
+      </div>
+    ),
+}));
 
 vi.mock('@/modules/docs/layout', () => ({
-  AppSidebar: (props: { moduleId?: string; onNavigate?: () => void }) => {
-    const navigate = useNavigate();
-    return (
-      <button
-        type="button"
-        aria-label="Mock article"
-        onClick={() => {
-          navigate(`/${props.moduleId}/components`);
-          props.onNavigate?.();
-        }}
-      >
-        Article
-      </button>
-    );
-  },
+  resolveDocNavigationContext: (pathname: string) =>
+    pathname.startsWith('/viz')
+      ? {
+          areaId: 'viz',
+          moduleId: 'viz',
+          sectionId: 'chart',
+          location: { moduleId: 'viz', sectionId: 'chart', pageId: 'points', subPageId: 'scatter' },
+        }
+      : { areaId: null, moduleId: null, sectionId: null, location: null },
+  AppSidebar: (props: { location?: { moduleId: string }; onNavigate?: () => void }) => (
+    <button type="button" aria-label="Mock scoped article" onClick={props.onNavigate}>
+      {props.location?.moduleId} article
+    </button>
+  ),
 }));
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
 
-const renderMobileNav = (): HTMLElement => {
+const LocationProbe = () => {
+  const { pathname } = useLocation();
+  return <output data-location>{pathname}</output>;
+};
+
+const renderMobileNav = (initialEntry: string): HTMLElement => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -112,12 +109,9 @@ const renderMobileNav = (): HTMLElement => {
 
   act(() => {
     root.render(
-      <MemoryRouter initialEntries={['/kernel/introduction']}>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <MobileNav />
-        <Routes>
-          <Route path="/viz" element={<Navigate to="/viz/introduction" replace />} />
-          <Route path="*" element={null} />
-        </Routes>
+        <LocationProbe />
       </MemoryRouter>,
     );
   });
@@ -132,34 +126,45 @@ const click = (element: Element | null): void => {
   });
 };
 
+beforeEach(() => {
+  useDocModuleStore.setState({ scope: 'viz' });
+});
+
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
   document.body.replaceChildren();
+  localStorage.clear();
 });
 
 describe('MobileNav', () => {
-  it('固定显示文档站品牌且不展示模块版本', () => {
-    const container = renderMobileNav();
+  it('首页抽屉显示模块选择器、扁平模块入口和 About 下拉', () => {
+    const container = renderMobileNav('/');
 
     click(container.querySelector('button[aria-label="Open navigation"]'));
 
-    expect(container.querySelector('a[aria-label="retikz home"]')?.textContent).toBe('retikz.doc');
+    expect(container.querySelector('[data-module-picker="home"]')).not.toBeNull();
+    expect(container.querySelector('[data-brand-link]')).toBeNull();
+    expect(container.querySelector('[data-module-nav="true"]')).not.toBeNull();
+    expect(container.querySelector('[data-about-nav="true"]')).not.toBeNull();
+    expect(container.querySelector('[data-section-nav="about"]')).toBeNull();
   });
 
-  it('切换顶部模块后保持抽屉打开', () => {
-    const container = renderMobileNav();
+  it('文档页抽屉显示当前 area 的选择器、section 导航和 scoped Sidebar', () => {
+    const container = renderMobileNav('/viz/chart/points/scatter');
 
     click(container.querySelector('button[aria-label="Open navigation"]'));
-    click(container.querySelector('button[data-module-id="viz"]'));
 
-    expect(container.querySelector('[data-slot="mock-mobile-sheet"]')?.getAttribute('data-open')).toBe('true');
+    expect(container.querySelector('a[aria-label="retikz home"]')).toBeNull();
+    expect(container.querySelector('[data-module-picker="viz"]')).not.toBeNull();
+    expect(container.querySelector('[data-section-nav="viz"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Mock scoped article"]')?.textContent).toContain('viz article');
   });
 
-  it('点击具体文章后关闭抽屉', () => {
-    const container = renderMobileNav();
+  it('点击当前文档入口后关闭抽屉', () => {
+    const container = renderMobileNav('/viz/chart/points/scatter');
 
     click(container.querySelector('button[aria-label="Open navigation"]'));
-    click(container.querySelector('button[aria-label="Mock article"]'));
+    click(container.querySelector('button[aria-label="Mock scoped article"]'));
 
     expect(container.querySelector('[data-slot="mock-mobile-sheet"]')?.getAttribute('data-open')).toBe('false');
   });

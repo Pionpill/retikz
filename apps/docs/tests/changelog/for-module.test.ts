@@ -46,8 +46,8 @@ describe('changelogForModule', () => {
 
   it('Data 更新日志只含 Data 包', () => {
     const releases = changelogForModule('viz', 'data');
-    expect(releases).toHaveLength(1);
-    expect(releases[0]?.packages.map(block => block.pkg)).toEqual(['@retikz/data']);
+    expect(releases).toHaveLength(2);
+    for (const release of releases) expect(release.packages.map(block => block.pkg)).toEqual(['@retikz/data']);
   });
 
   it('Table 更新日志只含三个 Table 包', () => {
@@ -61,7 +61,7 @@ describe('changelogForModule', () => {
   });
 
   it('Viz 分区按各发布组日期展示 stable 状态', () => {
-    expect(changelogForModule('viz', 'data')[0]?.stableDate).toBe('2026-08-03');
+    expect(changelogForModule('viz', 'data').map(release => release.stableDate)).toEqual([null, '2026-08-03']);
     expect(changelogForModule('viz', 'plot')[0]?.stableDate).toBeNull();
     expect(changelogForModule('viz', 'table')[0]?.stableDate).toBeNull();
     expect(changelogForModule('viz')[0]?.stableDate).toBeNull();

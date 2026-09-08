@@ -14,17 +14,12 @@ import { waterfallTransform } from './waterfall.definition';
 export const previewControls = waterfallControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={450}
-    height={250}
-    viewBox={{ x: -15, y: -15, width: 450, height: 290 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout viewBox={{ x: -15, y: -15, width: 450, height: 290 }}>
     <Plot
       data={waterfallRows}
       width={420}
       height={260}
-      plotTheme={{ palette: { categorical: ['#16a34a', '#dc2626'] } }}
+      plotDefaults={{ palette: { categorical: ['#16a34a', '#dc2626'] } }}
       transformDefinitions={[waterfallTransform]}
     >
       <PlotTransform {...waterfallOperationOf(values)} />

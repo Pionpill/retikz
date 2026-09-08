@@ -58,9 +58,9 @@ const screenShift = definePositionAdjustment<ScreenShift>({
     })),
 });
 
-const plotThemeTokens = {
-  'plot.area.fill': '#123456',
-} satisfies NonNullable<IRPlot['plotThemeTokens']>;
+const plotDefaults = {
+  plotArea: { fill: '#123456' },
+} satisfies NonNullable<IRPlot['plotDefaults']>;
 
 type ScenePrimLike = { type: string; id?: string; children?: Array<ScenePrimLike> };
 
@@ -95,8 +95,8 @@ describe('renderPlot 薄包装（SSR SVG 串）', () => {
     expect(svg).toContain('<ellipse');
   });
 
-  it('Plot local token override 生效', () => {
-    const svg = renderPlot({ ...spec, plotThemeTokens }, data, { width: 480, height: 300 });
+  it('Plot local defaults override 生效', () => {
+    const svg = renderPlot({ ...spec, plotDefaults }, data, { width: 480, height: 300 });
 
     expect(svg).toContain('fill="#123456"');
   });

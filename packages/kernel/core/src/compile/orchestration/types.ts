@@ -1,3 +1,4 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { AxisAlignedBounds } from '@retikz/math';
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
@@ -18,7 +19,7 @@ import type {
   Transform,
 } from '../../contract';
 import type { StyleResolveFrame } from '../../resolve';
-import type { IRChild, IRPathBase, IRPosition, JsonValue, ResolvedDropShadow } from '../../schemas';
+import type { IRChild, IRPathBase, IRPosition, ResolvedDropShadow } from '../../schemas';
 import type { ResolvedTheme } from '../../shared';
 import type { NamespaceFrameChange, NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';

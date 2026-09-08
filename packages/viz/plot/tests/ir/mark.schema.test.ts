@@ -1,6 +1,6 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
+import { CustomMarkSchema, IntervalBoundsSchema, MarkOperationSchema, MarkSchema } from '../../src/schemas/mark';
 
 const gradientPaint = {
   kind: 'linearGradient',
@@ -61,6 +61,16 @@ describe('MarkSchema (contract)', () => {
     const mark = { type: 'custom-symbol', defaultColorGroup: 'observations', value: 1 };
 
     expect(MarkOperationSchema.parse(mark)).toEqual(mark);
+  });
+
+  it('custom_mark_reports_deep_non_json_leaf_path', () => {
+    const result = CustomMarkSchema.safeParse({
+      type: 'custom-symbol',
+      payload: { nested: [0, { bad: Symbol('invalid') }] },
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.at(0)?.path).toEqual(['payload']);
   });
 
   // 错误路径
@@ -741,12 +751,12 @@ describe('MarkSchema (contract)', () => {
   it('mark_path_with_core_path_style_channels_valid', () => {
     const m = {
       type: 'path',
+      roundedCorners: { kind: 'field', value: 'corner' },
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
       strokeWidth: { kind: 'field', value: 'weight' },
       opacity: { kind: 'constant', value: 0.9 },
       lineCap: { kind: 'constant', value: 'round' },
       lineJoin: { kind: 'constant', value: 'bevel' },
-      roundedCorners: { kind: 'field', value: 'corner' },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
@@ -754,9 +764,9 @@ describe('MarkSchema (contract)', () => {
   it('mark_path_accepts_paint_fill_and_stroke', () => {
     const m = {
       type: 'path',
+      encoding: { x: { field: 'x' }, y: { field: 'y' } },
       fill: { kind: 'constant', value: gradientPaint },
       stroke: { kind: 'constant', value: gradientPaint },
-      encoding: { x: { field: 'x' }, y: { field: 'y' } },
     };
     expect(MarkSchema.parse(m)).toEqual(m);
   });
@@ -792,8 +802,8 @@ describe('MarkSchema (contract)', () => {
     expect(
       MarkSchema.safeParse({
         type: 'path',
-        fill: { kind: 'constant', value: '   ' },
         encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        fill: { kind: 'constant', value: '   ' },
       }).success,
     ).toBe(false);
     expect(

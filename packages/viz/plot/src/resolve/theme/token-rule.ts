@@ -1,38 +1,20 @@
-import type { IRPlotThemeResolution, IRPlotThemeTokenResolution, PlotThemeTokenValue } from '../../schemas';
+import type { IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
 
-type MutablePlotTokens = { -readonly [K in keyof IRPlotThemeTokenResolution]: IRPlotThemeTokenResolution[K] };
+import { applyPlotDefaults, mergePlotDefaults } from './mapping';
 
-const matchesDimension = (dimension: string | ReadonlyArray<string>, candidate: string): boolean =>
+const doesPlotAxisRuleMatchDimension = (dimension: string | ReadonlyArray<string>, candidate: string): boolean =>
   typeof dimension === 'string' ? dimension === candidate : dimension.includes(candidate);
 
-const isDefaultRulePath = (path: string): boolean => path.startsWith('$default/');
-const isStyleRulePath = (path: string): boolean => path.startsWith('$style/');
-const isNativeTokenSource = (path: string): boolean => path.startsWith('$spec/plotTheme/');
-const isDefaultTokenSource = (path: string): boolean => path.startsWith('$default/');
-const isStyleTokenSource = (path: string): boolean => path.startsWith('$style/');
-
-/** 为一个已有 Axis dimension 解析 rule-adjusted token */
-export const resolvePlotAxisThemeTokens = (
-  resolution: IRPlotThemeResolution,
-  dimension: string,
-): IRPlotThemeTokenResolution => {
-  const tokens: MutablePlotTokens = structuredClone(resolution.tokens);
-  const sourceByToken = new Map(resolution.tokenSources.map(source => [source.token, source.path]));
-
-  for (const source of resolution.tokenRules) {
-    if (!matchesDimension(source.rule.select.dimension, dimension)) continue;
-    for (const [token, value] of Object.entries(source.rule.tokens)) {
-      const canonicalToken = token as PlotThemeTokenValue;
-      const globalSource = sourceByToken.get(canonicalToken);
-      if (globalSource === undefined) continue;
-      if (isDefaultRulePath(source.path) && !isDefaultTokenSource(globalSource)) continue;
-      if (isStyleRulePath(source.path) && !isDefaultTokenSource(globalSource) && !isStyleTokenSource(globalSource))
-        continue;
-      if (!isDefaultRulePath(source.path) && !isStyleRulePath(source.path) && isNativeTokenSource(globalSource))
-        continue;
-      (tokens as Record<string, unknown>)[canonicalToken] = structuredClone(value);
+/** 为一个已有 Axis dimension 按实际来源顺序重放 defaults 和匹配规则 */
+export const resolvePlotAxisDefaults = (resolution: IRPlotThemeResolution, dimension: string): IRPlotDefaults => {
+  let defaults: IRPlotDefaults = {};
+  for (const layer of resolution.layers) {
+    defaults = applyPlotDefaults(defaults, layer.defaults);
+    for (const source of resolution.rules) {
+      if (source.sourcePath !== layer.path) continue;
+      if (!doesPlotAxisRuleMatchDimension(source.rule.select.dimension, dimension)) continue;
+      defaults = mergePlotDefaults(defaults, { axis: source.rule.axis });
     }
   }
-
-  return tokens;
+  return defaults;
 };

@@ -24,8 +24,20 @@ const source = (fill: string): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'changed', position: [0, 0], shape: 'rectangle', fill },
-    { type: 'node', id: 'stable', position: [40, 0], shape: 'rectangle', fill: '#ffffff' },
+    {
+      type: 'node',
+      id: 'changed',
+      position: [0, 0],
+      shape: 'rectangle',
+      style: { fill },
+    },
+    {
+      type: 'node',
+      id: 'stable',
+      position: [40, 0],
+      shape: 'rectangle',
+      style: { fill: '#ffffff' },
+    },
   ],
 });
 
@@ -135,7 +147,7 @@ const makeDatasetDefinition = (datasets: Readonly<Record<string, unknown>>): Any
           id: 'dataset-box',
           position: [0, 0],
           shape: 'rectangle',
-          fill: string().parse(datasets.color),
+          style: { fill: string().parse(datasets.color) },
         },
       ],
     }),
@@ -301,10 +313,10 @@ describe('@retikz/vanilla retained mount', () => {
     } as const;
 
     const prepared = retained.prepare([candidate]);
-    expect(delegate.expand(node, context).children[0]).toMatchObject({ fill: '#22c55e' });
+    expect(delegate.expand(node, context).children[0]).toMatchObject({ style: { fill: '#22c55e' } });
     prepared.rollback();
 
-    expect(delegate.expand(node, context).children[0]).toMatchObject({ fill: '#ef4444' });
+    expect(delegate.expand(node, context).children[0]).toMatchObject({ style: { fill: '#ef4444' } });
   });
 
   it('retained expand delegate透明转发 Core Theme context', () => {
@@ -317,7 +329,7 @@ describe('@retikz/vanilla retained mount', () => {
         {
           type: 'node' as const,
           position: [0, 0] as [number, number],
-          fill: context.theme.mode === 'dark' ? '#111111' : '#eeeeee',
+          style: { fill: context.theme.mode === 'dark' ? '#111111' : '#eeeeee' },
         },
       ],
     }));
@@ -339,7 +351,7 @@ describe('@retikz/vanilla retained mount', () => {
     } as const;
 
     expect(delegate.expand({ namespace: 'fixture', type: 'themeDelegate' } as never, context)).toMatchObject({
-      children: [expect.objectContaining({ fill: '#111111' })],
+      children: [expect.objectContaining({ style: { fill: '#111111' } })],
     });
     expect(initialExpand).toHaveBeenCalledWith(expect.any(Object), context);
   });
@@ -352,7 +364,7 @@ describe('@retikz/vanilla retained mount', () => {
           id: 'dataset-box',
           position: [0, 0] as [number, number],
           shape: 'rectangle',
-          fill: '#ef4444',
+          style: { fill: '#ef4444' },
         },
       ],
     }));
@@ -363,7 +375,7 @@ describe('@retikz/vanilla retained mount', () => {
           id: 'dataset-box',
           position: [0, 0] as [number, number],
           shape: 'rectangle',
-          fill: '#22c55e',
+          style: { fill: '#22c55e' },
         },
       ],
     }));
@@ -594,7 +606,7 @@ describe('@retikz/vanilla retained mount', () => {
             id: 'fixed-composite',
             position: [0, 0],
             shape: 'rectangle',
-            fill: '#ef4444',
+            style: { fill: '#ef4444' },
           },
         ],
       }),
@@ -614,7 +626,7 @@ describe('@retikz/vanilla retained mount', () => {
           id: 'fixed-composite',
           position: [0, 0],
           shape: 'rectangle',
-          fill: '#22c55e',
+          style: { fill: '#22c55e' },
         },
       ],
     });

@@ -11,8 +11,8 @@ const circleNode = (id: string, position: [number, number], minimumSize = 40): I
   id,
   shape: 'circle',
   position,
-  minimumSize,
-  fill: '#2563eb',
+  style: { fill: '#2563eb' },
+  layout: { minimumSize },
 });
 
 /** 手搓一个带 viewBox 的 Scene IR（viewBox 直接塞，绕过 ViewBoxSchema 守门） */
@@ -239,14 +239,16 @@ describe('viewBox 与 clip / paint 资源正交共存', () => {
           id: 'g',
           shape: 'rectangle',
           position: [0, 0],
-          minimumSize: 40,
-          fill: {
-            kind: 'linearGradient',
-            stops: [
-              { offset: 0, color: '#2563eb' },
-              { offset: 1, color: '#f59e0b' },
-            ],
+          style: {
+            fill: {
+              kind: 'linearGradient',
+              stops: [
+                { offset: 0, color: '#2563eb' },
+                { offset: 1, color: '#f59e0b' },
+              ],
+            },
           },
+          layout: { minimumSize: 40 },
         },
       ],
       viewBox,

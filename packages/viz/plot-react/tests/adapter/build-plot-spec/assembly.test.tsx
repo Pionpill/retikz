@@ -15,24 +15,21 @@ const compilePlot = (
 ) => compileToScene({ version: 1, type: 'scene', children: [spec] }, { composites: lowerPlots(datasets, options) });
 
 describe('buildPlotIR 装配', () => {
-  it('透传 Plot plotThemeTokens 到 canonical IRPlot', () => {
-    const plotThemeTokens: NonNullable<IRPlot['plotThemeTokens']> = { 'plot.palette.series': ['#2563eb'] };
-    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokens });
-    expect(spec.plotThemeTokens).toEqual(plotThemeTokens);
+  it('透传 Plot plotDefaults 到 canonical IRPlot', () => {
+    const plotDefaults: NonNullable<IRPlot['plotDefaults']> = { palette: { series: ['#2563eb'] } };
+    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotDefaults });
+    expect(spec.plotDefaults).toEqual(plotDefaults);
   });
 
-  it('透传 Plot plotThemeTokenRules 到 canonical IRPlot', () => {
-    const plotThemeTokenRules: NonNullable<IRPlot['plotThemeTokenRules']> = [
+  it('透传 Plot plotRules 到 canonical IRPlot', () => {
+    const plotRules: NonNullable<IRPlot['plotRules']> = [
       {
         select: { dimension: 'x' },
-        tokens: {
-          'axis.grid.enabled': true,
-          'axis.grid.includeDomain': true,
-        },
+        axis: { grid: { includeDomain: true } },
       },
     ];
-    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotThemeTokenRules });
-    expect(spec.plotThemeTokenRules).toEqual(plotThemeTokenRules);
+    const spec = buildPlotIR(<PathMark x="month" y="revenue" />, '__plot', { plotRules });
+    expect(spec.plotRules).toEqual(plotRules);
   });
 
   it('单 line：装配出等价手写 IRPlot（薄 Plot：无默认 guides）', () => {

@@ -23,9 +23,23 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: spec },
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      style: { fill: spec },
+    },
     ...(second
-      ? [{ type: 'node' as const, id: 'B', position: [60, 0] as [number, number], text: 'B', fill: second }]
+      ? [
+          {
+            type: 'node' as const,
+            id: 'B',
+            position: [60, 0] as [number, number],
+            text: 'B',
+            style: { fill: second },
+          },
+        ]
       : []),
   ],
 });

@@ -2,26 +2,25 @@ import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue } from '@reti
 
 import { resolveDefaultCoreThemeColors } from '@retikz/core';
 
-import type { IRPlotThemeTokenResolution } from '../../schemas';
+import type { IRPlotDefaults } from '../../schemas';
 
-import { PlotThemeTokenResolutionSchema } from '../../schemas';
-import { getAxisPreset, getLegendPreset, getPalettePreset, getPlotAreaPreset, getTypographyPreset } from './preset';
+import {
+  getNeutralAxisDefaults,
+  getNeutralLegendDefaults,
+  getNeutralPaletteDefaults,
+  getNeutralPlotAreaDefaults,
+  getNeutralTypographyDefaults,
+} from './preset';
 
-const createPreset = (
-  mode: ThemeModeValue,
-  categorical: NonEmptyReadonlyArray<CssColorValue>,
-): IRPlotThemeTokenResolution => {
-  return PlotThemeTokenResolutionSchema.parse({
-    ...getPlotAreaPreset(mode),
-    ...getTypographyPreset(mode),
-    ...getAxisPreset(mode),
-    ...getLegendPreset(mode),
-    ...getPalettePreset(categorical),
-  });
-};
-
-/** 读取一个内建 Plot style/mode 的完整 token map */
-export const getDefaultPlotThemePreset = (
+/** 读取一个 mode-aware Neutral Plot defaults 片段 */
+export const getNeutralPlotDefaults = (
   mode: ThemeModeValue,
   categorical: NonEmptyReadonlyArray<CssColorValue> = resolveDefaultCoreThemeColors(mode).categorical,
-): IRPlotThemeTokenResolution => structuredClone(createPreset(mode, categorical));
+): IRPlotDefaults =>
+  structuredClone({
+    plotArea: getNeutralPlotAreaDefaults(mode),
+    typography: getNeutralTypographyDefaults(mode),
+    axis: getNeutralAxisDefaults(mode),
+    legend: getNeutralLegendDefaults(mode),
+    palette: getNeutralPaletteDefaults(categorical),
+  });

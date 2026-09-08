@@ -10,7 +10,7 @@ import { densityControls, previewControlContract } from './transform-density.en.
 export const previewControls = densityControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={measurements} width={440} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={measurements} width={440} height={260}>
     <PlotTransform {...densityOperationOf(values)} />
     <PlotScale dimension="x" type="linear" domain={[1, 10]} />
     <PlotScale dimension="y" type="linear" domain={[0, 0.7]} />

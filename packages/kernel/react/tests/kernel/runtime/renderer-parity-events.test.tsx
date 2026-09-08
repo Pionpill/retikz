@@ -48,7 +48,9 @@ afterEach(() => {
 describe('renderer 双模事件等价', () => {
   it('同一 <Node onClick> 在 svg 与 canvas 下点击 → 同一 spy 各触发一次', async () => {
     const onClick = vi.fn();
-    const figure = <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />;
+    const figure = (
+      <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
+    );
 
     // ── svg ──
     const svgContainer = document.createElement('div');

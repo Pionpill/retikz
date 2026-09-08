@@ -1,5 +1,4 @@
-import { JsonObjectSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { array, discriminatedUnion, literal, looseObject, number, strictObject, union } from 'zod';
 
 import { ReducerOperationKind, RESERVED_REDUCER_OPERATION_KINDS } from './constants';
@@ -120,22 +119,15 @@ export const BuiltinReducerOperationSchemas = Object.freeze({
 });
 
 /** 外部统计 reducer operation schema；只校验 JSON 形态和非内置 kind，具体契约由运行时 definition 提供 */
-export const ExternalReducerOperationSchema = looseObject({
+const ExternalReducerOperationObjectSchema = looseObject({
   kind: ReducerOperationKindSchema.refine(operationKind => !RESERVED_REDUCER_OPERATION_KINDS.has(operationKind), {
     message: 'external reducer kind must not collide with a built-in reducer kind',
   }).describe('Discriminator: custom reducer kind'),
-})
-  .superRefine((operation, ctx) => {
-    const result = JsonObjectSchema.safeParse(operation);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'external reducer operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
-      });
-    }
-  })
-  .describe('Custom reducer operation with JSON config');
+});
+
+export const ExternalReducerOperationSchema = ExternalReducerOperationObjectSchema.catchall(JsonValueSchema).describe(
+  'Custom reducer operation with JSON config',
+);
 
 /** 内置统计 reducer operation schema */
 export const BuiltinReducerOperationSchema = union([

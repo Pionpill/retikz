@@ -1,4 +1,3 @@
-import { JsonObjectSchema } from '@retikz/core';
 import {
   BuiltinTransformSchema as DataBuiltinTransformSchema,
   DataTransform,
@@ -9,6 +8,7 @@ import {
 } from '@retikz/data';
 import {
   createOpenStringSchema,
+  JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
@@ -353,7 +353,7 @@ export const PlotBuiltinTransformSchema = discriminatedUnion('kind', [
   SmoothTransformSchema,
 ]).describe('Built-in plot transform operation applied through the shared data pipeline');
 
-export const ExternalPlotTransformSchema = looseObject({
+const ExternalPlotTransformObjectSchema = looseObject({
   kind: PlotTransformKindSchema.refine(
     kind => !RESERVED_TRANSFORM_KINDS.has(kind) && !BUILTIN_PLOT_TRANSFORM_KINDS.has(kind),
     {
@@ -362,20 +362,11 @@ export const ExternalPlotTransformSchema = looseObject({
   ).describe(
     'Discriminator: externally registered transform operation kind; must be a non-blank, non-reserved identifier registered through options.transformDefinitions',
   ),
-})
-  .superRefine((operation, ctx) => {
-    const result = JsonObjectSchema.safeParse(operation);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'external transform operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
-      });
-    }
-  })
-  .describe(
-    'Externally registered transform operation: kind is any non-reserved identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions',
-  );
+});
+
+export const ExternalPlotTransformSchema = ExternalPlotTransformObjectSchema.catchall(JsonValueSchema).describe(
+  'Externally registered transform operation: kind is any non-reserved identifier; its config is validated at lowering time against the matching TransformDefinition supplied via options.transformDefinitions',
+);
 
 export const TransformSchema = union([
   DataBuiltinTransformSchema,

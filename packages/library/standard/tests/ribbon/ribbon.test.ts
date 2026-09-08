@@ -677,7 +677,7 @@ describe('compile ribbon', () => {
         { type: 'step' as const, kind: 'move' as const, to: [0, 4] as [number, number] },
         { type: 'step' as const, kind: 'line' as const, to: [10, 4] as [number, number] },
       ],
-      fill: '#bfdbfe',
+      style: { fill: '#bfdbfe' },
     });
     expect(RibbonSchema.parse(boundary)).toEqual(boundary);
     expect(() =>
@@ -782,7 +782,7 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          fill: conic,
+          style: { fill: conic },
         }),
       ]),
     ).scene;
@@ -800,12 +800,14 @@ describe('compile ribbon', () => {
     const compiled = compileToScene(
       scene([
         ribbon({
-          fill: '#60a5fa',
-          fillOpacity: 0.4,
-          stroke: '#172033',
-          strokeWidth: 2,
-          strokeOpacity: 0.7,
-          opacity: 0.5,
+          style: {
+            fill: '#60a5fa',
+            fillOpacity: 0.4,
+            stroke: '#172033',
+            strokeWidth: 2,
+            strokeOpacity: 0.7,
+            opacity: 0.5,
+          },
         }),
       ]),
       { padding: 0 },

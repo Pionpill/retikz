@@ -26,9 +26,23 @@ const patternNodeIR = (spec: IRPaint, second?: IRPaint): IRScene => ({
   version: 1,
   type: 'scene',
   children: [
-    { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: spec },
+    {
+      type: 'node',
+      id: 'A',
+      position: [0, 0],
+      text: 'A',
+      style: { fill: spec },
+    },
     ...(second
-      ? [{ type: 'node' as const, id: 'B', position: [60, 0] as [number, number], text: 'B', fill: second }]
+      ? [
+          {
+            type: 'node' as const,
+            id: 'B',
+            position: [60, 0] as [number, number],
+            text: 'B',
+            style: { fill: second },
+          },
+        ]
       : []),
   ],
 });
@@ -385,9 +399,27 @@ describe('ADV — dedup / override / 交叉', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad },
-        { type: 'node', id: 'B', position: [60, 0], text: 'B', fill: img },
-        { type: 'node', id: 'C', position: [120, 0], text: 'C', fill: pat },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: grad },
+        },
+        {
+          type: 'node',
+          id: 'B',
+          position: [60, 0],
+          text: 'B',
+          style: { fill: img },
+        },
+        {
+          type: 'node',
+          id: 'C',
+          position: [120, 0],
+          text: 'C',
+          style: { fill: pat },
+        },
       ],
     };
     const scene = compileToScene(ir).scene;
@@ -408,13 +440,13 @@ describe('ADV — dedup / override / 交叉', () => {
       children: [
         {
           type: 'path',
-          fill: { kind: 'pattern', shape: 'dots' },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { fill: { kind: 'pattern', shape: 'dots' } },
         },
       ],
     } as unknown as IRScene;

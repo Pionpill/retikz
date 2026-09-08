@@ -25,21 +25,18 @@ const Curve: FC<{ inspect?: boolean }> = props => {
         { inspector: STROKE_PATH_INSPECTOR_KEY, options: { labels: false } },
         { inspector: PATH_ENDPOINTS_INSPECTOR_KEY, options: true },
       ]}
-      stroke="dimgray"
-      strokeWidth={3}
+      style={{ stroke: 'dimgray', strokeWidth: 3 }}
     >
       {steps}
     </InspectPath>
   ) : (
-    <Path stroke="dimgray" strokeWidth={3}>
-      {steps}
-    </Path>
+    <Path style={{ stroke: 'dimgray', strokeWidth: 3 }}>{steps}</Path>
   );
 };
 
 /** 在同一个 registry 中组合内置控制点与第三方端点 Inspector */
 const Demo: FC = () => (
-  <InspectLayout registry={registry} width={420} height={220} viewBox={{ x: -210, y: -110, width: 420, height: 220 }}>
+  <InspectLayout registry={registry}>
     <Curve inspect />
   </InspectLayout>
 );
@@ -48,7 +45,7 @@ const Demo: FC = () => (
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (
-    <Layout width={420} height={220} viewBox={{ x: -210, y: -110, width: 420, height: 220 }}>
+    <Layout>
       <Curve />
     </Layout>
   ),

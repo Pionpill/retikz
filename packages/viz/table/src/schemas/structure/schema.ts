@@ -1,5 +1,4 @@
-import { JsonValueSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { array, boolean, enum as zodEnum, literal, null as zodNull, object, strictObject, union } from 'zod';
 
 import { ManualTableCellSchema, TableCellLayoutSchema, TableCellPayloadSchema } from '../cell';

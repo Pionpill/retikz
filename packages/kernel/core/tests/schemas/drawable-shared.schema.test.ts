@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   DrawableInstanceSchema,
@@ -33,28 +33,28 @@ describe('Drawable shared schema', () => {
     const parsed = PathSchema.parse(
       path({
         id: 'edge-a',
-        color: 'crimson',
-        fill: '#fee2e2',
-        fillOpacity: 0.4,
-        stroke: '#991b1b',
-        strokeWidth: 2,
-        strokeOpacity: 0.7,
-        opacity: 0.8,
-        shadow: 'md',
-        blendMode: 'multiply',
         zIndex: 3,
         meta: { series: 'a' },
         animations: [fade],
+        style: {
+          color: 'crimson',
+          fill: '#fee2e2',
+          fillOpacity: 0.4,
+          stroke: '#991b1b',
+          strokeWidth: 2,
+          strokeOpacity: 0.7,
+          opacity: 0.8,
+          shadow: 'md',
+          blendMode: 'multiply',
+        },
       }),
     );
 
     expect(parsed).toMatchObject({
       id: 'edge-a',
-      color: 'crimson',
-      fill: '#fee2e2',
-      stroke: '#991b1b',
       zIndex: 3,
       meta: { series: 'a' },
+      style: { color: 'crimson', fill: '#fee2e2', stroke: '#991b1b' },
     });
   });
 
@@ -64,28 +64,28 @@ describe('Drawable shared schema', () => {
         kind: 'custom',
         kindOptions: { width: 12 },
         id: 'flow-a',
-        color: 'teal',
-        fill: '#ccfbf1',
-        fillOpacity: 0.5,
-        stroke: '#0f766e',
-        strokeWidth: 1.5,
-        strokeOpacity: 0.75,
-        opacity: 0.9,
-        shadow: { offsetX: 1, offsetY: 2, blur: 3 },
-        blendMode: 'screen',
         zIndex: 4,
         meta: { row: 1 },
         animations: [fade],
+        style: {
+          color: 'teal',
+          fill: '#ccfbf1',
+          fillOpacity: 0.5,
+          stroke: '#0f766e',
+          strokeWidth: 1.5,
+          strokeOpacity: 0.75,
+          opacity: 0.9,
+          shadow: { offsetX: 1, offsetY: 2, blur: 3 },
+          blendMode: 'screen',
+        },
       }),
     );
 
     expect(parsed).toMatchObject({
       id: 'flow-a',
-      color: 'teal',
-      fill: '#ccfbf1',
-      stroke: '#0f766e',
       zIndex: 4,
       meta: { row: 1 },
+      style: { color: 'teal', fill: '#ccfbf1', stroke: '#0f766e' },
     });
   });
 

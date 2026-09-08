@@ -5,7 +5,7 @@ import { Layout, Node } from '@retikz/react';
 
 /** Demonstrates explicit tracks, fractions, spans, and auto placement */
 const Demo: FC = () => (
-  <Layout width={460} height={210}>
+  <Layout>
     <GridLayout
       columns={[
         { kind: 'fixed', value: 92 },
@@ -22,16 +22,16 @@ const Demo: FC = () => (
       rowGap={8}
     >
       <LayoutItem kind="grid" column={{ start: 0, span: 2 }}>
-        <Node position={[0, 0]} text="Two-column span" fill="#dbeafe" stroke="#2563eb" />
+        <Node position={[0, 0]} text="Two-column span" style={{ fill: '#dbeafe', stroke: '#2563eb' }} />
       </LayoutItem>
       <LayoutItem kind="grid" column={{ start: 2 }} row={{ start: 0 }}>
-        <Node position={[0, 0]} text="2fr" fill="#dcfce7" stroke="#16a34a" />
+        <Node position={[0, 0]} text="2fr" style={{ fill: '#dcfce7', stroke: '#16a34a' }} />
       </LayoutItem>
       <LayoutItem kind="grid">
-        <Node position={[0, 0]} text="Auto A" fill="#fef3c7" stroke="#d97706" />
+        <Node position={[0, 0]} text="Auto A" style={{ fill: '#fef3c7', stroke: '#d97706' }} />
       </LayoutItem>
       <LayoutItem kind="grid">
-        <Node position={[0, 0]} text="Auto B" fill="#f3e8ff" stroke="#9333ea" />
+        <Node position={[0, 0]} text="Auto B" style={{ fill: '#f3e8ff', stroke: '#9333ea' }} />
       </LayoutItem>
     </GridLayout>
   </Layout>

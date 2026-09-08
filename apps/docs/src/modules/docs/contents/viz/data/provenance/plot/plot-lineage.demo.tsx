@@ -55,7 +55,6 @@ const Demo: FC = () => {
           height={220}
           lineage={lineageOptions}
           onLineage={handleLineage}
-          style={{ maxWidth: '100%', height: 'auto' }}
         >
           <IntervalMark id="revenueBars" x="region" y="revenue" color="month" transform={transforms.mark} />
           <PlotScale dimension="y" type="linear" domainPadding={0} />

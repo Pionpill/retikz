@@ -23,6 +23,18 @@ describe('Theme schema', () => {
     expect(ThemeSchema.safeParse({ palettePreset: 'vibrant' }).success).toBe(false);
   });
 
+  it('由 strict owner schema 投影具有相同字段的 class instance', () => {
+    class ThemeInput {
+      style = 'clean';
+      mode = ThemeMode.Dark;
+    }
+
+    const parsed = ThemeSchema.parse(new ThemeInput());
+
+    expect(parsed).toEqual({ style: 'clean', mode: ThemeMode.Dark });
+    expect(Object.getPrototypeOf(parsed)).toBe(Object.prototype);
+  });
+
   it('Scene 与 Scope 复用闭合 Theme schema', () => {
     const scene = SceneSchema.parse({
       type: 'scene',

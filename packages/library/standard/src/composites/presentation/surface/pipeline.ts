@@ -120,9 +120,11 @@ export const compileSurface = (
       : [
           surfaceBoundaryPath(width, height, cornerRadius, {
             zIndex: -1,
-            fill: surface.background.fill,
-            ...(surface.background.fillOpacity === undefined ? {} : { fillOpacity: surface.background.fillOpacity }),
-            stroke: 'none',
+            style: {
+              fill: surface.background.fill,
+              ...(surface.background.fillOpacity === undefined ? {} : { fillOpacity: surface.background.fillOpacity }),
+              stroke: 'none',
+            },
           }),
         ];
   const border =
@@ -130,9 +132,8 @@ export const compileSurface = (
       ? []
       : [
           surfaceBoundaryPath(width, height, cornerRadius, {
-            ...surface.border,
             zIndex: 1,
-            fill: 'none',
+            style: { ...surface.border, fill: 'none' },
           }),
         ];
   const {

@@ -10,7 +10,7 @@ import {
   TableComposite,
   TableLayoutManifestSchema,
 } from '../../src';
-import { CLEAN_TABLE_THEME_TOKENS } from '../fixtures/clean-theme-tokens';
+import { CLEAN_TABLE_DEFAULTS } from '../fixtures/clean-table-defaults';
 
 /** 断言 JSON 风格对象图的每一层都已冻结 */
 const expectDeepFrozen = (value: unknown): void => {
@@ -25,7 +25,7 @@ describe('Table layout manifest', () => {
       namespace: TABLE_NAMESPACE,
       type: TableComposite.Table,
       id: 'people',
-      tableThemeTokens: CLEAN_TABLE_THEME_TOKENS,
+      tableDefaults: CLEAN_TABLE_DEFAULTS,
       data: { reference: 'people' },
       structure: {
         kind: 'detail',
@@ -124,7 +124,14 @@ describe('Table layout manifest', () => {
       layout: {
         columnSize: { kind: 'fixed', value: 40 },
         rowSize: { kind: 'fixed', value: 20 },
-        borders: { outer: { kind: 'line', stroke: '#f00', width: 2 } },
+        borders: {
+          outer: {
+            top: { kind: 'line', stroke: '#f00', width: 2 },
+            bottom: { kind: 'line', stroke: '#f00', width: 2 },
+            left: { kind: 'line', stroke: '#f00', width: 2 },
+            right: { kind: 'line', stroke: '#f00', width: 2 },
+          },
+        },
       },
     };
     const result = compileTable(spec, {}, { compile: { padding: 0 } });

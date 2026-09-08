@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import { PlotMark, RelationMarkSchema } from '@retikz/plot';
@@ -15,8 +15,8 @@ import { defineChartMark } from '../../_chart/contract';
 import { requiredFieldOf } from '../shared';
 import { RangedDotChartMarkSchema } from './schema';
 
-const endpointGlyphOf = (properties: IRRangedDotPointProperties): IRJsonObject => {
-  const glyph: IRJsonObject = {};
+const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => {
+  const glyph: JsonObject = {};
   for (const name of [
     'color',
     'size',
@@ -35,20 +35,20 @@ const endpointGlyphOf = (properties: IRRangedDotPointProperties): IRJsonObject =
   return glyph;
 };
 
-const rangeStyleOf = (properties: IRRangedDotRangeProperties): IRJsonObject => {
-  const style: IRJsonObject = {};
+const rangeStyleOf = (properties: IRRangedDotRangeProperties): JsonObject => {
+  const style: JsonObject = {};
   for (const name of ['stroke', 'strokeWidth', 'strokeOpacity', 'opacity', 'shadow', 'blendMode'] as const) {
     if (properties[name] !== undefined) style[name] = { kind: 'constant', value: properties[name] };
   }
   return style;
 };
 
-const rangePathOf = (properties: IRRangedDotRangeProperties): IRJsonObject | undefined => {
-  const options: IRJsonObject = {};
+const rangePathOf = (properties: IRRangedDotRangeProperties): JsonObject | undefined => {
+  const options: JsonObject = {};
   for (const name of ['lineCap', 'lineJoin', 'dashPattern'] as const) {
     if (properties[name] !== undefined) options[name] = properties[name];
   }
-  return Object.keys(options).length === 0 ? undefined : { options };
+  return Object.keys(options).length === 0 ? undefined : { options: { style: options } };
 };
 
 const fieldMappingOf = (
@@ -57,7 +57,7 @@ const fieldMappingOf = (
 ): Readonly<{ field: string; scale: string }> | undefined => {
   if (typeof value === 'string') return { field: value, scale: fallbackScale };
   if (value === null || Array.isArray(value) || typeof value !== 'object') return undefined;
-  const mapping = value as IRJsonObject;
+  const mapping = value as JsonObject;
   return typeof mapping.field === 'string'
     ? { field: mapping.field, scale: typeof mapping.scale === 'string' ? mapping.scale : fallbackScale }
     : undefined;
@@ -65,7 +65,7 @@ const fieldMappingOf = (
 
 /** 把一个 Ranged Dot semantic mark 解析为原子 projected Relation */
 export const resolveRangedDotMark = (
-  encodings: IRJsonObject,
+  encodings: JsonObject,
   properties: IRRangedDotChartProperties,
 ): IRPlotMarkOperation => {
   const category = requiredFieldOf(encodings, 'category', ['recipe', 'encodings', 'category']);

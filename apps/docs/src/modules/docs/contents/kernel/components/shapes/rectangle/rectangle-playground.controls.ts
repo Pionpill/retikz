@@ -97,8 +97,8 @@ export const previewControlContract = {
     'Rectangle.width',
     'Rectangle.height',
     'Rectangle.cornerRadius',
-    'Path.fill',
-    'Path.stroke',
-    'Path.strokeWidth',
+    'Path.style.fill',
+    'Path.style.stroke',
+    'Path.style.strokeWidth',
   ],
 } satisfies PreviewControlContract;

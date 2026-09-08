@@ -9,19 +9,12 @@ import { cylinderExampleControls, previewControlContract } from './cylinder-exam
 
 export const previewControls = cylinderExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={380}
-    height={220}
-    viewBox={{ x: -120, y: -90, width: 240, height: 180 }}
-    shapes={[CylinderShapeDefinition]}
-  >
+  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} shapes={[CylinderShapeDefinition]}>
     <Node
       position={[0, 0]}
-      minimumSize={{ width: 130, height: 90 }}
       shape={{ type: 'cylinder', params: { axis: values.axis, capDepth: values.capDepth } }}
-      fill="#ffedd5"
-      stroke="darkorange"
-      strokeWidth={1.5}
+      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
+      layout={{ minimumSize: { width: 130, height: 90 } }}
     />
   </Layout>
 ));

@@ -46,7 +46,7 @@ Graph parses params with the Definition's Zod schema before Theme selectors matc
 
 ## Inject into a host
 
-React can pass definitions directly to the `<Entity>` that consumes them. Use `<Graph>` when several descendants share the same definitions and local `graphTheme`:
+React can pass definitions directly to the `<Entity>` that consumes them. Use `<Graph>` when several descendants share the same definitions and local `graphRules`:
 
 ```tsx
 <Graph entityRoles={[serviceRole]} entityKinds={[gatewayKind]} entityPredicates={[availabilityPredicate]}>
@@ -90,14 +90,14 @@ The current provider assembly merges built-in and custom definitions into local 
 
 ## API Reference
 
-| Public export                                              | Purpose                                        |
-| ---------------------------------------------------------- | ---------------------------------------------- |
-| `defineEntityRole` / `EntityRoleDefinition`                | Defines complete role structure and shape      |
-| `defineEntityKind` / `EntityKindDefinition`                | Defines a stable subtype within a role         |
-| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | Defines a predicate with type-safe JSON params |
-| `EntityRole`                                               | Lists built-in open role keys                  |
-| `GraphThemeLayerSchema` / `IRGraphThemeLayer`              | Authors non-empty ordered appearance rules     |
-| `GraphDefinitionOptions`                                   | Assembles the three Entity Definition families |
+| Public export                                              | Purpose                                                          |
+| ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| `defineEntityRole` / `EntityRoleDefinition`                | Defines complete role structure and shape                        |
+| `defineEntityKind` / `EntityKindDefinition`                | Defines a stable subtype within a role                           |
+| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | Defines a predicate with type-safe JSON params                   |
+| `EntityRole`                                               | Lists built-in open role keys                                    |
+| `GraphRuleSchema` / `IRGraphRule`                          | Authors one ordered appearance rule; graphRules accepts an array |
+| `GraphDefinitionOptions`                                   | Assembles the three Entity Definition families                   |
 
 ## Related
 

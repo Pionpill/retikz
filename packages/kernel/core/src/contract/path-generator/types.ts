@@ -1,7 +1,7 @@
+import type { JsonObject } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
-import type { IRJsonObject } from '../../schemas';
 import type { PathCommand } from '../scene';
 
 /**
@@ -35,7 +35,7 @@ export type PathGeneratorDefinition = {
    * 实例参数 schema
    * @description 解析结果必须是 JSON object
    */
-  paramsSchema: ZodType<IRJsonObject>;
+  paramsSchema: ZodType<JsonObject>;
   /**
    * 需要解析为当前 Path 局部坐标的 params 顶层 key
    * @default []

@@ -183,7 +183,6 @@ export const normalizePath = (input: InputPath): IRPath => {
     arrowDetail: _arrowDetail,
     arrowPlacement: _arrowPlacement,
     children,
-    strokeWidth,
     marks: _marks,
     ...path
   } = input;
@@ -206,6 +205,7 @@ export const normalizePath = (input: InputPath): IRPath => {
   }
   const normalizedChildren = normalizePathChildren(authoredChildren);
   const marks = normalizePathMarks(input);
+  const strokeWidth = path.style?.strokeWidth;
   return {
     type: 'path',
     ...path,
@@ -213,8 +213,8 @@ export const normalizePath = (input: InputPath): IRPath => {
     ...(strokeWidth === undefined
       ? thickness === undefined
         ? {}
-        : { strokeWidth: THICKNESS_TO_WIDTH[thickness] }
-      : { strokeWidth }),
+        : { style: { ...path.style, strokeWidth: THICKNESS_TO_WIDTH[thickness] } }
+      : { style: path.style }),
     ...(marks === undefined ? {} : { marks }),
   };
 };

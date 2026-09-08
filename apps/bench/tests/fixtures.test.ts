@@ -1,6 +1,6 @@
 import type { ScenePrimitive } from '@retikz/core';
 
-import { compileToScene } from '@retikz/core';
+import { compileToScene, NodeSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -39,7 +39,7 @@ describe('benchmark fixtures', () => {
     expect(next.children[0]).toBe(current.children[0]);
     expect(next.children[1]).not.toBe(current.children[1]);
     expect(next.children[2]).toBe(current.children[2]);
-    expect(next.children[1]).toMatchObject({ id: 'entity-00001', fill: '#22c55e' });
+    expect(next.children[1]).toMatchObject({ id: 'entity-00001', style: { fill: '#22c55e' } });
   });
 
   it('创建 5000 occurrence stable Group 并只替换 Group 自身', () => {
@@ -57,7 +57,7 @@ describe('benchmark fixtures', () => {
       children: [{ type: 'rect' }, { type: 'text' }],
     });
     expect(next.children[1]).toBe(current.children[1]);
-    expect(nextGroup.fill).toBe('#22c55e');
+    expect(NodeSchema.parse(nextGroup).style?.fill).toBe('#22c55e');
   });
 
   it('拒绝非法 Group fixture', () => {

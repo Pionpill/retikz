@@ -13,8 +13,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const detail = { color: values.color, scale: values.scale, lineWidth: values.lineWidth };
   return (
     <Layout
-      width={460}
-      height={180}
       viewBox={{ x: -210, y: -80, width: 420, height: 160 }}
       arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
     >
@@ -25,8 +23,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ]}
         arrow="->"
         arrowDetail={{ ...detail, end: { ...detail, shape: 'diamond' } }}
-        stroke="#94a3b8"
-        strokeWidth={2}
+        style={{ stroke: '#94a3b8', strokeWidth: 2 }}
       />
       <Draw
         way={[
@@ -35,13 +32,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         ]}
         arrow="->"
         arrowDetail={{ ...detail, end: { ...detail, shape: 'openDiamond' } }}
-        stroke="#94a3b8"
-        strokeWidth={2}
+        style={{ stroke: '#94a3b8', strokeWidth: 2 }}
       />
-      <Node position={[-80, -35]} fill="none" stroke="none" font={{ size: 12 }} textColor="gray">
+      <Node position={[-80, -35]} style={{ fill: 'none', stroke: 'none', font: { size: 12 }, textColor: 'gray' }}>
         diamond
       </Node>
-      <Node position={[80, -35]} fill="none" stroke="none" font={{ size: 12 }} textColor="gray">
+      <Node position={[80, -35]} style={{ fill: 'none', stroke: 'none', font: { size: 12 }, textColor: 'gray' }}>
         openDiamond
       </Node>
     </Layout>

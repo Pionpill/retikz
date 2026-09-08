@@ -23,7 +23,12 @@ export const createCompileGroup =
       children: [
         context.scope(groupScopeProps(source), [
           context.replay(surface),
-          context.scope({ resetStyle: ['node'] }, [host]),
+          context.scope(
+            {
+              defaults: { reset: ['node'] },
+            },
+            [host],
+          ),
         ]),
       ],
     };

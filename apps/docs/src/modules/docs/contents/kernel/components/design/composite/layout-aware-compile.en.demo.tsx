@@ -1,0 +1,145 @@
+import type { FC } from 'react';
+
+import { Draw, Layout, Node, Text } from '@retikz/react';
+
+import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/components/logic-figure';
+
+/** Two-axis proposals are evaluated, selected, and committed inside one Core compile */
+const Demo: FC = () => (
+  <Layout>
+    <LogicFigureFrame id="compile-boundary">
+      <LogicFigureFrameTitle>One Core compile</LogicFigureFrameTitle>
+      <Node
+        id="compile"
+        position={[0, -145]}
+        cornerRadius={4}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>Tier 2 compile</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          node + context
+        </Text>
+      </Node>
+      <Node
+        id="contribution"
+        position={[0, -70]}
+        cornerRadius={4}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>Minimum / natural probe</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          resolved · failed
+        </Text>
+      </Node>
+      <Node
+        id="solve"
+        position={[0, 5]}
+        cornerRadius={4}
+        style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>Parent solver</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          slot · alignment · overflow
+        </Text>
+      </Node>
+      <Node
+        id="allocation"
+        position={[0, 80]}
+        cornerRadius={4}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>Range / exact probe</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          slot · allocation · visual · guides
+        </Text>
+      </Node>
+      <Node
+        id="commit"
+        position={[0, 155]}
+        cornerRadius={4}
+        style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+        layout={{ minimumSize: { width: 260, height: 54 }, align: 'middle', lineHeight: 16 }}
+      >
+        <Text font={{ size: 14, weight: 'bold' }}>Choose replay or raise</Text>
+        <Text fill="gray" font={{ size: 12 }}>
+          one-use · atomic
+        </Text>
+      </Node>
+    </LogicFigureFrame>
+
+    <Draw
+      way={[
+        'compile',
+        {
+          label: {
+            text: 'context.proposal',
+            position: 'midway',
+            side: 'right',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'contribution',
+      ]}
+      arrow="->"
+    />
+    <Draw
+      way={[
+        'contribution',
+        {
+          label: {
+            text: 'resolved result',
+            position: 'midway',
+            side: 'right',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'solve',
+      ]}
+      arrow="->"
+    />
+    <Draw
+      way={[
+        'solve',
+        {
+          label: {
+            text: 'next proposal',
+            position: 'midway',
+            side: 'right',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'allocation',
+      ]}
+      arrow="->"
+    />
+    <Draw
+      way={[
+        'allocation',
+        {
+          label: {
+            text: 'replay / raise',
+            position: 'midway',
+            side: 'right',
+            sloped: false,
+            textColor: 'gray',
+            font: { size: 12 },
+          },
+        },
+        'commit',
+      ]}
+      arrow="->"
+    />
+  </Layout>
+);
+
+export default Demo;

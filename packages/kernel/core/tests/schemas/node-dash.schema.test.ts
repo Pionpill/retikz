@@ -8,7 +8,7 @@ describe('Node dashPattern schema', () => {
       NodeSchema.safeParse({
         type: 'node',
         position: [0, 0],
-        dashPattern: [4, 2],
+        style: { dashPattern: [4, 2] },
       }).success,
     ).toBe(true);
   });
@@ -24,7 +24,11 @@ describe('Node dashPattern schema', () => {
   });
 
   it('nodeDefault 同步接受 dashPattern 且拒绝 dashArray', () => {
-    expect(NodeDefaultSchema.safeParse({ dashPattern: [4, 2] }).success).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { dashPattern: [4, 2] },
+      }).success,
+    ).toBe(true);
     expect(NodeDefaultSchema.safeParse({ dashArray: [4, 2] }).success).toBe(false);
   });
 });

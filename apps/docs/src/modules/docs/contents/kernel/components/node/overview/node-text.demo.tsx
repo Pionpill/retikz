@@ -25,19 +25,20 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   });
 
   return (
-    <Layout width={400} height={300} viewBox={{ x: -200, y: -150, width: 400, height: 300 }}>
+    <Layout viewBox={{ x: -200, y: -150, width: 400, height: 300 }}>
       <Node
         id="Q"
         position={[0, 0]}
         shape={values.shape}
         text={text}
-        align={values.align}
-        maxTextWidth={values.maxTextWidth}
-        lineHeight={values.lineHeight}
-        minimumSize={{ width: 80, height: 48 }}
-        padding={{ x: 18, y: 12 }}
-        fill="lightgray"
-        stroke="gray"
+        style={{ fill: 'lightgray', stroke: 'gray' }}
+        layout={{
+          align: values.align,
+          maxTextWidth: values.maxTextWidth,
+          lineHeight: values.lineHeight,
+          minimumSize: { width: 80, height: 48 },
+          padding: { x: 18, y: 12 },
+        }}
       />
     </Layout>
   );

@@ -39,6 +39,8 @@ ADR-09 是当前 family / recipe Chart 基础设施的总决策。早期 ADR-01�
 | 13  | Bubble 独立 chartType、必需字段尺寸映射、不可撤销 size 继承与 Point 共享边界                                                                          | Accepted                       |
 | 14  | Point family 复用 Core 四边 spacing，并按最终 Chart-owned Point 最大半径生成 range domain padding                                                     | Accepted                       |
 
+新增 [ADR-15](./15-theme-source-fragments.md)（Proposed）收敛 Theme 来源与 Source 默认片段：正式 presentation 保存内容与格式，作者使用 chartDefaults，Plot 默认由 Plot owner 消费，recipe guides 开关回到正式配置。以下已交付契约在该决策完成前保持当前状态。
+
 ## 3. 当前 Source 与解析主链
 
 alpha.1 的 Source root 固定为：

@@ -80,25 +80,20 @@ const addCompositeChildDescriptions = (target: DescriptionMap, path: ReadonlyArr
 
 const createLegendSchemaDescriptions = (): Readonly<DescriptionMap> => {
   const descriptions: DescriptionMap = {};
+  setDescription(descriptions, [field('style')], '当前图例的级联视觉属性');
+  setDescription(descriptions, [field('defaults')], '后代默认值通道与继承屏障');
   setDescription(descriptions, [field('namespace')], 'Standard 绘图能力使用的 composite 命名空间');
   setDescription(descriptions, [field('type')], '已解析视觉图例使用的 composite 类型');
-  setDescription(descriptions, [field('color')], '主图形颜色以及未单独覆盖的继承颜色');
-  setDescription(descriptions, [field('fill')], '主图形填充画笔');
-  setDescription(descriptions, [field('stroke')], '主图形描边画笔');
-  setDescription(descriptions, [field('fillOpacity')], '填充区域的不透明度');
-  setDescription(descriptions, [field('strokeWidth')], '描边宽度');
-  setDescription(descriptions, [field('strokeOpacity')], '描边的不透明度');
-  setDescription(descriptions, [field('opacity')], '整个图形的总不透明度');
   setDescription(descriptions, [field('theme')], '由当前 Scope 后代继承的稀疏 Theme 覆盖');
   setDescription(descriptions, [field('id')], '用于引用整个图例 Scope 的可选标识');
   setDescription(descriptions, [field('localNamespace')], '是否将子级标识保持在当前 Scope 的本地命名空间');
   setDescription(descriptions, [field('transforms')], '按编写顺序应用于所有图例子级的局部变换');
   setDescription(descriptions, [field('placement')], '在固有布局和局部变换之后应用的最终放置');
-  setDescription(descriptions, [field('nodeDefault')], '当前 Scope 内 Node 的默认样式');
-  setDescription(descriptions, [field('pathDefault')], '当前 Scope 内路径图元的默认样式');
-  setDescription(descriptions, [field('labelDefault')], '当前 Scope 内标签的默认样式');
-  setDescription(descriptions, [field('arrowDefault')], '当前 Scope 内箭头的默认样式');
-  setDescription(descriptions, [field('resetStyle')], '重置继承样式通道的边界');
+  setDescription(descriptions, [field('defaults'), field('node')], '当前 Scope 内 Node 的默认样式');
+  setDescription(descriptions, [field('defaults'), field('path')], '当前 Scope 内路径图元的默认样式');
+  setDescription(descriptions, [field('defaults'), field('label')], '当前 Scope 内标签的默认样式');
+  setDescription(descriptions, [field('defaults'), field('arrow')], '当前 Scope 内箭头的默认样式');
+  setDescription(descriptions, [field('defaults'), field('reset')], '重置继承样式通道的边界');
   setDescription(descriptions, [field('zIndex')], '图例 Scope 在兄弟 IR 子级中的堆叠顺序');
   setDescription(descriptions, [field('clip')], '当前 Scope 局部坐标中的裁切区域');
   setDescription(descriptions, [field('boundingShape')], '为图例 Scope 标识生成的矩形或圆形包络');

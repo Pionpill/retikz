@@ -83,17 +83,19 @@ describe('Core atomic drawing contracts', () => {
     const path = {
       type: 'path' as const,
       children: steps,
-      color: 'red',
-      dashPattern: [4, 2],
-      dashOffset: 1,
-      fillRule: 'evenodd' as const,
-      lineCap: 'round' as const,
-      lineJoin: 'bevel' as const,
       roundedCorners: 2,
       rotate: 15,
       scale: 1.25,
       label: { text: 'edge' },
       marks: [mark],
+      style: {
+        color: 'red',
+        dashPattern: [4, 2],
+        dashOffset: 1,
+        fillRule: 'evenodd' as const,
+        lineCap: 'round' as const,
+        lineJoin: 'bevel' as const,
+      },
     };
 
     expect(PathSchema.parse(path)).toEqual(path);
@@ -113,15 +115,15 @@ describe('Core atomic drawing contracts', () => {
     expect(CascadingGraphicStyleSchema.shape.strokeWidth).toBe(StrokeStyleSchema.shape.strokeWidth);
     expect(PathBaseSchema.shape.type).toBe(PathStructureSchema.shape.type);
     expect(PathBaseSchema.shape.kind).toBe(PathStructureSchema.shape.kind);
-    expect(PathBaseSchema.shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
-    expect(PathBaseSchema.shape.fillRule).toBe(PathFillSchema.shape.fillRule);
+    expect(PathBaseSchema.shape.style.unwrap().shape.dashPattern).toBe(PathStrokeSchema.shape.dashPattern);
+    expect(PathBaseSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
     expect(PathBaseSchema.shape.children).toBe(PathGeometrySchema.shape.children);
     expect(PathBaseSchema.shape.label).toBe(PathDecorationSchema.shape.label);
     expect(PathBaseSchema.shape.marks).toBe(PathDecorationSchema.shape.marks);
-    expect(PathDefaultSchema.shape.color).toBe(GraphicStyleSchema.shape.color);
-    expect(PathDefaultSchema.shape.shadow).toBe(GraphicStyleSchema.shape.shadow);
-    expect(PathDefaultSchema.shape.strokeWidth).toBe(PathStrokeSchema.shape.strokeWidth);
-    expect(PathDefaultSchema.shape.fillRule).toBe(PathFillSchema.shape.fillRule);
+    expect(PathDefaultSchema.shape.style.unwrap().shape.color).toBe(GraphicStyleSchema.shape.color);
+    expect(PathDefaultSchema.shape.style.unwrap().shape.shadow).toBe(GraphicStyleSchema.shape.shadow);
+    expect(PathDefaultSchema.shape.style.unwrap().shape.strokeWidth).toBe(PathStrokeSchema.shape.strokeWidth);
+    expect(PathDefaultSchema.shape.style.unwrap().shape.fillRule).toBe(PathFillSchema.shape.fillRule);
     expect(PathDefaultSchema.shape.rotate).toBe(PathGeometrySchema.shape.rotate);
   });
 

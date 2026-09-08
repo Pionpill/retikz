@@ -36,7 +36,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       : 'signed';
 
   return (
-    <Plot data={continuousValues} width={400} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={continuousValues} width={400} height={260}>
       <PathMark x="period" y={yField} order="period" />
       <PointMark x="period" y={yField} />
       {renderScale(values)}

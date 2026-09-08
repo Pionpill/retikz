@@ -24,15 +24,19 @@ export const pointGlyphStyle = (fill: MarkPaint, mark: PointGlyphStyleSource): I
   const rotate = mark.rotate?.kind === 'constant' ? mark.rotate.value : undefined;
   return {
     shape: 'circle',
-    padding: padding ?? 0,
-    minimumSize: minimumSize ?? (POINT_DEFAULT_RADIUS * 2) / Math.SQRT2,
-    ...(typeof fill === 'string' ? { color: fill } : {}),
-    fill,
-    ...(stroke !== undefined ? { stroke } : {}),
-    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
-    ...(fillOpacity !== undefined ? { fillOpacity } : {}),
-    ...(strokeOpacity !== undefined ? { strokeOpacity } : {}),
-    ...(opacity !== undefined ? { opacity } : {}),
     ...(rotate !== undefined ? { rotate } : {}),
+    style: {
+      ...(typeof fill === 'string' ? { color: fill } : {}),
+      fill,
+      ...(stroke !== undefined ? { stroke } : {}),
+      ...(strokeWidth !== undefined ? { strokeWidth } : {}),
+      ...(fillOpacity !== undefined ? { fillOpacity } : {}),
+      ...(strokeOpacity !== undefined ? { strokeOpacity } : {}),
+      ...(opacity !== undefined ? { opacity } : {}),
+    },
+    layout: {
+      padding: padding ?? 0,
+      minimumSize: minimumSize ?? (POINT_DEFAULT_RADIUS * 2) / Math.SQRT2,
+    },
   };
 };

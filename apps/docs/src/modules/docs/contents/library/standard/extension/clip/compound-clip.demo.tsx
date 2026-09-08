@@ -11,19 +11,14 @@ export const previewControls = compoundClipControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout
-    width={380}
-    height={220}
     viewBox={{ x: -165, y: -100, width: 330, height: 200 }}
     clips={[CompoundClipDefinition, CircleClipDefinition]}
   >
     <Node
       position={[0, 0]}
       shape="rectangle"
-      minimumSize={{ width: 300, height: 170 }}
-      fill="none"
-      stroke="lightgray"
-      strokeWidth={1}
-      dashPattern={[6, 4]}
+      style={{ fill: 'none', stroke: 'lightgray', strokeWidth: 1, dashPattern: [6, 4] }}
+      layout={{ minimumSize: { width: 300, height: 170 } }}
     />
     <Scope
       clip={{
@@ -38,9 +33,8 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node
         position={[0, 0]}
         shape="rectangle"
-        minimumSize={{ width: 300, height: 170 }}
-        stroke="none"
-        fill={{ kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 }}
+        style={{ stroke: 'none', fill: { kind: 'pattern', shape: 'grid', color: 'darkorange', size: 14 } }}
+        layout={{ minimumSize: { width: 300, height: 170 } }}
       />
     </Scope>
   </Layout>

@@ -9,9 +9,9 @@ const Demo: FC = () => (
   <BubbleChart
     rows={bubbleMinimalData}
     presentation={{
-      title: '震级越高，地震显著性通常越大',
-      subtitle: '100 条有效记录；横轴为深度（km），纵轴为震级，气泡面积表示显著性',
-      source: 'Vega Datasets earthquakes.json；访问于 2026-09-01',
+      title: { text: '震级越高，地震显著性通常越大' },
+      subtitle: { text: '100 条有效记录；横轴为深度（km），纵轴为震级，气泡面积表示显著性' },
+      source: { text: 'Vega Datasets earthquakes.json；访问于 2026-09-01' },
     }}
     recipe={{ encodings: { x: 'depthKm', y: 'magnitude', size: 'significance' } }}
   />

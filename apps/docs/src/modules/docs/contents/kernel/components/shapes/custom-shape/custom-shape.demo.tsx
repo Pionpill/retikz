@@ -94,9 +94,21 @@ const createHexagon = (): ShapeDefinition =>
 const hexagon = createHexagon();
 
 const Demo: FC = () => (
-  <Layout width={420} height={180} shapes={[hexagon]}>
-    <Node id="a" shape="hexagon" position={[-90, 0]} text="A" fill="lightgray" stroke="dodgerblue" strokeWidth={2} />
-    <Node id="b" shape="hexagon" position={[90, 0]} text="B" fill="lightgray" stroke="darkorange" strokeWidth={2} />
+  <Layout shapes={[hexagon]}>
+    <Node
+      id="a"
+      shape="hexagon"
+      position={[-90, 0]}
+      text="A"
+      style={{ fill: 'lightgray', stroke: 'dodgerblue', strokeWidth: 2 }}
+    />
+    <Node
+      id="b"
+      shape="hexagon"
+      position={[90, 0]}
+      text="B"
+      style={{ fill: 'lightgray', stroke: 'darkorange', strokeWidth: 2 }}
+    />
     <Draw way={['a', 'b']} arrow="->" />
   </Layout>
 );

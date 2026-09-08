@@ -9,21 +9,20 @@ import { flattenPrims } from '../helpers/flatten';
 
 const strokePath = (dashOffset: unknown): unknown => ({
   type: 'path',
-  dashPattern: [4, 2],
-  dashOffset,
   children: [
     { type: 'step', kind: 'move', to: [0, 0] },
     { type: 'step', kind: 'line', to: [10, 0] },
   ],
+  style: { dashPattern: [4, 2], dashOffset },
 });
 
 const strokePathWithOnlyOffset = (dashOffset: unknown): unknown => ({
   type: 'path',
-  dashOffset,
   children: [
     { type: 'step', kind: 'move', to: [0, 0] },
     { type: 'step', kind: 'line', to: [10, 0] },
   ],
+  style: { dashOffset },
 });
 
 const firstPath = (primitives: Array<ScenePrimitive>, stroke: string): PathPrim | undefined =>
@@ -50,9 +49,23 @@ describe('stroke dash offset', () => {
     expect(PathSchema.safeParse(strokePath('3')).success).toBe(false);
     expect(PathSchema.safeParse(strokePath(Number.NaN)).success).toBe(false);
     expect(PathSchema.safeParse(strokePath(Number.POSITIVE_INFINITY)).success).toBe(false);
-    expect(PathDefaultSchema.safeParse({ dashOffset: -3 }).success).toBe(true);
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], dashOffset: 2 }).success).toBe(true);
-    expect(NodeDefaultSchema.safeParse({ dashOffset: 2 }).success).toBe(true);
+    expect(
+      PathDefaultSchema.safeParse({
+        style: { dashOffset: -3 },
+      }).success,
+    ).toBe(true);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        style: { dashOffset: 2 },
+      }).success,
+    ).toBe(true);
+    expect(
+      NodeDefaultSchema.safeParse({
+        style: { dashOffset: 2 },
+      }).success,
+    ).toBe(true);
     expect(
       NodeSchema.safeParse({
         type: 'node',
@@ -76,26 +89,23 @@ describe('stroke dash offset', () => {
       children: [
         {
           type: 'path',
-          stroke: '#123',
-          dashPattern: [4, 2],
-          dashOffset: -2,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { stroke: '#123', dashPattern: [4, 2], dashOffset: -2 },
         },
         {
           type: 'node',
           id: 'box',
           position: [20, 0],
-          dashPattern: [3, 1],
-          dashOffset: 5,
+          style: { dashPattern: [3, 1], dashOffset: 5 },
         },
         {
           type: 'node',
           id: 'dashed',
           position: [60, 0],
-          dashed: true,
+          style: { dashed: true },
         },
         {
           type: 'node',
@@ -125,14 +135,12 @@ describe('stroke dash offset', () => {
       children: [
         {
           type: 'path',
-          stroke: '#123',
-          dashPattern: [11, 7],
-          dashOffset: 3,
           label: { text: 'gap', position: 0.42, sloped: true },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
           ],
+          style: { stroke: '#123', dashPattern: [11, 7], dashOffset: 3 },
         },
       ],
     };

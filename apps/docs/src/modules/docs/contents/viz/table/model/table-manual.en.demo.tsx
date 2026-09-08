@@ -7,7 +7,7 @@ import { PreviewManualTable as ManualTable } from '@/modules/docs/components/com
 import { manualRows } from './table-manual.en.data';
 
 const Demo: FC = () => (
-  <Layout width={288} height={158} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <ManualTable
       id="status-manual"
       rows={manualRows}
@@ -18,7 +18,7 @@ const Demo: FC = () => (
         columns: [{ index: 1, size: { kind: 'fixed', value: 72 } }],
         columnGap: 8,
         rowGap: 4,
-        borders: { outer: { kind: 'line', stroke: 'gray' } },
+        borders: { outer: { top: { kind: 'line', stroke: 'gray' }, bottom: { kind: 'line', stroke: 'gray' } } },
       }}
     />
   </Layout>

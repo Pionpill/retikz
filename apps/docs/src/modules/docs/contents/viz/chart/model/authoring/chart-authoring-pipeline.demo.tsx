@@ -8,26 +8,49 @@ const Demo: FC = () => (
     <Node
       id="authoring"
       position={[-315, 20]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
     >
       React / Vanilla
     </Node>
-    <Node id="source" position={[-155, 20]} stroke="darkorange" fill="darkorange" fillOpacity={0.08} cornerRadius={4}>
+    <Node
+      id="source"
+      position={[-155, 20]}
+      cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+    >
       Exact Chart Source
     </Node>
-    <Node id="json" position={[-155, -65]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+    <Node
+      id="json"
+      position={[-155, -65]}
+      cornerRadius={4}
+      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+    >
       JSON + exact schema
     </Node>
-    <Node id="bind" position={[0, 20]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+    <Node
+      id="bind"
+      position={[0, 20]}
+      cornerRadius={4}
+      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+    >
       chartType recipe
     </Node>
-    <Node id="resolve" position={[155, 20]} stroke="gray" fill="lightgray" fillOpacity={0.16} cornerRadius={4}>
+    <Node
+      id="resolve"
+      position={[155, 20]}
+      cornerRadius={4}
+      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+    >
       resolveChart
     </Node>
-    <Node id="base" position={[315, 20]} stroke="seagreen" fill="seagreen" fillOpacity={0.08} cornerRadius={4}>
+    <Node
+      id="base"
+      position={[315, 20]}
+      cornerRadius={4}
+      style={{ stroke: 'seagreen', fill: 'seagreen', fillOpacity: 0.08 }}
+    >
       Resolved Chart + Plot
     </Node>
 

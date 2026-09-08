@@ -3,16 +3,18 @@ title: Graph
 description: Compose an optional Graph Scope, Block, Group, Entity, Relation, and arbitrary Core content.
 ---
 
-Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds local `graphTheme` rules for visible Entity and Relation descendants. Automatic layout, routing algorithms, and rendering remain outside Graph.
+Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds `graphDefaults` for visible Entity, Relation, Group, and Block descendants, plus conditional `graphRules` for Entity and Relation. Automatic layout, routing algorithms, and rendering remain outside Graph.
 
 Block, Group, Entity, and Relation are independent Tier 2 composites that can appear directly in Layout, Scope, or any other Core-child position. Block models code and engineering objects through a fixed Header, Section, Row, and Cell structure. Graph maintains neither a member collection nor an identity index; Core namespace owns references and duplicate-id diagnostics.
+
+`Graph.style` sets cascading drawing styles, and `Graph.defaults` sets named descendant defaults. Standalone and embedded Graph use the same contract. `style` does not accept host CSS; apply CSS to an outer DOM element or `Layout.style`.
 
 ## Two host modes
 
 As a top-level React component, Graph creates one Scene host like Layout, Plot, or Table. It does not need an outer Layout:
 
 ```tsx
-<Graph width={420} height={160}>
+<Graph>
   <Entity id="service" role="activity" position={[120, 80]}>
     Service
   </Entity>
@@ -22,7 +24,7 @@ As a top-level React component, Graph creates one Scene host like Layout, Plot, 
 When an outer Layout already exists, Graph lowers to one Scope that affects only local content and creates no second SVG or Canvas:
 
 ```tsx
-<Layout width={800} height={220}>
+<Layout>
   <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>
     <Entity role="activity" position={[120, 80]}>
       Local content
@@ -31,13 +33,13 @@ When an outer Layout already exists, Graph lowers to one Scope that affects only
 </Layout>
 ```
 
-Fields such as `theme`, `nodeDefault`, `pathDefault`, `labelDefault`, `arrowDefault`, `resetStyle`, `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph` and retain Core Scope semantics. `width`, `height`, renderer, runtime, and DOM props belong only to the standalone Scene host; move them to the outer Layout when Graph is embedded.
+Fields such as `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `defaults.arrow`, `defaults.reset`, `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph` and retain Core Scope semantics. `width`, `height`, renderer, runtime, and DOM props belong only to the standalone Scene host; move them to the outer Layout when Graph is embedded.
 
 ## Responsibilities
 
 | Member     | Responsibility                                                        | Does not own                                 |
 | ---------- | --------------------------------------------------------------------- | -------------------------------------------- |
-| Graph      | Core Scope surface and local Graph Theme                              | Member indexes, layout, or routing           |
+| Graph      | Core Scope surface and local Graph defaults and rules                 | Member indexes, layout, or routing           |
 | Block      | Structured objects, local Flex layout, and addressable Section / Row  | Port models, execution, or automatic routing |
 | Group      | Visible arbitrary-content boundary, caption, and boundary labels      | Automatic layout, routing, or avoidance      |
 | Entity     | Node semantics and independent lowering to one Core Node              | Generated ids or arbitrary drawing children  |

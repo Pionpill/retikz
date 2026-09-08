@@ -33,7 +33,10 @@ const createDenseNodeGridPair = (): KernelLabScenePair => {
     ...first,
     children: first.children.map(child => {
       if (!isKernelNode(child)) throw new Error('Dense node grid fixture must contain only nodes');
-      return { ...child, fill: child.fill === '#2563eb' ? '#0891b2' : '#db2777' };
+      return {
+        ...child,
+        style: { ...child.style, fill: child.style?.fill === '#2563eb' ? '#0891b2' : '#db2777' },
+      };
     }),
   };
   return { first, second };
@@ -53,9 +56,8 @@ const createMixedPrimitiveScene = (): IRScene => ({
         type: 'node',
         id: `mixed-node-${index.toString().padStart(4, '0')}`,
         position: [x, y],
-        width: 10,
-        height: 10,
-        fill: '#2563eb',
+        layout: { minimumSize: { width: 10, height: 10 } },
+        style: { fill: '#2563eb' },
       };
     }
     if (index % 3 === 1) {
@@ -63,21 +65,19 @@ const createMixedPrimitiveScene = (): IRScene => ({
         type: 'node',
         id: `mixed-text-${index.toString().padStart(4, '0')}`,
         position: [x, y],
-        width: 14,
-        height: 12,
-        fill: '#7c3aed',
+        layout: { minimumSize: { width: 14, height: 12 } },
         text: `${index % 10}`,
+        style: { fill: '#7c3aed' },
       };
     }
     return {
       type: 'path',
       id: `mixed-path-${index.toString().padStart(4, '0')}`,
-      stroke: '#0f766e',
-      strokeWidth: 2,
       children: [
         { type: 'step', kind: 'move', to: [x - 6, y] },
         { type: 'step', kind: 'line', to: [x + 6, y + 6] },
       ],
+      style: { stroke: '#0f766e', strokeWidth: 2 },
     };
   }),
 });
@@ -89,9 +89,9 @@ const createMixedPrimitivesPair = (): KernelLabScenePair => {
     ...first,
     children: first.children.map(child =>
       child.type === 'path'
-        ? { ...child, stroke: '#ea580c' }
+        ? { ...child, style: { ...(child as IRPath).style, stroke: '#ea580c' } }
         : isKernelNode(child)
-          ? { ...child, fill: child.text === undefined ? '#16a34a' : '#c026d3' }
+          ? { ...child, style: { ...child.style, fill: child.text === undefined ? '#16a34a' : '#c026d3' } }
           : child,
     ),
   };
@@ -105,8 +105,6 @@ const createComplexPath = (index: number): IRPath => {
   return {
     type: 'path',
     id: `complex-path-${index.toString().padStart(4, '0')}`,
-    stroke: index % 2 === 0 ? '#2563eb' : '#7c3aed',
-    strokeWidth: 1.5,
     children: [
       { type: 'step', kind: 'move', to: [x, y] },
       { type: 'step', kind: 'cubic', to: [x + 12, y + 6], control1: [x + 3, y - 8], control2: [x + 9, y + 14] },
@@ -116,6 +114,7 @@ const createComplexPath = (index: number): IRPath => {
       { type: 'step', kind: 'cubic', to: [x + 42, y], control1: [x + 36, y + 18], control2: [x + 40, y - 10] },
       { type: 'step', kind: 'line', to: [x + 46, y + 6] },
     ],
+    style: { stroke: index % 2 === 0 ? '#2563eb' : '#7c3aed', strokeWidth: 1.5 },
   };
 };
 
@@ -132,7 +131,10 @@ const createComplexPathsPair = (): KernelLabScenePair => {
       if (child.type !== 'path' || 'namespace' in child) {
         throw new Error('Complex paths fixture must contain only paths');
       }
-      return { ...child, stroke: child.stroke === '#2563eb' ? '#0891b2' : '#db2777' };
+      return {
+        ...child,
+        style: { ...child.style, stroke: child.style?.stroke === '#2563eb' ? '#0891b2' : '#db2777' },
+      };
     }),
   };
   return { first, second };
@@ -153,9 +155,7 @@ const createNodeSelectionPair = (): KernelLabScenePair => {
   const first = createSimpleNodeScene(5_000);
   const second = updateNode(first, selectedNodeIndex, node => ({
     ...node,
-    fill: '#f59e0b',
-    stroke: '#fef3c7',
-    strokeWidth: 3,
+    style: { ...node.style, fill: '#f59e0b', stroke: '#fef3c7', strokeWidth: 3 },
   }));
   return { first, second };
 };
@@ -169,7 +169,7 @@ const createNodeInsertRemovePair = (): KernelLabScenePair => {
     ...removed,
     id: 'entity-inserted',
     position: [0, 0],
-    fill: '#f59e0b',
+    style: { ...removed.style, fill: '#f59e0b' },
   };
   const second: IRScene = { ...first, children: [...first.children.slice(1), inserted] };
   return { first, second };

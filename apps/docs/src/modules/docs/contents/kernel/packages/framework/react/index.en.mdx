@@ -31,7 +31,7 @@ export const Diagram = () => (
 );
 ```
 
-`<Layout>` emits SVG by default; pass `renderer="canvas"` when you need a raster bitmap. Start with [Getting Started](/kernel/get-start), then see [Layout](/kernel/components/layout/overview) for the complete host options.
+`<Layout>` emits SVG by default; pass `renderer="canvas"` when you need a raster bitmap. Start with [Getting Started](/kernel/components/get-start), then see [Layout](/kernel/components/layout/overview) for the complete host options.
 
 `<Layout theme>` writes the root `IRScene.theme`, while `<Scope theme>` writes a local `IRScope.theme`. Theme is a sparse `style / mode` override; `themeStyles` is the runtime-only compile option that registers custom Core styles defined with `defineThemeStyle`. When `ir` and an explicit `theme` are both present, the prop overrides `ir.theme` per field without mutating either input. See [Layout: Inherited Theme](/kernel/components/layout/overview#inherited-theme) for the complete example.
 
@@ -90,14 +90,14 @@ return (
     {
       label: 'Node IR marker implementation',
       path: 'packages/kernel/react/src/kernel/components/Node.tsx',
-      startLine: 112,
-      endLine: 118,
+      startLine: 74,
+      endLine: 81,
     },
     {
       label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 50,
-      endLine: 54,
+      startLine: 29,
+      endLine: 33,
     },
   ]}
 />
@@ -275,7 +275,7 @@ Event handlers are functions and cannot enter JSON IR. In children mode, React s
 ## Continue reading
 
 <div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/get-start">
+  <LinkedCard href="/kernel/components/get-start">
     <span className="font-semibold">Getting Started</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Install the package and build your first React figure

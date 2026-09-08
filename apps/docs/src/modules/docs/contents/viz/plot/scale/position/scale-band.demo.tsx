@@ -10,7 +10,7 @@ export const previewControls = scaleBandControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Plot data={segments} width={400} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={segments} width={400} height={270}>
       {values.scaleType === 'band' ? (
         <IntervalMark x="segment" y="revenue" />
       ) : (

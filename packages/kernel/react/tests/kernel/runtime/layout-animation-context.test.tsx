@@ -18,7 +18,7 @@ const FADE: Array<IRAnimationTrack> = [
 
 const animatedLayout = (animate: boolean, snapshotAt?: number): React.ReactElement => (
   <Layout width={100} height={100} animate={animate} snapshotAt={snapshotAt}>
-    <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+    <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
   </Layout>
 );
 

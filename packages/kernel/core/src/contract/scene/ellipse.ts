@@ -1,11 +1,6 @@
-﻿import type {
-  BlendModeValue,
-  IRAnimationTrack,
-  IRGraphicStyle,
-  IRJsonObject,
-  IRPathBase,
-  ResolvedDropShadow,
-} from '../../schemas';
+import type { JsonObject } from '@retikz/foundation';
+
+import type { BlendModeValue, IRAnimationTrack, IRGraphicStyle, IRPathBase, ResolvedDropShadow } from '../../schemas';
 import type { PaintValue } from './paint';
 
 /** 椭圆原语，圆形复用 rx=ry 的同一 Scene 分支 */
@@ -14,7 +9,7 @@ export type EllipsePrim = {
   /** 稳定挂点 id：compile 从 IR 元素 user id stamp，供 renderer emit data-retikz-id / canvas hit-test */
   id?: string;
   /** provenance 元数据：compile 从 IR 元素（node / path / scope）的 `meta` 原样 stamp，renderer 忽略（不进 DOM），交互层 / 工具链从 Scene 读 */
-  meta?: IRJsonObject;
+  meta?: JsonObject;
   /** 时间轴动画 tracks：compile 从 IR 元素的 animations 原样 stamp；renderer 能播则播、不能则渲染 settled 静态态并 warn（不丢图） */
   animations?: Array<IRAnimationTrack>;
   cx: number;
@@ -41,9 +36,9 @@ export type EllipsePrim = {
    */
   strokeOpacity?: IRGraphicStyle['strokeOpacity'];
   strokeWidth?: IRGraphicStyle['strokeWidth'];
-  dashPattern?: IRPathBase['dashPattern'];
+  dashPattern?: NonNullable<IRPathBase['style']>['dashPattern'];
   /** 描边 dash offset */
-  dashOffset?: IRPathBase['dashOffset'];
+  dashOffset?: NonNullable<IRPathBase['style']>['dashOffset'];
   /**
    * 整体透明度 0~1
    * @default 1

@@ -4,9 +4,8 @@ import type {
   CoreSemanticColors,
   CssColorValue,
   IRChild,
-  IRJsonObject,
-  JsonValue,
 } from '@retikz/core';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 /** Inspector registry 的公开复合键 */
@@ -31,7 +30,7 @@ export type InspectionAppearanceContext = Readonly<{
 }>;
 
 /** Inspector callback 读取的最终 occurrence 上下文 */
-export type InspectorContext<TOptions extends IRJsonObject = IRJsonObject> = Readonly<{
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
   /** 当前 Inspector key */
   inspectorKey: InspectorKey;
   /** 当前被观察的 Core owner */
@@ -49,8 +48,8 @@ export type InspectorContext<TOptions extends IRJsonObject = IRJsonObject> = Rea
 /** 独立于 Core owner Definition 的 Inspector 定义 */
 export type InspectorDefinition<
   TSubject extends JsonValue = JsonValue,
-  TOptionsInput extends IRJsonObject = IRJsonObject,
-  TResolvedOptions extends IRJsonObject = IRJsonObject,
+  TOptionsInput extends JsonObject = JsonObject,
+  TResolvedOptions extends JsonObject = JsonObject,
 > = Readonly<{
   /** registry namespace */
   namespace: string;
@@ -81,11 +80,11 @@ export type AnyInspectorDefinition = Readonly<{
   /** 擦除后仍恢复 JSON-safe subject */
   subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
   /** 擦除后仍恢复 JSON object input */
-  optionsInputSchema: Readonly<{ parse: (value: unknown) => IRJsonObject }>;
+  optionsInputSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
   /** 擦除后仍恢复 JSON object options */
-  optionsSchema: Readonly<{ parse: (value: unknown) => IRJsonObject }>;
+  optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
   /** 具体 options 类型由调用前的 schema 恢复 */
-  mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => IRJsonObject;
+  mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
   /** 具体 subject/context 类型由调用前的 schema 恢复 */
   inspect: (subject: never, context: never) => InspectorOutput;
 }>;

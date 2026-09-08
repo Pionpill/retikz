@@ -7,7 +7,7 @@ description: Named members placed in a scene — Node and Coordinate
 
 ## Node
 
-`NodeSchema` describes one positioned visual primitive. It's the heaviest IR entity — 30+ fields covering shape, fill / stroke style, padding, text content, font, scaling, and attached labels.
+`NodeSchema` describes a positioned visual entity. `style` groups visual overrides and `layout` groups size, spacing and text layout. Position, shape, transforms, text and labels remain at the root.
 
 <ZodSchema name="NodeSchema" />
 
@@ -21,7 +21,7 @@ description: Named members placed in a scene — Node and Coordinate
 
 ## Node text color keyword
 
-`NodeSchema.textColor` remains a regular string contract. `NodeTextColor.Contrast` is a reserved Node-host keyword that also works in the schema-derived `Scope.nodeDefault.textColor`; it selects pure black or white from the final static opaque fill.
+`NodeSchema.style.textColor` remains a regular string contract. `NodeTextColor.Contrast` is a reserved Node-host keyword that also works in the schema-derived `Scope.defaults.node.style.textColor`; it selects pure black or white from the final static opaque fill.
 
 Core parses only deterministic named, hex, `rgb()`, and `hsl()` colors; it never reads DOM or renderer state. Translucent / missing fills, gradients, patterns, images, and dynamic CSS colors use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`.
 

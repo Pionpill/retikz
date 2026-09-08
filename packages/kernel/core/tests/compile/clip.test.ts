@@ -149,7 +149,13 @@ describe('带 clip 的 scope 不被 prune', () => {
 describe('交互：paint + clip 资源共存 / transformed scope path ownership', () => {
   it('同 scene 既有 paint 又有 clip 资源 → 两类共存、id 命名空间不撞（paint-N / clip-N）', () => {
     const ir = scene([
-      { type: 'node', id: 'G', position: [0, 0], text: 'G', fill: grad },
+      {
+        type: 'node',
+        id: 'G',
+        position: [0, 0],
+        text: 'G',
+        style: { fill: grad },
+      },
       {
         type: 'scope',
         clip: { kind: 'rect', x: 0, y: 0, width: 40, height: 30 },

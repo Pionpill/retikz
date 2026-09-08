@@ -35,6 +35,9 @@ export const ORDINAL_COLOR_CELL_VISUAL_SCALE = defineCellVisualScale({
       options.domain === undefined ? [...new Set(values.filter(value => value !== null))] : [...options.domain];
     if (domain.length === 0) return undefined;
     const availableRange = options.range ?? context.categoricalColors;
+    if (availableRange === undefined) {
+      throw new RetikzTableError('ordinal-color requires a range or categorical Table defaults');
+    }
     if (availableRange.length < domain.length) {
       throw new RetikzTableError(`ordinal-color range requires at least ${domain.length} colors`);
     }

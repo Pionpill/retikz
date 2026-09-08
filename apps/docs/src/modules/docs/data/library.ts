@@ -7,6 +7,7 @@ export const librarySection: Array<Section> = [
   {
     id: 'standard',
     label: 'library.standard',
+    navigationDescription: 'library.standardNavigationDescription',
     document: true,
     pages: [
       {
@@ -97,6 +98,7 @@ export const librarySection: Array<Section> = [
   {
     id: 'layout',
     label: 'library.layout',
+    navigationDescription: 'library.layoutNavigationDescription',
     document: true,
     pages: [
       { id: 'flex-layout', label: 'library.flexLayout', difficulty: DocDifficulty.Advanced },

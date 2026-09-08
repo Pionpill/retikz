@@ -12,15 +12,13 @@ export const previewControls = arrowAppearanceControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
     <Layout
-      width={400}
-      height={182}
       viewBox={{ x: -40, y: -100, width: 440, height: 200 }}
       arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
     >
-      <Node id="A" position={[0, 0]} stroke="gray" dashed>
+      <Node id="A" position={[0, 0]} style={{ stroke: 'gray', dashed: true }}>
         a
       </Node>
-      <Node id="B" position={[360, 0]} stroke="gray" dashed>
+      <Node id="B" position={[360, 0]} style={{ stroke: 'gray', dashed: true }}>
         b
       </Node>
       <Draw
@@ -40,8 +38,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
               }
             : {}),
         }}
-        stroke="gray"
-        strokeWidth={2}
+        style={{ stroke: 'gray', strokeWidth: 2 }}
       />
     </Layout>
   );

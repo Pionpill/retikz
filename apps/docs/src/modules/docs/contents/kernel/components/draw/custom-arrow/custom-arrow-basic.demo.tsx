@@ -32,14 +32,19 @@ const bracket = defineArrow({
 });
 
 const Demo: FC = () => (
-  <Layout width={320} height={70} arrows={[bracket]}>
+  <Layout arrows={[bracket]}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>
     <Node id="b" position={[140, 0]}>
       B
     </Node>
-    <Draw way={['a', 'b']} arrow="->" arrowDetail={{ shape: 'bracket' }} stroke="darkorange" strokeWidth={1.5} />
+    <Draw
+      way={['a', 'b']}
+      arrow="->"
+      arrowDetail={{ shape: 'bracket' }}
+      style={{ stroke: 'darkorange', strokeWidth: 1.5 }}
+    />
   </Layout>
 );
 

@@ -241,8 +241,8 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            font: { family: 'Inter', size: 18 },
-            label: { text: 'L' }, // 没指定 font
+            label: { text: 'L' },
+            style: { font: { family: 'Inter', size: 18 } },
           },
         ],
       };
@@ -261,8 +261,8 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            font: { family: 'Inter', size: 18 },
             label: { text: 'L', font: { size: 10 } },
+            style: { font: { family: 'Inter', size: 18 } },
           },
         ],
       };
@@ -300,8 +300,8 @@ describe('Node label', () => {
             id: 'A',
             position: [0, 0],
             text: 'A',
-            textColor: 'red',
             label: { text: 'L' },
+            style: { textColor: 'red' },
           },
         ],
       };

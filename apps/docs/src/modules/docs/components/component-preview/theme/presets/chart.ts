@@ -1,7 +1,8 @@
-import type { IRChartThemeOverrides } from '@retikz/chart';
+import type { IRChartDefaults } from '@retikz/chart';
+import type { NodeTextAlignValue } from '@retikz/core';
 
-import { ChartThemeOverridesSchema, ChartThemeToken, defineChartTheme } from '@retikz/chart';
-import { NodeTextAlign } from '@retikz/core';
+import { ChartDefaultsSchema, defineChartTheme } from '@retikz/chart';
+import { NodeTextAlign as TextAlign } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';
 
@@ -43,50 +44,30 @@ const styles = {
   },
 } as const;
 
-const groups = [
-  [
-    ChartThemeToken.TitleFontSize,
-    ChartThemeToken.TitleFontWeight,
-    ChartThemeToken.TitleLineHeight,
-    ChartThemeToken.TitleAlign,
-  ],
-  [
-    ChartThemeToken.SubtitleFontSize,
-    ChartThemeToken.SubtitleFontWeight,
-    ChartThemeToken.SubtitleLineHeight,
-    ChartThemeToken.SubtitleAlign,
-  ],
-  [
-    ChartThemeToken.NoteFontSize,
-    ChartThemeToken.NoteFontWeight,
-    ChartThemeToken.NoteLineHeight,
-    ChartThemeToken.NoteAlign,
-  ],
-  [
-    ChartThemeToken.SourceFontSize,
-    ChartThemeToken.SourceFontWeight,
-    ChartThemeToken.SourceLineHeight,
-    ChartThemeToken.SourceAlign,
-  ],
-] as const;
-
-const tokensOf = (style: ReferenceStyle): IRChartThemeOverrides => {
+const defaultsOf = (style: ReferenceStyle): IRChartDefaults => {
   const preset = styles[style];
-  return ChartThemeOverridesSchema.parse({
-    [ChartThemeToken.Padding]: preset.padding,
-    [ChartThemeToken.Gap]: preset.gap,
-    [ChartThemeToken.FontFamily]: preset.fontFamily,
-    ...Object.fromEntries(
-      groups.flatMap(([fontSize, fontWeight, lineHeight, align], index) => {
-        const [size, weight, height] = preset.typography[index];
-        return [
-          [fontSize, size],
-          [fontWeight, weight],
-          [lineHeight, height],
-          [align, NodeTextAlign.Start],
-        ];
-      }),
-    ),
+  const slots = ['title', 'subtitle', 'note', 'source'] as const;
+  const presentation = Object.fromEntries(
+    slots.map((slot, index) => {
+      const [size, weight, lineHeight] = preset.typography[index];
+      return [
+        slot,
+        {
+          style: { font: { family: preset.fontFamily, size, weight } },
+          layout: { align: TextAlign.Start, lineHeight },
+        },
+      ];
+    }),
+  ) as Record<
+    (typeof slots)[number],
+    {
+      style: { font: { family: string; size: number; weight: number } };
+      layout: { align: NodeTextAlignValue; lineHeight: number };
+    }
+  >;
+  return ChartDefaultsSchema.parse({
+    layout: { padding: preset.padding, gap: preset.gap },
+    presentation,
   });
 };
 
@@ -95,4 +76,4 @@ export const PreviewChartThemeDefinitions = [
   PreviewThemeStyle.Academic,
   PreviewThemeStyle.Vibrant,
   PreviewThemeStyle.Clean,
-].map(name => defineChartTheme({ name, tokens: { chart: tokensOf(name) } }));
+].map(name => defineChartTheme({ name, defaults: defaultsOf(name) }));

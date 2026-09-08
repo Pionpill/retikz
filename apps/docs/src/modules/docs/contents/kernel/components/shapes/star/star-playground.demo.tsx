@@ -12,15 +12,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const innerRadius = values.outerRadius * values.innerRatio;
 
   return (
-    <Layout width={400} height={250} viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
-      <Circle center={[0, 0]} radius={values.outerRadius} stroke="lightgray" dashPattern={[1, 4]} lineCap="round" />
+    <Layout viewBox={{ x: -115, y: -100, width: 230, height: 200 }}>
+      <Circle
+        center={[0, 0]}
+        radius={values.outerRadius}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       <Circle
         center={[0, 0]}
         radius={innerRadius}
-        stroke="lightgray"
-        strokeOpacity={0.45}
-        dashPattern={[1, 4]}
-        lineCap="round"
+        style={{ stroke: 'lightgray', strokeOpacity: 0.45, dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Star
         center={[0, 0]}
@@ -28,10 +29,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         innerRatio={values.innerRatio}
         points={values.points}
         rotate={values.rotate}
-        fill={values.fill}
-        fillOpacity={0.72}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
+        style={{ fill: values.fill, fillOpacity: 0.72, stroke: values.stroke, strokeWidth: values.strokeWidth }}
       />
     </Layout>
   );

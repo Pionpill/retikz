@@ -27,7 +27,15 @@ describe('node IRPaint fill → 资源表 + resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: grad },
+        },
+      ],
     };
     const scene = compileToScene(ir).scene;
     const rect = rectsOf(scene.primitives)[0];
@@ -39,7 +47,15 @@ describe('node IRPaint fill → 资源表 + resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: 'lightblue' }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: 'lightblue' },
+        },
+      ],
     };
     const scene = compileToScene(ir).scene;
     expect(rectsOf(scene.primitives)[0].fill).toBe('lightblue');
@@ -53,8 +69,20 @@ describe('去重 + 稳定 id', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad },
-        { type: 'node', id: 'B', position: [60, 0], text: 'B', fill: grad },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: grad },
+        },
+        {
+          type: 'node',
+          id: 'B',
+          position: [60, 0],
+          text: 'B',
+          style: { fill: grad },
+        },
       ],
     };
     const scene = compileToScene(ir).scene;
@@ -70,8 +98,20 @@ describe('去重 + 稳定 id', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad },
-        { type: 'node', id: 'B', position: [60, 0], text: 'B', fill: grad2 },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: grad },
+        },
+        {
+          type: 'node',
+          id: 'B',
+          position: [60, 0],
+          text: 'B',
+          style: { fill: grad2 },
+        },
       ],
     };
     const scene = compileToScene(ir).scene;
@@ -83,7 +123,15 @@ describe('去重 + 稳定 id', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', fill: grad }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: grad },
+        },
+      ],
     };
     expect(compileToScene(ir).scene.resources).toEqual(compileToScene(ir).scene.resources);
   });
@@ -97,13 +145,13 @@ describe('path IRPaint fill', () => {
       children: [
         {
           type: 'path',
-          fill: grad,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { fill: grad },
         },
       ],
     };
@@ -122,11 +170,11 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
       children: [
         {
           type: 'scope',
-          fill: grad,
           children: [
             { type: 'node', id: 'A', position: [0, 0], text: 'A' },
             { type: 'node', id: 'B', position: [60, 0], text: 'B' },
           ],
+          style: { fill: grad },
         },
       ],
     };
@@ -142,8 +190,20 @@ describe('交互：scope 级联 + 纯色/渐变共存', () => {
       version: 1,
       type: 'scene',
       children: [
-        { type: 'node', id: 'A', position: [0, 0], text: 'A', fill: 'lightblue' },
-        { type: 'node', id: 'B', position: [60, 0], text: 'B', fill: grad },
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { fill: 'lightblue' },
+        },
+        {
+          type: 'node',
+          id: 'B',
+          position: [60, 0],
+          text: 'B',
+          style: { fill: grad },
+        },
       ],
     };
     const scene = compileToScene(ir).scene;
@@ -162,11 +222,11 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          stroke: grad,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { stroke: grad },
         },
       ],
     };
@@ -180,7 +240,15 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A', stroke: radial }],
+      children: [
+        {
+          type: 'node',
+          id: 'A',
+          position: [0, 0],
+          text: 'A',
+          style: { stroke: radial },
+        },
+      ],
     };
     const scene = compileToScene(ir).scene;
     expect(rectsOf(scene.primitives)[0].stroke).toEqual({ kind: 'resourceRef', id: 'paint-1' });
@@ -194,7 +262,6 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'scope',
-          stroke: grad,
           children: [
             { type: 'node', id: 'A', position: [0, 0], text: 'A' },
             {
@@ -205,6 +272,7 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
               ],
             },
           ],
+          style: { stroke: grad },
         },
       ],
     };
@@ -221,14 +289,13 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          fill: grad,
-          stroke: grad,
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
             { type: 'step', kind: 'line', to: [10, 10] },
             { type: 'step', kind: 'cycle' },
           ],
+          style: { fill: grad, stroke: grad },
         },
       ],
     };
@@ -246,11 +313,11 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          stroke: '#333',
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { stroke: '#333' },
         },
       ],
     };
@@ -285,12 +352,12 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          stroke: grad,
           marks: arrowMarks('->'),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { stroke: grad },
         },
       ],
     };
@@ -304,12 +371,12 @@ describe('stroke IRPaint → 资源表 + resourceRef', () => {
       children: [
         {
           type: 'path',
-          stroke: grad,
           marks: arrowMarks('->', { color: '#111' }),
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [10, 0] },
           ],
+          style: { stroke: grad },
         },
       ],
     };

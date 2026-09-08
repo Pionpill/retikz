@@ -79,12 +79,16 @@ describe('PointMark controls 渐进试验场', () => {
       'point-jitter-cartesian-span-kind',
       'point-jitter-cartesian-ratio',
       'point-jitter-cartesian-range',
+      'point-jitter-cartesian-distribution',
+      'point-jitter-cartesian-sigma',
       'point-jitter-cartesian-seed',
     ]);
     expect(controlIdsOf(polarJitterContract)).toEqual([
       'point-jitter-polar-scale',
       'point-jitter-polar-ratio',
       'point-jitter-polar-range',
+      'point-jitter-polar-distribution',
+      'point-jitter-polar-sigma',
       'point-jitter-polar-seed',
     ]);
     expect(controlIdsOf(textContract)).toEqual([
@@ -149,6 +153,16 @@ describe('PointMark controls 渐进试验场', () => {
     expect(visibleIds('continuous')).not.toContain('point-jitter-polar-ratio');
     expect(visibleIds('discrete')).toContain('point-jitter-polar-seed');
     expect(visibleIds('continuous')).toContain('point-jitter-polar-seed');
+  });
+
+  it('normal 分布才显示 sigma 控件', () => {
+    const visibleIds = (distribution: string) =>
+      resolveVisiblePreviewControlSections(cartesianJitterContract.controls.sections, {
+        'point-jitter-cartesian-distribution': distribution,
+      }).flatMap(section => section.controls.map(control => control.id));
+
+    expect(visibleIds('uniform')).not.toContain('point-jitter-cartesian-sigma');
+    expect(visibleIds('normal')).toContain('point-jitter-cartesian-sigma');
   });
 
   it('Node 参数只在对应形状下显示，并生成真实参数化边界', () => {

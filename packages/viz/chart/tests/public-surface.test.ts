@@ -24,8 +24,6 @@ describe('@retikz/chart public surface', () => {
     expect(chart).toHaveProperty('ChartPresentationSchema');
     expect(chart).toHaveProperty('ChartLayoutSchema');
     expect(chart).toHaveProperty('ChartPlotExtensionSchema');
-    expect(chart).toHaveProperty('ChartThemeOverridesSchema');
-    expect(chart).toHaveProperty('ChartThemeResolutionSchema');
     expect(chart).toHaveProperty('createChartSourceSchema');
     expect(chart).toHaveProperty('defineChartTheme');
     expect(chart.ChartWarningCode).toEqual({
@@ -134,11 +132,7 @@ describe('@retikz/chart public surface', () => {
   it('keeps generated Source JSON-safe without publishing a wide Chart schema', () => {
     expect(chart).not.toHaveProperty('ChartSchema');
     expect(chart).not.toHaveProperty('IRChart');
-    const sourceSchema = chart.createChartSourceSchema(
-      'point',
-      RecipeSchema,
-      chart.createChartThemeSchema(strictObject({})).optional(),
-    );
+    const sourceSchema = chart.createChartSourceSchema('point', RecipeSchema);
     const source = sourceSchema.parse({
       namespace: 'chart',
       type: 'point',

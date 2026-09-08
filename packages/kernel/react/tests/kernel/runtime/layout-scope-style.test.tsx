@@ -70,6 +70,42 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+describe('rootScope 的空覆盖与命名空间边界', () => {
+  const noops: Array<ScopeStyleProps> = [
+    {},
+    { style: {} },
+    { style: { fill: undefined } },
+    { defaults: {} },
+    { defaults: { node: { style: {}, layout: {} }, path: { style: {} }, label: {}, arrow: {} } },
+    { defaults: { node: { style: { fill: undefined } }, reset: false } },
+    { defaults: { reset: [] } },
+  ];
+
+  it.each(noops)('空覆盖保持输入 identity 和显式 Scope', rootScope => {
+    const children = (
+      <Scope id="explicit">
+        <Node id="n" position={[0, 0]} />
+      </Scope>
+    );
+    expect(layoutIR(rootScope, children)).toEqual(normalizeReactInput(children));
+  });
+
+  it('已有复合叶子 font 的空对象仍是明确覆盖', () => {
+    const source = layoutIR({ defaults: { node: { style: { font: {} } } } }, <Node position={[0, 0]} />);
+    expect(source.children[0]).toMatchObject({ type: 'scope', defaults: { node: { style: { font: {} } } } });
+  });
+
+  it('宿主 CSS 与绘图覆盖独立', () => {
+    const markup = renderToStaticMarkup(
+      <Layout style={{ backgroundColor: 'yellow' }} rootScope={{ style: { fill: 'red' } }}>
+        <Node position={[0, 0]} />
+      </Layout>,
+    );
+    expect(markup).toContain('background-color:yellow');
+    expect(markup).toContain('fill="red"');
+  });
+});
+
 // ===========================================================================
 // Happy path（≥ 3）
 // ===========================================================================
@@ -77,7 +113,13 @@ afterEach(() => {
 describe('Happy：Layout 级联样式 → 子图元继承', () => {
   it('layout_nodedefault_inherits：nodeDefault={{fill, stroke:none}} → 子 Node 未单设时继承', () => {
     const prims = layoutPrims(
-      { nodeDefault: { fill: 'lightblue', stroke: 'none' } },
+      {
+        defaults: {
+          node: {
+            style: { fill: 'lightblue', stroke: 'none' },
+          },
+        },
+      },
       <Node id="A" position={[0, 0]}>
         A
       </Node>,
@@ -88,21 +130,35 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
   });
 
   it('layout_pathdefault_inherits：pathDefault={{strokeWidth:5, lineCap:round}} → 子 Draw 继承', () => {
-    const prims = layoutPrims({ pathDefault: { strokeWidth: 5, lineCap: 'round' } }, twoNodesAndDraw());
+    const prims = layoutPrims(
+      {
+        defaults: {
+          path: {
+            style: { strokeWidth: 5, lineCap: 'round' },
+          },
+        },
+      },
+      twoNodesAndDraw(),
+    );
     const path = linePathOf(prims);
     expect(path?.strokeWidth).toBe(5);
     expect(path?.strokeLinecap).toBe('round');
   });
 
   it('layout_color_cascades：color="blue" → node 边/填充 + path stroke 全蓝', () => {
-    const prims = layoutPrims({ color: 'blue' }, twoNodesAndDraw());
+    const prims = layoutPrims(
+      {
+        style: { color: 'blue' },
+      },
+      twoNodesAndDraw(),
+    );
     const rect = rectOf(prims);
     expect(rect?.stroke).toBe('blue');
     expect(rect?.fill).toBe('blue');
     expect(linePathOf(prims)?.stroke).toBe('blue');
     // 端到端：真实 <Layout> 组件渲染也应把主色透出到 SVG
     const svg = renderToStaticMarkup(
-      <Layout color="blue">
+      <Layout rootScope={{ style: { color: 'blue' } }}>
         <Node id="A" position={[0, 0]}>
           A
         </Node>
@@ -113,7 +169,9 @@ describe('Happy：Layout 级联样式 → 子图元继承', () => {
 
   it('layout_labeldefault_inherits：labelDefault={{textColor:green}} → 边 label 文字继承', () => {
     const prims = layoutPrims(
-      { labelDefault: { textColor: 'green' } },
+      {
+        defaults: { label: { textColor: 'green' } },
+      },
       <>
         <Node id="a" position={[0, 0]}>
           a
@@ -157,9 +215,18 @@ describe('边界：无样式 / 空 children / 单通道', () => {
   });
 
   it('layout_style_prop_empty_children：带样式 prop 但 children 为空 → 合成空 scope 合法、不报错', () => {
-    const ir = layoutIR({ stroke: 'red' }, undefined);
+    const ir = layoutIR(
+      {
+        style: { stroke: 'red' },
+      },
+      undefined,
+    );
     const scope = ir.children[0];
-    expect(scope).toMatchObject({ type: 'scope', stroke: 'red', children: [] });
+    expect(scope).toMatchObject({
+      type: 'scope',
+      children: [],
+      style: { stroke: 'red' },
+    });
     expect(() => compileToScene(ir).scene).not.toThrow();
   });
 
@@ -170,23 +237,41 @@ describe('边界：无样式 / 空 children / 单通道', () => {
       </Node>
     );
     // 空对象 default 是 no-op，不应无谓包一层空 scope 改变 IR 拓扑（避免无谓的空 scope）
-    const emptyDefaults = layoutIR({ nodeDefault: {}, pathDefault: {}, labelDefault: {}, arrowDefault: {} }, children);
+    const emptyDefaults = layoutIR(
+      {
+        defaults: { node: {}, path: {}, label: {}, arrow: {} },
+      },
+      children,
+    );
     expect(emptyDefaults).toEqual(normalizeReactInput(children));
     expect(emptyDefaults.children.every(c => c.type !== 'scope')).toBe(true);
     // 但标量 falsy-defined 值（strokeWidth=0）是有意义样式 → 仍包 scope
-    const zeroWidth = layoutIR({ strokeWidth: 0 }, children);
-    expect(zeroWidth.children[0]).toMatchObject({ type: 'scope', strokeWidth: 0 });
+    const zeroWidth = layoutIR(
+      {
+        style: { strokeWidth: 0 },
+      },
+      children,
+    );
+    expect(zeroWidth.children[0]).toMatchObject({
+      type: 'scope',
+      style: { strokeWidth: 0 },
+    });
   });
 
   it('layout_single_style_channel：只设 stroke → 合成 scope 只进 stroke 通道，其余不出现', () => {
     const ir = layoutIR(
-      { stroke: 'red' },
+      {
+        style: { stroke: 'red' },
+      },
       <Node id="A" position={[0, 0]}>
         A
       </Node>,
     );
     const scope = ir.children[0];
-    expect(scope).toMatchObject({ type: 'scope', stroke: 'red' });
+    expect(scope).toMatchObject({
+      type: 'scope',
+      style: { stroke: 'red' },
+    });
     expect(scope).not.toHaveProperty('color');
     expect(scope).not.toHaveProperty('fill');
     expect(scope).not.toHaveProperty('nodeDefault');
@@ -206,7 +291,19 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
       children: [{ type: 'node', id: 'A', position: [0, 0], text: 'A' }],
     };
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const withStyle = renderToStaticMarkup(<Layout ir={ir} stroke="red" nodeDefault={{ fill: 'lime' }} />);
+    const withStyle = renderToStaticMarkup(
+      <Layout
+        ir={ir}
+        rootScope={{
+          style: { stroke: 'red' },
+          defaults: {
+            node: {
+              style: { fill: 'lime' },
+            },
+          },
+        }}
+      />,
+    );
     const plain = renderToStaticMarkup(<Layout ir={ir} />);
     // 样式被忽略：与不传样式的渲染逐字符一致
     expect(withStyle).toBe(plain);
@@ -217,18 +314,37 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
   it('layout_invalid_nodedefault_rejected：非法 nodeDefault 不被 Layout 吞掉、走 schema 校验报错', () => {
     // fill 期望 string | IRPaint，给 number 是非法结构（模拟无类型 JS 调用方 / LLM 生成）
     const badIr = layoutIR(
-      { nodeDefault: { fill: 42 } },
+      {
+        defaults: {
+          node: {
+            style: { fill: 42 },
+          },
+        },
+      },
       <Node id="A" position={[0, 0]}>
         A
       </Node>,
     );
     // Layout / Vanilla Input 原样透传，不在自己这层 sanitize
-    expect(badIr.children[0]).toMatchObject({ type: 'scope', nodeDefault: { fill: 42 } });
+    expect(badIr.children[0]).toMatchObject({
+      type: 'scope',
+      defaults: {
+        node: {
+          style: { fill: 42 },
+        },
+      },
+    });
     // 既有 IRScope schema 校验路径拒掉
     expect(SceneSchema.safeParse(badIr).success).toBe(false);
     // 对照：合法 fill 同路径通过
     const okIr = layoutIR(
-      { nodeDefault: { fill: 'lightblue' } },
+      {
+        defaults: {
+          node: {
+            style: { fill: 'lightblue' },
+          },
+        },
+      },
       <Node id="A" position={[0, 0]}>
         A
       </Node>,
@@ -244,16 +360,36 @@ describe('错误路径：ir + 样式并用 / 非法 nodeDefault', () => {
 describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障', () => {
   it('layout_style_overridden_by_inner_scope：内层 Scope pathDefault 覆盖 Layout pathDefault', () => {
     const prims = layoutPrims(
-      { pathDefault: { strokeWidth: 5 } },
-      <Scope pathDefault={{ strokeWidth: 2 }}>{twoNodesAndDraw()}</Scope>,
+      {
+        defaults: {
+          path: {
+            style: { strokeWidth: 5 },
+          },
+        },
+      },
+      <Scope
+        defaults={{
+          path: {
+            style: { strokeWidth: 2 },
+          },
+        }}
+      >
+        {twoNodesAndDraw()}
+      </Scope>,
     );
     expect(linePathOf(prims)?.strokeWidth).toBe(2);
   });
 
   it('layout_style_overridden_by_node_prop：Node 显式 stroke 胜过 Layout nodeDefault', () => {
     const prims = layoutPrims(
-      { nodeDefault: { stroke: 'none' } },
-      <Node id="A" position={[0, 0]} stroke="red">
+      {
+        defaults: {
+          node: {
+            style: { stroke: 'none' },
+          },
+        },
+      },
+      <Node id="A" position={[0, 0]} style={{ stroke: 'red' }}>
         A
       </Node>,
     );
@@ -263,8 +399,10 @@ describe('交互：内层 Scope 覆盖 / 显式属性胜出 / resetStyle 屏障'
 
   it('layout_color_with_inner_resetstyle：内层 Scope resetStyle 切断 Layout color 继承', () => {
     const prims = layoutPrims(
-      { color: 'red' },
-      <Scope resetStyle>
+      {
+        style: { color: 'red' },
+      },
+      <Scope defaults={{ reset: true }}>
         <Node id="A" position={[0, 0]}>
           A
         </Node>
@@ -293,9 +431,26 @@ describe('等价性：合成根 scope 与手写根 <Scope> 同 IR', () => {
         </Node>
       </>
     );
-    const synthetic = layoutIR({ stroke: 'currentColor', nodeDefault: { fill: 'none' } }, children);
+    const synthetic = layoutIR(
+      {
+        style: { stroke: 'currentColor' },
+        defaults: {
+          node: {
+            style: { fill: 'none' },
+          },
+        },
+      },
+      children,
+    );
     const manual = normalizeReactInput(
-      <Scope stroke="currentColor" nodeDefault={{ fill: 'none' }}>
+      <Scope
+        style={{ stroke: 'currentColor' }}
+        defaults={{
+          node: {
+            style: { fill: 'none' },
+          },
+        }}
+      >
         {children}
       </Scope>,
     );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileTable, TableLayoutManifestSchema, TableThemeTokenKeySchema } from '../../src';
+import { compileTable, TableLayoutManifestSchema } from '../../src';
 
 describe('Table style and encoding manifest seed', () => {
   it('publishes resolved style winners and Cell appearance lineage in canonical order', () => {
@@ -9,7 +9,9 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'styled',
-        tableThemeTokens: { 'cell.content.color': '#123456' },
+        tableDefaults: {
+          appearanceDefaults: { body: { content: { style: { color: '#123456' } } } },
+        },
         structure: { kind: 'manual', rows: [[1]] },
         encodings: [
           {
@@ -27,10 +29,18 @@ describe('Table style and encoding manifest seed', () => {
 
     expect(result.manifest.style).toMatchObject({
       themeMode: 'light',
-      tokens: { 'cell.content.color': '#123456' },
+      defaults: {
+        appearanceDefaults: { body: { content: { style: { color: '#123456' } } } },
+      },
+      layers: [
+        { kind: 'neutral', path: '$default/light' },
+        {
+          kind: 'source',
+          path: '$spec/tableDefaults',
+          defaults: { appearanceDefaults: { body: { content: { style: { color: '#123456' } } } } },
+        },
+      ],
     });
-    expect(result.manifest.style.sources.map(entry => entry.key)).toEqual(TableThemeTokenKeySchema.options);
-    expect(result.manifest.style.sources.find(entry => entry.key === 'cell.content.color')?.source).toBe('local');
     expect(result.manifest.encodings).toEqual([
       { id: 'value-fill', channel: 'backgroundFill', scaleName: 'ordinal-color', cellIndices: [0] },
     ]);
@@ -55,17 +65,29 @@ describe('Table style and encoding manifest seed', () => {
     expect(result.manifest.cells[0].appearanceTrace).toEqual(
       [...result.manifest.cells[0].appearanceTrace].sort((left, right) => left.path.localeCompare(right.path)),
     );
+
+    const forgedCellDefaults = structuredClone(result.manifest);
+    const trace = forgedCellDefaults.cells[0].appearanceTrace.find(entry => entry.source.kind === 'defaults');
+    if (trace === undefined || trace.source.kind !== 'defaults') throw new Error('expected Cell defaults trace');
+    Object.assign(trace.source, { path: '$spec/tableThemeTokens/cell.content.color' });
+    expect(() => TableLayoutManifestSchema.parse(forgedCellDefaults)).toThrow(/Cell defaults source|appearance leaf/i);
   });
 
-  it('rejects non-canonical style source order and mismatched border token provenance', () => {
+  it('rejects non-canonical defaults layers and mismatched border defaults provenance', () => {
     const result = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'provenance',
-        tableThemeTokens: {
-          'table.border.top': { kind: 'line', stroke: '#f5f5f5', width: 1.2 },
-          'table.border.bottom': { kind: 'line', stroke: '#f5f5f5', width: 1.2 },
+        tableDefaults: {
+          layout: {
+            borders: {
+              outer: {
+                top: { kind: 'line', stroke: '#f5f5f5', width: 1.2 },
+                bottom: { kind: 'line', stroke: '#f5f5f5', width: 1.2 },
+              },
+            },
+          },
         },
         structure: { kind: 'manual', rows: [['x']] },
       },
@@ -74,32 +96,42 @@ describe('Table style and encoding manifest seed', () => {
     );
     const repeatedSources = structuredClone(result.manifest);
     Object.assign(repeatedSources.style, {
-      sources: Array.from({ length: 19 }, () => repeatedSources.style.sources[0]),
+      layers: Array.from({ length: 19 }, () => repeatedSources.style.layers[0]),
     });
-    expect(() => TableLayoutManifestSchema.parse(repeatedSources)).toThrow(/canonical|source/i);
+    expect(() => TableLayoutManifestSchema.parse(repeatedSources)).toThrow(/path|source/i);
 
     const wrongPriority = structuredClone(result.manifest);
     const priorityWinner = wrongPriority.borders[0].atoms[0].winner;
-    if (priorityWinner.kind !== 'line' || priorityWinner.origin !== 'styleToken') {
-      throw new Error('expected style token line winner');
+    if (priorityWinner.kind !== 'line' || priorityWinner.origin !== 'defaults') {
+      throw new Error('expected Source defaults line winner');
     }
     Object.assign(priorityWinner, { priority: 0 });
     expect(() => TableLayoutManifestSchema.parse(wrongPriority)).toThrow(/priority/i);
 
-    const wrongOuterToken = structuredClone(result.manifest);
-    const tokenWinner = wrongOuterToken.borders[0].atoms[0].winner;
-    if (tokenWinner.kind !== 'line' || tokenWinner.origin !== 'styleToken') {
-      throw new Error('expected style token line winner');
+    const wrongOuterDefaults = structuredClone(result.manifest);
+    const outerDefaultsWinner = wrongOuterDefaults.borders[0].atoms[0].winner;
+    if (outerDefaultsWinner.kind !== 'line' || outerDefaultsWinner.origin !== 'defaults') {
+      throw new Error('expected Source defaults line winner');
     }
-    Object.assign(tokenWinner.styleToken, { key: 'table.border.vertical' });
-    expect(() => TableLayoutManifestSchema.parse(wrongOuterToken)).toThrow(/token|source/i);
+    Object.assign(outerDefaultsWinner.defaults, { path: '$spec/forged-table-defaults' });
+    expect(() => TableLayoutManifestSchema.parse(wrongOuterDefaults)).toThrow(/source|path/i);
+
+    const wrongExistingOuterDefaults = structuredClone(result.manifest);
+    const existingOuterDefaultsWinner = wrongExistingOuterDefaults.borders[0].atoms[0].winner;
+    if (existingOuterDefaultsWinner.kind !== 'line' || existingOuterDefaultsWinner.origin !== 'defaults') {
+      throw new Error('expected Source defaults line winner');
+    }
+    Object.assign(existingOuterDefaultsWinner.defaults, { path: '$default/dark' });
+    expect(() => TableLayoutManifestSchema.parse(wrongExistingOuterDefaults)).toThrow(
+      /Border defaults source|border leaf/i,
+    );
 
     const gridResult = compileTable(
       {
         namespace: 'table',
         type: 'table',
         id: 'grid-provenance',
-        tableThemeTokens: { 'table.border.horizontal': { kind: 'line', stroke: '#ffffff', width: 1 } },
+        tableDefaults: { layout: { borders: { horizontal: { kind: 'line', stroke: '#ffffff', width: 1 } } } },
         structure: { kind: 'manual', rows: [[1], [2]] },
       },
       {},
@@ -110,10 +142,13 @@ describe('Table style and encoding manifest seed', () => {
       .flatMap(border => border.atoms)
       .map(atom => atom.winner)
       .find(winner => winner.source.kind === 'default' && winner.source.scope === 'horizontal');
-    if (gridWinner?.kind !== 'line' || gridWinner.origin !== 'styleToken') {
-      throw new Error('expected horizontal style token winner');
+    if (gridWinner?.kind !== 'line' || gridWinner.origin !== 'defaults') {
+      throw new Error('expected horizontal Source defaults line winner');
     }
-    Object.assign(gridWinner.styleToken, { key: 'table.border.vertical' });
+    if (gridWinner.defaults.path !== '$spec/tableDefaults') {
+      throw new Error('expected horizontal Source defaults path');
+    }
+    Object.assign(gridWinner.defaults, { path: '$spec/forged-table-defaults' });
     expect(() => TableLayoutManifestSchema.parse(wrongGridToken)).toThrow(/token|source/i);
 
     const headerResult = compileTable(
@@ -121,41 +156,30 @@ describe('Table style and encoding manifest seed', () => {
         namespace: 'table',
         type: 'table',
         id: 'header-provenance',
-        tableThemeTokens: { 'columnHeader.border.bottom': { kind: 'line', stroke: '#ffffff', width: 1 } },
+        tableDefaults: {
+          appearanceDefaults: {
+            columnHeader: { borders: { bottom: { kind: 'line', stroke: '#ffffff', width: 1 } } },
+          },
+        },
         data: { reference: 'rows' },
         structure: { kind: 'detail', columns: [{ id: 'value', field: 'value' }] },
       },
       { rows: [{ value: 1 }] },
       { theme: { mode: 'light' }, compile: { padding: 0 } },
     );
-    const wrongHeaderCell = structuredClone(headerResult.manifest);
-    const headerWinner = wrongHeaderCell.borders
-      .flatMap(border => border.atoms)
-      .map(atom => atom.winner)
-      .find(
-        winner =>
-          winner.kind === 'line' &&
-          winner.origin === 'styleToken' &&
-          winner.styleToken.key === 'columnHeader.border.bottom',
-      );
-    const body = wrongHeaderCell.cells.find(cell => cell.location === 'body');
-    if (headerWinner?.kind !== 'line' || headerWinner.source.kind !== 'cell' || body === undefined) {
-      throw new Error('expected header style token winner and body Cell');
-    }
-    Object.assign(headerWinner.source, {
-      cellId: body.cellId,
-      row: body.rowIndex,
-      column: body.columnIndex,
-    });
-    expect(() => TableLayoutManifestSchema.parse(wrongHeaderCell)).toThrow(/token|location|source/i);
+    const wrongHeaderDefaults = structuredClone(headerResult.manifest);
+    const headerDefaultsLayer = wrongHeaderDefaults.style.layers.find(layer => layer.path === '$spec/tableDefaults');
+    if (headerDefaultsLayer === undefined) throw new Error('expected header Source defaults layer');
+    Object.assign(headerDefaultsLayer, { path: '$style/forged/light' });
+    expect(() => TableLayoutManifestSchema.parse(wrongHeaderDefaults)).toThrow(/source|path/i);
 
     const missingProvenance = structuredClone(result.manifest);
     const missingTokenWinner = missingProvenance.borders[0].atoms[0].winner;
-    if (missingTokenWinner.kind !== 'line' || missingTokenWinner.origin !== 'styleToken') {
-      throw new Error('expected style token line winner');
+    if (missingTokenWinner.kind !== 'line' || missingTokenWinner.origin !== 'defaults') {
+      throw new Error('expected Source defaults line winner');
     }
-    Reflect.deleteProperty(missingTokenWinner, 'styleToken');
-    expect(() => TableLayoutManifestSchema.parse(missingProvenance)).toThrow(/origin|provenance|styleToken/i);
+    Reflect.deleteProperty(missingTokenWinner, 'defaults');
+    expect(() => TableLayoutManifestSchema.parse(missingProvenance)).toThrow(/origin|provenance|defaults/i);
 
     const fakeProvenance = compileTable(
       {
@@ -163,7 +187,7 @@ describe('Table style and encoding manifest seed', () => {
         type: 'table',
         id: 'fake-provenance',
         structure: { kind: 'manual', rows: [['x']] },
-        layout: { borders: { outer: { kind: 'line', stroke: 'red', width: 2, priority: -100 } } },
+        layout: { borders: { outer: { top: { kind: 'line', stroke: 'red', width: 2, priority: -100 } } } },
       },
       {},
       { compile: { padding: 0 } },
@@ -171,27 +195,25 @@ describe('Table style and encoding manifest seed', () => {
     const fakeManifest = structuredClone(fakeProvenance.manifest);
     const fakeWinner = fakeManifest.borders[0].atoms[0].winner;
     if (fakeWinner.kind !== 'line') throw new Error('expected explicit line winner');
-    Object.assign(fakeWinner, { styleToken: { key: 'table.border.top', source: 'local' } });
-    expect(() => TableLayoutManifestSchema.parse(fakeManifest)).toThrow(/origin|line|styleToken/i);
+    Object.assign(fakeWinner, { defaults: { path: '$spec/tableDefaults' } });
+    expect(() => TableLayoutManifestSchema.parse(fakeManifest)).toThrow(/origin|line|defaults/i);
 
     const wrongTokenSource = structuredClone(result.manifest);
     const sourceWinner = wrongTokenSource.borders[0].atoms[0].winner;
-    if (sourceWinner.kind !== 'line' || sourceWinner.origin !== 'styleToken') {
-      throw new Error('expected style token line winner');
+    if (sourceWinner.kind !== 'line' || sourceWinner.origin !== 'defaults') {
+      throw new Error('expected Source defaults line winner');
     }
-    Object.assign(sourceWinner.styleToken, { source: 'inherit' });
-    expect(() => TableLayoutManifestSchema.parse(wrongTokenSource)).toThrow(/source/i);
+    Object.assign(sourceWinner.defaults, { path: '$style/forged/light' });
+    expect(() => TableLayoutManifestSchema.parse(wrongTokenSource)).toThrow(/source|path/i);
 
     const wrongInheritedPath = structuredClone(result.manifest);
-    const categoricalSource = wrongInheritedPath.style.sources.find(entry => entry.key === 'data.categorical');
-    if (categoricalSource === undefined) throw new Error('expected categorical source');
-    Object.assign(categoricalSource, { path: '$spec/tableThemeTokens/data.categorical' });
-    expect(() => TableLayoutManifestSchema.parse(wrongInheritedPath)).toThrow(/source|path/i);
+    Object.assign(wrongInheritedPath.style.layers[0], { path: '$spec/tableDefaults' });
+    expect(() => TableLayoutManifestSchema.parse(wrongInheritedPath)).toThrow(/neutral|cascade|path/i);
 
     const wrongLocalPath = structuredClone(result.manifest);
-    const contentSource = wrongLocalPath.style.sources.find(entry => entry.key === 'cell.content.color');
-    if (contentSource === undefined) throw new Error('expected content source');
-    Object.assign(contentSource, { path: '$spec/tableThemeTokens/cell.background.fill' });
+    const contentSource = wrongLocalPath.style.layers.find(entry => entry.path === '$spec/tableDefaults');
+    if (contentSource === undefined) throw new Error('expected local Source defaults layer');
+    Object.assign(contentSource, { path: '$spec/other-table-defaults' });
     expect(() => TableLayoutManifestSchema.parse(wrongLocalPath)).toThrow(/source|path/i);
   });
 

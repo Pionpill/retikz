@@ -6,7 +6,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 /** publish 前失败回滚 candidate，publish 后失败只进入 diagnostics，dispose 走独立状态机 */
 const Demo: FC = () => (
-  <Layout width={500} height={480} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <LogicFigureFrame id="transaction">
       <LogicFigureFrameTitle>Atomic transaction</LogicFigureFrameTitle>
       <Node
@@ -16,13 +16,9 @@ const Demo: FC = () => (
           { text: 'candidate values', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, -165]}
-        minimumSize={{ width: 120, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 120, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="run-programs"
@@ -31,13 +27,9 @@ const Demo: FC = () => (
           { text: 'topological order', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, -100]}
-        minimumSize={{ width: 124, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 124, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="publish"
@@ -46,13 +38,9 @@ const Demo: FC = () => (
           { text: 'advance revision', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, -35]}
-        minimumSize={{ width: 120, height: 46 }}
-        stroke="green"
-        fill="green"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'green', fill: 'green', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 120, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="observe"
@@ -61,13 +49,9 @@ const Demo: FC = () => (
           { text: 'published event', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, 30]}
-        minimumSize={{ width: 112, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 112, height: 46 }, lineHeight: 15 }}
       />
       <Node
         id="retire"
@@ -76,13 +60,9 @@ const Demo: FC = () => (
           { text: 'reverse order', fill: 'gray', font: { size: 11 } },
         ]}
         position={[0, 95]}
-        minimumSize={{ width: 124, height: 46 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13 }}
-        lineHeight={15}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13 } }}
+        layout={{ minimumSize: { width: 124, height: 46 }, lineHeight: 15 }}
       />
     </LogicFigureFrame>
 
@@ -93,13 +73,9 @@ const Demo: FC = () => (
         { text: 'reverse retire', fill: 'gray', font: { size: 11 } },
       ]}
       position={[-155, -35]}
-      minimumSize={{ width: 140, height: 46 }}
-      stroke="red"
-      fill="red"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'red', fill: 'red', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 140, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="unchanged"
@@ -108,13 +84,9 @@ const Demo: FC = () => (
         { text: 'same revision', fill: 'gray', font: { size: 11 } },
       ]}
       position={[-155, 35]}
-      minimumSize={{ width: 130, height: 46 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 130, height: 46 }, lineHeight: 15 }}
     />
     <Node
       id="diagnostic-queue"
@@ -123,13 +95,9 @@ const Demo: FC = () => (
         { text: 'no rollback', fill: 'gray', font: { size: 11 } },
       ]}
       position={[155, 65]}
-      minimumSize={{ width: 134, height: 46 }}
-      stroke="dimgray"
-      fill="dimgray"
-      fillOpacity={0.06}
       cornerRadius={4}
-      font={{ size: 13 }}
-      lineHeight={15}
+      style={{ stroke: 'dimgray', fill: 'dimgray', fillOpacity: 0.06, font: { size: 13 } }}
+      layout={{ minimumSize: { width: 134, height: 46 }, lineHeight: 15 }}
     />
 
     <LogicFigureFrame id="disposal">
@@ -137,51 +105,42 @@ const Demo: FC = () => (
       <Node
         id="idle"
         position={[-120, 205]}
-        minimumSize={{ width: 96, height: 38 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 96, height: 38 } }}
       >
         idle
       </Node>
       <Node
         id="disposing"
         position={[0, 205]}
-        minimumSize={{ width: 106, height: 38 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 106, height: 38 } }}
       >
         disposing
       </Node>
       <Node
         id="disposed"
         position={[120, 205]}
-        minimumSize={{ width: 106, height: 38 }}
-        stroke="dodgerblue"
-        fill="dodgerblue"
-        fillOpacity={0.08}
         cornerRadius={4}
-        font={{ size: 13, weight: 'bold' }}
+        style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+        layout={{ minimumSize: { width: 106, height: 38 } }}
       >
         disposed
       </Node>
     </LogicFigureFrame>
 
-    <Draw way={['prepare', 'run-programs']} arrow="->" stroke="gray" />
-    <Draw way={['run-programs', 'publish']} arrow="->" stroke="green" />
-    <Draw way={['publish', 'observe']} arrow="->" stroke="gray" />
-    <Draw way={['observe', 'retire']} arrow="->" stroke="gray" />
-    <Draw way={['run-programs', 'rollback']} arrow="->" stroke="red" dashPattern={[4, 3]} />
-    <Draw way={['rollback', 'unchanged']} arrow="->" stroke="red" />
-    <Draw way={['observe', 'diagnostic-queue']} arrow="->" stroke="red" dashPattern={[4, 3]} />
-    <Draw way={['retire', 'diagnostic-queue']} arrow="->" stroke="red" dashPattern={[4, 3]} />
-    <Draw way={['idle', 'disposing']} arrow="->" stroke="gray" />
-    <Draw way={['disposing', 'disposed']} arrow="->" stroke="gray" />
+    <Draw way={['prepare', 'run-programs']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['run-programs', 'publish']} arrow="->" style={{ stroke: 'green' }} />
+    <Draw way={['publish', 'observe']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['observe', 'retire']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['run-programs', 'rollback']} arrow="->" style={{ stroke: 'red', dashPattern: [4, 3] }} />
+    <Draw way={['rollback', 'unchanged']} arrow="->" style={{ stroke: 'red' }} />
+    <Draw way={['observe', 'diagnostic-queue']} arrow="->" style={{ stroke: 'red', dashPattern: [4, 3] }} />
+    <Draw way={['retire', 'diagnostic-queue']} arrow="->" style={{ stroke: 'red', dashPattern: [4, 3] }} />
+    <Draw way={['idle', 'disposing']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['disposing', 'disposed']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

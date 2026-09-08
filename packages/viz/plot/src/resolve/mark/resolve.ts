@@ -1,6 +1,5 @@
 import type { ExternalRow } from '@retikz/data';
 
-import { JsonObjectSchema } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 
 import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
@@ -23,12 +22,11 @@ export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkRe
   return definition;
 };
 
-/** 校验 mark JSON 形态与匹配 definition operation，产出 lowering 唯一消费结构 */
+/** 用匹配 definition schema 解析 mark operation，产出 lowering 唯一消费结构 */
 export const resolveMarkOperation = (
   mark: IRPlotMarkOperation,
   context: MarkResolveContext,
 ): MarkOperationResolution => {
-  JsonObjectSchema.parse(mark);
   const definition = resolveMarkDefinition(mark, context);
   const { defaultColorGroup, ...definitionOperation } = mark;
   const resolved = definition.schema.parse(definitionOperation) as IRPlotMarkOperation;
@@ -36,7 +34,6 @@ export const resolveMarkOperation = (
     defaultColorGroup === undefined
       ? resolved
       : { ...resolved, defaultColorGroup: NonBlankStringSchema.parse(defaultColorGroup) };
-  JsonObjectSchema.parse(operation);
   return { definition, operation };
 };
 

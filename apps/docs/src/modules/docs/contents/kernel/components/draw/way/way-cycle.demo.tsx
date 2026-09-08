@@ -14,10 +14,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
   return (
     <Layout
-      width={400}
-      height={220}
       viewBox={{ x: -170, y: -110, width: 340, height: 220 }}
-      nodeDefault={{ stroke: 'gray', dashed: true }}
+      rootScope={{
+        defaults: {
+          node: {
+            style: { stroke: 'gray', dashed: true },
+          },
+        },
+      }}
     >
       <Node id="A" position={[-80, 45]}>
         a
@@ -29,9 +33,12 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         c
       </Node>
       {presentation.showClosingGuide && (
-        <Draw way={['C.center', 'A.center']} stroke="gray" dashPattern={[1, 4]} lineCap="round" />
+        <Draw way={['C.center', 'A.center']} style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }} />
       )}
-      <Draw way={presentation.way} stroke="dodgerblue" strokeWidth={2} fill={presentation.fill} fillOpacity={0.16} />
+      <Draw
+        way={presentation.way}
+        style={{ stroke: 'dodgerblue', strokeWidth: 2, fill: presentation.fill, fillOpacity: 0.16 }}
+      />
     </Layout>
   );
 });

@@ -13,7 +13,7 @@ import { Layout } from '@retikz/react';
 ```
 
 ```tsx
-<Layout width={360} height={140}>
+<Layout>
   <Entity id="task" role="activity" position={[180, 70]}>
     Process order
   </Entity>
@@ -28,7 +28,7 @@ The seven built-in roles define only upper-level semantics and a base shape reci
 
 Theme owns the complete Entity visual language. Each demo below can precisely control instance color and text, while the page-level Theme selector switches the overall style among Academic, Vibrant, Clean, and other choices
 
-Neutral uses a complete master-color outline with a light same-color `fill: 0.08`. Graph Clean explicitly removes the Entity fill while retaining that outline and uses black or white body text for the current mode; explicit instance `fill` and `textColor` values still take precedence
+Neutral uses a complete master-color outline with a light same-color `fill: 0.08`. Graph Clean explicitly removes the Entity fill while retaining that outline and uses black or white body text for the current mode; explicit instance `style.fill` and `style.textColor` values still take precedence
 
 ### participant: an active subject
 
@@ -106,7 +106,7 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 
 - **Built-in kinds / predicates:** none
 - **Registrable kind examples:** `resource.document`, `resource.database`, and `resource.queue`
-- **Controllable predicate params example:** an extension could declare `{ mutable: boolean, replicas: number }` and map validated params to sparse appearance tokens in its predicate resolver
+- **Controllable predicate params example:** an extension could declare `{ mutable: boolean, replicas: number }` and map validated params to sparse appearance rules after predicate resolution
 
 <ComponentPreview
   files="entity-resource"
@@ -132,7 +132,7 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 
 `status` preserves a directly readable Graph state on an Entity. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. Omitting the field means no special marker; Graph does not write a `normal` value. This is distinct from the `state` role: status describes the current diagram semantics, while that role represents a persistent condition
 
-Every Entity role demo exposes a no-status option alongside these four values through its controls. Explicit Core Node-compatible appearance such as `color`, `fill`, and `stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
+Every Entity role demo exposes a no-status option alongside these four values through its controls. Explicit Core Node-compatible appearance such as `style.color`, `style.fill`, and `style.stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
 
 ### Style adjustments
 
@@ -152,25 +152,27 @@ The combined playground switches among all seven built-in roles and directly adj
   description="Revisit when persisting Graph data, integrating Diagram, or diagnosing compile input."
 />
 
-An Entity Source record stores authored fields only. `id`, `text`, and `position` may all be omitted without materializing empty wrappers, generated ids, or defaults. An Entity without `id` is still drawn from its role but registers no target in the Core namespace. At compile time, the role supplies shape, boundary, padding, corner radius, and base minimum size. Theme supplies appearance defaults, while explicit non-structural Node fields such as `color`, `fill`, `dashed`, `dashPattern`, and `textColor` take final precedence
+An Entity Source record stores authored fields only. `id`, `text`, and `position` may all be omitted without materializing empty wrappers, generated ids, or defaults. An Entity without `id` is still drawn from its role but registers no target in the Core namespace. At compile time, the role supplies shape, boundary, padding, corner radius, and base minimum size. Theme supplies appearance defaults, while explicit non-structural Node fields such as `style.color`, `style.fill`, `style.dashed`, `style.dashPattern`, and `style.textColor` take final precedence
 
-An explicit static `color` drives both numeric default stroke and fill channels. Compilation fails loudly when a non-static master such as `currentColor` must still resolve either numeric color channel. Use a static `color`, or provide both a string stroke and an opaque static fill, so Graph never guesses the host CSS color or backdrop
+An explicit static `style.color` drives both numeric default stroke and fill channels. Compilation fails loudly when a non-static master such as `currentColor` must still resolve either numeric color channel. Use a static `style.color`, or provide both a string stroke and an opaque static fill, so Graph never guesses the host CSS color or backdrop
 
 Entity performs its own registry lookup and lowers to an ordinary Core `Node`. Core, Scene, and renderers do not interpret Entity roles. Graph only adds local Theme context when present; it is not a compile prerequisite
 
 ## API Reference
 
-| Prop         | Type                                      | Default | Description                                                               |
-| ------------ | ----------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `id?`        | `string`                                  | —       | Optional Core target id; omission registers no reference target           |
-| `role`       | `string`                                  | —       | Registered open semantic role key                                         |
-| `kind?`      | `string`                                  | —       | Registered stable subtype within the role                                 |
-| `predicate?` | `{ name: string; params?: IRJsonObject }` | —       | Registered predicate and its JSON-safe parameters                         |
-| `status?`    | `GraphStatusValue`                        | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled` |
-| `position?`  | `IRPosition`                              | —       | Directly reuses the Core Node position language                           |
-| `text?`      | `IRNode['text']`                          | —       | Node-compatible text                                                      |
-| `children?`  | Node-compatible text                      | —       | React text entry; it cannot host arbitrary drawing children               |
-| `meta?`      | `IRJsonObject`                            | —       | Metadata ignored by Graph semantics                                       |
+Entity visual fields belong to `style`; text layout, size and spacing belong to `layout`. The role still owns padding, so instances cannot set `layout.padding`.
+
+| Prop         | Type                                    | Default | Description                                                               |
+| ------------ | --------------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `id?`        | `string`                                | —       | Optional Core target id; omission registers no reference target           |
+| `role`       | `string`                                | —       | Registered open semantic role key                                         |
+| `kind?`      | `string`                                | —       | Registered stable subtype within the role                                 |
+| `predicate?` | `{ name: string; params?: JsonObject }` | —       | Registered predicate and its JSON-safe parameters                         |
+| `status?`    | `GraphStatusValue`                      | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled` |
+| `position?`  | `IRPosition`                            | —       | Directly reuses the Core Node position language                           |
+| `text?`      | `IRNode['text']`                        | —       | Node-compatible text                                                      |
+| `children?`  | Node-compatible text                    | —       | React text entry; it cannot host arbitrary drawing children               |
+| `meta?`      | `JsonObject`                            | —       | Metadata ignored by Graph semantics                                       |
 
 ## Related
 

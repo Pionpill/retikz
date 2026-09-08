@@ -305,6 +305,15 @@ describe('ComponentPreviewDialog', () => {
     ).toThrow('Duplicate preview control slot id: "preview-tools".');
   });
 
+  it('Card 隐藏宿主工具栏时不渲染预览工具', () => {
+    const markup = renderToStaticMarkup(
+      <ComponentPreviewCard name="without-tools" Component={Demo} showTools={false} />,
+    );
+
+    expect(markup).not.toContain('aria-label="Zoom in"');
+    expect(markup).not.toContain('aria-label="Maximize"');
+  });
+
   it('Dialog 拒绝与 host preview tools 重复的 control slot id', () => {
     const duplicateSlot: PreviewControlSlot = {
       id: 'dialog-preview-tools',

@@ -1,3 +1,4 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
 import type {
@@ -6,7 +7,7 @@ import type {
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '../../contract';
-import type { IRComposite, JsonValue } from '../../schemas';
+import type { IRComposite } from '../../schemas';
 import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
 import { parseProviderPayload } from '../provider-payload';

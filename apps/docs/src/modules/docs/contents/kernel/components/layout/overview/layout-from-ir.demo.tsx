@@ -23,6 +23,6 @@ const ir: IRScene = {
   ],
 };
 
-const Demo: FC = () => <Layout ir={ir} width={300} height={120} />;
+const Demo: FC = () => <Layout ir={ir} />;
 
 export default Demo;

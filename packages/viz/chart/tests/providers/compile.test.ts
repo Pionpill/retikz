@@ -1,5 +1,6 @@
-import type { CoreProviderContribution, IRJsonObject, IRScene } from '@retikz/core';
+import type { CoreProviderContribution, IRScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type { LowerPlotsOptions } from '@retikz/plot';
 
 import {
@@ -14,7 +15,7 @@ import { FlexLayoutArtifactSchema } from '@retikz/layout';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
-import { array, boolean, literal, strictObject, string, undefined as zodUndefined } from 'zod';
+import { array, boolean, literal, strictObject, string } from 'zod';
 
 import { ChartWarningCode } from '../../src';
 import { defineChartMark, defineChartRecipe } from '../../src/_chart/contract';
@@ -31,7 +32,7 @@ import { createScatterChartProviderContribution, ScatterChartSchema } from '../.
 import { createStripChartProviderContribution, StripChartSchema } from '../../src/point/strip';
 
 const resolveDirectEncodings = (context: { encodings: Readonly<Record<string, unknown>> }) => ({
-  encodings: context.encodings as IRJsonObject,
+  encodings: context.encodings as JsonObject,
   transform: [],
   scales: [],
   positionScales: {},
@@ -674,7 +675,7 @@ describe('Chart providers through Core compile', () => {
       id: 'scatter-presentation-height',
       data: { reference: 'scatter.rows' },
       layout: { width: 800, height: 500 },
-      presentation: { title: 'Scatter' },
+      presentation: { title: { text: 'Scatter' } },
       recipe: {
         chartType: 'scatter',
         encodings: { x: 'x', y: 'y' },
@@ -849,7 +850,6 @@ describe('Chart providers through Core compile', () => {
         encodings: strictObject({ x: string(), y: string() }),
         marks: array(markSchema).optional(),
       }),
-      zodUndefined().optional(),
     );
     const annotation = defineChartMark({
       kind: 'annotation',
@@ -868,11 +868,6 @@ describe('Chart providers through Core compile', () => {
       chartType: 'warning-fixture',
       encodingSlots: ['x', 'y'],
       schema: sourceSchema,
-      theme: {
-        overridesSchema: strictObject({}),
-        resolutionSchema: strictObject({}),
-        fallback: {},
-      },
       consumes: { encodings: ['x', 'y'], properties: [] },
       marks: [{ definition: annotation, inherit: {} }],
       resolveEncodings: resolveDirectEncodings,

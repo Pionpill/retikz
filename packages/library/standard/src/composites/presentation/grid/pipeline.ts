@@ -151,14 +151,18 @@ const createGridLinePath = (
   from: [number, number],
   to: [number, number],
   style: IRStandardPathStrokeStyle | undefined,
-): IRPath => ({
-  ...style,
-  type: 'path',
-  children: [
-    { type: 'step', kind: 'move', to: from },
-    { type: 'step', kind: 'line', to },
-  ],
-});
+): IRPath => {
+  const { zIndex, ...appearance } = style ?? {};
+  return {
+    ...(zIndex === undefined ? {} : { zIndex }),
+    ...(style === undefined ? {} : { style: appearance }),
+    type: 'path',
+    children: [
+      { type: 'step', kind: 'move', to: from },
+      { type: 'step', kind: 'line', to },
+    ],
+  };
+};
 
 const createGridBorderPath = (
   minX: number,
@@ -167,15 +171,19 @@ const createGridBorderPath = (
   maxY: number,
   padding: number,
   style: IRStandardPathBorderStyle | undefined,
-): IRPath => ({
-  ...style,
-  type: 'path',
-  children: [
-    {
-      type: 'step',
-      kind: 'rectangle',
-      from: [minX - padding, minY - padding],
-      to: [maxX + padding, maxY + padding],
-    },
-  ],
-});
+): IRPath => {
+  const { zIndex, ...appearance } = style ?? {};
+  return {
+    ...(zIndex === undefined ? {} : { zIndex }),
+    ...(style === undefined ? {} : { style: appearance }),
+    type: 'path',
+    children: [
+      {
+        type: 'step',
+        kind: 'rectangle',
+        from: [minX - padding, minY - padding],
+        to: [maxX + padding, maxY + padding],
+      },
+    ],
+  };
+};

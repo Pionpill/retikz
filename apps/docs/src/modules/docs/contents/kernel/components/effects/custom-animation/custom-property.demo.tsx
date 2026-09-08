@@ -40,10 +40,10 @@ const previewInput = createInputScene(
   <Node
     id="a"
     position={[0, 0]}
-    fill="#3b82f6"
     animations={[
       createBlurIn(previewControlContract.canonicalValues.blur, previewControlContract.canonicalValues.duration),
     ]}
+    style={{ fill: '#3b82f6' }}
   >
     blur
   </Node>,
@@ -58,14 +58,12 @@ const Demo: FC = () => {
 
   return (
     <Layout
+      viewBox={{ x: -80, y: -50, width: 160, height: 100 }}
       key={replayKey}
       renderer="canvas"
-      width={160}
-      height={100}
-      viewBox={{ x: -80, y: -50, width: 160, height: 100 }}
       animationProperties={{ blur }}
     >
-      <Node id="a" position={[0, 0]} fill="#3b82f6" animations={[blurIn]}>
+      <Node id="a" position={[0, 0]} animations={[blurIn]} style={{ fill: '#3b82f6' }}>
         blur
       </Node>
     </Layout>

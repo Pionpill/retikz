@@ -10,18 +10,11 @@ import { previewControlContract, starExampleControls } from './star-example.cont
 export const previewControls = starExampleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={320}
-    height={220}
-    viewBox={{ x: -105, y: -85, width: 210, height: 170 }}
-    shapes={[StarShapeDefinition]}
-  >
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} shapes={[StarShapeDefinition]}>
     <Node
       position={[0, 0]}
       shape={{ type: 'star', params: values }}
-      fill="#ffedd5"
-      stroke="darkorange"
-      strokeWidth={1.5}
+      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
     />
   </Layout>
 ));

@@ -9,7 +9,7 @@ description: Use when changing retikz Zod/IR schema code, schema-derived public 
 
 - 只有可持久化 Source IR 定义 Zod：`IRXxx = z.infer<typeof XxxSchema>`。`XxxSchema` 不加 IR 前缀，Canonical、Input 和 compile 消费态都不设平行 Zod schema
 - `CanonicalXxx` 是由 `IRXxx` 用 `Omit`、`Pick`、交叉或字段替换派生的内部完整形态，定义在纵向领域 `resolve/<domain>/types.ts`。`InputXxx` 是 Vanilla API 包的 TypeScript authoring API，不设 schema，也不作为持久化格式
-- unknown JSON 在 schema / parse 边界显式 parse 一次；公开 compile 已接收 TypeScript 约束的 `IRXxx` 时不得重复 parse。纵向领域 `resolveXxx` 负责 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution`
+- unknown JSON 在 owner schema / parse 边界显式 parse 一次，并直接使用 parse 结果作为 Source IR；公开 compile 已接收 TypeScript 约束的 `IRXxx` 时不得重复 parse。纵向领域 `resolveXxx` 负责 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution`
 
 retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序列化边界、派生 TS 类型和文档 API 表都应从 schema 出发。改 schema 前先确认这是 IR 层契约，不是 provider / compile / adapter 的运行时能力。
 
@@ -18,8 +18,8 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - IR 必须 100% JSON 可序列化，不接收函数、ReactNode、class 实例或 renderer 专属对象。
 - 公开 IR 数据类型用 `z.infer<typeof XxxSchema>` 派生，不手写平行 interface。
 - schema 负责 Source IR 契约与可在 Source IR 表达的跨字段语义校验；纵向领域 `resolve/` 负责 context lookup、优先级、默认、Canonical 化后才出现的领域不变量和领域值转换；pipeline / compile 负责 context 生命周期、阶段调度、lowering、emit 和 renderer 策略
-- JSON、持久化配置等外部数据在 schema / parse 入口完成一次 parse，得到明确的 Source IR；Vanilla API 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，纵向领域 `resolveXxx` 将 IR 与当前 context 确定为 Canonical / Resolution。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
-- 只在 schema / parser 结果会直接暴露给外部或通过公开 API 返回时冻结；内部 canonical 数据和中间对象不额外使用 `Object.freeze`
+- JSON、持久化配置等外部数据只在 owner schema / parse 入口用 Zod 完成一次校验，并直接使用 `parse` / `safeParse` 的成功结果作为 Source IR；不得在 schema 前后增加通用 JSON walker、`undefined` 过滤、字段清理、结构优化、克隆、冻结或第二次通用 JSON schema 复核。Vanilla API 的 `normalizeXxx` 只把 `InputXxx` 组装为 IR，纵向领域 `resolveXxx` 将 IR 与当前 context 确定为 Canonical / Resolution。不要在内部重复做 schema 已覆盖的类型判断，或为 TypeScript 已经排除的类型错误增加 `throw`
+- 只有独立的 runtime callback 变异隔离或公开 immutable output 契约，才可在精确 schema parse 之后单独复制或冻结；这类操作不属于 Source IR 校验，内部 canonical 数据和中间对象不额外复制或冻结
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - 字段级约束写在字段 schema 上；跨字段、跨 kind 规则放最终 schema 的 `.superRefine(...)`。
 - schema 改动影响公开 IR / DSL / docs demo 时，同步 docs、schema registry、测试和示例。
@@ -47,6 +47,15 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 - 字段结构优先于长说明。能用字段名、discriminator、union 拆分表达清楚的，不靠长 `.describe(...)` 补救。
 - 开放式自定义字段要说明边界：provider name、custom kind，还是普通 string。
 - 同一概念在不同 schema 中保持同名同义。
+
+### 一级语义分组
+
+- 字段较多且能形成稳定关注点时，使用 `standard-name` 固定的 `style`、`layout`、`theme`、`presentation`、`encoding`、`defaults`、`routing` 分组；不得为同义概念另造一级属性名。
+- 根对象保留 discriminator、identity、主要领域事实和结构入口。`position`、`shape`、`coordinate`、`data`、`children`、显式 `route` 等高频核心语义不得只为减少一级属性数而下沉。
+- 分组保持浅层，通常不超过两至三层有意义对象；小型 leaf schema 继续扁平。只有子字段仍形成稳定、可复用且不会增加选择歧义的独立概念时才继续拆分。
+- 分组对象必须由命名 schema/type 承载并作为单一真源复用；不得同时保留扁平字段、兼容 alias、平行持久化 schema 或只供 LLM 的第二套 Source 表示。
+- 领域 `xxxDefaults` 按目标类型组织稀疏 Source 片段；Theme definition 生成默认时复用同一字段路径、值域与覆盖粒度，条件规则独立。点路径只用于诊断或 inspection，不建立平行 token / xxxTheme 输入。
+- 一级属性数量只作审计信号，不设机械上限；是否分组只由长期语义边界、字段共变关系与复用契约决定。
 
 ## 对象字段顺序
 
@@ -112,8 +121,9 @@ retikz schema 是 IR 契约的单一真源：字段、默认语义、JSON 可序
 1. 这是 IR 契约，还是 provider / compile / adapter 行为？
 2. 是否需要开放给用户自定义？如果是，先读 `standard-structure`，再读 contract / providers / pipeline 对应 skill。
 3. 字段名、判别字段和值是否 LLM 友好？
-4. `.describe(...)` 是否短而准确，且没有上下文膨胀？
-5. 对象字段顺序、shared spread、union 拆分是否符合规则？
-6. 是否能用 `BaseSchema + superRefine` 避免重复 object？
-7. `CanonicalXxx` 是否由 `IRXxx` 派生但定义在领域 `resolve/<domain>/types.ts`，且由 `resolveXxx` 结合当前 context 唯一展开紧凑 IR，避免下游重复处理等价联合？
-8. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？
+4. 同类字段是否需要使用固定一级语义分组，主要领域事实是否仍位于正确层级？
+5. `.describe(...)` 是否短而准确，且没有上下文膨胀？
+6. 对象字段顺序、shared spread、union 拆分是否符合规则？
+7. 是否能用 `BaseSchema + superRefine` 避免重复 object？
+8. `CanonicalXxx` 是否由 `IRXxx` 派生但定义在领域 `resolve/<domain>/types.ts`，且由 `resolveXxx` 结合当前 context 唯一展开紧凑 IR，避免下游重复处理等价联合？
+9. schema 改动是否需要同步 `types.ts`、docs、schema registry 和测试？

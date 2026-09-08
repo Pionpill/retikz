@@ -1,7 +1,7 @@
 import type { ZodType } from 'zod';
 
-import { ClipFillRuleSchema, defineClip, JsonObjectSchema, PathCommandSchema, PositionSchema } from '@retikz/core';
-import { NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
+import { ClipFillRuleSchema, defineClip, PathCommandSchema, PositionSchema } from '@retikz/core';
+import { JsonObjectSchema, NonBlankStringSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { array, intersection, literal, number, object, strictObject } from 'zod';
 
 import type {

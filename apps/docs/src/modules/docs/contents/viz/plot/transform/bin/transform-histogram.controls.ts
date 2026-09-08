@@ -1,3 +1,5 @@
+import type { IRPlotBinTransform } from '@retikz/plot';
+
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
@@ -11,15 +13,15 @@ export const histogramOperationOf = (values: {
   count: number;
   step: number;
   thresholdPreset: 'regular' | 'focused';
-}) => {
+}): IRPlotBinTransform => {
   const thresholds = values.thresholdPreset === 'focused' ? [3, 5, 7, 10, 14] : [4, 8, 12, 16];
   if (values.strategy === 'count') {
-    return { kind: 'bin', field: 'measurement', count: values.count, extent: [0, 20], nice: false } as const;
+    return { kind: 'bin', field: 'measurement', count: values.count, extent: [0, 20], nice: false };
   }
   if (values.strategy === 'step') {
-    return { kind: 'bin', field: 'measurement', step: values.step, extent: [0, 20] } as const;
+    return { kind: 'bin', field: 'measurement', step: values.step, extent: [0, 20] };
   }
-  return { kind: 'bin', field: 'measurement', thresholds, extent: [0, 20] } as const;
+  return { kind: 'bin', field: 'measurement', thresholds, extent: [0, 20] };
 };
 
 /** 分箱示例的中文控件 */

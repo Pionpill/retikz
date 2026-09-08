@@ -1,3 +1,4 @@
+import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
 
 import { boundsToRect } from '@retikz/math';
@@ -38,7 +39,6 @@ import type {
   IRStep,
   IRTarget,
   IRTransform,
-  JsonValue,
 } from '../../schemas';
 import type { NodeLayout } from '../node';
 import type { CompositeCompileArtifact } from '../types';
@@ -437,10 +437,7 @@ export const compileChildrenToPrimitives = (
         ...(input?.children === undefined ? {} : { children: [...input.children] }),
         label: undefined,
         marks: undefined,
-        color: undefined,
-        fill: undefined,
-        stroke: undefined,
-        strokeWidth: undefined,
+        style: { ...path.style, color: undefined, fill: undefined, stroke: undefined, strokeWidth: undefined },
         rotate: undefined,
         scale: undefined,
       };
@@ -503,7 +500,7 @@ export const compileChildrenToPrimitives = (
           measureText: runtime.context.measureText,
           round: runtime.context.round,
           rootFontSize: runtime.context.rootFontSize,
-          hostOpacity: path.opacity,
+          hostOpacity: path.style?.opacity,
           placement: { boundaryOffset: sample.boundaryOffset },
         });
         hostLabelBoundsPoints.push(...emittedLabel.boundsPoints);
@@ -1072,6 +1069,7 @@ export const compileChildrenToPrimitives = (
     let scopeTransforms: Array<Transform> = [];
     try {
       const scopeFrame: TraversalFrame = {
+        childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
         primitiveSink: scopePrimitiveSink,
         locatorPrefix: `${locatorPrefix}children[${index}].scope.`,

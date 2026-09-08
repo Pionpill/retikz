@@ -38,7 +38,7 @@ describe('JSX 模式 handlers prop 契约', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={SIZE} height={SIZE} handlers={bogusHandlers}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={fromJsx} />
+          <Node id="a" position={[0, 0]} onClick={fromJsx} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });
@@ -69,7 +69,7 @@ describe('JSX 模式 handlers prop 契约', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={SIZE} height={SIZE} handlers={bogusHandlers}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} />
+          <Node id="a" position={[0, 0]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });
@@ -89,7 +89,9 @@ describe('JSX 模式 handlers prop 契约', () => {
 
   it('对照：ir prop 模式下 handlers prop 生效（同一 prop 仅此路径有效）', async () => {
     const fromHandlersProp = vi.fn();
-    const ir = normalizeReactInput(<Node id="a" position={[0, 0]} fill="red" minimumSize={2} />);
+    const ir = normalizeReactInput(
+      <Node id="a" position={[0, 0]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />,
+    );
     const handlers: HydrationHandlers = { a: { click: fromHandlersProp } };
 
     const container = document.createElement('div');

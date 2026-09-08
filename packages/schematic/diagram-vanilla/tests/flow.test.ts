@@ -44,7 +44,7 @@ const sourceInput = {
     },
     { id: 'kernel', text: ['Kernel', 'IR compiler'] },
   ],
-  groups: [{ id: 'client', label: 'Client', children: ['frontend'] }],
+  groups: [{ id: 'client', caption: { title: { text: 'Client' } }, children: ['frontend'] }],
   layouts: [{ id: 'frontend', direction: 'down' as const, children: ['jsx'] }],
   children: ['client', 'kernel'],
   relations: [
@@ -53,10 +53,10 @@ const sourceInput = {
       target: 'kernel',
       label: 'normalize',
       status: 'warning' as const,
-      layout: { routing: { kind: 'orthogonal' as const, cornerRadius: 0 } },
+      routing: { kind: 'orthogonal' as const, cornerRadius: 0 },
     },
   ],
-  flowTheme: { layout: { nodeGap: 0, rankGap: 48 } },
+  flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } },
 };
 
 const expectedSource = {
@@ -90,7 +90,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(Object.keys(source).at(-1)).toBe('children');
   });
 
-  it('normalizes a Core-compatible Entity text block and existing text layout style without adapter defaults', () => {
+  it('normalizes a Core-compatible Entity text block and Source text layout without adapter defaults', () => {
     const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
     expect(normalizeFlowDiagram).toBeDefined();
     if (normalizeFlowDiagram === undefined) return;
@@ -100,7 +100,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
         {
           id: 'form',
           text: ['Frontend form', { text: 'Complete user details', fill: 'gray', font: { size: 'sm' } }],
-          style: { align: 'start' as const, lineHeight: 18, maxTextWidth: 160 },
+          layout: { align: 'start' as const, lineHeight: 18, maxTextWidth: 160 },
         },
       ],
       groups: [],

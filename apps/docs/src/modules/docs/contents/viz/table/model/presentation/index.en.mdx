@@ -3,7 +3,7 @@ title: Content Presentation
 description: Understand how Table resolves each Cell's formatter, presentation, and appearance winners before turning a raw value into styled renderable content.
 ---
 
-Structure has decided which Cell this is and where it belongs, but a raw scalar is neither its final display text nor measurable graphics content. Table first resolves a final Cell plan from preset/tokens, Cell configuration, encodings, and ordered rules. It then runs the winning formatter and Presentation to turn the value and final appearance into a Core child.
+Structure has decided which Cell this is and where it belongs, but a raw scalar is neither its final display text nor measurable graphics content. Table first resolves a final Cell plan from the preset and Source defaults, Cell configuration, encodings, and ordered rules. It then runs the winning formatter and Presentation to turn the value and final appearance into a Core child.
 
 <ComponentAlert
   type="tip"
@@ -15,7 +15,7 @@ Structure has decided which Cell this is and where it belongs, but a raw scalar 
 
 <ComponentPreview files="table-presentation-flow" hideCode size="xxxl" />
 
-The upper half of the figure is a candidate cascade, not value execution order. The built-in preset establishes the appearance baseline and user tokens replace its leaves. Cell configuration then supplies formatter and presentation references plus local appearance, encodings write color channels, and ordered rules apply the last matching overrides. Once the Cell plan contains the winning references and final `appearance`, the lower half runs the formatter on the raw value. Presentation then receives `rawValue`, formatted `value`, `context`, and that final `appearance` before producing the styled child.
+The upper half of the figure is a candidate cascade, not value execution order. The built-in preset establishes the appearance baseline and Source defaults replace formal IR leaves. Cell configuration then supplies formatter and presentation references plus local appearance, encodings write color channels, and ordered rules apply the last matching overrides. Once the Cell plan contains the winning references and final `appearance`, the lower half runs the formatter on the raw value. Presentation then receives `rawValue`, formatted `value`, `context`, and that final `appearance` before producing the styled child.
 
 Selectors and encodings always read the canonical raw value, not formatted text. Displaying `-3` as `−3` therefore changes neither numeric rule matching nor a scale domain.
 
@@ -41,7 +41,7 @@ A custom formatter only performs scalar-to-scalar conversion, and its output mus
 | `CellFormatterDefinition`    | `{ value, context }`, where value is the raw scalar | JSON scalar         |
 | `CellPresentationDefinition` | `{ rawValue, value, context, appearance }`          | JSON-safe `IRChild` |
 
-`context` always contains canonical address, roles, and provenance. Cell, row, and column ids appear only when an author or Structure supplied them. Presentation `value` is the formatter output, while `rawValue` preserves the original value for rules, diagnostics, and domain semantics. `appearance` already merges preset tokens, encodings, and rules.
+`context` always contains canonical address, roles, and provenance. Cell, row, and column ids appear only when an author or Structure supplied them. Presentation `value` is the formatter output, while `rawValue` preserves the original value for rules, diagnostics, and domain semantics. `appearance` already merges preset defaults, encodings, and rules.
 
 ## Built-in and custom use the same entry
 

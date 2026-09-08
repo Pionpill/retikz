@@ -17,10 +17,8 @@ describe('Table Cell plan lineage contract', () => {
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Default }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Structure }),
       TableCellPlanSourceSchema.parse({
-        kind: TableCellPlanSourceKind.StyleToken,
-        tokenKey: 'cell.content.color',
-        tokenSource: 'local',
-        tokenPath: '$default/light/cell.content.color',
+        kind: TableCellPlanSourceKind.Defaults,
+        path: '$default/light',
       }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.Encoding, encodingId: 'status-color' }),
       TableCellPlanSourceSchema.parse({ kind: TableCellPlanSourceKind.RootRule, ruleIndex: 0 }),
@@ -28,42 +26,16 @@ describe('Table Cell plan lineage contract', () => {
     expect(sources).toEqual([
       { kind: 'default' },
       { kind: 'structure' },
-      {
-        kind: 'styleToken',
-        tokenKey: 'cell.content.color',
-        tokenSource: 'local',
-        tokenPath: '$default/light/cell.content.color',
-      },
+      { kind: 'defaults', path: '$default/light' },
       { kind: 'encoding', encodingId: 'status-color' },
       { kind: 'rootRule', ruleIndex: 0 },
     ]);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'rootRule', ruleIndex: -1 })).toThrow(/ruleIndex/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'encoding', encodingId: '' })).toThrow(/encodingId/i);
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'encoding', encodingIndex: 0 })).toThrow();
-    expect(() => TableCellPlanSourceSchema.parse({ kind: 'styleToken' })).toThrow(/tokenKey|tokenSource/i);
-    expect(() =>
-      TableCellPlanSourceSchema.parse({
-        kind: 'styleToken',
-        tokenKey: 'data.categorical',
-        tokenSource: 'foreign',
-      }),
-    ).toThrow(/tokenKey/i);
-    expect(() =>
-      TableCellPlanSourceSchema.parse({
-        kind: 'styleToken',
-        tokenKey: 'cell.content.color',
-        tokenSource: 'inherit',
-        tokenPath: '$theme/colors/categorical',
-      }),
-    ).toThrow(/source|path/i);
-    expect(() =>
-      TableCellPlanSourceSchema.parse({
-        kind: 'styleToken',
-        tokenKey: 'cell.content.color',
-        tokenSource: 'local',
-        tokenPath: '$spec/tableThemeTokens/cell.background.fill',
-      }),
-    ).toThrow(/source|path/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'defaults' })).toThrow(/path/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'defaults', path: '' })).toThrow(/path/i);
+    expect(() => TableCellPlanSourceSchema.parse({ kind: 'defaults', source: 'local' })).toThrow();
     expect(() => TableCellPlanSourceSchema.parse({ kind: 'default', ruleIndex: 0 })).toThrow();
   });
 
@@ -76,13 +48,13 @@ describe('Table Cell plan lineage contract', () => {
     ].map(path => TableCellAppearanceTracePathSchema.parse(path));
     expect(paths).toEqual([
       '/background/fill',
-      '/content/nodeDefault/font/weight',
-      '/content/pathDefault/dashPattern',
+      '/content/defaults/node/style/font/weight',
+      '/content/defaults/path/style/dashPattern',
       '/borders/bottom',
     ]);
     expect(() => TableCellAppearanceTracePathSchema.parse('/background')).toThrow();
     expect(() => TableCellAppearanceTracePathSchema.parse('/content')).toThrow();
-    expect(() => TableCellAppearanceTracePathSchema.parse('/content/nodeDefault/font')).toThrow();
+    expect(() => TableCellAppearanceTracePathSchema.parse('/content/defaults/node/style/font')).toThrow();
     expect(() => TableCellAppearanceTracePathSchema.parse('/content/unknown')).toThrow();
   });
 
@@ -95,28 +67,27 @@ describe('Table Cell plan lineage contract', () => {
       '/borders/bottom',
       '/borders/left',
     ]);
-    const defaultSchemas = {
-      nodeDefault: NodeDefaultSchema,
-      pathDefault: PathDefaultSchema,
-      labelDefault: LabelDefaultSchema,
-      arrowDefault: ArrowDefaultSchema,
-    } as const;
-    Object.keys(TableCellContentStyleSchema.shape).forEach(contentField => {
-      if (!(contentField in defaultSchemas)) {
-        expected.add(`/content/${contentField}`);
-        return;
-      }
-      const defaultSchema = defaultSchemas[contentField as keyof typeof defaultSchemas];
-      Object.keys(defaultSchema.shape).forEach(field => {
-        if (field === 'font' && (contentField === 'nodeDefault' || contentField === 'labelDefault')) {
-          Object.keys(FontSchema.shape).forEach(fontField => {
-            expected.add(`/content/${contentField}/font/${fontField}`);
-          });
+    const addLeaves = (prefix: string, fields: Array<string>) => {
+      fields.forEach(field => {
+        if (field === 'font') {
+          Object.keys(FontSchema.shape).forEach(fontField => expected.add(`${prefix}/font/${fontField}`));
         } else {
-          expected.add(`/content/${contentField}/${field}`);
+          expected.add(`${prefix}/${field}`);
         }
       });
-    });
+    };
+    addLeaves('/content/style', Object.keys(TableCellContentStyleSchema.shape.style.unwrap().shape));
+    expected.add('/content/defaults/reset');
+    for (const [channel, schema] of Object.entries({ node: NodeDefaultSchema, path: PathDefaultSchema })) {
+      addLeaves(
+        `/content/defaults/${channel}`,
+        Object.keys(schema.shape).filter(field => field !== 'style' && field !== 'layout'),
+      );
+      addLeaves(`/content/defaults/${channel}/style`, Object.keys(schema.shape.style.unwrap().shape));
+    }
+    addLeaves('/content/defaults/node/layout', Object.keys(NodeDefaultSchema.shape.layout.unwrap().shape));
+    addLeaves('/content/defaults/label', Object.keys(LabelDefaultSchema.shape));
+    addLeaves('/content/defaults/arrow', Object.keys(ArrowDefaultSchema.shape));
 
     expect(new Set(Object.values(TableCellAppearanceTracePath))).toEqual(expected);
   });

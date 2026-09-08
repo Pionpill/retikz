@@ -1,9 +1,7 @@
-import type { ZodType } from 'zod';
-
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
-import type { IRTableStructureOperation, TableStructureOutput } from '../../src';
+import type { TableStructureOutput } from '../../src';
 
 import { defineTableStructure, TableCellLocation, TableCellRole, TableRowKind } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
@@ -149,19 +147,33 @@ describe('custom Table structure runtime guard', () => {
     expect(() => normalizeCustom(kind, output, options)).toThrow(message);
   });
 
-  it('rejects a definition field transform that emits a non-JSON value', () => {
+  it('passes a definition field transform result directly to build', () => {
+    let observed: unknown;
     const schema = strictObject({
-      kind: literal('non-json-transform'),
-      option: string().transform(() => () => 'not-json'),
-    }) as unknown as ZodType<IRTableStructureOperation>;
+      kind: literal('transformed-option'),
+      option: string().transform(value => value.toUpperCase()),
+    });
     const definition = defineTableStructure({
       schema,
-      build: () => validOutput(),
+      build: operation => {
+        observed = operation.option;
+        return {
+          ...validOutput(),
+          cells: [
+            {
+              ...validOutput().cells[0],
+              source: { kind: 'generated', structureKind: 'transformed-option' },
+            },
+          ],
+        };
+      },
     });
 
-    expect(() =>
-      normalizeTableStructure({ kind: 'non-json-transform', option: 'input' }, { structureDefinitions: [definition] }),
-    ).toThrow(/table: structure "non-json-transform"/);
+    expect(
+      normalizeTableStructure({ kind: 'transformed-option', option: 'input' }, { structureDefinitions: [definition] })
+        .cells[0].source,
+    ).toEqual({ kind: 'generated', structureKind: 'transformed-option' });
+    expect(observed).toBe('INPUT');
   });
 
   it('detaches and freezes provider output, payload, and source aliases', () => {

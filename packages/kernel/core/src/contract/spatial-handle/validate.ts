@@ -1,4 +1,5 @@
-import type { IRJsonObject } from '../../schemas';
+import type { JsonObject } from '@retikz/foundation';
+
 import type { SpatialHandleDeclaration } from './types';
 
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
@@ -77,11 +78,11 @@ export const validateSpatialHandleDeclarations = (
       );
     }
 
-    let payload: Readonly<IRJsonObject> | undefined;
+    let payload: Readonly<JsonObject> | undefined;
     if (declaration.payload !== undefined) {
       const rawPayload = requireRecord(owner, declaration.payload, `${location}.payload must be a JSON object`);
       try {
-        payload = cloneAndFreezeJson(rawPayload, `${owner} ${location}.payload`) as Readonly<IRJsonObject>;
+        payload = cloneAndFreezeJson(rawPayload, `${owner} ${location}.payload`) as Readonly<JsonObject>;
       } catch (cause) {
         const detail = cause instanceof Error ? cause.message : String(cause);
         fail(owner, `${location}.payload must be JSON-safe: ${detail}`);

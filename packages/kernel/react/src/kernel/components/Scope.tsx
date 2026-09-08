@@ -35,8 +35,6 @@ export type ScopeProps = ScopeStyleProps &
      * @description target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center
      */
     placement?: IRScope['placement'];
-    /** 继承屏障：切外层对应通道继承（true 全切 / 数组按 'node'|'path'|'label'|'arrow' 切） */
-    resetStyle?: IRScope['resetStyle'];
     /** 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序 */
     zIndex?: IRScope['zIndex'];
     /** 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */

@@ -1,5 +1,4 @@
-import type { ZodType } from 'zod';
-
+import { JsonObjectSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { boolean, number, object, strictObject, string, tuple } from 'zod';
 
@@ -8,7 +7,7 @@ import type { IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract';
-import { JsonObjectSchema, PathSchema } from '../../src/schemas';
+import { PathSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const firstDrawnPath = (prims: ReadonlyArray<ScenePrimitive>): Extract<ScenePrimitive, { type: 'path' }> | undefined =>
@@ -39,10 +38,10 @@ const catchCompile = (ir: IRScene, gens: Record<string, ReturnType<typeof define
 };
 
 // ───────────────────────────────────────────────────────────────────────────
-// AI 一等公民 — JSON 可序列化护栏（params 入口 + generate 出口双向）
+// AI 一等公民 — Source schema 与 generate 输出护栏
 // ───────────────────────────────────────────────────────────────────────────
 describe('[ADV] JSON 可序列化护栏', () => {
-  it('params_infinity_rejected：Infinity / -Infinity 被双 parse 拦（JsonValueSchema finite）', () => {
+  it('params_infinity_rejected：通用 JSON schema 拒绝非有限数', () => {
     expect(JsonObjectSchema.safeParse({ k: Infinity }).success).toBe(false);
     expect(JsonObjectSchema.safeParse({ k: -Infinity }).success).toBe(false);
     expect(JsonObjectSchema.safeParse({ k: Number.NaN }).success).toBe(false);
@@ -87,7 +86,7 @@ describe('[ADV] JSON 可序列化护栏', () => {
     expect(() => compileToScene(ir, { pathGenerators: [gen] }).scene).toThrow(/non-finite coordinate/i);
   });
 
-  it('infinity_param_rejected_before_generate：Infinity param 在双 parse 即被拦（不进 generate）', () => {
+  it('infinity_param_rejected_before_generate：Infinity param 被 Source schema 拦截（不进 generate）', () => {
     const gen = definePathGenerator({
       name: 'gen',
       paramsSchema: object({ k: number() }),
@@ -125,31 +124,41 @@ describe('[ADV] JSON 可序列化护栏', () => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-// 双 parse 护栏：非 JSON 输出全部被第二道拦
+// 精确 schema transform：输出直接进入 callback，不再被通用 JSON 复核
 // ───────────────────────────────────────────────────────────────────────────
-describe('[ADV] 双 parse 护栏', () => {
-  const probe = (transform: (o: { a: number }) => Record<string, unknown>): Error | undefined => {
-    const sneaky = object({ a: number() }).transform(transform);
+describe('[ADV] 精确 schema transform', () => {
+  const probe = (value: number): { error: Error | undefined; observed: unknown } => {
+    let observed: unknown;
+    const sneaky = object({ a: number() }).transform(input => ({ ...input, injected: value }));
     const gen = definePathGenerator({
       name: 'gen',
-      paramsSchema: sneaky as unknown as ZodType<Record<string, never>>,
-      generate: ({ from }) => [{ kind: 'line', to: from }],
+      paramsSchema: sneaky,
+      generate: ({ from, params }) => {
+        observed = params.injected;
+        return [{ kind: 'line', to: from }];
+      },
     });
     const ir = wrapPath([
       { type: 'step', kind: 'move', to: [0, 0] },
       { type: 'step', kind: 'generator', name: 'gen', params: { a: 1 } },
     ]);
-    return catchCompile(ir, { gen });
+    return { error: catchCompile(ir, { gen }), observed };
   };
 
-  it('transform 注入 undefined → 第二道护栏拦下', () => {
-    expect(probe(o => ({ ...o, injected: undefined }))).toBeDefined();
+  it('transform 注入 NaN → callback 直接接收', () => {
+    const result = probe(Number.NaN);
+    expect(result.error).toBeUndefined();
+    expect(result.observed).toBeNaN();
   });
-  it('transform 注入 function → 第二道护栏拦下', () => {
-    expect(probe(o => ({ ...o, fn: () => 1 }))).toBeDefined();
+  it('transform 注入 Infinity → callback 直接接收', () => {
+    const result = probe(Number.POSITIVE_INFINITY);
+    expect(result.error).toBeUndefined();
+    expect(result.observed).toBe(Number.POSITIVE_INFINITY);
   });
-  it('transform 注入 Infinity → 第二道护栏拦下', () => {
-    expect(probe(o => ({ ...o, big: Number.POSITIVE_INFINITY }))).toBeDefined();
+  it('transform 注入 -Infinity → callback 直接接收', () => {
+    const result = probe(Number.NEGATIVE_INFINITY);
+    expect(result.error).toBeUndefined();
+    expect(result.observed).toBe(Number.NEGATIVE_INFINITY);
   });
 });
 

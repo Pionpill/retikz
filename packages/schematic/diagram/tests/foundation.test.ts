@@ -8,9 +8,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   defineDiagramThemeStyle,
+  DiagramDefaultsSchema,
   DiagramFrameSchema,
   DiagramPresentationSchema,
-  DiagramThemeSchema,
   lowerDiagramFoundation,
   resolveDiagramFoundation,
   resolveDiagramThemeStyleRegistry,
@@ -22,8 +22,8 @@ const drawing: IRChild = {
   type: 'node',
   id: 'drawing',
   position: [0, 0],
-  minimumSize: { width: 80, height: 40 },
   text: 'Drawing',
+  layout: { minimumSize: { width: 80, height: 40 } },
 };
 
 const legend = LegendSchema.parse({
@@ -42,7 +42,12 @@ const legend = LegendSchema.parse({
     items: [
       {
         key: 'critical',
-        sample: { type: 'node', position: [0, 0], minimumSize: 10, fill: '#dc2626' },
+        sample: {
+          type: 'node',
+          position: [0, 0],
+          style: { fill: '#dc2626' },
+          layout: { minimumSize: 10 },
+        },
         label: { type: 'node', position: [0, 0], text: 'Critical' },
       },
     ],
@@ -56,7 +61,12 @@ const rampLegend = LegendSchema.parse({
   content: {
     kind: 'ramp',
     direction: 'horizontal',
-    sample: { type: 'node', position: [0, 0], minimumSize: { width: 60, height: 12 }, fill: '#64748b' },
+    sample: {
+      type: 'node',
+      position: [0, 0],
+      style: { fill: '#64748b' },
+      layout: { minimumSize: { width: 60, height: 12 } },
+    },
     ticks: [
       { key: 'low', offset: 0, label: { type: 'node', position: [0, 0], text: 'Low' } },
       { key: 'high', offset: 1, label: { type: 'node', position: [0, 0], text: 'High' } },
@@ -68,7 +78,7 @@ const resolveFoundation = (
   source: Readonly<{
     presentation?: ReturnType<typeof DiagramPresentationSchema.parse>;
     frame?: ReturnType<typeof DiagramFrameSchema.parse>;
-    diagramTheme?: ReturnType<typeof DiagramThemeSchema.parse>;
+    diagramDefaults?: ReturnType<typeof DiagramDefaultsSchema.parse>;
   }> = {},
 ) =>
   resolveDiagramFoundation(source, {
@@ -135,9 +145,9 @@ describe('Diagram Foundation resolve', () => {
   it('applies inline Theme then preserves every legal falsy Frame override', () => {
     const resolution = resolveFoundation({
       presentation: DiagramPresentationSchema.parse({ legend }),
-      diagramTheme: DiagramThemeSchema.parse({
+      diagramDefaults: DiagramDefaultsSchema.parse({
         frame: { padding: 20, cornerRadius: 8, background: { fill: '#ffffff' } },
-        presentation: { title: { opacity: 0.7, font: { family: 'Inter' } } },
+        presentation: { title: { style: { opacity: 0.7, font: { family: 'Inter' } } } },
       }),
       frame: DiagramFrameSchema.parse({
         legendPosition: 'left',
@@ -165,8 +175,32 @@ describe('Diagram Foundation resolve', () => {
     });
     expect(resolution.presentationAppearance.title).toMatchObject({
       opacity: 0.7,
-      font: { family: 'Inter', size: 18, weight: 600 },
+      font: { family: 'Inter' },
     });
+  });
+
+  it('lets an authored title font replace defaults while preserving independent formatting fields', () => {
+    const result = resolveFoundation({
+      presentation: { title: { text: 'Title', style: { font: { size: 13 }, opacity: 0 } } },
+      diagramDefaults: {
+        presentation: {
+          title: {
+            style: { font: { family: 'serif', size: 24, weight: 700 }, textColor: '#123456' },
+            layout: { lineHeight: 28 },
+          },
+        },
+      },
+    });
+    const outer = flexOf(lowerDiagramFoundation(result, drawing).child);
+    const heading = outer.children[0]?.child;
+    if (!isScope(heading)) throw new Error('Expected heading Scope');
+    const title = heading.children[0];
+    expect(title).toMatchObject({
+      style: { font: { size: 13 }, textColor: '#123456', opacity: 0 },
+      layout: { lineHeight: 28 },
+    });
+    expect(title).not.toHaveProperty('style.font.family');
+    expect(title).not.toHaveProperty('style.font.weight');
   });
 
   it.each([{ legendPosition: 'left' as const }, { legendAlign: 'center' as const }, { drawingLegendGap: 0 }])(
@@ -201,8 +235,8 @@ describe('Diagram Foundation lowering', () => {
 
   it('places complete Presentation text in a node-reset heading outside the drawing child', () => {
     const presentation = DiagramPresentationSchema.parse({
-      title: ['Title', { runs: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }],
-      description: 'Description',
+      title: { text: ['Title', { runs: [{ text: 'styled', fill: '#2563eb' }, { tex: 'x^2' }] }] },
+      description: { text: 'Description' },
     });
     const surface = lowerDiagramFoundation(resolveFoundation({ presentation }), drawing);
     const outer = flexOf(surface.child);
@@ -212,21 +246,15 @@ describe('Diagram Foundation lowering', () => {
     expect(outer.children).toHaveLength(2);
     const headingScope = outer.children[0]?.child;
     if (!isScope(headingScope)) throw new Error('Expected presentation reset Scope');
-    expect(headingScope.resetStyle).toEqual(['node']);
+    expect(headingScope.defaults?.reset).toEqual(['node']);
     const heading = flexOf(headingScope.children[0]);
     expect(heading.direction).toBe(FlexLayoutDirection.Column);
     expect(heading.gap).toEqual({ column: 6, row: 6 });
     expect(heading.children[0]?.child).toMatchObject({
       type: 'node',
-      fill: 'none',
-      stroke: 'none',
-      padding: 0,
-      margin: 0,
-      minimumSize: 0,
-      text: presentation.title,
-      textColor: '#000000',
-      opacity: 1,
-      font: { size: 18, weight: 600 },
+      text: presentation.title?.text,
+      style: { fill: 'none', stroke: 'none', textColor: '#000000', opacity: 1, font: { size: 18, weight: 600 } },
+      layout: { padding: 0, margin: 0, minimumSize: 0 },
     });
     expect(heading.children[1]?.child).toMatchObject({ type: 'node', text: 'Description' });
     expect(outer.children[1]?.child).toEqual(drawing);
@@ -269,7 +297,7 @@ describe('Diagram Foundation provider integration', () => {
       name: 'brand',
       resolve: theme => {
         observed.push(theme);
-        return { presentation: { title: { textColor: '#f97316' } } };
+        return { presentation: { title: { style: { textColor: '#f97316' } } } };
       },
     });
     const coreStyle = defineThemeStyle({
@@ -278,7 +306,7 @@ describe('Diagram Foundation provider integration', () => {
     });
     const output = compileTestDiagramFoundation(
       {
-        presentation: DiagramPresentationSchema.parse({ title: 'Themed title' }),
+        presentation: DiagramPresentationSchema.parse({ title: { text: 'Themed title' } }),
         drawing,
       },
       {
@@ -299,12 +327,17 @@ describe('Diagram Foundation provider integration', () => {
   it('isolates generated text Nodes while the opaque drawing keeps host nodeDefault', () => {
     const output = compileTestDiagramFoundation(
       {
-        presentation: DiagramPresentationSchema.parse({ title: 'Title' }),
+        presentation: DiagramPresentationSchema.parse({ title: { text: 'Title' } }),
         drawing,
       },
       {
         host: {
-          nodeDefault: { fill: '#ef4444', stroke: '#2563eb', minimumSize: 200 },
+          defaults: {
+            node: {
+              style: { fill: '#ef4444', stroke: '#2563eb' },
+              layout: { minimumSize: 200 },
+            },
+          },
         },
       },
     );
@@ -321,8 +354,8 @@ describe('Diagram Foundation provider integration', () => {
   it('keeps dependency-owned artifacts observable without publishing Diagram identity or artifacts', () => {
     const output = compileTestDiagramFoundation({
       presentation: DiagramPresentationSchema.parse({
-        title: 'Title',
-        description: 'Description',
+        title: { text: 'Title' },
+        description: { text: 'Description' },
         legend,
       }),
       drawing: { ...drawing, meta: { secret: 'drawing-source-only' } },
@@ -389,7 +422,11 @@ describe('Diagram Foundation provider integration', () => {
   it('lets replacement drawing geometry determine the complete Scene allocation', () => {
     const compileWithSize = (width: number, height: number) =>
       compileTestDiagramFoundation({
-        drawing: { type: 'node', position: [0, 0], minimumSize: { width, height } },
+        drawing: {
+          type: 'node',
+          position: [0, 0],
+          layout: { minimumSize: { width, height } },
+        },
       }).scene.layout;
     const small = compileWithSize(20, 10);
     const large = compileWithSize(120, 70);
@@ -439,8 +476,17 @@ describe('Diagram Foundation provider integration', () => {
     expect(surfaceContent).toBeDefined();
     expect(scopePrimitives).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: 'path', fill: '#f8fafc', stroke: 'none' }),
-        expect.objectContaining({ type: 'path', fill: 'none', stroke: '#0f172a', strokeWidth: 2 }),
+        expect.objectContaining({
+          type: 'path',
+          fill: '#f8fafc',
+          stroke: 'none',
+        }),
+        expect.objectContaining({
+          type: 'path',
+          fill: 'none',
+          stroke: '#0f172a',
+          strokeWidth: 2,
+        }),
       ]),
     );
     expect(

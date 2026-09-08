@@ -34,7 +34,13 @@ describe('Core value atom schemas', () => {
   });
 
   it('keeps graphic masters and paint-internal colors string-only', () => {
-    expect(NodeSchema.safeParse({ type: 'node', position: [0, 0], color: 0.4 }).success).toBe(false);
+    expect(
+      NodeSchema.safeParse({
+        type: 'node',
+        position: [0, 0],
+        style: { color: 0.4 },
+      }).success,
+    ).toBe(false);
     expect(
       PaintValueSchema.safeParse({
         kind: 'linearGradient',
@@ -85,8 +91,8 @@ describe('Core value atom schemas', () => {
     expect(FontSchema.shape.family.unwrap()).toBe(FontFamilySchema);
     expect(FontSchema.shape.weight.unwrap()).toBe(FontWeightSchema);
     expect(FontSchema.shape.style.unwrap()).toBe(FontStyleSchema);
-    expect(NodeSchema.shape.align.unwrap()).toBe(TextAlignSchema);
-    expect(NodeSchema.shape.lineHeight.unwrap()).toBe(LineHeightSchema);
+    expect(NodeSchema.shape.layout.unwrap().shape.align.unwrap()).toBe(TextAlignSchema);
+    expect(NodeSchema.shape.layout.unwrap().shape.lineHeight.unwrap()).toBe(LineHeightSchema);
     expect(StrokeStyleSchema.shape.strokeWidth.unwrap()).toBe(StrokeWidthSchema);
   });
 });

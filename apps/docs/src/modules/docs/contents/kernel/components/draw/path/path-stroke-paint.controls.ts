@@ -23,5 +23,5 @@ export const pathStrokePaintControls = definePreviewControls({
 export const previewControlContract = {
   controls: pathStrokePaintControls,
   canonicalValues: { angle: 90, startColor: '#2563eb', middleColor: '#f59e0b', endColor: '#e11d48' },
-  relatedApis: ['Path.stroke'],
+  relatedApis: ['Path.style.stroke'],
 } satisfies PreviewControlContract;

@@ -15,40 +15,35 @@ const NOTE_FONT = { size: 12 };
 
 /** Geometry of the Cell box, content area, child allocation, and final visible bounds */
 const Demo: FC = () => (
-  <Layout
-    width={540}
-    height={200}
-    viewBox={{ x: -270, y: -100, width: 540, height: 200 }}
-    style={{ maxWidth: '100%', height: 'auto' }}
-  >
+  <Layout>
     {/* Two horizontal and vertical lines provide only the central Cell's table context */}
     <Draw
       way={[
         [-BOX_HALF_WIDTH, -80],
         [-BOX_HALF_WIDTH, 80],
       ]}
-      stroke="currentColor"
+      style={{ stroke: 'currentColor' }}
     />
     <Draw
       way={[
         [BOX_HALF_WIDTH, -80],
         [BOX_HALF_WIDTH, 80],
       ]}
-      stroke="currentColor"
+      style={{ stroke: 'currentColor' }}
     />
     <Draw
       way={[
         [-140, -BOX_HALF_HEIGHT],
         [140, -BOX_HALF_HEIGHT],
       ]}
-      stroke="currentColor"
+      style={{ stroke: 'currentColor' }}
     />
     <Draw
       way={[
         [-140, BOX_HALF_HEIGHT],
         [140, BOX_HALF_HEIGHT],
       ]}
-      stroke="currentColor"
+      style={{ stroke: 'currentColor' }}
     />
 
     {/* contentBox: content area after removing padding from the box */}
@@ -56,9 +51,7 @@ const Demo: FC = () => (
       center={[0, 0]}
       width={CONTENT_WIDTH}
       height={CONTENT_HEIGHT}
-      fill="none"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'gray', dashPattern: [4, 3] }}
     />
 
     {/* visualOverflowBounds: visible bounds after applying visible or clip */}
@@ -66,9 +59,7 @@ const Demo: FC = () => (
       center={[25, 0]}
       width={VISUAL_WIDTH}
       height={VISUAL_HEIGHT}
-      fill="none"
-      stroke="darkorange"
-      dashPattern={[4, 3]}
+      style={{ fill: 'none', stroke: 'darkorange', dashPattern: [4, 3] }}
     />
 
     {/* contentAllocationBounds: content allocation after fit and alignment */}
@@ -76,18 +67,16 @@ const Demo: FC = () => (
       center={[12, 0]}
       width={ALLOCATION_WIDTH}
       height={ALLOCATION_HEIGHT}
-      fill="dodgerblue"
-      fillOpacity={0.08}
-      stroke="dodgerblue"
+      style={{ fill: 'dodgerblue', fillOpacity: 0.08, stroke: 'dodgerblue' }}
     />
-    <Node position={[12, 0]} stroke="none" padding={0} font={NOTE_FONT}>
+    <Node position={[12, 0]} style={{ stroke: 'none', font: NOTE_FONT }} layout={{ padding: 0 }}>
       child
     </Node>
 
-    <Node position={[-202, -66]} stroke="none" padding={0} font={TITLE_FONT}>
+    <Node position={[-202, -66]} style={{ stroke: 'none', font: TITLE_FONT }} layout={{ padding: 0 }}>
       box
     </Node>
-    <Node position={[-202, -46]} stroke="none" padding={0} textColor="gray" font={NOTE_FONT}>
+    <Node position={[-202, -46]} style={{ stroke: 'none', textColor: 'gray', font: NOTE_FONT }} layout={{ padding: 0 }}>
       tracks + gap + span
     </Node>
     <Draw
@@ -95,14 +84,14 @@ const Demo: FC = () => (
         [-150, -53],
         [-100, -40],
       ]}
-      stroke="currentColor"
       arrow="->"
+      style={{ stroke: 'currentColor' }}
     />
 
-    <Node position={[-202, 46]} stroke="none" padding={0} font={TITLE_FONT}>
+    <Node position={[-202, 46]} style={{ stroke: 'none', font: TITLE_FONT }} layout={{ padding: 0 }}>
       contentBox
     </Node>
-    <Node position={[-202, 66]} stroke="none" padding={0} textColor="gray" font={NOTE_FONT}>
+    <Node position={[-202, 66]} style={{ stroke: 'none', textColor: 'gray', font: NOTE_FONT }} layout={{ padding: 0 }}>
       box − padding
     </Node>
     <Draw
@@ -110,14 +99,14 @@ const Demo: FC = () => (
         [-148, 53],
         [-75, 29],
       ]}
-      stroke="gray"
       arrow="->"
+      style={{ stroke: 'gray' }}
     />
 
-    <Node position={[202, -66]} stroke="none" padding={0} font={TITLE_FONT}>
+    <Node position={[202, -66]} style={{ stroke: 'none', font: TITLE_FONT }} layout={{ padding: 0 }}>
       content allocation
     </Node>
-    <Node position={[202, -46]} stroke="none" padding={0} textColor="gray" font={NOTE_FONT}>
+    <Node position={[202, -46]} style={{ stroke: 'none', textColor: 'gray', font: NOTE_FONT }} layout={{ padding: 0 }}>
       fit → alignment
     </Node>
     <Draw
@@ -125,14 +114,14 @@ const Demo: FC = () => (
         [150, -53],
         [57, -17],
       ]}
-      stroke="dodgerblue"
       arrow="->"
+      style={{ stroke: 'dodgerblue' }}
     />
 
-    <Node position={[202, 46]} stroke="none" padding={0} font={TITLE_FONT}>
+    <Node position={[202, 46]} style={{ stroke: 'none', font: TITLE_FONT }} layout={{ padding: 0 }}>
       visible bounds
     </Node>
-    <Node position={[202, 66]} stroke="none" padding={0} textColor="gray" font={NOTE_FONT}>
+    <Node position={[202, 66]} style={{ stroke: 'none', textColor: 'gray', font: NOTE_FONT }} layout={{ padding: 0 }}>
       visible / clip
     </Node>
     <Draw
@@ -140,8 +129,8 @@ const Demo: FC = () => (
         [150, 53],
         [110, 25],
       ]}
-      stroke="darkorange"
       arrow="->"
+      style={{ stroke: 'darkorange' }}
     />
   </Layout>
 );

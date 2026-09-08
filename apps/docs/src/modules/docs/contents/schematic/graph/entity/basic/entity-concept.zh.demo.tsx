@@ -10,7 +10,7 @@ import { defineEntityAppearanceProps } from './entity-role-controls';
 export const previewControls = entityConceptControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Graph width={360} height={180} viewBox={{ x: 0, y: 0, width: 360, height: 180 }}>
+  <Graph viewBox={{ x: 0, y: 0, width: 360, height: 180 }}>
     <Entity
       role="concept"
       status={values.status || undefined}

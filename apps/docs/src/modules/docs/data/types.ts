@@ -95,12 +95,18 @@ export type SubPage =
 export type Page = SubPage & {
   /** 一级页面 label 左侧的 Lucide 图标 */
   icon?: DocSidebarIcon;
+  /** 同一 section 内用于侧栏视觉分组的标题 */
+  sidebarGroup?: I18nKey;
 };
 
 /** 顶层栏目分组。 */
 export type Section = {
   id?: string;
   label?: I18nKey;
+  /** 模块导航面板中用于解释分组职责的简短说明。 */
+  navigationDescription?: I18nKey;
+  /** 顶部模块导航中的显示顺序；缺省时沿用声明顺序。 */
+  navigationOrder?: number;
   /**
    * 分组自身是否拥有文档页。
    * @description 为 true 时 `/<module>/<section>` 渲染 `contents/<module>/<section>/index.<lang>.mdx`；未设置时保持旧行为，分组路径重定向到第一个子页面。

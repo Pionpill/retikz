@@ -6,6 +6,46 @@ export const vizV02: Release = {
   stableDate: null,
   packages: [
     {
+      pkg: '@retikz/data',
+      stableDate: null,
+      version: 'v0.2',
+      description: {
+        zh: 'Data v0.2 统一开放 operation 的 Source schema 与 Definition dispatch，使宿主只消费一次精确 Zod 解析结果。',
+        en: 'Data v0.2 unifies open-operation Source schemas and Definition dispatch so hosts consume one exact Zod parse result.',
+      },
+      highlights: [
+        {
+          label: { zh: '单一 Source 校验边界', en: 'Single Source validation boundary' },
+          content: {
+            zh: 'transform、reducer 与 selector 的开放配置由各自 Source schema 通过 JSON catchall 校验；registry dispatch 后只运行命中的 Definition schema，不再在前后重复执行通用 JSON object 检查。',
+            en: 'Open transform, reducer, and selector configuration is validated by each Source schema through a JSON catchall. After registry dispatch, only the matched Definition schema runs, with no generic JSON-object checks before or after it.',
+          },
+        },
+      ],
+      subVersions: [
+        {
+          version: 'alpha.1',
+          date: '2026-09-05',
+          summary: {
+            zh: '让 owner Zod schema 成为开放 Data operation 的唯一 Source 校验与投影边界。',
+            en: 'Makes the owner Zod schema the only Source validation and projection boundary for open Data operations.',
+          },
+          items: [
+            {
+              label: {
+                zh: 'BREAKING：Definition 精确 schema 独占解析',
+                en: 'BREAKING: exact Definition schemas own parsing',
+              },
+              content: {
+                zh: '公开 operation schema 直接拒绝 function、symbol、bigint、非有限数等非法 JSON 叶子并使用 Zod 原生 catchall path；命中的 Definition schema transform 结果直接交给 callback，不再被第二道通用 JSON guard 否定。',
+                en: 'Public operation schemas reject functions, symbols, bigints, non-finite numbers, and other invalid JSON leaves through native Zod catchall paths. A matched Definition schema transform now flows directly to its callback instead of being rejected by a second generic JSON guard.',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
       pkg: '@retikz/plot',
       stableDate: null,
       version: 'v0.2',
@@ -38,6 +78,13 @@ export const vizV02: Release = {
             en: 'Moves surface, guide, and palette token ownership into Plot while assigning complete-chart presentation to Chart.',
           },
           items: [
+            {
+              label: { zh: 'Core Source 语义分组', en: 'Grouped Core Source fields' },
+              content: {
+                zh: 'Plot channel 与自定义 mark 输出统一使用 Core Node 的 style/layout、Path 的 style 与 Scope 的 defaults；Relation options 的 dashPattern、fillRule、lineCap、lineJoin 移入 options.style，marks 与几何参数保持原位置。Plot 自有 mark 通道和 Theme token 保持原语义。',
+                en: 'Plot channels and custom marks now emit Core Node style/layout, Path style, and Scope defaults groups. Relation options move dashPattern, fillRule, lineCap, and lineJoin into options.style; marks and geometry parameters retain their paths. Plot-owned mark channels and Theme tokens retain their semantics.',
+              },
+            },
             {
               label: {
                 zh: 'BREAKING：domainPadding 默认改为 range 单位',
@@ -74,8 +121,18 @@ export const vizV02: Release = {
                 en: 'BREAKING: PlotThemeToken and namespaced inputs',
               },
               content: {
-                zh: '`IRPlot.plotThemeTokens` 使用 `PlotThemeTokenOverridesSchema`，覆盖 surface、typography、Axis、Legend 与 palette；Plot token Definition 注册为 `plot` namespace，未知 key、错误原子、空 palette 和显式 `undefined` 都会 fail-loud。',
-                en: '`IRPlot.plotThemeTokens` uses `PlotThemeTokenOverridesSchema` across surface, typography, axes, legends, and palettes. The Plot token Definition registers the `plot` namespace, so unknown keys, invalid atoms, empty palettes, and explicit `undefined` fail loudly.',
+                zh: '`IRPlot.plotThemeTokens` 使用 `PlotThemeTokenOverridesSchema`，覆盖 surface、typography、Axis、Legend 与 palette；Plot token Definition 注册为 `plot` namespace。未知 key、错误原子与空 palette 在 owner schema 失败；optional 显式 `undefined` 由 Zod 保留，并在覆盖完整 token 时由最终 resolution fail-loud。',
+                en: '`IRPlot.plotThemeTokens` uses `PlotThemeTokenOverridesSchema` across surface, typography, axes, legends, and palettes. The Plot token Definition registers the `plot` namespace. Unknown keys, invalid atoms, and empty palettes fail in the owner schema; Zod preserves optional explicit `undefined`, and final resolution fails if it replaces a complete token.',
+              },
+            },
+            {
+              label: {
+                zh: 'BREAKING：Source 与 Definition 只使用 owner schema',
+                en: 'BREAKING: Source and Definitions use owner schemas only',
+              },
+              content: {
+                zh: '开放 coordinate、mark、position adjustment 与 transform 由各自 Source schema 的 JSON catchall 直接校验；Definition dispatch 后只运行命中的精确 schema。Plot Theme 不再做 plain-container preflight 或清理已知 `undefined`，optional 值按 Zod 保留，完整 token resolution 继续校验最终必填值。',
+                en: 'Open coordinates, marks, position adjustments, and transforms are validated directly by each Source schema JSON catchall, and Definition dispatch runs only the matched exact schema. Plot Theme no longer performs plain-container preflights or cleans known `undefined`; Zod preserves optional values while complete-token resolution still validates every required final token.',
               },
             },
             {

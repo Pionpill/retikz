@@ -16,7 +16,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const labelSide = values[RELATION_BUBBLE_CONTROL_IDS.labelSide];
 
   return (
-    <Plot data={bubbleNodes} width={620} height={320} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={bubbleNodes} width={620} height={320}>
       <PointMark
         x="x"
         y="y"

@@ -4,6 +4,10 @@ import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObje
 
 import { TableBorderKind, TableBorderMode } from './constants';
 
+const requireAtLeastOneField = (label: string) => ({
+  message: `${label} must contain at least one field.`,
+});
+
 export const TableBorderKindSchema = zodEnum(TableBorderKind).describe('Discriminator for a Table border candidate.');
 
 export const TableBorderModeSchema = zodEnum(TableBorderMode).describe(
@@ -47,9 +51,46 @@ export const TableCellBordersSchema = strictObject({
   left: TableBorderSchema.optional().describe('Optional left-side border candidate.'),
 }).describe('Optional physical-side border candidates for one Table Cell.');
 
+/** Table Cell defaults 的稀疏物理侧边框片段，null 用于清除低优先级候选 */
+export const TableCellBordersDefaultsSchema = strictObject({
+  top: TableBorderSchema.nullable().optional().describe('Optional top-side border candidate or null to clear defaults.'),
+  right: TableBorderSchema.nullable().optional().describe('Optional right-side border candidate or null to clear defaults.'),
+  bottom: TableBorderSchema.nullable().optional().describe('Optional bottom-side border candidate or null to clear defaults.'),
+  left: TableBorderSchema.nullable().optional().describe('Optional left-side border candidate or null to clear defaults.'),
+})
+  .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell border defaults'))
+  .describe('Sparse physical-side border defaults for an existing Table Cell.');
+
+export const TableOuterBordersSchema = strictObject({
+  top: TableBorderSchema.optional().describe('Optional top-side outer border candidate.'),
+  right: TableBorderSchema.optional().describe('Optional right-side outer border candidate.'),
+  bottom: TableBorderSchema.optional().describe('Optional bottom-side outer border candidate.'),
+  left: TableBorderSchema.optional().describe('Optional left-side outer border candidate.'),
+}).describe('Sparse physical-side candidates for the Table outer boundary.');
+
+/** Table outer defaults 的稀疏物理侧片段，null 用于清除低优先级候选 */
+export const TableOuterBordersDefaultsSchema = strictObject({
+  top: TableBorderSchema.nullable().optional().describe('Optional top-side outer candidate or null to clear defaults.'),
+  right: TableBorderSchema.nullable().optional().describe('Optional right-side outer candidate or null to clear defaults.'),
+  bottom: TableBorderSchema.nullable().optional().describe('Optional bottom-side outer candidate or null to clear defaults.'),
+  left: TableBorderSchema.nullable().optional().describe('Optional left-side outer candidate or null to clear defaults.'),
+})
+  .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table outer border defaults'))
+  .describe('Sparse physical-side defaults for the Table outer boundary.');
+
 export const TableBordersSchema = strictObject({
   mode: TableBorderModeSchema.optional().describe('Border topology mode. Omitted fields use collapse.'),
-  outer: TableBorderSchema.optional().describe('Optional outer-boundary default candidate.'),
+  outer: TableOuterBordersSchema.optional().describe('Optional physical-side outer-boundary defaults.'),
   horizontal: TableBorderSchema.optional().describe('Optional internal row-boundary default candidate.'),
   vertical: TableBorderSchema.optional().describe('Optional internal column-boundary default candidate.'),
 }).describe('Table-wide border topology and default candidates.');
+
+/** Table defaults 的边框布局片段，null 用于清除低优先级模式或候选 */
+export const TableBordersDefaultsSchema = strictObject({
+  mode: TableBorderModeSchema.nullable().optional().describe('Optional border topology mode or null to clear defaults.'),
+  outer: TableOuterBordersDefaultsSchema.nullable().optional().describe('Optional outer-boundary defaults.'),
+  horizontal: TableBorderSchema.nullable().optional().describe('Optional horizontal candidate or null to clear defaults.'),
+  vertical: TableBorderSchema.nullable().optional().describe('Optional vertical candidate or null to clear defaults.'),
+})
+  .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table border defaults'))
+  .describe('Sparse Table border defaults for existing Table edges.');

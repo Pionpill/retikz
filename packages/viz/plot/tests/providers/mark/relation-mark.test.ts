@@ -47,7 +47,7 @@ const lineWeightChannel = definePathChannel<number>({
     };
   },
   deliver: (path, value) => {
-    path.strokeWidth = value;
+    path.style = { ...path.style, strokeWidth: value };
   },
 });
 
@@ -306,7 +306,7 @@ describe('RelationMark and anchorId lowering', () => {
       { d: rows },
     );
     const [path] = collectPaths(markLayer(root, 1));
-    expect(path.color).toBe('#2563eb');
+    expect(path.style?.color).toBe('#2563eb');
     expect(path.marks).toEqual([
       { pos: 0.5, mark: { kind: 'arrow' } },
       { pos: 1, mark: { kind: 'arrow' } },
@@ -762,8 +762,15 @@ describe('RelationMark and anchorId lowering', () => {
       [0, 100],
       [200, 100],
     ]);
-    expect(nodes[0]).toMatchObject({ fill: '#2563eb', minimumSize: 5 * Math.SQRT2 });
-    expect(nodes[1]).toMatchObject({ fill: '#dc2626', shape: 'diamond', minimumSize: 6 * Math.SQRT2 });
+    expect(nodes[0]).toMatchObject({
+      style: { fill: '#2563eb' },
+      layout: { minimumSize: 5 * Math.SQRT2 },
+    });
+    expect(nodes[1]).toMatchObject({
+      shape: 'diamond',
+      style: { fill: '#dc2626' },
+      layout: { minimumSize: 6 * Math.SQRT2 },
+    });
   });
 
   it('uses the same final-radius geometry for Point and Relation endpoint glyphs', () => {
@@ -789,7 +796,10 @@ describe('RelationMark and anchorId lowering', () => {
     const [point] = collectNodes(markLayer(root, 0));
     const endpoints = collectNodes(markLayer(root, 1));
 
-    expect(endpoints.map(endpoint => endpoint.minimumSize)).toEqual([point.minimumSize, point.minimumSize]);
+    expect(endpoints.map(endpoint => endpoint.layout?.minimumSize)).toEqual([
+      point.layout?.minimumSize,
+      point.layout?.minimumSize,
+    ]);
   });
 
   it('keeps zero-length projected relations and overlapping endpoint glyphs', () => {
@@ -942,9 +952,7 @@ describe('RelationMark and anchorId lowering', () => {
         interpolation: 'smooth',
         align: 'center',
       },
-      fill: '#38bdf8',
-      fillOpacity: 0.55,
-      stroke: 'none',
+      style: { fill: '#38bdf8', fillOpacity: 0.55, stroke: 'none' },
     });
   });
 
@@ -975,6 +983,6 @@ describe('RelationMark and anchorId lowering', () => {
       },
     );
     const [ribbon] = collectRibbons(markLayer(root, 0));
-    expect(ribbon.strokeWidth).toBe(5);
+    expect(ribbon.style?.strokeWidth).toBe(5);
   });
 });

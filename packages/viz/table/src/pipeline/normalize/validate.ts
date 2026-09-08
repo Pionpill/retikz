@@ -1,9 +1,14 @@
 import type { TableStructureContext, TableStructureOutput } from '../../contract/structure';
-import type { IRTableStructureOperation } from '../../schemas';
+import type { IRManualTableStructure } from '../../schemas';
 
 import { RetikzTableError } from '../../error';
-import { ManualTableStructureSchema, TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
+import { TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
 import { TableCellSourceKind } from '../../shared';
+
+type TableStructureValidationSource = Readonly<{
+  kind: string;
+  manualRows?: IRManualTableStructure['rows'];
+}>;
 
 const assertUniqueIds = (owner: string, values: ReadonlyArray<{ id?: string }>): void => {
   const ids = new Set<string>();
@@ -17,7 +22,7 @@ const assertUniqueIds = (owner: string, values: ReadonlyArray<{ id?: string }>):
 /** 验证 Structure Definition output 的 canonical 跨字段矩阵 */
 export const validateTableStructureOutput = (
   output: TableStructureOutput,
-  operation: IRTableStructureOperation,
+  source: TableStructureValidationSource,
   context: TableStructureContext,
 ): void => {
   assertUniqueIds('row', output.rows);
@@ -27,7 +32,6 @@ export const validateTableStructureOutput = (
     Array.from<{ cellIndex: number; cellId?: string } | undefined>({ length: output.columns.length }),
   );
   const sourceIndices = new Set(context.data?.sourceIndices ?? []);
-  const manualOperation = ManualTableStructureSchema.safeParse(operation);
   for (const [rowIndex, row] of output.rows.entries()) {
     const rowLabel = row.id === undefined ? `at index ${rowIndex}` : `"${row.id}"`;
     if (row.kind === TableRowKind.ColumnHeader && row.sourceIndex !== undefined) {
@@ -53,17 +57,14 @@ export const validateTableStructureOutput = (
     }
 
     if (cell.source?.kind === TableCellSourceKind.Manual) {
-      if (!manualOperation.success)
+      if (source.manualRows === undefined)
         throw new RetikzTableError(`Cell ${cellLabel} uses manual source outside manual structure`);
-      if (
-        cell.source.row >= manualOperation.data.rows.length ||
-        cell.source.column >= manualOperation.data.rows[0].length
-      ) {
+      if (cell.source.row >= source.manualRows.length || cell.source.column >= source.manualRows[0].length) {
         throw new RetikzTableError(
           `Cell ${cellLabel} manual source (${cell.source.row}, ${cell.source.column}) is out of range`,
         );
       }
-      const sourceEntry = manualOperation.data.rows[cell.source.row][cell.source.column];
+      const sourceEntry = source.manualRows[cell.source.row][cell.source.column];
       if (sourceEntry === null) {
         throw new RetikzTableError(
           `Cell ${cellLabel} manual source (${cell.source.row}, ${cell.source.column}) does not reference a Cell entry`,
@@ -85,8 +86,8 @@ export const validateTableStructureOutput = (
         throw new RetikzTableError(`Cell ${cellLabel} field sourceIndex ${cell.source.sourceIndex} is unknown`);
       }
     }
-    if (cell.source?.kind === TableCellSourceKind.Generated && cell.source.structureKind !== operation.kind) {
-      throw new RetikzTableError(`Cell ${cellLabel} generated source must match structure kind "${operation.kind}"`);
+    if (cell.source?.kind === TableCellSourceKind.Generated && cell.source.structureKind !== source.kind) {
+      throw new RetikzTableError(`Cell ${cellLabel} generated source must match structure kind "${source.kind}"`);
     }
 
     const rowSpan = cell.span?.rows ?? 1;

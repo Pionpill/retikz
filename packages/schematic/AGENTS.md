@@ -26,16 +26,16 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 alpha.1
 - Graph 不复制 Layout FlexLayout、artifact、spacing、axis sizing、clip 或 geometry 算法；公共面不足时先在 Layout owner 冻结并实现最小 composition contract
 - `graph-react` 通过 `graph-vanilla` 的 normalize / adapter 接线复用 `graph`、`@retikz/react`、`@retikz/vanilla` 与必要的 Foundation 错误契约；`graph-vanilla` 只消费 `graph` 与 `@retikz/vanilla`
 - public IR 必须 JSON-safe；ReactNode、DOM、renderer 资源和编辑器运行时状态不得进入 Graph schema
-- Group、Block、BlockHeader、BlockSection、BlockRow、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph、Group、Block、BlockSection 与 BlockRow 组合完整 Core Scope surface，Graph、Group 与 Block 可提供局部 `graphTheme`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界且不自动排列 authored children；Block 复用 Layout 与 Surface 按作者顺序纵向排列任意 children，Header / Section / Row 只是可选组合，Row 直接接受任意 children
+- Group、Block、BlockHeader、BlockSection、BlockRow、Entity 与 Relation 是可独立放入任意 Core 内容树的 semantic composite；Graph、Group、Block、BlockSection 与 BlockRow 组合完整 Core Scope surface，Graph、Group 与 Block 可提供局部 `graphDefaults` / `graphRules`。Group 复用 Standard Surface、Layout 与 Core Node labels 表达可见边界且不自动排列 authored children；Block 复用 Layout 与 Surface 按作者顺序纵向排列任意 children，Header / Section / Row 只是可选组合，Row 直接接受任意 children
 - Graph Theme style 只按 role、kind、predicate 与 direction 等真实语义提供稀疏 appearance 默认；单例精确外观继续使用 Core-compatible 字段，Graph 发布包只维护 Neutral baseline，命名 reference styles 由消费方通过公开 Definition 注入
 - React Graph standalone 复用 Layout 建立 Scene，embedded Graph 只贡献局部 Scope；host-only props 不进入 `IRGraph`，Graph 不拥有 Layout solver 或 Scene 语义
 - Relation endpoint 直接复用 Core NodeTarget 与 namespace，可以引用 Core 已公开寻址的 Node、Coordinate、resolved Scope 及下沉为这些 target 的上层 composite；Graph 不建立第二套 endpoint 或 lookup
 - Graph、Group、Block、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成。Block、Section 与 Row 的显式 id 发布到当前 Core namespace，不自动添加 Block 前缀
-- Diagram 用窄 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用表达包含，并保存显式 relations、布局意图、扁平 token、结构化全局配置与单项 style / layout；resolve 重建递归 Canonical tree 后确定性下沉 Graph records。Group 始终是可见 Graph 边界，独立 Layout 只建立固定排列 scope；Flow style 只能投影 Graph element 已开放字段，不得复制或绕过 Graph role、Theme、identity、屏蔽字段与 canonical lowering 契约
+- Diagram 用窄 Flow Source 平级声明 Entity / Group / Layout，以根、Group 与 Layout 的 `children` 引用表达包含，并保存显式 relations、布局意图、显式 defaults、正式实例配置与单项 style / layout；resolve 重建递归 Canonical tree 后确定性下沉 Graph records。Group 始终是可见 Graph 边界，独立 Layout 只建立固定排列 scope；Flow style 只能投影 Graph element 已开放字段，不得复制或绕过 Graph role、Theme、identity、屏蔽字段与 canonical lowering 契约
 
 ## 当前状态
 
-Graph v0.1 alpha.1 的 ADR-01～10 与 alpha.2 ADR-01～03 均已形成 Accepted、Proposed 或 Superseded 的当前状态。现行契约包含独立 Graph、Group、Block family、Entity 与 Relation Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphTheme` 只影响可见 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
+Graph v0.1 alpha.1 的 ADR-01～10 与 alpha.2 ADR-01～03 均已形成 Accepted、Proposed 或 Superseded 的当前状态。现行契约包含独立 Graph、Group、Block family、Entity 与 Relation Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphDefaults` 为可见后代 Entity / Relation / Group / Block 提供默认，`graphRules` 只匹配 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
 
 ## 验证
 

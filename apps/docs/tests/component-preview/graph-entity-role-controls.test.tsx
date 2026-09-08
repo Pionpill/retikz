@@ -327,12 +327,7 @@ describe('Graph Entity style playground', () => {
         role: 'activity',
         position: [180, 90],
         text: 'Process Order',
-        fill: '#e2e8f0',
-        stroke: '#2563eb',
-        strokeWidth: 2,
-        dashed: false,
-        opacity: 1,
-        textColor: '#0f172a',
+        style: { fill: '#e2e8f0', stroke: '#2563eb', strokeWidth: 2, dashed: false, opacity: 1, textColor: '#0f172a' },
       },
     ]);
   });

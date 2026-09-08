@@ -15,19 +15,15 @@ export const previewControls = blockCustomControls;
 
 /** Composes custom Block content from open slots and an ordinary Core Node */
 export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockCustomControls>) => (
-  <Graph width={420} height={340} viewBox={{ x: -90, y: -64, width: 420, height: 340 }}>
+  <Graph viewBox={{ x: -90, y: -64, width: 420, height: 340 }}>
     <Block id="user-service">
       <BlockHeader
         icon={
           <Node
             position={[0, 0]}
             shape="circle"
-            minimumSize={24}
-            padding={4}
-            fill={ACCENT}
-            fillOpacity={0.1}
-            stroke="none"
-            textColor={ACCENT}
+            style={{ fill: ACCENT, fillOpacity: 0.1, stroke: 'none', textColor: ACCENT }}
+            layout={{ minimumSize: 24, padding: 4 }}
           >
             U
           </Node>
@@ -37,13 +33,9 @@ export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockC
         trail={
           <Node
             position={[0, 0]}
-            padding={{ x: 6, y: 2 }}
-            fill={ACCENT}
-            fillOpacity={0.1}
-            stroke="none"
-            textColor={ACCENT}
-            font={{ size: 'sm' }}
             cornerRadius={4}
+            style={{ fill: ACCENT, fillOpacity: 0.1, stroke: 'none', textColor: ACCENT, font: { size: 'sm' } }}
+            layout={{ padding: { x: 6, y: 2 } }}
           >
             public
           </Node>
@@ -52,18 +44,19 @@ export const BlockCustomPreview = (values: PreviewControlValuesFor<typeof blockC
       <Node
         position={[0, 0]}
         shape={values.shape}
-        padding={values.padding}
-        minimumSize={{ width: values.minimumWidth, height: values.minimumHeight }}
         rotate={values.rotate}
         cornerRadius={values.cornerRadius}
-        fill={values.fill}
-        stroke={values.stroke}
-        strokeWidth={values.strokeWidth}
-        dashed={values.dashed}
-        opacity={values.opacity}
-        shadow={values.shadow}
-        textColor={values.textColor}
-        font={{ size: values.fontSize }}
+        style={{
+          fill: values.fill,
+          stroke: values.stroke,
+          strokeWidth: values.strokeWidth,
+          dashed: values.dashed,
+          opacity: values.opacity,
+          shadow: values.shadow,
+          textColor: values.textColor,
+          font: { size: values.fontSize },
+        }}
+        layout={{ padding: values.padding, minimumSize: { width: values.minimumWidth, height: values.minimumHeight } }}
       >
         {values.content}
       </Node>

@@ -339,12 +339,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   };
 
   return (
-    <Layout
-      width={400}
-      height={280}
-      viewBox={{ x: 0, y: 0, width: 400, height: 280 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout viewBox={{ x: 0, y: 0, width: 400, height: 280 }}>
       <Axes {...axesInput} />
     </Layout>
   );

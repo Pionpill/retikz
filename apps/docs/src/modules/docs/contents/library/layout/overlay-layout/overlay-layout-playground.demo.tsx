@@ -29,18 +29,16 @@ const createPreview = (inspecting: boolean) =>
           <Node
             position={[0, 0]}
             text="BASE"
-            minimumSize={{ width: 220, height: 88 }}
-            fill="#dbeafe"
-            stroke="#2563eb"
+            style={{ fill: '#dbeafe', stroke: '#2563eb' }}
+            layout={{ minimumSize: { width: 220, height: 88 } }}
           />
         </LayoutItem>
         <LayoutItem kind="overlay" itemKey="middle" zIndex={1} offset={{ x: 24, y: 20 }}>
           <Node
             position={[0, 0]}
             text="LAYER"
-            minimumSize={{ width: 128, height: 50 }}
-            fill="#dcfce7"
-            stroke="#16a34a"
+            style={{ fill: '#dcfce7', stroke: '#16a34a' }}
+            layout={{ minimumSize: { width: 128, height: 50 } }}
           />
         </LayoutItem>
         <LayoutItem
@@ -50,7 +48,13 @@ const createPreview = (inspecting: boolean) =>
           sizeParticipation="exclude"
           zIndex={values.zIndex}
         >
-          <Node position={[0, 0]} text="3" shape="circle" minimumSize={44} fill="#fee2e2" stroke="#dc2626" />
+          <Node
+            position={[0, 0]}
+            text="3"
+            shape="circle"
+            style={{ fill: '#fee2e2', stroke: '#dc2626' }}
+            layout={{ minimumSize: 44 }}
+          />
         </LayoutItem>
       </>
     );
@@ -61,10 +65,7 @@ const createPreview = (inspecting: boolean) =>
       alignItems: values.alignItems,
     } as const;
     const hostProps = {
-      width: 440,
-      height: 250,
       viewBox: { x: 0, y: 0, width: 440, height: 250 },
-      style: { maxWidth: '100%', height: 'auto' },
     } as const;
 
     return inspecting ? (

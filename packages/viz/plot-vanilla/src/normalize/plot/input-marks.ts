@@ -12,11 +12,11 @@ import type {
   IRPathScale,
   IRShapeRef,
   IRStepLabel,
-  JsonValue,
   NodeTextAlignValue,
   ShadowPresetValue,
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 import type {
   IRPlotAnchorId,
   IRPlotBlendModeStyle,
@@ -320,7 +320,7 @@ export type InputPlotPointMark = InputPlotMarkTransform &
     size?: InputPlotFieldName | number | IRPlotPointSizeStyle;
     /** 不透明度：字符串按字段解析，数字为常量糖 */
     opacity?: InputPlotMarkValueProp<number> | IRPlotPointOpacityStyle;
-    /** 形状字段（分类）：→ shape 通道，按类别映射到 plotTheme shape palette；连续/时间字段报错 */
+    /** 形状字段（分类）：→ shape 通道，按类别映射到 Plot shape palette；连续/时间字段报错 */
     shape?: InputPlotFieldName | InputPlotNodeShapeChannelValue | IRPlotPointShapeStyle;
     /** 文本内容字段名：给定则该 point 下沉为无边框带文本的 Node（吸收旧 text mark），否则散点 glyph */
     text?: InputPlotFieldName;

@@ -118,8 +118,8 @@ describe('boundary-aware boundary/canonical', () => {
         id: 'polygon-margin',
         shape: { type: 'polygon', params: { sides: 5 } },
         boundary: { type: 'circle', params: { fit: 'tight', gap: 2 } },
-        margin: 8,
         position: [0, 0],
+        layout: { margin: 8 },
       },
       namespaceStack,
     );

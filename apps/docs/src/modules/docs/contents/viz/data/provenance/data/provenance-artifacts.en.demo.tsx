@@ -4,17 +4,13 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** Row metadata and runtime events produced by Data provenance */
 const Demo: FC = () => (
-  <Layout width={700} height={270} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="pipeline"
       position={[-255, 0]}
-      minimumSize={{ width: 150, height: 64 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 150, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Data pipeline</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -24,13 +20,9 @@ const Demo: FC = () => (
     <Node
       id="row"
       position={[10, -65]}
-      minimumSize={{ width: 210, height: 72 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 210, height: 72 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Row provenance metadata</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -43,13 +35,9 @@ const Demo: FC = () => (
     <Node
       id="events"
       position={[10, 65]}
-      minimumSize={{ width: 210, height: 72 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={16}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 210, height: 72 }, align: 'middle', lineHeight: 16 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Runtime lineage events</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -62,13 +50,9 @@ const Demo: FC = () => (
     <Node
       id="consume"
       position={[280, 0]}
-      minimumSize={{ width: 150, height: 64 }}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.07}
       cornerRadius={4}
-      align="middle"
-      lineHeight={17}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.07 }}
+      layout={{ minimumSize: { width: 150, height: 64 }, align: 'middle', lineHeight: 17 }}
     >
       <Text font={{ size: 14, weight: 'bold' }}>Separate jobs</Text>
       <Text fill="gray" font={{ size: 12 }}>
@@ -76,10 +60,10 @@ const Demo: FC = () => (
       </Text>
     </Node>
 
-    <Draw way={['pipeline', 'row']} arrow="->" stroke="gray" />
-    <Draw way={['pipeline', 'events']} arrow="->" stroke="gray" />
-    <Draw way={['row', 'consume']} arrow="->" stroke="gray" />
-    <Draw way={['events', 'consume']} arrow="->" stroke="gray" />
+    <Draw way={['pipeline', 'row']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['pipeline', 'events']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['row', 'consume']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['events', 'consume']} arrow="->" style={{ stroke: 'gray' }} />
   </Layout>
 );
 

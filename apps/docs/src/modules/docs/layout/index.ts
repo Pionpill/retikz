@@ -2,6 +2,7 @@ export * from './doc-page-presentation';
 export * from './DocLayout';
 export * from './DocPage';
 export * from './filter-doc-sections';
+export * from './resolve-doc-navigation-context';
 export * from './sidebar';
 export * from './types';
 export * from './useDocLocation';

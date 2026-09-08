@@ -1,5 +1,7 @@
 import type { Position } from '@retikz/math';
 
+import { JsonObjectSchema } from '@retikz/foundation';
+
 import type { MarkerPrimitive, ScenePrimitive } from '../contract';
 
 import { createCompositeContractError } from '../resolve/diagnostics';
@@ -8,7 +10,6 @@ import {
   AnimationTrackSchema,
   BlendMode,
   FontStyle,
-  JsonObjectSchema,
   PathCommandSchema,
   PathFillRule,
   PathLineCap,

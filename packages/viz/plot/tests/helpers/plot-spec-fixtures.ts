@@ -158,7 +158,6 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
         series: 'species',
         order: 'densityX',
         closure: { kind: 'baseline', baseline: 0 },
-        fill: { kind: 'constant', value: '#60a5fa' },
         ...(options.fillOpacity == null
           ? {}
           : { fillOpacity: { kind: 'constant' as const, value: options.fillOpacity } }),
@@ -167,6 +166,7 @@ export const createDensityAreaSpec = (reference = 'samples', options: DensityOpt
           y: { field: 'density' },
           ...(scales.color ? { color: { field: 'species', scale: scales.color } } : {}),
         },
+        fill: { kind: 'constant', value: '#60a5fa' },
       },
     ],
     guides: [],

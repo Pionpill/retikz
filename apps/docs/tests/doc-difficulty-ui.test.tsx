@@ -158,7 +158,7 @@ describe('<HeaderActions>', () => {
 describe('<DocPageActions>', () => {
   const renderActions = (difficulty?: (typeof DocDifficulty)[keyof typeof DocDifficulty]): HTMLElement =>
     render(
-      <MemoryRouter initialEntries={['/kernel/examples/learning-path']}>
+      <MemoryRouter initialEntries={['/kernel/galleries/learning-path']}>
         <Routes>
           <Route
             path="/:moduleId/:sectionId/:pageId"

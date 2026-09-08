@@ -65,7 +65,7 @@ const renderCategoricalScene = (values: AxisCartesianPlaygroundValues) => {
   const fixedRotate = values.rotation === 'auto' ? undefined : Number(values.rotation);
 
   return (
-    <Plot data={axisCartesianPlaygroundRows} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
       <IntervalMark x="category" y="y" fill="#2563eb" />
       <PlotAxis
         dimension="x"
@@ -99,7 +99,7 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
     };
 
     return (
-      <Plot data={axisCartesianPlaygroundRows} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+      <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
         <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
         <PlotScale dimension="y" type="linear" domain={[-5, 35]} />
         <PathMark x="x" y="y" order="x" stroke="#2563eb" />
@@ -125,7 +125,7 @@ const renderContinuousScene = (values: AxisCartesianPlaygroundValues) => {
   }
 
   return (
-    <Plot data={axisCartesianPlaygroundRows} width={380} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={axisCartesianPlaygroundRows} width={380} height={260}>
       <PlotScale dimension="x" type="linear" domain={[-35, 35]} />
       <PlotScale dimension="y" type="linear" domain={[0, 35]} />
       <PathMark x="x" y="y" order="x" stroke="#2563eb" />

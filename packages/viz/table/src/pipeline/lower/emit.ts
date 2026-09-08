@@ -19,12 +19,9 @@ export const emitTableBoundsSentinel = (layout: Pick<TableLayout, 'allocationBou
     layout.allocationBounds.y + layout.allocationBounds.height / 2,
   ],
   shape: 'rectangle',
-  minimumSize: { width: layout.allocationBounds.width, height: layout.allocationBounds.height },
-  padding: 0,
-  fill: 'none',
-  stroke: 'none',
-  opacity: 0,
   meta: { role: 'tableBounds' },
+  style: { fill: 'none', stroke: 'none', opacity: 0 },
+  layout: { minimumSize: { width: layout.allocationBounds.width, height: layout.allocationBounds.height }, padding: 0 },
 });
 
 /** 把可见 Cell box 背景下沉为无描边的闭合 Core Path */
@@ -46,11 +43,6 @@ export const emitTableCellBackground = (
   const bottom = box.y + box.height;
   return {
     type: 'path',
-    color: masterColor,
-    fill: PaintValueSchema.parse(background.fill),
-    fillOpacity: background.fillOpacity ?? 1,
-    stroke: 'none',
-    strokeOpacity: 0,
     children: [
       { type: 'step', kind: 'move', to: [box.x, box.y] },
       { type: 'step', kind: 'line', to: [right, box.y] },
@@ -58,6 +50,13 @@ export const emitTableCellBackground = (
       { type: 'step', kind: 'line', to: [box.x, bottom] },
       { type: 'step', kind: 'cycle' },
     ],
+    style: {
+      color: masterColor,
+      fill: PaintValueSchema.parse(background.fill),
+      fillOpacity: background.fillOpacity ?? 1,
+      stroke: 'none',
+      strokeOpacity: 0,
+    },
   };
 };
 
@@ -65,18 +64,20 @@ export const emitTableCellBackground = (
 export const emitTableBorderPath = (edge: TableBorderEdge, tableId?: string): IRPath => ({
   type: 'path',
   ...(tableId === undefined ? {} : { id: `${tableId}/border/${edge.key}` }),
-  fill: 'none',
-  color: edge.style.color,
-  stroke: PaintValueSchema.parse(edge.style.stroke),
-  strokeWidth: edge.style.width,
-  strokeOpacity: edge.style.strokeOpacity,
-  ...(edge.style.dashPattern === undefined ? {} : { dashPattern: [...edge.style.dashPattern] }),
-  dashOffset: edge.style.dashOffset,
-  lineCap: edge.style.lineCap,
-  lineJoin: edge.style.lineJoin,
   meta: TableBorderPathMetaSchema.parse(tableBorderPathMetaOf(edge, tableId)),
   children: [
     { type: 'step', kind: 'move', to: [edge.start.x, edge.start.y] },
     { type: 'step', kind: 'line', to: [edge.end.x, edge.end.y] },
   ],
+  style: {
+    fill: 'none',
+    color: edge.style.color,
+    stroke: PaintValueSchema.parse(edge.style.stroke),
+    strokeWidth: edge.style.width,
+    strokeOpacity: edge.style.strokeOpacity,
+    ...(edge.style.dashPattern === undefined ? {} : { dashPattern: [...edge.style.dashPattern] }),
+    dashOffset: edge.style.dashOffset,
+    lineCap: edge.style.lineCap,
+    lineJoin: edge.style.lineJoin,
+  },
 });

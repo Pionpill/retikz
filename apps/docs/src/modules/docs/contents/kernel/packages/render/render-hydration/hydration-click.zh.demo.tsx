@@ -19,20 +19,19 @@ const Demo: FC = () => {
   const [count, setCount] = useState(0);
 
   return (
-    <Layout width={300} height={140}>
+    <Layout>
       <Node
         id="box"
         position={[0, 0]}
-        fill={active ? 'darkorange' : '#f1f5f9'}
-        stroke="darkorange"
         onClick={() => {
           setActive(value => !value);
           setCount(value => value + 1);
         }}
+        style={{ fill: active ? 'darkorange' : '#f1f5f9', stroke: 'darkorange' }}
       >
         点我
       </Node>
-      <Node id="count" position={[0, -50]} stroke="none">
+      <Node id="count" position={[0, -50]} style={{ stroke: 'none' }}>
         点击次数：{count}
       </Node>
     </Layout>

@@ -4,6 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "check:build": "pnpm run build",
+    "check:runtime": "node scripts/check-doc-runtime.mjs",
+    "check:site": "pnpm run check:static && pnpm run check:build && pnpm run check:runtime",
+    "check:static": "node scripts/check-doc-static.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -81,6 +85,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "playwright": "catalog:",
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:",
     "vite": "catalog:",

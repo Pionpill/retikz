@@ -194,7 +194,7 @@ export const bindCoordinateScaleNames = <TCoordinateOperation extends IRPlotCoor
     const scaleName = scaleNames[role];
     if (scaleName !== undefined) applicableScaleNames[role] = scaleName;
   }
-  const candidate: IRPlotCoordinateOperation =
+  const candidate =
     definition.scaleBinding === undefined
       ? { ...parsedOperation, ...applicableScaleNames }
       : definition.scaleBinding.bind(parsedOperation as never, applicableScaleNames);

@@ -4,6 +4,7 @@ import { literal } from 'zod';
 import type {
   CompileOptions,
   IRChild,
+  IRNode,
   IRScene,
   LayoutChildResult,
   LayoutProposal,
@@ -41,16 +42,12 @@ const minimumAxis = {
   mode: LayoutIntrinsicMode.Minimum,
 } as const;
 
-const plainNode = (text: string): IRChild => ({
+const plainNode = (text: string): IRNode => ({
   type: 'node',
   position: [0, 0],
   text,
-  font: { size: 10 },
-  lineHeight: 10,
-  padding: 0,
-  margin: 0,
-  fill: 'transparent',
-  stroke: 'transparent',
+  style: { font: { size: 10 }, fill: 'transparent', stroke: 'transparent' },
+  layout: { lineHeight: 10, padding: 0, margin: 0 },
 });
 
 const probeChild = (
@@ -169,8 +166,7 @@ describe('plain Node proposal consumption', () => {
     const boxed = probeChild(
       {
         ...plainNode('aa bb'),
-        padding: 5,
-        margin: 5,
+        layout: { ...plainNode('aa bb').layout, padding: 5, margin: 5 },
       },
       {
         x: { kind: LayoutAxisProposalKind.Exact, value: 60 },
@@ -180,7 +176,7 @@ describe('plain Node proposal consumption', () => {
     const authored = probeChild(
       {
         ...plainNode('aa bb'),
-        maxTextWidth: 30,
+        layout: { ...plainNode('aa bb').layout, maxTextWidth: 30 },
       },
       {
         x: { kind: LayoutAxisProposalKind.Exact, value: 100 },
@@ -282,10 +278,8 @@ describe('atomic Node content proposal refusal', () => {
     type: 'node',
     position: [0, 0],
     text: [{ runs: [{ text: 'aa bb' }] }, { runs: [{ text: 'cccc' }] }],
-    font: { size: 10 },
-    lineHeight: 10,
-    padding: 0,
-    margin: 0,
+    style: { font: { size: 10 } },
+    layout: { lineHeight: 10, padding: 0, margin: 0 },
   };
 
   it('keeps mixed authored lines atomic for minimum and exact x proposals', () => {
@@ -306,12 +300,8 @@ describe('atomic Node content proposal refusal', () => {
       type: 'node',
       position: [0, 0],
       text: [{ runs: [{ tex: 'x' }] }],
-      font: { size: 10 },
-      lineHeight: 10,
-      padding: 0,
-      margin: 0,
-      fill: 'transparent',
-      stroke: 'transparent',
+      style: { font: { size: 10 }, fill: 'transparent', stroke: 'transparent' },
+      layout: { lineHeight: 10, padding: 0, margin: 0 },
     };
     const lowerTex: NonNullable<CompileOptions['lowerTex']> = () => ({
       paths: [
@@ -449,8 +439,7 @@ describe('fixed built-in geometry proposal refusal', () => {
         type: 'node',
         position: [0, 0],
         shape: 'negative-zero-visual',
-        padding: 0,
-        margin: 0,
+        layout: { padding: 0, margin: 0 },
       },
       { x: naturalAxis, y: naturalAxis },
       { shapes: [negativeZeroVisualShape] },

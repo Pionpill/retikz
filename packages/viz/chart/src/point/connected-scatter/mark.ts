@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import { PathMarkSchema, PlotMark } from '@retikz/plot';
@@ -13,17 +13,17 @@ import { ConnectedScatterChartMarkSchema } from './schema';
 
 const seriesScaleName = pointRecipeId('connected-scatter', 'scale.series');
 
-const seriesOf = (encodings: IRJsonObject): Readonly<{ field: string; scale: string }> | undefined => {
+const seriesOf = (encodings: JsonObject): Readonly<{ field: string; scale: string }> | undefined => {
   if (!Object.hasOwn(encodings, 'series')) return undefined;
   const value = encodings.series;
   if (typeof value === 'string') return { field: value, scale: seriesScaleName };
-  const mapping = value as IRJsonObject;
+  const mapping = value as JsonObject;
   return { field: mapping.field as string, scale: typeof mapping.scale === 'string' ? mapping.scale : seriesScaleName };
 };
 
-const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): IRJsonObject => {
+const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): JsonObject => {
   const source = properties.path ?? {};
-  const result: IRJsonObject = {};
+  const result: JsonObject = {};
   for (const name of [
     'strokeWidth',
     'strokeOpacity',
@@ -42,16 +42,16 @@ const pathPropertiesOf = (properties: IRConnectedScatterChartProperties): IRJson
 
 /** 把一个 Connected Scatter semantic mark 解析为开放 Path 与 Point */
 export const resolveConnectedScatterMarkGroup = (
-  encodings: IRJsonObject,
+  encodings: JsonObject,
   properties: IRConnectedScatterChartProperties,
 ): readonly [IRPlotMarkOperation, IRPlotMarkOperation] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const order = requiredFieldOf(encodings, 'order', ['recipe', 'encodings', 'order']);
   const series = seriesOf(encodings);
-  const pointEncodings: IRJsonObject = { x, y };
-  const pointProperties: IRJsonObject = { ...(properties.point ?? {}) };
-  const path: IRJsonObject = {
+  const pointEncodings: JsonObject = { x, y };
+  const pointProperties: JsonObject = { ...(properties.point ?? {}) };
+  const path: JsonObject = {
     type: PlotMark.Path,
     order,
     closed: false,

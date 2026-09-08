@@ -10,19 +10,21 @@ export const previewControls = shadowPlaygroundControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={280} height={230} viewBox={{ x: -140, y: -115, width: 280, height: 230 }}>
+    <Layout viewBox={{ x: -140, y: -115, width: 280, height: 230 }}>
       <Node
         position={[0, 0]}
         shape="rectangle"
-        fill="white"
-        padding={{ x: 34, y: 22 }}
-        shadow={{
-          offsetX: values.offsetX,
-          offsetY: values.offsetY,
-          blur: values.blur,
-          color: values.color,
-          opacity: values.opacity,
+        style={{
+          fill: 'white',
+          shadow: {
+            offsetX: values.offsetX,
+            offsetY: values.offsetY,
+            blur: values.blur,
+            color: values.color,
+            opacity: values.opacity,
+          },
         }}
+        layout={{ padding: { x: 34, y: 22 } }}
       >
         shadow
       </Node>

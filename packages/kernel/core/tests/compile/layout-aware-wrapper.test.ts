@@ -46,9 +46,7 @@ const node = (id: string, position: readonly [number, number] = [0, 0]): IRChild
   type: 'node',
   id,
   position: [...position],
-  minimumSize: 8,
-  padding: 0,
-  margin: 0,
+  layout: { minimumSize: 8, padding: 0, margin: 0 },
 });
 
 const resolvedResultOf = (
@@ -82,6 +80,52 @@ const fade: IRAnimationTrack = {
 };
 
 describe('layout-aware composite runtime wrapper tree', () => {
+  it('forwards a parent proposal through a single Scope wrapper to its layout-aware child', () => {
+    let receivedProposal: LayoutProposal | undefined;
+    const leaf = defineComposite({
+      namespace: 'test',
+      type: 'proposalLeaf',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('proposalLeaf') }),
+      compile: (_value, context) => {
+        receivedProposal = context.proposal;
+        return { children: [] };
+      },
+    });
+    const wrapper = defineComposite({
+      namespace: 'test',
+      type: 'proposalWrapper',
+      schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('proposalWrapper') }),
+      compile: (_value, context) => {
+        const probe = context.layoutChild(
+          {
+            type: 'scope',
+            defaults: { label: { font: { size: 12 } } },
+            children: [{ namespace: 'test', type: 'proposalLeaf' }],
+          },
+          {
+            x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },
+            y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+          },
+        );
+        if (probe.kind === LayoutChildProbeKind.Failed) return context.raise(probe.failure);
+        return { children: [context.replay(probe.result)] };
+      },
+    });
+
+    compileToScene(scene([{ namespace: 'test', type: 'proposalWrapper' }]), {
+      composites: [leaf, wrapper],
+      padding: 0,
+    });
+
+    expect(receivedProposal).toEqual({
+      x: { kind: LayoutAxisProposalKind.Range, min: 0, max: 40 },
+      y: { kind: LayoutAxisProposalKind.Intrinsic, mode: LayoutIntrinsicMode.Natural },
+    });
+    expect(Object.isFrozen(receivedProposal)).toBe(true);
+    expect(Object.isFrozen(receivedProposal?.x)).toBe(true);
+    expect(Object.isFrozen(receivedProposal?.y)).toBe(true);
+  });
+
   it('keeps an outer clip/meta frame separate from the inner numeric placement frame', () => {
     const definition = defineComposite({
       namespace: 'test',
@@ -242,14 +286,18 @@ describe('layout-aware composite runtime wrapper tree', () => {
               localNamespace: true,
               transforms: [{ kind: 'rotate', degrees: 30, pivot: [4, 5] }],
               placement: { target: [20, 30], selfAnchor: [4, 5] },
-              fill: 'red',
-              nodeDefault: { fill: 'white' },
-              resetStyle: ['path'],
               clip: { kind: 'rect', x: -20, y: -20, width: 40, height: 40 },
               zIndex: 2,
               boundingShape: 'circle',
               meta: { role: 'all' },
               animations: [fade],
+              style: { fill: 'red' },
+              defaults: {
+                node: {
+                  style: { fill: 'white' },
+                },
+                reset: ['path'],
+              },
             },
             [node('inside')],
           ),
@@ -286,9 +334,14 @@ describe('layout-aware composite runtime wrapper tree', () => {
           children: [
             context.scope(
               {
-                color: 'red',
-                nodeDefault: { shape: 'circle', fill: 'white' },
-                resetStyle: true,
+                style: { color: 'red' },
+                defaults: {
+                  node: {
+                    shape: 'circle',
+                    style: { fill: 'white' },
+                  },
+                  reset: true,
+                },
               },
               [context.replay(laid)],
             ),
@@ -301,8 +354,8 @@ describe('layout-aware composite runtime wrapper tree', () => {
       scene([
         {
           type: 'scope',
-          color: 'blue',
           children: [{ namespace: 'test', type: 'styledReplay' }],
+          style: { color: 'blue' },
         },
       ]),
       { composites: [definition], padding: 0 },
@@ -331,7 +384,16 @@ describe('layout-aware composite runtime wrapper tree', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('test'), type: literal('styledReplayOwner') }),
       compile: (_value, context) => {
         const laid = resolvedResultOf(context, { namespace: 'test', type: 'styledReplayLeaf' });
-        return { children: [context.scope({ fill: 'purple' }, [context.replay(laid)])] };
+        return {
+          children: [
+            context.scope(
+              {
+                style: { fill: 'purple' },
+              },
+              [context.replay(laid)],
+            ),
+          ],
+        };
       },
     });
 
@@ -453,12 +515,14 @@ describe('layout-aware composite runtime wrapper tree', () => {
                 type: 'node',
                 id: 'same',
                 position: [20, 0],
-                fill: {
-                  kind: 'linearGradient',
-                  stops: [
-                    { offset: 0, color: '#000' },
-                    { offset: 1, color: '#fff' },
-                  ],
+                style: {
+                  fill: {
+                    kind: 'linearGradient',
+                    stops: [
+                      { offset: 0, color: '#000' },
+                      { offset: 1, color: '#fff' },
+                    ],
+                  },
                 },
               },
               node('same', [40, 0]),

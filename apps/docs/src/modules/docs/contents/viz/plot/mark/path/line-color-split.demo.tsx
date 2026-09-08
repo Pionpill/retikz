@@ -14,7 +14,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const color = values[LINE_COLOR_CONTROL_ID] === 'channel' ? 'channel' : undefined;
 
   return (
-    <Layout width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout>
       <Plot data={channelTrend} width={300} height={220} x={0} y={30}>
         <PathMark x="month" y="score" color={color} order="month" />
         <PlotAxis dimension="x" />

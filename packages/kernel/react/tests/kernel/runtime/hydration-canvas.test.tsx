@@ -59,7 +59,7 @@ describe('Canvas 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="canvas" width={SIZE} height={SIZE}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
+          <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });
@@ -89,7 +89,7 @@ describe('Canvas 水合', () => {
     await act(() => {
       root.render(
         <Layout renderer="canvas" width={SIZE} height={SIZE} runtime={{ mode: 'static' }}>
-          <Node id="a" position={[0, 0]} fill="red" minimumSize={2} onClick={onClick} />
+          <Node id="a" position={[0, 0]} onClick={onClick} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
         </Layout>,
       );
     });

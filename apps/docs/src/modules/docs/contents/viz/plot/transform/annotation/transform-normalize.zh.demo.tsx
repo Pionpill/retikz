@@ -9,7 +9,7 @@ import { revenue } from './transform-normalize.data';
 export const previewControls = normalizeControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={revenue} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={revenue} width={420} height={260}>
     {normalizeOperationsOf(values).map((operation, index) => (
       <PlotTransform key={index} {...operation} />
     ))}

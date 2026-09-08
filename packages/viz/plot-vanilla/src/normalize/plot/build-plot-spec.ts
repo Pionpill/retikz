@@ -105,9 +105,8 @@ export const normalizePlotIR = (
     ...coordinateRoot,
     marks,
     guides,
-    ...(options.plotThemeTokens === undefined ? {} : { plotThemeTokens: options.plotThemeTokens }),
-    ...(options.plotThemeTokenRules === undefined ? {} : { plotThemeTokenRules: options.plotThemeTokenRules }),
-    ...(options.plotTheme === undefined ? {} : { plotTheme: options.plotTheme }),
+    ...(options.plotDefaults === undefined ? {} : { plotDefaults: options.plotDefaults }),
+    ...(options.plotRules === undefined ? {} : { plotRules: options.plotRules }),
     ...(options.width === undefined ? {} : { width: options.width }),
     ...(options.height === undefined ? {} : { height: options.height }),
   } satisfies IRPlot;

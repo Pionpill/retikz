@@ -1,4 +1,4 @@
-import type { IRJsonObject } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
 import { PathMarkSchema, PlotMark, PlotTransform } from '@retikz/plot';
@@ -19,12 +19,12 @@ type RegressionSeriesMapping = Readonly<{
   scale: string;
 }>;
 
-const seriesMappingOf = (encodings: IRJsonObject): RegressionSeriesMapping | undefined => {
+const seriesMappingOf = (encodings: JsonObject): RegressionSeriesMapping | undefined => {
   if (!Object.hasOwn(encodings, 'series')) return undefined;
   const value = encodings.series;
   const fallbackScale = pointRecipeId('regression', 'scale.series');
   if (typeof value === 'string') return { field: value, scale: fallbackScale };
-  const mapping = value as IRJsonObject;
+  const mapping = value as JsonObject;
   return {
     field: mapping.field as string,
     scale: typeof mapping.scale === 'string' ? mapping.scale : fallbackScale,
@@ -47,9 +47,9 @@ const regressionPropertiesOf = (
   return properties;
 };
 
-const constantPathPropertiesOf = (properties: IRRegressionChartProperties): IRJsonObject => {
+const constantPathPropertiesOf = (properties: IRRegressionChartProperties): JsonObject => {
   const trend = properties.trend ?? {};
-  const result: IRJsonObject = {};
+  const result: JsonObject = {};
   for (const name of [
     'strokeWidth',
     'strokeOpacity',
@@ -68,14 +68,14 @@ const constantPathPropertiesOf = (properties: IRRegressionChartProperties): IRJs
 
 /** 把一个 Regression semantic mark 解析为原始 Point 与 mark-local Smooth Path */
 export const resolveRegressionMarkGroup = (
-  encodings: IRJsonObject,
+  encodings: JsonObject,
   properties: IRRegressionChartProperties,
 ): readonly [IRPlotMarkOperation, IRPlotMarkOperation] => {
   const x = requiredFieldOf(encodings, 'x', ['recipe', 'encodings', 'x']);
   const y = requiredFieldOf(encodings, 'y', ['recipe', 'encodings', 'y']);
   const series = seriesMappingOf(encodings);
-  const pointProperties: IRJsonObject = { ...(properties.point ?? {}) };
-  const pointEncodings: IRJsonObject = { x, y };
+  const pointProperties: JsonObject = { ...(properties.point ?? {}) };
+  const pointEncodings: JsonObject = { x, y };
 
   if (series !== undefined) {
     delete pointProperties.color;
@@ -83,7 +83,7 @@ export const resolveRegressionMarkGroup = (
     pointEncodings.color = { field: series.field, scale: series.scale };
   }
 
-  const smooth: IRJsonObject = {
+  const smooth: JsonObject = {
     kind: PlotTransform.Smooth,
     x,
     y,
@@ -95,7 +95,7 @@ export const resolveRegressionMarkGroup = (
     yAs: trendYField,
   };
   const trend = properties.trend ?? {};
-  const path: IRJsonObject = {
+  const path: JsonObject = {
     type: PlotMark.Path,
     order: trendXField,
     closed: false,
@@ -125,7 +125,7 @@ export const RegressionMarkDefinition: ChartMarkDefinition = defineChartMark({
   schema: RegressionChartMarkSchema,
   resolve: context => {
     const source = context.source as IRRegressionMark;
-    const encodings: IRJsonObject = { ...context.inherited.encodings, ...(source.encodings ?? {}) };
+    const encodings: JsonObject = { ...context.inherited.encodings, ...(source.encodings ?? {}) };
     return { marks: resolveRegressionMarkGroup(encodings, regressionPropertiesOf(context, source)) };
   },
 });

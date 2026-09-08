@@ -129,24 +129,32 @@ describe('PointMark 位置散布 playground', () => {
       'point-jitter-cartesian-span-kind': 'ratio',
       'point-jitter-cartesian-ratio': 0,
       'point-jitter-cartesian-range': 80,
+      'point-jitter-cartesian-distribution': 'uniform',
+      'point-jitter-cartesian-sigma': 0.5,
       'point-jitter-cartesian-seed': 7,
     });
     const ratioJitter = renderControlledDemo(CartesianJitterDemo, {
       'point-jitter-cartesian-span-kind': 'ratio',
       'point-jitter-cartesian-ratio': 0.8,
       'point-jitter-cartesian-range': 80,
+      'point-jitter-cartesian-distribution': 'uniform',
+      'point-jitter-cartesian-sigma': 0.5,
       'point-jitter-cartesian-seed': 7,
     });
     const numericJitter = renderControlledDemo(CartesianJitterDemo, {
       'point-jitter-cartesian-span-kind': 'range',
       'point-jitter-cartesian-ratio': 0.8,
       'point-jitter-cartesian-range': 80,
+      'point-jitter-cartesian-distribution': 'uniform',
+      'point-jitter-cartesian-sigma': 0.5,
       'point-jitter-cartesian-seed': 7,
     });
     const anotherSeed = renderControlledDemo(CartesianJitterDemo, {
       'point-jitter-cartesian-span-kind': 'ratio',
       'point-jitter-cartesian-ratio': 0.8,
       'point-jitter-cartesian-range': 80,
+      'point-jitter-cartesian-distribution': 'uniform',
+      'point-jitter-cartesian-sigma': 0.5,
       'point-jitter-cartesian-seed': 8,
     });
 
@@ -160,24 +168,32 @@ describe('PointMark 位置散布 playground', () => {
       'point-jitter-polar-scale': 'discrete',
       'point-jitter-polar-ratio': 0,
       'point-jitter-polar-range': 48,
+      'point-jitter-polar-distribution': 'uniform',
+      'point-jitter-polar-sigma': 0.5,
       'point-jitter-polar-seed': 7,
     });
     const discrete = renderControlledDemo(PolarJitterDemo, {
       'point-jitter-polar-scale': 'discrete',
       'point-jitter-polar-ratio': 0.8,
       'point-jitter-polar-range': 48,
+      'point-jitter-polar-distribution': 'uniform',
+      'point-jitter-polar-sigma': 0.5,
       'point-jitter-polar-seed': 7,
     });
     const continuous = renderControlledDemo(PolarJitterDemo, {
       'point-jitter-polar-scale': 'continuous',
       'point-jitter-polar-ratio': 0.8,
       'point-jitter-polar-range': 48,
+      'point-jitter-polar-distribution': 'uniform',
+      'point-jitter-polar-sigma': 0.5,
       'point-jitter-polar-seed': 7,
     });
     const anotherSeed = renderControlledDemo(PolarJitterDemo, {
       'point-jitter-polar-scale': 'discrete',
       'point-jitter-polar-ratio': 0.8,
       'point-jitter-polar-range': 48,
+      'point-jitter-polar-distribution': 'uniform',
+      'point-jitter-polar-sigma': 0.5,
       'point-jitter-polar-seed': 8,
     });
 

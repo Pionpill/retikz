@@ -13,7 +13,7 @@ import { Surface } from '@retikz/standard-react';
 ```
 
 ```tsx
-<Layout width={320} height={180}>
+<Layout>
   <Surface padding={16} background={{ fill: '#f8fafc' }} border={{ stroke: '#64748b' }}>
     <Node position={[0, 0]} text="Content" />
   </Surface>
@@ -86,6 +86,6 @@ React `SurfaceProps` 用 `children` 代替 IR 的 `child`，并要求最终恰�
 ## 相关
 
 - [Scope](/kernel/components/layout/scope)：Surface 下沉后的 authored 外层分组
-- [Tier 2 Composite](/kernel/concepts/design/composite)：Definition 与 provider graph
+- [Tier 2 Composite](/kernel/components/design/composite)：Definition 与 provider graph
 - [能力装载](/library/standard/extension/capability-loading)：React、Vanilla 与 direct IR 的装载路径
 - [Frame](/library/standard/composite/frame)：面向 Node 分组和标题语义的专用 composite

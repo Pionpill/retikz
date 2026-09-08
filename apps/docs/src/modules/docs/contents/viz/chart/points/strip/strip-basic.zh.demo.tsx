@@ -1,12 +1,11 @@
 import type { IRStripChartEncodings } from '@retikz/chart/point/strip';
 import type { FC } from 'react';
 
-import { ChartData, ChartLayout, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { StripChart, StripEncodings, StripProperties } from '@retikz/chart-react/point';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { resolvePointPreviewLayout } from '../point-coordinate-control';
 import { previewControlContract, STRIP_BASIC_CONTROL_IDS } from './strip-basic.controls';
 import { stripVegaBarleyData } from './strip-vega-barley.data';
 
@@ -33,11 +32,14 @@ const controlled = defineControlledPreview(previewControlContract, values => {
   return (
     <StripChart coordinate={{ type: coordinateSystem }}>
       <ChartData data={stripVegaBarleyData} />
-      <ChartLayout {...resolvePointPreviewLayout(coordinateSystem)} />
       <StripEncodings {...encodingsOf(discreteRole, discreteScale)} />
       <StripProperties
         jitter={{
           span: { kind: 'ratio', value: values[STRIP_BASIC_CONTROL_IDS.jitterSpan] },
+          distribution:
+            values[STRIP_BASIC_CONTROL_IDS.distribution] === 'normal'
+              ? { kind: 'normal', sigma: values[STRIP_BASIC_CONTROL_IDS.normalSigma] }
+              : { kind: 'uniform' },
           seed: values[STRIP_BASIC_CONTROL_IDS.seed],
         }}
         size={values[STRIP_BASIC_CONTROL_IDS.pointSize]}

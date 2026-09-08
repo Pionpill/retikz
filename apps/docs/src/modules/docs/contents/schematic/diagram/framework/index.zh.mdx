@@ -21,7 +21,7 @@ description: 图示框架负责具体绘图核心之外的说明区域、外框�
 
 ## Presentation
 
-标题与说明沿用 Core `TextBlock`，支持多行、行级与 run 级样式，以及 text / TeX mixed runs。图例直接复用显式 Standard Legend，不建立 Diagram 私有图例模型。
+标题与说明使用 `{ text, style?, layout? }`：`text` 沿用 Core `TextBlock`，支持多行、行级与 run 级样式，以及 text / TeX mixed runs。图例直接复用显式 Standard Legend，不建立 Diagram 私有图例模型。
 
 标题、说明和图例都是可选区域。某个区域缺失时，对应容器和间距完全折叠，不会在最终布局中保留空位。
 
@@ -45,3 +45,7 @@ Framework 只保留独立事实源，不读取、修改或持久化 drawing chil
 - Flow 拥有 Graph 测量、自动 layout、routing、orchestration 与 `FlowDiagramArtifact`
 
 这些边界让 Framework 继续作为具体 Diagram 的共享底座，而 [Flow Diagram](/schematic/diagram/flow) 只公开自身完整闭环所需的领域契约。
+
+## 显式默认值
+
+`diagramDefaults.presentation.title/description` 与正式 Presentation 路径一致，只提供 `style.textColor/font/opacity` 和 `layout.align/lineHeight/maxTextWidth`，不包含 `text`。`diagramDefaults.frame` 只提供 padding、三种 gap、background、border、cornerRadius；Legend 方位和 overflow 由正式 Frame 指定。Theme Definition 返回同一稀疏结构，实例字段最后覆盖；字体整体替换，不逐字段混合。

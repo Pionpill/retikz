@@ -1,5 +1,5 @@
-import type { JsonValue } from '@retikz/core';
 import type { DataSourceIdentity, ExternalDatasets, ExternalRow } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
 import { resolveFieldPath } from '@retikz/data';
 

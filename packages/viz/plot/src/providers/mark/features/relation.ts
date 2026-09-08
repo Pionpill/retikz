@@ -226,7 +226,7 @@ const endpointGlyphNode = (
   const size = resolveMarkValue<number>(glyph.size, row);
   if (shape !== undefined) node.shape = shape;
   // 与 Point size channel 一致：公开 size 是半径，Core circle 的 minimumSize 使用外接方尺寸
-  if (size !== undefined) node.minimumSize = size * Math.SQRT2;
+  if (size !== undefined) node.layout = { ...node.layout, minimumSize: size * Math.SQRT2 };
   const provenance =
     ctx?.provenance === undefined
       ? undefined
@@ -262,7 +262,6 @@ const relationPrimitiveStyle = (
     'opacity',
     'shadow',
     'blendMode',
-    'zIndex',
   ] as const) {
     const value = relationStyleValue(mark.style, key, row);
     if (value !== undefined) out[key] = value;
@@ -613,6 +612,7 @@ export const lowerRelation = (
     if (source === null || target === null) continue;
     const coordinates: Array<IRCoordinate> = [...source.coordinates, ...target.coordinates];
     const style = relationPrimitiveStyle(mark, row, colorOf, defaultColor);
+    const zIndex = resolveMarkValue<number>(mark.style?.zIndex, row);
     if ((mark.kind ?? RelationGeometryKind.Path) === RelationGeometryKind.Ribbon) {
       const width = resolveMarkValue<number>(mark.ribbon?.width, row);
       if (width === undefined) continue;
@@ -624,7 +624,8 @@ export const lowerRelation = (
         {
           type: 'path',
           kind: 'ribbon',
-          ...style,
+          style,
+          ...(zIndex !== undefined ? { zIndex } : {}),
           ...(label !== undefined ? { label } : {}),
           kindOptions: {
             ...ribbonOptions,
@@ -685,7 +686,8 @@ export const lowerRelation = (
       {
         type: 'path',
         ...pathOptions,
-        ...style,
+        style: { ...pathOptions.style, ...style },
+        ...(zIndex !== undefined ? { zIndex } : {}),
         ...(label !== undefined ? { label } : {}),
         children: steps,
       },

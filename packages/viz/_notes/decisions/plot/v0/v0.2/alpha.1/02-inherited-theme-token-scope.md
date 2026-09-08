@@ -5,6 +5,7 @@
 - 关联：[alpha.1 roadmap](./roadmap.md) · [plot v0.2 roadmap](../roadmap.md) · [ADR-01：Plot 主题 token 所有权与 Chart 消费边界](./01-chart-layering.md) · [Core ADR-13：Theme Token Namespace Context 与共享颜色](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/13-theme-token-namespace-context.md) · [Plot 可视化完备设计](../../../../../architecture/plot-visualization-complete.md)
 - Supersedes：本 ADR 取代 ADR-01 中关于 inherited token scope、局部 token 输入名称与 Core namespace context 的冲突边界；ADR-01 其余 Plot / Chart 主题所有权与消费边界继续有效
 - Superseded in part by：[Core ADR-15：轻量 Theme IR 与可扩展 Style 解析](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/15-lightweight-theme-resolution.md) 已移除持久化 namespace bag、Theme token Definition / Contribution 与 Core token registry。本文保留 Plot token owner、shared categorical projection、本地覆盖、级联和最终消费决策
+- Superseded in part by：[ADR-14：Plot Source 默认片段与 Axis 规则](./14-theme-source-fragments.md) 以 `plotDefaults` / `plotRules` 取代 `plotThemeTokens`、`plotThemeTokenRules`、`plotTheme` 与无消费者 sector palette；Core 环境、shared categorical baseline、Plot owner 和实际消费边界继续有效
 
 ## 背景与目标
 

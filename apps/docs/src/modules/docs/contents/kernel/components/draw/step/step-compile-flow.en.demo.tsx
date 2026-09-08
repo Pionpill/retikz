@@ -4,36 +4,27 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** IRStep 序列到路径命令与边标注的局部编译流程图 */
 const Demo: FC = () => (
-  <Layout width={540} height={180} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="step-ir"
       position={[-200, 0]}
       text={['Ordered', 'IRStep sequence']}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
     />
     <Node
       id="compile-step"
       position={[0, 0]}
       text={['Target resolution', 'Cursor + kind lowering']}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13, weight: 'bold' }}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
     />
     <Node
       id="path-output"
       position={[200, 0]}
       text={['Path commands', 'Edge-label geometry']}
-      stroke="darkviolet"
-      fill="darkviolet"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 13 }}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
     />
 
     <Draw

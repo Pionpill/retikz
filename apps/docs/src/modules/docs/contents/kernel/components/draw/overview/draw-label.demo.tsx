@@ -27,11 +27,11 @@ const wayOf = (values: DrawLabelValues): WayDSL => {
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout width={400} height={218} viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
-      <Node id="A" position={[0, -60]} stroke="gray" dashed>
+    <Layout viewBox={{ x: -40, y: -120, width: 440, height: 240 }}>
+      <Node id="A" position={[0, -60]} style={{ stroke: 'gray', dashed: true }}>
         a
       </Node>
-      <Node id="B" position={[360, 60]} stroke="gray" dashed>
+      <Node id="B" position={[360, 60]} style={{ stroke: 'gray', dashed: true }}>
         b
       </Node>
       <Draw way={wayOf(values)} arrow="->" />

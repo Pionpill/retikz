@@ -1,17 +1,12 @@
 import type { RefinementCtx, ZodType } from 'zod';
 
-import { JsonObjectSchema, NodeSchema } from '@retikz/core';
-import { NonBlankStringSchema } from '@retikz/foundation';
+import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
+import { SurfaceInputSchema } from '@retikz/standard';
 import { array, discriminatedUnion, literal, strictObject, union } from 'zod';
 
 import { GraphType } from '../../shared';
-import { EntityRoleSchema } from '../entity';
-import {
-  GraphRelationAppearanceTokenOverridesSchema,
-  RelationDirectionSchema,
-  RelationKindSchema,
-  RelationRoleSchema,
-} from '../relation';
+import { EntityRoleSchema, EntitySchema } from '../entity';
+import { RelationDirectionSchema, RelationKindSchema, RelationRoleSchema, RelationSchema } from '../relation';
 import { GraphStatusSchema } from '../status';
 
 const requireAtLeastOneField =
@@ -21,29 +16,6 @@ const requireAtLeastOneField =
       context.addIssue({ code: 'custom', message: `${label} requires at least one field.` });
     }
   };
-
-const GraphEntityNodeAppearanceShape = NodeSchema.pick({
-  color: true,
-  textColor: true,
-  fill: true,
-  stroke: true,
-  fillOpacity: true,
-  strokeWidth: true,
-  strokeOpacity: true,
-  opacity: true,
-  shadow: true,
-  blendMode: true,
-  dashed: true,
-  dotted: true,
-  dashPattern: true,
-  dashOffset: true,
-}).shape;
-
-export const GraphEntityAppearanceTokenOverridesSchema = strictObject({
-  ...GraphEntityNodeAppearanceShape,
-})
-  .superRefine(requireAtLeastOneField('Entity appearance'))
-  .describe('Non-empty appearance-only Entity overrides.');
 
 const selectorKeySchema = (keySchema: ZodType<string>, label: string) =>
   union([
@@ -80,7 +52,7 @@ export const GraphEntityThemeSelectorSchema = strictObject({
     .optional()
     .describe('One or more closed Entity semantic statuses.'),
 })
-  .superRefine(requireAtLeastOneField('Entity Theme selector'))
+  .superRefine(requireAtLeastOneField('Entity Graph selector'))
   .describe('Entity selector over complete Canonical semantics.');
 
 export const GraphRelationThemeSelectorSchema = strictObject({
@@ -98,26 +70,104 @@ export const GraphRelationThemeSelectorSchema = strictObject({
     .optional()
     .describe('One or more effective Relation directions.'),
 })
-  .superRefine(requireAtLeastOneField('Relation Theme selector'))
+  .superRefine(requireAtLeastOneField('Relation Graph selector'))
   .describe('Relation selector over complete Canonical semantics and effective direction.');
 
-export const GraphEntityThemeRuleSchema = strictObject({
-  type: literal(GraphType.Entity).describe('Entity Theme rule discriminator.'),
+export const GraphEntityDefaultsStyleSchema = EntitySchema.shape.style
+  .unwrap()
+  .pick({
+    color: true,
+    textColor: true,
+    fill: true,
+    stroke: true,
+    fillOpacity: true,
+    strokeWidth: true,
+    strokeOpacity: true,
+    opacity: true,
+    shadow: true,
+    blendMode: true,
+    dashed: true,
+    dotted: true,
+    dashPattern: true,
+    dashOffset: true,
+    font: true,
+  })
+  .describe('Sparse Entity Source style defaults.');
+
+export const GraphEntityRuleStyleSchema = GraphEntityDefaultsStyleSchema.omit({ font: true }).describe(
+  'Sparse Entity Source style rule fields without font.',
+);
+
+export const GraphEntityDefaultsLayoutSchema = EntitySchema.shape.layout
+  .unwrap()
+  .pick({
+    align: true,
+    lineHeight: true,
+    maxTextWidth: true,
+    minimumSize: true,
+    margin: true,
+  })
+  .describe('Sparse Entity Source layout defaults without role-owned padding.');
+
+export const GraphRelationDefaultsStyleSchema = RelationSchema.shape.style
+  .unwrap()
+  .pick({
+    color: true,
+    stroke: true,
+    strokeWidth: true,
+    strokeOpacity: true,
+    opacity: true,
+    shadow: true,
+    blendMode: true,
+    lineCap: true,
+    lineJoin: true,
+    dashOffset: true,
+  })
+  .describe('Sparse Relation Source path style without structural dash pattern or fill fields.');
+
+const GraphRelationDefaultsRootSchema = RelationSchema.pick({
+  sourceMarker: true,
+  targetMarker: true,
+  labelTextForeground: true,
+  labelFont: true,
+  labelOpacity: true,
+});
+
+export const GraphRelationDefaultsSchema = strictObject({
+  style: GraphRelationDefaultsStyleSchema.optional(),
+  ...GraphRelationDefaultsRootSchema.shape,
+}).describe('Sparse Relation Source defaults.');
+
+export const GraphSurfaceDefaultsSchema = strictObject({
+  background: SurfaceInputSchema.shape.background,
+  border: SurfaceInputSchema.shape.border,
+  cornerRadius: SurfaceInputSchema.shape.cornerRadius,
+}).describe('Sparse Group or Block Surface root defaults.');
+
+export const GraphEntityDefaultsSchema = strictObject({
+  style: GraphEntityDefaultsStyleSchema.optional(),
+  layout: GraphEntityDefaultsLayoutSchema.optional(),
+}).describe('Sparse Entity Source defaults.');
+
+export const GraphDefaultsSchema = strictObject({
+  entity: GraphEntityDefaultsSchema.optional(),
+  relation: GraphRelationDefaultsSchema.optional(),
+  group: GraphSurfaceDefaultsSchema.optional(),
+  block: GraphSurfaceDefaultsSchema.optional(),
+}).describe('Sparse Graph defaults grouped by semantic target.');
+
+export const GraphEntityRuleSchema = strictObject({
+  type: literal(GraphType.Entity).describe('Entity Graph rule discriminator.'),
   selector: GraphEntityThemeSelectorSchema.optional().describe('Optional Entity selector; omission matches all.'),
-  appearance: GraphEntityAppearanceTokenOverridesSchema.describe('Entity appearance overrides.'),
-}).describe('One ordered Entity appearance rule.');
+  style: GraphEntityRuleStyleSchema.optional().describe('Entity Source style rule fields.'),
+}).describe('One ordered Entity Source rule.');
 
-export const GraphRelationThemeRuleSchema = strictObject({
-  type: literal(GraphType.Relation).describe('Relation Theme rule discriminator.'),
+export const GraphRelationRuleSchema = strictObject({
+  type: literal(GraphType.Relation).describe('Relation Graph rule discriminator.'),
   selector: GraphRelationThemeSelectorSchema.optional().describe('Optional Relation selector; omission matches all.'),
-  appearance: GraphRelationAppearanceTokenOverridesSchema.describe('Relation appearance overrides.'),
-}).describe('One ordered Relation appearance rule.');
+  ...GraphRelationDefaultsSchema.shape,
+}).describe('One ordered Relation Source rule.');
 
-export const GraphThemeRuleSchema = discriminatedUnion('type', [
-  GraphEntityThemeRuleSchema,
-  GraphRelationThemeRuleSchema,
-]);
-
-export const GraphThemeLayerSchema = strictObject({
-  rules: array(GraphThemeRuleSchema).min(1).describe('Non-empty ordered Graph appearance rules.'),
-}).describe('Graph-local appearance layer with no structural recipes or default materialization.');
+export const GraphRuleSchema = discriminatedUnion('type', [GraphEntityRuleSchema, GraphRelationRuleSchema]).describe(
+  'Ordered Graph Source rules for Entity and Relation targets.',
+);

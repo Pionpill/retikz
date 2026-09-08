@@ -46,8 +46,6 @@ describe('FrameSchema', () => {
       id: 'heading',
       text: 'Contract',
       shape: 'circle',
-      font: { family: 'serif' },
-      padding: { x: 4, top: 2 },
       label: { text: 'stable', position: 'right' },
       meta: { role: 'title' },
       animations: [
@@ -60,19 +58,28 @@ describe('FrameSchema', () => {
           ],
         },
       ],
+      style: { font: { family: 'serif' } },
+      layout: { padding: { x: 4, top: 2 } },
     });
-    const description = FrameDescriptionSchema.parse({ text: '', opacity: 0.5 });
+    const description = FrameDescriptionSchema.parse({
+      text: '',
+      style: { opacity: 0.5 },
+    });
 
     expect(title).toMatchObject({
       id: 'heading',
       text: 'Contract',
       shape: 'circle',
-      font: { family: 'serif' },
       meta: { role: 'title' },
+      style: { font: { family: 'serif' } },
     });
     expect(description.text).toBe('');
     expect(FrameTitleSchema.safeParse({ text: 'invalid', position: [0, 0] }).success).toBe(false);
-    expect(FrameDescriptionSchema.safeParse({ opacity: 0.5 }).success).toBe(false);
+    expect(
+      FrameDescriptionSchema.safeParse({
+        style: { opacity: 0.5 },
+      }).success,
+    ).toBe(false);
   });
 
   it('separates root Scope styles from the nested border Path style', () => {
@@ -83,25 +90,23 @@ describe('FrameSchema', () => {
       padding: { default: 6, x: 8, top: 10 },
       gap: 0,
       headerDirection: FrameHeaderDirection.Vertical,
-      fill: '#fff',
-      opacity: 0.8,
       border: { style: { stroke: '#334155', fill: '#f8fafc', zIndex: -3 }, cornerRadius: 6 },
       zIndex: 3,
       title: { text: 'Group' },
-      description: { text: 'Details', maxTextWidth: 160 },
+      description: { text: 'Details', layout: { maxTextWidth: 160 } },
       children: [node],
+      style: { fill: '#fff', opacity: 0.8 },
     });
 
     expect(parsed).toMatchObject({
       padding: { default: 6, x: 8, top: 10 },
       gap: 0,
       headerDirection: 'vertical',
-      fill: '#fff',
-      opacity: 0.8,
       border: { style: { stroke: '#334155', fill: '#f8fafc', zIndex: -3 }, cornerRadius: 6 },
       zIndex: 3,
       title: { text: 'Group' },
-      description: { text: 'Details', maxTextWidth: 160 },
+      description: { text: 'Details', layout: { maxTextWidth: 160 } },
+      style: { fill: '#fff', opacity: 0.8 },
     });
   });
 

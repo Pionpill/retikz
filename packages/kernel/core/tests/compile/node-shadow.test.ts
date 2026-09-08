@@ -115,7 +115,12 @@ describe('[shadow] 边界', () => {
 // ════════════════ 错误路径（schema parse 边界，PASS now） ════════════════
 
 describe('[shadow] 错误路径（schema 拒）', () => {
-  const node = (shadow: unknown): unknown => ({ type: 'node', position: [0, 0], shape: 'rectangle', shadow });
+  const node = (shadow: unknown): unknown => ({
+    type: 'node',
+    position: [0, 0],
+    shape: 'rectangle',
+    style: { shadow },
+  });
 
   it('reject-nonfinite-offset：offsetX=NaN/Inf → 拒', () => {
     expect(NodeSchema.safeParse(node({ offsetX: NaN, offsetY: 1 })).success).toBe(false);
@@ -179,7 +184,15 @@ describe('[shadow] 交互', () => {
         version: 1,
         type: 'scene',
         viewBox: { x: -1, y: -2, width: 3, height: 4 },
-        children: [{ type: 'node', position: [0, 0], shape: 'rectangle', text: 'x', shadow: 'lg' }],
+        children: [
+          {
+            type: 'node',
+            position: [0, 0],
+            shape: 'rectangle',
+            text: 'x',
+            style: { shadow: 'lg' },
+          },
+        ],
       },
       silent,
     ).scene;
@@ -196,16 +209,22 @@ describe('[shadow] round-trip', () => {
       id: 'n',
       position: [0, 0] as [number, number],
       shape: 'rectangle',
-      shadow: { preset: 'md', color: '#3b82f6', opacity: 0.5 },
+      style: { shadow: { preset: 'md', color: '#3b82f6', opacity: 0.5 } },
     };
     const parsed = NodeSchema.parse(node);
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
-    expect(round.shadow).toEqual(parsed.shadow);
+    expect(round.style?.shadow).toEqual(parsed.style?.shadow);
   });
 
   it('含 shadow（预设字符串）的 IRNode JSON 往返保留 "md"', () => {
-    const parsed = NodeSchema.parse({ type: 'node', id: 'n', position: [0, 0], shape: 'rectangle', shadow: 'md' });
+    const parsed = NodeSchema.parse({
+      type: 'node',
+      id: 'n',
+      position: [0, 0],
+      shape: 'rectangle',
+      style: { shadow: 'md' },
+    });
     const round = NodeSchema.parse(JSON.parse(JSON.stringify(parsed)));
-    expect(round.shadow).toBe('md');
+    expect(round.style?.shadow).toBe('md');
   });
 });

@@ -11,7 +11,7 @@ export const previewControls = histogramControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Plot data={measurements} width={420} height={260} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Plot data={measurements} width={420} height={260}>
       <PlotTransform {...histogramOperationOf(values)} />
       <PlotScale dimension="x" type="linear" domain={[0, 20]} />
       <PlotScale dimension="y" type="linear" domain={[0, 25]} />

@@ -21,12 +21,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const labelOpacity = typeof values.labelOpacity === 'number' ? values.labelOpacity : 1;
 
   return (
-    <Graph width={460} height={220} viewBox={{ x: 0, y: 0, width: 460, height: 220 }}>
+    <Graph viewBox={{ x: 0, y: 0, width: 460, height: 220 }}>
       <Entity
         id="source"
         role="participant"
         position={[90, 110]}
-        {...(sourceColor === 'currentColor' ? {} : { color: sourceColor })}
+        {...(sourceColor === 'currentColor'
+          ? {}
+          : {
+              style: { color: sourceColor },
+            })}
       >
         Source
       </Entity>
@@ -34,7 +38,11 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         id="target"
         role="resource"
         position={[370, 110]}
-        {...(targetColor === 'currentColor' ? {} : { color: targetColor })}
+        {...(targetColor === 'currentColor'
+          ? {}
+          : {
+              style: { color: targetColor },
+            })}
       >
         Target
       </Entity>
@@ -44,16 +52,18 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         status={relationStatusOf(values.status)}
         source={{ id: 'source' }}
         target={{ id: 'target' }}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-        opacity={opacity}
-        {...(values.dashed === true ? { dashPattern: [6, 4] } : {})}
         sourceMarker={{ color: stroke, fill: stroke }}
         targetMarker={{ color: stroke, fill: stroke }}
         labelTextForeground={labelTextColor}
         labelOpacity={labelOpacity}
         labels={[{ text: content, position: 0.5 }]}
         way={['source', 'target']}
+        style={{
+          stroke,
+          strokeWidth,
+          opacity,
+          ...(values.dashed === true ? { dashPattern: [6, 4] } : {}),
+        }}
       />
     </Graph>
   );

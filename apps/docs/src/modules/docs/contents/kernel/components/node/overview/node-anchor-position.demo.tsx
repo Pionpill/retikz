@@ -23,52 +23,40 @@ const targetOf = (values: NodeAnchorPositionValues, withOffset: boolean): IRNode
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const target = targetOf(values, true);
   return (
-    <Layout width={400} height={230} viewBox={{ x: -220, y: -155, width: 440, height: 310 }}>
+    <Layout viewBox={{ x: -220, y: -155, width: 440, height: 310 }}>
       <Node
         id="A"
         position={[-28, 0]}
-        minimumSize={{ width: 126, height: 76 }}
-        padding={0}
-        margin={values.targetMargin}
-        fill="none"
-        stroke="gray"
-        dashed
         rotate={values.targetRotate}
+        style={{ fill: 'none', stroke: 'gray', dashed: true }}
+        layout={{ minimumSize: { width: 126, height: 76 }, padding: 0, margin: values.targetMargin }}
       >
         a
       </Node>
 
       <Draw
         way={[targetOf(values, false), target]}
-        stroke="lightgray"
-        dashPattern={[1, 4]}
-        lineCap="round"
         zIndex={-1}
+        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
 
       <Node
         id="Q"
         position={{ kind: 'anchor', target, selfAnchor: values.selfAnchor }}
-        minimumSize={{ width: 54, height: 36 }}
-        padding={{ left: 10, right: 2, top: 4, bottom: 8 }}
         scale={values.selfScale}
-        fill="#f97316"
-        stroke="none"
-        textColor="white"
         rotate={values.selfRotate}
+        style={{ fill: '#f97316', stroke: 'none', textColor: 'white' }}
+        layout={{ minimumSize: { width: 54, height: 36 }, padding: { left: 10, right: 2, top: 4, bottom: 8 } }}
       >
         q
       </Node>
 
       <Node
         position={{ kind: 'anchor', target }}
-        minimumSize={8}
-        padding={0}
         shape="circle"
-        fill="none"
-        stroke="#94a3b8"
-        strokeWidth={1}
         zIndex={1}
+        style={{ fill: 'none', stroke: '#94a3b8', strokeWidth: 1 }}
+        layout={{ minimumSize: 8, padding: 0 }}
       />
     </Layout>
   );

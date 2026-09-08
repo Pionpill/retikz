@@ -54,12 +54,8 @@ const plainNode = (text: string): IRChild => ({
   type: 'node',
   position: [0, 0],
   text,
-  font: { size: 10 },
-  lineHeight: 10,
-  padding: 0,
-  margin: 0,
-  fill: 'transparent',
-  stroke: 'transparent',
+  style: { font: { size: 10 }, fill: 'transparent', stroke: 'transparent' },
+  layout: { lineHeight: 10, padding: 0, margin: 0 },
 });
 
 /** 递归收集 Scene group，验证 replay 与 Scope 的结构语义未被扁平化 */
@@ -172,12 +168,11 @@ describe('Layout Core layout capability gate', () => {
     const result = probeChild(
       {
         type: 'path',
-        stroke: '#000',
-        strokeWidth: 4,
         children: [
           { type: 'step', kind: 'move', to: [10, 20] },
           { type: 'step', kind: 'line', to: [50, 30] },
         ],
+        style: { stroke: '#000', strokeWidth: 4 },
       },
       {
         x: { kind: LayoutAxisProposalKind.Exact, value: 10 },
@@ -338,8 +333,7 @@ describe('Layout Core layout capability gate', () => {
                 position: [0, 0],
                 shape: 'layout-core-gate-shape',
                 text: [{ runs: [{ tex: 'x' }] }],
-                padding: 0,
-                margin: 0,
+                layout: { padding: 0, margin: 0 },
               },
             ],
           },
@@ -435,14 +429,16 @@ describe('Layout Core layout capability gate', () => {
             type: 'node',
             id: 'discarded-node',
             position: [0, 0],
-            minimumSize: 10,
-            fill: {
-              kind: 'linearGradient',
-              stops: [
-                { offset: 0, color: '#ef4444' },
-                { offset: 1, color: '#f97316' },
-              ],
+            style: {
+              fill: {
+                kind: 'linearGradient',
+                stops: [
+                  { offset: 0, color: '#ef4444' },
+                  { offset: 1, color: '#f97316' },
+                ],
+              },
             },
+            layout: { minimumSize: 10 },
           },
           NaturalLayoutProposal,
         );

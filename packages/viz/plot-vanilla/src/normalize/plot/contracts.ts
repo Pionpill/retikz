@@ -1,5 +1,5 @@
-import type { IRJsonObject } from '@retikz/core';
 import type { ExternalRow, IRDataModel, IRDataReference } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import type {
   IRPlot,
   IRPlotCoordinateOperation,
@@ -61,7 +61,7 @@ export type InputPlotCoordinate =
        */
       endAngle?: number;
     }
-  | ({ type: string } & IRJsonObject)
+  | ({ type: string } & JsonObject)
   | IRPlotCoordinateOperation;
 
 /** 2D 极坐标入口配置 */
@@ -105,12 +105,10 @@ export type BuildPlotOptions = {
   transforms?: Array<IRPlotTransform>;
   /** 把 mark 形态转换为普通 Plot-level transforms 的作者侧简写 */
   markTransformShortcuts?: Array<MarkTransformShortcutDefinition>;
-  /** Plot-owned canonical theme token 稀疏覆盖 */
-  plotThemeTokens?: IRPlot['plotThemeTokens'];
-  /** 按 Axis dimension 覆盖 Plot-owned token 的有序规则 */
-  plotThemeTokenRules?: IRPlot['plotThemeTokenRules'];
-  /** Plot 主题 */
-  plotTheme?: IRPlot['plotTheme'];
+  /** Plot-owned Source-shaped visual defaults 稀疏覆盖 */
+  plotDefaults?: IRPlot['plotDefaults'];
+  /** 按 Axis dimension 覆盖 Plot-owned defaults 的有序规则 */
+  plotRules?: IRPlot['plotRules'];
   /** 当前数据集可见字段名集合 */
   dataFieldNames?: ReadonlySet<string>;
   /** 是否省略未显式声明的位置比例尺绑定，让 lowering 按实际字段类型派生
@@ -284,7 +282,7 @@ export type PlotAuthoringDeclaration = {
   /** 稳定组件 kind */
   kind: PlotDeclarationKind;
   /** 已移除 React children 与 runtime function 的 plain props */
-  props: IRJsonObject;
+  props: JsonObject;
   /** 组件在原始 ReactNode tree 中的结构化路径 */
   path: PlotDeclarationPath;
   /** PlotFacet、PlotScaffold 或 PlotTrack 提供的声明上下文 */

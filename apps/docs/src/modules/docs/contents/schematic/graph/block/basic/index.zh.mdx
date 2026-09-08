@@ -85,7 +85,7 @@ Block、Section 与 Row 支持完整的 Core Scope，包括 `localNamespace`。�
 
 命名 Graph Theme 会为 Block 根外框提供 `background`、`border` 与 `cornerRadius` 基线。Block 上显式编写的对应 Source 字段最终优先，并执行完整顶层字段替换，不会把显式 `border` 与 Theme 中的 dash、opacity 或 width 深合并
 
-`graphTheme` 只穿过已知的 Graph、Group、Block、Header、Section、Row 和 Core Scope 内容边界，投影到可见 Entity / Relation。它不会直接样式化结构 shell、普通 Core child 或未知 Tier 2 composite
+`graphRules` 只穿过已知的 Graph、Group、Block、Header、Section、Row 和 Core Scope 内容边界，投影到可见 Entity / Relation。`graphDefaults` 沿相同边界为后代 Entity / Relation 以及 Group / Block 根外框提供默认值。两者都不影响当前 Block 自身外框、普通 Core child 或未知 Tier 2 composite；切换 theme 不清除作者层
 
 <SourceLinks
   sources={[
@@ -118,18 +118,19 @@ Block 外框表中的外观默认值来自 Neutral Graph Theme；同名 Graph Th
 
 ### Block
 
-| 属性            | 类型                         | 默认值                       | 描述                                             |
-| --------------- | ---------------------------- | ---------------------------- | ------------------------------------------------ |
-| `children?`     | `ReadonlyArray<IRChild>`     | —                            | 任意有序 children；React 中为 `ReactNode`        |
-| `graphTheme?`   | `IRGraphThemeLayer`          | —                            | Block 局部 Graph Theme                           |
-| `width?`        | `number`                     | —                            | 包含水平 padding 的外层固定总宽度                |
-| `minWidth?`     | `number`                     | `240`                        | 包含水平 padding 的外层最小总宽度；不写回 Source |
-| `gap?`          | `number`                     | `8`                          | children 之间的纵向间距                          |
-| `padding?`      | `SurfaceInput['padding']`    | `8`                          | 外层内边距                                       |
-| `background?`   | `SurfaceInput['background']` | transparent                  | 外层背景                                         |
-| `border?`       | `SurfaceInput['border']`     | `currentColor` / `0.2` / `1` | 外层边框                                         |
-| `cornerRadius?` | `number`                     | `8`                          | 外层圆角                                         |
-| `overflow?`     | `'visible' \| 'clip'`        | `'visible'`                  | Surface overflow 语义                            |
+| 属性             | 类型                         | 默认值                       | 描述                                                |
+| ---------------- | ---------------------------- | ---------------------------- | --------------------------------------------------- |
+| `children?`      | `ReadonlyArray<IRChild>`     | —                            | 任意有序 children；React 中为 `ReactNode`           |
+| `graphDefaults?` | `IRGraphDefaults`            | —                            | 后代 Entity / Relation / Group / Block 的稀疏默认值 |
+| `graphRules?`    | `Array<IRGraphRule>`         | —                            | 后代 Entity / Relation 的有序规则                   |
+| `width?`         | `number`                     | —                            | 包含水平 padding 的外层固定总宽度                   |
+| `minWidth?`      | `number`                     | `240`                        | 包含水平 padding 的外层最小总宽度；不写回 Source    |
+| `gap?`           | `number`                     | `8`                          | children 之间的纵向间距                             |
+| `padding?`       | `SurfaceInput['padding']`    | `8`                          | 外层内边距                                          |
+| `background?`    | `SurfaceInput['background']` | transparent                  | 外层背景                                            |
+| `border?`        | `SurfaceInput['border']`     | `currentColor` / `0.2` / `1` | 外层边框                                            |
+| `cornerRadius?`  | `number`                     | `8`                          | 外层圆角                                            |
+| `overflow?`      | `'visible' \| 'clip'`        | `'visible'`                  | Surface overflow 语义                               |
 
 ### BlockHeader
 

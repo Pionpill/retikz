@@ -52,7 +52,6 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
     height: _height,
     viewBox: _viewBox,
     className: _className,
-    style: _style,
     renderer: _renderer,
     animate: _animate,
     snapshotAt: _snapshotAt,
@@ -85,7 +84,6 @@ const collectGraphInput = (props: GraphProps, embedId: string, rejectHostProps: 
   void _height;
   void _viewBox;
   void _className;
-  void _style;
   void _renderer;
   void _animate;
   void _snapshotAt;

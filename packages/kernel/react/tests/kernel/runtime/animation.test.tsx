@@ -80,7 +80,7 @@ describe('react SVG 动画', () => {
   it('load track → 内联 <style> 含 @keyframes（CSS 自播）', async () => {
     const c = await mount(
       <Layout width={100} height={100}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     const style = c.querySelector('style');
@@ -91,7 +91,7 @@ describe('react SVG 动画', () => {
   it('animate={false} → 无 <style>（静态 base）', async () => {
     const c = await mount(
       <Layout width={100} height={100} animate={false}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(c.querySelector('style')).toBeNull();
@@ -100,7 +100,7 @@ describe('react SVG 动画', () => {
   it('交互 track（manual）→ WAAPI 桥调 element.animate', async () => {
     await mount(
       <Layout width={100} height={100}>
-        <Node id="a" position={[0, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+        <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(animateSpy).toHaveBeenCalled();
@@ -117,7 +117,7 @@ describe('preset 集成', () => {
   it('<Layout animations={[cameraTo(...)]}> → SVG 输出含镜头 @keyframes', async () => {
     const c = await mount(
       <Layout width={100} height={100} animations={[cameraTo({ from: [0, 0, 100, 100], to: [25, 25, 50, 50] })]}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={[spin()]} />
+        <Node id="a" position={[0, 0]} animations={[spin()]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     const style = c.querySelector('style');
@@ -134,7 +134,15 @@ describe('preset 集成', () => {
       version: 1,
       viewBox: { x: 0, y: 0, width: 100, height: 100 },
       animations: [irAnimation],
-      children: [{ type: 'node', id: 'a', position: [0, 0], fill: 'red', minimumSize: 2 }],
+      children: [
+        {
+          type: 'node',
+          id: 'a',
+          position: [0, 0],
+          style: { fill: 'red' },
+          layout: { minimumSize: 2 },
+        },
+      ],
     };
 
     const c = await mount(<Layout width={100} height={100} ir={ir} animations={[propAnimation]} />);
@@ -150,7 +158,7 @@ describe('命令式动画句柄（animationRef）', () => {
     const ref = createRef<AnimationControls | null>();
     await mount(
       <Layout width={100} height={100} animationRef={ref}>
-        <Node id="a" position={[0, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+        <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(ref.current).not.toBeNull();
@@ -163,7 +171,7 @@ describe('命令式动画句柄（animationRef）', () => {
     const ref = createRef<AnimationControls | null>();
     await mount(
       <Layout width={100} height={100} animationRef={ref} runtime={{ mode: 'static' }}>
-        <Node id="a" position={[0, 0]} stroke="#000" minimumSize={2} animations={MANUAL} />
+        <Node id="a" position={[0, 0]} animations={MANUAL} style={{ stroke: '#000' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(ref.current).not.toBeNull();
@@ -174,7 +182,7 @@ describe('命令式动画句柄（animationRef）', () => {
     const ref = createRef<AnimationControls | null>();
     await mount(
       <Layout renderer="canvas" width={100} height={100} animationRef={ref}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(ref.current).not.toBeNull();
@@ -185,7 +193,7 @@ describe('命令式动画句柄（animationRef）', () => {
     const ref = createRef<AnimationControls | null>();
     await mount(
       <Layout width={100} height={100} animationRef={ref}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} />
+        <Node id="a" position={[0, 0]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(ref.current).toBeNull();
@@ -196,7 +204,7 @@ describe('react canvas 动画', () => {
   it('renderer="canvas" + load track → 起 rAF 时钟', async () => {
     await mount(
       <Layout renderer="canvas" width={100} height={100}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(rafSpy).toHaveBeenCalled();
@@ -205,7 +213,7 @@ describe('react canvas 动画', () => {
   it('renderer="canvas" + animate={false} → 不起 rAF（静态）', async () => {
     await mount(
       <Layout renderer="canvas" width={100} height={100} animate={false}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(rafSpy).not.toHaveBeenCalled();
@@ -218,7 +226,7 @@ describe('react canvas 动画', () => {
     );
     await mount(
       <Layout renderer="canvas" width={100} height={100} animate={true}>
-        <Node id="a" position={[0, 0]} fill="red" minimumSize={2} animations={FADE} />
+        <Node id="a" position={[0, 0]} animations={FADE} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
       </Layout>,
     );
     expect(rafSpy).toHaveBeenCalled();

@@ -8,7 +8,7 @@ import { pointTransformOperationOf, previewControlContract } from './point-trans
 import { regionOrders } from './point-transform.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Plot data={regionOrders} width={620} height={280} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Plot data={regionOrders} width={620} height={280}>
     <PointMark x="region" y="orders" fill="#94a3b8" opacity={0.35} minimumSize={6} />
     <PointMark
       x="region"

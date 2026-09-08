@@ -60,7 +60,7 @@ const formTextOf = (values: PreviewControlValuesFor<typeof flowBasicControls>): 
 
 /** Render the English form submission flow with explicit controls values */
 export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof flowBasicControls>): ReactElement => (
-  <FlowDiagram width={740} height={220} style={{ maxWidth: '100%', height: 'auto' }}>
+  <FlowDiagram>
     <FlowEntities
       items={[
         { id: 'user-input', text: 'User input', role: 'participant' },
@@ -69,7 +69,7 @@ export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof fl
           text: formTextOf(values),
           role: values.formRole,
           ...statusProps(values.formStatus),
-          style: {
+          layout: {
             align: isTextAlign(values.formTextAlign) ? values.formTextAlign : undefined,
             lineHeight: values.formLineHeight,
             maxTextWidth: values.formMaxTextWidth,

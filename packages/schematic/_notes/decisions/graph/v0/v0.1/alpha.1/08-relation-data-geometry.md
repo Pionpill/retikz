@@ -5,6 +5,8 @@
 - 修订日期：2026-08-23
 - 关联：[Entity contract](./07-entity-data-geometry.md) · [Graph context](./09-composable-graph-context.md) · [Standard Shape 与 Marker](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/01-diagram-shapes-and-endpoint-markers.md)
 
+> Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](../alpha.2/07-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
+
 ## 背景与目标
 
 Relation 是带稳定端点和 Graph 语义、最终下沉为一个 Core Path 的正式元素。它需要 role、kind、predicate、direction 与 endpoint marker 等领域契约，但 route、labels 和实例样式已经由 Core Path 表达，不需要再按 identity 拆分 geometry 与 presentation

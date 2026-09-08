@@ -102,13 +102,13 @@ const nodesOf = (layer: IRScope): Array<IRNode> => {
 };
 
 const nodeWidth = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.width ?? size?.default ?? 0;
 };
 
 const nodeHeight = (node: IRNode): number => {
-  const size = node.minimumSize;
+  const size = node.layout?.minimumSize;
   if (typeof size === 'number') return size;
   return size?.height ?? size?.default ?? 0;
 };
@@ -200,9 +200,9 @@ describe('rule cartesian line 几何', () => {
       cartOpts,
     ).children[0] as IRScope;
     // 2 色 → 2 个分色子 Scope（各带 pathDefault.stroke）
-    const colorScopes = (layer.children as Array<{ type?: string; pathDefault?: { stroke?: string } }>).filter(
-      c => c.type === 'scope' && c.pathDefault?.stroke !== undefined,
-    );
+    const colorScopes = (
+      layer.children as Array<{ type?: string; defaults?: { path?: { style?: { stroke?: string } } } }>
+    ).filter(c => c.type === 'scope' && c.defaults?.path?.style?.stroke !== undefined);
     expect(colorScopes).toHaveLength(2);
     expect(pathsOf(layer)).toHaveLength(3);
   });
@@ -213,7 +213,7 @@ describe('rule cartesian line 几何', () => {
       encoding: { y: { value: 80 }, color: { value: 'crimson' } },
     };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
-    expect((layer.pathDefault as { stroke?: string }).stroke).toBe('crimson');
+    expect(layer.defaults?.path?.style?.stroke).toBe('crimson');
   });
 
   it('constant-rule-with-color-field-fail-loud', () => {
@@ -298,7 +298,7 @@ describe('rule cartesian band 几何（projectCell rect）', () => {
       yTo: 90,
     };
     const layer = lowerMark(mark, [{}], cartFrame()) as IRScope;
-    expect((layer.nodeDefault as { fill?: string }).fill).toBe('amber');
+    expect(layer.defaults?.node?.style?.fill).toBe('amber');
   });
 
   it('rule-band-compiles-to-scene', () => {
@@ -668,7 +668,16 @@ describe('rule polar', () => {
       version: 1 as const,
       type: 'scene' as const,
       children: [
-        { type: 'scope' as const, nodeDefault: { padding: 0, strokeWidth: 0 }, children: [node] },
+        {
+          type: 'scope' as const,
+          children: [node],
+          defaults: {
+            node: {
+              style: { strokeWidth: 0 },
+              layout: { padding: 0 },
+            },
+          },
+        },
         {
           type: 'path' as const,
           children: [

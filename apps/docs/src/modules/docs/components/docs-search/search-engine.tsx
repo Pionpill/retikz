@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
-import type { Page } from '@/modules/docs/data';
+import type { DocNavigationAreaId, I18nKey, Page, Section } from '@/modules/docs/data';
 
-import { getSectionsByModule, modules } from '@/modules/docs/data';
+import { aboutSection, getSectionsByArea, modules } from '@/modules/docs/data';
 import { buildDocPath } from '@/modules/docs/layout';
 
 import { type IndexedPage, type SearchIndex } from './search-index';
@@ -71,60 +71,80 @@ const buildFields = (pageLabel: string, indexed: IndexedPage | undefined): Reado
   return fields;
 };
 
+type SearchTranslator = (key: I18nKey) => unknown;
+
 /**
- * 把 data/ 里的 module → section → page 树扁平为 SearchEntry 列表
+ * 把一个 navigation area 的 section → page 树扁平为 SearchEntry 列表
+ * @description About 与四个真实模块共用同一条索引构建路径；无分组页面直接挂在 area 下，分组页面保留 section 与 parent 元数据
+ */
+const appendSearchEntries = (
+  out: Array<SearchEntry>,
+  areaId: DocNavigationAreaId,
+  areaLabel: string,
+  sections: Array<Section>,
+  t: SearchTranslator,
+  searchIndex: SearchIndex,
+  lang: Lang,
+): void => {
+  for (const section of sections) {
+    const ungrouped = !section.id || !section.label;
+    const sectionLabel = section.label ? String(t(section.label)) : undefined;
+    if (section.document && section.id && section.label) {
+      const path = buildDocPath(areaId, section.id, null);
+      const pageLabel = String(t(section.label));
+      const indexed = searchIndex[path]?.[lang];
+      out.push({
+        path,
+        label: pageLabel,
+        moduleLabel: areaLabel,
+        sectionLabel,
+        fields: buildFields(pageLabel, indexed),
+      });
+    }
+    const walk = (pages: Array<Page>, parent: { id: string; label: string } | null): void => {
+      for (const page of pages) {
+        const pageLabel = String(t(page.label));
+        if (page.children) {
+          walk(page.children, { id: page.id, label: pageLabel });
+          continue;
+        }
+        const path = ungrouped
+          ? buildDocPath(areaId, null, page.id)
+          : parent
+            ? buildDocPath(areaId, section.id ?? null, parent.id, page.id)
+            : buildDocPath(areaId, section.id ?? null, page.id);
+        const indexed = searchIndex[path]?.[lang];
+        out.push({
+          path,
+          label: pageLabel,
+          moduleLabel: areaLabel,
+          sectionLabel,
+          parentLabel: parent?.label,
+          fields: buildFields(pageLabel, indexed),
+        });
+      }
+    };
+    walk(section.pages, null);
+  }
+};
+
+/**
+ * 构建当前语言下的全部文档搜索条目
  * @description i18n 切换语言时 label 自动重算；searchIndex 异步加载完后 fields 自动扩展（label 字段无依赖，body 字段按 lang 取索引）
  */
+export const buildSearchEntries = (t: SearchTranslator, searchIndex: SearchIndex, lang: Lang): Array<SearchEntry> => {
+  const out: Array<SearchEntry> = [];
+  for (const module of modules) {
+    appendSearchEntries(out, module.id, String(t(module.label)), getSectionsByArea(module.id), t, searchIndex, lang);
+  }
+  appendSearchEntries(out, 'about', String(t('about.label')), aboutSection, t, searchIndex, lang);
+  return out;
+};
+
+/** 构建 React 搜索面板使用的 memoized 条目列表。 */
 export const useSearchEntries = (searchIndex: SearchIndex, lang: Lang): Array<SearchEntry> => {
   const { t } = useTranslation();
-  return useMemo(() => {
-    const out: Array<SearchEntry> = [];
-    for (const m of modules) {
-      const moduleLabel = String(t(m.label));
-      const sections = getSectionsByModule(m.id);
-      for (const section of sections) {
-        const ungrouped = !section.id || !section.label;
-        const sectionLabel = section.label ? String(t(section.label)) : undefined;
-        if (section.document && section.id && section.label) {
-          const path = buildDocPath(m.id, section.id, null);
-          const pageLabel = String(t(section.label));
-          const indexed = searchIndex[path]?.[lang];
-          out.push({
-            path,
-            label: pageLabel,
-            moduleLabel,
-            sectionLabel,
-            fields: buildFields(pageLabel, indexed),
-          });
-        }
-        const walk = (pages: Array<Page>, parent: { id: string; label: string } | null) => {
-          for (const page of pages) {
-            const pageLabel = String(t(page.label));
-            if (page.children) {
-              walk(page.children, { id: page.id, label: pageLabel });
-              continue;
-            }
-            const path = ungrouped
-              ? `/${m.id}/${page.id}`
-              : parent
-                ? `/${m.id}/${section.id}/${parent.id}/${page.id}`
-                : `/${m.id}/${section.id}/${page.id}`;
-            const indexed = searchIndex[path]?.[lang];
-            out.push({
-              path,
-              label: pageLabel,
-              moduleLabel,
-              sectionLabel,
-              parentLabel: parent?.label,
-              fields: buildFields(pageLabel, indexed),
-            });
-          }
-        };
-        walk(section.pages, null);
-      }
-    }
-    return out;
-  }, [searchIndex, lang, t]);
+  return useMemo(() => buildSearchEntries(key => t(key), searchIndex, lang), [searchIndex, lang, t]);
 };
 
 /**

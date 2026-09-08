@@ -67,12 +67,15 @@ const textNodeBoundsOf = (node: IRNode, fallbackFontSize: number): TextNodeBound
   if (node.text === undefined || !Array.isArray(node.position)) return undefined;
   const [x, y] = node.position;
   if (typeof x !== 'number' || typeof y !== 'number') return undefined;
-  const authoredFontSize = node.font?.size;
+  const authoredFontSize = node.style?.font?.size;
   const fontSize = typeof authoredFontSize === 'number' ? authoredFontSize : fallbackFontSize;
-  const width = Math.min(estimateLabelWidth(textBlockMeasureText(node.text), fontSize), node.maxTextWidth ?? Infinity);
-  const height = typeof node.lineHeight === 'number' ? node.lineHeight : fontSize;
-  const localMinX = node.align === 'start' ? 0 : node.align === 'end' ? -width : -width / 2;
-  const localMaxX = node.align === 'start' ? width : node.align === 'end' ? 0 : width / 2;
+  const width = Math.min(
+    estimateLabelWidth(textBlockMeasureText(node.text), fontSize),
+    node.layout?.maxTextWidth ?? Infinity,
+  );
+  const height = typeof node.layout?.lineHeight === 'number' ? node.layout.lineHeight : fontSize;
+  const localMinX = node.layout?.align === 'start' ? 0 : node.layout?.align === 'end' ? -width : -width / 2;
+  const localMaxX = node.layout?.align === 'start' ? width : node.layout?.align === 'end' ? 0 : width / 2;
   const localMinY = -height / 2;
   const localMaxY = height / 2;
   const radians = ((node.rotate ?? 0) * Math.PI) / 180;

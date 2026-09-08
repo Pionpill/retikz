@@ -1,6 +1,6 @@
 # ADR-05：Table style preset 与 inherited token resolution
 
-- 状态：Accepted
+- 状态：Superseded by [ADR-07](./07-table-source-default-fragments.md)
 - 决策日期：2026-08-07
 - 关联：[alpha.3 roadmap](./roadmap.md) · [ADR-02 presentation](./02-presentation-context-and-cell-appearance.md) · [ADR-03 rules](./03-cell-selector-and-rule-cascade.md) · [ADR-04 visual encoding](./04-conditional-visual-encoding-and-scale.md) · [Core ADR-13：Theme Token Namespace Context 与共享颜色](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/13-theme-token-namespace-context.md) · [Table 表格可视化完备设计](../../../../../architecture/table-visualization-complete.md)
 - Superseded in part by：[Core ADR-15：轻量 Theme IR 与可扩展 Style 解析](../../../../../../../kernel/_notes/decisions/v0/v0.5/alpha.2/15-lightweight-theme-resolution.md) 已移除持久化 namespace bag、Theme token Definition / Contribution 与 Core token registry。本文保留 Table token owner、shared categorical projection、本地覆盖、级联和最终消费决策

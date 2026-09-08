@@ -4,17 +4,13 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 
 /** 同一次 Table transaction 同源生成 Scene 与 typed manifest */
 const Demo: FC = () => (
-  <Layout width={600} height={210} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="semantic"
       position={[-220, -46]}
-      minimumSize={{ width: 142, height: 42 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={14}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 142, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Semantic model</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -24,13 +20,9 @@ const Demo: FC = () => (
     <Node
       id="layout"
       position={[-220, 46]}
-      minimumSize={{ width: 142, height: 42 }}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={14}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 142, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Resolved layout</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -40,13 +32,9 @@ const Demo: FC = () => (
     <Node
       id="transaction"
       position={[0, 0]}
-      minimumSize={{ width: 132, height: 52 }}
-      stroke="gray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      align="middle"
-      lineHeight={15}
+      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16 }}
+      layout={{ minimumSize: { width: 132, height: 52 }, align: 'middle', lineHeight: 15 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Table transaction</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -56,13 +44,9 @@ const Demo: FC = () => (
     <Node
       id="scene"
       position={[220, -46]}
-      minimumSize={{ width: 136, height: 42 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={14}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 136, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Scene</Text>
       <Text fill="gray" font={{ size: 10 }}>
@@ -72,13 +56,9 @@ const Demo: FC = () => (
     <Node
       id="manifest"
       position={[220, 46]}
-      minimumSize={{ width: 136, height: 42 }}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      align="middle"
-      lineHeight={14}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
+      layout={{ minimumSize: { width: 136, height: 42 }, align: 'middle', lineHeight: 14 }}
     >
       <Text font={{ size: 13, weight: 'bold' }}>Manifest</Text>
       <Text fill="gray" font={{ size: 10 }}>

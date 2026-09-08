@@ -7,11 +7,18 @@ const chinesePage = readFileSync(resolve(pathRoot, 'index.zh.mdx'), 'utf8');
 const englishPage = readFileSync(resolve(pathRoot, 'index.en.mdx'), 'utf8');
 
 describe('PathMark 示例渐进结构', () => {
-  it('按单路径到边界行为只保留五个核心 playground', () => {
+  it('按单路径、极坐标插值到边界行为组织六个核心 playground', () => {
     const cases = [
       {
         page: chinesePage,
-        headings: ['### 基础用法', '### 系列与标签', '### 连接与样式', '### 闭合与填充', '### 缺失值处理'],
+        headings: [
+          '### 基础用法',
+          '### 系列与标签',
+          '### 连接与样式',
+          '### 极坐标插值',
+          '### 闭合与填充',
+          '### 缺失值处理',
+        ],
       },
       {
         page: englishPage,
@@ -19,6 +26,7 @@ describe('PathMark 示例渐进结构', () => {
           '### Basic Usage',
           '### Series and Labels',
           '### Connection and Style',
+          '### Polar Interpolation',
           '### Closure and Fill',
           '### Missing Values',
         ],
@@ -30,11 +38,11 @@ describe('PathMark 示例渐进结构', () => {
 
       expect(positions.every(position => position >= 0)).toBe(true);
       expect(positions).toEqual([...positions].sort((a, b) => a - b));
-      expect(page.match(/<ComponentPreview/g)).toHaveLength(5);
+      expect(page.match(/<ComponentPreview/g)).toHaveLength(6);
       expect(page).not.toContain("files={['line-color-split'");
       expect(page).not.toContain("files={['line-transform'");
       expect(page).not.toContain("files={['line-paint'");
-      expect(page).not.toContain("files={['line-radar'");
+      expect(page).toContain("files={['line-radar'");
       expect(page).not.toContain("files={['line-stack-area'");
     }
   });

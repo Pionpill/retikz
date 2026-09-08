@@ -1,7 +1,7 @@
 import * as corePackage from '@retikz/core';
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
-import { PlotThemeToken, resolvePlotTheme } from '@retikz/plot';
-import { resolveTableThemeTokens } from '@retikz/table';
+import { resolvePlotTheme } from '@retikz/plot';
+import { resolveTableThemeDefaults } from '@retikz/table';
 import { globSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -54,9 +54,9 @@ describe('docs-owned theme presets', () => {
 
     const academicTheme = themeOf(PreviewThemeStyle.Academic);
     const academicColor = academicTheme.colors.categorical[0];
-    expect(graphByName.get(PreviewThemeStyle.Academic)?.resolve(academicTheme)).toEqual({
+    expect(graphByName.get(PreviewThemeStyle.Academic)?.resolve(academicTheme).defaults).toEqual({
       entity: {
-        tokens: {
+        style: {
           color: academicColor,
           textColor: 'contrast',
           fill: 0.15,
@@ -64,53 +64,45 @@ describe('docs-owned theme presets', () => {
           strokeWidth: 1,
         },
       },
-      relation: { tokens: { color: foreground, strokeWidth: 1.25 } },
+      relation: { style: { color: foreground, strokeWidth: 1.25 } },
       group: {
-        tokens: {
-          background: { fill: 'none' },
-          border: { stroke: foreground, strokeWidth: 1, dashPattern: [4, 3] },
-          cornerRadius: 0,
-        },
+        background: { fill: 'none' },
+        border: { stroke: foreground, strokeWidth: 1, dashPattern: [4, 3] },
+        cornerRadius: 0,
       },
       block: {
-        tokens: {
-          background: { fill: 'none' },
-          border: { stroke: foreground, strokeWidth: 1 },
-          cornerRadius: 0,
-        },
+        background: { fill: 'none' },
+        border: { stroke: foreground, strokeWidth: 1 },
+        cornerRadius: 0,
       },
     });
 
     const vibrantTheme = themeOf(PreviewThemeStyle.Vibrant);
-    expect(graphByName.get(PreviewThemeStyle.Vibrant)?.resolve(vibrantTheme)).toEqual({
+    expect(graphByName.get(PreviewThemeStyle.Vibrant)?.resolve(vibrantTheme).defaults).toEqual({
       entity: {
-        tokens: {
+        style: {
           color: vibrantTheme.colors.categorical[0],
           textColor: 'contrast',
           fill: 1,
           stroke: 'none',
         },
       },
-      relation: { tokens: { color: vibrantTheme.colors.categorical[1], strokeWidth: 1.5 } },
+      relation: { style: { color: vibrantTheme.colors.categorical[1], strokeWidth: 1.5 } },
       group: {
-        tokens: {
-          background: { fill: vibrantTheme.colors.categorical[0], fillOpacity: 0.08 },
-          border: { stroke: vibrantTheme.colors.categorical[0], strokeWidth: 1.5, strokeOpacity: 0.7 },
-          cornerRadius: 12,
-        },
+        background: { fill: vibrantTheme.colors.categorical[0], fillOpacity: 0.08 },
+        border: { stroke: vibrantTheme.colors.categorical[0], strokeWidth: 1.5, strokeOpacity: 0.7 },
+        cornerRadius: 12,
       },
       block: {
-        tokens: {
-          background: { fill: vibrantTheme.colors.categorical[1], fillOpacity: 0.12 },
-          border: { stroke: vibrantTheme.colors.categorical[1], strokeWidth: 1.5, strokeOpacity: 0.85 },
-          cornerRadius: 12,
-        },
+        background: { fill: vibrantTheme.colors.categorical[1], fillOpacity: 0.12 },
+        border: { stroke: vibrantTheme.colors.categorical[1], strokeWidth: 1.5, strokeOpacity: 0.85 },
+        cornerRadius: 12,
       },
     });
 
     const cleanTheme = themeOf(PreviewThemeStyle.Clean);
-    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({
-      entity: { tokens: { textColor: foreground, fill: 'none' } },
+    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme).defaults).toEqual({
+      entity: { style: { textColor: foreground, fill: 'none' } },
     });
 
     const flowByName = new Map(PreviewFlowThemeStyles.map(definition => [definition.name, definition]));
@@ -135,44 +127,44 @@ describe('docs-owned theme presets', () => {
       if (core === undefined) throw new Error(`missing Core definition for ${definition.name}`);
       const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
       const resolved = resolvePlotTheme({ style: definition.name, mode, colors }, {}, [definition]);
-      expect(resolved.tokens[PlotThemeToken.AxisLineEnabled]).toBe(definition.name === PreviewThemeStyle.Academic);
+      expect(resolved.defaults.axis?.line !== false).toBe(definition.name === PreviewThemeStyle.Academic);
       const expectedStyleRules =
         definition.name === PreviewThemeStyle.Academic
           ? [
               {
                 select: { dimension: ['x', 'y'] },
-                tokens: {
-                  [PlotThemeToken.AxisGridEnabled]: false,
-                  [PlotThemeToken.AxisGridIncludeDomain]: false,
-                },
+                axis: { grid: false },
               },
             ]
           : definition.name === PreviewThemeStyle.Vibrant
             ? [
                 {
                   select: { dimension: ['x', 'y'] },
-                  tokens: {
-                    [PlotThemeToken.AxisGridEnabled]: true,
-                    [PlotThemeToken.AxisGridIncludeDomain]: false,
+                  axis: {
+                    grid: {
+                      stroke: mode === ThemeMode.Light ? '#FFFFFF' : '#000000',
+                      strokeWidth: 1,
+                      drawOpacity: 1,
+                      includeDomain: false,
+                    },
                   },
                 },
               ]
             : [
                 {
                   select: { dimension: ['x', 'y'] },
-                  tokens: {
-                    [PlotThemeToken.AxisGridEnabled]: false,
-                    [PlotThemeToken.AxisGridIncludeDomain]: false,
-                  },
+                  axis: { grid: false },
                 },
                 {
                   select: { dimension: 'y' },
-                  tokens: { [PlotThemeToken.AxisGridEnabled]: true },
+                  axis: {
+                    grid: { stroke: 'currentColor', strokeWidth: 1, drawOpacity: 0.15, includeDomain: true },
+                  },
                 },
               ];
-      expect(resolved.tokenRules.slice(1).map(source => source.rule)).toEqual(expectedStyleRules);
-      expect(resolved.tokens[PlotThemeToken.PlotPaletteShape]).toHaveLength(8);
-      expect(resolved.tokens[PlotThemeToken.PlotPaletteShape][4]).toEqual({
+      expect(resolved.rules.slice(1).map(source => source.rule)).toEqual(expectedStyleRules);
+      expect(resolved.palette.shape).toHaveLength(8);
+      expect(resolved.palette.shape[4]).toEqual({
         type: 'polygon',
         params: { sides: 3, rotate: -90 },
       });
@@ -194,22 +186,24 @@ describe('docs-owned theme presets', () => {
     if (academic === undefined || vibrant === undefined || clean === undefined)
       throw new Error('missing Table definition');
 
-    const academicTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Academic), {}, [academic]).tokens;
-    expect(academicTokens['cell.content.font.family']).toBe('serif');
-    expect(academicTokens['table.border.top']).toEqual({
+    const academicDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Academic), [academic]).defaults;
+    expect(academicDefaults.appearanceDefaults?.body?.content?.defaults?.node?.style?.font?.family).toBe('serif');
+    expect(academicDefaults.layout?.borders?.outer?.top).toEqual({
       kind: 'line',
       stroke: mode === ThemeMode.Light ? '#111111' : '#f5f5f5',
       width: 1.2,
     });
 
-    const vibrantTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Vibrant), {}, [vibrant]).tokens;
-    expect(vibrantTokens['cell.background.fill']).toBe(mode === ThemeMode.Light ? '#e5ecf6' : '#111827');
-    expect(vibrantTokens['table.border.horizontal']).toMatchObject({ kind: 'line', width: 1 });
+    const vibrantDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Vibrant), [vibrant]).defaults;
+    expect(vibrantDefaults.appearanceDefaults?.body?.background?.fill).toBe(
+      mode === ThemeMode.Light ? '#e5ecf6' : '#111827',
+    );
+    expect(vibrantDefaults.layout?.borders?.horizontal).toMatchObject({ kind: 'line', width: 1 });
 
-    const cleanTokens = resolveTableThemeTokens(themeOf(PreviewThemeStyle.Clean), {}, [clean]).tokens;
-    expect(cleanTokens['cell.background.fill']).toBeNull();
-    expect(cleanTokens['table.border.horizontal']).toBeNull();
-    expect(cleanTokens['data.sequential']).toEqual(
+    const cleanDefaults = resolveTableThemeDefaults(themeOf(PreviewThemeStyle.Clean), [clean]).defaults;
+    expect(cleanDefaults.appearanceDefaults?.body?.background?.fill).toBe('none');
+    expect(cleanDefaults.layout?.borders?.horizontal).toEqual({ kind: 'none' });
+    expect(cleanDefaults.visualDefaults?.sequential).toEqual(
       mode === ThemeMode.Light ? ['#eff6ff', '#1d4ed8'] : ['#172554', '#60a5fa'],
     );
   });

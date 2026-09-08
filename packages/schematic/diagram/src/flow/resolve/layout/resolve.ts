@@ -1,9 +1,9 @@
 import type { EffectiveFlowLayout, FlowLayoutDefinition, FlowLayoutRouting } from '../../contract';
-import type { IRFlowLayoutIntent } from '../../schemas';
+import type { IRFlowLayoutIntent, IRFlowRouting } from '../../schemas';
 
 const resolveFlowLayoutRouting = (
   definition: FlowLayoutDefinition,
-  intent: IRFlowLayoutIntent['routing'] | undefined,
+  intent: IRFlowRouting | undefined,
   inheritedRouting: FlowLayoutRouting | undefined,
 ): FlowLayoutRouting => {
   const routing = intent ?? inheritedRouting ?? definition.defaults.routing;
@@ -23,9 +23,10 @@ export const resolveEffectiveFlowLayout = (
   definition: FlowLayoutDefinition,
   intent: IRFlowLayoutIntent,
   inheritedLayout?: EffectiveFlowLayout,
+  routing?: IRFlowRouting,
 ): EffectiveFlowLayout => ({
   direction: intent.direction ?? inheritedLayout?.direction ?? definition.defaults.direction,
   nodeGap: intent.nodeGap ?? inheritedLayout?.nodeGap ?? definition.defaults.nodeGap,
   rankGap: intent.rankGap ?? inheritedLayout?.rankGap ?? definition.defaults.rankGap,
-  routing: resolveFlowLayoutRouting(definition, intent.routing, inheritedLayout?.routing),
+  routing: resolveFlowLayoutRouting(definition, routing, inheritedLayout?.routing),
 });

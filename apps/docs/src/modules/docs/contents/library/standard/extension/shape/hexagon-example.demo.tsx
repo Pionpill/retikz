@@ -9,19 +9,12 @@ import { hexagonExampleControls, previewControlContract } from './hexagon-exampl
 
 export const previewControls = hexagonExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={380}
-    height={220}
-    viewBox={{ x: -120, y: -80, width: 240, height: 160 }}
-    shapes={[HexagonShapeDefinition]}
-  >
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} shapes={[HexagonShapeDefinition]}>
     <Node
       position={[0, 0]}
-      minimumSize={{ width: 140, height: 72 }}
       shape={{ type: 'hexagon', params: { shoulderDepth: values.shoulderDepth, cornerRadius: values.cornerRadius } }}
-      fill="#ffedd5"
-      stroke="darkorange"
-      strokeWidth={1.5}
+      style={{ fill: '#ffedd5', stroke: 'darkorange', strokeWidth: 1.5 }}
+      layout={{ minimumSize: { width: 140, height: 72 } }}
     />
   </Layout>
 ));

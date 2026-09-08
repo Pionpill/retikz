@@ -277,7 +277,7 @@ describe('buildPreviewSource', () => {
       data: { reference: 'chart.data' },
       layout: { width: 320, height: 200 },
       recipe: { chartType: 'scatter', encodings: { x: 'income', y: 'life' } },
-      presentation: { title: 'Income and life expectancy', source: 'World Bank' },
+      presentation: { title: { text: 'Income and life expectancy' }, source: { text: 'World Bank' } },
     });
     expect(result.previewIr?.sourceIr.children[0]).not.toHaveProperty('plot');
     expect(ir?.files[0]?.code).not.toContain('__chart.scatter.scale');
@@ -287,8 +287,8 @@ describe('buildPreviewSource', () => {
       "import { createScatterChart } from '@retikz/chart-vanilla/point/scatter'",
     );
     expect(vanilla?.files[0]?.code).not.toContain("import { createChart, renderChart } from '@retikz/chart-vanilla'");
-    expect(vanilla?.files[0]?.code).toContain("title: 'Income and life expectancy'");
-    expect(vanilla?.files[0]?.code).toContain("source: 'World Bank'");
+    expect(vanilla?.files[0]?.code).toContain("title: { text: 'Income and life expectancy' }");
+    expect(vanilla?.files[0]?.code).toContain("source: { text: 'World Bank' }");
     expect(vanilla?.files[0]?.code).toContain("x: 'income'");
     expect(vanilla?.files[0]?.code).toContain("y: 'life'");
     expect(vanilla?.files[0]?.code).not.toContain('__chart.scatter.scale');
@@ -311,7 +311,7 @@ describe('buildPreviewSource', () => {
         chartType: 'bubble',
         encodings: { x: 'income', y: 'life', size: 'population' },
       },
-      presentation: { title: 'Income, life expectancy, and population' },
+      presentation: { title: { text: 'Income, life expectancy, and population' } },
     });
     expect(result.source?.ir?.files[0]?.code).toContain('"chartType": "bubble"');
     expect(vanilla?.files[0]?.code).toContain("import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble'");

@@ -1,6 +1,6 @@
 import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 
-import { BendDirection, BoxSpacingSchema, FoldStepVia, JsonObjectSchema, PaintSchema } from '@retikz/core';
+import { BendDirection, BoxSpacingSchema, FoldStepVia, PaintSchema } from '@retikz/core';
 import {
   AnchorRefSchema,
   PathDecorationSchema,
@@ -25,7 +25,12 @@ import {
   ShadowPreset,
   ShapeValueSchema,
 } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import {
+  JsonValueSchema,
+  NonBlankStringSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import {
   array,
@@ -158,10 +163,14 @@ export const RelationStepLabelSchema = StepLabelSchema.extend({
 }).describe('Relation path step label; lowered to core StepLabelSchema after field bindings are resolved');
 
 export const RelationPathSpecificOptionsSchema = strictObject({
-  dashPattern: PathStrokeSchema.shape.dashPattern,
-  fillRule: PathFillSchema.shape.fillRule,
-  lineCap: PathStrokeSchema.shape.lineCap,
-  lineJoin: PathStrokeSchema.shape.lineJoin,
+  style: strictObject({
+    dashPattern: PathStrokeSchema.shape.dashPattern,
+    fillRule: PathFillSchema.shape.fillRule,
+    lineCap: PathStrokeSchema.shape.lineCap,
+    lineJoin: PathStrokeSchema.shape.lineJoin,
+  })
+    .partial()
+    .describe('Path-only dash, fill rule, cap and join overrides'),
   roundedCorners: PathGeometrySchema.shape.roundedCorners,
   rotate: PathGeometrySchema.shape.rotate,
   scale: PathGeometrySchema.shape.scale,
@@ -1096,7 +1105,7 @@ export const MarkSchema = discriminatedUnion('type', [
   'Mark union: dimensional marks (point / path / interval), reference marks, and source-target relation marks',
 );
 
-export const CustomMarkSchema = looseObject({
+const CustomMarkObjectSchema = looseObject({
   type: NonBlankStringSchema.refine(type => !BUILTIN_MARK_TYPES.has(type), {
     message: 'custom mark type must not collide with a built-in mark type',
   }).describe(
@@ -1117,20 +1126,11 @@ export const CustomMarkSchema = looseObject({
   encoding: EncodingSchema.optional().describe(
     'Position / non-position channels; reuses the shared encoding so a custom mark contributes to scale inference like built-in marks',
   ),
-})
-  .superRefine((operation, ctx) => {
-    const result = JsonObjectSchema.safeParse(operation);
-    if (!result.success) {
-      ctx.addIssue({
-        code: 'custom',
-        message:
-          'custom mark operation must be a JSON-serializable object; functions, undefined, NaN, and Infinity are not allowed',
-      });
-    }
-  })
-  .describe(
-    'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.markDefinitions',
-  );
+});
+
+export const CustomMarkSchema = CustomMarkObjectSchema.catchall(JsonValueSchema).describe(
+  'Custom mark operation: type is any non-built-in identifier; its config is validated at lowering time against the matching MarkDefinition supplied via options.markDefinitions',
+);
 
 export const MarkOperationSchema = union([MarkSchema, CustomMarkSchema]).describe(
   'Mark operation union: built-in mark configs plus custom type open config operations validated by a runtime MarkDefinition',

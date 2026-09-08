@@ -1,5 +1,6 @@
-import type { IRJsonObject, IRScope } from '@retikz/core';
+import type { IRScope } from '@retikz/core';
 import type { DataView } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
@@ -67,7 +68,7 @@ export type ScopedFramesResolveContext = {
 export type ScopedFramesResolution = {
   coordinateScopes: CoordinateScopeRegistry;
   scopeById: Map<string, CoordinateScopeRegistryEntry>;
-  scopeContextOf: (scope: CoordinateScopeRegistryEntry) => IRJsonObject;
+  scopeContextOf: (scope: CoordinateScopeRegistryEntry) => JsonObject;
   axisPolicyFor: (
     resolve: CompositionResolve | undefined,
     context: { hasFacets: boolean; hasScaffolds: boolean },
@@ -125,9 +126,9 @@ export const resolveScopedFrames = (context: ScopedFramesResolveContext): Scoped
     resolveVisibleGuideTicks,
     ...overrides,
   });
-  const scopeContextOf = (scope: CoordinateScopeRegistryEntry): IRJsonObject => {
+  const scopeContextOf = (scope: CoordinateScopeRegistryEntry): JsonObject => {
     if (node.composition === undefined) return {};
-    const scopeMeta: IRJsonObject = { coordinateView: scope.id };
+    const scopeMeta: JsonObject = { coordinateView: scope.id };
     if (scope.placement?.kind === 'track') {
       scopeMeta.arrangement = scope.placement.scaffold;
       scopeMeta.track = scope.placement.track;

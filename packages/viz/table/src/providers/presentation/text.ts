@@ -11,8 +11,7 @@ export const TEXT_CELL_PRESENTATION = defineCellPresentation({
     type: 'node',
     position: [0, 0],
     text: value === null ? '' : String(value),
-    stroke: 'none',
-    fill: 'none',
-    padding: 0,
+    style: { stroke: 'none', fill: 'none' },
+    layout: { padding: 0 },
   }),
 });

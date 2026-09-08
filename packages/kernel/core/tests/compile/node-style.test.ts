@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { EllipsePrim, PathPrim, RectPrim, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
@@ -27,7 +27,14 @@ describe('Node 颜色 / 不透明度', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: 'A', textColor: 'red' }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'A',
+          style: { textColor: 'red' },
+        },
+      ],
     };
     expect(findText(ir)?.fill).toBe('red');
   });
@@ -45,7 +52,14 @@ describe('Node 颜色 / 不透明度', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], text: 'A', opacity: 0.5 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'A',
+          style: { opacity: 0.5 },
+        },
+      ],
     };
     expect(findRect(ir)?.opacity).toBe(0.5);
     expect(findText(ir)?.opacity).toBe(0.5);
@@ -55,7 +69,13 @@ describe('Node 颜色 / 不透明度', () => {
     const rectIR: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], fill: '#fef3c7', fillOpacity: 0.4 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { fill: '#fef3c7', fillOpacity: 0.4 },
+        },
+      ],
     };
     expect(findRect(rectIR)?.fillOpacity).toBe(0.4);
 
@@ -67,8 +87,7 @@ describe('Node 颜色 / 不透明度', () => {
           type: 'node',
           shape: 'circle',
           position: [0, 0],
-          fill: '#fef3c7',
-          fillOpacity: 0.4,
+          style: { fill: '#fef3c7', fillOpacity: 0.4 },
         },
       ],
     };
@@ -82,8 +101,7 @@ describe('Node 颜色 / 不透明度', () => {
           type: 'node',
           shape: 'diamond',
           position: [0, 0],
-          fill: '#fef3c7',
-          fillOpacity: 0.4,
+          style: { fill: '#fef3c7', fillOpacity: 0.4 },
         },
       ],
     };
@@ -94,7 +112,13 @@ describe('Node 颜色 / 不透明度', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], strokeOpacity: 0.3 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { strokeOpacity: 0.3 },
+        },
+      ],
     };
     expect(findRect(ir)?.strokeOpacity).toBe(0.3);
   });
@@ -105,7 +129,13 @@ describe('Node 描边样式', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], dashed: true }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { dashed: true },
+        },
+      ],
     };
     expect(findRect(ir)?.dashPattern).toEqual([4, 2]);
   });
@@ -114,7 +144,13 @@ describe('Node 描边样式', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], dotted: true }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { dotted: true },
+        },
+      ],
     };
     expect(findRect(ir)?.dashPattern).toEqual([1, 2]);
   });
@@ -127,9 +163,7 @@ describe('Node 描边样式', () => {
         {
           type: 'node',
           position: [0, 0],
-          dashed: true,
-          dotted: true,
-          dashPattern: [8, 3, 2, 3],
+          style: { dashed: true, dotted: true, dashPattern: [8, 3, 2, 3] },
         },
       ],
     };
@@ -140,7 +174,13 @@ describe('Node 描边样式', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], dashed: true, dotted: true }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          style: { dashed: true, dotted: true },
+        },
+      ],
     };
     expect(findRect(ir)?.dashPattern).toEqual([4, 2]);
   });
@@ -165,7 +205,13 @@ describe('Node 尺寸约束', () => {
     const wide: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], minimumSize: { width: 100 } }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          layout: { minimumSize: { width: 100 } },
+        },
+      ],
     };
     expect(findRect(small)?.width).toBe(16);
     expect(findRect(wide)?.width).toBe(100);
@@ -177,7 +223,13 @@ describe('Node 尺寸约束', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], minimumSize: { height: 60 } }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          layout: { minimumSize: { height: 60 } },
+        },
+      ],
     };
     expect(findRect(ir)?.height).toBe(60);
     expect(findRect(ir)?.width).toBe(16);
@@ -187,7 +239,13 @@ describe('Node 尺寸约束', () => {
     const sym: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], minimumSize: 50 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          layout: { minimumSize: 50 },
+        },
+      ],
     };
     expect(findRect(sym)?.width).toBe(50);
     expect(findRect(sym)?.height).toBe(50);
@@ -201,7 +259,7 @@ describe('Node 尺寸约束', () => {
         {
           type: 'node',
           position: [0, 0],
-          minimumSize: { default: 30, width: 80 },
+          layout: { minimumSize: { default: 30, width: 80 } },
         },
       ],
     };
@@ -219,7 +277,7 @@ describe('Node 尺寸约束', () => {
           type: 'node',
           position: [0, 0],
           text: 'long enough text',
-          minimumSize: { width: 10 },
+          layout: { minimumSize: { width: 10 } },
         },
       ],
     };
@@ -232,7 +290,14 @@ describe('Node 尺寸约束', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], minimumSize: 50, scale: 2 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          scale: 2,
+          layout: { minimumSize: 50 },
+        },
+      ],
     };
     // 旧实现 minimum 不乘 scale → 仍 50；现 50×2 = 100
     expect(findRect(ir)?.width).toBe(100);
@@ -243,7 +308,14 @@ describe('Node 尺寸约束', () => {
     const ir: IRScene = {
       version: 1,
       type: 'scene',
-      children: [{ type: 'node', position: [0, 0], shape: { type: 'ellipse' }, minimumSize: 100 }],
+      children: [
+        {
+          type: 'node',
+          position: [0, 0],
+          shape: { type: 'ellipse' },
+          layout: { minimumSize: 100 },
+        },
+      ],
     };
     const e = findEllipse(ir);
     // 旧实现把 100 floor 进内框半轴(50)，circumscribe 再 ×√2 → rx≈70.7（直径≈141）；

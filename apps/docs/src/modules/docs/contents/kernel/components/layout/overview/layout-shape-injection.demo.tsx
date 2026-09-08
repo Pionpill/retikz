@@ -6,22 +6,22 @@ import { fileShape, FileShapeName } from './layout-file-shape';
 
 /** Layout 注入自定义 ShapeDefinition 的完整闭环 */
 const Demo: FC = () => (
-  <Layout width={320} height={130} shapes={[fileShape]}>
+  <Layout shapes={[fileShape]}>
     <Node
       id="ir-file"
       position={[-90, 0]}
       shape={FileShapeName}
-      minimumSize={{ width: 76, height: 96 }}
       text="IR"
-      fill="none"
+      style={{ fill: 'none' }}
+      layout={{ minimumSize: { width: 76, height: 96 } }}
     />
     <Node
       id="scene-file"
       position={[90, 0]}
       shape={FileShapeName}
-      minimumSize={{ width: 76, height: 96 }}
       text="Scene"
-      fill="none"
+      style={{ fill: 'none' }}
+      layout={{ minimumSize: { width: 76, height: 96 } }}
     />
     <Draw way={['ir-file', 'scene-file']} arrow="->" />
   </Layout>

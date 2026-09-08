@@ -11,6 +11,8 @@ SVG 是 retikz 的默认渲染器。它把编译好的图画成一棵真实的 `
 
 <ComponentPreview files="shared-scene" size="sm" hideCode />
 
+SVG 字符串输出默认使用 Scene.layout 的宽高作为显示尺寸。通常省略输出 width / height；只指定一个数值轴时，另一轴按内容比例推导。
+
 ## 怎么用
 
 **React**——`<Layout>` 默认就是 SVG，`renderer` 可省：

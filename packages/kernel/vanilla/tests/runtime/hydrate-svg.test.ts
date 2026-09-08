@@ -18,7 +18,15 @@ import { hydrate, mountSvg } from '../../src/dom';
 const idIr: IRScene = {
   version: 1,
   type: 'scene',
-  children: [{ type: 'node', id: 'a', position: [0, 0], shape: 'rectangle', minimumSize: { width: 40, height: 20 } }],
+  children: [
+    {
+      type: 'node',
+      id: 'a',
+      position: [0, 0],
+      shape: 'rectangle',
+      layout: { minimumSize: { width: 40, height: 20 } },
+    },
+  ],
 };
 
 /** 带 meta provenance 的 Node IR（验 context.meta / context.geometry） */
@@ -31,8 +39,8 @@ const metaIr: IRScene = {
       id: 'a',
       position: [0, 0],
       shape: 'rectangle',
-      minimumSize: { width: 40, height: 20 },
       meta: { series: 'sales', i: 3 },
+      layout: { minimumSize: { width: 40, height: 20 } },
     },
   ],
 };

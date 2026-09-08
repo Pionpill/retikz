@@ -107,5 +107,12 @@ export const previewControlContract = {
     scale: 1,
     rotate: 0,
   },
-  relatedApis: ['Node.padding', 'Node.margin', 'Node.minimumSize', 'Node.cornerRadius', 'Node.scale', 'Node.rotate'],
+  relatedApis: [
+    'Node.layout.padding',
+    'Node.layout.margin',
+    'Node.layout.minimumSize',
+    'Node.cornerRadius',
+    'Node.scale',
+    'Node.rotate',
+  ],
 } satisfies PreviewControlContract;

@@ -35,7 +35,7 @@ describe('Sugar 形状事件全链 DOM 派发', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={SIZE} height={SIZE}>
-          <Circle id="ring" center={[0, 0]} radius={20} fill="red" onClick={onClick} />
+          <Circle id="ring" center={[0, 0]} radius={20} onClick={onClick} style={{ fill: 'red' }} />
         </Layout>,
       );
     });
@@ -66,11 +66,11 @@ describe('Sugar 形状事件全链 DOM 派发', () => {
             id="ring"
             center={[0, 0]}
             radius={20}
-            fill="red"
             meta={{ series: 'donut', i: 2 }}
             onClick={(_event, received) => {
               context = received;
             }}
+            style={{ fill: 'red' }}
           />
         </Layout>,
       );
@@ -101,7 +101,13 @@ describe('Sugar 形状事件全链 DOM 派发', () => {
     await act(() => {
       root.render(
         <Layout renderer="svg" width={SIZE} height={SIZE}>
-          <Rectangle id="box" corner1={[0, 0]} corner2={[40, 30]} fill="blue" onPointerEnter={onPointerEnter} />
+          <Rectangle
+            id="box"
+            corner1={[0, 0]}
+            corner2={[40, 30]}
+            onPointerEnter={onPointerEnter}
+            style={{ fill: 'blue' }}
+          />
         </Layout>,
       );
     });
@@ -135,7 +141,7 @@ describe('Sugar 形状事件全链 DOM 派发', () => {
             outerRadius={30}
             innerRadius={12}
             points={5}
-            fill="gold"
+            style={{ fill: 'gold' }}
             onPointerDown={onPointerDown}
           />
         </Layout>,

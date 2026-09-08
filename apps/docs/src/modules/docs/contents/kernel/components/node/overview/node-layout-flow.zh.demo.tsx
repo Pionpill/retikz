@@ -4,67 +4,49 @@ import { Draw, Layout, Node } from '@retikz/react';
 
 /** Node 从 props 收敛到可见图元与命名几何的流程图 */
 const Demo: FC = () => (
-  <Layout width={560} height={290} style={{ maxWidth: '100%', height: 'auto' }}>
+  <Layout>
     <Node
       id="props"
       position={[-205, -55]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
       text={['Node props', '位置 · 内容 · 几何']}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     />
     <Node
       id="definitions"
       position={[-205, 70]}
-      stroke="darkorange"
-      fill="darkorange"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
     >
       shape / boundary 定义
     </Node>
     <Node
       id="layout"
       position={[-10, 0]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 15, weight: 'bold' }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 15, weight: 'bold' } }}
     >
       Node 布局
     </Node>
     <Node
       id="primitives"
       position={[195, -75]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
       text={['Scene 图元', '形状 · 文字 · 标签']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     />
     <Node
       id="geometry"
       position={[195, 20]}
-      stroke="dodgerblue"
-      fill="dodgerblue"
-      fillOpacity={0.08}
       cornerRadius={4}
-      font={{ size: 14 }}
       text={['命名几何', 'id · 锚点 · 连接面']}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
     />
     <Node
       id="consumers"
       position={[195, 110]}
-      stroke="dimgray"
-      fill="lightgray"
-      fillOpacity={0.16}
       cornerRadius={4}
-      font={{ size: 14 }}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
     >
       Path / Draw
     </Node>
@@ -77,7 +59,7 @@ const Demo: FC = () => (
       ]}
       arrow="->"
     />
-    <Draw way={['definitions', 'layout']} arrow="->" stroke="gray" dashPattern={[4, 3]} />
+    <Draw way={['definitions', 'layout']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
     <Draw
       way={[
         'layout',
@@ -93,8 +75,7 @@ const Demo: FC = () => (
         'geometry',
       ]}
       arrow="->"
-      stroke="gray"
-      dashPattern={[4, 3]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
     />
     <Draw way={['geometry', 'consumers']} arrow="->" />
   </Layout>

@@ -97,7 +97,7 @@ Canonical / Resolution (`CanonicalXxx` / `XxxResolution`, domain resolve types, 
 
 `parseXxx` 只接受 `unknown`、序列化 JSON、字符串或 provider payload 等外部数据；公开 compile 已接收 `IRXxx` 时不得重新 parse。Vanilla `normalizeXxx` 表示 `InputXxx` 到 Source IR 的组装。独立的 Core 文本 / DSL parser 继续由 Core 拥有；它的 grammar 类型不命名为 `InputXxx`，框架包只能经 Vanilla 调度该类 parser，不能各自复制或直接拼装其 IR 结果。被领域 compile consumer 复用的 closed value vocabulary / mapping 留在 Core；只服务 typed authoring 的 `*SugarInput` 与 Input-to-IR 字段组装留在 Vanilla。
 
-Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 registry、data、host 或 DOM，也不 warning。Vanilla processing 组合 Source IR、Core compile、Runtime 与 Render 的公开能力，产出可订阅的只读处理结果；其根入口同样不读取 DOM。Core / Plot `resolveXxx` 消费当前 context，统一展开 IR 等价简写、补领域默认值、计算继承与覆盖优先级、执行 registry / reference / host lookup、校验 Canonical 化后才出现的领域不变量，并完成颜色等领域值转换。compile / pipeline 只负责 context 生命周期、依赖顺序与调度，不重复 resolver 的结构处理。不得重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。Theme 的 style、mode、颜色与 token 默认全部由 Core / Plot resolve 使用 context 确定；可由 `CompileOptions.themeStyles` 注入的颜色必须在该阶段决定。
+Vanilla API `normalizeXxx` 是纯函数：只组装 authoring Input，不读取 registry、data、host 或 DOM，也不 warning。Vanilla processing 组合 Source IR、Core compile、Runtime 与 Render 的公开能力，产出可订阅的只读处理结果；其根入口同样不读取 DOM。Core / Plot `resolveXxx` 消费当前 context，统一展开 IR 等价简写、补领域默认值、计算继承与覆盖优先级、执行 registry / reference / host lookup、校验 Canonical 化后才出现的领域不变量，并完成颜色等领域值转换。compile / pipeline 只负责 context 生命周期、依赖顺序与调度，不重复 resolver 的结构处理。不得重复 schema 已覆盖或明确 TypeScript 类型已保证的校验。Theme 的 style、mode 与颜色由 Core 解析；领域 resolve 组合 Theme definition 的生成片段、作者 xxxDefaults、独立规则与实例，保持 Source 同构及来源差异；可由 `CompileOptions.themeStyles` 注入的颜色必须在该阶段决定。
 
 ## 6. 跨包不变量
 

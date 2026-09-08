@@ -35,7 +35,15 @@ const customPathSchema = <TKind extends string>(kind: TKind) => PathSchema.exten
 
 describe('Path kind registry', () => {
   it('compiles omitted kind as the built-in stroke path kind', () => {
-    const [prim] = pathPrims(scene([{ type: 'path', stroke: 'crimson', children: steps }]));
+    const [prim] = pathPrims(
+      scene([
+        {
+          type: 'path',
+          children: steps,
+          style: { stroke: 'crimson' },
+        },
+      ]),
+    );
 
     expect(prim.stroke).toBe('crimson');
     expect(prim.fill).toBe('none');
@@ -84,14 +92,36 @@ describe('Path kind registry', () => {
     expect(prim.stroke).toBe('gold');
   });
 
+  it('自定义 Path 无需 Stroke steps，仍接收分组 Source', () => {
+    let observed: unknown;
+    const empty = definePathKind({
+      name: 'empty',
+      schema: customPathSchema('empty'),
+      compile: context => {
+        observed = context.path;
+        return null;
+      },
+    });
+    const output = compileToScene(scene([{ type: 'path', kind: 'empty', style: { stroke: 'blue' } }]), {
+      pathKinds: [empty],
+    });
+    expect(output.scene.primitives).toEqual([]);
+    expect(observed).toMatchObject({ type: 'path', kind: 'empty', style: { stroke: 'blue' } });
+    expect(observed).not.toHaveProperty('stroke');
+  });
+
   it('keeps Source shorthand visible to custom providers before emitStroke canonicalizes it', () => {
     let observedPosition: unknown;
+    let observedStyle: unknown;
+    let observedStroke: unknown;
     const sourceStroke = definePathKind({
       name: 'source-stroke',
       schema: customPathSchema('source-stroke'),
       compile: context => {
         const line = context.path.children?.[1];
         observedPosition = line && 'label' in line ? line.label?.position : undefined;
+        observedStyle = context.path.style;
+        observedStroke = context.appearance.stroke;
         return context.emitStroke();
       },
     });
@@ -100,6 +130,7 @@ describe('Path kind registry', () => {
         {
           type: 'path',
           kind: 'source-stroke',
+          style: { color: '#336699', stroke: 0.8 },
           children: [steps[0], { ...steps[1], label: { text: 'end', position: 'at-end' } }],
         },
       ] as IRScene['children']),
@@ -108,6 +139,8 @@ describe('Path kind registry', () => {
     const label = flatten(compiled.primitives).find(primitive => primitive.type === 'text');
 
     expect(observedPosition).toBe('at-end');
+    expect(observedStyle).toMatchObject({ color: '#336699', stroke: '#5c85ad' });
+    expect(observedStroke).toBe('#5c85ad');
     expect(label).toMatchObject({ type: 'text', x: 100 });
   });
 
