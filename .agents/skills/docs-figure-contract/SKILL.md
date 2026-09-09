@@ -37,6 +37,7 @@ MDX 中使用：
 - demo 默认 `export default FC`，不要用 hooks 或渲染外副作用；`ComponentPreview` 会直接调用组件生成 IR。
 - 技术 label 可用单文件 `<name>.demo.tsx`；只有 label 含本地化文本时才拆 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx`。
 - 图不能替代正文。图前后必须用段落或小节标题解释读者应看什么。
+- 表达真实执行或数据先后的流程图默认使用最新 `FlowDiagram`、`FlowLayout`、`FlowEntities` 与 `FlowRelations`；不以手写 `Layout`、`Node`、`Draw` 重建 Flow 的布局与连线语义。关系、架构和几何图仍按其实际图型选择 Graph 或基础图元。
 
 ## 视觉语言
 

@@ -5,7 +5,11 @@ import { Graph, Relation } from '@retikz/graph-react';
 
 import type { LogicFigureRelationKindValue } from './logic-figure-vocabulary';
 
-import { logicFigureGraphProps, logicFigureRelationRoleByKind } from './logic-figure-vocabulary';
+import {
+  logicFigureGraphProps,
+  logicFigureRelationKinds,
+  logicFigureRelationRoleByKind,
+} from './logic-figure-vocabulary';
 
 /** 带站点逻辑图 vocabulary 的 Graph 根参数 */
 export type LogicFigureProps = Omit<GraphProps, 'entityKinds' | 'relationKinds' | 'graphRules'> &
@@ -25,7 +29,7 @@ export type LogicFigureRelationProps = Omit<RelationProps, 'role' | 'kind' | 're
 export const LogicFigure: FC<LogicFigureProps> = props => {
   const { semanticColors, ...graphProps } = props;
 
-  return <Graph {...graphProps} {...logicFigureGraphProps(semanticColors)} />;
+  return <Graph {...graphProps} {...logicFigureGraphProps(semanticColors)} relationKinds={logicFigureRelationKinds} />;
 };
 
 /** 以 site kind 声明连线语义，并由 vocabulary 选择 Graph role */

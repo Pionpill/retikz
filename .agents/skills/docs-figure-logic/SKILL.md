@@ -61,9 +61,9 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 
 ## 站点逻辑图语义
 
-逻辑图的颜色和线型不是图片后处理。需要保留给 Source IR、工具与 LLM 的角色关系时，使用 `@/modules/docs/components/logic-figure` 提供的 `<LogicFigure>` 与 `<LogicFigureRelation>`，并在其中使用普通 Graph `<Entity>`；不要退回手写 `Node` / `Draw` 的颜色和 dash pattern。
+逻辑图的颜色和线型不是图片后处理。存在真实执行或数据先后的流程图，默认使用最新 `@retikz/diagram-react/flow` 的 `FlowDiagram`、`FlowLayout`、`FlowEntities` 与 `FlowRelations`；Flow 根级可直接消费 `entityKinds`、`relationKinds` 和 `graphRules`，不要退回手写 `Layout`、`Node`、`Draw` 重建布局或连线。非流程的关系、架构与职责图才使用 `@/modules/docs/components/logic-figure` 提供的 `<LogicFigure>` 与 `<LogicFigureRelation>`。
 
-`<LogicFigure>` 为内部 `<Entity>` 注册站点逻辑图 vocabulary。`Entity.kind` 与 `role` 共同选择稳定 Graph kind 和站点 rule 的外观。默认词汇为：
+流程图和 `<LogicFigure>` 共用站点 Entity vocabulary。`Entity.kind` 与 `role` 共同选择稳定 Graph kind 和站点 `graphRules` 的外观；Flow 根可展开 `logicFigureGraphProps()` 注入 Entity definitions 与规则。默认词汇为：
 
 | kind                       | 可用 role                               | 颜色语义                                          |
 | -------------------------- | --------------------------------------- | ------------------------------------------------- |
@@ -72,16 +72,15 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 | `docs.logic.secondary`     | 全部 role                               | 次要或背景内容，`gray`                            |
 | `docs.logic.algorithm`     | `activity`                              | 算法、高复杂度或性能问题，`darkviolet`            |
 
-`LogicFigureRelation` 的 `kind` 同时选择 Graph relation role 与结构 recipe：
+只负责校验、准入或拒绝的节点不承担主要处理，应使用 `docs.logic.secondary`；只有它实际转换数据、执行算法或构成读者必须关注的核心阶段时，才使用重要或算法 kind。
 
-- `docs.logic.control-flow`：真实控制流、调用链或主执行次序，灰色实线
-- `docs.logic.data-flow`：真实数据或 payload 流动，`darkorange` 实线
-- `docs.logic.dependency`：辅助工具或运行时依赖，灰色虚线
-- `docs.logic.feedback`：返回前序阶段的真实反馈流，灰色虚线
+流程主链不声明 Relation kind，使用 Flow 默认的灰色实线。只有非主通道的次要依赖才声明唯一的 relation kind：
 
-点线仍只表示不存在于 Graph 模型中的教学几何参考，继续使用 `<Draw>` 与 `dashPattern={[1, 4]}`；不要把它伪装成 `LogicFigureRelation`。错误、成功、警告与禁用使用 Graph `status`；其中 `disabled` 额外使用 `[6, 4]` 虚线，以区别 `docs.logic.secondary` 的灰色类别语义。
+- `docs.logic.secondary`：Graph `dependency` role 与 `[6, 4]` 虚线结构。`<LogicFigure>` 会自动注册；Flow 只有实际使用它时才额外传入 `relationKinds={logicFigureRelationKinds}`。
 
-controls 只能选择当前 role 已注册的上述 kind，并让 demo 实际消费该值；不暴露任意颜色或 dash 的自由组合。每张叙述图不默认增加 controls，只有读者确实需要比较同一结构下的语义分支时才增加 playground。
+点线只表示不存在于 Graph 模型中的教学几何参考，不伪装成 Flow Relation 或 `LogicFigureRelation`。错误、成功、警告与禁用使用 Graph `status`；其中 `disabled` 额外使用 `[6, 4]` 虚线。
+
+controls 只能选择当前 role 已注册的 Entity kind，或实际存在的 `docs.logic.secondary` Relation kind；不暴露任意颜色或 dash 的自由组合。每张叙述图不默认增加 controls，只有读者确实需要比较同一结构下的语义分支时才增加 playground。
 
 ## 节点风格
 

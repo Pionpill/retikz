@@ -38,6 +38,12 @@ describe('Flow Diagram documentation', () => {
           : '`flowDefaults` supplies one shared default style for each Flow object category at the root',
       );
       expect(basic).toContain('relation.style');
+      expect(basic).toContain('graphRules');
+      expect(basic).toContain(
+        lang === 'zh'
+          ? '只投影到 Flow 下沉的 Entity 与 Relation'
+          : 'projects only to Flow-materialized Entities and Relations',
+      );
     },
   );
 

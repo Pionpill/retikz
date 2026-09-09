@@ -108,7 +108,7 @@ H2 进右侧 TOC；同一概念下的细分点用 H3。
 硬约束：
 
 - **图必须和正文绑定**——正文要引用图里的标注（如「箭头上 `anchors` 代表的依赖」），否则图是孤儿
-- **流程图善用 edge label**——`<Draw>` 的 `{ label: { text, side, textColor } }` 在箭头中点标注每段处理 / 中间产物
+- **流程图使用 Flow 的 Relation label**——用 `FlowRelations` 的关系标签在箭头中点标注关键处理 / 中间产物；真实执行或数据先后默认用 `FlowDiagram`，不手写 `<Draw>` 重建流程
 - **画法细节全部交给 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)**：`stroke="none"` 当文字锚点、配色、y 轴朝下、宽度自适应、双语拆分条件、验证规则——本 skill 不重复
 
 ## 表格优先

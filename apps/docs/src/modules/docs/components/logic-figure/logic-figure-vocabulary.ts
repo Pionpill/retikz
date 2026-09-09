@@ -1,4 +1,4 @@
-import type { IRGraphRule } from '@retikz/graph';
+import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import type { GraphProps } from '@retikz/graph-react';
 
 import { defineEntityKind, defineRelationKind, RelationRole } from '@retikz/graph';
@@ -16,10 +16,7 @@ export type LogicFigureEntityKindValue = (typeof LogicFigureEntityKind)[keyof ty
 
 /** Docs 逻辑图使用的稳定 Relation kind */
 export const LogicFigureRelationKind = {
-  ControlFlow: 'docs.logic.control-flow',
-  DataFlow: 'docs.logic.data-flow',
-  Dependency: 'docs.logic.dependency',
-  Feedback: 'docs.logic.feedback',
+  Secondary: 'docs.logic.secondary',
 } as const;
 
 /** Docs 逻辑图使用的 Relation kind 值 */
@@ -103,32 +100,18 @@ const logicFigureEntityDefinitions = [
   }),
 ] as const;
 
-const logicFigureRelationDefinitions = [
+export const logicFigureRelationKinds: NonNullable<GraphProps['relationKinds']> = [
   defineRelationKind({
-    kind: LogicFigureRelationKind.ControlFlow,
-    role: RelationRole.Flow,
-    description: '真实控制流、调用链或主要执行次序',
-  }),
-  defineRelationKind({
-    kind: LogicFigureRelationKind.DataFlow,
-    role: RelationRole.Flow,
-    description: '在真实处理链路中传递的数据或 payload',
-  }),
-  defineRelationKind({
-    kind: LogicFigureRelationKind.Dependency,
+    kind: LogicFigureRelationKind.Secondary,
     role: RelationRole.Dependency,
-    description: '不属于主要执行通道的工具或运行时依赖',
-    directions: { forward: { dashPattern: [6, 4] } },
-  }),
-  defineRelationKind({
-    kind: LogicFigureRelationKind.Feedback,
-    role: RelationRole.Flow,
-    description: '把结果送回前序阶段的真实反馈流',
+    description: 'Secondary logic relationship',
     directions: { forward: { dashPattern: [6, 4] } },
   }),
 ] as const;
 
-const logicFigureRules: Array<IRGraphRule> = [
+type LogicFigureFlowGraphProps = Pick<FlowDiagramProps, 'entityKinds' | 'graphRules'>;
+
+const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
   {
     type: 'entity',
     selector: { kind: LogicFigureEntityKind.Important },
@@ -149,33 +132,15 @@ const logicFigureRules: Array<IRGraphRule> = [
     selector: { kind: LogicFigureEntityKind.Algorithm },
     style: { color: 'darkviolet' },
   },
-  {
-    type: 'relation',
-    selector: { kind: LogicFigureRelationKind.DataFlow },
-    style: { color: 'darkorange', stroke: 'darkorange' },
-  },
-  {
-    type: 'relation',
-    selector: {
-      kind: [LogicFigureRelationKind.ControlFlow, LogicFigureRelationKind.Dependency, LogicFigureRelationKind.Feedback],
-    },
-    style: { color: 'gray', stroke: 'gray' },
-  },
 ];
 
 /** Docs Relation kind 对应的稳定 Graph role */
 export const logicFigureRelationRoleByKind: Readonly<Record<LogicFigureRelationKindValue, string>> = {
-  [LogicFigureRelationKind.ControlFlow]: RelationRole.Flow,
-  [LogicFigureRelationKind.DataFlow]: RelationRole.Flow,
-  [LogicFigureRelationKind.Dependency]: RelationRole.Dependency,
-  [LogicFigureRelationKind.Feedback]: RelationRole.Flow,
+  [LogicFigureRelationKind.Secondary]: RelationRole.Dependency,
 };
 
 /** 为需要自行决定 semantic rule 优先级的 Graph 提供 Docs logic vocabulary 参数 */
-export const logicFigureGraphProps = (
-  semanticColors = true,
-): Pick<GraphProps, 'entityKinds' | 'relationKinds' | 'graphRules'> => ({
+export const logicFigureGraphProps = (semanticColors = true): LogicFigureFlowGraphProps => ({
   entityKinds: logicFigureEntityDefinitions,
-  relationKinds: logicFigureRelationDefinitions,
   ...(semanticColors ? { graphRules: logicFigureRules } : {}),
 });

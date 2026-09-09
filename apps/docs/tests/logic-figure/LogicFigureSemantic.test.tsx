@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
 
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { Entity } from '@retikz/graph-react';
 import { createInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
+import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
 import {
   LogicFigure,
   LogicFigureEntityKind,
@@ -13,6 +15,8 @@ import {
   LogicFigureRelation,
   LogicFigureRelationKind,
 } from '@/modules/docs/components/logic-figure';
+import OpaqueColorFlowEn from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow.en.demo';
+import OpaqueColorFlowZh from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow.zh.demo';
 
 /** 经过 React authoring 与 Vanilla normalize 读取逻辑图的 Source IR */
 const readLogicFigure = (element: ReactNode) => {
@@ -44,15 +48,9 @@ describe('LogicFigure semantic vocabulary', () => {
         </Entity>
         <LogicFigureRelation
           id="depends-on"
-          kind={LogicFigureRelationKind.Dependency}
+          kind={LogicFigureRelationKind.Secondary}
           source={{ id: 'runtime' }}
           target={{ id: 'input' }}
-        />
-        <LogicFigureRelation
-          id="produces"
-          kind={LogicFigureRelationKind.ControlFlow}
-          source={{ id: 'runtime' }}
-          target={{ id: 'scene' }}
         />
       </LogicFigure>,
     );
@@ -64,8 +62,7 @@ describe('LogicFigure semantic vocabulary', () => {
         { type: 'entity', id: 'input', role: 'participant', kind: 'docs.logic.important' },
         { type: 'entity', id: 'runtime', role: 'activity', kind: 'docs.logic.important' },
         { type: 'entity', id: 'scene', role: 'resource', kind: 'docs.logic.importantData' },
-        { type: 'relation', id: 'depends-on', role: 'dependency', kind: 'docs.logic.dependency' },
-        { type: 'relation', id: 'produces', role: 'flow', kind: 'docs.logic.control-flow' },
+        { type: 'relation', id: 'depends-on', role: 'dependency', kind: 'docs.logic.secondary' },
       ],
     });
   });
@@ -95,5 +92,60 @@ describe('LogicFigure semantic vocabulary', () => {
         },
       ],
     });
+  });
+
+  it.each([
+    ['Chinese', OpaqueColorFlowZh],
+    ['English', OpaqueColorFlowEn],
+  ])('renders the %s CSS color flow with stable logic kinds', (_language, Demo) => {
+    const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
+
+    expect(figure).toMatchObject({
+      namespace: 'diagram',
+      type: 'flow',
+      graphRules: expect.any(Array),
+    });
+    expect(figure.entities).toEqual(
+      expect.arrayContaining(
+        [
+          { id: 'inputs', role: 'participant' },
+          { id: 'weight', role: 'activity', kind: LogicFigureEntityKind.Secondary },
+          { id: 'parse', role: 'activity', kind: LogicFigureEntityKind.Important },
+          { id: 'colors', role: 'resource', kind: LogicFigureEntityKind.Secondary },
+          { id: 'backdrop', role: 'activity', kind: LogicFigureEntityKind.Important },
+          { id: 'compose', role: 'activity', kind: LogicFigureEntityKind.Algorithm },
+          { id: 'output', role: 'participant' },
+        ].map(value => expect.objectContaining(value)),
+      ),
+    );
+    expect(figure.entities.find(entity => entity.id === 'inputs')?.kind).toBeUndefined();
+    expect(figure.entities.find(entity => entity.id === 'output')?.kind).toBeUndefined();
+    expect(figure.layouts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'rows', direction: 'down' }),
+        expect.objectContaining({ id: 'prepare', direction: 'right' }),
+        expect.objectContaining({ id: 'compose-row', direction: 'right' }),
+      ]),
+    );
+    const relations = figure.relations ?? [];
+
+    expect(relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: 'colors',
+          target: 'parse',
+          role: 'dependency',
+          kind: LogicFigureRelationKind.Secondary,
+        }),
+        expect.objectContaining({
+          source: 'parse',
+          target: 'backdrop',
+          routing: { kind: 'orthogonal', cornerRadius: 8 },
+        }),
+      ]),
+    );
+    expect(
+      relations.filter(relation => relation.source !== 'colors').every(relation => relation.kind === undefined),
+    ).toBe(true);
   });
 });
