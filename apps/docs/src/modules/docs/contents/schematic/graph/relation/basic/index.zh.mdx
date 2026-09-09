@@ -28,6 +28,8 @@ import { Layout, Node } from '@retikz/react';
 
 Relation 直接复用大部分 Core Path 字段。默认 Graph Theme 使用灰色、`sm` 字号的 label；role、kind、predicate 与 Theme 只提供默认，Relation 显式 `style.stroke`、`style.dashPattern` 等 Path 字段最终优先，每个 label 也可以单独设置 `textColor`、`font` 与 `opacity`
 
+在同一个 Graph 根的公开可见内容树中，Entity 与 Relation 可以写相同 `group`。Graph 按 group 首次出现顺序从当前分类色板正序分配颜色；未写 group 的元素保持原有外观。`group` 不是 kind、selector 或状态，Graph rule、显式 `style.color` / `style.stroke` 与 marker color 仍然优先；独立 Relation 不自动取组色。
+
 ## 例子
 
 五个内置 role 定义关系的上位语义、source / target 基础解释、允许 direction 与 marker family。Relation **没有内置 predicate**；只有先在当前 provider assembly 注册 predicate definition，才能使用对应 `predicate.name` 和 params
@@ -151,6 +153,7 @@ Relation resolve 只处理 role、kind、predicate、status、direction 与 Them
 | `predicate?`           | `{ name: string; params?: JsonObject }`                                                                                            | —                                     | 已注册 predicate 与 JSON-safe 参数                                                                                                                        |
 | `status?`              | `GraphStatusValue`                                                                                                                 | —                                     | 可选闭合图式状态：`error`、`success`、`warning`、`disabled`                                                                                               |
 | `direction?`           | `'none' \| 'forward' \| 'reverse' \| 'both'`                                                                                       | 由 role 决定                          | 显式语义方向，必须在 role/kind 允许集合内                                                                                                                 |
+| `group?`               | `string`                                                                                                                           | —                                     | Graph 根内的视觉颜色分组标识；Entity 或 Relation 相同值复用自动分类色，省略时保持原有外观                                                                 |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                           | —                                     | 完整 Core Geometry Label；每个 label 的显式颜色、字体与透明度覆盖 Relation 默认                                                                           |
 | `route?`               | `Array<IRGraphRelationRouteStep>`                                                                                                  | source→target 直连                    | 完整 Core Path step sequence；route step 不承载 label                                                                                                     |
 | `style.dashPattern?`   | `Array<number>`                                                                                                                    | 由 role/kind 或匹配的 Theme rule 决定 | 显式 Path dash pattern，最终覆盖关系结构默认                                                                                                              |

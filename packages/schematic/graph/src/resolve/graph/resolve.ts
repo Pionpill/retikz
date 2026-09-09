@@ -1,4 +1,6 @@
-import type { IRChild, IRScope } from '@retikz/core';
+import type { IRChild, IRScope, ResolvedTheme } from '@retikz/core';
+
+import { categoricalColorAt, DEFAULT_RESOLVED_THEME } from '@retikz/core';
 
 import type {
   IRBlock,
@@ -21,6 +23,12 @@ import { resolveGraphAuthorSurfaceDefaults } from '../theme';
 type GraphProjectionContext = Readonly<{
   layers: ReadonlyArray<GraphAuthorLayer>;
 }>;
+
+type GroupColorContext = {
+  palette: ResolvedTheme['colors']['categorical'];
+  colorByGroup: Map<string, ResolvedTheme['colors']['categorical'][number]>;
+  nextGroupIndex: number;
+};
 
 const isGraphComposite = (child: IRChild, type: string): boolean =>
   'namespace' in child && child.namespace === GRAPH_NAMESPACE && child.type === type;
@@ -164,9 +172,98 @@ const projectChildren = (
     return child;
   });
 
+/** 创建当前 Graph 根范围内 Entity 与 Relation 分组颜色的稳定分配上下文 */
+const createGroupColorContext = (theme: ResolvedTheme): GroupColorContext => ({
+  palette: theme.colors.categorical,
+  colorByGroup: new Map(),
+  nextGroupIndex: 0,
+});
+
+/** 按首次出现顺序从分类色板头部为一个视觉 group 分配颜色 */
+const resolveGroupColor = (
+  group: string,
+  context: GroupColorContext,
+): ResolvedTheme['colors']['categorical'][number] => {
+  const existingColor = context.colorByGroup.get(group);
+  if (existingColor !== undefined) return existingColor;
+  const paletteIndex = context.nextGroupIndex % context.palette.length;
+  const color = categoricalColorAt(context.palette, paletteIndex);
+  context.colorByGroup.set(group, color);
+  context.nextGroupIndex += 1;
+  return color;
+};
+
+/** 为未被作者颜色覆盖的 Entity 投影所属 group 的 fallback color */
+const projectEntityGroupColor = (source: IRGraphEntity, context: GroupColorContext): IRGraphEntity => {
+  if (source.group === undefined) return source;
+  const color = resolveGroupColor(source.group, context);
+  if (source.style?.color !== undefined) return source;
+  return {
+    ...source,
+    style: { ...source.style, color },
+  };
+};
+
+/** 为未被作者颜色覆盖的 Relation 投影所属 group 的 fallback color */
+const projectRelationGroupColor = (source: IRGraphRelation, context: GroupColorContext): IRGraphRelation => {
+  if (source.group === undefined) return source;
+  const color = resolveGroupColor(source.group, context);
+  if (source.style?.color !== undefined || source.style?.stroke !== undefined) return source;
+  return {
+    ...source,
+    style: { ...source.style, color },
+    ...(source.sourceMarker?.color === undefined ? { sourceMarker: { ...source.sourceMarker, color } } : {}),
+    ...(source.targetMarker?.color === undefined ? { targetMarker: { ...source.targetMarker, color } } : {}),
+  };
+};
+
+/** 在 Graph 当前公开可见内容树中投影 Entity 与 Relation group 的自动颜色 */
+const projectGroupColors = (children: ReadonlyArray<IRChild>, context: GroupColorContext): Array<IRChild> =>
+  children.map(child => {
+    if (isEntity(child)) return projectEntityGroupColor(child, context);
+    if (isRelation(child)) return projectRelationGroupColor(child, context);
+    if (isBlock(child)) {
+      return {
+        ...child,
+        ...(child.children === undefined ? {} : { children: projectGroupColors(child.children, context) }),
+      };
+    }
+    if (isBlockHeader(child)) {
+      const projectSlot = (slot: IRChild | undefined): IRChild | undefined =>
+        slot === undefined ? undefined : projectGroupColors([slot], context)[0];
+      return {
+        ...child,
+        ...(child.icon === undefined ? {} : { icon: projectSlot(child.icon)! }),
+        ...(child.trail === undefined ? {} : { trail: projectSlot(child.trail)! }),
+      };
+    }
+    if (isBlockSection(child) || isGraph(child) || isGroup(child) || isScope(child)) {
+      return {
+        ...child,
+        ...(child.children === undefined ? {} : { children: projectGroupColors(child.children, context) }),
+      };
+    }
+    if (isBlockRow(child)) {
+      return {
+        ...child,
+        ...(!('children' in child) || child.children === undefined
+          ? {}
+          : { children: projectGroupColors(child.children, context) }),
+      };
+    }
+    return child;
+  });
+
 /** 把 Graph-local author layers 投影到 schema 可见的语义后代，并保留完整有序 Core child tree */
-export const resolveGraph = (source: IRGraph, options: GraphResolveContext): Array<IRChild> =>
-  projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options);
+export const resolveGraph = (
+  source: IRGraph,
+  options: GraphResolveContext,
+  theme: ResolvedTheme = DEFAULT_RESOLVED_THEME,
+): Array<IRChild> =>
+  projectGroupColors(
+    projectChildren(source.children ?? [], graphContext(source, { layers: [] }), options),
+    createGroupColorContext(theme),
+  );
 
 /** 把 Graph-local author layers 投影到一个 Group 的 schema 可见后代 */
 export const resolveGroupChildren = (source: IRGroup, options: GraphResolveContext): Array<IRChild> =>

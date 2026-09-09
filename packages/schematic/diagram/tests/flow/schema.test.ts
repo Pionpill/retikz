@@ -112,6 +112,31 @@ describe('Flow Source schema', () => {
     ).toBe(false);
   });
 
+  it('round-trips a Flow Relation group and rejects non-string groups', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'source', text: 'Source' },
+        { id: 'target', text: 'Target' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['source', 'target'],
+      relations: [{ source: 'source', target: 'target', group: '' }],
+    };
+
+    const parsed = FlowDiagramSchema.parse(source);
+
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+    expect(
+      FlowDiagramSchema.safeParse({
+        ...source,
+        relations: [{ source: 'source', target: 'target', group: 1 }],
+      }).success,
+    ).toBe(false);
+  });
+
   it('parses the flat catalog Source and round-trips without changing it', () => {
     const parsed = FlowDiagramSchema.parse(completeFlow);
 

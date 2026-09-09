@@ -96,6 +96,7 @@ describe('@retikz/diagram-react/flow', () => {
       graphRules: [{ type: 'entity' as const, selector: { role: 'concept' }, style: { color: 'dodgerblue' } }],
     } satisfies FlowReact.FlowDiagramProps;
     const entity = { id: 'node', text: 'Node', layout: { lineHeight: 18 } };
+    const relation = { source: 'node', target: 'node', group: 'forward' };
     const direct = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',
@@ -104,12 +105,25 @@ describe('@retikz/diagram-react/flow', () => {
       groups: [],
       layouts: [],
       children: ['node'],
+      relations: [relation],
     });
     const input = createInputScene(
-      createElement(FlowReact.FlowDiagram, props, createElement(FlowReact.FlowEntity, entity)),
+      createElement(
+        FlowReact.FlowDiagram,
+        props,
+        createElement(FlowReact.FlowEntity, entity),
+        createElement(FlowReact.FlowRelation, relation),
+      ),
     );
     const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
-    const vanilla = normalizeFlowDiagram({ ...props, entities: [entity], groups: [], layouts: [], children: ['node'] });
+    const vanilla = normalizeFlowDiagram({
+      ...props,
+      entities: [entity],
+      groups: [],
+      layouts: [],
+      children: ['node'],
+      relations: [relation],
+    });
     expect(react).toEqual(direct);
     expect(vanilla).toEqual(direct);
   });

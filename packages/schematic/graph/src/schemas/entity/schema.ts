@@ -1,6 +1,6 @@
 import { NodeLayoutSchema, NodeSchema } from '@retikz/core';
 import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { literal, strictObject } from 'zod';
+import { literal, strictObject, string } from 'zod';
 
 import { EntityRole, GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
@@ -25,6 +25,7 @@ export const EntitySchema = strictObject({
   kind: NonBlankStringSchema.optional().describe(
     'Open stable subtype key whose registration identity is the selected Entity role and kind.',
   ),
+  group: string().optional().describe('Optional Graph-root visual color grouping identifier.'),
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   ...EntityNodeShape,

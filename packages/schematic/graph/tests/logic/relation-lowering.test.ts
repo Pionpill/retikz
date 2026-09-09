@@ -66,6 +66,12 @@ describe('Relation lowering', () => {
     expect(lower(source)).not.toHaveProperty('id');
   });
 
+  it('does not pass the Graph-only Relation group to the lowered Core Path', () => {
+    const lowered = lower(relation({ group: 'forward' }));
+
+    expect(lowered).not.toHaveProperty('group');
+  });
+
   it('preserves an explicit route and every inherited Core Path instance field', () => {
     const route = [
       { type: 'step', kind: 'move', to: [0, 0] },

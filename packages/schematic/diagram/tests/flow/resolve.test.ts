@@ -86,6 +86,38 @@ describe('Flow Source resolve', () => {
     expect(resolved.relations[1]?.graph.style).toMatchObject({ color: 'darkorange', strokeWidth: 2 });
   });
 
+  it('projects shared Flow Entity and Relation groups through the Graph categorical color fallback', () => {
+    const resolved = resolve({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'first', text: 'First', group: 'forward' },
+        { id: 'second', text: 'Second', group: 'reverse' },
+        { id: 'third', text: 'Third' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['first', 'second', 'third'],
+      relations: [
+        { source: 'first', target: 'second', group: 'forward' },
+        { source: 'second', target: 'third', group: 'reverse' },
+        { source: 'third', target: 'first', group: 'forward' },
+        { source: 'first', target: 'third' },
+      ],
+    });
+    const palette = DEFAULT_RESOLVED_THEME.colors.categorical;
+
+    expect(
+      resolved.elements.map(element => (element.type === 'entity' ? element.graph.style?.color : undefined)),
+    ).toEqual([palette.at(0), palette.at(1), undefined]);
+    expect(resolved.relations.map(relation => relation.graph.style?.color)).toEqual([
+      palette.at(0),
+      palette.at(1),
+      palette.at(0),
+      undefined,
+    ]);
+  });
+
   it('rebuilds one recursive Canonical tree from owner children order and catalog paths', () => {
     const resolved = resolve({
       namespace: 'diagram',

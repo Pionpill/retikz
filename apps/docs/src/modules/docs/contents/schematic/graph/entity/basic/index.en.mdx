@@ -158,6 +158,8 @@ An explicit static `style.color` drives both numeric default stroke and fill cha
 
 Entity performs its own registry lookup and lowers to an ordinary Core `Node`. Graph only provides built-in roles; every kind must be registered by an upper layer in the provider assembly, and an unregistered key fails loudly. Core, Scene, and renderers do not interpret Entity roles or kinds. Graph only adds local Theme context when present; it is not a compile prerequisite
 
+Within one Graph root's publicly visible content tree, Entities and Relations may use the same `group` to express one visual chain. Graph assigns colors from the current categorical palette in first-appearance order; elements without a group keep their existing appearance. `group` does not participate in kinds, selectors, or status; Graph rules and explicit colors such as instance `style.color` still win
+
 ## API Reference
 
 Entity visual fields belong to `style`; text layout, size and spacing belong to `layout`. The role still owns padding, so instances cannot set `layout.padding`.
@@ -167,6 +169,7 @@ Entity visual fields belong to `style`; text layout, size and spacing belong to 
 | `id?`        | `string`                                | —       | Optional Core target id; omission registers no reference target                                                                    |
 | `role`       | `string`                                | —       | Registered open semantic role key                                                                                                  |
 | `kind?`      | `string`                                | —       | Stable subtype registered by an upper layer. Its identity is `(role, kind)`, so the same kind may be registered for multiple roles |
+| `group?`     | `string`                                | —       | Visual color-group identifier within one Graph root; the same value as a Relation reuses its automatic categorical color           |
 | `predicate?` | `{ name: string; params?: JsonObject }` | —       | Registered predicate and its JSON-safe parameters                                                                                  |
 | `status?`    | `GraphStatusValue`                      | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled`                                                          |
 | `position?`  | `IRPosition`                            | —       | Directly reuses the Core Node position language                                                                                    |
