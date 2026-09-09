@@ -199,7 +199,7 @@ export const matchesGraphThemeSelector = (
 export type GraphThemeSelectorRegistryContext = Readonly<{
   member: 'Entity' | 'Relation';
   roles: ReadonlyMap<string, unknown>;
-  kinds: ReadonlyMap<string, unknown>;
+  kinds: ReadonlySet<string> | ReadonlyMap<string, unknown>;
   predicates: ReadonlyMap<string, unknown>;
 }>;
 
@@ -208,7 +208,7 @@ const selectorKeys = (value: string | ReadonlyArray<string> | undefined): Readon
 
 const assertSelectorKeysRegistered = (
   keys: ReadonlyArray<string>,
-  registry: ReadonlyMap<string, unknown>,
+  registry: ReadonlySet<string> | ReadonlyMap<string, unknown>,
   capability: string,
 ): void => {
   for (const key of keys) {

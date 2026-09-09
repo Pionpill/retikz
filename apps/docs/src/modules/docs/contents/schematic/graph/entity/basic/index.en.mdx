@@ -24,7 +24,7 @@ import { Layout } from '@retikz/react';
 
 ## Examples
 
-The seven built-in roles define only upper-level semantics and a base shape recipe. Graph has **no built-in Entity kinds or predicates**: a `kind` or `predicate.name` can be used only after it is registered in the current provider assembly. Every kind and params object listed below is an extension example, not a built-in value
+The seven built-in roles define only upper-level semantics and a base shape recipe. Graph **does not maintain a built-in catalog of Entity kinds or predicates**: a `kind` or `predicate.name` can be used only after it is registered in the current provider assembly. Docs logic figures register four kinds: `docs.logic.important`, `docs.logic.importantData`, `docs.logic.secondary`, and `docs.logic.algorithm`. The same kind can be registered independently for multiple roles. Every role demo starts without a kind, and its Kind control lists only the site kinds registered for that role
 
 Theme owns the complete Entity visual language. Each demo below can precisely control instance color and text, while the page-level Theme selector switches the overall style among Academic, Vibrant, Clean, and other choices
 
@@ -35,13 +35,13 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `participant` represents a subject that actively participates, owns responsibility, or provides a capability. Typical objects include people, teams, organizations, external systems, and services. Use `activity` for work being performed and `resource` for an object that is merely consumed or stored
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `participant.person`, `participant.team`, and `participant.system`; these are examples of globally unique keys only
+- **Selectable site kinds:** `docs.logic.important`, for important logic content; `docs.logic.secondary`, for secondary or background content
 - **Controllable predicate params example:** an extension could declare `{ capacity: number, region: string }` through `paramsSchema`, but built-in `participant` accepts no predefined params
 
 <ComponentPreview
   files="entity-participant"
   size="sm"
-  caption="Control the participant outline, Graph Theme primary color, and text."
+  caption="Start with no kind; select docs.logic.important or docs.logic.secondary to observe blue or gray semantic appearance."
 />
 
 ### activity: work and action
@@ -49,13 +49,13 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `activity` represents work, an action, or a transformation that happens or must be performed. Typical objects include tasks, processing steps, subprocesses, and system operations. A persistent condition is a `state`; an instantaneous occurrence is an `event`
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `activity.task`, `activity.subprocess`, and `activity.operation`
+- **Selectable site kinds:** `docs.logic.important` for important logic content, `docs.logic.secondary` for secondary or background content, and `docs.logic.algorithm` for algorithmic, high-complexity, or performance-sensitive logic
 - **Controllable predicate params example:** an extension could declare `{ retryable: boolean, slaMinutes: number }`; its `paramsSchema` owns the exact fields, defaults, and ranges
 
 <ComponentPreview
   files="entity-activity"
   size="sm"
-  caption="Inspect the activity's default solid outline, then control its precise color and text."
+  caption="Start with no kind; select docs.logic.important, docs.logic.secondary, or docs.logic.algorithm to observe blue, gray, or violet semantic appearance."
 />
 
 ### event: a point in time
@@ -63,13 +63,13 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `event` represents an occurrence, boundary, or lifecycle point in time. Typical objects include start, end, timeout, message arrival, and failure events. It does not represent ongoing work or a condition that persists
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `event.start`, `event.end`, `event.timer`, and `event.message`
+- **Selectable site kinds:** `docs.logic.importantData`, for important data, data structures, types, or schemas; `docs.logic.secondary`, for secondary or background content
 - **Controllable predicate params example:** an extension could declare `{ interrupting: boolean, channel: string }`; Graph stores only JSON-safe params accepted by that schema
 
 <ComponentPreview
   files="entity-event"
   size="sm"
-  caption="Control the event outline, Graph Theme primary color, and text."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance."
 />
 
 ### state: a persistent condition
@@ -77,13 +77,13 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `state` represents a condition that persists for an object or system. Typical objects include pending, active, suspended, and failed states. The action that changes a state is an `activity`; the instant of transition may be modeled as an `event`
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `state.pending`, `state.active`, and `state.failed`
+- **Selectable site kinds:** `docs.logic.importantData`, for important data, data structures, types, or schemas; `docs.logic.secondary`, for secondary or background content
 - **Controllable predicate params example:** an extension could declare `{ severity: 'low' | 'high', terminal: boolean }`, with the enum and value domain validated by `paramsSchema`
 
 <ComponentPreview
   files="entity-state"
   size="sm"
-  caption="Control the state outline, Graph Theme primary color, and text."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance."
 />
 
 ### gateway: a semantic control point
@@ -91,13 +91,13 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `gateway` represents a split, merge, or synchronization point with explicit control semantics. Typical objects include exclusive choices, parallel splits, parallel joins, and multi-way synchronization. Do not use it merely to obtain a diamond shape or in place of a participant or business resource
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `gateway.exclusive`, `gateway.parallel`, and `gateway.inclusive`
+- **Selectable site kinds:** `docs.logic.importantData`, for important data, data structures, types, or schemas; `docs.logic.secondary`, for secondary or background content
 - **Controllable predicate params example:** an extension could declare `{ mode: 'split' | 'merge', branches: number }` and map params to emphasis without replacing the gateway structure recipe
 
 <ComponentPreview
   files="entity-gateway"
   size="sm"
-  caption="Control the gateway outline, Graph Theme primary color, and text."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance."
 />
 
 ### resource: an object that is used or stored
@@ -105,13 +105,13 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `resource` represents an object that is used, produced, transferred, or stored. Typical objects include documents, databases, queues, datasets, and artifacts. A system that actively participates and provides a capability is usually a `participant`. Its default contour closes two half-elliptic caps with straight sides, so the top does not form a complete ellipse; symmetric vertical padding keeps the text vertically centered
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `resource.document`, `resource.database`, and `resource.queue`
+- **Selectable site kinds:** `docs.logic.importantData`, for important data, data structures, types, or schemas; `docs.logic.secondary`, for secondary or background content
 - **Controllable predicate params example:** an extension could declare `{ mutable: boolean, replicas: number }` and map validated params to sparse appearance rules after predicate resolution
 
 <ComponentPreview
   files="entity-resource"
   size="sm"
-  caption="Inspect the resource's half-elliptic caps, then control the Graph Theme primary color and text."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance and the resource outline."
 />
 
 ### concept: an abstract knowledge object
@@ -119,29 +119,29 @@ Neutral uses a complete master-color outline with a light same-color `fill: 0.08
 `concept` represents an abstract knowledge object rather than a concrete runtime instance. Typical objects include classes, claims, topics, domain concepts, and rules. Use `activity` for executable work and `participant` for an active connectable subject
 
 - **Built-in kinds / predicates:** none
-- **Registrable kind examples:** `concept.class`, `concept.claim`, and `concept.topic`
+- **Selectable site kinds:** `docs.logic.important`, for important logic content; `docs.logic.secondary`, for secondary or background content
 - **Controllable predicate params example:** an extension could declare `{ confidence: number, source: string }`; those params remain the predicate's domain contract rather than fixed `concept` fields
 
 <ComponentPreview
   files="entity-concept"
   size="sm"
-  caption="Control the concept outline, Graph Theme primary color, and text."
+  caption="Start with no kind; select docs.logic.important or docs.logic.secondary to observe blue or gray semantic appearance."
 />
 
 ### Semantic status
 
-`status` preserves a directly readable Graph state on an Entity. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. Omitting the field means no special marker; Graph does not write a `normal` value. This is distinct from the `state` role: status describes the current diagram semantics, while that role represents a persistent condition
+`status` preserves a directly readable Graph state on an Entity. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. `disabled` also uses a `[6, 4]` dashed stroke, distinguishing it from the gray `docs.logic.secondary` kind. Omitting the field means no special marker; Graph does not write a `normal` value. This is distinct from the `state` role: status describes the current diagram semantics, while that role represents a persistent condition
 
-Every Entity role demo exposes a no-status option alongside these four values through its controls. Explicit Core Node-compatible appearance such as `style.color`, `style.fill`, and `style.stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
+Every role demo and the combined style playground can switch between no status and the four status values. With no status, demos with a site kind show the kind semantic color; once a status is selected, the current Theme status color takes precedence. You can also write `status` directly in any Entity Source. Explicit Core Node-compatible appearance such as `style.color`, `style.fill`, and `style.stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
 
 ### Style adjustments
 
-The combined playground switches among all seven built-in roles and directly adjusts Core Node-compatible fill, stroke, opacity, and text styles. The role changes Entity semantics and its base shape recipe; these explicit style fields override the corresponding Theme defaults
+The combined playground uses the `activity` role to switch among its three registered site kinds: `docs.logic.important` is blue, `docs.logic.secondary` is gray, and `docs.logic.algorithm` is violet. Event, state, gateway, and resource also support the orange `docs.logic.importantData`. Fill and stroke defer to the kind rule by default; choosing a concrete color overrides that semantic color
 
 <ComponentPreview
   files="entity-style"
   size="sm"
-  caption="Switch roles, then adjust the fill, stroke, stroke width, dash, opacity, and text color independently."
+  caption="Switch between the site kinds registered for activity to observe blue and violet semantic appearance, then override it with explicit styles when needed."
 />
 
 ## How it works
@@ -156,23 +156,23 @@ An Entity Source record stores authored fields only. `id`, `text`, and `position
 
 An explicit static `style.color` drives both numeric default stroke and fill channels. Compilation fails loudly when a non-static master such as `currentColor` must still resolve either numeric color channel. Use a static `style.color`, or provide both a string stroke and an opaque static fill, so Graph never guesses the host CSS color or backdrop
 
-Entity performs its own registry lookup and lowers to an ordinary Core `Node`. Core, Scene, and renderers do not interpret Entity roles. Graph only adds local Theme context when present; it is not a compile prerequisite
+Entity performs its own registry lookup and lowers to an ordinary Core `Node`. Graph only provides built-in roles; every kind must be registered by an upper layer in the provider assembly, and an unregistered key fails loudly. Core, Scene, and renderers do not interpret Entity roles or kinds. Graph only adds local Theme context when present; it is not a compile prerequisite
 
 ## API Reference
 
 Entity visual fields belong to `style`; text layout, size and spacing belong to `layout`. The role still owns padding, so instances cannot set `layout.padding`.
 
-| Prop         | Type                                    | Default | Description                                                               |
-| ------------ | --------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `id?`        | `string`                                | —       | Optional Core target id; omission registers no reference target           |
-| `role`       | `string`                                | —       | Registered open semantic role key                                         |
-| `kind?`      | `string`                                | —       | Registered stable subtype within the role                                 |
-| `predicate?` | `{ name: string; params?: JsonObject }` | —       | Registered predicate and its JSON-safe parameters                         |
-| `status?`    | `GraphStatusValue`                      | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled` |
-| `position?`  | `IRPosition`                            | —       | Directly reuses the Core Node position language                           |
-| `text?`      | `IRNode['text']`                        | —       | Node-compatible text                                                      |
-| `children?`  | Node-compatible text                    | —       | React text entry; it cannot host arbitrary drawing children               |
-| `meta?`      | `JsonObject`                            | —       | Metadata ignored by Graph semantics                                       |
+| Prop         | Type                                    | Default | Description                                                                                                                        |
+| ------------ | --------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `id?`        | `string`                                | —       | Optional Core target id; omission registers no reference target                                                                    |
+| `role`       | `string`                                | —       | Registered open semantic role key                                                                                                  |
+| `kind?`      | `string`                                | —       | Stable subtype registered by an upper layer. Its identity is `(role, kind)`, so the same kind may be registered for multiple roles |
+| `predicate?` | `{ name: string; params?: JsonObject }` | —       | Registered predicate and its JSON-safe parameters                                                                                  |
+| `status?`    | `GraphStatusValue`                      | —       | Optional closed Graph state: `error`, `success`, `warning`, or `disabled`                                                          |
+| `position?`  | `IRPosition`                            | —       | Directly reuses the Core Node position language                                                                                    |
+| `text?`      | `IRNode['text']`                        | —       | Node-compatible text                                                                                                               |
+| `children?`  | Node-compatible text                    | —       | React text entry; it cannot host arbitrary drawing children                                                                        |
+| `meta?`      | `JsonObject`                            | —       | Metadata ignored by Graph semantics                                                                                                |
 
 ## Related
 

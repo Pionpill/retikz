@@ -66,7 +66,7 @@ appearance = Graph Theme baseline 与有序 rules
            > Relation / label 显式 Core-compatible 字段
 ```
 
-结构决定 marker family、marker existence 和规范 dash；Theme 只能改变颜色、线宽、opacity、marker paint 与 label appearance，不能增删 marker、切换 provider 或改变语义 direction。单个实例的 Path、marker 和 label 字段最终覆盖适用的默认值
+结构决定 marker family、marker existence 和规范 dash；Theme / graphRules 只能通过受限 `structure.dashPattern` 覆盖箭身 dash，其余只改变颜色、线宽、opacity、marker paint 与 label appearance，不能增删 marker、切换 provider 或改变语义 direction。单个实例的 Path、marker 和 label 字段最终覆盖适用的默认值
 
 Relation selector 可以匹配 role、kind、predicate name、Canonical params 与 direction。字段按 AND 匹配；params 使用递归子集匹配，并且必须同时声明 predicate name。规则按声明顺序执行，后匹配项逐字段覆盖先匹配项
 

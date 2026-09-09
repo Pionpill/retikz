@@ -22,7 +22,9 @@ export const EntitySchema = strictObject({
   namespace: literal(GRAPH_NAMESPACE).describe('Graph semantic element namespace.'),
   type: literal(GraphType.Entity).describe('Entity Source record discriminator.'),
   role: EntityRoleSchema,
-  kind: NonBlankStringSchema.optional().describe('Open stable subtype key within the selected Entity role.'),
+  kind: NonBlankStringSchema.optional().describe(
+    'Open stable subtype key whose registration identity is the selected Entity role and kind.',
+  ),
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   ...EntityNodeShape,

@@ -138,6 +138,10 @@ export const GraphRelationDefaultsSchema = strictObject({
   ...GraphRelationDefaultsRootSchema.shape,
 }).describe('Sparse Relation Source defaults.');
 
+export const GraphRelationRuleStructureSchema = strictObject({
+  dashPattern: RelationSchema.shape.style.unwrap().shape.dashPattern.unwrap().describe('Complete Relation dash pattern.'),
+}).describe('Relation rule structural override limited to the dash recipe.');
+
 export const GraphSurfaceDefaultsSchema = strictObject({
   background: SurfaceInputSchema.shape.background,
   border: SurfaceInputSchema.shape.border,
@@ -165,6 +169,7 @@ export const GraphEntityRuleSchema = strictObject({
 export const GraphRelationRuleSchema = strictObject({
   type: literal(GraphType.Relation).describe('Relation Graph rule discriminator.'),
   selector: GraphRelationThemeSelectorSchema.optional().describe('Optional Relation selector; omission matches all.'),
+  structure: GraphRelationRuleStructureSchema.optional().describe('Optional Relation structural dash recipe.'),
   ...GraphRelationDefaultsSchema.shape,
 }).describe('One ordered Relation Source rule.');
 

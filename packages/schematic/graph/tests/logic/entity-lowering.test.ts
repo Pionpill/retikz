@@ -88,20 +88,24 @@ describe('Entity lowering', () => {
   });
 
   it.each([
-    { status: 'error', color: theme.colors.semantic.error },
-    { status: 'success', color: theme.colors.semantic.success },
-    { status: 'warning', color: theme.colors.semantic.warning },
-    { status: 'disabled', color: theme.colors.semantic.guide },
+    { status: 'error', color: theme.colors.semantic.error, dashPattern: undefined },
+    { status: 'success', color: theme.colors.semantic.success, dashPattern: undefined },
+    { status: 'warning', color: theme.colors.semantic.warning, dashPattern: undefined },
+    { status: 'disabled', color: theme.colors.semantic.guide, dashPattern: [6, 4] },
   ] as const)(
     'resolves the Neutral $status status to the Core semantic Entity appearance family',
-    ({ status, color }) => {
+    ({ status, color, dashPattern }) => {
       const options = Graph.resolveGraphDefinitionOptions();
       const canonical = Graph.resolveEntity(entity({ status }), options);
 
-      expect(Graph.resolveEntityAppearance(canonical, { ...options, theme })).toMatchObject({ style: { color } });
-      expect(
-        Graph.lowerEntity(canonical, Graph.resolveEntityAppearance(canonical, { ...options, theme })),
-      ).not.toHaveProperty('status');
+      const appearance = Graph.resolveEntityAppearance(canonical, { ...options, theme });
+
+      expect(appearance).toMatchObject({ style: { color } });
+      expect(appearance.style?.dashPattern).toEqual(dashPattern);
+      const lowered = Graph.lowerEntity(canonical, appearance);
+
+      expect(lowered.style?.dashPattern).toEqual(dashPattern);
+      expect(lowered).not.toHaveProperty('status');
     },
   );
 

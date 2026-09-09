@@ -5,7 +5,7 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 
 # Docs Figure Logic
 
-本 skill 用于给“功能如何实现”配叙述性逻辑图。先读 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)，本文只补充实现逻辑图的风格方法：如何抽象节点、组织箭头、处理 path label、区分 stroke / fill、安排布局。
+本 skill 用于给“功能如何实现”配叙述性逻辑图。先读 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)，本文只补充实现逻辑图的风格方法：如何抽象节点、组织箭头、处理 path label、区分 stroke / fill、安排布局与保存可读取的 Graph 语义。
 
 ## 目标
 
@@ -58,6 +58,30 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 7. 选择统一边界模式，并写下“角色类别 -> 颜色”映射；同页复用同一编码。
 8. 用 retikz 写 demo，先完成主关系，再加入不可缺少的辅助信息。
 9. 做一次删减和紧凑化检查，再回看正文是否解释每个非显然角色。
+
+## 站点逻辑图语义
+
+逻辑图的颜色和线型不是图片后处理。需要保留给 Source IR、工具与 LLM 的角色关系时，使用 `@/modules/docs/components/logic-figure` 提供的 `<LogicFigure>` 与 `<LogicFigureRelation>`，并在其中使用普通 Graph `<Entity>`；不要退回手写 `Node` / `Draw` 的颜色和 dash pattern。
+
+`<LogicFigure>` 为内部 `<Entity>` 注册站点逻辑图 vocabulary。`Entity.kind` 与 `role` 共同选择稳定 Graph kind 和站点 rule 的外观。默认词汇为：
+
+| kind                       | 可用 role                               | 颜色语义                                          |
+| -------------------------- | --------------------------------------- | ------------------------------------------------- |
+| `docs.logic.important`     | `participant`、`activity`、`concept`    | 重要逻辑性内容，`dodgerblue`                      |
+| `docs.logic.importantData` | `event`、`state`、`gateway`、`resource` | 重要的数据、数据结构、类型或 schema，`darkorange` |
+| `docs.logic.secondary`     | 全部 role                               | 次要或背景内容，`gray`                            |
+| `docs.logic.algorithm`     | `activity`                              | 算法、高复杂度或性能问题，`darkviolet`            |
+
+`LogicFigureRelation` 的 `kind` 同时选择 Graph relation role 与结构 recipe：
+
+- `docs.logic.control-flow`：真实控制流、调用链或主执行次序，灰色实线
+- `docs.logic.data-flow`：真实数据或 payload 流动，`darkorange` 实线
+- `docs.logic.dependency`：辅助工具或运行时依赖，灰色虚线
+- `docs.logic.feedback`：返回前序阶段的真实反馈流，灰色虚线
+
+点线仍只表示不存在于 Graph 模型中的教学几何参考，继续使用 `<Draw>` 与 `dashPattern={[1, 4]}`；不要把它伪装成 `LogicFigureRelation`。错误、成功、警告与禁用使用 Graph `status`；其中 `disabled` 额外使用 `[6, 4]` 虚线，以区别 `docs.logic.secondary` 的灰色类别语义。
+
+controls 只能选择当前 role 已注册的上述 kind，并让 demo 实际消费该值；不暴露任意颜色或 dash 的自由组合。每张叙述图不默认增加 controls，只有读者确实需要比较同一结构下的语义分支时才增加 playground。
 
 ## 节点风格
 

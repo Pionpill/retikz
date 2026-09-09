@@ -55,7 +55,7 @@ Source IR 只保存作者提供的事实。省略可选 `children`、位置、ro
 
 Graph `children` 直接使用 Core `ChildSchema`，可以混合 Entity、Relation、Node、Coordinate、Path、Scope 及其它 composite。`theme`、样式默认、transform、placement、clip、bounding shape、animation 与 `meta` 都保留 Core Scope 语义；Graph 专属默认入口为 `graphDefaults` 与 `graphRules`
 
-Entity role、Relation role / kind 都是开放 key。schema 会把内置 const object 词汇作为 TypeScript 和 JSON Schema 提示，但仍接受任意非空白自定义字符串；是否已注册只在 resolve 阶段校验。Entity kind 与 predicate name 当前没有内置词汇，因此继续显示为普通非空白字符串
+Entity role、Relation role / kind 都是开放 key。schema 会把内置 const object 词汇作为 TypeScript 和 JSON Schema 提示，但仍接受任意非空白自定义字符串；是否已注册只在 resolve 阶段校验。Entity kind 与 predicate name 当前没有内置词汇，因此继续显示为普通非空白字符串。Entity kind 的注册身份是 `(role, kind)`，相同词面 kind 可以分别注册给多个 role
 
 ```json
 {
@@ -121,7 +121,7 @@ Entity 把语义与 Core Node 实例字段放在同一个 Source record。除了
     namespace: 'Graph semantic owner namespace。',
     type: 'Entity Source discriminator。',
     role: '由 Entity role registry 解析的开放 key。',
-    kind: 'role 内可选稳定子类型 key。',
+    kind: 'role 内可选稳定子类型 key；注册身份是 (role, kind)。',
     predicate: '可选精确 predicate reference。',
     'style.color': '主图形颜色及未单独覆盖时的继承颜色。',
     'style.fill': '节点填充画笔；显式值覆盖 Theme 默认。',
@@ -322,12 +322,12 @@ Entity / Relation 的 `style.color` 是字符串主色。适用的 `fill`、`str
 
 Core `theme` 选择主题环境；`graphDefaults` 显式指定后代默认值，`graphRules` 独立保存有序规则，二者都可单独使用。默认片段保留正式 Source 的路径：Entity 使用 `style` / `layout`，Relation 的 marker 与标签格式位于根，Group / Block 使用根 Surface 字段。默认值不包含内容、identity、role、路由或算法策略。
 
-| 规则契约                                           | 允许的赋值                            | 匹配条件                              |
-| -------------------------------------------------- | ------------------------------------- | ------------------------------------- |
-| `GraphRuleSchema` / `IRGraphRule` 的 Entity 分支   | `style`，不含 `font`；不允许 `layout` | `role`、`kind`、`predicate`、`status` |
-| `GraphRuleSchema` / `IRGraphRule` 的 Relation 分支 | 受限 `style` 与根 marker / 标签格式   | 上述条件及有效 `direction`            |
+| 规则契约                                           | 允许的赋值                                                   | 匹配条件                              |
+| -------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------- |
+| `GraphRuleSchema` / `IRGraphRule` 的 Entity 分支   | `style`，不含 `font`；不允许 `layout`                        | `role`、`kind`、`predicate`、`status` |
+| `GraphRuleSchema` / `IRGraphRule` 的 Relation 分支 | 受限 `style`、根 marker / 标签格式与 `structure.dashPattern` | 上述条件及有效 `direction`            |
 
-Relation 默认与规则不接受 fill 或结构性 dashPattern；marker 外观不会创建 marker，也不能改变其 shape / size。Group / Block 不提供 selector rules。
+Relation 默认不接受 fill 或结构性 `dashPattern`。只有 Relation rule 可通过受限的 `structure.dashPattern` 覆盖箭身虚线；它不能创建 marker，也不能改变 marker 的 shape / size。Group / Block 不提供 selector rules。
 
 `defineGraphThemeStyle()` 的 `resolve(theme)` 返回 `GraphThemeStyleSource`，即 `{ defaults?, rules? }`。`defaults` 与 `graphDefaults` 复用同一片段，`rules` 与 `graphRules` 复用同一规则；callback 不再返回 tokens 包装。空片段、空组、已知字段的 optional `undefined` 表示没有覆盖，合法的 `0`、`false` 与字段允许的 `null` 保持有效。
 

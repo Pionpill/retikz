@@ -67,6 +67,7 @@ type PreviewSource = typeof participantZhSource;
 
 type RoleScenario = Readonly<{
   role: string;
+  kinds: ReadonlyArray<string>;
   content: string;
   chinese: PreviewControlContract;
   english: PreviewControlContract;
@@ -78,6 +79,7 @@ type RoleScenario = Readonly<{
 const scenarios: ReadonlyArray<RoleScenario> = [
   {
     role: 'participant',
+    kinds: ['docs.logic.important', 'docs.logic.secondary'],
     content: 'Payment API',
     chinese: participantZh,
     english: participantEn,
@@ -87,6 +89,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
   },
   {
     role: 'activity',
+    kinds: ['docs.logic.important', 'docs.logic.secondary', 'docs.logic.algorithm'],
     content: 'Process Order',
     chinese: activityZh,
     english: activityEn,
@@ -96,6 +99,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
   },
   {
     role: 'event',
+    kinds: ['docs.logic.importantData', 'docs.logic.secondary'],
     content: 'Timeout',
     chinese: eventZh,
     english: eventEn,
@@ -105,6 +109,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
   },
   {
     role: 'state',
+    kinds: ['docs.logic.importantData', 'docs.logic.secondary'],
     content: 'Pending',
     chinese: stateZh,
     english: stateEn,
@@ -114,6 +119,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
   },
   {
     role: 'gateway',
+    kinds: ['docs.logic.importantData', 'docs.logic.secondary'],
     content: 'Stock?',
     chinese: gatewayZh,
     english: gatewayEn,
@@ -123,6 +129,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
   },
   {
     role: 'resource',
+    kinds: ['docs.logic.importantData', 'docs.logic.secondary'],
     content: 'Order DB',
     chinese: resourceZh,
     english: resourceEn,
@@ -132,6 +139,7 @@ const scenarios: ReadonlyArray<RoleScenario> = [
   },
   {
     role: 'concept',
+    kinds: ['docs.logic.important', 'docs.logic.secondary'],
     content: 'Order',
     chinese: conceptZh,
     english: conceptEn,
@@ -160,7 +168,7 @@ const renderWithValues = (scenario: RoleScenario, values: Readonly<PreviewContro
   );
 
 describe('Graph Entity role controls', () => {
-  it('为七个 role 暴露双语一致的状态、精确颜色与文本控件', () => {
+  it('每个 role demo 默认不写 kind，且只能选择自身 role 已注册的 kind', () => {
     for (const scenario of scenarios) {
       const fields = getPreviewControlFields(scenario.chinese.controls);
 
@@ -168,21 +176,41 @@ describe('Graph Entity role controls', () => {
         fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue })),
         scenario.role,
       ).toEqual([
+        { kind: 'select', id: 'kind', defaultValue: '' },
         { kind: 'select', id: 'status', defaultValue: '' },
         { kind: 'color', id: 'color', defaultValue: 'currentColor' },
         { kind: 'text', id: 'content', defaultValue: scenario.content },
       ]);
       expect(scenario.chinese.canonicalValues, scenario.role).toEqual({
+        kind: '',
         status: '',
         color: 'currentColor',
         content: scenario.content,
       });
       expect(scenario.english.canonicalValues, scenario.role).toEqual(scenario.chinese.canonicalValues);
       expect(scenario.english.relatedApis, scenario.role).toEqual(scenario.chinese.relatedApis);
+
+      const kindField = fields.find(field => field.id === 'kind');
+
+      expect(kindField, scenario.role).toMatchObject({
+        kind: 'select',
+        defaultValue: '',
+      });
+      expect(kindField?.kind === 'select' ? kindField.options.map(option => option.value) : [], scenario.role).toEqual([
+        '',
+        ...scenario.kinds,
+      ]);
     }
   });
 
   it('让 canonical preview 使用主题默认填充，并让每个控件改变真实 SVG', () => {
+    const semanticColorByKind = {
+      'docs.logic.important': '#1e90ff',
+      'docs.logic.importantData': '#ff8c00',
+      'docs.logic.secondary': '#808080',
+      'docs.logic.algorithm': '#9400d3',
+    } as const;
+
     for (const scenario of scenarios) {
       const baseline = renderWithValues(scenario, scenario.chinese.canonicalValues);
 
@@ -190,17 +218,24 @@ describe('Graph Entity role controls', () => {
       expect(baseline, scenario.role).toMatch(/fill="(?!none")[^"]+"/u);
       if (scenario.role === 'activity') expect(baseline).not.toContain('stroke-dasharray');
       expect(
-        renderWithValues(scenario, { ...scenario.chinese.canonicalValues, status: 'success' }),
-        `${scenario.role}: status`,
-      ).not.toBe(baseline);
-      expect(
         renderWithValues(scenario, { ...scenario.chinese.canonicalValues, color: '#2563eb' }),
         `${scenario.role}: color`,
+      ).not.toBe(baseline);
+      expect(
+        renderWithValues(scenario, { ...scenario.chinese.canonicalValues, status: 'success' }),
+        `${scenario.role}: status`,
       ).not.toBe(baseline);
       expect(
         renderWithValues(scenario, { ...scenario.chinese.canonicalValues, content: `${scenario.content} · changed` }),
         `${scenario.role}: content`,
       ).not.toBe(baseline);
+      for (const kind of scenario.kinds) {
+        const semanticColor = semanticColorByKind[kind as keyof typeof semanticColorByKind];
+        const markup = renderWithValues(scenario, { ...scenario.chinese.canonicalValues, kind });
+
+        expect(markup, `${scenario.role}: ${kind}`).toContain(semanticColor);
+        expect(markup, `${scenario.role}: ${kind}`).not.toContain(`fill="${semanticColor}"`);
+      }
     }
   });
 
@@ -258,35 +293,31 @@ describe('Graph Entity style playground', () => {
       </PreviewControlStateContext.Provider>,
     );
 
-  it('暴露全部内置 role 与统一样式控件，并保持双语契约一致', () => {
+  it('暴露 activity role 的站点 docs.logic kind 与统一样式控件，并保持双语契约一致', () => {
     const fields = getPreviewControlFields(styleZh.controls);
 
     expect(fields.map(field => ({ kind: field.kind, id: field.id, defaultValue: field.defaultValue }))).toEqual([
-      { kind: 'select', id: 'role', defaultValue: 'activity' },
+      { kind: 'select', id: 'kind', defaultValue: 'docs.logic.algorithm' },
       { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'text', id: 'content', defaultValue: 'Process Order' },
-      { kind: 'color', id: 'fill', defaultValue: '#e2e8f0' },
-      { kind: 'color', id: 'stroke', defaultValue: '#2563eb' },
+      { kind: 'color', id: 'fill', defaultValue: 'currentColor' },
+      { kind: 'color', id: 'stroke', defaultValue: 'currentColor' },
       { kind: 'range', id: 'strokeWidth', defaultValue: 2 },
       { kind: 'switch', id: 'dashed', defaultValue: false },
       { kind: 'range', id: 'opacity', defaultValue: 1 },
       { kind: 'color', id: 'textColor', defaultValue: '#0f172a' },
     ]);
     expect(fields[0]?.kind === 'select' ? fields[0].options.map(option => option.value) : []).toEqual([
-      'participant',
-      'activity',
-      'event',
-      'state',
-      'gateway',
-      'resource',
-      'concept',
+      'docs.logic.important',
+      'docs.logic.secondary',
+      'docs.logic.algorithm',
     ]);
     expect(styleZh.canonicalValues).toEqual({
-      role: 'activity',
+      kind: 'docs.logic.algorithm',
       status: '',
       content: 'Process Order',
-      fill: '#e2e8f0',
-      stroke: '#2563eb',
+      fill: 'currentColor',
+      stroke: 'currentColor',
       strokeWidth: 2,
       dashed: false,
       opacity: 1,
@@ -296,14 +327,23 @@ describe('Graph Entity style playground', () => {
     expect(styleEn.relatedApis).toEqual(styleZh.relatedApis);
   });
 
-  it('让 role 与每个显式样式控件都改变真实 SVG', () => {
+  it('让 activity role 的站点 kind 改变真实 SVG 的语义颜色，并允许显式样式覆盖', () => {
     const baseline = renderStyleWithValues(styleZh.canonicalValues);
 
     expect(baseline).toContain('<svg');
-    for (const role of ['participant', 'event', 'state', 'gateway', 'resource', 'concept']) {
-      expect(renderStyleWithValues({ ...styleZh.canonicalValues, role }), `${role}: role`).not.toBe(baseline);
+    const semanticColors = {
+      'docs.logic.important': '#1e90ff',
+      'docs.logic.secondary': '#808080',
+      'docs.logic.algorithm': '#9400d3',
+    } as const;
+    for (const [kind, color] of Object.entries(semanticColors)) {
+      const markup = renderStyleWithValues({ ...styleZh.canonicalValues, kind });
+
+      expect(markup, `${kind}: kind`).toContain(color);
+      if (kind !== styleZh.canonicalValues.kind) expect(markup, `${kind}: kind`).not.toBe(baseline);
     }
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, content: 'Changed' }), 'content').not.toBe(baseline);
+    expect(renderStyleWithValues({ ...styleZh.canonicalValues, status: 'success' }), 'status').not.toBe(baseline);
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, fill: '#dbeafe' }), 'fill').not.toBe(baseline);
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, stroke: '#dc2626' }), 'stroke').not.toBe(baseline);
     expect(renderStyleWithValues({ ...styleZh.canonicalValues, strokeWidth: 4 }), 'strokeWidth').not.toBe(baseline);
@@ -325,9 +365,10 @@ describe('Graph Entity style playground', () => {
         type: 'entity',
         id: 'entity-style',
         role: 'activity',
+        kind: 'docs.logic.algorithm',
         position: [180, 90],
         text: 'Process Order',
-        style: { fill: '#e2e8f0', stroke: '#2563eb', strokeWidth: 2, dashed: false, opacity: 1, textColor: '#0f172a' },
+        style: { strokeWidth: 2, dashed: false, opacity: 1, textColor: '#0f172a' },
       },
     ]);
   });
