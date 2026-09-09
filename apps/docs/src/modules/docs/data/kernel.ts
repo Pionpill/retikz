@@ -240,10 +240,10 @@ export const kernelSection: Array<Section> = [
           {
             id: 'validation-errors',
             label: 'kernel.pkgFoundationValidationErrors',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
           },
-          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Internals },
-          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Internals },
+          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Advanced },
+          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
