@@ -4,6 +4,8 @@ import {
   EntityRole,
   GraphType,
   mergeGraphDefaults,
+  projectEntityGraphLayers,
+  projectRelationGraphLayers,
   RelationRole,
   resolveEntity,
   resolveGraphDefinitionOptions,
@@ -39,6 +41,7 @@ type FlowContainmentOwner = Readonly<{
 
 type ResolveState = Readonly<{
   graph: ReturnType<typeof resolveGraphDefinitionOptions>;
+  graphLayers: ReadonlyArray<Readonly<{ rules?: IRFlowDiagram['graphRules'] }>>;
   defaults: IRFlowDefaults;
   ids: Map<string, FlowSourcePath>;
   entities: Map<string, IRFlowEntity>;
@@ -210,12 +213,15 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     ...(Object.keys(style).length === 0 ? {} : { style }),
     ...(Object.keys(layout).length === 0 ? {} : { layout }),
   };
-  resolveEntity(graph, state.graph);
+  const projectedGraph = projectEntityGraphLayers(resolveEntity(graph, state.graph), {
+    ...state.graph,
+    layers: state.graphLayers,
+  });
   return {
     type: 'entity',
     id: source.id,
     source,
-    graph,
+    graph: projectedGraph,
     ...(source.rank === undefined ? {} : { rank: source.rank }),
     style,
     layout,
@@ -363,9 +369,13 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     ...(defaults?.labelOpacity === undefined ? {} : { labelOpacity: defaults.labelOpacity }),
   };
   const canonical = resolveRelation(graph, state.graph);
+  const projectedGraph = projectRelationGraphLayers(canonical, {
+    ...state.graph,
+    layers: state.graphLayers,
+  });
   return {
     source,
-    graph: { ...graph, direction: canonical.effectiveDirection },
+    graph: { ...projectedGraph, direction: canonical.effectiveDirection },
     ...(source.routing === undefined ? {} : { routing: source.routing }),
     path,
   };
@@ -376,6 +386,7 @@ export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveCo
   const defaults = resolveFlowTheme(context.theme, context.flowThemeStyles, source.flowDefaults);
   const state: ResolveState = {
     graph: resolveGraphDefinitionOptions(context.graph),
+    graphLayers: source.graphRules === undefined ? [] : [{ rules: source.graphRules }],
     defaults,
     ids: new Map(),
     entities: new Map(),

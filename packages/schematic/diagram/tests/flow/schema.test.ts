@@ -88,6 +88,30 @@ const completeFlow = {
 } as const;
 
 describe('Flow Source schema', () => {
+  it('preserves root Graph rules while rejecting Flow Group-local rules', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      graphRules: [{ type: 'entity', selector: { kind: 'docs.logic.important' }, style: { color: 'dodgerblue' } }],
+      entities: [{ id: 'entity', text: 'Entity', kind: 'docs.logic.important' }],
+      groups: [],
+      layouts: [],
+      children: ['entity'],
+    };
+
+    const parsed = FlowDiagramSchema.parse(source);
+
+    expect(parsed.graphRules).toEqual(source.graphRules);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
+    expect(
+      FlowDiagramSchema.safeParse({
+        ...source,
+        groups: [{ id: 'group', graphRules: source.graphRules, children: ['entity'] }],
+        children: ['group'],
+      }).success,
+    ).toBe(false);
+  });
+
   it('parses the flat catalog Source and round-trips without changing it', () => {
     const parsed = FlowDiagramSchema.parse(completeFlow);
 

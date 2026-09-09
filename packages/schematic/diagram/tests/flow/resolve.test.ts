@@ -1,4 +1,5 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import { defineEntityKind, defineRelationKind, RelationRole } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
@@ -6,10 +7,11 @@ import { FlowDiagramSchema } from '../../src/flow';
 import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 
-const resolve = (source: unknown) =>
+const resolve = (source: unknown, graph?: Parameters<typeof resolveFlowDiagram>[1]['graph']) =>
   resolveFlowDiagram(FlowDiagramSchema.parse(source), {
     theme: DEFAULT_RESOLVED_THEME,
     flowThemeStyles: resolveFlowThemeStyleRegistry(),
+    ...(graph === undefined ? {} : { graph }),
   });
 
 const expectDiagramError = (
@@ -38,6 +40,52 @@ const singleEntityFlow = {
 } as const;
 
 describe('Flow Source resolve', () => {
+  it('projects root Graph rules after Flow defaults and item overrides', () => {
+    const graph = {
+      entityKinds: [
+        defineEntityKind({ kind: 'docs.logic.important', role: 'activity', description: 'Important logic content' }),
+      ],
+      relationKinds: [
+        defineRelationKind({ kind: 'docs.logic.data-flow', role: RelationRole.Flow, description: 'Data flow' }),
+      ],
+    };
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      graphRules: [
+        { type: 'entity', selector: { kind: 'docs.logic.important' }, style: { color: 'dodgerblue' } },
+        { type: 'relation', selector: { kind: 'docs.logic.data-flow' }, style: { color: 'darkorange' } },
+      ],
+      entities: [
+        { id: 'rule', text: 'Rule', role: 'activity', kind: 'docs.logic.important' },
+        {
+          id: 'explicit',
+          text: 'Explicit',
+          role: 'activity',
+          kind: 'docs.logic.important',
+          style: { color: 'green' },
+        },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['rule', 'explicit'],
+      relations: [
+        { source: 'rule', target: 'explicit', kind: 'docs.logic.data-flow', style: { color: 'green' } },
+        { source: 'explicit', target: 'rule', kind: 'docs.logic.data-flow' },
+      ],
+      flowDefaults: { entity: { style: { fill: 'lightgray' } }, relation: { style: { strokeWidth: 2 } } },
+    };
+
+    const resolved = resolve(source, graph);
+    const rule = resolved.elements[0];
+    const explicit = resolved.elements[1];
+
+    expect(rule).toMatchObject({ type: 'entity', graph: { style: { color: 'dodgerblue', fill: 'lightgray' } } });
+    expect(explicit).toMatchObject({ type: 'entity', graph: { style: { color: 'green', fill: 'lightgray' } } });
+    expect(resolved.relations[0]?.graph.style).toMatchObject({ color: 'green', strokeWidth: 2 });
+    expect(resolved.relations[1]?.graph.style).toMatchObject({ color: 'darkorange', strokeWidth: 2 });
+  });
+
   it('rebuilds one recursive Canonical tree from owner children order and catalog paths', () => {
     const resolved = resolve({
       namespace: 'diagram',

@@ -57,6 +57,7 @@ const sourceInput = {
     },
   ],
   flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } },
+  graphRules: [{ type: 'entity' as const, selector: { role: 'activity' }, style: { color: 'dodgerblue' } }],
 };
 
 const expectedSource = {

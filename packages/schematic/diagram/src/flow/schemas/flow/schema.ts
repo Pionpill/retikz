@@ -6,6 +6,7 @@ import {
   EntityRoleSchema,
   EntitySchema,
   GraphRelationDefaultsSchema,
+  GraphRuleSchema,
   GraphStatusSchema,
   GroupCaptionTextSchema,
   GroupSchema,
@@ -220,6 +221,9 @@ export const FlowDiagramSchema = strictObject({
   frame: DiagramFrameSchema.optional().describe('Optional Diagram Frame overrides.'),
   diagramDefaults: DiagramDefaultsSchema.optional().describe('Optional Diagram Source defaults.'),
   flowDefaults: FlowDefaultsSchema.optional().describe('Optional Flow Source defaults.'),
+  graphRules: array(GraphRuleSchema)
+    .optional()
+    .describe('Optional ordered Graph rules for Flow-materialized Entities and Relations.'),
   layout: FlowLayoutIntentSchema.optional().describe('Root Flow layout overrides.'),
   routing: FlowRoutingSchema.optional().describe('Root Flow relation routing default.'),
   entities: array(FlowEntitySchema).nonempty().describe('Non-empty flat Flow Entity declaration catalog.'),

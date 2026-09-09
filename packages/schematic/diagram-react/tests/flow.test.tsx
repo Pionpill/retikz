@@ -93,6 +93,7 @@ describe('@retikz/diagram-react/flow', () => {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
       diagramDefaults: { presentation: { title: { style: { opacity: 0.8 } } } },
       flowDefaults: { entity: { layout: { maxTextWidth: 180 } }, relation: { labelFont: { size: 11 } } },
+      graphRules: [{ type: 'entity' as const, selector: { role: 'concept' }, style: { color: 'dodgerblue' } }],
     } satisfies FlowReact.FlowDiagramProps;
     const entity = { id: 'node', text: 'Node', layout: { lineHeight: 18 } };
     const direct = FlowDiagramSchema.parse({

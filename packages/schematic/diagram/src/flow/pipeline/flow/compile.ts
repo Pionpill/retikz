@@ -24,6 +24,7 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
     frame: _frame,
     diagramDefaults: _diagramDefaults,
     flowDefaults: _flowDefaults,
+    graphRules: _graphRules,
     layout: _layout,
     routing: _routing,
     entities: _entities,
@@ -39,6 +40,7 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
   void _frame;
   void _diagramDefaults;
   void _flowDefaults;
+  void _graphRules;
   void _layout;
   void _routing;
   void _entities;
