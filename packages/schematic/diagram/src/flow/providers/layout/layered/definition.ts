@@ -20,7 +20,7 @@ export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayou
   },
   defaults: {
     direction: 'right',
-    nodeGap: 24,
+    nodeGap: 48,
     rankGap: 48,
     routing: { kind: 'straight', orthogonalCornerRadius: 8 },
   },

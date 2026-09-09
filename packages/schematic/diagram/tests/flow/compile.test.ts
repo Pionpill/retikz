@@ -1337,7 +1337,7 @@ describe('Flow Graph materialization invariants', () => {
       input: {
         layout: {
           direction: 'right',
-          nodeGap: 24,
+          nodeGap: 48,
           rankGap: 48,
           routing: { kind: 'straight' },
         },

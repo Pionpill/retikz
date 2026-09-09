@@ -77,7 +77,7 @@ describe('Flow Layout registry and catalog', () => {
 
     expect(layered?.defaults).toEqual({
       direction: 'right',
-      nodeGap: 24,
+      nodeGap: 48,
       rankGap: 48,
       routing: { kind: 'straight', orthogonalCornerRadius: 8 },
     });
