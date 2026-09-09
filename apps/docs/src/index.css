@@ -147,3 +147,15 @@
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* rehype-mathjax 将 display TeX 输出为自定义 mjx-container；统一占满正文宽度后居中其 SVG */
+mjx-container[jax='SVG'][display='true'] {
+  display: block;
+  width: 100%;
+  text-align: center !important;
+}
+
+/* Tailwind preflight 将 svg 设为 block，须用自动外边距而非 text-align 实际居中 */
+mjx-container[jax='SVG'][display='true'] > svg {
+  margin-inline: auto;
+}
