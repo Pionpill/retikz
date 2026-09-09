@@ -39,6 +39,17 @@ const local = worldToLocal(shape, world); // 约为 [20, 0]
 
 两个方法互为逆变换，都会返回新的点，不会修改输入的 tuple。
 
+### 算法解析
+
+上方从局部点到世界点：`localToWorld` 先按 `rotate` 绕局部原点旋转，再加上图形中心。下方则反向执行：`worldToLocal` 先减去图形中心，再按负旋转角旋转。中心图形（`CenteredShape`）位于中间，同时为两条链提供中心位置与旋转角；当 `rotate` 为 `0` 或省略时，旋转保持点不变。两条实线链及其独立计算步骤通过同一 Entity / Relation group 自动使用不同颜色，颜色不表示新的 kind。
+
+<ComponentPreview
+  files="coordinate-conversion-flow"
+  size="sm"
+  hideCode
+  caption="上下两条链互为逆变换，中心图形提供共同参数"
+/>
+
 ### API 参考
 
 | 类别 | API             | 作用                                             |
@@ -49,21 +60,41 @@ const local = worldToLocal(shape, world); // 约为 [20, 0]
 
 ## 二维仿射矩阵
 
-当变换不只是“围绕中心旋转”，而是还包含缩放、镜像、错切，或者需要连续组合多个变换时，可以使用二维仿射矩阵。它可以理解为一张“坐标计算配方”：输入一个点 `[x, y]`，按照配方计算出新的点 `[x', y']`。
+前一节的局部到世界坐标转换，本质上也是“旋转后平移”的仿射变换；`CenteredShape` 将这一常见场景压缩为中心和角度。当还需要缩放、镜像、错切，或连续组合多个变换时，可以使用二维仿射矩阵。它可以理解为一张“坐标计算配方”：输入一个点 `[x, y]`，按照配方计算出新的点 `[x', y']`。
 
-六元组中的前四个数负责改变方向和尺寸，后两个数负责平移：
+`AffineMatrix` 沿用 SVG / Canvas 的表示法：它是一个包含六个数的 tuple，顺序固定为 `[a, b, c, d, e, f]`。这六项分为两部分：
 
 | 部分           | 直观作用                                   |
 | -------------- | ------------------------------------------ |
 | `[a, b, c, d]` | 组合旋转、缩放、镜像和错切等方向或尺寸变化 |
 | `[e, f]`       | 把结果整体移动到新的位置                   |
 
-`AffineMatrix` 沿用 SVG / Canvas 常见的 `[a, b, c, d, e, f]` 顺序，对点的计算公式是：
+其中前四项组成线性部分：
 
-```text
-x' = a × x + c × y + e
-y' = b × x + d × y + f
-```
+$$
+\begin{bmatrix}
+a & c \\
+b & d
+\end{bmatrix}
+$$
+
+按输入坐标的来源看，每一项的含义是：
+
+| 参数 | 作用                        |
+| ---- | --------------------------- |
+| `a`  | 输入 `x` 对输出 `x'` 的贡献 |
+| `b`  | 输入 `x` 对输出 `y'` 的贡献 |
+| `c`  | 输入 `y` 对输出 `x'` 的贡献 |
+| `d`  | 输入 `y` 对输出 `y'` 的贡献 |
+
+按照这套六元组顺序，对点的计算公式是：
+
+$$
+\begin{aligned}
+x' &= ax + cy + e \\
+y' &= bx + dy + f
+\end{aligned}
+$$
 
 例如，下面的两个矩阵先把点的横坐标放大为 2 倍、纵坐标放大为 3 倍，再把结果向右移动 10、向下移动 20：
 
@@ -75,9 +106,40 @@ const matrix = multiplyAffine(translate, scale);
 applyAffine(matrix, [4, 5]); // [18, 35]：先缩放，再平移
 ```
 
+也就是说，这个点依次经过 `[4, 5] → [8, 15] → [18, 35]`；中间结果 `[8, 15]` 是缩放后的坐标。
+
 `multiplyAffine(outer, inner)` 中，`inner` 是先执行的内层变换，`outer` 是后执行的外层变换。因此上例先执行 `scale`，再执行 `translate`；交换两个参数，得到的结果也会改变。
 
-可以这样选择两种能力：只需要围绕图形中心处理局部点时，使用 `localToWorld` / `worldToLocal`；需要表达任意线性变化或组合多步变换时，使用 `AffineMatrix`、`multiplyAffine` 和 `applyAffine`。
+### 算法解析
+
+二维仿射计算分成“组合配方”和“应用配方”两步。内层矩阵 `inner` 先处理原始点，外层矩阵 `outer` 再处理内层的结果；它们不是按书写顺序从左到右作用。因此，合成矩阵 `combined` 满足：
+
+```ts
+applyAffine(combined, point) === applyAffine(outer, applyAffine(inner, point));
+
+const combined = multiplyAffine(outer, inner);
+```
+
+若 `outer = [A, B, C, D, E, F]`、`inner = [a, b, c, d, e, f]`，并记合成结果为 `combined = [a', b', c', d', e', f']`，则：
+
+$$
+\begin{aligned}
+a' &= Aa + Cb & b' &= Ba + Db \\
+c' &= Ac + Cd & d' &= Bc + Dd \\
+e' &= Ae + Cf + E & f' &= Be + Df + F
+\end{aligned}
+$$
+
+前四项组合旋转、缩放、镜像或错切，最后两项先变换内层的平移 `[e, f]`，再加上外层平移 `[E, F]`。`multiplyAffine` 只合成配方，不处理点；随后 `applyAffine` 才让输入点的 `x`、`y` 参与两条线性组合，得到新点。
+
+<ComponentPreview
+  files="affine-composition-flow"
+  size="sm"
+  hideCode
+  caption="内层先执行、外层随后；先将二者合成为矩阵，再应用到输入点"
+/>
+
+可以这样选择两种能力：只需要围绕图形中心处理局部点时，使用 `localToWorld` / `worldToLocal`；需要表达任意二维仿射变换或组合多步变换时，使用 `AffineMatrix`、`multiplyAffine` 和 `applyAffine`。
 
 如果需要在消费仿射矩阵前检查它是否由有限数值组成且可逆，可以使用 `isFiniteNonSingularAffine`。对于描边等要求保持统一缩放的场景，可以使用 `getAffineSimilarityScale` 获取缩放因子；矩阵不是相似变换时会返回 `undefined`。
 

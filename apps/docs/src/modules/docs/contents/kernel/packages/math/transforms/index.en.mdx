@@ -43,6 +43,17 @@ Choose the function from the data you already have:
 
 The two functions are inverses. Both return a new point and leave the input tuple unchanged.
 
+### Algorithm walkthrough
+
+The upper lane maps a local point to a world point: `localToWorld` rotates around the local origin by `rotate`, then adds the shape center. The lower lane performs the reverse: `worldToLocal` first subtracts the shape center, then rotates by the negative angle. `CenteredShape` sits between the lanes and supplies the shared center and rotation; when `rotate` is `0` or omitted, rotation leaves the point unchanged. The two solid lanes and their independent calculation steps use shared Entity / Relation groups to receive different automatic colors; color does not introduce another kind.
+
+<ComponentPreview
+  files="coordinate-conversion-flow"
+  size="sm"
+  hideCode
+  caption="The upper and lower lanes are inverse transforms that share CenteredShape parameters"
+/>
+
 ### API reference
 
 | Category | API             | Purpose                                                    |
@@ -53,21 +64,41 @@ The two functions are inverses. Both return a new point and leave the input tupl
 
 ## Two-dimensional affine matrices
 
-When a transform is more than “rotate around a shape center”—for example, when it also includes scaling, reflection, or shear—or when several transforms need to be composed, use a two-dimensional affine matrix. Think of it as a recipe for calculating a new point: give it `[x, y]`, and it produces `[x', y']`.
+The previous local-to-world conversion is itself an affine transform: rotate, then translate. `CenteredShape` reduces that common case to a center and an angle. When a transform also needs scaling, reflection, shear, or several composed steps, use a two-dimensional affine matrix. Think of it as a recipe for calculating a new point: give it `[x, y]`, and it produces `[x', y']`.
 
-The first four values change direction and size; the final two values translate the result:
+`AffineMatrix` follows SVG / Canvas notation: it is a six-number tuple in the fixed order `[a, b, c, d, e, f]`. The values have two parts:
 
 | Part           | Intuitive role                                   |
 | -------------- | ------------------------------------------------ |
 | `[a, b, c, d]` | Combine rotation, scaling, reflection, and shear |
 | `[e, f]`       | Move the result to a new position                |
 
-`AffineMatrix` follows the common SVG / Canvas `[a, b, c, d, e, f]` order. For a point, the calculation is:
+The first four values form the linear part:
 
-```text
-x' = a × x + c × y + e
-y' = b × x + d × y + f
-```
+$$
+\begin{bmatrix}
+a & c \\
+b & d
+\end{bmatrix}
+$$
+
+By the input coordinate each value receives, they mean:
+
+| Value | Contribution             |
+| ----- | ------------------------ |
+| `a`   | Input `x` to output `x'` |
+| `b`   | Input `x` to output `y'` |
+| `c`   | Input `y` to output `x'` |
+| `d`   | Input `y` to output `y'` |
+
+With that tuple order, the calculation for a point is:
+
+$$
+\begin{aligned}
+x' &= ax + cy + e \\
+y' &= bx + dy + f
+\end{aligned}
+$$
 
 For example, these matrices first scale the horizontal coordinate by 2 and the vertical coordinate by 3, then move the result right by 10 and down by 20:
 
@@ -79,9 +110,40 @@ const matrix = multiplyAffine(translate, scale);
 applyAffine(matrix, [4, 5]); // [18, 35]: scale first, then translate
 ```
 
+The point therefore goes through `[4, 5] → [8, 15] → [18, 35]`; `[8, 15]` is the coordinate after scaling.
+
 In `multiplyAffine(outer, inner)`, `inner` is the inner transform applied first, and `outer` is the outer transform applied afterward. The example therefore scales first and translates second; swapping the arguments changes the result.
 
-Choose between the two capabilities this way: use `localToWorld` / `worldToLocal` for local points around a shape center; use `AffineMatrix`, `multiplyAffine`, and `applyAffine` for arbitrary linear changes or multi-step transform chains.
+### Algorithm walkthrough
+
+A two-dimensional affine calculation has two stages: compose the recipe, then apply it. The inner matrix, `inner`, transforms the original point first; the outer matrix, `outer`, then transforms that result. They do not act from left to right in their written order. The composed matrix, `combined`, therefore satisfies:
+
+```ts
+applyAffine(combined, point) === applyAffine(outer, applyAffine(inner, point));
+
+const combined = multiplyAffine(outer, inner);
+```
+
+For `outer = [A, B, C, D, E, F]` and `inner = [a, b, c, d, e, f]`, write the composed result as `combined = [a', b', c', d', e', f']`:
+
+$$
+\begin{aligned}
+a' &= Aa + Cb & b' &= Ba + Db \\
+c' &= Ac + Cd & d' &= Bc + Dd \\
+e' &= Ae + Cf + E & f' &= Be + Df + F
+\end{aligned}
+$$
+
+The first four values compose rotation, scale, reflection, or shear. The final two first transform the inner translation `[e, f]`, then add the outer translation `[E, F]`. `multiplyAffine` only composes the recipe; `applyAffine` then uses an input point's `x` and `y` in two linear combinations to produce the new point.
+
+<ComponentPreview
+  files="affine-composition-flow"
+  size="sm"
+  hideCode
+  caption="The inner transform runs first and the outer follows; compose them, then apply the resulting matrix to a point"
+/>
+
+Choose between the two capabilities this way: use `localToWorld` / `worldToLocal` for local points around a shape center; use `AffineMatrix`, `multiplyAffine`, and `applyAffine` for arbitrary two-dimensional affine transforms or multi-step transform chains.
 
 When a consumer needs to check a matrix before using it, `isFiniteNonSingularAffine` verifies that it contains finite values and is invertible. For cases such as stroke scaling that require one uniform scale, `getAffineSimilarityScale` returns the scale factor and returns `undefined` for other matrices.
 
