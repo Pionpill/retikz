@@ -45,11 +45,11 @@ The two functions are inverses. Both return a new point and leave the input tupl
 
 ### API reference
 
-| API             | Category | Purpose                                                    |
-| --------------- | -------- | ---------------------------------------------------------- |
-| `CenteredShape` | Type     | Describes a shape center in world coordinates and rotation |
-| `localToWorld`  | Method   | Convert a shape-local point into world coordinates         |
-| `worldToLocal`  | Method   | Convert a world point into shape-local coordinates         |
+| Category | API             | Purpose                                                    |
+| -------- | --------------- | ---------------------------------------------------------- |
+| Type     | `CenteredShape` | Describes a shape center in world coordinates and rotation |
+| Method   | `localToWorld`  | Convert a shape-local point into world coordinates         |
+|          | `worldToLocal`  | Convert a world point into shape-local coordinates         |
 
 ## Two-dimensional affine matrices
 
@@ -87,11 +87,11 @@ When a consumer needs to check a matrix before using it, `isFiniteNonSingularAff
 
 ### API reference
 
-| API                         | Category | Purpose                                                                   |
-| --------------------------- | -------- | ------------------------------------------------------------------------- |
-| `AffineMatrix`              | Type     | Represents a 2D affine matrix in `[a, b, c, d, e, f]` order               |
-| `AFFINE_IDENTITY`           | Constant | Represents the identity matrix, which changes nothing                     |
-| `multiplyAffine`            | Method   | Compose two transforms: inner first, outer second                         |
-| `applyAffine`               | Method   | Map a point using the affine-matrix formula                               |
-| `isFiniteNonSingularAffine` | Method   | Check that a matrix has finite values and is invertible                   |
-| `getAffineSimilarityScale`  | Method   | Get the uniform scale of a similarity transform, or `undefined` otherwise |
+| Category | API                         | Purpose                                                                   |
+| -------- | --------------------------- | ------------------------------------------------------------------------- |
+| Type     | `AffineMatrix`              | Represents a 2D affine matrix in `[a, b, c, d, e, f]` order               |
+| Constant | `AFFINE_IDENTITY`           | Represents the identity matrix, which changes nothing                     |
+| Method   | `multiplyAffine`            | Compose two transforms: inner first, outer second                         |
+|          | `applyAffine`               | Map a point using the affine-matrix formula                               |
+|          | `isFiniteNonSingularAffine` | Check that a matrix has finite values and is invertible                   |
+|          | `getAffineSimilarityScale`  | Get the uniform scale of a similarity transform, or `undefined` otherwise |
