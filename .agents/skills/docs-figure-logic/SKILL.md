@@ -78,6 +78,8 @@ description: Use when explaining how a retikz feature, module, pipeline, runtime
 
 - `docs.logic.secondary`：Graph `dependency` role 与 `[6, 4]` 虚线结构。`<LogicFigure>` 会自动注册；Flow 只有实际使用它时才额外传入 `relationKinds={logicFigureRelationKinds}`。
 
+同一图存在两条或以上并行、语义明确且读者必须区分的链路时，可为该链路的 `Entity` 和 `Relation` 赋予同一个 `group`，由 Graph 按色板自动统一着色。`group` 只用于区分并行链路，不表示节点类别、职责分组或布局容器；普通串行主链不声明它。语义分组边界仍使用 `LogicFigureFrame`，不要以 `group` 替代。
+
 点线只表示不存在于 Graph 模型中的教学几何参考，不伪装成 Flow Relation 或 `LogicFigureRelation`。错误、成功、警告与禁用使用 Graph `status`；其中 `disabled` 额外使用 `[6, 4]` 虚线。
 
 controls 只能选择当前 role 已注册的 Entity kind，或实际存在的 `docs.logic.secondary` Relation kind；不暴露任意颜色或 dash 的自由组合。每张叙述图不默认增加 controls，只有读者确实需要比较同一结构下的语义分支时才增加 playground。
@@ -192,6 +194,7 @@ path label 是“关系名”，不是解释句。
 - 语义分组是否使用 `LogicFigureFrame` + `LogicFigureFrameTitle`，而不是手写空边界和标题 `Node`？
 - 分组框是否紧密包裹标题与内容，标题是否位于框内左上角的预留标题行并使用灰色常规字重？
 - 同色节点是否属于同一角色类别，当前重点是否用加粗而不是颜色表达？
+- 多条并行链路确实需要区分时，链路内的 Entity / Relation 是否共享 `group`；普通串行逻辑是否未无故声明 `group`？
 - 双行节点是否保持统一标题 / 第二行层级，实现位置是否仍被误画成流程节点？
 - path label 是否短、少、位置稳定？
 - 带 label 的边是否获得了额外留白，相邻无 label 的边是否仍不过挤？
