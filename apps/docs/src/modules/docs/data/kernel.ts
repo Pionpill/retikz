@@ -237,13 +237,13 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgFoundation',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
+          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Advanced },
+          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Advanced },
           {
             id: 'validation-errors',
             label: 'kernel.pkgFoundationValidationErrors',
             difficulty: DocDifficulty.Advanced,
           },
-          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Advanced },
-          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Advanced },
         ],
       },
       {
@@ -251,8 +251,8 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgMath',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
-          { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
           { id: 'primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
+          { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
           { id: 'algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
         ],
       },

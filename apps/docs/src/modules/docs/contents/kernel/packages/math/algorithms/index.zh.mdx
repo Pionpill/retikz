@@ -245,9 +245,22 @@ $$
 
 <ComponentPreview files="curve-playground" size="md" caption="比较点集、张力与三次贝塞尔段" />
 
+### 算法解析
+
 内部采用 [centripetal Catmull–Rom](https://www.cemyuksel.com/research/catmullrom_param/)（$\alpha=0.5$）：每一段根据两端及其相邻 knot 计算局部切线，再转成两个贝塞尔控制点。参数间隔随点距变化，点距差异很大时能降低尖点或异常回环的风险。`tension` 只缩放控制柄长度，曲线仍严格经过每个 knot。
 
 至少需要两个 knot；返回的段数为 `knots.length - 1`，每段终点严格命中下一个 knot。开放曲线两端复用端点形成单侧切线；重合 knot 用极小间隔避免除零，所以输出仍保持有限，但不保证任意输入下都没有自交。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'centripetal Catmull–Rom 到三次贝塞尔段',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 124,
+      endLine: 181,
+    },
+  ]}
+/>
 
 ### API 参考
 

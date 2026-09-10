@@ -33,18 +33,18 @@ const distance = point.distance(start, end); // 约为 42.7
 
 ## 职责一览
 
-| 文档     | 职责                           | 适合何时查阅         |
-| -------- | ------------------------------ | -------------------- |
-| 几何原语 | 点、向量、边界和曲线的基本表示 | 构造或读取几何数据时 |
-| 坐标变换 | 在坐标空间之间变换几何数据     | 处理布局或变换时     |
-| 几何算法 | 相交、裁切和构造等算法         | 需要派生几何结果时   |
+| 文档     | 职责                                 | 适合何时查阅         |
+| -------- | ------------------------------------ | -------------------- |
+| 几何原语 | 点、向量、边界、椭圆与圆弧的基本表示 | 构造或读取几何数据时 |
+| 坐标变换 | 在坐标空间之间变换几何数据           | 处理布局或变换时     |
+| 几何算法 | 相交、曲线切片与过点曲线构造         | 需要派生几何结果时   |
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    { title: '几何原语', description: '点、向量、边界与曲线', url: '/kernel/packages/math/primitives' },
+    { title: '几何原语', description: '点、向量、边界、椭圆与圆弧', url: '/kernel/packages/math/primitives' },
     { title: '坐标变换', description: '不同坐标空间之间的换算', url: '/kernel/packages/math/transforms' },
-    { title: '几何算法', description: '相交、裁切与几何构造', url: '/kernel/packages/math/algorithms' },
+    { title: '几何算法', description: '相交、曲线切片与过点曲线构造', url: '/kernel/packages/math/algorithms' },
   ]}
 />

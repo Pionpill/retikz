@@ -20,7 +20,7 @@ Change the angle and length to see that the vector and its left-hand normal stay
 
 <ComponentPreview files="vector-normal" size="sm" caption="A vector and its left-hand normal" />
 
-### How it works
+### Algorithm notes
 
 To move from one point toward another, first take their difference as a direction, normalize it, then scale it by the requested distance and add it back to the origin:
 
@@ -86,7 +86,7 @@ The demo adds the arc's boundary candidates to the point set, so the dashed rect
   caption="Change a point coordinate or arc angle to see how the points and arc jointly affect the axis-aligned bounds"
 />
 
-### How it works
+### Algorithm notes
 
 When the input mixes points, curves, and basic shapes, the goal is one axis-aligned boundary—not a `boundsOf` that needs to understand every primitive. Each primitive helper first identifies the positions that can affect the outer box, then hands them to `boundsOf` for a uniform reduction.
 

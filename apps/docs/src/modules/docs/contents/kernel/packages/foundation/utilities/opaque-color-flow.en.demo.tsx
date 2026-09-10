@@ -6,8 +6,8 @@ import { RelationRole } from '@retikz/graph';
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import {
   LogicFigureEntityKind,
-  LogicFigureRelationKind,
   logicFigureGraphProps,
+  LogicFigureRelationKind,
   logicFigureRelationKinds,
 } from '@/modules/docs/components/logic-figure';
 

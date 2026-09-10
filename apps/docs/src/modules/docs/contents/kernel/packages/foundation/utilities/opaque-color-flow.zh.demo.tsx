@@ -19,7 +19,12 @@ const Demo: FC = () => (
         <FlowEntities
           items={[
             { id: 'inputs', text: '输入', role: 'participant' },
-            { id: 'weight', text: '校验权重 0..1', role: 'activity' },
+            {
+              id: 'weight',
+              text: '校验权重 0..1',
+              role: 'activity',
+              kind: LogicFigureEntityKind.Secondary,
+            },
             { id: 'parse', text: '解析静态颜色', role: 'activity', kind: LogicFigureEntityKind.Important },
             { id: 'colors', text: '颜色列表', role: 'resource', kind: LogicFigureEntityKind.Secondary },
           ]}
