@@ -69,7 +69,7 @@ With the upper-left and lower-right nodes fixed, switch the connection route, `s
   caption="Switch the route and label position: automatic center gaps the stroke; the other side values stay continuous by default."
 />
 
-When `interrupt` is omitted, only that unfilled built-in Stroke + centered combination gets an automatic gap. `interrupt: false` forces a continuous stroke; `interrupt: true` can also gap a non-centered label.
+When `interrupt` is omitted, only that unfilled built-in Stroke + centered combination gets an automatic gap. `interrupt: false` forces a continuous stroke; `interrupt: true` can also gap a non-centered label. The gap extends by `4` user units beyond each side of the label's visual bounds by default; use `gap` to override it, and `gap: 0` for no extra clearance.
 
 Any effective `fill` — including `fill="transparent"` or `fillOpacity={0}` — disables the automatic gap, and `interrupt: true` then fails loudly. Any explicit boolean on Ribbon, a custom Path kind, or another non-built-in Stroke host also fails loudly. The gap does not move labels, marks, dash phase, or endpoint arrows, and does not avoid label / arrow or mark collisions.
 
@@ -229,7 +229,7 @@ The built-in `stroke` kind and external kinds use the same registry and collisio
 
 ### How stroke materializes geometry
 
-The default stroke path first resolves relative targets, node references, and generators into path commands (`PathCommand`: materialized move / line / arc geometry). `roundedCorners` then rewrites those commands. Labels still sample the uncut logical path; a compatible `interrupt` projects the text visual box, removes only stroke geometry, and emits path fragments that retain command form and the original logical owner. Marks, endpoint arrows, and dash phase still follow the logical path, then `rotate` / `scale` wrap the main path, labels, and marks in one group.
+The default stroke path first resolves relative targets, node references, and generators into path commands (`PathCommand`: materialized move / line / arc geometry). `roundedCorners` then rewrites those commands. Labels still sample the uncut logical path; a compatible `interrupt` projects the text visual box plus its `gap` clearance, removes only stroke geometry, and emits path fragments that retain command form and the original logical owner. Marks, endpoint arrows, and dash phase still follow the logical path, then `rotate` / `scale` wrap the main path, labels, and marks in one group.
 
 <SourceLinks
   sources={[

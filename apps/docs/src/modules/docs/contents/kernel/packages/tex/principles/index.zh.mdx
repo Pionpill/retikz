@@ -1,0 +1,129 @@
+---
+title: 解析原理
+description: 理解 TeX 如何被降解为 Core 路径，以及缓存、失败和自定义 engine 的边界
+---
+
+`@retikz/tex` 不把 MathJax 或 SVG 交给 renderer。它先把公式降解为带度量的字形路径，再由 Core 像普通 Scene path 一样布局和渲染。因此 Core 不依赖 MathJax，应用也能替换内置 engine。
+
+## 实现原理
+
+### 为什么内置 MathJax
+
+这里选择 MathJax 的原因是它能把 TeX 公式排版为 SVG 几何，而不是把公式留成宿主 DOM 文本。内置 engine 使用 SVG output jax，并设置 `fontCache: 'none'`，使返回 SVG 中的字形以路径形式内联；Tex 包随后可把这些轮廓转换为后端中立的路径数据。
+
+MathJax 也提供按 package 组合的 TeX 语法能力，正好对应 `profile` 与 `extensions` 的公开配置。`mathjax-full` 作为 optional peer 按需动态加载，不使用公式能力时，Core 和 renderer 都不会依赖或初始化它。
+
+这并不是把 Retikz 锁定为 MathJax：MathJax 只是内置 engine。只要其它 engine 同步返回本包支持的 SVG 子集，就可以复用同一条 SVG lowering 链路。
+
+### 从 TeX 到 Scene primitive
+
+下面的图按“Core 入口 → Tex lowering → Core 输出”展开一次公式转换。Tex 分组不会把 SVG 直接交给 renderer，而是把 SVG 的几何信息翻译成 Core 的结构化 `PathCommand`，再把路径和公式度量交还给 Core：
+
+<ComponentPreview files="tex-conversion-flow" size="sm" hideCode />
+
+图中同一 layout 行内的相邻阶段直接连接；跨 layout 行、尤其跨度较大的阶段使用 `|-|` 三段折线连接，以保持主链方向清晰并避开中间内容。
+
+1. 宿主注入 `lowerTex` 后，Core 才把 `$...$` / `$$...$$` 识别为 math run；未注入时字符串保持普通文字
+2. Core 把 TeX source、`displayMode`、字号和颜色交给 `LowerTex`，并用返回的 `height` / `depth` 完成同行布局
+3. 内置 `MathJaxSvgEngine` 生成内联字形路径的 SVG 字符串
+4. Tex 解析受限的 SVG 节点、path data、paint 和 transform，生成结构化 `PathCommand` 与 `LoweredTex.paths`
+5. Core 校验并冻结 lowering 结果，将其度量纳入基线布局；不支持的节点、样式或变换会拒绝整段公式，不返回部分路径
+6. Core 把每条 `LoweredTexPath` 发为普通 `PathPrim`，再用带 baseline 平移的 `GroupPrim` 定位；renderer 此后只消费普通 Scene primitive，不需要理解 TeX、MathJax 或 SVG
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core 文本内容的 TeX gating、度量与 PathPrim 发出',
+      path: 'packages/kernel/core/src/compile/text/layout.ts',
+    },
+    {
+      label: 'MathJax SVG 节点、paint 与 metrics 解析',
+      path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts',
+    },
+    {
+      label: 'SVG path d 到结构化 PathCommand 的转换',
+      path: 'packages/kernel/tex/src/svg/path-d.ts',
+    },
+  ]}
+/>
+
+### 可替换的引擎边界
+
+Core 只依赖同步的 `LowerTex`：
+
+```ts
+type LowerTex = (
+  content: { tex: string; displayMode?: boolean },
+  style: { fontSize: number; color?: string },
+) => LoweredTex | null;
+```
+
+`LoweredTex` 包含按绘制顺序排列的 paths，以及公式的 `width`、`height`、`depth`。每条 path 自带 fill / stroke、透明度和路径命令，因此 Core 可以继续布局和渲染。Tex 包消费的最小 engine 契约是同步的 `MathJaxSvgEngine.convert(tex, { display }) => string`；自定义 engine 必须返回本包支持的 SVG 子集。
+
+`mathjax-full` 因此保持为可选依赖：不使用公式能力的 Core 使用者不会承担 MathJax 包体积。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'MathJax engine 最小抽象与 optional peer 边界',
+      path: 'packages/kernel/tex/src/mathjax/engine.ts',
+    },
+    {
+      label: 'Core 的 LowerTex 与 LoweredTex 契约',
+      path: 'packages/kernel/core/src/compile/text/tex.ts',
+    },
+  ]}
+/>
+
+## 缓存、失败与重试
+
+下面的图同时展示 lowering 缓存，以及 React 共享 engine、清理旧 lowerer 和处理过期结果的生命周期：
+
+<ComponentPreview files="tex-cache-lifecycle" size="xl" hideCode />
+
+`createLowerTex` 为每个 lowerer 建立内存缓存，key 包含 TeX source、inline / display 模式、字号和宿主颜色。成功结果与确定性的 MathJax / SVG 失败会缓存；`engine.convert` 抛出的异常视为瞬态失败，不缓存，下一次调用仍可重试。每次公开 lowering 失败都会调用最新的 `onDiagnostic`。
+
+`useLowerTex` 以最终生效的 extension 集合作为共享 engine 的 key。切换集合时立即进入 `loading` 并清空旧 lowerer；已卸载或过期请求的异步结果不会写回。初始化失败会返回 `error` 并删除共享失败项，使后续挂载可以重试。
+
+| 场景                                    | 可观察结果                                                                                             |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| 未注入 lowerer 的字符串公式             | `$...$` / `$$...$$` 保持普通文字，不进入公式解析                                                       |
+| 未注入 lowerer 的显式 math run          | 跳过该片段并报告 `TEX_LOWERER_MISSING`；同一行的 text run 继续渲染                                     |
+| MathJax 返回错误节点                    | lowerer 返回 `null`，报告 `mathjax-error`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存               |
+| SVG 不支持或格式错误                    | 拒绝整段公式，报告 `unsupported-svg` 或 `malformed-svg`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存 |
+| `engine.convert` 抛出异常               | lowerer 返回 `null`，报告 `engine-error`，Core 再报告 `TEX_INVALID`；该瞬态失败不缓存                  |
+| `mathjax-full` 缺失或 engine 初始化失败 | 工厂 Promise 拒绝安装或初始化信息；React 返回 `error`，后续挂载可以重试                                |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'TeX lowering 缓存与失败结果',
+      path: 'packages/kernel/tex/src/lower/lower-tex.ts',
+    },
+    {
+      label: 'React engine 共享与生命周期',
+      path: 'packages/kernel/tex/src/react/use-lower-tex.ts',
+    },
+  ]}
+/>
+
+## API 参考
+
+| API                       | 说明                                                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `createMathJaxLowerTex`   | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`。一步创建内置 MathJax engine 和 Core lowerer                 |
+| `createMathJaxEngine`     | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`。动态加载 `mathjax-full` 并创建同步 SVG engine         |
+| `createLowerTex`          | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`。适配自定义 engine，负责 SVG 解析、缓存和诊断      |
+| `MathJaxSvgEngine`        | `.convert(tex, { display }) => string`。自定义 engine 必须同步返回受支持的 SVG 子集                                    |
+| `LowerTexOptions`         | `.onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void`。每次公开 lowering 失败时调用，包括命中缓存的确定性失败  |
+| `TexLoweringDiagnostic`   | `.kind` 为 `engine-error`、`mathjax-error`、`unsupported-svg` 或 `malformed-svg`；含失败的 `source` 与可诊断 `message` |
+| `LowerTex`                | Core 的同步注入点；无法 lowering 时返回 `null`                                                                         |
+| `LoweredTex`              | 包含绘制顺序的 paths、`width`、`height` 与 `depth`                                                                     |
+| `CompileOptions.lowerTex` | Vanilla / Core 编译上下文中的公式能力注入位置                                                                          |
+
+## 相关
+
+- [安装与接入](/kernel/packages/tex)
+- [公式写法](/kernel/packages/tex/authoring)
+- [MathJax 配置](/kernel/packages/tex/configuration)
+- [Core compile 参考](/kernel/reference/runtime/compile)

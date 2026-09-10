@@ -5,15 +5,86 @@ description: 浏览 @retikz/tex 的公式解析、lowering 与运行时接入
 
 `@retikz/tex` 是可选公式能力包，负责把 TeX 公式接入既有文本与渲染流程。
 
+## 安装与接入
+
+`mathjax-full` 是可选 peer dependency。使用内置 MathJax engine 时，应用需要和 `@retikz/tex` 一起安装它：
+
+<PackageManagerInstall packages="@retikz/tex mathjax-full" />
+
+### React
+
+React 应用从 `@retikz/tex/react` 使用 `useLowerTex`。hook 会异步准备共享的 MathJax engine，并返回 `loading`、`ready` 或 `error` 状态。只有 `ready` 状态才把同步 lowerer 注入 `<Layout>`：
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { useLowerTex } from '@retikz/tex/react';
+
+const Diagram = () => {
+  const lowerTexState = useLowerTex({ profile: 'math' });
+
+  if (lowerTexState.status === 'loading') return <div>Loading MathJax…</div>;
+  if (lowerTexState.status === 'error') return <div>{lowerTexState.diagnostic.message}</div>;
+
+  return (
+    <Layout lowerTex={lowerTexState.lowerTex}>
+      <Node position={[0, 0]}>{'$\\frac{a}{b} = c$'}</Node>
+    </Layout>
+  );
+};
+```
+
+只要把 lowerer 注入最外层 `<Layout lowerTex>`，其子级文本就会复用这项编译能力。`@retikz/tex/react` 只负责 React 生命周期和共享 engine，不改变 Core 的文本写法。
+
+### Vanilla
+
+Vanilla 应用先创建 MathJax engine，再用 `createLowerTex` 适配为 Core `LowerTex`，最后通过 `compile.lowerTex` 交给 `renderToSvgString` 或其它 Vanilla compile 入口：
+
+```ts
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+
+const lowerTex = createLowerTex(await createMathJaxEngine({ profile: 'math' }));
+const input = scene({
+  children: [node('formula', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
+});
+
+const svg = renderToSvgString(input, { compile: { lowerTex } });
+```
+
+如果不需要拆开 engine 和 lowerer，也可以直接等待 `createMathJaxLowerTex(options)`。Vanilla 不需要安装 React，也不需要使用 `@retikz/tex/react`。
+
+### 注入宿主
+
+`@retikz/tex` 不直接寻找或修改宿主。它只提供一个符合 Core 契约的函数，由宿主在编译入口注入：
+
+| 宿主    | 注入位置                       | 作用                                                                   |
+| ------- | ------------------------------ | ---------------------------------------------------------------------- |
+| React   | `<Layout lowerTex={lowerTex}>` | Layout 把 lowerer 传给 Core 编译上下文                                 |
+| Vanilla | `{ compile: { lowerTex } }`    | `renderToSvgString`、mount 或 processing 使用同一个 compile capability |
+
+注入完成后，公式才会进入 MathJax lowering；没有注入时，字符串里的 `$...$` 仍按普通文字兼容处理，显式 math run 会被跳过并产生 Core warning。
+
 ## 职责一览
 
-| 文档 | 职责                      | 适合何时查阅                  |
-| ---- | ------------------------- | ----------------------------- |
-| 概览 | 公式写法、lowering 与缓存 | 在图中使用或接入 LaTeX 公式时 |
+| 文档         | 职责                        | 适合何时查阅                   |
+| ------------ | --------------------------- | ------------------------------ |
+| 公式写法     | 文本中的公式语法与排版方式  | 在图中编写或调整公式时         |
+| MathJax 配置 | profile 与 extension 的选择 | 需要额外数学语法或命令时       |
+| 解析原理     | 转换边界、缓存和失败语义    | 自定义 engine 或排查公式渲染时 |
 
-## 文档
+## 章节内容
 
-<LinkedCard href="/kernel/packages/tex/overview">
-  <span className="font-semibold">概览</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">公式接入与运行时配置</span>
-</LinkedCard>
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/packages/tex/authoring">
+    <span className="font-semibold">公式写法</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">从行内公式到显式 math run 的排版方式</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/tex/configuration">
+    <span className="font-semibold">MathJax 配置</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">选择 profile 与 extensions，扩展可用公式语法</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/packages/tex/principles">
+    <span className="font-semibold">解析原理</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解转换流程、缓存和失败的可观察结果</span>
+  </LinkedCard>
+</div>

@@ -290,8 +290,8 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 | ---------------- | ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | `pathGenerators` | `ReadonlyArray`<br />`<PathGeneratorDefinition>` | —      | 注入路径生成器；见[路径生成器](/kernel/components/draw/path-generator)                                                           |
 | `pathKinds`      | `ReadonlyArray`<br />`<PathKindDefinition>`      | —      | 注入 Path kind；见[自定义路径](/kernel/components/draw/custom-path)或可选的[Standard Ribbon](/library/standard/extension/ribbon) |
-| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/components/design/composite)                                           |
-| `lowerTex`       | `LowerTex`                                       | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex/overview)                                                                  |
+| `composites`     | `ReadonlyArray`<br />`<AnyCompositeDefinition>`  | —      | 注入 Tier 2 expand / layout-aware compile；见[复合](/kernel/components/design/composite)                                         |
+| `lowerTex`       | `LowerTex`                                       | —      | 注入公式 lowering；见[TeX 公式](/kernel/packages/tex)                                                                            |
 
 ### 全图默认值
 
@@ -313,17 +313,17 @@ retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR
 
 ### 渲染与宿主
 
-| 属性                     | 类型                                             | 默认值            | 描述                                                                               |
-| ------------------------ | ------------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------- |
-| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | 输出后端；缺省时读取最近的 `RendererModeProvider`                                  |
-| `className`              | `string`                                         | —                 | 透传到 SVG / Canvas 根元素                                                         |
-| `style`                  | `CSSProperties`                                  | —                 | 透传到 SVG / Canvas 根元素                                                         |
-| `idPrefix`               | `string`                                         | —                 | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                                      |
+| 属性                     | 类型                                             | 默认值            | 描述                                                                        |
+| ------------------------ | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------- |
+| `renderer`               | `'svg'` \| `'canvas'`                            | `'svg'`           | 输出后端；缺省时读取最近的 `RendererModeProvider`                           |
+| `className`              | `string`                                         | —                 | 透传到 SVG / Canvas 根元素                                                  |
+| `style`                  | `CSSProperties`                                  | —                 | 透传到 SVG / Canvas 根元素                                                  |
+| `idPrefix`               | `string`                                         | —                 | 覆盖资源 id 前缀，用于多实例或 SSR 水合稳定性                               |
 | `handlers`               | `LayoutProps['handlers']`                        | —                 | `ir` 模式的事件 handler 注册表；见[水合](/kernel/packages/render/hydration) |
-| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | 选择 retained / static processing 与 auto / full Program 更新策略                  |
-| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | retained 创建 Vanilla controller；static 直接完整物化且不提供事务回滚              |
-| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | retained Program 走自动增量 / fallback，或强制 full                                |
-| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | 仅 retained；按 Runtime queue 顺序接收 diagnostic                                  |
+| `runtime`                | `LayoutRuntimeOptions`                           | `retained + auto` | 选择 retained / static processing 与 auto / full Program 更新策略           |
+| `runtime.mode`           | `LayoutRuntimeModeValue`                         | `'retained'`      | retained 创建 Vanilla controller；static 直接完整物化且不提供事务回滚       |
+| `runtime.updateStrategy` | `LayoutRetainedRuntimeOptions['updateStrategy']` | `'auto'`          | retained Program 走自动增量 / fallback，或强制 full                         |
+| `runtime.onDiagnostic`   | `LayoutRetainedRuntimeOptions['onDiagnostic']`   | —                 | 仅 retained；按 Runtime queue 顺序接收 diagnostic                           |
 
 `runtime.mode: 'static'` 与其余三个 runtime 字段互斥。retained 的 `onDiagnostic` callback 自身抛错会被隔离，不改变 Runtime 的提交或失败结果。
 

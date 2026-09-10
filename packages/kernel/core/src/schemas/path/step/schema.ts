@@ -37,6 +37,9 @@ export const GeometryLabelSchema = strictObject({
   interrupt: boolean()
     .optional()
     .describe('Whether this label requests a gap in a compatible host stroke. Omitted values use the host policy.'),
+  gap: NonNegativeNumberSchema.optional().describe(
+    'Extra clearance in user units on each side of an interrupted host stroke gap. Defaults to 4.',
+  ),
   placement: zodEnum(GeometryLabelPlacement)
     .optional()
     .describe(

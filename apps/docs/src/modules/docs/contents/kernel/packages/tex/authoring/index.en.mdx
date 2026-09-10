@@ -1,0 +1,57 @@
+---
+title: Formula Authoring
+description: Write and lay out LaTeX in Node text with inline formulas, display formulas, or explicit math runs
+---
+
+When Node text needs LaTeX, continue to author formulas with `$...$`, `$$...$$`, or explicit math runs. After [installation and integration](/kernel/packages/tex), `@retikz/tex` converts them into glyph paths that Core consumes, so SVG and Canvas share the same formula result.
+
+<ComponentAlert
+  type="tip"
+  title="New to LaTeX?"
+  description="LaTeX is a separate typesetting language and @retikz/tex only integrates formulas. Start with inline formulas and the basic examples here, then visit MathJax Configuration when you need more syntax."
+/>
+
+## Basic usage
+
+Start with the three common forms: an inline formula in a string, a display formula in a string, and an explicit math run whose style can be controlled independently. The static demo below puts all three in one Layout so you can see their behavior in text:
+
+<ComponentPreview
+  files="tex-formula-basics.en"
+  size="sm"
+  caption="One Layout shows an inline formula, an explicit math run, and a display formula together."
+/>
+
+Core parses formula sugar in a string into text runs and math runs:
+
+| Form                    | Meaning                                          |
+| ----------------------- | ------------------------------------------------ |
+| `$...$`                 | An inline formula aligned to the text baseline   |
+| `$$...$$`               | A display formula with roomier vertical metrics  |
+| `\\$`                   | A literal dollar sign, not a formula delimiter   |
+| `{ tex, displayMode? }` | An explicit math run with local color or opacity |
+
+An explicit run can mix with ordinary text runs:
+
+```tsx
+<Node
+  text={[
+    {
+      runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (red-line length)' }],
+    },
+  ]}
+/>
+```
+
+`displayMode` changes formula metrics; it does not split one Node into several Nodes. A multiline LaTeX environment remains one formula fragment in the same line layout. Use a text run for CJK annotations instead of relying on MathJax `\\text{}` for CJK font coverage.
+
+## Edit and preview
+
+Use the demo below to edit TeX source and compare inline / display metrics and font sizes. Start from a complete example, then adjust the source or layout parameters:
+
+<ComponentPreview
+  files="tex-playground"
+  size="md"
+  caption="Edit TeX source and switch inline / display mode and font size to compare one formula under different layout parameters."
+/>
+
+For additional syntax such as AMS, command definitions, brackets, cancellation, cases, or color, continue to [MathJax Configuration](/kernel/packages/tex/configuration).

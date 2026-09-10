@@ -8,6 +8,11 @@ describe('StepLabelSchema 新增样式字段', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: false }).success).toBe(true);
   });
 
+  it('接受非负的断口两侧留白', () => {
+    expect(StepLabelSchema.safeParse({ text: 'x', gap: 0 }).success).toBe(true);
+    expect(StepLabelSchema.safeParse({ text: 'x', gap: 8 }).success).toBe(true);
+  });
+
   it('接受 textColor', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', textColor: 'red' }).success).toBe(true);
     expect(StepLabelSchema.safeParse({ text: 'x', textColor: 0.35 }).success).toBe(true);
@@ -46,6 +51,11 @@ describe('StepLabelSchema 错误路径', () => {
   it('interrupt 非布尔值拒绝', () => {
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: 'always' }).success).toBe(false);
     expect(StepLabelSchema.safeParse({ text: 'x', interrupt: 1 }).success).toBe(false);
+  });
+
+  it('断口两侧留白拒绝负数与非有限值', () => {
+    expect(StepLabelSchema.safeParse({ text: 'x', gap: -1 }).success).toBe(false);
+    expect(StepLabelSchema.safeParse({ text: 'x', gap: Infinity }).success).toBe(false);
   });
 
   it('保持严格对象，拒绝未知字段', () => {

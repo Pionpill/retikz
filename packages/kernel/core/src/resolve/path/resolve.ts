@@ -112,7 +112,7 @@ const assertPathEndpointOverlapHost = (path: ResolvedPathSource, irPath: string)
   }
 };
 
-/** 展开位置、方向、距离与 interruption 的默认值 */
+/** 展开位置、方向、距离、interruption 与断口留白的默认值 */
 const canonicalizeLabel = (
   label: ResolvedGeometryLabel,
   canAutomaticallyInterrupt: boolean,
@@ -129,6 +129,7 @@ const canonicalizeLabel = (
     side,
     distance: label.distance ?? 4,
     interrupt: label.interrupt ?? (canAutomaticallyInterrupt && side === 'center'),
+    gap: label.gap ?? 4,
   };
 };
 

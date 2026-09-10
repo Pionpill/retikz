@@ -47,7 +47,7 @@ export const kernelSection: Array<Section> = [
           {
             id: 'principles',
             label: 'kernel.principles',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'architecture',
               audience: 'maintainer',
@@ -277,8 +277,18 @@ export const kernelSection: Array<Section> = [
         sidebarGroup: 'kernel.pkgGroupExtension',
         children: [
           {
-            id: 'overview',
-            label: 'kernel.pkgOverview',
+            id: 'authoring',
+            label: 'kernel.pkgTexAuthoring',
+            difficulty: DocDifficulty.Beginner,
+          },
+          {
+            id: 'configuration',
+            label: 'kernel.pkgTexConfiguration',
+            difficulty: DocDifficulty.Advanced,
+          },
+          {
+            id: 'principles',
+            label: 'kernel.pkgTexPrinciples',
             difficulty: DocDifficulty.Internals,
             meta: extensionGuide('kernel.tex'),
           },

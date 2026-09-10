@@ -162,7 +162,7 @@ describe('resolvePath', () => {
     );
 
     expect(canonical.path.label).toEqual([
-      { text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false, interrupt: false },
+      { text: 'host', position: 1, side: 'bottom', distance: 0, sloped: false, interrupt: false, gap: 4 },
     ]);
   });
 

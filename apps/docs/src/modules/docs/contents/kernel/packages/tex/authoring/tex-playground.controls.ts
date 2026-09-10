@@ -42,8 +42,8 @@ export const texPlaygroundControls = definePreviewControls({
           label: '度量模式',
           defaultValue: 'display',
           options: [
-            { value: 'inline', label: 'inline' },
-            { value: 'display', label: 'display' },
+            { value: 'inline', label: '行内' },
+            { value: 'display', label: '显示' },
           ],
         },
         {

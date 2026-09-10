@@ -93,6 +93,28 @@ describe('Stroke Path label interruption', () => {
     expect(flattenPrims(scene.primitives).some(primitive => 'id' in primitive && primitive.id === 'edge')).toBe(true);
   });
 
+  it('adds the default four-unit clearance to both sides of an interrupted label gap', () => {
+    const defaultGap = compile(horizontalHostLabelPath({ text: 'default', sloped: true }));
+    const noGap = compile(horizontalHostLabelPath({ text: 'none', sloped: true, gap: 0 }));
+    const explicitGap = compile(horizontalHostLabelPath({ text: 'wide', sloped: true, gap: 8 }));
+    const defaultFragments = strokeFragments(defaultGap.primitives).sort(
+      (left, right) => firstMove(left)[0] - firstMove(right)[0],
+    );
+    const noGapFragments = strokeFragments(noGap.primitives).sort(
+      (left, right) => firstMove(left)[0] - firstMove(right)[0],
+    );
+    const explicitGapFragments = strokeFragments(explicitGap.primitives).sort(
+      (left, right) => firstMove(left)[0] - firstMove(right)[0],
+    );
+
+    expect(lastLine(defaultFragments[0])[0]).toBe(35.5);
+    expect(firstMove(defaultFragments[1])[0]).toBe(64.5);
+    expect(lastLine(noGapFragments[0])[0]).toBe(39.5);
+    expect(firstMove(noGapFragments[1])[0]).toBe(60.5);
+    expect(lastLine(explicitGapFragments[0])[0]).toBe(31.5);
+    expect(firstMove(explicitGapFragments[1])[0]).toBe(68.5);
+  });
+
   it('keeps fragments under one logical path owner with id, meta, and animations', () => {
     const animation = {
       property: 'opacity' as const,

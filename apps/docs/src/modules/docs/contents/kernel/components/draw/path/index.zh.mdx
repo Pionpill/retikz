@@ -65,7 +65,7 @@ import { Path, Step } from '@retikz/react';
   caption="切换路线与标签位置；自动居中会断线，其它 side 默认保持连续。"
 />
 
-省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。
+省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。断口默认从标签视觉边界向两侧各额外留出 `4` user units；用 `gap` 覆盖该值，`gap: 0` 表示不加额外留白。
 
 任意有效 `fill`（包括 `fill="transparent"` 或 `fillOpacity={0}`）都会关闭自动断线，且 `interrupt: true` 会 fail-loud。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样 fail-loud。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
 
@@ -225,7 +225,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 描边如何物化几何
 
-默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令。标签仍从未切断的逻辑路径取样；兼容的 `interrupt` 会按文字视觉盒只移除描边几何，并输出保留命令形态与原逻辑 owner 的路径片段。marks、端点箭头和 dash 仍按逻辑路径处理，`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。
+默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令。标签仍从未切断的逻辑路径取样；兼容的 `interrupt` 会按文字视觉盒与 `gap` 留白只移除描边几何，并输出保留命令形态与原逻辑 owner 的路径片段。marks、端点箭头和 dash 仍按逻辑路径处理，`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。
 
 <SourceLinks
   sources={[
