@@ -112,9 +112,9 @@
     "pkgVanilla": "vanilla",
     "pkgTex": "tex",
     "pkgMath": "math",
-    "pkgMathPrimitives": "math · Primitives",
-    "pkgMathTransforms": "math · Transforms",
-    "pkgMathAlgorithms": "math · Algorithms",
+    "pkgMathPrimitives": "Primitives",
+    "pkgMathTransforms": "Transforms",
+    "pkgMathAlgorithms": "Algorithms",
     "pkgRender": "render",
     "pkgRenderSvg": "render · SVG",
     "pkgRenderCanvas": "render · Canvas",
@@ -449,6 +449,17 @@
     "prevPage": "Previous",
     "nextPage": "Next",
     "docStats": "About {{minutes}} min · {{chars}} chars · {{components}} components"
+  },
+  "sourceViewer": {
+    "title": "View source",
+    "description": "View the GitHub source cited by this document",
+    "loading": "Loading GitHub source…",
+    "loadFailed": "The source is temporarily unavailable. Check your connection and try again.",
+    "retry": "Retry",
+    "showLineHighlight": "Show line highlight",
+    "hideLineHighlight": "Hide line highlight",
+    "openOnGithub": "Open on GitHub",
+    "close": "Close source"
   },
   "ai": {
     "triggerLabel": "Chat RetikZ",

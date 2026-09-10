@@ -450,6 +450,17 @@
     "nextPage": "下一页",
     "docStats": "约 {{minutes}} 分钟 · 共 {{chars}} 字 · {{components}} 个组件"
   },
+  "sourceViewer": {
+    "title": "查看源码",
+    "description": "查看当前文档引用的 GitHub 源码",
+    "loading": "正在获取 GitHub 源码…",
+    "loadFailed": "源码暂时无法获取，请检查网络后重试。",
+    "retry": "重试",
+    "showLineHighlight": "显示定位条",
+    "hideLineHighlight": "隐藏定位条",
+    "openOnGithub": "在 GitHub 打开",
+    "close": "关闭源码"
+  },
   "ai": {
     "triggerLabel": "Chat RetikZ",
     "triggerHint": "基于当前文档页问 AI",

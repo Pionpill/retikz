@@ -68,7 +68,7 @@ describe('<SourceLinks>', () => {
     );
     expect(html).toContain('target="_blank"');
     expect(html).toContain('rel="noopener noreferrer"');
-    expect(html).not.toContain('<svg');
+    expect(html).toContain('data-source-link-open="true"');
   });
 
   it('首个链接前不显示横线，后续链接之间保留点分隔符', () => {
@@ -94,6 +94,21 @@ describe('<SourceLinks>', () => {
 
     expect(html).toContain(
       'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/runtime/Layout.tsx"',
+    );
+  });
+
+  it('主操作在右侧打开源码，同时保留独立的 GitHub 外链', () => {
+    const SourceLinks = getSourceLinks();
+    const html = renderToStaticMarkup(
+      <SourceLinks
+        sources={[{ label: 'Layout', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx', startLine: 12 }]}
+      />,
+    );
+
+    expect(html).toContain('data-source-link-open="true"');
+    expect(html).toContain('<button');
+    expect(html).toContain(
+      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/runtime/Layout.tsx#L12"',
     );
   });
 
