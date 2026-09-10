@@ -37,6 +37,10 @@ export type ComponentPreviewProps = {
   controls?: PreviewControlsOptions;
   /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
   controlPanelDefaultOpen?: boolean;
+  /** 属性面板的默认尺寸百分比。桌面端为宽度，窄屏时等比作为高度
+   * @default 25
+   */
+  controlPanelDefaultSize?: number;
   /** 全屏弹窗 header 动作。 */
   dialogActions?: Array<PreviewActionSlot>;
   /** 渲染区垂直对齐，默认 center */
@@ -60,6 +64,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     defaultSourceFile,
     controls,
     controlPanelDefaultOpen,
+    controlPanelDefaultSize,
     dialogActions,
     align = 'center',
     size = 'md',
@@ -229,6 +234,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlContract={controlContract}
       controlDefinition={controlDefinition}
       controlPanelDefaultOpen={controlPanelDefaultOpen}
+      controlPanelDefaultSize={controlPanelDefaultSize}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}

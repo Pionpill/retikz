@@ -19,7 +19,7 @@ import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
-import { useComponentPreviewStore } from '@/modules/docs/store';
+import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
 
 import type {
   AlignKey,
@@ -84,6 +84,8 @@ export type ComponentPreviewDialogProps = {
   onThemeStyleChange?: (themeStyle: PreviewThemeStyleSelection) => void;
   /** 与所属 Card 共享的属性面板打开状态 */
   controlPanelOpen: boolean;
+  /** 属性面板的默认尺寸百分比。桌面端为宽度，窄屏时等比作为高度 */
+  controlPanelDefaultSize?: number;
   /** 更新 Card/Dialog 共享的属性面板打开状态 */
   onControlPanelOpenChange: (open: boolean) => void;
   /** 针对弹窗独立 runtime 求值的预览控制定义。 */
@@ -159,6 +161,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     themeStyleSelection = 'inherit',
     onThemeStyleChange,
     controlPanelOpen,
+    controlPanelDefaultSize,
     onControlPanelOpenChange,
     controlSlots,
     dialogActions,
@@ -180,7 +183,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     hovered: true,
     pinned: true,
   });
-  const setAiOpen = useAiChatStore(state => state.setOpen);
+  const openAi = useRightPanelStore(state => state.openAi);
   const fillAiDraft = useAiChatStore(state => state.fillDraftAndFocus);
   const aiCurrentPage = useAiChatStore(state => state.currentPage);
   const hasCode = sourceState.views.length > 0;
@@ -191,7 +194,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const handleAskAi = () => {
     const lang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
-    setAiOpen(true);
+    openAi();
     fillAiDraft(buildAskAiPrompt(lang, pageTitle, '', name));
   };
   const previewPanel = (
@@ -206,6 +209,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       themeStyleSelection={themeStyleSelection}
       onThemeStyleChange={onThemeStyleChange}
       controlPanelOpen={controlPanelOpen}
+      controlPanelDefaultSize={controlPanelDefaultSize}
       controlDensity="default"
       onControlPanelOpenChange={onControlPanelOpenChange}
       previewState={previewState}
