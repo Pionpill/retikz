@@ -20,6 +20,49 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 <ComponentPreview files="vector-normal" size="sm" caption="向量与左手法向量" />
 
+### 算法解析
+
+从一点朝另一点移动时，先用两点之差取得方向，再把它单位化，最后按指定距离缩放并加回起点：
+
+$$
+\mathbf d = \mathbf b - \mathbf a,\qquad \hat{\mathbf d} = \frac{\mathbf d}{\lVert\mathbf d\rVert},\qquad \mathbf p' = \mathbf p + s\hat{\mathbf d}
+$$
+
+`point.shiftToward` 使用这条计算链：两点重合时保留起点。`vector2.normalize` 在长度小于容差时返回 fallback；需要把零长度或非有限长度显式交给调用方处理时，使用返回 `null` 的 `vector2.normalizeOrNull`。`point.along` 和 `point.against` 不会先单位化方向，因此只有传入单位向量时，`length` 才是实际几何距离。
+
+`vector2.normal` 将二维向量变为法向量，并保持长度不变且与原向量正交：
+
+$$
+\operatorname{normal}(\mathbf v)=(-y,x),\qquad \mathbf v\cdot\operatorname{normal}(\mathbf v)=0,\qquad \lVert\operatorname{normal}(\mathbf v)\rVert=\lVert\mathbf v\rVert
+$$
+
+页面和渲染器采用 SVG 坐标，y 轴向下，因此从原向量转到该法向量在画面上看起来是顺时针旋转。
+
+点积和二维叉积把两个向量的关系压缩为一个标量：
+
+$$
+\mathbf a\cdot\mathbf b=a_xb_x+a_yb_y,\qquad \mathbf a\times\mathbf b=a_xb_y-a_yb_x
+$$
+
+点积为零表示正交；叉积为零表示共线，正负可用于判断转向。这些判断会继续用于凸包和线段求交等几何算法。
+
+<SourceLinks
+  sources={[
+    {
+      label: '向量运算与单位化',
+      path: 'packages/kernel/math/src/primitives/point.ts',
+      startLine: 18,
+      endLine: 58,
+    },
+    {
+      label: '点的移动与插值',
+      path: 'packages/kernel/math/src/primitives/point.ts',
+      startLine: 61,
+      endLine: 79,
+    },
+  ]}
+/>
+
 ### API 参考
 
 | 类别 | API                                                                                    | 作用                           |
@@ -43,6 +86,71 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
   caption="修改点坐标或圆弧角度，观察点集与圆弧共同影响轴对齐边界"
 />
 
+### 算法解析
+
+当输入混有点、曲线和基本图形时，目标是得到同一个轴对齐边界，而不是让 `boundsOf` 了解所有图元。各图元 helper 先找出可能影响外框的位置，再交给 `boundsOf` 做统一归约。
+
+边界计算先按几何输入的类型生成候选点，再只对这些点做一次极值归约；`boundsOf` 本身不识别图元类型。
+
+<ComponentPreview files="bounds-candidate-flow" size="sm" hideCode />
+
+#### 常规点
+
+常规点已经是坐标，可直接加入候选点集合。点集为空时，`boundsOf` 返回 `undefined`，由调用方决定是忽略、兜底还是报错。
+
+#### 曲线
+
+圆弧和轴对齐椭圆弧除了两个端点，还要加入扫过的轴向极值点。圆弧的候选点按下式计算：
+
+$$
+p(\theta)=(c_x+r\cos\theta,c_y+r\sin\theta)
+$$
+
+其中落在角度范围内的轴向角为：
+
+$$
+\theta\in\{0^\circ,90^\circ,180^\circ,270^\circ\}
+$$
+
+它可能决定边界，而不一定是端点。
+
+#### 基本图形
+
+圆、椭圆等基本图形先派生自身的边界候选点，再与普通点和曲线候选点汇集。旋转椭圆不由椭圆弧 helper 直接处理，应先在局部坐标中计算，再映射到世界坐标。
+
+#### 汇总与归约
+
+`boundsOf` 遍历全部候选点，分别取得四个坐标极值：
+
+$$
+\operatorname{AABB}(P)=(\min_{p\in P}p_x,\ \min_{p\in P}p_y,\ \max_{p\in P}p_x,\ \max_{p\in P}p_y)
+$$
+
+`mergeBounds` 对两个结果重复这组 min / max；`expandBounds` 再按四个方向的 inset 外扩边界。
+
+<SourceLinks
+  sources={[
+    {
+      label: '点集的极值归约',
+      path: 'packages/kernel/math/src/primitives/bounds.ts',
+      startLine: 48,
+      endLine: 63,
+    },
+    {
+      label: '圆弧的边界候选点',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 75,
+      endLine: 106,
+    },
+    {
+      label: '椭圆弧的边界候选点',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 127,
+      endLine: 160,
+    },
+  ]}
+/>
+
 ### API 参考
 
 | 类别 | API                                                                 | 作用                         |
@@ -62,9 +170,52 @@ description: 用 @retikz/math 构造点、向量、边界、椭圆与圆弧。
 
 <ComponentPreview files="ellipse-arc-playground" size="sm" caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界" />
 
-`pointAtArcAngle` / `pointAtEllipseArcAngle` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。`isAngleWithinArcSweep` 按 `startAngleDeg → endAngleDeg` 的符号判断有向区间：正跨度在屏幕上顺时针，负跨度逆时针
+### 算法解析
+
+这里解决两个和曲线相关的问题：沿给定方向从椭圆中心出发时，边界点在哪里；以及一段圆弧或椭圆弧实际经过哪些会影响外框的极值位置。前者把“朝某点”转成精确交点，后者让曲线也能进入上一节同一套边界计算。
+
+#### 椭圆边界交点
+
+`ellipse.boundaryPoint` 先把目标方向变到椭圆的局部坐标，得到 $d=(d_x,d_y)$，再按半轴归一化到边界：
+
+$$
+t=\frac{1}{\sqrt{(d_x/r_x)^2+(d_y/r_y)^2}},\qquad p_{\mathrm{local}}=t\,d
+$$
+
+式中的量分别承担不同职责：
+
+- $d$ 是从椭圆中心指向目标的局部方向；椭圆未旋转时，它就是目标相对中心的位移
+- $t$ 是沿 $d$ 需要走的缩放比例。半轴越短，该方向上可走的距离越小；这个比例确保结果刚好落在椭圆边界
+- $p_{\mathrm{local}}$ 是局部坐标中的最终边界点。把它映射回世界坐标后，才恢复椭圆的位置和旋转
+
+零半轴或目标恰在中心时，方法返回椭圆中心。
+
+`pointAtArcAngle` / `pointAtEllipseArcAngle` 取曲线上一点；椭圆的 `angleDeg` 是参数角，不一定等于从中心观察到的真实极角。
 
 `collectArcBoundingCandidates` / `collectEllipseArcBoundingCandidates` 取得端点与轴向极值等边界候选点。椭圆弧方法只处理轴对齐椭圆弧；旋转椭圆应先在局部坐标计算，再用[坐标变换](/kernel/packages/math/transforms)映射到世界坐标。
+
+<SourceLinks
+  sources={[
+    {
+      label: '椭圆边界交点',
+      path: 'packages/kernel/math/src/primitives/ellipse.ts',
+      startLine: 60,
+      endLine: 73,
+    },
+    {
+      label: '圆弧的取点和候选点',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 75,
+      endLine: 106,
+    },
+    {
+      label: '椭圆弧的取点和候选点',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 127,
+      endLine: 160,
+    },
+  ]}
+/>
 
 ### API 参考
 

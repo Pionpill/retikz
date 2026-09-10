@@ -159,3 +159,8 @@ mjx-container[jax='SVG'][display='true'] {
 mjx-container[jax='SVG'][display='true'] > svg {
   margin-inline: auto;
 }
+
+/* 行内公式保留在正文流中，覆盖 Tailwind preflight 对 SVG 的块级默认值 */
+mjx-container[jax='SVG']:not([display='true']) > svg {
+  display: inline-block;
+}
