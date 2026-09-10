@@ -139,6 +139,7 @@ describe('Relation lowering', () => {
           {
             text: 'precise',
             position: 0.75,
+            side: 'top',
             textColor: '#dc2626',
             font: { weight: 'bold' },
             opacity: 0.4,
@@ -151,6 +152,7 @@ describe('Relation lowering', () => {
       {
         text: 'default',
         position: 0.25,
+        placement: 'inside',
         textColor: '#334155',
         font: { family: 'Inter', size: 14 },
         opacity: 0.8,
@@ -158,6 +160,7 @@ describe('Relation lowering', () => {
       {
         text: 'precise',
         position: 0.75,
+        side: 'top',
         textColor: '#dc2626',
         font: { family: 'Inter', size: 14, weight: 'bold' },
         opacity: 0.4,
@@ -253,7 +256,7 @@ describe('Relation lowering', () => {
     ).toBe(true);
   });
 
-  it('applies the Graph preset font size and color to an unstyled Relation label', () => {
+  it('inherits the Relation foreground while applying the Graph preset font size to an unstyled label', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -273,7 +276,7 @@ describe('Relation lowering', () => {
       primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'default label'),
     );
 
-    expect(label).toMatchObject({ type: 'text', fill: 'gray', fontSize: 14 });
+    expect(label).toMatchObject({ type: 'text', fill: '#000000', fontSize: 14 });
   });
 
   it.each([

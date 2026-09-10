@@ -893,7 +893,7 @@ describe('Flow Diagram compile transaction', () => {
     },
   );
 
-  it('uses provider labelBounds to place the rendered sloped Graph label', () => {
+  it('keeps Flow relation labels centered on the path midpoint regardless of their layout reservation', () => {
     const compile = (reservation: 'horizontal' | 'vertical'): { label: TextPrim; rotation: number | undefined } => {
       const customLayout = definition(layoutInput => {
         const sourceElement = layoutInput.elements[0];
@@ -983,11 +983,11 @@ describe('Flow Diagram compile transaction', () => {
     const horizontal = compile('horizontal');
     const vertical = compile('vertical');
 
-    expect(horizontal.label.y).toBeLessThan(vertical.label.y);
-    expect(vertical.label.x).toBeGreaterThan(horizontal.label.x);
-    expect(horizontal.rotation).toBeDefined();
-    expect(vertical.rotation).toBeDefined();
-    expect(vertical.rotation).not.toBe(horizontal.rotation);
+    expect(horizontal.label.x).toBeCloseTo(vertical.label.x);
+    expect(horizontal.label.y).toBeCloseTo(vertical.label.y);
+    expect(horizontal.label.y).toBeGreaterThan(70);
+    expect(horizontal.rotation).toBeUndefined();
+    expect(vertical.rotation).toBeUndefined();
   });
 
   it('reports a final Graph relation probe failure as materialize with the authored relation context', () => {

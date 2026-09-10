@@ -58,7 +58,7 @@ const measureRelationLabel = (
         fill: 'none',
         stroke: 'none',
         strokeWidth: 0,
-        textColor: appearance.labelTextForeground,
+        ...(appearance.labelTextForeground === undefined ? {} : { textColor: appearance.labelTextForeground }),
         ...(appearance.labelFont === undefined ? {} : { font: appearance.labelFont }),
         opacity: appearance.labelOpacity,
       },

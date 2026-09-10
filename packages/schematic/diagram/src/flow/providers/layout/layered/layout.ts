@@ -91,6 +91,64 @@ const rankEdgesForScope = (
         return source === target ? [] : [{ source, target }];
       });
 
+/** 把同一作者 Layout 内 relation label 的主轴尺寸均分到两端 child margin，保留作者指定的 gap 作为净空 */
+const withLayoutLabelMargins = (
+  children: ReadonlyArray<SizedElement>,
+  layout: EffectiveFlowLayout,
+  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  index: LayeredInputIndex,
+  layoutId: string,
+): ReadonlyArray<SizedElement> => {
+  const childIndices = new Map(children.map((child, childIndex) => [child.input.id, childIndex]));
+  const additions = new Map(children.map(child => [child.input.id, { ...ZERO_INSETS }]));
+  const addMargin = (id: string, side: keyof BoundsInsets, value: number): void => {
+    const margin = additions.get(id);
+    if (margin !== undefined) margin[side] += value;
+  };
+  for (const relation of relations) {
+    if (relation.labelSize === undefined) continue;
+    const sourceScopes = index.scopes.get(relation.source) ?? [];
+    const targetScopes = index.scopes.get(relation.target) ?? [];
+    if (commonScope(sourceScopes, targetScopes) !== layoutId) continue;
+    const source = directChildId(relation.source, sourceScopes, layoutId);
+    const target = directChildId(relation.target, targetScopes, layoutId);
+    const sourceIndex = childIndices.get(source);
+    const targetIndex = childIndices.get(target);
+    if (sourceIndex === undefined || targetIndex === undefined || sourceIndex === targetIndex) continue;
+    const first = sourceIndex < targetIndex ? source : target;
+    const second = sourceIndex < targetIndex ? target : source;
+    const halfExtent =
+      (layout.direction === 'right' || layout.direction === 'left'
+        ? relation.labelSize.width
+        : relation.labelSize.height) / 2;
+    if (layout.direction === 'right') {
+      addMargin(first, 'right', halfExtent);
+      addMargin(second, 'left', halfExtent);
+    } else if (layout.direction === 'left') {
+      addMargin(first, 'left', halfExtent);
+      addMargin(second, 'right', halfExtent);
+    } else if (layout.direction === 'down') {
+      addMargin(first, 'bottom', halfExtent);
+      addMargin(second, 'top', halfExtent);
+    } else {
+      addMargin(first, 'top', halfExtent);
+      addMargin(second, 'bottom', halfExtent);
+    }
+  }
+  return children.map(child => {
+    const addition = additions.get(child.input.id) ?? ZERO_INSETS;
+    return {
+      ...child,
+      margin: {
+        top: child.margin.top + addition.top,
+        right: child.margin.right + addition.right,
+        bottom: child.margin.bottom + addition.bottom,
+        left: child.margin.left + addition.left,
+      },
+    };
+  });
+};
+
 const sizeElement = (
   input: FlowLayoutElementInput,
   relations: ReadonlyArray<FlowLayoutRelationInput>,
@@ -102,6 +160,7 @@ const sizeElement = (
   }
   if (input.kind === 'layout') {
     const sizedChildren = input.elements.map(element => sizeElement(element, relations, index, context));
+    const childrenWithLabelMargins = withLayoutLabelMargins(sizedChildren, input.layout, relations, index, input.id);
     const placement = context.placeLayout({
       layout: {
         id: input.id,
@@ -109,7 +168,7 @@ const sizeElement = (
         gap: input.layout.nodeGap,
         align: input.align,
       },
-      elements: sizedChildren.map(element => ({
+      elements: childrenWithLabelMargins.map(element => ({
         id: element.input.id,
         size: { width: element.width, height: element.height },
         margin: element.margin,
@@ -119,7 +178,7 @@ const sizeElement = (
     const children: ScopeLayoutResult = {
       width: placement.bounds.width,
       height: placement.bounds.height,
-      elements: sizedChildren.map(element => ({
+      elements: childrenWithLabelMargins.map(element => ({
         input: element.input,
         bounds: placementById.get(element.input.id)!,
         ...(element.children === undefined ? {} : { children: element.children }),
@@ -191,6 +250,39 @@ const transformBounds = (
   };
 };
 
+/** 为跨越 rank 的关系标签在 canonical 主轴上预留完整的测量尺寸 */
+const rankGapsForScope = (
+  relations: ReadonlyArray<FlowLayoutRelationInput>,
+  index: LayeredInputIndex,
+  scopeId: string | undefined,
+  ranks: ReadonlyMap<string, number>,
+  rankValues: ReadonlyArray<number>,
+  direction: FlowDirectionValue,
+  defaultGap: number,
+): ReadonlyArray<number> => {
+  const gaps = rankValues.slice(1).map(() => defaultGap);
+  for (const relation of relations) {
+    if (relation.labelSize === undefined) continue;
+    const sourceScopes = index.scopes.get(relation.source) ?? [];
+    const targetScopes = index.scopes.get(relation.target) ?? [];
+    if (commonScope(sourceScopes, targetScopes) !== scopeId) continue;
+    const source = directChildId(relation.source, sourceScopes, scopeId);
+    const target = directChildId(relation.target, targetScopes, scopeId);
+    const sourceRank = ranks.get(source);
+    const targetRank = ranks.get(target);
+    if (sourceRank === undefined || targetRank === undefined || sourceRank === targetRank) continue;
+    const labelExtent =
+      direction === 'right' || direction === 'left' ? relation.labelSize.width : relation.labelSize.height;
+    const requiredGap = labelExtent + defaultGap;
+    const start = Math.min(sourceRank, targetRank);
+    const end = Math.max(sourceRank, targetRank);
+    rankValues.slice(1).forEach((rank, gapIndex) => {
+      if (rank > start && rank <= end) gaps[gapIndex] = Math.max(gaps[gapIndex] ?? defaultGap, requiredGap);
+    });
+  }
+  return gaps;
+};
+
 const layoutScope = (
   inputs: ReadonlyArray<FlowLayoutElementInput>,
   layout: EffectiveFlowLayout,
@@ -210,6 +302,7 @@ const layoutScope = (
     rankEdgesForScope(relations, index, scopeId),
   );
   const rankValues = [...new Set(sized.map(element => ranks.get(element.input.id) ?? 0))].sort((a, b) => a - b);
+  const rankGaps = rankGapsForScope(relations, index, scopeId, ranks, rankValues, layout.direction, layout.rankGap);
   const rankLayouts = rankValues.map(rank => {
     const members = sized.filter(element => (ranks.get(element.input.id) ?? 0) === rank);
     const width = Math.max(0, ...members.map(element => element.margin.left + element.width + element.margin.right));
@@ -229,7 +322,7 @@ const layoutScope = (
   let canonicalWidth = 0;
   const canonicalHeight = Math.max(0, ...rankLayouts.map(rank => rank.height));
 
-  for (const rank of rankLayouts) {
+  for (const [rankIndex, rank] of rankLayouts.entries()) {
     let rankY = (canonicalHeight - rank.height) / 2;
     rank.members.forEach((element, memberIndex) => {
       const bounds = {
@@ -247,7 +340,7 @@ const layoutScope = (
       if (memberIndex < rank.members.length - 1) rankY += layout.nodeGap;
     });
     canonicalWidth = Math.max(canonicalWidth, rankX + rank.width);
-    rankX += rank.width + layout.rankGap;
+    rankX += rank.width + (rankGaps[rankIndex] ?? 0);
   }
 
   const width = layout.direction === 'up' || layout.direction === 'down' ? canonicalHeight : canonicalWidth;

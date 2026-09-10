@@ -231,6 +231,88 @@ describe('layered Flow layout', () => {
     }
   });
 
+  it('reserves a horizontal rank gap for the full measured relation-label width', () => {
+    const output = run({
+      layout: layout('right'),
+      elements: [
+        leaf('source', undefined, { width: 40, height: 40 }),
+        leaf('target', undefined, { width: 40, height: 40 }),
+      ],
+      relations: [relation('source', 'target', { labelSize: { width: 120, height: 12 } })],
+    });
+    const source = boundsOf(output, 'source');
+    const target = boundsOf(output, 'target');
+    const labelBounds = output.relations[0]?.labelBounds;
+
+    expect(target.x - (source.x + source.width)).toBeGreaterThanOrEqual(160);
+    expect(labelBounds).toBeDefined();
+    if (labelBounds === undefined) return;
+    expect(labelBounds.x - (source.x + source.width)).toBeGreaterThanOrEqual(20);
+    expect(target.x - (labelBounds.x + labelBounds.width)).toBeGreaterThanOrEqual(20);
+  });
+
+  it('reserves a vertical rank gap for the full measured relation-label height', () => {
+    const output = run({
+      layout: layout('down'),
+      elements: [
+        leaf('source', undefined, { width: 40, height: 40 }),
+        leaf('target', undefined, { width: 40, height: 40 }),
+      ],
+      relations: [relation('source', 'target', { labelSize: { width: 12, height: 120 } })],
+    });
+    const source = boundsOf(output, 'source');
+    const target = boundsOf(output, 'target');
+    const labelBounds = output.relations[0]?.labelBounds;
+
+    expect(target.y - (source.y + source.height)).toBeGreaterThanOrEqual(160);
+    expect(labelBounds).toBeDefined();
+    if (labelBounds === undefined) return;
+    expect(labelBounds.y - (source.y + source.height)).toBeGreaterThanOrEqual(20);
+    expect(target.y - (labelBounds.y + labelBounds.height)).toBeGreaterThanOrEqual(20);
+  });
+
+  it('adds a measured relation label width around direct children in an authored horizontal Layout', () => {
+    let placementInput: FlowLayoutPlacementOutput | undefined;
+    let receivedMargins: ReadonlyArray<unknown> = [];
+    LayeredFlowLayoutDefinition.layout(
+      {
+        layout: layout(),
+        elements: [
+          {
+            kind: 'layout',
+            id: 'lane',
+            layout: layout('right'),
+            align: 'center',
+            elements: [
+              leaf('source', undefined, { width: 40, height: 40 }),
+              leaf('target', undefined, { width: 40, height: 40 }),
+            ],
+          },
+        ],
+        relations: [relation('source', 'target', { labelSize: { width: 120, height: 12 } })],
+      },
+      {
+        placeLayout: input => {
+          receivedMargins = input.elements;
+          placementInput = {
+            bounds: { x: 0, y: 0, width: 40, height: 40 },
+            elements: [
+              { id: 'source', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+              { id: 'target', bounds: { x: 0, y: 0, width: 40, height: 40 } },
+            ],
+          };
+          return placementInput;
+        },
+      },
+    );
+
+    expect(placementInput).toBeDefined();
+    expect(receivedMargins).toMatchObject([
+      { id: 'source', margin: { right: 60 } },
+      { id: 'target', margin: { left: 60 } },
+    ]);
+  });
+
   it('centers nested Group children when its minimum cross size exceeds the child scope', () => {
     const output = run({
       layout: layout('down'),

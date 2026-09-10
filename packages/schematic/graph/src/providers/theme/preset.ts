@@ -31,7 +31,6 @@ export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyl
           strokeOpacity: 1,
           opacity: 1,
         },
-        labelTextForeground: 'gray',
         labelFont: { size: 'sm' },
         labelOpacity: 1,
       },
