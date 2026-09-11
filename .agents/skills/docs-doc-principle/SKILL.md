@@ -14,6 +14,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)；Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
    - 扩展指南：[`docs-doc-extension`](../docs-doc-extension/SKILL.md)
    - 示例页：[`docs-doc-example`](../docs-doc-example/SKILL.md)
+   - 包总纲页：[`docs-doc-overview`](../docs-doc-overview/SKILL.md)
    - 分组落地页：[`docs-doc-group`](../docs-doc-group/SKILL.md)
    - 概念页：[`docs-doc-concept`](../docs-doc-concept/SKILL.md)
    - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
@@ -77,25 +78,33 @@ URL 段、`data` 节点 `id` 与 `contents` 目录段必须一致。新增或移
 
 用户正文优先展示 DSL（如 `<Layout>`、`<Node>`、`<Path>`、`<Draw>`）。普通用法页不为了“完整”重复 IR JSON 或编译器内部；IR 只在架构、持久化、AI 接入或必须用它解释公开行为时出现。
 
+- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页的纯代码示例必须并列保留两套最小接入说明：分别点明入口、注入或调用位置与产物。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
+
 ComponentPreview 的 IR 与 Vanilla 配置必须保持最上层、精简的 Source IR / authoring 语义；不得把 lower、resolve 或 runtime canonical 结果直接暴露给读者。运行时为统一消费而产生的 `base`、完整 Plot 或其它下沉形态只用于校验与渲染。
 
 所有功能 demo 和叙述图都用 retikz 自绘：同级 demo + `<ComponentPreview>`。不使用截图、PNG/JPG/GIF、Mermaid、Excalidraw 或 draw.io 代替功能展示。叙述图默认 `hideCode`；可复制用法保留源码。
 
 关系、流程或架构图的具体画法由 `docs-figure-contract` 拥有，本 skill 只决定是否需要图。
 
-## API 与源码真源
+## 三类 API 文档与源码真源
 
-API 参考按需使用“公开导出概览 → 核心契约 → 重要闭合集合”：
+API 内容按读者任务分为三类，名称和职责不得混用：
 
-1. 只列本页完成任务直接需要的公开导出
-2. props、Definition、options 等核心契约再展开字段表
-3. 影响选择的 enum、const object、内置 Definition 或 registry 才单列闭合集合
+| 类型             | 目标与范围                                                                                           | 真源与写法                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 文中 API 介绍    | 帮读者顺着当前主题理解和完成当前任务；只选本页直接需要的 API、核心字段或闭合集合，不承担完整查询职责 | 人工正文，可用简短表格、代码或链接；优先说明何时使用和可见结果                                        |
+| API Reference    | 提供包根入口及公开子路径的完整 TypeScript 查询入口                                                   | 由 `package.json` 的 `exports`、对应 owner barrel、签名和 JSDoc 自动生成；不手写另一份完整签名表      |
+| Schema Reference | 提供持久化 IR / 配置 schema 的完整字段词典                                                           | Zod schema 与 `.describe()` 是字段真源；用 `<ZodSchema>` 渲染，规则见 `references/reference-pages.md` |
 
-文档里的函数、类型和常量名必须是从所属包公开入口可导入的真实标识符。不要把概念简称、内部类型或 owner 深层 export 冒充公共 API。写 API 表前沿着“组件 Props / schema → owner barrel → package root”核对；宿主组件页还要检查同 owner barrel 的 Provider、Context、hook 与 helper，避免漏掉用户完成任务所需的伴随导出。
+概念、组件、算法和示例页只写“文中 API 介绍”，并在适当位置链接到 API Reference 或 Schema Reference。不要因“完整”在正文复制整个包的导出、完整 overload 或 schema 字段；API Reference 中的 schema 类型只展示摘要并链接到 Schema Reference，避免两份字段说明漂移。
+
+API Reference 只收录从 package `exports` 可达的真实公共标识符；入口、子路径、re-export 和 JSDoc 必须由 TypeScript 分析产物确定，不扫描任意内部源码文件。中文说明以中文 JSDoc 为源；英文说明由受审查的翻译产物生成，代码标识符、签名、枚举值、示例和 JSDoc 机器语义不翻译。不得在浏览器运行时调用 LLM 翻译，也不得把未经审查的机翻作为契约真源。
+
+文中 API 介绍里的函数、类型和常量名仍必须是从所属包公开入口可导入的真实标识符。不要把概念简称、内部类型或 owner 深层 export 冒充公共 API。写表前沿着“组件 Props / schema → owner barrel → package root”核对；宿主组件页还要检查同 owner barrel 的 Provider、Context、hook 与 helper，避免漏掉用户完成任务所需的伴随导出。
 
 共享或继承 props 不在每页复制完整字段表：用一行说明公开共享契约及其职责，并链接到唯一权威页；本页只展开新增或重定义的字段。
 
-手写 API 表遇到对象类型时：
+文中 API 表遇到对象类型时：
 
 - 类型列第一行写公开对象类型，从第二行起按声明顺序将每个属性写成独立的 `- field?: Type`；描述列第一行写整体语义，后续逐行与属性同序、同数、一一对应
 - 属性名和类型值保留行内代码样式；联合类型拆成多个代码片段，让页面在 `|` 边界换行，不把整条类型包成跨行灰块
@@ -116,7 +125,7 @@ API 参考按需使用“公开导出概览 → 核心契约 → 重要闭合集
 3. `apps/docs/src/modules/docs/data/<moduleId>.ts`
 4. 相关 sidebar、Related、LinkedCard 与正文链接
 
-分组落地页、扩展页和 blog 的额外元数据由对应页型 skill 定义。
+包总纲页、分组落地页、扩展页和 blog 的额外元数据由对应页型 skill 定义。包根页使用 `docs-doc-overview`，不要套用组件或参考家族的 `docs-doc-group` 结构。
 
 `introduction` / `get-start` 等入口页按读者任务组织，不强套组件或示例页结构，但仍服从本 skill 的三处协同、双语、写作权重与验证规则。
 

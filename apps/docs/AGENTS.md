@@ -47,6 +47,7 @@ docs 内容规则不复制在 AGENTS 中，按需动态加载：
 - Standard Tier 2 composite 组件页：`docs-doc-standard-composite`
 - 扩展指南：`docs-doc-extension`
 - 示例页：`docs-doc-example`
+- 包总纲页：`docs-doc-overview`
 - 分组落地页：`docs-doc-group`
 - 概念页：`docs-doc-concept`
 - blog：`docs-doc-blog`

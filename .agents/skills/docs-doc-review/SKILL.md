@@ -31,12 +31,12 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 ### 1. 页型结构
 
-- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 5 类 section 顺序：Usage / Examples / How it works / API Reference / Related
+- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 5 类 section 顺序：Usage / Examples / How it works / API overview / Related
 - 是否照搬了独立的 Composition 顶级章节；必要组合关系是否就近放在 Usage 骨架、Examples 用法或 How it works 机制中
 - 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
 - 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
-- Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程
+- Schema Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程；API Reference 是否由实际 `exports`、签名和 JSDoc 生成，而不是手写完整副本
 - 中文 Reference 的 object `<ZodSchema>` 是否用 `descriptions` 覆盖全部字段与匿名对象点路径；只有顶层 `description`、字段仍回退英文 `.describe()` 均不算完成
 - 英文 Reference 是否直接复用源码 `.describe()`，不重复维护 `descriptions`
 - zh / en 是否结构对齐：标题层级、表格列、示例数量、关键 bullet 数一致
@@ -96,7 +96,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 - `contents/`、`data/`、`i18n/` 是否同步
 - 页面路由、目录段、data id 是否一致
-- API 表是否与当前 props / schema 一致
+- 文中 API 介绍是否仅覆盖本页阅读需要，且与当前 props / schema 一致；完整公开 API 与 schema 字段是否分别指向 API Reference / Schema Reference
 - API 表中的函数、类型和常量是否从所属包根入口真实可导入；是否把概念简称或内部类型误写成公共 API
 - 组件 Props、schema、owner barrel 与 package root 是否形成可追溯导出链
 - 宿主/容器页是否漏掉 owner barrel 中完成任务所需的 Provider、Context、hook 或 helper；共享继承 props 是否只做一行摘要并指向权威页
