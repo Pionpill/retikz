@@ -1,6 +1,6 @@
 /**
  * 内置 MathJax 配置档
- * @description `base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合
+ * @description `base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合。它提供 `createMathJaxEngine` 与 lowerer 工厂可识别的扩展集合选择，不创建引擎，也不改变已创建实例
  */
 export const MathJaxProfile = {
   /** 仅启用 MathJax 基础 TeX 配置 */
@@ -11,7 +11,7 @@ export const MathJaxProfile = {
 
 /**
  * 可按需加载的 MathJax TeX 扩展
- * @description 值与 MathJax configuration 的扩展标识保持一致，并由 profile 解析阶段统一校验和加载
+ * @description 值与 MathJax configuration 的扩展标识保持一致，并由 profile 解析阶段统一校验、去重和加载。它提供可传给引擎配置的稳定扩展标识
  */
 export const MathJaxExtension = {
   /** AMS 数学环境与命令 */

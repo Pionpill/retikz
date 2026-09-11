@@ -16,7 +16,7 @@ import { ExamplePrompt } from './example-prompt';
 import { LinkedCard } from './linked-card';
 import { LinkedSections } from './linked-sections';
 import { PackageManagerInstall } from './package-manager-install';
-import { SourceLinks } from './source-links';
+import { ApiSourceLink, SourceLinks } from './source-links';
 import { StaticCssColorCatalog } from './static-css-color-catalog';
 import { ZodSchema } from './zod-schema';
 
@@ -74,6 +74,7 @@ const Code: FC<CodeProps> = ({ className, children, showLineNumbers, ...rest }) 
 
 export const mdxComponents: MDXComponents = {
   ApiValues,
+  ApiSourceLink,
   h1: ({ className, ...props }) => (
     <h1 className={cn('mt-2 scroll-m-28 font-heading text-3xl font-bold tracking-tight', className)} {...props} />
   ),
