@@ -118,17 +118,3 @@ When the extension set changes, the hook immediately enters `loading` and clears
     },
   ]}
 />
-
-## API reference
-
-| API                       | Description                                                                                                                                    |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createMathJaxLowerTex`   | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`. Creates the built-in MathJax engine and Core lowerer in one step                    |
-| `createMathJaxEngine`     | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`. Dynamically loads `mathjax-full` and creates a synchronous engine             |
-| `createLowerTex`          | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`. Adapts a custom engine and owns SVG parsing, caching, diagnostics         |
-| `MathJaxSvgEngine`        | `.convert(tex, { display }) => string`. A custom engine synchronously returns the supported SVG subset                                         |
-| `LowerTexOptions`         | `.onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void`. Runs for every public lowering failure, including cached deterministic failures |
-| `TexLoweringDiagnostic`   | `.kind` is `engine-error`, `mathjax-error`, `unsupported-svg`, or `malformed-svg`, with failed `source` and a diagnostic `message`             |
-| `LowerTex`                | Core's synchronous injection point; returns `null` when lowering fails                                                                         |
-| `LoweredTex`              | Paths in draw order plus `width`, `height`, and `depth`                                                                                        |
-| `CompileOptions.lowerTex` | Formula capability injection point in the Vanilla / Core compile context                                                                       |

@@ -118,17 +118,3 @@ type LowerTex = (
     },
   ]}
 />
-
-## API 参考
-
-| API                       | 说明                                                                                                                   |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `createMathJaxLowerTex`   | `(options?: MathJaxLowerTexOptions) => Promise<LowerTex>`。一步创建内置 MathJax engine 和 Core lowerer                 |
-| `createMathJaxEngine`     | `(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>`。动态加载 `mathjax-full` 并创建同步 SVG engine         |
-| `createLowerTex`          | `(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex`。适配自定义 engine，负责 SVG 解析、缓存和诊断      |
-| `MathJaxSvgEngine`        | `.convert(tex, { display }) => string`。自定义 engine 必须同步返回受支持的 SVG 子集                                    |
-| `LowerTexOptions`         | `.onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void`。每次公开 lowering 失败时调用，包括命中缓存的确定性失败  |
-| `TexLoweringDiagnostic`   | `.kind` 为 `engine-error`、`mathjax-error`、`unsupported-svg` 或 `malformed-svg`；含失败的 `source` 与可诊断 `message` |
-| `LowerTex`                | Core 的同步注入点；无法 lowering 时返回 `null`                                                                         |
-| `LoweredTex`              | 包含绘制顺序的 paths、`width`、`height` 与 `depth`                                                                     |
-| `CompileOptions.lowerTex` | Vanilla / Core 编译上下文中的公式能力注入位置                                                                          |
