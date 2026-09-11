@@ -1,0 +1,75 @@
+---
+title: 编译原理
+description: 理解 Inspect 如何隔离编译辅助内容、与主图原子提交，并查询编译结果和结构化错误
+---
+
+Inspect 只观察最终结果，不参与布局求解或修改主图。普通 `compileToScene()` 不创建检查会话；基础 React 与 Vanilla 入口也不会静态加载本包。
+
+## 编译与只读图层
+
+一次带检查能力的编译会同时得到不变的主图和可选辅助图层：最终所属者产物进入 Inspector 回调，普通辅助 `IRChild` 隔离编译，最后与主图原子提交。
+
+<ComponentPreview files="inspect-compile-flow.zh" size="md" hideCode />
+
+按以下顺序阅读流程图：
+
+1. 宿主把运行时选择与 registry 交给可选编译驱动
+2. Core 完成普通编译，只发布被选择所属者的最终产物
+3. Inspect 校验最终产物和选项，调用对应 Definition 的 `inspect`
+4. 返回的 `IRChild` 在当前 Theme、Scope 样式和 provider 环境中隔离编译，并移除公开身份、元数据和动画语义
+5. Render 将辅助平面映射为不可命中的只读图层；主图和辅助图层在同一 revision 中一起成功或回滚
+
+当没有匹配结果或回调返回空内容时，不会生成辅助平面。额外成本来自被选择所属者的观察、Inspector 回调和非空辅助输出的隔离编译。
+
+<SourceLinks
+  sources={[
+    { label: '主图与辅助内容的编译编排', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: '辅助输出规范化与隔离', path: 'packages/kernel/inspect/src/compile/output.ts' },
+    { label: '辅助平面到只读图层的映射', path: 'packages/kernel/inspect/src/render/readonly-layers.ts' },
+    { label: 'Vanilla 静态与保留式运行时接线', path: 'packages/kernel/inspect/src/vanilla/driver.ts' },
+  ]}
+/>
+
+## 编译结果
+
+| 字段                                  | 含义                                    |
+| ------------------------------------- | --------------------------------------- |
+| `InspectionCompileResult.primary`     | 未被辅助内容修改的普通 Core 编译结果    |
+| `InspectionCompileResult.inspection`  | 有序辅助平面；所有回调无输出时为 `null` |
+| `InspectionCompileResult.diagnostics` | 隔离片段产生的结构化警告列表            |
+
+`compileInspectionToScene()` 直接执行一次主图与辅助内容的原子编译。React 和 Vanilla 宿主 API 见[基础用法](/kernel/packages/inspect/usage)。
+
+| API                          | 说明                             |
+| ---------------------------- | -------------------------------- |
+| `compileInspectionToScene()` | 直接执行主图与辅助内容的原子编译 |
+| `RetikzInspectError`         | Inspect 包统一的结构化错误类型   |
+| `RetikzInspectErrorCode`     | 稳定错误码集合                   |
+
+## 错误与限制
+
+`RetikzInspectError.details.origin` 用结构化阶段标明失败位置：
+
+| `stage`              | 含义                          | 附加字段                                          |
+| -------------------- | ----------------------------- | ------------------------------------------------- |
+| `selection`          | 选择规则接纳或解析            | `ruleIndex`、`target`                             |
+| `subject`、`inspect` | 最终产物校验或 Inspector 回调 | `inspector`、`owner`、`occurrence`                |
+| `output`、`fragment` | 输出规范化或辅助片段编译      | `inspector`、`owner`、`occurrence`、`outputIndex` |
+| `complete`           | 主结果与观测结果的最终组装    | 无                                                |
+
+| 错误码                      | 类别                               |
+| --------------------------- | ---------------------------------- |
+| `INSPECTION_ERROR`          | 未被更精确类别覆盖的 Inspect 错误  |
+| `INSPECTION_COMPILE_ERROR`  | 选择、最终产物或辅助输出的编译错误 |
+| `INSPECTION_COMPILE_FAILED` | 整次检查编译失败                   |
+| `INSPECTION_CONTRACT_ERROR` | Definition 或 Inspect 契约无效     |
+| `INSPECTION_REGISTRY_ERROR` | registry 键、Definition 或查找无效 |
+| `INSPECTION_VANILLA_ERROR`  | Vanilla 编排标记或宿主接线无效     |
+
+贡献内部无法无歧义定位的嵌套 `Scope` 会被 Vanilla 驱动明确拒绝；它需要更精确的贡献内子树定位契约。检查器输出中出现的公开身份、元数据或动画字段会在辅助内容封装时移除。
+
+## 相关
+
+- [自定义检查器](/kernel/packages/inspect/inspectors)：Definition、注册表和扩展错误
+- [Core](/kernel/packages/core/overview)：最终产物观察与隔离片段编译
+- [Render](/kernel/packages/render/overview)：只读图层物化

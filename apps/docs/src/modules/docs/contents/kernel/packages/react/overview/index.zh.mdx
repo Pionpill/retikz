@@ -197,7 +197,7 @@ Definition 数组按有序元素 identity 规范化，因此 render 时重新创
 
 基础包只提供领域中立的 `VanillaCompileDriver` 与不解释的 `authoring` site。默认 driver 由 Vanilla processing 执行普通 Core 编译，observer 与只读图层都为空。可选的 `@retikz/inspect/react` 通过 `InspectLayout`、`InspectScope` 和 `InspectPath` 解释运行时选择，并把检查 observer 接入同一 static 或 retained processing；这些选择不进入 `IRScene`、`IRScope` 或 `IRPath`。
 
-`VanillaCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。static processing 直接物化完整 frame；retained processing 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect/overview)。
+`VanillaCompileDriver` 可为同一次编译注入 observers，再从 Core primary 与 observer outputs 解析有序只读图层和扩展诊断。static processing 直接物化完整 frame；retained processing 在同一 revision 原子提交主图与图层。检查包在这个通用边界上接线，基础 React 包不导入任何 Inspector definition、配色或选择逻辑。完整用法见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 <SourceLinks
   sources={[

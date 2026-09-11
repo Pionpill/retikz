@@ -1,0 +1,131 @@
+---
+title: 基础用法
+description: 在 React 或 Vanilla 宿主中接入内置 Inspector，选择观测范围，并用只读辅助图层解释最终路径结果
+---
+
+当你需要查看路径最终采用的控制点等结果时，先创建注册表，再在所用宿主上声明运行时检查请求。请求不进入 IR、Scene 或运行时快照，因此不会改变主图的边界、资源、命中测试、动画或公开身份。
+
+## React
+
+React 使用 `@retikz/inspect/react` 的可选包装组件。`InspectLayout` 接收注册表，`InspectPath` 在当前 Path 上附加检查请求：
+
+```tsx
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { Step } from '@retikz/react';
+
+const registry = createDefaultInspectorRegistry();
+
+<InspectLayout registry={registry}>
+  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+  </InspectPath>
+</InspectLayout>;
+```
+
+`InspectLayout` 复用普通 `<Layout>` 的 static 或 retained 运行时；`InspectPath` 与 `InspectScope` 只在基础组件的编排位置附加选择信息。
+
+## Vanilla
+
+Vanilla 分别创建编排标记与编译驱动。标记描述检查位置，驱动把注册表、选择规则和只读图层接入普通渲染流程：
+
+```ts
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+const registry = createDefaultInspectorRegistry();
+const input = scene({
+  children: [
+    path('curve', {
+      authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, options: { labels: true } }),
+      way: [
+        [0, 0],
+        {
+          cubic: [
+            [20, -30],
+            [80, 30],
+          ],
+        },
+        [100, 0],
+      ],
+    }),
+  ],
+});
+
+const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
+```
+
+## 内置路径检查器
+
+内置 `stroke` 路径检查器读取最终采用的路径命令，并用普通 `Path` 和 `Node` 绘制贝塞尔控制柄、控制点与可选标签：
+
+<ComponentPreview
+  files="inspect-basic"
+  size="sm"
+  caption="辅助图层显示最终路径命令使用的控制柄和控制点；主路径本身没有被改写。"
+/>
+
+`controlPoints` 默认开启，`labels` 默认关闭，二者只影响辅助内容。
+
+## 选择范围
+
+Inspect 只会观察明确选中的最终实例。请求可以来自整张图、一个编排子树或当前实例；它们描述运行时选择，而不是持久化图形数据。
+
+### React 选择位置
+
+| 目标     | React 入口                       | 结果                                 |
+| -------- | -------------------------------- | ------------------------------------ |
+| 整张图   | `<InspectLayout request={...}>`  | 选择图中所有匹配所属者的最终实例     |
+| 编排子树 | `<InspectScope request={...}>`   | 选择该 Scope 内匹配的最终实例        |
+| 当前路径 | `<InspectPath request={...}>`    | 只选择当前 Path 对应的最终实例       |
+| 硬屏障   | `<InspectScope request={false}>` | 阻止后代继承或重新开启任何 Inspector |
+
+### 范围与屏障
+
+下面的试验场把两条曲线放在独立子树中，每条曲线都通过局部 `InspectPath` 请求检查。切换目标、控制点和标签，再开启右侧屏障，观察局部请求如何选择路径：
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A、B 是两条独立的普通路径；右侧屏障开启后，B 的局部请求也不能重新开启检查。"
+/>
+
+同一位置可以请求多个不同 Inspector。同一 Inspector 在整图、子树和当前实例上的稀疏选项按从外到内顺序合并；普通 `false` 只关闭当前位置的一个 Inspector，屏障则阻止后代重新开启任何 Inspector。
+
+### 选择结构
+
+| 结构                                | 含义                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------- |
+| `InspectionSelection`               | `rules: ReadonlyArray<InspectionSelectionRule>`，一次编译的完整运行时选择 |
+| `InspectionSelectionRule` request   | `inspector`、`target`、`options`，选择 Inspector 并传入开关或稀疏选项     |
+| `InspectionSelectionRule` barrier   | `target`，只允许整图或编排子树，阻止后代重新开启任何 Inspector            |
+| `InspectionSelectionTarget` scene   | `{ kind: 'scene' }`，匹配整张图                                           |
+| `InspectionSelectionTarget` subtree | `{ kind: 'subtree', sourcePath }`，匹配一个编排子树                       |
+| `InspectionSelectionTarget` self    | `{ kind: 'self', locator }`，按编排来源或精确最终实例定位当前对象         |
+
+`resolveInspectionSelection()` 会校验目标和所属者，按最终实例稳定排序并合并选项。无效来源路径、越界实例或所属者不匹配会在选择阶段失败，不会调用 Inspector 回调。
+
+<SourceLinks
+  sources={[
+    { label: '选择校验、级联与稳定解析', path: 'packages/kernel/inspect/src/compile/selection.ts' },
+    { label: 'React 选择包装组件', path: 'packages/kernel/inspect/src/react/components.tsx' },
+  ]}
+/>
+
+## 宿主入口
+
+| 入口                      | 职责                                                     |
+| ------------------------- | -------------------------------------------------------- |
+| `@retikz/inspect`         | Definition、注册表、选择、诊断、编译驱动和内置 Inspector |
+| `@retikz/inspect/react`   | `InspectLayout`、`InspectPath`、`InspectScope`           |
+| `@retikz/inspect/vanilla` | 编排标记和 Vanilla 编译驱动                              |
+| `@retikz/inspect/render`  | 把辅助平面转换为 Render 普通只读图层                     |
+
+布局检查能力由 `@retikz/layout/inspect`、`@retikz/layout-react/inspect` 和 `@retikz/layout-vanilla/inspect` 提供。它们显式依赖本包；Layout 根入口仍可在没有 Inspect 时使用。
+
+## 相关
+
+- [Path](/kernel/components/draw/path)：内置 `stroke` Path Inspector 的组件用法
+- [Layout 布局运行时](/library/layout/reference/runtime)：`Flex`、`Grid` 与 `Overlay` Inspector

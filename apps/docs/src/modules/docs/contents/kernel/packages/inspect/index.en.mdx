@@ -1,19 +1,113 @@
 ---
 title: Compilation Inspection · inspect
-description: Browse @retikz/inspect selection, inspection, and auxiliary compilation
+description: Add on-demand observation and readonly auxiliary layers to completed compilation without changing the primary figure
 ---
 
-`@retikz/inspect` provides optional selection, inspection, and auxiliary output for compiled diagrams.
+`@retikz/inspect` adds optional observation to a completed Core compile. An Inspector reads final occurrences and owner output, then produces independent readonly auxiliary content. Control points, layout bounds, and alignment guides are concrete uses of that observation.
+
+It explains final results only: it does not repair input, participate in layout solving, or mutate the primary figure. Ordinary drawing, compilation, and rendering do not require this package, and no auxiliary fragment exists when no Inspector matches.
+
+<ComponentAlert
+  title="Optional drawing aid"
+  description="@retikz/inspect is not required for drawing or rendering. It only helps interpret completed figures and compilation results, making it useful for development, debugging, or teaching rather than as a routine production capability."
+/>
+
+## Install and use
+
+<PackageManagerInstall packages="@retikz/inspect" />
+
+Both hosts use a registry, but React attaches requests at JSX authoring sites while Vanilla creates path markers and a compile driver separately:
+
+| Host    | Entry                                                                   | Integration point                                                |
+| ------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| React   | `InspectLayout`, `InspectPath`                                          | Inject a registry at Layout and attach requests to JSX Paths     |
+| Vanilla | `createInspectionVanillaAuthoring()`, `createInspectionVanillaDriver()` | Create path markers and add the inspection driver when rendering |
+
+### React
+
+React imports optional wrappers from `@retikz/inspect/react`. `InspectLayout` receives the registry, and `InspectPath` attaches a request to the current path:
+
+```tsx
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { Step } from '@retikz/react';
+
+const registry = createDefaultInspectorRegistry();
+
+export const InspectExample = () => (
+  <InspectLayout registry={registry}>
+    <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+    </InspectPath>
+  </InspectLayout>
+);
+```
+
+`InspectLayout` adds the optional inspection compile driver to the ordinary Layout runtime. `InspectPath` keeps ordinary Path authoring and turns its request into a runtime-only authoring marker.
+
+### Vanilla
+
+Vanilla creates an authoring marker and a compile driver separately: the marker declares that a path needs observation, and the driver adds the registry and auxiliary layers at the ordinary render entry:
+
+```ts
+import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+const registry = createDefaultInspectorRegistry();
+const input = scene({
+  children: [
+    path('curve', {
+      authoring: createInspectionVanillaAuthoring({
+        inspector: STROKE_PATH_INSPECTOR_KEY,
+        options: { controlPoints: true, labels: true },
+      }),
+      way: [
+        [0, 0],
+        {
+          cubic: [
+            [20, -30],
+            [80, 30],
+          ],
+        },
+        [100, 0],
+      ],
+    }),
+  ],
+});
+
+const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
+```
+
+The root entry owns Definitions, registries, selection, and auxiliary compilation. React, Vanilla, and Render adapters come from explicit subentries. Start with Basic Usage for a first result, then continue to extension or compilation details as needed.
 
 ## Responsibilities
 
-| Document | Responsibility                                     | Reach for it when                           |
-| -------- | -------------------------------------------------- | ------------------------------------------- |
-| Overview | Inspector registration, selection, and host wiring | Diagnosing or extending runtime observation |
+| Document               | Responsibility                                         | Reach for it when                         |
+| ---------------------- | ------------------------------------------------------ | ----------------------------------------- |
+| Basic Usage            | Add a built-in Inspector and select observation scope  | Adding or restricting auxiliary content   |
+| Custom Inspectors      | Define, register, and inject a third-party Inspector   | Extending your own observation capability |
+| Compilation Principles | Understand isolation, readonly layers, API, and errors | Diagnosing behavior or deeper boundaries  |
 
-## Documentation
+## Contents
 
-<LinkedCard href="/kernel/packages/inspect/overview">
-  <span className="font-semibold">Overview</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">Integrating and extending inspection</span>
-</LinkedCard>
+<LinkedSections
+  items={[
+    {
+      title: 'Basic Usage',
+      description: 'Host setup, the built-in Path Inspector, and observation scope',
+      url: '/kernel/packages/inspect/usage',
+    },
+    {
+      title: 'Custom Inspectors',
+      description: 'Definitions, registries, and one shared execution path',
+      url: '/kernel/packages/inspect/inspectors',
+    },
+    {
+      title: 'Compilation Principles',
+      description: 'Auxiliary planes, isolation, API, and errors',
+      url: '/kernel/packages/inspect/principles',
+    },
+  ]}
+/>

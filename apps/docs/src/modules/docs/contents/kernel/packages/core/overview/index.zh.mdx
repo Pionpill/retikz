@@ -84,7 +84,7 @@ const { output, snapshot, patch } = session.artifact(coreProgram).value;
 
 Core 只提供领域中立的观测能力。Composite 通过现有 `artifactSchema` 发布最终产物；Path kind 可声明 `ownerOutput.schema`，并在 `context.ownerOutput.requested` 为真时调用 `publish()`。只有最终提交的 occurrence 会触发 `observe()`，失败或被丢弃的 probe 不可见；事件携带最终 occurrence、probe/replay 来源以及从所属者局部坐标到主 Scene 坐标的变换。
 
-observer 可用 `context.compileFragment()` 在当前 occurrence 环境中编译普通 `IRChild`。返回的片段包含隔离的静态 Scene、artifacts 与 diagnostics，不写回主编译结果，也不能引用主图或其它片段的公共身份。observer 的最终输出由 `complete()` 决定并递归冻结，Core 不限定其领域结构。Inspector 的注册、选择、配色与只读图层组装位于可选的 [`@retikz/inspect`](/kernel/packages/inspect/overview)。
+observer 可用 `context.compileFragment()` 在当前 occurrence 环境中编译普通 `IRChild`。返回的片段包含隔离的静态 Scene、artifacts 与 diagnostics，不写回主编译结果，也不能引用主图或其它片段的公共身份。observer 的最终输出由 `complete()` 决定并递归冻结，Core 不限定其领域结构。Inspector 的注册、选择、配色与只读图层组装位于可选的 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 

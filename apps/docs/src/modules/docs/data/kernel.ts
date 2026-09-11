@@ -299,12 +299,14 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgInspect',
         sidebarGroup: 'kernel.pkgGroupExtension',
         children: [
+          { id: 'usage', label: 'kernel.pkgInspectUsage', difficulty: DocDifficulty.Beginner },
           {
-            id: 'overview',
-            label: 'kernel.pkgOverview',
+            id: 'inspectors',
+            label: 'kernel.pkgInspectInspectors',
             difficulty: DocDifficulty.Internals,
             meta: extensionGuide('kernel.inspect'),
           },
+          { id: 'principles', label: 'kernel.pkgInspectPrinciples', difficulty: DocDifficulty.Internals },
         ],
       },
       {
