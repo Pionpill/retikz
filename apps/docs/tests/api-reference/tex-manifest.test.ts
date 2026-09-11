@@ -59,6 +59,7 @@ describe('TeX API Reference MDX', () => {
 
   it('为英文页面生成相同的 API 结构与英文固定文案', async () => {
     const source = await createTexApiReferenceMdx('en');
+    const prose = source.replaceAll(/```[\s\S]*?```/g, '');
 
     expect(source).toContain('## Root entry `@retikz/tex`');
     expect(source).toContain('## React entry `@retikz/tex/react`');
@@ -70,7 +71,9 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain('| Member | Type | Default | Description |');
     expect(source).toContain('TeX lowerer configuration');
     expect(source).toContain('Optional configuration for MathJax extensions and lowering diagnostics.');
+    expect(source).toContain('> **Notes:** Uses a literal dynamic import to support bundler code splitting');
     expect(source).not.toContain('TeX lowerer 配置');
+    expect(prose).not.toMatch(/[\u3400-\u9fff]/u);
     expect(source).toContain(
       '<p><ApiSourceLink label={"useLowerTex"} path={"packages/kernel/tex/src/react/use-lower-tex.ts"} startLine={75}>',
     );

@@ -286,14 +286,18 @@ const renderTagSection = (title: string, content: string, lang: ApiReferenceLang
 
 /** 渲染 JSDoc 的非主路径补充说明 */
 const renderRemarks = (remarks: string, lang: ApiReferenceLanguage): string =>
-  remarks ? `> **${lang === 'zh' ? '备注' : 'Notes'}：** ${localizeText(remarks, lang)}` : '';
+  remarks
+    ? `> **${lang === 'zh' ? '备注' : 'Notes'}${lang === 'zh' ? '：' : ':'}** ${localizeText(remarks, lang)}`
+    : '';
 
 /** 渲染版本、弃用与延伸阅读等不改变签名的 JSDoc 元数据 */
 const renderMetadata = (symbol: ApiReferenceSymbol, lang: ApiReferenceLanguage): string => {
   const parts = [
-    symbol.since ? `**${lang === 'zh' ? '自' : 'Since'}：** ${localizeText(symbol.since, lang)}` : '',
+    symbol.since
+      ? `**${lang === 'zh' ? '自' : 'Since'}${lang === 'zh' ? '：' : ':'}** ${localizeText(symbol.since, lang)}`
+      : '',
     symbol.deprecated
-      ? `> **${lang === 'zh' ? '已弃用' : 'Deprecated'}：** ${localizeText(symbol.deprecated, lang)}`
+      ? `> **${lang === 'zh' ? '已弃用' : 'Deprecated'}${lang === 'zh' ? '：' : ':'}** ${localizeText(symbol.deprecated, lang)}`
       : '',
     symbol.see.length > 0
       ? [

@@ -292,6 +292,17 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Internals,
             meta: extensionGuide('kernel.tex'),
           },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgTexApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.tex.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {

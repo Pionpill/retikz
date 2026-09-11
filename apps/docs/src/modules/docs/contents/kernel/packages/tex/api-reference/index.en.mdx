@@ -1,0 +1,10 @@
+---
+title: tex API Reference
+description: Browse the public TypeScript API exposed by the @retikz/tex root and React entry points
+---
+
+`@retikz/tex` provides optional TeX formula parsing, SVG glyph lowering, and MathJax integration for the Core text pipeline.
+
+The package has two entry points. Import runtime-neutral engines, lowerers, and configuration from `@retikz/tex`; import `useLowerTex` from `@retikz/tex/react` inside React components. React is an optional peer dependency, so the Hook lives on a separate subpath and non-React consumers do not statically depend on React.
+
+{/* @include kernel/packages/tex/api-reference/generated */}

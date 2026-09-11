@@ -77,7 +77,11 @@ const translations: Readonly<Record<string, string>> = {
     'The initialization state of the MathJax lowerer for the current component configuration.',
 };
 
-/** 将中文 JSDoc 投影为必须经人工审阅的英文文案 */
+/**
+ * 将脚本生成后由 LLM 翻译、并经审阅的中文 JSDoc 投影为英文文案
+ *
+ * @description 每次新增中文说明先运行生成器，再补齐本映射并重新生成。运行时不调用 LLM；缺少映射时立即失败
+ */
 export const translateTexApiReference = (source: string): string => {
   if (!/[\u3400-\u9fff]/u.test(source)) return source;
   const translation = translations[source];

@@ -117,6 +117,7 @@
     "pkgTexAuthoring": "公式写法",
     "pkgTexConfiguration": "MathJax 配置",
     "pkgTexPrinciples": "解析原理",
+    "pkgTexApiReference": "API 参考",
     "pkgMath": "数学 · math",
     "pkgMathPrimitives": "几何原语",
     "pkgMathTransforms": "坐标变换",

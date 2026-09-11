@@ -117,6 +117,7 @@
     "pkgTexAuthoring": "Formula Authoring",
     "pkgTexConfiguration": "MathJax Configuration",
     "pkgTexPrinciples": "Lowering Principles",
+    "pkgTexApiReference": "API Reference",
     "pkgMath": "math",
     "pkgMathPrimitives": "Primitives",
     "pkgMathTransforms": "Transforms",
