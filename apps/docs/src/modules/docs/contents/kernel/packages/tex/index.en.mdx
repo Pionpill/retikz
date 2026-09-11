@@ -5,11 +5,18 @@ description: Browse @retikz/tex formula parsing, lowering, and runtime integrati
 
 `@retikz/tex` is the optional formula package that integrates TeX into the existing text and rendering flow.
 
-## Installation & integration
+## Install and use
 
 `mathjax-full` is an optional peer dependency. Applications using the built-in MathJax engine install it together with `@retikz/tex`:
 
 <PackageManagerInstall packages="@retikz/tex mathjax-full" />
+
+Choose the injection entry for your host. Formulas enter MathJax lowering only after a lowerer is injected; without it, `$...$` strings stay compatible ordinary text and explicit math runs are skipped with a Core warning.
+
+| Host    | Entry              | Integration point                                                                |
+| ------- | ------------------ | -------------------------------------------------------------------------------- |
+| React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout lowerTex={lowerTex}>`                     |
+| Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `renderToSvgString` or another compile entry |
 
 ### React
 
@@ -52,17 +59,6 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 ```
 
 If the engine and lowerer do not need to be configured separately, await `createMathJaxLowerTex(options)` instead. Vanilla does not install React or use `@retikz/tex/react`.
-
-### Host injection
-
-`@retikz/tex` does not locate or modify a host. It provides a function that satisfies the Core contract, which the host injects at its compile entry:
-
-| Host    | Injection point                | Effect                                                                |
-| ------- | ------------------------------ | --------------------------------------------------------------------- |
-| React   | `<Layout lowerTex={lowerTex}>` | Layout passes the lowerer into the Core compile context               |
-| Vanilla | `{ compile: { lowerTex } }`    | `renderToSvgString`, mount, or processing uses one compile capability |
-
-After injection, formulas enter MathJax lowering. Without it, `$...$` strings stay compatible ordinary text; explicit math runs are skipped and emit a Core warning.
 
 ## Responsibilities
 

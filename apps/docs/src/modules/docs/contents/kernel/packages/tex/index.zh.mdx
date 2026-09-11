@@ -5,11 +5,18 @@ description: 浏览 @retikz/tex 的公式解析、lowering 与运行时接入
 
 `@retikz/tex` 是可选公式能力包，负责把 TeX 公式接入既有文本与渲染流程。
 
-## 安装与接入
+## 安装与使用
 
 `mathjax-full` 是可选 peer dependency。使用内置 MathJax engine 时，应用需要和 `@retikz/tex` 一起安装它：
 
 <PackageManagerInstall packages="@retikz/tex mathjax-full" />
+
+按宿主选择注入入口。公式只有在 lowerer 注入后才会进入 MathJax lowering；未注入时，`$...$` 仍按普通文字兼容处理，显式 math run 会被跳过并产生 Core warning。
+
+| 宿主    | 入口               | 接入位置                                                           |
+| ------- | ------------------ | ------------------------------------------------------------------ |
+| React   | `useLowerTex()`    | 在 `<Layout lowerTex={lowerTex}>` 注入 ready 状态的 lowerer        |
+| Vanilla | `createLowerTex()` | 将 `{ compile: { lowerTex } }` 传给 `renderToSvgString` 等编译入口 |
 
 ### React
 
@@ -52,17 +59,6 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 ```
 
 如果不需要拆开 engine 和 lowerer，也可以直接等待 `createMathJaxLowerTex(options)`。Vanilla 不需要安装 React，也不需要使用 `@retikz/tex/react`。
-
-### 注入宿主
-
-`@retikz/tex` 不直接寻找或修改宿主。它只提供一个符合 Core 契约的函数，由宿主在编译入口注入：
-
-| 宿主    | 注入位置                       | 作用                                                                   |
-| ------- | ------------------------------ | ---------------------------------------------------------------------- |
-| React   | `<Layout lowerTex={lowerTex}>` | Layout 把 lowerer 传给 Core 编译上下文                                 |
-| Vanilla | `{ compile: { lowerTex } }`    | `renderToSvgString`、mount 或 processing 使用同一个 compile capability |
-
-注入完成后，公式才会进入 MathJax lowering；没有注入时，字符串里的 `$...$` 仍按普通文字兼容处理，显式 math run 会被跳过并产生 Core warning。
 
 ## 职责一览
 
