@@ -244,6 +244,17 @@ export const kernelSection: Array<Section> = [
             label: 'kernel.pkgFoundationValidationErrors',
             difficulty: DocDifficulty.Advanced,
           },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgFoundationApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.foundation.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {
@@ -254,6 +265,17 @@ export const kernelSection: Array<Section> = [
           { id: 'primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
           { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
           { id: 'algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgMathApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.math.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {

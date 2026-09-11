@@ -24,8 +24,8 @@ describe('TeX API Reference MDX', () => {
   it('把 package exports 的公开导出生成可直接内联的中文 MDX', async () => {
     const source = await createTexApiReferenceMdx('zh');
 
-    expect(source).toContain('## 根入口 `@retikz/tex`');
-    expect(source).toContain('## React 子路径 `@retikz/tex/react`');
+    expect(source).toContain('## `@retikz/tex`');
+    expect(source).toContain('## `@retikz/tex/react`');
     expect(source).not.toContain('从 `@retikz/tex`.');
     expect(source).toContain('### createLowerTex');
     expect(source).not.toContain('### `createLowerTex`');
@@ -61,8 +61,8 @@ describe('TeX API Reference MDX', () => {
     const source = await createTexApiReferenceMdx('en');
     const prose = source.replaceAll(/```[\s\S]*?```/g, '');
 
-    expect(source).toContain('## Root entry `@retikz/tex`');
-    expect(source).toContain('## React entry `@retikz/tex/react`');
+    expect(source).toContain('## `@retikz/tex`');
+    expect(source).toContain('## `@retikz/tex/react`');
     expect(source).not.toContain('Import from `@retikz/tex/react`.');
     expect(source).toContain('### useLowerTex');
     expect(source).not.toContain('### `useLowerTex`');
