@@ -17,6 +17,10 @@ import {
 } from '@/modules/docs/components/logic-figure';
 import OpaqueColorFlowEn from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow.en.demo';
 import OpaqueColorFlowZh from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow.zh.demo';
+import AffineCompositionFlowEn from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow.en.demo';
+import AffineCompositionFlowZh from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow.zh.demo';
+import CoordinateConversionFlowEn from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow.en.demo';
+import CoordinateConversionFlowZh from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow.zh.demo';
 
 /** 经过 React authoring 与 Vanilla normalize 读取逻辑图的 Source IR */
 const readLogicFigure = (element: ReactNode) => {
@@ -147,5 +151,58 @@ describe('LogicFigure semantic vocabulary', () => {
     expect(
       relations.filter(relation => relation.source !== 'colors').every(relation => relation.kind === undefined),
     ).toBe(true);
+  });
+
+  it.each([
+    ['Chinese', CoordinateConversionFlowZh],
+    ['English', CoordinateConversionFlowEn],
+  ])('uses two shared Entity and Relation groups for the %s coordinate conversion Flow', (_language, Demo) => {
+    const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
+    const entities = figure.entities;
+    const relations = figure.relations ?? [];
+    const forwardRelations = relations.filter(relation => relation.group === 'local-to-world');
+    const reverseRelations = relations.filter(relation => relation.group === 'world-to-local');
+    const dependencyRelations = relations.filter(relation => relation.role === 'dependency');
+
+    expect(forwardRelations).toHaveLength(3);
+    expect(reverseRelations).toHaveLength(3);
+    expect(entities.filter(entity => entity.group === 'local-to-world').map(entity => entity.id)).toEqual([
+      'rotate',
+      'translate',
+    ]);
+    expect(entities.filter(entity => entity.group === 'world-to-local').map(entity => entity.id)).toEqual([
+      'inverse-rotate',
+      'remove-center',
+    ]);
+    expect(entities.every(entity => entity.kind === undefined)).toBe(true);
+    expect(dependencyRelations).toHaveLength(4);
+    expect(dependencyRelations.every(relation => relation.group === undefined)).toBe(true);
+  });
+
+  it.each([
+    ['Chinese', AffineCompositionFlowZh],
+    ['English', AffineCompositionFlowEn],
+  ])('keeps the %s affine composition Flow ungrouped', (_language, Demo) => {
+    const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
+    const relations = figure.relations ?? [];
+
+    expect(figure.layouts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'affine', direction: 'right' }),
+        expect.objectContaining({ id: 'application', direction: 'down' }),
+      ]),
+    );
+    expect(figure.entities.every(entity => entity.group === undefined)).toBe(true);
+    expect(relations.every(relation => relation.group === undefined)).toBe(true);
+    expect(relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: 'combined-matrix',
+          target: 'apply',
+          role: 'dependency',
+          kind: LogicFigureRelationKind.Secondary,
+        }),
+      ]),
+    );
   });
 });
