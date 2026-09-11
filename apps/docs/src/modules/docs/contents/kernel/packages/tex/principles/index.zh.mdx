@@ -21,7 +21,7 @@ MathJax 也提供按 package 组合的 TeX 语法能力，正好对应 `profile`
 
 <ComponentPreview files="tex-conversion-flow" size="sm" hideCode />
 
-图中同一 layout 行内的相邻阶段直接连接；跨 layout 行、尤其跨度较大的阶段使用 `|-|` 三段折线连接，以保持主链方向清晰并避开中间内容。
+整条链路从 Core 在文本内容中识别公式片段开始：`LowerTex` 将 TeX source 与排版样式交给 MathJax SVG engine，随后 SVG lowerer 把字形几何和度量转成 `LoweredTex`。Core 最终把这些路径作为普通 Scene primitive 发出，renderer 无需了解 TeX、MathJax 或 SVG。
 
 1. 宿主注入 `lowerTex` 后，Core 才把 `$...$` / `$$...$$` 识别为 math run；未注入时字符串保持普通文字
 2. Core 把 TeX source、`displayMode`、字号和颜色交给 `LowerTex`，并用返回的 `height` / `depth` 完成同行布局
@@ -77,22 +77,21 @@ type LowerTex = (
 
 ## 缓存、失败与重试
 
-下面的图同时展示 lowering 缓存，以及 React 共享 engine、清理旧 lowerer 和处理过期结果的生命周期：
+公式在文本重排、组件重渲染或同一内容多次出现时可能被重复 lowering。缓存保存完整的 `LoweredTex`，命中后同时跳过 MathJax 的 `engine.convert()` 排版，以及 SVG 节点、path data 和 transform 到 `PathCommand` 的解析与归一化；它解决的是这两段重复计算的成本，而不是只针对其中一个步骤。
 
-<ComponentPreview files="tex-cache-lifecycle" size="xl" hideCode />
+下图只说明一次公式请求如何命中缓存，或经 MathJax 解析后把结果回写缓存：
+
+<ComponentPreview files="tex-lower-cache" size="sm" hideCode />
 
 `createLowerTex` 为每个 lowerer 建立内存缓存，key 包含 TeX source、inline / display 模式、字号和宿主颜色。成功结果与确定性的 MathJax / SVG 失败会缓存；`engine.convert` 抛出的异常视为瞬态失败，不缓存，下一次调用仍可重试。每次公开 lowering 失败都会调用最新的 `onDiagnostic`。
 
-`useLowerTex` 以最终生效的 extension 集合作为共享 engine 的 key。切换集合时立即进入 `loading` 并清空旧 lowerer；已卸载或过期请求的异步结果不会写回。初始化失败会返回 `error` 并删除共享失败项，使后续挂载可以重试。
-
-| 场景                                    | 可观察结果                                                                                             |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| 未注入 lowerer 的字符串公式             | `$...$` / `$$...$$` 保持普通文字，不进入公式解析                                                       |
-| 未注入 lowerer 的显式 math run          | 跳过该片段并报告 `TEX_LOWERER_MISSING`；同一行的 text run 继续渲染                                     |
-| MathJax 返回错误节点                    | lowerer 返回 `null`，报告 `mathjax-error`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存               |
-| SVG 不支持或格式错误                    | 拒绝整段公式，报告 `unsupported-svg` 或 `malformed-svg`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存 |
-| `engine.convert` 抛出异常               | lowerer 返回 `null`，报告 `engine-error`，Core 再报告 `TEX_INVALID`；该瞬态失败不缓存                  |
-| `mathjax-full` 缺失或 engine 初始化失败 | 工厂 Promise 拒绝安装或初始化信息；React 返回 `error`，后续挂载可以重试                                |
+| 场景                           | 可观察结果                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| 未注入 lowerer 的字符串公式    | `$...$` / `$$...$$` 保持普通文字，不进入公式解析                                                       |
+| 未注入 lowerer 的显式 math run | 跳过该片段并报告 `TEX_LOWERER_MISSING`；同一行的 text run 继续渲染                                     |
+| MathJax 返回错误节点           | lowerer 返回 `null`，报告 `mathjax-error`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存               |
+| SVG 不支持或格式错误           | 拒绝整段公式，报告 `unsupported-svg` 或 `malformed-svg`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存 |
+| `engine.convert` 抛出异常      | lowerer 返回 `null`，报告 `engine-error`，Core 再报告 `TEX_INVALID`；该瞬态失败不缓存                  |
 
 <SourceLinks
   sources={[
@@ -100,6 +99,19 @@ type LowerTex = (
       label: 'TeX lowering 缓存与失败结果',
       path: 'packages/kernel/tex/src/lower/lower-tex.ts',
     },
+  ]}
+/>
+
+### React API
+
+`@retikz/tex/react` 导出的 `useLowerTex` 只服务 React。它以最终生效的 extension 集合作为共享 MathJax engine 的 key；Vanilla 调用方自行 `await createMathJaxLowerTex()` 并注入 `compile.lowerTex`。
+
+<ComponentPreview files="tex-react-lifecycle" size="xs" hideCode />
+
+切换集合时，hook 立即进入 `loading` 并清空旧 lowerer；已卸载或过期请求的异步结果不会写回。`mathjax-full` 缺失或 engine 初始化失败时，hook 返回 `error` 并删除共享失败项，使后续挂载可以重试。
+
+<SourceLinks
+  sources={[
     {
       label: 'React engine 共享与生命周期',
       path: 'packages/kernel/tex/src/react/use-lower-tex.ts',
@@ -120,10 +132,3 @@ type LowerTex = (
 | `LowerTex`                | Core 的同步注入点；无法 lowering 时返回 `null`                                                                         |
 | `LoweredTex`              | 包含绘制顺序的 paths、`width`、`height` 与 `depth`                                                                     |
 | `CompileOptions.lowerTex` | Vanilla / Core 编译上下文中的公式能力注入位置                                                                          |
-
-## 相关
-
-- [安装与接入](/kernel/packages/tex)
-- [公式写法](/kernel/packages/tex/authoring)
-- [MathJax 配置](/kernel/packages/tex/configuration)
-- [Core compile 参考](/kernel/reference/runtime/compile)

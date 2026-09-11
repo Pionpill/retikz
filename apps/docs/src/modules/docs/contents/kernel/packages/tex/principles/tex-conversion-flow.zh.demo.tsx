@@ -26,7 +26,7 @@ const Demo: FC = () => (
       <FlowLayout id="output-row" direction="right" align="center" gap={48}>
         <FlowEntities
           items={[
-            { id: 'svg-lowerer', text: 'SVG 降解器', role: 'activity' },
+            { id: 'svg-lowerer', text: 'SVG 降解器', role: 'activity', kind: LogicFigureEntityKind.Important },
             { id: 'lowered-tex', text: 'LoweredTex', role: 'resource' },
             { id: 'core-scene', text: 'Core Scene 输出', role: 'participant' },
           ]}

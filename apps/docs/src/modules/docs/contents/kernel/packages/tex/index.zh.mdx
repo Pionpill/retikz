@@ -74,17 +74,22 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/tex/authoring">
-    <span className="font-semibold">公式写法</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">从行内公式到显式 math run 的排版方式</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex/configuration">
-    <span className="font-semibold">MathJax 配置</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">选择 profile 与 extensions，扩展可用公式语法</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex/principles">
-    <span className="font-semibold">解析原理</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">了解转换流程、缓存和失败的可观察结果</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '公式写法',
+      description: '从行内公式到显式 math run 的排版方式',
+      url: '/kernel/packages/tex/authoring',
+    },
+    {
+      title: 'MathJax 配置',
+      description: '选择 profile 与 extensions，扩展可用公式语法',
+      url: '/kernel/packages/tex/configuration',
+    },
+    {
+      title: '解析原理',
+      description: '了解转换流程、缓存和失败的可观察结果',
+      url: '/kernel/packages/tex/principles',
+    },
+  ]}
+/>

@@ -21,7 +21,7 @@ The figure follows one conversion from “Core entry → Tex lowering → Core o
 
 <ComponentPreview files="tex-conversion-flow" size="sm" hideCode />
 
-The figure connects adjacent stages in one layout row directly. Connections across layout rows—especially wider spans—use a three-leg `|-|` route so the main flow stays legible without crossing intervening content.
+The complete chain starts when Core recognizes a formula run in text content. `LowerTex` passes the TeX source and typesetting style to the MathJax SVG engine, then the SVG lowerer turns glyph geometry and metrics into `LoweredTex`. Core finally emits those paths as ordinary Scene primitives, so the renderer never needs to understand TeX, MathJax, or SVG.
 
 1. After the host injects `lowerTex`, Core recognizes `$...$` / `$$...$$` as math runs; without it, strings remain ordinary text
 2. Core passes the TeX source, `displayMode`, font size, and color to `LowerTex`, then uses returned `height` / `depth` in inline layout
@@ -77,13 +77,13 @@ This also keeps `mathjax-full` optional, so Core users who do not use formulas d
 
 ## Caching, failures, and retries
 
-This figure combines the lowering cache with the React lifecycle for sharing engines, clearing an old lowerer, and discarding stale results:
+Formula lowering may repeat during text relayout, component rerenders, or when the same content appears more than once. The cache retains the complete `LoweredTex`, so a hit skips both MathJax typesetting through `engine.convert()` and the parsing and normalization of SVG nodes, path data, and transforms into `PathCommand`. It addresses the cost of repeating both stages, rather than attributing the cost to one stage alone.
 
-<ComponentPreview files="tex-cache-lifecycle" size="xl" hideCode />
+This figure only shows how a formula request hits the cache, or is parsed by MathJax and written back:
+
+<ComponentPreview files="tex-lower-cache" size="sm" hideCode />
 
 `createLowerTex` maintains an in-memory cache per lowerer. Its key contains TeX source, inline / display mode, font size, and host color. Successful results and deterministic MathJax / SVG failures are cached. An exception from `engine.convert` is transient and not cached, so the next call can retry. Every public failure calls the latest `onDiagnostic`.
-
-`useLowerTex` shares an engine by effective extension set. A configuration change immediately enters `loading` and clears the old lowerer; an async result for an unmounted or stale request cannot write back. Initialization failure returns `error` and removes the failed shared item, allowing a later mount to retry.
 
 | Scenario                                      | Observable result                                                                                                          |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -92,7 +92,6 @@ This figure combines the lowering cache with the React lifecycle for sharing eng
 | MathJax returns an error node                 | The lowerer returns `null`, reports `mathjax-error`, then Core reports `TEX_INVALID`; this deterministic failure is cached |
 | SVG is unsupported or malformed               | The full formula is rejected and reports `unsupported-svg` or `malformed-svg`, then Core `TEX_INVALID`; it is cached       |
 | `engine.convert` throws                       | The lowerer returns `null`, reports `engine-error`, then Core `TEX_INVALID`; this transient failure is not cached          |
-| `mathjax-full` is missing or startup fails    | The factory Promise rejects with install or startup details; React returns `error` and a later mount may retry             |
 
 <SourceLinks
   sources={[
@@ -100,6 +99,19 @@ This figure combines the lowering cache with the React lifecycle for sharing eng
       label: 'TeX lowering cache and failure results',
       path: 'packages/kernel/tex/src/lower/lower-tex.ts',
     },
+  ]}
+/>
+
+### React API
+
+`useLowerTex`, exported by `@retikz/tex/react`, is React-only. It keys a shared MathJax engine by the effective extension set; Vanilla callers instead `await createMathJaxLowerTex()` and inject `compile.lowerTex` themselves.
+
+<ComponentPreview files="tex-react-lifecycle" size="xs" hideCode />
+
+When the extension set changes, the hook immediately enters `loading` and clears the old lowerer; an async result for an unmounted or stale request cannot write back. If `mathjax-full` is missing or engine initialization fails, the hook returns `error` and removes the failed shared entry, allowing a later mount to retry.
+
+<SourceLinks
+  sources={[
     {
       label: 'React engine sharing and lifecycle',
       path: 'packages/kernel/tex/src/react/use-lower-tex.ts',
@@ -120,10 +132,3 @@ This figure combines the lowering cache with the React lifecycle for sharing eng
 | `LowerTex`                | Core's synchronous injection point; returns `null` when lowering fails                                                                         |
 | `LoweredTex`              | Paths in draw order plus `width`, `height`, and `depth`                                                                                        |
 | `CompileOptions.lowerTex` | Formula capability injection point in the Vanilla / Core compile context                                                                       |
-
-## Related
-
-- [Installation & integration](/kernel/packages/tex)
-- [Formula Authoring](/kernel/packages/tex/authoring)
-- [MathJax Configuration](/kernel/packages/tex/configuration)
-- [Core compile reference](/kernel/reference/runtime/compile)

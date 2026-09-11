@@ -74,23 +74,22 @@ After injection, formulas enter MathJax lowering. Without it, `$...$` strings st
 
 ## Chapter contents
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/tex/authoring">
-    <span className="font-semibold">Formula Authoring</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      From inline formulas to explicit math-run layout
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex/configuration">
-    <span className="font-semibold">MathJax Configuration</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Choose profiles and extensions for additional syntax
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex/principles">
-    <span className="font-semibold">Lowering Principles</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand conversion, caching, and observable failures
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Formula Authoring',
+      description: 'From inline formulas to explicit math-run layout',
+      url: '/kernel/packages/tex/authoring',
+    },
+    {
+      title: 'MathJax Configuration',
+      description: 'Choose profiles and extensions for additional syntax',
+      url: '/kernel/packages/tex/configuration',
+    },
+    {
+      title: 'Lowering Principles',
+      description: 'Understand conversion, caching, and observable failures',
+      url: '/kernel/packages/tex/principles',
+    },
+  ]}
+/>
