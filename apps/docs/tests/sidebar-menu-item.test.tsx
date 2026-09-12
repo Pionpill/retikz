@@ -31,6 +31,16 @@ const DeepLinkNavigator = () => {
   );
 };
 
+const GroupNavigator = () => {
+  const navigate = useNavigate();
+
+  return (
+    <button type="button" onClick={() => navigate('/docs/group-b/b')}>
+      Navigate to group B
+    </button>
+  );
+};
+
 const renderMenuItem = (): HTMLElement => {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -77,6 +87,48 @@ describe('<AppSidebarMenuItem>', () => {
     const activeLeaf = findButton(container, 'Principles');
     expect(activeLeaf).toBeDefined();
     expect(activeLeaf?.className).toContain('bg-accent');
+  });
+
+  it('切换到其他分组后保留已展开的分组', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push(root);
+
+    act(() => {
+      root.render(
+        <MemoryRouter initialEntries={['/docs/group-a/a']}>
+          <GroupNavigator />
+          <ul>
+            <AppSidebarMenuItem
+              item={{ value: 'group-a', label: 'Group A', children: [{ value: 'a', label: 'A' }] }}
+              path="/docs/group-a"
+            />
+            <AppSidebarMenuItem
+              item={{ value: 'group-b', label: 'Group B', children: [{ value: 'b', label: 'B' }] }}
+              path="/docs/group-b"
+            />
+          </ul>
+        </MemoryRouter>,
+      );
+    });
+
+    const expandGroupB = container.querySelector<HTMLButtonElement>('button[aria-label="common.expandSection"]');
+    const navigateButton = findButton(container, 'Navigate to group B');
+
+    expect(findButton(container, 'A')).toBeDefined();
+    expect(findButton(container, 'B')).toBeUndefined();
+    expect(expandGroupB).toBeDefined();
+    expect(navigateButton).toBeDefined();
+    if (!expandGroupB || !navigateButton) throw new Error('Sidebar controls not found');
+
+    act(() => {
+      expandGroupB.click();
+      navigateButton.click();
+    });
+
+    expect(findButton(container, 'A')).toBeDefined();
+    expect(findButton(container, 'B')).toBeDefined();
   });
 });
 
