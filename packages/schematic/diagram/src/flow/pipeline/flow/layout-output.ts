@@ -211,6 +211,39 @@ type PlacementRecord = Readonly<{
   output: FlowLayoutPlacementOutput;
 }>;
 
+/** 判断 provider 回传的 Grid placement 是否保留原始矩阵或对象结构 */
+const hasMatchingGridPlacements = (
+  actual: unknown,
+  expected:
+    | ReadonlyArray<ReadonlyArray<string | null>>
+    | Readonly<Record<string, Readonly<{ row: number; column: number }>>>,
+): boolean => {
+  if (Array.isArray(expected))
+    return (
+      Array.isArray(actual) &&
+      actual.length === expected.length &&
+      actual.every(
+        (actualRow, rowIndex) =>
+          Array.isArray(actualRow) &&
+          actualRow.length === expected[rowIndex].length &&
+          actualRow.every((actualCell, columnIndex) => actualCell === expected[rowIndex][columnIndex]),
+      )
+    );
+  return (
+    isPlainRecord(actual) &&
+    hasExactKeys(actual, Object.keys(expected)) &&
+    Object.entries(expected).every(([id, cell]) => {
+      const actualCell = actual[id];
+      return (
+        isPlainRecord(actualCell) &&
+        hasExactKeys(actualCell, ['row', 'column']) &&
+        actualCell.row === cell.row &&
+        actualCell.column === cell.column
+      );
+    })
+  );
+};
+
 const validatePlacementInput = (
   definition: FlowLayoutDefinition,
   expected: Extract<FlowLayoutElementInput, { kind: 'layout' }>,
@@ -244,17 +277,7 @@ const validatePlacementInput = (
         placement.kind === 'grid' &&
         actual.rowGap === placement.rowGap &&
         actual.columnGap === placement.columnGap &&
-        isPlainRecord(actual.placements) &&
-        hasExactKeys(actual.placements, Object.keys(placement.placements)) &&
-        Object.entries(placement.placements).every(([id, cell]) => {
-          const actualCell = actual.placements[id];
-          return (
-            isPlainRecord(actualCell) &&
-            hasExactKeys(actualCell, ['row', 'column']) &&
-            actualCell.row === cell.row &&
-            actualCell.column === cell.column
-          );
-        });
+        hasMatchingGridPlacements(actual.placements, placement.placements);
   if (!matches)
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,

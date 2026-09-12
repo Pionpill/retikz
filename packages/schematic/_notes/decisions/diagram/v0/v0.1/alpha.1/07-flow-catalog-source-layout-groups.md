@@ -36,7 +36,7 @@ Group 的 `layout` 是 Flow layout provider 的局部意图：provider 可以依
 
 `IRFlowLayout` 使用必填 `kind: 'linear' | 'grid'` 闭合联合，完整字段与行列语义由 [Flow Grid 二维对齐布局](./10-flow-grid-layout.md) 定义。两种布局共享 `id`、`rank` 和 `children`。
 
-Linear 的 `direction` 必填，`gap` 省略时继承有效 `nodeGap`，`align` 省略时为 `center`。Grid 以 `placements` 指定直接 children 的单元格，两轴居中，行列间距独立继承有效 `nodeGap`。`rank` 只约束整个 Layout 在外层自动布局中的位置。
+Linear 的 `direction` 必填，`gap` 省略时继承有效 `nodeGap`，`align` 省略时为 `center`。Grid 的 `placements` 推荐以二维矩阵指定直接 children 的单元格，`null` 保留空格，也支持 `{ childId: { row, column } }` 映射；两种结构均保持两轴居中，行列间距独立继承有效 `nodeGap`。`rank` 只约束整个 Layout 在外层自动布局中的位置。
 
 Layout 无 label、style、shell、Graph identity 或 endpoint 能力，可以和 Group 相互嵌套。Linear 按 children 顺序排列；Grid 的 children 只决定包含与绘制顺序，placements 决定空间位置。Layout 内 Relation 不产生 rank edge，也不重排 children；所有 Relation 都在完整 bounds 产生后统一 routing。
 

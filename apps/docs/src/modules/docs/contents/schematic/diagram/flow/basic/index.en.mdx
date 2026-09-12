@@ -44,13 +44,13 @@ The form submission flow starts with user input, passes through a frontend form 
 
 Flow provides two forms of grouping. `FlowGroup` expresses a visible boundary with domain meaning, while `FlowLayout` only organizes several elements as one layout unit. Both establish containment through `children` and may nest each other.
 
-| Difference        | `FlowGroup`                                                               | `FlowLayout`                                               |
-| ----------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Primary role      | Express a named, styled semantic group                                    | Place direct children in a fixed arrangement               |
-| Visible result    | Materialize a Graph Group with a shell and optional title                 | Add no border, background, or title                        |
-| Internal layout   | `layout` controls automatic direction, peer gap, and rank gap             | `direction`, `gap`, and `align` directly control placement |
-| Relation endpoint | Allowed                                                                   | Not allowed; connect an Entity or Group inside it          |
-| Source catalog    | Stored in `groups`; `children` preserves direct members and sibling order | Stored in `layouts`; `children` preserves fixed order      |
+| Difference        | `FlowGroup`                                                               | `FlowLayout`                                                               |
+| ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Primary role      | Express a named, styled semantic group                                    | Place direct children in a fixed arrangement                               |
+| Visible result    | Materialize a Graph Group with a shell and optional title                 | Add no border, background, or title                                        |
+| Internal layout   | `layout` controls automatic direction, peer gap, and rank gap             | `kind="linear"` for one axis, or `kind="grid"` for shared rows and columns |
+| Relation endpoint | Allowed                                                                   | Not allowed; connect an Entity or Group inside it                          |
+| Source catalog    | Stored in `groups`; `children` preserves direct members and sibling order | Stored in `layouts`; `children` preserves fixed order                      |
 
 React nesting is only authoring convenience. The adapter normalizes Groups, Layouts, and Entities into flat catalogs, with each owner's `children` as the sole containment fact. The example places a visible Group above a shell-free Layout; the relation from the Group shell to the queue also demonstrates a Group endpoint.
 
@@ -59,6 +59,52 @@ React nesting is only authoring convenience. The adapter normalizes Groups, Layo
   size="lg"
   caption="Adjust the Group's automatic direction and rank spacing separately from the Layout's fixed direction, gap, and alignment. The camera stays fixed, and only the Group has a shell."
 />
+
+### Row and column alignment
+
+Use `FlowLayout kind="grid"` when nodes in different rows must align in pairs. The recommended `placements` form is a matrix: the outer index is the zero-based row, the inner index is the column, each cell contains a direct child id, and `null` keeps a cell empty. An id-keyed `{ childId: { row, column } }` mapping is also supported. Both forms produce the same row and column positions; columns share center x, rows share center y, and nodes retain their measured sizes. Groups keep automatic layout; a Grid can be nested inside one.
+
+```tsx
+import { FlowDiagram, FlowEntities, FlowLayout } from '@retikz/diagram-react/flow';
+
+<FlowDiagram>
+  <FlowLayout
+    kind="grid"
+    id="stages"
+    placements={[
+      ['request', 'cache'],
+      ['parse', 'result'],
+    ]}
+  >
+    <FlowEntities items={['request', 'cache', 'parse', 'result']} />
+  </FlowLayout>
+</FlowDiagram>;
+```
+
+Vanilla uses the same `placements`. Explicit `children` controls only containment and paint order, producing the same Flow Source:
+
+```ts
+import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
+
+const source = normalizeFlowDiagram({
+  entities: ['request', 'cache', 'parse', 'result'].map(id => ({ id, text: id })),
+  groups: [],
+  layouts: [
+    {
+      kind: 'grid',
+      id: 'stages',
+      children: ['request', 'cache', 'parse', 'result'],
+      placements: [
+        ['request', 'cache'],
+        ['parse', 'result'],
+      ],
+    },
+  ],
+  children: ['stages'],
+});
+```
+
+Every direct child needs a cell. Overlap, spans, and references to descendants in other containers are not supported. Empty tracks remain without creating placeholder elements. `rowGap` and `columnGap` independently inherit `nodeGap` and accept explicit `0`. Asymmetric margins reserve sufficient space symmetrically without shifting node centers. Grid does not rotate with the flow direction. `reserveLabelSpace` is enabled by default. A labeled horizontal Relation adds its measured width to `columnGap`; a vertical Relation adds its measured height to `rowGap`. Labels on the same axis use the largest measured dimension, so every gap on that axis grows uniformly. For example, `columnGap={32}` with a label width of `12` produces a `44` column gap. Set it to `false` to use the configured `rowGap` and `columnGap` exactly, without reserving label space. This does not guarantee global collision avoidance for diagonal or orthogonal routes, or routes crossing intermediate nodes. The [TeX cache diagram](/kernel/packages/tex/principles#caching-failures-and-retries) demonstrates this layout.
 
 ### Global configuration
 
@@ -78,13 +124,13 @@ React nesting is only authoring convenience. The adapter normalizes Groups, Layo
   description="Return here when consuming layout results, diagnosing Definitions, or building an LLM tool contract."
 />
 
-| Stage       | Input                              | Observable result                                                         |
-| ----------- | ---------------------------------- | ------------------------------------------------------------------------- |
-| Measure     | Final Graph Definitions and Theme  | Fixed leaf sizes, Group shells, Layout children, and relation-label sizes |
-| Layout      | `FlowLayoutInput` + Layout context | Flex placement, automatic element bounds, routes, and label reservations  |
-| Materialize | The same validated geometry        | Graph Scene, `FlowDiagramArtifact`, and world-space handles               |
+| Stage       | Input                              | Observable result                                                             |
+| ----------- | ---------------------------------- | ----------------------------------------------------------------------------- |
+| Measure     | Final Graph Definitions and Theme  | Fixed leaf sizes, Group shells, Layout children, and relation-label sizes     |
+| Layout      | `FlowLayoutInput` + Layout context | Flex/Grid placement, automatic element bounds, routes, and label reservations |
+| Materialize | The same validated geometry        | Graph Scene, `FlowDiagramArtifact`, and world-space handles                   |
 
-The layout callback must synchronously return JSON-safe plain data and call `placeLayout` exactly once for every authored Layout. Flow uses the `@retikz/layout` Flex compiler for fixed placement, then verifies that the provider did not rewrite relative Layout bounds. It also validates ids, sizes, containment, collisions, routes, and label coverage before Graph/Core renders the result.
+The layout callback must synchronously return JSON-safe plain data and call `placeLayout` exactly once for every authored Layout. Flow uses the `@retikz/layout` Flex/Grid compiler for fixed placement, then verifies that the provider did not rewrite relative Layout bounds. It also validates ids, sizes, containment, collisions, routes, and label coverage before Graph/Core renders the result. Definitions must declare supported `placementKinds`; unsupported requests fail before the callback.
 
 ## Defaults and routing
 
@@ -98,15 +144,15 @@ Root and Group `routing` declare routing separately from layout; Relation `routi
 
 ### React authoring
 
-| Component       | Core props                                                                                                                                                                                       | Default                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FlowDiagram`   | JSX children collect `entities` / `groups` / `layouts` / root `children` / `relations`; `presentation?`, `frame?`, `diagramDefaults?`, `graphRules?`, `flowDefaults?`, `layout?`, `routing?`     | `layered` (`nodeGap=48`, `rankGap=48`) + straight routing | Source root, Definition injection, and standalone `Layout` host. `graphRules` reuses Graph selectors and affects only this Flow's Entities and Relations                                                                                                                                                                                                                                                                                                                                                        |
-| `FlowEntity`    | `id`, `text`, `role?`, `kind?`, `group?`, `status?`, `rank?`, `style?`, `layout?`                                                                                                                | role=`concept`                                            | One Graph Entity. `group` shares its automatic categorical color with Relations that use the same value. `text` accepts a string or TextBlock line array; each line can override `fill` and `font`, while a Flow Entity must contain at least one non-blank text or TeX run. `status` reuses Graph's `error`, `success`, `warning`, and `disabled` values; omission leaves the Entity unmarked. `layout.align`, `lineHeight`, and `maxTextWidth` control whole-block alignment, line height, and wrapping width |
-| `FlowEntities`  | `items: ReadonlyArray<string \| InputFlowEntity>`<br />`complete?: boolean`                                                                                                                      | complete=`false`                                          | Declares Entities at the marker position in array order. It is additive by default; `complete` makes it the owner's sole complete Entity list                                                                                                                                                                                                                                                                                                                                                                   |
-| `FlowGroup`     | `id`, `caption?`, `rank?`, `layout?`, `routing?`, `padding?`, `background?`, `border?`, `cornerRadius?`, `overflow?`, `children`                                                                 | Graph Group                                               | Visible boundary; `caption.title.text` is its title, `layout` places children, and `routing` sets scoped relation routing. Relations belong at the root                                                                                                                                                                                                                                                                                                                                                         |
-| `FlowLayout`    | `id`, `direction`, `gap?`, `align?`, `rank?`, `children`                                                                                                                                         | align=`center`                                            | Shell-free fixed placement; omitted `gap` inherits effective `nodeGap`; never a Relation endpoint                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `FlowRelation`  | `source`, `target`, `label?`, `role?`, `kind?`, `status?`, `direction?`, `group?`, `style?`, `sourceMarker?`, `targetMarker?`, `labelTextForeground?`, `labelFont?`, `labelOpacity?`, `routing?` | role=`flow`                                               | Ordered root relation without an independent id; endpoints are Entities or Groups, never Layouts. `group` reuses Graph visual color grouping; path appearance lives in `style`, while markers, label formatting, and routing are root fields                                                                                                                                                                                                                                                                    |
-| `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                                                                 | complete=`false`                                          | Declares Relations at the Flow root in array order. It is additive by default; `complete` makes it the root's sole complete Relation list                                                                                                                                                                                                                                                                                                                                                                       |
+| Component       | Core props                                                                                                                                                                                       | Default                                                                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FlowDiagram`   | JSX children collect `entities` / `groups` / `layouts` / root `children` / `relations`; `presentation?`, `frame?`, `diagramDefaults?`, `graphRules?`, `flowDefaults?`, `layout?`, `routing?`     | `layered` (`nodeGap=48`, `rankGap=48`) + straight routing               | Source root, Definition injection, and standalone `Layout` host. `graphRules` reuses Graph selectors and affects only this Flow's Entities and Relations                                                                                                                                                                                                                                                                                                                                                        |
+| `FlowEntity`    | `id`, `text`, `role?`, `kind?`, `group?`, `status?`, `rank?`, `style?`, `layout?`                                                                                                                | role=`concept`                                                          | One Graph Entity. `group` shares its automatic categorical color with Relations that use the same value. `text` accepts a string or TextBlock line array; each line can override `fill` and `font`, while a Flow Entity must contain at least one non-blank text or TeX run. `status` reuses Graph's `error`, `success`, `warning`, and `disabled` values; omission leaves the Entity unmarked. `layout.align`, `lineHeight`, and `maxTextWidth` control whole-block alignment, line height, and wrapping width |
+| `FlowEntities`  | `items: ReadonlyArray<string \| InputFlowEntity>`<br />`complete?: boolean`                                                                                                                      | complete=`false`                                                        | Declares Entities at the marker position in array order. It is additive by default; `complete` makes it the owner's sole complete Entity list                                                                                                                                                                                                                                                                                                                                                                   |
+| `FlowGroup`     | `id`, `caption?`, `rank?`, `layout?`, `routing?`, `padding?`, `background?`, `border?`, `cornerRadius?`, `overflow?`, `children`                                                                 | Graph Group                                                             | Visible boundary; `caption.title.text` is its title, `layout` places children, and `routing` sets scoped relation routing. Relations belong at the root                                                                                                                                                                                                                                                                                                                                                         |
+| `FlowLayout`    | `kind`, `id`, `rank?`, `children`; linear: `direction`, `gap?`, `align?`; grid: `placements`, `rowGap?`, `columnGap?`, `reserveLabelSpace?`                                                      | linear align=`center`; gaps inherit `nodeGap`; label reservation=`true` | Shell-free fixed placement, never a Relation endpoint; Grid recommends a matrix and also accepts an id-keyed `{ childId: { row, column } }` mapping; both axes are always centered                                                                                                                                                                                                                                                                                                                              |
+| `FlowRelation`  | `source`, `target`, `label?`, `role?`, `kind?`, `status?`, `direction?`, `group?`, `style?`, `sourceMarker?`, `targetMarker?`, `labelTextForeground?`, `labelFont?`, `labelOpacity?`, `routing?` | role=`flow`                                                             | Ordered root relation without an independent id; endpoints are Entities or Groups, never Layouts. `group` reuses Graph visual color grouping; path appearance lives in `style`, while markers, label formatting, and routing are root fields                                                                                                                                                                                                                                                                    |
+| `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                                                                 | complete=`false`                                                        | Declares Relations at the Flow root in array order. It is additive by default; `complete` makes it the root's sole complete Relation list                                                                                                                                                                                                                                                                                                                                                                       |
 
 ### Public entries
 

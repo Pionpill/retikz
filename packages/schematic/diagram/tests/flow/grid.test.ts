@@ -18,12 +18,17 @@ const layout = {
   kind: 'grid',
   id: 'grid',
   children: ['a', 'b', 'c', 'd'],
-  placements: {
-    a: { row: 0, column: 0 },
-    b: { row: 0, column: 1 },
-    c: { row: 1, column: 0 },
-    d: { row: 1, column: 1 },
-  },
+  placements: [
+    ['a', 'b'],
+    ['c', 'd'],
+  ],
+};
+
+const objectPlacements = {
+  a: { row: 0, column: 0 },
+  b: { row: 0, column: 1 },
+  c: { row: 1, column: 0 },
+  d: { row: 1, column: 1 },
 };
 
 const compile = (
@@ -113,7 +118,10 @@ describe('Flow Grid', () => {
   it('reserves each sparse column gap for the largest measured label deterministically', () => {
     const sparse = {
       ...layout,
-      placements: { ...layout.placements, b: { row: 0, column: 3 }, d: { row: 1, column: 3 } },
+      placements: [
+        ['a', null, null, 'b'],
+        ['c', null, null, 'd'],
+      ],
     };
     const baseline = compile(sparse, 'right', 100);
     const short = compile(sparse, 'right', 100, {}, [{ source: 'a', target: 'b', label: 'x' }]);
@@ -191,7 +199,7 @@ describe('Flow Grid', () => {
                 rowGap: 17,
                 columnGap: 17,
                 reserveLabelSpace: true,
-                placements: { ...layout.placements, a: { row: 3, column: 3 } },
+                placements: [[null, 'b'], ['c', 'd'], [], [null, null, null, 'a']],
               },
             }),
         }),
@@ -214,28 +222,85 @@ describe('Flow Grid', () => {
     });
     expect(() => compile(layout, 'right', 17, { flowLayouts: [shifted], defaultFlowLayout: shifted.name })).toThrow();
   });
-  it('round-trips placements without deriving containment or sorting keys', () => {
+  it('round-trips Grid placement rows without deriving containment or sorting children', () => {
     const source = FlowLayoutSchema.parse(layout);
     expect(FlowLayoutSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+  });
+
+  it('accepts object-mapped placements with the same Grid geometry as a matrix', () => {
+    const source = {
+      ...layout,
+      placements: objectPlacements,
+    };
+    const parsed = FlowLayoutSchema.safeParse(source);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success || parsed.data.kind !== 'grid') return;
+
+    expect(parsed.data.placements).toEqual(source.placements);
+    expect(compile(parsed.data).children).toEqual(compile(layout).children);
   });
 
   it.each([
     { ...layout, kind: undefined },
     { ...layout, direction: 'right' },
-    { ...layout, placements: { ...layout.placements, a: { row: -1, column: 0 } } },
-    { ...layout, placements: { ...layout.placements, a: { row: 0.5, column: 0 } } },
-    { ...layout, placements: { ...layout.placements, a: { row: 0, column: GRID_LAYOUT_MAX_TRACKS_PER_AXIS } } },
-    { ...layout, placements: { ...layout.placements, a: { row: 0, column: 1 } } },
-    { ...layout, placements: { b: layout.placements.b, c: layout.placements.c, d: layout.placements.d } },
-    { ...layout, placements: { ...layout.placements, extra: { row: 3, column: 3 } } },
+    { ...layout, placements: { a: { row: 0, column: 0 } } },
+    { ...layout, placements: { ...objectPlacements, a: { row: -1, column: 0 } } },
+    { ...layout, placements: { ...objectPlacements, a: { row: 0.5, column: 0 } } },
+    {
+      ...layout,
+      placements: { ...objectPlacements, a: { row: 0, column: GRID_LAYOUT_MAX_TRACKS_PER_AXIS } },
+    },
+    { ...layout, placements: { ...objectPlacements, a: { row: 0, column: 1 } } },
+    { ...layout, placements: { b: objectPlacements.b, c: objectPlacements.c, d: objectPlacements.d } },
+    { ...layout, placements: { ...objectPlacements, extra: { row: 3, column: 3 } } },
+    {
+      ...layout,
+      placements: [
+        ['a', 'b'],
+        ['c', 'a'],
+      ],
+    },
+    {
+      ...layout,
+      placements: [
+        ['a', 'b'],
+        ['c', null],
+      ],
+    },
+    {
+      ...layout,
+      placements: [
+        ['a', 'b'],
+        ['c', 'd', 'extra'],
+      ],
+    },
+    {
+      ...layout,
+      placements: Array.from({ length: GRID_LAYOUT_MAX_TRACKS_PER_AXIS + 1 }, (_, index) =>
+        index === 0 ? ['a', 'b'] : [],
+      ),
+    },
+    {
+      ...layout,
+      placements: [
+        ['a', 'b', ...Array.from({ length: GRID_LAYOUT_MAX_TRACKS_PER_AXIS - 1 }, () => null)],
+        ['c', 'd'],
+      ],
+    },
   ])('rejects malformed grid input %#', source => {
     expect(FlowLayoutSchema.safeParse(source).success).toBe(false);
   });
 
-  it('locates missing placements at the child key', () => {
-    const parsed = FlowLayoutSchema.safeParse({ ...layout, placements: {} });
+  it('locates missing placements at the Grid matrix', () => {
+    const parsed = FlowLayoutSchema.safeParse({
+      ...layout,
+      placements: [
+        ['a', 'b'],
+        ['c', null],
+      ],
+    });
     expect(parsed.success).toBe(false);
-    if (!parsed.success) expect(parsed.error.issues.map(issue => issue.path)).toContainEqual(['placements', 'a']);
+    if (!parsed.success) expect(parsed.error.issues.map(issue => issue.path)).toContainEqual(['placements']);
   });
 
   it.each(['right', 'left', 'up', 'down'])(
@@ -267,12 +332,7 @@ describe('Flow Grid', () => {
     const sparse = {
       ...layout,
       children: ['d', 'c', 'b', 'a'],
-      placements: {
-        d: { row: 2, column: 2 },
-        c: { row: 2, column: 0 },
-        b: { row: 0, column: 2 },
-        a: { row: 0, column: 0 },
-      },
+      placements: [['a', null, 'b'], [], ['c', null, 'd']],
     };
     const dense = compile();
     const result = compile(sparse);

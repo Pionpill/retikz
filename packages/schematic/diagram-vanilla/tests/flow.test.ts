@@ -112,6 +112,34 @@ describe('@retikz/diagram-vanilla/flow', () => {
     expect(normalizeFlowDiagram(input)).toEqual({ namespace: 'diagram', type: 'flow', ...input });
   });
 
+  it('preserves id-keyed Grid placements in typed Vanilla authoring', () => {
+    const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
+    expect(normalizeFlowDiagram).toBeDefined();
+    if (normalizeFlowDiagram === undefined) return;
+
+    const input = {
+      entities: [
+        { id: 'request', text: 'Request' },
+        { id: 'result', text: 'Result' },
+      ],
+      groups: [],
+      layouts: [
+        {
+          kind: 'grid' as const,
+          id: 'stages',
+          children: ['request', 'result'],
+          placements: {
+            request: { row: 0, column: 0 },
+            result: { row: 1, column: 1 },
+          },
+        },
+      ],
+      children: ['stages'],
+    };
+
+    expect(normalizeFlowDiagram(input)).toEqual({ namespace: 'diagram', type: 'flow', ...input });
+  });
+
   it('keeps definition options out of Source and contributes the same Flow provider root', () => {
     const flowDiagram = functionExport<CreateFlowDiagramEmbed>('flowDiagram');
     const adapter = adapterExport();

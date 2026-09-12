@@ -8,8 +8,8 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 /** 展示公式从 Core 入口经 Tex lowering 回到 Core Scene 的主链 */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} layout={{ direction: 'down' }}>
-    <FlowLayout id="tex-conversion" direction="down" align="center" gap={48}>
-      <FlowLayout id="input-row" direction="right" align="center" gap={48}>
+    <FlowLayout kind="linear" id="tex-conversion" direction="down" align="center" gap={48}>
+      <FlowLayout kind="linear" id="input-row" direction="right" align="center" gap={48}>
         <FlowEntities
           items={[
             { id: 'core-text', text: 'Core text pipeline', role: 'participant' },
@@ -23,7 +23,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="output-row" direction="right" align="center" gap={48}>
+      <FlowLayout kind="linear" id="output-row" direction="right" align="center" gap={48}>
         <FlowEntities
           items={[
             { id: 'svg-lowerer', text: 'SVG lowerer', role: 'activity', kind: LogicFigureEntityKind.Important },

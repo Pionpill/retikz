@@ -88,45 +88,57 @@ const expectedSource = {
 };
 
 describe('@retikz/diagram-react/flow', () => {
-  it('preserves Grid placements through typed React, Vanilla and direct Source inside a Group', () => {
-    const grid = {
-      kind: 'grid' as const,
-      id: 'grid',
-      rowGap: 0,
-      columnGap: 24,
-      placements: { a: { row: 0, column: 0 }, b: { row: 1, column: 1 } },
-    };
-    const entities = [
-      { id: 'a', text: 'A' },
-      { id: 'b', text: 'B' },
-    ];
-    const source = {
-      entities,
-      groups: [{ id: 'group', children: ['grid'] }],
-      layouts: [{ ...grid, children: ['a', 'b'] }],
-      children: ['group'],
-    };
-    const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
-    const input = createInputScene(
-      createElement(
-        FlowReact.FlowDiagram,
-        null,
+  it.each([
+    { form: 'matrix', placements: [['a'], [null, 'b']] },
+    {
+      form: 'id-keyed mapping',
+      placements: {
+        a: { row: 0, column: 0 },
+        b: { row: 1, column: 1 },
+      },
+    },
+  ])(
+    'preserves $form Grid placements through typed React, Vanilla and direct Source inside a Group',
+    ({ placements }) => {
+      const grid = {
+        kind: 'grid' as const,
+        id: 'grid',
+        rowGap: 0,
+        columnGap: 24,
+        placements,
+      };
+      const entities = [
+        { id: 'a', text: 'A' },
+        { id: 'b', text: 'B' },
+      ];
+      const source = {
+        entities,
+        groups: [{ id: 'group', children: ['grid'] }],
+        layouts: [{ ...grid, children: ['a', 'b'] }],
+        children: ['group'],
+      };
+      const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
+      const input = createInputScene(
         createElement(
-          FlowReact.FlowGroup,
-          { id: 'group' },
-          createElement(FlowReact.FlowLayout, grid, createElement(FlowReact.FlowEntities, { items: entities })),
+          FlowReact.FlowDiagram,
+          null,
+          createElement(
+            FlowReact.FlowGroup,
+            { id: 'group' },
+            createElement(FlowReact.FlowLayout, grid, createElement(FlowReact.FlowEntities, { items: entities })),
+          ),
         ),
-      ),
-    );
-    const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
-    expect(react).toEqual(direct);
-    expect(normalizeFlowDiagram(source)).toEqual(direct);
-    const result = processToStaticInputResult(input.scene, {
-      adapters: input.adapters,
-      compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
-    });
-    expect(JSON.stringify(result)).toContain('A');
-  });
+      );
+      const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+      expect(react).toEqual(direct);
+      expect(normalizeFlowDiagram(source)).toEqual(direct);
+      const result = processToStaticInputResult(input.scene, {
+        adapters: input.adapters,
+        compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
+      });
+      expect(JSON.stringify(result)).toContain('A');
+    },
+  );
   it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
     const props = {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },

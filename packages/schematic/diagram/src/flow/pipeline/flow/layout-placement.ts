@@ -42,6 +42,38 @@ const placementFailure = (input: FlowLayoutPlacementInput, reason: string, cause
   });
 };
 
+type GridCell = Readonly<{ row: number; column: number }>;
+
+type GridPlacements = ReadonlyArray<ReadonlyArray<string | null>> | Readonly<Record<string, GridCell>>;
+
+const isGridPlacementMatrix = (placements: GridPlacements): placements is ReadonlyArray<ReadonlyArray<string | null>> =>
+  Array.isArray(placements);
+
+/** 将 Grid 的两种公开 placement 结构投影为按 child identity 查询的位置 */
+const gridCellsById = (placements: GridPlacements): ReadonlyMap<string, GridCell> => {
+  if (!isGridPlacementMatrix(placements)) return new Map(Object.entries(placements));
+  const cells = new Map<string, { row: number; column: number }>();
+  placements.forEach((row, rowIndex) => {
+    row.forEach((child, columnIndex) => {
+      if (child !== null) cells.set(child, { row: rowIndex, column: columnIndex });
+    });
+  });
+  return cells;
+};
+
+/** 返回 Grid 两个轴由当前 placement 结构确定的轨道数 */
+const gridTrackCount = (
+  placements: GridPlacements,
+  cellsById: ReadonlyMap<string, GridCell>,
+  axis: 'row' | 'column',
+) => {
+  if (isGridPlacementMatrix(placements)) {
+    if (axis === 'row') return placements.length;
+    return Math.max(...placements.map(row => row.length));
+  }
+  return Math.max(...Array.from(cellsById.values(), cell => cell[axis])) + 1;
+};
+
 /** 使用公开 Flex/Grid compiler 执行一个无绘制 Flow Layout placement */
 export const createFlowLayoutExecutionContext = (
   context: LayoutCompositeCompileContext,
@@ -51,13 +83,13 @@ export const createFlowLayoutExecutionContext = (
     try {
       if (input.layout.kind === 'grid') {
         const layout = input.layout;
-        const cells = Object.values(layout.placements);
+        const cellsById = gridCellsById(layout.placements);
         const grid = createGridLayout({
-          columns: Array.from({ length: Math.max(...cells.map(cell => cell.column)) + 1 }, () => ({
+          columns: Array.from({ length: gridTrackCount(layout.placements, cellsById, 'column') }, () => ({
             kind: 'content' as const,
             mode: 'natural' as const,
           })),
-          rows: Array.from({ length: Math.max(...cells.map(cell => cell.row)) + 1 }, () => ({
+          rows: Array.from({ length: gridTrackCount(layout.placements, cellsById, 'row') }, () => ({
             kind: 'content' as const,
             mode: 'natural' as const,
           })),
@@ -66,7 +98,7 @@ export const createFlowLayoutExecutionContext = (
           justifyItems: LayoutAlignment.Center,
           alignItems: LayoutAlignment.Center,
           children: input.elements.map(element => {
-            const cell = layout.placements[element.id];
+            const cell = cellsById.get(element.id)!;
             const horizontal = Math.max(element.margin.left, element.margin.right);
             const vertical = Math.max(element.margin.top, element.margin.bottom);
             return {
@@ -86,7 +118,7 @@ export const createFlowLayoutExecutionContext = (
         const ownerById = new Map<string, string>();
         const visit = (elements: ReadonlyArray<FlowLayoutElementInput>, owner?: string): void => {
           for (const element of elements) {
-            const directOwner = Object.hasOwn(layout.placements, element.id) ? element.id : owner;
+            const directOwner = cellsById.has(element.id) ? element.id : owner;
             if (directOwner !== undefined) ownerById.set(element.id, directOwner);
             if (element.kind !== 'leaf') visit(element.elements, directOwner);
           }
@@ -97,8 +129,8 @@ export const createFlowLayoutExecutionContext = (
           const sourceId = ownerById.get(relation.source);
           const targetId = ownerById.get(relation.target);
           if (sourceId === undefined || targetId === undefined || sourceId === targetId) continue;
-          const sourceCell = layout.placements[sourceId];
-          const targetCell = layout.placements[targetId];
+          const sourceCell = cellsById.get(sourceId)!;
+          const targetCell = cellsById.get(targetId)!;
           const columns = Math.abs(sourceCell.column - targetCell.column);
           const rows = Math.abs(sourceCell.row - targetCell.row);
           if (columns > 0) {

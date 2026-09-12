@@ -22,11 +22,11 @@ Layout 不绘制边框，不产生 Graph identity，也不能作为 Relation end
 
 ### 包含顺序与单元格位置分别表达独立事实
 
-根、Group 和所有 Layout 的 `children` 仍是唯一包含事实源。Grid 使用按 direct child id 索引的 `placements` 指定行列位置；它只表达位置，不建立第二套 owner，不移动或重新包含被引用元素。
+根、Group 和所有 Layout 的 `children` 仍是唯一包含事实源。Grid 使用 `placements` 指定行列位置。推荐的二维矩阵中，外层下标是行，内层下标是列，非空单元格写 direct child id，`null` 保留空格；也接受以 direct child id 为键、值为 `{ row, column }` 的对象映射。两种结构只表达位置，不建立第二套 owner，不移动或重新包含被引用元素。
 
-`children` 决定稳定遍历、绘制与 artifact 顺序，`placements` 决定空间位置；对象键顺序和 catalog 顺序不影响位置。两者不是可相互推导的重复事实：改变绘制顺序不改变单元格位置，改变单元格位置也不改变绘制顺序。
+`children` 决定稳定遍历、绘制与 artifact 顺序，`placements` 决定空间位置；矩阵位置与 catalog 顺序不影响位置。两者不是可相互推导的重复事实：改变绘制顺序不改变单元格位置，改变单元格位置也不改变绘制顺序。
 
-每个 direct child 必须恰有一个 placement，且 placement 只能引用 direct child。行列从零开始，使用非负整数，每个元素只占一个单元格，重叠单元格非法。当前不提供自动填充、跨行跨列或固定轨道宽高，避免为简单共享行列引入完整表格配置。
+每个 direct child 必须恰好对应一个位置，位置只能引用 direct child。矩阵的行列由数组下标确定；对象映射的 `row` 与 `column` 显式从零开始。重复 child 或重叠坐标非法。当前不提供自动填充、跨行跨列或固定轨道宽高，避免为简单共享行列引入完整表格配置。
 
 未占用的单元格保留为空，不创建占位 Entity、Graph identity 或 artifact element。行列范围由最大索引确定；索引空洞不压缩。全空轨道的内容尺寸为零，其两侧仍按相邻轨道间距处理；范围上限沿用 Layout Grid 的公开轨道限制，不重复保存可推导的行列数量。
 
@@ -72,7 +72,9 @@ type IRFlowLayout =
       rowGap?: number;
       columnGap?: number;
       reserveLabelSpace?: boolean;
-      placements: Readonly<Record<string, Readonly<{ row: number; column: number }>>>;
+      placements:
+        | ReadonlyArray<ReadonlyArray<string | null>>
+        | Readonly<Record<string, Readonly<{ row: number; column: number }>>>;
       children: ReadonlyArray<string>;
     }>;
 ```
@@ -87,22 +89,17 @@ Grid 不接受 Linear 的 `direction`、`gap` 或 `align`；Linear 不接受 Gri
 {
   "kind": "grid",
   "id": "cache",
-  "rowGap": 24,
-  "columnGap": 24,
-  "placements": {
-    "tex-request": { "row": 0, "column": 0 },
-    "cache-lookup": { "row": 0, "column": 1 },
-    "cached-content": { "row": 0, "column": 2 },
-    "mathjax-processing": { "row": 1, "column": 1 },
-    "parsing-result": { "row": 1, "column": 2 }
-  },
+  "placements": [
+    ["tex-request", "cache-lookup", "cached-content"],
+    [null, "mathjax-processing", "parsing-result"]
+  ],
   "children": ["tex-request", "cache-lookup", "cached-content", "mathjax-processing", "parsing-result"]
 }
 ```
 
 ### 三入口与 provider 执行边界
 
-Direct IR、Vanilla `InputFlowLayout` 与 React `FlowLayout` 表达同一判别联合。React 继续通过嵌套 children 收集唯一 containment，Grid 的 `placements` 使用同样的 authored id；不新增只在 JSX 中存在的布局算法、行容器或隐式占位节点。
+Direct IR、Vanilla `InputFlowLayout` 与 React `FlowLayout` 表达同一判别联合。React 继续通过嵌套 children 收集唯一 containment，Grid 的 `placements` 可以使用矩阵或 id 映射，以相同的 authored id 指定位置；不新增只在 JSX 中存在的布局算法、行容器或隐式占位节点。
 
 `FlowLayoutCapabilities` 增加必填、非空且无重复的 `placementKinds: ReadonlyArray<'linear' | 'grid'>`，catalog 如实暴露该集合；`compoundScopes` 继续描述含 Layout / Group 的递归结构支持。内置 layered 声明支持两种 placement，自定义 Definition 可以显式声明支持的子集。实际请求包含未支持的 placement kind 时，在 callback 前失败，不回退为一维布局。
 
@@ -117,7 +114,7 @@ artifact 继续使用 `kind: 'layout'`、authored id、bounds 和有序 elements
 ## 行为、失败语义与兼容性
 
 - 相同 Source、definitions、Theme 和测量结果产生相同 placement、artifact 与 Scene；行列中心对齐以布局坐标成立，不依赖渲染像素取整
-- 非法行列索引、重复单元格、placement 缺失、非 direct child 引用和轨道范围超限在 Source 边界拒绝，诊断定位到 Layout 及相应 `placements` 字段；已有未知 child、重复包含和循环包含继续沿用 Flow 引用与 containment 诊断
+- 非法矩阵单元格或对象映射、重复 child、重叠坐标、placement 缺失、非 direct child 引用和行列范围超限在 Source 边界拒绝，诊断定位到 Layout 及相应 `placements` 字段；已有未知 child、重复包含和循环包含继续沿用 Flow 引用与 containment 诊断
 - 不支持的 placement kind 使用 `DIAGRAM_FLOW_LAYOUT_CAPABILITY_UNSUPPORTED`，给出 Definition、Layout id 与缺失的 placement kind
 - provider 改写固定 placement 或输出错误的 child 尺寸时使用 `DIAGRAM_FLOW_LAYOUT_OUTPUT_INVALID`；执行组合失败保留底层 cause，沿用 Diagram 物化失败边界，不静默降级
 - 本决策被采纳并实施时，替代 ADR-07 的一维专属 Layout 形态，并更新 ADR-04/05 的 placement 输入、能力预检和结果保证；其余 Graph 语义、包含关系、identity 与同步执行边界保持有效

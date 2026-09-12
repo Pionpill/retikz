@@ -8,8 +8,8 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 /** 展示 useLowerTex 的 React hook 生命周期 */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} layout={{ direction: 'down' }}>
-    <FlowLayout id="lifecycle" direction="down" align="center" gap={28}>
-      <FlowLayout id="configuration-row" direction="right" align="center" gap={36}>
+    <FlowLayout kind="linear" id="lifecycle" direction="down" align="center" gap={28}>
+      <FlowLayout kind="linear" id="configuration-row" direction="right" align="center" gap={36}>
         <FlowEntities
           items={[
             { id: 'configuration-change', text: '配置变更', role: 'activity', kind: LogicFigureEntityKind.Important },
@@ -18,7 +18,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="failure-row" direction="right" align="center" gap={36}>
+      <FlowLayout kind="linear" id="failure-row" direction="right" align="center" gap={36}>
         <FlowEntities
           items={[
             { id: 'initialization-failure', text: '初始化失败', role: 'activity' },

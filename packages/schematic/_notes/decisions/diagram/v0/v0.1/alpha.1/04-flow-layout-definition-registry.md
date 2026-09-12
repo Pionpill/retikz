@@ -143,7 +143,9 @@ type EffectiveFlowPlacement =
       kind: 'grid';
       rowGap: number;
       columnGap: number;
-      placements: Readonly<Record<string, Readonly<{ row: number; column: number }>>>;
+      placements:
+        | ReadonlyArray<ReadonlyArray<string | null>>
+        | Readonly<Record<string, Readonly<{ row: number; column: number }>>>;
     }>;
 
 type FlowLayoutContainerInput = Readonly<{

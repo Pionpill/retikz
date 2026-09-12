@@ -210,6 +210,18 @@ const FlowGridPlacementSchema = strictObject({
   ),
 });
 
+const FlowGridPlacementMatrixSchema = array(array(NonBlankStringSchema.nullable()).max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS))
+  .max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
+  .describe(
+    'Physical Grid rows. Each non-null cell references one direct child; row and column indices derive from array positions.',
+  );
+
+const FlowGridPlacementsSchema = FlowGridPlacementMatrixSchema.or(
+  record(NonBlankStringSchema, FlowGridPlacementSchema).describe(
+    'Direct-child Grid cells keyed by authored identity with explicit zero-based row and column indices.',
+  ),
+);
+
 const FlowGridLayoutSchema = strictObject({
   kind: literal(FlowPlacementKind.Grid).describe('Shared row and column placement discriminator.'),
   ...FlowLayoutBaseSchema.shape,
@@ -218,8 +230,8 @@ const FlowGridLayoutSchema = strictObject({
   reserveLabelSpace: zodBoolean()
     .optional()
     .describe('Whether measured relation labels expand their matching Grid track gap. Omission enables reservation.'),
-  placements: record(NonBlankStringSchema, FlowGridPlacementSchema).describe(
-    'One cell per direct child, keyed by authored identity.',
+  placements: FlowGridPlacementsSchema.describe(
+    'Grid positions as a recommended row-major matrix or an id-keyed row and column mapping.',
   ),
 });
 
@@ -227,7 +239,58 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
   .superRefine((layout, context) => {
     if (layout.kind !== FlowPlacementKind.Grid) return;
     const children = new Set(layout.children);
+    if (Array.isArray(layout.placements)) {
+      const placed = new Set<string>();
+      for (const [row, cells] of layout.placements.entries()) {
+        for (const [column, child] of cells.entries()) {
+          if (child === null) continue;
+          if (!children.has(child)) {
+            context.addIssue({
+              code: 'custom',
+              path: ['placements', row, column],
+              message: 'Grid cell must reference a direct child.',
+            });
+          }
+          if (placed.has(child)) {
+            context.addIssue({
+              code: 'custom',
+              path: ['placements', row, column],
+              message: 'Grid child must appear in exactly one cell.',
+            });
+          }
+          placed.add(child);
+        }
+      }
+      for (const child of children) {
+        if (!placed.has(child)) {
+          context.addIssue({
+            code: 'custom',
+            path: ['placements'],
+            message: `Direct child '${child}' requires a Grid cell.`,
+          });
+        }
+      }
+      return;
+    }
     const occupied = new Set<string>();
+    for (const [child, cell] of Object.entries(layout.placements)) {
+      if (!children.has(child)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['placements', child],
+          message: 'Grid cell must reference a direct child.',
+        });
+      }
+      const coordinate = `${cell.row}:${cell.column}`;
+      if (occupied.has(coordinate)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['placements', child],
+          message: 'Grid cells must not overlap.',
+        });
+      }
+      occupied.add(coordinate);
+    }
     for (const child of children) {
       if (!Object.hasOwn(layout.placements, child)) {
         context.addIssue({
@@ -236,20 +299,6 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
           message: 'Every direct child requires a placement.',
         });
       }
-    }
-    for (const [id, placement] of Object.entries(layout.placements)) {
-      if (!children.has(id)) {
-        context.addIssue({
-          code: 'custom',
-          path: ['placements', id],
-          message: 'Placement must reference a direct child.',
-        });
-      }
-      const cell = `${placement.row}:${placement.column}`;
-      if (occupied.has(cell)) {
-        context.addIssue({ code: 'custom', path: ['placements', id], message: 'Grid cells must not overlap.' });
-      }
-      occupied.add(cell);
     }
   })
   .describe('Invisible Flow Layout with explicit linear or grid placement.');
