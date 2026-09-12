@@ -1,7 +1,12 @@
 import type { IRTextBlock } from '@retikz/core';
 
 import { ScopePropsSchema, TextBlockSchema } from '@retikz/core';
-import { NonBlankStringSchema, NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import {
+  NonBlankStringSchema,
+  NonNegativeIntegerSchema,
+  NonNegativeNumberSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import {
   EntityRoleSchema,
   EntitySchema,
@@ -93,6 +98,7 @@ const FlowEntityLayoutFieldsSchema = EntitySchema.shape.layout.unwrap().pick({
   align: true,
   lineHeight: true,
   maxTextWidth: true,
+  width: true,
   minimumSize: true,
   margin: true,
 });
@@ -208,6 +214,11 @@ const FlowLayoutBaseSchema = strictObject({
     .optional()
     .describe('Direct child ids excluded from this Layout bounds, without removing their local placement or drawing.'),
   rank: NonNegativeIntegerSchema.optional().describe('Optional rank constraint within the parent Flow scope.'),
+  itemWidth: PositiveNumberSchema.or(literal('match-largest'))
+    .optional()
+    .describe(
+      'Optional direct Entity visible-width strategy. Numeric values are fixed widths; match-largest uses this Layout scope natural maximum.',
+    ),
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 });
 

@@ -221,6 +221,33 @@ describe('Flow Source schema', () => {
     ).toBe(false);
   });
 
+  it('accepts direct-Entity item width strategies and rejects invalid values', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [{ id: 'entity', text: 'Entity', layout: { width: 80 } }],
+      groups: [],
+      layouts: [
+        {
+          kind: 'linear' as const,
+          id: 'layout',
+          direction: 'down',
+          itemWidth: 'match-largest' as const,
+          children: ['entity'],
+        },
+      ],
+      children: ['layout'],
+    };
+
+    expect(FlowDiagramSchema.parse(source)).toEqual(source);
+    expect(FlowDiagramSchema.safeParse({ ...source, layouts: [{ ...source.layouts[0], itemWidth: 0 }] }).success).toBe(
+      false,
+    );
+    expect(
+      FlowDiagramSchema.safeParse({ ...source, layouts: [{ ...source.layouts[0], itemWidth: 'largest' }] }).success,
+    ).toBe(false);
+  });
+
   it.each([
     { entityStatus: '', relationStatus: 'warning' },
     { entityStatus: 'planned', relationStatus: 'warning' },

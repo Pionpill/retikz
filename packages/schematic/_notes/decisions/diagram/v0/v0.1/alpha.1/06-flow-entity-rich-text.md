@@ -1,6 +1,6 @@
 # ADR-06：Flow Entity 复用 Core 富文本
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-02
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [Flow Source 模型与 LLM-first Authoring](./03-flow-source-model.md) · [Flow Orchestration、Result 与 Artifact](./05-flow-orchestration-result-artifact.md) · [Schematic Graph 完备设计](../../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 

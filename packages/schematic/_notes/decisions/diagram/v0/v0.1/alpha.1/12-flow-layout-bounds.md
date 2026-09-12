@@ -1,6 +1,6 @@
 # ADR-12：Flow 布局边界贡献控制
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-12
 - 关联：[所属 roadmap](../roadmap.md) · [Layout 与 containment](./07-flow-catalog-source-layout-groups.md) · [布局扩展契约](./04-flow-layout-definition-registry.md) · [结果与 artifact](./05-flow-orchestration-result-artifact.md) · [Grid](./10-flow-grid-layout.md) · [能力完备性](../../../../../architecture/schematic-graph-complete.md)
 

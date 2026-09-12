@@ -382,6 +382,56 @@ const isCreateFlowDiagramProviderContribution = (value: unknown): value is Creat
   typeof value === 'function';
 
 describe('Flow Diagram compile transaction', () => {
+  it('applies match-largest only to direct Layout Entities and preserves the final Core width through materialization', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [Flow.createFlowDiagramProviderContribution()],
+    });
+    const source: IRChild = parseTestFlowDiagram({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'short', text: 'A' },
+        { id: 'long', text: 'Longest Flow label' },
+        { id: 'nested', text: 'Nested' },
+      ],
+      groups: [],
+      layouts: [
+        { kind: 'linear', id: 'nested-layout', direction: 'down', children: ['nested'] },
+        {
+          kind: 'linear',
+          id: 'lane',
+          direction: 'down',
+          itemWidth: 'match-largest',
+          children: ['short', 'long', 'nested-layout'],
+        },
+      ],
+      children: ['lane'],
+    });
+    const result = compileToScene(
+      { type: 'scene', version: 1, children: [source] },
+      {
+        ...definitions,
+        padding: 0,
+        measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
+      },
+    );
+    const flowArtifact = Flow.FlowDiagramArtifactSchema.parse(
+      result.artifacts.find(envelope => envelope.kind === 'composite' && envelope.namespace === 'diagram')?.value,
+    );
+    const lane = flowArtifact.elements[0];
+    if (lane.kind !== 'layout') throw new Error('expected root Flow Layout artifact');
+    const short = lane.elements.find(element => element.id === 'short');
+    const long = lane.elements.find(element => element.id === 'long');
+    const nestedLayout = lane.elements.find(element => element.id === 'nested-layout');
+    if (short?.kind !== 'entity' || long?.kind !== 'entity' || nestedLayout?.kind !== 'layout') {
+      throw new Error('expected direct Entity and nested Layout artifacts');
+    }
+
+    expect(short.bounds.width).toBe(long.bounds.width);
+    expect(nestedLayout.elements[0]?.bounds.width).toBeLessThan(long.bounds.width);
+    expect(textPrimitive(result.scene.primitives, 'A')).toBeDefined();
+  });
+
   it('measures and renders a styled multi-line Entity text block through the Graph pipeline', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],

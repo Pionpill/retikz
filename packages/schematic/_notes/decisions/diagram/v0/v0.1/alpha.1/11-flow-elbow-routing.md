@@ -1,6 +1,6 @@
 # ADR-11：Flow 单折角路由
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-12
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [Flow Layout Definition](./04-flow-layout-definition-registry.md) · [Flow 结果交付](./05-flow-orchestration-result-artifact.md)
 

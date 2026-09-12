@@ -1,6 +1,6 @@
 # ADR-09：Flow 根级 Graph 规则投影
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-09
 - 主责：Diagram，目标版本 0.1.0-alpha.1
 - 关联：[v0.1 roadmap](../roadmap.md) · [Flow Source](./07-flow-catalog-source-layout-groups.md) · [Flow Defaults](./08-theme-source-fragments.md) · [Graph Theme 片段](../../../../graph/v0/v0.1/alpha.2/07-theme-source-fragments.md)

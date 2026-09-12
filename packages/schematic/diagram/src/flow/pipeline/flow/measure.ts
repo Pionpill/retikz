@@ -18,6 +18,57 @@ import type { FlowElementMeasurement, FlowMeasurement } from './types';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 
+/** 用当前 Graph Source 测量一个 Flow Entity，并把唯一最终 Source 记录在 measurement 中 */
+const measureEntity = (
+  element: Extract<CanonicalFlowElement, { type: 'entity' }>,
+  graph: Extract<CanonicalFlowElement, { type: 'entity' }>['graph'],
+  context: LayoutCompositeCompileContext,
+  state: MeasurementState,
+): FlowLayoutElementInput => {
+  const child = { ...graph, position: [0, 0] as const };
+  const probe = requiredLayoutProbe(context, { child, occurrence: 0 }, intrinsicLayoutProposal('natural'));
+  const margin = resolveBoxSpacing(element.layout.margin, 0);
+  state.elementMeasurements.set(element.id, { element, graph, probe, margin });
+  return {
+    kind: 'leaf',
+    id: element.id,
+    ...(element.rank === undefined ? {} : { rank: element.rank }),
+    size: { width: probe.allocationBounds.width, height: probe.allocationBounds.height },
+    margin,
+  };
+};
+
+/** 在一个无外壳 Layout scope 内，把直接 Entity 重测为同一可见外框宽度 */
+const applyLayoutItemWidth = (
+  source: Extract<CanonicalFlowElement, { type: 'layout' }>['source'],
+  elements: ReadonlyArray<CanonicalFlowElement>,
+  measuredElements: ReadonlyArray<FlowLayoutElementInput>,
+  context: LayoutCompositeCompileContext,
+  state: MeasurementState,
+): ReadonlyArray<FlowLayoutElementInput> => {
+  const itemWidth = source.itemWidth;
+  if (itemWidth === undefined) return measuredElements;
+  const leafMeasurements = elements.flatMap(element => {
+    if (element.type !== 'entity') return [];
+    const measurement = state.elementMeasurements.get(element.id);
+    return measurement !== undefined && 'probe' in measurement ? [{ element, measurement }] : [];
+  });
+  const targetWidth =
+    typeof itemWidth === 'number'
+      ? itemWidth
+      : Math.max(...leafMeasurements.map(({ measurement }) => measurement.probe.visualBounds.width), 0);
+  if (leafMeasurements.length === 0) return measuredElements;
+  return measuredElements.map((measured, index) => {
+    const element = elements[index];
+    if (element.type !== 'entity') return measured;
+    const graph = {
+      ...element.graph,
+      layout: { ...element.graph.layout, width: targetWidth },
+    };
+    return measureEntity(element, graph, context, state);
+  });
+};
+
 const measureFailure = (element: CanonicalFlowElement | CanonicalFlowRelation, cause: unknown): never => {
   const isElement = 'type' in element;
   const relatedIds = isElement ? [element.id] : [element.source.source, element.source.target];
@@ -123,13 +174,20 @@ const measureElements = (
           state,
         );
         if (element.type === 'layout') {
+          const finalElements = applyLayoutItemWidth(
+            element.source,
+            element.elements,
+            measuredElements,
+            context,
+            state,
+          );
           return {
             kind: 'layout',
             id: element.id,
             ...(element.rank === undefined ? {} : { rank: element.rank }),
             layout: effectiveLayout,
             placement: resolveEffectiveFlowPlacement(element.source, layoutIntent, definition),
-            elements: measuredElements,
+            elements: finalElements,
           };
         }
         return {
@@ -146,17 +204,7 @@ const measureElements = (
       }
     }
     try {
-      const child = { ...element.graph, position: [0, 0] as const };
-      const probe = requiredLayoutProbe(context, { child, occurrence: 0 }, intrinsicLayoutProposal('natural'));
-      const margin = resolveBoxSpacing(element.layout.margin, 0);
-      state.elementMeasurements.set(element.id, { element, probe, margin });
-      return {
-        kind: 'leaf',
-        id: element.id,
-        ...(element.rank === undefined ? {} : { rank: element.rank }),
-        size: { width: probe.allocationBounds.width, height: probe.allocationBounds.height },
-        margin,
-      };
+      return measureEntity(element, element.graph, context, state);
     } catch (cause) {
       return measureFailure(element, cause);
     }

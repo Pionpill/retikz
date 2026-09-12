@@ -54,6 +54,8 @@ Flow 有两种分组形式：`FlowGroup` 表达有业务含义的可见边界，
 
 React 中的嵌套只是编写便利；adapter 会将 Group、Layout 和 Entity 归一到平级 catalog，并以各 owner 的 `children` 作为唯一包含事实。示例上半部分是可见 Group，下半部分是无外壳 Layout；从 Group 外壳到队列的关系同时展示了 Group endpoint。
 
+需要让一个步骤组的边缘整齐时，在 `FlowLayout` 上设置 `itemWidth`。`"match-largest"` 先测量当前 Layout 的直接 Entity，再将它们绘制为其中最大的自然可见宽度；传入数值（例如 `itemWidth={180}`）则固定该宽度，长的普通文本会自动换行并增加高度。它只作用于直接 Entity，不穿透嵌套 Layout 或 Group；margin 不参与宽度比较，也不提供横向子项换行。
+
 <ComponentPreview
   files="flow-compound"
   size="lg"

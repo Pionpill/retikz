@@ -54,6 +54,8 @@ Flow provides two forms of grouping. `FlowGroup` expresses a visible boundary wi
 
 React nesting is only authoring convenience. The adapter normalizes Groups, Layouts, and Entities into flat catalogs, with each owner's `children` as the sole containment fact. The example places a visible Group above a shell-free Layout; the relation from the Group shell to the queue also demonstrates a Group endpoint.
 
+Set `itemWidth` on a `FlowLayout` when the edges of one step group should align. `"match-largest"` measures the Layout's direct Entities and draws each at the largest natural visible width; a number such as `itemWidth={180}` fixes that width, wrapping long plain text and growing its height. The strategy affects direct Entities only: it does not cross a nested Layout or Group, excludes margin from the comparison, and does not wrap horizontal children onto another row.
+
 <ComponentPreview
   files="flow-compound"
   size="lg"

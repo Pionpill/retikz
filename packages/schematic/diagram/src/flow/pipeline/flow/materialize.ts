@@ -44,7 +44,7 @@ const translatedElement = (
 ): IRChild => {
   const localX = bounds.x - parentOrigin[0] - measurement.probe.allocationBounds.x;
   const localY = bounds.y - parentOrigin[1] - measurement.probe.allocationBounds.y;
-  return { ...element.graph, position: [localX, localY] };
+  return { ...measurement.graph, position: [localX, localY] };
 };
 
 const materializeElements = (

@@ -39,7 +39,7 @@ export const InspectCompileFlowFigure: FC<InspectCompileFlowFigureProps> = props
               },
             ]}
           />
-          <FlowLayout gap={24} kind="linear" id="auxiliary" direction="down" align="center">
+          <FlowLayout gap={24} kind="linear" id="auxiliary" direction="down" align="center" itemWidth="match-largest">
             <FlowEntities
               items={[
                 {

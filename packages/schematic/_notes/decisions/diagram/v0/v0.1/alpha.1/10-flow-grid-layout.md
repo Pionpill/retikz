@@ -1,6 +1,6 @@
 # ADR-10：Flow Grid 二维对齐布局
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-11
 - 关联：[Diagram v0.1 roadmap](../roadmap.md) · [Flow 平级 Source、Group 与 Layout](./07-flow-catalog-source-layout-groups.md) · [Flow Layout Definition 与 Registry](./04-flow-layout-definition-registry.md) · [Flow Orchestration、Result 与 Artifact](./05-flow-orchestration-result-artifact.md) · [Schematic 制图能力域设计](../../../../../../../../notes/architecture/schematic-design.md)
 
