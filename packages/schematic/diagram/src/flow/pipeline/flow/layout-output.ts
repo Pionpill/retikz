@@ -14,6 +14,7 @@ import type {
 } from '../../contract';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import { FlowRoutingKind } from '../../shared';
 
 type PlainRecord = Readonly<Record<string, unknown>>;
 
@@ -385,7 +386,7 @@ const validateRoute = (
   if (relation.routing.kind === 'straight' && points.length !== 2) {
     invalidOutput(definition, [...path, 'points'], 'straight route must contain exactly two points.', relatedIds);
   }
-  if (relation.routing.kind === 'orthogonal') {
+  if (relation.routing.kind !== FlowRoutingKind.Straight) {
     points.slice(1).forEach((point, index) => {
       const previous = points[index];
       if (point[0] !== previous[0] && point[1] !== previous[1]) {
@@ -410,6 +411,29 @@ const validateRoute = (
   }
   if (!containsPoint(sourceBounds, points[0]) || !containsPoint(targetBounds, points.at(-1)!)) {
     invalidOutput(definition, [...path, 'points'], 'route endpoints must lie inside their element bounds.', relatedIds);
+  }
+  if (
+    relation.routing.kind === FlowRoutingKind.HorizontalThenVertical ||
+    relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
+  ) {
+    const source: Position = [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2];
+    const target: Position = [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2];
+    const corner: Position =
+      relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
+        ? [target[0], source[1]]
+        : [source[0], target[1]];
+    const expected = collapsePoints([source, corner, target]);
+    if (
+      points.length !== expected.length ||
+      points.some((point, index) => point[0] !== expected[index][0] || point[1] !== expected[index][1])
+    ) {
+      invalidOutput(
+        definition,
+        [...path, 'points'],
+        'single-elbow route must connect element centers in the requested axis order.',
+        relatedIds,
+      );
+    }
   }
   if (relation.labelSize === undefined && labelBounds !== undefined) {
     invalidOutput(definition, [...path, 'labelBounds'], 'unlabeled relation must not return label bounds.', relatedIds);

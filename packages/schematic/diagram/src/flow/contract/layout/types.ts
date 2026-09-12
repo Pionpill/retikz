@@ -21,7 +21,9 @@ export type EffectiveFlowPlacement =
     }>;
 
 /** Flow layout provider 使用的有效路由 */
-export type FlowLayoutRouting = Readonly<{ kind: 'straight' }> | Readonly<{ kind: 'orthogonal'; cornerRadius: number }>;
+export type FlowLayoutRouting =
+  | Readonly<{ kind: 'straight' }>
+  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; cornerRadius: number }>;
 
 /** Flow layout scope 已补全的有效配置 */
 export type EffectiveFlowLayout = Readonly<{
@@ -38,6 +40,7 @@ export type FlowLayoutDefaults = Readonly<{
   rankGap: number;
   routing: Readonly<{
     kind: FlowRoutingKindValue;
+    /** 所有轴对齐路由的圆角默认；支持任一轴对齐模式时必填 */
     orthogonalCornerRadius?: number;
   }>;
 }>;

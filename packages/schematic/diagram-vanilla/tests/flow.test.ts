@@ -73,6 +73,26 @@ const artifactValueOf = (
 ) => result.artifacts.find(artifact => artifact.namespace === 'diagram' && artifact.type === 'flow')?.value;
 
 describe('@retikz/diagram-vanilla/flow', () => {
+  it.each(['-|', '|-'] as const)('compiles %s routing through the public Vanilla adapter', kind => {
+    const result = processToStaticInputResult(
+      {
+        children: [
+          FlowVanilla.flowDiagram('elbow', {
+            entities: [
+              { id: 'a', text: 'A' },
+              { id: 'b', text: 'B' },
+            ],
+            groups: [],
+            layouts: [],
+            children: ['a', 'b'],
+            relations: [{ source: 'a', target: 'b', routing: { kind, cornerRadius: 0 } }],
+          }),
+        ],
+      },
+      { adapters: FlowVanilla.createFlowDiagramVanillaAdapters(), compile: { measureText } },
+    );
+    expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
+  });
   it('exports the complete Flow authoring surface from the explicit subpath', () => {
     expect(functionExport('normalizeFlowDiagram')).toBeDefined();
     expect(functionExport('flowDiagram')).toBeDefined();

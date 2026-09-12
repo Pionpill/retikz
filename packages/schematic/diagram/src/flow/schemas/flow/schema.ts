@@ -37,13 +37,28 @@ const FlowStraightRoutingSchema = strictObject({
 const FlowOrthogonalRoutingSchema = strictObject({
   kind: literal(FlowRoutingKind.Orthogonal).describe('Axis-aligned route intent.'),
   cornerRadius: NonNegativeNumberSchema.optional().describe(
-    'Optional corner radius; omission delegates to the selected layout Definition.',
+    'Corner radius; omission inherits the ancestor axis-aligned routing or the selected layout Definition.',
   ),
 });
 
-export const FlowRoutingSchema = FlowStraightRoutingSchema.or(FlowOrthogonalRoutingSchema).describe(
-  'Provider-neutral Flow relation routing intent.',
-);
+const FlowHorizontalThenVerticalRoutingSchema = FlowOrthogonalRoutingSchema.extend({
+  kind: literal(FlowRoutingKind.HorizontalThenVertical).describe(
+    'Horizontal then vertical single-elbow route; no obstacle avoidance.',
+  ),
+});
+
+const FlowVerticalThenHorizontalRoutingSchema = FlowOrthogonalRoutingSchema.extend({
+  kind: literal(FlowRoutingKind.VerticalThenHorizontal).describe(
+    'Vertical then horizontal single-elbow route; no obstacle avoidance.',
+  ),
+});
+
+export const FlowRoutingSchema = discriminatedUnion('kind', [
+  FlowStraightRoutingSchema,
+  FlowOrthogonalRoutingSchema,
+  FlowHorizontalThenVerticalRoutingSchema,
+  FlowVerticalThenHorizontalRoutingSchema,
+]).describe('Provider-neutral Flow relation routing intent.');
 
 const FlowLayoutIntentBaseSchema = strictObject({
   direction: zodEnum(FlowDirection).optional().describe('Primary direction for this Flow layout scope.'),

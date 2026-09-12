@@ -9,6 +9,8 @@ import type {
   FlowLayoutRelationOutput,
 } from '../../../contract';
 
+import { FlowRoutingKind } from '../../../shared';
+
 type RoutingIndex = Readonly<{
   scopes: ReadonlyMap<string, ReadonlyArray<string>>;
   layouts: ReadonlyMap<string, EffectiveFlowLayout>;
@@ -172,17 +174,21 @@ export const routeLayeredRelations = (
     const points =
       relation.routing.kind === 'straight'
         ? [source, target]
-        : orthogonalPoints(
-            relation,
-            source,
-            target,
-            sourceBounds,
-            targetBounds,
-            scopeLayout.direction,
-            laneOffset,
-            envelope,
-            scopeLayout.rankGap,
-          );
+        : relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
+          ? collapsePoints([source, [target[0], source[1]], target])
+          : relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
+            ? collapsePoints([source, [source[0], target[1]], target])
+            : orthogonalPoints(
+                relation,
+                source,
+                target,
+                sourceBounds,
+                targetBounds,
+                scopeLayout.direction,
+                laneOffset,
+                envelope,
+                scopeLayout.rankGap,
+              );
     return {
       points,
       ...(relation.labelSize === undefined ? {} : { labelBounds: labelBoundsFor(points, relation.labelSize) }),

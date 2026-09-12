@@ -131,10 +131,13 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   if (!capabilities.routingKinds.includes(defaults.routing.kind)) {
     invalidDefinition(definition, 'defaults.routing.kind is not declared by routingKinds.');
   }
-  const supportsOrthogonal = capabilities.routingKinds.includes(FlowRoutingKind.Orthogonal);
+  const supportsOrthogonal = capabilities.routingKinds.some(kind => kind !== FlowRoutingKind.Straight);
   const radius = defaults.routing.orthogonalCornerRadius;
   if (supportsOrthogonal !== (radius !== undefined)) {
-    invalidDefinition(definition, 'orthogonalCornerRadius must exist exactly when orthogonal routing is supported.');
+    invalidDefinition(
+      definition,
+      'orthogonalCornerRadius must exist exactly when an axis-aligned routing kind is supported.',
+    );
   }
   if (radius !== undefined) validateFiniteNonNegative(radius, 'defaults.routing.orthogonalCornerRadius', definition);
   if (typeof definition.layout !== 'function') invalidDefinition(definition, 'layout must be a synchronous function.');

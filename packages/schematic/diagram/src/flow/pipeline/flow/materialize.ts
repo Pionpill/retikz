@@ -113,7 +113,7 @@ const materializeRelation = (
       })),
       { type: 'step', kind: 'line', to: { id: relation.source.target } },
     ],
-    ...(routing.kind === 'orthogonal' && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
+    ...(routing.kind !== 'straight' && routing.cornerRadius > 0 ? { roundedCorners: routing.cornerRadius } : {}),
     ...(label === undefined ? {} : { labels: [label] }),
   };
 };

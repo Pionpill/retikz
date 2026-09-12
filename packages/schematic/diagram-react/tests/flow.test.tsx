@@ -88,6 +88,40 @@ const expectedSource = {
 };
 
 describe('@retikz/diagram-react/flow', () => {
+  it.each(['-|', '|-'] as const)('renders %s with the same Source as Vanilla and direct IR', kind => {
+    const entities = [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ];
+    const relation = { source: 'a', target: 'b', routing: { kind, cornerRadius: 3 } };
+    const input = createInputScene(
+      createElement(
+        FlowReact.FlowDiagram,
+        null,
+        createElement(FlowReact.FlowEntities, { items: entities }),
+        createElement(FlowReact.FlowRelation, relation),
+      ),
+    );
+    const vanilla = normalizeFlowDiagram({
+      entities,
+      groups: [],
+      layouts: [],
+      children: ['a', 'b'],
+      relations: [relation],
+    });
+    expect(normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0]).toEqual(vanilla);
+    expect(FlowDiagramSchema.parse(vanilla).relations?.[0].routing).toEqual({ kind, cornerRadius: 3 });
+    const markup = renderToStaticMarkup(
+      createElement(
+        FlowReact.FlowDiagram,
+        null,
+        createElement(FlowReact.FlowEntities, { items: entities }),
+        createElement(FlowReact.FlowRelation, relation),
+      ),
+    );
+    expect(markup).toContain('<svg');
+    expect(markup).toContain('<path');
+  });
   it.each([
     { form: 'matrix', placements: [['a'], [null, 'b']] },
     {

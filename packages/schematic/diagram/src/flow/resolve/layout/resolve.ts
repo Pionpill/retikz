@@ -37,7 +37,9 @@ const resolveFlowLayoutRouting = (
     kind: routing.kind,
     cornerRadius:
       ('cornerRadius' in routing ? routing.cornerRadius : undefined) ??
-      (inheritedRouting?.kind === 'orthogonal' ? inheritedRouting.cornerRadius : undefined) ??
+      (inheritedRouting !== undefined && inheritedRouting.kind !== 'straight'
+        ? inheritedRouting.cornerRadius
+        : undefined) ??
       definition.defaults.routing.orthogonalCornerRadius ??
       0,
   };

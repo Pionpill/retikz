@@ -1,6 +1,7 @@
 import type { FlowLayoutDefinition } from '../../../contract';
 
 import { defineFlowLayout } from '../../../contract';
+import { FlowRoutingKind } from '../../../shared';
 import { layoutLayeredFlow } from './layout';
 
 /** 内置 layered Flow Layout Definition */
@@ -17,7 +18,7 @@ export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayou
     parallelRelations: true,
     relationLabels: true,
     relationDirections: ['none', 'forward', 'reverse', 'both'],
-    routingKinds: ['straight', 'orthogonal'],
+    routingKinds: Object.values(FlowRoutingKind),
   },
   defaults: {
     direction: 'right',
