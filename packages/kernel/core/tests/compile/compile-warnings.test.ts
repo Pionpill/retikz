@@ -264,14 +264,6 @@ describe('scope.transforms warn code 指向真正失败的那个 transform', () 
 });
 
 describe('CompileWarningCode 收编与导出', () => {
-  it('PARTIAL_ARC_CLOSED_INVALID 已收编进 CompileWarningCode 并从包根导出', () => {
-    expect(CompileWarningCode.PartialArcClosedInvalid).toBe(CompileWarningCode.PartialArcClosedInvalid);
-  });
-
-  it('BOUNDARY_TIGHT_FALLBACK 已收编进 CompileWarningCode 并从包根导出', () => {
-    expect(CompileWarningCode.BoundaryTightFallback).toBe(CompileWarningCode.BoundaryTightFallback);
-  });
-
   it('formatCompileWarning 从包根导出，可格式化为人类可读字符串', () => {
     const msg = formatCompileWarning({
       code: CompileWarningCode.UnresolvedNodeReference,

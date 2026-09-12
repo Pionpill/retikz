@@ -1,6 +1,6 @@
 ---
 name: test-contract
-description: Use when a retikz ADR or beta TODO changes data structures, public interfaces, compile semantics, adapter behavior, renderer output, or docs-visible behavior and needs a traceable behavior-to-test contract before implementation or final acceptance.
+description: Use when adding or changing retikz unit, integration, or regression tests, or when an ADR or beta TODO needs a traceable behavior-to-test contract before implementation or acceptance.
 ---
 
 # Test Contract：设计行为到测试证据
@@ -17,6 +17,15 @@ description: Use when a retikz ADR or beta TODO changes data structures, public 
 | 实施已接受的测试整理             | develop-refactor          |
 
 本 skill 不决定产品设计、不写实现或临时探索测试，也不以覆盖率百分比代替契约。
+
+## 单测写入规范
+
+- 新增 case 前先检索同一行为的现有测试，明确生产入口、可观察结果与新增的独立失效模式；同一失效模式优先修改已有 case，不按每次改动追加测试。小任务在对话或测试名称中说明即可，不强制新建矩阵。
+- 断言保护稳定行为，不锁定私有源码、调用形式、历史迁移、文档整句或 demo 的偶然配色与排版。源码生成器的产物属于公开输出；需要静态约束时由对应 lint / integrity 检查统一负责。
+- 具体颜色、坐标或特殊输入只有在区分契约、边界或真实回归时才保留；颜色透传、主题覆盖优先级、退化几何与失败事务不是展示细节。真实缺陷的唯一回归守卫不得因场景特殊而删除。
+- 同一规则选择代表性成功输入、关键边界和必要错误分支，不枚举视觉变体或无新增失效模式的组合。参数化用于表达等价类；性质测试用于稳定不变量，限定输入域与运行预算并保留可复现反例，不替代必要的具名回归。
+- 核心规则在拥有契约的最低层验证；adapter 只补接入、转换和差异，跨层只补必要闭环，不重复底层全套 case。通用测试须断言实际结果，不能仅检查不报错、存在或快照未变。
+- Snapshot 必须小而聚焦且逐项审阅；不以自动更新快照、测试数量或覆盖率增长证明有效性。完成时核对核心失效模式仍有守卫，未覆盖风险显式记录。
 
 ## 输入与产物
 

@@ -12,11 +12,4 @@ describe('corpus assertions', () => {
       expect(item.assertions?.length ?? 0).toBeGreaterThanOrEqual(1);
     }
   });
-
-  it('断言 kind 都在 v1 词汇内', () => {
-    const kinds = new Set(['textPresent', 'primitiveCount', 'arrowCount', 'stylePresent']);
-    for (const item of corpus) {
-      for (const a of item.assertions ?? []) expect(kinds.has(a.kind)).toBe(true);
-    }
-  });
 });

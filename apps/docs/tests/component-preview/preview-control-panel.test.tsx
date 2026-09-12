@@ -976,26 +976,6 @@ describe('PreviewControlPanel', () => {
     expect(columns).toHaveLength(2);
   });
 
-  it('内容网格使用 gap-2 与 p-2', async () => {
-    const container = await mount(
-      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
-    );
-    const columns = container.querySelector('[data-slot="preview-control-columns"]');
-
-    expect(columns?.classList.contains('gap-2')).toBe(true);
-    expect(columns?.classList.contains('p-2')).toBe(true);
-  });
-
-  it('section 之间使用 mb-3 间距', async () => {
-    const container = await mount(
-      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
-    );
-    const section = container.querySelector('[data-slot="preview-control-column"] > section');
-
-    expect(section?.classList.contains('mb-3')).toBe(true);
-    expect(section?.classList.contains('last:mb-0')).toBe(true);
-  });
-
   it('299px 始终一列，达到 300px 且高度不足时最多渲染两列与一个 Separator', async () => {
     const container = await mount(
       <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,

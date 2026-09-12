@@ -86,18 +86,6 @@ afterEach(() => {
 });
 
 describe('<ShowcaseTabs>', () => {
-  it('使用 shadcn 默认的圆角分段标签样式', () => {
-    const container = renderTabs('/viz/chart/points/scatter');
-    const tabsList = container.querySelector('[data-slot="tabs-list"]');
-
-    expect(tabsList?.className).toContain('rounded-lg');
-    expect(tabsList?.className).toContain('bg-muted');
-    expect(tabsList?.getAttribute('data-variant')).toBe('default');
-    expect(tabsList?.classList.contains('rounded-none')).toBe(false);
-    expect(tabsList?.classList.contains('bg-transparent')).toBe(false);
-    expect(tabsList?.parentElement?.className).not.toContain('border-b');
-  });
-
   it('缺少 tab 参数时默认展示 Examples，并用 replace 写入切换结果', () => {
     const container = renderTabs('/viz/chart/points/scatter');
 

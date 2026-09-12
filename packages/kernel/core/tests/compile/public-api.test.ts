@@ -1,22 +1,6 @@
 import { NormalizedFractionSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
-import type {
-  CompileOptions,
-  CompileWarning,
-  IRTheme,
-  LoweredIRChild,
-  LoweredIRScene,
-  LoweredIRScope,
-  LowerIRToKernelOptions,
-  LowerTex,
-  ResolvedTheme,
-  TextMeasurer,
-  ThemeModeValue,
-  ThemeStyleValue,
-  ThemeTokenSourceValue,
-} from '../../src';
-
 import * as core from '../../src';
 
 describe('core public compile exports', () => {
@@ -35,48 +19,6 @@ describe('core public compile exports', () => {
     expect(core.ThemeTokenSource).toEqual({
       Inherit: 'inherit',
       Local: 'local',
-    });
-  });
-
-  it('keeps root compile types available', () => {
-    const options: CompileOptions = {};
-    const warning: CompileWarning | undefined = undefined;
-    const lowerTex: LowerTex | undefined = undefined;
-    const measureText: TextMeasurer | undefined = undefined;
-    const lowerOptions: LowerIRToKernelOptions = {};
-    const loweredChild: LoweredIRChild | undefined = undefined;
-    const loweredScope: LoweredIRScope | undefined = undefined;
-    const loweredScene: LoweredIRScene | undefined = undefined;
-    const theme: IRTheme = { style: 'clean' };
-    const resolvedTheme: ResolvedTheme = {
-      style: 'clean',
-      mode: 'dark',
-      colors: {
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
-        categorical: ['#2563eb'],
-      },
-    };
-    const style: ThemeStyleValue = 'clean';
-    const mode: ThemeModeValue = 'dark';
-    const source: ThemeTokenSourceValue = core.ThemeTokenSource.Inherit;
-
-    expect(options).toEqual({});
-    expect(warning).toBeUndefined();
-    expect(lowerTex).toBeUndefined();
-    expect(measureText).toBeUndefined();
-    expect(lowerOptions).toEqual({});
-    expect(loweredChild).toBeUndefined();
-    expect(loweredScope).toBeUndefined();
-    expect(loweredScene).toBeUndefined();
-    expect(theme).toEqual({ style: 'clean' });
-    expect(source).toBe('inherit');
-    expect(resolvedTheme).toEqual({
-      style,
-      mode,
-      colors: {
-        semantic: { error: '#dc2626', success: '#16a34a', warning: '#d97706', guide: '#6b7280' },
-        categorical: ['#2563eb'],
-      },
     });
   });
 
