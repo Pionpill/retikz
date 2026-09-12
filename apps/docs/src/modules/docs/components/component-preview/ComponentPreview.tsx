@@ -3,10 +3,10 @@ import type { FC, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { Lang } from '@/i18n';
+
 import { cn } from '@/lib';
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
-
-import type { Lang } from '@/i18n';
 
 import type {
   AlignKey,
@@ -112,8 +112,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const controlContract: PreviewControlContract | undefined = controlsDisabled
     ? undefined
     : explicitControlsName === null
-      ? (resolvePreviewControlContract(controlModule) ?? resolvePreviewControlContract(mod))
-      : resolvePreviewControlContract(controlModule);
+      ? (resolvePreviewControlContract(controlModule, lang) ?? resolvePreviewControlContract(mod, lang))
+      : resolvePreviewControlContract(controlModule, lang);
   const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
   const baselineRawSource = resources?.baselineRawSource;
   const irJsonOverride = resources?.irJsonOverride;

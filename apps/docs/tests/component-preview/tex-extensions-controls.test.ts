@@ -7,13 +7,10 @@ import {
   getPreviewControlItems,
 } from '../../src/modules/docs/components/component-preview/controls';
 import {
+  createPreviewControlContract,
   previewControlContract as zhContract,
   texExtensionsControls as zhControls,
 } from '../../src/modules/docs/contents/kernel/packages/tex/configuration/tex-extensions.controls';
-import {
-  previewControlContract as enContract,
-  texExtensionsControls as enControls,
-} from '../../src/modules/docs/contents/kernel/packages/tex/configuration/tex-extensions.en.controls';
 
 const fieldContract = (controls: PreviewControlsDefinition) =>
   getPreviewControlItems(controls).map(field => ({
@@ -30,6 +27,8 @@ describe('TeX extensions 配置示例', () => {
   });
 
   it('中英文保留相同的可操作控件', () => {
+    const enContract = createPreviewControlContract('en');
+    const enControls = enContract.controls;
     expect(fieldContract(enControls)).toEqual(fieldContract(zhControls));
     expect(enControls.sections).toHaveLength(1);
     expect(enContract.canonicalValues).toEqual(zhContract.canonicalValues);

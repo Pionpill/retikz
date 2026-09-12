@@ -20,6 +20,33 @@ const definition = (namespace: string, type: string) =>
   });
 
 describe('Inspector registry', () => {
+  it('reuses a validated definition across registries', () => {
+    const inspector = definition('test', 'reused');
+    expect(createInspectorRegistry([inspector]).require(inspector)).toBe(inspector);
+    expect(createInspectorRegistry([inspector]).require(inspector)).toBe(inspector);
+    expect(defineInspector(inspector)).toBe(inspector);
+  });
+
+  it('validates and snapshots a directly supplied definition', () => {
+    const rawDefinition = { ...definition('test', 'raw'), owner: { kind: 'pathKind' as const, name: 'stroke' } };
+    const registered = createInspectorRegistry([rawDefinition]).require(rawDefinition);
+    rawDefinition.owner.name = 'changed';
+    expect(registered.owner).toEqual({ kind: 'pathKind', name: 'stroke' });
+    expect(Object.isFrozen(registered)).toBe(true);
+    expect(Object.isFrozen(registered.owner)).toBe(true);
+    expect(createInspectorRegistry([registered]).require(registered)).toBe(registered);
+  });
+
+  it('does not trust a caller-frozen definition with an invalid owner', () => {
+    const invalidDefinition = Object.freeze({
+      ...definition('test', 'invalid'),
+      owner: Object.freeze({ kind: 'pathKind' as const, name: ' ' }),
+    });
+    expect(() => createInspectorRegistry([invalidDefinition])).toThrow(
+      'Inspector owner name must be a non-empty string.',
+    );
+  });
+
   it('allows multiple keys for one owner and resolves each key', () => {
     const registry = createInspectorRegistry([definition('third-party', 'points'), definition('third-party', 'curve')]);
     expect(registry.definitions).toHaveLength(2);

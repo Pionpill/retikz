@@ -1,37 +1,44 @@
 ---
 title: Inspection principles
-description: Understand how Inspect reuses final Core observations, compiles auxiliary IR in isolation, and delivers readonly layers in one commit
+description: Follow a figure's compiled results to see how Core notifies Inspect, how auxiliary marks are generated, and how both are displayed without rewriting each other
 ---
 
-Inspect is an optional observer attached to a Core compile, not a second drawing or layout system. Ordinary Core compilation creates no auxiliary fragment and need not load Inspect when there is no registry, request, or matching owner.
+After drawing a curve, you may want to see which control points it actually uses. Inspect can display those points and guide lines without recomputing the primary figure or changing your drawing description. Start with how the primary figure becomes a displayable result to understand where these auxiliary marks come from.
 
 ## How Inspect cooperates with Core
 
-Core draws the primary figure normally and provides the observation facts Inspect needs after a final occurrence exists. Inspect selects those facts, produces auxiliary IR, and asks Core to compile it. Core knows no Inspector Definitions, registries, or auxiliary-layer palette.
+Inspect does not analyze your drawing code directly. It waits for Core to compute drawing results, then uses those results to describe auxiliary marks. Core compilation resolves coordinates, references, and layout into scene data (Scene) for Render to display; compilation itself does not paint pixels on screen.
+
+When connecting Inspect, you also select the objects and inspectors to use. The left branch preserves the primary result; the right branch shows the auxiliary work enabled by inspection. Both reach Render, with no arrow returning from the auxiliary branch to modify the primary figure.
+
+<ComponentPreview files="inspect-compile-flow" size="lg" hideCode />
+
+1. **Compute drawing results first.** Core compiles the primary figure and determines the final results of primitives or components. Each specific instance is called an occurrence (one instance after compilation; the same definition can produce multiple instances).
+2. **Report selected results.** Objects that support observation publish their final output in Core. Core notifies Inspect of each selected instance's location and output. This notification is an observation (an event carrying a result), and its recipient is an observer. Inspect does not reconstruct the result from the displayed image.
+3. **Describe auxiliary marks.** Inspect finds the corresponding Inspector and passes it the result. The Inspector returns ordinary drawing descriptions for control points, guide lines, and other marks: auxiliary IR (intermediate representation), not direct canvas operations.
+4. **Compile separately, then display together.** Inspect asks Core to compile those descriptions in isolation into separate scenes. The host connects them as readonly layers, and Render displays them with the primary figure, whose result stays unchanged.
+
+With that flow in mind, the following fields show how Core supplies results and compilation capabilities to Inspect. The `owner` identifies what owns the observed object, while a request expresses the user's inspection selection:
 
 | What Core provides                            | How Inspect uses it                                                                                       |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `CompileObservation.owner` and `occurrence`   | Matches a request to a final path-kind or composite occurrence                                            |
+| `CompileObservation.owner` and `occurrence`   | Matches a request to the observed object's final instance by owner and occurrence location                |
 | `CompileObservation.value`                    | Validates final output with `subjectSchema` and supplies it to `inspect()`                                |
 | `CompileObservationContext.theme`             | Gives auxiliary content the current occurrence's theme and semantic colors                                |
 | `CompileObservationContext.compileFragment()` | Compiles ordinary IR returned by an Inspector in the current Theme, Scope-style, and provider environment |
 
-An owner that does not publish final output from Core cannot gain observable facts by inspecting authored input alone; it must first provide the matching Core observation capability.
+A custom Inspector therefore requires the corresponding object to publish final output in Core. Registering an Inspector alone does not make an object without observation support emit observations. Core provides notification and isolated compilation; it does not look up Inspectors or choose auxiliary styling.
 
 ## When auxiliary content is drawn
 
-Auxiliary content is not written during Core's primary drawing stage. In the observer `complete` stage of the same observed compile, it is compiled separately from final occurrences Core has already captured:
+The diagram shows data flow, not an instruction to draw a guide line as soon as each notification arrives. Execution separates collecting results from generating auxiliary content:
 
-<ComponentPreview files="inspect-compile-flow.en" size="md" hideCode />
+- **`observe()`: collect only.** When Core dispatches a selected instance's final result, Inspect saves the output and its context. It does not generate auxiliary graphics in this callback.
+- **`complete()`: generate together.** After Core finishes dispatching final observations, Inspect resolves selection, merges options, validates outputs, and calls each Inspector's `inspect()`. Returned `IRChild` values are compiled in isolation through `compileFragment()` and collected into an InspectionPlane (a collection of auxiliary scenes).
 
-1. The host gives a registry and runtime selection to an optional compile driver, which registers one Core observer
-2. While Core compiles the primary figure, the observer selects candidate sites by owner and source path
-3. After each selected owner has produced final output, Core calls `observe()` with that output and the current occurrence context
-4. `complete()` resolves selection, merges options, validates `subjectSchema`, and invokes the matching Definition's `inspect()`
-5. Each ordinary `IRChild` returned by `inspect()` is passed to `compileFragment()` and compiled in isolation into an InspectionPlane; public identity, metadata, and animation semantics do not enter the auxiliary Scene
-6. Render turns the InspectionPlane into non-hittable readonly layers; primary and auxiliary layers commit together only in the same revision
+The host then converts those scenes into non-hittable readonly layers for Render to display. Primary and auxiliary layers belong to the same compilation revision and commit only when both succeed; a new primary figure is not displayed with auxiliary content from an older revision. Auxiliary scenes also exclude public identity, metadata, and animation semantics.
 
-The InspectionPlane is `null` when no result matches or a callback returns no content. Extra cost comes only from observing selected owners, running Inspector callbacks, and compiling non-empty auxiliary fragments.
+Ordinary drawing need not load Inspect. When enabled, if no result matches or all Inspectors return empty content, the InspectionPlane is `null` and no auxiliary layer is produced. Extra cost comes from observing selected objects, running Inspector callbacks, and compiling non-empty auxiliary fragments.
 
 ## Runtime selection
 

@@ -52,9 +52,9 @@ export type InspectorDefinition<
   TResolvedOptions extends JsonObject = JsonObject,
   TSourceOptions extends JsonObject = TParsedOptions,
 > = Readonly<{
-  /** registry namespace */
+  /** registry 命名空间 */
   namespace: string;
-  /** registry type */
+  /** registry 类型 */
   type: string;
   /** 被观察的 Core owner */
   owner: CompileObservationOwner;

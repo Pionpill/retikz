@@ -1,5 +1,7 @@
+import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { texExtensionsI18n } from './tex-extensions.i18n';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 拓展用法 demo 的控件 id */
@@ -35,41 +37,50 @@ export const TexExtensionExample = {
 } as const;
 
 /** MathJaxEngineOptions 的 extensions 示例控件 */
-export const texExtensionsControls = definePreviewControls({
-  presentation: 'panel',
-  title: '拓展用法',
-  sections: [
-    {
-      label: '引擎参数',
-      controls: [
-        {
-          kind: 'select',
-          id: TexExtensionsControlId.Example,
-          label: '公式示例',
-          defaultValue: 'none',
-          options: [
-            { value: 'none', label: '基础 TeX' },
-            { value: 'ams', label: 'AMS 对齐环境' },
-            { value: 'newcommand', label: '自定义命令' },
-            { value: 'boldsymbol', label: '粗体数学符号' },
-            { value: 'braket', label: 'bra-ket 记号' },
-            { value: 'cancel', label: '消去标记' },
-            { value: 'cases', label: '分情况环境' },
-            { value: 'centernot', label: '居中否定' },
-            { value: 'mathtools', label: '数学工具' },
-            { value: 'color', label: '颜色命令' },
-          ],
-        },
-      ],
-    },
-  ],
-});
+export const createTexExtensionsControls = (i18n: typeof texExtensionsI18n.zh) =>
+  definePreviewControls({
+    presentation: 'panel',
+    title: i18n.label1,
+    sections: [
+      {
+        label: i18n.label2,
+        controls: [
+          {
+            kind: 'select',
+            id: TexExtensionsControlId.Example,
+            label: i18n.label3,
+            defaultValue: 'none',
+            options: [
+              { value: 'none', label: i18n.label4 },
+              { value: 'ams', label: i18n.label5 },
+              { value: 'newcommand', label: i18n.label6 },
+              { value: 'boldsymbol', label: i18n.label7 },
+              { value: 'braket', label: i18n.label8 },
+              { value: 'cancel', label: i18n.label9 },
+              { value: 'cases', label: i18n.label10 },
+              { value: 'centernot', label: i18n.label11 },
+              { value: 'mathtools', label: i18n.label12 },
+              { value: 'color', label: i18n.label13 },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+export const texExtensionsControls = createTexExtensionsControls(texExtensionsI18n.zh);
 
 /** 拓展用法 demo 的稳定状态与 API 覆盖 */
-export const previewControlContract = {
-  controls: texExtensionsControls,
-  canonicalValues: {
-    example: 'none',
-  },
-  relatedApis: ['MathJaxEngineOptions.extensions', 'MathJaxExtension'],
-} satisfies PreviewControlContract;
+export const createPreviewControlContract = (lang: Lang) => {
+  const i18n = texExtensionsI18n[lang];
+
+  return {
+    controls: createTexExtensionsControls(i18n),
+    canonicalValues: {
+      example: 'none',
+    },
+    relatedApis: ['MathJaxEngineOptions.extensions', 'MathJaxExtension'],
+  } satisfies PreviewControlContract;
+};
+
+export const previewControlContract = createPreviewControlContract('zh');

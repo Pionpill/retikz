@@ -15,12 +15,9 @@ import {
   LogicFigureRelation,
   LogicFigureRelationKind,
 } from '@/modules/docs/components/logic-figure';
-import OpaqueColorFlowEn from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow.en.demo';
-import OpaqueColorFlowZh from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow.zh.demo';
-import AffineCompositionFlowEn from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow.en.demo';
-import AffineCompositionFlowZh from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow.zh.demo';
-import CoordinateConversionFlowEn from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow.en.demo';
-import CoordinateConversionFlowZh from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow.zh.demo';
+import OpaqueColorFlow from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow';
+import AffineCompositionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow';
+import CoordinateConversionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow';
 
 /** 经过 React authoring 与 Vanilla normalize 读取逻辑图的 Source IR */
 const readLogicFigure = (element: ReactNode) => {
@@ -99,8 +96,8 @@ describe('LogicFigure semantic vocabulary', () => {
   });
 
   it.each([
-    ['Chinese', OpaqueColorFlowZh],
-    ['English', OpaqueColorFlowEn],
+    ['Chinese', OpaqueColorFlow],
+    ['English', OpaqueColorFlow],
   ])('renders the %s CSS color flow with stable logic kinds', (_language, Demo) => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
 
@@ -154,8 +151,8 @@ describe('LogicFigure semantic vocabulary', () => {
   });
 
   it.each([
-    ['Chinese', CoordinateConversionFlowZh],
-    ['English', CoordinateConversionFlowEn],
+    ['Chinese', CoordinateConversionFlow],
+    ['English', CoordinateConversionFlow],
   ])('uses two shared Entity and Relation groups for the %s coordinate conversion Flow', (_language, Demo) => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
     const entities = figure.entities;
@@ -180,8 +177,8 @@ describe('LogicFigure semantic vocabulary', () => {
   });
 
   it.each([
-    ['Chinese', AffineCompositionFlowZh],
-    ['English', AffineCompositionFlowEn],
+    ['Chinese', AffineCompositionFlow],
+    ['English', AffineCompositionFlow],
   ])('keeps the %s affine composition Flow ungrouped', (_language, Demo) => {
     const figure = FlowDiagramSchema.parse(buildPreviewIR(Demo).sourceIr.children[0]);
     const relations = figure.relations ?? [];

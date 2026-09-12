@@ -1,9 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
 
+import manifest from '../../package.json';
 import * as api from '../../src';
 
 describe('@retikz/inspect public exports', () => {
+  it('exposes only the root and host entry points in development and publication', () => {
+    expect(Object.keys(manifest.exports).sort()).toEqual(['.', './react', './vanilla']);
+    expect(Object.keys(manifest.publishConfig.exports).sort()).toEqual(['.', './react', './vanilla']);
+  });
+
   it('exports the host-independent root API', () => {
     expect(Object.keys(api)).toEqual(
       expect.arrayContaining([

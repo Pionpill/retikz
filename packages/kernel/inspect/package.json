@@ -38,10 +38,6 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./render": {
-      "types": "./src/render/index.ts",
-      "default": "./src/render/index.ts"
-    },
     "./react": {
       "types": "./src/react/index.ts",
       "default": "./src/react/index.ts"
@@ -60,11 +56,6 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
-      },
-      "./render": {
-        "types": "./dist/types/render/index.d.ts",
-        "import": "./dist/render/index.js",
-        "default": "./dist/render/index.js"
       },
       "./react": {
         "types": "./dist/types/react/index.d.ts",

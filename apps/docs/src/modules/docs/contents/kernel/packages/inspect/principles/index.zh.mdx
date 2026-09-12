@@ -1,37 +1,44 @@
 ---
 title: 解析原理
-description: 理解 Inspect 如何复用 Core 最终观测、隔离编译辅助 IR，并在同次提交中交付只读图层
+description: 从主图的编译结果出发，理解 Core 如何通知 Inspect 生成辅助内容，以及两者如何一起显示而互不改写
 ---
 
-Inspect 是附加给 Core 编译的一项可选 observer，而不是第二套绘图或布局系统。没有 registry、request 或匹配 owner 时，普通 Core 编译不会创建辅助片段，也不需要加载 Inspect。
+画出一条曲线后，你可能想知道它最终使用了哪些控制点。Inspect 可以把这些控制点和辅助线显示出来，但它不重新计算主图，也不修改你写下的绘图描述。下面从主图如何变成可显示的结果开始，说明这些辅助内容从哪里来。
 
 ## Inspect 与 Core 的协作
 
-Core 负责正常绘制主图，并在最终 occurrence 产生后提供 Inspect 所需的观测事实；Inspect 负责选择这些事实、生成辅助 IR，再复用 Core 编译它。Core 不认识任何 Inspector Definition、registry 或辅助层配色。
+Inspect 不直接分析你写下的绘图代码，而是等待 Core 算出绘图结果，再根据这些结果生成辅助内容。Core 的“编译”是把绘图描述中的坐标、引用和布局等确定下来，生成供 Render 显示的场景数据（Scene）；编译本身不是把像素画到屏幕上。
+
+接入 Inspect 时，你还会选择要观察的对象和观测器。图中左侧保留主图结果，右侧展示启用观测后的辅助支路；两条路径最后汇入 Render，没有从辅助支路返回修改主图的箭头。
+
+<ComponentPreview files="inspect-compile-flow" size="lg" hideCode />
+
+1. **先得到绘图结果。** Core 编译主图，确定图元或组件的最终结果。这里的一次具体出现称为 occurrence（编译后的一个具体实例，同一份定义可以对应多个实例）。
+2. **再通知选中的结果。** 支持观测的对象会在 Core 中发布最终产物；Core 把选中实例的位置和产物通知 Inspect。这次通知就是 observation（观测事件），而接收通知的一方称为 observer（观察者）。它不是 Inspect 从画面上反推出来的结果。
+3. **生成辅助绘图描述。** Inspect 找到对应的 Inspector（观测器），把结果交给它。观测器返回控制点、辅助线等普通绘图描述，也就是辅助 IR（中间表示），而不是直接操作画布。
+4. **单独编译，再一起显示。** Inspect 请求 Core 隔离编译这些辅助描述，得到独立场景。宿主把它们接成只读图层，Render 再与主图一起显示；主图结果保持不变。
+
+理解这条流程后，再看 Core 通过哪些字段把结果和编译能力交给 Inspect。`owner` 标识被观测对象的所属者，request 则是用户发出的观测请求：
 
 | Core 提供的内容                               | Inspect 如何使用                                                           |
 | --------------------------------------------- | -------------------------------------------------------------------------- |
-| `CompileObservation.owner` 与 `occurrence`    | 让 request 精确匹配 path kind 或 composite 的最终实例                      |
+| `CompileObservation.owner` 与 `occurrence`    | 让 request 按所属者与实例位置，精确匹配被观测对象的最终实例                |
 | `CompileObservation.value`                    | 作为 `subjectSchema` 校验的最终产物，供 `inspect()` 读取                   |
 | `CompileObservationContext.theme`             | 为辅助内容分配与当前 occurrence 一致的主题与语义颜色                       |
 | `CompileObservationContext.compileFragment()` | 在当前 Theme、Scope 样式和 provider 环境中隔离编译 Inspector 返回的普通 IR |
 
-因此，若自定义 owner 没有在 Core 中发布最终产物，Inspector 无法仅凭作者输入推断出可观测事实；它必须先获得对应的 Core observation 能力。
+因此，自定义观测器的前提是：对应对象已经能在 Core 中发布最终产物。仅仅注册一个 Inspector，不会让原本不支持观测的对象自动产生 observation。Core 只提供这套通知与隔离编译能力，不负责查找 Inspector 或决定辅助内容的样式。
 
 ## 辅助内容何时绘制
 
-辅助内容不写入 Core 的主图绘制阶段。它在同一次 observed compile 的 observer `complete` 阶段，基于已经捕获的最终 occurrence 另行编译：
+上图描述的是数据流，不代表每收到一次通知就立即画出辅助线。实际执行分为“收集结果”和“生成辅助内容”两个时机：
 
-<ComponentPreview files="inspect-compile-flow.zh" size="md" hideCode />
+- **`observe()`：只收集。** Core 派发选中实例的最终结果时，Inspect 保存产物与该实例的上下文，不在这个回调中生成辅助图形。
+- **`complete()`：集中生成。** Core 完成最终观测通知后，Inspect 解析选择、合并 options、校验产物，再调用观测器的 `inspect()`。返回的 `IRChild` 经 `compileFragment()` 隔离编译，汇成 InspectionPlane（辅助场景集合）。
 
-1. 宿主把 registry 与运行时选择交给可选 compile driver，driver 注册一个 Core observer
-2. Core 编译主图时，observer 按 owner 与来源路径选择可能匹配的站点
-3. 每个选中的 owner 产生最终结果后，Core 调用 `observe()`，保存最终产物与当前 occurrence 的上下文
-4. `complete()` 解析选择、合并 options、校验 `subjectSchema`，再调用对应 Definition 的 `inspect()`
-5. `inspect()` 返回的普通 `IRChild` 逐项传给 `compileFragment()` 隔离编译，得到 InspectionPlane；公开身份、元数据和动画语义不会进入辅助 Scene
-6. Render 把 InspectionPlane 转成不可命中的只读图层，主图与辅助图层只在同一 revision 一起成功提交
+之后，宿主将辅助场景集合转换为不可命中的只读图层，由 Render 显示。主图与辅助层属于同一次编译版本，只有一起成功才提交，不会先显示新主图、再补上旧版本的辅助内容。辅助场景也不会保留公开身份、元数据和动画语义。
 
-没有匹配结果或 callback 返回空内容时，InspectionPlane 为 `null`。额外成本只来自被选中 owner 的观测、Inspector callback 与非空辅助片段编译。
+普通绘图不需要加载 Inspect。启用后，若没有匹配结果或所有观测器都返回空内容，InspectionPlane 为 `null`，不会生成辅助图层；额外成本来自选中对象的观测、观测器回调和非空辅助片段的编译。
 
 ## 运行时选择
 

@@ -6,6 +6,9 @@ import type { AnyInspectorDefinition, InspectorDefinition } from './types';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
+/** 仅记录本模块校验并冻结的结果，避免重复处理且不阻止对象回收 */
+const sealedInspectorDefinitions = new WeakSet<AnyInspectorDefinition>();
+
 const inspectorContractError = (label: string): RetikzInspectError =>
   new RetikzInspectError(RetikzInspectErrorCode.Contract, `${label} must be a non-empty string.`);
 
@@ -25,10 +28,13 @@ const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
 
 /** 校验并冻结 registry 与公开 define 共用的擦除后 Definition */
 export const sealInspectorDefinition = (definition: AnyInspectorDefinition): AnyInspectorDefinition => {
+  if (sealedInspectorDefinitions.has(definition)) return definition;
   assertNonEmptyString(definition.namespace, 'Inspector namespace', inspectorContractError('Inspector namespace'));
   assertNonEmptyString(definition.type, 'Inspector type', inspectorContractError('Inspector type'));
   assertValidOwner(definition.owner);
-  return Object.freeze({ ...definition, owner: Object.freeze({ ...definition.owner }) });
+  const sealedDefinition = Object.freeze({ ...definition, owner: Object.freeze({ ...definition.owner }) });
+  sealedInspectorDefinitions.add(sealedDefinition);
+  return sealedDefinition;
 };
 
 /** 校验并冻结一个独立 Inspector Definition */

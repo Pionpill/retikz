@@ -258,7 +258,6 @@ canonical scope palette 沿用 `#2563eb`、`#7c3aed`、`#c026d3`、`#db2777`、`
 
 `@retikz/inspect` 根入口只依赖 Core，提供宿主无关的 Definition、registry、选择、编译驱动与辅助平面。可选集成使用独立子入口：
 
-- `@retikz/inspect/render`：把 plane 适配为 Render 普通只读图层
 - `@retikz/inspect/react`：为 React 宿主提供选择收集和编译驱动接线
 - `@retikz/inspect/vanilla`：为 Vanilla 宿主提供同构接线
 
@@ -378,7 +377,7 @@ type RenderFrameSnapshot = Readonly<{
 
 primary patch 只描述 primary identity 变化；任一 layer 或其顺序变化时，renderer 可以整体替换只读层，但不能把 layer identity 混入 primary patch。layer prepare、resource 或绘制失败不得提交新的 primary candidate
 
-`@retikz/inspect/render` 只把每个 `InspectionPlaneEntry` 一对一映射为 `RenderReadonlyLayer`：稳定 key 来自 Inspector key 与 entry 顺序，Scene 和 occurrence transform 原样进入 layer。它不改变 camera、资源执行或 retained transaction。SVG 与 Canvas 复用正常 Scene primitive / resource 执行能力，不认识 Inspector role、tone、palette 或 options；Render 的任何公共 frame 字段都不得使用 inspection 命名
+Inspect 的包内 Render 适配只把每个 `InspectionPlaneEntry` 一对一映射为 `RenderReadonlyLayer`，由宿主接线内部消费，不提供独立公开入口：稳定 key 来自 Inspector key 与 entry 顺序，Scene 和 occurrence transform 原样进入 layer。它不改变 camera、资源执行或 retained transaction。SVG 与 Canvas 复用正常 Scene primitive / resource 执行能力，不认识 Inspector role、tone、palette 或 options；Render 的任何公共 frame 字段都不得使用 inspection 命名
 
 ## 辅助内容隔离与确定性
 

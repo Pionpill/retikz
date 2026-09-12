@@ -1,3 +1,5 @@
+import type { Lang } from '@/i18n';
+
 import type { PreviewControlContract, PreviewControlsDefinition, PreviewControlValues } from '../types';
 import type { PreviewLoader } from './contents';
 
@@ -13,6 +15,9 @@ export const controlModuleLoaders: Record<string, PreviewLoader<Record<string, u
 
 export const buildControlsKey = (segments: Array<string>, name: string) =>
   buildSourceFileKey(segments, `${name}.controls.ts`);
+
+/** 按文档语言创建 controls 契约的模块导出。 */
+export type PreviewControlContractFactory = (lang: Lang) => PreviewControlContract;
 
 /** 构建带语言后缀的 controls registry key。 */
 export const buildLangControlsKey = (segments: Array<string>, name: string, lang: string) =>
@@ -41,6 +46,9 @@ const isControlContract = (value: unknown): value is PreviewControlContract =>
   typeof Reflect.get(value, 'canonicalValues') === 'object' &&
   Reflect.get(value, 'canonicalValues') !== null &&
   Array.isArray(Reflect.get(value, 'relatedApis'));
+
+const isControlContractFactory = (value: unknown): value is PreviewControlContractFactory =>
+  typeof value === 'function';
 
 const assertKnownValues = (
   label: 'canonicalValues' | `preset "${string}"`,
@@ -74,8 +82,12 @@ const contractFromDefinition = (controls: PreviewControlsDefinition): PreviewCon
 /** 解析并校验 demo controls 的稳定文档契约。 */
 export const resolvePreviewControlContract = (
   mod: Record<string, unknown> | undefined,
+  lang: Lang = 'zh',
 ): PreviewControlContract | undefined => {
   if (mod === undefined) return undefined;
+  if (isControlContractFactory(mod.createPreviewControlContract)) {
+    return validateControlContract(mod.createPreviewControlContract(lang));
+  }
   if (isControlContract(mod.previewControlContract)) {
     return validateControlContract(mod.previewControlContract);
   }
@@ -93,4 +105,5 @@ export const resolvePreviewControlContract = (
 /** 解析 demo controls 的声明式定义 */
 export const resolvePreviewControls = (
   mod: Record<string, unknown> | undefined,
-): PreviewControlsDefinition | undefined => resolvePreviewControlContract(mod)?.controls;
+  lang: Lang = 'zh',
+): PreviewControlsDefinition | undefined => resolvePreviewControlContract(mod, lang)?.controls;
