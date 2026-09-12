@@ -5,6 +5,7 @@ import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
+import { InspectionLabelsSchema, StrokePathInspectOptionsSchema } from '@retikz/inspect';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
@@ -34,6 +35,16 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  InspectionLabelsSchema: {
+    schema: InspectionLabelsSchema,
+    label: 'InspectionLabels',
+    url: '/kernel/packages/inspect/schema-reference#inspectionlabelsschema',
+  },
+  StrokePathInspectOptionsSchema: {
+    schema: StrokePathInspectOptionsSchema,
+    label: 'StrokePathInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#strokepathinspectoptionsschema',
+  },
   SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
   ThemeSchema: {
     schema: IR.ThemeSchema,

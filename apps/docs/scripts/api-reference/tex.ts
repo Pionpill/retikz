@@ -21,6 +21,8 @@ export type ApiReferencePackageConfig = {
   tsconfigPath: string;
   entries: ReadonlyArray<ApiReferenceEntry>;
   translate: (source: string) => string;
+  /** schema 符号只保留摘要并链接到字段真源 */
+  schemaReferences?: Readonly<Record<string, string>>;
 };
 
 type ApiReferenceMember = {
@@ -201,7 +203,7 @@ const toMembers = (reflection: JSONOutput.DeclarationReflection): Array<ApiRefer
     .map(member => ({
       name: member.name,
       optional: member.flags.isOptional === true,
-      type: renderType(member.type),
+      type: member.signatures?.length ? member.signatures.map(renderSignature).join('; ') : renderType(member.type),
       description: renderComment(member.comment),
       defaultValue:
         unwrapCodeFence(renderTagContent([member.comment], ['@default', '@defaultValue'])) ||
@@ -428,7 +430,17 @@ export const createApiReferenceMdx = async (
     .map((entry, index) => {
       const symbols = (entrySymbols[index] ?? [])
         .map(symbol => toSymbol(symbol, config.packageDirectory))
-        .map(symbol => renderSymbol(symbol, lang, config.translate));
+        .map(symbol => {
+          const schemaUrl = config.schemaReferences?.[symbol.name];
+          if (!schemaUrl) return renderSymbol(symbol, lang, config.translate);
+          return [
+            `### ${symbol.name}`,
+            renderSummary(symbol, lang, config.translate),
+            `[${lang === 'zh' ? 'Schema 参考' : 'Schema reference'}](${schemaUrl})`,
+          ]
+            .filter(Boolean)
+            .join('\n\n');
+        });
       return [`## ${entry.title[lang]}`, ...symbols].join('\n\n');
     })
     .join('\n\n');

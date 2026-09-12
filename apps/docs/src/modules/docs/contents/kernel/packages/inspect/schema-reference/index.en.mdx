@@ -1,0 +1,22 @@
+---
+title: Inspect Schema reference
+description: Look up Inspect label visibility and built-in stroke Path options, including field types, defaults, and validation structure
+---
+
+This page displays the configuration schemas exported by `@retikz/inspect`. They constrain inspection options, not complete inspection requests or Scenes; see the [API reference](/kernel/packages/inspect/api-reference) for runtime selection rules, registries, and callback types.
+
+## InspectionLabelsSchema
+
+The shared label visibility switch, disabled by default.
+
+<ZodSchema name="InspectionLabelsSchema" />
+
+## StrokePathInspectOptionsSchema
+
+The strict options object for the built-in stroke Path Inspector. Authored options are merged before defaults are applied: control handles and points are visible by default, while labels are hidden.
+
+The table shows the parsed structure; both input fields may be omitted and receive schema defaults.
+
+<ZodSchema name="StrokePathInspectOptionsSchema" />
+
+See [Built-in inspection](/kernel/packages/inspect/builtins) for usage and [Extending inspection](/kernel/packages/inspect/extensions) for custom Inspector option contracts.

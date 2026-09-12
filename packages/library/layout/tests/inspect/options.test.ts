@@ -1,11 +1,13 @@
-import { createInspectorRegistry, resolveInspectionSelection } from '@retikz/inspect';
-import { describe, expect, it } from 'vitest';
+import { compileInspectionToScene, createInspectorRegistry, defineInspector } from '@retikz/inspect';
+import { describe, expect, it, vi } from 'vitest';
 import { toJSONSchema } from 'zod';
 
+import { createFlexLayout, FlexLayoutDefinition, LayoutItemKind } from '../../src';
 import {
   createLayoutInspectionSelection,
   FLEX_LAYOUT_INSPECT_PRESETS,
   FLEX_LAYOUT_INSPECTOR,
+  FLEX_LAYOUT_INSPECTOR_KEY,
   FlexLayoutInspectOptionsSchema,
   GRID_LAYOUT_INSPECT_PRESETS,
   GRID_LAYOUT_INSPECTOR,
@@ -24,47 +26,53 @@ describe('Layout inspect options', () => {
   });
 
   it('preserves nested inherited options through the actual selection pipeline', () => {
-    const occurrence = { sourcePath: 'children[0].scope.children[0]', expansionPath: [] };
-    const selected = resolveInspectionSelection({
-      ir: {
+    const inspect = vi.fn(FLEX_LAYOUT_INSPECTOR.inspect);
+    compileInspectionToScene(
+      {
         version: 1,
         type: 'scene',
-        children: [{ type: 'scope', children: [{ namespace: 'layout', type: 'flex-layout' }] }],
-      },
-      registry: createInspectorRegistry([FLEX_LAYOUT_INSPECTOR]),
-      observations: [
-        {
-          owner: FLEX_LAYOUT_INSPECTOR.owner,
-          occurrence,
-          provenance: { origin: occurrence, final: occurrence },
-          transform: [1, 0, 0, 1, 0, 0],
-          value: null,
-        },
-      ],
-      selection: {
-        rules: [
+        children: [
           {
-            kind: 'request',
-            inspector: FLEX_LAYOUT_INSPECTOR,
-            target: { kind: 'scene' },
-            options: { labels: true, bounds: { visual: true, content: false } },
-          },
-          {
-            kind: 'request',
-            inspector: FLEX_LAYOUT_INSPECTOR,
-            target: { kind: 'subtree', sourcePath: 'children[0].scope' },
-            options: { bounds: { slot: false } },
-          },
-          {
-            kind: 'request',
-            inspector: FLEX_LAYOUT_INSPECTOR,
-            target: { kind: 'self', locator: { kind: 'authored', sourcePath: occurrence.sourcePath } },
-            options: {},
+            type: 'scope',
+            children: [
+              createFlexLayout({
+                children: [
+                  { kind: LayoutItemKind.Flex, key: 'item', child: { type: 'node', id: 'item', position: [0, 0] } },
+                ],
+              }),
+            ],
           },
         ],
       },
-    });
-    expect(selected[0]?.options).toMatchObject({
+      {
+        registry: createInspectorRegistry([defineInspector({ ...FLEX_LAYOUT_INSPECTOR, inspect })]),
+        compileOptions: { composites: [FlexLayoutDefinition] },
+        selection: {
+          rules: [
+            {
+              kind: 'request',
+              inspector: FLEX_LAYOUT_INSPECTOR_KEY,
+              target: { kind: 'scene' },
+              options: { labels: true, bounds: { visual: true, content: false } },
+            },
+            {
+              kind: 'request',
+              inspector: FLEX_LAYOUT_INSPECTOR_KEY,
+              target: { kind: 'subtree', sourcePath: 'children[0].scope' },
+              options: { bounds: { slot: false } },
+            },
+            {
+              kind: 'request',
+              inspector: FLEX_LAYOUT_INSPECTOR_KEY,
+              target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[0]' } },
+              options: {},
+            },
+          ],
+        },
+      },
+    );
+    expect(inspect).toHaveBeenCalledOnce();
+    expect(inspect.mock.calls[0]?.[1].options).toMatchObject({
       labels: true,
       bounds: { visual: true, content: false, slot: false, container: true },
     });

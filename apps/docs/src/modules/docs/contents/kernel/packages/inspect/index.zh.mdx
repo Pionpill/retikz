@@ -83,15 +83,17 @@ const input = scene({
 const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
 ```
 
-根入口只提供 Definition、注册表、选择与辅助编译；React、Vanilla 和 Render 适配均从显式子入口导入。先从“内置观测”看到第一个结果，再按需阅读拓展或解析原理。
+根入口只提供 Definition、注册表、选择与辅助编译；React 与 Vanilla 适配分别从 `/react` 与 `/vanilla` 子入口导入，渲染仍由 `@retikz/render` 负责。先从“内置观测”看到第一个结果，再按需阅读拓展或解析原理。配置字段见 [Schema 参考](/kernel/packages/inspect/schema-reference)。
 
 ## 职责一览
 
-| 文档     | 职责                                                   | 适合何时查阅                         |
-| -------- | ------------------------------------------------------ | ------------------------------------ |
-| 内置观测 | 查看 Core 当前支持的内置 Inspector 与其辅助内容        | 想快速理解最终 Path 结果时           |
-| 拓展观测 | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
-| 解析原理 | 理解 Core 观测、隔离片段和只读图层如何在同次编译中协作 | 诊断行为或深入实现边界时             |
+| 文档        | 职责                                                   | 适合何时查阅                         |
+| ----------- | ------------------------------------------------------ | ------------------------------------ |
+| 内置观测    | 查看 Core 当前支持的内置 Inspector 与其辅助内容        | 想快速理解最终 Path 结果时           |
+| 拓展观测    | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
+| 解析原理    | 理解 Core 观测、隔离片段和只读图层如何在同次编译中协作 | 诊断行为或深入实现边界时             |
+| API 参考    | 查询根入口、React 与 Vanilla 子路径的公开 API          | 需要完整签名与类型时                 |
+| Schema 参考 | 查询标签开关与内置 Path 观测配置                       | 需要字段、默认值与校验结构时         |
 
 ## 章节内容
 
@@ -111,6 +113,16 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
       title: '解析原理',
       description: 'Core 观测、隔离编译和只读图层的协作流程',
       url: '/kernel/packages/inspect/principles',
+    },
+    {
+      title: 'API 参考',
+      description: '根入口与 React、Vanilla 子路径的公开类型、函数和组件',
+      url: '/kernel/packages/inspect/api-reference',
+    },
+    {
+      title: 'Schema 参考',
+      description: '标签开关与内置 Path 观测选项的完整字段契约',
+      url: '/kernel/packages/inspect/schema-reference',
     },
   ]}
 />

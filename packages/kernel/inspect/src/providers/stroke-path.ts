@@ -98,10 +98,10 @@ export const STROKE_PATH_INSPECTOR = defineInspector({
       output.push(
         ...points.map(point => ({
           type: 'node' as const,
-          position: [point.position[0] + 6, point.position[1] - 6] as IRPosition,
+          position: [point.position[0] + 6, point.position[1] - 14] as IRPosition,
           text: point.label,
           layout: { padding: 2 },
-          style: { textColor: context.appearance.scopeColor, fill: '#ffffff', strokeWidth: 0, font: { size: 10 } },
+          style: { textColor: context.appearance.scopeColor, fill: 'none', strokeWidth: 0, font: { size: 10 } },
         })),
       );
     }

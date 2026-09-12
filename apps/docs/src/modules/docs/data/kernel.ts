@@ -340,6 +340,18 @@ export const kernelSection: Array<Section> = [
             meta: extensionGuide('kernel.inspect'),
           },
           { id: 'principles', label: 'kernel.pkgInspectPrinciples', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgInspectApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.inspect.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference', difficulty: DocDifficulty.Advanced },
         ],
       },
       {

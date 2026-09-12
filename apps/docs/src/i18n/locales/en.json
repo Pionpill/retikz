@@ -111,6 +111,8 @@
     "pkgInspectBuiltins": "Built-in inspection",
     "pkgInspectExtensions": "Extending inspection",
     "pkgInspectPrinciples": "Inspection principles",
+    "pkgInspectApiReference": "API reference",
+    "pkgInspectSchemaReference": "Schema reference",
     "pkgRuntime": "runtime",
     "pkgRuntimeSession": "runtime · Programs & Synchronous Sessions",
     "pkgReact": "react",

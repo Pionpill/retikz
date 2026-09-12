@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
 
 import manifest from '../../package.json';
 import * as api from '../../src';
+import * as reactApi from '../../src/react';
+import * as vanillaApi from '../../src/vanilla';
 
 describe('@retikz/inspect public exports', () => {
   it('exposes only the root and host entry points in development and publication', () => {
@@ -11,21 +12,26 @@ describe('@retikz/inspect public exports', () => {
   });
 
   it('exports the host-independent root API', () => {
-    expect(Object.keys(api)).toEqual(
-      expect.arrayContaining([
+    expect(Object.keys(api).sort()).toEqual(
+      [
         'defineInspector',
         'createInspectorRegistry',
         'createDefaultInspectorRegistry',
-        'resolveInspectionSelection',
         'compileInspectionToScene',
         'RetikzInspectError',
         'RetikzInspectErrorCode',
         'STROKE_PATH_INSPECTOR',
         'InspectionLabelsSchema',
-      ]),
+        'StrokePathInspectOptionsSchema',
+        'STROKE_PATH_INSPECTOR_KEY',
+        'BUILTIN_INSPECTORS',
+      ].sort(),
     );
-    expect(api).not.toHaveProperty('RetikzInspectionCompileError');
-    expect(api).not.toHaveProperty('inspectionPlaneToReadonlyLayers');
+    expect(Object.keys(reactApi).sort()).toEqual(['InspectLayout', 'InspectPath', 'InspectScope']);
+    expect(Object.keys(vanillaApi).sort()).toEqual([
+      'createInspectionVanillaAuthoring',
+      'createInspectionVanillaDriver',
+    ]);
   });
 
   it('does not evaluate optional host peers from the root entry', async () => {
@@ -43,18 +49,5 @@ describe('@retikz/inspect public exports', () => {
       throw new Error('optional React runtime evaluated');
     });
     await expect(import('../../src/index')).resolves.toBeDefined();
-    const root = await readFile(new URL('../../src/index.ts', import.meta.url), 'utf8');
-    expect(root.trim().split(/\r?\n/)).toEqual([
-      "export * from './compile';",
-      "export * from './contract';",
-      "export * from './error';",
-      "export * from './providers';",
-      "export * from './schema';",
-    ]);
-    expect(root).not.toContain('@retikz/render');
-    expect(root).not.toContain('@retikz/vanilla');
-    await expect(readFile(new URL('../../src/shared/index.ts', import.meta.url), 'utf8')).rejects.toMatchObject({
-      code: 'ENOENT',
-    });
   });
 });

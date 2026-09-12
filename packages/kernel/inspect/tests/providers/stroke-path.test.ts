@@ -212,6 +212,6 @@ describe('stroke Path Inspector', () => {
       },
     );
 
-    expect(output).toMatchObject([{ type: 'node', position: [11, 2], text: 'Q1' }]);
+    expect(output).toMatchObject([{ type: 'node', position: [11, -6], text: 'Q1' }]);
   });
 });

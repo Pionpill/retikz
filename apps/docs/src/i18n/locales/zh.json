@@ -111,6 +111,8 @@
     "pkgInspectBuiltins": "内置观测",
     "pkgInspectExtensions": "拓展观测",
     "pkgInspectPrinciples": "解析原理",
+    "pkgInspectApiReference": "API 参考",
+    "pkgInspectSchemaReference": "Schema 参考",
     "pkgRuntime": "增量执行 · runtime",
     "pkgRuntimeSession": "Program 与同步 Session",
     "pkgReact": "React 适配 · react",

@@ -1,0 +1,29 @@
+---
+title: Inspect Schema 参考
+description: 查询 Inspect 公开的标签开关与内置 stroke Path 观测配置，包括字段类型、默认值与校验结构
+---
+
+这里展示 `@retikz/inspect` 公开的配置 schema。它们约束观测选项，不是完整的观测请求或 Scene schema；运行时的选择规则、注册表与回调类型见 [API 参考](/kernel/packages/inspect/api-reference)。
+
+## InspectionLabelsSchema
+
+共享的标签显示开关，默认关闭。
+
+<ZodSchema name="InspectionLabelsSchema" description="是否显示 Inspector 标签，默认 false。" />
+
+## StrokePathInspectOptionsSchema
+
+内置 stroke Path Inspector 的严格配置对象。先合并作者提供的原始选项，再应用默认值：控制柄和控制点默认显示，标签默认隐藏。
+
+表格展示解析后的结构；输入时两个字段均可省略，由 schema 补齐默认值。
+
+<ZodSchema
+  name="StrokePathInspectOptionsSchema"
+  description="stroke Path 观测选项；在原始选项合并后应用默认值。"
+  descriptions={{
+    controlPoints: '是否显示控制柄与控制点，默认 true',
+    labels: '是否显示控制点标签，默认 false',
+  }}
+/>
+
+内置用法见 [内置观测](/kernel/packages/inspect/builtins)，自定义 Inspector 的选项契约见 [拓展观测](/kernel/packages/inspect/extensions)。

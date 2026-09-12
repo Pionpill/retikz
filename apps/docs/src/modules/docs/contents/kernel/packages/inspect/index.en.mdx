@@ -83,7 +83,7 @@ const input = scene({
 const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
 ```
 
-The root entry owns Definitions, registries, selection, and auxiliary compilation. React, Vanilla, and Render adapters come from explicit subentries. Start with Built-in inspection for a first result, then continue to extension or inspection details as needed.
+The root entry owns Definitions, registries, selection, and auxiliary compilation. React and Vanilla adapters come from `/react` and `/vanilla`; rendering remains the responsibility of `@retikz/render`. Start with Built-in inspection, then continue to extension or inspection details as needed. Configuration fields are listed in the [Schema reference](/kernel/packages/inspect/schema-reference).
 
 ## Responsibilities
 
@@ -92,6 +92,8 @@ The root entry owns Definitions, registries, selection, and auxiliary compilatio
 | Built-in inspection   | See the Inspectors Core currently provides and their auxiliary output     | Quickly interpreting final Path results                 |
 | Extending inspection  | Define, register, and request a third-party Inspector                     | Explaining final output from your own Core owner        |
 | Inspection principles | Understand one compile's Core observation, fragments, and readonly layers | Diagnosing behavior or deeper implementation boundaries |
+| API reference         | Query public APIs from the root, React, and Vanilla entries               | Looking up complete signatures and types                |
+| Schema reference      | Query label visibility and built-in Path inspection options               | Looking up fields, defaults, and validation structure   |
 
 ## Contents
 
@@ -111,6 +113,16 @@ The root entry owns Definitions, registries, selection, and auxiliary compilatio
       title: 'Inspection principles',
       description: 'How Core observation, isolated compilation, and readonly layers cooperate',
       url: '/kernel/packages/inspect/principles',
+    },
+    {
+      title: 'API reference',
+      description: 'Public types, functions, and components from the root, React, and Vanilla entries',
+      url: '/kernel/packages/inspect/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Complete field contracts for label visibility and built-in Path inspection options',
+      url: '/kernel/packages/inspect/schema-reference',
     },
   ]}
 />

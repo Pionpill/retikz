@@ -1,10 +1,15 @@
 import path from 'node:path';
 
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
+import { writeInspectApiReferenceMdx } from './api-reference/inspect';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+
+await writeInspectApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/inspect/api-reference/_includes'),
+);
 
 await writeTexApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/tex/api-reference/_includes'),

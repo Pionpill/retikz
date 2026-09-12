@@ -3,7 +3,8 @@ import type { CompileObservation, IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { null as zodNull, number, strictObject, string } from 'zod';
 
-import { createInspectorRegistry, defineInspector, resolveInspectionSelection } from '../../src';
+import { createInspectorRegistry, defineInspector } from '../../src';
+import { resolveInspectionSelection } from '../../src/compile';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
 const key = { namespace: 'test', type: 'box' };
