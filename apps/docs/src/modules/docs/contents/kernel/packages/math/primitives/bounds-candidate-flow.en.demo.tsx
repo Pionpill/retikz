@@ -8,9 +8,9 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 /** Shows how different geometry inputs join candidate points before bounds calculation */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()}>
-    <FlowLayout id="bounds" direction="right" align="center" gap={32}>
+    <FlowLayout kind="linear" id="bounds" direction="right" align="center" gap={32}>
       <FlowEntities items={[{ id: 'input', text: 'Geometry input', role: 'participant' }]} />
-      <FlowLayout id="geometry-types" direction="down" align="center" gap={32}>
+      <FlowLayout kind="linear" id="geometry-types" direction="down" align="center" gap={32}>
         <FlowEntities
           items={[
             { id: 'point', text: 'Point', role: 'participant', group: 'point' },
@@ -19,7 +19,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="candidate-geometry" direction="down" align="center" gap={32}>
+      <FlowLayout kind="linear" id="candidate-geometry" direction="down" align="center" gap={32}>
         <FlowEntities
           items={[
             { id: 'direct', text: 'Use directly', role: 'activity', group: 'point' },
@@ -28,7 +28,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="reduction" direction="right" align="center" gap={32}>
+      <FlowLayout kind="linear" id="reduction" direction="right" align="center" gap={32}>
         <FlowEntities items={[{ id: 'candidates', text: 'Candidate points', role: 'activity' }]} />
         <FlowEntities items={[{ id: 'calculate-bounds', text: 'Compute bounds', role: 'activity' }]} />
       </FlowLayout>

@@ -13,9 +13,9 @@ import {
 /** 展示二维仿射矩阵的组合与应用顺序 */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
-    <FlowLayout id="affine" direction="right" align="center">
-      <FlowLayout id="composition" direction="right" align="center">
-        <FlowLayout id="matrix-inputs" direction="down" align="center">
+    <FlowLayout kind="linear" id="affine" direction="right" align="center">
+      <FlowLayout kind="linear" id="composition" direction="right" align="center">
+        <FlowLayout kind="linear" id="matrix-inputs" direction="down" align="center">
           <FlowEntities
             items={[
               { id: 'inner', text: '内层矩阵（先执行）', role: 'activity', kind: 'docs.logic.important' },
@@ -28,7 +28,7 @@ const Demo: FC = () => (
           items={[{ id: 'combined-matrix', text: '合成矩阵', role: 'activity', kind: 'docs.logic.important' }]}
         />
       </FlowLayout>
-      <FlowLayout id="application" direction="down" align="center" gap={32}>
+      <FlowLayout kind="linear" id="application" direction="down" align="center" gap={32}>
         <FlowEntities items={[{ id: 'point', text: '输入点', role: 'participant' }]} />
         <FlowEntities items={[{ id: 'apply', text: '应用矩阵', role: 'activity', kind: 'docs.logic.important' }]} />
         <FlowEntities items={[{ id: 'result', text: '变换后点', role: 'participant' }]} />

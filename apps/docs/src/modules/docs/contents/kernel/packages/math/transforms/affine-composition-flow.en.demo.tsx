@@ -13,9 +13,9 @@ import {
 /** Shows the composition and application order of a two-dimensional affine matrix */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
-    <FlowLayout id="affine" direction="right" align="center">
-      <FlowLayout id="composition" direction="right" align="center">
-        <FlowLayout id="matrix-inputs" direction="down" align="center">
+    <FlowLayout kind="linear" id="affine" direction="right" align="center">
+      <FlowLayout kind="linear" id="composition" direction="right" align="center">
+        <FlowLayout kind="linear" id="matrix-inputs" direction="down" align="center">
           <FlowEntities
             items={[
               { id: 'inner', text: 'Inner matrix (first)', role: 'activity', kind: 'docs.logic.important' },
@@ -30,7 +30,7 @@ const Demo: FC = () => (
           items={[{ id: 'combined-matrix', text: 'Combined matrix', role: 'activity', kind: 'docs.logic.important' }]}
         />
       </FlowLayout>
-      <FlowLayout id="application" direction="down" align="center" gap={32}>
+      <FlowLayout kind="linear" id="application" direction="down" align="center" gap={32}>
         <FlowEntities items={[{ id: 'point', text: 'Input point', role: 'participant' }]} />
         <FlowEntities items={[{ id: 'apply', text: 'Apply matrix', role: 'activity', kind: 'docs.logic.important' }]} />
         <FlowEntities items={[{ id: 'result', text: 'Transformed point', role: 'participant' }]} />

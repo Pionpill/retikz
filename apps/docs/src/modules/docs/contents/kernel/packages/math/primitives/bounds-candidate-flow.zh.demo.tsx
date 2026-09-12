@@ -8,9 +8,9 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 /** 展示不同几何输入如何汇入候选点集，再计算边界 */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()}>
-    <FlowLayout id="bounds" direction="right" align="center" gap={32}>
+    <FlowLayout kind="linear" id="bounds" direction="right" align="center" gap={32}>
       <FlowEntities items={[{ id: 'input', text: '几何输入', role: 'participant' }]} />
-      <FlowLayout id="geometry-types" direction="down" align="center" gap={32}>
+      <FlowLayout kind="linear" id="geometry-types" direction="down" align="center" gap={32}>
         <FlowEntities
           items={[
             { id: 'point', text: '常规点', role: 'participant', group: 'point' },
@@ -19,7 +19,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="candidate-geometry" direction="down" align="center" gap={32}>
+      <FlowLayout kind="linear" id="candidate-geometry" direction="down" align="center" gap={32}>
         <FlowEntities
           items={[
             { id: 'direct', text: '直接纳入', role: 'activity', group: 'point' },
@@ -28,7 +28,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="reduction" direction="right" align="center" gap={32}>
+      <FlowLayout kind="linear" id="reduction" direction="right" align="center" gap={32}>
         <FlowEntities items={[{ id: 'candidates', text: '候选点集', role: 'activity' }]} />
         <FlowEntities items={[{ id: 'calculate-bounds', text: '计算边界', role: 'activity' }]} />
       </FlowLayout>

@@ -13,9 +13,9 @@ import {
 /** Shows bidirectional local and world coordinate conversion around a CenteredShape */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
-    <FlowLayout id="conversion" direction="right" align="center">
+    <FlowLayout kind="linear" id="conversion" direction="right" align="center">
       <FlowEntities items={[{ id: 'local-point', text: 'Local point', role: 'participant' }]} />
-      <FlowLayout id="left-steps" direction="down" align="center">
+      <FlowLayout kind="linear" id="left-steps" direction="down" align="center">
         <FlowEntities
           items={[
             {
@@ -42,7 +42,7 @@ const Demo: FC = () => (
           },
         ]}
       />
-      <FlowLayout id="right-steps" direction="down" align="center">
+      <FlowLayout kind="linear" id="right-steps" direction="down" align="center">
         <FlowEntities
           items={[
             {

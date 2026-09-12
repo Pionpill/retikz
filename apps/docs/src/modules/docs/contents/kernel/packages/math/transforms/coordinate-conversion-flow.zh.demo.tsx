@@ -13,9 +13,9 @@ import {
 /** 展示围绕 CenteredShape 的双向局部与世界坐标转换 */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
-    <FlowLayout id="conversion" direction="right" align="center">
+    <FlowLayout kind="linear" id="conversion" direction="right" align="center">
       <FlowEntities items={[{ id: 'local-point', text: '局部点', role: 'participant' }]} />
-      <FlowLayout id="left-steps" direction="down" align="center">
+      <FlowLayout kind="linear" id="left-steps" direction="down" align="center">
         <FlowEntities
           items={[
             {
@@ -42,7 +42,7 @@ const Demo: FC = () => (
           },
         ]}
       />
-      <FlowLayout id="right-steps" direction="down" align="center">
+      <FlowLayout kind="linear" id="right-steps" direction="down" align="center">
         <FlowEntities
           items={[
             {

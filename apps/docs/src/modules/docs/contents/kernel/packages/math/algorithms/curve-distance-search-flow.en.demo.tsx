@@ -8,8 +8,8 @@ import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 /** Shows the bisection search that recovers a curve parameter from distance */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-    <FlowLayout id="distance-search" direction="right" align="center">
-      <FlowLayout id="search-state" direction="down" align="center">
+    <FlowLayout kind="linear" id="distance-search" direction="right" align="center">
+      <FlowLayout kind="linear" id="search-state" direction="down" align="center">
         <FlowEntities
           items={[
             {

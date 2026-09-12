@@ -14,8 +14,8 @@ import {
 /** 展示 compositeOpaqueColor 的正常解析与预合成链路 */
 const Demo: FC = () => (
   <FlowDiagram {...logicFigureGraphProps()} relationKinds={logicFigureRelationKinds}>
-    <FlowLayout id="rows" direction="down" align="center">
-      <FlowLayout id="prepare" direction="right" align="center">
+    <FlowLayout kind="linear" id="rows" direction="down" align="center">
+      <FlowLayout kind="linear" id="prepare" direction="right" align="center">
         <FlowEntities
           items={[
             { id: 'inputs', text: '输入', role: 'participant' },
@@ -30,7 +30,7 @@ const Demo: FC = () => (
           ]}
         />
       </FlowLayout>
-      <FlowLayout id="compose-row" direction="right" align="center">
+      <FlowLayout kind="linear" id="compose-row" direction="right" align="center">
         <FlowEntities
           items={[
             {
