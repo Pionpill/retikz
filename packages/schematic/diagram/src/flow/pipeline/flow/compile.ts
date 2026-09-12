@@ -108,7 +108,11 @@ export const createCompileFlowDiagram =
     });
     assertFlowLayoutCapabilities(definition, diagram);
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
-    const output = executeFlowLayout(definition, measurement.input, createFlowLayoutExecutionContext(context));
+    const output = executeFlowLayout(
+      definition,
+      measurement.input,
+      createFlowLayoutExecutionContext(context, measurement.input),
+    );
     const drawing = materializeFlowGraph(measurement, output);
     try {
       requiredLayoutProbe(context, { child: drawing, occurrence: 0 }, intrinsicLayoutProposal('natural'));

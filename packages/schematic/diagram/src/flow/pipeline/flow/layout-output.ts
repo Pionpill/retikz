@@ -220,21 +220,45 @@ const validatePlacementInput = (
     !isPlainRecord(input) ||
     !hasExactKeys(input, ['layout', 'elements']) ||
     !isPlainRecord(input.layout) ||
-    !hasExactKeys(input.layout, ['id', 'direction', 'gap', 'align']) ||
+    !hasExactKeys(
+      input.layout,
+      expected.placement.kind === 'linear'
+        ? ['kind', 'id', 'direction', 'gap', 'align']
+        : ['kind', 'id', 'rowGap', 'columnGap', 'reserveLabelSpace', 'placements'],
+    ) ||
     !Array.isArray(input.elements)
   ) {
     return invalidOutput(definition, ['layouts', expected.id], 'expected a closed Layout placement input.');
   }
-  if (
-    input.layout.id !== expected.id ||
-    input.layout.direction !== expected.layout.direction ||
-    input.layout.gap !== expected.layout.nodeGap ||
-    input.layout.align !== expected.align
-  ) {
+  if (input.layout.id !== expected.id || input.layout.kind !== expected.placement.kind) {
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,
     ]);
   }
+  const actual = input.layout;
+  const placement = expected.placement;
+  const matches =
+    actual.kind === 'linear' && placement.kind === 'linear'
+      ? actual.direction === placement.direction && actual.gap === placement.gap && actual.align === placement.align
+      : actual.kind === 'grid' &&
+        placement.kind === 'grid' &&
+        actual.rowGap === placement.rowGap &&
+        actual.columnGap === placement.columnGap &&
+        isPlainRecord(actual.placements) &&
+        hasExactKeys(actual.placements, Object.keys(placement.placements)) &&
+        Object.entries(placement.placements).every(([id, cell]) => {
+          const actualCell = actual.placements[id];
+          return (
+            isPlainRecord(actualCell) &&
+            hasExactKeys(actualCell, ['row', 'column']) &&
+            actualCell.row === cell.row &&
+            actualCell.column === cell.column
+          );
+        });
+  if (!matches)
+    invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
+      expected.id,
+    ]);
   if (
     input.elements.length !== expected.elements.length ||
     input.elements.some((element, index) => element.id !== expected.elements[index]?.id)

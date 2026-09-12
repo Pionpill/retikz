@@ -49,7 +49,7 @@ const flowChildren = (
       { id: 'client', caption: { title: { text: 'Client' } } },
       createElement(
         FlowLayout,
-        { id: 'frontend', direction: 'down' },
+        { kind: 'linear' as const, id: 'frontend', direction: 'down' },
         createElement(FlowEntity, { id: 'jsx', text: 'JSX', status: 'success', rank: 0 }),
       ),
     ),
@@ -73,7 +73,7 @@ const expectedSource = {
     { id: 'kernel', text: ['Kernel', 'IR compiler'] },
   ],
   groups: [{ id: 'client', caption: { title: { text: 'Client' } }, children: ['frontend'] }],
-  layouts: [{ id: 'frontend', direction: 'down', children: ['jsx'] }],
+  layouts: [{ kind: 'linear' as const, id: 'frontend', direction: 'down', children: ['jsx'] }],
   children: ['client', 'kernel'],
   relations: [
     {
@@ -88,6 +88,45 @@ const expectedSource = {
 };
 
 describe('@retikz/diagram-react/flow', () => {
+  it('preserves Grid placements through typed React, Vanilla and direct Source inside a Group', () => {
+    const grid = {
+      kind: 'grid' as const,
+      id: 'grid',
+      rowGap: 0,
+      columnGap: 24,
+      placements: { a: { row: 0, column: 0 }, b: { row: 1, column: 1 } },
+    };
+    const entities = [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ];
+    const source = {
+      entities,
+      groups: [{ id: 'group', children: ['grid'] }],
+      layouts: [{ ...grid, children: ['a', 'b'] }],
+      children: ['group'],
+    };
+    const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
+    const input = createInputScene(
+      createElement(
+        FlowReact.FlowDiagram,
+        null,
+        createElement(
+          FlowReact.FlowGroup,
+          { id: 'group' },
+          createElement(FlowReact.FlowLayout, grid, createElement(FlowReact.FlowEntities, { items: entities })),
+        ),
+      ),
+    );
+    const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+    expect(react).toEqual(direct);
+    expect(normalizeFlowDiagram(source)).toEqual(direct);
+    const result = processToStaticInputResult(input.scene, {
+      adapters: input.adapters,
+      compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
+    });
+    expect(JSON.stringify(result)).toContain('A');
+  });
   it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
     const props = {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
@@ -274,7 +313,7 @@ describe('@retikz/diagram-react/flow', () => {
           createElement(FlowEntities, { items: ['group-entity'], complete: true }),
           createElement(
             FlowLayout,
-            { id: 'layout', direction: 'right' },
+            { kind: 'linear' as const, id: 'layout', direction: 'right' },
             createElement(FlowEntities, { items: ['layout-entity'], complete: true }),
           ),
         ),
@@ -290,7 +329,7 @@ describe('@retikz/diagram-react/flow', () => {
         { id: 'layout-entity', text: 'layout-entity' },
       ],
       groups: [{ id: 'group', children: ['group-entity', 'layout'] }],
-      layouts: [{ id: 'layout', direction: 'right', children: ['layout-entity'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['layout-entity'] }],
       children: ['root', 'group'],
     });
   });
@@ -341,7 +380,7 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowEntities, { items: [{ id: 'group-child', text: 'Group child' }] }),
         createElement(
           FlowLayout,
-          { id: 'row', direction: 'right' },
+          { kind: 'linear' as const, id: 'row', direction: 'right' },
           createElement(FlowEntities, { items: ['layout-a', 'layout-b'] }),
         ),
       ),
@@ -356,7 +395,7 @@ describe('@retikz/diagram-react/flow', () => {
         { id: 'layout-b', text: 'layout-b' },
       ],
       groups: [{ id: 'group', children: ['group-child', 'row'] }],
-      layouts: [{ id: 'row', direction: 'right', children: ['layout-a', 'layout-b'] }],
+      layouts: [{ kind: 'linear' as const, id: 'row', direction: 'right', children: ['layout-a', 'layout-b'] }],
       children: ['group'],
     });
   });
@@ -374,7 +413,7 @@ describe('@retikz/diagram-react/flow', () => {
     const owner =
       ownerKind === 'group'
         ? createElement(FlowGroup, { id: 'owner' }, nestedRelations)
-        : createElement(FlowLayout, { id: 'owner', direction: 'right' }, nestedRelations);
+        : createElement(FlowLayout, { kind: 'linear' as const, id: 'owner', direction: 'right' }, nestedRelations);
 
     expect(() => createInputScene(createElement(FlowDiagram, null, owner))).toThrowError(
       expect.objectContaining({

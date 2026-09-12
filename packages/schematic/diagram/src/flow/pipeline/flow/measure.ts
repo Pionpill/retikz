@@ -15,7 +15,7 @@ import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowRelation 
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { resolveEffectiveFlowLayout } from '../../resolve';
+import { resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 
 const measureFailure = (element: CanonicalFlowElement | CanonicalFlowRelation, cause: unknown): never => {
   const isElement = 'type' in element;
@@ -124,7 +124,7 @@ const measureElements = (
             id: element.id,
             ...(element.rank === undefined ? {} : { rank: element.rank }),
             layout: effectiveLayout,
-            align: element.source.align ?? 'center',
+            placement: resolveEffectiveFlowPlacement(element.source, effectiveLayout),
             elements: measuredElements,
           };
         }

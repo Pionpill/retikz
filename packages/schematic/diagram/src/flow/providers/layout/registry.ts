@@ -5,7 +5,7 @@ import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundat
 import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { FlowDirection, FlowRoutingKind } from '../../shared';
+import { FlowDirection, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 import { BUILTIN_FLOW_LAYOUT_DEFINITIONS } from './definitions';
 import { LayeredFlowLayoutDefinition } from './layered';
 
@@ -26,6 +26,7 @@ const ROUTING_KINDS = new Set(Object.values(FlowRoutingKind));
 const FLOW_DIRECTIONS = new Set(Object.values(FlowDirection));
 const DEFINITION_KEYS = new Set(['name', 'description', 'capabilities', 'defaults', 'layout']);
 const CAPABILITY_KEYS = new Set([
+  'placementKinds',
   'compoundScopes',
   'groupEndpoints',
   'crossScopeRelations',
@@ -118,6 +119,12 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   }
   validateUniqueValues(capabilities.relationDirections, RELATION_DIRECTIONS, 'relationDirections', definition);
   validateUniqueValues(capabilities.routingKinds, ROUTING_KINDS, 'routingKinds', definition);
+  validateUniqueValues(
+    capabilities.placementKinds,
+    new Set(Object.values(FlowPlacementKind)),
+    'placementKinds',
+    definition,
+  );
   if (!FLOW_DIRECTIONS.has(defaults.direction)) invalidDefinition(definition, 'defaults.direction is unsupported.');
   validateFiniteNonNegative(defaults.nodeGap, 'defaults.nodeGap', definition);
   validateFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);

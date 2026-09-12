@@ -48,15 +48,7 @@ const completeFlow = {
       children: ['pipeline'],
     },
   ],
-  layouts: [
-    {
-      id: 'pipeline',
-      direction: 'down',
-      gap: 12,
-      align: 'center',
-      children: ['ir'],
-    },
-  ],
+  layouts: [{ kind: 'linear' as const, id: 'pipeline', direction: 'down', gap: 12, align: 'center', children: ['ir'] }],
   children: ['sugar', 'compile'],
   relations: [
     {
@@ -194,7 +186,9 @@ describe('Flow Source schema', () => {
       type: 'flow',
       entities: [{ id: 'entity', text: 'Entity' }],
       groups: [],
-      layouts: [{ id: 'layout', direction: 'left', gap: 8, align: 'end', children: ['entity'] }],
+      layouts: [
+        { kind: 'linear' as const, id: 'layout', direction: 'left', gap: 8, align: 'end', children: ['entity'] },
+      ],
       children: ['layout'],
     };
 
@@ -214,7 +208,7 @@ describe('Flow Source schema', () => {
     expect(
       FlowDiagramSchema.safeParse({
         ...source,
-        layouts: [{ id: 'layout', children: ['entity'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', children: ['entity'] }],
       }).success,
     ).toBe(false);
     expect(
@@ -255,7 +249,7 @@ describe('Flow Source schema', () => {
     { ...completeFlow, unknown: true },
     { ...completeFlow, entities: [] },
     { ...completeFlow, children: [] },
-    { ...completeFlow, layouts: [{ id: 'empty', direction: 'right', children: [] }] },
+    { ...completeFlow, layouts: [{ kind: 'linear' as const, id: 'empty', direction: 'right', children: [] }] },
     { ...completeFlow, relations: [] },
     { ...completeFlow, entities: [{ type: 'entity', id: 'typed', text: 'Typed' }] },
     { ...completeFlow, entities: [{ id: '', text: 'blank id' }] },

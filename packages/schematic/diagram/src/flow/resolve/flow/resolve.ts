@@ -307,10 +307,15 @@ const resolveElementRecord = (id: string, state: ResolveState): CanonicalFlowEle
       id: layoutSource.id,
       source: layoutSource,
       ...(layoutSource.rank === undefined ? {} : { rank: layoutSource.rank }),
-      layout: mergeFlowLayoutIntent(undefined, {
-        direction: layoutSource.direction,
-        ...(layoutSource.gap === undefined ? {} : { nodeGap: layoutSource.gap }),
-      }),
+      layout: mergeFlowLayoutIntent(
+        undefined,
+        layoutSource.kind === 'linear'
+          ? {
+              direction: layoutSource.direction,
+              ...(layoutSource.gap === undefined ? {} : { nodeGap: layoutSource.gap }),
+            }
+          : {},
+      ),
       elements: layoutSource.children.map(childId => resolveElementRecord(childId, state)),
       path,
     };

@@ -160,13 +160,14 @@ const sizeElement = (
   }
   if (input.kind === 'layout') {
     const sizedChildren = input.elements.map(element => sizeElement(element, relations, index, context));
-    const childrenWithLabelMargins = withLayoutLabelMargins(sizedChildren, input.layout, relations, index, input.id);
+    const childrenWithLabelMargins =
+      input.placement.kind === 'linear'
+        ? withLayoutLabelMargins(sizedChildren, input.layout, relations, index, input.id)
+        : sizedChildren;
     const placement = context.placeLayout({
       layout: {
+        ...input.placement,
         id: input.id,
-        direction: input.layout.direction,
-        gap: input.layout.nodeGap,
-        align: input.align,
       },
       elements: childrenWithLabelMargins.map(element => ({
         id: element.input.id,

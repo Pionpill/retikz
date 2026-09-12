@@ -1,7 +1,7 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 
 import { GraphProviderKey } from '@retikz/graph';
-import { FlexLayoutProvider } from '@retikz/layout';
+import { FlexLayoutProvider, GridLayoutProvider } from '@retikz/layout';
 import { LegendProvider } from '@retikz/standard';
 
 import type { FlowDiagramDefinitionOptions } from '../contract';
@@ -25,7 +25,7 @@ const makeFlowDiagramDefinition: CoreDependencyProvider['makeDefinition'] = data
 export const createFlowDiagramProvider = (options: FlowDiagramDefinitionOptions = {}): CoreDependencyProvider =>
   Object.freeze({
     key: FlowDiagramProviderKey,
-    dependencies: Object.freeze([GraphProviderKey, FlexLayoutProvider.key, LegendProvider.key]),
+    dependencies: Object.freeze([GraphProviderKey, FlexLayoutProvider.key, GridLayoutProvider.key, LegendProvider.key]),
     datasets: createFlowDiagramRuntimeDatasets(options),
     makeDefinition: makeFlowDiagramDefinition,
   });

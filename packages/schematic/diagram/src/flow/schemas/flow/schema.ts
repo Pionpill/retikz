@@ -15,7 +15,8 @@ import {
   RelationRoleSchema,
   RelationSchema,
 } from '@retikz/graph';
-import { array, enum as zodEnum, literal, strictObject } from 'zod';
+import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS } from '@retikz/layout';
+import { array, boolean as zodBoolean, discriminatedUnion, enum as zodEnum, literal, record, strictObject } from 'zod';
 
 import {
   DIAGRAM_NAMESPACE,
@@ -23,7 +24,7 @@ import {
   DiagramFrameSchema,
   DiagramPresentationSchema,
 } from '../../../_diagram';
-import { FLOW_TYPE, FlowDirection, FlowLayoutAlignment, FlowRoutingKind } from '../../shared';
+import { FLOW_TYPE, FlowDirection, FlowLayoutAlignment, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 
 const requireOverrides = (label: string) => ({
   message: `${label} must contain at least one override.`,
@@ -186,16 +187,72 @@ export const FlowGroupSchema = strictObject({
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 }).describe('Visible Flow Group projected to one Graph Group shell.');
 
-export const FlowLayoutSchema = strictObject({
+const FlowLayoutBaseSchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Layout identity.'),
   rank: NonNegativeIntegerSchema.optional().describe('Optional rank constraint within the parent Flow scope.'),
+  children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
+});
+
+const FlowLinearLayoutSchema = strictObject({
+  kind: literal(FlowPlacementKind.Linear).describe('One-dimensional placement discriminator.'),
+  ...FlowLayoutBaseSchema.shape,
   direction: zodEnum(FlowDirection).describe('Required authored direction for direct children placement.'),
   gap: NonNegativeNumberSchema.optional().describe('Optional gap between direct children in user units.'),
   align: zodEnum(FlowLayoutAlignment)
     .optional()
     .describe('Optional cross-axis alignment; omission resolves to center.'),
-  children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 }).describe('Invisible Flow Layout with author-controlled one-dimensional placement.');
+
+const FlowGridPlacementSchema = strictObject({
+  row: NonNegativeIntegerSchema.max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS - 1).describe('Zero-based physical row index.'),
+  column: NonNegativeIntegerSchema.max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS - 1).describe(
+    'Zero-based physical column index.',
+  ),
+});
+
+const FlowGridLayoutSchema = strictObject({
+  kind: literal(FlowPlacementKind.Grid).describe('Shared row and column placement discriminator.'),
+  ...FlowLayoutBaseSchema.shape,
+  rowGap: NonNegativeNumberSchema.optional().describe('Minimum row track gap. Omission uses inherited nodeGap.'),
+  columnGap: NonNegativeNumberSchema.optional().describe('Minimum column track gap. Omission uses inherited nodeGap.'),
+  reserveLabelSpace: zodBoolean()
+    .optional()
+    .describe('Whether measured relation labels expand their matching Grid track gap. Omission enables reservation.'),
+  placements: record(NonBlankStringSchema, FlowGridPlacementSchema).describe(
+    'One cell per direct child, keyed by authored identity.',
+  ),
+});
+
+export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSchema, FlowGridLayoutSchema])
+  .superRefine((layout, context) => {
+    if (layout.kind !== FlowPlacementKind.Grid) return;
+    const children = new Set(layout.children);
+    const occupied = new Set<string>();
+    for (const child of children) {
+      if (!Object.hasOwn(layout.placements, child)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['placements', child],
+          message: 'Every direct child requires a placement.',
+        });
+      }
+    }
+    for (const [id, placement] of Object.entries(layout.placements)) {
+      if (!children.has(id)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['placements', id],
+          message: 'Placement must reference a direct child.',
+        });
+      }
+      const cell = `${placement.row}:${placement.column}`;
+      if (occupied.has(cell)) {
+        context.addIssue({ code: 'custom', path: ['placements', id], message: 'Grid cells must not overlap.' });
+      }
+      occupied.add(cell);
+    }
+  })
+  .describe('Invisible Flow Layout with explicit linear or grid placement.');
 
 export const FlowRelationSchema = strictObject({
   source: NonBlankStringSchema.describe('Authored source Flow element id.'),

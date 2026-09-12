@@ -161,7 +161,7 @@ describe('Flow Source resolve', () => {
         { id: 'first', text: 'First' },
       ],
       groups: [],
-      layouts: [{ id: 'layout', direction: 'right', children: ['first'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['first'] }],
       children: ['layout', 'second'],
     };
     const reordered = {
@@ -218,7 +218,7 @@ describe('Flow Source resolve', () => {
         type: 'flow',
         entities: [{ id: 'duplicate', text: 'First' }],
         groups: [],
-        layouts: [{ id: 'duplicate', direction: 'right', children: ['duplicate'] }],
+        layouts: [{ kind: 'linear' as const, id: 'duplicate', direction: 'right', children: ['duplicate'] }],
         children: ['duplicate'],
       },
       RetikzDiagramErrorCode.FlowDuplicateId,
@@ -236,7 +236,7 @@ describe('Flow Source resolve', () => {
       name: 'unknown Group child',
       source: {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['missing'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['missing'] }],
         children: ['layout'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -259,7 +259,7 @@ describe('Flow Source resolve', () => {
       name: 'multiple parents',
       source: {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['entity'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['entity'] }],
         children: ['layout', 'entity'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -278,7 +278,7 @@ describe('Flow Source resolve', () => {
       name: 'self containment',
       source: {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['layout'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['layout'] }],
         children: ['entity'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -289,7 +289,7 @@ describe('Flow Source resolve', () => {
       source: {
         ...singleEntityFlow,
         groups: [{ id: 'b', children: ['a'] }],
-        layouts: [{ id: 'a', direction: 'right', children: ['b'] }],
+        layouts: [{ kind: 'linear' as const, id: 'a', direction: 'right', children: ['b'] }],
         children: ['entity'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -319,7 +319,7 @@ describe('Flow Source resolve', () => {
     expectDiagramError(
       {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['entity'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['entity'] }],
         children: ['layout'],
         relations: [
           {

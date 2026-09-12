@@ -108,7 +108,9 @@ describe('Flow defaults and formal Source fragments', () => {
           children: ['source'],
         },
       ],
-      layouts: [{ id: 'lane', direction: 'down', gap: 4, align: 'center', children: ['target'] }],
+      layouts: [
+        { kind: 'linear' as const, id: 'lane', direction: 'down', gap: 4, align: 'center', children: ['target'] },
+      ],
       children: ['group', 'lane'],
       relations: [
         {
@@ -240,7 +242,7 @@ describe('Flow defaults and formal Source fragments', () => {
           children: ['lane'],
         },
       ],
-      layouts: [{ id: 'lane', direction: 'right', gap: 0, children: ['source', 'target'] }],
+      layouts: [{ kind: 'linear' as const, id: 'lane', direction: 'right', gap: 0, children: ['source', 'target'] }],
       children: ['group'],
       relations: [{ source: 'source', target: 'target' }],
     };
@@ -332,7 +334,7 @@ describe('Flow defaults and formal Source fragments', () => {
           { id: 'outer', children: ['lane'] },
           { id: 'inner', layout: { nodeGap: 0 }, children: ['node'] },
         ],
-        layouts: [{ id: 'lane', direction: 'down', children: ['inner'] }],
+        layouts: [{ kind: 'linear' as const, id: 'lane', direction: 'down', children: ['inner'] }],
         children: ['outer'],
       },
       { flowLayouts: [layout], defaultFlowLayout: layout.name },

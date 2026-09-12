@@ -1,7 +1,24 @@
 import type { RelationDirectionValue } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
-import type { FlowDirectionValue, FlowLayoutAlignmentValue, FlowRoutingKindValue } from '../../shared';
+import type { IRFlowLayout } from '../../schemas';
+import type {
+  FlowDirectionValue,
+  FlowLayoutAlignmentValue,
+  FlowPlacementKindValue,
+  FlowRoutingKindValue,
+} from '../../shared';
+
+/** 已补全默认值的固定排列配置；Grid 使用物理行列，不改变流程方向 */
+export type EffectiveFlowPlacement =
+  | Readonly<{ kind: 'linear'; direction: FlowDirectionValue; gap: number; align: FlowLayoutAlignmentValue }>
+  | Readonly<{
+      kind: 'grid';
+      rowGap: number;
+      columnGap: number;
+      reserveLabelSpace: boolean;
+      placements: Extract<IRFlowLayout, { kind: 'grid' }>['placements'];
+    }>;
 
 /** Flow layout provider 使用的有效路由 */
 export type FlowLayoutRouting = Readonly<{ kind: 'straight' }> | Readonly<{ kind: 'orthogonal'; cornerRadius: number }>;
@@ -54,7 +71,7 @@ export type FlowLayoutContainerInput = Readonly<{
   id: string;
   rank?: number;
   layout: EffectiveFlowLayout;
-  align: FlowLayoutAlignmentValue;
+  placement: EffectiveFlowPlacement;
   elements: ReadonlyArray<FlowLayoutElementInput>;
 }>;
 
@@ -70,12 +87,7 @@ export type FlowLayoutPlacementElementInput = Readonly<{
 
 /** Flow Layout 固定 placement 的完整输入 */
 export type FlowLayoutPlacementInput = Readonly<{
-  layout: Readonly<{
-    id: string;
-    direction: FlowDirectionValue;
-    gap: number;
-    align: FlowLayoutAlignmentValue;
-  }>;
+  layout: EffectiveFlowPlacement & Readonly<{ id: string }>;
   elements: ReadonlyArray<FlowLayoutPlacementElementInput>;
 }>;
 
@@ -126,6 +138,8 @@ export type FlowLayoutOutput = Readonly<{
 
 /** Layout Definition 对结构、方向与路由的权威保证 */
 export type FlowLayoutCapabilities = Readonly<{
+  /** 支持的固定排列种类，必须非空且无重复 */
+  placementKinds: ReadonlyArray<FlowPlacementKindValue>;
   compoundScopes: boolean;
   groupEndpoints: boolean;
   crossScopeRelations: boolean;

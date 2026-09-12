@@ -8,7 +8,7 @@
 
 复杂架构图和流程图通常同时包含两类结构：可见的语义分组，以及只负责左右、上下排列和对齐的空间布局。旧方案把两者都建模为 `FlowGroup`，再用 `kind: 'layout' | 'visible'` 区分。虽然它能够工作，但会让 Group 同时承担 Graph 语义边界和通用排列容器两种职责，也迫使作者通过 Group 的变体才能表达纯布局。
 
-Flow Source 已采用平级 catalog 与 owner-side `children`：Entity、Group 的声明与包含关系分离，真实嵌套只存在于引用图和运行期 Canonical tree。本决策继续这一方向，并把纯布局提升为与 Entity、Group 平级的独立 `Layout`。公开概念只叫 Layout；其实现复用 `@retikz/layout` 的 Flex 能力，但 Flow Source 不暴露底层 Flex IR，也不复制其 solver。
+Flow Source 已采用平级 catalog 与 owner-side `children`：Entity、Group 的声明与包含关系分离，真实嵌套只存在于引用图和运行期 Canonical tree。本决策继续这一方向，并把纯布局提升为与 Entity、Group 平级的独立 `Layout`。公开概念只叫 Layout；其实现复用 `@retikz/layout` 的 Flex/Grid 能力，但 Flow Source 不暴露底层 Layout IR，也不复制其 solver。
 
 目标是让三类声明各自只有一个清晰职责：Entity 表达节点，Group 表达可见语义边界，Layout 表达作者指定的无外壳空间排列。Relation 只在全部 element bounds 确定后 routing，不参与 Layout 内部 placement。
 
@@ -34,22 +34,11 @@ Group 的 `layout` 是 Flow layout provider 的局部意图：provider 可以依
 
 ### Layout 是独立的固定空间排列
 
-`IRFlowLayout` 具有以下闭合字段：
+`IRFlowLayout` 使用必填 `kind: 'linear' | 'grid'` 闭合联合，完整字段与行列语义由 [Flow Grid 二维对齐布局](./10-flow-grid-layout.md) 定义。两种布局共享 `id`、`rank` 和 `children`。
 
-```ts
-type IRFlowLayout = Readonly<{
-  id: string;
-  rank?: number;
-  direction: 'right' | 'left' | 'down' | 'up';
-  gap?: number;
-  align?: 'start' | 'center' | 'end';
-  children: ReadonlyArray<string>;
-}>;
-```
+Linear 的 `direction` 必填，`gap` 省略时继承有效 `nodeGap`，`align` 省略时为 `center`。Grid 以 `placements` 指定直接 children 的单元格，两轴居中，行列间距独立继承有效 `nodeGap`。`rank` 只约束整个 Layout 在外层自动布局中的位置。
 
-`direction` 必填，避免省略值在不同 Theme 或 provider 下改变 authored placement。`gap` 省略时继承当前 scope 的有效 `nodeGap`，`align` 省略时为 `center`。`rank` 只约束 Layout 作为外层 owner 直接 child 时的位置，不改变 Layout 内部排列。
-
-Layout 无 label、style、shell、Graph identity 或 endpoint 能力。它可以和 Group 相互嵌套；其 children 顺序、direction、gap 与 align 唯一决定内部 placement。Layout 内 Relation 不产生 rank edge，也不重排 children；所有 Relation 都在完整 bounds 产生后统一 routing。
+Layout 无 label、style、shell、Graph identity 或 endpoint 能力，可以和 Group 相互嵌套。Linear 按 children 顺序排列；Grid 的 children 只决定包含与绘制顺序，placements 决定空间位置。Layout 内 Relation 不产生 rank edge，也不重排 children；所有 Relation 都在完整 bounds 产生后统一 routing。
 
 ### Source resolve 与 Canonical tree
 
@@ -61,7 +50,7 @@ Relation endpoint 只能引用 Entity 或 Group。引用 Layout 使用 `DIAGRAM_
 
 ### Layout placement 复用 `@retikz/layout`
 
-Flow Layout Definition 的同步 callback 获得一个执行 context，其中 `placeLayout` 是 Layout placement 的唯一入口。Diagram pipeline 将每个 authored Layout 投影为 canonical Flex 调用：
+Flow Layout Definition 的同步 callback 获得一个执行 context，其中 `placeLayout` 是固定排列的唯一入口。Linear 复用 Flex；Grid 复用内容驱动轨道和双轴中心对齐。Linear 的映射为：
 
 - `right / left / down / up` 分别映射为 `row / row-reverse / column / column-reverse`
 - `align` 映射为底层 cross-axis start / center / end
@@ -70,7 +59,7 @@ Flow Layout Definition 的同步 callback 获得一个执行 context，其中 `p
 
 每个 Layout 必须恰好调用一次 `placeLayout`。执行边界记录结果，并验证 provider 最终输出的 Layout bounds 与 direct child 相对 bounds 等于该记录，从而防止内置或自定义 Flow Layout Definition 忽略、重排或改写作者指定 placement。
 
-`FlowDiagramProvider` 显式依赖 `FlexLayoutProvider`。Diagram 不复制 Flex schema、solver、wrap 或 distribution；Flow Source 只保留当前真实消费者需要的单行 direction、gap 与 align 投影。
+`FlowDiagramProvider` 显式依赖 `FlexLayoutProvider` 与 `GridLayoutProvider`。Diagram 不复制底层 solver；Grid 不提供自动占格或 spans。
 
 ### Provider、artifact 与 capability
 
@@ -78,11 +67,11 @@ Flow Layout Definition 的同步 callback 获得一个执行 context，其中 `p
 
 - Group 仍由 Flow layout provider 递归自动布局
 - Layout 先递归取得 children 尺寸，再调用 `context.placeLayout`，之后作为一个固定 compound box参与外层自动布局
-- routing index 同时递归 Group 与 Layout；Relation 的最低共同 scope 若是 Layout，则使用 Layout direction 与继承后的 routing intent
+- routing index 同时递归 Group 与 Layout；Linear 建立局部 direction，Grid 继承外层有效 direction；两者均继承 routing intent
 
 artifact 保留三种递归 element：`entity`、`group`、`layout`。Layout artifact 使用 `kind: 'layout'`，spatial handle 使用 `role: 'layout'`；Group 不再携带 `groupKind`。
 
-layout capabilities 的结构语义改名为 `compoundScopes` 与 `crossScopeRelations`，覆盖 Group 和 Layout 两类 scope；`groupEndpoints` 仍只描述可见 Group endpoint。旧 `compoundGroups`、`crossGroupRelations` 不保留别名。
+layout capabilities 的 `compoundScopes` 与 `crossScopeRelations` 覆盖 Group 和 Layout 两类 scope；`groupEndpoints` 只描述可见 Group endpoint，`placementKinds` 声明支持的固定排列种类。
 
 ### 三入口一致
 
@@ -123,7 +112,7 @@ type FlowRelationsProps = Readonly<{
 - duplicate child、multiple parents、orphan、self-containment、cycle：`DIAGRAM_FLOW_CONTAINMENT_INVALID`
 - Relation 引用 Layout：`DIAGRAM_FLOW_ENDPOINT_INVALID`，reason 为 `layout-endpoint`
 - 相同 Source、definitions、Theme 与 measurer 必须产生相同 Canonical tree、Layout placement、provider output、artifact 与 Scene
-- catalog 重排不得改变布局；owner `children` 重排会改变 Layout 的固定排列，并可改变自动 layout 的确定性 tie-break
+- catalog 重排不得改变布局；owner `children` 重排改变 Linear 顺序和自动 layout 的确定性 tie-break，但不改变 Grid 单元格位置
 - React 批量 Entity 的字符串 item 同时作为 authored id 与 text；空白、重复或与其它声明冲突时沿用现有 Flow Source 诊断，不自动修复
 - React 批量 Relation 的 tuple 只在 Flow 根有效；放入 Group 或 Layout 时沿用现有 `relation-outside-root` authoring 失败
 - React `complete` marker 与当前 owner 的其它同类 marker 冲突时使用 `DIAGRAM_REACT_FLOW_CHILD_INVALID`；Entity reason 为 `complete-entities-conflict`，Relation reason 为 `complete-relations-conflict`

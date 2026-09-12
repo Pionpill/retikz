@@ -10,6 +10,7 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
   name: 'custom',
   description: 'A deterministic custom Flow layout.',
   capabilities: {
+    placementKinds: ['linear', 'grid'],
     compoundScopes: false,
     groupEndpoints: false,
     crossScopeRelations: false,

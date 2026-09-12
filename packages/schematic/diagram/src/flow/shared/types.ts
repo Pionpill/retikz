@@ -1,6 +1,9 @@
 import type { ValueOf } from '@retikz/foundation';
 
-import type { FlowDirection, FlowLayoutAlignment, FlowRoutingKind } from './constants';
+import type { FlowDirection, FlowLayoutAlignment, FlowPlacementKind, FlowRoutingKind } from './constants';
+
+/** Flow Layout 固定排列种类值 */
+export type FlowPlacementKindValue = ValueOf<typeof FlowPlacementKind>;
 
 /** Flow 自动布局作用域与 Layout 固定排列的主方向值 */
 export type FlowDirectionValue = ValueOf<typeof FlowDirection>;

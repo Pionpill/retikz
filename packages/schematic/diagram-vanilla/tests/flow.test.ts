@@ -45,7 +45,7 @@ const sourceInput = {
     { id: 'kernel', text: ['Kernel', 'IR compiler'] },
   ],
   groups: [{ id: 'client', caption: { title: { text: 'Client' } }, children: ['frontend'] }],
-  layouts: [{ id: 'frontend', direction: 'down' as const, children: ['jsx'] }],
+  layouts: [{ kind: 'linear' as const, id: 'frontend', direction: 'down' as const, children: ['jsx'] }],
   children: ['client', 'kernel'],
   relations: [
     {

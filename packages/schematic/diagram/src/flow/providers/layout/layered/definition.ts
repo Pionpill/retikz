@@ -8,6 +8,7 @@ export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayou
   name: 'layered',
   description: 'Deterministic hierarchical layout for compound directed Flow diagrams.',
   capabilities: {
+    placementKinds: ['linear', 'grid'],
     compoundScopes: true,
     groupEndpoints: true,
     crossScopeRelations: true,

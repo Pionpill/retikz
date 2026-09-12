@@ -43,8 +43,11 @@ Diagram 只拥有完整图示的区域装配语义和 Diagram 独有行为。通
 | [07](./alpha.1/07-flow-catalog-source-layout-groups.md)  | Flow 平级 Source、Group 与 Layout      | 平级 Entity / Group / Layout catalog、引用式唯一 containment、可见 Group、固定 Layout、Flex placement、endpoint 与 artifact 边界                                                     | Accepted |
 | [08](./alpha.1/08-theme-source-fragments.md)             | Diagram / Flow Defaults 与 Theme 来源  | 文本区域内容与格式、独立显式 defaults、Flow layout/routing 分离、Graph 受限片段消费与字段覆盖                                                                                        | Accepted |
 | [09](./alpha.1/09-flow-graph-rules.md)                   | Flow Graph 规则投影                    | Flow 根级 Graph 规则、kind 驱动的 Entity / Relation 语义外观、Graph author rule 复用与三入口等价                                                                                     | Proposed |
+| [10](./alpha.1/10-flow-grid-layout.md)                   | Flow Grid 二维对齐布局                 | 共享行列中心线、内容与 margin 驱动尺寸、Layout Grid 复用与三入口等价 | Proposed |
 
 ADR-08 承接 Core Theme 来源与稀疏 defaults 协议和 Graph alpha.2 ADR-07；两者保持各自发布版本，实施时共同闭合 Graph 到 Flow 的消费链。旧 token 与混合 Theme 输入已删除，三入口使用正式 Source 路径与独立显式 defaults。
+
+ADR-10 在当前 alpha.1 补充二维固定排列，依赖 ADR-07 的独立 Layout、ADR-04/05 的统一执行与结果边界，以及 Layout 已有 Grid 组合能力。不把任意跨 Group 后代对齐或标签精确占位纳入本项；状态保持 Proposed，待最终验收。
 
 上述 ADR 只表示长期决策的依赖分区，不在 roadmap 冻结字段、默认值、算法库、测试 case、文件 scope 或实现步骤
 

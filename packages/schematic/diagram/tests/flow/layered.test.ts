@@ -282,7 +282,7 @@ describe('layered Flow layout', () => {
             kind: 'layout',
             id: 'lane',
             layout: layout('right'),
-            align: 'center',
+            placement: { kind: 'linear', direction: 'right', gap: layout('right').nodeGap, align: 'center' },
             elements: [
               leaf('source', undefined, { width: 40, height: 40 }),
               leaf('target', undefined, { width: 40, height: 40 }),
@@ -379,7 +379,7 @@ describe('layered Flow layout', () => {
             kind: 'layout',
             id: 'lane',
             layout: { ...layout('down'), nodeGap: 10 },
-            align: 'end',
+            placement: { kind: 'linear', direction: 'down', gap: 10, align: 'end' },
             elements: [
               leaf('first', undefined, { width: 40, height: 20 }),
               leaf('second', undefined, { width: 60, height: 30 }),
@@ -391,7 +391,7 @@ describe('layered Flow layout', () => {
       {
         placeLayout: input => {
           calls += 1;
-          expect(input.layout).toEqual({ id: 'lane', direction: 'down', gap: 10, align: 'end' });
+          expect(input.layout).toEqual({ kind: 'linear', id: 'lane', direction: 'down', gap: 10, align: 'end' });
           expect(input.elements.map(element => element.id)).toEqual(['first', 'second']);
           return {
             bounds: { x: 0, y: 0, width: 60, height: 60 },

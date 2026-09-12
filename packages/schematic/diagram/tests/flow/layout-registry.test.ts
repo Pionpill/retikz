@@ -14,6 +14,7 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
     name,
     description: 'Custom straight-only Flow layout.',
     capabilities: {
+      placementKinds: ['linear', 'grid'],
       compoundScopes: false,
       groupEndpoints: false,
       crossScopeRelations: false,
@@ -91,7 +92,7 @@ describe('Flow Layout capability preflight', () => {
       type: 'flow',
       entities: [{ id: 'entity', text: 'Entity' }],
       groups: [],
-      layouts: [{ id: 'layout', direction: 'right', children: ['entity'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['entity'] }],
       children: ['layout'],
     });
     const canonical = resolveFlowDiagram(source, {

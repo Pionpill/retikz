@@ -111,6 +111,7 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
     name: 'test-layout',
     description: 'Deterministic test layout.',
     capabilities: {
+      placementKinds: ['linear', 'grid'],
       compoundScopes: true,
       groupEndpoints: true,
       crossScopeRelations: true,
@@ -283,7 +284,7 @@ describe('Flow layout callback execution', () => {
           kind: 'layout',
           id: 'lane',
           layout: { ...input.layout, direction: 'down', nodeGap: 6 },
-          align: 'end',
+          placement: { kind: 'linear', direction: 'down', gap: 6, align: 'end' },
           elements: [input.elements[0]],
         },
       ],
@@ -297,7 +298,7 @@ describe('Flow layout callback execution', () => {
     };
     const place = (context: FlowLayoutExecutionContext) =>
       context.placeLayout({
-        layout: { id: 'lane', direction: 'down', gap: 6, align: 'end' },
+        layout: { kind: 'linear', id: 'lane', direction: 'down', gap: 6, align: 'end' },
         elements: [
           {
             id: 'a',
@@ -1204,10 +1205,8 @@ describe('Flow Diagram compile transaction', () => {
       expect(layout.layout.direction).toBe('down');
       const placement = context.placeLayout({
         layout: {
+          ...layout.placement,
           id: layout.id,
-          direction: layout.layout.direction,
-          gap: layout.layout.nodeGap,
-          align: layout.align,
         },
         elements: [{ id: child.id, size: child.size, margin: child.margin }],
       });
@@ -1239,7 +1238,7 @@ describe('Flow Diagram compile transaction', () => {
         { id: 'outside', text: 'Outside' },
       ],
       groups: [],
-      layouts: [{ id: 'layout-only', direction: 'down', children: ['nested'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout-only', direction: 'down', children: ['nested'] }],
       children: ['layout-only', 'outside'],
     });
     const result = compileToScene(
@@ -1288,7 +1287,7 @@ describe('Flow Diagram compile transaction', () => {
         { id: 'long', text: 'Longer entity' },
       ],
       groups: [],
-      layouts: [{ id: 'lane', direction, gap: 13, align: 'end', children: ['short', 'long'] }],
+      layouts: [{ kind: 'linear' as const, id: 'lane', direction, gap: 13, align: 'end', children: ['short', 'long'] }],
       children: ['lane'],
     });
     const result = compileToScene(
