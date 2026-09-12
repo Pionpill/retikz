@@ -21,7 +21,7 @@ import { getPreviewControlFields } from '../src/modules/docs/components/componen
 import { PreviewCoreThemeStyles, PreviewThemeStyle } from '../src/modules/docs/components/component-preview/theme';
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
-import IrCentricDemo from '../src/modules/docs/contents/kernel/components/introduction/ir-centric.zh.demo';
+import IrCentricDemo from '../src/modules/docs/contents/about/blog/core-philosophy/pipeline';
 import {
   previewSource as FlowBasicEnPreviewSource,
   renderFlowBasicPreview as renderFlowBasicEnPreview,
@@ -201,7 +201,8 @@ describe('Flow Diagram ComponentPreview', () => {
     });
 
     expect(serialized).toContain('"namespace":"diagram","type":"flow"');
-    expect(serialized).not.toContain('"position"');
+    const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
+    expect(flow.entities.every(entity => !Object.hasOwn(entity, 'position'))).toBe(true);
     expect(serialized).not.toContain('"width":720');
     expect(serialized).not.toContain('"width":760');
     expect(vanilla.svg).toContain('<svg');

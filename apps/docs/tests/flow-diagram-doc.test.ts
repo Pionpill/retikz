@@ -47,15 +47,12 @@ describe('Flow Diagram documentation', () => {
     },
   );
 
-  it.each(['zh', 'en'] as const)('%s migrates the IR-centric figure to automatic Flow layout', lang => {
-    const demo = readContent(`src/modules/docs/contents/kernel/components/introduction/ir-centric.${lang}.demo.tsx`);
-
-    expect(demo).toContain('FlowDiagram');
-    expect(demo).toContain('FlowEntity');
-    expect(demo).toContain('FlowRelation');
-    expect(demo).not.toContain('<FlowRelation id=');
-    expect(demo).not.toContain('position=');
-    expect(demo).not.toContain('<Draw');
+  it.each(['zh', 'en'] as const)('%s reuses the shared pipeline figure directly', lang => {
+    for (const page of ['kernel/components/introduction', 'about/blog/origin']) {
+      const content = readContent(`src/modules/docs/contents/${page}/index.${lang}.mdx`);
+      expect(content).toContain('files="/about/blog/core-philosophy/pipeline"');
+      expect(content).not.toContain('files="ir-centric"');
+    }
   });
 
   it('registers the Diagram package family in the shared Schematic v0.1 changelog', () => {

@@ -31,7 +31,7 @@ import { isPreviewThemeStyleDocument, usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
-  /** 主 demo 与附加源码文件；主 demo id 不含 `.demo.tsx` 后缀。 */
+  /** 主 demo 与附加源码文件；主 demo id 不含后缀，以 / 开头时相对 contents 根目录，其余相对当前页面 */
   files: ComponentPreviewFiles;
   /** React 源码视图默认选中的附加文件；缺省显示主 demo。 */
   defaultSourceFile?: string;

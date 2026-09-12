@@ -2,6 +2,7 @@ import type { PreviewControlContract, PreviewControlsDefinition, PreviewControlV
 import type { PreviewLoader } from './contents';
 
 import { buildPreviewControlDefaults, definePreviewControls, getPreviewControlFields } from '../controls';
+import { buildSourceFileKey } from './contents';
 
 /** 收集 contents 下 canonical 与本地化 controls definition 模块 */
 export const controlModuleLoaders: Record<string, PreviewLoader<Record<string, unknown>> | undefined> =
@@ -11,11 +12,11 @@ export const controlModuleLoaders: Record<string, PreviewLoader<Record<string, u
   );
 
 export const buildControlsKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.controls.ts`;
+  buildSourceFileKey(segments, `${name}.controls.ts`);
 
 /** 构建带语言后缀的 controls registry key。 */
 export const buildLangControlsKey = (segments: Array<string>, name: string, lang: string) =>
-  `../../contents/${segments.join('/')}/${name}.${lang}.controls.ts`;
+  buildSourceFileKey(segments, `${name}.${lang}.controls.ts`);
 
 /** 优先解析语言化 controls，缺失时回退到语言无关文件。 */
 export const resolveControlsKey = (segments: Array<string>, name: string, lang: string): string => {

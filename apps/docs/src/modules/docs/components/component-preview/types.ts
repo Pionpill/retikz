@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from 'react';
 
 import type { Lang } from '@/i18n';
+
 import type { PreviewThemeStyleValue } from './theme';
 
 /** 预览区平移 / 缩放状态。 */
@@ -416,7 +417,7 @@ export type SizeKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'xxxl';
 
 /** ComponentPreview 使用的单个源码文件对象配置。 */
 export type ComponentPreviewFileConfig = {
-  /** 主 demo id 或相对当前页面目录的附加源码文件名。 */
+  /** 主 demo id 或附加源码文件名；以 / 开头时相对 contents 根目录，其余相对当前页面目录 */
   file: string;
   /** 当前文件使用的 diff baseline。 */
   diffFrom?: string;

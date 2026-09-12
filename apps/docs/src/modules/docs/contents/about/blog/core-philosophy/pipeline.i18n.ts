@@ -1,12 +1,12 @@
 import type { Lang } from '@/i18n';
 
-export const pipelineI18n: Record<Lang, Readonly<Record<'svg' | 'persist', string>>> = {
+export const pipelineI18n: Record<Lang, Readonly<Record<'persist' | 'planned', string>>> = {
   zh: {
-    svg: '纯 SVG 字符串',
     persist: '持久化 / 编辑',
+    planned: '灰色在计划中，但尚未支持',
   },
   en: {
-    svg: 'pure SVG string',
     persist: 'persistence / edit',
+    planned: 'Gray items are planned but not yet supported',
   },
 };

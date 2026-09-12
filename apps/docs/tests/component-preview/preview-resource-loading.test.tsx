@@ -12,7 +12,14 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 import i18n from '@/i18n';
 import { ComponentPreview } from '@/modules/docs/components';
 import { DemoLocationContext } from '@/modules/docs/components/component-preview/context';
-import { loadPreviewResources } from '@/modules/docs/components/component-preview/registry';
+import {
+  buildControlsKey,
+  buildIrJsonKey,
+  buildLangControlsKey,
+  buildSourceFileKey,
+  buildVanillaKey,
+  loadPreviewResources,
+} from '@/modules/docs/components/component-preview/registry';
 
 beforeAll(async () => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
@@ -42,6 +49,50 @@ const renderAtRoute = (path: string, node: ReactNode): string =>
   );
 
 describe('ComponentPreview 资源加载', () => {
+  it('跨目录伴随资源使用同一 contents 根路径', () => {
+    const segments = ['kernel', 'components', 'introduction'];
+    const name = '/about/blog/core-philosophy/pipeline';
+    const prefix = '../../contents/about/blog/core-philosophy/pipeline';
+    expect(buildControlsKey(segments, name)).toBe(`${prefix}.controls.ts`);
+    expect(buildLangControlsKey(segments, name, 'en')).toBe(`${prefix}.en.controls.ts`);
+    expect(buildIrJsonKey(segments, name)).toBe(`${prefix}.ir.json`);
+    expect(buildVanillaKey(segments, name)).toBe(`${prefix}.vanilla.ts`);
+    expect(buildSourceFileKey(segments, `${name}.i18n.ts`)).toBe(`${prefix}.i18n.ts`);
+  });
+  it.each(['zh', 'en'])('跨目录引用加载同一份 demo 与源码（%s）', async lang => {
+    const request = {
+      segments: ['about', 'blog', 'core-philosophy'],
+      name: 'pipeline',
+      lang,
+      controlName: null,
+      controlsDisabled: false,
+      sourceFiles: [],
+    };
+    const local = await loadPreviewResources(request);
+    const shared = await loadPreviewResources({
+      ...request,
+      segments: ['kernel', 'components', 'introduction'],
+      name: '/about/blog/core-philosophy/pipeline',
+    });
+    expect(local.status).toBe('ready');
+    expect(shared).toEqual(local);
+  });
+
+  it('不存在的跨目录 demo 保持 missing 诊断', async () => {
+    const result = await loadPreviewResources({
+      segments: ['kernel', 'components', 'introduction'],
+      name: '/about/blog/core-philosophy/missing-demo',
+      lang: 'zh',
+      controlName: null,
+      controlsDisabled: false,
+      sourceFiles: [],
+    });
+    expect(result).toEqual({
+      status: 'missing',
+      key: '../../contents/about/blog/core-philosophy/missing-demo.demo.tsx',
+    });
+  });
+
   it('只加载请求指定的真实 demo 资源', async () => {
     const result = await loadPreviewResources({
       segments: ['kernel', 'components', 'node', 'overview'],

@@ -554,7 +554,9 @@ const validateFile = async ({ contentsRoot, file, registeredRoutes, repoRoot, sh
   }
 
   for (const id of collectPreviewIds(content)) {
-    const candidates = previewCandidates(path.dirname(file), id, language);
+    const candidates = id.startsWith('/')
+      ? previewCandidates(contentsRoot, id.slice(1), language)
+      : previewCandidates(path.dirname(file), id, language);
     const matches = await Promise.all(candidates.map(exists));
     if (!matches.some(Boolean)) {
       errors.push(`${label}: ComponentPreview demo does not exist: ${id}`);

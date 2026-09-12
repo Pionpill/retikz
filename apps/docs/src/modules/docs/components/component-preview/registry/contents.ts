@@ -71,18 +71,18 @@ export const irJsonOverrideLoaders: Record<string, PreviewLoader<string> | undef
   },
 );
 
-export const buildKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.demo.tsx`;
-export const buildComponentKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.tsx`;
-export const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
-  `../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
+/** 以 / 开头的引用从 contents 根目录解析，其余引用相对当前页面 */
 export const buildSourceFileKey = (segments: Array<string>, filename: string) =>
-  `../../contents/${segments.join('/')}/${filename}`;
+  `../../contents/${filename.startsWith('/') ? filename.slice(1) : `${segments.join('/')}/${filename}`}`;
+
+export const buildKey = (segments: Array<string>, name: string) => buildSourceFileKey(segments, `${name}.demo.tsx`);
+export const buildComponentKey = (segments: Array<string>, name: string) => buildSourceFileKey(segments, `${name}.tsx`);
+export const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
+  buildSourceFileKey(segments, `${name}.${lang}.demo.tsx`);
 export const buildVanillaKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.vanilla.ts`;
+  buildSourceFileKey(segments, `${name}.vanilla.ts`);
 export const buildIrJsonKey = (segments: Array<string>, name: string) =>
-  `../../contents/${segments.join('/')}/${name}.ir.json`;
+  buildSourceFileKey(segments, `${name}.ir.json`);
 export const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') + 1);
 
 /**
