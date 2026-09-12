@@ -21,7 +21,8 @@ description: Use when drawing or reviewing architecture, flow, concept, schema, 
 
 ```text
 contents/<...>/<page>/
-  <figure-name>.demo.tsx
+  <figure-name>.tsx
+  <figure-name>.i18n.ts
   index.zh.mdx
   index.en.mdx
 ```
@@ -34,8 +35,9 @@ MDX 中使用：
 
 规则：
 
-- demo 默认 `export default FC`，不要用 hooks 或渲染外副作用；`ComponentPreview` 会直接调用组件生成 IR。
-- 技术 label 可用单文件 `<name>.demo.tsx`；只有 label 含本地化文本时才拆 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx`。
+- 图默认 `export default FC<{ lang?: Lang }>`，不要用 hooks 或渲染外副作用；`ComponentPreview` 会直接调用组件生成 IR，并按当前语言传入 `lang`。
+- 图的结构与翻译分离：所有含展示文本的新图使用单个 `<name>.tsx`，同级 `<name>.i18n.ts` 导出 `<name>I18n`。图内通过 `const i18n = <name>I18n[lang ?? 'zh']` 取文案，不写 zh / en 两份图组件；`I18n` 不追加 `Labels` 等后缀。
+- 既有 `<name>.demo.tsx` 与 `<name>.<lang>.demo.tsx` 仅作为兼容路径，不在新图中继续创建。
 - 图不能替代正文。图前后必须用段落或小节标题解释读者应看什么。
 - 表达真实执行或数据先后的流程图默认使用最新 `FlowDiagram`、`FlowLayout`、`FlowEntities` 与 `FlowRelations`；不以手写 `Layout`、`Node`、`Draw` 重建 Flow 的布局与连线语义。关系、架构和几何图仍按其实际图型选择 Graph 或基础图元。
 
@@ -199,7 +201,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 按改动范围选择验证：
 
 - 只改正文说明：`pnpm exec prettier --write <changed-files>` + `git diff --check`。
-- 新增 / 修改 `.demo.tsx` 插图：`pnpm --filter @retikz/docs exec tsc --noEmit`。条件允许（本地页面可访问，且浏览器或截图能力可用）时，必须打开真实文档页面，必要时获取整图与窄屏截图做视觉检查；不要只依赖源码审阅或类型检查。
+- 新增 / 修改 ComponentPreview 插图：`pnpm --filter @retikz/docs exec tsc --noEmit`。条件允许（本地页面可访问，且浏览器或截图能力可用）时，必须打开真实文档页面，必要时获取整图与窄屏截图做视觉检查；不要只依赖源码审阅或类型检查。
 
 Codex Node REPL 提供 Playwright 时，导入 [`scripts/check-figure-preview.mjs`](scripts/check-figure-preview.mjs) 并传入页面 URL 与中英文 H2；脚本会检查四种组合并把临时截图写到 `notes/reports/figure-preview/`。运行时没有 Playwright 时，手动执行同一检查矩阵，不安装新的仓库依赖。
 

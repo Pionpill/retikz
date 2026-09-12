@@ -482,8 +482,9 @@ const previewCandidates = (directory, id, language) => {
   }
 
   return [
-    path.join(directory, `${id}.${language}.demo.tsx`),
+    path.join(directory, `${id}.tsx`),
     path.join(directory, `${id}.demo.tsx`),
+    path.join(directory, `${id}.${language}.demo.tsx`),
     path.join(directory, `${id}.zh.demo.tsx`),
     path.join(directory, `${id}.en.demo.tsx`),
   ];
@@ -491,7 +492,11 @@ const previewCandidates = (directory, id, language) => {
 
 const localizedPreviewCandidates = (directory, id, language) => {
   if (/\.[cm]?[jt]sx?$/.test(id) || id.endsWith('.json')) return [path.join(directory, id)];
-  return [path.join(directory, `${id}.${language}.demo.tsx`), path.join(directory, `${id}.demo.tsx`)];
+  return [
+    path.join(directory, `${id}.tsx`),
+    path.join(directory, `${id}.demo.tsx`),
+    path.join(directory, `${id}.${language}.demo.tsx`),
+  ];
 };
 
 const controlsCandidates = (directory, name, language) =>

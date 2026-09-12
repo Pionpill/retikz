@@ -155,7 +155,7 @@ node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope <
 | docs data、i18n、schema registry        | 上述检查 + docs `tsc --noEmit` + 对应路由/Schema               |
 | 用户明确要求 CI 或产物等价验证          | `check:build`；如明确要求，再执行 `check:runtime`              |
 
-新建 `*.demo.tsx` 时按 [`ComponentPreview 按需契约`](references/component-preview.md) 的新文件规则验证，不依赖旧 dev session 的热更新状态。
+新建 ComponentPreview 图时按 [`ComponentPreview 按需契约`](references/component-preview.md) 的新文件规则验证，不依赖旧 dev session 的热更新状态。
 
 ### 大改与新增页面的独立评审
 

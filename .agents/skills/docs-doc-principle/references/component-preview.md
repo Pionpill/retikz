@@ -4,8 +4,10 @@
 
 ## 文件与入口
 
-- 主 demo 与 MDX 同目录，命名 `<name>.demo.tsx`；有本地化展示文本时用 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx`
-- demo 默认导出 React FC，MDX 用 `<ComponentPreview files="<name>" />`
+- 主 demo 与 MDX 同目录。新建且含本地化展示文本的图统一使用 `<name>.tsx` + `<name>.i18n.ts`，不要为 zh / en 复制两份图组件
+- `<name>.tsx` 默认导出接收 `lang?: Lang` 的 React FC，并用 `const i18n = <name>I18n[lang ?? 'zh']` 读取文案；`<name>.i18n.ts` 导出 `<name>I18n: Record<Lang, ...>`。`I18n` 已表达字典职责，不追加 `Labels` 等后缀
+- MDX 始终用 `<ComponentPreview files="<name>" />`；宿主按当前文档语言传入 `lang`
+- `<name>.demo.tsx` 与 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx` 仅为既有 demo 的兼容结构，不为新图创建；解析顺序为单文件图、单文件旧 demo、当前语言旧 demo
 - `files` 数组第一项是主 demo，其余是源码附属文件；只有需要 `diffFrom` 时使用对象形式
 - 叙述图使用 `hideCode`，可复制组件用法保留默认源码视图
 - `size` 必须在 800px 正文的真实页面按内容留白选择，不能只看源码的逻辑宽高
@@ -39,7 +41,7 @@ export const previewSource = {
 
 ## 数据与附属源码
 
-数据与取数逻辑不内联到大型 `.demo.tsx`，放在同级 `.data` 文件并列入 `files`：
+数据与取数逻辑不内联到大型图组件，放在同级 `.data` 文件并列入 `files`：
 
 | 场景           | 文件                                               |
 | -------------- | -------------------------------------------------- |
