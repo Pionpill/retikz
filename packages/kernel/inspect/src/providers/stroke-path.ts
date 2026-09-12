@@ -3,7 +3,7 @@ import type { IRChild, IRPosition, PathCommand, StrokePathOwnerOutput } from '@r
 import { StrokePathOwnerOutputSchema } from '@retikz/core';
 
 import { defineInspector } from '../contract';
-import { StrokePathInspectOptionsInputSchema, StrokePathInspectOptionsSchema } from '../schema';
+import { StrokePathInspectOptionsSchema } from '../schema';
 
 /** 内置 Core stroke Path Inspector key */
 export const STROKE_PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'stroke-path' });
@@ -64,8 +64,14 @@ export const STROKE_PATH_INSPECTOR = defineInspector({
   ...STROKE_PATH_INSPECTOR_KEY,
   owner: { kind: 'pathKind', name: 'stroke' },
   subjectSchema: StrokePathOwnerOutputSchema,
-  optionsInputSchema: StrokePathInspectOptionsInputSchema,
   optionsSchema: StrokePathInspectOptionsSchema,
+  resolveOptions: options => options,
+  mergeOptionsInput: (inherited, local) => {
+    const merged = { ...inherited };
+    if (local.controlPoints !== undefined) merged.controlPoints = local.controlPoints;
+    if (local.labels !== undefined) merged.labels = local.labels;
+    return merged;
+  },
   inspect: (subject: StrokePathOwnerOutput, context) => {
     const { handles, points } = collectControls(subject.commands);
     const output: Array<IRChild> = [];

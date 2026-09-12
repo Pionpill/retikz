@@ -1,78 +1,97 @@
 ---
-title: Compilation Principles
-description: Understand how Inspect compiles auxiliary content in isolation, commits it atomically with the primary figure, and exposes results and structured errors
+title: Inspection principles
+description: Understand how Inspect reuses final Core observations, compiles auxiliary IR in isolation, and delivers readonly layers in one commit
 ---
 
-Inspect observes final results only; it does not participate in layout solving or mutate the primary figure. Ordinary `compileToScene()` creates no inspection session, and base React and Vanilla entries do not statically load this package.
+Inspect is an optional observer attached to a Core compile, not a second drawing or layout system. Ordinary Core compilation creates no auxiliary fragment and need not load Inspect when there is no registry, request, or matching owner.
 
-## Compilation and readonly layers
+## How Inspect cooperates with Core
 
-One inspection-enabled compile produces an unchanged primary figure and optional auxiliary layers. A final owner output enters an Inspector callback, ordinary `IRChild` auxiliary content compiles in isolation, and the result commits atomically beside the primary figure.
+Core draws the primary figure normally and provides the observation facts Inspect needs after a final occurrence exists. Inspect selects those facts, produces auxiliary IR, and asks Core to compile it. Core knows no Inspector Definitions, registries, or auxiliary-layer palette.
+
+| What Core provides                            | How Inspect uses it                                                                                       |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `CompileObservation.owner` and `occurrence`   | Matches a request to a final path-kind or composite occurrence                                            |
+| `CompileObservation.value`                    | Validates final output with `subjectSchema` and supplies it to `inspect()`                                |
+| `CompileObservationContext.theme`             | Gives auxiliary content the current occurrence's theme and semantic colors                                |
+| `CompileObservationContext.compileFragment()` | Compiles ordinary IR returned by an Inspector in the current Theme, Scope-style, and provider environment |
+
+An owner that does not publish final output from Core cannot gain observable facts by inspecting authored input alone; it must first provide the matching Core observation capability.
+
+## When auxiliary content is drawn
+
+Auxiliary content is not written during Core's primary drawing stage. In the observer `complete` stage of the same observed compile, it is compiled separately from final occurrences Core has already captured:
 
 <ComponentPreview files="inspect-compile-flow.en" size="md" hideCode />
 
-Read the flow in this order:
+1. The host gives a registry and runtime selection to an optional compile driver, which registers one Core observer
+2. While Core compiles the primary figure, the observer selects candidate sites by owner and source path
+3. After each selected owner has produced final output, Core calls `observe()` with that output and the current occurrence context
+4. `complete()` resolves selection, merges options, validates `subjectSchema`, and invokes the matching Definition's `inspect()`
+5. Each ordinary `IRChild` returned by `inspect()` is passed to `compileFragment()` and compiled in isolation into an InspectionPlane; public identity, metadata, and animation semantics do not enter the auxiliary Scene
+6. Render turns the InspectionPlane into non-hittable readonly layers; primary and auxiliary layers commit together only in the same revision
 
-1. The host gives runtime selection and a registry to the optional compile driver
-2. Core runs an ordinary compile and publishes final output only for selected owners
-3. Inspect validates the final subject and options, then calls the matching Definition's `inspect`
-4. Returned `IRChild` content compiles in the current Theme, Scope style, and provider environment, then loses public identity, metadata, and animation semantics
-5. Render maps the auxiliary plane to non-interactive readonly layers; primary and auxiliary layers succeed or roll back together in one revision
+The InspectionPlane is `null` when no result matches or a callback returns no content. Extra cost comes only from observing selected owners, running Inspector callbacks, and compiling non-empty auxiliary fragments.
 
-No auxiliary plane is created when nothing matches or every callback returns no content. Extra work comes from observing selected owners, invoking Inspector callbacks, and compiling non-empty auxiliary output in isolation.
+## Runtime selection
+
+A request is runtime policy for which final occurrences reach an Inspector, not persisted diagram data. It may originate at a whole scene, an authored subtree, or the current occurrence:
+
+| Structure                         | Meaning                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------- |
+| `InspectionSelectionRule` request | Selects an Inspector and scope with `inspector`, `target`, and `options`      |
+| `InspectionSelectionRule` barrier | Prevents descendants from reopening Inspectors at a scene or authored subtree |
+| scene target                      | Matches final occurrences with a given owner across the whole scene           |
+| subtree target                    | Matches final occurrences below one authored Scope                            |
+| self target                       | Matches the current object by source or occurrence index                      |
+
+The playground places two curves in separate subtrees. Change target, control points, and labels, then enable the right barrier to see how local requests resolve against Core final occurrences:
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A and B are ordinary independent paths. After the right barrier is enabled, B cannot reopen inspection with its local request."
+/>
+
+One site may request several Inspectors. Sparse options for one Inspector merge from scene to subtree to current occurrence; ordinary `false` disables one Inspector only at the current site, while a barrier prevents descendants from reopening any Inspector.
+
+Merging uses authored options, then the single `optionsSchema` applies defaults before `resolveOptions` expands shorthand. A parent with `labels: true` and a child with `{}` keeps labels enabled; an explicit child `labels: false` disables them. Every enabled rule is still validated at admission, even if it never matches or is later overridden.
+
+Calling `StrokePathInspectOptionsSchema.parse({})` directly produces a defaulted snapshot containing `labels: false`. Passing that snapshot as child options makes `false` an explicit override. Persist authored configuration to retain omission intent; persisting parsed output stores materialized defaults instead.
+
+## Results and errors
+
+| Field                                 | Meaning                                                                |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| `InspectionCompileResult.primary`     | Ordinary Core compile output, unchanged by auxiliary content           |
+| `InspectionCompileResult.inspection`  | Ordered auxiliary plane; `null` when every callback produces no output |
+| `InspectionCompileResult.diagnostics` | Structured warnings from isolated fragments                            |
+
+`RetikzInspectError.details.origin.stage` identifies a failure in selection, final-output validation, an `inspect` callback, output normalization, auxiliary-fragment compilation, or final assembly. Duplicate registry keys, unregistered requests, owner mismatch, and schema failures stop that inspection compile without delivering a partial auxiliary result.
 
 <SourceLinks
   sources={[
-    { label: 'Primary and auxiliary compile orchestration', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: 'Auxiliary output normalization and sealing', path: 'packages/kernel/inspect/src/compile/output.ts' },
     {
-      label: 'Auxiliary plane to readonly-layer mapping',
+      label: 'Core observation context and isolated-fragment contract',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
+    },
+    {
+      label: 'Core dispatch stage for final observations',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    {
+      label: 'Inspect observer selection, callbacks, and fragments',
+      path: 'packages/kernel/inspect/src/compile/driver.ts',
+    },
+    {
+      label: 'Inspection planes become readonly Render layers',
       path: 'packages/kernel/inspect/src/render/readonly-layers.ts',
     },
-    { label: 'Vanilla static and retained runtime wiring', path: 'packages/kernel/inspect/src/vanilla/driver.ts' },
   ]}
 />
 
-## Compile result
-
-| Field                                 | Meaning                                                         |
-| ------------------------------------- | --------------------------------------------------------------- |
-| `InspectionCompileResult.primary`     | Ordinary Core compile result, unchanged by auxiliary content    |
-| `InspectionCompileResult.inspection`  | Ordered auxiliary plane, or `null` when every callback is empty |
-| `InspectionCompileResult.diagnostics` | Structured warnings from isolated fragments                     |
-
-`compileInspectionToScene()` runs one atomic primary and auxiliary compile. See [Basic Usage](/kernel/packages/inspect/usage) for React and Vanilla host APIs.
-
-| API                          | Description                                           |
-| ---------------------------- | ----------------------------------------------------- |
-| `compileInspectionToScene()` | Run one atomic primary and auxiliary compile          |
-| `RetikzInspectError`         | Unified structured error type for the Inspect package |
-| `RetikzInspectErrorCode`     | Stable Inspect error-code collection                  |
-
-## Errors and limits
-
-`RetikzInspectError.details.origin` identifies the failure stage structurally:
-
-| `stage`              | Meaning                                        | Additional fields                                 |
-| -------------------- | ---------------------------------------------- | ------------------------------------------------- |
-| `selection`          | Selection admission or resolution              | `ruleIndex`, `target`                             |
-| `subject`, `inspect` | Final-subject validation or Inspector callback | `inspector`, `owner`, `occurrence`                |
-| `output`, `fragment` | Output normalization or fragment compilation   | `inspector`, `owner`, `occurrence`, `outputIndex` |
-| `complete`           | Final primary and observation assembly         | None                                              |
-
-| Code                        | Category                                              |
-| --------------------------- | ----------------------------------------------------- |
-| `INSPECTION_ERROR`          | Inspect error not covered by a more specific category |
-| `INSPECTION_COMPILE_ERROR`  | Selection, final-subject, or auxiliary-output error   |
-| `INSPECTION_COMPILE_FAILED` | Failure of the complete inspection compile            |
-| `INSPECTION_CONTRACT_ERROR` | Invalid Definition or Inspect contract                |
-| `INSPECTION_REGISTRY_ERROR` | Invalid registry key, Definition, or lookup           |
-| `INSPECTION_VANILLA_ERROR`  | Invalid Vanilla authoring marker or host wiring       |
-
-The Vanilla driver rejects a nested `Scope` inside a contribution when it cannot locate that subtree unambiguously; it needs a more precise contribution-subtree locator contract. Public identity, metadata, and animation fields in Inspector output are removed while auxiliary content is sealed.
-
 ## Related
 
-- [Custom Inspectors](/kernel/packages/inspect/inspectors): Definitions, registries, and extension failures
-- [Core](/kernel/packages/core/overview): final-output observation and isolated fragment compilation
-- [Render](/kernel/packages/render/overview): readonly-layer materialization
+- [Built-in inspection](/kernel/packages/inspect/builtins): Inspectors Core currently provides
+- [Extending inspection](/kernel/packages/inspect/extensions): define inspection for a custom Core owner
+- [Core](/kernel/packages/core/overview): generic compilation observation and final output

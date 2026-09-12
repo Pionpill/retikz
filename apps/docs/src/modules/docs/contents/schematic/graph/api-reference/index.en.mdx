@@ -5,6 +5,10 @@ description: Look up independent Graph-family Source composites, their Scope sur
 
 `@retikz/graph` owns JSON-safe Source IR, Definition registries, resolve, and lowering. Graph, Group, Block, BlockHeader, BlockSection, BlockRow, Entity, and Relation compile independently. Graph additionally hosts a Scene at the top React level, Group composes general visible boundaries, and Block vertically arranges open content
 
+The `createGraph`, `createGroup`, Block-family, `createEntity`, and `createRelation` factories only assemble typed sparse Source without validating it or filling defaults. Use the matching `XxxSchema.parse()` for external JSON; Definition admission and domain resolvers handle compilation.
+
+Calling `parse()` materializes schema-declared static defaults. Shell fields that inherit Graph Theme remain optional: theme and local configuration merge before Surface defaults apply. Persisting parsed output stores the snapshot's explicit values, not the original omission intent.
+
 ## Public exports
 
 | Capability         | `@retikz/graph`                                                                                                                      | React                                                                  | Vanilla                                                            |

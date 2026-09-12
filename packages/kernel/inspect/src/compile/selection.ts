@@ -22,7 +22,12 @@ import { formatInspectorRegistryKey } from '../providers';
 import { createInspectionSelectionDiagnosticOrigin, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson } from './output';
 
-type IndexedRule = Readonly<{ index: number; rule: InspectionSelectionRule }>;
+type IndexedRule = Readonly<{
+  index: number;
+  rule: InspectionSelectionRule;
+  options: JsonObject;
+  parsedOptions: JsonObject;
+}>;
 
 /** 校验实例定位器中 TypeScript 无法表达的非负安全整数约束 */
 const assertOccurrenceLocator = (occurrence: CompileOccurrenceLocator): void => {
@@ -109,6 +114,8 @@ export const admitInspectionSelection = (
     selection.rules.map((rule, index) => {
       const target = rule.target;
       try {
+        let options: JsonObject = {};
+        let parsedOptions: JsonObject = {};
         assertSelectionTarget(target, authoredPaths);
         if (rule.kind === 'request') {
           const definition = registry.require(rule.inspector);
@@ -120,10 +127,15 @@ export const admitInspectionSelection = (
             );
           requestKeys.add(duplicateKey);
           if (rule.options !== false) {
-            definition.optionsInputSchema.parse(rule.options === true ? {} : rule.options);
+            const sourceOptions = rule.options === true ? {} : rule.options;
+            parsedOptions = cloneAndFreezeInspectionJson(
+              definition.optionsSchema.parse(sourceOptions),
+              `Inspector '${definition.namespace}/${definition.type}' source options`,
+            );
+            options = structuredClone(sourceOptions);
           }
         }
-        return Object.freeze({ index, rule });
+        return Object.freeze({ index, rule, options, parsedOptions });
       } catch (cause) {
         throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(index, target), cause);
       }
@@ -182,7 +194,23 @@ export const resolveInspectionSelection = ({
   selection: InspectionSelection;
   observations: ReadonlyArray<CompileObservation>;
 }>): ReadonlyArray<ResolvedInspectionRequest> => {
-  const admittedRules = admitInspectionSelection(ir, registry, selection);
+  return resolveAdmittedInspectionSelection({
+    registry,
+    admittedRules: admitInspectionSelection(ir, registry, selection),
+    observations,
+  });
+};
+
+/** 消费已准入规则；observer 的多次 session 复用同一稀疏 Source */
+export const resolveAdmittedInspectionSelection = ({
+  registry,
+  admittedRules,
+  observations,
+}: Readonly<{
+  registry: InspectorRegistry;
+  admittedRules: ReadonlyArray<IndexedRule>;
+  observations: ReadonlyArray<CompileObservation>;
+}>): ReadonlyArray<ResolvedInspectionRequest> => {
   const orderedObservations = [...observations].sort((left, right) =>
     compareInspectionOccurrences(left.occurrence, right.occurrence),
   );
@@ -248,24 +276,24 @@ export const resolveInspectionSelection = ({
       if (definition.owner.kind === 'pathKind' && !requests.some(entry => entry.rule.target.kind === 'self')) continue;
       let isRequestActive = false;
       let mergedOptionsInput: JsonObject = {};
+      let parsedOptions: JsonObject | undefined;
       for (const entry of requests) {
         try {
           if (entry.rule.options === false) {
             isRequestActive = false;
             mergedOptionsInput = {};
+            parsedOptions = undefined;
             continue;
           }
-          const localOptionsInput = definition.optionsInputSchema.parse(
-            entry.rule.options === true ? {} : entry.rule.options,
-          );
+          const localOptionsInput = entry.options;
           const mergeOptionsInput = definition.mergeOptionsInput as
             | ((inheritedOptionsInput: JsonObject, localOptionsInput: JsonObject) => JsonObject)
             | undefined;
           mergedOptionsInput =
             isRequestActive && mergeOptionsInput !== undefined
-              ? mergeOptionsInput(mergedOptionsInput, localOptionsInput)
+              ? mergeOptionsInput(structuredClone(mergedOptionsInput), structuredClone(localOptionsInput))
               : localOptionsInput;
-          mergedOptionsInput = definition.optionsInputSchema.parse(mergedOptionsInput);
+          parsedOptions = isRequestActive && mergeOptionsInput !== undefined ? undefined : entry.parsedOptions;
           isRequestActive = true;
         } catch (cause) {
           throw wrapInspectionError(createInspectionSelectionDiagnosticOrigin(entry.index, entry.rule.target), cause);
@@ -274,8 +302,15 @@ export const resolveInspectionSelection = ({
       if (!isRequestActive) continue;
       let options: JsonObject;
       try {
+        const resolveOptions = definition.resolveOptions as (source: JsonObject) => JsonObject;
         options = cloneAndFreezeInspectionJson(
-          definition.optionsSchema.parse(mergedOptionsInput),
+          resolveOptions(
+            parsedOptions ??
+              cloneAndFreezeInspectionJson(
+                definition.optionsSchema.parse(mergedOptionsInput),
+                'Parsed merged Inspector options',
+              ),
+          ),
           `Inspector '${definition.namespace}/${definition.type}' options`,
         );
       } catch (cause) {

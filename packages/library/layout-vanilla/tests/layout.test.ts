@@ -4,6 +4,7 @@ import {
   FlexLayoutProvider,
   GridLayoutDefinition,
   GridLayoutProvider,
+  GridLayoutSchema,
   LayoutItemKind,
   OverlayLayoutDefinition,
   OverlayLayoutProvider,
@@ -98,11 +99,13 @@ describe('Layout Vanilla family', () => {
     expect(Object.isFrozen(FlexLayoutInputEmbedAdapter)).toBe(false);
   });
 
-  it('rejects a Vanilla embed spec where canonical nested IR is required', () => {
+  it('rejects an external Vanilla embed payload at the Source schema boundary', () => {
     const embed = flexLayout('nested', {});
 
     expect(() =>
-      createGridLayout({
+      GridLayoutSchema.parse({
+        namespace: 'layout',
+        type: 'gridLayout',
         columns: [{ kind: 'fixed', value: 10 }],
         children: [
           {

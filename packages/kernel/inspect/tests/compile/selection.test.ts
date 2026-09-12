@@ -11,11 +11,8 @@ const definition = defineInspector({
   ...key,
   owner,
   subjectSchema: strictObject({ value: number() }),
-  optionsInputSchema: strictObject({ label: string().optional(), tone: string().optional() }),
-  optionsSchema: strictObject({ label: string().optional(), tone: string().optional() }).transform(value => ({
-    label: value.label ?? 'default',
-    tone: value.tone ?? 'normal',
-  })),
+  optionsSchema: strictObject({ label: string().default('default'), tone: string().default('normal') }),
+  resolveOptions: value => value,
   mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
   inspect: () => [],
 });
@@ -64,6 +61,93 @@ const colocatedObservation = (index: number): CompileObservation => ({
 });
 
 describe('Inspection selection', () => {
+  it('isolates merge callback mutations from authored options and later occurrences', () => {
+    const sourceOptions = { label: 'parent' };
+    const mutating = defineInspector({
+      ...definition,
+      mergeOptionsInput: inherited => {
+        inherited.label = `${inherited.label ?? ''}!`;
+        return inherited;
+      },
+    });
+    const resolved = resolveInspectionSelection({
+      ir,
+      registry: createInspectorRegistry([mutating]),
+      observations: [observation(0), observation(1)],
+      selection: {
+        rules: [
+          { kind: 'request', inspector: key, target: { kind: 'scene' }, options: sourceOptions },
+          {
+            kind: 'request',
+            inspector: key,
+            target: { kind: 'subtree', sourcePath: 'children[0].scope' },
+            options: {},
+          },
+        ],
+      },
+    });
+    expect(resolved.map(request => request.options.label)).toEqual(['parent!', 'parent!']);
+    expect(sourceOptions).toEqual({ label: 'parent' });
+  });
+  it('merges three authored layers before transforming effective options', () => {
+    const transformed = defineInspector({
+      ...key,
+      owner,
+      subjectSchema: definition.subjectSchema,
+      inspect: () => [],
+      optionsSchema: strictObject({
+        label: string()
+          .transform(label => `${label}!`)
+          .default('default'),
+      }),
+      resolveOptions: options => options,
+      mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
+    });
+    const resolved = resolveInspectionSelection({
+      ir,
+      registry: createInspectorRegistry([transformed]),
+      observations: [observation(0)],
+      selection: {
+        rules: [
+          { kind: 'request', inspector: key, target: { kind: 'scene' }, options: { label: 'once' } },
+          {
+            kind: 'request',
+            inspector: key,
+            target: { kind: 'subtree', sourcePath: 'children[0].scope' },
+            options: {},
+          },
+          {
+            kind: 'request',
+            inspector: key,
+            target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[0]' } },
+            options: {},
+          },
+        ],
+      },
+    });
+    expect(resolved[0]?.options).toEqual({ label: 'once!' });
+  });
+
+  it.each([true, false])('rejects invalid source rules even when unmatched or overridden: %s', matched => {
+    expect(() =>
+      resolveInspectionSelection({
+        ir,
+        registry,
+        observations: matched ? [observation(0)] : [],
+        selection: {
+          rules: [
+            { kind: 'request', inspector: key, target: { kind: 'scene' }, options: { label: 42 } },
+            {
+              kind: 'request',
+              inspector: key,
+              target: { kind: 'subtree', sourcePath: 'children[0].scope' },
+              options: { label: 'valid' },
+            },
+          ],
+        },
+      }),
+    ).toThrow();
+  });
   it('evaluates scene, outer subtree, inner self and allocates appearance after stable sorting', () => {
     const resolved = resolveInspectionSelection({
       ir,
@@ -151,8 +235,8 @@ describe('Inspection selection', () => {
       ...key,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
       subjectSchema: zodNull(),
-      optionsInputSchema: strictObject({}),
       optionsSchema: strictObject({}),
+      resolveOptions: options => options,
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);
@@ -270,8 +354,8 @@ describe('Inspection selection', () => {
       ...pathKey,
       owner: { kind: 'pathKind' as const, name: 'stroke' },
       subjectSchema: strictObject({ value: number() }),
-      optionsInputSchema: strictObject({}),
       optionsSchema: strictObject({}),
+      resolveOptions: options => options,
       inspect: () => [],
     });
     const pathRegistry = createInspectorRegistry([pathDefinition]);

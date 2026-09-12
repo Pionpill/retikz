@@ -1,0 +1,33 @@
+---
+title: Built-in inspection
+description: See the Inspectors Core currently provides and use readonly auxiliary content to explain final Path results
+---
+
+Built-in inspection gives a quick view of final output that Core already publishes. Complete React or Vanilla host setup in [Install and use](/kernel/packages/inspect#install-and-use), then request one of the Inspectors below; none changes the primary figure.
+
+## Built-in Inspectors available now
+
+The default registry currently contains one built-in Inspector. It belongs to Core's `stroke` Path owner rather than inspecting arbitrary Paths:
+
+| Inspector               | Core owner           | Final output read                              | Auxiliary content                                   |
+| ----------------------- | -------------------- | ---------------------------------------------- | --------------------------------------------------- |
+| `STROKE_PATH_INSPECTOR` | `pathKind: 'stroke'` | Final adopted path commands and control points | Bézier handles, control points, and optional labels |
+
+`createDefaultInspectorRegistry()` adds it automatically. No auxiliary fragment is produced when no `stroke` Path matches or the key is not requested.
+
+## Path control points
+
+The built-in `stroke` Path Inspector reads commands after Core has resolved them, rather than the authored `way`. Handles and control points therefore explain the final result after relative coordinates, node references, and similar input have been processed:
+
+<ComponentPreview
+  files="inspect-basic"
+  size="sm"
+  caption="The auxiliary layer shows handles and control points from the final path commands; the primary path is unchanged."
+/>
+
+`controlPoints` defaults to enabled and `labels` defaults to disabled. Both affect auxiliary content only.
+
+## Related
+
+- [Extending inspection](/kernel/packages/inspect/extensions): define an Inspector for another Core owner
+- [Inspection principles](/kernel/packages/inspect/principles): learn how requests select final occurrences and when auxiliary content is compiled in isolation

@@ -13,8 +13,8 @@ export const PATH_ENDPOINTS_INSPECTOR = defineInspector({
   ...PATH_ENDPOINTS_INSPECTOR_KEY,
   owner: { kind: 'pathKind', name: 'stroke' },
   subjectSchema: StrokePathOwnerOutputSchema,
-  optionsInputSchema: z.strictObject({}),
   optionsSchema: z.strictObject({}),
+  resolveOptions: options => options,
   inspect: (subject, context) => {
     const markers = subject.commands.flatMap(command =>
       'to' in command

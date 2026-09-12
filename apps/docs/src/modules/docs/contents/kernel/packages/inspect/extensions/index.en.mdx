@@ -1,0 +1,59 @@
+---
+title: Extending inspection
+description: Use Inspector Definitions, a registry, and shared selection to add custom readonly inspection for final output from a Core owner
+---
+
+Built-in Inspectors cover only the small set of owners that Core currently provides. Define an Inspector when a path kind or composite needs its own final output explained; it shares the registry, selection, validation, and auxiliary-compilation path with built-ins and never changes the primary figure.
+
+## Observation interfaces you can extend
+
+An `InspectorDefinition` joins “which Core owner can be observed” with “how to turn final output into auxiliary content”:
+
+| Interface                   | Responsibility                                                                                                        |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `owner`                     | Names the `pathKind` or composite owner that publishes final output                                                   |
+| `subjectSchema`             | Validates the final output published by Core and restores the facts the Inspector needs                               |
+| `optionsSchema`             | The single options contract; declares defaults and applies them and transforms after merging authored options         |
+| `resolveOptions`            | Receives parsed options, expands shorthand, and produces callback options                                             |
+| `mergeOptionsInput`         | Optionally merge one Inspector's options at scene, subtree, and current-occurrence scope                              |
+| `inspect(subject, context)` | Reads final output plus occurrence, appearance, and option context, then returns ordinary `IRChild` auxiliary content |
+
+`inspect()` may return only ordinary Core IR. It cannot write into the primary Scene or introduce a separate rendering semantic. `owner` and `subjectSchema` must match the final output Core actually publishes.
+
+The input and output of `optionsSchema` may differ: `mergeOptionsInput` receives authored input, while `resolveOptions` receives parsed output with defaults applied. Derive these types with `z.input` and `z.output` from the same schema instead of maintaining a second schema.
+
+## Define an inspection
+
+The endpoint Inspector below requests the same path as the built-in control-point Inspector. Both read final output from the same `stroke` owner and emit content into one readonly auxiliary plane:
+
+<ComponentPreview
+  files={['inspect-custom', 'inspect-path-endpoints.ts']}
+  size="sm"
+  caption="One path requests the built-in control-point Inspector and a third-party endpoint Inspector; both share registry, selection, and auxiliary compilation."
+/>
+
+## Register and request it
+
+Validate and freeze a Definition with `defineInspector()`, then give it to `createDefaultInspectorRegistry([endpointInspector])` or `createInspectorRegistry([...])`. The former merely preloads built-ins into the same immutable registry; third parties have no special execution path.
+
+See [Install and use](/kernel/packages/inspect#install-and-use) for attaching a registry and request in React or Vanilla. A request locates its Definition with `namespace + type`; [Inspection principles](/kernel/packages/inspect/principles#runtime-selection) explains which final occurrence it reaches and how options merge across scopes.
+
+## Errors and boundaries
+
+A duplicate registry key, request for an unregistered Inspector, owner mismatch, or failed final-output, option, or output schema stops that compile with `RetikzInspectError`; Inspect does not deliver a partial auxiliary result. An owner for which Core publishes no final output cannot gain an observation interface from an Inspector alone.
+
+<SourceLinks
+  sources={[
+    { label: 'Inspector Definition and callback contract', path: 'packages/kernel/inspect/src/contract/types.ts' },
+    { label: 'Definition validation and freezing', path: 'packages/kernel/inspect/src/contract/define.ts' },
+    {
+      label: 'One registry for built-ins and third parties',
+      path: 'packages/kernel/inspect/src/providers/registry.ts',
+    },
+  ]}
+/>
+
+## Related
+
+- [Built-in inspection](/kernel/packages/inspect/builtins): Inspectors Core currently provides
+- [Custom Path](/kernel/components/draw/custom-path): publish observable final output from a custom owner

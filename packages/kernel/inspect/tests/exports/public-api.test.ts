@@ -15,7 +15,6 @@ describe('@retikz/inspect public exports', () => {
         'RetikzInspectError',
         'RetikzInspectErrorCode',
         'STROKE_PATH_INSPECTOR',
-        'InspectionLabelsInputSchema',
         'InspectionLabelsSchema',
       ]),
     );

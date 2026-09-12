@@ -1,7 +1,9 @@
+import type { infer as ZodInfer } from 'zod';
+
 import { enum as zodEnum, number, strictObject } from 'zod';
 
 import type { BoundaryDefinition } from '../../contract';
-import type { BoundaryFitValue, BuiltinShapeValue } from '../../schemas';
+import type { BuiltinShapeValue } from '../../schemas';
 import type { Rect } from '../../shared';
 
 import { defineBoundary } from '../../contract';
@@ -12,13 +14,12 @@ import { ellipseShape, rectangle } from '../shape';
 
 const builtinBoundaryParamsSchema = strictObject({
   fit: zodEnum(BoundaryFit)
-    .optional()
     .default(BoundaryFit.Tight)
     .describe('How the regular boundary fits the visual shape: shape-aware tight envelope or AABB bounds.'),
-  gap: number().optional().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
+  gap: number().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
 });
 
-type BuiltinBoundaryParams = { fit: BoundaryFitValue; gap: number };
+type BuiltinBoundaryParams = ZodInfer<typeof builtinBoundaryParamsSchema>;
 
 /** 用指定半轴替换 rect 尺寸，并在 fit 后应用有符号 gap */
 const withGap = (rect: Rect, halfWidth: number, halfHeight: number, gap: number, provider: string): Rect => {
@@ -70,14 +71,15 @@ const circleBoundary = defineBoundary({
 const rectangleBoundary = defineBoundary({
   name: BuiltinShape.Rectangle,
   paramsSchema: builtinBoundaryParamsSchema,
-  resolveRect: (context, params: BuiltinBoundaryParams) =>
-    withGap(
+  resolveRect: (context, params: BuiltinBoundaryParams) => {
+    return withGap(
       context.visualRect,
       context.visualRect.width / 2,
       context.visualRect.height / 2,
       params.gap,
       BuiltinShape.Rectangle,
-    ),
+    );
+  },
   boundaryPoint: rectangle.boundaryPoint,
   anchor: rectangle.anchor,
 });

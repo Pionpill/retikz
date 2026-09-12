@@ -98,7 +98,7 @@ Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格�
 
 ## API 参考
 
-`AxesProps` 是 `AxesInput` 的公开别名，Vanilla adapter 也接收同一个 `AxesInput`；`createAxes` 校验输入并返回应用了 schema 默认值的 `IRAxes`。下表中的 `Position` 来自 `@retikz/math`。
+`AxesProps` 是 `AxesInput` 的公开别名，Vanilla adapter 也接收同一个 `AxesInput`；`createAxes` 只组装稀疏 `IRAxes`。`AxesSchema.parse()` 校验外部 JSON 并补齐静态默认值；编译解析复用同一默认值并处理上下文。下表中的 `Position` 来自 `@retikz/math`。
 
 ### `AxesInput`
 

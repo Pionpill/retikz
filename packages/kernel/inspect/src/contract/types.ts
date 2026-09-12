@@ -48,8 +48,9 @@ export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonl
 /** 独立于 Core owner Definition 的 Inspector 定义 */
 export type InspectorDefinition<
   TSubject extends JsonValue = JsonValue,
-  TOptionsInput extends JsonObject = JsonObject,
+  TParsedOptions extends JsonObject = JsonObject,
   TResolvedOptions extends JsonObject = JsonObject,
+  TSourceOptions extends JsonObject = TParsedOptions,
 > = Readonly<{
   /** registry namespace */
   namespace: string;
@@ -59,12 +60,12 @@ export type InspectorDefinition<
   owner: CompileObservationOwner;
   /** Core owner output 之后的第二层 subject schema */
   subjectSchema: ZodType<TSubject>;
-  /** runtime sparse options input schema */
-  optionsInputSchema: ZodType<TOptionsInput>;
-  /** sparse input 到 canonical options 的 schema */
-  optionsSchema: ZodType<TResolvedOptions, TOptionsInput>;
+  /** 唯一 options 契约；合并原始输入后应用默认值与变换 */
+  optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
+  /** 将 schema 解析后的有效 options 转为 callback 消费态 */
+  resolveOptions: (options: TParsedOptions) => TResolvedOptions;
   /** 多层 sparse input 的可选合并规则 */
-  mergeOptionsInput?: (inheritedOptionsInput: TOptionsInput, localOptionsInput: TOptionsInput) => TOptionsInput;
+  mergeOptionsInput?: (inheritedOptionsInput: TSourceOptions, localOptionsInput: TSourceOptions) => TSourceOptions;
   /** 把 settled subject 转为普通 Core IR */
   inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
 }>;
@@ -79,11 +80,11 @@ export type AnyInspectorDefinition = Readonly<{
   owner: CompileObservationOwner;
   /** 擦除后仍恢复 JSON-safe subject */
   subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-  /** 擦除后仍恢复 JSON object input */
-  optionsInputSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-  /** 擦除后仍恢复 JSON object options */
+  /** 擦除后仍产出已应用默认值与变换的 JSON object options */
   optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-  /** 具体 options 类型由调用前的 schema 恢复 */
+  /** 具体 options 类型由准入 schema 恢复 */
+  resolveOptions: (options: never) => JsonObject;
+  /** 合并已准入的原始 options，不消费 schema 变换后的结果 */
   mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
   /** 具体 subject/context 类型由调用前的 schema 恢复 */
   inspect: (subject: never, context: never) => InspectorOutput;

@@ -4,7 +4,7 @@ import type { BoundsRect, Position } from '@retikz/math';
 
 import { LayoutChildProbeKind } from '@retikz/core';
 import { compileFlexLayout, exactLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
-import { compileSurface } from '@retikz/standard';
+import { compileSurface, resolveSurface } from '@retikz/standard';
 
 import type { DiagramFoundationResolution } from '../../resolve';
 
@@ -105,7 +105,8 @@ const collectFoundationFlexRegions = (
   if (artifact === undefined) return foundationCompositionFailure('FlexLayout returned no placement artifact.');
 
   artifact.items.forEach(item => {
-    const authoredItem = flex.children[item.sourceIndex];
+    const authoredItem = flex.children?.[item.sourceIndex];
+    if (authoredItem === undefined) return foundationCompositionFailure('FlexLayout artifact has no authored child.');
     const childOffset: Position = [containerOffset[0] + item.translation.x, containerOffset[1] + item.translation.y];
     if (item.key === 'title' || item.key === 'description' || item.key === 'drawing' || item.key === 'legend') {
       state.regions[item.key] = translateFoundationRegion(item, containerOffset);
@@ -162,11 +163,12 @@ export const composeDiagramFoundation = (
   context: LayoutCompositeCompileContext,
 ): DiagramFoundationComposition => {
   const surface = lowerDiagramFoundation(resolution, drawingChild);
+  const { padding } = resolveSurface(surface);
   const contentPlacement = captureSurfaceContentPlacement(surface, context);
   const frameProbe = requiredLayoutProbe(context, { child: surface, occurrence: 0 }, context.proposal);
   const contentOffset: Position = [
-    frameProbe.allocationBounds.x + surface.padding.left - contentPlacement.result.allocationBounds.x,
-    frameProbe.allocationBounds.y + surface.padding.top - contentPlacement.result.allocationBounds.y,
+    frameProbe.allocationBounds.x + padding.left - contentPlacement.result.allocationBounds.x,
+    frameProbe.allocationBounds.y + padding.top - contentPlacement.result.allocationBounds.y,
   ];
   const state: FoundationPlacementState = { regions: {} };
 

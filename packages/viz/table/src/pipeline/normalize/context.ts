@@ -1,6 +1,6 @@
 import type { ExternalDatasets, IRDataReference, IRDataScalarValue } from '@retikz/data';
 
-import { DataReferenceSchema, resolveFieldPath, resolveFieldTypes, ScalarValueSchema } from '@retikz/data';
+import { resolveFieldPath, resolveFieldTypes, ScalarValueSchema } from '@retikz/data';
 
 import type { TableStructureContext } from '../../contract/structure';
 
@@ -19,7 +19,7 @@ export const createTableStructureContext = (
     });
   }
 
-  const parsedData = DataReferenceSchema.parse(data);
+  const parsedData = structuredClone(data);
   if (!Object.hasOwn(datasets, parsedData.reference)) {
     throw new RetikzTableError(`dataset "${parsedData.reference}" not found in provided datasets`);
   }

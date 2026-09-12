@@ -19,18 +19,19 @@ export const normalizePointPartitionEncodings = <TEncodings extends PointPartiti
 });
 
 /** 组装 concrete chartType 共用的 Chart Source 外壳 */
-export const chartSourceOf = (
+export const chartSourceOf = <TRoot extends { coordinate?: InputChartCoordinate }, const TFields extends object>(
   input: InputChartPresentation,
-  root: Record<string, unknown> & { coordinate?: InputChartCoordinate },
-  sourceFields: Record<string, unknown>,
-): Record<string, unknown> => {
+  root: TRoot,
+  sourceFields: TFields,
+) => {
   const { title, subtitle, note, source } = input;
+  const { coordinate: coordinateInput, ...sourceRoot } = root;
   const normalizedPresentation = normalizeChartPresentation({ title, subtitle, note, source });
-  const coordinate = normalizeChartCoordinate(root.coordinate);
+  const coordinate = normalizeChartCoordinate(coordinateInput);
   return {
     namespace: CHART_NAMESPACE,
     ...(normalizedPresentation === undefined ? {} : { presentation: normalizedPresentation }),
-    ...root,
+    ...sourceRoot,
     ...(coordinate === undefined ? {} : { coordinate }),
     ...sourceFields,
   };

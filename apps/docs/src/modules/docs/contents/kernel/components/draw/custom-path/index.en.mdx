@@ -56,18 +56,15 @@ const highlight = definePathKind<HighlightPath>({
 When this Path kind needs development-only auxiliary content, the Path-kind Definition declares only a schema-backed `ownerOutput`; an Inspector is defined and registered independently in `@retikz/inspect`. This example reuses standard stroke compilation, publishes final commands on demand, and returns an ordinary Node from the external Inspector.
 
 ```tsx
-const InspectInputSchema = z.strictObject({ summary: z.boolean().optional() });
-const InspectOptionsSchema = InspectInputSchema.transform(value => ({
-  summary: value.summary ?? true,
-}));
+const InspectOptionsSchema = z.strictObject({ summary: z.boolean().optional() });
 
 const highlightInspector = defineInspector({
   namespace: 'demo',
   type: 'highlight-summary',
   owner: { kind: 'pathKind', name: 'highlight' },
   subjectSchema: StrokePathOwnerOutputSchema,
-  optionsInputSchema: InspectInputSchema,
   optionsSchema: InspectOptionsSchema,
+  resolveOptions: options => ({ summary: options.summary ?? true }),
   inspect: (subject: StrokePathOwnerOutput, context) =>
     context.options.summary
       ? {
@@ -177,15 +174,15 @@ A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG
 
 ### InspectorDefinition
 
-| Field                | Type                             | Default | Description                                               |
-| -------------------- | -------------------------------- | ------- | --------------------------------------------------------- |
-| `namespace`          | `string`                         | —       | Forms an independent registry key with `type`             |
-| `type`               | `string`                         | —       | Forms an independent registry key with `namespace`        |
-| `owner`              | `CompileObservationOwner`        | —       | Targets the observed Path kind                            |
-| `subjectSchema`      | `ZodType<JsonValue>`             | —       | Validates the owner-output agreement                      |
-| `optionsInputSchema` | strict `ZodObject`               | —       | Validates sparse runtime input and must accept `{}`       |
-| `optionsSchema`      | `ZodType<JsonObject>`            | —       | Resolves sparse input into complete JSON-safe options     |
-| `inspect`            | `InspectorDefinition['inspect']` | —       | Returns one ordinary Core child or a dense readonly array |
+| Field            | Type                                    | Default | Description                                               |
+| ---------------- | --------------------------------------- | ------- | --------------------------------------------------------- |
+| `namespace`      | `string`                                | —       | Forms an independent registry key with `type`             |
+| `type`           | `string`                                | —       | Forms an independent registry key with `namespace`        |
+| `owner`          | `CompileObservationOwner`               | —       | Targets the observed Path kind                            |
+| `subjectSchema`  | `ZodType<JsonValue>`                    | —       | Validates the owner-output agreement                      |
+| `optionsSchema`  | `ZodType<JsonObject>`                   | —       | Validates sparse Source options without applying defaults |
+| `resolveOptions` | `InspectorDefinition['resolveOptions']` | —       | Resolves merged options into callback-ready values        |
+| `inspect`        | `InspectorDefinition['inspect']`        | —       | Returns one ordinary Core child or a dense readonly array |
 
 ### Compile context
 

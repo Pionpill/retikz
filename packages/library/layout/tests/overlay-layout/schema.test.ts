@@ -1,3 +1,5 @@
+import type { IRChild } from '@retikz/core';
+
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -11,20 +13,29 @@ import {
   OverlayLayoutSchema,
   OverlayPlacementKind,
 } from '../../src';
+import { resolveOverlayLayout } from '../../src/resolve/overlay-layout';
 
-const child = { type: 'node', position: [0, 0], text: 'Overlay' } as const;
+const child: IRChild = { type: 'node', position: [0, 0], text: 'Overlay' };
+
+/** 外部 payload 的唯一 schema 入口 */
+const parseOverlayLayout = (input: Record<string, unknown>) =>
+  OverlayLayoutSchema.parse({ namespace: 'layout', type: 'overlayLayout', ...input });
 
 describe('OverlayLayout schema and factory', () => {
   it('creates canonical JSON IR from author input defaults', () => {
     const item = { kind: LayoutItemKind.Overlay, key: 'plot', child } satisfies OverlayLayoutItemInput;
     const input = { children: [item] } satisfies OverlayLayoutInput;
-    const parsed = createOverlayLayout(input);
+    const source = createOverlayLayout(input);
+    expect(source).toEqual({ namespace: 'layout', type: 'overlayLayout', ...input });
+    expect(parseOverlayLayout(input)).toMatchObject({ justifyItems: 'center', alignItems: 'center' });
+    expect(resolveOverlayLayout(parseOverlayLayout(input))).toEqual(resolveOverlayLayout(source));
+    const parsed = resolveOverlayLayout(source);
 
     expect(parsed).toEqual({
       namespace: 'layout',
       type: 'overlayLayout',
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
-      padding: 0,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
       overflow: 'visible',
       justifyItems: 'center',
       alignItems: 'center',
@@ -33,7 +44,7 @@ describe('OverlayLayout schema and factory', () => {
           kind: 'overlay',
           key: 'plot',
           child,
-          margin: 0,
+          margin: { top: 0, right: 0, bottom: 0, left: 0 },
           placement: { kind: 'aligned' },
           offset: { x: 0, y: 0 },
           sizeParticipation: 'include',
@@ -51,7 +62,7 @@ describe('OverlayLayout schema and factory', () => {
       width: 20,
     } satisfies OverlayPlacementInput;
     expect(
-      createOverlayLayout({
+      parseOverlayLayout({
         children: [{ kind: 'overlay', key: 'badge', child, placement }],
       }).children[0]?.placement,
     ).toEqual({
@@ -63,7 +74,7 @@ describe('OverlayLayout schema and factory', () => {
   });
 
   it('keeps an omitted item key out of Source IR', () => {
-    const parsed = createOverlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] });
+    const parsed = parseOverlayLayout({ children: [{ kind: LayoutItemKind.Overlay, child }] });
 
     expect(parsed.children[0]).not.toHaveProperty('key');
   });
@@ -73,20 +84,20 @@ describe('OverlayLayout schema and factory', () => {
     expect(() =>
       OverlayLayoutSchema.parse({ namespace: 'layout', type: 'overlayLayout', ...base, extra: true }),
     ).toThrow();
-    expect(() => createOverlayLayout({ children: [{ ...base.children[0], extra: true } as never] })).toThrow();
+    expect(() => parseOverlayLayout({ children: [{ ...base.children[0], extra: true }] })).toThrow();
     expect(() =>
-      createOverlayLayout({
+      parseOverlayLayout({
         children: [
           {
             ...base.children[0],
-            placement: { kind: 'positioned', at: { x: 0, y: 0 }, extra: true } as never,
+            placement: { kind: 'positioned', at: { x: 0, y: 0 }, extra: true },
           },
         ],
       }),
     ).toThrow();
     for (const field of ['at', 'anchor'] as const) {
       expect(() =>
-        createOverlayLayout({
+        parseOverlayLayout({
           children: [
             {
               ...base.children[0],
@@ -95,14 +106,14 @@ describe('OverlayLayout schema and factory', () => {
                 at: { x: 0, y: 0 },
                 anchor: { x: 0.5, y: 0.5 },
                 [field]: { x: 0, y: 0, extra: true },
-              } as never,
+              },
             },
           ],
         }),
       ).toThrow();
     }
     expect(() =>
-      createOverlayLayout({ children: [{ ...base.children[0], offset: { x: 0, y: 0, extra: true } as never }] }),
+      parseOverlayLayout({ children: [{ ...base.children[0], offset: { x: 0, y: 0, extra: true } }] }),
     ).toThrow();
   });
 
@@ -119,30 +130,28 @@ describe('OverlayLayout schema and factory', () => {
       positioned({ height: Number.POSITIVE_INFINITY }),
       positioned({ at: { x: Number.NaN, y: 0 } }),
     ]) {
-      expect(() =>
-        createOverlayLayout({ children: [{ kind: 'overlay', key: 'bad', child, placement } as never] }),
-      ).toThrow();
+      expect(() => parseOverlayLayout({ children: [{ kind: 'overlay', key: 'bad', child, placement }] })).toThrow();
     }
     expect(() =>
-      createOverlayLayout({
+      parseOverlayLayout({
         children: [{ kind: 'overlay', key: 'bad', child, offset: { x: Number.NaN, y: 0 } }],
       }),
     ).toThrow();
-    expect(() => createOverlayLayout({ children: [{ kind: 'overlay', key: 'bad', child, zIndex: 0.5 }] })).toThrow();
+    expect(() => parseOverlayLayout({ children: [{ kind: 'overlay', key: 'bad', child, zIndex: 0.5 }] })).toThrow();
     expect(() =>
-      createOverlayLayout({
+      parseOverlayLayout({
         children: [
           { kind: 'overlay', key: 'same', child },
           { kind: 'overlay', key: 'same', child },
         ],
       }),
     ).toThrow(/duplicate/i);
-    expect(() => createOverlayLayout({ children: [{ kind: 'grid', key: 'bad', child } as never] })).toThrow();
+    expect(() => parseOverlayLayout({ children: [{ kind: 'grid', key: 'bad', child }] })).toThrow();
   });
 
   it('rejects effective positioned baselines and aligned baseline y offsets', () => {
     expect(() =>
-      createOverlayLayout({
+      parseOverlayLayout({
         alignItems: LayoutAlignment.FirstBaseline,
         children: [
           {
@@ -155,7 +164,7 @@ describe('OverlayLayout schema and factory', () => {
       }),
     ).toThrow();
     expect(() =>
-      createOverlayLayout({
+      parseOverlayLayout({
         children: [
           {
             kind: 'overlay',
@@ -168,13 +177,13 @@ describe('OverlayLayout schema and factory', () => {
       }),
     ).toThrow();
     expect(() =>
-      createOverlayLayout({
+      parseOverlayLayout({
         alignItems: LayoutAlignment.FirstBaseline,
         children: [{ kind: 'overlay', key: 'aligned', child, offset: { x: 2, y: 1 } }],
       }),
     ).toThrow();
     expect(
-      createOverlayLayout({
+      parseOverlayLayout({
         alignItems: LayoutAlignment.FirstBaseline,
         children: [
           {

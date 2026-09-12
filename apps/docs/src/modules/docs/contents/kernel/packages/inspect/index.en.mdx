@@ -50,6 +50,8 @@ export const InspectExample = () => (
 
 Vanilla creates an authoring marker and a compile driver separately: the marker declares that a path needs observation, and the driver adds the registry and auxiliary layers at the ordinary render entry:
 
+`authoring` is not a drawing field of Path; it is a runtime-only attachment slot in the Vanilla adapter. `createInspectionVanillaAuthoring()` wraps the request in a private-token marker, letting the same `compileDriver` turn the current authored Path into an Inspector selection rule. It never enters Core IR, so it cannot change `way`, path geometry, or layout.
+
 ```ts
 import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
@@ -59,6 +61,7 @@ const registry = createDefaultInspectorRegistry();
 const input = scene({
   children: [
     path('curve', {
+      // Mark this authored Path for inspection; it never enters Core IR.
       authoring: createInspectionVanillaAuthoring({
         inspector: STROKE_PATH_INSPECTOR_KEY,
         options: { controlPoints: true, labels: true },
@@ -80,33 +83,33 @@ const input = scene({
 const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
 ```
 
-The root entry owns Definitions, registries, selection, and auxiliary compilation. React, Vanilla, and Render adapters come from explicit subentries. Start with Basic Usage for a first result, then continue to extension or compilation details as needed.
+The root entry owns Definitions, registries, selection, and auxiliary compilation. React, Vanilla, and Render adapters come from explicit subentries. Start with Built-in inspection for a first result, then continue to extension or inspection details as needed.
 
 ## Responsibilities
 
-| Document               | Responsibility                                         | Reach for it when                         |
-| ---------------------- | ------------------------------------------------------ | ----------------------------------------- |
-| Basic Usage            | Add a built-in Inspector and select observation scope  | Adding or restricting auxiliary content   |
-| Custom Inspectors      | Define, register, and inject a third-party Inspector   | Extending your own observation capability |
-| Compilation Principles | Understand isolation, readonly layers, API, and errors | Diagnosing behavior or deeper boundaries  |
+| Document              | Responsibility                                                            | Reach for it when                                       |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Built-in inspection   | See the Inspectors Core currently provides and their auxiliary output     | Quickly interpreting final Path results                 |
+| Extending inspection  | Define, register, and request a third-party Inspector                     | Explaining final output from your own Core owner        |
+| Inspection principles | Understand one compile's Core observation, fragments, and readonly layers | Diagnosing behavior or deeper implementation boundaries |
 
 ## Contents
 
 <LinkedSections
   items={[
     {
-      title: 'Basic Usage',
-      description: 'Host setup, the built-in Path Inspector, and observation scope',
-      url: '/kernel/packages/inspect/usage',
+      title: 'Built-in inspection',
+      description: 'The built-in Inspectors Core currently supports and their auxiliary content',
+      url: '/kernel/packages/inspect/builtins',
     },
     {
-      title: 'Custom Inspectors',
-      description: 'Definitions, registries, and one shared execution path',
-      url: '/kernel/packages/inspect/inspectors',
+      title: 'Extending inspection',
+      description: 'Observation interfaces, custom Inspectors, and registration',
+      url: '/kernel/packages/inspect/extensions',
     },
     {
-      title: 'Compilation Principles',
-      description: 'Auxiliary planes, isolation, API, and errors',
+      title: 'Inspection principles',
+      description: 'How Core observation, isolated compilation, and readonly layers cooperate',
       url: '/kernel/packages/inspect/principles',
     },
   ]}

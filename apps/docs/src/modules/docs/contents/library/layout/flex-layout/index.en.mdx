@@ -94,7 +94,7 @@ Each line runs bounded grow/shrink independently. An item freezes when it reache
 
 ## API Reference
 
-`FlexLayoutInput` is the factory authoring input. `IRFlexLayout` is the JSON-safe persisted form after defaults are applied.
+`FlexLayoutInput` is the factory authoring input; `IRFlexLayout` permits omissions and shorthand. Factories preserve authored values, while `FlexLayoutSchema.parse()` materializes schema-declared static defaults. Compilation resolution reuses those defaults and expands shorthand.
 
 React `FlexLayoutProps` mirrors the container fields below but changes `children` to direct `LayoutItem` elements. `FlexLayoutItemProps` renames optional JSON `key` to `itemKey` and requires exactly one of `children` or `ir`.
 

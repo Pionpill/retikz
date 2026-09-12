@@ -26,19 +26,19 @@ import type {
 export type LayoutAxisSizeKindValue = ValueOf<typeof LayoutAxisSizeKind>;
 
 /** 持久化的单轴容器尺寸策略 */
-export type IRLayoutAxisSize = ZodInfer<typeof LayoutAxisSizeSchema>;
+export type IRLayoutAxisSize = ZodInput<typeof LayoutAxisSizeSchema>;
 
 /** 创建单轴尺寸策略时允许的 schema 输入 */
 export type LayoutAxisSizeInput = ZodInput<typeof LayoutAxisSizeSchema>;
 
 /** 持久化的双轴容器尺寸策略 */
-export type IRLayoutSize = ZodInfer<typeof LayoutSizeSchema>;
+export type IRLayoutSize = ZodInput<typeof LayoutSizeSchema>;
 
 /** 创建双轴尺寸策略时允许省略默认轴的输入 */
 export type LayoutSizeInput = ZodInput<typeof LayoutSizeSchema>;
 
 /** 持久化的通用 Layout container Box */
-export type IRLayoutContainerBox = ZodInfer<typeof LayoutContainerBoxSchema>;
+export type IRLayoutContainerBox = ZodInput<typeof LayoutContainerBoxSchema>;
 
 /** 创建通用 Layout container Box 时允许省略默认字段的输入 */
 export type LayoutContainerBoxInput = ZodInput<typeof LayoutContainerBoxSchema>;
@@ -47,10 +47,11 @@ export type LayoutContainerBoxInput = ZodInput<typeof LayoutContainerBoxSchema>;
 export type LayoutItemKindValue = ValueOf<typeof LayoutItemKind>;
 
 /** 持久化的通用 LayoutItem 字段 */
-export type IRLayoutItemBase = ZodInfer<typeof LayoutItemBaseSchema>;
+export type IRLayoutItemBase = Omit<ZodInput<typeof LayoutItemBaseSchema>, 'child'> &
+  Pick<ZodInfer<typeof LayoutItemBaseSchema>, 'child'>;
 
 /** 创建通用 LayoutItem 时允许省略默认 margin 的输入 */
-export type LayoutItemBaseInput = ZodInput<typeof LayoutItemBaseSchema>;
+export type LayoutItemBaseInput = IRLayoutItemBase;
 
 /** item 对齐方式取值 */
 export type LayoutAlignmentValue = ValueOf<typeof LayoutAlignment>;

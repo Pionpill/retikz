@@ -385,7 +385,7 @@ const convertLayoutChild = (
       void _type;
       return flexLayout(nextLibraryId('flexLayout', state, childId), {
         ...input,
-        children: children.map(item => ({
+        children: children?.map(item => ({
           ...item,
           child: convertPreviewChild(item.child, state, graphState),
         })),
@@ -397,7 +397,7 @@ const convertLayoutChild = (
       void _type;
       return gridLayout(nextLibraryId('gridLayout', state, childId), {
         ...input,
-        children: children.map(item => ({
+        children: children?.map(item => ({
           ...item,
           child: convertPreviewChild(item.child, state, graphState),
         })),
@@ -409,7 +409,7 @@ const convertLayoutChild = (
       void _type;
       return overlayLayout(nextLibraryId('overlayLayout', state, childId), {
         ...input,
-        children: children.map(item => ({
+        children: children?.map(item => ({
           ...item,
           child: convertPreviewChild(item.child, state, graphState),
         })),

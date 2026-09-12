@@ -22,8 +22,7 @@ const LegendGapSchema = union([
     column: LayoutGapSchema.describe('Physical horizontal gap between adjacent columns.'),
   }).describe('Independent physical row and column gaps.'),
 ])
-  .transform(gap => (typeof gap === 'number' ? { row: gap, column: gap } : gap))
-  .default({ row: 8, column: 8 })
+  .default(8)
   .describe('Physical gaps between adjacent rows and columns; a number applies uniformly to both axes.');
 
 export const LegendItemSchema = strictObject({

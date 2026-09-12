@@ -14,8 +14,8 @@ const definition = (namespace: string, type: string) =>
     type,
     owner: { kind: 'pathKind' as const, name: 'stroke' },
     subjectSchema: strictObject({ value: string() }),
-    optionsInputSchema: strictObject({}),
     optionsSchema: strictObject({}),
+    resolveOptions: options => options,
     inspect: () => [],
   });
 

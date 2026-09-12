@@ -193,8 +193,8 @@ const CardInspector = defineInspector({
   type: 'card-bounds',
   owner: { kind: 'composite', namespace: 'demo', type: 'card' },
   subjectSchema: CardArtifactSchema,
-  optionsInputSchema: z.strictObject({}),
   optionsSchema: z.strictObject({}),
+  resolveOptions: options => options,
   inspect: (artifact: CardArtifact, context) => ({
     type: 'path',
     children: [

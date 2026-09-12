@@ -24,10 +24,10 @@ describe('Inspector definition', () => {
       type: 'bounds',
       owner: { kind: 'composite', namespace: 'demo', type: 'box' },
       subjectSchema: strictObject({ width: number() }),
-      optionsInputSchema: strictObject({ color: string().optional() }),
-      optionsSchema: strictObject({ color: string().optional() }).transform(value => ({
+      optionsSchema: strictObject({ color: string().optional() }),
+      resolveOptions: value => ({
         color: value.color ?? '#000000',
-      })),
+      }),
       inspect: () => [],
     });
 
@@ -47,8 +47,8 @@ describe('Inspector definition', () => {
           type: field === 'type' ? value : 'bounds',
           owner: { kind: 'pathKind', name: 'stroke' },
           subjectSchema: zodNull(),
-          optionsInputSchema: strictObject({}),
           optionsSchema: strictObject({}),
+          resolveOptions: options => options,
           inspect: () => [],
         }),
       label,
@@ -67,8 +67,8 @@ describe('Inspector definition', () => {
           type: 'invalid-owner',
           owner,
           subjectSchema: zodNull(),
-          optionsInputSchema: strictObject({}),
           optionsSchema: strictObject({}),
+          resolveOptions: options => options,
           inspect: () => [],
         }),
       label,

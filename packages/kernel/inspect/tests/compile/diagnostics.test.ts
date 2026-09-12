@@ -22,8 +22,8 @@ describe('Inspection diagnostics', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ ok: boolean() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => ({
           type: 'path',
           children: [

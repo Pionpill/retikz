@@ -35,6 +35,49 @@ const selection = {
 };
 
 describe('Inspection compile driver', () => {
+  it('uses the admitted Source value when an option parser changes its representation', () => {
+    const inspector = defineInspector({
+      ...key,
+      owner,
+      subjectSchema: strictObject({ label: string() }),
+      optionsSchema: strictObject({ label: string().transform(label => `${label}!`) }),
+      resolveOptions: options => options,
+      inspect: (_subject, context) => [{ type: 'node', position: [0, 0], text: context.options.label }],
+    });
+    const result = compileInspectionToScene(ir, {
+      registry: createInspectorRegistry([inspector]),
+      selection: { rules: [{ ...selection.rules[0], options: { label: 'once' } }] },
+      compileOptions: { composites: [composite] },
+    });
+    expect(JSON.stringify(result.inspection)).toContain('once!');
+    expect(JSON.stringify(result.inspection)).not.toContain('once!!');
+  });
+
+  it('keeps resolver failure atomic and preserves its selection origin and cause', () => {
+    const cause = new Error('Cannot resolve options');
+    const inspector = defineInspector({
+      ...key,
+      owner,
+      subjectSchema: strictObject({ label: string() }),
+      optionsSchema: strictObject({}),
+      resolveOptions: () => {
+        throw cause;
+      },
+      inspect: () => [],
+    });
+    expect(() =>
+      compileInspectionToScene(ir, {
+        registry: createInspectorRegistry([inspector]),
+        selection,
+        compileOptions: { composites: [composite] },
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        cause,
+        details: expect.objectContaining({ origin: expect.objectContaining({ stage: 'selection', ruleIndex: 0 }) }),
+      }),
+    );
+  });
   it('resolves appearance from the captured occurrence Theme', () => {
     let appearance:
       | {
@@ -60,8 +103,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: literal('settled') }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: (_subject, context) => {
           appearance = context.appearance;
           return [];
@@ -88,8 +131,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: literal('settled') }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: (_subject, context) => [
           {
             type: 'node',
@@ -122,8 +165,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: (_subject, context) => {
           expect(context.appearance.colorScope).toBe(0);
           return [];
@@ -161,8 +204,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => ({ type: 'node', position: [0, 0], text: 'captured' }),
       }),
     ]);
@@ -184,8 +227,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => sparse,
       }),
     ]);
@@ -211,8 +254,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: literal('different') }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => {
           callbacks += 1;
           return [];
@@ -236,8 +279,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => ({
           type: 'node',
           position: { kind: 'anchor', target: { id: 'primary-node' } },
@@ -267,8 +310,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () =>
           ({
             type: 'node',

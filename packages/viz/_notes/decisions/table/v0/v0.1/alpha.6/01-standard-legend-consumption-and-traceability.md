@@ -18,7 +18,7 @@ Table 保留自身复杂的 body layout；Legend stack、body 与未来 title/de
 
 当前已能从 `@retikz/standard` package root 消费以下真实公共能力：
 
-1. JSON-safe `LegendInput` / `LegendSchema`、`createLegend()` 与 canonical `IRLegend`，覆盖 `items | ramp` 与任意 `IRChild` sample
+1. JSON-safe `LegendInput` / `LegendSchema`、`createLegend()` 与 稀疏 Source `IRLegend`，覆盖 `items | ramp` 与任意 `IRChild` sample
 2. `LegendDefinition`、`createFlexLayout()` 与 `FlexLayoutDefinition`
 3. constrained layout、layout-aware compile 与 typed Legend / Flex artifacts
 4. direct Definition 接入及重复 composite key 的确定冲突语义
@@ -61,7 +61,7 @@ alpha.6 只支持 right/bottom。left/top、overlay、floating 与完全自定�
 
 ### Descriptor 到 Standard Legend
 
-Table 把 `TableLegendDescriptor` 与 root table id 解析为 Standard public `LegendInput` plain JSON，再由 `createLegend()` 取得 canonical `IRLegend`。Table 不返回自有 Legend input 类型，也不镜像 Standard schema。
+Table 把 `TableLegendDescriptor` 与 root table id 解析为 Standard public `LegendInput` plain JSON，再由 `createLegend()` 取得 稀疏 Source `IRLegend`。Table 不返回自有 Legend input 类型，也不镜像 Standard schema。
 
 | Table descriptor                | Standard Legend 语义                                                                |
 | ------------------------------- | ----------------------------------------------------------------------------------- |

@@ -1,13 +1,13 @@
 import type { IRScene } from '@retikz/core';
 
 import { describe, expect, it } from 'vitest';
+import { toJSONSchema } from 'zod';
 
 import {
   compileInspectionToScene,
   createDefaultInspectorRegistry,
   STROKE_PATH_INSPECTOR,
   STROKE_PATH_INSPECTOR_KEY,
-  StrokePathInspectOptionsInputSchema,
   StrokePathInspectOptionsSchema,
 } from '../../src';
 
@@ -32,13 +32,48 @@ const ir: IRScene = {
 };
 
 describe('stroke Path Inspector', () => {
+  it('treats a typed undefined override as omission during selection', () => {
+    const local: { labels?: boolean } = { labels: undefined };
+    const result = compileInspectionToScene(ir, {
+      registry: createDefaultInspectorRegistry(),
+      selection: {
+        rules: [
+          {
+            kind: 'request',
+            inspector: STROKE_PATH_INSPECTOR_KEY,
+            target: { kind: 'scene' },
+            options: { labels: true },
+          },
+          {
+            kind: 'request',
+            inspector: STROKE_PATH_INSPECTOR_KEY,
+            target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].path' } },
+            options: local,
+          },
+        ],
+      },
+    });
+    expect(hasText(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])).toBe(true);
+    expect(local).toEqual({ labels: undefined });
+  });
+  it('exports the same defaults and descriptions to JSON Schema', () => {
+    expect(toJSONSchema(StrokePathInspectOptionsSchema)).toMatchObject({
+      properties: {
+        controlPoints: { default: true, description: expect.any(String) },
+        labels: { default: false, description: expect.any(String) },
+      },
+    });
+  });
   it('uses the Core package namespace for its registry key', () => {
     expect(STROKE_PATH_INSPECTOR_KEY).toEqual({ namespace: 'core', type: 'stroke-path' });
   });
 
-  it('keeps sparse labels absent until canonical options apply the default', () => {
-    expect(StrokePathInspectOptionsInputSchema.parse({})).toEqual({});
-    expect(StrokePathInspectOptionsSchema.parse({})).toEqual({ controlPoints: true, labels: false });
+  it('materializes schema defaults when explicitly parsing a configuration snapshot', () => {
+    const source = StrokePathInspectOptionsSchema.parse({});
+    expect(source).toEqual({ controlPoints: true, labels: false });
+    expect(JSON.parse(JSON.stringify(source))).toEqual(source);
+    expect(STROKE_PATH_INSPECTOR.resolveOptions(source)).toEqual({ controlPoints: true, labels: false });
+    expect(source).toEqual({ controlPoints: true, labels: false });
   });
 
   it('draws handles, control points, and optional labels from settled owner output', () => {
@@ -57,6 +92,41 @@ describe('stroke Path Inspector', () => {
     });
     expect(result.inspection?.entries.length).toBeGreaterThan(2);
     expect(hasText(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])).toBe(true);
+  });
+
+  it.each<boolean | Record<string, boolean>>([true, {}, { labels: false }, StrokePathInspectOptionsSchema.parse({})])(
+    'inherits scene labels unless self explicitly disables them: %j',
+    local => {
+      const result = compileInspectionToScene(ir, {
+        registry: createDefaultInspectorRegistry(),
+        selection: {
+          rules: [
+            {
+              kind: 'request',
+              inspector: STROKE_PATH_INSPECTOR_KEY,
+              target: { kind: 'scene' },
+              options: { labels: true },
+            },
+            {
+              kind: 'request',
+              inspector: STROKE_PATH_INSPECTOR_KEY,
+              target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].path' } },
+              options: local,
+            },
+          ],
+        },
+      });
+      expect(hasText(result.inspection?.entries.flatMap(entry => entry.scene.primitives) ?? [])).toBe(
+        typeof local === 'boolean' || !('labels' in local),
+      );
+    },
+  );
+
+  it('ignores undefined overrides and preserves explicit false during option merging', () => {
+    const inherited = { labels: true, controlPoints: true };
+    const merged = STROKE_PATH_INSPECTOR.mergeOptionsInput?.(inherited, { labels: undefined, controlPoints: false });
+    expect(merged).toEqual({ labels: true, controlPoints: false });
+    expect(inherited).toEqual({ labels: true, controlPoints: true });
   });
 
   it('does not enable the builtin from a scene request', () => {

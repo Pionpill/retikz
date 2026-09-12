@@ -1,14 +1,11 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { InspectionSelection, InspectionSelectionTarget, InspectorKey } from '@retikz/inspect';
-import type { input as ZodInput, output as ZodOutput } from 'zod';
+import type { input as ZodInput } from 'zod';
 
-import type { BaseLayoutInspectOptionsInputSchema, BaseLayoutInspectOptionsSchema } from './schema';
+import type { BaseLayoutInspectOptionsSchema } from './schema';
 
 /** 通用布局检查器的输入选项 */
-export type BaseLayoutInspectOptions = ZodInput<typeof BaseLayoutInspectOptionsInputSchema>;
-
-/** 完整解析后的通用布局检查器选项 */
-export type ResolvedBaseLayoutInspectOptions = ZodOutput<typeof BaseLayoutInspectOptionsSchema>;
+export type BaseLayoutInspectOptions = ZodInput<typeof BaseLayoutInspectOptionsSchema>;
 
 /** Layout 布局检查器选择策略的作用范围 */
 export type LayoutInspectionSelectionScope = InspectionSelectionTarget;

@@ -1,75 +1,91 @@
 ---
-title: 编译原理
-description: 理解 Inspect 如何隔离编译辅助内容、与主图原子提交，并查询编译结果和结构化错误
+title: 解析原理
+description: 理解 Inspect 如何复用 Core 最终观测、隔离编译辅助 IR，并在同次提交中交付只读图层
 ---
 
-Inspect 只观察最终结果，不参与布局求解或修改主图。普通 `compileToScene()` 不创建检查会话；基础 React 与 Vanilla 入口也不会静态加载本包。
+Inspect 是附加给 Core 编译的一项可选 observer，而不是第二套绘图或布局系统。没有 registry、request 或匹配 owner 时，普通 Core 编译不会创建辅助片段，也不需要加载 Inspect。
 
-## 编译与只读图层
+## Inspect 与 Core 的协作
 
-一次带检查能力的编译会同时得到不变的主图和可选辅助图层：最终所属者产物进入 Inspector 回调，普通辅助 `IRChild` 隔离编译，最后与主图原子提交。
+Core 负责正常绘制主图，并在最终 occurrence 产生后提供 Inspect 所需的观测事实；Inspect 负责选择这些事实、生成辅助 IR，再复用 Core 编译它。Core 不认识任何 Inspector Definition、registry 或辅助层配色。
+
+| Core 提供的内容                               | Inspect 如何使用                                                           |
+| --------------------------------------------- | -------------------------------------------------------------------------- |
+| `CompileObservation.owner` 与 `occurrence`    | 让 request 精确匹配 path kind 或 composite 的最终实例                      |
+| `CompileObservation.value`                    | 作为 `subjectSchema` 校验的最终产物，供 `inspect()` 读取                   |
+| `CompileObservationContext.theme`             | 为辅助内容分配与当前 occurrence 一致的主题与语义颜色                       |
+| `CompileObservationContext.compileFragment()` | 在当前 Theme、Scope 样式和 provider 环境中隔离编译 Inspector 返回的普通 IR |
+
+因此，若自定义 owner 没有在 Core 中发布最终产物，Inspector 无法仅凭作者输入推断出可观测事实；它必须先获得对应的 Core observation 能力。
+
+## 辅助内容何时绘制
+
+辅助内容不写入 Core 的主图绘制阶段。它在同一次 observed compile 的 observer `complete` 阶段，基于已经捕获的最终 occurrence 另行编译：
 
 <ComponentPreview files="inspect-compile-flow.zh" size="md" hideCode />
 
-按以下顺序阅读流程图：
+1. 宿主把 registry 与运行时选择交给可选 compile driver，driver 注册一个 Core observer
+2. Core 编译主图时，observer 按 owner 与来源路径选择可能匹配的站点
+3. 每个选中的 owner 产生最终结果后，Core 调用 `observe()`，保存最终产物与当前 occurrence 的上下文
+4. `complete()` 解析选择、合并 options、校验 `subjectSchema`，再调用对应 Definition 的 `inspect()`
+5. `inspect()` 返回的普通 `IRChild` 逐项传给 `compileFragment()` 隔离编译，得到 InspectionPlane；公开身份、元数据和动画语义不会进入辅助 Scene
+6. Render 把 InspectionPlane 转成不可命中的只读图层，主图与辅助图层只在同一 revision 一起成功提交
 
-1. 宿主把运行时选择与 registry 交给可选编译驱动
-2. Core 完成普通编译，只发布被选择所属者的最终产物
-3. Inspect 校验最终产物和选项，调用对应 Definition 的 `inspect`
-4. 返回的 `IRChild` 在当前 Theme、Scope 样式和 provider 环境中隔离编译，并移除公开身份、元数据和动画语义
-5. Render 将辅助平面映射为不可命中的只读图层；主图和辅助图层在同一 revision 中一起成功或回滚
+没有匹配结果或 callback 返回空内容时，InspectionPlane 为 `null`。额外成本只来自被选中 owner 的观测、Inspector callback 与非空辅助片段编译。
 
-当没有匹配结果或回调返回空内容时，不会生成辅助平面。额外成本来自被选择所属者的观察、Inspector 回调和非空辅助输出的隔离编译。
+## 运行时选择
+
+request 不是持久化图形数据，而是决定哪些最终 occurrence 交给 Inspector 的运行时规则。它可以来自整张图、一个 authored 子树或当前实例：
+
+| 结构                              | 含义                                                      |
+| --------------------------------- | --------------------------------------------------------- |
+| `InspectionSelectionRule` request | 以 `inspector`、`target`、`options` 选择 Inspector 与范围 |
+| `InspectionSelectionRule` barrier | 在整图或 authored 子树阻止后代重新开启 Inspector          |
+| scene target                      | 匹配整张图中属于指定 owner 的最终实例                     |
+| subtree target                    | 匹配一个 authored Scope 下的最终实例                      |
+| self target                       | 按来源或 occurrence index 匹配当前对象                    |
+
+下面的试验场把两条曲线放在独立子树中。切换目标、控制点和标签，再开启右侧屏障，观察局部 request 如何在 Core 的最终实例上解析：
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A、B 是两条独立的普通路径；右侧屏障开启后，B 的局部 request 也不能重新开启检查。"
+/>
+
+同一位置可以请求多个不同 Inspector。同一 Inspector 的稀疏 options 从整图到子树再到当前实例合并；普通 `false` 只关闭当前位置的一个 Inspector，barrier 则阻止后代重新开启任何 Inspector。
+
+合并使用作者传入的原始配置，随后由唯一的 `optionsSchema` 补默认值，再交给 `resolveOptions` 展开简写。例如父级 `labels: true`、子级 `{}` 会继续显示标签；子级显式 `labels: false` 才会关闭。每条启用规则仍会在准入时校验，即使未匹配或随后被覆盖也不能携带非法选项。
+
+直接调用 `StrokePathInspectOptionsSchema.parse({})` 会得到包含 `labels: false` 的完整默认快照；再把它作为子级配置时，`false` 就是显式覆盖。保存原始配置才能保留省略意图；保存 parse 结果则保存已物化的默认值。
+
+## 结果与错误
+
+| 字段                                  | 含义                                          |
+| ------------------------------------- | --------------------------------------------- |
+| `InspectionCompileResult.primary`     | 未被辅助内容修改的普通 Core 编译结果          |
+| `InspectionCompileResult.inspection`  | 有序辅助平面；所有 callback 无输出时为 `null` |
+| `InspectionCompileResult.diagnostics` | 隔离片段产生的结构化警告列表                  |
+
+`RetikzInspectError.details.origin.stage` 标明失败发生在选择、最终产物校验、`inspect` callback、输出规范化、辅助片段编译或最终组装。重复 registry key、未注册 request、owner 不匹配以及 schema 失败都会终止该次检查编译，不会交付部分辅助结果。
 
 <SourceLinks
   sources={[
-    { label: '主图与辅助内容的编译编排', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: '辅助输出规范化与隔离', path: 'packages/kernel/inspect/src/compile/output.ts' },
-    { label: '辅助平面到只读图层的映射', path: 'packages/kernel/inspect/src/render/readonly-layers.ts' },
-    { label: 'Vanilla 静态与保留式运行时接线', path: 'packages/kernel/inspect/src/vanilla/driver.ts' },
+    {
+      label: 'Core observation 的上下文与隔离片段契约',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
+    },
+    {
+      label: 'Core 最终 observation 的派发阶段',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+    { label: 'Inspect observer 的选择、回调与辅助片段编译', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: '辅助平面到只读 Render 图层', path: 'packages/kernel/inspect/src/render/readonly-layers.ts' },
   ]}
 />
 
-## 编译结果
-
-| 字段                                  | 含义                                    |
-| ------------------------------------- | --------------------------------------- |
-| `InspectionCompileResult.primary`     | 未被辅助内容修改的普通 Core 编译结果    |
-| `InspectionCompileResult.inspection`  | 有序辅助平面；所有回调无输出时为 `null` |
-| `InspectionCompileResult.diagnostics` | 隔离片段产生的结构化警告列表            |
-
-`compileInspectionToScene()` 直接执行一次主图与辅助内容的原子编译。React 和 Vanilla 宿主 API 见[基础用法](/kernel/packages/inspect/usage)。
-
-| API                          | 说明                             |
-| ---------------------------- | -------------------------------- |
-| `compileInspectionToScene()` | 直接执行主图与辅助内容的原子编译 |
-| `RetikzInspectError`         | Inspect 包统一的结构化错误类型   |
-| `RetikzInspectErrorCode`     | 稳定错误码集合                   |
-
-## 错误与限制
-
-`RetikzInspectError.details.origin` 用结构化阶段标明失败位置：
-
-| `stage`              | 含义                          | 附加字段                                          |
-| -------------------- | ----------------------------- | ------------------------------------------------- |
-| `selection`          | 选择规则接纳或解析            | `ruleIndex`、`target`                             |
-| `subject`、`inspect` | 最终产物校验或 Inspector 回调 | `inspector`、`owner`、`occurrence`                |
-| `output`、`fragment` | 输出规范化或辅助片段编译      | `inspector`、`owner`、`occurrence`、`outputIndex` |
-| `complete`           | 主结果与观测结果的最终组装    | 无                                                |
-
-| 错误码                      | 类别                               |
-| --------------------------- | ---------------------------------- |
-| `INSPECTION_ERROR`          | 未被更精确类别覆盖的 Inspect 错误  |
-| `INSPECTION_COMPILE_ERROR`  | 选择、最终产物或辅助输出的编译错误 |
-| `INSPECTION_COMPILE_FAILED` | 整次检查编译失败                   |
-| `INSPECTION_CONTRACT_ERROR` | Definition 或 Inspect 契约无效     |
-| `INSPECTION_REGISTRY_ERROR` | registry 键、Definition 或查找无效 |
-| `INSPECTION_VANILLA_ERROR`  | Vanilla 编排标记或宿主接线无效     |
-
-贡献内部无法无歧义定位的嵌套 `Scope` 会被 Vanilla 驱动明确拒绝；它需要更精确的贡献内子树定位契约。检查器输出中出现的公开身份、元数据或动画字段会在辅助内容封装时移除。
-
 ## 相关
 
-- [自定义检查器](/kernel/packages/inspect/inspectors)：Definition、注册表和扩展错误
-- [Core](/kernel/packages/core/overview)：最终产物观察与隔离片段编译
-- [Render](/kernel/packages/render/overview)：只读图层物化
+- [内置观测](/kernel/packages/inspect/builtins)：查看 Core 当前提供的 Inspector
+- [拓展观测](/kernel/packages/inspect/extensions)：为自定义 Core owner 定义观测内容
+- [Core](/kernel/packages/core/overview)：编译观测与最终产物的通用能力

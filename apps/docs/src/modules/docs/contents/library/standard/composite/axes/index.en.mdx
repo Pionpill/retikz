@@ -98,7 +98,7 @@ A hand-written `IRAxes` without its definition is not interpreted silently. Core
 
 ## API reference
 
-`AxesProps` is the public alias of `AxesInput`, and the Vanilla adapter accepts the same `AxesInput`. `createAxes` validates the input and returns `IRAxes` with schema defaults applied. `Position` in the tables comes from `@retikz/math`.
+`AxesProps` is the public alias of `AxesInput`, and the Vanilla adapter accepts the same `AxesInput`. `createAxes` only assembles sparse `IRAxes`. `AxesSchema.parse()` validates external JSON and materializes static defaults; compilation resolution reuses those defaults and handles context. `Position` in the tables comes from `@retikz/math`.
 
 ### `AxesInput`
 

@@ -332,11 +332,11 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgInspect',
         sidebarGroup: 'kernel.pkgGroupExtension',
         children: [
-          { id: 'usage', label: 'kernel.pkgInspectUsage', difficulty: DocDifficulty.Beginner },
+          { id: 'builtins', label: 'kernel.pkgInspectBuiltins', difficulty: DocDifficulty.Beginner },
           {
-            id: 'inspectors',
-            label: 'kernel.pkgInspectInspectors',
-            difficulty: DocDifficulty.Internals,
+            id: 'extensions',
+            label: 'kernel.pkgInspectExtensions',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.inspect'),
           },
           { id: 'principles', label: 'kernel.pkgInspectPrinciples', difficulty: DocDifficulty.Internals },

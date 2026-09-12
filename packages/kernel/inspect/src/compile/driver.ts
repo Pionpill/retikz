@@ -32,7 +32,11 @@ import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { INSPECTION_OBSERVER_KEY } from './constants';
 import { wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson, sealInspectionScene, snapshotInspectorOutput } from './output';
-import { admitInspectionSelection, canInspectionSelectionRequestSite, resolveInspectionSelection } from './selection';
+import {
+  admitInspectionSelection,
+  canInspectionSelectionRequestSite,
+  resolveAdmittedInspectionSelection,
+} from './selection';
 
 type CapturedObservation = Readonly<{ observation: CompileObservation; context: CompileObservationContext }>;
 type InspectionObserverOutput = Readonly<{
@@ -87,15 +91,13 @@ const createInspectionOutputDiagnosticOrigin = (
 
 /** 将捕获的 observation 编译为 Inspect plane 与诊断结果 */
 const compileInspectionObserverOutput = (
-  ir: IRScene,
   registry: InspectorRegistry,
-  selection: InspectionSelection,
+  admittedRules: ReturnType<typeof admitInspectionSelection>,
   captured: ReadonlyArray<CapturedObservation>,
 ): InspectionObserverOutput => {
-  const resolvedRequests = resolveInspectionSelection({
-    ir,
+  const resolvedRequests = resolveAdmittedInspectionSelection({
     registry,
-    selection,
+    admittedRules,
     observations: captured.map(entry => entry.observation),
   });
   const preparedRequests = resolvedRequests.map(request => {
@@ -196,7 +198,7 @@ export const createInspectionObserver = (
   registry: InspectorRegistry,
   selection: InspectionSelection,
 ): CompileObserverDefinition<InspectionObserverOutput> => {
-  const capturedSelection = cloneAndFreezeInspectionJson(selection, 'Inspection selection');
+  const capturedSelection = structuredClone(selection);
   const admittedRules = admitInspectionSelection(ir, registry, capturedSelection);
   return Object.freeze({
     key: INSPECTION_OBSERVER_KEY,
@@ -208,7 +210,7 @@ export const createInspectionObserver = (
         observe: (observation: CompileObservation, context: CompileObservationContext) => {
           captured.push({ observation, context });
         },
-        complete: () => compileInspectionObserverOutput(ir, registry, capturedSelection, captured),
+        complete: () => compileInspectionObserverOutput(registry, admittedRules, captured),
       });
     },
   });

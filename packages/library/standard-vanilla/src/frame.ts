@@ -7,14 +7,7 @@ import type {
 } from '@retikz/standard';
 import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContribution, InputNode } from '@retikz/vanilla';
 
-import {
-  createFrame,
-  FrameDescriptionSchema,
-  FrameProvider,
-  FrameTitleSchema,
-  RetikzStandardError,
-  RetikzStandardErrorCode,
-} from '@retikz/standard';
+import { createFrame, FrameProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 
 import { StandardFrameEmbedKind } from './constants';
 
@@ -50,11 +43,10 @@ const headerInputOf = (child: FrameNode): FrameTitleInput | FrameDescriptionInpu
 };
 
 /** 创建 JSON-safe 的 Frame 主标题输入 */
-export const frameTitle = (input: FrameTitleInput): IRFrameTitle => FrameTitleSchema.parse(input);
+export const frameTitle = (input: FrameTitleInput): IRFrameTitle => ({ ...input });
 
 /** 创建 JSON-safe 的 Frame 辅助说明输入 */
-export const frameDescription = (input: FrameDescriptionInput): IRFrameDescription =>
-  FrameDescriptionSchema.parse(input);
+export const frameDescription = (input: FrameDescriptionInput): IRFrameDescription => ({ ...input });
 
 /** Standard Frame 的 InputEmbed adapter */
 export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {

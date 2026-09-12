@@ -15,11 +15,14 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
+import type { CanonicalFlexLayout, CanonicalFlexLayoutItem } from '../../resolve/flex-layout';
 import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
-import type { FlexLayoutArtifact, IRFlexLayout, IRFlexLayoutItem } from './types';
+import type { FlexLayoutArtifact } from './types';
+import type { IRFlexLayout } from './types';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import { resolveFlexLayout } from '../../resolve/flex-layout';
 import {
   alignAllocationInSlot,
   appendLayoutSpacing,
@@ -33,7 +36,6 @@ import {
   formFlexLines,
   layoutClipOf,
   layoutEpsilon,
-  normalizeLayoutSpacing,
   resolveFlexItemCrossSlotStart,
   resolveFlexLineCrossMetrics,
   resolveFlexLineDistribution,
@@ -48,7 +50,7 @@ import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
 type PhysicalAxis = 'x' | 'y';
 
 type MeasuredFlexItem = Readonly<{
-  authored: EffectiveLayoutItem<IRFlexLayoutItem>;
+  authored: EffectiveLayoutItem<CanonicalFlexLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   flexBaseSlot: number;
@@ -101,19 +103,19 @@ const intrinsicProposal = (mode: 'minimum' | 'natural'): LayoutAxisProposal => (
 const exactProposal = (value: number): LayoutAxisProposal => ({ kind: LayoutAxisProposalKind.Exact, value });
 
 /** 读取方向对应的 main/cross 物理轴 */
-const axesOf = (direction: IRFlexLayout['direction']): Readonly<{ main: PhysicalAxis; cross: PhysicalAxis }> =>
+const axesOf = (direction: CanonicalFlexLayout['direction']): Readonly<{ main: PhysicalAxis; cross: PhysicalAxis }> =>
   direction === FlexLayoutDirection.Row || direction === FlexLayoutDirection.RowReverse
     ? { main: 'x', cross: 'y' }
     : { main: 'y', cross: 'x' };
 
 /** 判断 main traversal 是否沿物理轴反向 */
-const isMainReverse = (direction: IRFlexLayout['direction']): boolean =>
+const isMainReverse = (direction: CanonicalFlexLayout['direction']): boolean =>
   direction === FlexLayoutDirection.RowReverse || direction === FlexLayoutDirection.ColumnReverse;
 
 /** 读取方向语义下的 main-start 与 main-end margin */
 const mainMarginsOf = (
   margin: LayoutInsets,
-  direction: IRFlexLayout['direction'],
+  direction: CanonicalFlexLayout['direction'],
 ): Readonly<{ start: number; end: number }> => {
   if (direction === FlexLayoutDirection.Row) return { start: margin.left, end: margin.right };
   if (direction === FlexLayoutDirection.RowReverse) return { start: margin.right, end: margin.left };
@@ -132,7 +134,7 @@ const rectAxis = (rect: LayoutRect, axis: PhysicalAxis): Readonly<{ start: numbe
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
   context: LayoutCompositeCompileContext,
-  child: IRFlexLayoutItem['child'],
+  child: CanonicalFlexLayoutItem['child'],
   proposal: LayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
@@ -142,7 +144,7 @@ const requiredProbe = (
 
 /** 计算当前 cross policy 可确定的有限 content-box 上限 */
 const finiteCrossLimitOf = (
-  node: IRFlexLayout,
+  node: CanonicalFlexLayout,
   crossAxis: PhysicalAxis,
   crossProposal: LayoutAxisProposal,
   padding: LayoutInsets,
@@ -186,7 +188,7 @@ const finiteCrossLimitOf = (
 
 /** 读取 cross 轴最终可确定的 content-box 尺寸 */
 const definiteCrossSizeOf = (
-  node: IRFlexLayout,
+  node: CanonicalFlexLayout,
   crossAxis: PhysicalAxis,
   crossProposal: LayoutAxisProposal,
   finiteCrossLimit: number | undefined,
@@ -212,7 +214,7 @@ const basisCrossProposal = (
       : { kind: LayoutAxisProposalKind.Range, min: 0, max: finiteCrossLimit };
 
 /** 用 item probe 结果构造 Flex main solver 输入 */
-const mainSolverItemOf = (item: MeasuredFlexItem, direction: IRFlexLayout['direction']) => {
+const mainSolverItemOf = (item: MeasuredFlexItem, direction: CanonicalFlexLayout['direction']) => {
   const margins = mainMarginsOf(item.margin, direction);
   return {
     key: item.authored.key,
@@ -309,11 +311,12 @@ const outgoingLineGuide = (
 
 /** 编译 Layout FlexLayout 的完整 probe、求解、placement 与 replay 流程 */
 export const compileFlexLayout = (
-  node: IRFlexLayout,
+  sourceLayout: IRFlexLayout,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<FlexLayoutArtifact> => {
+  const node = resolveFlexLayout(sourceLayout);
   const axes = axesOf(node.direction);
-  const padding = normalizeLayoutSpacing(node.padding);
+  const padding = node.padding;
   const proposalByAxis = context.proposal;
   const mainProposal = proposalByAxis[axes.main];
   const crossProposal = proposalByAxis[axes.cross];
@@ -321,7 +324,7 @@ export const compileFlexLayout = (
   const definiteCrossSize = definiteCrossSizeOf(node, axes.cross, crossProposal, finiteCrossLimit);
 
   const measured = createEffectiveLayoutItems(node.children).map((authored, sourceIndex): MeasuredFlexItem => {
-    const margin = normalizeLayoutSpacing(authored.margin);
+    const margin = authored.margin;
     const crossMargins = crossMarginsOf(margin, axes.cross);
     const alignment = authored.alignSelf ?? node.alignItems;
     const stretchedCrossSize =

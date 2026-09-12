@@ -97,19 +97,28 @@ describe('Layout inspect output', () => {
     const flexOutput = ordinaryChildren(
       FLEX_LAYOUT_INSPECTOR.inspect(
         flexArtifact,
-        contextOf(FLEX_LAYOUT_INSPECTOR.optionsSchema.parse({ labels: true }), FLEX_LAYOUT_INSPECTOR.owner),
+        contextOf(
+          FLEX_LAYOUT_INSPECTOR.resolveOptions(FLEX_LAYOUT_INSPECTOR.optionsSchema.parse({ labels: true })),
+          FLEX_LAYOUT_INSPECTOR.owner,
+        ),
       ),
     );
     const gridOutput = ordinaryChildren(
       GRID_LAYOUT_INSPECTOR.inspect(
         gridArtifact,
-        contextOf(GRID_LAYOUT_INSPECTOR.optionsSchema.parse({}), GRID_LAYOUT_INSPECTOR.owner),
+        contextOf(
+          GRID_LAYOUT_INSPECTOR.resolveOptions(GRID_LAYOUT_INSPECTOR.optionsSchema.parse({})),
+          GRID_LAYOUT_INSPECTOR.owner,
+        ),
       ),
     );
     const overlayOutput = ordinaryChildren(
       OVERLAY_LAYOUT_INSPECTOR.inspect(
         overlayArtifact,
-        contextOf(OVERLAY_LAYOUT_INSPECTOR.optionsSchema.parse({ anchors: true }), OVERLAY_LAYOUT_INSPECTOR.owner),
+        contextOf(
+          OVERLAY_LAYOUT_INSPECTOR.resolveOptions(OVERLAY_LAYOUT_INSPECTOR.optionsSchema.parse({ anchors: true })),
+          OVERLAY_LAYOUT_INSPECTOR.owner,
+        ),
       ),
     );
 

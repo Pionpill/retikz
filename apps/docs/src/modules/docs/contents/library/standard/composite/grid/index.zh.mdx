@@ -94,7 +94,7 @@ Grid 的 IR 不直接成为新的渲染图元。角点形式先按两个轴独�
 
 ## API 参考
 
-`GridProps` 是 `GridInput` 的公开别名，Vanilla adapter 也接收同一个 `GridInput`；`createGrid` 校验输入并返回应用了 schema 默认值的 `IRGrid`。下表中的 `Position` 与 `PolarPosition` 来自 Core 的位置契约
+`GridProps` 是 `GridInput` 的公开别名，Vanilla adapter 也接收同一个 `GridInput`；`createGrid` 只组装稀疏 `IRGrid`。`GridSchema.parse()` 校验外部 JSON 并补齐静态默认值；编译解析复用同一默认值并处理上下文。下表中的 `Position` 与 `PolarPosition` 来自 Core 的位置契约
 
 ### `GridInput`
 

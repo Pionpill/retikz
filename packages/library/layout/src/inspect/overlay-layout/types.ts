@@ -1,9 +1,5 @@
-import type { input as ZodInput, output as ZodOutput } from 'zod';
+import type { input as ZodInput } from 'zod';
 
-import type { OverlayLayoutInspectOptionsInputSchema, OverlayLayoutInspectOptionsSchema } from './schema';
+import type { OverlayLayoutInspectOptionsSchema } from './schema';
 
-/** Overlay 布局检查器的输入选项 */
-export type OverlayLayoutInspectOptions = ZodInput<typeof OverlayLayoutInspectOptionsInputSchema>;
-
-/** 完整解析后的 Overlay 布局检查器选项 */
-export type ResolvedOverlayLayoutInspectOptions = ZodOutput<typeof OverlayLayoutInspectOptionsSchema>;
+export type OverlayLayoutInspectOptions = ZodInput<typeof OverlayLayoutInspectOptionsSchema>;

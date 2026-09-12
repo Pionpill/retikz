@@ -50,6 +50,8 @@ export const InspectExample = () => (
 
 Vanilla 分别创建 authoring 标记和编译驱动：前者说明当前路径需要观测，后者在普通渲染入口接入 registry 与辅助图层：
 
+`authoring` 不是 Path 的绘图字段，而是 Vanilla adapter 的运行时附加槽。`createInspectionVanillaAuthoring()` 用带私有 token 的标记包住 request，让同一次 `compileDriver` 把当前 authored Path 转成 Inspector 的选择规则；它不进入 Core IR，因此不会改变 `way`、路径几何或布局。
+
 ```ts
 import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
@@ -59,6 +61,7 @@ const registry = createDefaultInspectorRegistry();
 const input = scene({
   children: [
     path('curve', {
+      // 将当前 authored Path 标为要观测的目标；不会进入 Core IR
       authoring: createInspectionVanillaAuthoring({
         inspector: STROKE_PATH_INSPECTOR_KEY,
         options: { controlPoints: true, labels: true },
@@ -80,33 +83,33 @@ const input = scene({
 const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
 ```
 
-根入口只提供 Definition、注册表、选择与辅助编译；React、Vanilla 和 Render 适配均从显式子入口导入。先从“基础用法”得到第一个结果，再按需阅读扩展或编译原理。
+根入口只提供 Definition、注册表、选择与辅助编译；React、Vanilla 和 Render 适配均从显式子入口导入。先从“内置观测”看到第一个结果，再按需阅读拓展或解析原理。
 
 ## 职责一览
 
-| 文档         | 职责                                                   | 适合何时查阅             |
-| ------------ | ------------------------------------------------------ | ------------------------ |
-| 基础用法     | 在 React 或 Vanilla 宿主接入内置检查器，并选择观测范围 | 首次添加或限制辅助内容时 |
-| 自定义检查器 | 定义、注册并注入第三方 Inspector                       | 扩展自己的观测能力时     |
-| 编译原理     | 理解隔离编译、只读图层、API 和错误                     | 诊断行为或深入实现边界时 |
+| 文档     | 职责                                                   | 适合何时查阅                         |
+| -------- | ------------------------------------------------------ | ------------------------------------ |
+| 内置观测 | 查看 Core 当前支持的内置 Inspector 与其辅助内容        | 想快速理解最终 Path 结果时           |
+| 拓展观测 | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
+| 解析原理 | 理解 Core 观测、隔离片段和只读图层如何在同次编译中协作 | 诊断行为或深入实现边界时             |
 
 ## 章节内容
 
 <LinkedSections
   items={[
     {
-      title: '基础用法',
-      description: '宿主接入、内置 Path Inspector 与观测范围',
-      url: '/kernel/packages/inspect/usage',
+      title: '内置观测',
+      description: 'Core 当前提供的内置 Inspector 与辅助内容',
+      url: '/kernel/packages/inspect/builtins',
     },
     {
-      title: '自定义检查器',
-      description: 'Definition、注册表与统一执行路径',
-      url: '/kernel/packages/inspect/inspectors',
+      title: '拓展观测',
+      description: '观测接口、自定义 Inspector 与注册路径',
+      url: '/kernel/packages/inspect/extensions',
     },
     {
-      title: '编译原理',
-      description: '辅助平面、隔离、API 与错误边界',
+      title: '解析原理',
+      description: 'Core 观测、隔离编译和只读图层的协作流程',
       url: '/kernel/packages/inspect/principles',
     },
   ]}

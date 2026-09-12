@@ -2,43 +2,56 @@ import type { PreviewControlContract } from '@/modules/docs/preview';
 
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { InspectSelectionControlId, InspectSelectionTarget } from './inspect-selection.controls';
+/** Inspect selection playground 使用的稳定字段 id */
+export const InspectSelectionControlId = {
+  Target: 'target',
+  ControlPoints: 'controlPoints',
+  Labels: 'labels',
+  BarrierRight: 'barrierRight',
+} as const;
 
-/** English controls for Inspector selection, options, and barriers */
+/** Inspect selection playground 使用的目标集合 */
+export const InspectSelectionTarget = {
+  Left: 'left',
+  Right: 'right',
+  Both: 'both',
+} as const;
+
+/** Inspector 选择、选项与 barrier 的中文面板 */
 export const inspectSelectionControls = definePreviewControls({
   presentation: 'panel',
-  title: 'Inspection scope',
+  title: '检查范围',
   sections: [
     {
-      label: 'Selection',
+      label: '选择',
       controls: [
         {
           kind: 'select',
           id: InspectSelectionControlId.Target,
-          label: 'Inspect path',
+          label: '检查路径',
           defaultValue: InspectSelectionTarget.Both,
           options: [
-            { value: InspectSelectionTarget.Left, label: 'Left path' },
-            { value: InspectSelectionTarget.Right, label: 'Right path' },
-            { value: InspectSelectionTarget.Both, label: 'Both paths' },
+            { value: InspectSelectionTarget.Left, label: '左侧路径' },
+            { value: InspectSelectionTarget.Right, label: '右侧路径' },
+            { value: InspectSelectionTarget.Both, label: '两条路径' },
           ],
         },
         {
           kind: 'switch',
           id: InspectSelectionControlId.ControlPoints,
-          label: 'Control points',
+          label: '控制点',
           defaultValue: true,
         },
         {
           kind: 'switch',
           id: InspectSelectionControlId.Labels,
-          label: 'Control-point labels',
+          label: '控制点标签',
           defaultValue: true,
         },
         {
           kind: 'switch',
           id: InspectSelectionControlId.BarrierRight,
-          label: 'Block right subtree',
+          label: '屏蔽右侧子树',
           defaultValue: false,
         },
       ],
@@ -46,7 +59,7 @@ export const inspectSelectionControls = definePreviewControls({
   ],
 });
 
-/** Stable state and API coverage for the English selection playground */
+/** Inspect selection playground 的稳定状态与 API 覆盖 */
 export const previewControlContract = {
   controls: inspectSelectionControls,
   canonicalValues: {
@@ -55,5 +68,5 @@ export const previewControlContract = {
     labels: true,
     barrierRight: false,
   },
-  relatedApis: ['InspectPath.request', 'InspectScope.request', 'StrokePathInspectOptionsInputSchema'],
+  relatedApis: ['InspectPath.request', 'InspectScope.request', 'StrokePathInspectOptionsSchema'],
 } satisfies PreviewControlContract;

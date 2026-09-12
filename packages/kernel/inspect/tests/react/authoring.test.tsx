@@ -119,8 +119,8 @@ describe('@retikz/inspect/react authoring and driver', () => {
         ...key,
         owner,
         subjectSchema: zodNull(),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => [],
       });
     const colonRegistry = createInspectorRegistry([

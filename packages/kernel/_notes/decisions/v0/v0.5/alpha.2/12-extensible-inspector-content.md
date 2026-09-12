@@ -174,8 +174,8 @@ type InspectorDefinition<
   type: string;
   owner: CompileObservationOwner;
   subjectSchema: ZodType<TSubject>;
-  optionsInputSchema: ZodType<TOptionsInput>;
-  optionsSchema: ZodType<TResolvedOptions, TOptionsInput>;
+  optionsSchema: ZodType<TOptionsInput>;
+  resolveOptions: (options: TOptionsInput) => TResolvedOptions;
   mergeOptionsInput?: (inherited: TOptionsInput, local: TOptionsInput) => TOptionsInput;
   inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
 }>;
@@ -246,7 +246,7 @@ type InspectionCompileResult = Readonly<{
 
 `namespace + type` 是 Inspector registry key；`namespace` 表示拥有该 Inspector 能力的包，`owner` 是被观察的 Core 所属者，二者不是同一个字段。`subjectSchema` 在外部注册表恢复具体所属者产物类型，不替代 Core owner output schema。两者必须连续成功：Core 先保证所属者产物符合其 Definition 契约，Inspect 再保证该 Inspector 与目标所属者约定的 subject 一致
 
-`optionsInputSchema` 接受 runtime-only sparse input，`optionsSchema` 产出 JSON-safe canonical options。多层规则默认由更具体输入整体替换；需要稀疏合并的 Inspector 显式提供 `mergeOptionsInput()`，内置与第三方使用同一回调边界。合并结果必须再次经过 input schema 和 canonical schema，不能由 adapter 预先按内置 key 裁剪
+`optionsSchema` 是唯一 options 契约，以 `.default()` 声明静态默认。准入校验每条启用规则，同时保留原始配置供继承合并；未匹配或被覆盖的非法规则不能漏检。多层规则默认由更具体输入整体替换；需要字段继承的 Inspector 提供 `mergeOptionsInput()`，缺省与 undefined 不覆盖父级，false 等显式值保留。内置 stroke 与 Layout Inspector 通过此回调表达字段合并粒度。合并原始配置后由同一 schema 应用默认与变换，再调用 `resolveOptions()` 展开为 JSON-safe callback 消费态；不维护第二套 schema，不把已变换输出重复解析。直接 parse 的快照再次参与合并时，其默认字段视为显式值。内置与第三方共用此路径，adapter 不按 key 裁剪；回调变异隔离独立于校验，不能污染后续 occurrence 或作者配置
 
 canonical scope palette 沿用 `#2563eb`、`#7c3aed`、`#c026d3`、`#db2777`、`#ea580c`、`#a16207`、`#16a34a`、`#0f766e`、`#0891b2` 的顺序并按 `colorScope % 9` 取值，warning color 为 `#dc2626`。这些默认值迁入 `@retikz/inspect`，Render 与 Standard 不得维护副本
 

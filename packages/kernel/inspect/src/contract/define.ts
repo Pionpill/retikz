@@ -34,14 +34,16 @@ export const sealInspectorDefinition = (definition: AnyInspectorDefinition): Any
 /** 校验并冻结一个独立 Inspector Definition */
 export const defineInspector = <
   TSubject extends JsonValue,
-  TOptionsInput extends JsonObject,
+  TParsedOptions extends JsonObject,
   TResolvedOptions extends JsonObject,
+  TSourceOptions extends JsonObject = TParsedOptions,
 >(
-  definition: InspectorDefinition<TSubject, TOptionsInput, TResolvedOptions>,
-): InspectorDefinition<TSubject, TOptionsInput, TResolvedOptions> => {
+  definition: InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+): InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions> => {
   return sealInspectorDefinition(definition) as unknown as InspectorDefinition<
     TSubject,
-    TOptionsInput,
-    TResolvedOptions
+    TParsedOptions,
+    TResolvedOptions,
+    TSourceOptions
   >;
 };

@@ -1,0 +1,33 @@
+---
+title: 内置观测
+description: 查看 Core 当前提供的内置 Inspector，并用只读辅助内容解释最终 Path 结果
+---
+
+内置观测用于快速查看 Core 已经发布的最终结果。先在[安装与使用](/kernel/packages/inspect#安装与使用)完成 React 或 Vanilla 宿主接入，再请求下表中的 Inspector；它们不会改变主图。
+
+## 当前可用的内置观测
+
+默认 registry 目前只包含一个内置 Inspector。它对应 Core 的 `stroke` Path owner，而不是泛化地检查任意 Path：
+
+| 检查器                  | Core 归属            | 读取的最终产物             | 辅助内容                       |
+| ----------------------- | -------------------- | -------------------------- | ------------------------------ |
+| `STROKE_PATH_INSPECTOR` | `pathKind: 'stroke'` | 最终采用的路径命令与控制点 | 贝塞尔控制柄、控制点与可选标签 |
+
+`createDefaultInspectorRegistry()` 自动加入它。没有匹配的 `stroke` Path 或没有请求这个 key 时，不会生成辅助片段。
+
+## 路径控制点
+
+内置 `stroke` Path Inspector 读取已经解析完成的路径命令，而不是作者最初写下的 `way`。这使控制柄和控制点能够解释相对坐标、节点引用等输入被 Core 处理后的最终结果：
+
+<ComponentPreview
+  files="inspect-basic"
+  size="sm"
+  caption="辅助图层显示最终路径命令使用的控制柄和控制点；主路径本身没有被改写。"
+/>
+
+`controlPoints` 默认开启，`labels` 默认关闭；二者只影响辅助内容。
+
+## 相关
+
+- [拓展观测](/kernel/packages/inspect/extensions)：为其它 Core owner 定义自己的 Inspector
+- [解析原理](/kernel/packages/inspect/principles)：了解请求如何选择最终实例，以及辅助内容何时隔离编译

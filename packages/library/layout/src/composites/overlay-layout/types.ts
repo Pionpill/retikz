@@ -16,22 +16,25 @@ export type OverlayPlacementKindValue = ValueOf<typeof OverlayPlacementKind>;
 export type LayoutSizeParticipationValue = ValueOf<typeof LayoutSizeParticipation>;
 
 /** Overlay placement 的 canonical JSON IR */
-export type IROverlayPlacement = ZodInfer<typeof OverlayPlacementSchema>;
+export type IROverlayPlacement = ZodInput<typeof OverlayPlacementSchema>;
 
 /** Overlay placement 的作者输入 */
 export type OverlayPlacementInput = ZodInput<typeof OverlayPlacementSchema>;
 
 /** OverlayLayout item 的 canonical JSON IR */
-export type IROverlayLayoutItem = ZodInfer<typeof OverlayLayoutItemSchema>;
+export type IROverlayLayoutItem = Omit<ZodInput<typeof OverlayLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof OverlayLayoutItemSchema>, 'child'>;
 
 /** OverlayLayout item 的作者输入 */
-export type OverlayLayoutItemInput = ZodInput<typeof OverlayLayoutItemSchema>;
+export type OverlayLayoutItemInput = IROverlayLayoutItem;
 
 /** OverlayLayout 的 canonical JSON IR */
-export type IROverlayLayout = ZodInfer<typeof OverlayLayoutSchema>;
+export type IROverlayLayout = Omit<ZodInput<typeof OverlayLayoutSchema>, 'children'> & {
+  children?: Array<IROverlayLayoutItem>;
+};
 
 /** OverlayLayout factory 接受的作者输入 */
-export type OverlayLayoutInput = Omit<ZodInput<typeof OverlayLayoutSchema>, 'namespace' | 'type'>;
+export type OverlayLayoutInput = Omit<IROverlayLayout, 'namespace' | 'type'>;
 
 /** OverlayLayout 的 JSON-safe compile artifact payload */
 export type OverlayLayoutArtifact = ZodInfer<typeof OverlayLayoutArtifactSchema>;

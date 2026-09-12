@@ -5,6 +5,10 @@ description: 查询 Graph family 的独立 Source composite、Scope 公共面与
 
 `@retikz/graph` 拥有 JSON-safe Source IR、Definition registry、resolve 与 lowering。Graph、Group、Block、BlockHeader、BlockSection、BlockRow、Entity、Relation 都能独立编译；Graph 额外作为顶层 React 宿主建立 Scene，Group 组合通用可见边界，Block 纵向排列开放内容
 
+`createGraph`、`createGroup`、Block family、`createEntity` 与 `createRelation` 工厂只组装类型化的稀疏 Source，不执行校验或补默认值。外部 JSON 使用对应 `XxxSchema.parse()`；编译时由 Definition 准入和领域 resolver 完成后续解析。
+
+schema 声明的静态默认值会在直接 `parse()` 时物化；需要继承 Graph Theme 的外壳字段则保留省略，先合并主题与局部配置，再应用 Surface 默认值。保存 parse 结果意味着保存快照中的显式值，不能再还原原始省略意图。
+
 ## 公开导出
 
 | 能力         | `@retikz/graph`                                                                                                        | React                                              | Vanilla                                                            |

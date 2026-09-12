@@ -1,3 +1,5 @@
+import type { IRChild } from '@retikz/core';
+
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -19,20 +21,29 @@ import {
   LayoutDistribution,
   LayoutItemKind,
 } from '../../src';
+import { resolveGridLayout } from '../../src/resolve/grid-layout';
 
-const child = { type: 'node', position: [0, 0], text: 'Revenue' } as const;
+const child: IRChild = { type: 'node', position: [0, 0], text: 'Revenue' };
+
+/** 外部 payload 的唯一 schema 入口 */
+const parseGridLayout = (input: Record<string, unknown>) =>
+  GridLayoutSchema.parse({ namespace: 'layout', type: 'gridLayout', ...input });
 
 describe('GridLayout schema and factory', () => {
   it('creates canonical JSON IR from author input defaults', () => {
     const item = { kind: LayoutItemKind.Grid, key: 'label', child } satisfies GridLayoutItemInput;
     const input = { columns: [{ kind: 'fixed', value: 20 }], children: [item] } satisfies GridLayoutInput;
-    const parsed = createGridLayout(input);
+    const source = createGridLayout(input);
+    expect(source).toEqual({ namespace: 'layout', type: 'gridLayout', ...input });
+    expect(parseGridLayout(input)).toMatchObject({ rowGap: 0, rows: [], overlap: 'reject' });
+    expect(resolveGridLayout(parseGridLayout(input))).toEqual(resolveGridLayout(source));
+    const parsed = resolveGridLayout(source);
 
     expect(parsed).toEqual({
       namespace: 'layout',
       type: 'gridLayout',
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
-      padding: 0,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
       overflow: 'visible',
       columns: [{ kind: 'fixed', value: 20 }],
       rows: [],
@@ -46,7 +57,16 @@ describe('GridLayout schema and factory', () => {
       alignItems: 'stretch',
       justifyContent: 'start',
       alignContent: 'start',
-      children: [{ kind: 'grid', key: 'label', child, margin: 0 }],
+      children: [
+        {
+          kind: 'grid',
+          key: 'label',
+          child,
+          margin: { top: 0, right: 0, bottom: 0, left: 0 },
+          column: { span: 1 },
+          row: { span: 1 },
+        },
+      ],
     });
     expect(ChildSchema.safeParse(parsed.children[0]?.child).success).toBe(true);
   });
@@ -56,15 +76,15 @@ describe('GridLayout schema and factory', () => {
     const track = { kind: 'minmax', min: breadth, max: { kind: 'fraction', factor: 2 } } satisfies GridTrackInput;
     const placement = { start: 0 } satisfies GridPlacementInput;
     expect(
-      createGridLayout({ columns: [track], children: [{ kind: 'grid', key: 'a', child, column: placement }] }),
-    ).toMatchObject({ columns: [track], children: [{ column: { start: 0, span: 1 } }] });
+      parseGridLayout({ columns: [track], children: [{ kind: 'grid', key: 'a', child, column: placement }] }),
+    ).toMatchObject({ columns: [track], children: [{ column: { start: 0 } }] });
   });
 
   it('accepts a span without a start as an auto-placement axis', () => {
     const autoSpan = { span: 2 } satisfies GridPlacementInput;
 
     expect(
-      createGridLayout({
+      parseGridLayout({
         columns: [{ kind: 'fixed', value: 20 }],
         children: [{ kind: 'grid', key: 'span', child, column: autoSpan }],
       }).children[0]?.column,
@@ -72,7 +92,7 @@ describe('GridLayout schema and factory', () => {
   });
 
   it('keeps an omitted item key out of Source IR', () => {
-    const parsed = createGridLayout({
+    const parsed = parseGridLayout({
       columns: [{ kind: 'fixed', value: 20 }],
       children: [{ kind: LayoutItemKind.Grid, child }],
     });
@@ -109,22 +129,22 @@ describe('GridLayout schema and factory', () => {
       { kind: 'minmax', min: { kind: 'fixed', value: 3 }, max: { kind: 'fixed', value: 2 } },
     ];
 
-    for (const track of invalid) expect(() => createGridLayout({ ...base, columns: [track as never] })).toThrow();
-    expect(() => createGridLayout({ ...base, columns: [{ kind: 'fixed', value: 1, extra: true } as never] })).toThrow();
+    for (const track of invalid) expect(() => parseGridLayout({ ...base, columns: [track] })).toThrow();
+    expect(() => parseGridLayout({ ...base, columns: [{ kind: 'fixed', value: 1, extra: true }] })).toThrow();
     expect(() =>
-      createGridLayout({
+      parseGridLayout({
         ...base,
         children: [{ kind: 'grid', key: 'a', child, column: { start: -1 } }],
       }),
     ).toThrow();
     expect(() =>
-      createGridLayout({
+      parseGridLayout({
         ...base,
         children: [{ kind: 'grid', key: 'a', child, row: { start: 0, span: 0 } }],
       }),
     ).toThrow();
     expect(() =>
-      createGridLayout({
+      parseGridLayout({
         ...base,
         children: [
           { kind: 'grid', key: 'same', child },
@@ -132,7 +152,7 @@ describe('GridLayout schema and factory', () => {
         ],
       }),
     ).toThrow(/duplicate/i);
-    expect(() => createGridLayout({ ...base, children: [{ kind: 'flex', key: 'a', child } as never] })).toThrow();
+    expect(() => parseGridLayout({ ...base, children: [{ kind: 'flex', key: 'a', child }] })).toThrow();
     expect(() => GridLayoutSchema.parse({ namespace: 'layout', type: 'gridLayout', ...base, unknown: true })).toThrow();
   });
 
@@ -141,7 +161,7 @@ describe('GridLayout schema and factory', () => {
     expect(Object.values(GridAutoFlow)).toEqual(['row', 'column']);
     expect(Object.values(GridOverlap)).toEqual(['reject', 'allow']);
     expect(
-      createGridLayout({
+      parseGridLayout({
         columns: [{ kind: 'content', mode: 'natural' }],
         autoFlow: GridAutoFlow.Column,
         overlap: GridOverlap.Allow,
@@ -151,13 +171,13 @@ describe('GridLayout schema and factory', () => {
       }),
     ).toMatchObject({ autoFlow: 'column', overlap: 'allow', alignItems: 'first-baseline' });
     expect(() =>
-      createGridLayout({
+      parseGridLayout({
         columns: [{ kind: 'fixed', value: 1 }],
-        children: [{ kind: 'grid', key: 'a', child, justifySelf: LayoutAlignment.FirstBaseline as never }],
+        children: [{ kind: 'grid', key: 'a', child, justifySelf: LayoutAlignment.FirstBaseline }],
       }),
     ).toThrow();
     expect(() =>
-      createGridLayout({
+      parseGridLayout({
         columns: Array.from({ length: GRID_LAYOUT_MAX_TRACKS_PER_AXIS + 1 }, () => ({ kind: 'fixed', value: 1 })),
       }),
     ).toThrow();

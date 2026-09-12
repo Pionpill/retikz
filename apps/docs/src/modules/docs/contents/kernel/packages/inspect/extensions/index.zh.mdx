@@ -1,0 +1,56 @@
+---
+title: 拓展观测
+description: 用 Inspector Definition、注册表与统一选择路径，为 Core owner 的最终产物添加自定义只读观测
+---
+
+内置 Inspector 只覆盖 Core 当前提供的少量 owner。需要解释自己的 path kind 或 composite 最终产物时，定义一个 Inspector；它和内置项经过同一个 registry、选择、校验和辅助编译路径，不会修改主图。
+
+## 可拓展的观测接口
+
+一个 `InspectorDefinition` 把“哪个 Core owner 能被观察”和“怎样把最终产物画成辅助内容”连在一起：
+
+| 接口                        | 作用                                                                     |
+| --------------------------- | ------------------------------------------------------------------------ |
+| `owner`                     | 指向发布最终产物的 `pathKind` 或 composite owner                         |
+| `subjectSchema`             | 校验 Core 发布的最终产物，恢复自定义观测所需的事实                       |
+| `optionsSchema`             | 唯一选项契约；声明默认值，合并原始配置后应用默认与变换                   |
+| `resolveOptions`            | 接收 schema 解析结果，展开简写并产出 callback 消费态                     |
+| `mergeOptionsInput`         | 可选地合并整图、子树与当前实例上的同一个 Inspector 选项                  |
+| `inspect(subject, context)` | 读取最终产物与 occurrence、外观、选项上下文，返回普通 `IRChild` 辅助内容 |
+
+`inspect()` 只能返回普通 Core IR；它不能写回主 Scene，也不能另建渲染语义。`owner` 与 `subjectSchema` 必须匹配 Core 实际发布的最终产物。
+
+`optionsSchema` 的输入与输出可以不同：`mergeOptionsInput` 接收原始输入，`resolveOptions` 接收已补默认值的解析输出。分别用 `z.input` 与 `z.output` 从同一 schema 派生类型，不再维护第二份 schema。
+
+## 定义一个观测内容
+
+下面的端点 Inspector 与内置控制点 Inspector 请求同一条路径。两者分别读取同一个 `stroke` owner 的最终产物，并在同一个只读辅助平面中输出内容：
+
+<ComponentPreview
+  files={['inspect-custom', 'inspect-path-endpoints.ts']}
+  size="sm"
+  caption="同一路径同时请求内置控制点检查器和第三方端点检查器；二者共享注册、选择和辅助编译流程。"
+/>
+
+## 注册和请求
+
+用 `defineInspector()` 校验并冻结 Definition，再把它交给 `createDefaultInspectorRegistry([endpointInspector])` 或 `createInspectorRegistry([...])`。前者只是在同一个 immutable registry 中预先加入内置项，不存在第三方的特殊执行分支。
+
+宿主如何把 registry 和 request 接入 React 或 Vanilla，见[安装与使用](/kernel/packages/inspect#安装与使用)。request 用 `namespace + type` 定位 Definition；它命中哪个最终实例、不同范围的 options 如何合并，由[解析原理](/kernel/packages/inspect/principles#运行时选择)说明。
+
+## 错误与边界
+
+重复注册 key、请求未注册 Inspector、owner 不匹配，或最终产物、选项、输出不通过 schema 时，Inspect 会以 `RetikzInspectError` 终止对应编译；不会交付部分辅助结果。Core 没有发布最终产物的 owner 不能仅靠 Inspector 补出观测接口。
+
+<SourceLinks
+  sources={[
+    { label: 'Inspector Definition 与 callback 契约', path: 'packages/kernel/inspect/src/contract/types.ts' },
+    { label: 'Definition 校验与冻结', path: 'packages/kernel/inspect/src/contract/define.ts' },
+    { label: '内置与第三方共用的 registry', path: 'packages/kernel/inspect/src/providers/registry.ts' },
+  ]}
+/>
+
+## 相关
+
+- [内置观测](/kernel/packages/inspect/builtins)：Core 当前提供的内置 Inspector
+- [自定义 Path](/kernel/components/draw/custom-path)：让自定义 owner 发布可观察的最终产物

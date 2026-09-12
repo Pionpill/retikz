@@ -82,12 +82,14 @@ const isExactDataRecord = (value: unknown, keys: ReadonlyArray<string>): value i
 const isCanonicalClipPath = (value: unknown): boolean => {
   if (!isExactDataRecord(value, ['commands', 'fillRule'])) return false;
   if (value.fillRule !== 'nonzero' && value.fillRule !== 'evenodd') return false;
-  if (!isDenseArray(value.commands, command => PathCommandSchema.safeParse(command).success)) return false;
+  if (!isDenseObjectArray(value.commands)) return false;
   if (value.commands.length === 0) return false;
   let activeSubpath = false;
   let hasDrawingSegment = false;
   for (const commandValue of value.commands) {
-    const command = PathCommandSchema.parse(commandValue);
+    const parsed = PathCommandSchema.safeParse(commandValue);
+    if (!parsed.success) return false;
+    const command = parsed.data;
     switch (command.kind) {
       case 'move':
         activeSubpath = true;

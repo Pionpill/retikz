@@ -86,3 +86,5 @@ export {
   LayoutOverflowSchema,
   LayoutSizeSchema,
 } from '../composites/shared';
+export type { CanonicalLayoutContainerBox } from '../resolve/shared';
+export { resolveLayoutContainerBox } from '../resolve/shared';

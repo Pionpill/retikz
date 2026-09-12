@@ -1,4 +1,5 @@
-import { ChildSchema } from '@retikz/core';
+import type { IRChild } from '@retikz/core';
+
 import { ScalarValueSchema } from '@retikz/data';
 
 import type {
@@ -13,7 +14,7 @@ import type { ResolvedTableCellPlan } from '../rule';
 
 import { RetikzTableError } from '../../error';
 import { cellFormatterDefinitionOf, resolveCellFormatterRegistry } from '../../providers';
-import { TableCellPayloadKind, TableCellPayloadSchema } from '../../schemas';
+import { TableCellPayloadKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
@@ -37,12 +38,13 @@ const formatCell = (
   plan: ResolvedTableCellPlan,
   registry: ReadonlyMap<string, AnyCellFormatterDefinition>,
 ): FormattedTableCell => {
-  const parsedPayload = TableCellPayloadSchema.parse(cell.payload);
+  const parsedPayload = cell.payload;
   if (parsedPayload.kind === TableCellPayloadKind.Content) {
     return deepFreeze({
       kind: TableCellPayloadKind.Content,
       ...(cell.id === undefined ? {} : { cellId: cell.id }),
-      content: ChildSchema.parse(parsedPayload.content),
+      // Source 已校验；独立副本解除 semantic model 的只读投影，不再次 parse
+      content: structuredClone(parsedPayload.content) as IRChild,
     });
   }
 

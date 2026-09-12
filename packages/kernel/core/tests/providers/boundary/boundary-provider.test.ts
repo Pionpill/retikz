@@ -54,7 +54,7 @@ const fixedBoundary = (name: string, x: number): BoundaryDefinition =>
   });
 
 describe('Boundary provider contract', () => {
-  it('builtin boundary params 使用统一 fit / gap 默认值，并允许有限负 gap', () => {
+  it('builtin boundary params 应用 schema 默认值，并允许有限负 gap', () => {
     for (const boundary of BUILTIN_BOUNDARIES) {
       expect(boundary.paramsSchema.parse({})).toEqual({ fit: 'tight', gap: 0 });
       expect(boundary.paramsSchema.parse({ fit: 'bounds', gap: -3 })).toEqual({ fit: 'bounds', gap: -3 });

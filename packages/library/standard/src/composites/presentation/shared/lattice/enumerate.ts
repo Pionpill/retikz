@@ -6,7 +6,12 @@ import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors
 export const MAX_LATTICE_VALUES_PER_AXIS = 10_000;
 
 /** 返回格点索引或输出规模违反确定性 lowering 上限时的错误信息 */
-export const getLatticeRangeError = ({ min, max, spacing, origin }: LatticeOptions): string | undefined => {
+export const getLatticeRangeError = ({
+  min,
+  max,
+  spacing,
+  origin,
+}: Omit<LatticeOptions, 'includeBoundary'> & Partial<Pick<LatticeOptions, 'includeBoundary'>>): string | undefined => {
   const firstIndex = Math.ceil((min - origin) / spacing);
   const lastIndex = Math.floor((max - origin) / spacing);
 
