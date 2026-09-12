@@ -234,8 +234,8 @@ describe('<AppSidebar>', () => {
     expect(components.textContent).toContain('kernel.components');
     expect(components.querySelectorAll('[data-slot="separator"]')).toHaveLength(2);
 
-    const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'overview' });
-    expect(about.textContent).toContain('about.overview');
+    const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'introduction' });
+    expect(about.textContent).toContain('about.introduction');
     expect(about.textContent).toContain('about.blog');
     expect(about.textContent).toContain('about.blogCorePhilosophy');
     expect(about.textContent).toContain('about.releases');

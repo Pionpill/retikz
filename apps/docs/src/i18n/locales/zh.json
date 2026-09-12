@@ -330,11 +330,12 @@
   },
   "about": {
     "label": "关于",
-    "overview": "总览",
+    "introduction": "介绍",
     "blog": "博客",
     "blogCorePhilosophy": "retikz 核心理念",
     "blogOrigin": "retikz 的起点",
     "developer": "开发者",
+    "iterationDesign": "迭代设计",
     "sourceCodeGuide": "源码指南",
     "aiAssistedDevelopment": "AI 辅助开发",
     "releases": "发布",

@@ -2,6 +2,7 @@
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef, FC } from 'react';
 
+import { Blocks, Braces, Layers, Monitor, Puzzle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { cn } from '@/lib';
@@ -154,6 +155,12 @@ export const mdxComponents: MDXComponents = {
   ComponentPreview,
   ExamplePrompt,
   LinkedCard,
+  Blocks,
+  Braces,
+  Layers,
+  Monitor,
+  Puzzle,
+  Sparkles,
   LinkedSections,
   PackageManagerInstall,
   SourceLinks,

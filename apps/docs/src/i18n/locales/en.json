@@ -330,11 +330,12 @@
   },
   "about": {
     "label": "About",
-    "overview": "Overview",
+    "introduction": "Introduction",
     "blog": "Blog",
     "blogCorePhilosophy": "Core Philosophy of retikz",
     "blogOrigin": "Origins of retikz",
     "developer": "Developer",
+    "iterationDesign": "Iteration design",
     "sourceCodeGuide": "Source Code Guide",
     "aiAssistedDevelopment": "AI-assisted development",
     "releases": "Releases",
