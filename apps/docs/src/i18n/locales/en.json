@@ -33,8 +33,8 @@
     "showcaseFamilyEmpty": "There are no other primary charts in this family yet."
   },
   "docs": {
-    "homeTitle": "AI-Friendly Declarative Graphics Framework",
-    "homeDescription": "Build graphics, diagrams, and data visualizations with React, JavaScript, or JSON. Give developers and AI one structured format to create, edit, and reuse graphics.",
+    "homeTitle": "AI-Friendly Semantic Graphics Framework",
+    "homeDescription": "Declare graphics, relationships, and data with React, JavaScript, or JSON. Give developers and AI one structured description to create, edit, and reuse graphics.",
     "homeAbout": "Learn more",
     "homeNavigationLabel": "Docs home",
     "homeNavigationDescription": "Browse every retikz module and learn about the project",

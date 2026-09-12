@@ -33,8 +33,8 @@
     "showcaseFamilyEmpty": "当前分组暂时没有其它主要图表。"
   },
   "docs": {
-    "homeTitle": "AI 友好的声明式绘图框架",
-    "homeDescription": "用 React、JavaScript 或 JSON 构建图形、关系图与数据可视化。让开发者与 AI 围绕同一份结构化描述创建、编辑和复用图形。",
+    "homeTitle": "AI 友好的语义化绘图框架",
+    "homeDescription": "用 React、JavaScript 或 JSON 声明图形、关系与数据，让开发者与 AI 围绕同一份结构化描述创建、编辑和复用图形。",
     "homeAbout": "了解",
     "homeNavigationLabel": "文档首页",
     "homeNavigationDescription": "从这里浏览 retikz 的全部模块与项目介绍",
