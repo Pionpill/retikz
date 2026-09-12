@@ -9,10 +9,8 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 
 import { iterationGatesI18n } from './iteration-gates.i18n';
 
-/** 两个 Gate 流程图的本地化参数 */
 export type IterationGatesFigureProps = Readonly<{ lang?: Lang }>;
 
-/** 展示 ADR 从设计、确认到获得实施授权的顺序 */
 export const IterationGatesFigure: FC<IterationGatesFigureProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = iterationGatesI18n[lang];

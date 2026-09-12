@@ -1,0 +1,66 @@
+import type { FC } from 'react';
+
+import { Draw, Layout, Node } from '@retikz/react';
+
+import type { Lang } from '@/i18n';
+
+import { roadmapI18n } from './roadmap.i18n';
+
+const ARROW_COLOR = '#9ca3af';
+
+export type RoadmapProps = Readonly<{ lang?: Lang }>;
+
+const Demo: FC<RoadmapProps> = props => {
+  const { lang = 'zh' } = props;
+  const i18n = roadmapI18n[lang];
+
+  return (
+    <Layout>
+      <Node id="v01" position={[-250, -45]} style={{ stroke: 'none' }}>
+        {i18n.current}
+      </Node>
+      <Node id="v02" position={[-150, -45]} style={{ stroke: 'none' }}>
+        v0.2
+      </Node>
+      <Node id="v03" position={[-50, -45]} style={{ stroke: 'none' }}>
+        v0.3
+      </Node>
+      <Node id="v04" position={[50, -45]} style={{ stroke: 'none' }}>
+        v0.4
+      </Node>
+      <Node id="v10" position={[150, -45]} style={{ stroke: 'none' }}>
+        v1.0
+      </Node>
+      <Node id="future" position={[250, -45]} style={{ stroke: 'none' }}>
+        {i18n.future}
+      </Node>
+
+      <Draw way={['v01', 'v02']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+      <Draw way={['v02', 'v03']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+      <Draw way={['v03', 'v04']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+      <Draw way={['v04', 'v10']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+      <Draw way={['v10', 'future']} arrow="->" style={{ stroke: ARROW_COLOR }} />
+
+      <Node position={[-250, 10]} style={{ stroke: 'none' }}>
+        {i18n.primitives}
+      </Node>
+      <Node position={[-150, 10]} style={{ stroke: 'none' }}>
+        Scope + Shape
+      </Node>
+      <Node position={[-50, 10]} style={{ stroke: 'none' }}>
+        {i18n.positioning}
+      </Node>
+      <Node position={[50, 10]} style={{ stroke: 'none' }}>
+        {i18n.libraries}
+      </Node>
+      <Node position={[150, 10]} style={{ stroke: 'none' }}>
+        + canvas
+      </Node>
+      <Node position={[250, 10]} style={{ stroke: 'none' }}>
+        + plot
+      </Node>
+    </Layout>
+  );
+};
+
+export default Demo;

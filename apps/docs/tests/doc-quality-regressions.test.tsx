@@ -13,7 +13,7 @@ import LearningPathStacksDemo from '../src/modules/docs/contents/kernel/gallerie
 import LearningPathPathsDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-04-paths.demo';
 import LearningPathDashedDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-05-dashed.demo';
 import InspectCustomDemo from '../src/modules/docs/contents/kernel/packages/inspect/extensions/inspect-custom.demo';
-import AiRoadmapDemo from '../src/modules/docs/contents/about/blog/origin/ai-roadmap.demo';
+import AiRoadmapDemo from '../src/modules/docs/contents/about/blog/origin/ai-roadmap';
 import { previewSource as RibbonGeometryPreviewSource } from '../src/modules/docs/contents/library/standard/extension/ribbon/ribbon-geometry.demo';
 import { previewSource as LegendColorFormsEnPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.en.demo';
 import { previewSource as LegendColorFormsPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.zh.demo';

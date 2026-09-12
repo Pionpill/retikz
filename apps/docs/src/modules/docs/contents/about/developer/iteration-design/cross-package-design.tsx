@@ -9,10 +9,8 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 
 import { crossPackageDesignI18n } from './cross-package-design.i18n';
 
-/** 跨包设计关系图的本地化参数 */
 export type CrossPackageDesignFigureProps = Readonly<{ lang?: Lang }>;
 
-/** 展示问题如何经由 owner、契约和统一扩展路径形成可验证闭环 */
 export const CrossPackageDesignFigure: FC<CrossPackageDesignFigureProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = crossPackageDesignI18n[lang];
