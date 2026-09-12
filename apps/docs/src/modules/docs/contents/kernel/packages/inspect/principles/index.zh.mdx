@@ -29,20 +29,46 @@ Inspect 不直接分析你写下的绘图代码，而是等待 Core 算出绘图
 
 因此，自定义观测器的前提是：对应对象已经能在 Core 中发布最终产物。仅仅注册一个 Inspector，不会让原本不支持观测的对象自动产生 observation。Core 只提供这套通知与隔离编译能力，不负责查找 Inspector 或决定辅助内容的样式。
 
-## 辅助内容何时绘制
+<SourceLinks
+  sources={[
+    { label: 'Core 观测上下文与隔离编译契约', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    { label: 'Core 最终观测通知的派发', path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts' },
+  ]}
+/>
+
+## 绘制流程
 
 上图描述的是数据流，不代表每收到一次通知就立即画出辅助线。实际执行分为“收集结果”和“生成辅助内容”两个时机：
 
 - **`observe()`：只收集。** Core 派发选中实例的最终结果时，Inspect 保存产物与该实例的上下文，不在这个回调中生成辅助图形。
 - **`complete()`：集中生成。** Core 完成最终观测通知后，Inspect 解析选择、合并 options、校验产物，再调用观测器的 `inspect()`。返回的 `IRChild` 经 `compileFragment()` 隔离编译，汇成 InspectionPlane（辅助场景集合）。
 
+一次 compile 中，`observe()` 会按选中的最终 occurrence 调用零到多次；`complete()` 则只在全部通知结束后调用一次。图中三个 occurrence 代表一批最终实例，都会汇入同一个 observer 会话：
+
+<ComponentPreview files="inspect-observer-batch-flow" size="md" hideCode />
+
 之后，宿主将辅助场景集合转换为不可命中的只读图层，由 Render 显示。主图与辅助层属于同一次编译版本，只有一起成功才提交，不会先显示新主图、再补上旧版本的辅助内容。辅助场景也不会保留公开身份、元数据和动画语义。
 
 普通绘图不需要加载 Inspect。启用后，若没有匹配结果或所有观测器都返回空内容，InspectionPlane 为 `null`，不会生成辅助图层；额外成本来自选中对象的观测、观测器回调和非空辅助片段的编译。
 
+<SourceLinks
+  sources={[
+    { label: 'observe 收集与 complete 生成辅助内容', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: '辅助场景转换为只读图层', path: 'packages/kernel/inspect/src/render/readonly-layers.ts' },
+  ]}
+/>
+
 ## 运行时选择
 
-request 不是持久化图形数据，而是决定哪些最终 occurrence 交给 Inspector 的运行时规则。它可以来自整张图、一个 authored 子树或当前实例：
+`request` 是你在场景、authored 子树或对象上声明的一条 Inspect 选择规则。它指定哪个 Inspector 要响应（`inspector`）、哪些最终 occurrence 在范围内（`target`），以及可选参数（`options`）；`true` 使用默认参数，`false` 则在当前位置关闭该 Inspector。
+
+下图以支持整图选择、且对象 owner 匹配的同一个 Inspector 为例。连线表示父子结构；蓝色表示开启，灰色虚线框表示关闭或封锁。A 继承父级开启；B 在子树关闭后可由对象重新开启；C 设置屏障后，对象即使请求开启也无效。开关只影响辅助观测，所有对象的主图仍正常绘制。
+
+<ComponentPreview files="inspect-selection-tree" size="md" hideCode />
+
+这里 B 的 `options: false` 只关闭指定 Inspector，C 的 `barrier` 则封锁子树内全部 Inspector；React 中可用 `<InspectScope request={false}>` 声明这个屏障。
+
+这些选择不是持久化图形数据，而是在每次编译时决定哪些最终 occurrence 交给 Inspector 的运行时规则：
 
 | 结构                              | 含义                                                      |
 | --------------------------------- | --------------------------------------------------------- |
@@ -66,6 +92,28 @@ request 不是持久化图形数据，而是决定哪些最终 occurrence 交给
 
 直接调用 `StrokePathInspectOptionsSchema.parse({})` 会得到包含 `labels: false` 的完整默认快照；再把它作为子级配置时，`false` 就是显式覆盖。保存原始配置才能保留省略意图；保存 parse 结果则保存已物化的默认值。
 
+<SourceLinks
+  sources={[
+    { label: 'request 转换为目标规则与屏障', path: 'packages/kernel/inspect/src/vanilla/authoring.ts' },
+    { label: '范围匹配、屏障与 options 级联合并', path: 'packages/kernel/inspect/src/compile/selection.ts' },
+  ]}
+/>
+
+## 绘制样式
+
+Inspect 的常规辅助颜色按有效观测请求的顺序，从 Core 当前主题的分类色板中选取。同一请求生成的辅助线、控制点与标签共用一种颜色，便于识别它们对应的对象；控制点标签背景透明。
+
+Inspect 沿用 Core 的色板与语义颜色，不提供独立的 Inspect Theme 配色配置。内置观测器也不提供 Core 绘图组件那样自由的样式定制：例如路径观测器只开放控制点与标签的显示开关，线宽、虚线和字号由实现统一决定。它的定位是帮助理解主图的辅助内容，因此优先保证清晰、一致与克制。
+
+自定义 Inspector 仍可在返回的普通 Core IR 中定义样式；这是观测器扩展能力，不属于内置观测器的样式选项。
+
+<SourceLinks
+  sources={[
+    { label: '色板与语义颜色的分配', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: '内置控制点、辅助线与标签样式', path: 'packages/kernel/inspect/src/providers/stroke-path.ts' },
+  ]}
+/>
+
 ## 结果与错误
 
 | 字段                                  | 含义                                          |
@@ -77,18 +125,7 @@ request 不是持久化图形数据，而是决定哪些最终 occurrence 交给
 `RetikzInspectError.details.origin.stage` 标明失败发生在选择、最终产物校验、`inspect` callback、输出规范化、辅助片段编译或最终组装。重复 registry key、未注册 request、owner 不匹配以及 schema 失败都会终止该次检查编译，不会交付部分辅助结果。
 
 <SourceLinks
-  sources={[
-    {
-      label: 'Core observation 的上下文与隔离片段契约',
-      path: 'packages/kernel/core/src/contract/observation/types.ts',
-    },
-    {
-      label: 'Core 最终 observation 的派发阶段',
-      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
-    },
-    { label: 'Inspect observer 的选择、回调与辅助片段编译', path: 'packages/kernel/inspect/src/compile/driver.ts' },
-    { label: '辅助平面到只读 Render 图层', path: 'packages/kernel/inspect/src/render/readonly-layers.ts' },
-  ]}
+  sources={[{ label: '编译结果、辅助平面与诊断结构', path: 'packages/kernel/inspect/src/compile/types.ts' }]}
 />
 
 ## 相关
