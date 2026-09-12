@@ -5,9 +5,11 @@ import { useCallback, useRef, useState } from 'react';
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
+import type { Lang } from '@/i18n';
 
 import type {
   AlignKey,
+  ComponentPreviewDemoComponent,
   ComponentRenderSource,
   PreviewActionSlot,
   PreviewControlContract,
@@ -32,7 +34,9 @@ export type { ComponentRenderSource } from './types';
 export type ComponentPreviewCardProps = {
   /** demo 标识，仅用于 Dialog header 显示。 */
   name: string;
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染。 */
   source?: ComponentRenderSource;
   /** React 源码视图默认选中的文件名。 */
@@ -77,6 +81,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const {
     name,
     Component,
+    lang = 'zh',
     source,
     defaultSourceFile,
     align = 'center',
@@ -188,6 +193,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           onThemeStyleChange={onThemeStyleChange}
           previewState={previewState}
           Component={Component}
+          lang={lang}
           activeRender={sourceState.activeRender}
           controlSlots={resolvedCardControlSlots}
           previewClassName={cn(
@@ -212,6 +218,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           <ComponentPreviewDialog
             name={name}
             Component={Component}
+            lang={lang}
             source={source}
             defaultSourceFile={defaultSourceFile}
             align={align}

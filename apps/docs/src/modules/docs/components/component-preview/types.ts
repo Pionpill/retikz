@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
+import type { Lang } from '@/i18n';
 import type { PreviewThemeStyleValue } from './theme';
 
 /** 预览区平移 / 缩放状态。 */
@@ -10,6 +11,12 @@ export type SourceView = 'react' | 'ir' | 'vanilla';
 
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
 export type RendererMode = 'svg' | 'canvas';
+
+/** ComponentPreview 向单文件 demo 注入的当前文档语言 */
+export type ComponentPreviewDemoProps = Readonly<{ lang?: Lang }>;
+
+/** 可由 ComponentPreview 加载的 demo 默认组件 */
+export type ComponentPreviewDemoComponent = FC<ComponentPreviewDemoProps>;
 
 /** 单张预览的局部主题环境。 */
 export type PreviewThemeMode = 'inherit' | 'light' | 'dark';
@@ -436,7 +443,7 @@ export type PreviewSourceConfig = {
   /** 是否允许直接执行 demo 以自动派生 IR。 @default true */
   deriveIR?: boolean;
   /** 使用稳定默认状态渲染源码视图，不参与可见 demo 的交互状态 */
-  canonicalRender?: () => ReactNode;
+  canonicalRender?: (lang?: Lang) => ReactNode;
   /** 按外部数据引用名声明 Vanilla 源码复用的附属数据导入。 */
   datasetImports?: Readonly<Record<string, PreviewDatasetImport>>;
 };

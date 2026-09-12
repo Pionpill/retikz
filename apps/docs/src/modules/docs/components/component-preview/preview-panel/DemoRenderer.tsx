@@ -4,13 +4,16 @@ import { RendererModeProvider } from '@retikz/react';
 import { memo } from 'react';
 
 import type { PreviewTheme } from '../theme';
-import type { RendererMode } from '../types';
+import type { ComponentPreviewDemoComponent, RendererMode } from '../types';
+import type { Lang } from '@/i18n';
 
 import { PreviewThemeProvider } from '../theme';
 
 export type DemoRendererProps = {
   /** demo 组件。 */
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 当前渲染目标。 */
   rendererMode: RendererMode;
   /** 当前预览实际生效的 ThemeStyle。 */
@@ -20,11 +23,11 @@ export type DemoRendererProps = {
 
 /** 用当前渲染目标渲染 demo，避免每个示例源码都显式写 renderer。 */
 const DemoRendererComponent: FC<DemoRendererProps> = props => {
-  const { Component, rendererMode, theme } = props;
+  const { Component, lang = 'zh', rendererMode, theme } = props;
   return (
     <PreviewThemeProvider theme={theme}>
       <RendererModeProvider mode={rendererMode}>
-        <Component />
+        <Component lang={lang} />
       </RendererModeProvider>
     </PreviewThemeProvider>
   );

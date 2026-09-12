@@ -40,6 +40,7 @@ import {
 } from '../../src/modules/docs/components/component-preview/controls';
 import {
   buildControlsKey,
+  buildComponentKey,
   buildKey,
   buildLangControlsKey,
   buildSourceFileKey,
@@ -237,7 +238,7 @@ describe('preview controls registry', () => {
   it('ComponentPreview 使用已解析语言选择本地化 controls', () => {
     const source = readFileSync(resolve('src/modules/docs/components/component-preview/ComponentPreview.tsx'), 'utf8');
 
-    expect(source).toContain("const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';");
+    expect(source).toContain("const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';");
   });
 
   it('registry helper 不通过组件预览根 barrel 转发', () => {
@@ -327,6 +328,21 @@ describe('preview controls registry', () => {
     );
     expect(resolveDemoKey(['kernel', 'components', 'test'], '__missing__', 'zh')).toBe(
       '../../contents/kernel/components/test/__missing__.demo.tsx',
+    );
+  });
+
+  it('优先解析单文件多语言图，同时保留旧双语 demo 回退', () => {
+    const inspectSegments = ['kernel', 'packages', 'inspect', 'principles'];
+    const inspectKey = buildComponentKey(inspectSegments, 'inspect-compile-flow');
+
+    expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'zh')).toBe(inspectKey);
+    expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'en')).toBe(inspectKey);
+    expect(demoModules[inspectKey]?.default).toBeTypeOf('function');
+    expect(resolveDemoKey(['viz', 'table', 'reference', 'runtime'], 'table-runtime-transaction', 'zh')).toBe(
+      '../../contents/viz/table/reference/runtime/table-runtime-transaction.zh.demo.tsx',
+    );
+    expect(resolveDemoKey(['viz', 'table', 'reference', 'runtime'], 'table-runtime-transaction', 'en')).toBe(
+      '../../contents/viz/table/reference/runtime/table-runtime-transaction.en.demo.tsx',
     );
   });
 

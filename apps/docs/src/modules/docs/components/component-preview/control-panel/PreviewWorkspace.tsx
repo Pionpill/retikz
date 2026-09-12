@@ -5,10 +5,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
+import type { Lang } from '@/i18n';
 
 import type { PreviewPanelState } from '../preview-panel';
 import type {
   PreviewControlContract,
+  ComponentPreviewDemoComponent,
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
@@ -61,7 +63,9 @@ export type PreviewWorkspaceProps = {
   /** 当前宿主独享的视图 controller */
   previewState: PreviewPanelState;
   /** 默认 React demo */
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 当前源码视图提供的渲染函数 */
   activeRender?: (rendererMode: RendererMode) => ReactNode;
   /** 当前预览区的浮层控制 slots */
@@ -129,6 +133,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     onControlPanelOpenChange,
     previewState,
     Component,
+    lang = 'zh',
     activeRender,
     controlSlots,
     previewClassName,
@@ -172,6 +177,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
       <PreviewPanel
         state={previewState}
         Component={Component}
+        lang={lang}
         activeRender={activeRender}
         theme={previewTheme}
         controlSlots={resolvedControlSlots}

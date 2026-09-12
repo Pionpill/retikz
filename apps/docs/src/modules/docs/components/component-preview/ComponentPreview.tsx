@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib';
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
+import type { Lang } from '@/i18n';
+
 import type {
   AlignKey,
   ComponentPreviewFiles,
@@ -78,7 +80,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
   const { i18n } = useTranslation();
-  const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
+  const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
   const previewTheme = usePreviewTheme(themeStyleSelection);
 
   const ctxSegments = useDemoLocationContext();
@@ -140,6 +142,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             vanillaOverride,
             vanillaSvg,
             theme: previewTheme,
+            lang,
           })
         : { source: undefined, previewIr: null },
     [
@@ -158,6 +161,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       vanillaOverride,
       vanillaSvg,
       previewTheme,
+      lang,
     ],
   );
 
@@ -225,6 +229,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     <ComponentPreviewCard
       name={name}
       Component={Component}
+      lang={lang}
       source={sourceResult.source}
       defaultSourceFile={defaultSourceFile}
       align={align}

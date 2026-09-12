@@ -45,5 +45,5 @@ export const createGraphPreviewSource = (render: () => ReactNode): PreviewSource
 export const withGraphPreviewSource = (source: PreviewSourceConfig): PreviewSourceConfig => ({
   ...source,
   canonicalRender:
-    source.canonicalRender === undefined ? undefined : () => graphCanonicalRender(source.canonicalRender?.()),
+    source.canonicalRender === undefined ? undefined : lang => graphCanonicalRender(source.canonicalRender?.(lang)),
 });

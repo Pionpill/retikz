@@ -20,9 +20,11 @@ import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
+import type { Lang } from '@/i18n';
 
 import type {
   AlignKey,
+  ComponentPreviewDemoComponent,
   ComponentRenderSource,
   PreviewActionSlot,
   PreviewControlContract,
@@ -54,7 +56,9 @@ export type ComponentPreviewDialogProps = {
   /** demo 文件名，用于 header 标识与下载文件名。 */
   name: string;
   /** 默认 React demo 组件。 */
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 不可变源码视图定义；缺省时预览区占满弹窗。 */
   source?: ComponentRenderSource;
   /** React 源码视图默认选中的文件名。 */
@@ -147,6 +151,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const {
     name,
     Component,
+    lang = 'zh',
     source,
     defaultSourceFile,
     align,
@@ -214,6 +219,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       onControlPanelOpenChange={onControlPanelOpenChange}
       previewState={previewState}
       Component={Component}
+      lang={lang}
       activeRender={sourceState.activeRender}
       controlSlots={resolvedDialogControlSlots}
       previewClassName={cn('flex h-full w-full justify-center overflow-hidden p-10 select-none', alignClass[align])}

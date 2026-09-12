@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import type {
+  ComponentPreviewDemoComponent,
   ComponentPreviewFileConfig,
   PreviewControlContract,
   PreviewControlsDefinition,
@@ -13,7 +12,7 @@ export type PreviewLoader<T> = () => Promise<T>;
 
 /** 单个 demo 模块对 ComponentPreview 暴露的导出。 */
 export type PreviewDemoModule = {
-  default: FC;
+  default: ComponentPreviewDemoComponent;
   previewIR?: unknown;
   previewControlContract?: PreviewControlContract;
   previewControls?: PreviewControlsDefinition;
@@ -28,10 +27,10 @@ export type PreviewVanillaModule = { svg?: unknown };
  * @description 只在 component-preview 内部用于 demo、source、IR、vanilla 解析，不属于顶层公共 API。
  */
 export const demoModuleLoaders: Record<string, PreviewLoader<PreviewDemoModule> | undefined> =
-  import.meta.glob<PreviewDemoModule>('../../contents/**/*.demo.tsx', { base: '../' });
+  import.meta.glob<PreviewDemoModule>('../../contents/**/*.tsx', { base: '../' });
 
 export const demoSourceLoaders: Record<string, PreviewLoader<string> | undefined> = import.meta.glob<string>(
-  '../../contents/**/*.demo.tsx',
+  '../../contents/**/*.tsx',
   {
     base: '../',
     query: '?raw',
@@ -74,6 +73,8 @@ export const irJsonOverrideLoaders: Record<string, PreviewLoader<string> | undef
 
 export const buildKey = (segments: Array<string>, name: string) =>
   `../../contents/${segments.join('/')}/${name}.demo.tsx`;
+export const buildComponentKey = (segments: Array<string>, name: string) =>
+  `../../contents/${segments.join('/')}/${name}.tsx`;
 export const buildLangKey = (segments: Array<string>, name: string, lang: string) =>
   `../../contents/${segments.join('/')}/${name}.${lang}.demo.tsx`;
 export const buildSourceFileKey = (segments: Array<string>, filename: string) =>
@@ -86,12 +87,15 @@ export const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') +
 
 /**
  * 解析 demo key。
- * @description 优先 `<name>.<lang>.demo.tsx`，找不到回退到 `<name>.demo.tsx`；含展示文本的 demo 配双语副本，纯几何 demo 单文件即可。
+ * @description 优先单文件 `<name>.tsx`，再回退旧的 `<name>.demo.tsx` 与 `<name>.<lang>.demo.tsx`。
  */
 export const resolveDemoKey = (segments: Array<string>, name: string, lang: string): string => {
+  const componentKey = buildComponentKey(segments, name);
+  if (demoModuleLoaders[componentKey] !== undefined) return componentKey;
+  const demoKey = buildKey(segments, name);
+  if (demoModuleLoaders[demoKey] !== undefined) return demoKey;
   const langKey = buildLangKey(segments, name, lang);
-  if (demoModuleLoaders[langKey] !== undefined) return langKey;
-  return buildKey(segments, name);
+  return demoModuleLoaders[langKey] !== undefined ? langKey : demoKey;
 };
 
 /** 解析附加源码文件对应的 diff baseline 文件名。 */
