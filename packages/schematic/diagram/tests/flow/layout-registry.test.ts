@@ -25,7 +25,13 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
       relationDirections: ['forward'],
       routingKinds: ['straight'],
     },
-    defaults: { direction: 'down', nodeGap: 10, rankGap: 20, routing: { kind: 'straight' } },
+    defaults: {
+      direction: 'down',
+      nodeGap: 10,
+      rankGap: 20,
+      placementGap: { horizontal: 10, vertical: 10 },
+      routing: { kind: 'straight' },
+    },
     layout: () => ({ elements: [], relations: [] }),
   });
 
@@ -80,6 +86,7 @@ describe('Flow Layout registry and catalog', () => {
       direction: 'right',
       nodeGap: 48,
       rankGap: 48,
+      placementGap: { horizontal: 48, vertical: 32 },
       routing: { kind: 'straight', orthogonalCornerRadius: 8 },
     });
   });

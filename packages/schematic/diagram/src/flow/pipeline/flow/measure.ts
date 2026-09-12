@@ -12,10 +12,11 @@ import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/com
 
 import type { FlowLayoutDefinition, FlowLayoutElementInput, FlowLayoutRelationInput } from '../../contract';
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
+import type { IRFlowLayoutIntent } from '../../schemas';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
+import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 
 const measureFailure = (element: CanonicalFlowElement | CanonicalFlowRelation, cause: unknown): never => {
   const isElement = 'type' in element;
@@ -83,6 +84,7 @@ const measureElements = (
   definition: FlowLayoutDefinition,
   graphOptions: GraphDefinitionOptions,
   inheritedLayout: ReturnType<typeof resolveEffectiveFlowLayout>,
+  inheritedLayoutIntent: IRFlowLayoutIntent,
   ancestorScopeIds: ReadonlyArray<string>,
   state: MeasurementState,
 ): ReadonlyArray<FlowLayoutElementInput> =>
@@ -90,6 +92,7 @@ const measureElements = (
     state.scopePaths.set(element.id, ancestorScopeIds);
     if (element.type !== 'entity') {
       try {
+        const layoutIntent = mergeFlowLayoutIntent(inheritedLayoutIntent, element.layout);
         const effectiveLayout = resolveEffectiveFlowLayout(
           definition,
           element.layout,
@@ -115,6 +118,7 @@ const measureElements = (
           definition,
           graphOptions,
           effectiveLayout,
+          layoutIntent,
           [...ancestorScopeIds, element.id],
           state,
         );
@@ -124,7 +128,7 @@ const measureElements = (
             id: element.id,
             ...(element.rank === undefined ? {} : { rank: element.rank }),
             layout: effectiveLayout,
-            placement: resolveEffectiveFlowPlacement(element.source, effectiveLayout),
+            placement: resolveEffectiveFlowPlacement(element.source, layoutIntent, definition),
             elements: measuredElements,
           };
         }
@@ -208,7 +212,16 @@ export const measureFlowDiagram = (
     effectiveLayouts: new Map(),
     scopePaths: new Map(),
   };
-  const elements = measureElements(diagram.elements, context, definition, graphOptions, rootLayout, [], state);
+  const elements = measureElements(
+    diagram.elements,
+    context,
+    definition,
+    graphOptions,
+    rootLayout,
+    diagram.layout,
+    [],
+    state,
+  );
   return {
     diagram,
     input: {

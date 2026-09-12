@@ -11,13 +11,22 @@ import type {
 
 /** 已补全默认值的固定排列配置；Grid 使用物理行列，不改变流程方向 */
 export type EffectiveFlowPlacement =
-  | Readonly<{ kind: 'linear'; direction: FlowDirectionValue; gap: number; align: FlowLayoutAlignmentValue }>
+  | Readonly<{
+      kind: 'linear';
+      direction: FlowDirectionValue;
+      gap: number;
+      align: FlowLayoutAlignmentValue;
+      /** 仅排除对外结构边界贡献，不移除局部排列或绘制 */
+      excludeFromBounds?: ReadonlyArray<string>;
+    }>
   | Readonly<{
       kind: 'grid';
       rowGap: number;
       columnGap: number;
       reserveLabelSpace: boolean;
       placements: Extract<IRFlowLayout, { kind: 'grid' }>['placements'];
+      /** 仅排除对外结构边界贡献，不移除局部排列或绘制 */
+      excludeFromBounds?: ReadonlyArray<string>;
     }>;
 
 /** Flow layout provider 使用的有效路由 */
@@ -38,6 +47,13 @@ export type FlowLayoutDefaults = Readonly<{
   direction: FlowDirectionValue;
   nodeGap: number;
   rankGap: number;
+  /** 固定 Layout 未获得作者间距时使用的物理轴默认值，不影响自动布局 */
+  placementGap: Readonly<{
+    /** 左右排列与 Grid 列间距 */
+    horizontal: number;
+    /** 上下排列与 Grid 行间距 */
+    vertical: number;
+  }>;
   routing: Readonly<{
     kind: FlowRoutingKindValue;
     /** 所有轴对齐路由的圆角默认；支持任一轴对齐模式时必填 */
@@ -96,6 +112,7 @@ export type FlowLayoutPlacementInput = Readonly<{
 
 /** Flow Layout 固定 placement 的完整输出 */
 export type FlowLayoutPlacementOutput = Readonly<{
+  /** 对外结构边界；排除配置下原点为零，子项允许溢出或使用负坐标 */
   bounds: Readonly<BoundsRect>;
   elements: ReadonlyArray<FlowLayoutElementOutput>;
 }>;

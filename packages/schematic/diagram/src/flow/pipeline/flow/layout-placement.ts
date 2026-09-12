@@ -1,4 +1,5 @@
 import type { LayoutCompositeCompileContext } from '@retikz/core';
+import type { BoundsRect } from '@retikz/math';
 
 import { createGroupBodyAllocation } from '@retikz/graph';
 import {
@@ -9,12 +10,14 @@ import {
   LayoutItemKind,
 } from '@retikz/layout';
 import { compileFlexLayout, compileGridLayout, intrinsicLayoutProposal } from '@retikz/layout/compose';
+import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
 
 import type {
   FlowLayoutElementInput,
   FlowLayoutExecutionContext,
   FlowLayoutInput,
   FlowLayoutPlacementInput,
+  FlowLayoutPlacementOutput,
 } from '../../contract';
 import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '../../shared';
 
@@ -72,6 +75,52 @@ const gridTrackCount = (
     return Math.max(...placements.map(row => row.length));
   }
   return Math.max(...Array.from(cellsById.values(), cell => cell[axis])) + 1;
+};
+
+/** 保留完整局部排列，只投影 Layout 对父级贡献的结构边界 */
+const projectPlacementBounds = (
+  input: FlowLayoutPlacementInput,
+  output: FlowLayoutPlacementOutput,
+  flow: FlowLayoutInput,
+): FlowLayoutPlacementOutput => {
+  const excluded = input.layout.excludeFromBounds;
+  if (excluded === undefined || excluded.length === 0) return output;
+  const findLayout = (elements: ReadonlyArray<FlowLayoutElementInput>): FlowLayoutElementInput | undefined => {
+    for (const element of elements) {
+      if (element.id === input.layout.id) return element;
+      if (element.kind !== 'leaf') {
+        const found = findLayout(element.elements);
+        if (found !== undefined) return found;
+      }
+    }
+    return undefined;
+  };
+  const owner = findLayout(flow.elements)!;
+  const children = owner.kind === 'leaf' ? [] : owner.elements;
+  let contribution: BoundsRect | undefined;
+  for (const element of output.elements) {
+    if (excluded.includes(element.id)) continue;
+    const child = children.find(candidate => candidate.id === element.id)!;
+    const margin = child.kind === 'leaf' ? child.margin : { top: 0, right: 0, bottom: 0, left: 0 };
+    const bounds = {
+      x: element.bounds.x - margin.left,
+      y: element.bounds.y - margin.top,
+      width: element.bounds.width + margin.left + margin.right,
+      height: element.bounds.height + margin.top + margin.bottom,
+    };
+    contribution =
+      contribution === undefined
+        ? bounds
+        : boundsToRect(mergeBounds(rectToBounds(contribution), rectToBounds(bounds))!);
+  }
+  const bounds = contribution!;
+  return {
+    bounds: { ...bounds, x: 0, y: 0 },
+    elements: output.elements.map(element => ({
+      ...element,
+      bounds: { ...element.bounds, x: element.bounds.x - bounds.x, y: element.bounds.y - bounds.y },
+    })),
+  };
 };
 
 /** 使用公开 Flex/Grid compiler 执行一个无绘制 Flow Layout placement */
@@ -142,10 +191,14 @@ export const createFlowLayoutExecutionContext = (
         }
         const artifact = compileGridLayout({ ...grid, rowGap, columnGap }, compileContext).artifact;
         if (artifact === undefined) return placementFailure(input, 'GridLayout returned no placement artifact.');
-        return {
-          bounds: artifact.container.allocationBounds,
-          elements: artifact.items.map(item => ({ id: item.key, bounds: item.allocationBounds })),
-        };
+        return projectPlacementBounds(
+          input,
+          {
+            bounds: artifact.container.allocationBounds,
+            elements: artifact.items.map(item => ({ id: item.key, bounds: item.allocationBounds })),
+          },
+          flow,
+        );
       }
       const flex = createFlexLayout({
         direction: flexDirection(input.layout.direction),
@@ -163,10 +216,14 @@ export const createFlowLayoutExecutionContext = (
         proposal: intrinsicLayoutProposal('natural'),
       }).artifact;
       if (artifact === undefined) return placementFailure(input, 'FlexLayout returned no placement artifact.');
-      return {
-        bounds: artifact.container.allocationBounds,
-        elements: artifact.items.map(item => ({ id: item.key, bounds: item.allocationBounds })),
-      };
+      return projectPlacementBounds(
+        input,
+        {
+          bounds: artifact.container.allocationBounds,
+          elements: artifact.items.map(item => ({ id: item.key, bounds: item.allocationBounds })),
+        },
+        flow,
+      );
     } catch (cause) {
       if (cause instanceof RetikzDiagramError) throw cause;
       return placementFailure(input, 'Layout composition failed.', cause);

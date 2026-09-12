@@ -1,5 +1,7 @@
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
+import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
+
 import type {
   EffectiveFlowLayout,
   FlowLayoutElementInput,
@@ -41,6 +43,38 @@ type ScopeLayoutResult = Readonly<{
 }>;
 
 const ZERO_INSETS: Readonly<BoundsInsets> = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
+
+/** 在可见 Group 边界恢复 Layout 溢出后代的完整占位，并整体平移子树 */
+const encloseGroupContent = (content: ScopeLayoutResult): ScopeLayoutResult => {
+  let bounds = rectToBounds({ x: 0, y: 0, width: content.width, height: content.height });
+  const visit = (elements: ReadonlyArray<PlacedElement>, offsetX: number, offsetY: number): void => {
+    for (const element of elements) {
+      const x = element.bounds.x + offsetX;
+      const y = element.bounds.y + offsetY;
+      const margin = element.input.kind === 'leaf' ? element.input.margin : ZERO_INSETS;
+      bounds = mergeBounds(
+        bounds,
+        rectToBounds({
+          x: x - margin.left,
+          y: y - margin.top,
+          width: element.bounds.width + margin.left + margin.right,
+          height: element.bounds.height + margin.top + margin.bottom,
+        }),
+      )!;
+      if (element.input.kind === 'layout' && element.children !== undefined) visit(element.children.elements, x, y);
+    }
+  };
+  visit(content.elements, 0, 0);
+  const complete = boundsToRect(bounds);
+  return {
+    width: complete.width,
+    height: complete.height,
+    elements: content.elements.map(element => ({
+      ...element,
+      bounds: { ...element.bounds, x: element.bounds.x - complete.x, y: element.bounds.y - complete.y },
+    })),
+  };
+};
 
 const buildInputIndex = (elements: ReadonlyArray<FlowLayoutElementInput>): LayeredInputIndex => {
   const scopes = new Map<string, ReadonlyArray<string>>();
@@ -193,7 +227,7 @@ const sizeElement = (
       children,
     };
   }
-  const children = layoutScope(input.elements, input.layout, relations, index, input.id, context);
+  const children = encloseGroupContent(layoutScope(input.elements, input.layout, relations, index, input.id, context));
   return {
     input,
     width: Math.max(input.minimumSize.width, input.contentInsets.left + children.width + input.contentInsets.right),

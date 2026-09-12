@@ -172,7 +172,9 @@ const validateElementGeometry = (
     if (contentBounds.width < 0 || contentBounds.height < 0) {
       invalidOutput(definition, ['elements'], 'Flow scope content insets exceed its bounds.', [element.id]);
     }
-    for (const child of element.elements) {
+    const containedChildren = element.kind === 'group' ? flattenElements(element.elements) : element.elements;
+    for (const child of containedChildren) {
+      if (element.kind === 'layout' && element.placement.excludeFromBounds?.includes(child.id)) continue;
       const childBounds = boundsById.get(child.id);
       if (childBounds === undefined || !containsBounds(contentBounds, childBounds)) {
         invalidOutput(definition, ['elements'], 'Flow scope content bounds must contain every direct child.', [
@@ -259,6 +261,7 @@ const validatePlacementInput = (
       expected.placement.kind === 'linear'
         ? ['kind', 'id', 'direction', 'gap', 'align']
         : ['kind', 'id', 'rowGap', 'columnGap', 'reserveLabelSpace', 'placements'],
+      ['excludeFromBounds'],
     ) ||
     !Array.isArray(input.elements)
   ) {
@@ -271,6 +274,14 @@ const validatePlacementInput = (
   }
   const actual = input.layout;
   const placement = expected.placement;
+  if (JSON.stringify(actual.excludeFromBounds) !== JSON.stringify(placement.excludeFromBounds)) {
+    invalidOutput(
+      definition,
+      ['layouts', expected.id, 'layout', 'excludeFromBounds'],
+      'Layout exclusion must match input.',
+      [expected.id],
+    );
+  }
   const matches =
     actual.kind === 'linear' && placement.kind === 'linear'
       ? actual.direction === placement.direction && actual.gap === placement.gap && actual.align === placement.align

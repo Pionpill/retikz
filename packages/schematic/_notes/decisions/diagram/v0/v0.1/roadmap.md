@@ -51,6 +51,8 @@ ADR-10 在当前 alpha.1 补充二维固定排列，依赖 ADR-07 的独立 Layo
 
 [ADR-11：Flow 单折角路由](./alpha.1/11-flow-elbow-routing.md) 在当前 alpha.1 扩展显式转折顺序，复用 ADR-04/05 的统一 provider 与结果链路。实现与验证已完成，状态保持 Proposed，待最终验收；不改变默认路由与间距，不包含自动避障。
 
+[ADR-12：Flow 布局边界贡献控制](./alpha.1/12-flow-layout-bounds.md) 在当前 alpha.1 补充容器局部的边界贡献选择，让附属子树保留自身排列与关系，同时不扩大指定 Layout 向父级报告的占位。状态为 Proposed，待设计确认；完整输出与可见 Group 的包含边界仍保留全部内容，不包含 absolute 定位或自动避障。
+
 上述 ADR 只表示长期决策的依赖分区，不在 roadmap 冻结字段、默认值、算法库、测试 case、文件 scope 或实现步骤
 
 ## 依赖顺序

@@ -126,6 +126,7 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
       direction: 'right',
       nodeGap: 20,
       rankGap: 40,
+      placementGap: { horizontal: 20, vertical: 20 },
       routing: { kind: 'orthogonal', orthogonalCornerRadius: 6 },
     },
     layout,

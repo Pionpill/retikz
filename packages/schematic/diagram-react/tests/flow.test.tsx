@@ -10,6 +10,29 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowReact from '../src/flow';
 
+it('preserves local Layout exclusion through React and Vanilla equally', () => {
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowLayout id="row" kind="linear" direction="right" excludeFromBounds={['png']}>
+        <FlowReact.FlowEntities items={['canvas', 'png']} />
+      </FlowReact.FlowLayout>
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const vanilla = normalizeFlowDiagram({
+    entities: [
+      { id: 'canvas', text: 'canvas' },
+      { id: 'png', text: 'png' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'row', kind: 'linear', direction: 'right', children: ['canvas', 'png'], excludeFromBounds: ['png'] },
+    ],
+    children: ['row'],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
+});
+
 type FlowComponent = FC<Readonly<Record<string, unknown>> & Readonly<{ children?: ReactNode }>>;
 
 const componentExport = (name: string): FlowComponent | undefined => {

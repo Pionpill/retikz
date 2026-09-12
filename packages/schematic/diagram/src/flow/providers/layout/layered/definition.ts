@@ -24,6 +24,7 @@ export const LayeredFlowLayoutDefinition: FlowLayoutDefinition = defineFlowLayou
     direction: 'right',
     nodeGap: 48,
     rankGap: 48,
+    placementGap: { horizontal: 48, vertical: 32 },
     routing: { kind: 'straight', orthogonalCornerRadius: 8 },
   },
   layout: layoutLayeredFlow,

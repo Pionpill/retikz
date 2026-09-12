@@ -204,6 +204,9 @@ export const FlowGroupSchema = strictObject({
 
 const FlowLayoutBaseSchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Layout identity.'),
+  excludeFromBounds: array(NonBlankStringSchema)
+    .optional()
+    .describe('Direct child ids excluded from this Layout bounds, without removing their local placement or drawing.'),
   rank: NonNegativeIntegerSchema.optional().describe('Optional rank constraint within the parent Flow scope.'),
   children: array(NonBlankStringSchema).nonempty().describe('Non-empty ordered direct child identity references.'),
 });
@@ -252,6 +255,24 @@ const FlowGridLayoutSchema = strictObject({
 
 export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSchema, FlowGridLayoutSchema])
   .superRefine((layout, context) => {
+    const excluded = new Set<string>();
+    for (const [index, id] of (layout.excludeFromBounds ?? []).entries()) {
+      if (excluded.has(id) || !layout.children.includes(id)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['excludeFromBounds', index],
+          message: 'Excluded ids must be unique direct children.',
+        });
+      }
+      excluded.add(id);
+    }
+    if (layout.children.every(id => excluded.has(id))) {
+      context.addIssue({
+        code: 'custom',
+        path: ['excludeFromBounds'],
+        message: 'At least one direct child must contribute to Layout bounds.',
+      });
+    }
     if (layout.kind !== FlowPlacementKind.Grid) return;
     const children = new Set(layout.children);
     if (Array.isArray(layout.placements)) {

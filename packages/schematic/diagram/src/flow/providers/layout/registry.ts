@@ -37,7 +37,8 @@ const CAPABILITY_KEYS = new Set([
   'relationDirections',
   'routingKinds',
 ]);
-const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'routing']);
+const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'placementGap', 'routing']);
+const PLACEMENT_GAP_KEYS = new Set(['horizontal', 'vertical']);
 const ROUTING_DEFAULT_KEYS = new Set(['kind', 'orthogonalCornerRadius']);
 
 const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cause?: unknown): never => {
@@ -110,6 +111,7 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   }
   validateExactKeys(capabilities, CAPABILITY_KEYS, 'capabilities', definition);
   validateExactKeys(defaults, DEFAULT_KEYS, 'defaults', definition);
+  validateExactKeys(defaults.placementGap, PLACEMENT_GAP_KEYS, 'defaults.placementGap', definition);
   validateExactKeys(defaults.routing, ROUTING_DEFAULT_KEYS, 'defaults.routing', definition, new Set(['kind']));
   if (capabilities.groupEndpoints && !capabilities.compoundScopes) {
     invalidDefinition(definition, 'groupEndpoints requires compoundScopes.');
@@ -128,6 +130,8 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   if (!FLOW_DIRECTIONS.has(defaults.direction)) invalidDefinition(definition, 'defaults.direction is unsupported.');
   validateFiniteNonNegative(defaults.nodeGap, 'defaults.nodeGap', definition);
   validateFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);
+  validateFiniteNonNegative(defaults.placementGap.horizontal, 'defaults.placementGap.horizontal', definition);
+  validateFiniteNonNegative(defaults.placementGap.vertical, 'defaults.placementGap.vertical', definition);
   if (!capabilities.routingKinds.includes(defaults.routing.kind)) {
     invalidDefinition(definition, 'defaults.routing.kind is not declared by routingKinds.');
   }

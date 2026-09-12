@@ -26,7 +26,7 @@ import { FlowDiagram, FlowEntities, FlowRelations } from '@retikz/diagram-react/
 
 需要明确一个批量 marker 已列出当前 owner 的全部同类声明时，设置 `complete`。`complete` 默认为 `false`；设为 `true` 后，该 marker 不能和当前 owner 的其它同类单项或批量 marker 共存。`FlowEntities` 的 owner 可以是 Flow 根、Group 或 Layout，不同 owner 互不冲突；`FlowRelations` 只能位于 Flow 根。
 
-`FlowDiagram` 既可直接复用 `Layout` 作为 standalone 宿主，也可作为外层 `Layout` 的 embed。Source 中不写 `position` 或 route；省略运行时配置时使用内置 `layered`，relation 默认采用直线 routing。需要折线时可显式选择 `orthogonal`。
+`FlowDiagram` 既可直接复用 `Layout` 作为 standalone 宿主，也可作为外层 `Layout` 的 embed。Source 中不写 `position` 或 route；省略运行时配置时使用内置 `layered`，relation 默认采用直线 routing。需要折线时可选择 `orthogonal`；需要明确转折顺序时用 `-|` 或 `|-`。
 
 ## 例子
 
@@ -104,9 +104,45 @@ const source = normalizeFlowDiagram({
 });
 ```
 
-每个直接子项都必须指定单元格，不能重叠、跨格或引用其它容器的后代。空行列保留，但不生成占位元素。`rowGap`、`columnGap` 分别默认继承 `nodeGap`，接受显式 `0`；非对称 margin 会对称预留足够空间，不推偏节点中心。Grid 不随流程方向旋转。
+每个直接子项都必须指定单元格，不能重叠、跨格或引用其它容器的后代。空行列保留，但不生成占位元素。`rowGap`、`columnGap` 优先继承作者显式设置的 `nodeGap`；未设置时，内置默认分别为 `32`、`48`，接受显式 `0`；非对称 margin 会对称预留足够空间，不推偏节点中心。Grid 不随流程方向旋转。
 
 `reserveLabelSpace` 默认开启。带标签的横向 Relation 会把其测量宽度加到 `columnGap`，纵向 Relation 会把测量高度加到 `rowGap`；同轴多个标签取最大尺寸，因此其它行列也会使用同一扩张后的间距。例如 `columnGap={32}` 且标签宽度为 `12` 时，实际列间距为 `44`。设为 `false` 后，Grid 严格使用 `rowGap` / `columnGap` 配置值，不为标签预留空间。此行为不保证斜线、折线或跨越中间节点的全局避碰。[TeX 缓存图](/kernel/packages/tex/principles#缓存失败与重试) 展示了实际用法。
+
+`FlowLayout kind="linear"` 的左右方向默认 `gap=48`，上下方向默认 `gap=32`。优先级为本层显式间距、祖先显式 `nodeGap`（或 Linear 的 `gap`）、Definition 的物理轴默认值；显式 `0` 也会继承。父级补出的默认间距不作为显式值传给子布局。根图示和可见 Group 的自动布局默认 `nodeGap=48`、`rankGap=48` 保持不变。
+
+自定义 Layout Definition 必须提供 `defaults.placementGap: { horizontal, vertical }`，两个值均为有限非负数；它只控制固定 Layout 的默认间距，与自动布局的 `nodeGap` / `rankGap` 分开。
+
+### 附属内容与布局边界
+
+主体需要附带独立节点，但不希望附属内容推偏上层对齐时，在 `FlowLayout` 上设置 `excludeFromBounds`。下面 Canvas 与 SVG 保持同列居中；PNG、JPEG 仍在自己的子布局中上下排列，并分别连接 Canvas。
+
+<ComponentPreview
+  files="flow-bounds"
+  size="sm"
+  caption="formats 在内部正常排列，但不扩大 canvas-output 向父级报告的边界。"
+/>
+
+| 属性                | 类型 / 默认              | 行为                                       |
+| ------------------- | ------------------------ | ------------------------------------------ |
+| `excludeFromBounds` | `Array<string>` / 不排除 | Linear、Grid 均可用；只引用当前直接子项 id |
+
+React 的 `<FlowLayout excludeFromBounds={['formats']}>` 与 Vanilla `layouts` 中的 `{ excludeFromBounds: ['formats'] }` 表达相同配置，预览源码可切换查看。缺省或空数组保持原行为；重复 id、后代或其它容器的 id，以及排除全部子项都会报错。名单不向子布局继承。
+
+排除只改变该 Layout 对父级贡献的尺寸与对齐基准，不是隐藏或 absolute 定位：局部顺序、gap、margin、Grid 轨道和标签预留仍生效。将附属项夹在两个主体中间，仍可能改变二者距离；需要隔离影响时，像示例一样包装为独立 Layout。
+
+完整画布仍包含附属内容与连线；可见 `FlowGroup` 也仍包住全部后代。排除不提供自动避障。Layout artifact 的 `bounds` 是布局占位，不是全部后代的绘制范围或裁切框；自定义 provider 必须原样传递排除配置，并保留 `placeLayout` 返回的全部子项及相对坐标。
+
+### 单折角连线
+
+从同一个 A 连到 B，`-|` 先水平再垂直，`|-` 先垂直再水平。它们不受主布局方向或箭头方向影响，也不会为其它节点自动绕行。预览的 React 与 Vanilla 源码使用相同的 `routing` 配置。
+
+<ComponentPreview
+  files="flow-routing"
+  size="sm"
+  caption="比较两条连线：-| 沿上方转向，|- 沿下方转向；两端都连接节点边界。"
+/>
+
+两端对齐时自动退化为直线；中心完全重合时会报路由错误。`cornerRadius: 0` 保留直角，正数使用圆角。平行边可能重叠；需要避开节点时应调整布局，而不是把单折角路由当作避障算法。
 
 ### 全局配置
 
@@ -142,19 +178,32 @@ Flow defaults 只包含 `layout.nodeGap/rankGap`、`entity.style/layout`、Group
 
 根和 Group 用独立 `routing` 设置路由意图，Relation 的 `routing` 优先。未指定时取两个 endpoint 最近公共 Group 的有效路由，再取根和布局 Definition 的默认路由；中间的 FlowLayout 不建立路由层。例如根为 straight、Group 为 orthogonal 时，嵌套 Layout 内的关系仍使用 orthogonal。
 
+三种轴对齐模式共享圆角继承：实例 `cornerRadius` 优先，其次祖先有效 routing 的半径，再取 Definition 的 `orthogonalCornerRadius`，内置值为 `8`。切换 `kind` 不丢失继承半径，显式 `0` 禁用圆角。
+
+自定义 Layout Definition 必须在 `capabilities.routingKinds` 声明支持的模式；只要支持任一轴对齐模式，就必须提供 `defaults.routing.orthogonalCornerRadius`。新模式返回从 source bounds 中心到 target bounds 中心的单折角点链；反向折角、额外绕行或偏离中心会以 `FlowLayoutOutputInvalid` 报错。Artifact 保留模式和未裁剪参考点，最终边界裁剪与圆角由 Core 完成。
+
 ## API 参考
+
+### 路由配置
+
+| `routing.kind` | 行为                   | 圆角                  |
+| -------------- | ---------------------- | --------------------- |
+| `straight`     | 直线；内置默认         | 不接受 `cornerRadius` |
+| `orthogonal`   | 按布局方向生成正交折线 | 可选 `cornerRadius`   |
+| `-\|`          | 从 source 先水平后垂直 | 可选 `cornerRadius`   |
+| `\|-`          | 从 source 先垂直后水平 | 可选 `cornerRadius`   |
 
 ### React authoring
 
-| 组件            | 核心属性                                                                                                                                                                                         | 默认值                                                       | 描述                                                                                                                                                                                                                                                                                                                                                      |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FlowDiagram`   | `entities` / `groups` / `layouts` / 根 `children` / `relations` 由 JSX children 收集；`presentation?`、`frame?`、`diagramDefaults?`、`graphRules?`、`flowDefaults?`、`layout?`、`routing?`       | `layered`（`nodeGap=48`、`rankGap=48`）+ 直线 routing        | Source 根、Definition 注入和 standalone `Layout` 宿主。`graphRules` 复用 Graph selector，只作用于此 Flow 的 Entity 与 Relation                                                                                                                                                                                                                            |
-| `FlowEntity`    | `id`、`text`、`role?`、`kind?`、`group?`、`status?`、`rank?`、`style?`、`layout?`                                                                                                                | role=`concept`                                               | 单一 Graph Entity。`group` 与 Relation 使用相同值时共享自动分类色；`text` 可为字符串或 TextBlock 行数组；每行可覆盖 `fill` 与 `font`，但 Flow 中至少须有一条非空文本或 TeX run。`status` 复用 Graph 的 `error`、`success`、`warning`、`disabled`，省略时不标记状态。`layout.align`、`lineHeight`、`maxTextWidth` 分别控制整个文本块的对齐、行距与换行宽度 |
-| `FlowEntities`  | `items: ReadonlyArray<string \| InputFlowEntity>`<br />`complete?: boolean`                                                                                                                      | complete=`false`                                             | 在当前位置按数组顺序声明 Entity。默认可与同 owner 的其它 Entity marker 追加混用；`complete` 表示当前 owner 的唯一完整 Entity 清单                                                                                                                                                                                                                         |
-| `FlowGroup`     | `id`、`caption?`、`rank?`、`layout?`、`routing?`、`padding?`、`background?`、`border?`、`cornerRadius?`、`overflow?`、`children`                                                                 | Graph Group                                                  | 可见语义边界；`caption.title.text` 是标题，`layout` 排列 children，`routing` 为作用域内关系提供默认路由；Relation 只能放在根                                                                                                                                                                                                                              |
-| `FlowLayout`    | `kind`、`id`、`rank?`、`children`；linear：`direction`、`gap?`、`align?`；grid：`placements`、`rowGap?`、`columnGap?`、`reserveLabelSpace?`                                                      | linear align=`center`；间距继承 `nodeGap`；label 预留=`true` | 无外壳固定排列，不能作为 Relation endpoint；Grid 的 `placements` 推荐二维数组，也支持 `{ childId: { row, column } }` 映射；两个轴始终居中                                                                                                                                                                                                                 |
-| `FlowRelation`  | `source`、`target`、`label?`、`role?`、`kind?`、`status?`、`direction?`、`group?`、`style?`、`sourceMarker?`、`targetMarker?`、`labelTextForeground?`、`labelFont?`、`labelOpacity?`、`routing?` | role=`flow`                                                  | 根级有序关系，无独立 id；endpoint 可为 Entity 或 Group，不能为 Layout。`group` 复用 Graph 的视觉颜色分组；路径外观放在 `style`，marker、标签格式与 routing 直接放在关系根                                                                                                                                                                                 |
-| `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                                                                 | complete=`false`                                             | 在 Flow 根按数组顺序声明 Relation。默认可与其它 Relation marker 追加混用；`complete` 表示根级唯一完整 Relation 清单                                                                                                                                                                                                                                       |
+| 组件            | 核心属性                                                                                                                                                                                         | 默认值                                                                               | 描述                                                                                                                                                                                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FlowDiagram`   | `entities` / `groups` / `layouts` / 根 `children` / `relations` 由 JSX children 收集；`presentation?`、`frame?`、`diagramDefaults?`、`graphRules?`、`flowDefaults?`、`layout?`、`routing?`       | `layered`（`nodeGap=48`、`rankGap=48`）+ 直线 routing                                | Source 根、Definition 注入和 standalone `Layout` 宿主。`graphRules` 复用 Graph selector，只作用于此 Flow 的 Entity 与 Relation                                                                                                                                                                                                                            |
+| `FlowEntity`    | `id`、`text`、`role?`、`kind?`、`group?`、`status?`、`rank?`、`style?`、`layout?`                                                                                                                | role=`concept`                                                                       | 单一 Graph Entity。`group` 与 Relation 使用相同值时共享自动分类色；`text` 可为字符串或 TextBlock 行数组；每行可覆盖 `fill` 与 `font`，但 Flow 中至少须有一条非空文本或 TeX run。`status` 复用 Graph 的 `error`、`success`、`warning`、`disabled`，省略时不标记状态。`layout.align`、`lineHeight`、`maxTextWidth` 分别控制整个文本块的对齐、行距与换行宽度 |
+| `FlowEntities`  | `items: ReadonlyArray<string \| InputFlowEntity>`<br />`complete?: boolean`                                                                                                                      | complete=`false`                                                                     | 在当前位置按数组顺序声明 Entity。默认可与同 owner 的其它 Entity marker 追加混用；`complete` 表示当前 owner 的唯一完整 Entity 清单                                                                                                                                                                                                                         |
+| `FlowGroup`     | `id`、`caption?`、`rank?`、`layout?`、`routing?`、`padding?`、`background?`、`border?`、`cornerRadius?`、`overflow?`、`children`                                                                 | Graph Group                                                                          | 可见语义边界；`caption.title.text` 是标题，`layout` 排列 children，`routing` 为作用域内关系提供默认路由；Relation 只能放在根                                                                                                                                                                                                                              |
+| `FlowLayout`    | `kind`、`id`、`rank?`、`children`、`excludeFromBounds?`；linear：`direction`、`gap?`、`align?`；grid：`placements`、`rowGap?`、`columnGap?`、`reserveLabelSpace?`                                | linear align=`center`；横向 `48` / 纵向 `32`；显式 `nodeGap` 优先；label 预留=`true` | 无外壳固定排列，不能作为 Relation endpoint；Grid 的 `placements` 推荐二维数组，也支持 `{ childId: { row, column } }` 映射；两个轴始终居中                                                                                                                                                                                                                 |
+| `FlowRelation`  | `source`、`target`、`label?`、`role?`、`kind?`、`status?`、`direction?`、`group?`、`style?`、`sourceMarker?`、`targetMarker?`、`labelTextForeground?`、`labelFont?`、`labelOpacity?`、`routing?` | role=`flow`                                                                          | 根级有序关系，无独立 id；endpoint 可为 Entity 或 Group，不能为 Layout。`group` 复用 Graph 的视觉颜色分组；路径外观放在 `style`，marker、标签格式与 routing 直接放在关系根                                                                                                                                                                                 |
+| `FlowRelations` | `items: ReadonlyArray<readonly [string, string] \| InputFlowRelation>`<br />`complete?: boolean`                                                                                                 | complete=`false`                                                                     | 在 Flow 根按数组顺序声明 Relation。默认可与其它 Relation marker 追加混用；`complete` 表示根级唯一完整 Relation 清单                                                                                                                                                                                                                                       |
 
 ### 公开入口
 

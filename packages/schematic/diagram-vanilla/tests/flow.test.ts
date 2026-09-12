@@ -6,6 +6,25 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
 
+it('preserves local Layout exclusion through Vanilla authoring', () => {
+  const input: FlowVanilla.InputFlowDiagram = {
+    entities: [
+      { id: 'canvas', text: 'Canvas' },
+      { id: 'png', text: 'PNG' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'row', kind: 'linear', direction: 'right', children: ['canvas', 'png'], excludeFromBounds: ['png'] },
+    ],
+    children: ['row'],
+  };
+  const source = FlowVanilla.normalizeFlowDiagram(input);
+  expect(source.layouts[0].excludeFromBounds).toEqual(['png']);
+  expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(
+    DiagramFlow.FlowDiagramSchema.parse(source),
+  );
+});
+
 type NormalizeFlowDiagram = (input: Readonly<Record<string, unknown>>) => DiagramFlow.IRFlowDiagram;
 type CreateFlowDiagramEmbed = (
   id: string,
