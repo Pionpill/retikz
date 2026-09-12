@@ -7,7 +7,7 @@ import { useLayoutStore } from '@/store';
 
 /**
  * 全局快捷键
- * @description Ctrl+L 复制 URL；Ctrl+Alt+B 切 TOC；Ctrl+Alt+M 切布局；Ctrl+Alt+H 切隐藏所有 demo 代码；Ctrl+Alt+E 切强制展开所有 demo 代码
+ * @description Ctrl+L 复制 URL；Ctrl+B 切左侧目录；Ctrl+Alt+B 切 TOC；Ctrl+Alt+M 切布局；Ctrl+Alt+H 切隐藏所有 demo 代码；Ctrl+Alt+E 切强制展开所有 demo 代码
  */
 export const useDocShortcuts = () => {
   const { t } = useTranslation();
@@ -15,6 +15,7 @@ export const useDocShortcuts = () => {
   const setTocOpen = useTocStore(state => state.setTocOpen);
   const hasToc = useTocStore(state => state.hasToc);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
+  const toggleSidebar = useLayoutStore(s => s.toggleSidebar);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
 
@@ -36,6 +37,11 @@ export const useDocShortcuts = () => {
       if (mod && !event.altKey && !event.shiftKey && key === 'l') {
         event.preventDefault();
         handleCopyLink();
+        return;
+      }
+      if (mod && !event.altKey && !event.shiftKey && key === 'b') {
+        event.preventDefault();
+        toggleSidebar();
         return;
       }
       if (mod && event.altKey && !event.shiftKey) {
@@ -61,5 +67,5 @@ export const useDocShortcuts = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleCopyLink, handleToggleToc, toggleLayout, togglePreviewHideCode, togglePreviewIsExpand]);
+  }, [handleCopyLink, handleToggleToc, toggleLayout, togglePreviewHideCode, togglePreviewIsExpand, toggleSidebar]);
 };

@@ -98,6 +98,7 @@ blog 是 docs 站的顶层 module，路径为 `/blog/<sectionId>/<slug>`，复�
 ## 快捷键
 
 - `Ctrl+L`：复制当前页 URL。
+- `Ctrl+B`：切换左侧文档目录。
 - `Ctrl+Alt+B`：切换右侧 TOC 抽屉。
 
 ## 常用命令
