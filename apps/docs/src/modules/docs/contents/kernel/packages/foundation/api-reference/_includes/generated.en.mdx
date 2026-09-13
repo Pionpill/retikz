@@ -10,12 +10,12 @@
   </ApiSourceLink>
 </p>
 
-| Member        | Type       | Default | Description |
-| ------------- | ---------- | ------- | ----------- |
-| `constructor` | `unknown`  | —       | —           |
-| `cause?`      | `unknown`  | —       | —           |
-| `code`        | `TCode`    | —       | —           |
-| `details`     | `TDetails` | —       | —           |
+| Member        | Type                                                                                              | Default | Description |
+| ------------- | ------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `constructor` | `<TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
+| `cause?`      | `unknown`                                                                                         | —       | —           |
+| `code`        | `TCode`                                                                                           | —       | —           |
+| `details`     | `TDetails`                                                                                        | —       | —           |
 
 #### Type parameters
 
@@ -32,9 +32,9 @@
   </ApiSourceLink>
 </p>
 
-| Member        | Type      | Default | Description |
-| ------------- | --------- | ------- | ----------- |
-| `constructor` | `unknown` | —       | —           |
+| Member        | Type                                                                                                                                                                                      | Default | Description |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `constructor` | `<TCode, TDetails>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
 
 #### Type parameters
 
@@ -89,7 +89,7 @@ string | number | boolean | null | ReadonlyArray<JsonValue> | {};
 ### NonEmptyReadonlyArray
 
 <p>
-  <ApiSourceLink label={'NonEmptyReadonlyArray'} path={'packages/kernel/foundation/src/types.ts'} startLine={28}>
+  <ApiSourceLink label={'NonEmptyReadonlyArray'} path={'packages/kernel/foundation/src/types.ts'} startLine={31}>
     Readonly array with at least one element
   </ApiSourceLink>
 </p>
@@ -190,6 +190,25 @@ indexedAccess;
 | -------------- | ----------- |
 | `T`            | —           |
 
+### WithOptionalProperties
+
+<p>
+  <ApiSourceLink label={'WithOptionalProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={28}>
+    Makes selected properties optional while preserving the remaining properties
+  </ApiSourceLink>
+</p>
+
+```ts
+Omit<T, TKey> & Partial<Pick<T, TKey>>;
+```
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `T`            | —           |
+| `TKey`         | —           |
+
 ### WithRequiredProperties
 
 <p>
@@ -218,7 +237,7 @@ T & Required<Pick<T, TKey>>;
 </p>
 
 ```ts
-ZodRecord<ZodString, ZodType<JsonValue, unknown, $ZodTypeInternals<JsonValue, unknown>>>;
+ZodRecord<ZodString, ZodType<JsonValue, JsonValue, $ZodTypeInternals<JsonValue, JsonValue>>>;
 ```
 
 ### JsonValueSchema
@@ -230,7 +249,7 @@ ZodRecord<ZodString, ZodType<JsonValue, unknown, $ZodTypeInternals<JsonValue, un
 </p>
 
 ```ts
-ZodType<JsonValue, unknown>;
+ZodType<JsonValue, JsonValue>;
 ```
 
 ### NonBlankStringSchema
@@ -462,7 +481,7 @@ Multiplies the foreground alpha by weight, then uses source-over sRGB compositin
 </p>
 
 ```ts
-<TValues>(values: TValues) => ZodType<OpenString<ValueOf<TValues>>>;
+<TValues>(values: TValues) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
 ```
 
 #### Type parameters

@@ -18,6 +18,8 @@ const translations: Readonly<Record<string, string>> = {
   '取得对象所有 value 的联合类型': 'Obtains the union of all object values',
   '将指定属性收窄为必填，同时保留其余属性':
     'Narrows selected properties to required while preserving the remaining properties',
+  '将指定属性扩展为可选，同时保留其余属性':
+    'Makes selected properties optional while preserving the remaining properties',
   '字符串键 JSON 对象 schema': 'Schema for a string-keyed JSON object',
   '递归 JSON 值 schema': 'Schema for recursive JSON values',
   '非空白字符串 schema': 'Schema for non-blank strings',

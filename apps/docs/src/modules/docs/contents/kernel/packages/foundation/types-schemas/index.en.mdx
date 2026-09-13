@@ -15,6 +15,7 @@ These types exist only at compile time and describe or narrow cross-package cont
 | `AssertEqual<TActual, TExpected>` | Checks two types for bidirectional equality                       |
 | `OpenString<T>`                   | Preserves known string hints while accepting any string           |
 | `WithRequiredProperties<T, TKey>` | Narrows selected properties to required while preserving the rest |
+| `WithOptionalProperties<T, TKey>` | Makes selected properties optional while preserving the rest      |
 | `NonEmptyReadonlyArray<T>`        | Represents a readonly array with at least one item                |
 
 For example, after a local flow has established that an `id` exists, use `WithRequiredProperties` to carry that fact to the next function:
@@ -24,6 +25,12 @@ type NodeInput = { id?: string; label: string };
 type IdentifiedNode = WithRequiredProperties<NodeInput, 'id'>;
 
 const useNode = (node: IdentifiedNode) => node.id.toUpperCase();
+```
+
+Conversely, use `WithOptionalProperties` when an author-facing contract may omit a few existing fields, rather than making the entire object `Partial`:
+
+```ts
+type NodePatch = WithOptionalProperties<NodeInput, 'label'>;
 ```
 
 ## JSON data contracts

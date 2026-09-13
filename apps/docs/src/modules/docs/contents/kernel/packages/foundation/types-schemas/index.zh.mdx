@@ -15,6 +15,7 @@ Foundation 将可在多个包之间复用的类型工具与运行时 schema 放�
 | `AssertEqual<TActual, TExpected>` | 双向检查两个类型是否等价               |
 | `OpenString<T>`                   | 保留已知字符串提示，同时接受任意字符串 |
 | `WithRequiredProperties<T, TKey>` | 将指定属性收窄为必填，同时保留其余属性 |
+| `WithOptionalProperties<T, TKey>` | 将指定属性扩展为可选，同时保留其余属性 |
 | `NonEmptyReadonlyArray<T>`        | 表示至少包含一个元素的只读数组         |
 
 例如，在局部流程已经保证 `id` 存在后，可以用 `WithRequiredProperties` 将该事实传递给后续函数：
@@ -24,6 +25,12 @@ type NodeInput = { id?: string; label: string };
 type IdentifiedNode = WithRequiredProperties<NodeInput, 'id'>;
 
 const useNode = (node: IdentifiedNode) => node.id.toUpperCase();
+```
+
+反向地，作者侧契约需要省略少量已有字段时，使用 `WithOptionalProperties`，而不把整个对象变为 `Partial`：
+
+```ts
+type NodePatch = WithOptionalProperties<NodeInput, 'label'>;
 ```
 
 ## JSON 数据契约
