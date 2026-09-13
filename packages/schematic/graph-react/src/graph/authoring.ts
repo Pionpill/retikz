@@ -9,6 +9,7 @@ import type { LayoutProps } from '@retikz/react';
 import type { AnyInputEmbedAdapter, InputChild, InputPath } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
 
+import { mergeProperties } from '@retikz/foundation';
 import { createInputScene, Node, Path, Step, Text } from '@retikz/react';
 import { normalizePath } from '@retikz/vanilla';
 import { Children, createElement, Fragment, isValidElement } from 'react';
@@ -103,16 +104,6 @@ export const graphLayoutHostPropsOf = (props: GraphLayoutHostProps): GraphLayout
     if (Object.hasOwn(props, key)) Object.assign(output, { [key]: props[key] });
   }
   return output;
-};
-
-/** 按 JSX props 的透传语义忽略值为 undefined 的字段 */
-const definedPropertiesOf = <TSource extends object>(source: TSource): TSource => {
-  const definedProperties = { ...source };
-  for (const key of Object.keys(source) as Array<keyof TSource>) {
-    const value = source[key];
-    if (value === undefined) Reflect.deleteProperty(definedProperties, key);
-  }
-  return definedProperties;
 };
 
 /** Graph JSX children 的通用 Kernel authoring 收集结果 */
@@ -220,7 +211,8 @@ export const collectEntityInput = (props: EntityProps, embedIdPrefix: string): E
   }
   return {
     type: 'entity',
-    ...definedPropertiesOf(input),
+    ...mergeProperties([input], { shouldOverride: value => value !== undefined }),
+    role: input.role,
     ...(authoredText === undefined ? (text === undefined ? {} : { text }) : { text: authoredText }),
   };
 };
@@ -283,7 +275,10 @@ export const collectRelationInput = (props: RelationProps, embedIdPrefix: string
   }
   return {
     type: 'relation',
-    ...definedPropertiesOf(input),
+    ...mergeProperties([input], { shouldOverride: value => value !== undefined }),
+    role: input.role,
+    source: input.source,
+    target: input.target,
     ...(authoredRoute !== undefined
       ? { route: authoredRoute }
       : route !== undefined

@@ -1,3 +1,5 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { RelationPredicateDefinition } from '../../contract';
 import type {
   IRGraphRelation,
@@ -265,11 +267,6 @@ const relationSourceAppearanceOf = (source: IRGraphRelation): IRGraphRelationDef
   };
 };
 
-const projectDefinedFields = <T extends object>(value: T | undefined): Partial<T> =>
-  value === undefined
-    ? {}
-    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
-
 /** 把作者 Graph defaults/rules 按层投影到 Relation Source */
 export const projectRelationGraphLayers = (
   relation: CanonicalRelation,
@@ -280,9 +277,9 @@ export const projectRelationGraphLayers = (
   if (Object.keys(authorAppearance).length === 0 && authorStructure === undefined) return relation.source;
   const projected = mergeRelationAppearance(authorAppearance, relationSourceAppearanceOf(relation.source));
   const style = {
-    ...projectDefinedFields(projected.style),
+    ...mergeProperties([projected.style], { shouldOverride: value => value !== undefined }),
     ...(authorStructure === undefined ? {} : { dashPattern: authorStructure.dashPattern }),
-    ...projectDefinedFields(relation.source.style),
+    ...mergeProperties([relation.source.style], { shouldOverride: value => value !== undefined }),
   };
   return {
     ...relation.source,

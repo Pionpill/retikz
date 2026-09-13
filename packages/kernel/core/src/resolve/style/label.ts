@@ -1,14 +1,17 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { IRFont, IRGeometryLabel, IRLabelDefault } from '../../schemas';
 import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 
-import { cutsStyleChannel, pickDefinedKeys } from './frame';
+import { cutsStyleChannel } from './frame';
 
 /** fold labelDefault 通道 */
 export const resolveEffectiveLabelDefault = (stack: ReadonlyArray<StyleResolveFrame>): EffectiveLabelDefault => {
   let acc: IRLabelDefault = {};
   for (const frame of stack) {
     if (cutsStyleChannel(frame.resetStyle, 'label')) acc = {};
-    if (frame.labelDefault) acc = { ...acc, ...pickDefinedKeys(frame.labelDefault) };
+    if (frame.labelDefault)
+      acc = { ...acc, ...mergeProperties([frame.labelDefault], { shouldOverride: value => value !== undefined }) };
   }
   return acc;
 };

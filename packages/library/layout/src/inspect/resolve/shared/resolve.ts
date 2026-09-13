@@ -1,3 +1,5 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { BaseLayoutInspectOptions } from '../../shared/types';
 import type { CanonicalBaseLayoutInspectOptions } from './types';
 
@@ -35,23 +37,20 @@ export const resolveBaseLayoutInspectOptions = (
   };
 };
 
-/** Layout 选项按已提供字段浅合并，不解释默认或深层结构 */
-const mergeDefinedOptions = <T extends object>(inherited: T, local: T): T => {
-  const merged = { ...inherited };
-  for (const key in local) {
-    if (local[key] !== undefined) merged[key] = local[key];
-  }
-  return merged;
-};
-
 /** 合并共享与布局专属字段；只有两个对象简写才逐字段合并 */
 export const mergeLayoutInspectOptionsInput = <T extends BaseLayoutInspectOptions>(inherited: T, local: T): T => {
-  const merged = mergeDefinedOptions(inherited, local);
+  const merged = { ...inherited, ...mergeProperties([local], { shouldOverride: value => value !== undefined }) };
   if (typeof inherited.bounds === 'object' && typeof local.bounds === 'object') {
-    merged.bounds = mergeDefinedOptions(inherited.bounds, local.bounds);
+    merged.bounds = {
+      ...inherited.bounds,
+      ...mergeProperties([local.bounds], { shouldOverride: value => value !== undefined }),
+    };
   }
   if (typeof inherited.spacing === 'object' && typeof local.spacing === 'object') {
-    merged.spacing = mergeDefinedOptions(inherited.spacing, local.spacing);
+    merged.spacing = {
+      ...inherited.spacing,
+      ...mergeProperties([local.spacing], { shouldOverride: value => value !== undefined }),
+    };
   }
   return merged;
 };

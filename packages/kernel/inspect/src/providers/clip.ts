@@ -2,6 +2,7 @@ import type { ClipOwnerOutput, IRChild, IRPosition, PathCommand } from '@retikz/
 import type { output as ZodOutput } from 'zod';
 
 import { ClipOwnerOutputSchema } from '@retikz/core';
+import { mergeProperties } from '@retikz/foundation';
 
 import type { InspectorContext } from '../contract';
 
@@ -46,8 +47,7 @@ export const CLIP_INSPECTOR = defineInspector({
   optionsSchema: ClipInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,
-    ...(local.outline === undefined ? {} : { outline: local.outline }),
-    ...(local.labels === undefined ? {} : { labels: local.labels }),
+    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
   }),
   inspect: (subject: ClipOwnerOutput, context: InspectorContext<ClipInspectorOptions>): Array<IRChild> => {
     const output: Array<IRChild> = [];

@@ -2,6 +2,7 @@ import type { IRChild, IRPosition, IRStep, ScopeOwnerOutput } from '@retikz/core
 import type { output as ZodOutput } from 'zod';
 
 import { ScopeOwnerOutputSchema } from '@retikz/core';
+import { mergeProperties } from '@retikz/foundation';
 
 import type { InspectorContext } from '../contract';
 
@@ -67,10 +68,7 @@ export const SCOPE_INSPECTOR = defineInspector({
   optionsSchema: ScopeInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,
-    ...(local.envelope === undefined ? {} : { envelope: local.envelope }),
-    ...(local.origin === undefined ? {} : { origin: local.origin }),
-    ...(local.axes === undefined ? {} : { axes: local.axes }),
-    ...(local.labels === undefined ? {} : { labels: local.labels }),
+    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
   }),
   inspect: (subject: ScopeOwnerOutput, context: InspectorContext<ScopeInspectorOptions>): Array<IRChild> => {
     const color = context.appearance.scopeColor;

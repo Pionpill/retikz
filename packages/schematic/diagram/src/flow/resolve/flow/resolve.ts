@@ -1,6 +1,7 @@
 import type { IRChild } from '@retikz/core';
 import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 
+import { mergeProperties } from '@retikz/foundation';
 import {
   EntityRole,
   GraphType,
@@ -184,9 +185,6 @@ const assertCompleteContainment = (source: IRFlowDiagram, state: ResolveState): 
   }
 };
 
-const definedFields = <T extends object>(value: T): Partial<T> =>
-  Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>;
-
 const entityDefaultsOf = (defaults: IRFlowDefaults['entity'], source: IRFlowEntity) => {
   const sourceOverride =
     source.style === undefined && source.layout === undefined
@@ -263,13 +261,13 @@ const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: Re
       : {
           title: {
             text: sourceCaption.text,
-            ...definedFields(titleDefaults ?? {}),
+            ...mergeProperties([titleDefaults ?? {}], { shouldOverride: value => value !== undefined }),
           },
         };
   const { caption: _caption, ...groupSurface } = groupDefaults;
   void _caption;
   const surface = {
-    ...definedFields(groupSurface),
+    ...mergeProperties([groupSurface], { shouldOverride: value => value !== undefined }),
     ...(source.overflow === undefined ? {} : { overflow: source.overflow }),
   };
   const graph: IRGroup = {

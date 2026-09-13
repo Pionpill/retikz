@@ -2,6 +2,7 @@ import type { CoordinateOwnerOutput, IRChild } from '@retikz/core';
 import type { output as ZodOutput } from 'zod';
 
 import { CoordinateOwnerOutputSchema } from '@retikz/core';
+import { mergeProperties } from '@retikz/foundation';
 
 import type { InspectorContext } from '../contract';
 
@@ -22,7 +23,7 @@ export const COORDINATE_INSPECTOR = defineInspector({
   optionsSchema: CoordinateInspectOptionsSchema,
   mergeOptionsInput: (inherited, local) => ({
     ...inherited,
-    ...(local.labels === undefined ? {} : { labels: local.labels }),
+    ...mergeProperties([local], { shouldOverride: value => value !== undefined }),
   }),
   inspect: (subject: CoordinateOwnerOutput, context: InspectorContext<CoordinateInspectorOptions>): Array<IRChild> => {
     const color = context.appearance.scopeColor;
