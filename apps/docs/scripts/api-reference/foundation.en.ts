@@ -1,5 +1,18 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  属性浅合并的写入策略: 'Write policy for shallow property merging',
+  '决定源属性是否参与写入；首次写入也调用，返回 false 时保留已有值':
+    'Decides whether a source property is written; also runs for initial writes, and false preserves any existing value',
+  '从左到右浅合并对象的自身可枚举属性，返回新对象':
+    'Shallowly merges own enumerable properties from left to right into a new object',
+  '包含字符串与 symbol 键，跳过 undefined 源；默认保留所有属性值，不递归合并或修改输入':
+    'Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs',
+  按优先级从低到高排列的源对象: 'Source objects ordered from lowest to highest priority',
+  属性写入策略: 'Property write policy',
+  '可能经过过滤的新对象，因此返回类型为 `Partial<T>`':
+    'A new, potentially filtered object, hence the `Partial<T>` return type',
+  '属性读取或策略回调失败时抛出 RetikzFoundationError，原始异常保留为 cause':
+    'Throws RetikzFoundationError when reading a property or invoking the policy fails, preserving the original exception as cause',
   'Retikz 结构化领域错误的基础骨架': 'Base structure for Retikz structured domain errors',
   'Foundation 原子契约失败的统一结构化错误': 'Unified structured error for Foundation atomic-contract failures',
   双向检查两个类型是否等价: 'Bi-directionally checks whether two types are equivalent',

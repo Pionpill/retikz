@@ -89,6 +89,24 @@ RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
 
+## Shallow property merging
+
+Use `mergeProperties(sources, options)` to combine priority layers: sources are applied from left to right, with later properties taking precedence. It returns a new object without mutating inputs or recursively merging nested objects.
+
+```ts
+import { mergeProperties } from '@retikz/foundation';
+
+const options = mergeProperties<{ color?: string | null; width?: number }>(
+  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
+  { shouldOverride: value => value !== undefined },
+);
+// { color: 'red', width: 0 }
+```
+
+`shouldOverride(value, key)` applies to both initial writes and subsequent overrides. Returning `false` skips the current property without deleting an earlier value. To also ignore `null`, use `value => value !== undefined && value !== null`; a truthiness check would also discard `false`, `0`, and empty strings.
+
+Without a policy, property values of `undefined` and `null` overwrite earlier values; an `undefined` source is always skipped. Only own enumerable string and symbol properties are copied, while nested objects and arrays retain their references. Since the policy can filter any field, the return type is `Partial<T>`; consumers supply required fields. Property-read or policy-callback failures throw `RetikzFoundationError` with the original exception preserved as `cause`.
+
 <SourceLinks
   sources={[
     {

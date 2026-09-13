@@ -86,6 +86,24 @@ ZodInfer<typeof JsonObjectSchema>;
 string | number | boolean | null | ReadonlyArray<JsonValue> | {};
 ```
 
+### MergePropertiesOptions
+
+<p>
+  <ApiSourceLink label={'MergePropertiesOptions'} path={'packages/kernel/foundation/src/objects.ts'} startLine={4}>
+    Write policy for shallow property merging
+  </ApiSourceLink>
+</p>
+
+```ts
+Readonly<{ shouldOverride?: (value: indexedAccess, key: PropertyKey) => boolean }>;
+```
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `T`            | —           |
+
 ### NonEmptyReadonlyArray
 
 <p>
@@ -540,6 +558,41 @@ Copies input entries into independent storage while preserving native Map iterat
 | Parameter | Type      | Description |
 | --------- | --------- | ----------- |
 | `value`   | `unknown` | —           |
+
+### mergeProperties
+
+<p>
+  <ApiSourceLink label={'mergeProperties'} path={'packages/kernel/foundation/src/objects.ts'} startLine={19}>
+    Shallowly merges own enumerable properties from left to right into a new object
+  </ApiSourceLink>
+</p>
+
+Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
+
+```ts
+<T>(sources: readonly Array<Readonly<T> | undefined>, options: MergePropertiesOptions<NoInfer<T>>) => Partial<T>;
+```
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `T`            | —           |
+
+#### Parameters
+
+| Parameter | Type                                       | Description                                            |
+| --------- | ------------------------------------------ | ------------------------------------------------------ |
+| `sources` | `readonly Array<Readonly<T> \| undefined>` | Source objects ordered from lowest to highest priority |
+| `options` | `MergePropertiesOptions<NoInfer<T>>`       | Property write policy                                  |
+
+#### Returns
+
+A new, potentially filtered object, hence the `Partial<T>` return type
+
+#### Throws
+
+- Throws RetikzFoundationError when reading a property or invoking the policy fails, preserving the original exception as cause
 
 ### parseStaticCssColor
 
