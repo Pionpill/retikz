@@ -182,6 +182,10 @@ const FlowEntityTextSchema = TextBlockSchema.refine(hasFlowEntityText, {
   message: 'Flow Entity text must contain at least one non-whitespace text or TeX run.',
 });
 
+const FlowRelationLabelSchema = TextBlockSchema.refine(hasFlowEntityText, {
+  message: 'Flow Relation label must contain at least one non-whitespace text or TeX run.',
+});
+
 export const FlowEntitySchema = strictObject({
   id: NonBlankStringSchema.describe('Flow-wide authored Entity identity.'),
   text: FlowEntityTextSchema.describe('Required Core TextBlock with at least one non-whitespace text or TeX run.'),
@@ -353,7 +357,7 @@ export const FlowLayoutSchema = discriminatedUnion('kind', [FlowLinearLayoutSche
 export const FlowRelationSchema = strictObject({
   source: NonBlankStringSchema.describe('Authored source Flow element id.'),
   target: NonBlankStringSchema.describe('Authored target Flow element id.'),
-  label: NonBlankStringSchema.optional().describe('Optional relation label measured and placed by Flow.'),
+  label: FlowRelationLabelSchema.optional().describe('Optional Core TextBlock measured and placed by Flow.'),
   role: RelationRoleSchema.optional().describe('Open Graph Relation role; omission resolves to flow.'),
   kind: RelationKindSchema.optional().describe('Open stable kind within the selected Relation role.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),

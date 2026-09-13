@@ -946,7 +946,16 @@ describe('Flow Diagram compile transaction', () => {
   );
 
   it('keeps Flow relation labels centered on the path midpoint regardless of their layout reservation', () => {
-    const compile = (reservation: 'horizontal' | 'vertical'): { label: TextPrim; rotation: number | undefined } => {
+    const compile = (
+      reservation: 'horizontal' | 'vertical',
+      relationLabel: string | Array<string> = 'edge-label',
+    ): {
+      hasDetail: boolean;
+      label: TextPrim;
+      labelSize: { width: number; height: number };
+      rotation: number | undefined;
+    } => {
+      let measuredLabelSize: { width: number; height: number } | undefined;
       const customLayout = definition(layoutInput => {
         const sourceElement = layoutInput.elements[0];
         const targetElement = layoutInput.elements[1];
@@ -975,6 +984,7 @@ describe('Flow Diagram compile transaction', () => {
         ];
         const labelSize = relation.labelSize;
         if (labelSize === undefined) throw new Error('missing test label size');
+        measuredLabelSize = labelSize;
         const labelCenter: [number, number] =
           reservation === 'horizontal' ? [50, sourceCenter[1] - 12] : [turnX + 18, 52];
         return {
@@ -1013,7 +1023,7 @@ describe('Flow Diagram compile transaction', () => {
         groups: [],
         layouts: [],
         children: ['source', 'target'],
-        relations: [{ source: 'source', target: 'target', label: 'edge-label' }],
+        relations: [{ source: 'source', target: 'target', label: relationLabel }],
       });
       const result = compileToScene(
         { type: 'scene', version: 1, children: [source] },
@@ -1023,13 +1033,23 @@ describe('Flow Diagram compile transaction', () => {
           measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
         },
       );
-      const label = textPrimitive(result.scene.primitives, 'edge-label');
+      const label = textPrimitive(
+        result.scene.primitives,
+        typeof relationLabel === 'string' ? relationLabel : relationLabel[0],
+      );
       expect(label).toBeDefined();
       if (label === undefined) throw new Error('missing rendered relation label');
       const rotation = slopedLabelGroup(result.scene.primitives, 'edge-label')?.transforms?.find(
         transform => transform.kind === 'rotate',
       );
-      return { label, rotation: rotation?.kind === 'rotate' ? rotation.degrees : undefined };
+      if (measuredLabelSize === undefined) throw new Error('missing measured relation label size');
+      return {
+        hasDetail:
+          typeof relationLabel === 'string' || textPrimitive(result.scene.primitives, relationLabel[1]) !== undefined,
+        label,
+        labelSize: measuredLabelSize,
+        rotation: rotation?.kind === 'rotate' ? rotation.degrees : undefined,
+      };
     };
 
     const horizontal = compile('horizontal');
@@ -1040,6 +1060,10 @@ describe('Flow Diagram compile transaction', () => {
     expect(horizontal.label.y).toBeGreaterThan(70);
     expect(horizontal.rotation).toBeUndefined();
     expect(vertical.rotation).toBeUndefined();
+
+    const multiLine = compile('horizontal', ['edge-label', 'detail']);
+    expect(multiLine.labelSize.height).toBeGreaterThan(horizontal.labelSize.height);
+    expect(multiLine.hasDetail).toBe(true);
   });
 
   it('reports a final Graph relation probe failure as materialize with the authored relation context', () => {

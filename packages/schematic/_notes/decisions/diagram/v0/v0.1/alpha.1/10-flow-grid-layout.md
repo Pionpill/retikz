@@ -42,7 +42,7 @@ Group 的 shell minimum、caption 和 content insets 继续参与其自身测量
 
 Grid 行列位置不由 Relation 推断，Relation 不重排 children。`rowGap` 和 `columnGap` 是相邻轨道间距，不是节点中心距；轨道尺寸由内容和 margin 决定。
 
-Grid 默认使用真实测量的 relation label 宽高自动扩张间距：横向关系把标签宽度加到 `columnGap`，纵向关系把标签高度加到 `rowGap`；跨行列关系在两个轴上分别预留空间。同轴关系取最大标签尺寸，并把该尺寸加到每个同轴间隙，因此同轴其它间隙也会一起增大，且结果与 relation 遍历顺序无关。`reserveLabelSpace` 省略时为 `true`；设为 `false` 后严格使用作者配置的行列间距，不为标签预留空间。
+Grid 默认使用 Core 真实测量的 relation label 整块视觉盒宽高自动扩张间距：横向关系把标签宽度加到 `columnGap`，纵向关系把标签高度加到 `rowGap`；跨行列关系在两个轴上分别预留空间。同轴关系取最大标签尺寸，并把该尺寸加到每个同轴间隙，因此同轴其它间隙也会一起增大，且结果与 relation 遍历顺序无关。`reserveLabelSpace` 省略时为 `true`；设为 `false` 后严格使用作者配置的行列间距，不为标签预留空间。
 
 固定 placement context 从同一次 Flow measurement 消费标签约束，内置与自定义 provider 共用此边界，不额外暴露派生间距或复制标签尺寸。连接后代时以所属 direct child 的整体 bounds 参与空间分配，不穿透内部排列。Linear 保留已有标签 margin 行为；两种 Layout 的标签显示与路由继续沿用 Graph/Core 和所选 provider 的既有语义。Core 标签断口 gap 与 Grid 轨道留白是不同语义，不相互覆盖。
 

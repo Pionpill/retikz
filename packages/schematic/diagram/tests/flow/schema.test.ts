@@ -180,6 +180,24 @@ describe('Flow Source schema', () => {
     });
   });
 
+  it('accepts a non-blank Core TextBlock as a Relation label', () => {
+    const label = ['编译', { text: '生成 Scene', fill: 'gray' }];
+    const parsed = FlowDiagramSchema.parse({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'source', text: 'Source' },
+        { id: 'target', text: 'Target' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['source', 'target'],
+      relations: [{ source: 'source', target: 'target', label }],
+    });
+
+    expect(parsed.relations?.[0]?.label).toEqual(label);
+  });
+
   it('keeps Group visible and gives Layout a separate closed schema', () => {
     const source = {
       namespace: 'diagram',

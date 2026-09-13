@@ -38,7 +38,7 @@ provider output 只在 callback 内作为 transient 输入。通过验证后形�
 
 Flow resolve 把每个 authored Entity 与 Group id 原样投影到对应 Graph record，并按 Source relations 顺序投影没有 Path id 的 Graph Relation records；Layout 保留 Flow authored id 与递归 scope，但不生成 Graph record。同一次 Graph Definition options 解析 role、kind、direction、Graph Theme 与 appearance。测量必须 probe 最终会使用的 Graph / Core child；不能用字符数、DOM、renderer 回读、固定节点尺寸或 Diagram 私有 shape / text 算法估算
 
-Entity 的 measured leaf size 不包含 Flow margin。Entity margin 在进入 provider input 前由 Graph 同源字段解析为独立 insets，最终 placement 已消费该 margin，render-ready Graph 不再把它作为第二次外边距应用。relation label 使用最终 Graph Geometry Label text、font、opacity 与同一个 Core text measurer取得固定 label size；Flow 不增加独立 label primitive
+Entity 的 measured leaf size 不包含 Flow margin。Entity margin 在进入 provider input 前由 Graph 同源字段解析为独立 insets，最终 placement 已消费该 margin，render-ready Graph 不再把它作为第二次外边距应用。relation label 使用最终 Graph Geometry Label 的完整 TextBlock、font、opacity 与同一个 Core text measurer取得固定 label size；多行宽高来自同一整块视觉盒，Flow 不增加独立 label primitive 或字符串宽度估算
 
 Group shell 的默认 padding、caption、caption item gap、caption body gap、Surface appearance 与组合顺序继续由 Graph 拥有。Graph 提供最小、同步、公开的 Graph-owned shell measurement / composition 投影：它接收已解析 Group shell 与 Core measurement 上下文，使用 Graph 自己的 caption lowering 和 Layout / Surface 组合真源，返回 ADR-04 所需的 `minimumSize` 与 `contentInsets`，并能以一个给定 body allocation 构造同源的精确 Group shell。Graph 自身 Group lowering 与该投影共享同一组合来源；Diagram 不复制 Graph 默认常量、caption child、Flex 算术或 Surface proposal 规则。Layout 不调用 Graph shell measurement；Flow 将其 direct children 的真实 size / margin 交给 Flex / Grid placement context，再把结果作为固定 compound box 交给 provider。这些投影不接收 Flow relation 或自动布局状态，也不让 Graph / Layout 拥有 Flow 自动布局
 

@@ -168,6 +168,12 @@ describe('Relation lowering', () => {
     ]);
   });
 
+  it('passes a multi-line Core TextBlock through Relation lowering unchanged', () => {
+    const text = ['编译', { text: '生成 Scene', fill: 'gray' }];
+
+    expect(lower(relation({ labels: [{ text }] })).label).toMatchObject({ text });
+  });
+
   it.each([
     {
       name: 'UML association',
