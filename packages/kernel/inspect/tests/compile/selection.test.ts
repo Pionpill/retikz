@@ -13,7 +13,6 @@ const definition = defineInspector({
   owner,
   subjectSchema: strictObject({ value: number() }),
   optionsSchema: strictObject({ label: string().default('default'), tone: string().default('normal') }),
-  resolveOptions: value => value,
   mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
   inspect: () => [],
 });
@@ -62,6 +61,46 @@ const colocatedObservation = (index: number): CompileObservation => ({
 });
 
 describe('Inspection selection', () => {
+  it('uses schema defaults and transformed output without a resolver on direct registration', () => {
+    const rawDefinition = {
+      ...key,
+      owner,
+      subjectSchema: definition.subjectSchema,
+      optionsSchema: strictObject({ count: string().default('2').transform(Number) }),
+      inspect: () => [],
+    };
+    for (const [options, count] of [
+      [true, 2],
+      [{ count: '5' }, 5],
+    ] as const) {
+      const requests = resolveInspectionSelection({
+        ir,
+        registry: createInspectorRegistry([rawDefinition]),
+        observations: [observation(0)],
+        selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options }] },
+      });
+      expect(requests[0]?.options).toEqual({ count });
+    }
+  });
+
+  it('passes parsed output to a custom resolver with a different consumer shape', () => {
+    const inspector = defineInspector({
+      ...key,
+      owner,
+      subjectSchema: definition.subjectSchema,
+      optionsSchema: strictObject({ count: string().default('2').transform(Number) }),
+      resolveOptions: options => ({ label: options.count.toFixed(1) }),
+      inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
+    });
+    const requests = resolveInspectionSelection({
+      ir,
+      registry: createInspectorRegistry([inspector]),
+      observations: [observation(0)],
+      selection: { rules: [{ kind: 'request', inspector: key, target: { kind: 'scene' }, options: true }] },
+    });
+    expect(requests[0]?.options).toEqual({ label: '2.0' });
+  });
+
   it('isolates merge callback mutations from authored options and later occurrences', () => {
     const sourceOptions = { label: 'parent' };
     const mutating = defineInspector({
@@ -101,7 +140,6 @@ describe('Inspection selection', () => {
           .transform(label => `${label}!`)
           .default('default'),
       }),
-      resolveOptions: options => options,
       mergeOptionsInput: (inherited, local) => ({ ...inherited, ...local }),
     });
     const resolved = resolveInspectionSelection({

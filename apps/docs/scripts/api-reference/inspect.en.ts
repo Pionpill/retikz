@@ -1,4 +1,10 @@
 const translations: Record<string, string> = {
+  '作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段':
+    'Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output types',
+  'registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver':
+    'Heterogeneous author definitions accepted by registries, with options schemas and resolvers completed at registration',
+  '补齐默认选项契约并冻结 Inspector；省略 schema 时只接受空对象，省略 resolver 时使用 schema 输出':
+    'Completes default options contracts and freezes an Inspector; an omitted schema accepts only an empty object, and an omitted resolver uses schema output',
   'Inspect 包统一的结构化错误': 'The structured error shared by the Inspect package',
   'registry 内擦除具体泛型后的 Inspector 定义':
     'An Inspector definition with concrete generic types erased for registry storage',

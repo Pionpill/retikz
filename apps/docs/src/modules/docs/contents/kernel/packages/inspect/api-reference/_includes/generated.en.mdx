@@ -35,6 +35,24 @@ Readonly<{
 }>;
 ```
 
+### AnyInspectorDefinitionInput
+
+<p>
+  <ApiSourceLink
+    label={'AnyInspectorDefinitionInput'}
+    path={'packages/kernel/inspect/src/contract/types.ts'}
+    startLine={154}
+  >
+    Heterogeneous author definitions accepted by registries, with options schemas and resolvers completed at
+    registration
+  </ApiSourceLink>
+</p>
+
+```ts
+Omit<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'> &
+  Partial<Pick<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>>;
+```
+
 ### InspectionAppearanceContext
 
 <p>
@@ -240,6 +258,38 @@ Readonly<{
   subjectSchema: ZodType<TSubject>;
   type: string;
 }>;
+```
+
+#### Type parameters
+
+| Type parameter     | Description |
+| ------------------ | ----------- |
+| `TSubject`         | —           |
+| `TParsedOptions`   | —           |
+| `TResolvedOptions` | —           |
+| `TSourceOptions`   | —           |
+
+### InspectorDefinitionInput
+
+<p>
+  <ApiSourceLink
+    label={'InspectorDefinitionInput'}
+    path={'packages/kernel/inspect/src/contract/types.ts'}
+    startLine={95}
+  >
+    Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output
+    types
+  </ApiSourceLink>
+</p>
+
+```ts
+(Omit<
+  InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
+  'optionsSchema' | 'resolveOptions'
+> &
+  Readonly<{ optionsSchema: ZodType<TParsedOptions, TSourceOptions> }>) |
+  (conditional & Readonly<{ resolveOptions: (options: TParsedOptions) => TResolvedOptions }>) |
+  conditional;
 ```
 
 #### Type parameters
@@ -521,20 +571,7 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 </p>
 
 ```ts
-(
-  definitions: readonly Array<
-    Readonly<{
-      inspect: (subject: never, context: never) => InspectorOutput;
-      mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-      namespace: string;
-      optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-      owner: CompileObservationOwner;
-      resolveOptions: (options: never) => JsonObject;
-      subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-      type: string;
-    }>
-  >,
-) =>
+(definitions: readonly Array<AnyInspectorDefinitionInput>) =>
   Readonly<{
     definitions: readonly Array<
       Readonly<{
@@ -568,9 +605,9 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 
 #### Parameters
 
-| Parameter     | Type                                                                                                                                                                                                                                                                                                                                                                                                                                             | Description |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| `definitions` | `readonly Array<Readonly<{ inspect: (subject: never, context: never) => InspectorOutput; mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject; namespace: string; optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>; owner: CompileObservationOwner; resolveOptions: (options: never) => JsonObject; subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>; type: string }>>` | —           |
+| Parameter     | Type                                          | Description |
+| ------------- | --------------------------------------------- | ----------- |
+| `definitions` | `readonly Array<AnyInspectorDefinitionInput>` | —           |
 
 ### createInspectorRegistry
 
@@ -585,39 +622,27 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 </p>
 
 ```ts
-(
-  definitions: readonly Array<
-    Readonly<{
-      inspect: (subject: never, context: never) => InspectorOutput;
-      mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-      namespace: string;
-      optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-      owner: CompileObservationOwner;
-      resolveOptions: (options: never) => JsonObject;
-      subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-      type: string;
-    }>
-  >,
-) => InspectorRegistry;
+(definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
 ```
 
 #### Parameters
 
-| Parameter     | Type                                                                                                                                                                                                                                                                                                                                                                                                                                             | Description |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| `definitions` | `readonly Array<Readonly<{ inspect: (subject: never, context: never) => InspectorOutput; mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject; namespace: string; optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>; owner: CompileObservationOwner; resolveOptions: (options: never) => JsonObject; subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>; type: string }>>` | —           |
+| Parameter     | Type                                          | Description |
+| ------------- | --------------------------------------------- | ----------- |
+| `definitions` | `readonly Array<AnyInspectorDefinitionInput>` | —           |
 
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={41}>
-    Validates and freezes an independent Inspector Definition
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={66}>
+    Completes default options contracts and freezes an Inspector; an omitted schema accepts only an empty object, and an
+    omitted resolver uses schema output
   </ApiSourceLink>
 </p>
 
 ```ts
 <TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
-  definition: InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
 ) => InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
@@ -632,9 +657,9 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 
 #### Parameters
 
-| Parameter    | Type                                                                              | Description |
-| ------------ | --------------------------------------------------------------------------------- | ----------- |
-| `definition` | `InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | —           |
+| Parameter    | Type                                                                                   | Description |
+| ------------ | -------------------------------------------------------------------------------------- | ----------- |
+| `definition` | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | —           |
 
 ## `@retikz/inspect/react`
 

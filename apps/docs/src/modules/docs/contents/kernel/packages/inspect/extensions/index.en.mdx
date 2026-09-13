@@ -17,19 +17,21 @@ This example adds circular markers to path endpoints: a custom `inspect(subject,
 
 ## Definition mechanism
 
-An `InspectorDefinition` specifies what to observe, which options to accept, and how to generate auxiliary content. A Core owner identifies the capability publishing the compiled result; the example's `stroke` owner publishes final path output.
+An `InspectorDefinitionInput` specifies what to observe, which options to accept, and how to generate auxiliary content. `defineInspector()` fills in defaults and returns a complete `InspectorDefinition`. A Core owner identifies the capability publishing the compiled result; the example's `stroke` owner publishes final path output.
 
-| Interface                   | Responsibility                                                                                 |
-| --------------------------- | ---------------------------------------------------------------------------------------------- |
-| `namespace` / `type`        | Form the Inspector registry key used by requests                                               |
-| `owner`                     | Identify the Core owner to observe                                                             |
-| `subjectSchema`             | Validate the owner's final output and determine the `subject` type                             |
-| `mergeOptionsInput`         | Optionally merge raw options from scene, subtree, and current-occurrence scopes                |
-| `optionsSchema`             | Define this Inspector's custom input contract; validate, default, and transform merged options |
-| `resolveOptions`            | Resolve parsed options into `context.options`                                                  |
-| `inspect(subject, context)` | Read output and context, returning Core IR or coordinate-space wrappers around it              |
+| Interface                   | Responsibility                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| `namespace` / `type`        | Form the Inspector registry key used by requests                                              |
+| `owner`                     | Identify the Core owner to observe                                                            |
+| `subjectSchema`             | Validate the owner's final output and determine the `subject` type                            |
+| `mergeOptionsInput`         | Optional raw-options merge; by default, more specific input replaces inherited input entirely |
+| `optionsSchema`             | Optional input validation, defaults, and transforms; omission accepts only an empty object    |
+| `resolveOptions`            | Optional conversion into `context.options`; omission uses the schema output directly          |
+| `inspect(subject, context)` | Read output and context, returning Core IR or coordinate-space wrappers around it             |
 
 `owner` and `subjectSchema` must match the output Core actually publishes. Derive raw input and parsed output from `optionsSchema` with `z.input` and `z.output`: merge raw configuration first, then parse and resolve options.
+
+The example has no custom options, so it omits both `optionsSchema` and `resolveOptions`. Schema defaults and transforms do not need an identity resolver either; provide `resolveOptions` only for a different consumer representation. Definitions passed directly to a registry receive the same defaults.
 
 The figure shows how output and options feed `inspect()`. The Definition supplies the contracts and callbacks inside the dashed boundary; the Inspect driver executes them. The two branches express data dependencies, not parallel execution.
 
@@ -47,7 +49,7 @@ inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => Ins
 
 ### Input context
 
-`subject` is final output validated by `subjectSchema`; `TResolvedOptions` is the output type of `resolveOptions`. The `context` supplies options, provenance, and appearance for the observed instance (occurrence).
+`subject` is final output validated by `subjectSchema`; `TResolvedOptions` is the output type of `resolveOptions`, or the schema's parsed output type when the resolver is omitted. The `context` supplies options, provenance, and appearance for the observed instance (occurrence).
 
 ```ts
 export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{

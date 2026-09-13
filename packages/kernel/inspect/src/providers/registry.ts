@@ -1,4 +1,4 @@
-import type { AnyInspectorDefinition, InspectorKey } from '../contract';
+import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorKey } from '../contract';
 
 import { sealInspectorDefinition } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
@@ -18,7 +18,7 @@ export type InspectorRegistry = Readonly<{
 export const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
 
 /** 创建无全局状态的 Inspector registry */
-export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition>): InspectorRegistry => {
+export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinitionInput>): InspectorRegistry => {
   const definitionsByKey = new Map<string, AnyInspectorDefinition>();
   const sealedDefinitions = definitions.map((definition, index) => {
     const candidateDefinition = sealInspectorDefinition(definition);
@@ -51,5 +51,5 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
 };
 
 /** 创建内置优先、第三方同路的默认 Inspector registry */
-export const createDefaultInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition> = []) =>
+export const createDefaultInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinitionInput> = []) =>
   createInspectorRegistry([...BUILTIN_INSPECTORS, ...definitions]);

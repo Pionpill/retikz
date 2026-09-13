@@ -14,12 +14,41 @@ const definition = (namespace: string, type: string) =>
     type,
     owner: { kind: 'pathKind' as const, name: 'stroke' },
     subjectSchema: strictObject({ value: string() }),
-    optionsSchema: strictObject({}),
-    resolveOptions: options => options,
     inspect: () => [],
   });
 
 describe('Inspector registry', () => {
+  it('completes omitted options fields at both authoring entry points', () => {
+    const rawDefinition = {
+      namespace: 'test',
+      type: 'empty-options',
+      owner: { kind: 'pathKind' as const, name: 'stroke' },
+      subjectSchema: strictObject({ value: string() }),
+      inspect: () => [],
+    };
+    const authored = defineInspector(rawDefinition);
+    const registered = createInspectorRegistry([rawDefinition]).require(rawDefinition);
+    expect(authored.resolveOptions(authored.optionsSchema.parse({}))).toEqual({});
+    for (const candidate of [authored, registered]) {
+      expect(candidate.optionsSchema.parse({})).toEqual({});
+      expect(() => candidate.optionsSchema.parse({ unexpected: true })).toThrow();
+      expect(Object.isFrozen(candidate)).toBe(true);
+      expect(createInspectorRegistry([candidate]).require(candidate)).toBe(candidate);
+    }
+  });
+
+  it('preserves a custom resolver when the options schema is omitted', () => {
+    const inspector = defineInspector({
+      namespace: 'test',
+      type: 'resolved-empty',
+      owner: { kind: 'pathKind', name: 'stroke' },
+      subjectSchema: strictObject({ value: string() }),
+      resolveOptions: () => ({ label: 'marker' }),
+      inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
+    });
+    expect(inspector.resolveOptions(inspector.optionsSchema.parse({}))).toEqual({ label: 'marker' });
+  });
+
   it('reuses a validated definition across registries', () => {
     const inspector = definition('test', 'reused');
     expect(createInspectorRegistry([inspector]).require(inspector)).toBe(inspector);

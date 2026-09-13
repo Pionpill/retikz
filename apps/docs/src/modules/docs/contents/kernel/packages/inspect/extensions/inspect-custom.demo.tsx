@@ -4,7 +4,6 @@ import { StrokePathOwnerOutputSchema } from '@retikz/core';
 import { createInspectorRegistry, defineInspector } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 import { Layout, Path, Step } from '@retikz/react';
-import { z } from 'zod';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
@@ -14,8 +13,6 @@ const endpointInspector = defineInspector({
   ...endpointInspectorKey,
   owner: { kind: 'pathKind', name: 'stroke' },
   subjectSchema: StrokePathOwnerOutputSchema,
-  optionsSchema: z.strictObject({}),
-  resolveOptions: options => options,
   inspect: (subject, context) => {
     const markers = subject.commands.flatMap(command =>
       'to' in command

@@ -70,6 +70,45 @@ export type InspectorDefinition<
   inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
 }>;
 
+/** 作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段 */
+export type InspectorDefinitionInput<
+  TSubject extends JsonValue = JsonValue,
+  TParsedOptions extends JsonObject = Record<string, never>,
+  TResolvedOptions extends JsonObject = TParsedOptions,
+  TSourceOptions extends JsonObject = TParsedOptions,
+> = Omit<
+  InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
+  'optionsSchema' | 'resolveOptions'
+> &
+  (
+    | Readonly<{
+        /** 自定义选项的输入与解析输出契约 */
+        optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
+      }>
+    | ([TParsedOptions, TSourceOptions] extends [Record<string, never>, Record<string, never>]
+        ? Readonly<{
+            /** 无自定义选项时省略，仅接受严格空对象
+             * @default z.strictObject({})
+             */
+            optionsSchema?: never;
+          }>
+        : never)
+  ) &
+  (
+    | Readonly<{
+        /** 将 schema 输出转换为 callback 消费态 */
+        resolveOptions: (options: TParsedOptions) => TResolvedOptions;
+      }>
+    | ([TParsedOptions] extends [TResolvedOptions]
+        ? Readonly<{
+            /** callback 直接消费 schema 输出时省略
+             * @default identity
+             */
+            resolveOptions?: never;
+          }>
+        : never)
+  );
+
 /** registry 内擦除具体泛型后的 Inspector 定义 */
 export type AnyInspectorDefinition = Readonly<{
   /** registry namespace */
@@ -89,3 +128,7 @@ export type AnyInspectorDefinition = Readonly<{
   /** 具体 subject/context 类型由调用前的 schema 恢复 */
   inspect: (subject: never, context: never) => InspectorOutput;
 }>;
+
+/** registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver */
+export type AnyInspectorDefinitionInput = Omit<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'> &
+  Partial<Pick<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>>;

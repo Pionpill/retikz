@@ -35,6 +35,23 @@ Readonly<{
 }>;
 ```
 
+### AnyInspectorDefinitionInput
+
+<p>
+  <ApiSourceLink
+    label={'AnyInspectorDefinitionInput'}
+    path={'packages/kernel/inspect/src/contract/types.ts'}
+    startLine={154}
+  >
+    registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver
+  </ApiSourceLink>
+</p>
+
+```ts
+Omit<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'> &
+  Partial<Pick<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>>;
+```
+
 ### InspectionAppearanceContext
 
 <p>
@@ -240,6 +257,37 @@ Readonly<{
   subjectSchema: ZodType<TSubject>;
   type: string;
 }>;
+```
+
+#### 类型参数
+
+| 类型参数           | 说明 |
+| ------------------ | ---- |
+| `TSubject`         | —    |
+| `TParsedOptions`   | —    |
+| `TResolvedOptions` | —    |
+| `TSourceOptions`   | —    |
+
+### InspectorDefinitionInput
+
+<p>
+  <ApiSourceLink
+    label={'InspectorDefinitionInput'}
+    path={'packages/kernel/inspect/src/contract/types.ts'}
+    startLine={95}
+  >
+    作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段
+  </ApiSourceLink>
+</p>
+
+```ts
+(Omit<
+  InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
+  'optionsSchema' | 'resolveOptions'
+> &
+  Readonly<{ optionsSchema: ZodType<TParsedOptions, TSourceOptions> }>) |
+  (conditional & Readonly<{ resolveOptions: (options: TParsedOptions) => TResolvedOptions }>) |
+  conditional;
 ```
 
 #### 类型参数
@@ -521,20 +569,7 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 </p>
 
 ```ts
-(
-  definitions: readonly Array<
-    Readonly<{
-      inspect: (subject: never, context: never) => InspectorOutput;
-      mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-      namespace: string;
-      optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-      owner: CompileObservationOwner;
-      resolveOptions: (options: never) => JsonObject;
-      subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-      type: string;
-    }>
-  >,
-) =>
+(definitions: readonly Array<AnyInspectorDefinitionInput>) =>
   Readonly<{
     definitions: readonly Array<
       Readonly<{
@@ -568,9 +603,9 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 
 #### 参数
 
-| 参数          | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                             | 说明 |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
-| `definitions` | `readonly Array<Readonly<{ inspect: (subject: never, context: never) => InspectorOutput; mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject; namespace: string; optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>; owner: CompileObservationOwner; resolveOptions: (options: never) => JsonObject; subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>; type: string }>>` | —    |
+| 参数          | 类型                                          | 说明 |
+| ------------- | --------------------------------------------- | ---- |
+| `definitions` | `readonly Array<AnyInspectorDefinitionInput>` | —    |
 
 ### createInspectorRegistry
 
@@ -585,39 +620,26 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 </p>
 
 ```ts
-(
-  definitions: readonly Array<
-    Readonly<{
-      inspect: (subject: never, context: never) => InspectorOutput;
-      mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-      namespace: string;
-      optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-      owner: CompileObservationOwner;
-      resolveOptions: (options: never) => JsonObject;
-      subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-      type: string;
-    }>
-  >,
-) => InspectorRegistry;
+(definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
 ```
 
 #### 参数
 
-| 参数          | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                             | 说明 |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
-| `definitions` | `readonly Array<Readonly<{ inspect: (subject: never, context: never) => InspectorOutput; mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject; namespace: string; optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>; owner: CompileObservationOwner; resolveOptions: (options: never) => JsonObject; subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>; type: string }>>` | —    |
+| 参数          | 类型                                          | 说明 |
+| ------------- | --------------------------------------------- | ---- |
+| `definitions` | `readonly Array<AnyInspectorDefinitionInput>` | —    |
 
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={41}>
-    校验并冻结一个独立 Inspector Definition
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={66}>
+    补齐默认选项契约并冻结 Inspector；省略 schema 时只接受空对象，省略 resolver 时使用 schema 输出
   </ApiSourceLink>
 </p>
 
 ```ts
 <TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
-  definition: InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
 ) => InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
@@ -632,9 +654,9 @@ Readonly<{ namespace: 'core'; type: 'stroke-path' }>;
 
 #### 参数
 
-| 参数         | 类型                                                                              | 说明 |
-| ------------ | --------------------------------------------------------------------------------- | ---- |
-| `definition` | `InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | —    |
+| 参数         | 类型                                                                                   | 说明 |
+| ------------ | -------------------------------------------------------------------------------------- | ---- |
+| `definition` | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | —    |
 
 ## `@retikz/inspect/react`
 

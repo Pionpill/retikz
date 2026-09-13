@@ -518,6 +518,13 @@ export const kernelV05: Release = {
           },
           items: [
             {
+              label: { zh: '可省略的 Inspector 选项契约', en: 'Optional Inspector options contracts' },
+              content: {
+                zh: '`defineInspector()` 与直接注册均支持省略 `optionsSchema` 和 `resolveOptions`：前者默认只接受严格空对象，后者默认直接使用 schema 的解析输出。注册后仍提供完整定义，自定义 resolver 与原始选项继承语义保持不变。',
+                en: '`defineInspector()` and direct registration accept omitted `optionsSchema` and `resolveOptions`: the former defaults to a strict empty object, and the latter uses parsed schema output directly. Registered definitions remain complete; custom resolvers and raw-options inheritance retain their semantics.',
+              },
+            },
+            {
               label: { zh: 'Child owner 错误与只读输出', en: 'Child-owned errors and readonly output' },
               content: {
                 zh: '非法 Inspector child 由 `ChildSchema` 的 Zod cause 报告；合法结果仍与 callback 原对象脱离并递归冻结，不再经历 snapshot → schema → snapshot 的重复链。',

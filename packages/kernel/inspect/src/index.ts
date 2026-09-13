@@ -11,9 +11,11 @@ export type {
 export { compileInspectionToScene } from './compile';
 export type {
   AnyInspectorDefinition,
+  AnyInspectorDefinitionInput,
   InspectionAppearanceContext,
   InspectorContext,
   InspectorDefinition,
+  InspectorDefinitionInput,
   InspectorKey,
   InspectorOutput,
 } from './contract';

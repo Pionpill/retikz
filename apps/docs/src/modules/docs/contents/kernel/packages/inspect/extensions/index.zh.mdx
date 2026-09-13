@@ -13,19 +13,21 @@ description: 定义自定义 Inspector，读取图形的编译结果并生成端
 
 ## Definition 机制
 
-`InspectorDefinition` 指定观察什么、接受哪些选项，以及如何生成辅助内容。被观察对象由 Core owner 标识，即负责发布该类编译结果的能力；示例中的 `stroke` owner 发布路径的最终产物。
+通过 `InspectorDefinitionInput` 描述观察什么、接受哪些选项，以及如何生成辅助内容；`defineInspector()` 补齐默认行为，返回完整的 `InspectorDefinition`。被观察对象由 Core owner 标识，即负责发布该类编译结果的能力；示例中的 `stroke` owner 发布路径的最终产物。
 
-| 接口                        | 作用                                                          |
-| --------------------------- | ------------------------------------------------------------- |
-| `namespace` / `type`        | 组成 Inspector 的注册键，供请求定位                           |
-| `owner`                     | 指定被观察的 Core owner                                       |
-| `subjectSchema`             | 校验 owner 的最终产物，确定 `subject` 类型                    |
-| `mergeOptionsInput`         | 可选；合并整图、子树与当前实例的原始选项                      |
-| `optionsSchema`             | 当前 Inspector 的自定义入参契约；合并后校验并应用默认值与变换 |
-| `resolveOptions`            | 将解析后的选项展开为 `context.options`                        |
-| `inspect(subject, context)` | 读取产物与上下文，返回 Core IR 或包装它的坐标片段             |
+| 接口                        | 作用                                                               |
+| --------------------------- | ------------------------------------------------------------------ |
+| `namespace` / `type`        | 组成 Inspector 的注册键，供请求定位                                |
+| `owner`                     | 指定被观察的 Core owner                                            |
+| `subjectSchema`             | 校验 owner 的最终产物，确定 `subject` 类型                         |
+| `mergeOptionsInput`         | 可选；合并原始选项，省略时由更具体的输入整体替换上级输入           |
+| `optionsSchema`             | 可选；校验入参并应用默认值与变换，省略时只接受空对象               |
+| `resolveOptions`            | 可选；将解析结果转为 `context.options`，省略时直接使用 schema 输出 |
+| `inspect(subject, context)` | 读取产物与上下文，返回 Core IR 或包装它的坐标片段                  |
 
 `owner` 与 `subjectSchema` 必须匹配 Core 实际发布的产物。`optionsSchema` 的原始输入和解析输出可分别由 `z.input` 与 `z.output` 派生；先合并原始配置，再解析和展开选项。
+
+示例没有自定义选项，因此省略了 `optionsSchema` 与 `resolveOptions`。只需要 schema 的默认值或变换时，也不必写恒等 resolver；需要不同的消费态时再提供 `resolveOptions`。直接向 registry 传入定义，同样会补齐这些默认行为。
 
 下图展示产物与选项如何汇入 `inspect()`。虚线框内的契约与回调由 Definition 提供，实际由 Inspect 驱动执行；两路输入表示数据依赖，不表示并行执行。
 
@@ -43,7 +45,7 @@ inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => Ins
 
 ### 输入上下文
 
-`subject` 是经过 `subjectSchema` 校验的最终产物；`TResolvedOptions` 是 `resolveOptions` 的输出类型。`context` 提供当前被观测实例（occurrence）的选项、来源与外观信息。
+`subject` 是经过 `subjectSchema` 校验的最终产物；`TResolvedOptions` 是 `resolveOptions` 的输出类型，省略 resolver 时就是 schema 的解析输出类型。`context` 提供当前被观测实例（occurrence）的选项、来源与外观信息。
 
 ```ts
 export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
