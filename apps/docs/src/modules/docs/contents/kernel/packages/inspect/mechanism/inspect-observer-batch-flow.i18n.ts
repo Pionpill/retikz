@@ -6,7 +6,9 @@ export type InspectObserverBatchFlowI18n = Readonly<{
   admit: InputFlowEntity['text'];
   occurrence1: InputFlowEntity['text'];
   occurrence2: InputFlowEntity['text'];
-  occurrence3: InputFlowEntity['text'];
+  callback: InputFlowEntity['text'];
+  fragment: InputFlowEntity['text'];
+  layers: InputFlowEntity['text'];
   requestSite: InputFlowEntity['text'];
   observe: InputFlowEntity['text'];
   captured: InputFlowEntity['text'];
@@ -22,8 +24,10 @@ export const inspectObserverBatchFlowI18n: Record<Lang, InspectObserverBatchFlow
       { text: '校验规则并准备 admitted rules', fill: 'gray', font: { size: 'sm' } },
     ],
     occurrence1: 'occurrence 1',
-    occurrence2: 'occurrence 2',
-    occurrence3: 'occurrence 3',
+    occurrence2: 'occurrence N',
+    callback: ['inspect()', { text: '校验 subject 后生成辅助 IR', fill: 'gray', font: { size: 'sm' } }],
+    fragment: ['compileFragment()', { text: '隔离编译辅助片段', fill: 'gray', font: { size: 'sm' } }],
+    layers: ['inspectionPlaneToReadonlyLayers()', { text: '宿主接入只读图层', fill: 'gray', font: { size: 'sm' } }],
     requestSite: [
       'canInspectionSelectionRequestSite()',
       { text: '判断站点是否需要发布观测', fill: 'gray', font: { size: 'sm' } },
@@ -40,8 +44,13 @@ export const inspectObserverBatchFlowI18n: Record<Lang, InspectObserverBatchFlow
       { text: 'Validate rules and prepare admitted rules', fill: 'gray', font: { size: 'sm' } },
     ],
     occurrence1: 'occurrence 1',
-    occurrence2: 'occurrence 2',
-    occurrence3: 'occurrence 3',
+    occurrence2: 'occurrence N',
+    callback: ['inspect()', { text: 'Validate subject; create auxiliary IR', fill: 'gray', font: { size: 'sm' } }],
+    fragment: ['compileFragment()', { text: 'Compile auxiliary fragments', fill: 'gray', font: { size: 'sm' } }],
+    layers: [
+      'inspectionPlaneToReadonlyLayers()',
+      { text: 'Deliver host readonly layers', fill: 'gray', font: { size: 'sm' } },
+    ],
     requestSite: [
       'canInspectionSelectionRequestSite()',
       { text: 'Decide whether a site should publish observation', fill: 'gray', font: { size: 'sm' } },

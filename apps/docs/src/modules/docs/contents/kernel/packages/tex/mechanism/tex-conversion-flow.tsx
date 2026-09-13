@@ -1,13 +1,13 @@
 import type { FC } from 'react';
 
-import type { Lang } from '@/i18n';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 
+import type { Lang } from '@/i18n';
+
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { texConversionFlowI18n } from './tex-conversion-flow.i18n';
-import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 /** 展示公式从 Core 入口经 Tex lowering 回到 Core Scene 的主链 */
 export type TexConversionFlowI18nFigureProps = Readonly<{ lang?: Lang }>;
@@ -17,7 +17,11 @@ const Demo: FC<TexConversionFlowI18nFigureProps> = props => {
   const i18n = texConversionFlowI18n[lang];
 
   return (
-    <FlowDiagram {...logicFigureGraphProps()} layout={{ direction: 'down' }}>
+    <FlowDiagram
+      {...logicFigureGraphProps()}
+      layout={{ direction: 'down' }}
+      style={{ maxWidth: '100%', height: 'auto' }}
+    >
       <FlowLayout kind="linear" id="tex-conversion" direction="down" align="center" gap={48}>
         <FlowLayout kind="linear" id="input-row" direction="right" align="center" gap={48}>
           <FlowEntities

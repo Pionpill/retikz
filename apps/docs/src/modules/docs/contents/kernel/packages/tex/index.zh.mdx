@@ -66,7 +66,7 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 | ------------ | --------------------------- | ------------------------------ |
 | 公式写法     | 文本中的公式语法与排版方式  | 在图中编写或调整公式时         |
 | MathJax 配置 | profile 与 extension 的选择 | 需要额外数学语法或命令时       |
-| 解析原理     | 转换边界、缓存和失败语义    | 自定义 engine 或排查公式渲染时 |
+| 实现原理     | 转换边界、缓存和失败语义    | 自定义 engine 或排查公式渲染时 |
 
 ## 章节内容
 
@@ -83,9 +83,9 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
       url: '/kernel/packages/tex/configuration',
     },
     {
-      title: '解析原理',
+      title: '实现原理',
       description: '了解转换流程、缓存和失败的可观察结果',
-      url: '/kernel/packages/tex/principles',
+      url: '/kernel/packages/tex/mechanism',
     },
   ]}
 />

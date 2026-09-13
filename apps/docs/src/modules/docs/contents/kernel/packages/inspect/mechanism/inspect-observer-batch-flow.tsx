@@ -16,7 +16,7 @@ export const InspectObserverBatchFlow: FC<InspectObserverBatchFlowProps> = props
   const i18n = inspectObserverBatchFlowI18n[lang];
 
   return (
-    <PreviewFlowDiagram {...logicFigureGraphProps()}>
+    <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
       <FlowLayout kind="linear" id="flow" direction="down" align="center" gap={48}>
         <FlowLayout kind="linear" id="observations" direction="right" align="center">
           <FlowLayout kind="linear" id="occurrences" direction="down" align="center" gap={16}>
@@ -73,7 +73,16 @@ export const InspectObserverBatchFlow: FC<InspectObserverBatchFlowProps> = props
             items={[
               { id: 'captured', text: i18n.captured, role: 'resource', kind: LogicFigureEntityKind.ImportantData },
               { id: 'complete', text: i18n.complete, role: 'activity', kind: LogicFigureEntityKind.Important },
-              { id: 'plane', text: i18n.inspectionPlane, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'callback', text: i18n.callback, role: 'activity', kind: LogicFigureEntityKind.Important },
+            ]}
+          />
+        </FlowLayout>
+        <FlowLayout kind="linear" id="delivery" direction="right" align="center">
+          <FlowEntities
+            items={[
+              { id: 'fragment', text: i18n.fragment, role: 'activity', kind: LogicFigureEntityKind.Important },
+              { id: 'plane', text: i18n.inspectionPlane, role: 'resource', kind: LogicFigureEntityKind.ImportantData },
+              { id: 'layers', text: i18n.layers, role: 'activity', kind: LogicFigureEntityKind.Secondary },
             ]}
           />
         </FlowLayout>
@@ -85,8 +94,11 @@ export const InspectObserverBatchFlow: FC<InspectObserverBatchFlowProps> = props
           { source: 'occurrence-n', target: 'request-site' },
           { source: 'request-site', target: 'observe' },
           { source: 'observe', target: 'captured', routing: { kind: 'orthogonal', cornerRadius: 4 } },
-          { source: 'captured', target: 'complete', label: i18n.resolveLabel },
-          { source: 'complete', target: 'plane' },
+          { source: 'captured', target: 'complete' },
+          { source: 'complete', target: 'callback', label: i18n.resolveLabel },
+          { source: 'callback', target: 'fragment', routing: { kind: 'orthogonal', cornerRadius: 4 } },
+          { source: 'fragment', target: 'plane' },
+          { source: 'plane', target: 'layers' },
         ]}
       />
     </PreviewFlowDiagram>

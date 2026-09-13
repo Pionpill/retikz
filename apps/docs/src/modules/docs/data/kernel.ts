@@ -309,8 +309,8 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Advanced,
           },
           {
-            id: 'principles',
-            label: 'kernel.pkgTexPrinciples',
+            id: 'mechanism',
+            label: 'kernel.pkgTexMechanism',
             difficulty: DocDifficulty.Internals,
             meta: extensionGuide('kernel.tex'),
           },
@@ -339,7 +339,7 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.inspect'),
           },
-          { id: 'principles', label: 'kernel.pkgInspectPrinciples', difficulty: DocDifficulty.Internals },
+          { id: 'mechanism', label: 'kernel.pkgInspectMechanism', difficulty: DocDifficulty.Internals },
           {
             id: 'api-reference',
             label: 'kernel.pkgInspectApiReference',

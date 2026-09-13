@@ -14,20 +14,20 @@ export type InspectCompileFlowI18n = Readonly<{
 /** 按文档语言获取流程图标签 */
 export const inspectCompileFlowI18n: Record<Lang, InspectCompileFlowI18n> = {
   zh: {
-    input: '用户描述主图',
-    compile: 'Core 确定绘图结果',
+    input: '主图、registry 与 selection',
+    compile: '选择准入与 Core 编译',
     primary: '主图结果保持不变',
-    observation: 'Core 通知选中对象的结果',
-    inspect: 'Inspect 生成辅助绘图描述',
+    observation: '收集最终产物',
+    inspect: '匹配实例并生成辅助描述',
     fragment: 'Core 单独编译辅助内容',
     render: 'Render 显示主图与辅助层',
   },
   en: {
-    input: 'User describes figure',
-    compile: 'Core compiles figure',
+    input: 'Figure, registry, selection',
+    compile: 'Admit selection; Core compiles',
     primary: 'Primary unchanged',
-    observation: 'Core reports results',
-    inspect: 'Inspect creates marks',
+    observation: 'Capture final outputs',
+    inspect: 'Match instances; create marks',
     fragment: 'Core compiles marks',
     render: 'Render displays both',
   },

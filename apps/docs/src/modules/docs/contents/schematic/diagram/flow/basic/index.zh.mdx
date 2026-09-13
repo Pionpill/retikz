@@ -108,7 +108,7 @@ const source = normalizeFlowDiagram({
 
 每个直接子项都必须指定单元格，不能重叠、跨格或引用其它容器的后代。空行列保留，但不生成占位元素。`rowGap`、`columnGap` 优先继承作者显式设置的 `nodeGap`；未设置时，内置默认分别为 `32`、`48`，接受显式 `0`；非对称 margin 会对称预留足够空间，不推偏节点中心。Grid 不随流程方向旋转。
 
-`reserveLabelSpace` 默认开启。带标签的横向 Relation 会把其测量宽度加到 `columnGap`，纵向 Relation 会把测量高度加到 `rowGap`；同轴多个标签取最大尺寸，因此其它行列也会使用同一扩张后的间距。`FlowRelation.label` 可写字符串（`\n` 硬换行）或 TextBlock 行数组，Flow 始终把整个标签块交给 Core 测量。例如 `columnGap={32}` 且标签宽度为 `12` 时，实际列间距为 `44`。设为 `false` 后，Grid 严格使用 `rowGap` / `columnGap` 配置值，不为标签预留空间。此行为不保证斜线、折线或跨越中间节点的全局避碰。[TeX 缓存图](/kernel/packages/tex/principles#缓存失败与重试) 展示了实际用法。
+`reserveLabelSpace` 默认开启。带标签的横向 Relation 会把其测量宽度加到 `columnGap`，纵向 Relation 会把测量高度加到 `rowGap`；同轴多个标签取最大尺寸，因此其它行列也会使用同一扩张后的间距。`FlowRelation.label` 可写字符串（`\n` 硬换行）或 TextBlock 行数组，Flow 始终把整个标签块交给 Core 测量。例如 `columnGap={32}` 且标签宽度为 `12` 时，实际列间距为 `44`。设为 `false` 后，Grid 严格使用 `rowGap` / `columnGap` 配置值，不为标签预留空间。此行为不保证斜线、折线或跨越中间节点的全局避碰。[TeX 缓存图](/kernel/packages/tex/mechanism#缓存失败与重试) 展示了实际用法。
 
 `FlowLayout kind="linear"` 的左右方向默认 `gap=48`，上下方向默认 `gap=32`。优先级为本层显式间距、祖先显式 `nodeGap`（或 Linear 的 `gap`）、Definition 的物理轴默认值；显式 `0` 也会继承。父级补出的默认间距不作为显式值传给子布局。根图示和可见 Group 的自动布局默认 `nodeGap=48`、`rankGap=48` 保持不变。
 

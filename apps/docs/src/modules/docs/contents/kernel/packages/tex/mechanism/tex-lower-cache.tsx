@@ -1,19 +1,19 @@
 import type { FC } from 'react';
 
-import type { Lang } from '@/i18n';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import { RelationRole } from '@retikz/graph';
 
-import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import type { Lang } from '@/i18n';
 
-import { texLowerCacheI18n } from './tex-lower-cache.i18n';
+import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import {
   LogicFigureEntityKind,
   logicFigureGraphProps,
   LogicFigureRelationKind,
   logicFigureRelationKinds,
 } from '@/modules/docs/components/logic-figure';
+
+import { texLowerCacheI18n } from './tex-lower-cache.i18n';
 
 /** 展示单个 lowerer 的公式缓存、解析与回写 */
 export type TexLowerCacheI18nFigureProps = Readonly<{ lang?: Lang }>;

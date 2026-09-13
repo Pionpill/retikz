@@ -1,13 +1,13 @@
 import type { FC } from 'react';
 
-import type { Lang } from '@/i18n';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 
+import type { Lang } from '@/i18n';
+
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { texReactLifecycleI18n } from './tex-react-lifecycle.i18n';
-import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 /** 展示 useLowerTex 的 React hook 生命周期 */
 export type TexReactLifecycleI18nFigureProps = Readonly<{ lang?: Lang }>;
