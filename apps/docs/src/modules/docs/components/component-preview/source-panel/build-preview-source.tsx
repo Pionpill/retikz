@@ -1,8 +1,9 @@
 import type { IRScene } from '@retikz/core';
-import type { FC } from 'react';
 
 import { SceneSchema } from '@retikz/core';
 import { Layout } from '@retikz/react';
+
+import type { Lang } from '@/i18n';
 
 import type {
   ComponentPreviewDemoComponent,
@@ -11,7 +12,6 @@ import type {
   PreviewSourceConfig,
   RendererMode,
 } from '../types';
-import type { Lang } from '@/i18n';
 import type { PreviewIR } from '../utils';
 
 import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite } from '../utils';
@@ -103,6 +103,10 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     hideCode,
   });
   const extraSourceFiles = reactFiles.filter(file => !file.isMain);
+
+  if (previewSource?.buildViews !== undefined) {
+    return { source: { react: { files: reactFiles }, ...previewSource.buildViews({ lang, theme }) }, previewIr: null };
+  }
 
   let resolvedPreviewIr: UnvalidatedPreviewIR | null = null;
   let irJson = '';

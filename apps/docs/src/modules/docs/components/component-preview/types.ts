@@ -1,3 +1,4 @@
+import type { IRScene } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -8,7 +9,7 @@ import type { PreviewThemeStyleValue } from './theme';
 export type Transform = { x: number; y: number; scale: number };
 
 /** 源码视图切换：React 源码 / IR JSON / Vanilla Input 代码 */
-export type SourceView = 'react' | 'ir' | 'vanilla';
+export type SourceView = 'react' | 'ir' | 'vanilla' | 'config';
 
 /** demo 渲染目标：SVG DOM 或 Canvas 2D。 */
 export type RendererMode = 'svg' | 'canvas';
@@ -441,6 +442,12 @@ export type PreviewDatasetImport = {
 
 /** demo 模块声明的源码派生能力。 */
 export type PreviewSourceConfig = {
+  /** 为不能仅由 Core IR 表达的运行时示例生成附加源码与实际预览 */
+  buildViews?: (context: {
+    lang: Lang;
+    theme?: IRScene['theme'];
+    values?: Readonly<PreviewControlValues>;
+  }) => Omit<ComponentRenderSource, 'react'>;
   /** 是否允许直接执行 demo 以自动派生 IR。 @default true */
   deriveIR?: boolean;
   /** 使用稳定默认状态渲染源码视图，不参与可见 demo 的交互状态 */

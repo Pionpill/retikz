@@ -1,11 +1,12 @@
 import type { FC, ReactNode } from 'react';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+
+import type { Lang } from '@/i18n';
 
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
-import type { Lang } from '@/i18n';
 
 import type {
   AlignKey,
@@ -15,6 +16,7 @@ import type {
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlSlot,
+  PreviewControlValues,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   SizeKey,
@@ -39,6 +41,8 @@ export type ComponentPreviewCardProps = {
   lang?: Lang;
   /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染。 */
   source?: ComponentRenderSource;
+  /** 根据当前控件状态派生显式源码视图 */
+  buildSourceViews?: (values: Readonly<PreviewControlValues>) => Omit<ComponentRenderSource, 'react'>;
   /** React 源码视图默认选中的文件名。 */
   defaultSourceFile?: string;
   /** 渲染区垂直对齐，默认 center。 */
@@ -82,7 +86,8 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     name,
     Component,
     lang = 'zh',
-    source,
+    source: initialSource,
+    buildSourceViews,
     defaultSourceFile,
     align = 'center',
     size = 'md',
@@ -93,7 +98,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     controlPanelDefaultOpen,
     controlPanelDefaultSize,
     controlContract,
-    showContextBar = source !== undefined,
+    showContextBar = initialSource !== undefined,
     controlSlots,
     dialogActions,
     enableThemeSwitch = false,
@@ -105,8 +110,6 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [localControlPanelOpen, setLocalControlPanelOpen] = useState<boolean>();
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>(() => useComponentPreviewStore.getState().themeMode);
-  const sourceState = useSourcePanelState(source, defaultSourceFile);
-  const hasCode = sourceState.views.length > 0;
   const [isMaximized, setIsMaximized] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const openAi = useRightPanelStore(s => s.openAi);
@@ -125,6 +128,15 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     controlContract?.canonicalValues,
     globalRangePlaybackDuration,
   );
+  const source = useMemo(
+    () =>
+      initialSource && buildSourceViews
+        ? { ...initialSource, ...buildSourceViews(controlState.values) }
+        : initialSource,
+    [initialSource, buildSourceViews, controlState.values],
+  );
+  const sourceState = useSourcePanelState(source, defaultSourceFile);
+  const hasCode = sourceState.views.length > 0;
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalRendererMode,
@@ -145,10 +157,10 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
 
   const handleAskAi = useCallback(() => {
     const heading = findPrecedingHeading(containerRef.current);
-    const lang = aiCurrentPage?.lang ?? 'zh';
+    const promptLang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
     const headingText = (heading?.textContent ?? '').trim();
-    const prompt = buildAskAiPrompt(lang, pageTitle, headingText, name);
+    const prompt = buildAskAiPrompt(promptLang, pageTitle, headingText, name);
     openAi();
     fillAiDraft(prompt);
   }, [aiCurrentPage, fillAiDraft, name, openAi]);

@@ -231,6 +231,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       Component={Component}
       lang={lang}
       source={sourceResult.source}
+      buildSourceViews={
+        previewSource?.buildViews === undefined
+          ? undefined
+          : values => previewSource.buildViews!({ lang, theme: previewTheme, values })
+      }
       defaultSourceFile={defaultSourceFile}
       align={align}
       size={size}

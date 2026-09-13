@@ -1,5 +1,5 @@
 export { usePreviewControls } from '../context';
-export { definePreviewControls } from '../controls/define-preview-controls';
+export { buildPreviewControlDefaults, definePreviewControls } from '../controls/define-preview-controls';
 export type {
   PreviewControlContract,
   PreviewControlField,
