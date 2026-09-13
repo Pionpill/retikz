@@ -334,6 +334,7 @@
   "about": {
     "label": "关于",
     "introduction": "介绍",
+    "getStarted": "开始使用",
     "blog": "博客",
     "blogCorePhilosophy": "retikz 核心理念",
     "blogOrigin": "retikz 的起点",

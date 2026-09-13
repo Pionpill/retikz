@@ -1,8 +1,13 @@
 import type { Section } from './types';
 
+import { DocDifficulty } from './types';
+
 export const aboutSection: Array<Section> = [
   {
-    pages: [{ id: 'introduction', label: 'about.introduction' }],
+    pages: [
+      { id: 'introduction', label: 'about.introduction' },
+      { id: 'get-start', label: 'about.getStarted', difficulty: DocDifficulty.Beginner },
+    ],
   },
   {
     id: 'releases',

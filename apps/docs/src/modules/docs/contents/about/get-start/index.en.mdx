@@ -1,0 +1,63 @@
+---
+title: Get Started
+description: Choose Retikz packages by drawing domain and focused task, distinguishing application adapters, domain capabilities, and foundation implementation.
+---
+
+Most applications start from an adapter ending in `-react` or `-vanilla`; adapters connect domain capabilities to a React or plain JavaScript host. Domain packages without a suffix own IR, resolution, and compilation. Foundation packages are normally read directly only for extensions, diagnostics, or lower-level integration.
+
+## Use what you need
+
+| Domain    | Focus      | Package                    | Needed | Notes                                                               |
+| --------- | ---------- | -------------------------- | ------ | ------------------------------------------------------------------- |
+| Kernel    | core       | `@retikz/react`            | √      | React adapter: describe 2D graphics with JSX                        |
+|           |            | `@retikz/vanilla`          | √      | Framework-neutral adapter: use objects and functions                |
+|           |            | `@retikz/core`             |        | Backend-neutral 2D drawing IR, extension contracts, and compilation |
+|           | inspect    | `@retikz/inspect`          |        | Inspect compilation results and generate supporting output          |
+|           | tex        | `@retikz/tex`              |        | Add TeX formulas to Core text                                       |
+|           | foundation | `@retikz/foundation`       |        | Atomic foundation contracts and schemas                             |
+|           | math       | `@retikz/math`             |        | Pure computational geometry and shared algorithms                   |
+|           | runtime    | `@retikz/runtime`          |        | Incremental execution, transactions, and scheduling                 |
+|           | render     | `@retikz/render`           |        | Execute a Scene as SVG or Canvas                                    |
+| Library   | standard   | `@retikz/standard`         |        | General-graphics Definitions, composition, and lowering             |
+|           |            | `@retikz/standard-vanilla` | √      | Standard framework-neutral adapter                                  |
+|           |            | `@retikz/standard-react`   | √      | Standard React adapter                                              |
+|           | layout     | `@retikz/layout`           |        | Rule-based layout, solver, and artifacts                            |
+|           |            | `@retikz/layout-vanilla`   | √      | Layout framework-neutral adapter                                    |
+|           |            | `@retikz/layout-react`     | √      | Layout React adapter                                                |
+| Schematic | graph      | `@retikz/graph`            |        | Semantic IR and lowering for entities, groups, and relations        |
+|           |            | `@retikz/graph-vanilla`    | √      | Graph framework-neutral adapter                                     |
+|           |            | `@retikz/graph-react`      | √      | Graph React adapter                                                 |
+|           | diagram    | `@retikz/diagram`          |        | Automatic layout and routing from diagram intent                    |
+|           |            | `@retikz/diagram-vanilla`  | √      | Diagram framework-neutral adapter                                   |
+|           |            | `@retikz/diagram-react`    | √      | Diagram React adapter                                               |
+| Viz       | data       | `@retikz/data`             | √      | Shared data models, transforms, and statistics for visualization    |
+|           | plot       | `@retikz/plot`             |        | A grammar-of-graphics visualization foundation                      |
+|           |            | `@retikz/plot-vanilla`     | √      | Plot framework-neutral adapter                                      |
+|           |            | `@retikz/plot-react`       | √      | Plot React adapter                                                  |
+|           | chart      | `@retikz/chart`            |        | Structure and presentation for common chart types                   |
+|           |            | `@retikz/chart-vanilla`    | √      | Chart framework-neutral adapter                                     |
+|           |            | `@retikz/chart-react`      | √      | Chart React adapter                                                 |
+|           | table      | `@retikz/table`            |        | Two-dimensional semantic tables for data or explicit content        |
+|           |            | `@retikz/table-vanilla`    | √      | Table framework-neutral adapter                                     |
+|           |            | `@retikz/table-react`      | √      | Table React adapter                                                 |
+
+React and Vanilla share the same drawing semantics. React uses JSX in a component tree; Vanilla uses objects and functions in a non-React application, server-side rendering, or an application-managed host.
+
+## Read the documentation
+
+Sidebar entries and the icon beside a page title show its reading difficulty. The level describes the task you should complete after reading, not the page length or amount of code.
+
+| Level     | Keyword    | Read it when                                                                                              |
+| --------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| Beginner  | Use        | You want to complete a figure or a focused feature with existing APIs                                     |
+| Advanced  | Customize  | You need to combine capabilities, understand configuration constraints, or write code for a specific case |
+| Internals | Principles | You need to extend Retikz, diagnose a complex issue, or debug performance and runtime behavior            |
+
+Complete a beginner example first, then follow the problem into advanced pages. Read internals pages only when the problem needs a mechanism-level explanation. A beginner page may link to deeper material without making it required reading.
+
+## Continue reading
+
+- [General drawing](/kernel/components/get-start): add the Kernel basics through a static figure
+- [Graph](/schematic/graph): start describing entities, groups, and relations
+- [Chart](/viz/chart): start data visualization from a concrete chart type
+- [Table](/viz/table): organize data or explicit content into a two-dimensional table
