@@ -6,10 +6,10 @@ import { toJSONSchema } from 'zod';
 import {
   compileInspectionToScene,
   createDefaultInspectorRegistry,
-  PATH_INSPECTOR,
   PATH_INSPECTOR_KEY,
   PathInspectOptionsSchema,
 } from '../../src';
+import { PATH_INSPECTOR } from '../../src/providers';
 
 const hasText = (primitives: ReadonlyArray<{ type: string; children?: ReadonlyArray<{ type: string }> }>): boolean =>
   primitives.some(
@@ -92,13 +92,6 @@ describe('stroke Path Inspector', () => {
       labels: false,
     });
     expect(JSON.parse(JSON.stringify(source))).toEqual(source);
-    expect(PATH_INSPECTOR.resolveOptions(source)).toEqual({
-      controlPoints: true,
-      vertices: false,
-      arcGeometry: true,
-      ellipseAxes: false,
-      labels: false,
-    });
     expect(source).toEqual({
       controlPoints: true,
       vertices: false,

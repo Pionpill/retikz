@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { null as zodNull, number, strictObject, string } from 'zod';
 
 import { createInspectorRegistry, defineInspector, RetikzInspectError } from '../../src';
-import { resolveInspectionSelection } from '../../src/compile';
+import { resolveInspectionSelection } from '../../src/compile/selection';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
 const key = { namespace: 'test', type: 'box' };
@@ -188,7 +188,7 @@ describe('Inspection selection', () => {
       }),
     ).toThrow();
   });
-  it('evaluates scene, outer subtree, inner self and allocates appearance after stable sorting', () => {
+  it('evaluates scene, outer subtree, authored self and allocates appearance after stable sorting', () => {
     const resolved = resolveInspectionSelection({
       ir,
       registry,
@@ -206,13 +206,7 @@ describe('Inspection selection', () => {
             kind: 'request',
             inspector: key,
             target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope.children[1]' } },
-            options: false,
-          },
-          {
-            kind: 'request',
-            inspector: key,
-            target: { kind: 'self', locator: { kind: 'occurrence', occurrence: observation(1).occurrence } },
-            options: { tone: 'reopened' },
+            options: { tone: 'self' },
           },
         ],
       },
@@ -224,7 +218,7 @@ describe('Inspection selection', () => {
     ]);
     expect(resolved.map(request => request.options)).toEqual([
       { label: 'nested', tone: 'scene' },
-      { label: 'default', tone: 'reopened' },
+      { label: 'nested', tone: 'self' },
     ]);
     expect(resolved.map(request => request.colorScope)).toEqual([0, 1]);
   });
@@ -529,28 +523,6 @@ describe('Inspection selection', () => {
                 kind: 'authored',
                 sourcePath: 'children[0].scope.children[0]',
                 occurrenceIndex: -1,
-              },
-            },
-            options: true,
-          },
-        ],
-      },
-    ],
-    [
-      'invalid occurrence locator index',
-      {
-        rules: [
-          {
-            kind: 'request',
-            inspector: key,
-            target: {
-              kind: 'self',
-              locator: {
-                kind: 'occurrence',
-                occurrence: {
-                  sourcePath: 'children[0].scope.children[0]',
-                  expansionPath: [{ kind: 'replay', index: -1 }],
-                },
               },
             },
             options: true,

@@ -3,7 +3,8 @@ import type { IRScene, IRScopeDefaults, PathCommand, ScenePrimitive } from '@ret
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { CLIP_INSPECTOR, compileInspectionToScene, createDefaultInspectorRegistry,SCOPE_INSPECTOR } from '../../src';
+import { compileInspectionToScene, createDefaultInspectorRegistry } from '../../src';
+import { CLIP_INSPECTOR, SCOPE_INSPECTOR } from '../../src/providers';
 
 /** 展开容器以检查实际几何命令 */
 const leafPrimitives = (primitives: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>

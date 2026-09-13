@@ -17,7 +17,7 @@ This example adds circular markers to path endpoints: a custom `inspect(subject,
 
 ## Definition mechanism
 
-An `InspectorDefinitionInput` specifies what to observe, which options to accept, and how to generate auxiliary content. `defineInspector()` fills in defaults and returns a complete `InspectorDefinition`. A Core owner identifies the capability publishing the compiled result; the example's `stroke` owner publishes final path output.
+An `InspectorDefinitionInput` specifies what to observe, which options to accept, and how to generate auxiliary content. The public type of `defineInspector()` remains the author-input form; it and the registry fill in defaults at the registration boundary, and the completed runtime form is consumed only inside Inspect. A Core owner identifies the capability publishing the compiled result; the example's `stroke` owner publishes final path output.
 
 | Interface                   | Responsibility                                                                                |
 | --------------------------- | --------------------------------------------------------------------------------------------- |

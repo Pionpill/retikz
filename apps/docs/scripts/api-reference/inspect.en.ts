@@ -4,8 +4,7 @@ const translations: Record<string, string> = {
     'Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output types',
   'registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver':
     'Heterogeneous author definitions accepted by registries, with options schemas and resolvers completed at registration',
-  '补齐默认选项契约并冻结 Inspector；省略 schema 时只接受空对象，省略 resolver 时使用 schema 输出':
-    'Completes default options contracts and freezes an Inspector; an omitted schema accepts only an empty object, and an omitted resolver uses schema output',
+  '以保留作者输入类型的方式定义 Inspector': 'Defines an Inspector while preserving its author-input type',
   '按辅助片段 coordinateSpace 生成的只读 Scene': 'A readonly Scene placed according to its fragment coordinateSpace',
   带显式坐标空间的辅助片段: 'An auxiliary fragment with an explicit coordinate space',
   '辅助片段判别字段，不属于 Core IR': 'The auxiliary fragment discriminator; not part of Core IR',
@@ -59,6 +58,7 @@ const translations: Record<string, string> = {
   'Inspector registry 的公开复合键': 'The public composite key for an Inspector registry',
   'Inspector 可返回的普通 Core IR child': 'Ordinary Core IR children that an Inspector can return',
   'Inspector Definition 的 immutable registry': 'An immutable registry of Inspector Definitions',
+  '已注册 Inspector 的不透明容器': 'An opaque container for registered Inspectors',
   'selection 解析出的 canonical request': 'A canonical request resolved from selection rules',
   'Inspect 包稳定错误码取值': 'Stable error code values for the Inspect package',
   'Inspect 包错误的结构化构造参数': 'Structured constructor options for Inspect errors',
@@ -81,6 +81,8 @@ const translations: Record<string, string> = {
   '为 static 或 retained Core compile 创建一次 Inspect observer definition':
     'Creates an Inspect observer definition for static or retained Core compilation',
   '创建无全局状态的 Inspector registry': 'Creates an Inspector registry without global state',
+  '合并多个已创建的 registry，保持各 registry 的定义顺序':
+    'Merges created registries while preserving the definition order of each registry',
   '校验并冻结一个独立 Inspector Definition': 'Validates and freezes an independent Inspector Definition',
   '把公开 Inspector key 转为无歧义的 registry 内部键':
     'Converts a public Inspector key into an unambiguous internal registry key',

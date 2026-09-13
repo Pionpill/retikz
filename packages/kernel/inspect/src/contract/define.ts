@@ -3,12 +3,7 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { assertNonEmptyString } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import type {
-  AnyInspectorDefinition,
-  AnyInspectorDefinitionInput,
-  InspectorDefinition,
-  InspectorDefinitionInput,
-} from './types';
+import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorDefinitionInput } from './types';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
@@ -62,7 +57,7 @@ export const sealInspectorDefinition = (definition: AnyInspectorDefinitionInput)
   return sealedDefinition;
 };
 
-/** 补齐默认选项契约并冻结 Inspector；省略 schema 时只接受空对象，省略 resolver 时使用 schema 输出 */
+/** 以保留作者输入类型的方式定义 Inspector */
 export const defineInspector = <
   TSubject extends JsonValue,
   TParsedOptions extends JsonObject = Record<string, never>,
@@ -70,11 +65,10 @@ export const defineInspector = <
   TSourceOptions extends JsonObject = TParsedOptions,
 >(
   definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
-): InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions> => {
-  return sealInspectorDefinition(definition) as unknown as InspectorDefinition<
+): InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions> =>
+  sealInspectorDefinition(definition) as unknown as InspectorDefinitionInput<
     TSubject,
     TParsedOptions,
     TResolvedOptions,
     TSourceOptions
   >;
-};

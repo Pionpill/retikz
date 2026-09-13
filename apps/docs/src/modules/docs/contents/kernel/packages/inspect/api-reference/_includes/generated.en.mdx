@@ -14,31 +14,6 @@
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
 | `constructor` | `(message: string) => RetikzInspectError; (options: RetikzInspectErrorOptions) => RetikzInspectError; (code: RetikzInspectErrorCodeValue, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCodeValue; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>) => RetikzInspectError` | —       | —           |
 
-### AnyInspectorDefinition
-
-<p>
-  <ApiSourceLink
-    label={'AnyInspectorDefinition'}
-    path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={136}
-  >
-    An Inspector definition with concrete generic types erased for registry storage
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{
-  inspect: (subject: never, context: never) => InspectorOutput;
-  mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-  namespace: string;
-  optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-  owner: CompileObservationOwner;
-  resolveOptions: (options: never) => JsonObject;
-  subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-  type: string;
-}>;
-```
-
 ### AnyInspectorDefinitionInput
 
 <p>
@@ -78,7 +53,7 @@ Readonly<{ colorScope: number; scopeColor: CssColorValue; semanticColors: CoreSe
   <ApiSourceLink
     label={'InspectionCompileResult'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={126}
+    startLine={119}
   >
     Atomic compilation output containing primary and auxiliary results
   </ApiSourceLink>
@@ -95,7 +70,7 @@ Readonly<{
 ### InspectionDiagnostic
 
 <p>
-  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={118}>
+  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={111}>
     An Inspect-owned diagnostic for a callback or fragment warning
   </ApiSourceLink>
 </p>
@@ -110,7 +85,7 @@ Readonly<{ cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>; o
   <ApiSourceLink
     label={'InspectionDiagnosticOrigin'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={100}
+    startLine={93}
   >
     Structured origins of Inspect failures, callback warnings, and fragment diagnostics
   </ApiSourceLink>
@@ -137,7 +112,7 @@ Readonly<{ ruleIndex: number; stage: 'selection'; target: InspectionSelectionTar
 ### InspectionPlane
 
 <p>
-  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={94}>
+  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={87}>
     An ordered, read-only Inspector auxiliary plane
   </ApiSourceLink>
 </p>
@@ -149,7 +124,7 @@ Readonly<{ entries: ReadonlyArray<InspectionPlaneEntry> }>;
 ### InspectionPlaneEntry
 
 <p>
-  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={78}>
+  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={71}>
     An auxiliary Scene plane entry
   </ApiSourceLink>
 </p>
@@ -168,7 +143,7 @@ Readonly<{
 ### InspectionSelection
 
 <p>
-  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={56}>
+  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={49}>
     Runtime-only Inspector selection for one compilation
   </ApiSourceLink>
 </p>
@@ -180,7 +155,7 @@ Readonly<{ rules: ReadonlyArray<InspectionSelectionRule> }>;
 ### InspectionSelectionRule
 
 <p>
-  <ApiSourceLink label={'InspectionSelectionRule'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={37}>
+  <ApiSourceLink label={'InspectionSelectionRule'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={30}>
     One selection rule: a request controls one Inspector; a barrier blocks all Inspectors within a scope
   </ApiSourceLink>
 </p>
@@ -209,12 +184,7 @@ Readonly<{
 ```ts
 Readonly<{ kind: 'scene' }> |
   Readonly<{ kind: 'subtree'; sourcePath: string }> |
-  Readonly<{
-    kind: 'self';
-    locator:
-      | Readonly<{ kind: 'authored'; occurrenceIndex?: number; sourcePath: string }>
-      | Readonly<{ kind: 'occurrence'; occurrence: CompileOccurrenceLocator }>;
-  }>;
+  Readonly<{ kind: 'self'; locator: Readonly<{ kind: 'authored'; occurrenceIndex?: number; sourcePath: string }> }>;
 ```
 
 ### InspectorContext
@@ -262,36 +232,6 @@ Readonly<{
 'local' | 'scene';
 ```
 
-### InspectorDefinition
-
-<p>
-  <ApiSourceLink label={'InspectorDefinition'} path={'packages/kernel/inspect/src/contract/types.ts'} startLine={72}>
-    An Inspector definition independent of the Core owner Definition
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{
-  inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
-  mergeOptionsInput?: (inheritedOptionsInput: TSourceOptions, localOptionsInput: TSourceOptions) => TSourceOptions;
-  namespace: string;
-  optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
-  owner: CompileObservationOwner;
-  resolveOptions: (options: TParsedOptions) => TResolvedOptions;
-  subjectSchema: ZodType<TSubject>;
-  type: string;
-}>;
-```
-
-#### Type parameters
-
-| Type parameter     | Description |
-| ------------------ | ----------- |
-| `TSubject`         | —           |
-| `TParsedOptions`   | —           |
-| `TResolvedOptions` | —           |
-| `TSourceOptions`   | —           |
-
 ### InspectorDefinitionInput
 
 <p>
@@ -306,7 +246,7 @@ Readonly<{
 </p>
 
 ```ts
-(Omit<
+(WithOptionalProperties<
   InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
   'optionsSchema' | 'resolveOptions'
 > &
@@ -363,17 +303,13 @@ IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
 ### InspectorRegistry
 
 <p>
-  <ApiSourceLink label={'InspectorRegistry'} path={'packages/kernel/inspect/src/providers/registry.ts'} startLine={8}>
-    An immutable registry of Inspector Definitions
+  <ApiSourceLink label={'InspectorRegistry'} path={'packages/kernel/inspect/src/providers/registry.ts'} startLine={10}>
+    An opaque container for registered Inspectors
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{
-  definitions: ReadonlyArray<AnyInspectorDefinition>;
-  get: (key: InspectorKey) => AnyInspectorDefinition | undefined;
-  require: (key: InspectorKey) => AnyInspectorDefinition;
-}>;
+Readonly<{ [inspectorRegistryBrand]: true }>;
 ```
 
 ### RetikzInspectErrorCodeValue
@@ -405,111 +341,10 @@ Readonly<{
 }>;
 ```
 
-### BUILTIN_INSPECTORS
-
-<p>
-  <ApiSourceLink
-    label={'BUILTIN_INSPECTORS'}
-    path={'packages/kernel/inspect/src/providers/definitions.ts'}
-    startLine={10}
-  >
-    Built-in Inspector definitions used by the default registry
-  </ApiSourceLink>
-</p>
-
-```ts
-ReadonlyArray<AnyInspectorDefinition>;
-```
-
-### CLIP_INSPECTOR
-
-<p>
-  <ApiSourceLink label={'CLIP_INSPECTOR'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={42}>
-    The built-in Clip application Inspector
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{
-  inspect: (
-    subject: {
-      path: {
-        commands: Array<
-          | { kind: 'move'; to: [number, number] }
-          | { kind: 'line'; to: [number, number] }
-          | { control: [number, number]; kind: 'quad'; to: [number, number] }
-          | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] }
-          | {
-              center: [number, number];
-              counterClockwise?: boolean;
-              endAngle: number;
-              kind: 'arc';
-              radius: number;
-              startAngle: number;
-            }
-          | {
-              center: [number, number];
-              counterClockwise?: boolean;
-              endAngle: number;
-              kind: 'ellipseArc';
-              radiusX: number;
-              radiusY: number;
-              rotation?: number;
-              startAngle: number;
-            }
-          | { kind: 'close' }
-        >;
-        fillRule: 'nonzero' | 'evenodd';
-      };
-    },
-    context: InspectorContext<TResolvedOptions>,
-  ) => InspectorOutput;
-  mergeOptionsInput?: (
-    inheritedOptionsInput: { labels?: boolean; outline?: boolean },
-    localOptionsInput: { labels?: boolean; outline?: boolean },
-  ) => { labels?: boolean; outline?: boolean };
-  namespace: string;
-  optionsSchema: ZodType<{ labels: boolean; outline: boolean }, { labels?: boolean; outline?: boolean }>;
-  owner: CompileObservationOwner;
-  resolveOptions: (options: { labels: boolean; outline: boolean }) => { labels: boolean; outline: boolean };
-  subjectSchema: ZodType<{
-    path: {
-      commands: Array<
-        | { kind: 'move'; to: [number, number] }
-        | { kind: 'line'; to: [number, number] }
-        | { control: [number, number]; kind: 'quad'; to: [number, number] }
-        | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] }
-        | {
-            center: [number, number];
-            counterClockwise?: boolean;
-            endAngle: number;
-            kind: 'arc';
-            radius: number;
-            startAngle: number;
-          }
-        | {
-            center: [number, number];
-            counterClockwise?: boolean;
-            endAngle: number;
-            kind: 'ellipseArc';
-            radiusX: number;
-            radiusY: number;
-            rotation?: number;
-            startAngle: number;
-          }
-        | { kind: 'close' }
-      >;
-      fillRule: 'nonzero' | 'evenodd';
-    };
-  }>;
-  type: string;
-}>;
-```
-
 ### CLIP_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'CLIP_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={15}>
+  <ApiSourceLink label={'CLIP_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={16}>
     The built-in Core Clip Inspector key
   </ApiSourceLink>
 </p>
@@ -521,43 +356,12 @@ Readonly<{ namespace: 'core'; type: 'clip' }>;
 ### ClipInspectOptionsSchema
 
 <p>
-  <ApiSourceLink label={'ClipInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/clip.ts'} startLine={6}>
+  <ApiSourceLink label={'ClipInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/clip.ts'} startLine={4}>
     Options and defaults for the built-in Clip Inspector
   </ApiSourceLink>
 </p>
 
 [Schema reference](/kernel/packages/inspect/schema-reference#clipinspectoptionsschema)
-
-### COORDINATE_INSPECTOR
-
-<p>
-  <ApiSourceLink
-    label={'COORDINATE_INSPECTOR'}
-    path={'packages/kernel/inspect/src/providers/coordinate.ts'}
-    startLine={18}
-  >
-    The built-in resolved Coordinate point Inspector
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{
-  inspect: (
-    subject: { id: string; position: [number, number] },
-    context: InspectorContext<TResolvedOptions>,
-  ) => InspectorOutput;
-  mergeOptionsInput?: (
-    inheritedOptionsInput: { labels?: boolean },
-    localOptionsInput: { labels?: boolean },
-  ) => { labels?: boolean };
-  namespace: string;
-  optionsSchema: ZodType<{ labels: boolean }, { labels?: boolean }>;
-  owner: CompileObservationOwner;
-  resolveOptions: (options: { labels: boolean }) => { labels: boolean };
-  subjectSchema: ZodType<{ id: string; position: [number, number] }>;
-  type: string;
-}>;
-```
 
 ### COORDINATE_INSPECTOR_KEY
 
@@ -565,7 +369,7 @@ Readonly<{
   <ApiSourceLink
     label={'COORDINATE_INSPECTOR_KEY'}
     path={'packages/kernel/inspect/src/providers/coordinate.ts'}
-    startLine={15}
+    startLine={16}
   >
     The built-in Core Coordinate Inspector key
   </ApiSourceLink>
@@ -581,7 +385,7 @@ Readonly<{ namespace: 'core'; type: 'coordinate' }>;
   <ApiSourceLink
     label={'CoordinateInspectOptionsSchema'}
     path={'packages/kernel/inspect/src/schema/coordinate.ts'}
-    startLine={6}
+    startLine={4}
   >
     Options and defaults for the built-in Coordinate Inspector
   </ApiSourceLink>
@@ -589,233 +393,10 @@ Readonly<{ namespace: 'core'; type: 'coordinate' }>;
 
 [Schema reference](/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema)
 
-### InspectionLabelsSchema
-
-[Schema reference](/kernel/packages/inspect/schema-reference#inspectionlabelsschema)
-
-### NODE_INSPECTOR
-
-<p>
-  <ApiSourceLink label={'NODE_INSPECTOR'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={144}>
-    The built-in Node geometry Inspector
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{
-  inspect: (
-    subject: {
-      boundary: {
-        name: string;
-        outline: Array<
-          | { kind: 'move'; to: [number, number] }
-          | { kind: 'line'; to: [number, number] }
-          | { control: [number, number]; kind: 'quad'; to: [number, number] }
-          | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] }
-          | {
-              center: [number, number];
-              counterClockwise?: boolean;
-              endAngle: number;
-              kind: 'arc';
-              radius: number;
-              startAngle: number;
-            }
-          | {
-              center: [number, number];
-              counterClockwise?: boolean;
-              endAngle: number;
-              kind: 'ellipseArc';
-              radiusX: number;
-              radiusY: number;
-              rotation?: number;
-              startAngle: number;
-            }
-          | { kind: 'close' }
-        > | null;
-      };
-      content: {
-        baselines: Array<{ from: [number, number]; to: [number, number] }>;
-        corners: [[number, number], [number, number], [number, number], [number, number]];
-      } | null;
-      rect: { height: number; rotate?: number; width: number; x: number; y: number };
-      shape: {
-        keyPoints: Array<{ name: string; position: [number, number] }> | null;
-        name: string;
-        outline: Array<
-          | { kind: 'move'; to: [number, number] }
-          | { kind: 'line'; to: [number, number] }
-          | { control: [number, number]; kind: 'quad'; to: [number, number] }
-          | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] }
-          | {
-              center: [number, number];
-              counterClockwise?: boolean;
-              endAngle: number;
-              kind: 'arc';
-              radius: number;
-              startAngle: number;
-            }
-          | {
-              center: [number, number];
-              counterClockwise?: boolean;
-              endAngle: number;
-              kind: 'ellipseArc';
-              radiusX: number;
-              radiusY: number;
-              rotation?: number;
-              startAngle: number;
-            }
-          | { kind: 'close' }
-        > | null;
-      };
-    },
-    context: InspectorContext<TResolvedOptions>,
-  ) => InspectorOutput;
-  mergeOptionsInput?: (
-    inheritedOptionsInput: {
-      baselines?: boolean;
-      boundary?: boolean;
-      bounds?: boolean;
-      box?: boolean;
-      content?: boolean;
-      keyPoints?: boolean;
-      labels?: boolean;
-      outline?: boolean;
-    },
-    localOptionsInput: {
-      baselines?: boolean;
-      boundary?: boolean;
-      bounds?: boolean;
-      box?: boolean;
-      content?: boolean;
-      keyPoints?: boolean;
-      labels?: boolean;
-      outline?: boolean;
-    },
-  ) => {
-    baselines?: boolean;
-    boundary?: boolean;
-    bounds?: boolean;
-    box?: boolean;
-    content?: boolean;
-    keyPoints?: boolean;
-    labels?: boolean;
-    outline?: boolean;
-  };
-  namespace: string;
-  optionsSchema: ZodType<
-    {
-      baselines: boolean;
-      boundary: boolean;
-      bounds: boolean;
-      box: boolean;
-      content: boolean;
-      keyPoints: boolean;
-      labels: boolean;
-      outline: boolean;
-    },
-    {
-      baselines?: boolean;
-      boundary?: boolean;
-      bounds?: boolean;
-      box?: boolean;
-      content?: boolean;
-      keyPoints?: boolean;
-      labels?: boolean;
-      outline?: boolean;
-    }
-  >;
-  owner: CompileObservationOwner;
-  resolveOptions: (options: {
-    baselines: boolean;
-    boundary: boolean;
-    bounds: boolean;
-    box: boolean;
-    content: boolean;
-    keyPoints: boolean;
-    labels: boolean;
-    outline: boolean;
-  }) => {
-    baselines: boolean;
-    boundary: boolean;
-    bounds: boolean;
-    box: boolean;
-    content: boolean;
-    keyPoints: boolean;
-    labels: boolean;
-    outline: boolean;
-  };
-  subjectSchema: ZodType<{
-    boundary: {
-      name: string;
-      outline: Array<
-        | { kind: 'move'; to: [number, number] }
-        | { kind: 'line'; to: [number, number] }
-        | { control: [number, number]; kind: 'quad'; to: [number, number] }
-        | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] }
-        | {
-            center: [number, number];
-            counterClockwise?: boolean;
-            endAngle: number;
-            kind: 'arc';
-            radius: number;
-            startAngle: number;
-          }
-        | {
-            center: [number, number];
-            counterClockwise?: boolean;
-            endAngle: number;
-            kind: 'ellipseArc';
-            radiusX: number;
-            radiusY: number;
-            rotation?: number;
-            startAngle: number;
-          }
-        | { kind: 'close' }
-      > | null;
-    };
-    content: {
-      baselines: Array<{ from: [number, number]; to: [number, number] }>;
-      corners: [[number, number], [number, number], [number, number], [number, number]];
-    } | null;
-    rect: { height: number; rotate?: number; width: number; x: number; y: number };
-    shape: {
-      keyPoints: Array<{ name: string; position: [number, number] }> | null;
-      name: string;
-      outline: Array<
-        | { kind: 'move'; to: [number, number] }
-        | { kind: 'line'; to: [number, number] }
-        | { control: [number, number]; kind: 'quad'; to: [number, number] }
-        | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] }
-        | {
-            center: [number, number];
-            counterClockwise?: boolean;
-            endAngle: number;
-            kind: 'arc';
-            radius: number;
-            startAngle: number;
-          }
-        | {
-            center: [number, number];
-            counterClockwise?: boolean;
-            endAngle: number;
-            kind: 'ellipseArc';
-            radiusX: number;
-            radiusY: number;
-            rotation?: number;
-            startAngle: number;
-          }
-        | { kind: 'close' }
-      > | null;
-    };
-  }>;
-  type: string;
-}>;
-```
-
 ### NODE_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'NODE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={24}>
+  <ApiSourceLink label={'NODE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={25}>
     The built-in Core Node Inspector key
   </ApiSourceLink>
 </p>
@@ -827,29 +408,17 @@ Readonly<{ namespace: 'core'; type: 'node' }>;
 ### NodeInspectOptionsSchema
 
 <p>
-  <ApiSourceLink label={'NodeInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/node.ts'} startLine={6}>
+  <ApiSourceLink label={'NodeInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/node.ts'} startLine={4}>
     Options and defaults for the built-in Node Inspector
   </ApiSourceLink>
 </p>
 
 [Schema reference](/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema)
 
-### PATH_INSPECTOR
-
-<p>
-  <ApiSourceLink label={'PATH_INSPECTOR'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={228}>
-    The built-in stroke Path control-point Inspector
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{ inspect: (subject: { commands: Array<{ kind: 'move'; to: [number, number] } | { kind: 'line'; to: [number, number] } | { control: [number, number]; kind: 'quad'; to: [number, number] } | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] } | { center: [number, number]; counterClockwise?: boolean; endAngle: number; kind: 'arc'; radius: number; startAngle: number } | { center: [number, number]; counterClockwise?: boolean; endAngle: number; kind: 'ellipseArc'; radiusX: number; radiusY: number; rotation?: number; startAngle: number } | { kind: 'close' }>; transforms: Array<{ kind: 'translate'; x: number; y: number } | { angle: number; kind: 'polar-translate'; origin?: string | [number, number] | SharedPolarPosition; radius: number } | { direction: 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'; distance?: number; kind: 'at-translate'; of: string } | { kind: 'offset-translate'; of: string | [number, number] | SharedPolarPosition; offset?: [number, number] } | { between: [IRAbsoluteTarget, IRAbsoluteTarget]; fraction: number; kind: 'between-translate' } | { degrees: number; kind: 'rotate'; pivot?: number | 'origin' | [number, number] | OpenString<ValueOf<{ Bottom: ...; BottomLeft: ...; BottomRight: ...; Center: ...; Left: ...; Right: ...; Top: ...; TopLeft: ...; TopRight: ... }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' } } | { kind: 'scale'; pivot?: number | 'origin' | [number, number] | OpenString<ValueOf<{ Bottom: ...; BottomLeft: ...; BottomRight: ...; Center: ...; Left: ...; Right: ...; Top: ...; TopLeft: ...; TopRight: ... }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' }; x: number; y?: number }> }, context: InspectorContext<TResolvedOptions>) => InspectorOutput; mergeOptionsInput?: (inheritedOptionsInput: { arcGeometry?: boolean; controlPoints?: boolean; ellipseAxes?: boolean; labels?: boolean; vertices?: boolean }, localOptionsInput: { arcGeometry?: boolean; controlPoints?: boolean; ellipseAxes?: boolean; labels?: boolean; vertices?: boolean }) => { arcGeometry?: boolean; controlPoints?: boolean; ellipseAxes?: boolean; labels?: boolean; vertices?: boolean }; namespace: string; optionsSchema: ZodType<{ arcGeometry: boolean; controlPoints: boolean; ellipseAxes: boolean; labels: boolean; vertices: boolean }, { arcGeometry?: boolean; controlPoints?: boolean; ellipseAxes?: boolean; labels?: boolean; vertices?: boolean }>; owner: CompileObservationOwner; resolveOptions: (options: { arcGeometry: boolean; controlPoints: boolean; ellipseAxes: boolean; labels: boolean; vertices: boolean }) => { arcGeometry: boolean; controlPoints: boolean; ellipseAxes: boolean; labels: boolean; vertices: boolean }; subjectSchema: ZodType<{ commands: Array<{ kind: 'move'; to: [number, number] } | { kind: 'line'; to: [number, number] } | { control: [number, number]; kind: 'quad'; to: [number, number] } | { control1: [number, number]; control2: [number, number]; kind: 'cubic'; to: [number, number] } | { center: [number, number]; counterClockwise?: boolean; endAngle: number; kind: 'arc'; radius: number; startAngle: number } | { center: [number, number]; counterClockwise?: boolean; endAngle: number; kind: 'ellipseArc'; radiusX: number; radiusY: number; rotation?: number; startAngle: number } | { kind: 'close' }>; transforms: Array<{ kind: 'translate'; x: number; y: number } | { angle: number; kind: 'polar-translate'; origin?: string | [number, number] | SharedPolarPosition; radius: number } | { direction: 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'; distance?: number; kind: 'at-translate'; of: string } | { kind: 'offset-translate'; of: string | [number, number] | SharedPolarPosition; offset?: [number, number] } | { between: [IRAbsoluteTarget, IRAbsoluteTarget]; fraction: number; kind: 'between-translate' } | { degrees: number; kind: 'rotate'; pivot?: number | 'origin' | [number, number] | OpenString<ValueOf<{ Bottom: ...; BottomLeft: ...; BottomRight: ...; Center: ...; Left: ...; Right: ...; Top: ...; TopLeft: ...; TopRight: ... }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' } } | { kind: 'scale'; pivot?: number | 'origin' | [number, number] | OpenString<ValueOf<{ Bottom: ...; BottomLeft: ...; BottomRight: ...; Center: ...; Left: ...; Right: ...; Top: ...; TopLeft: ...; TopRight: ... }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' }; x: number; y?: number }> }>; type: string }>
-```
-
 ### PATH_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'PATH_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={10}>
+  <ApiSourceLink label={'PATH_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={11}>
     The built-in Core stroke Path Inspector key
   </ApiSourceLink>
 </p>
@@ -861,7 +430,7 @@ Readonly<{ namespace: 'core'; type: 'path' }>;
 ### PathInspectOptionsSchema
 
 <p>
-  <ApiSourceLink label={'PathInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/path.ts'} startLine={6}>
+  <ApiSourceLink label={'PathInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/path.ts'} startLine={4}>
     Options and defaults for the built-in stroke Path Inspector
   </ApiSourceLink>
 </p>
@@ -887,55 +456,10 @@ Readonly<{ namespace: 'core'; type: 'path' }>;
 }
 ```
 
-### SCOPE_INSPECTOR
-
-<p>
-  <ApiSourceLink label={'SCOPE_INSPECTOR'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={63}>
-    The built-in Scope hierarchy and coordinate-frame Inspector
-  </ApiSourceLink>
-</p>
-
-```ts
-Readonly<{
-  inspect: (
-    subject: {
-      envelope: {
-        rect: { height: number; rotate?: number; width: number; x: number; y: number };
-        shape: 'rectangle' | 'circle';
-      } | null;
-    },
-    context: InspectorContext<TResolvedOptions>,
-  ) => InspectorOutput;
-  mergeOptionsInput?: (
-    inheritedOptionsInput: { axes?: boolean; envelope?: boolean; labels?: boolean; origin?: boolean },
-    localOptionsInput: { axes?: boolean; envelope?: boolean; labels?: boolean; origin?: boolean },
-  ) => { axes?: boolean; envelope?: boolean; labels?: boolean; origin?: boolean };
-  namespace: string;
-  optionsSchema: ZodType<
-    { axes: boolean; envelope: boolean; labels: boolean; origin: boolean },
-    { axes?: boolean; envelope?: boolean; labels?: boolean; origin?: boolean }
-  >;
-  owner: CompileObservationOwner;
-  resolveOptions: (options: { axes: boolean; envelope: boolean; labels: boolean; origin: boolean }) => {
-    axes: boolean;
-    envelope: boolean;
-    labels: boolean;
-    origin: boolean;
-  };
-  subjectSchema: ZodType<{
-    envelope: {
-      rect: { height: number; rotate?: number; width: number; x: number; y: number };
-      shape: 'rectangle' | 'circle';
-    } | null;
-  }>;
-  type: string;
-}>;
-```
-
 ### SCOPE_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'SCOPE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={22}>
+  <ApiSourceLink label={'SCOPE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={23}>
     The built-in Core Scope Inspector key
   </ApiSourceLink>
 </p>
@@ -947,7 +471,7 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 ### ScopeInspectOptionsSchema
 
 <p>
-  <ApiSourceLink label={'ScopeInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/scope.ts'} startLine={6}>
+  <ApiSourceLink label={'ScopeInspectOptionsSchema'} path={'packages/kernel/inspect/src/schema/scope.ts'} startLine={4}>
     Options and defaults for the built-in Scope Inspector
   </ApiSourceLink>
 </p>
@@ -960,7 +484,7 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'compileInspectionToScene'}
     path={'packages/kernel/inspect/src/compile/driver.ts'}
-    startLine={260}
+    startLine={261}
   >
     Runs an atomic Inspector compilation using Core observed compilation
   </ApiSourceLink>
@@ -1063,43 +587,14 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'createDefaultInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={54}
+    startLine={71}
   >
     Creates the default Inspector registry with built-ins first and the same path for third-party definitions
   </ApiSourceLink>
 </p>
 
 ```ts
-(definitions: readonly Array<AnyInspectorDefinitionInput>) =>
-  Readonly<{
-    definitions: readonly Array<
-      Readonly<{
-        inspect: (subject: never, context: never) => InspectorOutput;
-        mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-        namespace: string;
-        optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-        owner: CompileObservationOwner;
-        resolveOptions: (options: never) => JsonObject;
-        subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-        type: string;
-      }>
-    >;
-    get: (
-      key: InspectorKey,
-    ) =>
-      | Readonly<{
-          inspect: (subject: never, context: never) => InspectorOutput;
-          mergeOptionsInput?: (inheritedOptionsInput: never, localOptionsInput: never) => JsonObject;
-          namespace: string;
-          optionsSchema: Readonly<{ parse: (value: unknown) => JsonObject }>;
-          owner: CompileObservationOwner;
-          resolveOptions: (options: never) => JsonObject;
-          subjectSchema: Readonly<{ parse: (value: unknown) => JsonValue }>;
-          type: string;
-        }>
-      | undefined;
-    require: (key: InspectorKey) => AnyInspectorDefinition;
-  }>;
+(definitions: readonly Array<AnyInspectorDefinitionInput>) => Readonly<{ [inspectorRegistryBrand]: true }>;
 ```
 
 #### Parameters
@@ -1114,7 +609,7 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'createInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={21}
+    startLine={29}
   >
     Creates an Inspector registry without global state
   </ApiSourceLink>
@@ -1133,16 +628,15 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={66}>
-    Completes default options contracts and freezes an Inspector; an omitted schema accepts only an empty object, and an
-    omitted resolver uses schema output
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={61}>
+    Defines an Inspector while preserving its author-input type
   </ApiSourceLink>
 </p>
 
 ```ts
 <TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
   definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
-) => InspectorDefinition<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
+) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
 #### Type parameters
@@ -1159,6 +653,28 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 | Parameter    | Type                                                                                   | Description |
 | ------------ | -------------------------------------------------------------------------------------- | ----------- |
 | `definition` | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | —           |
+
+### mergeInspectorRegistries
+
+<p>
+  <ApiSourceLink
+    label={'mergeInspectorRegistries'}
+    path={'packages/kernel/inspect/src/providers/registry.ts'}
+    startLine={63}
+  >
+    Merges created registries while preserving the definition order of each registry
+  </ApiSourceLink>
+</p>
+
+```ts
+(registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>) => InspectorRegistry;
+```
+
+#### Parameters
+
+| Parameter    | Type                                                           | Description |
+| ------------ | -------------------------------------------------------------- | ----------- |
+| `registries` | `readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>` | —           |
 
 ## `@retikz/inspect/react`
 
@@ -1301,7 +817,7 @@ FC<InspectScopeProps>;
   <ApiSourceLink
     label={'CreateInspectionVanillaDriverOptions'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={67}
+    startLine={68}
   >
     Fixed configuration for the Inspect Vanilla compilation driver
   </ApiSourceLink>
@@ -1376,7 +892,7 @@ Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
   <ApiSourceLink
     label={'createInspectionVanillaDriver'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={144}
+    startLine={145}
   >
     Creates a Vanilla compilation driver binding an Inspector registry, selection, and committed callbacks
   </ApiSourceLink>

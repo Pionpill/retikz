@@ -4,6 +4,7 @@ import { BUILTIN_SHAPES, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { compileInspectionToScene, createDefaultInspectorRegistry } from '../../src';
+import { getResolvedInspectorRegistry } from '../../src/providers';
 
 const registry = createDefaultInspectorRegistry();
 const nodeScene: IRScene = { version: 1, type: 'scene', children: [{ type: 'node', position: [0, 0], text: 'A' }] };
@@ -20,13 +21,11 @@ const pathVertices = (primitives: ReadonlyArray<ScenePrimitive>): Array<readonly
 
 describe('内置几何检查', () => {
   it('五种内置均注册，但空selection不产生辅助结果', () => {
-    expect(registry.definitions.map(definition => definition.type).sort()).toEqual([
-      'clip',
-      'coordinate',
-      'node',
-      'path',
-      'scope',
-    ]);
+    expect(
+      getResolvedInspectorRegistry(registry)
+        .definitions.map(definition => definition.type)
+        .sort(),
+    ).toEqual(['clip', 'coordinate', 'node', 'path', 'scope']);
     const result = compileInspectionToScene(nodeScene, { registry, selection: { rules: [] } });
     expect(result.inspection).toBeNull();
     expect(result.diagnostics).toEqual([]);

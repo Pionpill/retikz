@@ -18,16 +18,9 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
   }
 };
 
-/** callback output 做 JSON-safe 脱离、dense 校验与 Core child schema 恢复 */
+/** callback output 做 JSON-safe 脱离与 Core child schema 恢复 */
 export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<InspectorFragment> => {
   const outputValues = Array.isArray(output) ? output : [output];
-  for (let index = 0; index < outputValues.length; index += 1) {
-    if (!(index in outputValues))
-      throw new RetikzInspectError(
-        RetikzInspectErrorCode.Compile,
-        `Inspector output must be dense; missing output index ${index}`,
-      );
-  }
   return Object.freeze(
     outputValues.map((outputValue, index) => {
       const fragment: InspectorFragment =

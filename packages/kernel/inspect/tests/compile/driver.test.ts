@@ -220,33 +220,6 @@ describe('Inspection compile driver', () => {
     expect(result.inspection?.entries).toHaveLength(1);
   });
 
-  it('rejects sparse output and preserves a structured output origin', () => {
-    const sparse = new Array(1) as Array<never>;
-    const registry = createInspectorRegistry([
-      defineInspector({
-        ...key,
-        owner,
-        subjectSchema: strictObject({ label: string() }),
-        optionsSchema: strictObject({}),
-        resolveOptions: options => options,
-        inspect: () => sparse,
-      }),
-    ]);
-    try {
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
-      throw new Error('expected compile to fail');
-    } catch (error) {
-      expect(error).toBeInstanceOf(RetikzInspectError);
-      expect(error).toBeInstanceOf(RetikzError);
-      expect((error as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
-      expect((error as RetikzInspectError).details.origin).toMatchObject({
-        stage: 'output',
-        outputIndex: 0,
-        inspector: key,
-      });
-    }
-  });
-
   it('validates all subjects before invoking any Inspector callback', () => {
     let callbacks = 0;
     const registry = createInspectorRegistry([

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import type { InspectionPlane } from '../../src';
 
-import { inspectionPlaneToReadonlyLayers } from '../../src/render';
+import { inspectionPlaneToReadonlyLayers } from '../../src/vanilla/readonly-layers';
 
-describe('Inspection plane Render adapter', () => {
+describe('Inspection plane Vanilla adapter', () => {
   it('maps entries one-to-one with stable keys and unchanged Scene/transform references', () => {
     const scene = { primitives: [], layout: { x: 0, y: 0, width: 0, height: 0 } };
     const transform = [1, 0, 0, 1, 4, 5] as const;

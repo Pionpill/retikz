@@ -29,6 +29,7 @@ import type {
 } from './types';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
+import { getResolvedInspectorRegistry } from '../providers';
 import { INSPECTION_OBSERVER_KEY } from './constants';
 import { wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson, sealInspectionScene, snapshotInspectorOutput } from './output';
@@ -101,7 +102,7 @@ const compileInspectionObserverOutput = (
     observations: captured.map(entry => entry.observation),
   });
   const preparedRequests = resolvedRequests.map(request => {
-    const definition = registry.require(request.inspector);
+    const definition = getResolvedInspectorRegistry(registry).require(request.inspector);
     const capturedObservation = captured.find(
       entry =>
         isCompileObservationOwnerEqual(entry.observation.owner, request.owner) &&
@@ -154,15 +155,7 @@ const compileInspectionObserverOutput = (
       try {
         outputChildren = snapshotInspectorOutput(callbackOutput);
       } catch (cause) {
-        const outputIndex = Array.isArray(callbackOutput)
-          ? (Array.from({ length: callbackOutput.length }, (_, index) => index).find(
-              index => !(index in callbackOutput),
-            ) ?? 0)
-          : 0;
-        throw wrapInspectionError(
-          createInspectionOutputDiagnosticOrigin('output', preparedRequest.request, outputIndex),
-          cause,
-        );
+        throw wrapInspectionError(createInspectionOutputDiagnosticOrigin('output', preparedRequest.request, 0), cause);
       }
     } catch (cause) {
       throw wrapInspectionError(createInspectionDiagnosticOrigin('inspect', preparedRequest.request), cause);

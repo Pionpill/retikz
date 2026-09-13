@@ -1,10 +1,4 @@
-import type {
-  CompileObservation,
-  CompileObservationOwner,
-  CompileOccurrenceLocator,
-  IRChild,
-  IRScene,
-} from '@retikz/core';
+import type { CompileObservation, CompileObservationOwner, IRChild, IRScene } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 
 import { compareCompileOccurrences, isCompileObservationOwnerEqual, isCompileOccurrenceEqual } from '@retikz/core';
@@ -18,7 +12,7 @@ import type {
 } from './types';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
-import { formatInspectorRegistryKey } from '../providers';
+import { formatInspectorRegistryKey, getResolvedInspectorRegistry } from '../providers';
 import { createInspectionSelectionDiagnosticOrigin, wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson } from './output';
 
@@ -29,25 +23,11 @@ type IndexedRule = Readonly<{
   parsedOptions: JsonObject;
 }>;
 
-/** 校验实例定位器中 TypeScript 无法表达的非负安全整数约束 */
-const assertOccurrenceLocator = (occurrence: CompileOccurrenceLocator): void => {
-  if (occurrence.expansionPath.some(segment => !Number.isSafeInteger(segment.index) || segment.index < 0)) {
-    throw new RetikzInspectError(RetikzInspectErrorCode.Compile, 'Invalid inspection occurrence locator');
-  }
-};
-
-/** 按 Core 的编译顺序比较两个实例定位器 */
-export const compareInspectionOccurrences = compareCompileOccurrences;
-
 /** 将选择目标格式化为用于去重的稳定键 */
 const formatTargetKey = (target: InspectionSelectionTarget): string => {
   if (target.kind === 'scene') return 'scene';
   if (target.kind === 'subtree') return `subtree:${target.sourcePath}`;
-  if (target.locator.kind === 'authored')
-    return `self:authored:${target.locator.sourcePath}:${target.locator.occurrenceIndex ?? '*'}`;
-  return `self:occurrence:${target.locator.occurrence.sourcePath}:${target.locator.occurrence.expansionPath
-    .map(segment => `${segment.kind}[${segment.index}]`)
-    .join('/')}`;
+  return `self:authored:${target.locator.sourcePath}:${target.locator.occurrenceIndex ?? '*'}`;
 };
 
 /** 收集 IR 中可用于选择的作者节点路径与子树路径 */
@@ -81,10 +61,6 @@ const assertSelectionTarget = (
       throw new RetikzInspectError(RetikzInspectErrorCode.Compile, `Invalid inspection subtree '${target.sourcePath}'`);
     return;
   }
-  if (target.locator.kind === 'occurrence') {
-    assertOccurrenceLocator(target.locator.occurrence);
-    return;
-  }
   if (!authoredPaths.selfPaths.has(target.locator.sourcePath)) {
     throw new RetikzInspectError(
       RetikzInspectErrorCode.Compile,
@@ -115,7 +91,7 @@ export const admitInspectionSelection = (
         let parsedOptions: JsonObject = {};
         assertSelectionTarget(target, authoredPaths);
         if (rule.kind === 'request') {
-          const definition = registry.require(rule.inspector);
+          const definition = getResolvedInspectorRegistry(registry).require(rule.inspector);
           const duplicateKey = `${formatTargetKey(target)}\u0000${formatInspectorRegistryKey(rule.inspector)}`;
           if (requestKeys.has(duplicateKey))
             throw new RetikzInspectError(
@@ -155,7 +131,6 @@ const doesTargetMatchObservation = (
     );
   }
   const locator = target.locator;
-  if (locator.kind === 'occurrence') return isCompileOccurrenceEqual(observation.occurrence, locator.occurrence);
   if (observation.owner.kind === 'clip') return false;
   if (observation.occurrence.sourcePath !== locator.sourcePath) return false;
   if (locator.occurrenceIndex === undefined) return true;
@@ -165,7 +140,7 @@ const doesTargetMatchObservation = (
         candidate.occurrence.sourcePath === locator.sourcePath &&
         isCompileObservationOwnerEqual(candidate.owner, owner),
     )
-    .sort((left, right) => compareInspectionOccurrences(left.occurrence, right.occurrence))
+    .sort((left, right) => compareCompileOccurrences(left.occurrence, right.occurrence))
     .at(locator.occurrenceIndex);
   return (
     selectedObservation !== undefined &&
@@ -199,7 +174,12 @@ export const resolveInspectionSelection = ({
   });
 };
 
-/** 消费已准入规则；observer 的多次 session 复用同一稀疏 Source */
+/**
+ * 将已准入的选择规则解析为本次最终实例的 Inspector 请求
+ *
+ * @description 对每个最终 observation，仅消费 owner 相符且未被 barrier 封锁的 request。按 scene、外层 subtree、内层 subtree、self 的顺序级联稀疏 options，最后才补默认值并交给 Inspector 的 resolveOptions
+ * @remarks observer 的多次 session 复用同一份稀疏 Source；本函数只根据本轮 observations 物化运行时请求
+ */
 export const resolveAdmittedInspectionSelection = ({
   registry,
   admittedRules,
@@ -209,15 +189,14 @@ export const resolveAdmittedInspectionSelection = ({
   admittedRules: ReadonlyArray<IndexedRule>;
   observations: ReadonlyArray<CompileObservation>;
 }>): ReadonlyArray<ResolvedInspectionRequest> => {
+  /** 所有实例按 Core 的稳定顺序处理，避免输入 observation 顺序影响 options 合并或颜色 */
   const orderedObservations = [...observations].sort((left, right) =>
-    compareInspectionOccurrences(left.occurrence, right.occurrence),
+    compareCompileOccurrences(left.occurrence, right.occurrence),
   );
+  /** self 是显式指向 authored 对象的请求，必须在实际遍历前确认它至少对应一个最终 owner output */
   for (const { index, rule } of admittedRules) {
     if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.options === false) continue;
-    const sourcePath =
-      rule.target.locator.kind === 'authored'
-        ? rule.target.locator.sourcePath
-        : rule.target.locator.occurrence.sourcePath;
+    const sourcePath = rule.target.locator.sourcePath;
     if (
       admittedRules.some(
         ({ rule: candidate }) =>
@@ -226,7 +205,7 @@ export const resolveAdmittedInspectionSelection = ({
     ) {
       continue;
     }
-    const definition = registry.require(rule.inspector);
+    const definition = getResolvedInspectorRegistry(registry).require(rule.inspector);
     const matchingObservations = orderedObservations.filter(observation =>
       doesTargetMatchObservation(rule.target, observation, orderedObservations, definition.owner),
     );
@@ -246,14 +225,17 @@ export const resolveAdmittedInspectionSelection = ({
     }
   }
 
+  /** 每项都是一个 observation 与一个 owner-matched Inspector 的最终请求，尚未分配外观颜色 */
   const pendingRequests: Array<Omit<ResolvedInspectionRequest, 'colorScope'>> = [];
   for (const observation of orderedObservations) {
-    for (const definition of registry.definitions) {
+    for (const definition of getResolvedInspectorRegistry(registry).definitions) {
       if (!isCompileObservationOwnerEqual(observation.owner, definition.owner)) continue;
+      /** 仅保留作用到当前最终实例的规则；barrier 优先于任何 request */
       const matchingRules = admittedRules.filter(({ rule }) =>
         doesTargetMatchObservation(rule.target, observation, orderedObservations, definition.owner),
       );
       if (matchingRules.some(({ rule }) => rule.kind === 'barrier')) continue;
+      /** 级联从宽到窄：scene → subtree（由外至内）→ self；同范围保持作者声明顺序 */
       const requests = matchingRules
         .filter(
           (entry): entry is IndexedRule & { rule: Extract<InspectionSelectionRule, { kind: 'request' }> } =>
@@ -274,6 +256,7 @@ export const resolveAdmittedInspectionSelection = ({
       let isRequestActive = false;
       let mergedOptionsInput: JsonObject = {};
       let parsedOptions: JsonObject | undefined;
+      /** false 会关闭并清空此前继承；合并时保留 sparse options，避免默认值被误当作显式覆盖 */
       for (const entry of requests) {
         try {
           if (entry.rule.options === false) {
@@ -329,9 +312,10 @@ export const resolveAdmittedInspectionSelection = ({
       });
     }
   }
+  /** 以最终实例和 Inspector key 固定输出顺序，再分配连续 colorScope */
   pendingRequests.sort(
     (left, right) =>
-      compareInspectionOccurrences(left.occurrence, right.occurrence) ||
+      compareCompileOccurrences(left.occurrence, right.occurrence) ||
       formatInspectorRegistryKey(left.inspector).localeCompare(formatInspectorRegistryKey(right.inspector)),
   );
   return Object.freeze(pendingRequests.map((request, colorScope) => Object.freeze({ ...request, colorScope })));
@@ -347,12 +331,10 @@ export const canInspectionSelectionRequestSite = (
   !admittedRules.some(({ rule }) => rule.kind === 'barrier' && doesBarrierContainSourcePath(rule.target, sourcePath)) &&
   admittedRules.some(({ rule }) => {
     if (rule.kind !== 'request' || rule.options === false) return false;
-    const definition = registry.get(rule.inspector);
+    const definition = getResolvedInspectorRegistry(registry).get(rule.inspector);
     if (definition === undefined || !isCompileObservationOwnerEqual(owner, definition.owner)) return false;
     if (rule.target.kind === 'scene') return true;
     if (rule.target.kind === 'subtree')
       return sourcePath === rule.target.sourcePath || sourcePath.startsWith(`${rule.target.sourcePath}.`);
-    return rule.target.locator.kind === 'authored'
-      ? owner.kind !== 'clip' && sourcePath === rule.target.locator.sourcePath
-      : sourcePath === rule.target.locator.occurrence.sourcePath;
+    return owner.kind !== 'clip' && sourcePath === rule.target.locator.sourcePath;
   });

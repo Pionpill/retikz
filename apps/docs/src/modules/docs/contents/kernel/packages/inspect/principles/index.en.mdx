@@ -55,7 +55,7 @@ The diagram shows data flow, not an instruction to draw a guide line as soon as 
 
 Within one compile, `observe()` runs zero or more times, once for each selected final occurrence; `complete()` runs once only after every notification finishes. The three occurrences in the diagram represent one batch of final instances converging on the same observer session:
 
-<ComponentPreview files="inspect-observer-batch-flow" size="md" hideCode />
+<ComponentPreview files="inspect-observer-batch-flow" size="lg" hideCode />
 
 The host then converts those scenes into non-hittable readonly layers for Render to display. Primary and auxiliary layers belong to the same compilation revision and commit only when both succeed; a new primary figure is not displayed with auxiliary content from an older revision. Auxiliary scenes also exclude public identity, metadata, and animation semantics.
 
@@ -71,7 +71,7 @@ An `inspect(subject, context)` callback can call `context.warn(code, message)` w
     },
     {
       label: 'Auxiliary scenes converted to readonly layers',
-      path: 'packages/kernel/inspect/src/render/readonly-layers.ts',
+      path: 'packages/kernel/inspect/src/vanilla/readonly-layers.ts',
     },
   ]}
 />
@@ -88,17 +88,19 @@ B's `options: false` disables only the selected Inspector; C's `barrier` blocks 
 
 These selections are runtime rules for which final occurrences reach an Inspector at each compile, rather than persisted diagram data:
 
-| Structure                         | Meaning                                                                       |
-| --------------------------------- | ----------------------------------------------------------------------------- |
-| `InspectionSelectionRule` request | Selects an Inspector and scope with `inspector`, `target`, and `options`      |
-| `InspectionSelectionRule` barrier | Prevents descendants from reopening Inspectors at a scene or authored subtree |
-| scene target                      | Matches final occurrences with a given owner across the whole scene           |
-| subtree target                    | Matches final occurrences below one authored Scope                            |
-| self target                       | Matches the current object by source or occurrence index                      |
+| Structure                         | Meaning                                                                                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `InspectionSelectionRule` request | Selects an Inspector and scope with `inspector`, `target`, and `options`                             |
+| `InspectionSelectionRule` barrier | Prevents descendants from reopening Inspectors at a scene or authored subtree                        |
+| scene target                      | Matches final occurrences with a given owner across the whole scene                                  |
+| subtree target                    | Matches final occurrences below one authored Scope                                                   |
+| self target                       | Matches the current authored object by source path; `occurrenceIndex` selects its Nth final instance |
 
-For batch Path selection, a scene target matches every final Path with the requested owner across the figure, while a subtree target matches every such Path below one authored Scope. Only a self target (React's `<InspectPath>`) limits the request to the current authored Path. You can therefore enable a Path Inspector once on `<InspectLayout request>` or on `<InspectScope request>` without repeating the same request on every Path.
+For batch Path selection, a scene target matches every final Path with the requested owner across the figure, while a subtree target matches every such Path below one authored Scope. Only a self target (React's `<InspectPath>`) limits the request to the current authored Path. When one authored object compiles to multiple final instances, `occurrenceIndex` selects one in stable final-instance order. You can therefore enable a Path Inspector once on `<InspectLayout request>` or on `<InspectScope request>` without repeating the same request on every Path.
 
-Ordinary Core IR children returned by an Inspector callback use occurrence-local coordinates; Inspect places them with `context.transform`. To choose a space explicitly, return an `InspectorFragment`: `{ type: 'fragment', coordinateSpace: 'local' | 'scene', child }`. Scene-space fragments use the identity transform. A single callback can mix both spaces, as `NODE_INSPECTOR` does for local geometry and its AABB.
+`InspectionSelection` and host wrappers are the usage entry points. Inspect's compile driver internally admits rules, matches final instances, and cascades options; those implementation functions are not importable APIs and consumers neither need nor should call them directly.
+
+The final `occurrence` remains callback, auxiliary-plane result, and diagnostic context that identifies the instance actually processed by compilation; it is not a user-supplied selection target. Ordinary Core IR children returned by an Inspector callback use occurrence-local coordinates; Inspect places them with `context.transform`. To choose a space explicitly, return an `InspectorFragment`: `{ type: 'fragment', coordinateSpace: 'local' | 'scene', child }`. Scene-space fragments use the identity transform. A single callback can mix both spaces, as `NODE_INSPECTOR` does for local geometry and its AABB.
 
 The playground places two curves in separate subtrees. Change target, control points, and labels, then enable the right barrier to see how local requests resolve against Core final occurrences:
 

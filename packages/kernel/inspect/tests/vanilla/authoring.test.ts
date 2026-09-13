@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { BUILTIN_INSPECTORS, createInspectorRegistry, PATH_INSPECTOR_KEY } from '../../src';
+import { createInspectorRegistry, PATH_INSPECTOR_KEY } from '../../src';
+import { BUILTIN_INSPECTORS } from '../../src/providers';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);

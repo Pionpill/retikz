@@ -13,8 +13,9 @@ import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
-import { inspectionPlaneToReadonlyLayers } from '../render';
+import { getResolvedInspectorRegistry } from '../providers';
 import { inspectionSelectionRulesFromVanillaSite } from './authoring';
+import { inspectionPlaneToReadonlyLayers } from './readonly-layers';
 
 const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
@@ -117,10 +118,10 @@ const resolveVanillaSelection = (
     const occurrenceIndex =
       owner === undefined ? undefined : allocateObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
     return siteRules.map(rule => {
-      if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.target.locator.kind !== 'authored') {
+      if (rule.kind !== 'request' || rule.target.kind !== 'self') {
         return rule;
       }
-      const definitionOwner = registry.require(rule.inspector).owner;
+      const definitionOwner = getResolvedInspectorRegistry(registry).require(rule.inspector).owner;
       if (owner !== undefined && !isCompileObservationOwnerEqual(owner, definitionOwner)) {
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Vanilla,

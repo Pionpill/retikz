@@ -9,6 +9,8 @@ describe('@retikz/inspect public exports', () => {
   it('exposes only the root and host entry points in development and publication', () => {
     expect(Object.keys(manifest.exports).sort()).toEqual(['.', './react', './vanilla']);
     expect(Object.keys(manifest.publishConfig.exports).sort()).toEqual(['.', './react', './vanilla']);
+    expect(manifest.exports).not.toHaveProperty('./compile');
+    expect(manifest.publishConfig.exports).not.toHaveProperty('./compile');
   });
 
   it('exports the host-independent root API', () => {
@@ -17,26 +19,20 @@ describe('@retikz/inspect public exports', () => {
         'defineInspector',
         'createInspectorRegistry',
         'createDefaultInspectorRegistry',
+        'mergeInspectorRegistries',
         'compileInspectionToScene',
         'RetikzInspectError',
         'RetikzInspectErrorCode',
-        'PATH_INSPECTOR',
-        'NODE_INSPECTOR',
         'NODE_INSPECTOR_KEY',
-        'CLIP_INSPECTOR',
         'CLIP_INSPECTOR_KEY',
-        'SCOPE_INSPECTOR',
         'SCOPE_INSPECTOR_KEY',
-        'COORDINATE_INSPECTOR',
         'COORDINATE_INSPECTOR_KEY',
-        'InspectionLabelsSchema',
         'PathInspectOptionsSchema',
         'NodeInspectOptionsSchema',
         'ClipInspectOptionsSchema',
         'ScopeInspectOptionsSchema',
         'CoordinateInspectOptionsSchema',
         'PATH_INSPECTOR_KEY',
-        'BUILTIN_INSPECTORS',
       ].sort(),
     );
     expect(Object.keys(reactApi).sort()).toEqual([
@@ -50,6 +46,9 @@ describe('@retikz/inspect public exports', () => {
       'createInspectionVanillaAuthoring',
       'createInspectionVanillaDriver',
     ]);
+    expect(api).not.toHaveProperty('admitInspectionSelection');
+    expect(api).not.toHaveProperty('resolveAdmittedInspectionSelection');
+    expect(api).not.toHaveProperty('canInspectionSelectionRequestSite');
   });
 
   it('does not evaluate optional host peers from the root entry', async () => {

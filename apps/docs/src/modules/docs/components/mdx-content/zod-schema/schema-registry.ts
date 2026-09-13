@@ -8,7 +8,6 @@ import * as GraphIR from '@retikz/graph';
 import {
   ClipInspectOptionsSchema,
   CoordinateInspectOptionsSchema,
-  InspectionLabelsSchema,
   NodeInspectOptionsSchema,
   PathInspectOptionsSchema,
   ScopeInspectOptionsSchema,
@@ -61,11 +60,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: CoordinateInspectOptionsSchema,
     label: 'CoordinateInspectOptions',
     url: '/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema',
-  },
-  InspectionLabelsSchema: {
-    schema: InspectionLabelsSchema,
-    label: 'InspectionLabels',
-    url: '/kernel/packages/inspect/schema-reference#inspectionlabelsschema',
   },
   PathInspectOptionsSchema: {
     schema: PathInspectOptionsSchema,

@@ -99,7 +99,7 @@ export type InspectorDefinitionInput<
   TParsedOptions extends JsonObject = Record<string, never>,
   TResolvedOptions extends JsonObject = TParsedOptions,
   TSourceOptions extends JsonObject = TParsedOptions,
-> = Omit<
+> = WithOptionalProperties<
   InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
   'optionsSchema' | 'resolveOptions'
 > &

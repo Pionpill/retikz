@@ -16,7 +16,6 @@ export const inspectApiReferenceConfig = {
   })),
   translate: translateInspectApiReference,
   schemaReferences: {
-    InspectionLabelsSchema: '/kernel/packages/inspect/schema-reference#inspectionlabelsschema',
     PathInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
     NodeInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema',
     ScopeInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema',

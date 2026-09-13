@@ -13,7 +13,7 @@ description: 定义自定义 Inspector，读取图形的编译结果并生成端
 
 ## Definition 机制
 
-通过 `InspectorDefinitionInput` 描述观察什么、接受哪些选项，以及如何生成辅助内容；`defineInspector()` 补齐默认行为，返回完整的 `InspectorDefinition`。被观察对象由 Core owner 标识，即负责发布该类编译结果的能力；示例中的 `stroke` owner 发布路径的最终产物。
+通过 `InspectorDefinitionInput` 描述观察什么、接受哪些选项，以及如何生成辅助内容。`defineInspector()` 的公开类型保留作者输入态；它与 registry 都在注册边界补齐默认行为，补齐后的运行态仅由 Inspect 包内部消费。被观察对象由 Core owner 标识，即负责发布该类编译结果的能力；示例中的 `stroke` owner 发布路径的最终产物。
 
 | 接口                        | 作用                                                               |
 | --------------------------- | ------------------------------------------------------------------ |

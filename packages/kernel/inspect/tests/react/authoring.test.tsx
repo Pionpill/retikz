@@ -8,7 +8,8 @@ import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { null as zodNull, strictObject } from 'zod';
 
-import { BUILTIN_INSPECTORS, createInspectorRegistry, defineInspector, PATH_INSPECTOR_KEY } from '../../src';
+import { createInspectorRegistry, defineInspector, PATH_INSPECTOR_KEY } from '../../src';
+import { BUILTIN_INSPECTORS } from '../../src/providers';
 import { InspectCoordinate, InspectLayout, InspectNode, InspectPath, InspectScope } from '../../src/react';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 

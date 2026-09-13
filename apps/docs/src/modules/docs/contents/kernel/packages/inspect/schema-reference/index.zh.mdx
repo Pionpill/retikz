@@ -7,12 +7,6 @@ description: 查询五类内置 Inspector 的配置字段、默认值与校验�
 
 以下默认值只在明确选择相应 Inspector 后生效。输入字段均可省略：先逐字段合并原始选项，再由 schema 补齐默认值；注册检查器不会自动开启检查。
 
-## InspectionLabelsSchema
-
-共享的标签显示开关，默认关闭。
-
-<ZodSchema name="InspectionLabelsSchema" description="是否显示 Inspector 标签，默认 false。" />
-
 ## PathInspectOptionsSchema
 
 检查最终 Path 命令的控制柄、顶点与弧线构造；标签序号对应最终命令，而不是 authored step。

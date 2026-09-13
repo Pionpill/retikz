@@ -16,21 +16,14 @@ export type InspectionSelectionTarget =
   | Readonly<{ kind: 'subtree'; sourcePath: string }>
   | Readonly<{
       kind: 'self';
-      locator:
-        | Readonly<{
-            /** 按 authored source path 选择其产生的最终 occurrence */
-            kind: 'authored';
-            /** authored IR 中的稳定来源路径 */
-            sourcePath: string;
-            /** 同一来源路径与所属者下按最终实例顺序选择的序号；省略表示全部 */
-            occurrenceIndex?: number;
-          }>
-        | Readonly<{
-            /** 精确选择一个最终编译 occurrence */
-            kind: 'occurrence';
-            /** Core 提供的最终 occurrence 定位器 */
-            occurrence: CompileOccurrenceLocator;
-          }>;
+      locator: Readonly<{
+        /** 按 authored source path 选择其产生的最终 occurrence */
+        kind: 'authored';
+        /** authored IR 中的稳定来源路径 */
+        sourcePath: string;
+        /** 同一来源路径与所属者下按最终实例顺序选择的序号；省略表示全部 */
+        occurrenceIndex?: number;
+      }>;
     }>;
 
 /** Inspector selection 的单条规则：request 控制单个 Inspector，barrier 封锁一个范围内的全部 Inspector */

@@ -1,4 +1,3 @@
-import { InspectionLabelsSchema } from '@retikz/inspect';
 import { boolean, strictObject, union } from 'zod';
 
 /** 布局检查器边界选项的选项结构及默认值 */
@@ -22,5 +21,5 @@ export const BaseLayoutInspectOptionsSchema = strictObject({
   spacing: union([boolean(), LayoutInspectSpacingOptionsSchema]).default(true).describe('Box spacing.'),
   overflow: boolean().default(true).describe('Whether to shade overflowing content.'),
   alignmentGuides: boolean().default(true).describe('Whether to draw alignment guides.'),
-  labels: InspectionLabelsSchema.describe('Whether to draw item labels.'),
+  labels: boolean().default(false).describe('Whether to draw item labels.'),
 }).describe('Shared options accepted by every Layout Inspector.');
