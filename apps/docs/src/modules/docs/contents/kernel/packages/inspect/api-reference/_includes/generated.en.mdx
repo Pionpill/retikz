@@ -53,8 +53,7 @@ Readonly<{
 </p>
 
 ```ts
-Omit<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'> &
-  Partial<Pick<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>>;
+WithOptionalProperties<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>;
 ```
 
 ### InspectionAppearanceContext

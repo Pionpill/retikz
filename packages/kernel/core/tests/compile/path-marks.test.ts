@@ -1,3 +1,5 @@
+import type { WithOptionalProperties } from '@retikz/foundation';
+
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
@@ -7,7 +9,7 @@ import type { ArrowDefinition } from '../../src/contract';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
-type TestArrowDefinition = Omit<ArrowDefinition, 'name'> & { name?: string };
+type TestArrowDefinition = WithOptionalProperties<ArrowDefinition, 'name'>;
 
 /** flatten 后非 group 的叶子 primitive 数（marker 产出体现为新增叶子 / group） */
 const leafCount = (prims: ReadonlyArray<ScenePrimitive>): number => flattenPrims(prims).length;

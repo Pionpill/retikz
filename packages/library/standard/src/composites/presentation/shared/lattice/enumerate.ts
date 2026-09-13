@@ -1,3 +1,5 @@
+import type { WithOptionalProperties } from '@retikz/foundation';
+
 import type { LatticeOptions, LatticeValue } from './types';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors';
@@ -11,7 +13,7 @@ export const getLatticeRangeError = ({
   max,
   spacing,
   origin,
-}: Omit<LatticeOptions, 'includeBoundary'> & Partial<Pick<LatticeOptions, 'includeBoundary'>>): string | undefined => {
+}: WithOptionalProperties<LatticeOptions, 'includeBoundary'>): string | undefined => {
   const firstIndex = Math.ceil((min - origin) / spacing);
   const lastIndex = Math.floor((max - origin) / spacing);
 

@@ -6,7 +6,7 @@ import type {
   CssColorValue,
   IRChild,
 } from '@retikz/core';
-import type { JsonObject, JsonValue } from '@retikz/foundation';
+import type { JsonObject, JsonValue, WithOptionalProperties } from '@retikz/foundation';
 import type { AffineMatrix } from '@retikz/math';
 import type { ZodType } from 'zod';
 
@@ -153,5 +153,7 @@ export type AnyInspectorDefinition = Readonly<{
 }>;
 
 /** registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver */
-export type AnyInspectorDefinitionInput = Omit<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'> &
-  Partial<Pick<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>>;
+export type AnyInspectorDefinitionInput = WithOptionalProperties<
+  AnyInspectorDefinition,
+  'optionsSchema' | 'resolveOptions'
+>;
