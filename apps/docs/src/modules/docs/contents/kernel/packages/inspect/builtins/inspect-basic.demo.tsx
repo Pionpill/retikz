@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 
-import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 import { Layout, Path, Step } from '@retikz/react';
 
@@ -20,7 +20,7 @@ const Curve: FC<{ inspect?: boolean }> = props => {
   return inspect ? (
     <InspectPath
       request={{
-        inspector: STROKE_PATH_INSPECTOR_KEY,
+        inspector: PATH_INSPECTOR_KEY,
         options: { controlPoints: true, labels: true },
       }}
       style={{ stroke: 'dimgray', strokeWidth: 3 }}

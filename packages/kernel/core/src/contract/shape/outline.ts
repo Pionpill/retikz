@@ -4,9 +4,43 @@ import type { ContourCommand, LineSegment } from '../../shared';
 import type { PathCommand, PathPrim } from '../scene';
 import type { ResolvedShapeStyle } from './types';
 
+import { DEG_TO_RAD, localToWorld, rectOutline } from '../../shared';
+
 /** 将顶点环变换为闭合线段，供形状定义复用 */
 export const verticesToSegments = (vertices: Array<Position>): Array<LineSegment> =>
   vertices.map((from, index) => ({ kind: 'line', from, to: vertices[(index + 1) % vertices.length] }));
+
+/** 把带旋转的矩形轮廓算子转换为结构化 PathCommand */
+export const rectOutlinePathCommands = (
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotate?: number;
+  },
+  cornerRadius?: number,
+): Array<PathCommand> => {
+  const from: Position = [bounds.x - bounds.width / 2, bounds.y - bounds.height / 2];
+  const to: Position = [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2];
+  const rotation = (bounds.rotate ?? 0) / DEG_TO_RAD;
+  const toWorld = (point: Position): Position => localToWorld(bounds, [point[0] - bounds.x, point[1] - bounds.y]);
+
+  return rectOutline(from, to, cornerRadius).map(operation => {
+    if (operation.kind === 'move') return { kind: 'move', to: toWorld(operation.to) };
+    if (operation.kind === 'line') return { kind: 'line', to: toWorld(operation.to) };
+    if (operation.kind === 'close') return { kind: 'close' };
+    return {
+      kind: 'ellipseArc',
+      center: toWorld(operation.center),
+      radiusX: operation.radius,
+      radiusY: operation.radius,
+      startAngle: operation.startAngle,
+      endAngle: operation.endAngle,
+      ...(rotation === 0 ? {} : { rotation }),
+    };
+  });
+};
 
 /** 将共享轮廓命令转换为 Scene path 命令 */
 export const contourToPathCommands = (

@@ -5,6 +5,8 @@ description: 查询 @retikz/inspect 根入口、React 与 Vanilla 子路径的�
 
 `@retikz/inspect` 从 Core 编译结果生成辅助观测内容。根入口提供 Inspector 定义、注册表、选择规则和编译接口；`@retikz/inspect/react` 提供 JSX 宿主，`@retikz/inspect/vanilla` 提供 authoring 标记与编译驱动。
 
+当前根入口包含五类内置 Inspector：Path、Node、Clip、Scope 和 Coordinate。`InspectorFragment.coordinateSpace` 支持 `local` / `scene`；`InspectorContext` 提供 `transform`、`ancestors` 与 `warn()`，用于定位辅助内容和提交可诊断的部分结果。
+
 以下内容由公开入口、TypeScript 签名和 JSDoc 生成。配置字段及默认值见 [Schema 参考](/kernel/packages/inspect/schema-reference)；首次接入请从 [内置观测](/kernel/packages/inspect/builtins) 开始。
 
 {/* @include kernel/packages/inspect/api-reference/generated */}

@@ -4,6 +4,7 @@ import { number, strictObject } from 'zod';
 import type { CompileOptions } from '../../../src/compile/compile';
 import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
 import type { IRBoundary, IRScene } from '../../../src/schemas';
+import type { Rect } from '../../../src/shared/geometry/rect';
 
 import { compileToScene } from '../../../src/compile/compile';
 import { defineBoundary, defineShape } from '../../../src/contract';
@@ -51,6 +52,20 @@ const fixedBoundary = (name: string, x: number): BoundaryDefinition =>
     name,
     paramsSchema: strictObject({}),
     boundaryPoint: rect => [rect.x + x, rect.y],
+  });
+
+const outlinedBoundary = (): BoundaryDefinition =>
+  defineBoundary({
+    name: 'outlined',
+    paramsSchema: strictObject({}),
+    boundaryPoint: rect => [rect.x + rect.width / 2, rect.y],
+    outline: rect => [
+      { kind: 'move', to: [rect.x - rect.width / 2, rect.y - rect.height / 2] },
+      { kind: 'line', to: [rect.x + rect.width / 2, rect.y - rect.height / 2] },
+      { kind: 'line', to: [rect.x + rect.width / 2, rect.y + rect.height / 2] },
+      { kind: 'line', to: [rect.x - rect.width / 2, rect.y + rect.height / 2] },
+      { kind: 'close' },
+    ],
   });
 
 describe('Boundary provider contract', () => {
@@ -124,5 +139,26 @@ describe('Boundary provider contract', () => {
   it('boundary_json_round_trip：boundary IR 只保存 JSON-safe 引用和 params', () => {
     const boundary = { type: 'pin', params: { offset: 11 } };
     expect(BoundarySchema.parse(JSON.parse(JSON.stringify(boundary)))).toEqual(boundary);
+  });
+
+  it('custom boundary may publish an explicit closed outline', () => {
+    const boundary = outlinedBoundary();
+    const rect: Rect = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
+    expect(boundary.outline?.(rect, {})).toEqual([
+      { kind: 'move', to: [-1, 2] },
+      { kind: 'line', to: [9, 2] },
+      { kind: 'line', to: [9, 8] },
+      { kind: 'line', to: [-1, 8] },
+      { kind: 'close' },
+    ]);
+  });
+
+  it('built-in circle, rectangle, and ellipse boundaries publish explicit closed outlines', () => {
+    const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+    for (const boundary of BUILTIN_BOUNDARIES) {
+      const outline = boundary.outline?.(rect, { fit: 'tight', gap: 0 });
+      expect(outline).toBeDefined();
+      expect(outline?.at(-1)).toEqual({ kind: 'close' });
+    }
   });
 });

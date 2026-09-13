@@ -14,8 +14,10 @@ export type {
   AnyInspectorDefinitionInput,
   InspectionAppearanceContext,
   InspectorContext,
+  InspectorCoordinateSpace,
   InspectorDefinition,
   InspectorDefinitionInput,
+  InspectorFragment,
   InspectorKey,
   InspectorOutput,
 } from './contract';
@@ -24,9 +26,17 @@ export * from './error';
 export type { InspectorRegistry } from './providers';
 export {
   BUILTIN_INSPECTORS,
+  CLIP_INSPECTOR,
+  CLIP_INSPECTOR_KEY,
+  COORDINATE_INSPECTOR,
+  COORDINATE_INSPECTOR_KEY,
   createDefaultInspectorRegistry,
   createInspectorRegistry,
-  STROKE_PATH_INSPECTOR,
-  STROKE_PATH_INSPECTOR_KEY,
+  NODE_INSPECTOR,
+  NODE_INSPECTOR_KEY,
+  PATH_INSPECTOR,
+  PATH_INSPECTOR_KEY,
+  SCOPE_INSPECTOR,
+  SCOPE_INSPECTOR_KEY,
 } from './providers';
 export * from './schema';

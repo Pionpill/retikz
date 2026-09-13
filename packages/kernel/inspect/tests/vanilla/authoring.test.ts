@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
-import { path, renderToSvgString, scene, scope } from '@retikz/vanilla';
+import { coordinate, node, path, renderToSvgString, scene, scope } from '@retikz/vanilla';
 import { mountSvg } from '@retikz/vanilla/dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { BUILTIN_INSPECTORS, createInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '../../src';
+import { BUILTIN_INSPECTORS, createInspectorRegistry, PATH_INSPECTOR_KEY } from '../../src';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
-const request = Object.freeze({ inspector: STROKE_PATH_INSPECTOR_KEY, options: Object.freeze({ labels: true }) });
+const request = Object.freeze({ inspector: PATH_INSPECTOR_KEY, options: Object.freeze({ labels: true }) });
 
 const content = (barrier = false) =>
   scene({
@@ -37,6 +37,41 @@ afterEach(() => {
 });
 
 describe('@retikz/inspect/vanilla authoring and driver', () => {
+  it('Node 与 Coordinate authored self 请求只选择各自实例', () => {
+    const onCommit = vi.fn();
+    const svg = renderToSvgString(
+      scene({
+        children: [
+          node('selected', {
+            position: [0, 0],
+            text: 'A',
+            authoring: createInspectionVanillaAuthoring({
+              inspector: { namespace: 'core', type: 'node' },
+              options: true,
+            }),
+          }),
+          node('unselected', { position: [60, 0], text: 'B' }),
+          coordinate('point', {
+            position: [20, 40],
+            authoring: createInspectionVanillaAuthoring({
+              inspector: { namespace: 'core', type: 'coordinate' },
+              options: { labels: true },
+            }),
+          }),
+        ],
+      }),
+      { compileDriver: createInspectionVanillaDriver({ registry, onCommit }) },
+    );
+    expect(svg).toContain('data-retikz-readonly-layer');
+    const entries = onCommit.mock.calls[0]?.[0].inspection.entries;
+    expect(entries.some((entry: { owner: { kind: string } }) => entry.owner.kind === 'node')).toBe(true);
+    expect(entries.some((entry: { owner: { kind: string } }) => entry.owner.kind === 'coordinate')).toBe(true);
+    expect(
+      entries.every(
+        (entry: { occurrence: { sourcePath: string } }) => entry.occurrence.sourcePath !== 'children[1].node',
+      ),
+    ).toBe(true);
+  });
   it('可选 authoring 复用基础 InputScene 并在 SSR 输出只读图层', () => {
     const onCommit = vi.fn();
     const svg = renderToSvgString(content(), {

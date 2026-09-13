@@ -1,10 +1,45 @@
 const translations: Record<string, string> = {
+  按本次主图编译精度舍入数值: 'Rounds a value using the precision of the current primary compile',
   '作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段':
     'Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output types',
   'registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver':
     'Heterogeneous author definitions accepted by registries, with options schemas and resolvers completed at registration',
   '补齐默认选项契约并冻结 Inspector；省略 schema 时只接受空对象，省略 resolver 时使用 schema 输出':
     'Completes default options contracts and freezes an Inspector; an omitted schema accepts only an empty object, and an omitted resolver uses schema output',
+  '按辅助片段 coordinateSpace 生成的只读 Scene': 'A readonly Scene placed according to its fragment coordinateSpace',
+  带显式坐标空间的辅助片段: 'An auxiliary fragment with an explicit coordinate space',
+  '辅助片段判别字段，不属于 Core IR': 'The auxiliary fragment discriminator; not part of Core IR',
+  当前片段采用的坐标空间: 'The coordinate space used by this fragment',
+  '交给 Core 隔离编译的普通 IR child': 'An ordinary IR child compiled in isolation by Core',
+  '裸 Core child 使用局部坐标；显式片段可逐项选择坐标空间':
+    'Plain Core children use local coordinates; explicit fragments select a coordinate space per item',
+  '内置 Clip application Inspector': 'The built-in Clip application Inspector',
+  '内置 Core Clip Inspector key': 'The built-in Core Clip Inspector key',
+  '内置已解析 Coordinate 点 Inspector': 'The built-in resolved Coordinate point Inspector',
+  '内置 Core Coordinate Inspector key': 'The built-in Core Coordinate Inspector key',
+  '内置 Node Scene-space AABB Inspector': 'The built-in Node Scene-space AABB Inspector',
+  '内置 Core Node Scene bounds Inspector key': 'The built-in Core Node Scene bounds Inspector key',
+  '内置 Node 几何 Inspector': 'The built-in Node geometry Inspector',
+  '内置 Core Node Inspector key': 'The built-in Core Node Inspector key',
+  '内置 Scope 层级与坐标框 Inspector': 'The built-in Scope hierarchy and coordinate-frame Inspector',
+  '内置 Core Scope Inspector key': 'The built-in Core Scope Inspector key',
+  '一条回调或 fragment warning 的 Inspect-owned diagnostic':
+    'An Inspect-owned diagnostic for a callback or fragment warning',
+  'Inspect 失败、回调警告及 fragment diagnostic 的结构化来源':
+    'Structured origins of Inspect failures, callback warnings, and fragment diagnostics',
+  'Inspector callback 输出所采用的坐标约定': 'The coordinate convention used by Inspector callback output',
+  '内置 Clip Inspector 选项及默认值': 'Options and defaults for the built-in Clip Inspector',
+  '内置 Coordinate Inspector 选项及默认值': 'Options and defaults for the built-in Coordinate Inspector',
+  '内置 Node Scene bounds Inspector 选项及默认值': 'Options and defaults for the built-in Node Scene bounds Inspector',
+  '内置 Node Inspector 选项及默认值': 'Options and defaults for the built-in Node Inspector',
+  '内置 Scope Inspector 选项及默认值': 'Options and defaults for the built-in Scope Inspector',
+  '只选择当前 Coordinate 的可选 Inspector wrapper props':
+    'Props for an optional Inspector wrapper selecting only the current Coordinate',
+  '只选择当前 Node 的可选 Inspector wrapper props':
+    'Props for an optional Inspector wrapper selecting only the current Node',
+  '复用基础 Coordinate，仅附加运行时检查请求':
+    'Reuses the base Coordinate and only attaches runtime inspection requests',
+  '复用基础 Node，仅附加运行时检查请求': 'Reuses the base Node and only attaches runtime inspection requests',
   'Inspect 包统一的结构化错误': 'The structured error shared by the Inspect package',
   'registry 内擦除具体泛型后的 Inspector 定义':
     'An Inspector definition with concrete generic types erased for registry storage',

@@ -11,7 +11,7 @@ const endpointInspectorKey = { namespace: 'docs', type: 'path-endpoints' };
 
 const endpointInspector = defineInspector({
   ...endpointInspectorKey,
-  owner: { kind: 'pathKind', name: 'stroke' },
+  owner: { kind: 'path', name: 'stroke' },
   subjectSchema: StrokePathOwnerOutputSchema,
   inspect: (subject, context) => {
     const markers = subject.commands.flatMap(command =>

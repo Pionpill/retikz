@@ -86,6 +86,8 @@ Core 只提供领域中立的观测能力。Composite 通过现有 `artifactSche
 
 observer 可用 `context.compileFragment()` 在当前 occurrence 环境中编译普通 `IRChild`。返回的片段包含隔离的静态 Scene、artifacts 与 diagnostics，不写回主编译结果，也不能引用主图或其它片段的公共身份。observer 的最终输出由 `complete()` 决定并递归冻结，Core 不限定其领域结构。Inspector 的注册、选择、配色与只读图层组装位于可选的 [`@retikz/inspect`](/kernel/packages/inspect)。
 
+`context.round(value)` 复用本次主图的编译精度，便于将重新计算的几何坐标与最终输出进行比较；Inspect 的回调上下文也提供同一个方法。
+
 初始运行执行完整编译。update 无法安全局部证明时，Program 会 full fallback，并在 `patch.operations` 中发布唯一的 `replaceScene`；调用方仍只消费同一个 Snapshot / Patch envelope，不需要切换协议。
 
 Core 会把可选 ChangeSet 与 previous / next 完整 Snapshot 交叉校验。Scene 根和 stable entity 的每一项自身 value 变化都必须由唯一 `update` hint 恰好覆盖；add/remove/move 必须完整解释所属 parent 的 next identity 集合与顺序，`parent` / `before` 指向 next 的最终位置。

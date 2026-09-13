@@ -1,5 +1,4 @@
-import type { IRCoordinate } from '@retikz/core';
-
+import type { InputCoordinate } from './coordinate';
 import type { InputEmbed } from './embed';
 import type { InputNode } from './node';
 import type { InputPath } from './path';
@@ -25,8 +24,8 @@ export const node = (
   };
 };
 
-/** 创建作者侧坐标 Source IR */
-export const coordinate = (id: string, config: Omit<IRCoordinate, 'type' | 'id'>): IRCoordinate => ({
+/** 创建作者侧命名坐标输入 */
+export const coordinate = (id: string, config: Omit<InputCoordinate, 'type' | 'id'>): InputCoordinate => ({
   type: 'coordinate',
   id,
   ...config,

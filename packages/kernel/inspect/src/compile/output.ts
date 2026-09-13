@@ -1,9 +1,9 @@
-import type { IRChild, Scene, ScenePrimitive } from '@retikz/core';
+import type { Scene, ScenePrimitive } from '@retikz/core';
 
 import { ChildSchema } from '@retikz/core';
 import { cloneAndFreezeJson } from '@retikz/foundation';
 
-import type { InspectorOutput } from '../contract';
+import type { InspectorFragment, InspectorOutput } from '../contract';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
@@ -19,7 +19,7 @@ export const cloneAndFreezeInspectionJson = <T>(value: T, label: string): T => {
 };
 
 /** callback output 做 JSON-safe 脱离、dense 校验与 Core child schema 恢复 */
-export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<IRChild> => {
+export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<InspectorFragment> => {
   const outputValues = Array.isArray(output) ? output : [output];
   for (let index = 0; index < outputValues.length; index += 1) {
     if (!(index in outputValues))
@@ -30,8 +30,15 @@ export const snapshotInspectorOutput = (output: InspectorOutput): ReadonlyArray<
   }
   return Object.freeze(
     outputValues.map((outputValue, index) => {
-      const parsedOutput = ChildSchema.parse(outputValue);
-      return cloneAndFreezeInspectionJson(parsedOutput, `Inspector output ${index}`);
+      const fragment: InspectorFragment =
+        outputValue.type === 'fragment'
+          ? {
+              type: 'fragment',
+              coordinateSpace: outputValue.coordinateSpace,
+              child: ChildSchema.parse(outputValue.child),
+            }
+          : { type: 'fragment', coordinateSpace: 'local', child: ChildSchema.parse(outputValue) };
+      return cloneAndFreezeInspectionJson(fragment, `Inspector output ${index}`);
     }),
   );
 };

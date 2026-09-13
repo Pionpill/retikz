@@ -7,13 +7,13 @@ pnpm add @retikz/inspect
 ```
 
 ```tsx
-import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 
 const registry = createDefaultInspectorRegistry();
 
 <InspectLayout registry={registry}>
-  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: true }}>{/* Path props */}</InspectPath>
+  <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: true }}>{/* Path props */}</InspectPath>
 </InspectLayout>;
 ```
 

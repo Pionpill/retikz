@@ -38,7 +38,7 @@ describe('@retikz/inspect selection playground controls', () => {
     expect(inspectSelectionContract.relatedApis).toEqual([
       'InspectPath.request',
       'InspectScope.request',
-      'StrokePathInspectOptionsSchema',
+      'PathInspectOptionsSchema',
     ]);
     expect(inspectSelectionEnContract.relatedApis).toEqual(inspectSelectionContract.relatedApis);
   });

@@ -61,7 +61,7 @@ const InspectOptionsSchema = z.strictObject({ summary: z.boolean().optional() })
 const highlightInspector = defineInspector({
   namespace: 'demo',
   type: 'highlight-summary',
-  owner: { kind: 'pathKind', name: 'highlight' },
+  owner: { kind: 'path', name: 'highlight' },
   subjectSchema: StrokePathOwnerOutputSchema,
   optionsSchema: InspectOptionsSchema,
   resolveOptions: options => ({ summary: options.summary ?? true }),

@@ -29,6 +29,10 @@ With that flow in mind, the following fields show how Core supplies results and 
 
 A custom Inspector therefore requires the corresponding object to publish final output in Core. Registering an Inspector alone does not make an object without observation support emit observations. Core provides notification and isolated compilation; it does not look up Inspectors or choose auxiliary styling.
 
+Core currently exposes these observation owners: `path` (a named final Path kind), `node` (Node geometry and text layout), `scope` (the intrinsic Scope envelope), `coordinate` (a resolved coordinate point), `clip` (one logical Clip application), and `composite` (a composite owner identified by namespace and type). Built-in Inspectors bind to these owners; registering an Inspector cannot create an observation for an owner that publishes no final output.
+
+Each observation also carries `ancestors`, an outside-in chain of the Scope and composite containers with their occurrences. An Inspector can use it to explain hierarchy or distinguish the same owner in different containers without guessing parentage from a source path.
+
 <SourceLinks
   sources={[
     {
@@ -56,6 +60,8 @@ Within one compile, `observe()` runs zero or more times, once for each selected 
 The host then converts those scenes into non-hittable readonly layers for Render to display. Primary and auxiliary layers belong to the same compilation revision and commit only when both succeed; a new primary figure is not displayed with auxiliary content from an older revision. Auxiliary scenes also exclude public identity, metadata, and animation semantics.
 
 Ordinary drawing need not load Inspect. When enabled, if no result matches or all Inspectors return empty content, the InspectionPlane is `null` and no auxiliary layer is produced. Extra cost comes from observing selected objects, running Inspector callbacks, and compiling non-empty auxiliary fragments.
+
+An `inspect(subject, context)` callback can call `context.warn(code, message)` when an optional geometry facet is unavailable while still returning the remaining marks. The warning is added to the same `InspectionCompileResult.diagnostics`; it does not rewrite the primary figure or turn a partial observation into a primary-compile failure.
 
 <SourceLinks
   sources={[
@@ -90,6 +96,10 @@ These selections are runtime rules for which final occurrences reach an Inspecto
 | subtree target                    | Matches final occurrences below one authored Scope                            |
 | self target                       | Matches the current object by source or occurrence index                      |
 
+For batch Path selection, a scene target matches every final Path with the requested owner across the figure, while a subtree target matches every such Path below one authored Scope. Only a self target (React's `<InspectPath>`) limits the request to the current authored Path. You can therefore enable a Path Inspector once on `<InspectLayout request>` or on `<InspectScope request>` without repeating the same request on every Path.
+
+Ordinary Core IR children returned by an Inspector callback use occurrence-local coordinates; Inspect places them with `context.transform`. To choose a space explicitly, return an `InspectorFragment`: `{ type: 'fragment', coordinateSpace: 'local' | 'scene', child }`. Scene-space fragments use the identity transform. A single callback can mix both spaces, as `NODE_INSPECTOR` does for local geometry and its AABB.
+
 The playground places two curves in separate subtrees. Change target, control points, and labels, then enable the right barrier to see how local requests resolve against Core final occurrences:
 
 <ComponentPreview
@@ -102,7 +112,7 @@ One site may request several Inspectors. Sparse options for one Inspector merge 
 
 Merging uses authored options, then the single `optionsSchema` applies defaults before `resolveOptions` expands shorthand. A parent with `labels: true` and a child with `{}` keeps labels enabled; an explicit child `labels: false` disables them. Every enabled rule is still validated at admission, even if it never matches or is later overridden.
 
-Calling `StrokePathInspectOptionsSchema.parse({})` directly produces a defaulted snapshot containing `labels: false`. Passing that snapshot as child options makes `false` an explicit override. Persist authored configuration to retain omission intent; persisting parsed output stores materialized defaults instead.
+Calling `PathInspectOptionsSchema.parse({})` directly produces a defaulted snapshot containing `labels: false`. Passing that snapshot as child options makes `false` an explicit override. Persist authored configuration to retain omission intent; persisting parsed output stores materialized defaults instead.
 
 <SourceLinks
   sources={[
@@ -121,7 +131,7 @@ Calling `StrokePathInspectOptionsSchema.parse({})` directly produces a defaulted
 
 Inspect assigns ordinary auxiliary colors from the current Core theme's categorical palette in effective inspection-request order. Guide lines, control points, and labels produced by the same request share a color so their associated object is easy to identify. Control point labels have transparent backgrounds.
 
-Inspect uses Core's palette and semantic colors without providing a separate Inspect Theme configuration. Built-in Inspectors also offer less styling freedom than Core drawing components: the path Inspector exposes only control-point and label visibility, while its implementation determines line widths, dash patterns, and font sizes. As auxiliary content for understanding the primary figure, inspection prioritizes clarity, consistency, and restraint.
+Inspect uses Core's palette and semantic colors without providing a separate Inspect Theme configuration. Built-in Inspectors also offer less styling freedom than Core drawing components: the path Inspector exposes only control-point, vertex, arc-geometry, and label visibility, while its implementation determines line widths, dash patterns, and font sizes. As auxiliary content for understanding the primary figure, inspection prioritizes clarity, consistency, and restraint.
 
 Custom Inspectors can still define styles in the ordinary Core IR they return. This belongs to Inspector extensibility rather than the built-in Inspector's styling options.
 
@@ -130,7 +140,7 @@ Custom Inspectors can still define styles in the ordinary Core IR they return. T
     { label: 'Palette and semantic color assignment', path: 'packages/kernel/inspect/src/compile/driver.ts' },
     {
       label: 'Built-in control point, guide line, and label styles',
-      path: 'packages/kernel/inspect/src/providers/stroke-path.ts',
+      path: 'packages/kernel/inspect/src/providers/path.ts',
     },
   ]}
 />
@@ -141,7 +151,7 @@ Custom Inspectors can still define styles in the ordinary Core IR they return. T
 | ------------------------------------- | ---------------------------------------------------------------------- |
 | `InspectionCompileResult.primary`     | Ordinary Core compile output, unchanged by auxiliary content           |
 | `InspectionCompileResult.inspection`  | Ordered auxiliary plane; `null` when every callback produces no output |
-| `InspectionCompileResult.diagnostics` | Structured warnings from isolated fragments                            |
+| `InspectionCompileResult.diagnostics` | Structured warnings from Inspector callbacks and isolated fragments    |
 
 `RetikzInspectError.details.origin.stage` identifies a failure in selection, final-output validation, an `inspect` callback, output normalization, auxiliary-fragment compilation, or final assembly. Duplicate registry keys, unregistered requests, owner mismatch, and schema failures stop that inspection compile without delivering a partial auxiliary result.
 

@@ -126,12 +126,23 @@ const compileInspectionObserverOutput = (
   const diagnostics: Array<InspectionDiagnostic> = [];
   for (const preparedRequest of preparedRequests) {
     const context: InspectorContext = Object.freeze({
+      round: preparedRequest.capturedObservation.context.round,
       inspectorKey: preparedRequest.request.inspector,
       owner: preparedRequest.request.owner,
       occurrence: preparedRequest.request.occurrence,
       provenance: preparedRequest.request.provenance,
       options: preparedRequest.request.options,
       appearance: preparedRequest.appearance,
+      transform: preparedRequest.capturedObservation.observation.transform,
+      ancestors: preparedRequest.capturedObservation.observation.ancestors,
+      warn: (code: string, message: string): void => {
+        diagnostics.push(
+          Object.freeze({
+            origin: createInspectionDiagnosticOrigin('inspect', preparedRequest.request),
+            cause: Object.freeze({ code, message, path: preparedRequest.request.occurrence.sourcePath }),
+          }),
+        );
+      },
     });
     let outputChildren: ReturnType<typeof snapshotInspectorOutput>;
     try {
@@ -156,10 +167,10 @@ const compileInspectionObserverOutput = (
     } catch (cause) {
       throw wrapInspectionError(createInspectionDiagnosticOrigin('inspect', preparedRequest.request), cause);
     }
-    for (const [outputIndex, child] of outputChildren.entries()) {
+    for (const [outputIndex, outputFragment] of outputChildren.entries()) {
       let fragment: ReturnType<CompileObservationContext['compileFragment']>;
       try {
-        fragment = preparedRequest.capturedObservation.context.compileFragment(child);
+        fragment = preparedRequest.capturedObservation.context.compileFragment(outputFragment.child);
       } catch (cause) {
         throw wrapInspectionError(
           createInspectionOutputDiagnosticOrigin('fragment', preparedRequest.request, outputIndex),
@@ -174,7 +185,10 @@ const compileInspectionObserverOutput = (
           occurrence: preparedRequest.request.occurrence,
           colorScope: preparedRequest.request.colorScope,
           scene,
-          transform: preparedRequest.capturedObservation.observation.transform,
+          transform:
+            outputFragment.coordinateSpace === 'scene'
+              ? Object.freeze([1, 0, 0, 1, 0, 0] as const)
+              : preparedRequest.capturedObservation.observation.transform,
         }),
       );
       for (const diagnostic of fragment.diagnostics) {

@@ -6,7 +6,49 @@ import { literal, string } from 'zod';
 
 import type { InputChild, InputEmbedAdapter, InputScene } from '../../src';
 
-import { embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
+import { coordinate, embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
+
+it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入嵌套 Core IR', () => {
+  const marker = { request: 'opaque' };
+  const result = normalizeScene(
+    scene({
+      children: [
+        {
+          type: 'scope',
+          children: [
+            node('n', { position: [0, 0], authoring: marker }),
+            coordinate('c', { position: [1, 2], authoring: marker }),
+          ],
+        },
+      ],
+    }),
+  );
+  expect(result.ir.children).toEqual([
+    {
+      type: 'scope',
+      children: [
+        { type: 'node', id: 'n', position: [0, 0] },
+        { type: 'coordinate', id: 'c', position: [1, 2] },
+      ],
+    },
+  ]);
+  expect(result.authoringSites.filter(site => site.authoring === marker)).toEqual([
+    {
+      kind: 'node',
+      type: 'node',
+      sourcePath: 'children[0].scope.children[0].node',
+      owner: { kind: 'node' },
+      authoring: marker,
+    },
+    {
+      kind: 'coordinate',
+      type: 'coordinate',
+      sourcePath: 'children[0].scope.children[1].coordinate',
+      owner: { kind: 'coordinate' },
+      authoring: marker,
+    },
+  ]);
+});
 
 const EMPTY_COMPOSITE_DEPENDENCIES = Object.freeze({ roots: [], providers: [] });
 

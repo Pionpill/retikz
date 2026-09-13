@@ -1,4 +1,5 @@
 import type {
+  CompileObservationAncestor,
   CompileObservationOwner,
   CompileOccurrenceLocator,
   CoreSemanticColors,
@@ -6,6 +7,7 @@ import type {
   IRChild,
 } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
+import type { AffineMatrix } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 /** Inspector registry 的公开复合键 */
@@ -16,8 +18,21 @@ export type InspectorKey = Readonly<{
   type: string;
 }>;
 
-/** Inspector 可返回的普通 Core IR child */
-export type InspectorOutput = IRChild | ReadonlyArray<IRChild>;
+/** Inspector callback 输出所采用的坐标约定 */
+export type InspectorCoordinateSpace = 'local' | 'scene';
+
+/** 带显式坐标空间的辅助片段 */
+export type InspectorFragment = Readonly<{
+  /** 辅助片段判别字段，不属于 Core IR */
+  type: 'fragment';
+  /** 当前片段采用的坐标空间 */
+  coordinateSpace: InspectorCoordinateSpace;
+  /** 交给 Core 隔离编译的普通 IR child */
+  child: IRChild;
+}>;
+
+/** 裸 Core child 使用局部坐标；显式片段可逐项选择坐标空间 */
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
 
 /** Inspector callback 的稳定外观上下文 */
 export type InspectionAppearanceContext = Readonly<{
@@ -31,6 +46,8 @@ export type InspectionAppearanceContext = Readonly<{
 
 /** Inspector callback 读取的最终 occurrence 上下文 */
 export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
+  /** 按本次主图编译精度舍入数值 */
+  round: (value: number) => number;
   /** 当前 Inspector key */
   inspectorKey: InspectorKey;
   /** 当前被观察的 Core owner */
@@ -39,10 +56,16 @@ export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonl
   occurrence: CompileOccurrenceLocator;
   /** probe/replay 来源 */
   provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
+  /** observation-local 到主 Scene 的最终仿射变换 */
+  transform: AffineMatrix;
+  /** 从外到内排列的最终逻辑容器链条 */
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** canonical JSON-safe options */
   options: TOptions;
   /** callback 前分配的外观上下文 */
   appearance: InspectionAppearanceContext;
+  /** 声明当前 callback 可以省略的部分结果 */
+  warn: (code: string, message: string) => void;
 }>;
 
 /** 独立于 Core owner Definition 的 Inspector 定义 */

@@ -12,7 +12,7 @@ describe('Inspection plane Render adapter', () => {
       entries: [
         {
           inspector: { namespace: 'test', type: 'points' },
-          owner: { kind: 'pathKind', name: 'stroke' },
+          owner: { kind: 'path', name: 'stroke' },
           occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
           colorScope: 0,
           scene,

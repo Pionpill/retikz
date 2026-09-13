@@ -26,16 +26,24 @@ const inspectorContractError = (label: string): RetikzInspectError =>
 
 /** 校验 Inspector owner 判别字段 */
 const assertValidOwner = (owner: AnyInspectorDefinition['owner']): void => {
-  if (owner.kind === 'pathKind') {
-    assertNonEmptyString(owner.name, 'Inspector owner name', inspectorContractError('Inspector owner name'));
-    return;
+  switch (owner.kind) {
+    case 'path':
+      assertNonEmptyString(owner.name, 'Inspector owner name', inspectorContractError('Inspector owner name'));
+      return;
+    case 'node':
+    case 'scope':
+    case 'coordinate':
+    case 'clip':
+      return;
+    case 'composite':
+      assertNonEmptyString(
+        owner.namespace,
+        'Inspector owner namespace',
+        inspectorContractError('Inspector owner namespace'),
+      );
+      assertNonEmptyString(owner.type, 'Inspector owner type', inspectorContractError('Inspector owner type'));
+      return;
   }
-  assertNonEmptyString(
-    owner.namespace,
-    'Inspector owner namespace',
-    inspectorContractError('Inspector owner namespace'),
-  );
-  assertNonEmptyString(owner.type, 'Inspector owner type', inspectorContractError('Inspector owner type'));
 };
 
 /** 校验并冻结 registry 与公开 define 共用的擦除后 Definition */

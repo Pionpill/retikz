@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle, NodeOwnerOutputSchema } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, ZodError } from 'zod';
@@ -330,5 +330,65 @@ describe('Inspection compile driver', () => {
       expect((error as RetikzInspectError).cause).toBeInstanceOf(ZodError);
       expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'output', outputIndex: 0 });
     }
+  });
+
+  it('places mixed local and scene fragments independently and preserves context warnings', () => {
+    const nodeScene: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          transforms: [{ kind: 'translate', x: 20, y: 10 }],
+          children: [{ type: 'node', id: 'node-a', position: [0, 0], text: 'A' }],
+        },
+      ],
+    };
+    const nodeKey = { namespace: 'test', type: 'node-scene' };
+    const nodeInspector = defineInspector({
+      ...nodeKey,
+      owner: { kind: 'node' as const },
+      subjectSchema: NodeOwnerOutputSchema,
+      optionsSchema: strictObject({}),
+      resolveOptions: options => options,
+      inspect: (_subject, context) => {
+        expect(context.transform).toEqual([1, 0, 0, 1, 20, 10]);
+        expect(context.ancestors).toHaveLength(1);
+        expect(context.ancestors[0]?.owner).toEqual({ kind: 'scope' });
+        expect(typeof context.warn).toBe('function');
+        context.warn('OptionalGeometry', 'key points are unavailable');
+        return [
+          {
+            type: 'fragment',
+            coordinateSpace: 'scene',
+            child: { type: 'node', position: [20, 10], text: 'scene output' },
+          },
+          { type: 'node', position: [0, 0], text: 'local output' },
+          {
+            type: 'fragment',
+            coordinateSpace: 'local',
+            child: { type: 'node', position: [0, 0], text: 'explicit local' },
+          },
+        ];
+      },
+    });
+
+    const result = compileInspectionToScene(nodeScene, {
+      registry: createInspectorRegistry([nodeInspector]),
+      selection: {
+        rules: [{ kind: 'request', inspector: nodeKey, target: { kind: 'scene' }, options: true }],
+      },
+      compileOptions: { padding: 0 },
+    });
+
+    expect(result.inspection?.entries).toHaveLength(3);
+    expect(result.inspection?.entries[0]?.transform).toEqual([1, 0, 0, 1, 0, 0]);
+    expect(result.inspection?.entries[1]?.transform).toEqual([1, 0, 0, 1, 20, 10]);
+    expect(result.inspection?.entries[2]?.transform).toEqual([1, 0, 0, 1, 20, 10]);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        cause: { code: 'OptionalGeometry', message: 'key points are unavailable', path: expect.any(String) },
+      }),
+    ]);
   });
 });

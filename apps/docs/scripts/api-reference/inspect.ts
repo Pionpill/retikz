@@ -17,7 +17,11 @@ export const inspectApiReferenceConfig = {
   translate: translateInspectApiReference,
   schemaReferences: {
     InspectionLabelsSchema: '/kernel/packages/inspect/schema-reference#inspectionlabelsschema',
-    StrokePathInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#strokepathinspectoptionsschema',
+    PathInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
+    NodeInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema',
+    ScopeInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema',
+    ClipInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#clipinspectoptionsschema',
+    CoordinateInspectOptionsSchema: '/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema',
   },
 };
 

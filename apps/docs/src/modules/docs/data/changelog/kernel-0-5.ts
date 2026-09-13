@@ -344,6 +344,13 @@ export const kernelV05: Release = {
                 en: 'Theme Sources, Path Generators, Clips, and Shapes now consume only their owner or Definition schema results without extra plain-container, generic JSON, or explicit-`undefined` rules. Definition schema transforms may produce runtime-only callback parameters, while the independent Scene provider-output snapshot contract is unchanged.',
               },
             },
+            {
+              label: { zh: '最终元素几何观测', en: 'Final element geometry observations' },
+              content: {
+                zh: '按需发布 Node、Scope、Coordinate 与每次 Clip 应用的最终产物及逻辑祖先链；Shape / Boundary 可声明精确 outline，Shape 可声明命名 keyPoints。Node 正文盒与基线复用同次排版，观测不改变主图或 artifacts。自定义 observer 的 owner 穷举需补齐新增分支。',
+                en: 'Publishes final Node, Scope, Coordinate, and per-application Clip outputs with logical ancestry on demand. Shape and Boundary providers can expose exact outlines, and Shapes can expose named key points. Node content boxes and baselines reuse the settled layout without changing the primary figure or artifacts. Custom observers must handle the new owner variants in exhaustive branches.',
+              },
+            },
           ],
         },
         {
@@ -496,15 +503,15 @@ export const kernelV05: Release = {
         {
           label: { zh: '独立 Inspector 注册表', en: 'Independent Inspector registry' },
           content: {
-            zh: '`defineInspector()`、显式注册表、运行时 selection、选项合并、诊断与辅助平面全部位于可选包；内置 stroke Path Inspector 与第三方定义使用同一条注册和编译路径。',
-            en: '`defineInspector()`, explicit registries, runtime selection, option merging, diagnostics, and inspection planes all live in the optional package. The built-in stroke Path Inspector and third-party definitions share the same registration and compile path.',
+            zh: '`defineInspector()`、显式注册表、运行时 selection、选项合并、诊断与辅助平面全部位于可选包；五类内置 Inspector 与第三方定义使用同一条注册和编译路径。',
+            en: '`defineInspector()`, explicit registries, runtime selection, option merging, diagnostics, and inspection planes all live in the optional package. The five built-in Inspectors and third-party definitions share the same registration and compile path.',
           },
         },
         {
           label: { zh: '按宿主选择入口', en: 'Host-specific optional entries' },
           content: {
-            zh: '根入口保持宿主无关；`/render`、`/react` 与 `/vanilla` 分别接入只读图层和通用编译驱动。未导入这些入口时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
-            en: 'The root entry remains host-independent, while `/render`, `/react`, and `/vanilla` integrate readonly layers and generic compile drivers. Core, Render, React, and Vanilla run no Inspector logic unless these optional entries are imported.',
+            zh: '根入口保持宿主无关；`/react` 与 `/vanilla` 接入只读图层和通用编译驱动，Render 适配由包内宿主使用，不公开 `/render` 子入口。未使用 Inspect 时，基础 Core、Render、React 与 Vanilla 不执行 Inspector 逻辑。',
+            en: 'The root entry remains host-independent. `/react` and `/vanilla` integrate readonly layers and generic compile drivers; internal host wiring uses Render adapters without a public `/render` subpath. Core, Render, React, and Vanilla run no Inspector logic when Inspect is unused.',
           },
         },
       ],
@@ -513,8 +520,8 @@ export const kernelV05: Release = {
           version: 'alpha.4',
           date: '2026-09-05',
           summary: {
-            zh: 'Inspector callback output 先由 Child schema 解析，再为公开只读结果执行一次独立冻结。',
-            en: 'Inspector callback output is parsed by the Child schema before one independent freeze for the public readonly result.',
+            zh: '扩展五类内置几何检查，统一批量选择、坐标约定与部分结果诊断；辅助内容仍与主图隔离。',
+            en: 'Expands built-in geometry inspection to six types with unified bulk selection, coordinate conventions, and partial-result diagnostics; auxiliary content remains isolated from the primary figure.',
           },
           items: [
             {
@@ -529,6 +536,20 @@ export const kernelV05: Release = {
               content: {
                 zh: '非法 Inspector child 由 `ChildSchema` 的 Zod cause 报告；合法结果仍与 callback 原对象脱离并递归冻结，不再经历 snapshot → schema → snapshot 的重复链。',
                 en: 'Invalid Inspector children report the `ChildSchema` Zod cause. Valid output remains detached from the callback object and deeply frozen without the former snapshot → schema → snapshot chain.',
+              },
+            },
+            {
+              label: { zh: '五类内置检查', en: 'Five built-in Inspectors' },
+              content: {
+                zh: '新增 node、clip、scope、coordinate，path 补充顶点、圆弧半径与椭圆主轴。Node 统一显示轮廓、连接面、定向外框、正文盒、基线、关键点与 Scene AABB，所有显示参数默认开启。注册不会自动启用，线点文字按 Core 色板顺序取色，标签背景透明。',
+                en: 'Adds node, clip, scope, and coordinate, and extends path with vertices, arc radii, and ellipse axes. Node inspection combines outlines, boundaries, oriented boxes, content boxes, baselines, key points, and the Scene AABB; all display options default to enabled. Registration does not activate inspection. Lines, points, and text follow the Core categorical palette, with transparent label backgrounds.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：统一选择与扩展上下文', en: 'BREAKING: unified selection and extension context' },
+              content: {
+                zh: '显式 scene / subtree 的 Path 请求现在会绘制，不再要求 self。新增 InspectNode / InspectCoordinate 可选 React wrapper，Vanilla 使用同一 runtime authoring 通道。自定义 Inspector 可按输出片段选择 local / scene 坐标，并通过 transform、ancestors 与 warn 消费最终上下文；缺失可选几何仅报告 UnsupportedGeometry，非法 provider 输出仍失败。',
+                en: 'Explicit scene and subtree Path requests now draw without requiring self. Optional InspectNode and InspectCoordinate React wrappers use the same runtime authoring channel as Vanilla. Custom Inspectors can choose local or scene coordinates per output fragment and use transform, ancestors, and warn. Missing optional geometry reports UnsupportedGeometry; invalid provider output still fails.',
               },
             },
           ],

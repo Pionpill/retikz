@@ -18,9 +18,17 @@ describe('Inspect API Reference', () => {
       expect(sections[1]).not.toContain('### createInspectionVanillaDriver');
       expect(sections[2]).toContain('`@retikz/inspect/vanilla`');
       expect(sections[2]).toContain('### createInspectionVanillaDriver');
-      const schemaSection = source.split('### StrokePathInspectOptionsSchema\n')[1]?.split('\n### ')[0];
-      expect(schemaSection).toContain('/kernel/packages/inspect/schema-reference#strokepathinspectoptionsschema');
-      expect(schemaSection).not.toContain('```');
+      for (const schema of [
+        'PathInspectOptionsSchema',
+        'NodeInspectOptionsSchema',
+        'ClipInspectOptionsSchema',
+        'ScopeInspectOptionsSchema',
+        'CoordinateInspectOptionsSchema',
+      ]) {
+        const schemaSection = source.split(`### ${schema}\n`)[1]?.split('\n### ')[0];
+        expect(schemaSection).toContain(`/kernel/packages/inspect/schema-reference#${schema.toLowerCase()}`);
+        expect(schemaSection).not.toContain('```');
+      }
       if (lang === 'en') expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
       await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeTruthy();
     }

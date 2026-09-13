@@ -5,14 +5,14 @@ import {
   createDefaultInspectorRegistry,
   createInspectorRegistry,
   defineInspector,
-  STROKE_PATH_INSPECTOR_KEY,
+  PATH_INSPECTOR_KEY,
 } from '../../src';
 
 const definition = (namespace: string, type: string) =>
   defineInspector({
     namespace,
     type,
-    owner: { kind: 'pathKind' as const, name: 'stroke' },
+    owner: { kind: 'path' as const, name: 'stroke' },
     subjectSchema: strictObject({ value: string() }),
     inspect: () => [],
   });
@@ -22,7 +22,7 @@ describe('Inspector registry', () => {
     const rawDefinition = {
       namespace: 'test',
       type: 'empty-options',
-      owner: { kind: 'pathKind' as const, name: 'stroke' },
+      owner: { kind: 'path' as const, name: 'stroke' },
       subjectSchema: strictObject({ value: string() }),
       inspect: () => [],
     };
@@ -41,7 +41,7 @@ describe('Inspector registry', () => {
     const inspector = defineInspector({
       namespace: 'test',
       type: 'resolved-empty',
-      owner: { kind: 'pathKind', name: 'stroke' },
+      owner: { kind: 'path', name: 'stroke' },
       subjectSchema: strictObject({ value: string() }),
       resolveOptions: () => ({ label: 'marker' }),
       inspect: (_subject, context) => ({ type: 'node', position: [0, 0], content: context.options.label }),
@@ -57,10 +57,10 @@ describe('Inspector registry', () => {
   });
 
   it('validates and snapshots a directly supplied definition', () => {
-    const rawDefinition = { ...definition('test', 'raw'), owner: { kind: 'pathKind' as const, name: 'stroke' } };
+    const rawDefinition = { ...definition('test', 'raw'), owner: { kind: 'path' as const, name: 'stroke' } };
     const registered = createInspectorRegistry([rawDefinition]).require(rawDefinition);
     rawDefinition.owner.name = 'changed';
-    expect(registered.owner).toEqual({ kind: 'pathKind', name: 'stroke' });
+    expect(registered.owner).toEqual({ kind: 'path', name: 'stroke' });
     expect(Object.isFrozen(registered)).toBe(true);
     expect(Object.isFrozen(registered.owner)).toBe(true);
     expect(createInspectorRegistry([registered]).require(registered)).toBe(registered);
@@ -69,7 +69,7 @@ describe('Inspector registry', () => {
   it('does not trust a caller-frozen definition with an invalid owner', () => {
     const invalidDefinition = Object.freeze({
       ...definition('test', 'invalid'),
-      owner: Object.freeze({ kind: 'pathKind' as const, name: ' ' }),
+      owner: Object.freeze({ kind: 'path' as const, name: ' ' }),
     });
     expect(() => createInspectorRegistry([invalidDefinition])).toThrow(
       'Inspector owner name must be a non-empty string.',
@@ -105,7 +105,7 @@ describe('Inspector registry', () => {
 
   it('registers the stroke builtin through the same default path', () => {
     const registry = createDefaultInspectorRegistry([definition('third-party', 'points')]);
-    expect(registry.get(STROKE_PATH_INSPECTOR_KEY)).toBeDefined();
+    expect(registry.get(PATH_INSPECTOR_KEY)).toBeDefined();
     expect(registry.get({ namespace: 'third-party', type: 'points' })).toBeDefined();
   });
 });

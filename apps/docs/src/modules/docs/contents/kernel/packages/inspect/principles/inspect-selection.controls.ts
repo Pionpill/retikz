@@ -68,5 +68,5 @@ export const previewControlContract = {
     labels: true,
     barrierRight: false,
   },
-  relatedApis: ['InspectPath.request', 'InspectScope.request', 'StrokePathInspectOptionsSchema'],
+  relatedApis: ['InspectPath.request', 'InspectScope.request', 'PathInspectOptionsSchema'],
 } satisfies PreviewControlContract;

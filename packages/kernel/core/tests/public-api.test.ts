@@ -51,7 +51,15 @@ describe('Core public API', () => {
       Probe: 'probe',
       Replay: 'replay',
       ScopeChild: 'scopeChild',
+      Clip: 'clip',
     });
+  });
+
+  it('exports the JSON schemas for every builtin observation owner output', () => {
+    expect(core.NodeOwnerOutputSchema).toBeDefined();
+    expect(core.ScopeOwnerOutputSchema).toBeDefined();
+    expect(core.CoordinateOwnerOutputSchema).toBeDefined();
+    expect(core.ClipOwnerOutputSchema).toBeDefined();
   });
 
   it('公开 occurrence 和 observation owner 的稳定比较工具', () => {

@@ -19,6 +19,7 @@ import { inspectionSelectionRulesFromVanillaSite } from './authoring';
 const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
 type ObservationOwnerCounts = {
+  kernel: Map<string, number>;
   pathKinds: Map<string, number>;
   composites: Map<string, Map<string, number>>;
 };
@@ -31,12 +32,17 @@ const allocateObservationOwnerIndex = (
 ): number => {
   let counts = countsBySourcePath.get(sourcePath);
   if (counts === undefined) {
-    counts = { pathKinds: new Map(), composites: new Map() };
+    counts = { pathKinds: new Map(), composites: new Map(), kernel: new Map() };
     countsBySourcePath.set(sourcePath, counts);
   }
-  if (owner.kind === 'pathKind') {
+  if (owner.kind === 'path') {
     const index = counts.pathKinds.get(owner.name) ?? 0;
     counts.pathKinds.set(owner.name, index + 1);
+    return index;
+  }
+  if (owner.kind !== 'composite') {
+    const index = counts.kernel.get(owner.kind) ?? 0;
+    counts.kernel.set(owner.kind, index + 1);
     return index;
   }
   let typeCounts = counts.composites.get(owner.namespace);

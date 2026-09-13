@@ -84,9 +84,9 @@ export type InspectionPlaneEntry = Readonly<{
   occurrence: CompileOccurrenceLocator;
   /** request 级连续颜色序号 */
   colorScope: number;
-  /** occurrence-local sealed Scene */
+  /** 按辅助片段 coordinateSpace 生成的只读 Scene */
   scene: Scene;
-  /** occurrence local 到 primary Scene 的矩阵 */
+  /** 辅助 Scene 到 primary Scene 的矩阵；scene 模式为单位矩阵 */
   transform: AffineMatrix;
 }>;
 
@@ -96,7 +96,7 @@ export type InspectionPlane = Readonly<{
   entries: ReadonlyArray<InspectionPlaneEntry>;
 }>;
 
-/** Inspect fail-loud 错误及非致命 fragment diagnostic 的结构化来源 */
+/** Inspect 失败、回调警告及 fragment diagnostic 的结构化来源 */
 export type InspectionDiagnosticOrigin =
   | Readonly<{ stage: 'selection'; ruleIndex: number; target: InspectionSelectionTarget | null }>
   | Readonly<{
@@ -114,11 +114,11 @@ export type InspectionDiagnosticOrigin =
     }>
   | Readonly<{ stage: 'complete' }>;
 
-/** 一个 fragment warning 的 Inspect-owned diagnostic */
+/** 一条回调或 fragment warning 的 Inspect-owned diagnostic */
 export type InspectionDiagnostic = Readonly<{
   /** warning 对应的 request 与 output */
   origin: InspectionDiagnosticOrigin;
-  /** Core code/message/path 原样投影 */
+  /** 回调 code/message 与来源路径，或 Core warning 的原样投影 */
   cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>;
 }>;
 
@@ -128,6 +128,6 @@ export type InspectionCompileResult = Readonly<{
   primary: CompileResult;
   /** 全部 callback 无输出时为 null */
   inspection: InspectionPlane | null;
-  /** 仅包含 fragment warnings */
+  /** 按请求顺序排列的回调警告与 fragment warnings */
   diagnostics: ReadonlyArray<InspectionDiagnostic>;
 }>;

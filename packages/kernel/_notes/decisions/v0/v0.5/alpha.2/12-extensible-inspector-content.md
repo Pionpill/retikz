@@ -65,7 +65,7 @@ Core 公开四项稳定能力：
 ```ts
 type CompileObservationOwner =
   | Readonly<{ kind: 'composite'; namespace: string; type: string }>
-  | Readonly<{ kind: 'pathKind'; name: string }>;
+  | Readonly<{ kind: 'path'; name: string }>;
 
 type CompileOwnerOutputDefinition<TValue extends JsonValue> = Readonly<{
   schema: ZodType<TValue>;

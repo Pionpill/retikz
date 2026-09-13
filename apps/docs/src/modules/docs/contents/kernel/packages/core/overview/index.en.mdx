@@ -86,6 +86,8 @@ Core provides only domain-neutral observation. A Composite publishes its final o
 
 An observer can call `context.compileFragment()` to compile ordinary `IRChild` content in the current occurrence environment. The result contains an isolated static Scene, artifacts, and diagnostics; it never writes into the primary result and cannot reference public identities from the primary figure or another fragment. `complete()` chooses the observer's final output, which Core recursively freezes without prescribing a domain shape. Inspector registration, selection, colors, and readonly-layer assembly belong to the optional [`@retikz/inspect`](/kernel/packages/inspect) package.
 
+`context.round(value)` reuses the current primary compile precision to compare recomputed geometry coordinates with the final output. Inspect callbacks expose the same method through their context.
+
 The initial run performs a full compile. When an update cannot be proven locally safe, the Program falls back to a full compile and publishes one `replaceScene` in `patch.operations`. Callers still consume the same Snapshot / Patch envelope instead of switching protocols.
 
 Core cross-checks an optional ChangeSet against the complete previous and next Snapshots. One unique `update` hint must cover each changed value owned by the Scene root or a stable entity. Add/remove/move hints must completely explain the next identity set and order under their parent, with `parent` and `before` pointing to final positions in the next Snapshot.

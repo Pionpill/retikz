@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
 
-import type { ConnectionEnvelopeKind, ShapeDefinition, TextLine } from '../../contract';
+import type { ConnectionEnvelopeKind, PathCommand, ShapeDefinition, TextLine } from '../../contract';
 import type { BoundaryReferenceResolution, CanonicalNode, CanonicalNodeLabel } from '../../resolve';
 import type { PaintResolutionInput } from '../../resolve/resource';
 import type { BlendModeValue, IRAnimationTrack, IRBoundary, IRFont, IRPaint, ResolvedDropShadow } from '../../schemas';
@@ -16,6 +16,8 @@ export type NodeFontWeight = NonNullable<IRFont['weight']>;
 export type BoundaryGeometryDefinition = {
   /** provider 名称 */
   name: string;
+  /** 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何 */
+  outline?: (rect: Rect, params: JsonObject) => ReadonlyArray<PathCommand>;
   /** 按方向求连接点 */
   boundaryPoint: (rect: Rect, toward: Position, params: JsonObject) => Position;
   /** 求命名 anchor */

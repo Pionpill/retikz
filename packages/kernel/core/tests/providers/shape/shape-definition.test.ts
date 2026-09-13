@@ -117,6 +117,14 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
         return localToWorld(rect, [(lx / len) * r, (ly / len) * r]);
       },
       anchor: (rect, name) => (name === 'origin' ? [rect.x, rect.y] : undefined),
+      outline: rect => [
+        { kind: 'move', to: [rect.x - rect.width / 2, rect.y - rect.height / 2] },
+        { kind: 'line', to: [rect.x + rect.width / 2, rect.y - rect.height / 2] },
+        { kind: 'line', to: [rect.x + rect.width / 2, rect.y + rect.height / 2] },
+        { kind: 'line', to: [rect.x - rect.width / 2, rect.y + rect.height / 2] },
+        { kind: 'close' },
+      ],
+      keyPoints: rect => [{ name: 'origin', position: [rect.x, rect.y] }],
       *emit(rect, style): Iterable<ScenePrimitive> {
         yield {
           type: 'path',
@@ -140,6 +148,49 @@ describe('custom ShapeDefinition is a plain object (factory-friendly)', () => {
   it('edgePoint is optional —— custom shape may omit it', () => {
     const poly = createPolygonShape();
     expect(poly.edgePoint).toBeUndefined();
+  });
+
+  it('outline and keyPoints are optional geometry capabilities with JSON-safe results', () => {
+    const poly = createPolygonShape();
+    const rect: Rect = { x: 4, y: 5, width: 10, height: 6, rotate: 0 };
+    expect(poly.outline?.(rect, NO_PARAMS)).toEqual([
+      { kind: 'move', to: [-1, 2] },
+      { kind: 'line', to: [9, 2] },
+      { kind: 'line', to: [9, 8] },
+      { kind: 'line', to: [-1, 8] },
+      { kind: 'close' },
+    ]);
+    expect(poly.keyPoints?.(rect, NO_PARAMS)).toEqual([{ name: 'origin', position: [4, 5] }]);
+  });
+});
+
+describe('BUILTIN_SHAPES outline contract', () => {
+  const rect: Rect = { x: 0, y: 0, width: 20, height: 10, rotate: 0 };
+
+  it('publishes explicit closed outlines for rectangle, ellipse, and polygon', () => {
+    const rectangleOutline = BUILTIN_SHAPES.rectangle.outline?.(rect, NO_PARAMS);
+    const ellipseOutline = BUILTIN_SHAPES.ellipse.outline?.(rect, NO_PARAMS);
+    const polygonOutline = BUILTIN_SHAPES.polygon.outline?.(rect, DIAMOND_PARAMS);
+
+    expect(rectangleOutline).toBeDefined();
+    expect(ellipseOutline).toBeDefined();
+    expect(polygonOutline).toBeDefined();
+    expect(rectangleOutline?.at(-1)).toEqual({ kind: 'close' });
+    expect(ellipseOutline?.at(-1)).toEqual({ kind: 'close' });
+    expect(polygonOutline?.at(-1)).toEqual({ kind: 'close' });
+  });
+
+  it('publishes stable named key points for the built-in shape family', () => {
+    const rectangleKeyPoints = BUILTIN_SHAPES.rectangle.keyPoints?.(rect, NO_PARAMS);
+    const ellipseKeyPoints = BUILTIN_SHAPES.ellipse.keyPoints?.(rect, NO_PARAMS);
+    const polygonKeyPoints = BUILTIN_SHAPES.polygon.keyPoints?.(rect, DIAMOND_PARAMS);
+
+    expect(rectangleKeyPoints).toBeDefined();
+    expect(ellipseKeyPoints).toBeDefined();
+    expect(polygonKeyPoints).toBeDefined();
+    expect(new Set(rectangleKeyPoints?.map(point => point.name)).size).toBe(rectangleKeyPoints?.length);
+    expect(new Set(ellipseKeyPoints?.map(point => point.name)).size).toBe(ellipseKeyPoints?.length);
+    expect(new Set(polygonKeyPoints?.map(point => point.name)).size).toBe(polygonKeyPoints?.length);
   });
 });
 

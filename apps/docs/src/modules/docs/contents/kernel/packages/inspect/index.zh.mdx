@@ -16,19 +16,19 @@ description: 为已完成的编译按需添加观测与只读辅助图层，不�
 
 <PackageManagerInstall packages="@retikz/inspect" />
 
-两种宿主都需要 registry，但 React 在 JSX 编排位置附加 request，Vanilla 则分别创建路径标记和编译驱动：
+两种宿主都需要 registry，但 React 在 JSX 编排位置附加 request，Vanilla 则分别创建 authoring 标记和编译驱动。当前内置检查覆盖 Path、Node、Clip、Scope 和 Coordinate 五类结果：
 
-| 宿主    | 入口                                                                    | 接入位置                                              |
-| ------- | ----------------------------------------------------------------------- | ----------------------------------------------------- |
-| React   | `InspectLayout`、`InspectPath`                                          | 在 Layout 注入 registry，并在 JSX Path 上附加 request |
-| Vanilla | `createInspectionVanillaAuthoring()`、`createInspectionVanillaDriver()` | 创建路径标记，并在渲染入口接入 inspection driver      |
+| 宿主    | 入口                                                                               | 接入位置                                                |
+| ------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| React   | `InspectLayout`、`InspectPath`、`InspectNode`、`InspectScope`、`InspectCoordinate` | 在 Layout 注入 registry，并在对应 JSX site 附加 request |
+| Vanilla | `createInspectionVanillaAuthoring()`、`createInspectionVanillaDriver()`            | 创建路径标记，并在渲染入口接入 inspection driver        |
 
 ### React
 
-React 从 `@retikz/inspect/react` 导入包装组件。`InspectLayout` 接收 registry，`InspectPath` 把 request 附加到当前路径：
+React 从 `@retikz/inspect/react` 导入包装组件。`InspectLayout` 接收 registry；`InspectPath`、`InspectNode`、`InspectScope` 和 `InspectCoordinate` 分别把 request 附加到当前 Path、Node、Scope 或 Coordinate：
 
 ```tsx
-import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 import { Step } from '@retikz/react';
 
@@ -36,7 +36,7 @@ const registry = createDefaultInspectorRegistry();
 
 export const InspectExample = () => (
   <InspectLayout registry={registry}>
-    <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
+    <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
     </InspectPath>
@@ -46,6 +46,32 @@ export const InspectExample = () => (
 
 `InspectLayout` 在普通 Layout 运行时接入可选 inspection compile driver；`InspectPath` 保持普通 Path 的内容写法，只把 request 转成 runtime-only authoring 标记。
 
+也可以不使用 `InspectXxx` 包装组件，保留普通 `Layout` / `Path`，通过 `compileDriver` 和 `authoring` 属性显式接入同一套观测能力：
+
+```tsx
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { Layout, Path, Step } from '@retikz/react';
+
+const registry = createDefaultInspectorRegistry();
+const compileDriver = createInspectionVanillaDriver({ registry });
+const pathInspection = createInspectionVanillaAuthoring({
+  inspector: PATH_INSPECTOR_KEY,
+  options: { controlPoints: true, labels: true },
+});
+
+export const ConfiguredInspectExample = () => (
+  <Layout compileDriver={compileDriver}>
+    <Path authoring={pathInspection}>
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+    </Path>
+  </Layout>
+);
+```
+
+两种写法在相同配置下生成相同的观测请求与结果；包装组件只是代为完成接线。这里的配置固定，因此驱动放在组件外；若依赖 React props 或状态，在组件内用 `useMemo` 创建驱动并声明对应依赖。基础组件没有 `inspect` 属性，`authoring` 也不会写入 Core IR。
+
 ### Vanilla
 
 Vanilla 分别创建 authoring 标记和编译驱动：前者说明当前路径需要观测，后者在普通渲染入口接入 registry 与辅助图层：
@@ -53,7 +79,7 @@ Vanilla 分别创建 authoring 标记和编译驱动：前者说明当前路径�
 `authoring` 不是 Path 的绘图字段，而是 Vanilla adapter 的运行时附加槽。`createInspectionVanillaAuthoring()` 用带私有 token 的标记包住 request，让同一次 `compileDriver` 把当前 authored Path 转成 Inspector 的选择规则；它不进入 Core IR，因此不会改变 `way`、路径几何或布局。
 
 ```ts
-import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
 import { path, renderToSvgString, scene } from '@retikz/vanilla';
 
@@ -63,7 +89,7 @@ const input = scene({
     path('curve', {
       // 将当前 authored Path 标为要观测的目标；不会进入 Core IR
       authoring: createInspectionVanillaAuthoring({
-        inspector: STROKE_PATH_INSPECTOR_KEY,
+        inspector: PATH_INSPECTOR_KEY,
         options: { controlPoints: true, labels: true },
       }),
       way: [
@@ -89,7 +115,7 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
 
 | 文档        | 职责                                                   | 适合何时查阅                         |
 | ----------- | ------------------------------------------------------ | ------------------------------------ |
-| 内置观测    | 查看 Core 当前支持的内置 Inspector 与其辅助内容        | 想快速理解最终 Path 结果时           |
+| 内置观测    | 查看 Core 当前支持的五类内置 Inspector 与其辅助内容    | 想快速理解最终编译结果时             |
 | 拓展观测    | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
 | 解析原理    | 理解 Core 观测、隔离片段和只读图层如何在同次编译中协作 | 诊断行为或深入实现边界时             |
 | API 参考    | 查询根入口、React 与 Vanilla 子路径的公开 API          | 需要完整签名与类型时                 |
@@ -101,7 +127,7 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
   items={[
     {
       title: '内置观测',
-      description: 'Core 当前提供的内置 Inspector 与辅助内容',
+      description: 'Core 当前提供的五类内置 Inspector 与辅助内容',
       url: '/kernel/packages/inspect/builtins',
     },
     {

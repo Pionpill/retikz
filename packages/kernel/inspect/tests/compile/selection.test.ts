@@ -3,7 +3,7 @@ import type { CompileObservation, IRScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { null as zodNull, number, strictObject, string } from 'zod';
 
-import { createInspectorRegistry, defineInspector } from '../../src';
+import { createInspectorRegistry, defineInspector, RetikzInspectError } from '../../src';
 import { resolveInspectionSelection } from '../../src/compile';
 
 const owner = { kind: 'composite' as const, namespace: 'demo', type: 'box' };
@@ -37,6 +37,7 @@ const observation = (index: number): CompileObservation => ({
     origin: { sourcePath: `children[0].scope.children[${index}]`, expansionPath: [] },
     final: { sourcePath: `children[0].scope.children[${index}]`, expansionPath: [] },
   },
+  ancestors: [],
   transform: [1, 0, 0, 1, 0, 0],
   value: { value: index },
 });
@@ -272,7 +273,7 @@ describe('Inspection selection', () => {
   it('fails an explicit self owner mismatch but permits scene rules with no matching owner', () => {
     const pathDefinition = defineInspector({
       ...key,
-      owner: { kind: 'pathKind' as const, name: 'stroke' },
+      owner: { kind: 'path' as const, name: 'stroke' },
       subjectSchema: zodNull(),
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
@@ -309,7 +310,7 @@ describe('Inspection selection', () => {
   it('selects the matching owner when one authored source publishes multiple owner outputs', () => {
     const colocatedPath: CompileObservation = {
       ...observation(0),
-      owner: { kind: 'pathKind', name: 'stroke' },
+      owner: { kind: 'path', name: 'stroke' },
     };
 
     const resolved = resolveInspectionSelection({
@@ -387,11 +388,11 @@ describe('Inspection selection', () => {
     ).toThrow(/final owner output/i);
   });
 
-  it('requires explicit self selection for every Path Inspector, including third-party definitions', () => {
+  it('supports both scene and self selection for third-party Path Inspectors', () => {
     const pathKey = { namespace: 'third-party', type: 'path-geometry' };
     const pathDefinition = defineInspector({
       ...pathKey,
-      owner: { kind: 'pathKind' as const, name: 'stroke' },
+      owner: { kind: 'path' as const, name: 'stroke' },
       subjectSchema: strictObject({ value: number() }),
       optionsSchema: strictObject({}),
       resolveOptions: options => options,
@@ -404,13 +405,14 @@ describe('Inspection selection', () => {
       children: [{ type: 'path', children: [{ type: 'step', kind: 'move', to: [0, 0] }] }],
     };
     const pathObservation: CompileObservation = {
-      owner: { kind: 'pathKind', name: 'stroke' },
+      owner: { kind: 'path', name: 'stroke' },
       occurrence: { sourcePath: 'children[0].path', expansionPath: [] },
       provenance: {
         origin: { sourcePath: 'children[0].path', expansionPath: [] },
         final: { sourcePath: 'children[0].path', expansionPath: [] },
       },
       transform: [1, 0, 0, 1, 0, 0],
+      ancestors: [],
       value: { value: 1 },
     };
 
@@ -421,7 +423,7 @@ describe('Inspection selection', () => {
         observations: [pathObservation],
         selection: { rules: [{ kind: 'request', inspector: pathKey, target: { kind: 'scene' }, options: true }] },
       }),
-    ).toEqual([]);
+    ).toHaveLength(1);
     expect(
       resolveInspectionSelection({
         ir: pathIr,
@@ -439,6 +441,56 @@ describe('Inspection selection', () => {
         },
       }),
     ).toHaveLength(1);
+  });
+
+  it('does not let an authored Scope self locator select a Clip application at the same source path', () => {
+    const clipKey = { namespace: 'test', type: 'clip' };
+    const clipDefinition = defineInspector({
+      ...clipKey,
+      owner: { kind: 'clip' as const },
+      subjectSchema: strictObject({ value: number() }),
+      optionsSchema: strictObject({}),
+      resolveOptions: options => options,
+      inspect: () => [],
+    });
+    const clipObservation: CompileObservation = {
+      owner: { kind: 'clip' },
+      occurrence: { sourcePath: 'children[0].scope', expansionPath: [{ kind: 'clip', index: 0 }] },
+      provenance: {
+        origin: { sourcePath: 'children[0].scope', expansionPath: [] },
+        final: { sourcePath: 'children[0].scope', expansionPath: [{ kind: 'clip', index: 0 }] },
+      },
+      ancestors: [],
+      transform: [1, 0, 0, 1, 0, 0],
+      value: { value: 1 },
+    };
+    const clipIr: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'scope', clip: { kind: 'rect', x: 0, y: 0, width: 10, height: 10 }, children: [] }],
+    };
+
+    try {
+      resolveInspectionSelection({
+        ir: clipIr,
+        registry: createInspectorRegistry([clipDefinition]),
+        observations: [clipObservation],
+        selection: {
+          rules: [
+            {
+              kind: 'request',
+              inspector: clipKey,
+              target: { kind: 'self', locator: { kind: 'authored', sourcePath: 'children[0].scope' } },
+              options: true,
+            },
+          ],
+        },
+      });
+      throw new Error('expected authored Scope self selection to reject Clip output');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RetikzInspectError);
+      expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'selection' });
+    }
   });
 
   it.each([

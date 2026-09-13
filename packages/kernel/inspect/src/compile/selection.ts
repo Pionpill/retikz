@@ -60,10 +60,7 @@ const collectAuthoredPaths = (ir: IRScene) => {
       subtreePaths.add(basePath);
       return;
     }
-    if (child.type === 'path') {
-      selfPaths.add(`${basePath}.path`);
-      return;
-    }
+    selfPaths.add(`${basePath}.${child.type}`);
     if (child.type !== 'scope') return;
     const scopePath = `${basePath}.scope`;
     subtreePaths.add(scopePath);
@@ -159,6 +156,7 @@ const doesTargetMatchObservation = (
   }
   const locator = target.locator;
   if (locator.kind === 'occurrence') return isCompileOccurrenceEqual(observation.occurrence, locator.occurrence);
+  if (observation.owner.kind === 'clip') return false;
   if (observation.occurrence.sourcePath !== locator.sourcePath) return false;
   if (locator.occurrenceIndex === undefined) return true;
   const selectedObservation = observations
@@ -273,7 +271,6 @@ export const resolveAdmittedInspectionSelection = ({
           }
           return left.index - right.index;
         });
-      if (definition.owner.kind === 'pathKind' && !requests.some(entry => entry.rule.target.kind === 'self')) continue;
       let isRequestActive = false;
       let mergedOptionsInput: JsonObject = {};
       let parsedOptions: JsonObject | undefined;
@@ -352,11 +349,10 @@ export const canInspectionSelectionRequestSite = (
     if (rule.kind !== 'request' || rule.options === false) return false;
     const definition = registry.get(rule.inspector);
     if (definition === undefined || !isCompileObservationOwnerEqual(owner, definition.owner)) return false;
-    if (definition.owner.kind === 'pathKind' && rule.target.kind !== 'self') return false;
     if (rule.target.kind === 'scene') return true;
     if (rule.target.kind === 'subtree')
       return sourcePath === rule.target.sourcePath || sourcePath.startsWith(`${rule.target.sourcePath}.`);
     return rule.target.locator.kind === 'authored'
-      ? sourcePath === rule.target.locator.sourcePath
+      ? owner.kind !== 'clip' && sourcePath === rule.target.locator.sourcePath
       : sourcePath === rule.target.locator.occurrence.sourcePath;
   });

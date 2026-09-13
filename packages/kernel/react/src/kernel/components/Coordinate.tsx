@@ -5,6 +5,8 @@ import type { FC } from 'react';
 import { TIKZ_COORDINATE } from '../protocol';
 
 export type CoordinateProps = {
+  /** 可选编译驱动解释的运行时载荷，不进入 Core IR */
+  authoring?: unknown;
   /** 占位节点的 id；其它 path / node `at.of` 通过这个 id 引用 */
   id: string;
   /**

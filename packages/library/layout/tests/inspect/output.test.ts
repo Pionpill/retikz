@@ -39,8 +39,15 @@ const contextOf = <TOptions extends JsonObject>(
   owner: InspectorContext<TOptions>['owner'],
 ): InspectorContext<TOptions> =>
   Object.freeze({
-    inspectorKey: { namespace: 'layout', type: owner.kind === 'composite' ? owner.type : owner.name },
+    inspectorKey: {
+      namespace: 'layout',
+      type: owner.kind === 'composite' ? owner.type : owner.kind === 'path' ? owner.name : owner.kind,
+    },
     owner,
+    round: (value: number) => value,
+    ancestors: [],
+    transform: [1, 0, 0, 1, 0, 0] as const,
+    warn: () => undefined,
     occurrence: { sourcePath: 'children[0]', expansionPath: [] },
     provenance: {
       origin: { sourcePath: 'children[0]', expansionPath: [] },

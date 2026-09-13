@@ -5,7 +5,14 @@ import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
-import { InspectionLabelsSchema, StrokePathInspectOptionsSchema } from '@retikz/inspect';
+import {
+  ClipInspectOptionsSchema,
+  CoordinateInspectOptionsSchema,
+  InspectionLabelsSchema,
+  NodeInspectOptionsSchema,
+  PathInspectOptionsSchema,
+  ScopeInspectOptionsSchema,
+} from '@retikz/inspect';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
@@ -35,15 +42,35 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  NodeInspectOptionsSchema: {
+    schema: NodeInspectOptionsSchema,
+    label: 'NodeInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema',
+  },
+  ScopeInspectOptionsSchema: {
+    schema: ScopeInspectOptionsSchema,
+    label: 'ScopeInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema',
+  },
+  ClipInspectOptionsSchema: {
+    schema: ClipInspectOptionsSchema,
+    label: 'ClipInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#clipinspectoptionsschema',
+  },
+  CoordinateInspectOptionsSchema: {
+    schema: CoordinateInspectOptionsSchema,
+    label: 'CoordinateInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema',
+  },
   InspectionLabelsSchema: {
     schema: InspectionLabelsSchema,
     label: 'InspectionLabels',
     url: '/kernel/packages/inspect/schema-reference#inspectionlabelsschema',
   },
-  StrokePathInspectOptionsSchema: {
-    schema: StrokePathInspectOptionsSchema,
+  PathInspectOptionsSchema: {
+    schema: PathInspectOptionsSchema,
     label: 'StrokePathInspectOptions',
-    url: '/kernel/packages/inspect/schema-reference#strokepathinspectoptionsschema',
+    url: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
   },
   SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
   ThemeSchema: {

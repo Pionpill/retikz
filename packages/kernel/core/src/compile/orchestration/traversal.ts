@@ -65,7 +65,15 @@ import type {
   TraversalRuntime,
 } from './types';
 
-import { CompileExpansionKind, LayoutChildProbeKind, NaturalLayoutProposal } from '../../contract';
+import {
+  ClipOwnerOutputSchema,
+  CompileExpansionKind,
+  CoordinateOwnerOutputSchema,
+  LayoutChildProbeKind,
+  NaturalLayoutProposal,
+  NodeOwnerOutputSchema,
+  ScopeOwnerOutputSchema,
+} from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
   bindComposite,
@@ -105,6 +113,7 @@ import {
   labelExtentPoints,
   layoutNode,
   outerRectOf,
+  projectNodeOwnerOutput,
 } from '../node';
 import { emitPathPrimitive } from '../path';
 import { emitLabelPrimitive } from '../path';
@@ -356,6 +365,55 @@ export const compileChildrenToPrimitives = (
     return { keys, publisher, hasPublished: () => hasPublished, value: () => published };
   };
 
+  /** 仅在选中时投影 Kernel 的同次编译事实并加入最终提交队列 */
+  const publishKernelObservation = (
+    owner: CompileObservationOwner,
+    occurrence: CompileOccurrenceLocator,
+    frame: TraversalFrame,
+    schema: { parse: (value: unknown) => unknown },
+    project: () => unknown,
+  ): void => {
+    const output = createOwnerOutputPublisher(Object.freeze(owner), occurrence.sourcePath, { schema });
+    if (!output.publisher.requested) return;
+    output.publisher.publish(project() as JsonValue);
+    const value = output.value();
+    if (value === undefined) throw createCompileInvariantError('internal: Kernel owner output was not published');
+    frame.compileObservationSink.push({
+      owner,
+      occurrence: freezeOccurrence(occurrence),
+      origin: freezeOccurrence(occurrence),
+      ancestors: frame.ancestors,
+      scopeChain: [...frame.scopeChain],
+      value,
+      observerKeys: output.keys,
+      theme: frame.theme,
+      styleStack: [...frame.styleStack],
+    });
+  };
+
+  /** 复用已经登记的裁切路径，每个逻辑宿主只发布一次应用 */
+  const publishClipObservation = (
+    clipRef: string | undefined,
+    host: CompileOccurrenceLocator,
+    frame: TraversalFrame,
+  ): void => {
+    if (clipRef === undefined) return;
+    publishKernelObservation(
+      { kind: 'clip' },
+      {
+        sourcePath: host.sourcePath,
+        expansionPath: [...host.expansionPath, { kind: CompileExpansionKind.Clip, index: 0 }],
+      },
+      frame,
+      ClipOwnerOutputSchema,
+      () => {
+        const resource = runtime.context.clip.resources().find(candidate => candidate.id === clipRef);
+        if (resource === undefined) throw createCompileInvariantError('internal: observed clip resource is missing');
+        return { path: resource.path };
+      },
+    );
+  };
+
   /** 消费 resolve/path 已绑定的 path kind，并提供内置 stroke emit 回调 */
   const emitPathKindPrimitive = (
     pendingPath: PendingPathEmission,
@@ -367,7 +425,7 @@ export const compileChildrenToPrimitives = (
       runtime.context.onWarn({ code, message, path: node?.irPath ?? irPath });
     const targetView = pathTargetViewOf(resolution.targets, targetWarn);
     const { name: kind, definition } = resolution.kind;
-    const observationOwner = Object.freeze({ kind: 'pathKind' as const, name: kind });
+    const observationOwner = Object.freeze({ kind: 'path' as const, name: kind });
     const ownerOutput = createOwnerOutputPublisher(
       observationOwner,
       pendingPath.occurrence.sourcePath,
@@ -534,6 +592,7 @@ export const compileChildrenToPrimitives = (
     if (value !== undefined) {
       pendingPath.observationSink.push({
         owner: observationOwner,
+        ancestors: pendingPath.ancestors,
         occurrence: freezeOccurrence(pendingPath.occurrence),
         origin: freezeOccurrence(pendingPath.occurrence),
         scopeChain: [...scopeChain],
@@ -661,6 +720,13 @@ export const compileChildrenToPrimitives = (
       },
     );
     const globalLayout = projectLayoutToGlobal(layout, scopeChain);
+    publishKernelObservation(
+      { kind: 'node' },
+      occurrence ?? { sourcePath: nodeIrPath, expansionPath: [] },
+      frame,
+      NodeOwnerOutputSchema,
+      () => projectNodeOwnerOutput(layout, runtime.context.round),
+    );
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
     }
@@ -702,7 +768,12 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 解析 coordinate 位置并注册为零尺寸 layout，供后续命名引用使用 */
-  const registerCoordinateChild = (child: CoordinateChild, index: number, frame: TraversalFrame): void => {
+  const registerCoordinateChild = (
+    child: CoordinateChild,
+    index: number,
+    frame: TraversalFrame,
+    occurrence: CompileOccurrenceLocator,
+  ): void => {
     const { scopeChain, locatorPrefix, layoutSink } = frame;
     const coordinateIrPath = `${locatorPrefix}children[${index}].coordinate`;
     const localCenter = resolvePosition(child.position, positionContextOf(scopeChain))?.localPoint;
@@ -712,6 +783,10 @@ export const compileChildrenToPrimitives = (
       );
     }
     const globalCenter = scopeChain.length === 0 ? localCenter : applyTransformChain(localCenter, scopeChain);
+    publishKernelObservation({ kind: 'coordinate' }, occurrence, frame, CoordinateOwnerOutputSchema, () => ({
+      id: child.id,
+      position: localCenter,
+    }));
     const localCoordinateLayout = createSyntheticRectangleLayout(
       { id: child.id, rect: { x: localCenter[0], y: localCenter[1], width: 0, height: 0, rotate: 0 } },
       { shapes: runtime.context.shapes, boundaries: runtime.context.boundaries },
@@ -739,6 +814,7 @@ export const compileChildrenToPrimitives = (
     const placeholder = makePathPlaceholder();
     primitiveSink.push(placeholder);
     const pending: PendingPathEmission = {
+      ancestors: frame.ancestors,
       path: {
         ...child,
         animations: filterAnimations(child.animations, {
@@ -991,7 +1067,7 @@ export const compileChildrenToPrimitives = (
   };
 
   /** 在需要可见输出时 emit scope group，并挂载 transform、clip 和动画 */
-  const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): void => {
+  const emitScopeGroup = (child: ScopeChild, input: EmitScopeGroupContext): string | undefined => {
     const { index, scopeTransforms, scopePrimitiveSink, frame, resolvedClipShape, semanticOwner } = input;
     const { primitiveSink, locatorPrefix } = frame;
     const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
@@ -1023,6 +1099,7 @@ export const compileChildrenToPrimitives = (
     primitiveSink.push(group);
     if (semanticOwner !== undefined) runtime.state.identityTracker?.recordPrimitives([group], semanticOwner, 'scope');
     recordPrimitiveZIndex(runtime.state.zIndexOf, group, child.zIndex);
+    return group.clipRef;
   };
 
   /** 编排单个 scope 子树，处理命名空间、局部输出容器、延迟 path 和 scope group 输出 */
@@ -1037,6 +1114,14 @@ export const compileChildrenToPrimitives = (
     preResolvedClipShape?: ClipShape,
   ): void => {
     const { locatorPrefix, styleStack } = frame;
+    const scopeOccurrence = generatedOccurrence ?? {
+      sourcePath: `${locatorPrefix}children[${index}].scope`,
+      expansionPath: [],
+    };
+    const scopeAncestors: TraversalFrame['ancestors'] = [
+      ...frame.ancestors,
+      { owner: { kind: 'scope' }, occurrence: scopeOccurrence },
+    ];
     const themePath =
       generatedOccurrence === undefined
         ? `${locatorPrefix}children[${index}].scope.theme`
@@ -1069,6 +1154,7 @@ export const compileChildrenToPrimitives = (
     let scopeTransforms: Array<Transform> = [];
     try {
       const scopeFrame: TraversalFrame = {
+        ancestors: scopeAncestors,
         childProposal: frame.childProposal,
         scopeChain: preliminaryScopeChain,
         primitiveSink: scopePrimitiveSink,
@@ -1103,6 +1189,26 @@ export const compileChildrenToPrimitives = (
         intrinsicLayout,
         placementTarget,
         preliminaryTransforms,
+      );
+      publishKernelObservation(
+        { kind: 'scope' },
+        scopeOccurrence,
+        {
+          ...scopeFrame,
+          ancestors: frame.ancestors,
+          scopeChain: [...frame.scopeChain, ...scopeTransforms],
+          compileObservationSink: frame.compileObservationSink,
+        },
+        ScopeOwnerOutputSchema,
+        () => ({
+          envelope:
+            scopeLayouts.length === 0
+              ? null
+              : {
+                  shape: child.boundingShape === ScopeBoundingShape.Circle ? 'circle' : 'rectangle',
+                  rect: intrinsicLayout.rect,
+                },
+        }),
       );
       const postTransforms =
         preliminaryTransforms === undefined
@@ -1172,13 +1278,20 @@ export const compileChildrenToPrimitives = (
       }
     }
 
-    emitScopeGroup(child, {
+    const clipRef = emitScopeGroup(child, {
       index,
       scopeTransforms,
       scopePrimitiveSink,
       frame,
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
       ...(preResolvedClipShape === undefined ? {} : { resolvedClipShape: preResolvedClipShape }),
+    });
+    publishClipObservation(clipRef, scopeOccurrence, {
+      ...frame,
+      ancestors: scopeAncestors,
+      theme,
+      styleStack: [...styleStack, createStyleResolveFrame(child)],
+      scopeChain: [...frame.scopeChain, ...scopeTransforms],
     });
   };
 
@@ -1351,6 +1464,11 @@ export const compileChildrenToPrimitives = (
     }
     const wrapperClipRef =
       wrapperClipShape === undefined ? undefined : runtime.context.clip.importResolved(wrapperClipShape);
+    publishClipObservation(
+      wrapperClipRef,
+      replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, transaction.originOccurrence),
+      frame,
+    );
     const replayedPrimitives = transaction.primitives.map(primitive => remapPrimitiveResources(primitive, resourceIds));
     const committedPrimitives: Array<ScenePrimitive> = [];
     if ((transforms === undefined || transforms.length === 0) && wrapperClipRef === undefined) {
@@ -1492,6 +1610,24 @@ export const compileChildrenToPrimitives = (
       frame.compileObservationSink.push({
         ...observation,
         occurrence: replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, observation.occurrence),
+        ancestors: [
+          ...frame.ancestors,
+          ...observation.ancestors
+            .filter(
+              ancestor =>
+                ancestor.occurrence.sourcePath === transaction.originOccurrence.sourcePath &&
+                ancestor.occurrence.expansionPath.length >= transaction.originOccurrence.expansionPath.length &&
+                transaction.originOccurrence.expansionPath.every(
+                  (segment, index) =>
+                    segment.kind === ancestor.occurrence.expansionPath[index]?.kind &&
+                    segment.index === ancestor.occurrence.expansionPath[index]?.index,
+                ),
+            )
+            .map(ancestor => ({
+              ...ancestor,
+              occurrence: replayOccurrence(occurrence, outputIndex, transaction.originOccurrence, ancestor.occurrence),
+            })),
+        ],
       });
     }
   };
@@ -1757,6 +1893,12 @@ export const compileChildrenToPrimitives = (
       occurrence: freezeOccurrence(occurrence),
     });
     const spatialOwnerPath = Object.freeze([...frame.spatialOwnerPath, spatialOwner]);
+    const observationOwner = Object.freeze({
+      kind: 'composite' as const,
+      namespace: child.namespace,
+      type: child.type,
+    });
+    const childAncestors: TraversalFrame['ancestors'] = [...frame.ancestors, { owner: observationOwner, occurrence }];
     if (resolution.kind === 'expand') {
       const produced = resolution.expand(resolution.node, Object.freeze({ theme: frame.theme }));
       const expanded = validateExpandCompositeOutput(`Composite '${key}'`, produced);
@@ -1769,7 +1911,7 @@ export const compileChildrenToPrimitives = (
           scopeChain: [...frame.scopeChain],
         });
       }
-      const expandedFrame: TraversalFrame = { ...frame, spatialOwnerPath };
+      const expandedFrame: TraversalFrame = { ...frame, spatialOwnerPath, ancestors: childAncestors };
       for (const [outputIndex, output] of expanded.children.entries()) {
         compileChild(
           output,
@@ -1789,11 +1931,6 @@ export const compileChildrenToPrimitives = (
       return;
     }
     const callable = resolution;
-    const observationOwner = Object.freeze({
-      kind: 'composite' as const,
-      namespace: child.namespace,
-      type: child.type,
-    });
     const observerKeys =
       callable.artifactSchema === undefined || runtime.context.observation === undefined
         ? []
@@ -1860,6 +1997,7 @@ export const compileChildrenToPrimitives = (
         clip,
       };
       const laid = compileChildrenToPrimitives([clonedChild], sandboxContext, {
+        ancestors: childAncestors,
         namespaceStack,
         scopeChain: probeScopeChain,
         styleStack: probeStyleStack,
@@ -2057,6 +2195,7 @@ export const compileChildrenToPrimitives = (
       }
       frame.compileObservationSink.push({
         owner: observationOwner,
+        ancestors: frame.ancestors,
         occurrence: freezeOccurrence(occurrence),
         origin: freezeOccurrence(occurrence),
         scopeChain: [...frame.scopeChain],
@@ -2068,6 +2207,7 @@ export const compileChildrenToPrimitives = (
     }
     const outputFrame: TraversalFrame = {
       ...frame,
+      ancestors: childAncestors,
       alignmentGuideSink: [],
       spatialOwnerPath,
       ...(explicitAllocation === undefined ? {} : { allocationBoundary: {} }),
@@ -2137,7 +2277,7 @@ export const compileChildrenToPrimitives = (
             emitNodeChild(child, index, frame, occurrence, semanticOwner);
             break;
           case 'coordinate':
-            registerCoordinateChild(child, index, frame);
+            registerCoordinateChild(child, index, frame, occurrence);
             break;
           case 'scope':
             compileScopeChild(child, index, frame, generated ? occurrence : undefined, compositeDepth, semanticOwner);
@@ -2208,6 +2348,7 @@ export const compileChildrenToPrimitives = (
     rootChildren,
     {
       childProposal: options.proposal ?? NaturalLayoutProposal,
+      ancestors: options.ancestors ?? [],
       scopeChain: options.scopeChain ?? [],
       primitiveSink: runtime.state.primitives,
       locatorPrefix: '',
