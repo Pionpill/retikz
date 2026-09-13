@@ -106,6 +106,25 @@ export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChil
 
 通常直接返回 Core child 即可；需要为某项输出指定坐标空间时，再使用 `InspectorFragment`。`local` 片段由 Inspect 应用 `context.transform`，`scene` 片段不再应用该变换。
 
+## 推荐写法
+
+自定义 Inspector 建议沿用官方实现的辅助视觉语言，让多个观测同时开启时仍能辨认来源，而不抢占主图的视觉重点。以下是写法建议，不是编译器自动添加的样式。
+
+1. **同一次观测共用色板颜色。** 线条、点标记和标签统一使用 `context.appearance.scopeColor`，不要为每个 Inspector 写死同一种颜色或自行维护色板。驱动按观测请求分配当前主题的分类色，减少嵌套层级与多个观测之间的混淆；色板会循环，仍需结合线型和标签区分。警告等明确语义使用 `context.appearance.semanticColors` 中的对应颜色。
+
+2. **辅助线优先使用虚线或点线。** 控制柄、参考轴、包围框等使用 dashed / dotted 的视觉形式，通过 `style.dashPattern` 表达；同色的不同观测内容可以使用不同线型。实线留给需要连续表达的真实轮廓，例如当前内置 Clip 的裁剪轮廓，不必把所有线条机械地改成虚线。
+
+3. **尽量不遮挡主图。** 轮廓默认无填充、使用细线，关键点用小标记；只有表达占用区域、间距或警告范围时才增加填充，并用低透明度或纹理保留底图可读性。标签保持透明背景、简短且略微偏离标记，安排在辅助输出的后部，避免被辅助线覆盖。
+
+4. **按观测内容拆分开关。** 像 Node 的轮廓、关键点、正文盒，Path 的控制点、顶点等，按可独立理解的内容提供选项；标签单独由 `labels` 控制。不要把每个颜色、线宽都变成配置项；没有选项时直接省略 `optionsSchema`，无需转换时省略 `resolveOptions`。
+
+5. **明确辅助样式的继承边界。** 观测片段可以继承被观察位置的环境。需要稳定的辅助外观时，像内置 Inspector 一样，用普通 Scope 的 `defaults: { reset: true }` 隔离主图默认值，再显式设置必要样式，避免主图的填充、字体或路径默认配置改变标记含义；不要借此重建另一套主题或渲染机制。
+
 <SourceLinks
-  sources={[{ label: 'Inspector Definition 与回调类型源码', path: 'packages/kernel/inspect/src/contract/types.ts' }]}
+  sources={[
+    { label: 'Inspector Definition 与回调类型源码', path: 'packages/kernel/inspect/src/contract/types.ts' },
+    { label: '内置标记、标签与样式隔离', path: 'packages/kernel/inspect/src/providers/geometry.ts' },
+    { label: 'Node 观测内容与线型', path: 'packages/kernel/inspect/src/providers/node.ts' },
+    { label: 'Layout 观测的区域填充与语义颜色', path: 'packages/library/layout/src/inspect/shared/output.ts' },
+  ]}
 />
