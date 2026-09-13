@@ -12,7 +12,7 @@ import { array, boolean, discriminatedUnion, enum as zodEnum, literal, strictObj
 import { Side } from '../../../shared';
 import { PositionSchema } from '../../position';
 import { AngleDegreesSchema } from '../../scalar';
-import { createLabelVisualStyleShape, LabelTextContentSchema } from '../../text';
+import { createLabelVisualStyleShape, TextBlockSchema } from '../../text';
 import { NodeTargetSchema, TargetSchema } from '../target';
 import { BendDirection, FoldStepVia, GeometryLabelPlacement, GeometryLabelPosition, PathCloseMode } from './constants';
 
@@ -22,7 +22,9 @@ export const GeometryLabelSchema = strictObject({
     opacity: 'Label-only opacity, multiplied with the owning path opacity.',
     font: 'Label font overrides. Missing fields inherit from scope label defaults.',
   }),
-  text: LabelTextContentSchema,
+  text: TextBlockSchema.describe(
+    'One text block for this geometry label. Arrays provide authored lines with optional per-line styles.',
+  ),
   position: union([zodEnum(GeometryLabelPosition), NormalizedFractionSchema])
     .optional()
     .describe('Position along the step: keyword or normalized number. Parameter meaning follows the step kind.'),
@@ -49,7 +51,7 @@ export const GeometryLabelSchema = strictObject({
     'Side offset distance in user units. Defaults to the same distance as Path step labels.',
   ),
 }).describe(
-  'Geometry label spec attached to a path-like host; compiled to a TextPrim positioned from a centerline sample.',
+  'Geometry label spec attached to a path-like host; compiled as one text block positioned from a centerline sample.',
 );
 
 export const StepLabelSchema = GeometryLabelSchema;

@@ -55,6 +55,8 @@ import { Path, Step } from '@retikz/react';
 
 `<Path label>` 在整条 Path 上采样，`<Step label>` 只在所属 Step 上采样。无 `fill` 的内置 `stroke` Path 出现 canonical `side: 'center'` 时，Core 会从文字下移除真实描边，而不是绘制一层背景。`sloped: true` 且没有 `side` 时也会 canonicalize 为 `center`。
 
+`label.text` 与 Node 复用同一个 TextBlock：可写单个字符串（其中 `\n` 是硬换行），也可写行数组并给每行单独设置 `fill` / `font`。所有行仍是同一个标签块，共享锚点、`position`、`side`、`sloped` 与 `interrupt`；断口按整个文字块的视觉边界计算，不会把每一行拆成独立标签。
+
 <ComponentPreview files="path-label-interruption" size="md" />
 
 固定左上、右下两个节点后，切换连接路线、`side` 与 0–1 的标签位置，观察同一条宿主 Path 上的采样与断口。选择“自动居中”时不传 `side`、只启用 `sloped`，因此仍走居中标签的默认断线规则。

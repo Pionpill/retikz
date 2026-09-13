@@ -55,6 +55,8 @@ Compare a polyline, multiple subpaths, and a closed fill in one panel. Repeated 
 
 `<Path label>` samples on the whole Path, while `<Step label>` samples only on its owning Step. When an unfilled built-in `stroke` Path has canonical `side: 'center'`, Core removes real stroke geometry beneath the text rather than painting a backdrop. `sloped: true` with no `side` also canonicalizes to `center`.
 
+`label.text` reuses the same TextBlock as Node text: use one string (`\n` is a hard line break), or an array of lines with per-line `fill` / `font`. All lines remain one label block with one anchor, `position`, `side`, `sloped`, and `interrupt`; a gap uses the whole block's visual bounds rather than treating lines as separate labels.
+
 <ComponentPreview files="path-label-interruption" size="md" />
 
 With the upper-left and lower-right nodes fixed, switch the connection route, `side`, and the label position from 0 to 1 to observe sampling and gaps on the same host Path. “Automatic center” omits `side` and enables only `sloped`, so it still follows the centered-label default gap rule.

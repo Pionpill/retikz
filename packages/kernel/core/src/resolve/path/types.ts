@@ -22,14 +22,14 @@ import type { ThemeModeValue } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
-import type { ResolvedLabelTextContent } from '../text';
+import type { ResolvedLabelTextBlock } from '../text';
 
 /** 已把文字与 run 派生颜色确定为字符串的路径几何标签 */
 export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> & {
   /** 已确定的标签文字主色 */
   textColor?: string;
   /** 已确定 run 颜色的标签正文 */
-  text: ResolvedLabelTextContent;
+  text: ResolvedLabelTextBlock;
 };
 
 /** 展开位置、方向与距离默认值后的路径几何标签 */
@@ -83,7 +83,7 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   marks?: Array<Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & { mark: ResolvedArrowMark }>;
 };
 
-type WithCanonicalStepLabel<TStep extends IRStep> = TStep extends unknown
+type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
   ? 'label' extends keyof TStep
     ? Omit<TStep, 'label'> & { label?: CanonicalGeometryLabel }
     : TStep

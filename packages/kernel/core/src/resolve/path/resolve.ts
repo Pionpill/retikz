@@ -4,6 +4,7 @@ import type { Transform } from '../../contract';
 import type {
   IRArrowMark,
   IRGeometryLabel,
+  IRLine,
   IRMathRun,
   IRPaintValue,
   IRPathBase,
@@ -12,7 +13,7 @@ import type {
   IRTarget,
   IRTextRun,
 } from '../../schemas';
-import type { ResolvedInlineSourceRun, ResolvedLabelTextContent } from '../text';
+import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 import type {
   CanonicalGeometryLabel,
   CanonicalPath,
@@ -214,19 +215,39 @@ const resolveLabelRunColor = (
 };
 
 /** 确定 geometry label 单行内容中各 run 的派生颜色 */
+const resolveGeometryLabelTextLine = (
+  text: IRLine,
+  masterColor: string | undefined,
+  context: PathResolveContext,
+  fieldPath: string,
+): ResolvedTextLine => {
+  if (typeof text === 'string') return text;
+  if ('runs' in text) {
+    return {
+      runs: text.runs.map((run, index) =>
+        resolveLabelRunColor(run, masterColor, context, `${fieldPath}.runs[${index}]`),
+      ),
+    };
+  }
+  const { fill, ...style } = text;
+  return {
+    ...style,
+    ...(fill === undefined
+      ? {}
+      : { fill: resolveContextualColor(fill, { masterColor, mode: context.mode, fieldPath: `${fieldPath}.fill` }) }),
+  };
+};
+
+/** 确定 geometry label 文本块中各行的派生颜色 */
 const resolveGeometryLabelText = (
   text: IRGeometryLabel['text'],
   masterColor: string | undefined,
   context: PathResolveContext,
   fieldPath: string,
-): ResolvedLabelTextContent =>
-  typeof text === 'string'
-    ? text
-    : {
-        runs: text.runs.map((run, index) =>
-          resolveLabelRunColor(run, masterColor, context, `${fieldPath}.runs[${index}]`),
-        ),
-      };
+): ResolvedLabelTextBlock =>
+  Array.isArray(text)
+    ? text.map((line, index) => resolveGeometryLabelTextLine(line, masterColor, context, `${fieldPath}[${index}]`))
+    : resolveGeometryLabelTextLine(text, masterColor, context, fieldPath);
 
 /** 确定一个 geometry label 的文字主色与 run 颜色 */
 const resolveGeometryLabelColors = (
