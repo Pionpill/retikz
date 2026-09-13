@@ -17,6 +17,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 包总纲页：[`docs-doc-overview`](../docs-doc-overview/SKILL.md)
    - 分组落地页：[`docs-doc-group`](../docs-doc-group/SKILL.md)
    - 概念页：[`docs-doc-concept`](../docs-doc-concept/SKILL.md)
+   - 实现原理页：[`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)，面向已读前置文档的源码读者
    - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
 3. 仅在命中条件时继续加载：
    - Showcase / 成品型功能展示：[`docs-doc-showcase`](../docs-doc-showcase/SKILL.md)
@@ -127,6 +128,8 @@ API Reference 生成器对常用 JSDoc 的投影规则固定如下：首段 summ
 
 机制说明先写用户可观察行为，再用 `<SourceLinks>` 给直接实现入口。每项 `path` 使用仓库相对路径，行号范围最小且必须仍支撑正文结论；源码链接不能替代解释。
 
+实现原理页按 `docs-doc-mechanism` 展开内部成员与执行过程；明确标注的内部实现锚点不受公共 API 标识符要求限制，但不得冒充公开调用入口或进入 API Reference。
+
 ## 文档宽度
 
 正文最大宽度 800px，表格单元格默认不换行。表格优先 3 列以内；过长内容用 `<br />` 或拆出正文。MDX 表格中的 union `|` 写成 `\|`，同一字段的多个类型放在同一行内用 `<br />` 分隔。
@@ -172,11 +175,11 @@ node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope <
 
 命中任一条件即视为文档大改：新增页面；重写页面主线或章节顺序；新增或替换 demo、controls、API 表；同时对多个小节或页面做语义调整。纯错字、链接、格式和局部措辞修改不触发。
 
-- 文档大改按中型任务处理，开始时在一次执行计划中确认 scope、验证以及是否使用一个只读 subagent review
-- 未授权 subagent 时由主 agent 使用 `docs-doc-review` 自审；已授权时在改稿和机械验证后派一个只读 reviewer
-- 已授权 reviewer 时不能因时间紧或机械检查通过而跳过，也不在完稿后追加第二个 reviewer
-- 给 subagent 原始页面、diff、demo 与必要实现依据，不预告预期结论；由它从入门读者视角独立找出术语、理解跳跃和顺序问题
-- 修正 BLOCKING 后复用同一 reviewer，直到阻塞关闭或达到计划循环上限；未授权时明确报告“未执行独立读者评审”
+- 文档大改按中型任务处理，执行计划包含 scope、验证和完稿后的 1 个只读 Luna（`gpt-5.6-luna`）读者评审；复审上限沿用获批计划
+- 新建、重写或大范围重构完成且机械检查通过后，必须派遣该 subagent，不能以主 agent 自审或检查通过代替；用户明确取消或工具不可用时如实说明未执行
+- reviewer 使用 fresh 上下文，仅查看待评文档正文与页面内图示，不读取项目规范、AGENTS、skills、源码、测试、diff 或作者说明。主 agent 不传递项目历史、预期结论或补充概念解释
+- 要求 reviewer 直接提出读者疑问，指出具体段落中未解释或解释过晚的概念、含糊说明、逻辑跳跃和章节衔接问题；不能靠猜测或源码替文档补齐解释。源码一致性与规范检查由主 agent 负责
+- 修正 BLOCKING 后在计划上限内复用同一 reviewer，不追加第二个 reviewer；局部措辞、格式等小改由主 agent 自审
 
 完成前还要人工确认：
 

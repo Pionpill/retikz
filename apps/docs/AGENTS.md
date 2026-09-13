@@ -50,6 +50,7 @@ docs 内容规则不复制在 AGENTS 中，按需动态加载：
 - 包总纲页：`docs-doc-overview`
 - 分组落地页：`docs-doc-group`
 - 概念页：`docs-doc-concept`
+- 实现原理页：`docs-doc-mechanism`
 - blog：`docs-doc-blog`
 - 文档评审：`docs-doc-review`
 - 外站 markdown 转换：`docs-blog-converter`

@@ -22,6 +22,8 @@ description: Use when writing or editing a leaf apps/docs concept page to explai
 
 ## 定位
 
+以输入到输出的内部执行过程和源码阅读为主线时，改用 [`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)；本 skill 保留概念模型与架构关系的写法，不要求原理页重复入门教学
+
 概念页讲**抽象概念 / 心智模型 / 架构**——读者不是来查 API，是来「搞懂这套模型怎么运作、什么时候该用哪一层」。与其它 section 的边界：
 
 | Section                 | 服务什么                                                                              |
