@@ -1,56 +1,109 @@
 ---
 title: 拓展观测
-description: 用 Inspector Definition、注册表与统一选择路径，为 Core owner 的最终产物添加自定义只读观测
+description: 定义自定义 Inspector，读取图形的编译结果并生成端点、边界等只读辅助标记
 ---
 
-内置 Inspector 只覆盖 Core 当前提供的少量 owner。需要解释自己的 path kind 或 composite 最终产物时，定义一个 Inspector；它和内置项经过同一个 registry、选择、校验和辅助编译路径，不会修改主图。
+需要为图形添加自定义辅助标记时，可以定义一个 Inspector。内置与自定义 Inspector 共用同一条执行流程，不会修改主图。
 
-## 可拓展的观测接口
+## 定义一个 Inspector
 
-一个 `InspectorDefinition` 把“哪个 Core owner 能被观察”和“怎样把最终产物画成辅助内容”连在一起：
+下面的示例为路径端点添加圆形标记：自定义 `inspect(subject, context)` 读取路径命令并返回 Core Node，同一份源码包含 Definition、注册与请求。
 
-| 接口                        | 作用                                                                     |
-| --------------------------- | ------------------------------------------------------------------------ |
-| `owner`                     | 指向发布最终产物的 `pathKind` 或 composite owner                         |
-| `subjectSchema`             | 校验 Core 发布的最终产物，恢复自定义观测所需的事实                       |
-| `optionsSchema`             | 唯一选项契约；声明默认值，合并原始配置后应用默认与变换                   |
-| `resolveOptions`            | 接收 schema 解析结果，展开简写并产出 callback 消费态                     |
-| `mergeOptionsInput`         | 可选地合并整图、子树与当前实例上的同一个 Inspector 选项                  |
-| `inspect(subject, context)` | 读取最终产物与 occurrence、外观、选项上下文，返回普通 `IRChild` 辅助内容 |
+<ComponentPreview files="inspect-custom" size="sm" caption="自定义 inspect 回调为路径的显式端点生成辅助标记。" />
 
-`inspect()` 只能返回普通 Core IR；它不能写回主 Scene，也不能另建渲染语义。`owner` 与 `subjectSchema` 必须匹配 Core 实际发布的最终产物。
+## Definition 机制
 
-`optionsSchema` 的输入与输出可以不同：`mergeOptionsInput` 接收原始输入，`resolveOptions` 接收已补默认值的解析输出。分别用 `z.input` 与 `z.output` 从同一 schema 派生类型，不再维护第二份 schema。
+`InspectorDefinition` 指定观察什么、接受哪些选项，以及如何生成辅助内容。被观察对象由 Core owner 标识，即负责发布该类编译结果的能力；示例中的 `stroke` owner 发布路径的最终产物。
 
-## 定义一个观测内容
+| 接口                        | 作用                                                          |
+| --------------------------- | ------------------------------------------------------------- |
+| `namespace` / `type`        | 组成 Inspector 的注册键，供请求定位                           |
+| `owner`                     | 指定被观察的 Core owner                                       |
+| `subjectSchema`             | 校验 owner 的最终产物，确定 `subject` 类型                    |
+| `mergeOptionsInput`         | 可选；合并整图、子树与当前实例的原始选项                      |
+| `optionsSchema`             | 当前 Inspector 的自定义入参契约；合并后校验并应用默认值与变换 |
+| `resolveOptions`            | 将解析后的选项展开为 `context.options`                        |
+| `inspect(subject, context)` | 读取产物与上下文，返回 Core IR 或包装它的坐标片段             |
 
-下面的端点 Inspector 与内置控制点 Inspector 请求同一条路径。两者分别读取同一个 `stroke` owner 的最终产物，并在同一个只读辅助平面中输出内容：
+`owner` 与 `subjectSchema` 必须匹配 Core 实际发布的产物。`optionsSchema` 的原始输入和解析输出可分别由 `z.input` 与 `z.output` 派生；先合并原始配置，再解析和展开选项。
 
-<ComponentPreview
-  files={['inspect-custom', 'inspect-path-endpoints.ts']}
-  size="sm"
-  caption="同一路径同时请求内置控制点检查器和第三方端点检查器；二者共享注册、选择和辅助编译流程。"
-/>
+下图展示产物与选项如何汇入 `inspect()`。虚线框内的契约与回调由 Definition 提供，实际由 Inspect 驱动执行；两路输入表示数据依赖，不表示并行执行。
 
-## 注册和请求
+<ComponentPreview files="inspector-definition-flow" hideCode size="lg" />
 
-用 `defineInspector()` 校验并冻结 Definition，再把它交给 `createDefaultInspectorRegistry([endpointInspector])` 或 `createInspectorRegistry([...])`。前者只是在同一个 immutable registry 中预先加入内置项，不存在第三方的特殊执行分支。
+回调生成的辅助内容仍交由 Core 隔离编译成 Scene，不另建渲染机制。
 
-宿主如何把 registry 和 request 接入 React 或 Vanilla，见[安装与使用](/kernel/packages/inspect#安装与使用)。request 用 `namespace + type` 定位 Definition；它命中哪个最终实例、不同范围的 options 如何合并，由[解析原理](/kernel/packages/inspect/principles#运行时选择)说明。
+## inspect 回调
 
-## 错误与边界
+以下摘录回调签名及相关类型，省略源码注释：
 
-重复注册 key、请求未注册 Inspector、owner 不匹配，或最终产物、选项、输出不通过 schema 时，Inspect 会以 `RetikzInspectError` 终止对应编译；不会交付部分辅助结果。Core 没有发布最终产物的 owner 不能仅靠 Inspector 补出观测接口。
+```ts
+inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
+```
+
+### 输入上下文
+
+`subject` 是经过 `subjectSchema` 校验的最终产物；`TResolvedOptions` 是 `resolveOptions` 的输出类型。`context` 提供当前被观测实例（occurrence）的选项、来源与外观信息。
+
+```ts
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
+  inspectorKey: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
+  transform: AffineMatrix;
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
+  options: TOptions;
+  appearance: InspectionAppearanceContext;
+  warn: (code: string, message: string) => void;
+}>;
+
+export type InspectionAppearanceContext = Readonly<{
+  colorScope: number;
+  scopeColor: CssColorValue;
+  semanticColors: CoreSemanticColors;
+}>;
+```
+
+| 参数 / 属性                   | 作用                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `subject`                     | 经过校验的 Core 最终产物；只读取实际提供的几何信息                              |
+| `context.inspectorKey`        | 当前 Inspector 的 `namespace` 与 `type`                                         |
+| `context.owner`               | 发布当前产物的 Core owner                                                       |
+| `context.occurrence`          | 当前被观测的最终实例                                                            |
+| `context.provenance`          | 产物的原始实例 `origin` 与最终实例 `final`                                      |
+| `context.transform`           | 从当前局部坐标转换到主 Scene 的仿射矩阵                                         |
+| `context.ancestors`           | 从外到内排列的 Scope / composite 容器链                                         |
+| `context.options`             | 已完成解析与展开的自定义选项                                                    |
+| `context.appearance`          | `colorScope` 为请求序号；`scopeColor` 为常规颜色；`semanticColors` 为主题语义色 |
+| `context.warn(code, message)` | 报告非致命警告，例如省略不可用的几何信息                                        |
+
+产物中的部分几何信息可能缺失，例如 Node 的轮廓或关键点可能为 `null`。只处理实际可用的信息，必要时通过 `context.warn()` 说明省略的内容。
+
+### 返回内容
+
+```ts
+export type InspectorCoordinateSpace = 'local' | 'scene';
+
+export type InspectorFragment = Readonly<{
+  type: 'fragment';
+  coordinateSpace: InspectorCoordinateSpace;
+  child: IRChild;
+}>;
+
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+```
+
+| 返回形式 / 属性                     | 作用                                            |
+| ----------------------------------- | ----------------------------------------------- |
+| 普通 `IRChild`                      | 直接返回辅助图元，默认使用当前实例的局部坐标    |
+| `InspectorFragment.type`            | 固定为 `'fragment'`，标识坐标片段包装           |
+| `InspectorFragment.coordinateSpace` | `local` 使用局部坐标；`scene` 使用主 Scene 坐标 |
+| `InspectorFragment.child`           | 待编译的普通 Core IR child                      |
+| 数组                                | 返回多个辅助内容，可混合普通 child 与显式片段   |
+
+通常直接返回 Core child 即可；需要为某项输出指定坐标空间时，再使用 `InspectorFragment`。`local` 片段由 Inspect 应用 `context.transform`，`scene` 片段不再应用该变换。
 
 <SourceLinks
-  sources={[
-    { label: 'Inspector Definition 与 callback 契约', path: 'packages/kernel/inspect/src/contract/types.ts' },
-    { label: 'Definition 校验与冻结', path: 'packages/kernel/inspect/src/contract/define.ts' },
-    { label: '内置与第三方共用的 registry', path: 'packages/kernel/inspect/src/providers/registry.ts' },
-  ]}
+  sources={[{ label: 'Inspector Definition 与回调类型源码', path: 'packages/kernel/inspect/src/contract/types.ts' }]}
 />
-
-## 相关
-
-- [内置观测](/kernel/packages/inspect/builtins)：Core 当前提供的内置 Inspector
-- [自定义 Path](/kernel/components/draw/custom-path)：让自定义 owner 发布可观察的最终产物

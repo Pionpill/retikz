@@ -1,14 +1,45 @@
 import type { FC } from 'react';
 
-import { createDefaultInspectorRegistry, STROKE_PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { StrokePathOwnerOutputSchema } from '@retikz/core';
+import { createInspectorRegistry, defineInspector } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 import { Layout, Path, Step } from '@retikz/react';
+import { z } from 'zod';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
-import { PATH_ENDPOINTS_INSPECTOR, PATH_ENDPOINTS_INSPECTOR_KEY } from './inspect-path-endpoints';
+const endpointInspectorKey = { namespace: 'docs', type: 'path-endpoints' };
 
-const registry = createDefaultInspectorRegistry([PATH_ENDPOINTS_INSPECTOR]);
+const endpointInspector = defineInspector({
+  ...endpointInspectorKey,
+  owner: { kind: 'pathKind', name: 'stroke' },
+  subjectSchema: StrokePathOwnerOutputSchema,
+  optionsSchema: z.strictObject({}),
+  resolveOptions: options => options,
+  inspect: (subject, context) => {
+    const markers = subject.commands.flatMap(command =>
+      'to' in command
+        ? [
+            {
+              type: 'node' as const,
+              position: command.to,
+              shape: 'circle',
+              layout: { minimumSize: 10, padding: 0 },
+              style: {
+                fill: context.appearance.scopeColor,
+                stroke: context.appearance.scopeColor,
+                strokeWidth: 1,
+              },
+            },
+          ]
+        : [],
+    );
+    if (subject.transforms.length === 0) return markers;
+    return { type: 'scope' as const, transforms: subject.transforms, children: markers };
+  },
+});
+
+const registry = createInspectorRegistry([endpointInspector]);
 
 const Curve: FC<{ inspect?: boolean }> = props => {
   const { inspect = false } = props;
@@ -21,10 +52,7 @@ const Curve: FC<{ inspect?: boolean }> = props => {
 
   return inspect ? (
     <InspectPath
-      request={[
-        { inspector: STROKE_PATH_INSPECTOR_KEY, options: { labels: false } },
-        { inspector: PATH_ENDPOINTS_INSPECTOR_KEY, options: true },
-      ]}
+      request={{ inspector: endpointInspectorKey, options: true }}
       style={{ stroke: 'dimgray', strokeWidth: 3 }}
     >
       {steps}
@@ -34,14 +62,14 @@ const Curve: FC<{ inspect?: boolean }> = props => {
   );
 };
 
-/** 在同一个 registry 中组合内置控制点与第三方端点 Inspector */
+/** Register and request the custom endpoint Inspector. */
 const Demo: FC = () => (
   <InspectLayout registry={registry}>
     <Curve inspect />
   </InspectLayout>
 );
 
-/** 源码派生只保留持久化图形，不把 Inspector selection 写入 IR */
+/** Keep Inspector selection outside the persistent drawing IR. */
 export const previewSource = {
   deriveIR: false,
   canonicalRender: () => (

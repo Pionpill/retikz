@@ -1,59 +1,115 @@
 ---
 title: Extending inspection
-description: Use Inspector Definitions, a registry, and shared selection to add custom readonly inspection for final output from a Core owner
+description: Define custom Inspectors that read compiled geometry and generate readonly endpoint, boundary, or other auxiliary markers
 ---
 
-Built-in Inspectors cover only the small set of owners that Core currently provides. Define an Inspector when a path kind or composite needs its own final output explained; it shares the registry, selection, validation, and auxiliary-compilation path with built-ins and never changes the primary figure.
+Define an Inspector when a figure needs custom auxiliary markers. Built-in and custom Inspectors share the same execution flow and never change the primary figure.
 
-## Observation interfaces you can extend
+## Define an Inspector
 
-An `InspectorDefinition` joins “which Core owner can be observed” with “how to turn final output into auxiliary content”:
-
-| Interface                   | Responsibility                                                                                                        |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `owner`                     | Names the `pathKind` or composite owner that publishes final output                                                   |
-| `subjectSchema`             | Validates the final output published by Core and restores the facts the Inspector needs                               |
-| `optionsSchema`             | The single options contract; declares defaults and applies them and transforms after merging authored options         |
-| `resolveOptions`            | Receives parsed options, expands shorthand, and produces callback options                                             |
-| `mergeOptionsInput`         | Optionally merge one Inspector's options at scene, subtree, and current-occurrence scope                              |
-| `inspect(subject, context)` | Reads final output plus occurrence, appearance, and option context, then returns ordinary `IRChild` auxiliary content |
-
-`inspect()` may return only ordinary Core IR. It cannot write into the primary Scene or introduce a separate rendering semantic. `owner` and `subjectSchema` must match the final output Core actually publishes.
-
-The input and output of `optionsSchema` may differ: `mergeOptionsInput` receives authored input, while `resolveOptions` receives parsed output with defaults applied. Derive these types with `z.input` and `z.output` from the same schema instead of maintaining a second schema.
-
-## Define an inspection
-
-The endpoint Inspector below requests the same path as the built-in control-point Inspector. Both read final output from the same `stroke` owner and emit content into one readonly auxiliary plane:
+This example adds circular markers to path endpoints: a custom `inspect(subject, context)` reads path commands and returns Core Nodes. The same source file includes the Definition, registration, and request.
 
 <ComponentPreview
-  files={['inspect-custom', 'inspect-path-endpoints.ts']}
+  files="inspect-custom"
   size="sm"
-  caption="One path requests the built-in control-point Inspector and a third-party endpoint Inspector; both share registry, selection, and auxiliary compilation."
+  caption="A custom inspect callback generates auxiliary markers for explicit path endpoints."
 />
 
-## Register and request it
+## Definition mechanism
 
-Validate and freeze a Definition with `defineInspector()`, then give it to `createDefaultInspectorRegistry([endpointInspector])` or `createInspectorRegistry([...])`. The former merely preloads built-ins into the same immutable registry; third parties have no special execution path.
+An `InspectorDefinition` specifies what to observe, which options to accept, and how to generate auxiliary content. A Core owner identifies the capability publishing the compiled result; the example's `stroke` owner publishes final path output.
 
-See [Install and use](/kernel/packages/inspect#install-and-use) for attaching a registry and request in React or Vanilla. A request locates its Definition with `namespace + type`; [Inspection principles](/kernel/packages/inspect/principles#runtime-selection) explains which final occurrence it reaches and how options merge across scopes.
+| Interface                   | Responsibility                                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `namespace` / `type`        | Form the Inspector registry key used by requests                                               |
+| `owner`                     | Identify the Core owner to observe                                                             |
+| `subjectSchema`             | Validate the owner's final output and determine the `subject` type                             |
+| `mergeOptionsInput`         | Optionally merge raw options from scene, subtree, and current-occurrence scopes                |
+| `optionsSchema`             | Define this Inspector's custom input contract; validate, default, and transform merged options |
+| `resolveOptions`            | Resolve parsed options into `context.options`                                                  |
+| `inspect(subject, context)` | Read output and context, returning Core IR or coordinate-space wrappers around it              |
 
-## Errors and boundaries
+`owner` and `subjectSchema` must match the output Core actually publishes. Derive raw input and parsed output from `optionsSchema` with `z.input` and `z.output`: merge raw configuration first, then parse and resolve options.
 
-A duplicate registry key, request for an unregistered Inspector, owner mismatch, or failed final-output, option, or output schema stops that compile with `RetikzInspectError`; Inspect does not deliver a partial auxiliary result. An owner for which Core publishes no final output cannot gain an observation interface from an Inspector alone.
+The figure shows how output and options feed `inspect()`. The Definition supplies the contracts and callbacks inside the dashed boundary; the Inspect driver executes them. The two branches express data dependencies, not parallel execution.
+
+<ComponentPreview files="inspector-definition-flow" hideCode size="lg" />
+
+Core compiles the resulting auxiliary content into Scenes in isolation; the callback does not introduce a separate rendering mechanism.
+
+## inspect callback
+
+The following excerpts show the callback signature and related types, with source comments omitted:
+
+```ts
+inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
+```
+
+### Input context
+
+`subject` is final output validated by `subjectSchema`; `TResolvedOptions` is the output type of `resolveOptions`. The `context` supplies options, provenance, and appearance for the observed instance (occurrence).
+
+```ts
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
+  inspectorKey: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
+  transform: AffineMatrix;
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
+  options: TOptions;
+  appearance: InspectionAppearanceContext;
+  warn: (code: string, message: string) => void;
+}>;
+
+export type InspectionAppearanceContext = Readonly<{
+  colorScope: number;
+  scopeColor: CssColorValue;
+  semanticColors: CoreSemanticColors;
+}>;
+```
+
+| Parameter / property          | Responsibility                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `subject`                     | Validated final Core output; read only the geometry actually provided                             |
+| `context.inspectorKey`        | The current Inspector's `namespace` and `type`                                                    |
+| `context.owner`               | The Core owner publishing this output                                                             |
+| `context.occurrence`          | The final occurrence being observed                                                               |
+| `context.provenance`          | The original `origin` and final `final` occurrences                                               |
+| `context.transform`           | Affine matrix from local coordinates to the primary Scene                                         |
+| `context.ancestors`           | The outside-in Scope / composite container chain                                                  |
+| `context.options`             | Custom options after parsing and resolution                                                       |
+| `context.appearance`          | `colorScope`: request index; `scopeColor`: regular color; `semanticColors`: theme semantic colors |
+| `context.warn(code, message)` | Report a nonfatal warning, such as omitted unavailable geometry                                   |
+
+Some geometry may be unavailable; for example, a Node's outline or key points may be `null`. Process only the available information and use `context.warn()` when an omission needs explaining.
+
+### Return content
+
+```ts
+export type InspectorCoordinateSpace = 'local' | 'scene';
+
+export type InspectorFragment = Readonly<{
+  type: 'fragment';
+  coordinateSpace: InspectorCoordinateSpace;
+  child: IRChild;
+}>;
+
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+```
+
+| Return form / property              | Responsibility                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| Ordinary `IRChild`                  | Return an auxiliary primitive directly, using occurrence-local coordinates by default |
+| `InspectorFragment.type`            | The fixed `'fragment'` discriminator identifies a coordinate-space wrapper            |
+| `InspectorFragment.coordinateSpace` | `local` uses local coordinates; `scene` uses primary Scene coordinates                |
+| `InspectorFragment.child`           | The ordinary Core IR child to compile                                                 |
+| Array                               | Return multiple items, mixing ordinary children and explicit fragments if needed      |
+
+Usually, return Core children directly. Use `InspectorFragment` when an output item needs an explicit coordinate space. Inspect applies `context.transform` to `local` fragments; `scene` fragments do not receive that transform.
 
 <SourceLinks
   sources={[
-    { label: 'Inspector Definition and callback contract', path: 'packages/kernel/inspect/src/contract/types.ts' },
-    { label: 'Definition validation and freezing', path: 'packages/kernel/inspect/src/contract/define.ts' },
-    {
-      label: 'One registry for built-ins and third parties',
-      path: 'packages/kernel/inspect/src/providers/registry.ts',
-    },
+    { label: 'Inspector Definition and callback type source', path: 'packages/kernel/inspect/src/contract/types.ts' },
   ]}
 />
-
-## Related
-
-- [Built-in inspection](/kernel/packages/inspect/builtins): Inspectors Core currently provides
-- [Custom Path](/kernel/components/draw/custom-path): publish observable final output from a custom owner
