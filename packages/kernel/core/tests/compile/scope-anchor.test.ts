@@ -24,24 +24,6 @@ const lineTo = (prim: ScenePrimitive | undefined): [number, number] | undefined 
 };
 
 describe('跨 scope anchor keyword', () => {
-  it('scope_anchor_canonical_corner：对象形态 top-left 与 top-left 等价', () => {
-    const endFor = (anchor: string): [number, number] | undefined => {
-      const ir = scene([
-        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
-        {
-          type: 'path',
-          children: [
-            { type: 'step', kind: 'move', to: [40, 40] },
-            { type: 'step', kind: 'line', to: { id: 'A', anchor } },
-          ],
-        },
-      ]);
-      return lineTo(topPath(compileToScene(ir).scene.primitives));
-    };
-
-    expect(endFor('top-left')).toEqual(endFor('top-left'));
-  });
-
   it('scope_anchor_top_cross：scope translate(100,0) + path A.top 投影到全局 (100, A.top.y)', () => {
     const ir = scene([
       { type: 'node', id: 'ext', position: [0, 0], text: 'E' },

@@ -1,0 +1,115 @@
+---
+title: Introduction
+description: A declarative drawing framework connecting general-purpose graphics, relationship diagrams, and data visualization through code and structured data.
+---
+
+Retikz is a declarative, general-purpose drawing framework. Describe graphics with code or structured data, and combine primitives, relationship diagrams, charts, and tables into reusable visual content.
+
+It is built for graphics that evolve with your content, data, and product: explanatory figures in technical documentation, relationship views in applications, annotated charts, and AI-generated graphics that you need to keep editing.
+
+## Describe graphics you can reuse
+
+A figure contains more than colors and coordinates. It also carries meaning: which nodes connect, which elements belong together, and which data field determines a bar's height. Retikz makes these intentions part of the drawing description.
+
+For example, connect two nodes by referencing their names and let the framework calculate where the line meets their boundaries. Change a node's text or position, and the connection is recalculated using the same rules. Reusing the figure can start with replacing its content and parameters.
+
+This declarative approach separates three decisions:
+
+| What you decide                              | How Retikz supports it                                                                                          |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| What the figure contains and how it connects | Describe content, relationships, and styles with components or structured data                                  |
+| Which application hosts it                   | Core drawing semantics are independent of the UI framework, with React and Vanilla entry points available today |
+| How it is rendered                           | The rendering layer produces SVG or Canvas output, separating drawing semantics from the backend                |
+
+Framework independence lets you choose an entry point that suits your application. Renderer independence keeps drawing semantics separate from a particular drawing API. Consult the selected backend's documentation for its specific output capabilities.
+
+## From primitives to domain-specific graphics
+
+Retikz provides four groups of capabilities. Start with higher-level domain concepts, or use primitives to control the details.
+
+| Group                               | What it handles                                                                   | Where to start                                                |
+| ----------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Kernel · Drawing foundation**     | Nodes, paths, text, geometry, and the shared compilation and rendering foundation | [Basic drawing](/kernel/components/get-start)                 |
+| **Library · Reusable capabilities** | General-purpose drawing components, container composition, and layout             | [Standard](/library/standard) · [Layout](/library/layout)     |
+| **Schematic · Structural diagrams** | Entities, relationships, groups, and structured diagrams                          | [Graph](/schematic/graph) · [Diagram](/schematic/diagram)     |
+| **Viz · Data visualization**        | Data processing, visual mappings, charts, and two-dimensional tables              | [Plot](/viz/plot) · [Chart](/viz/chart) · [Table](/viz/table) |
+
+These groups share the underlying drawing capabilities. Domain components translate their own semantics into general-purpose graphics, which enter a common compilation and rendering process. Layout, relationships, and data graphics can therefore contribute to the same figure without each maintaining its own canvas and drawing rules.
+
+This also leaves room for customization. Use existing components for common tasks, compose lower-level elements for more specific needs, or extend capabilities through public definitions and registration mechanisms.
+
+## Graphics designed for LLMs
+
+Retikz's AI-friendly design goes beyond generating JSON. It lets a model express drawing intent through compact configuration, delegates necessary calculations to the framework, and preserves graphics semantics for later edits.
+
+- **Describe graphics with less configuration**: node references, shared styles, and higher-level components encode reusable rules instead of repeating structures and coordinates for every element. For tasks involving relationships, layout, or repeated graphics, this can reduce the details to generate and maintain compared with writing low-level HTML/SVG directly. It does not mean every figure requires less configuration or fewer tokens.
+- **Keep generated results editable**: Retikz's JSON intermediate representation (IR) retains nodes, relationships, data, and styles. Unlike pixels in a bitmap, these provide explicit objects and intentions to edit. HTML/SVG is editable too; Retikz additionally preserves higher-level drawing semantics, such as “connect these two nodes,” rather than only the resulting line coordinates.
+- **Encapsulate necessary algorithms**: the relevant capabilities handle geometry, connections at node boundaries, and the arrangement rules of the selected layout components. A model describes goals, relationships, and parameters without expanding every calculation itself. When content changes, the framework applies the same rules again.
+
+Retikz also structures its contracts to make these descriptions easier for LLMs to understand and generate:
+
+- **Self-describing schemas**: Zod schemas use English `.describe()` annotations to explain field meanings and usage rules. Spacing configuration, for example, specifies not just numeric types but the precedence of individual sides, axes, and defaults. A model reading the contract gets semantic guidance, while programs use the schema to check structure and field constraints.
+- **Semantically grouped properties**: Node, for example, puts visual overrides in `style` and size, spacing, and text layout in `layout`, while content and references retain their own fields. Grouping helps a model locate properties by editing intent instead of navigating a flat list of mixed responsibilities.
+- **Controlled discriminator branches**: `kind` distinguishes genuinely different operations, while parameters express variations of the same operation. Orthogonal folds, for example, share `kind: 'fold'` and use `via` to select the route, instead of introducing a separate operation for every direction. This keeps semantic branches explicit without multiplying equivalent concepts.
+
+Together, these choices let models focus on what a figure should express, reduce low-level detail generation, and keep results validatable, editable, and reusable. See the [Schema Reference](/kernel/reference/schema) for specific fields and constraints.
+
+## Why choose Retikz
+
+A shared drawing foundation is particularly useful when a figure needs domain semantics, local customization, and long-term maintenance together.
+
+- **Move from ready-made concepts to detailed customization**: build the main structure with charts, relationships, and layout components, then add details with general-purpose primitives.
+- **Turn a one-off drawing into reusable content**: drive changes through content, data, and configuration, integrating repeated drawing tasks into application logic.
+- **Share semantics across entry points**: React, Vanilla, and structured data work against common drawing contracts.
+- **Keep AI-generated results editable**: preserve a description that can be validated, connecting generation, human adjustments, and later updates.
+
+When choosing a drawing tool, consider the way you want to work:
+
+| Approach                                     | What to consider                                                                                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Write SVG / Canvas directly                  | Useful when you need direct control over drawing details; Retikz adds primitives, references, and composition above that level                                            |
+| Use a dedicated charting or diagramming tool | Evaluate whether its ready-made visuals and interactions meet your needs; Retikz is worth exploring when you need to combine domain concepts with general-purpose drawing |
+| Maintain graphics as code and data           | Look for descriptions that can be reused, validated, and edited over time; this is Retikz's primary way of working                                                        |
+
+If you need a complete drag-and-drop design tool, also evaluate selection, editing operations, and collaboration features. Retikz is a programmable drawing framework; applications organize the editing experience for their own needs.
+
+## Features
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard icon={<Braces />} className="items-start p-5 sm:p-6">
+    <span className="font-semibold">Declarative drawing</span>
+    <span className="mt-2 text-sm text-muted-foreground">
+      Describe content, relationships, and styles; let the framework calculate the graphics.
+    </span>
+  </LinkedCard>
+  <LinkedCard icon={<Blocks />} className="items-start p-5 sm:p-6">
+    <span className="font-semibold">Framework independent</span>
+    <span className="mt-2 text-sm text-muted-foreground">
+      Integrate through React or Vanilla while sharing core drawing semantics.
+    </span>
+  </LinkedCard>
+  <LinkedCard icon={<Monitor />} className="items-start p-5 sm:p-6">
+    <span className="font-semibold">Renderer independent</span>
+    <span className="mt-2 text-sm text-muted-foreground">
+      Separate drawing descriptions from the backend, with SVG and Canvas output.
+    </span>
+  </LinkedCard>
+  <LinkedCard icon={<Sparkles />} className="items-start p-5 sm:p-6">
+    <span className="font-semibold">AI-friendly</span>
+    <span className="mt-2 text-sm text-muted-foreground">
+      Connect generation, validation, and ongoing edits through structured descriptions and schemas.
+    </span>
+  </LinkedCard>
+  <LinkedCard icon={<Layers />} className="items-start p-5 sm:p-6">
+    <span className="font-semibold">Cross-domain composition</span>
+    <span className="mt-2 text-sm text-muted-foreground">
+      Give primitives, relationships, and data graphics a shared composition and rendering foundation.
+    </span>
+  </LinkedCard>
+  <LinkedCard icon={<Puzzle />} className="items-start p-5 sm:p-6">
+    <span className="font-semibold">Extensible capabilities</span>
+    <span className="mt-2 text-sm text-muted-foreground">
+      Choose capabilities for your task and add custom implementations through public contracts.
+    </span>
+  </LinkedCard>
+</div>

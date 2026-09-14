@@ -10,15 +10,17 @@ import type {
 import { LayoutAxisProposalKind, rectOutline } from '@retikz/core';
 import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
+import type { CanonicalSurface } from '../../../resolve/surface';
 import type { IRSurface } from './types';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
+import { resolveSurface } from '../../../resolve/surface';
 import { SURFACE_HANDLE_KEY, SURFACE_HANDLE_ROLE } from './constants';
 
 type SurfaceAxis = 'x' | 'y';
 
 /** 取得一个物理轴两侧的 Surface padding 总量 */
-const axisPadding = (surface: IRSurface, axis: SurfaceAxis): number =>
+const axisPadding = (surface: CanonicalSurface, axis: SurfaceAxis): number =>
   axis === 'x' ? surface.padding.left + surface.padding.right : surface.padding.top + surface.padding.bottom;
 
 /** 把 Surface 收到的单轴 proposal 转成 content child proposal */
@@ -49,7 +51,7 @@ const childAxisProposal = (proposal: LayoutAxisProposal, padding: number, axis: 
 };
 
 /** 把 Surface parent proposal 转成唯一 child 的 content proposal */
-const childProposal = (surface: IRSurface, proposal: LayoutProposal): LayoutProposal => ({
+const childProposal = (surface: CanonicalSurface, proposal: LayoutProposal): LayoutProposal => ({
   x: childAxisProposal(proposal.x, axisPadding(surface, 'x'), 'x'),
   y: childAxisProposal(proposal.y, axisPadding(surface, 'y'), 'y'),
 });
@@ -86,9 +88,10 @@ const surfaceClip = (width: number, height: number, cornerRadius: number): IRCli
 
 /** 将一个 canonical Surface 编译为普通 Core Scope/Path/replay 输出 */
 export const compileSurface = (
-  surface: IRSurface,
+  sourceSurface: IRSurface,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult => {
+  const surface = resolveSurface(sourceSurface);
   const child = requiredLayoutProbe(
     context,
     { child: surface.child, occurrence: 0 },

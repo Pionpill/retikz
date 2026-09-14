@@ -1,10 +1,38 @@
 import type { RelationDirectionValue } from '@retikz/graph';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
-import type { FlowDirectionValue, FlowLayoutAlignmentValue, FlowRoutingKindValue } from '../../shared';
+import type { IRFlowLayout } from '../../schemas';
+import type {
+  FlowDirectionValue,
+  FlowLayoutAlignmentValue,
+  FlowPlacementKindValue,
+  FlowRoutingKindValue,
+} from '../../shared';
+
+/** 已补全默认值的固定排列配置；Grid 使用物理行列，不改变流程方向 */
+export type EffectiveFlowPlacement =
+  | Readonly<{
+      kind: 'linear';
+      direction: FlowDirectionValue;
+      gap: number;
+      align: FlowLayoutAlignmentValue;
+      /** 仅排除对外结构边界贡献，不移除局部排列或绘制 */
+      excludeFromBounds?: ReadonlyArray<string>;
+    }>
+  | Readonly<{
+      kind: 'grid';
+      rowGap: number;
+      columnGap: number;
+      reserveLabelSpace: boolean;
+      placements: Extract<IRFlowLayout, { kind: 'grid' }>['placements'];
+      /** 仅排除对外结构边界贡献，不移除局部排列或绘制 */
+      excludeFromBounds?: ReadonlyArray<string>;
+    }>;
 
 /** Flow layout provider 使用的有效路由 */
-export type FlowLayoutRouting = Readonly<{ kind: 'straight' }> | Readonly<{ kind: 'orthogonal'; cornerRadius: number }>;
+export type FlowLayoutRouting =
+  | Readonly<{ kind: 'straight' }>
+  | Readonly<{ kind: 'orthogonal' | '-|' | '|-'; cornerRadius: number }>;
 
 /** Flow layout scope 已补全的有效配置 */
 export type EffectiveFlowLayout = Readonly<{
@@ -19,8 +47,16 @@ export type FlowLayoutDefaults = Readonly<{
   direction: FlowDirectionValue;
   nodeGap: number;
   rankGap: number;
+  /** 固定 Layout 未获得作者间距时使用的物理轴默认值，不影响自动布局 */
+  placementGap: Readonly<{
+    /** 左右排列与 Grid 列间距 */
+    horizontal: number;
+    /** 上下排列与 Grid 行间距 */
+    vertical: number;
+  }>;
   routing: Readonly<{
     kind: FlowRoutingKindValue;
+    /** 所有轴对齐路由的圆角默认；支持任一轴对齐模式时必填 */
     orthogonalCornerRadius?: number;
   }>;
 }>;
@@ -54,7 +90,7 @@ export type FlowLayoutContainerInput = Readonly<{
   id: string;
   rank?: number;
   layout: EffectiveFlowLayout;
-  align: FlowLayoutAlignmentValue;
+  placement: EffectiveFlowPlacement;
   elements: ReadonlyArray<FlowLayoutElementInput>;
 }>;
 
@@ -70,17 +106,13 @@ export type FlowLayoutPlacementElementInput = Readonly<{
 
 /** Flow Layout 固定 placement 的完整输入 */
 export type FlowLayoutPlacementInput = Readonly<{
-  layout: Readonly<{
-    id: string;
-    direction: FlowDirectionValue;
-    gap: number;
-    align: FlowLayoutAlignmentValue;
-  }>;
+  layout: EffectiveFlowPlacement & Readonly<{ id: string }>;
   elements: ReadonlyArray<FlowLayoutPlacementElementInput>;
 }>;
 
 /** Flow Layout 固定 placement 的完整输出 */
 export type FlowLayoutPlacementOutput = Readonly<{
+  /** 对外结构边界；排除配置下原点为零，子项允许溢出或使用负坐标 */
   bounds: Readonly<BoundsRect>;
   elements: ReadonlyArray<FlowLayoutElementOutput>;
 }>;
@@ -126,6 +158,8 @@ export type FlowLayoutOutput = Readonly<{
 
 /** Layout Definition 对结构、方向与路由的权威保证 */
 export type FlowLayoutCapabilities = Readonly<{
+  /** 支持的固定排列种类，必须非空且无重复 */
+  placementKinds: ReadonlyArray<FlowPlacementKindValue>;
   compoundScopes: boolean;
   groupEndpoints: boolean;
   crossScopeRelations: boolean;

@@ -78,6 +78,62 @@ describe('Entity definition registry', () => {
     expect(predicate).not.toHaveProperty('resolvePresentation');
   });
 
+  it('keeps the Entity kind registry empty until an upper layer registers a definition', () => {
+    expect(Graph.resolveGraphDefinitionOptions().entityKinds).toEqual(new Map());
+
+    const kind = Graph.defineEntityKind({
+      kind: 'service.api',
+      role: 'participant',
+      description: 'An API service represented as a participant',
+    });
+
+    expect(Graph.resolveGraphDefinitionOptions({ entityKinds: [kind] }).entityKinds).toEqual(
+      new Map([['participant', new Map([['service.api', kind]])]]),
+    );
+  });
+
+  it('registers the same Entity kind independently for each declared role', () => {
+    const participantKind = Graph.defineEntityKind({
+      kind: 'docs.logic.important',
+      role: 'participant',
+      description: 'An important participant',
+    });
+    const activityKind = Graph.defineEntityKind({
+      kind: 'docs.logic.important',
+      role: 'activity',
+      description: 'An important activity',
+    });
+
+    const kinds = Graph.resolveGraphDefinitionOptions({ entityKinds: [participantKind, activityKind] }).entityKinds;
+
+    expect(kinds.get('participant')?.get('docs.logic.important')).toBe(participantKind);
+    expect(kinds.get('activity')?.get('docs.logic.important')).toBe(activityKind);
+  });
+
+  it('resolves the same Entity kind against the definition for its current role', () => {
+    const definitions = Graph.resolveGraphDefinitionOptions({
+      entityKinds: [
+        { kind: 'docs.logic.important', role: 'participant', description: 'An important participant' },
+        { kind: 'docs.logic.important', role: 'activity', description: 'An important activity' },
+        { kind: 'docs.logic.important', role: 'concept', description: 'An important concept' },
+      ],
+    });
+
+    for (const role of ['participant', 'activity', 'concept']) {
+      const canonical = Graph.resolveEntity(
+        Graph.EntitySchema.parse({
+          namespace: 'graph',
+          type: 'entity',
+          role,
+          kind: 'docs.logic.important',
+        }),
+        definitions,
+      );
+
+      expect(canonical.kindDefinition).toMatchObject({ role, kind: 'docs.logic.important' });
+    }
+  });
+
   it('validates parent-role constraints and duplicate custom keys through one option assembly', () => {
     const missingRoleKind = Graph.defineEntityKind({
       kind: 'unknown.kind',
@@ -104,7 +160,7 @@ describe('Entity definition registry', () => {
     expect(() => Graph.resolveGraphDefinitionOptions({ entityKinds: [kind, { ...kind }] })).toThrowError(
       expect.objectContaining({
         code: Graph.RetikzGraphErrorCode.DefinitionDuplicate,
-        details: { capability: 'entity-kind', key: 'workflow.start' },
+        details: { capability: 'entity-kind', key: 'workflow.start', reason: "role 'event'" },
       }),
     );
   });

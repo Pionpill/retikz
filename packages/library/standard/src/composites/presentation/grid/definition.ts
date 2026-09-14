@@ -9,9 +9,9 @@ import { lowerGrid } from './pipeline';
 import { GridSchema } from './schema';
 
 /** Standard Grid 的官方 Core composite definition */
-export const GridDefinition: ExpandCompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'> = defineComposite({
+export const GridDefinition = defineComposite({
   namespace: STANDARD_NAMESPACE,
   type: 'grid',
   schema: GridSchema,
   expand: grid => ({ children: [lowerGrid(grid)] }),
-});
+} satisfies ExpandCompositeDefinition<IRGrid, typeof STANDARD_NAMESPACE, 'grid'>);

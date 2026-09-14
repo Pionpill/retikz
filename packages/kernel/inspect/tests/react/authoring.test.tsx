@@ -8,14 +8,15 @@ import { act } from 'react-dom/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { null as zodNull, strictObject } from 'zod';
 
-import { BUILTIN_INSPECTORS, createInspectorRegistry, defineInspector, STROKE_PATH_INSPECTOR_KEY } from '../../src';
-import { InspectLayout, InspectPath, InspectScope } from '../../src/react';
+import { createInspectorRegistry, defineInspector, PATH_INSPECTOR_KEY } from '../../src';
+import { BUILTIN_INSPECTORS } from '../../src/providers';
+import { InspectCoordinate, InspectLayout, InspectNode, InspectPath, InspectScope } from '../../src/react';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../../src/vanilla';
 
 const registry = createInspectorRegistry(BUILTIN_INSPECTORS);
 
 const content = (
-  <InspectPath request={{ inspector: STROKE_PATH_INSPECTOR_KEY, options: { labels: true } }}>
+  <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: { labels: true } }}>
     <Step kind="move" to={[0, 0]} />
     <Step kind="cubic" control1={[10, 12]} control2={[20, 12]} to={[30, 0]} />
   </InspectPath>
@@ -29,6 +30,32 @@ beforeEach(() => {
 const normalizeEmptyElements = (value: string): string => value.replace(/><\/(ellipse|path|rect)>/g, ' />');
 
 describe('@retikz/inspect/react authoring and driver', () => {
+  it('Node/Coordinate wrappers 在 static 与 retained SSR 中输出相同只读图层', () => {
+    const children = (
+      <>
+        <InspectNode position={[0, 0]} request={{ inspector: { namespace: 'core', type: 'node' }, options: true }}>
+          A
+        </InspectNode>
+        <InspectCoordinate
+          id="point"
+          position={[30, 40]}
+          request={{ inspector: { namespace: 'core', type: 'coordinate' }, options: { labels: true } }}
+        />
+      </>
+    );
+    const retained = renderToString(
+      <InspectLayout registry={registry} idPrefix="inspect-node">
+        {children}
+      </InspectLayout>,
+    );
+    const staticHtml = renderToString(
+      <InspectLayout registry={registry} idPrefix="inspect-node" runtime={{ mode: 'static' }}>
+        {children}
+      </InspectLayout>,
+    );
+    expect(retained).toContain('data-retikz-readonly-layer');
+    expect(normalizeEmptyElements(staticHtml)).toBe(normalizeEmptyElements(retained));
+  });
   it('可选 Path wrapper 复用基础 Path 并保持 static/retained SSR plane 等价', () => {
     const retained = renderToString(
       <InspectLayout registry={registry} idPrefix="inspect-react">
@@ -100,7 +127,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
           sourcePath: 'children[0].path',
           owner: { kind: 'composite', namespace: 'fixture', type: 'box' },
           type: 'path',
-          authoring: createInspectionVanillaAuthoring({ inspector: STROKE_PATH_INSPECTOR_KEY, options: true }),
+          authoring: createInspectionVanillaAuthoring({ inspector: PATH_INSPECTOR_KEY, options: true }),
         },
       ],
       coreOptions: {},
@@ -119,8 +146,8 @@ describe('@retikz/inspect/react authoring and driver', () => {
         ...key,
         owner,
         subjectSchema: zodNull(),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => [],
       });
     const colonRegistry = createInspectorRegistry([
@@ -169,6 +196,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     observer.observe(
       {
         owner: firstOwner,
+        ancestors: [],
         occurrence,
         provenance: { origin: occurrence, final: occurrence },
         transform: [1, 0, 0, 1, 0, 0],
@@ -179,6 +207,7 @@ describe('@retikz/inspect/react authoring and driver', () => {
     observer.observe(
       {
         owner: secondOwner,
+        ancestors: [],
         occurrence,
         provenance: { origin: occurrence, final: occurrence },
         transform: [1, 0, 0, 1, 0, 0],

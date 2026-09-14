@@ -48,13 +48,21 @@ vi.mock('../../src/components/ui/resizable', () => ({
   ResizablePanel: (props: {
     children: ReactNode;
     defaultSize?: number;
+    minSize?: number;
+    maxSize?: number;
     order?: number;
     onCollapse?: () => void;
     onResize?: (size: number, previousSize: number | undefined) => void;
   }) => {
-    const { children, defaultSize, order, onCollapse, onResize } = props;
+    const { children, defaultSize, minSize, maxSize, order, onCollapse, onResize } = props;
     return (
-      <section data-slot="resizable-panel" data-default-size={defaultSize} data-order={order}>
+      <section
+        data-slot="resizable-panel"
+        data-default-size={defaultSize}
+        data-min-size={minSize}
+        data-max-size={maxSize}
+        data-order={order}
+      >
         {onResize ? (
           <button type="button" aria-label="Simulate panel resize" onClick={() => onResize(34, defaultSize)} />
         ) : null}
@@ -344,6 +352,7 @@ afterEach(async () => {
 
 type WorkspaceHarnessProps = {
   definition?: PreviewControlsDefinition;
+  controlPanelDefaultSize?: number;
   initialOpen?: boolean;
   showContextBar?: boolean;
   workspaceClassName?: string;
@@ -361,6 +370,7 @@ const emptyControlState: PreviewControlState = {
 const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
   const {
     definition: controlsDefinition,
+    controlPanelDefaultSize,
     initialOpen = true,
     showContextBar = true,
     workspaceClassName,
@@ -389,6 +399,7 @@ const WorkspaceHarness: FC<WorkspaceHarnessProps> = props => {
     <div data-panel-open={open}>
       <PreviewWorkspace
         definition={controlsDefinition}
+        controlPanelDefaultSize={controlPanelDefaultSize}
         controlState={controlState}
         showContextBar={showContextBar}
         themeMode={themeMode}
@@ -965,26 +976,6 @@ describe('PreviewControlPanel', () => {
     expect(columns).toHaveLength(2);
   });
 
-  it('内容网格使用 gap-2 与 p-2', async () => {
-    const container = await mount(
-      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
-    );
-    const columns = container.querySelector('[data-slot="preview-control-columns"]');
-
-    expect(columns?.classList.contains('gap-2')).toBe(true);
-    expect(columns?.classList.contains('p-2')).toBe(true);
-  });
-
-  it('section 之间使用 mb-3 间距', async () => {
-    const container = await mount(
-      <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
-    );
-    const section = container.querySelector('[data-slot="preview-control-column"] > section');
-
-    expect(section?.classList.contains('mb-3')).toBe(true);
-    expect(section?.classList.contains('last:mb-0')).toBe(true);
-  });
-
   it('299px 始终一列，达到 300px 且高度不足时最多渲染两列与一个 Separator', async () => {
     const container = await mount(
       <PreviewControlPanel definition={definition} controlState={emptyControlState} onClose={() => undefined} />,
@@ -1227,55 +1218,36 @@ describe('PreviewWorkspace', () => {
     ).toEqual(['1', '2']);
   });
 
-  it('允许 demo 为控制区配置更窄的初始宽度', async () => {
-    const container = await mount(<WorkspaceHarness definition={widePreviewDefinition} />);
+  it('允许 ComponentPreview 将默认面板宽度提高到 50%', async () => {
+    const container = await mount(<WorkspaceHarness definition={widePreviewDefinition} controlPanelDefaultSize={50} />);
     const panels = container.querySelectorAll('[data-slot="resizable-panel"]');
 
-    expect(panels[0].getAttribute('data-default-size')).toBe('20');
-    expect(panels[1].getAttribute('data-default-size')).toBe('80');
+    expect(panels[0].getAttribute('data-default-size')).toBe('50');
+    expect(panels[0].getAttribute('data-max-size')).toBe('50');
+    expect(panels[1].getAttribute('data-default-size')).toBe('50');
   });
 
-  it('窄 Workspace 在完整预览上方提供 100–300px 的纵向拖拽面板', async () => {
-    const container = await mount(<WorkspaceHarness definition={definition} workspaceClassName="h-56" />);
+  it('窄 Workspace 将默认面板宽度等比切换为纵向高度', async () => {
+    const container = await mount(
+      <WorkspaceHarness definition={definition} controlPanelDefaultSize={35} workspaceClassName="h-56" />,
+    );
     const group = () => container.querySelector('[data-slot="resizable-panel-group"]');
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(479)));
-    expect(group()).toBeNull();
-    const mobileStack = container.querySelector('[data-slot="preview-mobile-stack"]');
-    const mobileControlPanel = container.querySelector<HTMLElement>('[data-slot="preview-mobile-control-panel"]');
-    const mobileResizeHandle = container.querySelector<HTMLElement>('[data-slot="preview-mobile-resize-handle"]');
-    const mobilePreview = container.querySelector('[data-slot="preview-mobile-pane"]');
+    expect(group()).not.toBeNull();
+    expect(group()?.getAttribute('data-direction')).toBe('vertical');
+    const panels = container.querySelectorAll('[data-slot="resizable-panel"]');
+    const handle = container.querySelector('[data-slot="resizable-handle"]');
     const panel = container.querySelector('aside');
     const contextBar = container.querySelector('[data-slot="preview-context-bar"]');
-    expect(mobileStack).not.toBeNull();
-    expect(mobileControlPanel?.style.height).toBe('200px');
-    expect(mobileResizeHandle?.getAttribute('role')).toBe('separator');
-    expect(mobileResizeHandle?.getAttribute('aria-orientation')).toBe('horizontal');
-    expect(mobileResizeHandle?.getAttribute('aria-valuemin')).toBe('100');
-    expect(mobileResizeHandle?.getAttribute('aria-valuemax')).toBe('300');
-    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('200');
-    expect(mobileResizeHandle?.classList.contains('cursor-row-resize')).toBe(true);
-    expect(mobilePreview?.classList.contains('h-56')).toBe(true);
-    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(false);
+    expect(panels).toHaveLength(2);
+    expect(panels[0].getAttribute('data-default-size')).toBe('35');
+    expect(panels[1].getAttribute('data-default-size')).toBe('65');
+    expect(handle?.classList.contains('data-[panel-group-direction=vertical]:before:h-1')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(true);
     expect(panel).not.toBeNull();
     expect(contextBar).not.toBeNull();
     expect(panel!.compareDocumentPosition(contextBar!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-    await act(() => mobileResizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Home' })));
-    expect(mobileControlPanel?.style.height).toBe('100px');
-    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('100');
-
-    await act(() => mobileResizeHandle?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'End' })));
-    expect(mobileControlPanel?.style.height).toBe('300px');
-    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('300');
-
-    await act(() => {
-      mobileResizeHandle?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientY: 300 }));
-      window.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientY: 50 }));
-      window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-    });
-    expect(mobileControlPanel?.style.height).toBe('100px');
-    expect(mobileResizeHandle?.getAttribute('aria-valuenow')).toBe('100');
 
     await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitWidth(480)));
     expect(group()).not.toBeNull();

@@ -1,6 +1,6 @@
 import { ChildSchema, NodeLabelSchema, NodeSchema, ScopePropsSchema, Side } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
-import { SurfaceInputSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard';
 import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -53,10 +53,10 @@ export const GroupSchema = strictObject({
     .nonempty()
     .optional()
     .describe('Non-empty Core Node labels attached to the Group boundary.'),
-  padding: SurfaceInputSchema.shape.padding,
-  background: SurfaceInputSchema.shape.background,
-  border: SurfaceInputSchema.shape.border,
-  cornerRadius: SurfaceInputSchema.shape.cornerRadius,
-  overflow: SurfaceInputSchema.shape.overflow,
+  padding: SurfaceSchema.shape.padding.removeDefault().optional(),
+  background: SurfaceSchema.shape.background,
+  border: SurfaceSchema.shape.border,
+  cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
+  overflow: SurfaceSchema.shape.overflow.removeDefault().optional(),
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
 }).describe('JSON-safe Graph Group combining Scope, Surface, caption, boundary labels and arbitrary children.');

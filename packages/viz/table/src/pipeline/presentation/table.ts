@@ -1,6 +1,3 @@
-import { NonBlankStringSchema } from '@retikz/foundation';
-import { discriminatedUnion, literal, strictObject } from 'zod';
-
 import type {
   FormattedTableCell,
   FormattedTableModel,
@@ -13,28 +10,9 @@ import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './
 
 import { RetikzTableError } from '../../error';
 import { resolveCellPresentationRegistry } from '../../providers';
-import {
-  TableCellAppearanceSchema,
-  TableCellPayloadKind,
-  TableCellPresentation,
-  TablePresentationRefSchema,
-} from '../../schemas';
+import { TableCellPayloadKind, TableCellPresentation } from '../../schemas';
 import { deepFreeze } from '../../shared';
-import { applyTableCellContentStyle, parsePresentedChild, presentCellValue } from './present';
-
-const ResolvedTableCellPresentationInputSchema = discriminatedUnion('kind', [
-  strictObject({
-    kind: literal(TableCellPayloadKind.Value),
-    cellId: NonBlankStringSchema.optional(),
-    presentation: TablePresentationRefSchema,
-    appearance: TableCellAppearanceSchema,
-  }),
-  strictObject({
-    kind: literal(TableCellPayloadKind.Content),
-    cellId: NonBlankStringSchema.optional(),
-    appearance: TableCellAppearanceSchema,
-  }),
-]);
+import { applyTableCellContentStyle, presentCellValue } from './present';
 
 /** 从 canonical Cell 构造 detached、递归冻结的 presentation context */
 const presentationContextOf = (cell: SemanticTableCell): TableCellContext =>
@@ -54,7 +32,7 @@ const defaultCarrierOf = (
   formatted: FormattedTableCell,
   semantic: SemanticTableCell,
 ): ResolvedTableCellPresentationInput => {
-  const appearance = TableCellAppearanceSchema.parse({
+  const appearance = structuredClone({
     ...(semantic.layout.borders === undefined ? {} : { borders: semantic.layout.borders }),
   });
   if (formatted.kind === TableCellPayloadKind.Content) {
@@ -71,9 +49,7 @@ const defaultCarrierOf = (
   return deepFreeze({
     kind: TableCellPayloadKind.Value,
     ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),
-    presentation: TablePresentationRefSchema.parse(
-      semantic.payload.presentation ?? { name: TableCellPresentation.Text },
-    ),
+    presentation: structuredClone(semantic.payload.presentation ?? { name: TableCellPresentation.Text }),
     appearance,
   });
 };
@@ -95,10 +71,7 @@ const resolvePresentationCarriers = (
       if (semantic.id !== formatted.cellId || semantic.payload.kind !== formatted.kind) {
         throw new RetikzTableError(`table: presentation Cell ${index} identity differs from formatted model`);
       }
-      const carrier =
-        cells === undefined
-          ? defaultCarrierOf(formatted, semantic)
-          : ResolvedTableCellPresentationInputSchema.parse(cells[index]);
+      const carrier = cells === undefined ? defaultCarrierOf(formatted, semantic) : structuredClone(cells[index]);
       if (carrier.cellId !== formatted.cellId) {
         throw new RetikzTableError(`table: presentation carrier Cell ${index} identity differs from formatted model`);
       }
@@ -118,7 +91,8 @@ export const presentTable = (model: FormattedTableModel, options: PresentTableOp
     const semantic = model.semantic.cells[index];
     const carrier = carriers[index];
     if (formatted.kind === TableCellPayloadKind.Content && carrier.kind === TableCellPayloadKind.Content) {
-      const content = applyTableCellContentStyle(parsePresentedChild(formatted.content), carrier.appearance.content);
+      // 已校验的 content 仅复制解除只读投影，插件输出另在 presentCellValue 中准入
+      const content = applyTableCellContentStyle(structuredClone(formatted.content), carrier.appearance.content);
       return {
         kind: TableCellPayloadKind.Content,
         ...(formatted.cellId === undefined ? {} : { cellId: formatted.cellId }),

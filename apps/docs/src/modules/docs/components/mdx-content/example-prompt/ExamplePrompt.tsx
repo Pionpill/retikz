@@ -17,6 +17,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
+import { useRightPanelStore } from '@/modules/docs/store';
 
 import { InlineMarkdown } from '../../inline-markdown';
 
@@ -58,7 +59,7 @@ const MenuItemBody: FC<{ icon: ReactNode; title: string; desc: string }> = ({ ic
 
 const PromptActions: FC<{ content: string }> = ({ content }) => {
   const { t } = useTranslation();
-  const setOpen = useAiChatStore(s => s.setOpen);
+  const openAi = useRightPanelStore(s => s.openAi);
   const fillDraftAndFocus = useAiChatStore(s => s.fillDraftAndFocus);
 
   const writeClipboard = async (text: string) => {
@@ -82,7 +83,7 @@ const PromptActions: FC<{ content: string }> = ({ content }) => {
     );
 
   const handleSend = () => {
-    setOpen(true);
+    openAi();
     fillDraftAndFocus(content);
   };
 
@@ -143,11 +144,11 @@ const PromptActions: FC<{ content: string }> = ({ content }) => {
 
 const ExtensionRow: FC<{ content: string }> = ({ content }) => {
   const { t } = useTranslation();
-  const setOpen = useAiChatStore(s => s.setOpen);
+  const openAi = useRightPanelStore(s => s.openAi);
   const fillDraftAndFocus = useAiChatStore(s => s.fillDraftAndFocus);
 
   const handleSend = () => {
-    setOpen(true);
+    openAi();
     fillDraftAndFocus(content);
   };
 

@@ -172,6 +172,13 @@ export const polygon = defineShape<PolygonParams>({
   connectionEnvelope: (bounds, kind, params) => {
     return pointsConnectionEnvelope(polygonLocalVerticesForBounds(bounds, params), kind);
   },
+  outline: (bounds, params) => {
+    const vertices = polygonVertices(bounds, params);
+    const segments: Array<ContourSegment> = verticesToSegments(vertices);
+    return contourToPathCommands(contourCommands(segments, params.cornerRadius), value => value);
+  },
+  keyPoints: (bounds, params) =>
+    polygonVertices(bounds, params).map((position, index) => ({ name: `vertex-${index}`, position })),
   *emit(bounds: Rect, style, round, params): Iterable<ScenePrimitive> {
     // emit 收轴对齐 rect（rotate=0）；顶点世界坐标 → 折线段 → rounded-contour 命令 → path
     const verts = polygonVertices(bounds, params);

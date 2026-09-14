@@ -186,7 +186,8 @@ Control: <human-directed|llm-autonomous>
 ## IR / Schema / 分层
 
 - IR 必须 100% JSON 可序列化，禁止函数、ReactNode、class 实例。
-- 只有可持久化 IR 使用 Zod schema：`XxxSchema` 是运行时真源，`IRXxx` 用 `z.infer` 派生；Input、Canonical、compile 消费态只写 TypeScript 类型，schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
+- 只有可持久化 IR 使用 Zod schema：`XxxSchema` 是运行时真源，允许省略默认字段的 Source 用 `z.input` 派生，解析结果用 `z.output` / `z.infer`；Input、Canonical、compile 消费态不设平行 schema。schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
+- 静态默认值保留真实 `.default()`，resolve 复用同一 schema 的默认，不另写一份常量。继承先合并原始配置，再应用默认与变换；直接 parse 的结果是已物化快照，其默认字段再次参与合并时视为显式值。上下文继承字段可用 `.removeDefault().optional()` 精确复用权威字段，不复制约束或 describe；细则见 `standard-schema` / `standard-resolve`。
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - `IRXxx`、`InputXxx`、`CanonicalXxx`、`XxxResolveContext`、`XxxResolution`、Definition、enum 和阶段函数的命名及目录归属遵循 `standard-name`；纵向领域的 `CanonicalXxx` 由 `resolve/<domain>/resolve.ts` 产出并定义在同 domain `types.ts`。分层意义的 `normalize/` 与阶段级 `normalizeXxx` 只属于 Vanilla API 包。
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`。

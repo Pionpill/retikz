@@ -1,0 +1,114 @@
+---
+title: 迭代设计
+description: 了解 retikz 如何用 ADR、两类 Gate 与跨包设计原则，把长期决策和一次性实施细节分开。
+---
+
+迭代设计解决的不是“如何多走几个流程”，而是让长期架构决策与一次任务的施工细节各归其位。先确定能力的归属和边界，再确认实施能否落地，避免局部修补逐渐变成新的平行路径。
+
+## 长期决策与一次性计划
+
+ADR 是一次能力或架构迭代的长期真源。它只留下未来仍需要理解和遵守的结论：要解决的问题、核心决策、必要公开契约、可观察行为、失败语义与兼容性。
+
+镜像计划是任务的执行真源，保存在被忽略的 plan 目录中。它承载调研、设计检查、文件范围、测试与风险等施工细节；任务结束后可以丢弃，不应把它当作长期档案。
+
+| 产物     | 保留内容                   | 不承担的内容                         |
+| -------- | -------------------------- | ------------------------------------ |
+| ADR      | 长期决策、契约、行为与边界 | 文件清单、命令、测试 case 等施工细节 |
+| 镜像计划 | 设计检查与可执行的实施安排 | 反向改写 ADR 的公开契约或 owner      |
+
+这一区分让 ADR 保持短而稳定，也让计划可以随任务推进而更新。计划中发现需要改变公开契约、默认或失败语义时，应回到 ADR 重新决策，而不是在实施中悄悄扩大范围。
+
+## 两个 Gate
+
+两个 Gate 分别检查“方向是否正确”和“施工是否可执行”。它们提供审查证据，但都不会自动授权实现、提交或其它对外写入。
+
+| Gate              | 核心问题                                                       | 通过后允许什么                     |
+| ----------------- | -------------------------------------------------------------- | ---------------------------------- |
+| Architecture Gate | 能力是否归属正确，包边界、复用、扩展路径与端到端闭环是否成立   | ADR 可交由人确认，进入实施计划准备 |
+| Plan Gate         | 计划能否完整追溯 ADR，文件、依赖、测试、文档与风险是否足以实施 | 在获得实现授权后开始修改产品代码   |
+
+Architecture Gate 审查 ADR 和简略计划。它检查同类能力是否已有可组合基础、内置和自定义是否走同一条扩展链路，以及从输入到下游产物的闭环是否完整。
+
+Plan Gate 审查已细化的计划与测试契约。它不重新定义能力归属或公开面，而是确保实施不会遗漏必要的代码、测试、文档与验证。
+
+下图中的两个 Gate 分别停在不同的决策点：Architecture Gate 之后先由人确认 ADR；Plan Gate 通过后，仍要有当前任务的实现授权才能开始修改产品代码。
+
+<ComponentPreview files="iteration-gates" hideCode size="sm" />
+
+## 跨包设计理念
+
+这些原则来自全仓架构设计，适用于能力归属和依赖协作；具体领域包的细节由各自的 ADR、包级规则和源码指南说明。
+
+下图从左到右收束一次跨包设计：问题先归属到 owner，再由 owner 定义原子契约；内置与自定义沿同一条扩展路径进入下游，并以端到端闭环验证结果。
+
+<ComponentPreview files="cross-package-design" hideCode size="xs" />
+
+### 原子契约与组合
+
+<strong className="font-semibold">解决问题：</strong>上层能力为了满足一处需求，常会复制一份更大的
+schema、几何模型或处理链。相同的基础语义由多个包各自维护后，修改、诊断和扩展都会分叉。
+
+<strong className="font-semibold">实施方案：</strong>
+先识别长期稳定的语义、不变量和扩展边界，再将它们收束为足够小的公开契约。上层能力只组合这些原子契约，不重建同一份底层表达。
+
+原子化不等于把所有代码切碎。只有被多个能力域复用、并且移除领域词汇后仍成立的语义，才适合下沉为通用能力；只服务单一场景的细节应留在其领域 owner 中。判断的重点不是“能否抽出来”，而是抽出后是否仍有稳定、独立的职责。
+
+### 单一真源与 owner
+
+<strong className="font-semibold">解决问题：</strong>
+同一语义若由多个包分别保存、补默认或作判断，就会出现看似相同却逐渐漂移的 schema、registry、resolve
+与运行时。出现问题时也无法判断谁应修复。
+
+<strong className="font-semibold">实施方案：</strong>为每项长期语义确定一个
+owner：它定义事实源、负责确定化与诊断，并通过公开契约供其它包消费。下游只按需生成面向渲染、作者写法或宿主环境的投影，不重复保存或裁决同一份事实。
+
+因此，同一领域不应出现平行 schema、registry、resolve 或运行时。若多个消费者需要相同的派生结果，应先判断它是否为稳定共享语义；只有答案明确时才抽取纯 helper，而不是把缓存或适配字段写回公共模型。
+
+### 有界完备性
+
+<strong className="font-semibold">解决问题：</strong>
+“内置功能能运行”不等于能力已经可演进。若自定义能力必须绕过内置路径，或只能由某个 adapter
+展示，下一种同类需求就会新增白名单、特判或第二条处理链。
+
+<strong className="font-semibold">实施方案：</strong>
+新增能力时，同时检查内部表达、外部扩展与端到端闭环：主责包能否表达，内置与自定义能否共用 contract、registry
+和消费路径，以及输入、产物、测试和文档能否对齐。
+
+这是一种有边界的完备性，而非无限预留。不能由现有统一机制承载的需求，应明确选择下沉、上移、延期或不支持；不要用内置白名单、adapter 特判或第二条编译路径掩盖缺口。
+
+### 最小闭环后扩展
+
+<strong className="font-semibold">解决问题：</strong>
+在输入、处理和下游接入尚未连通前预先增加变体、配置或间接层，往往是在为并不存在的消费者设计。真正的缺口也会被大量尚未验证的抽象掩盖。
+
+<strong className="font-semibold">实施方案：</strong>
+跨包能力先完成一条最小端到端路径：作者或上游输入进入主责包，经过必要处理后得到下游可消费的产物，并由测试和文档确认其可观察行为。闭环成立后，再依据真实需求增加变体、配置或优化。
+
+这能及早发现缺口究竟属于 owner、依赖能力、adapter 还是 renderer。局部能展示但无法从主责包表达的能力，仍只是局部实现；只有闭环被验证后，扩展才有可靠的落点。
+
+### 包职责与依赖方向
+
+<strong className="font-semibold">解决问题：</strong>按当前文件位置或单个调用方的便利放置能力，会让包变成收纳桶。跨
+owner 的 deep import、反向依赖和临时平行路径虽然能很快接通，却会让职责、输入输出和后续修改范围失去边界。
+
+<strong className="font-semibold">实施方案：</strong>
+包按解决的问题和输入输出边界划分，不按当前实现文件或单个调用方的便利划分。跨包协作只经过对方公开入口，依赖方向保持单向：上层消费底层已公开的能力，底层不读取或复制上层的领域语义。
+
+当一个改动需要跨越 owner 时，先判断它究竟属于现有领域、应下沉到依赖域，还是仅属于宿主或 adapter。这个判断决定长期所有权，也让后续的 API、测试、文档与诊断有唯一的归属。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/about/developer/source-code-guide">
+    <span className="font-semibold">源码指南</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解包边界、扩展方式与 API 适配层</span>
+  </LinkedCard>
+  <LinkedCard href="/about/developer/ai-assisted-development">
+    <span className="font-semibold">AI 辅助开发</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解人机协作、授权边界与 skill 分类</span>
+  </LinkedCard>
+  <LinkedCard href="/about/releases/roadmap">
+    <span className="font-semibold">路线图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查看发布阶段与分组的当前方向</span>
+  </LinkedCard>
+</div>

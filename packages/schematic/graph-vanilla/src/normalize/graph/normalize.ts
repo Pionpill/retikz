@@ -10,7 +10,7 @@ import {
   createGroup,
   createRelation,
 } from '@retikz/graph';
-import { normalizePath } from '@retikz/vanilla';
+import { normalizePath, normalizeScene } from '@retikz/vanilla';
 
 import type {
   InputBlock,
@@ -23,6 +23,8 @@ import type {
   InputGroup,
   InputRelation,
 } from './types';
+
+import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from '../../errors';
 
 /** 将 Entity authoring 输入组装为单个 Source record */
 export const normalizeEntity = (input: InputEntity) => {
@@ -62,8 +64,18 @@ export const normalizeGraphChild = (child: InputGraphChild) => {
       return normalizeEntity(child);
     case 'relation':
       return normalizeRelation(child);
-    default:
-      return child;
+    default: {
+      // 独立 normalizer 复用 Kernel 的 child sugar；带运行时来源的输入必须由外层 Scene 消费
+      const normalized = normalizeScene({ children: [child] });
+      if (normalized.authoringSites.some(site => site.authoring !== undefined) || normalized.contributions.length > 0) {
+        throw new RetikzGraphVanillaError({
+          code: RetikzGraphVanillaErrorCode.NormalizeSceneRequired,
+          message: 'Graph child authoring requires an outer normalizeScene embed context.',
+          details: { label: 'Graph child' },
+        });
+      }
+      return normalized.ir.children[0];
+    }
   }
 };
 

@@ -2,12 +2,15 @@ import type { EntityProps } from '@retikz/graph-react';
 
 import { GraphStatus } from '@retikz/graph';
 
+import type { LogicFigureEntityKindValue } from '@/modules/docs/components/logic-figure';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { LogicFigureEntityKind } from '@/modules/docs/components/logic-figure';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Entity role demo 共用的稳定字段 id */
 export const EntityRoleControlId = {
+  Kind: 'kind',
   Status: 'status',
   Color: 'color',
   Content: 'content',
@@ -25,7 +28,34 @@ type EntityRoleControlCopy = Readonly<{
   contentLabel: string;
   contentPlaceholder: string;
   content: string;
+  kinds: ReadonlyArray<LogicFigureEntityKindValue>;
 }>;
+
+const entityKindLabels = {
+  zh: {
+    [LogicFigureEntityKind.Important]: '重要逻辑内容 - docs.logic.important',
+    [LogicFigureEntityKind.ImportantData]: '重要的数据、数据结构、类型或 schema - docs.logic.importantData',
+    [LogicFigureEntityKind.Secondary]: '次要或背景内容 - docs.logic.secondary',
+    [LogicFigureEntityKind.Algorithm]: '算法、高复杂度或性能逻辑 - docs.logic.algorithm',
+  },
+  en: {
+    [LogicFigureEntityKind.Important]: 'Important logic - docs.logic.important',
+    [LogicFigureEntityKind.ImportantData]: 'Important data, data structure, type, or schema - docs.logic.importantData',
+    [LogicFigureEntityKind.Secondary]: 'Secondary or background content - docs.logic.secondary',
+    [LogicFigureEntityKind.Algorithm]: 'Algorithm, high-complexity, or performance logic - docs.logic.algorithm',
+  },
+} satisfies Record<'zh' | 'en', Record<LogicFigureEntityKindValue, string>>;
+
+/** 返回 role 当前站点 kind 的本地化选项，不提供跨 role 候选项 */
+const entityKindOptionOf = (kind: LogicFigureEntityKindValue, locale: 'zh' | 'en') => ({
+  value: kind,
+  label: entityKindLabels[locale][kind],
+});
+
+const noKindOption = (locale: 'zh' | 'en') => ({
+  value: '',
+  label: locale === 'zh' ? '无 kind' : 'No kind',
+});
 
 const entityStatusOptions = {
   zh: [
@@ -54,6 +84,16 @@ export const defineEntityRoleControlContract = <const TCopy extends EntityRoleCo
         label: copy.sectionLabel,
         controls: [
           {
+            kind: 'select' as const,
+            id: EntityRoleControlId.Kind,
+            label: copy.statusLocale === 'zh' ? '类型' : 'Kind',
+            defaultValue: '',
+            options: [
+              noKindOption(copy.statusLocale),
+              ...copy.kinds.map(kind => entityKindOptionOf(kind, copy.statusLocale)),
+            ],
+          },
+          {
             kind: 'select',
             id: EntityRoleControlId.Status,
             label: copy.statusLocale === 'zh' ? '状态' : 'Status',
@@ -81,10 +121,11 @@ export const defineEntityRoleControlContract = <const TCopy extends EntityRoleCo
   return {
     controls,
     canonicalValues: {
+      kind: '',
       status: '',
       color: 'currentColor',
       content: copy.content,
     },
-    relatedApis: ['Entity.status', 'Entity.color', 'Entity.children'],
+    relatedApis: ['Entity.kind', 'Entity.status', 'Entity.color', 'Entity.children'],
   } satisfies PreviewControlContract;
 };

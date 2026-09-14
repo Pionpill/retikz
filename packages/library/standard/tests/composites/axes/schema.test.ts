@@ -1,9 +1,33 @@
 import { describe, expect, it } from 'vitest';
 
-import { AxesSchema } from '../../../src';
+import { AxesSchema, createAxes } from '../../../src';
+import { resolveAxes } from '../../../src/resolve/axes';
 import { fullScopeProps } from '../presentation/scope-props';
 
 describe('AxesSchema', () => {
+  it('resolves default-dependent label and lattice checks without modifying typed factory source', () => {
+    const source = createAxes({ x: { extent: 20, label: false }, y: { extent: 20 } });
+    expect(source.x).toEqual({ extent: 20, label: false });
+    expect(resolveAxes(AxesSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual(resolveAxes(source));
+    expect(resolveAxes(source).x.label).toBe(false);
+    const excessive = createAxes({
+      ...source,
+      x: { extent: 1, ticks: { source: { kind: 'spacing', spacing: 0.000001 } } },
+    });
+    expect(() => resolveAxes(excessive)).toThrow(/exceeds/);
+    const invalidLabel = createAxes({
+      ...source,
+      x: {
+        extent: 20,
+        ticks: {
+          source: { kind: 'values', values: [15] },
+          labels: { entries: [{ value: 15, text: 'filtered' }] },
+        },
+      },
+    });
+    expect(() => resolveAxes(invalidLabel)).toThrow(/emitted tick/);
+  });
+
   it('reuses the complete Core Scope authored surface', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
@@ -17,7 +41,7 @@ describe('AxesSchema', () => {
     expect(AxesSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('fills origin and per-axis defaults and remains JSON round-trippable', () => {
+  it('keeps source sparse and resolves origin and per-axis defaults', () => {
     const parsed = AxesSchema.parse({
       namespace: 'standard',
       type: 'axes',
@@ -25,10 +49,16 @@ describe('AxesSchema', () => {
       y: { extent: { negative: 20, positive: 40 } },
     });
 
-    expect(parsed).toMatchObject({
+    expect(parsed.origin).toEqual({ position: [0, 0], label: false });
+    expect(parsed.x).toEqual({ extent: 60 });
+    expect(resolveAxes(parsed)).toMatchObject({
       origin: { position: [0, 0], label: false },
-      x: { extent: 60, line: { arrows: 'positive' }, label: 'x' },
-      y: { extent: { negative: 20, positive: 40 }, line: { arrows: 'positive' }, label: 'y' },
+      x: {
+        extent: { negative: 60, positive: 60 },
+        line: { arrows: 'positive' },
+        label: { text: 'x', end: 'positive', offset: 8 },
+      },
+      y: { extent: { negative: 20, positive: 40 }, line: { arrows: 'positive' }, label: { text: 'y' } },
     });
     expect(AxesSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
@@ -72,7 +102,7 @@ describe('AxesSchema', () => {
       extent: { negative: 40, positive: 60 },
       line: { arrows: 'negative' },
       grid: { spacing: 20, offset: 5 },
-      ticks: { source: { kind: 'spacing', extent: 'positive' }, side: 'positive', length: 6 },
+      ticks: { source: { kind: 'spacing', extent: 'positive' }, side: 'positive' },
       label: { end: 'negative', offset: 10 },
     });
     expect(parsed.y).toMatchObject({ extent: { negative: 20, positive: 40 }, line: false, grid: false, label: false });
@@ -87,7 +117,13 @@ describe('AxesSchema', () => {
       y: { extent: 20 },
     });
 
-    expect(parsed.x).toMatchObject({ ticks: { side: 'both', endpointGap: 6, length: 6 } });
+    expect(parsed.x.ticks).toEqual({
+      source: { kind: 'values', values: [-10, 10] },
+      side: 'both',
+      length: 6,
+      endpointGap: 6,
+    });
+    expect(resolveAxes(parsed).x).toMatchObject({ ticks: { side: 'both', endpointGap: 6, length: 6 } });
   });
 
   it('accepts a zero endpoint gap and rejects negative gaps', () => {
@@ -159,7 +195,8 @@ describe('AxesSchema', () => {
       y: { extent: 20 },
     });
 
-    expect(parsed.x.grid).toMatchObject({ spacing: 10, offset: 0 });
+    expect(parsed.x.grid).toEqual({ spacing: 10, offset: 0 });
+    expect(resolveAxes(parsed).x.grid).toMatchObject({ spacing: 10, offset: 0 });
     expect(invalidArrow.success).toBe(false);
     if (!invalidArrow.success)
       expect(invalidArrow.error.issues[0]?.path).toEqual(['x', 'line', 'arrowDetail', 'scale']);
@@ -210,6 +247,7 @@ describe('AxesSchema', () => {
         extent: 50,
         ticks: {
           source: { kind: 'spacing', spacing: 20, extent: 'positive' },
+          endpointGap: 0,
           labels: { entries: [{ value: -20, text: 'hidden side' }] },
         },
       },
@@ -222,6 +260,7 @@ describe('AxesSchema', () => {
         extent: 50,
         ticks: {
           source: { kind: 'values', values: [-20, 20] },
+          endpointGap: 0,
           labels: { entries: [{ value: 40, text: 'missing' }] },
         },
       },
@@ -259,7 +298,7 @@ describe('AxesSchema', () => {
     const excessiveTicks = AxesSchema.safeParse({
       namespace: 'standard',
       type: 'axes',
-      x: { extent: 1, ticks: { source: { kind: 'spacing', spacing: 0.000001 } } },
+      x: { extent: 1, ticks: { source: { kind: 'spacing', spacing: 0.000001, extent: 'both' } } },
       y: { extent: 1 },
     });
     const unknownField = AxesSchema.safeParse({

@@ -1,7 +1,6 @@
 import type { ComponentRenderSource, DiffLineKind, DiffMode, SourceView, UnifiedDiff } from '../types';
 
-/** 源码视图的固定展示顺序。 */
-const SOURCE_VIEW_ORDER: ReadonlyArray<SourceView> = ['react', 'vanilla', 'ir'];
+import { SOURCE_VIEW_ORDER } from '../constants';
 
 /** 从源码集合中筛出有文件的可用视图。 */
 export const availableSourceViews = (source: ComponentRenderSource): Array<SourceView> =>

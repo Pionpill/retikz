@@ -1,7 +1,6 @@
-import { EntityRole, GraphStatus } from '@retikz/graph';
-
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { LogicFigureEntityKind } from '@/modules/docs/components/logic-figure';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { EntityStyleControlId } from './entity-style.controls';
@@ -16,17 +15,16 @@ export const entityStyleControls = definePreviewControls({
       controls: [
         {
           kind: 'select',
-          id: EntityStyleControlId.Role,
-          label: 'Role',
-          defaultValue: EntityRole.Activity,
+          id: EntityStyleControlId.Kind,
+          label: 'Kind',
+          defaultValue: LogicFigureEntityKind.Algorithm,
           options: [
-            { value: EntityRole.Participant, label: 'Participant' },
-            { value: EntityRole.Activity, label: 'Activity' },
-            { value: EntityRole.Event, label: 'Event' },
-            { value: EntityRole.State, label: 'State' },
-            { value: EntityRole.Gateway, label: 'Gateway' },
-            { value: EntityRole.Resource, label: 'Resource' },
-            { value: EntityRole.Concept, label: 'Concept' },
+            { value: LogicFigureEntityKind.Important, label: 'Important logic - docs.logic.important' },
+            { value: LogicFigureEntityKind.Secondary, label: 'Secondary or background content - docs.logic.secondary' },
+            {
+              value: LogicFigureEntityKind.Algorithm,
+              label: 'Algorithm, high-complexity, or performance logic - docs.logic.algorithm',
+            },
           ],
         },
         {
@@ -60,8 +58,8 @@ export const entityStyleControls = definePreviewControls({
     {
       label: 'Node style',
       controls: [
-        { kind: 'color', id: EntityStyleControlId.Fill, label: 'Fill', defaultValue: '#e2e8f0' },
-        { kind: 'color', id: EntityStyleControlId.Stroke, label: 'Stroke', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityStyleControlId.Fill, label: 'Fill', defaultValue: 'currentColor' },
+        { kind: 'color', id: EntityStyleControlId.Stroke, label: 'Stroke', defaultValue: 'currentColor' },
         {
           kind: 'range',
           id: EntityStyleControlId.StrokeWidth,
@@ -91,18 +89,18 @@ export const entityStyleControls = definePreviewControls({
 export const previewControlContract = {
   controls: entityStyleControls,
   canonicalValues: {
-    role: EntityRole.Activity,
+    kind: LogicFigureEntityKind.Algorithm,
     status: '',
     content: 'Process Order',
-    fill: '#e2e8f0',
-    stroke: '#2563eb',
+    fill: 'currentColor',
+    stroke: 'currentColor',
     strokeWidth: 2,
     dashed: false,
     opacity: 1,
     textColor: '#0f172a',
   },
   relatedApis: [
-    'Entity.role',
+    'Entity.kind',
     'Entity.status',
     'Entity.children',
     'Node.style.fill',
@@ -113,3 +111,4 @@ export const previewControlContract = {
     'Node.style.textColor',
   ],
 } satisfies PreviewControlContract;
+import { GraphStatus } from '@retikz/graph';

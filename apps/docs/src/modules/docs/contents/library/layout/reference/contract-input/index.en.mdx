@@ -7,6 +7,8 @@ This page is the authoritative contract for persisted Layout input. React props 
 
 > This page covers persisted and validated input. See [Runtime](/library/layout/reference/runtime) for Definitions, compilation, and host wiring, or [Contract - Artifact](/library/layout/reference/contract-artifact) for observable solved results.
 
+`createFlexLayout` / `createGridLayout` / `createOverlayLayout` only assemble typed Source, preserving omissions and shorthand. The single Layout schema declares static defaults; calling `parse()` validates and materializes them into a persistable snapshot. Compilation resolvers obtain missing defaults from that same schema and expand spacing and contextual semantics without rewriting authored configuration.
+
 ## Container inputs
 
 ### FlexLayoutSchema

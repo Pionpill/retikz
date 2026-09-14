@@ -612,9 +612,12 @@ const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string =>
   const encoded: Record<string, unknown> = {
     ...input,
     ...(children === undefined ? {} : { children }),
+    entityKinds: '__GRAPH_ENTITY_KINDS__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  let code = formatObject(encoded, indent)
+    .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
+    .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
   return code;
 };
@@ -782,10 +785,12 @@ const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => 
   const encoded = {
     ...input,
     diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
+    entityKinds: '__GRAPH_ENTITY_KINDS__',
     flowThemeStyles: '__FLOW_THEME_STYLES__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   return `flowDiagram(${formatString(`preview-flow-${ctx.flowCount}`)}, ${formatObject(encoded, indent)
+    .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
     .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
     .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
     .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;

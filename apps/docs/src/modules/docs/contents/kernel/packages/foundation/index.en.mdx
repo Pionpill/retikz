@@ -33,8 +33,8 @@ The example above illustrates one utility. Foundation provides reusable, busines
     {
       label: 'Root-only and subpath contract tests',
       path: 'packages/kernel/foundation/tests/public-surface.test.ts',
-      startLine: 1,
-      endLine: 66,
+      startLine: 4,
+      endLine: 38,
     },
   ]}
 />
@@ -53,19 +53,24 @@ The example above illustrates one utility. Foundation provides reusable, busines
 | Types & Schemas     | Compile-time types and runtime schemas                  | Reusing foundational data contracts |
 | Validation & Errors | Structured errors and scalar assertions                 | Defining a failure boundary         |
 
-## Documentation
+## Contents
 
-<LinkedCard href="/kernel/packages/foundation/utilities">
-  <span className="font-semibold">Utilities</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">Collection, JSON, and static-color utilities</span>
-</LinkedCard>
-
-<LinkedCard href="/kernel/packages/foundation/types-schemas">
-  <span className="font-semibold">Types & Schemas</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">Type utilities and runtime schemas</span>
-</LinkedCard>
-
-<LinkedCard href="/kernel/packages/foundation/validation-errors">
-  <span className="font-semibold">Validation & Errors</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">Structured errors and scalar assertions</span>
-</LinkedCard>
+<LinkedSections
+  items={[
+    {
+      title: 'Utilities',
+      description: 'Collection, JSON, and static-color utilities',
+      url: '/kernel/packages/foundation/utilities',
+    },
+    {
+      title: 'Types & Schemas',
+      description: 'Type utilities and runtime schemas',
+      url: '/kernel/packages/foundation/types-schemas',
+    },
+    {
+      title: 'Validation & Errors',
+      description: 'Structured errors and scalar assertions',
+      url: '/kernel/packages/foundation/validation-errors',
+    },
+  ]}
+/>

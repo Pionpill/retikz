@@ -19,16 +19,17 @@ export type FlexLayoutWrapValue = ValueOf<typeof FlexLayoutWrap>;
 export type FlexMainDistributionValue = ZodInfer<typeof FlexMainDistributionSchema>;
 
 /** 持久化的 FlexLayout item */
-export type IRFlexLayoutItem = ZodInfer<typeof FlexLayoutItemSchema>;
+export type IRFlexLayoutItem = Omit<ZodInput<typeof FlexLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof FlexLayoutItemSchema>, 'child'>;
 
 /** 创建 FlexLayout item 时允许省略默认字段的输入 */
-export type FlexLayoutItemInput = ZodInput<typeof FlexLayoutItemSchema>;
+export type FlexLayoutItemInput = IRFlexLayoutItem;
 
 /** 持久化的 Layout FlexLayout composite */
-export type IRFlexLayout = ZodInfer<typeof FlexLayoutSchema>;
+export type IRFlexLayout = Omit<ZodInput<typeof FlexLayoutSchema>, 'children'> & { children?: Array<IRFlexLayoutItem> };
 
-/** 创建 FlexLayout 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type FlexLayoutInput = Omit<ZodInput<typeof FlexLayoutSchema>, 'namespace' | 'type'>;
+/** 创建 FlexLayout 时允许省略固定 discriminator 与 可选字段的输入 */
+export type FlexLayoutInput = Omit<IRFlexLayout, 'namespace' | 'type'>;
 
 /** FlexLayout 的 JSON-safe compile artifact payload */
 export type FlexLayoutArtifact = ZodInfer<typeof FlexLayoutArtifactSchema>;

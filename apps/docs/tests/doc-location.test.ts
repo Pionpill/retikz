@@ -64,12 +64,12 @@ describe('resolveDocLocation', () => {
     expect(
       resolveDocLocation({
         moduleId: 'about',
-        firstSeg: 'overview',
+        firstSeg: 'introduction',
       }),
     ).toEqual({
       moduleId: 'about',
       sectionId: null,
-      pageId: 'overview',
+      pageId: 'introduction',
     });
   });
 });
@@ -98,14 +98,14 @@ describe('resolveDocNavigationContext', () => {
         pageId: null,
       },
     });
-    expect(resolveDocNavigationContext('/about/overview')).toEqual({
+    expect(resolveDocNavigationContext('/about/introduction')).toEqual({
       areaId: 'about',
       moduleId: null,
       sectionId: null,
       location: {
         moduleId: 'about',
         sectionId: null,
-        pageId: 'overview',
+        pageId: 'introduction',
       },
     });
     expect(resolveDocNavigationContext('/viz/chart/points/scatter')).toEqual({

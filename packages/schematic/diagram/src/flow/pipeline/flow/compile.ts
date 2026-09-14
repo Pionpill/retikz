@@ -24,6 +24,7 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
     frame: _frame,
     diagramDefaults: _diagramDefaults,
     flowDefaults: _flowDefaults,
+    graphRules: _graphRules,
     layout: _layout,
     routing: _routing,
     entities: _entities,
@@ -39,6 +40,7 @@ const flowScopeProps = (source: IRFlowDiagram): Omit<IRScope, 'type' | 'children
   void _frame;
   void _diagramDefaults;
   void _flowDefaults;
+  void _graphRules;
   void _layout;
   void _routing;
   void _entities;
@@ -106,7 +108,11 @@ export const createCompileFlowDiagram =
     });
     assertFlowLayoutCapabilities(definition, diagram);
     const measurement = measureFlowDiagram(diagram, context, definition, options.graph);
-    const output = executeFlowLayout(definition, measurement.input, createFlowLayoutExecutionContext(context));
+    const output = executeFlowLayout(
+      definition,
+      measurement.input,
+      createFlowLayoutExecutionContext(context, measurement.input),
+    );
     const drawing = materializeFlowGraph(measurement, output);
     try {
       requiredLayoutProbe(context, { child: drawing, occurrence: 0 }, intrinsicLayoutProposal('natural'));

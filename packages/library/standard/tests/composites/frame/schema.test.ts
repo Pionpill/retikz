@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { FrameDescriptionSchema, FrameHeaderDirection, FrameSchema, FrameTitleSchema } from '../../../src';
+import { resolveFrame } from '../../../src/resolve/frame';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const node = { type: 'node', position: [0, 0], text: 'A' } as const;
@@ -20,7 +21,7 @@ describe('FrameSchema', () => {
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('fills stable border, padding, and header gap defaults and round-trips through JSON', () => {
+  it('keeps Source sparse and resolves stable border, padding, and header defaults', () => {
     const parsed = FrameSchema.parse({
       namespace: 'standard',
       type: 'frame',
@@ -28,15 +29,17 @@ describe('FrameSchema', () => {
       children: [node],
     });
 
-    expect(parsed).toMatchObject({
-      padding: 8,
+    const canonical = resolveFrame(parsed);
+    expect(parsed.padding).toBe(8);
+    expect(canonical).toMatchObject({
+      padding: { top: 8, right: 8, bottom: 8, left: 8 },
       gap: 4,
       headerDirection: FrameHeaderDirection.Horizontal,
       border: { style: { stroke: 'currentColor', strokeWidth: 1 } },
       localNamespace: false,
       boundingShape: 'rectangle',
     });
-    expect(parsed.border.cornerRadius).toBeUndefined();
+    expect(canonical.border.cornerRadius).toBeUndefined();
     expect(FrameSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
     expect(FrameSchema.parse({ namespace: 'standard', type: 'frame', children: [node] })).not.toHaveProperty('id');
   });

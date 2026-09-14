@@ -295,7 +295,7 @@ describe('Table React components', () => {
           <ManualTable id={'\u2003'} rows={[[null]]} />
         </Layout>,
       );
-    expect(renderBlankId).toThrow(/id|non-whitespace/i);
+    expect(renderBlankId).toThrow(/table runtime contribution reference must be a non-empty string/i);
     expect(() =>
       renderToStaticMarkup(
         <Layout>

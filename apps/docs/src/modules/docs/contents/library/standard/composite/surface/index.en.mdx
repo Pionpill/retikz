@@ -20,11 +20,11 @@ import { Surface } from '@retikz/standard-react';
 </Layout>
 ```
 
-| Path           | Public entry                                                                                         |
-| -------------- | ---------------------------------------------------------------------------------------------------- |
-| React          | `Surface` from `@retikz/standard-react`                                                              |
-| Vanilla        | `surface`, `surfaceChild`, and `SurfaceInputEmbedAdapter` from `@retikz/standard-vanilla`            |
-| IR / persisted | `SurfaceSchema`, `IRSurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard` |
+| Path           | Public entry                                                                              |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| React          | `Surface` from `@retikz/standard-react`                                                   |
+| Vanilla        | `surface`, `surfaceChild`, and `SurfaceInputEmbedAdapter` from `@retikz/standard-vanilla` |
+| IR / persisted | `SurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard`         |
 
 ## Examples
 
@@ -55,7 +55,7 @@ The authored outer Scope also publishes a qualified handle whose key is `surface
 <SourceLinks
   sources={[
     {
-      label: 'Surface schema and defaults',
+      label: 'Surface Source schema',
       path: 'packages/library/standard/src/composites/presentation/surface/schema.ts',
     },
     {
@@ -80,7 +80,7 @@ The authored outer Scope also publishes a qualified handle whose key is `surface
 | `cornerRadius?` | `number`                          | `0`       | Non-negative radius, effectively capped at half the short side       |
 | Scope props     | `Omit<IRScope, 'type\|children'>` | —         | Core Scope behavior for the complete background/content/border group |
 
-`IRSurfaceSchema` validates normalized persisted output, where four-sided padding, `overflow`, and `cornerRadius` are required canonical fields. A finite range or exact proposal smaller than axis padding fails synchronously before the child is probed; Surface does not fall back to intrinsic sizing.
+`createSurface` preserves omissions and padding shorthand. `SurfaceSchema.parse()` materializes static defaults: `padding: 0`, `overflow: 'visible'`, and `cornerRadius: 0`. Domain resolution reuses those defaults and expands padding into four sides without rewriting authored configuration. A finite range or exact proposal smaller than axis padding fails synchronously before the child is probed; Surface does not fall back to intrinsic sizing.
 
 ### React and Vanilla
 

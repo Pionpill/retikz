@@ -3,7 +3,7 @@ import type { LayoutRect } from '@retikz/layout/compose';
 
 import { positionedLayoutSlotOf, unionLayoutArtifactRects } from '@retikz/layout/compose';
 
-import type { IRLegendRampContent } from '../types';
+import type { CanonicalLegendRampContent } from '../../../../resolve/legend';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors';
 import { LegendDirection } from '../constants';
@@ -54,7 +54,7 @@ const positionedSlot = (x: number, y: number, width: number, height: number): La
 
 /** 建立 ramp provisional slots，并把负向端点 overhang 统一规范化到原点 */
 export const createLegendRampStructure = (
-  content: IRLegendRampContent,
+  content: CanonicalLegendRampContent,
   sample: LayoutChildResult,
   ticks: ReadonlyArray<MeasuredLegendRampTick>,
 ): LegendRampStructure => {

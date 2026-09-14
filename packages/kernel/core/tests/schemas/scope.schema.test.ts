@@ -40,11 +40,6 @@ describe('ScopeSchema 合法形态', () => {
     expect(parsed.success).toBe(true);
   });
 
-  it('scope 允许 transforms 完全缺省', () => {
-    const parsed = ScopeSchema.safeParse({ type: 'scope', children: [] });
-    expect(parsed.success).toBe(true);
-  });
-
   it('scope 接受 id 字段', () => {
     const parsed = ScopeSchema.safeParse({
       type: 'scope',

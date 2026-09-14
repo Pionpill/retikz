@@ -1,0 +1,12 @@
+---
+title: inspect API reference
+description: Look up the public TypeScript API of @retikz/inspect and its React and Vanilla subpaths
+---
+
+`@retikz/inspect` generates auxiliary inspection content from Core compilation results. The root entry provides Inspector definitions, registries, selection rules, and compilation interfaces; `@retikz/inspect/react` provides JSX hosts, and `@retikz/inspect/vanilla` provides authoring markers and a compilation driver.
+
+The root entry currently includes five built-in Inspectors: Path, Node, Clip, Scope, and Coordinate. `InspectorFragment.coordinateSpace` supports `local` / `scene`, while `InspectorContext` exposes `transform`, `ancestors`, and `warn()` for fragment placement and diagnosable partial output.
+
+The content below is generated from public entries, TypeScript signatures, and JSDoc. See the [Schema reference](/kernel/packages/inspect/schema-reference) for configuration fields and defaults; start with [Built-in inspection](/kernel/packages/inspect/builtins) for initial integration.
+
+{/* @include kernel/packages/inspect/api-reference/generated */}

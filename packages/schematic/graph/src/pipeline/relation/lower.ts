@@ -18,6 +18,7 @@ const RELATION_ONLY_FIELDS = new Set<keyof IRGraphRelation>([
   'predicate',
   'status',
   'direction',
+  'group',
   'labels',
   'route',
   'sourceMarker',
@@ -74,7 +75,8 @@ export const lowerRelation = (
           };
     return {
       ...label,
-      textColor,
+      ...(label.placement === undefined && label.side === undefined ? { placement: 'inside' as const } : {}),
+      ...(textColor === undefined ? {} : { textColor }),
       ...(font === undefined ? {} : { font }),
       opacity,
     };

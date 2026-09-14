@@ -95,7 +95,7 @@ type LegendTickInput = {
 };
 ```
 
-以上是允许省略固定 discriminator 与默认字段的持久化 author input 最小公开结构；`IRScopeProps` 的字段在 root 上扁平出现，不再额外包一层 `scope` 对象。实际类型由 strict schema 推导，不维护手写平行类型。`createLegend()` 与 Vanilla 接收 `LegendInput`，React 则把组合式 JSX authoring 同步转换为同一输入；三者统一注入 `namespace: 'standard'` / `type: 'legend'` 并解析。schema 解析后的 canonical `IRLegend` 必须显式包含固定 discriminator、Core Scope props 的规范化值、`titleGap`、`contentAlign`、`size.x / size.y`、`padding`、`overflow`，items form 必须包含 `direction`、`wrap`、canonical `gap: { row: number; column: number }`、`sampleGap`、`sampleAlign`，ramp form 必须包含 `direction` 与 `sampleGap`；输入层的 `gap` 允许标量 shorthand，解析时将其复制到两个物理轴；只有 `title`、item / tick 的 `label` 继续可省略。直接 IR authoring 接受完整 canonical `IRLegend`；factory、React 与 Vanilla 产生该 parsed output，持久化、diff、compile 与 parity 都以它为真值，不能由 adapter 决定是否保留默认字段。
+以上是允许省略固定 discriminator 与默认字段的 author input 最小公开结构；`IRScopeProps` 的字段在 root 上扁平出现，不额外包一层 `scope` 对象。唯一 `LegendSchema` 声明静态默认，`IRLegend` 从其输入与已有 Core 字段契约派生。`createLegend()`、React 与 Vanilla 组装同一 Source 并注入 `namespace: 'standard'` / `type: 'legend'`，不补默认或执行外部输入校验。工厂 Source 保留省略与标量 `gap`；直接 parse 则产出已物化默认快照。领域 resolver 复用同一 schema 的默认，确定盒模型和内容上下文，并将 `gap` 展开为物理轴 `{ row, column }`。执行态只使用派生 TypeScript 类型，不建立平行 schema，也不回写作者配置；用户保存 parse 结果时，其默认值作为快照中的显式值保留。
 
 `sample` 可以是 Node、Path、Scope 或任意已注册 Composite。实线、虚线与点线直接使用具有对应 stroke 的 Path；色块或 symbol 使用 Node；连续颜色或透明度使用相应 Core child；未来 Stage、Decision、Connector 等能力可以直接提供自己的 composite sample。
 
@@ -311,7 +311,7 @@ marker 不复制文字、样式或对齐 props。标题与标签的字重、字�
 
 上述严格 slot grammar 由 `@retikz/standard-react` 拥有，因为它约束的是 Legend marker 的局部组合方式；本 ADR 不扩张 `@retikz/react` 的通用 children 语义，也不复制其 Kernel / Sugar 转换。该 React sugar 不建立私有 schema、registry、layout 或 capability discovery；nested Tier 2 sample 仍须由同一次 compile environment 显式提供 definition。
 
-React adapter 把 marker tree 同步转换为 `LegendInput` 后，必须调用同一 factory 获得 canonical `IRLegend`。Vanilla builder 只构造同一 canonical output，不维护独立 sample 类型、layout solver 或 registry。相同语义输入与 compile environment 在两种 adapter 下得到等价的 Core 语义与 Legend artifact；领域 React / Vanilla adapter 只负责把领域 authoring 送入领域 resolver，再生成 Standard Legend input，不得复制通用 Legend layout 或 renderer。
+React adapter 把 marker tree 同步转换为 `LegendInput` 后，必须调用同一 factory 获得稀疏 Source `IRLegend`。Vanilla builder 只构造同一 Source output，不维护独立 sample 类型、layout solver 或 registry。相同语义输入与 compile environment 在两种 adapter 下得到等价的 Core 语义与 Legend artifact；领域 React / Vanilla adapter 只负责把领域 authoring 送入领域 resolver，再生成 Standard Legend input，不得复制通用 Legend layout 或 renderer。
 
 ## 用户可观察行为与失败语义
 
@@ -326,7 +326,7 @@ React adapter 把 marker tree 同步转换为 `LegendInput` 后，必须调用�
 
 ## 迁移与兼容性
 
-Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力；Definition 重复注册继续由 Core 统一诊断。Legend 新增扁平的 Core authored Scope surface 与可选 root `id`，并把 layout-aware output 固定为 authored root Scope + 内部 allocation / replay Scope；不保留把这些字段塞进 replay wrapper 的兼容别名。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、canonical `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
+Standard alpha.2 尚未发布，本 ADR 可以直接新增公共能力；Definition 重复注册继续由 Core 统一诊断。Legend 新增扁平的 Core authored Scope surface 与可选 root `id`，并把 layout-aware output 固定为 authored root Scope + 内部 allocation / replay Scope；不保留把这些字段塞进 replay wrapper 的兼容别名。React 直接移除接受 plain-data `content` / `title` 的旧 props，不保留双入口、兼容 alias 或 deprecation bridge；`LegendInput`、Source `IRLegend` 与 Vanilla authoring 不受该 React surface 调整影响。
 
 Plot 当前 `IRPlotLegendGuide`、Table 当前 Legend descriptor 与未来逻辑组件仍是各自领域真源。本 ADR 不直接修改这些领域 API；它们迁移时只把解析后的呈现段改为构造 `IRLegend`，并保持自己的默认值、locator、provenance 与交互契约。
 

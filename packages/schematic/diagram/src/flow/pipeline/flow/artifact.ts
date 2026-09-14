@@ -1,7 +1,7 @@
 import type { SpatialHandleDeclaration } from '@retikz/core';
 import type { BoundsRect, Position } from '@retikz/math';
 
-import type { FlowLayoutOutput } from '../../contract';
+import type { FlowLayoutOutput, FlowLayoutRouting } from '../../contract';
 import type { CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
 import type { FlowArtifactBounds, FlowDiagramArtifact, FlowElementArtifact } from '../../schemas';
 
@@ -56,7 +56,7 @@ const artifactElements = (
 const artifactRelations = (
   relations: ReadonlyArray<CanonicalFlowRelation>,
   output: FlowLayoutOutput,
-  routings: ReadonlyArray<{ kind: 'straight' } | { kind: 'orthogonal'; cornerRadius: number }>,
+  routings: ReadonlyArray<FlowLayoutRouting>,
   drawingOffset: Readonly<Position>,
 ): FlowDiagramArtifact['relations'] =>
   relations.map((relation, index) => {
@@ -124,7 +124,7 @@ export const createFlowDiagramArtifact = (options: {
   elements: ReadonlyArray<CanonicalFlowElement>;
   relations: ReadonlyArray<CanonicalFlowRelation>;
   output: FlowLayoutOutput;
-  routings: ReadonlyArray<{ kind: 'straight' } | { kind: 'orthogonal'; cornerRadius: number }>;
+  routings: ReadonlyArray<FlowLayoutRouting>;
 }): FlowDiagramArtifact => {
   const boundsById = new Map(options.output.elements.map(element => [element.id, element.bounds]));
   return {

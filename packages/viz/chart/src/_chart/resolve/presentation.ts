@@ -3,7 +3,6 @@ import type { FlexLayoutItemInput, IRFlexLayout } from '@retikz/layout';
 import type { IRPlot } from '@retikz/plot';
 import type { IRSurface } from '@retikz/standard';
 
-import { NodeSchema } from '@retikz/core';
 import {
   createFlexLayout,
   FlexLayoutDirection,
@@ -48,7 +47,7 @@ const textNodeOf = (
   id: string | undefined,
 ): IRNode => {
   const regionDefaults = defaults.presentation?.[slot];
-  return NodeSchema.parse({
+  return {
     type: 'node',
     ...(id === undefined ? {} : { id }),
     position: [0, 0],
@@ -66,7 +65,7 @@ const textNodeOf = (
       ...(regionDefaults?.layout ?? {}),
       ...(region.layout ?? {}),
     },
-  });
+  };
 };
 
 const flexOf = (

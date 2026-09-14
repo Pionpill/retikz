@@ -24,5 +24,8 @@ export type OpenString<T extends string> = T | (string & {});
 /** 将指定属性收窄为必填，同时保留其余属性 */
 export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
 
+/** 将指定属性扩展为可选，同时保留其余属性 */
+export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Partial<Pick<T, TKey>>;
+
 /** 至少包含一个元素的只读数组 */
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];

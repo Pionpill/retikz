@@ -5,6 +5,13 @@ import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
 import { JsonObjectSchema, JsonValueSchema } from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
+import {
+  ClipInspectOptionsSchema,
+  CoordinateInspectOptionsSchema,
+  NodeInspectOptionsSchema,
+  PathInspectOptionsSchema,
+  ScopeInspectOptionsSchema,
+} from '@retikz/inspect';
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
@@ -34,6 +41,31 @@ export type SchemaRegistryEntry = {
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  NodeInspectOptionsSchema: {
+    schema: NodeInspectOptionsSchema,
+    label: 'NodeInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema',
+  },
+  ScopeInspectOptionsSchema: {
+    schema: ScopeInspectOptionsSchema,
+    label: 'ScopeInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema',
+  },
+  ClipInspectOptionsSchema: {
+    schema: ClipInspectOptionsSchema,
+    label: 'ClipInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#clipinspectoptionsschema',
+  },
+  CoordinateInspectOptionsSchema: {
+    schema: CoordinateInspectOptionsSchema,
+    label: 'CoordinateInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema',
+  },
+  PathInspectOptionsSchema: {
+    schema: PathInspectOptionsSchema,
+    label: 'StrokePathInspectOptions',
+    url: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
+  },
   SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
   ThemeSchema: {
     schema: IR.ThemeSchema,
@@ -423,35 +455,35 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/reference/schema/path#arrowenddetail',
   },
 
-  LayoutInspectBoundsOptionsInputSchema: {
-    schema: LayoutInspectIR.LayoutInspectBoundsOptionsInputSchema,
-    label: 'LayoutInspectBoundsOptionsInput',
-    url: '/library/layout/reference/runtime#layoutinspectboundsoptionsinputschema',
+  LayoutInspectBoundsOptionsSchema: {
+    schema: LayoutInspectIR.LayoutInspectBoundsOptionsSchema,
+    label: 'LayoutInspectBoundsOptions',
+    url: '/library/layout/reference/runtime#layoutinspectboundsoptionsschema',
   },
-  LayoutInspectSpacingOptionsInputSchema: {
-    schema: LayoutInspectIR.LayoutInspectSpacingOptionsInputSchema,
-    label: 'LayoutInspectSpacingOptionsInput',
-    url: '/library/layout/reference/runtime#layoutinspectspacingoptionsinputschema',
+  LayoutInspectSpacingOptionsSchema: {
+    schema: LayoutInspectIR.LayoutInspectSpacingOptionsSchema,
+    label: 'LayoutInspectSpacingOptions',
+    url: '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
   },
-  BaseLayoutInspectOptionsInputSchema: {
-    schema: LayoutInspectIR.BaseLayoutInspectOptionsInputSchema,
-    label: 'BaseLayoutInspectOptionsInput',
-    url: '/library/layout/reference/runtime#baselayoutinspectoptionsinputschema',
+  BaseLayoutInspectOptionsSchema: {
+    schema: LayoutInspectIR.BaseLayoutInspectOptionsSchema,
+    label: 'BaseLayoutInspectOptions',
+    url: '/library/layout/reference/runtime#baselayoutinspectoptionsschema',
   },
-  FlexLayoutInspectOptionsInputSchema: {
-    schema: LayoutInspectIR.FlexLayoutInspectOptionsInputSchema,
-    label: 'FlexLayoutInspectOptionsInput',
-    url: '/library/layout/reference/runtime#flexlayoutinspectoptionsinputschema',
+  FlexLayoutInspectOptionsSchema: {
+    schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
+    label: 'FlexLayoutInspectOptions',
+    url: '/library/layout/reference/runtime#flexlayoutinspectoptionsschema',
   },
-  GridLayoutInspectOptionsInputSchema: {
-    schema: LayoutInspectIR.GridLayoutInspectOptionsInputSchema,
-    label: 'GridLayoutInspectOptionsInput',
-    url: '/library/layout/reference/runtime#gridlayoutinspectoptionsinputschema',
+  GridLayoutInspectOptionsSchema: {
+    schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
+    label: 'GridLayoutInspectOptions',
+    url: '/library/layout/reference/runtime#gridlayoutinspectoptionsschema',
   },
-  OverlayLayoutInspectOptionsInputSchema: {
-    schema: LayoutInspectIR.OverlayLayoutInspectOptionsInputSchema,
-    label: 'OverlayLayoutInspectOptionsInput',
-    url: '/library/layout/reference/runtime#overlaylayoutinspectoptionsinputschema',
+  OverlayLayoutInspectOptionsSchema: {
+    schema: LayoutInspectIR.OverlayLayoutInspectOptionsSchema,
+    label: 'OverlayLayoutInspectOptions',
+    url: '/library/layout/reference/runtime#overlaylayoutinspectoptionsschema',
   },
 
   FlexLayoutSchema: {

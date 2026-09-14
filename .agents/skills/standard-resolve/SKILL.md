@@ -20,12 +20,17 @@ Source IR (`IRXxx`) + `XxxResolveContext`
 
 | 层                    | 负责                                                                                                                                     | 不负责                                                          |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| schema / parse        | Source IR 的 JSON 形态、持久化契约和入口校验                                                                                             | context lookup、领域默认、Canonical                             |
+| schema / parse        | Source IR 的 JSON 形态、持久化契约、静态默认和入口校验                                                                                   | context lookup、继承优先级、Canonical                           |
 | resolve               | IR shorthand、领域默认、cascade / 继承 / 覆盖优先级、registry / reference / host / data lookup、领域值转换、补全后不变量与上下文失败诊断 | unknown parse、traversal 调度、lowering、layout、primitive 输出 |
 | pipeline / compile    | 创建和维护上下文、确定依赖顺序、traversal 与阶段调度                                                                                     | 重复 resolver 的 merge、fallback、默认、校验和值转换            |
 | lower / layout / emit | 消费已经确定的结构并执行语义 lowering、几何计算或输出                                                                                    | 继续补 Canonical 字段或解释配置优先级                           |
 
-schema 已覆盖或 TypeScript 已保证的结构不得在 resolve 重复校验。resolve 只保留 Canonical 化后才出现的领域不变量、provider / reference 查找失败及其它真实上下文错误。
+schema 已覆盖或 TypeScript 已保证的结构不得在 resolve 重复校验。resolve 可在原始配置合并后调用权威 schema 应用默认与变换；不得重解析已变换输出。其它校验只保留 Canonical 化后不变量、provider / reference 查找失败及真实上下文错误。
+
+- 静态默认由唯一 schema 的 `.default()` 声明；resolver 复用其缺省结果，不维护第二份默认常量或 schema
+- 有继承时先合并原始字段，再默认化；上下文默认与 reset / barrier 仍由领域 resolver 决定
+- 外部直接 parse 的结果是已物化快照；其中默认字段再参与继承时是显式值，不追溯省略意图
+- 开放插件可在准入时校验每层原始输入，再对合并后的新输入解析；未匹配或被覆盖的非法层不能漏检，解析输出不参与下一次原始合并
 
 ## Context 边界
 

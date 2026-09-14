@@ -100,10 +100,6 @@ describe('rect.anchor', () => {
     expect(rect.anchor(r10x6, Anchor.BottomLeft)).toEqual([-5, 3]);
   });
 
-  it('accepts Anchor constants', () => {
-    expect(rect.anchor(r10x6, Anchor.TopRight)).toEqual(rect.anchor(r10x6, Anchor.TopRight));
-  });
-
   it('offsets anchors by rectangle center', () => {
     const r: Rect = { x: 100, y: 50, width: 10, height: 6 };
     expect(rect.center(r)).toEqual([100, 50]);

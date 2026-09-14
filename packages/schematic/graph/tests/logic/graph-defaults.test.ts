@@ -99,6 +99,29 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
   });
 
+  it('accepts a Relation rule dash structure without opening marker structure', () => {
+    const source = {
+      namespace: 'graph',
+      type: 'graph',
+      graphRules: [{ type: 'relation', selector: { status: 'disabled' }, structure: { dashPattern: [6, 4] } }],
+      children: [],
+    };
+
+    expect(Graph.GraphSchema.parse(source)).toEqual(source);
+    expect(
+      Graph.GraphSchema.safeParse({
+        ...source,
+        graphRules: [{ type: 'relation', selector: { status: 'disabled' }, structure: { sourceMarker: false } }],
+      }).success,
+    ).toBe(false);
+    expect(
+      Graph.GraphSchema.safeParse({
+        ...source,
+        graphRules: [{ type: 'relation', selector: { status: 'disabled' }, structure: { dashPattern: false } }],
+      }).success,
+    ).toBe(false);
+  });
+
   it('rejects the removed graphTheme root with an exact unknown-key issue', () => {
     const result = Graph.GraphSchema.safeParse({
       namespace: 'graph',
@@ -318,5 +341,31 @@ describe('Graph defaults and rules Source fragments', () => {
     expect(paths).toEqual(expect.arrayContaining([expect.objectContaining({ stroke: '#123456', strokeWidth: 2 })]));
     expect(paths).toHaveLength(baselinePaths.length);
     expect(paths.map(path => path.dashPattern)).toEqual(baselinePaths.map(path => path.dashPattern));
+  });
+
+  it('projects a matching Relation rule dash structure without changing the marker family', () => {
+    const output = compileGraph({
+      namespace: 'graph',
+      type: 'graph',
+      graphRules: [{ type: 'relation', selector: { status: 'disabled' }, structure: { dashPattern: [2, 1] } }],
+      children: [
+        { namespace: 'graph', type: 'entity', id: 'source', role: 'activity', position: [0, 0], text: 'Source' },
+        { namespace: 'graph', type: 'entity', id: 'target', role: 'activity', position: [100, 0], text: 'Target' },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          id: 'relation',
+          source: { id: 'source' },
+          target: { id: 'target' },
+          role: 'dependency',
+          status: 'disabled',
+        },
+      ],
+    });
+    const relationPath = primitivesOf(output.scene.primitives).find(
+      primitive => primitive.type === 'path' && primitive.id === 'relation',
+    );
+
+    expect(relationPath).toMatchObject({ dashPattern: [2, 1], arrowEnd: { shape: 'straightBarb' } });
   });
 });

@@ -1,0 +1,284 @@
+---
+title: Inspection mechanism
+description: Follow one observed compile through selection admission, final-result capture, instance matching, and auxiliary-scene output with source entry points
+---
+
+Read [Inspect usage](/kernel/packages/inspect) and [Built-in inspection](/kernel/packages/inspect/builtins) first. This page follows one compile that adds control points to a curve: primary IR, inspection rules, and available inspection implementations enter; the primary figure, auxiliary content, and diagnostics leave together. The host then adapts the auxiliary content into readonly layers.
+
+The running example is one curve and its control-point inspection. Internal functions below are source-reading anchors, not importable public APIs. The flow stops at auxiliary-layer delivery rather than renderer execution.
+
+## Overall flow
+
+First distinguish three roles in this compile:
+
+- `selection`: declares which objects to observe and which auxiliary information to show. It expresses intent without drawing anything.
+- `Inspector`: reads an object's compiled geometry and generates drawing descriptions for control points, guides, and similar marks without changing the primary figure.
+- `registry`: stores available Inspectors by name so selection rules can find their implementations.
+
+For our curve, selection requests control points, the registry provides the Path Inspector, and that Inspector generates the points only after receiving final geometry. Follow this collaboration through the stages below.
+
+Validate selection rules first, then let Core compile the primary figure and publish candidate results. After collecting the batch, Inspect matches final instances, invokes Inspectors, and compiles their auxiliary output in isolation. Primary and auxiliary branches produce separate results delivered together to the host.
+
+<ComponentPreview
+  files="inspect-compile-flow"
+  size="lg"
+  hideCode
+  caption="The blue branch preserves the primary result; the orange branch generates auxiliary inspection content. Both are delivered to Render together."
+/>
+
+Core provides final outputs and isolated compilation. Inspect owns selection, Inspector dispatch, and auxiliary results; no auxiliary stage rewrites the primary figure.
+
+<SourceLinks
+  sources={[
+    { label: 'Observed compile entry and final assembly', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+  ]}
+/>
+
+## Admit selection
+
+First see how a rule finds its implementation. Solid lines show rule processing; the registry supplies definitions from below. Looking up a definition does not invoke the Inspector yet: execution still needs final geometry.
+
+<ComponentPreview files="inspect-role-flow" size="sm" hideCode />
+
+Admission checks that selection rules can be executed legally before compiling the primary figure. A selection contains two kinds of rule:
+
+- `request`: selects an Inspector, a scope, and display options, such as showing control points for this curve.
+- `barrier`: blocks a scope so objects within it cannot reopen inspection. Its inheritance behavior is explained at final matching.
+
+A request identifies the implementation with `inspector`, the scope with `target`, and the configuration with `options`. It is still configuration, not generated control points. Locating input objects requires two more distinctions:
+
+- Authored object: an object written by the user in the input IR, such as this curve.
+- Source path: its position in the input tree, used to associate a request with that input object.
+
+Expansion can produce several final instances from one input object, so admission locates the input without selecting final geometry yet.
+
+Before Core traversal, `createInspectionObserver()` captures selection and calls `admitInspectionSelection()`. It checks authored locations, registered Inspectors, duplicate requests for the same target, and the options of enabled rules.
+
+Admission already retrieves the named Inspector definition from the registry to use its options schema. Final matching uses the definition's owner and option-resolution capabilities, and the driver subsequently invokes its `inspect` callback. Registry lookup does not first occur at callback execution.
+
+The curve's request is still associated with an authored source path, not final geometry. Admission preserves sparse authored options; validation does not prematurely cascade materialized defaults. Invalid configuration fails here even if a rule will never match or will later be overridden.
+
+<SourceLinks
+  sources={[
+    { label: 'Validate rules and preserve authored options', path: 'packages/kernel/inspect/src/compile/selection.ts' },
+  ]}
+/>
+
+## Capture final outputs
+
+Core tells Inspect which category produced which final result. First distinguish the notification from its receiver:
+
+- `observation`: a record Core publishes for one final result, carrying its category, instance location, and geometry data.
+- `observer`: a session that receives and collects these records, then dispatches Inspectors after collection finishes. It is not the Inspector that generates auxiliary graphics.
+
+Three fields describe each result:
+
+- `owner`: identifies the output category; Path kinds also have a `name`. This is not the Inspector's registry name.
+- `occurrence`: locates and distinguishes final instances produced by compilation, without storing their geometry.
+- `value`: holds the instance's resolved geometry and other output for the Inspector to read.
+
+For the ordinary curve in our example, the request first points into the input tree, then becomes associated with its final instance and geometry. If one source produces two instances, the notifications can share a source path but have separate occurrences and values; final matching can then select the first or second.
+
+While traversing candidate sites, Core calls `canInspectionSelectionRequestSite()` through the observer's `select()` to determine whether an owner and source path may need observation. This filters sites rather than matching final instances; selecting the Nth instance still requires the final set.
+
+Once the curve is compiled, Core publishes an observation carrying final geometry. Inspect's `observe()` only stores the output and context as a `CapturedObservation`; it does not invoke `inspect()` yet. The observer is the collection session connected to Core notifications; the Inspector generates graphics later. Core calls `complete()` once after dispatching all final notifications for this successful compile, not once per curve. A session may also receive no notifications.
+
+With that flow in mind, the following fields show how Core supplies results and compilation capabilities to Inspect. The `owner` identifies what owns the observed object, while a request expresses the user's inspection selection:
+
+| What Core provides                            | How Inspect uses it                                                                                       |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `CompileObservation.owner` and `occurrence`   | Matches a request to the observed object's final instance by owner and occurrence location                |
+| `CompileObservation.value`                    | Validates final output with `subjectSchema` and supplies it to `inspect()`                                |
+| `CompileObservationContext.theme`             | Gives auxiliary content the current occurrence's theme and semantic colors                                |
+| `CompileObservationContext.compileFragment()` | Compiles ordinary IR returned by an Inspector in the current Theme, Scope-style, and provider environment |
+
+A custom Inspector therefore requires the corresponding object to publish final output in Core. Registering an Inspector alone does not make an object without observation support emit observations. Core provides notification and isolated compilation; it does not look up Inspectors or choose auxiliary styling.
+
+The curve example only uses `path`; Core's full observation-owner list is: `path` (a named final Path kind), `node` (Node geometry and text layout), `scope` (the intrinsic Scope envelope), `coordinate` (a resolved coordinate point), `clip` (one logical Clip application), and `composite` (a composite owner identified by namespace and type). Built-in Inspectors bind to these owners; registering an Inspector cannot create an observation for an owner that publishes no final output.
+
+Each observation also carries `ancestors`, an outside-in chain of the Scope and composite containers with their occurrences. An Inspector can use it to explain hierarchy or distinguish the same owner in different containers without guessing parentage from a source path.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Core observation context and isolated compilation',
+      path: 'packages/kernel/core/src/contract/observation/types.ts',
+    },
+    {
+      label: 'Core dispatch of final observations',
+      path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Session wiring for select, observe, and complete',
+      path: 'packages/kernel/inspect/src/compile/driver.ts',
+    },
+  ]}
+/>
+
+## Match instances and merge options
+
+This example assumes one input produces two final instances and requests `occurrenceIndex: 1`. Read the top row left to right, then continue on the bottom row: admission checks input rules first; only after Core compilation and notification collection can matching select the second instance. Indexing starts at 0; an ordinary curve does not necessarily produce multiple instances.
+
+<ComponentPreview files="inspect-occurrence-flow" size="sm" hideCode />
+
+When `complete()` enters `compileInspectionObserverOutput()`, it first calls `resolveAdmittedInspectionSelection()`. The final observation set is now available, so targets can be selected in stable instance order and scene-to-object rules can be applied to the curve.
+
+The earlier request now binds to final instances. Admission checks input locations, registration, and option validity. This stage checks that an enabled self request not blocked by a barrier has a final output with a matching owner. An `occurrenceIndex` beyond the final set fails because no output matches; scene and subtree batch rules may match nothing. The input tree alone cannot establish these final conditions during admission.
+
+A request can be declared on a scene, authored subtree, or object. Its `options: true` uses defaults, while `options: false` disables that Inspector at the current site.
+
+The tree below follows one Inspector that supports scene-wide selection, with matching object owners. Lines represent parent-child structure; blue means enabled, and gray dashed boxes mean disabled or blocked. A inherits the parent's enabled state. B disables inspection for its subtree, but the object can reopen it. C sets a barrier, so even an explicit request cannot reopen inspection. These switches affect auxiliary inspection only; all objects still render in the primary figure.
+
+<ComponentPreview files="inspect-selection-tree" size="md" hideCode />
+
+B's `options: false` disables only the selected Inspector; C's `barrier` blocks every Inspector in the subtree. In React, `<InspectScope request={false}>` declares that barrier.
+
+These selections are runtime rules for which final occurrences reach an Inspector at each compile, rather than persisted diagram data:
+
+| Structure                         | Meaning                                                                                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `InspectionSelectionRule` request | Selects an Inspector and scope with `inspector`, `target`, and `options`                             |
+| `InspectionSelectionRule` barrier | Prevents descendants from reopening Inspectors at a scene or authored subtree                        |
+| scene target                      | Matches final occurrences with a given owner across the whole scene                                  |
+| subtree target                    | Matches final occurrences below one authored Scope                                                   |
+| self target                       | Matches the current authored object by source path; `occurrenceIndex` selects its Nth final instance |
+
+For batch Path selection, a scene target matches every final Path with the requested owner across the figure, while a subtree target matches every such Path below one authored Scope. Only a self target (React's `<InspectPath>`) limits the request to the current authored Path. When one authored object compiles to multiple final instances, `occurrenceIndex` selects one in stable final-instance order. You can therefore enable a Path Inspector once on `<InspectLayout request>` or on `<InspectScope request>` without repeating the same request on every Path.
+
+`InspectionSelection` and host wrappers are the usage entry points. Wrappers such as React's `<InspectPath>` and `<InspectScope>` turn declarations into selection rules. Inspect's compile driver internally admits rules, matches final instances, and cascades options; those implementation functions are not importable APIs and consumers neither need nor should call them directly.
+
+The playground places two curves in separate subtrees. Change target, control points, and labels, then enable the right barrier to see how local requests resolve against Core final occurrences:
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A and B are ordinary independent paths. After the right barrier is enabled, B cannot reopen inspection with its local request."
+/>
+
+One site may request several Inspectors. Sparse options for one Inspector merge from scene to subtree to current occurrence; ordinary `false` disables one Inspector only at the current site, while a barrier prevents descendants from reopening any Inspector.
+
+Merging uses authored options, then the single `optionsSchema` applies defaults before `resolveOptions` expands shorthand. A parent with `labels: true` and a child with `{}` keeps labels enabled; an explicit child `labels: false` disables them. Every enabled rule is still validated at admission, even if it never matches or is later overridden.
+
+Calling `PathInspectOptionsSchema.parse({})` directly produces a defaulted snapshot containing `labels: false`. Passing that snapshot as child options makes `false` an explicit override. Persist authored configuration to retain omission intent; persisting parsed output stores materialized defaults instead.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Requests converted to target rules and barriers',
+      path: 'packages/kernel/inspect/src/vanilla/authoring.ts',
+    },
+    {
+      label: 'Scope matching, barriers, and cascading options',
+      path: 'packages/kernel/inspect/src/compile/selection.ts',
+    },
+  ]}
+/>
+
+## Generate auxiliary descriptions
+
+The previous stage decides “which instance, with which configuration”; this stage decides “what to read from that instance and what guides to draw.” Merged options receive defaults from `optionsSchema` and shorthand expansion from `resolveOptions` to become callback configuration. Separately, the observation's `value` passes through `subjectSchema` to become the callback's subject. Configuration and observed geometry are different inputs.
+
+For matched requests, the driver validates and freezes observation values with `subjectSchema`, then passes them to `inspect(subject, context)`. Control-point inspection reads geometry already resolved by Core and returns ordinary IR for points and guides, without recomputing the primary figure.
+
+Two inputs meet at `inspect()`: configuration on the left decides what to show, while geometry on the right supplies where to draw it. The bottom row follows callback output through fragment preparation, isolated compilation, and host adaptation into readonly layers. Arrows express data handoffs, not concurrent configuration and geometry validation.
+
+<ComponentPreview files="inspect-output-flow" size="md" hideCode />
+
+With control points enabled, the Inspector reads their positions from the subject and returns point and line IR. There are no displayable layers yet; the next section explains fragment compilation and host delivery.
+
+The following coordinate-space details are not expanded in the figure. The final `occurrence` remains callback, auxiliary-plane result, and diagnostic context that identifies the instance actually processed by compilation; it is not a user-supplied selection target. Ordinary Core IR children returned by an Inspector callback use occurrence-local coordinates; Inspect places them with `context.transform`. To choose a space explicitly, return an `InspectorFragment`: `{ type: 'fragment', coordinateSpace: 'local' | 'scene', child }`. Scene-space fragments use the identity transform. A single callback can mix both spaces, as the built-in Node Inspector does for local geometry and its scene-space axis-aligned bounding box (AABB).
+
+Inspect assigns ordinary auxiliary colors from the current Core theme's categorical palette in effective inspection-request order. Guide lines, control points, and labels produced by the same request share a color so their associated object is easy to identify. Control point labels have transparent backgrounds.
+
+Inspect uses Core's palette and semantic colors without providing a separate Inspect Theme configuration. Built-in Inspectors also offer less styling freedom than Core drawing components: the path Inspector exposes only control-point, vertex, arc-geometry, and label visibility, while its implementation determines line widths, dash patterns, and font sizes. As auxiliary content for understanding the primary figure, inspection prioritizes clarity, consistency, and restraint.
+
+Custom Inspectors can still define styles in the ordinary Core IR they return. This belongs to Inspector extensibility rather than the built-in Inspector's styling options.
+
+<SourceLinks
+  sources={[
+    { label: 'Palette and semantic color assignment', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    {
+      label: 'Built-in control point, guide line, and label styles',
+      path: 'packages/kernel/inspect/src/providers/path.ts',
+    },
+  ]}
+/>
+
+## Compile in isolation and deliver
+
+The driver normalizes callback output with `snapshotInspectorOutput()` and invokes the captured context's `compileFragment()` for each fragment. This context retains the instance's Theme, Scope styles, and providers. Each fragment produces a separate Scene, sealed and frozen by `sealInspectionScene()`.
+
+The curve's control points are now Scene entries in the auxiliary plane. Local fragments retain the occurrence transform; scene-space fragments use the identity transform. Inspect returns this plane as `InspectionCompileResult.inspection`, not as host layers yet.
+
+The host calls `inspectionPlaneToReadonlyLayers()` to convert the plane into non-hittable readonly layers for Render; this conversion happens only once. Primary and auxiliary layers belong to the same compilation revision and commit only when both succeed; a new primary figure is not displayed with auxiliary content from an older revision. Auxiliary scenes also exclude public identity, metadata, and animation semantics.
+
+Ordinary drawing need not load Inspect. When enabled, if no result matches or all Inspectors return empty content, the InspectionPlane is `null` and no auxiliary layer is produced. Extra cost comes from observing selected objects, running Inspector callbacks, and compiling non-empty auxiliary fragments.
+
+An `inspect(subject, context)` callback can call `context.warn(code, message)` when an optional geometry facet is unavailable while still returning the remaining marks. The warning is added to the same `InspectionCompileResult.diagnostics`; it does not rewrite the primary figure or turn a partial observation into a primary-compile failure.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'observe collection and complete auxiliary generation',
+      path: 'packages/kernel/inspect/src/compile/driver.ts',
+    },
+    {
+      label: 'Auxiliary scenes converted to readonly layers',
+      path: 'packages/kernel/inspect/src/vanilla/readonly-layers.ts',
+    },
+  ]}
+/>
+
+## Results and errors
+
+| Field                                 | Meaning                                                                |
+| ------------------------------------- | ---------------------------------------------------------------------- |
+| `InspectionCompileResult.primary`     | Ordinary Core compile output, unchanged by auxiliary content           |
+| `InspectionCompileResult.inspection`  | Ordered auxiliary plane; `null` when every callback produces no output |
+| `InspectionCompileResult.diagnostics` | Structured warnings from Inspector callbacks and isolated fragments    |
+
+`RetikzInspectError.details.origin.stage` identifies a failure in selection, final-output (`subjectSchema`) validation, an `inspect` callback, output normalization, auxiliary-fragment compilation, or final assembly. Duplicate registry keys, unregistered requests, owner mismatch, and schema failures stop that inspection compile without delivering a partial auxiliary result.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Compile results, auxiliary planes, and diagnostic types',
+      path: 'packages/kernel/inspect/src/compile/types.ts',
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: 'Stage-specific error wrapping and termination', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+  ]}
+/>
+
+## Complete implementation flow
+
+This expands the admission, capture, matching, and auxiliary-output stages. Multiple occurrences converge on one session. Inside `complete()`, selection resolution precedes subject validation, `inspect()`, isolated fragment compilation, and `InspectionPlane` creation. Selection functions and captured storage in the figure are internal implementation members.
+
+<ComponentPreview files="inspect-observer-batch-flow" size="lg" hideCode />
+
+N is the number of final notifications in this compile and may be 0. `observe()` runs once per notification; `complete()` runs once after notification dispatch for this successful compile.
+
+Start with `compileInspectionToScene()` for orchestration, then `createInspectionObserver()` for select / observe / complete timing. Follow `resolveAdmittedInspectionSelection()` for exact matching and option cascading. Return to the driver for callbacks, fragment compilation, and result assembly, then read `inspectionPlaneToReadonlyLayers()` for host delivery.
+
+<SourceLinks
+  sources={[{ label: '1. Compile and observer session', path: 'packages/kernel/inspect/src/compile/driver.ts' }]}
+/>
+
+<SourceLinks
+  sources={[
+    { label: '2. Final instances and cascading rules', path: 'packages/kernel/inspect/src/compile/selection.ts' },
+  ]}
+/>
+
+<SourceLinks
+  sources={[{ label: '3. Readonly-layer delivery', path: 'packages/kernel/inspect/src/vanilla/readonly-layers.ts' }]}
+/>

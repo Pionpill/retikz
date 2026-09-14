@@ -10,6 +10,29 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowReact from '../src/flow';
 
+it('preserves local Layout exclusion through React and Vanilla equally', () => {
+  const input = createInputScene(
+    <FlowReact.FlowDiagram>
+      <FlowReact.FlowLayout id="row" kind="linear" direction="right" excludeFromBounds={['png']}>
+        <FlowReact.FlowEntities items={['canvas', 'png']} />
+      </FlowReact.FlowLayout>
+    </FlowReact.FlowDiagram>,
+  );
+  const normalized = normalizeScene(input.scene, { adapters: input.adapters });
+  const vanilla = normalizeFlowDiagram({
+    entities: [
+      { id: 'canvas', text: 'canvas' },
+      { id: 'png', text: 'png' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'row', kind: 'linear', direction: 'right', children: ['canvas', 'png'], excludeFromBounds: ['png'] },
+    ],
+    children: ['row'],
+  });
+  expect(FlowDiagramSchema.parse(normalized.ir.children[0])).toEqual(FlowDiagramSchema.parse(vanilla));
+});
+
 type FlowComponent = FC<Readonly<Record<string, unknown>> & Readonly<{ children?: ReactNode }>>;
 
 const componentExport = (name: string): FlowComponent | undefined => {
@@ -49,7 +72,7 @@ const flowChildren = (
       { id: 'client', caption: { title: { text: 'Client' } } },
       createElement(
         FlowLayout,
-        { id: 'frontend', direction: 'down' },
+        { kind: 'linear' as const, id: 'frontend', direction: 'down' },
         createElement(FlowEntity, { id: 'jsx', text: 'JSX', status: 'success', rank: 0 }),
       ),
     ),
@@ -73,7 +96,7 @@ const expectedSource = {
     { id: 'kernel', text: ['Kernel', 'IR compiler'] },
   ],
   groups: [{ id: 'client', caption: { title: { text: 'Client' } }, children: ['frontend'] }],
-  layouts: [{ id: 'frontend', direction: 'down', children: ['jsx'] }],
+  layouts: [{ kind: 'linear' as const, id: 'frontend', direction: 'down', children: ['jsx'] }],
   children: ['client', 'kernel'],
   relations: [
     {
@@ -88,13 +111,100 @@ const expectedSource = {
 };
 
 describe('@retikz/diagram-react/flow', () => {
+  it.each(['-|', '|-'] as const)('renders %s with the same Source as Vanilla and direct IR', kind => {
+    const entities = [
+      { id: 'a', text: 'A' },
+      { id: 'b', text: 'B' },
+    ];
+    const relation = { source: 'a', target: 'b', routing: { kind, cornerRadius: 3 } };
+    const input = createInputScene(
+      createElement(
+        FlowReact.FlowDiagram,
+        null,
+        createElement(FlowReact.FlowEntities, { items: entities }),
+        createElement(FlowReact.FlowRelation, relation),
+      ),
+    );
+    const vanilla = normalizeFlowDiagram({
+      entities,
+      groups: [],
+      layouts: [],
+      children: ['a', 'b'],
+      relations: [relation],
+    });
+    expect(normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0]).toEqual(vanilla);
+    expect(FlowDiagramSchema.parse(vanilla).relations?.[0].routing).toEqual({ kind, cornerRadius: 3 });
+    const markup = renderToStaticMarkup(
+      createElement(
+        FlowReact.FlowDiagram,
+        null,
+        createElement(FlowReact.FlowEntities, { items: entities }),
+        createElement(FlowReact.FlowRelation, relation),
+      ),
+    );
+    expect(markup).toContain('<svg');
+    expect(markup).toContain('<path');
+  });
+  it.each([
+    { form: 'matrix', placements: [['a'], [null, 'b']] },
+    {
+      form: 'id-keyed mapping',
+      placements: {
+        a: { row: 0, column: 0 },
+        b: { row: 1, column: 1 },
+      },
+    },
+  ])(
+    'preserves $form Grid placements through typed React, Vanilla and direct Source inside a Group',
+    ({ placements }) => {
+      const grid = {
+        kind: 'grid' as const,
+        id: 'grid',
+        rowGap: 0,
+        columnGap: 24,
+        placements,
+      };
+      const entities = [
+        { id: 'a', text: 'A' },
+        { id: 'b', text: 'B' },
+      ];
+      const source = {
+        entities,
+        groups: [{ id: 'group', children: ['grid'] }],
+        layouts: [{ ...grid, children: ['a', 'b'] }],
+        children: ['group'],
+      };
+      const direct = FlowDiagramSchema.parse({ namespace: 'diagram', type: 'flow', ...source });
+      const input = createInputScene(
+        createElement(
+          FlowReact.FlowDiagram,
+          null,
+          createElement(
+            FlowReact.FlowGroup,
+            { id: 'group' },
+            createElement(FlowReact.FlowLayout, grid, createElement(FlowReact.FlowEntities, { items: entities })),
+          ),
+        ),
+      );
+      const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
+      expect(react).toEqual(direct);
+      expect(normalizeFlowDiagram(source)).toEqual(direct);
+      const result = processToStaticInputResult(input.scene, {
+        adapters: input.adapters,
+        compile: { measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }) },
+      });
+      expect(JSON.stringify(result)).toContain('A');
+    },
+  );
   it('preserves Source-shaped defaults and instance paths through typed React and Vanilla authoring', () => {
     const props = {
       presentation: { title: { text: 'Pipeline', style: { font: { size: 21 } } } },
       diagramDefaults: { presentation: { title: { style: { opacity: 0.8 } } } },
       flowDefaults: { entity: { layout: { maxTextWidth: 180 } }, relation: { labelFont: { size: 11 } } },
+      graphRules: [{ type: 'entity' as const, selector: { role: 'concept' }, style: { color: 'dodgerblue' } }],
     } satisfies FlowReact.FlowDiagramProps;
     const entity = { id: 'node', text: 'Node', layout: { lineHeight: 18 } };
+    const relation = { source: 'node', target: 'node', group: 'forward' };
     const direct = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',
@@ -103,12 +213,25 @@ describe('@retikz/diagram-react/flow', () => {
       groups: [],
       layouts: [],
       children: ['node'],
+      relations: [relation],
     });
     const input = createInputScene(
-      createElement(FlowReact.FlowDiagram, props, createElement(FlowReact.FlowEntity, entity)),
+      createElement(
+        FlowReact.FlowDiagram,
+        props,
+        createElement(FlowReact.FlowEntity, entity),
+        createElement(FlowReact.FlowRelation, relation),
+      ),
     );
     const react = normalizeScene(input.scene, { adapters: input.adapters }).ir.children[0];
-    const vanilla = normalizeFlowDiagram({ ...props, entities: [entity], groups: [], layouts: [], children: ['node'] });
+    const vanilla = normalizeFlowDiagram({
+      ...props,
+      entities: [entity],
+      groups: [],
+      layouts: [],
+      children: ['node'],
+      relations: [relation],
+    });
     expect(react).toEqual(direct);
     expect(vanilla).toEqual(direct);
   });
@@ -259,7 +382,7 @@ describe('@retikz/diagram-react/flow', () => {
           createElement(FlowEntities, { items: ['group-entity'], complete: true }),
           createElement(
             FlowLayout,
-            { id: 'layout', direction: 'right' },
+            { kind: 'linear' as const, id: 'layout', direction: 'right' },
             createElement(FlowEntities, { items: ['layout-entity'], complete: true }),
           ),
         ),
@@ -275,7 +398,7 @@ describe('@retikz/diagram-react/flow', () => {
         { id: 'layout-entity', text: 'layout-entity' },
       ],
       groups: [{ id: 'group', children: ['group-entity', 'layout'] }],
-      layouts: [{ id: 'layout', direction: 'right', children: ['layout-entity'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['layout-entity'] }],
       children: ['root', 'group'],
     });
   });
@@ -326,7 +449,7 @@ describe('@retikz/diagram-react/flow', () => {
         createElement(FlowEntities, { items: [{ id: 'group-child', text: 'Group child' }] }),
         createElement(
           FlowLayout,
-          { id: 'row', direction: 'right' },
+          { kind: 'linear' as const, id: 'row', direction: 'right' },
           createElement(FlowEntities, { items: ['layout-a', 'layout-b'] }),
         ),
       ),
@@ -341,7 +464,7 @@ describe('@retikz/diagram-react/flow', () => {
         { id: 'layout-b', text: 'layout-b' },
       ],
       groups: [{ id: 'group', children: ['group-child', 'row'] }],
-      layouts: [{ id: 'row', direction: 'right', children: ['layout-a', 'layout-b'] }],
+      layouts: [{ kind: 'linear' as const, id: 'row', direction: 'right', children: ['layout-a', 'layout-b'] }],
       children: ['group'],
     });
   });
@@ -359,7 +482,7 @@ describe('@retikz/diagram-react/flow', () => {
     const owner =
       ownerKind === 'group'
         ? createElement(FlowGroup, { id: 'owner' }, nestedRelations)
-        : createElement(FlowLayout, { id: 'owner', direction: 'right' }, nestedRelations);
+        : createElement(FlowLayout, { kind: 'linear' as const, id: 'owner', direction: 'right' }, nestedRelations);
 
     expect(() => createInputScene(createElement(FlowDiagram, null, owner))).toThrowError(
       expect.objectContaining({

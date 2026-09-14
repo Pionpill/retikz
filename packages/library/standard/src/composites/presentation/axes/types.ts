@@ -1,5 +1,6 @@
+import type { IRScopeProps } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
-import type { infer as ZodInfer, input as ZodInput } from 'zod';
+import type { input as ZodInput } from 'zod';
 
 import type { AxesArrowMode, AxesLabelEnd, AxesTickExtent, AxesTickSide, AxesTickSourceKind } from './constants';
 import type { AxesSchema } from './schemas';
@@ -20,7 +21,7 @@ export type AxesTickSourceKindValue = ValueOf<typeof AxesTickSourceKind>;
 export type AxesLabelEndValue = ValueOf<typeof AxesLabelEnd>;
 
 /** 持久化的 Standard Axes composite */
-export type IRAxes = ZodInfer<typeof AxesSchema>;
+export type IRAxes = Omit<ZodInput<typeof AxesSchema>, keyof IRScopeProps> & IRScopeProps;
 
-/** 创建 Axes 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type AxesInput = Omit<ZodInput<typeof AxesSchema>, 'namespace' | 'type'>;
+/** 创建 Axes 时允许省略固定 discriminator 的输入 */
+export type AxesInput = Omit<IRAxes, 'namespace' | 'type'>;

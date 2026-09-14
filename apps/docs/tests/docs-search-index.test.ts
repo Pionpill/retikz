@@ -31,8 +31,8 @@ describe('docs search index frontmatter', () => {
   it('About 从模块列表移除后仍进入搜索条目', () => {
     const entries = buildSearchEntries((key: string) => key, {}, 'zh');
 
-    expect(entries.find(entry => entry.path === '/about/overview')).toMatchObject({
-      label: 'about.overview',
+    expect(entries.find(entry => entry.path === '/about/introduction')).toMatchObject({
+      label: 'about.introduction',
       moduleLabel: 'about.label',
     });
   });

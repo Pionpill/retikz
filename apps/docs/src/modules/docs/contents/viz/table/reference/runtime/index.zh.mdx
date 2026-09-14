@@ -7,6 +7,8 @@ IRTable 只保存 JSON-safe 结构；datasets、Definitions、Core compile optio
 
 > 这里解释运行时接线与执行逻辑，不重复 schema 字段。IRTable 与 Cell 内容见[表格契约](/viz/table/reference/contract-table)，轨道与 border 输入见[布局契约](/viz/table/reference/contract-layout)，compile 输出见[产物契约](/viz/table/reference/manifest)。
 
+`createDetailTableIR()` 与 `createManualTableIR()` 组装独立的稀疏 Source；外部 JSON 使用 `TableSchema.parse()`。布局 resolver 应用默认值，formatter / presentation 直接消费已确定的内部配置；自定义插件的 options 和返回值仍在各自边界校验。
+
 ## 入口如何汇合
 
 React standalone、Vanilla SSR、直接 `compileTable()` 与 embedded Table 的 authoring 和宿主方式不同，但它们不会复制 Table 的 normalize、defaults cascade、presentation 或 layout 算法。

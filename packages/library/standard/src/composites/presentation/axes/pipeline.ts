@@ -1,29 +1,31 @@
 import type { IRNode, IRPath, IRPosition, IRScope, IRTextBlock } from '@retikz/core';
 
+import type { CanonicalAxes } from '../../../resolve/axes';
 import type { IRStandardPathStrokeStyle } from '../shared/types';
 import type { IRAxes } from './types';
 
+import { resolveAxes } from '../../../resolve/axes';
 import { enumerateLattice } from '../shared/lattice';
 import { AxesArrowMode, AxesLabelEnd, AxesTickSide } from './constants';
-import { enumerateAxesTickValues, normalizeAxesExtent } from './schemas/utils';
+import { enumerateAxesTickValues } from './schemas/utils';
 
 type AxesChild = IRPath | IRNode;
-type AxesAxis = IRAxes['x'];
+type AxesAxis = CanonicalAxes['x'];
 type AxesTicks = Exclude<AxesAxis['ticks'], false | undefined>;
 type AxesTickLabels = Exclude<AxesTicks['labels'], false | undefined>;
 type AxesTextStyle = NonNullable<AxesTickLabels['style']>;
 type AxesAxisLabel = Exclude<AxesAxis['label'], false>;
-type AxesOriginLabel = Exclude<IRAxes['origin']['label'], false>;
+type AxesOriginLabel = Exclude<CanonicalAxes['origin']['label'], false>;
 
 /** 将 Standard Axes 规则确定性下沉为已有 Core Path 与 Node */
 export const lowerAxes = (axes: IRAxes): IRScope => {
-  const { namespace: _namespace, type: _type, origin, x, y, ...scopeProps } = axes;
+  const { namespace: _namespace, type: _type, origin, x, y, ...scopeProps } = resolveAxes(axes);
   void _namespace;
   void _type;
   const children: Array<AxesChild> = [];
   const [originX, originY] = origin.position;
-  const extentX = normalizeAxesExtent(x.extent);
-  const extentY = normalizeAxesExtent(y.extent);
+  const extentX = x.extent;
+  const extentY = y.extent;
   const minX = originX - extentX.negative;
   const maxX = originX + extentX.positive;
   const minY = originY - extentY.positive;
@@ -93,7 +95,7 @@ const appendAxisTicks = (
   const ticks = axis.ticks;
   const [originX, originY] = origin;
   const tickLengths = normalizeTickSideLengths(ticks.side, ticks.length);
-  enumerateAxesTickValues(ticks.source, normalizeAxesExtent(extentInput), ticks.endpointGap).forEach(value => {
+  enumerateAxesTickValues(ticks.source, extentInput, ticks.endpointGap).forEach(value => {
     if (axisName === 'x') {
       const x = originX + value;
       children.push(
@@ -133,9 +135,7 @@ const createAxisLabel = (
   origin: IRPosition,
   extent: { negative: number; positive: number },
 ): IRNode => {
-  const resolved = isAxisLabelObject(label)
-    ? label
-    : { text: label, end: AxesLabelEnd.Positive, offset: 8, style: undefined };
+  const resolved = label;
   const direction = resolved.end === AxesLabelEnd.Positive ? 1 : -1;
   const length = resolved.end === AxesLabelEnd.Positive ? extent.positive : extent.negative;
   const [originX, originY] = origin;
@@ -147,7 +147,7 @@ const createAxisLabel = (
 };
 
 const createOriginLabel = (label: AxesOriginLabel, origin: IRPosition): IRNode => {
-  const resolved = isOriginLabelObject(label) ? label : { text: label, offset: 10, style: undefined };
+  const resolved = label;
   return createTextNode([origin[0] - resolved.offset, origin[1] + resolved.offset], resolved.text, resolved.style);
 };
 
@@ -157,14 +157,6 @@ const normalizeTickSideLengths = (side: AxesTicks['side'], length: number): { ne
   if (side === AxesTickSide.Negative) return { negative: length, positive: 0 };
   return { negative: length / 2, positive: length / 2 };
 };
-
-const isAxisLabelObject = (label: AxesAxisLabel): label is Extract<AxesAxisLabel, { text: IRTextBlock; end: string }> =>
-  typeof label === 'object' && !Array.isArray(label) && 'text' in label;
-
-const isOriginLabelObject = (
-  label: AxesOriginLabel,
-): label is Extract<AxesOriginLabel, { text: IRTextBlock; offset: number }> =>
-  typeof label === 'object' && !Array.isArray(label) && 'text' in label;
 
 const createLinePath = (from: IRPosition, to: IRPosition, style: IRStandardPathStrokeStyle | undefined): IRPath => {
   const { zIndex, ...appearance } = style ?? {};

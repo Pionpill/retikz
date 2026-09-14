@@ -1,9 +1,12 @@
-import type { input as ZodInput, output as ZodOutput } from 'zod';
+import type { IRScopeProps } from '@retikz/core';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
-import type { SurfaceInputSchema, SurfaceSchema } from './schema';
+import type { SurfaceSchema } from './schema';
 
 /** Surface 的公开 authoring 输入 */
-export type SurfaceInput = ZodInput<typeof SurfaceInputSchema>;
+export type SurfaceInput = IRSurface;
 
-/** 经 schema 归一化的持久化 Standard Surface composite */
-export type IRSurface = ZodOutput<typeof SurfaceSchema>;
+/** 稀疏持久化 Standard Surface composite */
+export type IRSurface = Omit<ZodInput<typeof SurfaceSchema>, keyof IRScopeProps | 'child'> &
+  IRScopeProps &
+  Pick<ZodInfer<typeof SurfaceSchema>, 'child'>;

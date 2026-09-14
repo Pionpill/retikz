@@ -8,7 +8,7 @@ import { GraphStatus, GraphType } from '../../shared';
 
 /** 从当前 Core Theme 建立 Graph Entity、Relation 与 Surface 的中立 defaults/rules */
 export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyleResolution => {
-  const foreground = theme.mode === ThemeMode.Light ? '#000000' : '#ffffff';
+  const foreground = theme.mode === ThemeMode.Light ? '#666666' : '#999999';
   return {
     defaults: {
       entity: {
@@ -31,7 +31,6 @@ export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyl
           strokeOpacity: 1,
           opacity: 1,
         },
-        labelTextForeground: 'gray',
         labelFont: { size: 'sm' },
         labelOpacity: 1,
       },
@@ -65,7 +64,7 @@ export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyl
       {
         type: GraphType.Entity,
         selector: { status: GraphStatus.Disabled },
-        style: { color: theme.colors.semantic.guide },
+        style: { color: theme.colors.semantic.guide, dashPattern: [6, 4] },
       },
       {
         type: GraphType.Relation,
@@ -92,6 +91,7 @@ export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyl
         type: GraphType.Relation,
         selector: { status: GraphStatus.Disabled },
         style: { color: theme.colors.semantic.guide },
+        structure: { dashPattern: [6, 4] },
         sourceMarker: { color: theme.colors.semantic.guide },
         targetMarker: { color: theme.colors.semantic.guide },
       },

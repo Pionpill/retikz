@@ -86,7 +86,11 @@ describe('Layout inspect compile integration', () => {
       Array.from(
         new Set(
           output.inspection?.entries.map(entry =>
-            entry.owner.kind === 'composite' ? entry.owner.type : entry.owner.name,
+            entry.owner.kind === 'composite'
+              ? entry.owner.type
+              : entry.owner.kind === 'path'
+                ? entry.owner.name
+                : entry.owner.kind,
           ),
         ),
       ),

@@ -79,7 +79,7 @@ export const DocsHome: FC = () => {
   const navigation = (
     <>
       <Button asChild variant="default">
-        <Link to="/about/overview">{t('docs.homeAbout')}</Link>
+        <Link to="/about/introduction">{t('docs.homeAbout')}</Link>
       </Button>
       <TooltipProvider delayDuration={150}>
         <ButtonGroup>

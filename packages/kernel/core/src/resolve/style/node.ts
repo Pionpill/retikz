@@ -1,7 +1,9 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { IRNode, IRNodeDefault, IRNodeLayout, IRNodeStyle } from '../../schemas';
 import type { StyleResolveFrame } from './types';
 
-import { cutsStyleChannel, pickDefinedKeys } from './frame';
+import { cutsStyleChannel } from './frame';
 
 /** 按各字段的原有覆盖粒度解析节点分组，复合叶子保持整体覆盖 */
 export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleResolveFrame>): IRNode => {
@@ -15,16 +17,26 @@ export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<Sty
       layout = {};
     }
     const { style: nodeStyle, layout: nodeLayout, ...geometry } = frame.nodeDefault ?? {};
-    defaults = { ...defaults, ...pickDefinedKeys(geometry) };
-    style = { ...style, ...pickDefinedKeys(frame.cascade), ...pickDefinedKeys(nodeStyle ?? {}) };
-    layout = { ...layout, ...pickDefinedKeys(nodeLayout ?? {}) };
+    defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
+    style = {
+      ...style,
+      ...mergeProperties<IRNodeStyle>([frame.cascade, nodeStyle], { shouldOverride: value => value !== undefined }),
+    };
+    layout = { ...layout, ...mergeProperties([nodeLayout ?? {}], { shouldOverride: value => value !== undefined }) };
   }
-  style = { ...style, ...pickDefinedKeys(node.style ?? {}) };
-  layout = { ...layout, ...pickDefinedKeys(node.layout ?? {}) };
+  style = { ...style, ...mergeProperties([node.style ?? {}], { shouldOverride: value => value !== undefined }) };
+  layout = { ...layout, ...mergeProperties([node.layout ?? {}], { shouldOverride: value => value !== undefined }) };
   if (style.color !== undefined) {
     style.stroke ??= style.color;
     style.fill ??= style.color;
     style.textColor ??= style.color;
   }
-  return { ...defaults, ...pickDefinedKeys(node), type: node.type, position: node.position, style, layout };
+  return {
+    ...defaults,
+    ...mergeProperties([node], { shouldOverride: value => value !== undefined }),
+    type: node.type,
+    position: node.position,
+    style,
+    layout,
+  };
 };

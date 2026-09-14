@@ -73,6 +73,16 @@ const FlowOrthogonalRouteArtifactSchema = strictObject({
 export const FlowRouteArtifactSchema = discriminatedUnion('kind', [
   FlowStraightRouteArtifactSchema,
   FlowOrthogonalRouteArtifactSchema,
+  FlowOrthogonalRouteArtifactSchema.extend({
+    kind: literal(FlowRoutingKind.HorizontalThenVertical).describe(
+      'Horizontal then vertical Flow route discriminator.',
+    ),
+  }),
+  FlowOrthogonalRouteArtifactSchema.extend({
+    kind: literal(FlowRoutingKind.VerticalThenHorizontal).describe(
+      'Vertical then horizontal Flow route discriminator.',
+    ),
+  }),
 ]).describe('Canonical renderer-neutral Flow relation route.');
 
 export const FlowRelationArtifactSchema = strictObject({

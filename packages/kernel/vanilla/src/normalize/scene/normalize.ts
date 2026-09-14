@@ -129,6 +129,7 @@ const hasInputChildren = (child: InputChild): boolean => (inputChildrenOf(child)
 /** 判断已带 Scope 判别字段的容器是否仍含有需要 Vanilla 归一化的 authoring 子树 */
 const hasNestedInput = (child: InputChild): boolean =>
   inputChildrenOf(child)?.some(nested => {
+    if ('authoring' in nested) return true;
     if (nested.type === undefined || nested.type === 'embed') return true;
     if (
       nested.type === 'path' &&
@@ -144,7 +145,8 @@ const isInputPath = (child: InputChild): child is InputPath =>
   !('namespace' in child) &&
   (child.type === undefined
     ? 'way' in child || hasInputPathSteps(child) || 'kind' in child
-    : child.type === 'path' && ('way' in child || 'thickness' in child || 'arrow' in child || 'arrowDetail' in child));
+    : child.type === 'path' &&
+      ('authoring' in child || 'way' in child || 'thickness' in child || 'arrow' in child || 'arrowDetail' in child));
 
 /** 判断一个 child 是否为 Core Scope 或 InputScope */
 const isInputScope = (child: InputChild): child is InputScope =>
@@ -154,7 +156,8 @@ const isInputScope = (child: InputChild): child is InputScope =>
     : child.type === 'scope' && ('authoring' in child || hasNestedInput(child)));
 
 /** 判断一个 child 是否为 Core Node 或 InputNode */
-const isInputNode = (child: InputChild): child is InputNode => child.type === undefined;
+const isInputNode = (child: InputChild): child is InputNode =>
+  child.type === undefined || (!('namespace' in child) && child.type === 'node');
 
 /** 判断 adapter 产物是否为普通 Core Scope */
 const isCoreScope = (child: IRChild): child is IRScope => child.type === 'scope' && !('namespace' in child);
@@ -333,7 +336,7 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
       Object.freeze({
         kind: 'path',
         sourcePath: `${ctx.sourcePath}.path`,
-        owner: { kind: 'pathKind', name: path.kind ?? PathKind.Stroke },
+        owner: { kind: 'path', name: path.kind ?? PathKind.Stroke },
         type: 'path',
         authoring: input.authoring,
       }),
@@ -375,7 +378,31 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
       'normalizeScene: child with an empty children array must declare type',
     );
   }
-  if (isInputNode(input)) return normalizeNode(input);
+  if (isInputNode(input)) {
+    ctx.authoringSites.push(
+      Object.freeze({
+        kind: 'node',
+        type: 'node',
+        sourcePath: `${ctx.sourcePath}.node`,
+        owner: { kind: 'node' },
+        authoring: input.authoring,
+      }),
+    );
+    return normalizeNode(input);
+  }
+  if (!('namespace' in input) && input.type === 'coordinate') {
+    const { authoring, ...coordinate } = input;
+    ctx.authoringSites.push(
+      Object.freeze({
+        kind: 'coordinate',
+        type: 'coordinate',
+        sourcePath: `${ctx.sourcePath}.coordinate`,
+        owner: { kind: 'coordinate' },
+        authoring,
+      }),
+    );
+    return coordinate;
+  }
   return input;
 };
 

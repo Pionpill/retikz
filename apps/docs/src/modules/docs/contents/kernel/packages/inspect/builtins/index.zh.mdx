@@ -1,0 +1,124 @@
+---
+title: 内置观测
+description: 查看 Core 当前提供的五类内置 Inspector，并用只读辅助内容解释最终编译结果
+---
+
+内置观测用于快速查看 Core 已经发布的最终结果。先在[安装与使用](/kernel/packages/inspect#安装与使用)完成 React 或 Vanilla 宿主接入，再请求下表中的 Inspector；它们不会改变主图。
+
+## 内置检查
+
+默认 registry 目前包含五类内置 Inspector。每一类都读取 Core 已经完成解析的最终产物：
+
+| 观测器定义             | 对应组件     | 说明                                  |
+| ---------------------- | ------------ | ------------------------------------- |
+| `PATH_INSPECTOR`       | `Path`       | 控制柄、顶点、圆弧几何与标签          |
+| `NODE_INSPECTOR`       | `Node`       | 局部几何、正文排版、关键点与场景 AABB |
+| `CLIP_INSPECTOR`       | `Clip`       | 最终路径的子路径、孔洞边缘与标签      |
+| `SCOPE_INSPECTOR`      | `Scope`      | 固有包络、原点、轴和层级标签          |
+| `COORDINATE_INSPECTOR` | `Coordinate` | 坐标点与作者指定的 id                 |
+
+`createDefaultInspectorRegistry()` 会自动加入这五项。没有匹配的最终 owner 或没有请求对应 key 时，不会生成辅助片段。
+
+“图形参数”改变主体，“检查选项”只影响辅助层。
+
+内置观测标签与所标记点或边缘的纵向偏移统一为 12 个单位，保留各自的上方或下方标注方向；坐标轴名称沿轴方向距末端 12 个单位。
+
+## 曲线
+
+`PATH_INSPECTOR` 读取 Core 解析完成的 Path 命令。每个示例只保留一条曲线，分别调整主图参数和辅助内容。
+
+顶点按首次出现的顺序标为 `V0`、`V1`……，重合点只编号一次；圆弧和椭圆弧的两个不同端点显示为 `V0`、`V1`。
+
+`controlPoints`、`vertices`、`arcGeometry` 分别控制控制柄、有效顶点和圆弧几何，默认依次为 `true`、`false`、`true`；`labels` 默认关闭。为方便观察，以下示例预先打开相关辅助项。
+
+### 二次贝塞尔
+
+<ComponentPreview
+  files={['inspect-quadratic', 'inspect-quadratic.controls.ts', 'inspect-quadratic.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="移动起终点或控制点，观察曲线与辅助控制柄同步改变。"
+/>
+
+### 三次贝塞尔
+
+<ComponentPreview
+  files={['inspect-cubic', 'inspect-cubic.controls.ts', 'inspect-cubic.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="分别移动两个控制点，观察它们对曲线两端走向的影响。"
+/>
+
+### 圆弧
+
+<ComponentPreview
+  files={['inspect-arc', 'inspect-arc.controls.ts', 'inspect-arc.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="调整半径和角度，观察圆心、半径线与端点。"
+/>
+
+圆弧与椭圆弧的半径辅助线使用 dashed 样式。`ellipseAxes` 独立控制椭圆十字轴线，默认关闭，开启后使用 dotted 样式，不受 `arcGeometry` 开关影响。
+
+### 椭圆弧
+
+<ComponentPreview
+  files={['inspect-ellipse-arc', 'inspect-ellipse-arc.controls.ts', 'inspect-ellipse-arc.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="分别改变水平、垂直半径，观察椭圆弧几何。"
+/>
+
+## 节点边界
+
+`NODE_INSPECTOR` 统一展示形状轮廓、连接边界、布局外框、文本框、基线、关键点与场景轴对齐包围框（AABB）。`outline`、`boundary`、`box`、`content`、`baselines`、`keyPoints`、`bounds` 和 `labels` 默认全部开启，可分别关闭。
+
+AABB 由外框四角经过最终变换后计算，不包含 stroke、shadow 或外置 label，也不因 Clip 缩小。为避免文字重叠，示例默认关闭标签，其他几何辅助项全部开启。
+
+<ComponentPreview
+  files={['inspect-node-geometry', 'inspect-node-geometry.controls.ts', 'inspect-node-geometry.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="旋转同一个节点，比较随节点旋转的局部框和始终对齐场景坐标轴的 AABB。"
+/>
+
+## 裁切
+
+`CLIP_INSPECTOR` 观察一次逻辑裁切应用，显示最终路径的全部子路径。下例只有一个被裁切节点，使用 `evenodd` 外轮廓与菱形内轮廓形成孔洞。
+
+<ComponentPreview
+  files={['inspect-clip', 'inspect-clip.controls.ts', 'inspect-clip.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="改变外轮廓和孔洞大小，或关闭辅助边缘以比较实际裁切结果。"
+/>
+
+## 层级
+
+`SCOPE_INSPECTOR` 读取 Scope 的固有包络，并在局部坐标中标出原点、坐标轴和层级标签。下面放置两个错开的子节点，包络围住两者，便于观察 Scope 变换和包络的关系。
+
+局部坐标轴固定长 40 个局部单位，以虚线、末端箭头和 `x` / `y` 标注表示正方向，并随 Scope 变换。轴名随 `axes` 开关显示；`labels` 只控制 `scope N` 层级标签。
+
+<ComponentPreview
+  files={['inspect-scope', 'inspect-scope.controls.ts', 'inspect-scope.i18n.ts']}
+  size="lg"
+  controlPanelDefaultOpen
+  caption="平移、旋转 Scope，观察固有包络、局部原点与坐标轴。"
+/>
+
+## 坐标
+
+`COORDINATE_INSPECTOR` 标出已经解析的 Coordinate 位置，并可显示作者指定的 id。坐标本身是定位信息；可见的点和标识由辅助层绘制。
+
+<ComponentPreview
+  files={['inspect-coordinate', 'inspect-coordinate.controls.ts', 'inspect-coordinate.i18n.ts']}
+  size="sm"
+  controlPanelDefaultOpen
+  caption="移动坐标点，切换观测或标识；关闭观测时，Coordinate 本身不产生可见图形。"
+/>
+
+## 相关
+
+- [拓展观测](/kernel/packages/inspect/extensions)：为其它 Core owner 定义自己的 Inspector
+- [实现原理](/kernel/packages/inspect/mechanism)：了解 request 如何选择最终实例、坐标空间如何生效，以及辅助内容何时隔离编译
+- [Schema 参考](/kernel/packages/inspect/schema-reference)：查询五类内置选项的默认值与字段契约

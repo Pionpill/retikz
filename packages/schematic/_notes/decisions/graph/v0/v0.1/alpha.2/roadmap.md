@@ -19,6 +19,7 @@ alpha.2 建立第五类 Graph Source composite `Block`，用于表达具有 Grap
 | [05](./05-uml-relation-kind-catalog.md)   | UML Relation kind 目录与结构默认    | Relation Definition、Core Path、Standard Arrow           | Proposed   |
 | [06](./06-graph-status.md)                | Entity / Relation 语义状态          | Graph Source、Graph Theme、Entity / Relation resolve     | Proposed   |
 | [07](./07-theme-source-fragments.md)      | Graph Defaults、Rules 与 Theme 来源 | Core Theme 协议、Graph Source、容器与语义规则            | Accepted   |
+| [08](./08-relation-color-groups.md)       | Entity / Relation 自动颜色分组      | Graph Source、Graph Theme、Diagram Flow                  | Proposed   |
 
 ADR-07 冻结 graphDefaults、独立 graphRules、Theme 生成来源及作用域；其实施与 Diagram 对 Graph 的直接消费同步完成。旧 graphTheme、token 与 appearance 入口已删除，三入口采用同一 Source 片段契约。
 

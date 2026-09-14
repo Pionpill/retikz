@@ -48,15 +48,7 @@ const completeFlow = {
       children: ['pipeline'],
     },
   ],
-  layouts: [
-    {
-      id: 'pipeline',
-      direction: 'down',
-      gap: 12,
-      align: 'center',
-      children: ['ir'],
-    },
-  ],
+  layouts: [{ kind: 'linear' as const, id: 'pipeline', direction: 'down', gap: 12, align: 'center', children: ['ir'] }],
   children: ['sugar', 'compile'],
   relations: [
     {
@@ -88,6 +80,55 @@ const completeFlow = {
 } as const;
 
 describe('Flow Source schema', () => {
+  it('preserves root Graph rules while rejecting Flow Group-local rules', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      graphRules: [{ type: 'entity', selector: { kind: 'docs.logic.important' }, style: { color: 'dodgerblue' } }],
+      entities: [{ id: 'entity', text: 'Entity', kind: 'docs.logic.important' }],
+      groups: [],
+      layouts: [],
+      children: ['entity'],
+    };
+
+    const parsed = FlowDiagramSchema.parse(source);
+
+    expect(parsed.graphRules).toEqual(source.graphRules);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed);
+    expect(
+      FlowDiagramSchema.safeParse({
+        ...source,
+        groups: [{ id: 'group', graphRules: source.graphRules, children: ['entity'] }],
+        children: ['group'],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('round-trips a Flow Relation group and rejects non-string groups', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'source', text: 'Source' },
+        { id: 'target', text: 'Target' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['source', 'target'],
+      relations: [{ source: 'source', target: 'target', group: '' }],
+    };
+
+    const parsed = FlowDiagramSchema.parse(source);
+
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(source);
+    expect(
+      FlowDiagramSchema.safeParse({
+        ...source,
+        relations: [{ source: 'source', target: 'target', group: 1 }],
+      }).success,
+    ).toBe(false);
+  });
+
   it('parses the flat catalog Source and round-trips without changing it', () => {
     const parsed = FlowDiagramSchema.parse(completeFlow);
 
@@ -139,13 +180,33 @@ describe('Flow Source schema', () => {
     });
   });
 
+  it('accepts a non-blank Core TextBlock as a Relation label', () => {
+    const label = ['编译', { text: '生成 Scene', fill: 'gray' }];
+    const parsed = FlowDiagramSchema.parse({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'source', text: 'Source' },
+        { id: 'target', text: 'Target' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['source', 'target'],
+      relations: [{ source: 'source', target: 'target', label }],
+    });
+
+    expect(parsed.relations?.[0]?.label).toEqual(label);
+  });
+
   it('keeps Group visible and gives Layout a separate closed schema', () => {
     const source = {
       namespace: 'diagram',
       type: 'flow',
       entities: [{ id: 'entity', text: 'Entity' }],
       groups: [],
-      layouts: [{ id: 'layout', direction: 'left', gap: 8, align: 'end', children: ['entity'] }],
+      layouts: [
+        { kind: 'linear' as const, id: 'layout', direction: 'left', gap: 8, align: 'end', children: ['entity'] },
+      ],
       children: ['layout'],
     };
 
@@ -165,7 +226,7 @@ describe('Flow Source schema', () => {
     expect(
       FlowDiagramSchema.safeParse({
         ...source,
-        layouts: [{ id: 'layout', children: ['entity'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', children: ['entity'] }],
       }).success,
     ).toBe(false);
     expect(
@@ -175,6 +236,33 @@ describe('Flow Source schema', () => {
         layouts: [],
         children: ['group'],
       }).success,
+    ).toBe(false);
+  });
+
+  it('accepts direct-Entity item width strategies and rejects invalid values', () => {
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [{ id: 'entity', text: 'Entity', layout: { width: 80 } }],
+      groups: [],
+      layouts: [
+        {
+          kind: 'linear' as const,
+          id: 'layout',
+          direction: 'down',
+          itemWidth: 'match-largest' as const,
+          children: ['entity'],
+        },
+      ],
+      children: ['layout'],
+    };
+
+    expect(FlowDiagramSchema.parse(source)).toEqual(source);
+    expect(FlowDiagramSchema.safeParse({ ...source, layouts: [{ ...source.layouts[0], itemWidth: 0 }] }).success).toBe(
+      false,
+    );
+    expect(
+      FlowDiagramSchema.safeParse({ ...source, layouts: [{ ...source.layouts[0], itemWidth: 'largest' }] }).success,
     ).toBe(false);
   });
 
@@ -206,7 +294,7 @@ describe('Flow Source schema', () => {
     { ...completeFlow, unknown: true },
     { ...completeFlow, entities: [] },
     { ...completeFlow, children: [] },
-    { ...completeFlow, layouts: [{ id: 'empty', direction: 'right', children: [] }] },
+    { ...completeFlow, layouts: [{ kind: 'linear' as const, id: 'empty', direction: 'right', children: [] }] },
     { ...completeFlow, relations: [] },
     { ...completeFlow, entities: [{ type: 'entity', id: 'typed', text: 'Typed' }] },
     { ...completeFlow, entities: [{ id: '', text: 'blank id' }] },

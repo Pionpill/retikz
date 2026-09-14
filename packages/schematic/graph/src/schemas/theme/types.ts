@@ -11,6 +11,7 @@ import type {
   GraphRelationDefaultsSchema,
   GraphRelationDefaultsStyleSchema,
   GraphRelationRuleSchema,
+  GraphRelationRuleStructureSchema,
   GraphRelationThemeSelectorSchema,
   GraphRuleSchema,
   GraphSurfaceDefaultsSchema,
@@ -33,6 +34,9 @@ export type IRGraphRelationDefaults = ZodInfer<typeof GraphRelationDefaultsSchem
 
 /** Relation defaults/rules 的正式 Source path style 片段 */
 export type IRGraphRelationDefaultsStyle = ZodInfer<typeof GraphRelationDefaultsStyleSchema>;
+
+/** Relation rules 可覆盖的受限结构片段 */
+export type IRGraphRelationRuleStructure = ZodInfer<typeof GraphRelationRuleStructureSchema>;
 
 /** Group / Block defaults 的正式 Surface 根片段 */
 export type IRGraphSurfaceDefaults = ZodInfer<typeof GraphSurfaceDefaultsSchema>;

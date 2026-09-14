@@ -111,6 +111,7 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
     name: 'test-layout',
     description: 'Deterministic test layout.',
     capabilities: {
+      placementKinds: ['linear', 'grid'],
       compoundScopes: true,
       groupEndpoints: true,
       crossScopeRelations: true,
@@ -125,6 +126,7 @@ const definition = (layout: FlowLayoutDefinition['layout']): FlowLayoutDefinitio
       direction: 'right',
       nodeGap: 20,
       rankGap: 40,
+      placementGap: { horizontal: 20, vertical: 20 },
       routing: { kind: 'orthogonal', orthogonalCornerRadius: 6 },
     },
     layout,
@@ -283,7 +285,7 @@ describe('Flow layout callback execution', () => {
           kind: 'layout',
           id: 'lane',
           layout: { ...input.layout, direction: 'down', nodeGap: 6 },
-          align: 'end',
+          placement: { kind: 'linear', direction: 'down', gap: 6, align: 'end' },
           elements: [input.elements[0]],
         },
       ],
@@ -297,7 +299,7 @@ describe('Flow layout callback execution', () => {
     };
     const place = (context: FlowLayoutExecutionContext) =>
       context.placeLayout({
-        layout: { id: 'lane', direction: 'down', gap: 6, align: 'end' },
+        layout: { kind: 'linear', id: 'lane', direction: 'down', gap: 6, align: 'end' },
         elements: [
           {
             id: 'a',
@@ -380,6 +382,56 @@ const isCreateFlowDiagramProviderContribution = (value: unknown): value is Creat
   typeof value === 'function';
 
 describe('Flow Diagram compile transaction', () => {
+  it('applies match-largest only to direct Layout Entities and preserves the final Core width through materialization', () => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [Flow.createFlowDiagramProviderContribution()],
+    });
+    const source: IRChild = parseTestFlowDiagram({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'short', text: 'A' },
+        { id: 'long', text: 'Longest Flow label' },
+        { id: 'nested', text: 'Nested' },
+      ],
+      groups: [],
+      layouts: [
+        { kind: 'linear', id: 'nested-layout', direction: 'down', children: ['nested'] },
+        {
+          kind: 'linear',
+          id: 'lane',
+          direction: 'down',
+          itemWidth: 'match-largest',
+          children: ['short', 'long', 'nested-layout'],
+        },
+      ],
+      children: ['lane'],
+    });
+    const result = compileToScene(
+      { type: 'scene', version: 1, children: [source] },
+      {
+        ...definitions,
+        padding: 0,
+        measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
+      },
+    );
+    const flowArtifact = Flow.FlowDiagramArtifactSchema.parse(
+      result.artifacts.find(envelope => envelope.kind === 'composite' && envelope.namespace === 'diagram')?.value,
+    );
+    const lane = flowArtifact.elements[0];
+    if (lane.kind !== 'layout') throw new Error('expected root Flow Layout artifact');
+    const short = lane.elements.find(element => element.id === 'short');
+    const long = lane.elements.find(element => element.id === 'long');
+    const nestedLayout = lane.elements.find(element => element.id === 'nested-layout');
+    if (short?.kind !== 'entity' || long?.kind !== 'entity' || nestedLayout?.kind !== 'layout') {
+      throw new Error('expected direct Entity and nested Layout artifacts');
+    }
+
+    expect(short.bounds.width).toBe(long.bounds.width);
+    expect(nestedLayout.elements[0]?.bounds.width).toBeLessThan(long.bounds.width);
+    expect(textPrimitive(result.scene.primitives, 'A')).toBeDefined();
+  });
+
   it('measures and renders a styled multi-line Entity text block through the Graph pipeline', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [Flow.createFlowDiagramProviderContribution()],
@@ -893,8 +945,17 @@ describe('Flow Diagram compile transaction', () => {
     },
   );
 
-  it('uses provider labelBounds to place the rendered sloped Graph label', () => {
-    const compile = (reservation: 'horizontal' | 'vertical'): { label: TextPrim; rotation: number | undefined } => {
+  it('keeps Flow relation labels centered on the path midpoint regardless of their layout reservation', () => {
+    const compile = (
+      reservation: 'horizontal' | 'vertical',
+      relationLabel: string | Array<string> = 'edge-label',
+    ): {
+      hasDetail: boolean;
+      label: TextPrim;
+      labelSize: { width: number; height: number };
+      rotation: number | undefined;
+    } => {
+      let measuredLabelSize: { width: number; height: number } | undefined;
       const customLayout = definition(layoutInput => {
         const sourceElement = layoutInput.elements[0];
         const targetElement = layoutInput.elements[1];
@@ -923,6 +984,7 @@ describe('Flow Diagram compile transaction', () => {
         ];
         const labelSize = relation.labelSize;
         if (labelSize === undefined) throw new Error('missing test label size');
+        measuredLabelSize = labelSize;
         const labelCenter: [number, number] =
           reservation === 'horizontal' ? [50, sourceCenter[1] - 12] : [turnX + 18, 52];
         return {
@@ -961,7 +1023,7 @@ describe('Flow Diagram compile transaction', () => {
         groups: [],
         layouts: [],
         children: ['source', 'target'],
-        relations: [{ source: 'source', target: 'target', label: 'edge-label' }],
+        relations: [{ source: 'source', target: 'target', label: relationLabel }],
       });
       const result = compileToScene(
         { type: 'scene', version: 1, children: [source] },
@@ -971,23 +1033,37 @@ describe('Flow Diagram compile transaction', () => {
           measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
         },
       );
-      const label = textPrimitive(result.scene.primitives, 'edge-label');
+      const label = textPrimitive(
+        result.scene.primitives,
+        typeof relationLabel === 'string' ? relationLabel : relationLabel[0],
+      );
       expect(label).toBeDefined();
       if (label === undefined) throw new Error('missing rendered relation label');
       const rotation = slopedLabelGroup(result.scene.primitives, 'edge-label')?.transforms?.find(
         transform => transform.kind === 'rotate',
       );
-      return { label, rotation: rotation?.kind === 'rotate' ? rotation.degrees : undefined };
+      if (measuredLabelSize === undefined) throw new Error('missing measured relation label size');
+      return {
+        hasDetail:
+          typeof relationLabel === 'string' || textPrimitive(result.scene.primitives, relationLabel[1]) !== undefined,
+        label,
+        labelSize: measuredLabelSize,
+        rotation: rotation?.kind === 'rotate' ? rotation.degrees : undefined,
+      };
     };
 
     const horizontal = compile('horizontal');
     const vertical = compile('vertical');
 
-    expect(horizontal.label.y).toBeLessThan(vertical.label.y);
-    expect(vertical.label.x).toBeGreaterThan(horizontal.label.x);
-    expect(horizontal.rotation).toBeDefined();
-    expect(vertical.rotation).toBeDefined();
-    expect(vertical.rotation).not.toBe(horizontal.rotation);
+    expect(horizontal.label.x).toBeCloseTo(vertical.label.x);
+    expect(horizontal.label.y).toBeCloseTo(vertical.label.y);
+    expect(horizontal.label.y).toBeGreaterThan(70);
+    expect(horizontal.rotation).toBeUndefined();
+    expect(vertical.rotation).toBeUndefined();
+
+    const multiLine = compile('horizontal', ['edge-label', 'detail']);
+    expect(multiLine.labelSize.height).toBeGreaterThan(horizontal.labelSize.height);
+    expect(multiLine.hasDetail).toBe(true);
   });
 
   it('reports a final Graph relation probe failure as materialize with the authored relation context', () => {
@@ -1204,10 +1280,8 @@ describe('Flow Diagram compile transaction', () => {
       expect(layout.layout.direction).toBe('down');
       const placement = context.placeLayout({
         layout: {
+          ...layout.placement,
           id: layout.id,
-          direction: layout.layout.direction,
-          gap: layout.layout.nodeGap,
-          align: layout.align,
         },
         elements: [{ id: child.id, size: child.size, margin: child.margin }],
       });
@@ -1239,7 +1313,7 @@ describe('Flow Diagram compile transaction', () => {
         { id: 'outside', text: 'Outside' },
       ],
       groups: [],
-      layouts: [{ id: 'layout-only', direction: 'down', children: ['nested'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout-only', direction: 'down', children: ['nested'] }],
       children: ['layout-only', 'outside'],
     });
     const result = compileToScene(
@@ -1288,7 +1362,7 @@ describe('Flow Diagram compile transaction', () => {
         { id: 'long', text: 'Longer entity' },
       ],
       groups: [],
-      layouts: [{ id: 'lane', direction, gap: 13, align: 'end', children: ['short', 'long'] }],
+      layouts: [{ kind: 'linear' as const, id: 'lane', direction, gap: 13, align: 'end', children: ['short', 'long'] }],
       children: ['lane'],
     });
     const result = compileToScene(
@@ -1337,7 +1411,7 @@ describe('Flow Graph materialization invariants', () => {
       input: {
         layout: {
           direction: 'right',
-          nodeGap: 24,
+          nodeGap: 48,
           rankGap: 48,
           routing: { kind: 'straight' },
         },

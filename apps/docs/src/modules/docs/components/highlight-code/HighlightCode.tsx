@@ -20,6 +20,10 @@ export type HighlightCodeProps = {
   showLineNumbers?: boolean;
   /** 每行的 diff 种类 */
   lineKinds?: ReadonlyArray<DiffLineKind>;
+  /** 首行的实际行号 */
+  lineNumberStart?: number;
+  /** 需要突出显示的实际行号范围 */
+  activeLineRange?: { start: number; end: number };
 };
 
 const LINE_KIND_CLASS: Record<DiffLineKind, string> = {
@@ -61,13 +65,14 @@ const tokenStyle = (token: ThemedToken): CSSProperties => {
 };
 
 const HighlightCodeComponent: FC<HighlightCodeProps> = props => {
-  const { lang, code, showLineNumbers, lineKinds } = props;
+  const { lang, code, showLineNumbers, lineKinds, lineNumberStart = 1, activeLineRange } = props;
 
   const siteTheme = useThemeStore(state => state.theme);
   const theme = siteTheme === 'dark' ? 'dark' : 'light';
   const [highlighted, setHighlighted] = useState<HighlightedCodeState>();
   const shouldShowLineNumbers = showLineNumbers ?? code.split('\n').length > 10;
   const hasDiff = lineKinds !== undefined && lineKinds.length > 0;
+  const hasActiveRange = activeLineRange !== undefined;
 
   useEffect(() => {
     let active = true;
@@ -91,25 +96,54 @@ const HighlightCodeComponent: FC<HighlightCodeProps> = props => {
       : undefined;
   const rawLines = code.split('\n');
   const lineCount = highlightedLines?.length ?? rawLines.length;
+  const activeRangeStart = activeLineRange === undefined ? undefined : Math.max(activeLineRange.start, lineNumberStart);
+  const activeRangeEnd =
+    activeLineRange === undefined ? undefined : Math.min(activeLineRange.end, lineNumberStart + lineCount - 1);
+  const activeLineRailStyle: CSSProperties | undefined =
+    activeRangeStart === undefined || activeRangeEnd === undefined || activeRangeStart > activeRangeEnd
+      ? undefined
+      : {
+          top: `${(activeRangeStart - lineNumberStart) * 1.5}rem`,
+          height: `${(activeRangeEnd - activeRangeStart + 1) * 1.5}rem`,
+          left: shouldShowLineNumbers ? '4rem' : '0.5rem',
+        };
 
   return (
     <pre className="shiki m-0 overflow-auto bg-transparent p-4 font-mono text-sm leading-6 whitespace-pre [tab-size:2]">
-      <code className="block min-w-max bg-transparent">
+      <code className="relative block min-w-max bg-transparent">
+        {activeLineRailStyle !== undefined ? (
+          <span
+            aria-hidden
+            data-source-active-rail
+            className="pointer-events-none absolute z-10 block w-1 bg-blue-500 dark:bg-blue-400"
+            style={activeLineRailStyle}
+          />
+        ) : null}
         {Array.from({ length: lineCount }, (_, lineIndex) => {
           const lineKind = hasDiff ? (lineKinds[lineIndex] ?? 'context') : 'context';
           const tokens = highlightedLines?.[lineIndex];
+          const lineNumber = lineNumberStart + lineIndex;
+          const active =
+            activeLineRange !== undefined && lineNumber >= activeLineRange.start && lineNumber <= activeLineRange.end;
 
           return (
-            <span key={lineIndex} className={cn('block min-h-6', LINE_KIND_CLASS[lineKind])}>
+            <span
+              key={lineIndex}
+              data-source-line={lineNumber}
+              data-source-line-active={active ? 'true' : undefined}
+              className={cn('block min-h-6', LINE_KIND_CLASS[lineKind])}
+            >
               {shouldShowLineNumbers ? (
                 <span aria-hidden className="inline-block min-w-14 pr-4 text-right text-muted-foreground select-none">
-                  {lineIndex + 1}
+                  {lineNumber}
                 </span>
               ) : null}
               {hasDiff ? (
                 <span aria-hidden className={cn('inline-block w-5 select-none', LINE_MARKER_CLASS[lineKind])}>
                   {LINE_MARKER[lineKind]}
                 </span>
+              ) : hasActiveRange ? (
+                <span aria-hidden className="inline-block w-5 select-none" />
               ) : null}
               {tokens !== undefined
                 ? tokens.map((token, tokenIndex) => (

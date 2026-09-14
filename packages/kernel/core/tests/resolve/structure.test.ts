@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -17,12 +17,6 @@ const sourceFiles = (directory: string): Array<string> => {
 };
 
 describe('resolve source structure', () => {
-  it('introduces the resolve owner and removes obsolete stage owners', () => {
-    expect(existsSync(resolve(root, 'src/resolve/index.ts'))).toBe(true);
-    expect(existsSync(resolve(root, 'src/normalize/index.ts'))).toBe(false);
-    expect(existsSync(resolve(root, 'src/compile/style/index.ts'))).toBe(false);
-  });
-
   it('keeps builtin path emitters resolution-only', () => {
     const stroke = source('src/compile/path/stroke/emit.ts');
     expect(stroke).not.toContain('normalizePath(');

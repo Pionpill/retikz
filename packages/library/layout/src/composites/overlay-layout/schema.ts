@@ -60,7 +60,7 @@ export const OverlayLayoutItemSchema = LayoutItemBaseSchema.extend({
     .default(LayoutSizeParticipation.Include)
     .describe('Whether the item contributes to intrinsic container size.'),
   zIndex: number().int().default(0).describe('Integer paint-order layer for the item scope.'),
-}).describe('Canonical JSON-safe item owned by OverlayLayout.');
+}).describe('Sparse JSON-safe item owned by OverlayLayout.');
 
 const OverlayLayoutBaseSchema = LayoutContainerBoxSchema.extend({
   namespace: literal(LAYOUT_NAMESPACE).describe('Composite namespace for Layout capabilities.'),
@@ -97,7 +97,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
         message: 'Positioned OverlayLayout items require an explicit edge alignment when baseline would be effective.',
       });
     }
-    if (item.placement.kind === OverlayPlacementKind.Aligned && isBaseline && item.offset.y !== 0) {
+    if (item.placement.kind !== OverlayPlacementKind.Positioned && isBaseline && item.offset.y !== 0) {
       context.addIssue({
         code: 'custom',
         path: ['children', index, 'offset', 'y'],
@@ -108,7 +108,7 @@ const refineOverlayLayout = (layout: OverlayLayoutRefinementInput, context: Refi
 };
 
 export const OverlayLayoutSchema = OverlayLayoutBaseSchema.superRefine(refineOverlayLayout).describe(
-  'Canonical JSON-safe Layout OverlayLayout composite.',
+  'Sparse JSON-safe Layout OverlayLayout composite.',
 );
 
 const OverlayResolvedPointSchema = strictObject({

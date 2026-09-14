@@ -2,15 +2,21 @@ import type { ChartThemeDefinition } from '@retikz/chart';
 import type { ThemeStyleDefinition } from '@retikz/core';
 import type { FlowDiagramDefinitionOptions, FlowThemeStyleDefinition } from '@retikz/diagram/flow';
 import type { GraphThemeStyleDefinition } from '@retikz/graph';
+import type { EntityKindDefinition } from '@retikz/graph';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { TableThemeStyleDefinition } from '@retikz/table';
 
 import { createContext, useContext } from 'react';
 
+import {
+  logicFigureCoreThemeStyle,
+  logicFigureDiagramThemeStyle,
+  logicFigureEntityDefinitions,
+  logicFigureFlowThemeStyle,
+  logicFigureGraphThemeStyle,
+} from '../../../logic-figure';
 import { PreviewChartThemeDefinitions } from './chart';
 import { PreviewCoreThemeStyles } from './core';
-import { PreviewDiagramThemeStyles, PreviewFlowThemeStyles } from './diagram';
-import { PreviewGraphThemeStyles } from './graph';
 import { PreviewPlotThemeStyles } from './plot';
 import { PreviewTableThemeStyles } from './table';
 
@@ -23,17 +29,19 @@ export type PreviewThemeDefinitions = Readonly<{
   chart: ReadonlyArray<ChartThemeDefinition>;
   table: ReadonlyArray<TableThemeStyleDefinition>;
   graph: ReadonlyArray<GraphThemeStyleDefinition>;
+  graphEntityKinds: ReadonlyArray<EntityKindDefinition>;
 }>;
 
 /** docs reference preset 的稳定 definition bundle */
 export const PreviewThemeDefinitionBundle: PreviewThemeDefinitions = Object.freeze({
-  core: PreviewCoreThemeStyles,
-  diagram: PreviewDiagramThemeStyles,
-  flow: PreviewFlowThemeStyles,
+  core: [...PreviewCoreThemeStyles, logicFigureCoreThemeStyle],
+  diagram: [logicFigureDiagramThemeStyle],
+  flow: [logicFigureFlowThemeStyle],
   plot: PreviewPlotThemeStyles,
   chart: PreviewChartThemeDefinitions,
   table: PreviewTableThemeStyles,
-  graph: PreviewGraphThemeStyles,
+  graph: [logicFigureGraphThemeStyle],
+  graphEntityKinds: logicFigureEntityDefinitions,
 });
 
 export const PreviewThemeDefinitionsContext = createContext<PreviewThemeDefinitions>(PreviewThemeDefinitionBundle);

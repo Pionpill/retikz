@@ -31,7 +31,7 @@ const lower = (source: Graph.IRGraphRelation) => {
   const canonical = Graph.resolveRelation(source, options);
   return Graph.lowerRelation(
     canonical,
-    Graph.resolveRelationStructure(canonical),
+    Graph.resolveRelationStructure(canonical, { ...options, theme }),
     Graph.resolveRelationAppearance(canonical, { ...options, theme }),
   );
 };
@@ -64,6 +64,12 @@ describe('Relation lowering', () => {
       ],
     });
     expect(lower(source)).not.toHaveProperty('id');
+  });
+
+  it('does not pass the Graph-only Relation group to the lowered Core Path', () => {
+    const lowered = lower(relation({ group: 'forward' }));
+
+    expect(lowered).not.toHaveProperty('group');
   });
 
   it('preserves an explicit route and every inherited Core Path instance field', () => {
@@ -133,6 +139,7 @@ describe('Relation lowering', () => {
           {
             text: 'precise',
             position: 0.75,
+            side: 'top',
             textColor: '#dc2626',
             font: { weight: 'bold' },
             opacity: 0.4,
@@ -145,6 +152,7 @@ describe('Relation lowering', () => {
       {
         text: 'default',
         position: 0.25,
+        placement: 'inside',
         textColor: '#334155',
         font: { family: 'Inter', size: 14 },
         opacity: 0.8,
@@ -152,11 +160,18 @@ describe('Relation lowering', () => {
       {
         text: 'precise',
         position: 0.75,
+        side: 'top',
         textColor: '#dc2626',
         font: { family: 'Inter', size: 14, weight: 'bold' },
         opacity: 0.4,
       },
     ]);
+  });
+
+  it('passes a multi-line Core TextBlock through Relation lowering unchanged', () => {
+    const text = ['编译', { text: '生成 Scene', fill: 'gray' }];
+
+    expect(lower(relation({ labels: [{ text }] })).label).toMatchObject({ text });
   });
 
   it.each([
@@ -247,7 +262,7 @@ describe('Relation lowering', () => {
     ).toBe(true);
   });
 
-  it('applies the Graph preset font size and color to an unstyled Relation label', () => {
+  it('inherits the Relation foreground while applying the Graph preset font size to an unstyled label', () => {
     const definitions = resolveCoreProviderDependencies({
       contributions: [{ roots: [Graph.RelationProviderKey], providers: Graph.createGraphProviders() }],
     });
@@ -267,28 +282,42 @@ describe('Relation lowering', () => {
       primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'default label'),
     );
 
-    expect(label).toMatchObject({ type: 'text', fill: 'gray', fontSize: 14 });
+    expect(label).toMatchObject({ type: 'text', fill: '#666666', fontSize: 14 });
   });
 
   it.each([
-    { status: 'error', color: theme.colors.semantic.error },
-    { status: 'success', color: theme.colors.semantic.success },
-    { status: 'warning', color: theme.colors.semantic.warning },
-    { status: 'disabled', color: theme.colors.semantic.guide },
+    { status: 'error', color: theme.colors.semantic.error, structureDashPattern: false, dashPattern: undefined },
+    { status: 'success', color: theme.colors.semantic.success, structureDashPattern: false, dashPattern: undefined },
+    { status: 'warning', color: theme.colors.semantic.warning, structureDashPattern: false, dashPattern: undefined },
+    { status: 'disabled', color: theme.colors.semantic.guide, structureDashPattern: [6, 4], dashPattern: [6, 4] },
   ] as const)(
     'resolves the Neutral $status status to Core semantic colors for the Relation path and markers',
-    ({ status, color }) => {
+    ({ status, color, structureDashPattern, dashPattern }) => {
       const options = Graph.resolveGraphDefinitionOptions();
       const canonical = Graph.resolveRelation(relation({ status }), options);
+      const structure = Graph.resolveRelationStructure(canonical, { ...options, theme });
+      const appearance = Graph.resolveRelationAppearance(canonical, { ...options, theme });
 
-      expect(Graph.resolveRelationAppearance(canonical, { ...options, theme })).toMatchObject({
+      expect(appearance).toMatchObject({
         style: { color, stroke: color },
         sourceMarker: { color },
         targetMarker: { color },
       });
-      expect(lower(relation({ status }))).not.toHaveProperty('status');
+      expect(structure.dashPattern).toEqual(structureDashPattern);
+      const lowered = lower(relation({ status }));
+
+      expect(lowered.style?.dashPattern).toEqual(dashPattern);
+      expect(lowered).not.toHaveProperty('status');
     },
   );
+
+  it('keeps an authored dash pattern above a matching Relation rule structure', () => {
+    const options = Graph.resolveGraphDefinitionOptions();
+    const canonical = Graph.resolveRelation(relation({ status: 'disabled', style: { dashPattern: [2, 1] } }), options);
+
+    expect(Graph.resolveRelationStructure(canonical, { ...options, theme }).dashPattern).toEqual([6, 4]);
+    expect(lower(relation({ status: 'disabled', style: { dashPattern: [2, 1] } })).style?.dashPattern).toEqual([2, 1]);
+  });
 
   it('lets authored Relation and endpoint appearance override the status Theme without removing status', () => {
     const options = Graph.resolveGraphDefinitionOptions();

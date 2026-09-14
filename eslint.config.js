@@ -5,7 +5,7 @@ const config = [
   ...eslintConfig,
   {
     name: '@retikz/docs-demo-modules',
-    files: ['apps/docs/src/modules/docs/contents/**/*.demo.tsx'],
+    files: ['apps/docs/src/modules/docs/contents/**/*.tsx'],
     rules: {
       'react-refresh/only-export-components': [
         'error',

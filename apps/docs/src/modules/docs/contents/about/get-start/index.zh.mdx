@@ -1,0 +1,63 @@
+---
+title: 开始使用
+description: 按要解决的绘图领域和细分任务选择 Retikz 包，并区分应用入口、领域能力与基础实现。
+---
+
+大多数应用从带 `-react` 或 `-vanilla` 后缀的接入包开始；它们把领域能力接到 React 或普通 JavaScript 宿主中。无后缀的领域包负责 IR、解析和编译，基础实现包通常只在扩展、调试或底层集成时直接使用。
+
+## 按需使用
+
+| 领域      | 细分       | 包                         | 必要 | 备注                                      |
+| --------- | ---------- | -------------------------- | ---- | ----------------------------------------- |
+| Kernel    | core       | `@retikz/react`            | √    | React 应用入口：用 JSX 描述二维图形       |
+|           |            | `@retikz/vanilla`          | √    | 无框架入口：用对象和函数描述二维图形      |
+|           |            | `@retikz/core`             |      | 后端中立的二维绘图 IR、扩展契约和编译能力 |
+|           | inspect    | `@retikz/inspect`          |      | 检查编译结果并生成辅助内容                |
+|           | tex        | `@retikz/tex`              |      | 将 TeX 公式接入 Core 文本能力             |
+|           | foundation | `@retikz/foundation`       |      | 原子基础契约与基础 schema                 |
+|           | math       | `@retikz/math`             |      | 纯计算几何与通用算法                      |
+|           | runtime    | `@retikz/runtime`          |      | 增量执行、事务与调度                      |
+|           | render     | `@retikz/render`           |      | 执行 Scene 并输出 SVG 或 Canvas           |
+| Library   | standard   | `@retikz/standard`         |      | 通用图形 Definition、组合与 lowering      |
+|           |            | `@retikz/standard-vanilla` | √    | Standard 的无框架应用入口                 |
+|           |            | `@retikz/standard-react`   | √    | Standard 的 React 应用入口                |
+|           | layout     | `@retikz/layout`           |      | 规则布局、solver 与 artifact              |
+|           |            | `@retikz/layout-vanilla`   | √    | Layout 的无框架应用入口                   |
+|           |            | `@retikz/layout-react`     | √    | Layout 的 React 应用入口                  |
+| Schematic | graph      | `@retikz/graph`            |      | 实体、分组、关系的语义 IR 与 lowering     |
+|           |            | `@retikz/graph-vanilla`    | √    | Graph 的无框架应用入口                    |
+|           |            | `@retikz/graph-react`      | √    | Graph 的 React 应用入口                   |
+|           | diagram    | `@retikz/diagram`          |      | 按图式意图进行自动布局和 routing          |
+|           |            | `@retikz/diagram-vanilla`  | √    | Diagram 的无框架应用入口                  |
+|           |            | `@retikz/diagram-react`    | √    | Diagram 的 React 应用入口                 |
+| Viz       | data       | `@retikz/data`             | √    | 可视化共用的数据模型、转换与统计          |
+|           | plot       | `@retikz/plot`             |      | 基于图形语法的底层可视化库                |
+|           |            | `@retikz/plot-vanilla`     | √    | Plot 的无框架应用入口                     |
+|           |            | `@retikz/plot-react`       | √    | Plot 的 React 应用入口                    |
+|           | chart      | `@retikz/chart`            |      | 常见图表类型的结构与呈现                  |
+|           |            | `@retikz/chart-vanilla`    | √    | Chart 的无框架应用入口                    |
+|           |            | `@retikz/chart-react`      | √    | Chart 的 React 应用入口                   |
+|           | table      | `@retikz/table`            |      | 数据或显式内容的二维语义表格              |
+|           |            | `@retikz/table-vanilla`    | √    | Table 的无框架应用入口                    |
+|           |            | `@retikz/table-react`      | √    | Table 的 React 应用入口                   |
+
+React 和 Vanilla 共享同一套绘图语义：React 用 JSX 接入组件树；Vanilla 用对象和函数接入非 React 应用、服务端渲染或自行管理的宿主。
+
+## 阅读文档
+
+侧栏条目与页面标题旁的图标标记了阅读难度。它表达的是读完页面后要完成的任务，不是篇幅或代码量。
+
+| 难度 | 关键词 | 适合什么时候读                                               |
+| ---- | ------ | ------------------------------------------------------------ |
+| 入门 | 使用   | 想通过既有 API 完成一张图或一个明确功能时，优先阅读          |
+| 进阶 | 定制   | 需要组合能力、理解配置约束，或为具体场景编写定制代码时阅读   |
+| 底层 | 原理   | 需要二次开发、扩展能力、排查复杂问题或调试性能与运行时时阅读 |
+
+推荐先完成一个入门示例，再根据问题进入进阶页；只有问题需要机制解释时再读底层页。入门页链接到底层材料，不表示必须先读完它们。
+
+## 接下来
+
+- [通用绘图](/kernel/components/get-start)：从一个静态图理解 Kernel 的基础接入
+- [Graph](/schematic/graph)：开始表达实体、分组和关系
+- [Chart](/viz/chart)：从具体图表类型开始数据可视化
+- [Table](/viz/table)：将数据或显式内容组织为二维表格
