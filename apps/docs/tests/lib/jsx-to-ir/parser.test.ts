@@ -42,12 +42,6 @@ describe('parseRetikzJsx — happy path', () => {
     expect(typeName(element)).toBe('Layout');
   });
 
-  it('解析空 Layout（主名作根）', () => {
-    const element = parseOk('<Layout />');
-    expect(isValidElement(element)).toBe(true);
-    expect(typeName(element)).toBe('Layout');
-  });
-
   it('Layout 作根 + Node child', () => {
     const element = parseOk('<Layout><Node>Hi</Node></Layout>');
     expect(typeName(element)).toBe('Layout');

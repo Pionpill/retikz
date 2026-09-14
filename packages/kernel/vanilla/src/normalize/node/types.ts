@@ -45,6 +45,8 @@ export type InputNodeLabel = Omit<IRNodeLabel, 'position'> & {
 
 /** 作者侧节点输入 */
 export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
+  /** 可选编译驱动解释的运行时载荷，不进入 Core IR */
+  authoring?: unknown;
   type?: 'node';
   position: InputPosition;
   label?: InputNodeLabel | ReadonlyArray<InputNodeLabel>;

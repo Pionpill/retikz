@@ -1,0 +1,10 @@
+---
+title: tex API 参考
+description: 查询 @retikz/tex 根入口与 React 子路径的全部公开 TypeScript API
+---
+
+`@retikz/tex` 为 Core 的文本流程提供可选的 TeX 公式解析、SVG 字形降解与 MathJax 集成接口。
+
+包提供两个入口：从 `@retikz/tex` 导入与运行时无关的引擎、lowerer 和配置；在 React 组件中从 `@retikz/tex/react` 导入 `useLowerTex`。React 是可选 peer，因此 Hook 放在独立子路径，避免非 React 使用方静态依赖 React。
+
+{/* @include kernel/packages/tex/api-reference/generated */}

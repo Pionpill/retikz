@@ -1,0 +1,137 @@
+---
+title: Extending inspection
+description: Define custom Inspectors that read compiled geometry and generate readonly endpoint, boundary, or other auxiliary markers
+---
+
+Define an Inspector when a figure needs custom auxiliary markers. Built-in and custom Inspectors share the same execution flow and never change the primary figure.
+
+## Define an Inspector
+
+This example adds circular markers to path endpoints: a custom `inspect(subject, context)` reads path commands and returns Core Nodes. The same source file includes the Definition, registration, and request.
+
+<ComponentPreview
+  files="inspect-custom"
+  size="sm"
+  caption="A custom inspect callback generates auxiliary markers for explicit path endpoints."
+/>
+
+## Definition mechanism
+
+An `InspectorDefinitionInput` specifies what to observe, which options to accept, and how to generate auxiliary content. The public type of `defineInspector()` remains the author-input form; it and the registry fill in defaults at the registration boundary, and the completed runtime form is consumed only inside Inspect. A Core owner identifies the capability publishing the compiled result; the example's `stroke` owner publishes final path output.
+
+| Interface                   | Responsibility                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| `namespace` / `type`        | Form the Inspector registry key used by requests                                              |
+| `owner`                     | Identify the Core owner to observe                                                            |
+| `subjectSchema`             | Validate the owner's final output and determine the `subject` type                            |
+| `mergeOptionsInput`         | Optional raw-options merge; by default, more specific input replaces inherited input entirely |
+| `optionsSchema`             | Optional input validation, defaults, and transforms; omission accepts only an empty object    |
+| `resolveOptions`            | Optional conversion into `context.options`; omission uses the schema output directly          |
+| `inspect(subject, context)` | Read output and context, returning Core IR or coordinate-space wrappers around it             |
+
+`owner` and `subjectSchema` must match the output Core actually publishes. Derive raw input and parsed output from `optionsSchema` with `z.input` and `z.output`: merge raw configuration first, then parse and resolve options.
+
+The example has no custom options, so it omits both `optionsSchema` and `resolveOptions`. Schema defaults and transforms do not need an identity resolver either; provide `resolveOptions` only for a different consumer representation. Definitions passed directly to a registry receive the same defaults.
+
+The figure shows how output and options feed `inspect()`. The Definition supplies the contracts and callbacks inside the dashed boundary; the Inspect driver executes them. The two branches express data dependencies, not parallel execution.
+
+<ComponentPreview files="inspector-definition-flow" hideCode size="lg" />
+
+Core compiles the resulting auxiliary content into Scenes in isolation; the callback does not introduce a separate rendering mechanism.
+
+## inspect callback
+
+The following excerpts show the callback signature and related types, with source comments omitted:
+
+```ts
+inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
+```
+
+### Input context
+
+`subject` is final output validated by `subjectSchema`; `TResolvedOptions` is the output type of `resolveOptions`, or the schema's parsed output type when the resolver is omitted. The `context` supplies options, provenance, and appearance for the observed instance (occurrence).
+
+```ts
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
+  inspectorKey: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
+  transform: AffineMatrix;
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
+  options: TOptions;
+  appearance: InspectionAppearanceContext;
+  warn: (code: string, message: string) => void;
+}>;
+
+export type InspectionAppearanceContext = Readonly<{
+  colorScope: number;
+  scopeColor: CssColorValue;
+  semanticColors: CoreSemanticColors;
+}>;
+```
+
+| Parameter / property          | Responsibility                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `subject`                     | Validated final Core output; read only the geometry actually provided                             |
+| `context.inspectorKey`        | The current Inspector's `namespace` and `type`                                                    |
+| `context.owner`               | The Core owner publishing this output                                                             |
+| `context.occurrence`          | The final occurrence being observed                                                               |
+| `context.provenance`          | The original `origin` and final `final` occurrences                                               |
+| `context.transform`           | Affine matrix from local coordinates to the primary Scene                                         |
+| `context.ancestors`           | The outside-in Scope / composite container chain                                                  |
+| `context.options`             | Custom options after parsing and resolution                                                       |
+| `context.appearance`          | `colorScope`: request index; `scopeColor`: regular color; `semanticColors`: theme semantic colors |
+| `context.warn(code, message)` | Report a nonfatal warning, such as omitted unavailable geometry                                   |
+
+Some geometry may be unavailable; for example, a Node's outline or key points may be `null`. Process only the available information and use `context.warn()` when an omission needs explaining.
+
+### Return content
+
+```ts
+export type InspectorCoordinateSpace = 'local' | 'scene';
+
+export type InspectorFragment = Readonly<{
+  type: 'fragment';
+  coordinateSpace: InspectorCoordinateSpace;
+  child: IRChild;
+}>;
+
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+```
+
+| Return form / property              | Responsibility                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| Ordinary `IRChild`                  | Return an auxiliary primitive directly, using occurrence-local coordinates by default |
+| `InspectorFragment.type`            | The fixed `'fragment'` discriminator identifies a coordinate-space wrapper            |
+| `InspectorFragment.coordinateSpace` | `local` uses local coordinates; `scene` uses primary Scene coordinates                |
+| `InspectorFragment.child`           | The ordinary Core IR child to compile                                                 |
+| Array                               | Return multiple items, mixing ordinary children and explicit fragments if needed      |
+
+Usually, return Core children directly. Use `InspectorFragment` when an output item needs an explicit coordinate space. Inspect applies `context.transform` to `local` fragments; `scene` fragments do not receive that transform.
+
+## Recommended conventions
+
+Follow the auxiliary visual language used by official Inspectors so that concurrent observations remain distinguishable without competing with the primary figure. These are authoring recommendations, not styles automatically added by the compiler.
+
+1. **Share one palette color within each observation.** Use `context.appearance.scopeColor` consistently for lines, markers, and labels instead of hardcoding the same color for every Inspector or maintaining a separate palette. The driver assigns categorical colors from the current theme per observation request, reducing confusion across nested scopes and concurrent observations. Colors repeat when the palette cycles, so also distinguish content with line patterns and labels. Use the corresponding `context.appearance.semanticColors` for explicit meanings such as warnings.
+
+2. **Prefer dashed or dotted auxiliary lines.** Express control handles, reference axes, and bounding boxes through `style.dashPattern`; different patterns can distinguish content sharing a color. Reserve solid lines for actual outlines that need continuity, such as the current built-in Clip outline, rather than turning every line into a dashed line mechanically.
+
+3. **Minimize obstruction of the primary figure.** Prefer thin, unfilled outlines and small point markers. Add fills only to communicate occupied areas, spacing, or warning regions, using low opacity or patterns to keep the underlying figure readable. Keep labels short, transparent, and slightly offset from their markers; place them late in the auxiliary output so auxiliary lines do not cover them.
+
+4. **Expose switches by observation content.** Provide options for independently meaningful content, such as Node outlines, key points, and content boxes, or Path control points and vertices. Control labels separately with `labels`, rather than making every color and line width configurable. Omit `optionsSchema` when there are no options, and omit `resolveOptions` when no conversion is needed.
+
+5. **Make style inheritance intentional.** Inspection fragments can inherit the environment at the observed site. For a stable auxiliary appearance, follow the built-ins: isolate primary defaults with an ordinary Scope using `defaults: { reset: true }`, then set the necessary styles explicitly. This prevents primary fills, fonts, or path defaults from changing the meaning of markers; it should not introduce another theme or rendering system.
+
+<SourceLinks
+  sources={[
+    { label: 'Inspector Definition and callback type source', path: 'packages/kernel/inspect/src/contract/types.ts' },
+    {
+      label: 'Built-in markers, labels, and style isolation',
+      path: 'packages/kernel/inspect/src/providers/geometry.ts',
+    },
+    { label: 'Node observation content and line patterns', path: 'packages/kernel/inspect/src/providers/node.ts' },
+    { label: 'Layout region fills and semantic colors', path: 'packages/library/layout/src/inspect/shared/output.ts' },
+  ]}
+/>

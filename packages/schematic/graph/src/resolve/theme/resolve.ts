@@ -1,6 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 
+import { mergeProperties } from '@retikz/foundation';
 import { array, strictObject } from 'zod';
 
 import type { GraphThemeStyleDefinition, GraphThemeStyleSource } from '../../contract';
@@ -22,22 +23,16 @@ import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { getDefaultGraphThemePreset } from '../../providers';
 import { GraphDefaultsSchema, GraphRuleSchema } from '../../schemas';
 
-/** 只保留这一层明确提供的字段，不展开复合叶子 */
-const definedFields = <T extends object>(value: T | undefined): Partial<T> =>
-  value === undefined
-    ? {}
-    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
-
 /** 按字段覆盖一个已选定的命名组，空组不物化 */
 const mergeFields = <T extends object>(current: T | undefined, override: T | undefined): T | undefined => {
-  const merged = { ...definedFields(current), ...definedFields(override) };
+  const merged = mergeProperties<Partial<T>>([current, override], { shouldOverride: value => value !== undefined });
   return Object.keys(merged).length === 0 ? undefined : (merged as T);
 };
 
 /** 空 font 不提供默认值；非空 font 保持 Node Source 的整体覆盖粒度 */
 const definedEntityStyle = (style: IRGraphEntityDefaultsStyle | undefined): IRGraphEntityDefaultsStyle | undefined => {
   if (style === undefined) return undefined;
-  const { font, ...fields } = definedFields(style);
+  const { font, ...fields } = mergeProperties([style], { shouldOverride: value => value !== undefined });
   const definedFont = mergeFields(undefined, font);
   return { ...fields, ...(definedFont === undefined ? {} : { font: definedFont }) };
 };
@@ -84,7 +79,7 @@ export const mergeGraphSurfaceDefaults = (
   override: IRGraphSurfaceDefaults | undefined,
 ): IRGraphSurfaceDefaults | undefined => {
   if (current === undefined && override === undefined) return undefined;
-  return { ...definedFields(current), ...definedFields(override) };
+  return mergeProperties([current, override], { shouldOverride: value => value !== undefined });
 };
 
 /** 合并一层 Graph defaults，并保持各目标字段的 Source 覆盖粒度 */
@@ -98,8 +93,7 @@ export const mergeGraphDefaults = (
   const group = mergeGraphSurfaceDefaults(current?.group, override?.group);
   const block = mergeGraphSurfaceDefaults(current?.block, override?.block);
   return {
-    ...definedFields(current),
-    ...definedFields(override),
+    ...mergeProperties([current, override], { shouldOverride: value => value !== undefined }),
     ...(entity === undefined ? {} : { entity }),
     ...(relation === undefined ? {} : { relation }),
     ...(group === undefined ? {} : { group }),
@@ -199,7 +193,7 @@ export const matchesGraphThemeSelector = (
 export type GraphThemeSelectorRegistryContext = Readonly<{
   member: 'Entity' | 'Relation';
   roles: ReadonlyMap<string, unknown>;
-  kinds: ReadonlyMap<string, unknown>;
+  kinds: ReadonlySet<string> | ReadonlyMap<string, unknown>;
   predicates: ReadonlyMap<string, unknown>;
 }>;
 
@@ -208,7 +202,7 @@ const selectorKeys = (value: string | ReadonlyArray<string> | undefined): Readon
 
 const assertSelectorKeysRegistered = (
   keys: ReadonlyArray<string>,
-  registry: ReadonlyMap<string, unknown>,
+  registry: ReadonlySet<string> | ReadonlyMap<string, unknown>,
   capability: string,
 ): void => {
   for (const key of keys) {

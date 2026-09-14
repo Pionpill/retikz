@@ -15,12 +15,15 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
+import type { CanonicalGridLayout, CanonicalGridLayoutItem } from '../../resolve/grid-layout';
 import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutSpacingArtifact } from '../shared';
 import type { GridTrackConstraint } from './tracks';
-import type { GridLayoutArtifact, IRGridLayout, IRGridLayoutItem, LayoutTrackSourceKindValue } from './types';
+import type { GridLayoutArtifact, LayoutTrackSourceKindValue } from './types';
+import type { IRGridLayout } from './types';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import { resolveGridLayout } from '../../resolve/grid-layout';
 import {
   alignAllocationInSlot,
   alignResolvedLayoutSlot,
@@ -34,7 +37,6 @@ import {
   createLayoutArtifactItem,
   layoutClipOf,
   layoutEpsilon,
-  normalizeLayoutSpacing,
   resolveLayoutAxisSize,
   sortLayoutSpacing,
 } from '../internal';
@@ -52,7 +54,7 @@ import {
 import { solveGridTracks } from './tracks';
 
 type MeasuredGridItem = Readonly<{
-  authored: EffectiveLayoutItem<IRGridLayoutItem>;
+  authored: EffectiveLayoutItem<CanonicalGridLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   columnStart: number;
@@ -69,13 +71,13 @@ type PlacedGridItem = Readonly<{
   rowSpan: number;
   margin: LayoutInsets;
   slotBounds: LayoutRect;
-  alignment: IRGridLayout['alignItems'];
+  alignment: CanonicalGridLayout['alignItems'];
   result: LayoutChildResult;
   translation: Readonly<{ x: number; y: number }>;
 }>;
 
 /** 把 Grid track 定义归一为公开 artifact 的稳定来源类别 */
-const trackSourceKindOf = (track: IRGridLayout['columns'][number]): LayoutTrackSourceKindValue => {
+const trackSourceKindOf = (track: CanonicalGridLayout['columns'][number]): LayoutTrackSourceKindValue => {
   if (track.kind === 'fixed') return LayoutTrackSourceKind.Fixed;
   if (track.kind === 'fraction') return LayoutTrackSourceKind.Fraction;
   if (track.kind === 'minmax') return LayoutTrackSourceKind.Minmax;
@@ -101,7 +103,7 @@ const boundedProposal = (max: number): LayoutAxisProposal => ({
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
   context: LayoutCompositeCompileContext,
-  child: IRGridLayoutItem['child'],
+  child: CanonicalGridLayoutItem['child'],
   proposal: LayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
@@ -111,7 +113,7 @@ const requiredProbe = (
 
 /** 计算 y policy 当前可确定的有限 content-box 上限 */
 const finiteYLimitOf = (
-  node: IRGridLayout,
+  node: CanonicalGridLayout,
   proposal: LayoutAxisProposal,
   padding: LayoutInsets,
 ): number | undefined => {
@@ -217,17 +219,18 @@ const outgoingRowGuide = (name: 'first-baseline' | 'last-baseline', items: Reado
 
 /** 编译 Layout GridLayout 的 placement、双轴 probe、track 求解与 replay 流程 */
 export const compileGridLayout = (
-  node: IRGridLayout,
+  sourceLayout: IRGridLayout,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<GridLayoutArtifact> => {
-  const padding = normalizeLayoutSpacing(node.padding);
+  const node = resolveGridLayout(sourceLayout);
+  const padding = node.padding;
   const authoredItems = createEffectiveLayoutItems(node.children);
   const placements = resolveGridPlacements(
     authoredItems.map((item, sourceIndex) => ({
       key: item.key,
       sourceIndex,
-      ...(item.column === undefined ? {} : { column: item.column }),
-      ...(item.row === undefined ? {} : { row: item.row }),
+      column: item.column,
+      row: item.row,
     })),
     {
       explicitColumns: node.columns.length,
@@ -243,7 +246,7 @@ export const compileGridLayout = (
     return Object.freeze({
       authored,
       sourceIndex,
-      margin: normalizeLayoutSpacing(authored.margin),
+      margin: authored.margin,
       columnStart: placement.columnStart,
       columnSpan: placement.columnSpan,
       rowStart: placement.rowStart,

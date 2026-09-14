@@ -104,6 +104,27 @@ describe('contract mark host label lowering', () => {
     expect(path.label).toEqual({ text: 'trend', position: 'midway', side: 'top' });
   });
 
+  it('wraps a legacy mixed geometry-label line as the Core TextBlock form', () => {
+    const root = expandOf(
+      baseSpec([
+        {
+          type: 'path',
+          label: { content: { value: { runs: [{ text: 'trend ' }, { tex: 'x' }] } }, position: 'midway' },
+          encoding: { x: { field: 'x' }, y: { field: 'y' } },
+        },
+      ]),
+      {
+        d: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+      },
+    );
+
+    const [path] = collectPaths(markLayer(root, 0));
+    expect(path.label).toEqual({ text: [{ runs: [{ text: 'trend ' }, { tex: 'x' }] }], position: 'midway' });
+  });
+
   it('reference-line-geometry-label：ReferenceMark line 使用 geometry label', () => {
     const root = expandOf(
       baseSpec([

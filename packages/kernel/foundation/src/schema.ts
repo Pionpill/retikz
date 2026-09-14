@@ -5,7 +5,7 @@ import { enum as zodEnum, json, number, record, string, union } from 'zod';
 import type { JsonValue, OpenString, ValueOf } from './types';
 
 /** 递归 JSON 值 schema */
-export const JsonValueSchema: ZodType<JsonValue, unknown> = json().describe(
+export const JsonValueSchema: ZodType<JsonValue, JsonValue> = json().describe(
   'Recursive JSON value: string, finite number, boolean, null, array, or object.',
 );
 
@@ -24,7 +24,7 @@ export const NonBlankStringSchema = string()
 /** 从已知 const object enum 建立保留提示的开放非空字符串 schema */
 export const createOpenStringSchema = <const TValues extends Readonly<Record<string, string>>>(
   values: TValues,
-): ZodType<OpenString<ValueOf<TValues>>> =>
+): ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>> =>
   union([zodEnum(values), NonBlankStringSchema.min(1)]).describe(
     'Known string values or any custom string containing at least one non-whitespace character.',
   );

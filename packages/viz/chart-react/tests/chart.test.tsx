@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import { normalizeBubbleChart } from '@retikz/chart-vanilla/point/bubble';
 import { normalizeConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
 import { normalizeRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
@@ -472,9 +473,6 @@ describe('Typed Point Chart React declarations', () => {
     ({ createInput }) => {
       expect(createInput().source.coordinate).toEqual({
         type: 'polar2D',
-        innerRadius: 0,
-        startAngle: 0,
-        endAngle: 360,
       });
     },
   );
@@ -489,7 +487,6 @@ describe('Typed Point Chart React declarations', () => {
       type: 'polar2D',
       innerRadius: 0,
       startAngle: -90,
-      endAngle: 360,
     });
   });
 
@@ -1084,18 +1081,20 @@ describe('Typed Point Chart React declarations', () => {
 
   it('rejects root ChartCoordinate combined with child composition', () => {
     expect(() =>
-      inputOf(
-        ScatterChart,
-        <>
-          <ChartData data={[{ x: 1, y: 2, region: 'north' }]} />
-          <ScatterEncodings x="x" y="y" />
-          <ChartCoordinate coordinate="cartesian2D" />
-          <ChartExtension>
-            <PlotFacet id="regions" row="region">
-              <PointMark x="x" y="y" />
-            </PlotFacet>
-          </ChartExtension>
-        </>,
+      ScatterChartSchema.parse(
+        inputOf(
+          ScatterChart,
+          <>
+            <ChartData data={[{ x: 1, y: 2, region: 'north' }]} />
+            <ScatterEncodings x="x" y="y" />
+            <ChartCoordinate coordinate="cartesian2D" />
+            <ChartExtension>
+              <PlotFacet id="regions" row="region">
+                <PointMark x="x" y="y" />
+              </PlotFacet>
+            </ChartExtension>
+          </>,
+        ).source,
       ),
     ).toThrowError(
       expect.objectContaining({ issues: [expect.objectContaining({ path: ['plotExtension', 'composition'] })] }),

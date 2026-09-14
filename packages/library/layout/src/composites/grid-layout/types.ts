@@ -19,34 +19,35 @@ export type GridAutoFlowValue = ValueOf<typeof GridAutoFlow>;
 export type GridOverlapValue = ValueOf<typeof GridOverlap>;
 
 /** Grid track breadth 的 canonical JSON IR */
-export type IRGridTrackBreadth = ZodInfer<typeof GridTrackBreadthSchema>;
+export type IRGridTrackBreadth = ZodInput<typeof GridTrackBreadthSchema>;
 
 /** Grid track breadth 的作者输入 */
 export type GridTrackBreadthInput = ZodInput<typeof GridTrackBreadthSchema>;
 
 /** Grid track 的 canonical JSON IR */
-export type IRGridTrack = ZodInfer<typeof GridTrackSchema>;
+export type IRGridTrack = ZodInput<typeof GridTrackSchema>;
 
 /** Grid track 的作者输入 */
 export type GridTrackInput = ZodInput<typeof GridTrackSchema>;
 
 /** Grid 单轴 placement 的 canonical JSON IR */
-export type IRGridPlacement = ZodInfer<typeof GridPlacementSchema>;
+export type IRGridPlacement = ZodInput<typeof GridPlacementSchema>;
 
 /** Grid 单轴 placement 的作者输入 */
 export type GridPlacementInput = ZodInput<typeof GridPlacementSchema>;
 
 /** GridLayout item 的 canonical JSON IR */
-export type IRGridLayoutItem = ZodInfer<typeof GridLayoutItemSchema>;
+export type IRGridLayoutItem = Omit<ZodInput<typeof GridLayoutItemSchema>, 'child'> &
+  Pick<ZodInfer<typeof GridLayoutItemSchema>, 'child'>;
 
 /** GridLayout item 的作者输入 */
-export type GridLayoutItemInput = ZodInput<typeof GridLayoutItemSchema>;
+export type GridLayoutItemInput = IRGridLayoutItem;
 
 /** GridLayout 的 canonical JSON IR */
-export type IRGridLayout = ZodInfer<typeof GridLayoutSchema>;
+export type IRGridLayout = Omit<ZodInput<typeof GridLayoutSchema>, 'children'> & { children?: Array<IRGridLayoutItem> };
 
 /** GridLayout factory 接受的作者输入 */
-export type GridLayoutInput = Omit<ZodInput<typeof GridLayoutSchema>, 'namespace' | 'type'>;
+export type GridLayoutInput = Omit<IRGridLayout, 'namespace' | 'type'>;
 
 /** GridLayout 的 JSON-safe compile artifact payload */
 export type GridLayoutArtifact = ZodInfer<typeof GridLayoutArtifactSchema>;

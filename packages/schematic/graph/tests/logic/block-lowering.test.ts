@@ -1,4 +1,4 @@
-import type { CompileWarning, LayoutProposal } from '@retikz/core';
+import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
 import type { FlexLayoutCompileArtifact } from '@retikz/layout';
 
 import {
@@ -20,9 +20,9 @@ import {
   primitivesOf,
 } from './test-utils';
 
-const textNode = (text: string) => ({
-  type: 'node' as const,
-  position: [0, 0] as const,
+const textNode = (text: string): IRNode => ({
+  type: 'node',
+  position: [0, 0],
   text,
   layout: { padding: 0, margin: 0 },
 });

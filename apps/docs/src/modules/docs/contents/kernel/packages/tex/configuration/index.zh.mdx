@@ -1,0 +1,58 @@
+---
+title: MathJax 配置
+description: 通过 profile 与 extensions 选择 @retikz/tex 的 MathJax 公式语法集合
+---
+
+`@retikz/tex` 默认提供基础 TeX 语法。需要 AMS、命令定义、括号、消去、分情况或颜色等额外能力时，在创建 lowerer 或调用 `useLowerTex` 时设置 `profile` 与 `extensions`。如何把结果注入 React 或 Vanilla，见 [安装与接入](/kernel/packages/tex)。
+
+## Profile 与 Extensions
+
+`MathJaxEngineOptions` 的 `profile` 决定基础配置，`extensions` 则在其后追加公开扩展。此示例固定启用完整的公开扩展集合，因此公式示例只切换公式内容，不再根据示例开关扩展；选择 `math` 会一次启用内置数学扩展集合：
+
+<ComponentPreview
+  files="tex-extensions"
+  size="sm"
+  caption="公式示例只切换公式内容；预览区展示固定启用的 extensions 集合。"
+/>
+
+| profile | 内容                  | 适用场景                                |
+| ------- | --------------------- | --------------------------------------- |
+| `base`  | MathJax 基础 TeX 语法 | 普通运算、分式、根式、上下标            |
+| `math`  | 内置数学扩展集合      | AMS、命令定义、括号、消去、分情况和颜色 |
+
+### MathJaxProfile
+
+`profile` 决定引擎启动时预置的扩展集合。未传入时为 `base`；`extensions` 始终在 profile 之后追加，重复值会按公开顺序去重。
+
+| 值     | 生效的预置扩展             | 作用                                                               |
+| ------ | -------------------------- | ------------------------------------------------------------------ |
+| `base` | 无                         | 仅使用 MathJax 基础 TeX。适合运算、分式、根式、上下标等通用公式    |
+| `math` | 以下全部九项公开 extension | 一次启用常用数学语法。等价于 `base` 加入全部 `MathJaxExtension` 值 |
+
+### MathJaxExtension
+
+在 `base` 下只追加实际需要的 extension，可减少引擎初始化时加载的配置；在 `math` 下再次传入同一项没有额外效果。所有值均可作为 `extensions` 数组成员。
+
+| 值           | 启用的语法                    | 适用场景与示例                                   |
+| ------------ | ----------------------------- | ------------------------------------------------ |
+| `ams`        | AMS 数学环境与命令            | 多行对齐、带标记的数学排版，如 `aligned` 环境    |
+| `newcommand` | `\newcommand`                 | 在单段 TeX 中定义并复用自己的命令                |
+| `boldsymbol` | `\boldsymbol`                 | 将希腊字母等数学符号加粗                         |
+| `braket`     | `\bra`、`\ket`、`\braket`     | Dirac bra-ket 量子力学记号                       |
+| `cancel`     | `\cancel`、`\bcancel`         | 标出被约去或排除的项                             |
+| `cases`      | `numcases` 等分段与编号环境   | 分段定义，尤其是需要对各分支附加条件或编号时     |
+| `centernot`  | `\centernot`                  | 让否定符号居中覆盖关系符，例如“不属于”或“不包含” |
+| `mathtools`  | `\coloneqq` 等 mathtools 命令 | 补充常用数学排版符号，例如定义等号               |
+| `color`      | `\color`、`\colorbox`         | 为公式片段设置文字色或背景色                     |
+
+`cases` 所需的内部 `empheq` 依赖由本包自动补齐，不会出现在公开 extension 集合中。
+
+## 配置 API
+
+| 字段                                       | 类型、默认值与说明                                                                                   |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `MathJaxEngineOptions`<br />`.profile?`    | `MathJaxProfileValue`，默认 `'base'`。选择内置语法集合                                               |
+| `MathJaxEngineOptions`<br />`.extensions?` | `Array<MathJaxExtensionValue>`，默认 `[]`。在 profile 后追加公开扩展，规范化时会去重并按稳定顺序排列 |
+| `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`。供 `createMathJaxLowerTex` 与 `useLowerTex` 使用           |
+
+React 中，`useLowerTex(options)` 会按最终生效的 extension 集合共享异步 engine。它在首次初始化或切换配置时返回 `loading`，就绪时返回可注入的 `lowerTex`，初始化失败时返回 `error`。接入代码和状态渲染见 [安装与接入](/kernel/packages/tex)。

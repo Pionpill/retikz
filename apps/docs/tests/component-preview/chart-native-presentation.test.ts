@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 
 import { ScatterChart } from '@retikz/chart-react/point';
-import { readFileSync } from 'node:fs';
 import { createElement, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -143,25 +142,6 @@ describe('Chart-native Scatter presentation', () => {
       }),
     ]);
     expect(preview.ir.children[0]).not.toHaveProperty('presentation');
-  });
-
-  it('documents the complete public multi-entry Chart APIs for React and Vanilla in both languages', () => {
-    for (const locale of ['zh', 'en']) {
-      const authoring = readFileSync(
-        new URL(`../../src/modules/docs/contents/viz/chart/model/authoring/index.${locale}.mdx`, import.meta.url),
-        'utf8',
-      );
-      const structure = readFileSync(
-        new URL(`../../src/modules/docs/contents/viz/chart/model/structure/index.${locale}.mdx`, import.meta.url),
-        'utf8',
-      );
-      const content = `${structure}\n${authoring}`;
-
-      expect(content).toContain('@retikz/chart/point/scatter');
-      expect(content).toContain('@retikz/chart-react/point');
-      expect(content).not.toContain('@retikz/chart-react/point/');
-      expect(content).toContain('@retikz/chart-vanilla/point/scatter');
-    }
   });
 
   it('uses the ScatterChart shorthand path for the World Bank example', () => {

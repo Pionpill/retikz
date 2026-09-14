@@ -5,6 +5,8 @@ description: 理解 React、Vanilla 与 JSON 如何形成精确 Chart Source，�
 
 Chart 把“方便编写”与“稳定执行”分成两个阶段。React 和 Vanilla 负责把各自的输入形态规范化为精确 Chart Source；解析入口先读取 family，再用 `recipe.chartType` 选择唯一 recipe。
 
+`normalizeXxxChart()` 只组装类型化 Source，不执行 schema 校验或补领域默认。加载外部 JSON 时显式使用对应 chartType schema 的 `parse()`；编译时由当前 Definition 准入并交给 resolver。
+
 ## 一条共享主链
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />

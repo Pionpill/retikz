@@ -54,12 +54,14 @@ describe('Graph Source authoring helpers', () => {
       position: [0, 0],
     });
     expect(() =>
-      Graph.createRelation({
+      Graph.RelationSchema.parse({
+        namespace: 'graph',
+        type: 'relation',
         source: { id: 'service' },
         target: { id: 'database' },
         role: 'dependency',
         way: ['source', '--', 'target'],
-      } as never),
+      }),
     ).toThrow();
   });
 

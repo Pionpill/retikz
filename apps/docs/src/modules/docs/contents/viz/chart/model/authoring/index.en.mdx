@@ -5,6 +5,8 @@ description: Understand how React, Vanilla, and JSON produce exact Chart Source 
 
 Chart separates convenient authoring from stable execution. React and Vanilla normalize their input forms into exact Chart Source. The parser first reads the family, then selects the unique recipe from `recipe.chartType`.
 
+`normalizeXxxChart()` only assembles typed Source; it does not run schema validation or fill domain defaults. Parse external JSON with the matching chartType schema. During compilation, the active Definition admits Source before domain resolution.
+
 ## One shared pipeline
 
 <ComponentPreview files="chart-authoring-pipeline" hideCode size="sm" />

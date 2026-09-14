@@ -34,7 +34,7 @@ const FrameBaseSchema = CompositeBaseSchema.extend({
   id: NonBlankStringSchema.optional().describe('Optional stable identity for the compiled outer Scope.'),
   localNamespace: ScopePropsSchema.shape.localNamespace.default(false),
   boundingShape: ScopePropsSchema.shape.boundingShape.default('rectangle'),
-  border: FrameBorderSchema.default({ style: { stroke: 'currentColor', strokeWidth: 1 } }).describe(
+  border: FrameBorderSchema.default(() => FrameBorderSchema.parse({})).describe(
     'Border Path style and corner radius, separate from the root Scope cascade.',
   ),
   padding: FramePaddingSchema.default(8).describe(

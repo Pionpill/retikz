@@ -80,7 +80,7 @@ const TwoSegResolver = () => {
 /** About 的两段入口解析器，数据源固定为 home-owned About section。 */
 const AboutTwoSegResolver: FC = () => {
   const { firstSeg } = useParams<'firstSeg'>();
-  if (!firstSeg) return <Navigate to="/about/overview" replace />;
+  if (!firstSeg) return <Navigate to="/about/introduction" replace />;
 
   const sections = getSectionsByArea(DOC_ABOUT_ID);
   const ungrouped = sections.find(section => !section.label);
@@ -101,7 +101,7 @@ export const AppRoutes: FC = () => (
       <Route element={<DocScopeSync />}>
         <Route index element={<HomeEntry />} />
         <Route path="about">
-          <Route index element={<Navigate to="/about/overview" replace />} />
+          <Route index element={<Navigate to="/about/introduction" replace />} />
           <Route path=":sectionId/:pageId/:subPageId" element={<DocLayout />}>
             <Route index element={<DocPage />} />
           </Route>

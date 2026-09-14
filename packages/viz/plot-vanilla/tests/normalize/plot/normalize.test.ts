@@ -1,9 +1,38 @@
-import { PlotSchema } from '@retikz/plot';
+import { CoordinateSchema, PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
 import { normalizePlot, normalizePlotDeclarations } from '../../../src';
 
 describe('normalizePlot', () => {
+  it('保持 Polar Source 稀疏并保留显式零值', () => {
+    const source = normalizePlot({
+      data: { reference: 'polar' },
+      scales: [
+        { type: 'point', name: 'angle' },
+        { type: 'linear', name: 'radius' },
+      ],
+      coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius' },
+      marks: [],
+    });
+    expect(source.coordinate).toEqual({ type: 'polar2D', angle: 'angle', radius: 'radius' });
+    expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(source.coordinate)))).toEqual({
+      ...source.coordinate,
+      startAngle: 0,
+      endAngle: 360,
+      innerRadius: 0,
+    });
+    const explicit = normalizePlot({
+      data: { reference: 'polar' },
+      scales: [
+        { type: 'point', name: 'angle' },
+        { type: 'linear', name: 'radius' },
+      ],
+      coordinate: { type: 'polar2D', angle: 'angle', radius: 'radius', startAngle: 0, endAngle: 0, innerRadius: 0 },
+      marks: [],
+    });
+    expect(explicit.coordinate).toMatchObject({ startAngle: 0, endAngle: 0, innerRadius: 0 });
+  });
+
   it('保留显式 ratio domain padding', () => {
     const spec = normalizePlot({
       data: { reference: 'sales' },

@@ -207,6 +207,28 @@ describe('Graph Source data assembly', () => {
     ).toThrow();
   });
 
+  it('preserves a JSON-safe Relation color group while rejecting non-string values', () => {
+    const schema = publicSchema('RelationSchema');
+    const groupedRelation = { ...relation, group: '' } as const;
+
+    const parsed = schema.parse(groupedRelation);
+
+    expect(parsed).toEqual(groupedRelation);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(groupedRelation);
+    expect(() => schema.parse({ ...relation, group: 1 })).toThrow();
+  });
+
+  it('preserves a JSON-safe Entity color group while rejecting non-string values', () => {
+    const schema = publicSchema('EntitySchema');
+    const groupedEntity = { ...entity, group: 'coordinate-chain' } as const;
+
+    const parsed = schema.parse(groupedEntity);
+
+    expect(parsed).toEqual(groupedEntity);
+    expect(JSON.parse(JSON.stringify(parsed))).toEqual(groupedEntity);
+    expect(() => schema.parse({ ...entity, group: 1 })).toThrow();
+  });
+
   it('keeps Relation structure separate from Theme-owned appearance', () => {
     const relationRole = publicSchema('GraphRelationRoleTokenRecipeSchema');
     const relationStructure = publicSchema('GraphRelationStructureTokenOverridesSchema');

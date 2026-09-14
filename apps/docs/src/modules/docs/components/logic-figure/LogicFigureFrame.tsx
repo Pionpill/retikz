@@ -1,87 +1,128 @@
-import type { FrameDescriptionProps, FrameProps, FrameTitleProps } from '@retikz/standard-react';
+import type { GroupProps } from '@retikz/graph-react';
 import type { FC, ReactNode } from 'react';
 
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
-import { Children, createElement, Fragment, isValidElement } from 'react';
+import { Group } from '@retikz/graph-react';
+import { Children, Fragment, isValidElement } from 'react';
 
-/** 文档逻辑图分组框接受的 Standard Frame 属性 */
-export type LogicFigureFrameProps = FrameProps;
+type LogicFigureFrameCaption = NonNullable<GroupProps['caption']>;
+type LogicFigureFrameCaptionText = NonNullable<LogicFigureFrameCaption['title']>;
 
-/** 文档逻辑图分组标题接受的 Standard FrameTitle 属性 */
-export type LogicFigureFrameTitleProps = FrameTitleProps;
+/** 文档逻辑图分组框接受的 Graph Group 属性 */
+export type LogicFigureFrameProps = Omit<GroupProps, 'caption' | 'children'> &
+  Readonly<{
+    /** 分组内的任意 Graph 或 Core 图元 */
+    children?: ReactNode;
+  }>;
 
-/** 文档逻辑图分组说明接受的 Standard FrameDescription 属性 */
-export type LogicFigureFrameDescriptionProps = FrameDescriptionProps;
+/** 文档逻辑图分组标题接受的 Graph Group caption 属性 */
+export type LogicFigureFrameTitleProps = Omit<LogicFigureFrameCaptionText, 'text'> &
+  Readonly<{
+    /** 分组标题文本 */
+    children: LogicFigureFrameCaptionText['text'];
+  }>;
+
+/** 文档逻辑图分组说明接受的 Graph Group caption 属性 */
+export type LogicFigureFrameDescriptionProps = Omit<LogicFigureFrameCaptionText, 'text'> &
+  Readonly<{
+    /** 分组说明文本 */
+    children: LogicFigureFrameCaptionText['text'];
+  }>;
+
+type LogicFigureFrameParts = Readonly<{
+  body: Array<ReactNode>;
+  title?: LogicFigureFrameTitleProps;
+  description?: LogicFigureFrameDescriptionProps;
+}>;
 
 const logicFigureFrameDefaults = {
-  border: {
-    style: {
-      stroke: 'lightgray',
-      fill: 'lightgray',
-      fillOpacity: 0.04,
-      dashPattern: [4, 3],
-    },
-    cornerRadius: 4,
-  },
+  background: { fill: 'lightgray', fillOpacity: 0.04 },
+  border: { stroke: 'lightgray', dashPattern: [4, 3] },
+  cornerRadius: 4,
   padding: 10,
 } satisfies Partial<LogicFigureFrameProps>;
 
-const resolveLogicFigureFrameBorder = (
-  border: LogicFigureFrameProps['border'],
-): NonNullable<LogicFigureFrameProps['border']> => ({
-  ...logicFigureFrameDefaults.border,
-  ...border,
-  style: {
-    ...logicFigureFrameDefaults.border.style,
-    ...border?.style,
-  },
-});
-
-const withLogicFigureFrameTitleDefaults = (props: LogicFigureFrameTitleProps): LogicFigureFrameTitleProps => ({
-  ...props,
-  style: { textColor: 'gray', ...props.style, font: { size: 12, weight: 'normal', ...props.style?.font } },
-});
+const withLogicFigureFrameTitleDefaults = (props: LogicFigureFrameTitleProps): LogicFigureFrameCaptionText => {
+  const { children, ...caption } = props;
+  return {
+    ...caption,
+    text: children,
+    textColor: caption.textColor ?? 'gray',
+    font: { size: 12, weight: 'normal', ...caption.font },
+  };
+};
 
 const withLogicFigureFrameDescriptionDefaults = (
   props: LogicFigureFrameDescriptionProps,
-): LogicFigureFrameDescriptionProps => ({
-  ...props,
-  style: { textColor: 'gray', opacity: 0.7, ...props.style, font: { size: 11, ...props.style?.font } },
-});
+): LogicFigureFrameCaptionText => {
+  const { children, ...caption } = props;
+  return {
+    ...caption,
+    text: children,
+    textColor: caption.textColor ?? 'gray',
+    opacity: caption.opacity ?? 0.7,
+    font: { size: 11, ...caption.font },
+  };
+};
 
-/** 把 LogicFigureFrame 的语义标题转换为 Standard Frame 可直接消费的组成部分 */
-const resolveLogicFigureFrameChildren = (children: ReactNode): ReactNode =>
-  Children.map(children, child => {
-    if (!isValidElement(child)) return child;
-    if (child.type === Fragment) {
-      return createElement(
-        Fragment,
-        { key: child.key },
-        resolveLogicFigureFrameChildren((child.props as { children?: ReactNode }).children),
-      );
-    }
-    if (isValidElement<LogicFigureFrameTitleProps>(child) && child.type === LogicFigureFrameTitle) {
-      return createElement(FrameTitle, { key: child.key, ...withLogicFigureFrameTitleDefaults(child.props) });
-    }
-    if (isValidElement<LogicFigureFrameDescriptionProps>(child) && child.type === LogicFigureFrameDescription) {
-      return createElement(FrameDescription, {
-        key: child.key,
-        ...withLogicFigureFrameDescriptionDefaults(child.props),
-      });
-    }
-    return child;
-  });
+/** 从透明 Fragment 与直接 children 收集分组标题、说明及 body */
+const readLogicFigureFrameParts = (children: ReactNode): LogicFigureFrameParts => {
+  const result: {
+    body: Array<ReactNode>;
+    title?: LogicFigureFrameTitleProps;
+    description?: LogicFigureFrameDescriptionProps;
+  } = {
+    body: [],
+  };
+  const visit = (nodes: ReactNode): void => {
+    Children.forEach(nodes, child => {
+      if (isValidElement(child) && child.type === Fragment) {
+        visit((child.props as { children?: ReactNode }).children);
+        return;
+      }
+      if (isValidElement<LogicFigureFrameTitleProps>(child) && child.type === LogicFigureFrameTitle) {
+        if (result.title !== undefined) throw new Error('LogicFigureFrame accepts at most one LogicFigureFrameTitle.');
+        result.title = child.props;
+        return;
+      }
+      if (isValidElement<LogicFigureFrameDescriptionProps>(child) && child.type === LogicFigureFrameDescription) {
+        if (result.description !== undefined)
+          throw new Error('LogicFigureFrame accepts at most one LogicFigureFrameDescription.');
+        result.description = child.props;
+        return;
+      }
+      result.body.push(child);
+    });
+  };
+  visit(children);
+  return result;
+};
 
-/** 使用逻辑图默认样式组合 Standard Frame，并允许显式属性覆盖 */
+/** 使用 Graph Group 作为逻辑图语义边界，使其同时容纳 Core Node 与 Graph Entity */
 export const LogicFigureFrame: FC<LogicFigureFrameProps> = props => {
-  const { children, border, ...frameProps } = props;
+  const { children, background, border, ...frameProps } = props;
+  const parts = readLogicFigureFrameParts(children);
+  const title = parts.title === undefined ? undefined : withLogicFigureFrameTitleDefaults(parts.title);
+  const description =
+    parts.description === undefined ? undefined : withLogicFigureFrameDescriptionDefaults(parts.description);
 
-  return createElement(Frame, {
-    ...logicFigureFrameDefaults,
-    ...frameProps,
-    border: resolveLogicFigureFrameBorder(border),
-    children: resolveLogicFigureFrameChildren(children),
-  });
+  return (
+    <Group
+      {...logicFigureFrameDefaults}
+      {...frameProps}
+      background={{ ...logicFigureFrameDefaults.background, ...background }}
+      border={{ ...logicFigureFrameDefaults.border, ...border }}
+      caption={
+        title === undefined && description === undefined
+          ? undefined
+          : {
+              ...(title === undefined ? {} : { title }),
+              ...(description === undefined ? {} : { description }),
+            }
+      }
+    >
+      {parts.body}
+    </Group>
+  );
 };
 
 LogicFigureFrame.displayName = 'LogicFigureFrame';

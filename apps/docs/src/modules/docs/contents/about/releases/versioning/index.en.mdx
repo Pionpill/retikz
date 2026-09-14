@@ -28,33 +28,20 @@ Breaking changes before `1.0.0` **do not force a MAJOR bump**, but the changelog
 
 ## Pre-release channels
 
-| Channel | Format          | Main content                                                                                                         | Main driver                                | Suitable for             |
-| ------- | --------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------ |
-| alpha   | `0.4.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable)                                           | **Human-designed + AI-implemented**        | Exploration / feedback   |
-| beta    | `0.4.0-beta.x`  | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring** | Integration testing      |
-| rc      | `0.4.0-rc.x`    | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only                       | Human-led                                  | Pre-production rehearsal |
-| stable  | `0.4.0`         | Under SemVer; normal PATCH / MINOR / MAJOR cadence                                                                   | —                                          | Production               |
+| Channel | Format          | Main content                                                                                                         | Main driver                                      | Suitable for             |
+| ------- | --------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------ |
+| alpha   | `0.4.0-alpha.x` | New features / new IR fields / API reshaping (schema in flux, IR unstable)                                           | **Human-directed + AI-authored and implemented** | Exploration / feedback   |
+| beta    | `0.4.0-beta.x`  | Performance / readability / refactoring / test hardening / docs completion; final breaking renames are still allowed | **Human-led optimization and refactoring**       | Integration testing      |
+| rc      | `0.4.0-rc.x`    | Public API frozen; compatible bug fixes, docs, installation acceptance, and release notes only                       | Human-led                                        | Pre-production rehearsal |
+| stable  | `0.4.0`         | Under SemVer; normal PATCH / MINOR / MAJOR cadence                                                                   | —                                                | Production               |
 
 Channels move forward only: alpha → beta → rc → stable. There's no rollback.
 
-retikz uses a **"human-designed + AI-implemented"** split during alpha: humans produce ADRs (schema fields, file scopes, test quadrants, option decisions), AI relays through spec / implementation / tests / docs, and humans reconcile and review at the end — keeping architectural decisions under human control while scaling out implementation work. Full workflow details: [AI-assisted development](/about/developer/ai-assisted-development).
+During alpha, retikz uses a **human-directed, AI-authored and implemented** workflow. Humans provide ideas, define goals and constraints, and confirm key directions. AI writes the ADR, develops the design, and carries out implementation, testing, and documentation. Humans guide the work through discussion and review rather than authoring the ADR. Full workflow details: [AI-assisted development](/about/developer/ai-assisted-development).
 
 beta inverts this — schema is frozen, the API stops growing, and AI's freedom narrows; this phase emphasizes human review of alpha-era implementation, performance tuning, refactoring, test hardening, and documentation completion, laying the foundation for rc / stable.
 
 rc narrows the work again: public APIs no longer break, and npm uses the `next` dist-tag. Installation acceptance uses `pnpm add @retikz/react@next react react-dom`; any issue that requires a breaking compatibility fix should stop the rc and return to a human version decision.
-
-## peerDependencies
-
-| Package           | peer                                                            | Version             |
-| ----------------- | --------------------------------------------------------------- | ------------------- |
-| `@retikz/react`   | `react` / `react-dom`                                           | `>=18`              |
-| `@retikz/core`    | (none)                                                          | —                   |
-| `@retikz/math`    | (none)                                                          | —                   |
-| `@retikz/render`  | `@napi-rs/canvas` (optional, Node export only)                  | catalog-managed     |
-| `@retikz/vanilla` | (none)                                                          | —                   |
-| `@retikz/tex`     | `mathjax-full` (optional)<br />`react` / `react-dom` (optional) | catalog<br />`>=18` |
-
-Bumping React's major version usually ships as a MINOR; we only bump MAJOR when the new React version is incompatible with our old API.
 
 ## Deprecation flow
 

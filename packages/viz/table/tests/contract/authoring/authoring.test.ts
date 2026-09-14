@@ -189,14 +189,16 @@ describe('Table plain authoring', () => {
     expect(spec.encodings?.[0]?.selector.locations).toEqual(['body']);
   });
 
-  it('delegates invalid detail and manual inputs to the Table schema', () => {
-    expect(() => createDetailTableIR({ dataRef: '', columns: [] })).toThrow();
-    expect(() => createManualTableIR({ rows: [] })).toThrow();
+  it('validates external detail and manual records at the Table schema boundary', () => {
+    expect(() => TableSchema.parse(createDetailTableIR({ dataRef: '', columns: [] }))).toThrow();
+    expect(() => TableSchema.parse(createManualTableIR({ rows: [] }))).toThrow();
     expect(() =>
-      createManualTableIR({
-        rows: [['A']],
-        rowKinds: ['body', 'body'],
-      }),
+      TableSchema.parse(
+        createManualTableIR({
+          rows: [['A']],
+          rowKinds: ['body', 'body'],
+        }),
+      ),
     ).toThrow(/rowKinds/i);
   });
 });

@@ -1,0 +1,124 @@
+---
+title: Built-in inspection
+description: See the five built-in Inspectors Core currently provides and use readonly auxiliary content to explain final compilation results
+---
+
+Built-in inspection gives a quick view of final output that Core already publishes. Complete React or Vanilla host setup in [Install and use](/kernel/packages/inspect#install-and-use), then request one of the Inspectors below; none changes the primary figure.
+
+## Built-in checks
+
+The default registry contains five built-in Inspectors. Each reads final output already settled by Core:
+
+| Inspector Definition   | Component    | Description                                                   |
+| ---------------------- | ------------ | ------------------------------------------------------------- |
+| `PATH_INSPECTOR`       | `Path`       | Handles, vertices, arc geometry, and labels                   |
+| `NODE_INSPECTOR`       | `Node`       | Local geometry, text layout, key points, and Scene AABB       |
+| `CLIP_INSPECTOR`       | `Clip`       | Every subpath and hole edge in the lowered path, plus a label |
+| `SCOPE_INSPECTOR`      | `Scope`      | Intrinsic envelope, origin, axes, and hierarchy label         |
+| `COORDINATE_INSPECTOR` | `Coordinate` | Point marker and authored id                                  |
+
+`createDefaultInspectorRegistry()` adds all five. No auxiliary fragment is produced when no final owner matches or the corresponding key is not requested.
+
+Shape parameters change the subject; inspection options affect only the auxiliary layer.
+
+Built-in inspection labels use a consistent vertical offset of 12 units from their reference point or edge, preserving their above or below placement. Axis names sit 12 units beyond the axis endpoint along its direction.
+
+## Curves
+
+`PATH_INSPECTOR` reads Path commands resolved by Core. Each example contains one curve, with separate controls for geometry and auxiliary content.
+
+Vertices are labeled `V0`, `V1`, and so on in first-occurrence order, with coincident points numbered once. The two distinct endpoints of an arc or elliptical arc are labeled `V0` and `V1`.
+
+`controlPoints`, `vertices`, and `arcGeometry` control handles, valid vertices, and arc geometry; their defaults are `true`, `false`, and `true`. `labels` defaults to off. These examples enable relevant helpers for exploration.
+
+### Quadratic Bézier
+
+<ComponentPreview
+  files={['inspect-quadratic', 'inspect-quadratic.controls.ts', 'inspect-quadratic.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="Move endpoints or control points to see the curve and auxiliary handles update together."
+/>
+
+### Cubic Bézier
+
+<ComponentPreview
+  files={['inspect-cubic', 'inspect-cubic.controls.ts', 'inspect-cubic.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="Move each control point to explore the directions at the two ends."
+/>
+
+### Circular arc
+
+<ComponentPreview
+  files={['inspect-arc', 'inspect-arc.controls.ts', 'inspect-arc.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="Adjust radius and angles to inspect the center, radius lines, and endpoints."
+/>
+
+Radius guides use dashed strokes for circular and elliptical arcs. `ellipseAxes` independently controls the dotted ellipse axes. It defaults to off and does not depend on `arcGeometry`.
+
+### Elliptical arc
+
+<ComponentPreview
+  files={['inspect-ellipse-arc', 'inspect-ellipse-arc.controls.ts', 'inspect-ellipse-arc.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="Change horizontal and vertical radii independently to inspect elliptical geometry."
+/>
+
+## Node bounds
+
+`NODE_INSPECTOR` displays the shape outline, connection boundary, layout box, text box, baselines, key points, and Scene axis-aligned bounding box (AABB). `outline`, `boundary`, `box`, `content`, `baselines`, `keyPoints`, `bounds`, and `labels` all default to `true` and can be disabled separately.
+
+The AABB projects the outer-box corners through the final transform. It excludes stroke, shadow, and external labels, and is not reduced by Clip. To avoid overlapping text, this demo starts with labels off and all geometry helpers on.
+
+<ComponentPreview
+  files={['inspect-node-geometry', 'inspect-node-geometry.controls.ts', 'inspect-node-geometry.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="Rotate one node to compare its rotating local boxes with the axis-aligned Scene AABB."
+/>
+
+## Clipping
+
+`CLIP_INSPECTOR` observes one logical clipping application and displays every subpath in its final path. This example clips one node using an `evenodd` outer contour and an inner diamond hole.
+
+<ComponentPreview
+  files={['inspect-clip', 'inspect-clip.controls.ts', 'inspect-clip.i18n.ts']}
+  size="md"
+  controlPanelDefaultOpen
+  caption="Resize the outer contour and hole, or hide helper edges to compare the actual clip."
+/>
+
+## Hierarchy
+
+`SCOPE_INSPECTOR` reads the Scope's intrinsic envelope and marks its origin, axes, and hierarchy label in local coordinates. Two offset child nodes share one enclosing envelope, making the relationship between the Scope transform and its envelope easier to see.
+
+Local axes have a fixed length of 40 local units, with dashed lines, arrowheads, and `x` / `y` labels indicating their positive directions. They follow the Scope transform. Axis names follow the `axes` switch; `labels` controls only the `scope N` hierarchy label.
+
+<ComponentPreview
+  files={['inspect-scope', 'inspect-scope.controls.ts', 'inspect-scope.i18n.ts']}
+  size="lg"
+  controlPanelDefaultOpen
+  caption="Translate and rotate the Scope to inspect its envelope, local origin, and axes."
+/>
+
+## Coordinates
+
+`COORDINATE_INSPECTOR` marks the resolved Coordinate position and can show its authored id. A coordinate is positioning information; the auxiliary layer draws the visible point and identifier.
+
+<ComponentPreview
+  files={['inspect-coordinate', 'inspect-coordinate.controls.ts', 'inspect-coordinate.i18n.ts']}
+  size="sm"
+  controlPanelDefaultOpen
+  caption="Move the coordinate and toggle inspection or its identifier; without inspection, Coordinate has no visible geometry."
+/>
+
+## Related
+
+- [Extending inspection](/kernel/packages/inspect/extensions): define an Inspector for another Core owner
+- [Inspection mechanism](/kernel/packages/inspect/mechanism): learn how requests select final occurrences, how coordinate spaces apply, and when auxiliary content is compiled in isolation
+- [Schema reference](/kernel/packages/inspect/schema-reference): look up defaults and fields for all five built-in option sets

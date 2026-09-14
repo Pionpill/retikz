@@ -187,6 +187,9 @@ export const NodeLayoutSchema = strictObject({
   maxTextWidth: PositiveNumberSchema.optional().describe(
     'Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.',
   ),
+  width: PositiveNumberSchema.optional().describe(
+    'Exact unscaled visible border width in user units. Excludes margin and must not be smaller than the effective minimum width.',
+  ),
   minimumSize: BoxSizeValueSchema.optional().describe(
     'Minimum visual border size in user units. Number applies to width and height; object width / height override default.',
   ),

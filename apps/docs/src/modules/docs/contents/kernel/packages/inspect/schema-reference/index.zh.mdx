@@ -1,0 +1,83 @@
+---
+title: Inspect Schema 参考
+description: 查询五类内置 Inspector 的配置字段、默认值与校验结构
+---
+
+这里展示 `@retikz/inspect` 公开的配置 schema。它们约束观测选项，不是完整的观测请求或 Scene schema；运行时的选择规则、注册表与回调类型见 [API 参考](/kernel/packages/inspect/api-reference)。
+
+以下默认值只在明确选择相应 Inspector 后生效。输入字段均可省略：先逐字段合并原始选项，再由 schema 补齐默认值；注册检查器不会自动开启检查。
+
+## PathInspectOptionsSchema
+
+检查最终 Path 命令的控制柄、顶点与弧线构造；标签序号对应最终命令，而不是 authored step。
+
+<ZodSchema
+  name="PathInspectOptionsSchema"
+  description="stroke Path 观测选项；在原始选项合并后应用默认值。"
+  descriptions={{
+    controlPoints: '是否显示控制柄与控制点，默认 true',
+    vertices: '是否显示子路径端点与闭合起点，默认 false',
+    ellipseAxes: '是否独立显示椭圆十字轴线，默认 false',
+    arcGeometry: '是否显示弧心、端点与起终半径，默认 true',
+    labels: '是否显示已选几何的标签，默认 false；也可单独显示贝塞尔控制点标签',
+  }}
+/>
+
+## NodeInspectOptionsSchema
+
+检查 Node 的局部几何与正文排版；正文盒和基线不包含外置 label。
+
+<ZodSchema
+  name="NodeInspectOptionsSchema"
+  description="Node 几何检查选项；先合并原始选项，再应用默认值。"
+  descriptions={{
+    outline: '是否显示 Shape 的精确轮廓，默认 true',
+    boundary: '是否显示已解析连接边界，默认 true',
+    bounds: '是否显示最终 Scene 坐标中的轴向包围盒，默认 true',
+    box: '是否显示经过 Node 自身旋转的外框，默认 true',
+    content: '是否显示同次排版的正文占用盒，默认 true',
+    baselines: '是否显示正文物理行基线，默认 true',
+    keyPoints: '是否显示 Shape provider 命名的结构关键点，默认 true',
+    labels: '是否显示几何标签，默认 true',
+  }}
+/>
+
+## ClipInspectOptionsSchema
+
+检查每次裁切应用的完整边缘，包括孔洞；不计算嵌套裁切的布尔交集。
+
+<ZodSchema
+  name="ClipInspectOptionsSchema"
+  description="Clip 应用检查选项；先合并原始选项，再应用默认值。"
+  descriptions={{
+    outline: '是否显示最终 lowering 路径的全部边缘，默认 true',
+    labels: '是否显示裁切应用标签，默认 false',
+  }}
+/>
+
+## ScopeInspectOptionsSchema
+
+检查 Scope 固有包络和局部坐标系；没有参与包络的子布局时只绘制已开启的原点、轴和标签。
+
+<ZodSchema
+  name="ScopeInspectOptionsSchema"
+  description="Scope 检查选项；先合并原始选项，再应用默认值。"
+  descriptions={{
+    envelope: '是否显示固有包络，默认 true',
+    origin: '是否显示局部原点，默认 true',
+    axes: '是否显示局部正向坐标轴，默认 false',
+    labels: '是否显示逻辑层级标签，默认 false',
+  }}
+/>
+
+## CoordinateInspectOptionsSchema
+
+检查已解析的坐标点。
+
+<ZodSchema
+  name="CoordinateInspectOptionsSchema"
+  description="Coordinate 检查选项。"
+  descriptions={{ labels: '是否显示 authored id 标签，默认 false' }}
+/>
+
+内置用法见 [内置观测](/kernel/packages/inspect/builtins)，自定义 Inspector 的选项契约见 [拓展观测](/kernel/packages/inspect/extensions)。

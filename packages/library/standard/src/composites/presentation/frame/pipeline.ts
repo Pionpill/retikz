@@ -1,7 +1,6 @@
 import type {
   CompositeCompileChild,
   CompositeCompileScopeProps,
-  IRBoxSpacing,
   IRNode,
   IRPath,
   LayoutChildResult,
@@ -13,16 +12,11 @@ import type { BoundsRect } from '@retikz/math';
 import { NaturalLayoutProposal } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
+import type { CanonicalFrame } from '../../../resolve/frame';
 import type { IRFrame, IRFrameDescription, IRFrameTitle } from './types';
 
+import { resolveFrame } from '../../../resolve/frame';
 import { FrameHeaderDirection } from './constants';
-
-type FramePaddingInsets = {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-};
 
 type FrameHeaderInput = IRFrameTitle | IRFrameDescription;
 
@@ -40,20 +34,6 @@ type PlacedFrameChild = Readonly<{
 /** 移除可选字段中的显式 undefined，避免覆盖 lowering 默认值 */
 const omitUndefined = <T extends object>(value: T): Partial<T> =>
   Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>;
-
-/** 把 Frame padding 归一化为四边独立的边框 offset */
-const normalizeFramePadding = (value: number | IRBoxSpacing | undefined, fallback: number): FramePaddingInsets => {
-  if (typeof value === 'number') {
-    return { top: value, right: value, bottom: value, left: value };
-  }
-  const base = value?.default ?? fallback;
-  return {
-    top: value?.top ?? value?.y ?? base,
-    right: value?.right ?? value?.x ?? base,
-    bottom: value?.bottom ?? value?.y ?? base,
-    left: value?.left ?? value?.x ?? base,
-  };
-};
 
 /** 把 Node-like Frame header 补全为可独立 probe 的普通 Core Node */
 const frameHeaderNodeOf = (header: FrameHeaderInput, options: FrameHeaderOptions): IRNode => {
@@ -114,7 +94,7 @@ const placeChild = (
 };
 
 /** 从 Frame 领域字段中分离 authored root Scope 的 Core 属性 */
-const authoredScopePropsOf = (frame: IRFrame): CompositeCompileScopeProps => {
+const authoredScopePropsOf = (frame: CanonicalFrame): CompositeCompileScopeProps => {
   const {
     namespace: _namespace,
     type: _type,
@@ -140,7 +120,11 @@ const authoredScopePropsOf = (frame: IRFrame): CompositeCompileScopeProps => {
 };
 
 /** 用 occurrence-local probe 排布 Frame body/header，并避免生成公开 Core id */
-export const compileFrame = (frame: IRFrame, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
+export const compileFrame = (
+  sourceFrame: IRFrame,
+  context: LayoutCompositeCompileContext,
+): LayoutCompositeCompileResult => {
+  const frame = resolveFrame(sourceFrame);
   let occurrence = 0;
   const bodyResult = requiredLayoutProbe(
     context,
@@ -215,7 +199,7 @@ export const compileFrame = (frame: IRFrame, context: LayoutCompositeCompileCont
   const contentBounds = [body, title, description]
     .filter((child): child is PlacedFrameChild => child !== undefined)
     .reduce((bounds, child) => unionBounds(bounds, child.bounds), body.bounds);
-  const insets = normalizeFramePadding(frame.padding, 8);
+  const insets = frame.padding;
   const allocationBounds = {
     x: contentBounds.x - insets.left,
     y: contentBounds.y - insets.top,

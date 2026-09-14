@@ -3,7 +3,6 @@ import type { FC } from 'react';
 import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
 import { Fragment } from 'react';
 
-// 字面色而非 CSS var：SVG 下载后 CSS var 不在新上下文里解析，会 fallback 成黑
 const MATH_FONT = {
   family: '"Latin Modern Math", "STIX Two Math", "Cambria Math", "Times New Roman", serif',
   style: 'italic' as const,
@@ -12,13 +11,12 @@ const MATH_FONT = {
 const COS30 = Math.cos((30 * Math.PI) / 180);
 const SIN30 = Math.sin((30 * Math.PI) / 180);
 const TAN30 = SIN30 / COS30;
-const SEC30 = 1 / COS30; // x 轴上的截距 = 1/cos(α)
-const CSC30 = 1 / SIN30; // y 轴上的截距 = 1/sin(α)
-const COT30 = 1 / TAN30; // 顶部水平切线与原点射线的距离 = 1/tan(α)
+const SEC30 = 1 / COS30;
+const CSC30 = 1 / SIN30;
+const COT30 = 1 / TAN30;
 
 const Demo: FC = () => (
   <Layout>
-    {/* 背景网格 */}
     {[-100, -50, 0, 50, 100].map(v => (
       <Fragment key={`grid-${v}`}>
         <Draw
@@ -38,13 +36,11 @@ const Demo: FC = () => (
       </Fragment>
     ))}
 
-    {/* 单位圆 */}
     <Path style={{ lineCap: 'round' }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="circlePath" radius={100} />
     </Path>
 
-    {/* 坐标轴：y 轴上端拉到 -230 以容纳 csc α = 2 端点 (0, -200) */}
     <Draw
       way={[
         [-150, 0],
@@ -68,7 +64,6 @@ const Demo: FC = () => (
     </Node>
     <Coordinate id="y-axis" position={[0, -230]} />
 
-    {/* 刻度：y 轴多加一个 2（位置 -200）方便看 csc 端点 */}
     {[
       { x: -100, text: '−1' },
       { x: -50, text: '−1/2' },
@@ -106,7 +101,6 @@ const Demo: FC = () => (
       </Fragment>
     ))}
 
-    {/* 30° 扇形 + α */}
     <Path style={{ fill: 'lightgray', stroke: 'green' }}>
       <Step kind="move" to={[0, 0]} />
       <Step kind="arc" startAngle={0} endAngle={-30} radius={30} />
@@ -120,8 +114,6 @@ const Demo: FC = () => (
       α
     </Node>
 
-    {/* 从原点穿过 P 的射线（延伸到 (cot α · 100, -100)）——cot 几何定义的基准；
-        虚线 currentColor：跟着主题深浅自适应，又一眼能看出是辅助线 */}
     <Draw
       way={[
         [0, 0],
@@ -130,7 +122,6 @@ const Demo: FC = () => (
       style={{ dashPattern: [3, 3] }}
     />
 
-    {/* sin α 红 / cos α 蓝 / tan α 橙；label.textColor 与线色一致 */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'sin α', side: 'left' } }, [COS30 * 100, 0]]}
       thickness="thick"
@@ -147,8 +138,6 @@ const Demo: FC = () => (
       style={{ stroke: 'darkorange' }}
     />
 
-    {/* sec α 紫：切线下半段，P → x 轴截距 (sec α · 100, 0)；
-        标签锚到段末 + side='bottom'，落到 x 轴下方，避开 tan α 的 right 侧标签 */}
     <Draw
       way={[
         { angle: -30, radius: 100 },
@@ -159,21 +148,18 @@ const Demo: FC = () => (
       style={{ stroke: 'dodgerblue' }}
     />
 
-    {/* csc α 粉：切线上半段，P → y 轴截距 (0, -csc α · 100) */}
     <Draw
       way={[{ angle: -30, radius: 100 }, { label: { text: 'csc α', side: 'left' } }, [0, -CSC30 * 100]]}
       thickness="thick"
       style={{ stroke: 'red' }}
     />
 
-    {/* cot α 青：顶部水平切线段，(0, -100) → (cot α · 100, -100) */}
     <Draw
       way={[[0, -100], { label: { text: 'cot α', side: 'top' } }, [COT30 * 100, -100]]}
       thickness="thick"
       style={{ stroke: 'green' }}
     />
 
-    {/* 右侧信息说明框：6 个三角函数的值 + α */}
     <Node
       position={[320, -70]}
       shape="rectangle"

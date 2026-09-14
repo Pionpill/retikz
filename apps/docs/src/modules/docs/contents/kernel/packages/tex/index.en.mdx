@@ -5,15 +5,87 @@ description: Browse @retikz/tex formula parsing, lowering, and runtime integrati
 
 `@retikz/tex` is the optional formula package that integrates TeX into the existing text and rendering flow.
 
+## Install and use
+
+`mathjax-full` is an optional peer dependency. Applications using the built-in MathJax engine install it together with `@retikz/tex`:
+
+<PackageManagerInstall packages="@retikz/tex mathjax-full" />
+
+Choose the injection entry for your host. Formulas enter MathJax lowering only after a lowerer is injected; without it, `$...$` strings stay compatible ordinary text and explicit math runs are skipped with a Core warning.
+
+| Host    | Entry              | Integration point                                                                |
+| ------- | ------------------ | -------------------------------------------------------------------------------- |
+| React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout lowerTex={lowerTex}>`                     |
+| Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `renderToSvgString` or another compile entry |
+
+### React
+
+React applications use `useLowerTex` from `@retikz/tex/react`. The hook asynchronously prepares a shared MathJax engine and returns `loading`, `ready`, or `error`. Inject the synchronous lowerer into `<Layout>` only when its state is `ready`:
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { useLowerTex } from '@retikz/tex/react';
+
+const Diagram = () => {
+  const lowerTexState = useLowerTex({ profile: 'math' });
+
+  if (lowerTexState.status === 'loading') return <div>Loading MathJax…</div>;
+  if (lowerTexState.status === 'error') return <div>{lowerTexState.diagnostic.message}</div>;
+
+  return (
+    <Layout lowerTex={lowerTexState.lowerTex}>
+      <Node position={[0, 0]}>{'$\\frac{a}{b} = c$'}</Node>
+    </Layout>
+  );
+};
+```
+
+Once the lowerer is injected into the outer `<Layout lowerTex>`, descendant text reuses the capability. `@retikz/tex/react` owns the React lifecycle and shared engine; it does not change Core's text syntax.
+
+### Vanilla
+
+Vanilla applications create a MathJax engine, adapt it to Core `LowerTex` with `createLowerTex`, then pass it as `compile.lowerTex` to `renderToSvgString` or another Vanilla compile entry:
+
+```ts
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+
+const lowerTex = createLowerTex(await createMathJaxEngine({ profile: 'math' }));
+const input = scene({
+  children: [node('formula', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
+});
+
+const svg = renderToSvgString(input, { compile: { lowerTex } });
+```
+
+If the engine and lowerer do not need to be configured separately, await `createMathJaxLowerTex(options)` instead. Vanilla does not install React or use `@retikz/tex/react`.
+
 ## Responsibilities
 
-| Document | Responsibility                           | Reach for it when                   |
-| -------- | ---------------------------------------- | ----------------------------------- |
-| Overview | Formula authoring, lowering, and caching | Using or integrating LaTeX formulas |
+| Document                 | Responsibility                               | Reach for it when                         |
+| ------------------------ | -------------------------------------------- | ----------------------------------------- |
+| Formula Authoring        | Formula syntax and text layout               | Writing or adjusting formulas in a figure |
+| MathJax Configuration    | Choosing profiles and extensions             | Additional formula syntax is required     |
+| Implementation mechanism | Conversion boundaries, caching, and failures | Customizing an engine or debugging output |
 
-## Documentation
+## Chapter contents
 
-<LinkedCard href="/kernel/packages/tex/overview">
-  <span className="font-semibold">Overview</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">Formula integration and runtime configuration</span>
-</LinkedCard>
+<LinkedSections
+  items={[
+    {
+      title: 'Formula Authoring',
+      description: 'From inline formulas to explicit math-run layout',
+      url: '/kernel/packages/tex/authoring',
+    },
+    {
+      title: 'MathJax Configuration',
+      description: 'Choose profiles and extensions for additional syntax',
+      url: '/kernel/packages/tex/configuration',
+    },
+    {
+      title: 'Implementation mechanism',
+      description: 'Understand conversion, caching, and observable failures',
+      url: '/kernel/packages/tex/mechanism',
+    },
+  ]}
+/>

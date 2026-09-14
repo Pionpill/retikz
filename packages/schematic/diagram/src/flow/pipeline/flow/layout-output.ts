@@ -14,6 +14,7 @@ import type {
 } from '../../contract';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import { FlowRoutingKind } from '../../shared';
 
 type PlainRecord = Readonly<Record<string, unknown>>;
 
@@ -171,7 +172,9 @@ const validateElementGeometry = (
     if (contentBounds.width < 0 || contentBounds.height < 0) {
       invalidOutput(definition, ['elements'], 'Flow scope content insets exceed its bounds.', [element.id]);
     }
-    for (const child of element.elements) {
+    const containedChildren = element.kind === 'group' ? flattenElements(element.elements) : element.elements;
+    for (const child of containedChildren) {
+      if (element.kind === 'layout' && element.placement.excludeFromBounds?.includes(child.id)) continue;
       const childBounds = boundsById.get(child.id);
       if (childBounds === undefined || !containsBounds(contentBounds, childBounds)) {
         invalidOutput(definition, ['elements'], 'Flow scope content bounds must contain every direct child.', [
@@ -211,6 +214,39 @@ type PlacementRecord = Readonly<{
   output: FlowLayoutPlacementOutput;
 }>;
 
+/** 判断 provider 回传的 Grid placement 是否保留原始矩阵或对象结构 */
+const hasMatchingGridPlacements = (
+  actual: unknown,
+  expected:
+    | ReadonlyArray<ReadonlyArray<string | null>>
+    | Readonly<Record<string, Readonly<{ row: number; column: number }>>>,
+): boolean => {
+  if (Array.isArray(expected))
+    return (
+      Array.isArray(actual) &&
+      actual.length === expected.length &&
+      actual.every(
+        (actualRow, rowIndex) =>
+          Array.isArray(actualRow) &&
+          actualRow.length === expected[rowIndex].length &&
+          actualRow.every((actualCell, columnIndex) => actualCell === expected[rowIndex][columnIndex]),
+      )
+    );
+  return (
+    isPlainRecord(actual) &&
+    hasExactKeys(actual, Object.keys(expected)) &&
+    Object.entries(expected).every(([id, cell]) => {
+      const actualCell = actual[id];
+      return (
+        isPlainRecord(actualCell) &&
+        hasExactKeys(actualCell, ['row', 'column']) &&
+        actualCell.row === cell.row &&
+        actualCell.column === cell.column
+      );
+    })
+  );
+};
+
 const validatePlacementInput = (
   definition: FlowLayoutDefinition,
   expected: Extract<FlowLayoutElementInput, { kind: 'layout' }>,
@@ -220,21 +256,44 @@ const validatePlacementInput = (
     !isPlainRecord(input) ||
     !hasExactKeys(input, ['layout', 'elements']) ||
     !isPlainRecord(input.layout) ||
-    !hasExactKeys(input.layout, ['id', 'direction', 'gap', 'align']) ||
+    !hasExactKeys(
+      input.layout,
+      expected.placement.kind === 'linear'
+        ? ['kind', 'id', 'direction', 'gap', 'align']
+        : ['kind', 'id', 'rowGap', 'columnGap', 'reserveLabelSpace', 'placements'],
+      ['excludeFromBounds'],
+    ) ||
     !Array.isArray(input.elements)
   ) {
     return invalidOutput(definition, ['layouts', expected.id], 'expected a closed Layout placement input.');
   }
-  if (
-    input.layout.id !== expected.id ||
-    input.layout.direction !== expected.layout.direction ||
-    input.layout.gap !== expected.layout.nodeGap ||
-    input.layout.align !== expected.align
-  ) {
+  if (input.layout.id !== expected.id || input.layout.kind !== expected.placement.kind) {
     invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
       expected.id,
     ]);
   }
+  const actual = input.layout;
+  const placement = expected.placement;
+  if (JSON.stringify(actual.excludeFromBounds) !== JSON.stringify(placement.excludeFromBounds)) {
+    invalidOutput(
+      definition,
+      ['layouts', expected.id, 'layout', 'excludeFromBounds'],
+      'Layout exclusion must match input.',
+      [expected.id],
+    );
+  }
+  const matches =
+    actual.kind === 'linear' && placement.kind === 'linear'
+      ? actual.direction === placement.direction && actual.gap === placement.gap && actual.align === placement.align
+      : actual.kind === 'grid' &&
+        placement.kind === 'grid' &&
+        actual.rowGap === placement.rowGap &&
+        actual.columnGap === placement.columnGap &&
+        hasMatchingGridPlacements(actual.placements, placement.placements);
+  if (!matches)
+    invalidOutput(definition, ['layouts', expected.id, 'layout'], 'Layout placement configuration must match input.', [
+      expected.id,
+    ]);
   if (
     input.elements.length !== expected.elements.length ||
     input.elements.some((element, index) => element.id !== expected.elements[index]?.id)
@@ -338,7 +397,7 @@ const validateRoute = (
   if (relation.routing.kind === 'straight' && points.length !== 2) {
     invalidOutput(definition, [...path, 'points'], 'straight route must contain exactly two points.', relatedIds);
   }
-  if (relation.routing.kind === 'orthogonal') {
+  if (relation.routing.kind !== FlowRoutingKind.Straight) {
     points.slice(1).forEach((point, index) => {
       const previous = points[index];
       if (point[0] !== previous[0] && point[1] !== previous[1]) {
@@ -363,6 +422,29 @@ const validateRoute = (
   }
   if (!containsPoint(sourceBounds, points[0]) || !containsPoint(targetBounds, points.at(-1)!)) {
     invalidOutput(definition, [...path, 'points'], 'route endpoints must lie inside their element bounds.', relatedIds);
+  }
+  if (
+    relation.routing.kind === FlowRoutingKind.HorizontalThenVertical ||
+    relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
+  ) {
+    const source: Position = [sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2];
+    const target: Position = [targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2];
+    const corner: Position =
+      relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
+        ? [target[0], source[1]]
+        : [source[0], target[1]];
+    const expected = collapsePoints([source, corner, target]);
+    if (
+      points.length !== expected.length ||
+      points.some((point, index) => point[0] !== expected[index][0] || point[1] !== expected[index][1])
+    ) {
+      invalidOutput(
+        definition,
+        [...path, 'points'],
+        'single-elbow route must connect element centers in the requested axis order.',
+        relatedIds,
+      );
+    }
   }
   if (relation.labelSize === undefined && labelBounds !== undefined) {
     invalidOutput(definition, [...path, 'labelBounds'], 'unlabeled relation must not return label bounds.', relatedIds);

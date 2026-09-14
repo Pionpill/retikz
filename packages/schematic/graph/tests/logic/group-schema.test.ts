@@ -48,10 +48,14 @@ describe('Group Source schema', () => {
   });
 
   it('rejects empty captions, invalid gaps and Core-invalid label combinations', () => {
-    expect(() => Graph.createGroup({ caption: {} })).toThrow();
-    expect(() => Graph.createGroup({ caption: { title: { text: 'A' }, bodyGap: -1 } })).toThrow();
-    expect(() => Graph.createGroup({ labels: [{ text: 'inside', placement: 'inside', pin: true }] })).toThrow();
-    expect(() => Graph.createGroup({ labels: [] })).toThrow();
+    expect(() => Graph.GroupSchema.parse(Graph.createGroup({ caption: {} }))).toThrow();
+    expect(() =>
+      Graph.GroupSchema.parse(Graph.createGroup({ caption: { title: { text: 'A' }, bodyGap: -1 } })),
+    ).toThrow();
+    expect(() =>
+      Graph.GroupSchema.parse(Graph.createGroup({ labels: [{ text: 'inside', placement: 'inside', pin: true }] })),
+    ).toThrow();
+    expect(() => Graph.GroupSchema.parse(Graph.createGroup({ labels: [] }))).toThrow();
   });
 
   it('does not accept Node identity or geometry fields inside caption text', () => {

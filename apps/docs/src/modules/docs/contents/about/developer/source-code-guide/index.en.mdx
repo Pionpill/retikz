@@ -1,160 +1,156 @@
 ---
 title: Source Code Guide
-description: A tour of the retikz source: the six kernel packages, plus core / React responsibilities, dependencies, and recommended reading order with GitHub links to jump straight to each file.
+description: Understand retikz source ownership and entry boundaries through package dependencies, vertical define-registry extensions, and Chart's horizontal organization.
 ---
 
-For readers who want to understand how retikz works, contribute code, or write an adapter for a new framework.
+This guide is for developers reading, extending, or contributing to retikz. Start with published packages and public entry points to establish boundaries; follow an implementation directory only when you need to change that capability.
 
-The official repo currently maintains six kernel packages:
+## Groups and package dependencies
 
-| Package                                                                                          | Role                                                                                                                                    | Status                |
-| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)       | Zero-dependency pure computational geometry (vectors / affine / arc / intersections / circles / hull); the compute base core depends on | Officially maintained |
-| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core)       | IR schemas, geometry, parsers, and the Scene compiler; zero React, zero DOM                                                             | Officially maintained |
-| [`@retikz/render`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/render)   | Renderer-neutral Scene output adapters: SVG descriptors/strings, Canvas 2D, hydration helpers, and animation runtime utilities          | Officially maintained |
-| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react)     | React adapter: JSX components that compile to IR, then render through SVG or Canvas                                                     | Officially maintained |
-| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | Framework-neutral foundation: Input helpers, processing, SVG/Canvas mounting, hydration, animation controls, and SVG string output      | Officially maintained |
-| [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | Optional LaTeX integration: MathJax SVG glyph paths lowered into the renderer-agnostic Scene model                                      | Officially maintained |
+The table lists each published package's direct runtime or peer dependencies on other `@retikz/*` packages. Third-party dependencies and devDependencies are excluded. A blank dependency means that the package has no retikz package dependency. A row consumes the packages at its right; it does not copy their implementations.
 
-Vue / Svelte / Solid / Native adapters are still future or community surfaces, but the IR remains universal: a new framework adapter can reuse `@retikz/core` and most renderer work from `@retikz/render`, then supply its own component bridge and text measurer where needed.
+| Group     | Package                    | Direct retikz dependencies                                                                |
+| --------- | -------------------------- | ----------------------------------------------------------------------------------------- |
+| Kernel    | `@retikz/foundation`       | —                                                                                         |
+|           | `@retikz/math`             | —                                                                                         |
+|           | `@retikz/core`             | `foundation`, `math`, `runtime`                                                           |
+|           | `@retikz/runtime`          | `foundation`                                                                              |
+|           | `@retikz/tex`              | `core`, `foundation`, `math`                                                              |
+|           | `@retikz/inspect`          | `core`, `foundation`, `math`, `react`, `render`<br />`vanilla`                            |
+|           | `@retikz/vanilla`          | `core`, `foundation`, `render`, `runtime`                                                 |
+|           | `@retikz/react`            | `core`, `foundation`, `render`, `runtime`, `vanilla`                                      |
+|           | `@retikz/render`           | `core`, `foundation`, `math`, `runtime`                                                   |
+| Library   | `@retikz/layout`           | `core`, `foundation`, `inspect`, `math`                                                   |
+|           | `@retikz/layout-vanilla`   | `inspect`, `layout`, `vanilla`                                                            |
+|           | `@retikz/layout-react`     | `inspect`, `layout`, `layout-vanilla`, `react`, `vanilla`                                 |
+|           | `@retikz/standard`         | `core`, `foundation`, `layout`, `math`                                                    |
+|           | `@retikz/standard-vanilla` | `standard`, `vanilla`                                                                     |
+|           | `@retikz/standard-react`   | `react`, `standard`, `standard-vanilla`, `vanilla`                                        |
+| Schematic | `@retikz/graph`            | `core`, `foundation`, `layout`, `math`, `standard`                                        |
+|           | `@retikz/graph-vanilla`    | `foundation`, `graph`, `vanilla`                                                          |
+|           | `@retikz/graph-react`      | `foundation`, `graph`, `graph-vanilla`, `react`, `vanilla`                                |
+|           | `@retikz/diagram`          | `core`, `foundation`, `graph`, `layout`, `math`<br />`standard`                           |
+|           | `@retikz/diagram-vanilla`  | `diagram`, `vanilla`                                                                      |
+|           | `@retikz/diagram-react`    | `diagram`, `diagram-vanilla`, `foundation`, `react`, `vanilla`                            |
+| Viz       | `@retikz/data`             | `core`, `foundation`, `math`                                                              |
+|           | `@retikz/plot`             | `core`, `data`, `foundation`, `layout`, `math`<br />`standard`                            |
+|           | `@retikz/plot-vanilla`     | `core`, `data`, `foundation`, `plot`, `vanilla`                                           |
+|           | `@retikz/plot-react`       | `core`, `data`, `foundation`, `plot`, `plot-vanilla`<br />`react`                         |
+|           | `@retikz/chart`            | `core`, `data`, `foundation`, `layout`, `plot`<br />`standard`                            |
+|           | `@retikz/chart-vanilla`    | `chart`, `core`, `data`, `foundation`, `plot`<br />`plot-vanilla`, `standard`, `vanilla`  |
+|           | `@retikz/chart-react`      | `chart`, `chart-vanilla`, `core`, `data`, `foundation`<br />`plot`, `plot-react`, `react` |
+|           | `@retikz/table`            | `core`, `data`, `foundation`, `math`                                                      |
+|           | `@retikz/table-vanilla`    | `core`, `data`, `foundation`, `table`, `vanilla`                                          |
+|           | `@retikz/table-react`      | `core`, `data`, `foundation`, `react`, `table`<br />`table-vanilla`, `vanilla`            |
 
-Data flow:
+This mirrors the group boundaries in the [roadmap](/about/releases/roadmap): Kernel supplies the foundation, while Library supplies cross-domain reuse. Schematic and Viz own their domain semantics. `*-vanilla` packages assemble authoring inputs; `*-react` packages bridge JSX and host lifecycles. Neither should rebuild a domain package's schema, resolution, or compile semantics.
 
-<ComponentPreview files="data-flow" size="sm" hideCode />
+## Vertical extension packages
 
-The dashed arrow indicates `shared/geometry` is called by `compile` — a tool dependency, not a separate data channel.
+When a domain needs an extensible capability, the problem is not merely supplying built-in implementations. Authors, built-ins, and compilation consumers must collaborate through one contract. Otherwise, every new capability adds another branch to schemas, built-ins, user configuration, and compilation, and the extension boundary gradually disappears.
 
-Below, the detailed reading order focuses on `@retikz/core` (data + compiler) and `@retikz/react` (component adapter), while pointing to `@retikz/math`, `@retikz/render`, and `@retikz/vanilla` where they enter the pipeline. `@retikz/tex` is the optional formula-lowering package and is usually best read after the core Scene model.
+define-registry reduces that vertical path to `Definition → registry → resolve → compile`. `defineXxx()` lets authors declare a capability as a stable `XxxDefinition`; providers merge built-ins and user definitions into one registry; resolve performs contextual lookup, defaults, and diagnostics; compile only schedules and consumes the determined result. The benefits are a shared path for built-ins and custom definitions, centralized fail-loud duplicate-key diagnostics, no copied built-in allowlists downstream, and no parallel compile path for extensions.
 
-## @retikz/core
+### Core as an example
 
-Zero-React, zero-DOM. `zod` is the only runtime dependency.
+Core is the base owner of this mechanism. It places persistent models, author contracts, built-in implementations, domain completion, and Scene orchestration in adjacent layers with one-way dependencies:
 
-### Package Layout
+```text
+core/src/
+  shared/                 Cross-capability pure vocabulary and helpers
+  schemas/<domain>/       Source IR Zod schemas and IRXxx types
+  contract/<capability>/
+    types.ts              XxxDefinition and author-facing contracts
+    define.ts             defineXxx() entry point
+  providers/<capability>/
+    <builtin>.ts          One built-in implementation
+    definitions.ts        BUILTIN_XXXS collection
+    registry.ts           Built-in/user merge and duplicate diagnostics
+  resolve/<domain>/       IR + context -> Canonical / Resolution
+  compile/                Context creation; resolve, lower, layout, emit Scene
+```
 
-| Module                                                                                                                                                                                                        | Responsibility                                                                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`schemas/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas)                                                                                                            | IR schema (zod) — position / node / coordinate / path / step / scope / paint / clip / scene, all defined with zod                                                                                                                                                                                                |
-| [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry)                                                                                            | Reusable core geometry helpers — rect / circle / ellipse / diamond / polar / contour / bend / segment; pure compute primitives (vectors / affine / arc / intersections / circles / hull) live in [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math), re-exported by core |
-| [`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                                                                                              | Scene data model — render-target-agnostic primitives, resources, markers, and clipping; `primitive/` remains only as compatibility re-exports                                                                                                                                                                    |
-| [`compile/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile)                                                                                                            | IR → Scene compiler — node layout, path resolution, style cascade, resource collection, layout                                                                                                                                                                                                                   |
-| [`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse)                                                                                                                | DSL → IR parsers — currently the Sugar `way` array and `target` strings                                                                                                                                                                                                                                          |
-| [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers) | v0.2 extension surfaces — custom shapes, arrows, pattern motifs, and path generators                                                                                                                                                                                                                             |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                                                                                           | Public API surface — every adapter must import from this file only                                                                                                                                                                                                                                               |
+The important point is not any one drawing primitive, but each layer's role: `contract/` does not depend on built-in implementations, `providers/` does not depend on resolve or compile, `resolve/` owns lookup, defaults, and contextual errors, and `compile/` manages only context lifetime and scheduling.
 
-### Recommended Reading Order
+| Extension package | Domain                                                         |
+| ----------------- | -------------------------------------------------------------- |
+| `@retikz/core`    | General drawing capabilities and compile extensions            |
+| `@retikz/graph`   | Entity, relation, and theme definitions                        |
+| `@retikz/data`    | Data selectors and statistics reducers                         |
+| `@retikz/plot`    | Channels, scales, coordinates, marks, and transforms           |
+| `@retikz/table`   | Table structures, presentations, formatters, and visual scales |
 
-Walk inward from both ends: input contract (IR) first, then output contract (Scene), then the `compile` step that bridges them.
+## Horizontal extension packages
 
-1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts) — Public API**<br />
-   Skim the named re-exports. What `@retikz/core` exposes (and doesn't) lives here; every adapter must import from this single file.
+When a package offers several finished capabilities in one family, the problem is how to share its domain model and processing pipeline without piling every implementation into one directory or the package root. A horizontal extension uses one internal shared owner for common contracts and logic, then separates peer subdomains by family or finished capability. Each subdomain owns only its differences; shared parts are not copied.
 
-2. **[`schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts) — IR root**<br />
-   `SceneSchema = { version, type: 'scene', children: ChildSchema[] }`; `ChildSchema` is a discriminated union of node / path / coordinate / scope.
+This organization lets a new sub-capability evolve without changing its peers, and lets consumers import only the stable subpath they need. The package root exposes genuinely shared public capabilities, while the internal shared owner is not a package-external dependency. That preserves family consistency while separating the API surface from implementation detail.
 
-3. **[`schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts) + [`schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path) + [`schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position) — IR fields**<br />
-   Read the zod schemas with their `.describe(...)` text. Each `.describe` is the LLM tool-use contract — schema and field semantics in one place.
+### Chart as an example
 
-4. **[`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene) — Scene output**<br />
-   `Scene = { primitives, layout, resources? }`. Primitives and resources are the render-target-agnostic common subset every adapter consumes; SVG-only / Canvas-only features are forbidden.
+In `@retikz/chart`, `_chart/` is the internal owner shared by every chart, while `point/` is a public domain organized by chart family. A point chart implements its own recipe, mark, encoding, and provider while reusing `_chart/` Source, theme, registry, and resolution capabilities.
 
-5. **Geometric foundation**<br />
-   Pure functions + plain data, no classes. Pure compute primitives (vectors / affine / `arc` / intersections / circles / hull) live in the standalone [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math) package, re-exported by core; reusable shape / boundary / path geometry helpers live in [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry), and `geometry/` remains only as compatibility re-exports.
+```text
+chart/src/
+  _chart/                 Internal owner shared by all Charts
+    schemas/              Chart Source, encoding, theme, presentation
+    contract/             Recipe, mark, locator, theme contracts
+    providers/            Definitions, themes, registry, selection
+    resolve/              Encoding, mark, theme, presentation -> Plot
+  point/                  Public Point-family domain
+    shared/               Encoding, mark, recipe shared by point charts
+    scatter/              One chart's schema, provider, recipe, mark
+    bubble/               Same structure
+    connected-scatter/    Same structure
+    ranged-dot/           Same structure
+    regression/           Same structure
+    strip/                Same structure
+  index.ts                Package-root public entry
+```
 
-6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts) — Compiler entry**<br />
-   `compileToScene(ir, options): CompileResult`. The main flow recursively processes children, lays out nodes and scopes, resolves paths, and collects Scene resources plus typed artifacts in the same compile. Reading it shows how IR becomes `result.scene` and `result.artifacts`.
+Consumers import only from entries declared in `package.json`: `@retikz/chart` for shared Chart APIs, `@retikz/chart/point` for the Point family, or a concrete chart subpath such as `@retikz/chart/point/scatter`. Do not deep-import `_chart/`, `schema.ts`, or other implementation files: they are not stable package contracts.
 
-7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) — Sub-compilers**<br />
-   Drill in as needed: node layout / path stepping / position resolution. [`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) ships a fallback measurer; adapters can inject a more accurate one.
+| Extension package | Shared owner and public subdomain                                                                        |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| `@retikz/diagram` | `_diagram/` shares diagram capability; `./flow` exposes the Flow subdomain                               |
+| `@retikz/chart`   | `_chart/` shares chart capability; `./point` and concrete point-chart subpaths support on-demand imports |
 
-8. **[`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse) — Standalone grammar entry (optional)**<br />
-   [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/target-sugar.ts) handle standalone path and target string grammar. Vanilla `normalizePath` dispatches them to normalize typed InputPath into Core IR; React does not call them directly.
+## API adapter packages
 
-9. **Registry extension surfaces (optional)**<br />
-   [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers): third-party packages should start from `contract/`; built-in implementations and registry merging live under `providers/`.
+Domain packages own schemas, definitions, resolution, and compile semantics. API adapter packages do not split domain capabilities again; they connect an authoring style or host environment to existing domain packages. In Kernel, `@retikz/vanilla` is the core layer for every API package: it integrates public domain capabilities, assembles author input into Source IR, and owns shared runtime processing, incremental execution, and performance optimizations.
 
-### Constraints to Keep in Mind
+`@retikz/react` is the only officially maintained framework adapter. It is a thin shell: it translates React JSX children, component declarations, and host lifecycles into author input that Vanilla can consume, preserving JSX composition benefits. The actual normalization, processing, and runtime execution remain in `@retikz/vanilla`; React does not rebuild a separate domain-logic path.
 
-Keep these constraints in mind when reading core; they explain why some implementation paths go through an extra layer instead of depending directly on the browser or React:
+In general, `*-vanilla` and `*-react` packages paired with a domain package are API adapter packages. They extend authoring entries or host capabilities, rather than belonging to the vertical or horizontal extension classifications for domain packages.
 
-- **Zero React, zero DOM** — core must not `import 'react'` / `import 'react-dom'`; browser-specific capabilities (text measurement, events) are injected by the adapter.
-- **IR data is 100% JSON-serializable** — no functions, class instances, refs, or Symbols in the IR schema.
-- **Geometry uses pure functions + plain data only** — no classes; function bundles are exposed as `const ns = { method1, method2 }` namespaces.
-- **`compileToScene` is a pure function** — same IR + same options ⇒ identical Scene and artifacts; no `Math.random()`, `Date.now()`, or module-level mutable state.
-- **Runtime dependency allowlist** — `zod` only; new runtime deps must be justified in the PR description.
+## Ground rules
 
-## @retikz/react
+Before changing source, first decide which layer owns the change. The relevant skills are compact decision checklists, not a second implementation path.
 
-`peerDependencies: react / react-dom`. The package turns JSX into IR, calls `compileToScene` for Scene plus artifacts, and renders the Scene through SVG or Canvas.
+| Question                                                                  | Read this skill first       | What it confirms                                                                                         |
+| ------------------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| How should a new directory, file, type, function, or export be named?     | `standard-name`             | Accurate owner, phase names, barrels, and public symbols                                                 |
+| Which layer owns a capability, and which dependency direction is allowed? | `standard-structure`        | The `shared → schemas → contract → providers → resolve → pipeline/compile` direction and boundaries      |
+| How do I change persistent IR, Zod, defaults, or field descriptions?      | `standard-schema`           | Schema is the single source of truth; context rules do not belong in schemas                             |
+| How do I add a capability shared by built-ins and third parties?          | `standard-contract`         | `XxxDefinition`, `defineXxx()`, and author-visible context boundaries                                    |
+| How do I add a built-in definition or registry behavior?                  | `standard-providers`        | Built-ins and user definitions merge on one path; conflicts are diagnosed centrally                      |
+| Where do defaults, inheritance, lookup, and domain completion belong?     | `standard-resolve`          | `IR + ResolveContext → Canonical / Resolution` is the only completion path                               |
+| How do I change a Vanilla authoring API?                                  | `standard-normalize`        | Only `*-vanilla` packages assemble `InputXxx` into Source IR                                             |
+| How do I change lowering, compile context, or Scene output?               | `standard-pipeline-compile` | Pipeline and compile orchestrate and consume; they do not repeat resolve defaults, lookup, or precedence |
 
-### Package Layout
+All of these rules share three limits: public imports follow `package.json` `exports` and owner barrels; unknown JSON is validated exactly once at a schema or parse boundary; obsolete structures are removed rather than retained through aliases, fallbacks, or parallel paths.
 
-| Module                                                                                               | Responsibility                                                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel — `components` hold marker components, `protocol` holds shared recognition contracts, `adapter` bridges JSX → InputScene, and `runtime` hosts `<Layout>` plus hydration wiring |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX components — `path` holds `<Draw>` / `<EdgeLabel>`, and `shapes` holds shape sugar; all expand into Kernel at compile time and introduce no new capabilities                          |
-| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React result-host wiring — `processing-result`, `svg`, `canvas`, and `text` handle processing results, SVG, CanvasHost, and the browser measurer                                                |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | Public API surface — Kernel + Sugar components, `createInputScene`, and `convertIRToReactNode`                                                                                                  |
+## Further reading
 
-### Recommended Reading Order
-
-1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) — Public API**<br />
-   See the exported Kernel / Sugar components, prop types, and adapter bridges. Core grammar vocabulary remains exported by its Core owner; React exposes only its JSX entry points.
-
-2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx) — Top-level orchestrator**<br />
-   `<Layout>` is the entry point of the whole pipeline: children → `createInputScene` → Vanilla processing (normalization, Core Program, runtime) → `ProcessingResultHost`, with same-compile artifacts published after commit. One file gives you the adapter's overall shape.
-
-3. **[`kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts) — JSX → InputScene**<br />
-   Dispatches by child `displayName` to construct authoring InputNode / InputPath / InputStep / InputScope values and collect Tier 2 `InputEmbedAdapter` values; it does not parse Core authoring grammar. The companion [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) goes the other way (IR → React element tree), useful for editor / AI workflows that "feed IR, render components".
-
-4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Step.tsx) etc. — Kernel components**<br />
-   These components don't render anything themselves — they only declare a `displayName` and hand props to the Input collector. Read one and you've read them all.
-
-5. **[`render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx) — ProcessingResult → React host**<br />
-   React only maps Vanilla's readonly processing result to SVG or Canvas, then binds hydration, animation, and artifact notifications. A different framework can reuse Vanilla processing and replace only this host layer.
-
-6. **[`render/text/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/text/browser-measurer.ts) — Text measurer injection**<br />
-   A canvas-`measureText`-based `TextMeasurer`, injected into Core compilation through Vanilla processing's `CompileOptions.measureText`. When there's no document (SSR), it falls back to core's `fallbackMeasurer` automatically.
-
-7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) — Sugar forwarding**<br />
-   `<Draw way={[...]}>` only forwards its props to Kernel `<Path>`. Vanilla `normalizePath` then parses `way` and emits Core Path steps; Sugar introduces no new drawing capability.
-
-8. **Shape components in [`sugar/shapes/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar/shapes) (optional)**<br />
-   `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<RegularPolygon>` / `<Star>` are Sugar too: they expand common geometry idioms into equivalent `<Path>` declarations. Standard `Grid` is instead a Tier 2 composite with its own persistent IR.
-
-### Mapping when writing a new adapter
-
-If you're building `@retikz/vue` / `@retikz/svelte` / etc., the React adapter maps over like this:
-
-| In React                                          | Your new adapter needs                                                              |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `kernel/*.tsx` components (declare `displayName`) | Equivalent component types in your framework (with a recognizable marker)           |
-| `kernel/input-scene.ts` (JSX → InputScene)        | A children / vnode → InputScene bridge that reuses Vanilla normalization            |
-| `render/processing-result.tsx`                    | Connecting a Vanilla processing result to your framework's native host              |
-| `render/text/browser-measurer.ts`                 | A measurer for your environment (browser / SSR / Native) — implement `TextMeasurer` |
-
-`@retikz/core`'s IR, `compileToScene`, `shared/geometry` helpers, and `contract/scene` types are reused unchanged — no need to rewrite them.
-
-## Quick File Index
-
-| Looking for                    | File                                                                                                                                                |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IR root                        | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)              |
-| Node fields                    | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)                |
-| Path / Step types              | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                                   |
-| Polar / relative position      | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                           |
-| Scene primitive types          | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                               |
-| Compile pipeline               | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)                        |
-| Text measurement contract      | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)              |
-| boundaryPoint / anchor         | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) and siblings |
-| core public API                | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                        |
-| React top-level pipeline       | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)                |
-| JSX → InputScene bridge        | [`react/kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts)        |
-| Vanilla processing             | [`vanilla/processing/prepare.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/vanilla/src/processing/prepare.ts)            |
-| Processing result → React host | [`react/render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx)  |
-| react public API               | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                      |
-
-## Further Reading
-
-- Repository-wide architecture and contribution rules: [AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md)
-- Decision records: [packages/kernel/\_notes/decisions/](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/_notes/decisions)
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/about/releases/roadmap">
+    <span className="font-semibold">Roadmap</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See the responsibilities and dependency boundaries of the four groups
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/design/layers">
+    <span className="font-semibold">Layers</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">Understand Kernel's path from IR to Scene</span>
+  </LinkedCard>
+</div>

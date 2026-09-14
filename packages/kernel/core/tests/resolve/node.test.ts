@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import type { RetikzCoreError} from '../../src/error';
 import type { StyleResolveFrame } from '../../src/resolve/style';
 import type { IRNode, IRScene } from '../../src/schemas';
 
 import { compileToScene } from '../../src/compile/compile';
+import { RetikzCoreErrorCode } from '../../src/error';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
@@ -86,6 +88,14 @@ describe('resolveNode', () => {
       minimumSize: { width: 0, height: 10 },
       scale: { x: 3, y: 1 },
     });
+  });
+
+  it('rejects layout.width below the effective minimum visible width', () => {
+    expect(() => resolve(node({ layout: { width: 40, minimumSize: { width: 50 } } }))).toThrowError(
+      expect.objectContaining({ code: RetikzCoreErrorCode.Resolve }) as RetikzCoreError,
+    );
+
+    expect(resolve(node({ layout: { width: 50, minimumSize: { width: 50 } } })).node.width).toBe(50);
   });
 
   it('supplies Node defaults without changing unrelated IR fields', () => {

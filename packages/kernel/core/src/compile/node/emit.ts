@@ -22,6 +22,43 @@ const EMPTY_SHAPE_PARAMS: JsonObject = {};
 
 type Round = (n: number) => number;
 
+type NodeBaselineYs = Readonly<{
+  /** 传给 TextPrim / LaidLine.emit 的原始 baseline y */
+  emitted: Array<number>;
+  /** 与已 emit 的物理行对应、已按 Scene precision 圆整的 baseline y */
+  observed: Array<number>;
+}>;
+
+/** 计算 Node 正文实际 emit 与 observation 共用的每条物理行 alphabetic baseline y */
+export const nodeBaselineYsOf = (layout: NodeLayout, round: Round): NodeBaselineYs => {
+  const lineCount = layout.inlineBlock?.lines.length ?? layout.lines?.length ?? 0;
+  if (lineCount === 0) return { emitted: [], observed: [] };
+
+  const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
+  if (layout.inlineBlock !== undefined) {
+    const emitted = layout.inlineBlock.lines.map(line => blockTop + line.baselineOffset);
+    return { emitted, observed: emitted.map(round) };
+  }
+
+  const emittedLineHeight = round(layout.lineHeight);
+  const baselineOffsets = layout.textBaselineOffsets;
+  const firstBaseline =
+    baselineOffsets !== undefined && baselineOffsets.length === lineCount
+      ? blockTop + baselineOffsets[0]
+      : toAlphabeticBaselineY({
+          y: layout.contentCenter[1],
+          baseline: 'middle',
+          lineCount,
+          lineHeight: emittedLineHeight,
+          fontSize: layout.fontSize,
+        });
+  const observedFirstBaseline = round(firstBaseline);
+  return {
+    emitted: [firstBaseline],
+    observed: Array.from({ length: lineCount }, (_value, index) => observedFirstBaseline + index * emittedLineHeight),
+  };
+};
+
 /** 从 NodeLayout 收敛 shape emit 所需的视觉样式 */
 const toShapeStyle = (layout: NodeLayout, resolvePaint: PaintResolver): ResolvedShapeStyle => ({
   fill: resolvePaint(layout.fillResolution ?? (typeof layout.fill === 'string' ? layout.fill : undefined)),
@@ -67,16 +104,16 @@ const emitNodeShapePrimitives = (
 /** 发出节点正文图元 */
 const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<ScenePrimitive> => {
   if (layout.inlineBlock) {
-    const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
+    const baselineYs = nodeBaselineYsOf(layout, round).emitted;
     const halfBlockW = layout.textWidth / 2;
-    return layout.inlineBlock.lines.flatMap(({ laid, baselineOffset }) => {
+    return layout.inlineBlock.lines.flatMap(({ laid }, index) => {
       const originX =
         layout.align === 'start'
           ? layout.contentCenter[0] - halfBlockW
           : layout.align === 'end'
             ? layout.contentCenter[0] + halfBlockW - laid.width
             : layout.contentCenter[0] - laid.width / 2;
-      return laid.emit(originX, blockTop + baselineOffset, round);
+      return laid.emit(originX, baselineYs[index], round);
     });
   }
 
@@ -87,8 +124,7 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
   const halfBlockW = layout.textWidth / 2;
   const xOffset = layout.align === 'start' ? -halfBlockW : layout.align === 'end' ? halfBlockW : 0;
   const lineHeight = round(layout.lineHeight);
-  const baselineOffsets = layout.textBaselineOffsets;
-  const blockTop = layout.contentCenter[1] - layout.textHeight / 2;
+  const baselineYs = nodeBaselineYsOf(layout, round).emitted;
   /** 用现有 grouped TextPrim 合同发出 authoritative physical-line baselines */
   const textPrimitive = (
     lines: NonNullable<NodeLayout['lines']>,
@@ -111,22 +147,7 @@ const emitNodeContentPrimitives = (layout: NodeLayout, round: Round): Array<Scen
     measuredWidth: round(layout.textWidth),
     measuredHeight: round(measuredHeight),
   });
-  if (baselineOffsets === undefined || baselineOffsets.length !== layout.lines.length) {
-    return [
-      textPrimitive(
-        layout.lines,
-        toAlphabeticBaselineY({
-          y: layout.contentCenter[1],
-          baseline: 'middle',
-          lineCount: layout.lines.length,
-          lineHeight,
-          fontSize: layout.fontSize,
-        }),
-        layout.textHeight,
-      ),
-    ];
-  }
-  return [textPrimitive(layout.lines, blockTop + baselineOffsets[0], layout.textHeight)];
+  return [textPrimitive(layout.lines, baselineYs[0], layout.textHeight)];
 };
 
 /** 发出 label pin 引线图元 */

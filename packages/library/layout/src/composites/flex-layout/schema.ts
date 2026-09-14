@@ -28,8 +28,7 @@ const FlexLayoutGapSchema = union([
     row: LayoutGapSchema.describe('Physical vertical gap between items or lines.'),
   }).describe('Independent physical column and row gaps.'),
 ])
-  .transform(gap => (typeof gap === 'number' ? { column: gap, row: gap } : gap))
-  .default({ column: 0, row: 0 })
+  .default(0)
   .describe('Physical gaps between items and lines; a number applies uniformly to both axes.');
 
 export const FlexMainDistributionSchema = zodEnum([
@@ -63,7 +62,7 @@ export const FlexLayoutItemSchema = LayoutItemBaseSchema.extend({
       });
     }
   })
-  .describe('Canonical JSON-safe item owned by FlexLayout.');
+  .describe('Sparse JSON-safe item owned by FlexLayout.');
 
 const FlexLayoutBaseSchema = CompositeBaseSchema.extend({
   namespace: literal(LAYOUT_NAMESPACE).describe('Composite namespace for Layout capabilities.'),
@@ -122,7 +121,7 @@ const refineFlexLayout = (layout: FlexLayoutRefinementInput, context: Refinement
 };
 
 export const FlexLayoutSchema = FlexLayoutBaseSchema.superRefine(refineFlexLayout).describe(
-  'Canonical JSON-safe Layout FlexLayout composite.',
+  'Sparse JSON-safe Layout FlexLayout composite.',
 );
 
 const FlexLayoutArtifactItemSchema = LayoutArtifactItemBaseSchema.extend({

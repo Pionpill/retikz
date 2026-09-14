@@ -15,6 +15,7 @@ These types exist only at compile time and describe or narrow cross-package cont
 | `AssertEqual<TActual, TExpected>` | Checks two types for bidirectional equality                       |
 | `OpenString<T>`                   | Preserves known string hints while accepting any string           |
 | `WithRequiredProperties<T, TKey>` | Narrows selected properties to required while preserving the rest |
+| `WithOptionalProperties<T, TKey>` | Makes selected properties optional while preserving the rest      |
 | `NonEmptyReadonlyArray<T>`        | Represents a readonly array with at least one item                |
 
 For example, after a local flow has established that an `id` exists, use `WithRequiredProperties` to carry that fact to the next function:
@@ -24,6 +25,12 @@ type NodeInput = { id?: string; label: string };
 type IdentifiedNode = WithRequiredProperties<NodeInput, 'id'>;
 
 const useNode = (node: IdentifiedNode) => node.id.toUpperCase();
+```
+
+Conversely, use `WithOptionalProperties` when an author-facing contract may omit a few existing fields, rather than making the entire object `Partial`:
+
+```ts
+type NodePatch = WithOptionalProperties<NodeInput, 'label'>;
 ```
 
 ## JSON data contracts
@@ -82,6 +89,24 @@ RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
 
+## Shallow property merging
+
+Use `mergeProperties(sources, options)` to combine priority layers: sources are applied from left to right, with later properties taking precedence. It returns a new object without mutating inputs or recursively merging nested objects.
+
+```ts
+import { mergeProperties } from '@retikz/foundation';
+
+const options = mergeProperties<{ color?: string | null; width?: number }>(
+  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
+  { shouldOverride: value => value !== undefined },
+);
+// { color: 'red', width: 0 }
+```
+
+`shouldOverride(value, key)` applies to both initial writes and subsequent overrides. Returning `false` skips the current property without deleting an earlier value. To also ignore `null`, use `value => value !== undefined && value !== null`; a truthiness check would also discard `false`, `0`, and empty strings.
+
+Without a policy, property values of `undefined` and `null` overwrite earlier values; an `undefined` source is always skipped. Only own enumerable string and symbol properties are copied, while nested objects and arrays retain their references. Since the policy can filter any field, the return type is `Partial<T>`; consumers supply required fields. Property-read or policy-callback failures throw `RetikzFoundationError` with the original exception preserved as `cause`.
+
 <SourceLinks
   sources={[
     {
@@ -99,20 +124,20 @@ RoleSchema.parse('custom.role');
     {
       label: 'JSON schema tests',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 31,
-      endLine: 83,
+      startLine: 24,
+      endLine: 74,
     },
     {
       label: 'Open-string tests',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 95,
-      endLine: 114,
+      startLine: 86,
+      endLine: 104,
     },
     {
       label: 'Scalar-schema tests',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 116,
-      endLine: 166,
+      startLine: 106,
+      endLine: 155,
     },
   ]}
 />

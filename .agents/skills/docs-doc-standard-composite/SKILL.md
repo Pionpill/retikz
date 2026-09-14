@@ -36,7 +36,7 @@ Definition 含函数，不进入 JSON；持久化完整 IR，不把 authoring in
 1. **用法 / Usage**：两个纯代码块给出 import 与最小 JSX；紧接三条用户路径的公开入口表
 2. **示例 / Examples**：按“基础 → 常见变体 → 控制面板”递进
 3. **技术原理 / How it works**：解释 Tier 2 lowering 与未注册诊断
-4. **API 参考 / API Reference**：四列表记录字段、类型、默认值和用户语义
+4. **API 概览 / API overview**：只记录当前 composite 上手所需字段、类型、默认值和用户语义；链接完整 API Reference 与 Schema Reference，不复制完整导出或 schema 字段
 5. **相关 / Related**：链接 Core 输出图元、Composite 概念与相邻 Standard 能力
 
 frontmatter 先说明这个 composite 保留了什么高层意图，以及它最终下沉为何种 Core IR。不要把 props 清单当导言。

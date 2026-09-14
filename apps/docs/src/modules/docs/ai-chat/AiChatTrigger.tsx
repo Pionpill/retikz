@@ -1,15 +1,14 @@
 import type { FC } from 'react';
 
 import { BotMessageSquare } from 'lucide-react';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Shortcut } from '@/components/shared';
 import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
-
-import { useAiChatStore } from './useAiChatStore';
+import { useRightPanelStore } from '@/modules/docs/store';
 
 /**
  * AI 聊天 Sheet 的 Header 触发器
@@ -18,7 +17,13 @@ import { useAiChatStore } from './useAiChatStore';
  */
 export const AiChatTrigger: FC = () => {
   const { t } = useTranslation();
-  const toggleOpen = useAiChatStore(s => s.toggleOpen);
+  const panel = useRightPanelStore(s => s.panel);
+  const openAi = useRightPanelStore(s => s.openAi);
+  const close = useRightPanelStore(s => s.close);
+  const toggleOpen = useCallback(() => {
+    if (panel.kind === 'ai') close();
+    else openAi();
+  }, [close, openAi, panel.kind]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

@@ -4,6 +4,7 @@ import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
 
 import type {
   ClipShape,
+  CompileObservationAncestor,
   CompileObservationOwner,
   CompileOccurrenceLocator,
   CompositeCompileChild,
@@ -32,6 +33,8 @@ import type { PendingSpatialHandle } from './spatial-handle';
 
 /** 等待命名引用完成注册后再 emit 的 path 任务 */
 export type PendingPathEmission = {
+  /** 最终逻辑容器祖先 */
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 已合并样式和动画过滤后的 path IR */
   /** path Source IR，样式与动态 target 解析延迟到 resolving phase */
   path: IRPathBase;
@@ -192,6 +195,8 @@ export type CompositeCompileSession = {
 
 /** 单次 traversal 的可选隔离输入 */
 export type TraversalCompileOptions = {
+  /** 隔离 traversal 继承的逻辑容器祖先 */
+  ancestors?: ReadonlyArray<CompileObservationAncestor>;
   /** 当前 traversal 是否为 layoutChild 隔离 probe */
   probe?: boolean;
   /** probe 继承的 namespace snapshot */
@@ -280,6 +285,8 @@ export type TraversalRuntime = {
 
 /** 递归处理一层 child 时的上下文 */
 export type TraversalFrame = {
+  /** 当前 child 的外层逻辑容器，不含自身 */
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 只供当前直接 child 消费的父 proposal；递归 Scope 不向普通后代广播 */
   childProposal?: LayoutProposal;
   /** 当前 scope 累计 transform */
@@ -422,6 +429,8 @@ export type PendingNodeLayoutObservation = {
 
 /** 等最终 Scope/replay transform 与 occurrence remap 完成后发布的 observation entry */
 export type PendingCompileObservation = {
+  /** 与 occurrence 同步提交的最终逻辑容器祖先 */
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 产生辅助内容的语义 owner */
   owner: CompileObservationOwner;
   /** 最终 owner occurrence locator */

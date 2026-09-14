@@ -29,7 +29,7 @@ const LANGUAGE_ALIASES: Readonly<Record<string, HighlightLanguage>> = {
 };
 
 const THEME_NAMES = {
-  light: 'light-plus',
+  light: 'one-light',
   dark: 'dark-plus',
 } as const;
 

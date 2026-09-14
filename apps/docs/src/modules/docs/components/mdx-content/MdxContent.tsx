@@ -1,21 +1,16 @@
-import type { CompileOptions } from '@mdx-js/mdx';
 import type { MDXContent as MDXContentType } from 'mdx/types';
 import type { FC } from 'react';
 
-import { compile, run } from '@mdx-js/mdx';
+import { run } from '@mdx-js/mdx';
 import { useEffect, useState } from 'react';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
 import { useLocation } from 'react-router';
-import rehypeMdxCodeProps from 'rehype-mdx-code-props';
-import rehypeSlug from 'rehype-slug';
-import remarkFrontmatter from 'remark-frontmatter';
-import remarkGfm from 'remark-gfm';
-import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { DemoLocationContext } from '@/modules/docs/components/component-preview/context';
 
+import { compileMdx } from './compile';
 import { mdxComponents } from './components';
 
 export type MdxFrontmatter = Record<string, unknown>;
@@ -34,14 +29,6 @@ const runtime = {
   jsxs: jsxRuntime.jsxs,
   jsxDEV: jsxDevRuntime.jsxDEV,
   Fragment: jsxRuntime.Fragment,
-};
-
-const compileOptions: CompileOptions = {
-  outputFormat: 'function-body',
-  development: import.meta.env.DEV,
-  remarkPlugins: [remarkFrontmatter, remarkMdxFrontmatter, remarkGfm],
-  // rehype-slug 给 h1-h6 注 id（TOC 跳转 / 锚链接靠它）；rehype-mdx-code-props 把围栏 meta 转成 JSX props，必须最后跑（把 hast 转 JSX 后下游插件就处理不了了）
-  rehypePlugins: [rehypeSlug, [rehypeMdxCodeProps, { tagName: 'code' }]],
 };
 
 /** 首次加载尚无任何内容可显示时的占位骨架 */
@@ -82,7 +69,7 @@ export const MdxContent: FC<MdxContentProps> = props => {
 
     void (async () => {
       try {
-        const compiled = await compile(source, compileOptions);
+        const compiled = await compileMdx(source);
         const mod = await run(compiled, runtime);
         if (signal.aborted) return;
         const fm = mod.frontmatter;

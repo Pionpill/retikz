@@ -47,7 +47,7 @@ export const kernelSection: Array<Section> = [
           {
             id: 'principles',
             label: 'kernel.principles',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'architecture',
               audience: 'maintainer',
@@ -237,13 +237,24 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgFoundation',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
+          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Advanced },
+          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Advanced },
           {
             id: 'validation-errors',
             label: 'kernel.pkgFoundationValidationErrors',
-            difficulty: DocDifficulty.Internals,
+            difficulty: DocDifficulty.Advanced,
           },
-          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Internals },
-          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgFoundationApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.foundation.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {
@@ -251,9 +262,20 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgMath',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
-          { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
           { id: 'primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
+          { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
           { id: 'algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgMathApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.math.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
         ],
       },
       {
@@ -277,10 +299,31 @@ export const kernelSection: Array<Section> = [
         sidebarGroup: 'kernel.pkgGroupExtension',
         children: [
           {
-            id: 'overview',
-            label: 'kernel.pkgOverview',
+            id: 'authoring',
+            label: 'kernel.pkgTexAuthoring',
+            difficulty: DocDifficulty.Beginner,
+          },
+          {
+            id: 'configuration',
+            label: 'kernel.pkgTexConfiguration',
+            difficulty: DocDifficulty.Advanced,
+          },
+          {
+            id: 'mechanism',
+            label: 'kernel.pkgTexMechanism',
             difficulty: DocDifficulty.Internals,
             meta: extensionGuide('kernel.tex'),
+          },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgTexApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.tex.api',
+              sourceOfTruth: 'runtime',
+            },
           },
         ],
       },
@@ -289,12 +332,26 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgInspect',
         sidebarGroup: 'kernel.pkgGroupExtension',
         children: [
+          { id: 'builtins', label: 'kernel.pkgInspectBuiltins', difficulty: DocDifficulty.Beginner },
           {
-            id: 'overview',
-            label: 'kernel.pkgOverview',
-            difficulty: DocDifficulty.Internals,
+            id: 'extensions',
+            label: 'kernel.pkgInspectExtensions',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.inspect'),
           },
+          { id: 'mechanism', label: 'kernel.pkgInspectMechanism', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.pkgInspectApiReference',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'reference',
+              audience: 'integrator',
+              capability: 'kernel.inspect.api',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference', difficulty: DocDifficulty.Advanced },
         ],
       },
       {

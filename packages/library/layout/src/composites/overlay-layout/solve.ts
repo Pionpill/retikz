@@ -2,9 +2,10 @@ import type { LayoutChildResult } from '@retikz/core';
 
 import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
 
+import type { CanonicalOverlayPlacement } from '../../resolve/overlay-layout';
 import type { LayoutInsets, LayoutRect } from '../internal';
 import type { LayoutAlignmentValue } from '../shared';
-import type { IROverlayPlacement, LayoutSizeParticipationValue } from './types';
+import type { LayoutSizeParticipationValue } from './types';
 
 import { alignAllocationInSlot, compensatedLayoutSum, positionedLayoutSlotOf } from '../internal';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
@@ -12,7 +13,7 @@ import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 /** Overlay 单个 profile 的结构输入 */
 export type OverlayProfileItem = Readonly<{
   sourceIndex: number;
-  placement: IROverlayPlacement;
+  placement: CanonicalOverlayPlacement;
   margin: LayoutInsets;
   offset: Readonly<{ x: number; y: number }>;
   alignment: LayoutAlignmentValue;
@@ -36,7 +37,7 @@ export type OverlayProfile = Readonly<{
 
 /** Overlay item placement 的纯求解输入 */
 export type PlaceOverlayItemInput = Readonly<{
-  placement: IROverlayPlacement;
+  placement: CanonicalOverlayPlacement;
   content: LayoutRect;
   margin: LayoutInsets;
   offset: Readonly<{ x: number; y: number }>;

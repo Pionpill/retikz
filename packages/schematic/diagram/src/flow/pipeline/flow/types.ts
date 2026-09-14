@@ -7,6 +7,8 @@ import type { CanonicalFlowDiagram, CanonicalFlowEntity, CanonicalFlowGroup, Can
 /** Flow leaf 的真实 Graph probe 与布局输入 */
 export type FlowLeafMeasurement = Readonly<{
   element: CanonicalFlowEntity;
+  /** 已投影 Flow 宽度策略后的最终 Graph Source */
+  graph: CanonicalFlowEntity['graph'];
   probe: LayoutChildResult;
   margin: Readonly<BoundsInsets>;
 }>;

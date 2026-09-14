@@ -15,6 +15,7 @@ Foundation 将可在多个包之间复用的类型工具与运行时 schema 放�
 | `AssertEqual<TActual, TExpected>` | 双向检查两个类型是否等价               |
 | `OpenString<T>`                   | 保留已知字符串提示，同时接受任意字符串 |
 | `WithRequiredProperties<T, TKey>` | 将指定属性收窄为必填，同时保留其余属性 |
+| `WithOptionalProperties<T, TKey>` | 将指定属性扩展为可选，同时保留其余属性 |
 | `NonEmptyReadonlyArray<T>`        | 表示至少包含一个元素的只读数组         |
 
 例如，在局部流程已经保证 `id` 存在后，可以用 `WithRequiredProperties` 将该事实传递给后续函数：
@@ -24,6 +25,12 @@ type NodeInput = { id?: string; label: string };
 type IdentifiedNode = WithRequiredProperties<NodeInput, 'id'>;
 
 const useNode = (node: IdentifiedNode) => node.id.toUpperCase();
+```
+
+反向地，作者侧契约需要省略少量已有字段时，使用 `WithOptionalProperties`，而不把整个对象变为 `Partial`：
+
+```ts
+type NodePatch = WithOptionalProperties<NodeInput, 'label'>;
 ```
 
 ## JSON 数据契约
@@ -82,6 +89,24 @@ RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
 
+## 属性浅合并
+
+用 `mergeProperties(sources, options)` 合并多个优先级层：数组从左到右，后面的属性覆盖前面的属性。返回新对象，不修改输入，也不递归合并嵌套对象。
+
+```ts
+import { mergeProperties } from '@retikz/foundation';
+
+const options = mergeProperties<{ color?: string | null; width?: number }>(
+  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
+  { shouldOverride: value => value !== undefined },
+);
+// { color: 'red', width: 0 }
+```
+
+`shouldOverride(value, key)` 对首次写入和后续覆盖都生效；返回 `false` 只跳过当前属性，不删除已合并的值。若还要忽略 `null`，可写 `value => value !== undefined && value !== null`；不要用真假值判断，否则会丢失 `false`、`0` 和空字符串。
+
+默认不设策略时，属性值 `undefined` 和 `null` 都会覆盖前值；源数组中的 `undefined` 则始终跳过。仅复制自身可枚举字符串和 symbol 属性，嵌套对象与数组保留引用。因为策略可以过滤任意字段，返回类型为 `Partial<T>`，必填字段由消费方补齐。属性读取或策略回调失败会抛出 `RetikzFoundationError`，原异常保留为 `cause`。
+
 <SourceLinks
   sources={[
     {
@@ -99,20 +124,20 @@ RoleSchema.parse('custom.role');
     {
       label: 'JSON schema 测试',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 31,
-      endLine: 83,
+      startLine: 24,
+      endLine: 74,
     },
     {
       label: '开放字符串测试',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 95,
-      endLine: 114,
+      startLine: 86,
+      endLine: 104,
     },
     {
       label: '标量 schema 测试',
       path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 116,
-      endLine: 166,
+      startLine: 106,
+      endLine: 155,
     },
   ]}
 />

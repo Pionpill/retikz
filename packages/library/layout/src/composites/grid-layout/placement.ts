@@ -1,6 +1,7 @@
 import type { GridAutoFlowValue, GridOverlapValue, IRGridPlacement } from './types';
 
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import { resolveGridPlacement } from '../../resolve/grid-layout';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from './constants';
 
 /** Grid placement solver 接受的 authored item 摘要 */
@@ -75,7 +76,7 @@ const firstOverlap = (candidate: OccupiedRect, occupied: ReadonlyArray<OccupiedR
 
 /** 求解 explicit、partial 与 non-dense auto placement */
 export const resolveGridPlacements = (
-  items: ReadonlyArray<GridPlacementItem>,
+  sourceItems: ReadonlyArray<GridPlacementItem>,
   options: Readonly<{
     explicitColumns: number;
     explicitRows: number;
@@ -83,6 +84,11 @@ export const resolveGridPlacements = (
     overlap: GridOverlapValue;
   }>,
 ): ResolvedGridPlacements => {
+  const items = sourceItems.map(item => ({
+    ...item,
+    column: resolveGridPlacement(item.column),
+    row: resolveGridPlacement(item.row),
+  }));
   if (options.explicitColumns < 1 || options.explicitColumns > GRID_LAYOUT_MAX_TRACKS_PER_AXIS) {
     throw new RetikzLayoutError({
       code: RetikzLayoutErrorCode.PlacementInvalid,
@@ -118,11 +124,11 @@ export const resolveGridPlacements = (
   };
 
   for (const item of items) {
-    const columnStart = item.column?.start;
-    const rowStart = item.row?.start;
+    const columnStart = item.column.start;
+    const rowStart = item.row.start;
     if (columnStart === undefined || rowStart === undefined) continue;
-    const columnSpan = item.column?.span ?? 1;
-    const rowSpan = item.row?.span ?? 1;
+    const columnSpan = item.column.span;
+    const rowSpan = item.row.span;
     guardedEnd(columnStart, columnSpan, 'column', item.key);
     guardedEnd(rowStart, rowSpan, 'row', item.key);
     register(
@@ -139,13 +145,13 @@ export const resolveGridPlacements = (
   }
 
   for (const item of items) {
-    const hasColumn = item.column?.start !== undefined;
-    const hasRow = item.row?.start !== undefined;
+    const hasColumn = item.column.start !== undefined;
+    const hasRow = item.row.start !== undefined;
     if (hasColumn === hasRow) continue;
     if (hasRow) {
       const rowStart = item.row.start!;
       const rowSpan = item.row.span;
-      const columnSpan = item.column?.span ?? 1;
+      const columnSpan = item.column.span;
       const rowEnd = guardedEnd(rowStart, rowSpan, 'row', item.key);
       rowCount = Math.max(rowCount, rowEnd);
       let columnStart = 0;
@@ -164,10 +170,10 @@ export const resolveGridPlacements = (
         rowSpan,
       });
     } else {
-      const column = item.column!;
+      const column = item.column;
       const columnStart = column.start!;
       const columnSpan = column.span;
-      const rowSpan = item.row?.span ?? 1;
+      const rowSpan = item.row.span;
       const columnEnd = guardedEnd(columnStart, columnSpan, 'column', item.key);
       columnCount = Math.max(columnCount, columnEnd);
       let rowStart = 0;
@@ -191,9 +197,9 @@ export const resolveGridPlacements = (
   let cursorColumn = 0;
   let cursorRow = 0;
   for (const item of items) {
-    if (item.column?.start !== undefined || item.row?.start !== undefined) continue;
-    const columnSpan = item.column?.span ?? 1;
-    const rowSpan = item.row?.span ?? 1;
+    if (item.column.start !== undefined || item.row.start !== undefined) continue;
+    const columnSpan = item.column.span;
+    const rowSpan = item.row.span;
     if (options.autoFlow === GridAutoFlow.Row) {
       guardedEnd(0, columnSpan, 'column', item.key);
       columnCount = Math.max(columnCount, columnSpan);

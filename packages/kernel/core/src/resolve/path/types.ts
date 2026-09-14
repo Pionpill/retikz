@@ -22,18 +22,21 @@ import type { ThemeModeValue } from '../../shared';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../node';
 import type { PaintResolutionInput } from '../resource';
 import type { StyleResolveFrame } from '../style';
-import type { ResolvedLabelTextContent } from '../text';
+import type { ResolvedLabelTextBlock } from '../text';
 
 /** 已把文字与 run 派生颜色确定为字符串的路径几何标签 */
 export type ResolvedGeometryLabel = Omit<IRGeometryLabel, 'textColor' | 'text'> & {
   /** 已确定的标签文字主色 */
   textColor?: string;
   /** 已确定 run 颜色的标签正文 */
-  text: ResolvedLabelTextContent;
+  text: ResolvedLabelTextBlock;
 };
 
 /** 展开位置、方向与距离默认值后的路径几何标签 */
-export type CanonicalGeometryLabel = Omit<ResolvedGeometryLabel, 'position' | 'side' | 'distance' | 'interrupt'> & {
+export type CanonicalGeometryLabel = Omit<
+  ResolvedGeometryLabel,
+  'position' | 'side' | 'distance' | 'interrupt' | 'gap'
+> & {
   /** 路径上的归一化位置 */
   position: number;
   /** 相对宿主线段的方向 */
@@ -42,6 +45,8 @@ export type CanonicalGeometryLabel = Omit<ResolvedGeometryLabel, 'position' | 's
   distance: number;
   /** 是否在兼容的宿主描边上产生断口 */
   interrupt: boolean;
+  /** 断口相对标签视觉边界每侧的额外留白 */
+  gap: number;
 };
 
 type WithResolvedStepLabel<TStep extends IRStep> = TStep extends unknown
@@ -78,7 +83,7 @@ export type ResolvedPathSource = Omit<IRPathBase, 'style' | 'children' | 'label'
   marks?: Array<Omit<NonNullable<IRPathBase['marks']>[number], 'mark'> & { mark: ResolvedArrowMark }>;
 };
 
-type WithCanonicalStepLabel<TStep extends IRStep> = TStep extends unknown
+type WithCanonicalStepLabel<TStep extends ResolvedStepSource> = TStep extends unknown
   ? 'label' extends keyof TStep
     ? Omit<TStep, 'label'> & { label?: CanonicalGeometryLabel }
     : TStep

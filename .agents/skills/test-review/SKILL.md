@@ -19,6 +19,8 @@ description: Use when auditing an existing retikz test suite, module test direct
 
 不要用测试数量、行数或覆盖率百分比直接决定保留与删除。唯一标准是：该 case 是否以最小必要粒度保护仍然存在的行为契约。
 
+写入与收敛标准统一读取 [`test-contract` 的单测写入规范](../test-contract/SKILL.md#单测写入规范)。颜色、坐标、snapshot 或特殊场景只是检索线索，不是删除依据；区分偶然展示值与稳定语义，不能删掉唯一的核心边界或真实回归守卫。
+
 ## 启动前
 
 1. 声明范围：一个 workspace、子模块或测试目录；全仓先拆包，不做无边界扫描。
@@ -126,3 +128,4 @@ notes/reports/test-review-YYYY-MM-DD-<scope>.md
 - 未把历史意图误当成现行契约。
 - 临时 case 已明确为删除或转正，没有模糊保留项。
 - 工作区除 ignored 报告外未被修改。
+- 全量审计区分目录盘点、测试块审查与实现核对的覆盖范围；未逐项核对的文件不得标记为已确认可删，剩余测试全绿不能代替删除前后的契约映射。

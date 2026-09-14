@@ -1,160 +1,154 @@
 ---
 title: 源码指南
-description: retikz 源码导览：kernel 组六包清单，以及 core / React 的职责、依赖关系与推荐阅读顺序，并配套 GitHub 链接直跳源文件。
+description: 从发布包的分组依赖、纵向 define-registry 扩展与 Chart 横向组织方式，理解 retikz 源码的所有权和入口边界。
 ---
 
-适合想读懂 retikz 实现、贡献代码、或为新框架写 adapter 的人。
+这篇指南面向需要阅读、扩展或贡献 retikz 源码的开发者。先用发布包和公开入口确定边界；只有要改某项能力时，才沿着它的目录深入实现。
 
-retikz 的官方仓库当前维护六个 kernel 组包：
+## 分组与包依赖
 
-| 包                                                                                               | 角色                                                                                                  | 当前状态 |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | -------- |
-| [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)       | 零依赖纯计算几何（向量 / 仿射 / arc / 求交 / 圆 / 凸包）；core 的计算底座，被 core 依赖               | 官方维护 |
-| [`@retikz/core`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core)       | IR schema、几何工具、parser 与 Scene 编译器；零 React、零 DOM                                         | 官方维护 |
-| [`@retikz/render`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/render)   | renderer-neutral 的 Scene 输出层：SVG descriptor / string、Canvas 2D、水合 helper 与动画 runtime 工具 | 官方维护 |
-| [`@retikz/react`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react)     | React adapter：JSX 组件编译成 IR，再通过 SVG 或 Canvas 渲染                                           | 官方维护 |
-| [`@retikz/vanilla`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/vanilla) | 无框架基础：Input helper、processing、SVG / Canvas mount、水合、动画控制与 SVG string 输出            | 官方维护 |
-| [`@retikz/tex`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/tex)         | 可选 LaTeX 公式接入：MathJax SVG 字形路径 lowering 到 renderer-agnostic Scene                         | 官方维护 |
+下表列出每个发布包对其它 `@retikz/*` 包的直接运行时或 peer 依赖；第三方依赖与 devDependencies 未列出。空白表示该包不依赖其它 retikz 包。依赖方向总是“当前行消费右侧包”，不表示实现会被复制到当前包。
 
-Vue / Svelte / Solid / Native adapter 仍属于后续或社区扩展面；但 IR 仍然是 universal 的，新框架 adapter 可以复用 `@retikz/core` 与 `@retikz/render` 的大部分 renderer 能力，只需要补自己的组件桥接层与必要的文字度量。
+| 组        | 包                         | 直接依赖的 retikz 包                                                                      |
+| --------- | -------------------------- | ----------------------------------------------------------------------------------------- |
+| Kernel    | `@retikz/foundation`       | —                                                                                         |
+|           | `@retikz/math`             | —                                                                                         |
+|           | `@retikz/core`             | `foundation`、`math`、`runtime`                                                           |
+|           | `@retikz/runtime`          | `foundation`                                                                              |
+|           | `@retikz/tex`              | `core`、`foundation`、`math`                                                              |
+|           | `@retikz/inspect`          | `core`、`foundation`、`math`、`react`、`render`<br />`vanilla`                            |
+|           | `@retikz/vanilla`          | `core`、`foundation`、`render`、`runtime`                                                 |
+|           | `@retikz/react`            | `core`、`foundation`、`render`、`runtime`、`vanilla`                                      |
+|           | `@retikz/render`           | `core`、`foundation`、`math`、`runtime`                                                   |
+| Library   | `@retikz/layout`           | `core`、`foundation`、`inspect`、`math`                                                   |
+|           | `@retikz/layout-vanilla`   | `inspect`、`layout`、`vanilla`                                                            |
+|           | `@retikz/layout-react`     | `inspect`、`layout`、`layout-vanilla`、`react`、`vanilla`                                 |
+|           | `@retikz/standard`         | `core`、`foundation`、`layout`、`math`                                                    |
+|           | `@retikz/standard-vanilla` | `standard`、`vanilla`                                                                     |
+|           | `@retikz/standard-react`   | `react`、`standard`、`standard-vanilla`、`vanilla`                                        |
+| Schematic | `@retikz/graph`            | `core`、`foundation`、`layout`、`math`、`standard`                                        |
+|           | `@retikz/graph-vanilla`    | `foundation`、`graph`、`vanilla`                                                          |
+|           | `@retikz/graph-react`      | `foundation`、`graph`、`graph-vanilla`、`react`、`vanilla`                                |
+|           | `@retikz/diagram`          | `core`、`foundation`、`graph`、`layout`、`math`<br />`standard`                           |
+|           | `@retikz/diagram-vanilla`  | `diagram`、`vanilla`                                                                      |
+|           | `@retikz/diagram-react`    | `diagram`、`diagram-vanilla`、`foundation`、`react`、`vanilla`                            |
+| Viz       | `@retikz/data`             | `core`、`foundation`、`math`                                                              |
+|           | `@retikz/plot`             | `core`、`data`、`foundation`、`layout`、`math`<br />`standard`                            |
+|           | `@retikz/plot-vanilla`     | `core`、`data`、`foundation`、`plot`、`vanilla`                                           |
+|           | `@retikz/plot-react`       | `core`、`data`、`foundation`、`plot`、`plot-vanilla`<br />`react`                         |
+|           | `@retikz/chart`            | `core`、`data`、`foundation`、`layout`、`plot`<br />`standard`                            |
+|           | `@retikz/chart-vanilla`    | `chart`、`core`、`data`、`foundation`、`plot`<br />`plot-vanilla`、`standard`、`vanilla`  |
+|           | `@retikz/chart-react`      | `chart`、`chart-vanilla`、`core`、`data`、`foundation`<br />`plot`、`plot-react`、`react` |
+|           | `@retikz/table`            | `core`、`data`、`foundation`、`math`                                                      |
+|           | `@retikz/table-vanilla`    | `core`、`data`、`foundation`、`table`、`vanilla`                                          |
+|           | `@retikz/table-react`      | `core`、`data`、`foundation`、`react`、`table`<br />`table-vanilla`、`vanilla`            |
 
-数据流向：
+这张表对应[路线图](/about/releases/roadmap)的分组边界：Kernel 提供底座，Library 提供跨领域复用能力；Schematic 和 Viz 持有各自领域语义。`*-vanilla` 负责作者输入组装，`*-react` 负责 JSX 与宿主生命周期，它们不应重建领域包的 schema、resolve 或编译语义。
 
-<ComponentPreview files="data-flow" size="sm" hideCode />
+## 纵向能力扩展包
 
-虚线箭头表示 `shared/geometry` 被 `compile` 调用——是工具依赖，不是独立的数据通道。
+当一个领域需要开放“可替换、可新增”的能力时，问题不只是提供几个内置实现：作者、内置实现和编译消费方必须围绕同一份契约协作。否则每增加一种能力，都要在 schema、内置分支、用户配置和编译器里各补一套判断，扩展会逐渐失去边界。
 
-下文重点讲 `@retikz/core`（数据 + 编译器层）和 `@retikz/react`（组件 adapter）的阅读顺序，并在对应段落串起 `@retikz/math`、`@retikz/render` 与 `@retikz/vanilla`。`@retikz/tex` 是按需接入的公式 lowering 包，通常在理解 core Scene 后再读。
+define-registry 将这条纵向路径收束为 `Definition → registry → resolve → compile`。`defineXxx()` 让作者按稳定的 `XxxDefinition` 声明能力；providers 将内置与用户定义合并到同一个 registry；resolve 在有上下文时完成 lookup、默认和诊断；compile 只调度并消费已确定的结果。它带来的好处是：内置与自定义同路、重复 key 可集中 fail-loud、下游不需要复制内置白名单，也不会因扩展而出现平行编译路径。
 
-## @retikz/core
+### 以 Core 为例
 
-整包零 React、零 DOM，运行时只依赖 `zod`。
+Core 是这条机制的基础 owner。它把持久化模型、作者契约、内置实现、领域确定化与 Scene 编排分别放在相邻但单向依赖的层中：
 
-### 包结构
+```text
+core/src/
+  shared/                 跨能力复用的纯词汇与工具
+  schemas/<domain>/       Source IR 的 Zod schema 与 IRXxx 类型
+  contract/<capability>/
+    types.ts              XxxDefinition 与作者侧契约
+    define.ts             defineXxx() 入口
+  providers/<capability>/
+    <builtin>.ts          单个内置实现
+    definitions.ts        BUILTIN_XXXS 集合
+    registry.ts           内置与用户定义合并、重复诊断
+  resolve/<domain>/       IR + context -> Canonical / Resolution
+  compile/                创建 context、调度 resolve、lower/layout/emit Scene
+```
 
-| 模块                                                                                                                                                                                                          | 职责                                                                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`schemas/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas)                                                                                                            | IR schema（zod）——position / node / coordinate / path / step / scope / paint / clip / scene 全部 zod 定义                                                                                                                                                  |
-| [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry)                                                                                            | core 内可复用几何 helper——rect / circle / ellipse / diamond / polar / contour / bend / segment；向量 / 仿射 / arc / 求交等纯计算原语已下沉 [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)，core 从其 re-export |
-| [`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                                                                                              | Scene 数据模型——渲染目标无关的图元、资源表、marker 与 clip；`primitive/` 只保留兼容 re-export                                                                                                                                                              |
-| [`compile/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile)                                                                                                            | IR → Scene 编译器——节点布局、路径解析、样式级联、资源收集、layout 计算                                                                                                                                                                                     |
-| [`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse)                                                                                                                | DSL → IR 解析器——目前覆盖 Sugar `way` 数组与 target 字符串                                                                                                                                                                                                 |
-| [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers) | v0.2 扩展面——自定义形状、箭头、图案 motif 与路径生成器                                                                                                                                                                                                     |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                                                                                           | 公开 API surface——所有 adapter 只能 import 这一个文件                                                                                                                                                                                                      |
+这里的关键不是某一种具体图元，而是层的职责：`contract/` 不依赖内置实现，`providers/` 不依赖 resolve 或 compile，`resolve/` 负责 lookup、默认和上下文错误，`compile/` 只管理上下文生命周期与调度。
 
-### 推荐阅读顺序
+| 扩展包          | 领域                                           |
+| --------------- | ---------------------------------------------- |
+| `@retikz/core`  | 通用绘图能力与编译扩展                         |
+| `@retikz/graph` | 实体、关系与主题的领域 definition              |
+| `@retikz/data`  | 数据选择器与统计 reducer                       |
+| `@retikz/plot`  | 通道、scale、coordinate、mark 与 transform     |
+| `@retikz/table` | 表格结构、presentation、formatter 与视觉 scale |
 
-按数据流向：先看输入契约（IR）、再看输出契约（Scene），最后看连接两者的 `compile`。
+## 横向能力扩展包
 
-1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts) ——公开 API**<br />
-   翻一遍 named re-export 清单。`@retikz/core` 对外暴露什么、不暴露什么，这里就是契约面；adapter 只能 import 这一个文件。
+当一个包要提供同类的多个成品能力时，问题是如何让它们共享领域模型与处理管线，又不把所有实现堆在一个目录或包根入口。横向扩展以一个内部共享 owner 承担共同契约和通用逻辑，再按家族或成品能力拆成并列子域；每个子域只拥有自己的差异，公共部分不复制。
 
-2. **[`schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts) ——IR 顶层**<br />
-   `SceneSchema = { version, type: 'scene', children: ChildSchema[] }`；`ChildSchema` 是 node / path / coordinate / scope 的 discriminated union。
+这种组织让新增子能力不必修改其它子域，也让使用者可以从稳定子路径按需导入。包根只暴露真正公共的共享能力，内部共享 owner 不成为包外依赖；这样既能保持同一家族的一致性，又能把 API 面与实现细节分开。
 
-3. **[`schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts) + [`schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path) + [`schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position) ——IR 字段**<br />
-   只看 zod schema 与 `.describe(...)`。每个 `.describe` 是 LLM 工具调用的契约——读 schema 同时读字段语义。
+### 以 Chart 为例
 
-4. **[`contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene) ——Scene 输出**<br />
-   `Scene = { primitives, layout, resources? }`。Primitive 与 resource 是渲染目标无关的最大公约子集，所有 adapter 消费的就是这个；禁止 SVG-only / Canvas-only 特性。
+`@retikz/chart` 的 `_chart/` 是所有图表共享的内部 owner；`point/` 是按图表家族划分的公开子域。一个 point 图表只实现自己的 recipe、mark、encoding 和 provider，再复用 `_chart/` 的 Source、主题、registry 与解析能力。
 
-5. **几何基础**<br />
-   纯函数 + plain data，无 class。纯计算原语（向量 / 仿射 / `arc` / 求交 / 圆 / 凸包）在独立包 [`@retikz/math`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/math)，core 从其 re-export；core 内可复用的形状 / 边界 / path 几何 helper 在 [`shared/geometry/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/shared/geometry)，`geometry/` 只保留兼容 re-export。
+```text
+chart/src/
+  _chart/                 所有 Chart 共享的内部 owner
+    schemas/              Chart Source、encoding、theme、presentation
+    contract/             recipe、mark、locator、theme 契约
+    providers/            definition、theme、registry 与选择
+    resolve/              encoding、mark、theme、presentation -> Plot
+  point/                  Point 家族的公开子域
+    shared/               多个 point 图表共享的 encoding、mark、recipe
+    scatter/              单一图表的 schema、provider、recipe、mark
+    bubble/               同上
+    connected-scatter/    同上
+    ranged-dot/           同上
+    regression/           同上
+    strip/                同上
+  index.ts                包根公开入口
+```
 
-6. **[`compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts) ——编译入口**<br />
-   `compileToScene(ir, options): CompileResult`。主线是递归处理 children、布局节点与 scope、解析路径，并在同次编译收集 Scene 资源与 typed artifacts。读完它就知道 IR 如何落到 `result.scene` 与 `result.artifacts`。
+消费者只能从 `package.json` 声明的入口导入：`@retikz/chart` 获取共享 Chart API，`@retikz/chart/point` 获取 Point 家族，或从 `@retikz/chart/point/scatter` 等具体图表子路径获取能力。不要 deep import `_chart/`、`schema.ts` 或其它实现文件；它们不是稳定的包外契约。
 
-7. **[`compile/node/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/node) / [`path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/compile/path) / [`position.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/position.ts) ——子编译器**<br />
-   按需深入：节点布局 / 路径步进 / 位置解析三个独立文件。[`text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts) 提供 fallback 度量，adapter 可注入更准的版本。
+| 扩展包            | 共享 owner 与公开子域                                             |
+| ----------------- | ----------------------------------------------------------------- |
+| `@retikz/diagram` | `_diagram/` 共享图式能力，`./flow` 提供 Flow 子域                 |
+| `@retikz/chart`   | `_chart/` 共享图表能力，`./point` 和具体 point 图表子路径按需导入 |
 
-8. **[`parse/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/parse) ——独立语法入口（可选）**<br />
-   [`parseWay`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/way.ts) / [`parseTargetSugar`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/parse/target-sugar.ts) 处理独立的 path / target 字符串 grammar。Vanilla 的 `normalizePath` 统一调度这些 parser，把已类型化的 InputPath 收敛为 Core IR；React 不直接调用它们。
+## API 适配包
 
-9. **注册扩展面（可选）**<br />
-   [`contract/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract) / [`providers/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/providers)：第三方包扩展能力时优先看这里，而不是改 core 内置枚举。
+领域功能包拥有 schema、definition、resolve 和编译语义；API 适配包不再划分领域能力，而是把一种作者写法或宿主环境接到已有功能包上。以 Kernel 为例，`@retikz/vanilla` 是所有 API 包的核心层：它对接领域包的公开能力，将作者输入组装为 Source IR，并承接运行时处理、增量执行和性能优化等通用工作。
 
-### 阅读约束
+`@retikz/react` 是官方唯一维护的框架适配包。它是一个薄壳：负责把 React JSX 的 children、组件声明与宿主生命周期转换为 Vanilla 可消费的作者输入，保留 JSX 组合写法的优势；实际的 normalize、处理与运行时执行仍在 `@retikz/vanilla` 中完成，而不是在 React 层重建一套领域逻辑。
 
-读 core 源码时先记住这些约束；它们解释了为什么很多实现看起来“绕一层”，而不是直接依赖浏览器或 React：
+一般来说，与领域包配对的 `*-vanilla`、`*-react` 发布包就是 API 适配包：它们扩展作者入口或宿主能力，不属于领域包的纵向或横向能力扩展分类。
 
-- **零 React、零 DOM**——core 不准 `import 'react'` / `import 'react-dom'`；浏览器特化能力（文字度量、事件）由 adapter 通过依赖注入提供
-- **进 IR 的数据 100% JSON 可序列化**——禁止函数 / class 实例 / ref / Symbol 进 IR schema
-- **几何工具只用纯函数 + plain data**——不写 class；函数集合用 `const ns = { method1, method2 }` 命名空间形态
-- **`compileToScene` 是纯函数**——相同 IR + 相同 options → 完全相同的 Scene 与 artifacts；禁止 `Math.random()` / `Date.now()` / 模块级可变状态
-- **运行时依赖白名单**——目前只有 `zod`；新增需在 PR 描述里写明理由
+## 基础准则
 
-## @retikz/react
+开始改源码前，先判断改动属于哪一层；相关 skill 提供的是最小的决策检查表，而不是另一套实现。下面是常用入口的简要说明。
 
-`peerDependencies: react / react-dom`。整包做三件事：JSX → IR、调 `compileToScene` 拿 Scene 与 artifacts、Scene → SVG / Canvas。
+| 遇到的问题                             | 先看哪个 skill              | 它帮助确认什么                                                                      |
+| -------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| 新目录、文件、类型、函数或导出怎么命名 | `standard-name`             | owner、阶段名称、barrel 和公共符号是否准确                                          |
+| 不确定能力应放哪层、能否依赖           | `standard-structure`        | `shared → schemas → contract → providers → resolve → pipeline/compile` 的方向与边界 |
+| 改持久化 IR、Zod、默认或字段描述       | `standard-schema`           | schema 是唯一真源；context 规则不放在 schema                                        |
+| 新增可供内置与第三方共用的能力         | `standard-contract`         | `XxxDefinition`、`defineXxx()` 和作者可见 context 的契约边界                        |
+| 添加内置 definition 或 registry 行为   | `standard-providers`        | 内置与用户定义同路合并；冲突集中诊断，不建两套消费路径                              |
+| 处理默认、继承、lookup 或领域确定化    | `standard-resolve`          | `IR + ResolveContext → Canonical / Resolution` 是唯一确定化路径                     |
+| 改 Vanilla authoring API               | `standard-normalize`        | 只有 `*-vanilla` 可将 `InputXxx` 组装为 Source IR                                   |
+| 改 lowering、编译上下文或 Scene 输出   | `standard-pipeline-compile` | pipeline / compile 只编排和消费，不重复 resolve 的默认、lookup 或优先级             |
 
-### 包结构
+所有这些准则共享三条底线：公开入口以 `package.json` 的 `exports` 和 owner barrel 为准；未知 JSON 只在 schema / parse 边界校验一次；过时结构直接删除，不通过 alias、fallback 或两条并行路径维持兼容。
 
-| 模块                                                                                                 | 职责                                                                                                                                           |
-| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`kernel/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/kernel)    | React DSL Kernel——`components` 放标记组件，`protocol` 放共享识别协议，`adapter` 做 JSX → InputScene，`runtime` 放 `<Layout>` 与 hydration 接线 |
-| [`sugar/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar)      | Sugar JSX 组件——`path` 放 `<Draw>` / `<EdgeLabel>`，`shapes` 放形状 sugar；编译期展开为 Kernel，不引入新能力                                   |
-| [`render/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/render)    | React 结果宿主接线——`processing-result`、`svg`、`canvas`、`text` 承接 processing result、SVG、CanvasHost 与 browser measurer                   |
-| [`index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) | 公开 API surface——Kernel + Sugar 组件、`createInputScene` 与 `convertIRToReactNode`                                                            |
+## 延伸阅读
 
-### 推荐阅读顺序
-
-1. **[`src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts) ——公开 API**<br />
-   先看暴露了什么 Kernel / Sugar 组件、prop 类型和 adapter bridge。Core 的 grammar vocabulary 仍由 Core owner 导出；React 只公开自己的 JSX 入口。
-
-2. **[`kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx) ——顶层编排**<br />
-   `<Layout>` 是整条管线的入口：children → `createInputScene` → Vanilla processing（normalize、Core Program、runtime）→ `ProcessingResultHost`，并在 commit 后发布同次 compile 的 artifacts。把这一个文件读懂，整个 adapter 的形状就有了。
-
-3. **[`kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts) ——JSX → InputScene**<br />
-   按 child 的 displayName 分派到 InputNode / InputPath / InputStep / InputScope 等作者输入，并收集 Tier 2 的 `InputEmbedAdapter`；它不解析 Core authoring grammar。同目录的 [`unbuilder.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/unbuilder.ts) 走反方向（IR → React element 树），用于编辑器 / AI 工作流"喂 IR 显示组件"。
-
-4. **[`kernel/Node.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Node.tsx) / [`Path.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Path.tsx) / [`Step.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/components/Step.tsx) 等 ——Kernel 组件**<br />
-   这些组件本身不渲染——只是声明 displayName，把 props 交给 Input collector。读懂一个就读懂全部。
-
-5. **[`render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx) ——ProcessingResult → React 宿主**<br />
-   React 只把 Vanilla 的只读 processing result 映射为 SVG 或 Canvas，并绑定 hydration、动画与 artifacts 通知。换框架时，复用 Vanilla processing，仅替换这一层宿主即可。
-
-6. **[`render/text/browser-measurer.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/text/browser-measurer.ts) ——文字度量注入**<br />
-   基于 canvas `measureText` 提供 `TextMeasurer`，通过 Vanilla processing 的 `CompileOptions.measureText` 注入 Core compile。SSR 无 document 时自动回退到 core 的 `fallbackMeasurer`。
-
-7. **[`sugar/Draw.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/sugar/path/Draw.tsx) ——Sugar 转交**<br />
-   `<Draw way={[...]}>` 只把 props 转交给 Kernel `<Path>`。随后 Vanilla 的 `normalizePath` 解析 `way` 并生成 Core Path steps；Sugar 不引入新的图形能力。
-
-8. **[`sugar/shapes/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/react/src/sugar/shapes) 的形状组件（可选）**<br />
-   `<Circle>` / `<Ellipse>` / `<Arc>` / `<Sector>` / `<Rectangle>` / `<RegularPolygon>` / `<Star>` 也是 Sugar：它们把常见几何形写法展开为等价 `<Path>`。Standard `Grid` 则是拥有持久化 IR 的 Tier 2 composite。
-
-### 写新 adapter 时的对应关系
-
-如果你要做 `@retikz/vue` / `@retikz/svelte` 等，对照 React adapter：
-
-| React 这边                                  | 新 adapter 要做的                                                        |
-| ------------------------------------------- | ------------------------------------------------------------------------ |
-| `kernel/*.tsx` 组件（声明 displayName）     | 各框架的组件等价物（声明组件类型识别符）                                 |
-| `kernel/input-scene.ts`（JSX → InputScene） | 各框架 children / vnode → InputScene 的 bridge，并复用 Vanilla normalize |
-| `render/processing-result.tsx`              | 将 Vanilla processing result 接入框架原生宿主                            |
-| `render/text/browser-measurer.ts`           | 浏览器 / SSR / Native 各自的 measurer（实现 `TextMeasurer` 即可）        |
-
-`@retikz/core` 的 IR、`compileToScene`、`shared/geometry` helper、`contract/scene` 类型一律复用，不需要重写。
-
-## 关键文件速查
-
-| 想查什么                       | 看哪里                                                                                                                                             |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IR 顶层结构                    | [`core/schemas/scene/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/scene/schema.ts)             |
-| 节点字段                       | [`core/schemas/node/schema.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/schemas/node/schema.ts)               |
-| Path / Step 类型               | [`core/schemas/path/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/path)                                  |
-| 极坐标 / 相对定位              | [`core/schemas/position/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/schemas/position)                          |
-| Scene primitive 类型           | [`core/contract/scene/`](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/core/src/contract/scene)                              |
-| 编译流水线                     | [`core/compile/compile.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/compile.ts)                       |
-| 文字度量接口                   | [`core/compile/text/metrics.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/compile/text/metrics.ts)             |
-| boundaryPoint / anchor         | [`core/shared/geometry/rect.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/shared/geometry/rect.ts) 等          |
-| core 公开 API                  | [`core/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/core/src/index.ts)                                       |
-| React 顶层管道                 | [`react/kernel/Layout.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/runtime/Layout.tsx)               |
-| JSX → InputScene 桥            | [`react/kernel/input-scene.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/kernel/adapter/input-scene.ts)       |
-| Vanilla processing             | [`vanilla/processing/prepare.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/vanilla/src/processing/prepare.ts)           |
-| Processing result → React 宿主 | [`react/render/processing-result.tsx`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/render/processing-result.tsx) |
-| react 公开 API                 | [`react/src/index.ts`](https://github.com/Pionpill/retikz/blob/next-kernel/packages/kernel/react/src/index.ts)                                     |
-
-## 相关阅读
-
-- 全仓架构与贡献约束：[AGENTS.md](https://github.com/Pionpill/retikz/blob/main/AGENTS.md)
-- ADR 决策档案：[packages/kernel/\_notes/decisions/](https://github.com/Pionpill/retikz/tree/next-kernel/packages/kernel/_notes/decisions)
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/about/releases/roadmap">
+    <span className="font-semibold">路线图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查看四个分组的职责与依赖边界</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/design/layers">
+    <span className="font-semibold">分层</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">理解 Kernel 从 IR 到 Scene 的处理链路</span>
+  </LinkedCard>
+</div>

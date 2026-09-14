@@ -7,12 +7,8 @@ import { relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  isPreviewThemeStyleDocument,
   PreviewChartThemeDefinitions,
   PreviewCoreThemeStyles,
-  PreviewDiagramThemeStyles,
-  PreviewFlowThemeStyles,
-  PreviewGraphThemeStyles,
   PreviewPlotThemeStyles,
   PreviewTableThemeStyles,
   PreviewThemeDefinitionBundle,
@@ -26,98 +22,19 @@ describe('docs-owned theme presets', () => {
     expect(PreviewThemeStyleOptions).toEqual(['default', 'academic', 'vibrant', 'clean']);
   });
 
-  it('三个参考风格为七个 owner 提供同名 definition', () => {
+  it('三个参考风格只为 Core 与 Viz owner 提供同名 definition', () => {
     const expected = [PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean];
     for (const definitions of [
       PreviewCoreThemeStyles,
       PreviewPlotThemeStyles,
       PreviewChartThemeDefinitions,
       PreviewTableThemeStyles,
-      PreviewGraphThemeStyles,
-      PreviewDiagramThemeStyles,
-      PreviewFlowThemeStyles,
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);
     }
-    expect(PreviewThemeDefinitionBundle.graph).toBe(PreviewGraphThemeStyles);
-  });
-
-  it.each([ThemeMode.Light, ThemeMode.Dark])('Graph reference definitions 保持三种可辨识视觉语言：%s', mode => {
-    const coreByName = new Map(PreviewCoreThemeStyles.map(definition => [definition.name, definition]));
-    const graphByName = new Map(PreviewGraphThemeStyles.map(definition => [definition.name, definition]));
-    const foreground = mode === ThemeMode.Light ? '#000000' : '#ffffff';
-    const themeOf = (style: Exclude<(typeof PreviewThemeStyle)[keyof typeof PreviewThemeStyle], 'default'>) => {
-      const core = coreByName.get(style);
-      if (core === undefined) throw new Error(`missing Core definition for ${style}`);
-      return { style, mode, colors: resolveCoreThemeStyleColors(mode, core.resolve({ mode })) };
-    };
-
-    const academicTheme = themeOf(PreviewThemeStyle.Academic);
-    const academicColor = academicTheme.colors.categorical[0];
-    expect(graphByName.get(PreviewThemeStyle.Academic)?.resolve(academicTheme).defaults).toEqual({
-      entity: {
-        style: {
-          color: academicColor,
-          textColor: 'contrast',
-          fill: 0.15,
-          stroke: 'currentColor',
-          strokeWidth: 1,
-        },
-      },
-      relation: { style: { color: foreground, strokeWidth: 1.25 } },
-      group: {
-        background: { fill: 'none' },
-        border: { stroke: foreground, strokeWidth: 1, dashPattern: [4, 3] },
-        cornerRadius: 0,
-      },
-      block: {
-        background: { fill: 'none' },
-        border: { stroke: foreground, strokeWidth: 1 },
-        cornerRadius: 0,
-      },
-    });
-
-    const vibrantTheme = themeOf(PreviewThemeStyle.Vibrant);
-    expect(graphByName.get(PreviewThemeStyle.Vibrant)?.resolve(vibrantTheme).defaults).toEqual({
-      entity: {
-        style: {
-          color: vibrantTheme.colors.categorical[0],
-          textColor: 'contrast',
-          fill: 1,
-          stroke: 'none',
-        },
-      },
-      relation: { style: { color: vibrantTheme.colors.categorical[1], strokeWidth: 1.5 } },
-      group: {
-        background: { fill: vibrantTheme.colors.categorical[0], fillOpacity: 0.08 },
-        border: { stroke: vibrantTheme.colors.categorical[0], strokeWidth: 1.5, strokeOpacity: 0.7 },
-        cornerRadius: 12,
-      },
-      block: {
-        background: { fill: vibrantTheme.colors.categorical[1], fillOpacity: 0.12 },
-        border: { stroke: vibrantTheme.colors.categorical[1], strokeWidth: 1.5, strokeOpacity: 0.85 },
-        cornerRadius: 12,
-      },
-    });
-
-    const cleanTheme = themeOf(PreviewThemeStyle.Clean);
-    expect(graphByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme).defaults).toEqual({
-      entity: { style: { textColor: foreground, fill: 'none' } },
-    });
-
-    const flowByName = new Map(PreviewFlowThemeStyles.map(definition => [definition.name, definition]));
-    expect(flowByName.get(PreviewThemeStyle.Academic)?.resolve(academicTheme)).toEqual({});
-    expect(flowByName.get(PreviewThemeStyle.Vibrant)?.resolve(vibrantTheme)).toEqual({});
-    expect(flowByName.get(PreviewThemeStyle.Clean)?.resolve(cleanTheme)).toEqual({});
-  });
-
-  it('只在 Viz、schematic/graph 与 schematic/diagram 文档启用现有 Theme style selector', () => {
-    expect(isPreviewThemeStyleDocument('viz', 'plot')).toBe(true);
-    expect(isPreviewThemeStyleDocument('viz', undefined)).toBe(true);
-    expect(isPreviewThemeStyleDocument('schematic', 'graph')).toBe(true);
-    expect(isPreviewThemeStyleDocument('schematic', 'introduction')).toBe(false);
-    expect(isPreviewThemeStyleDocument('schematic', 'diagram')).toBe(true);
-    expect(isPreviewThemeStyleDocument('kernel', 'graph')).toBe(false);
+    expect(PreviewThemeDefinitionBundle.graph).toEqual([]);
+    expect(PreviewThemeDefinitionBundle.diagram).toEqual([]);
+    expect(PreviewThemeDefinitionBundle.flow).toEqual([]);
   });
 
   it.each([ThemeMode.Light, ThemeMode.Dark])('Plot reference definitions 保留关键 Axis 与 shape 视觉值：%s', mode => {

@@ -6,6 +6,7 @@
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
 
 import { AnimationProperty } from '@retikz/core';
+import { mergeProperties } from '@retikz/foundation';
 
 import type { EasingRegistry } from '../../animation';
 import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
@@ -73,8 +74,10 @@ const mergeClass = (existing: string | undefined, added: string): string => (exi
 
 /** 给 SvgNode 叠加属性（过滤 undefined） */
 const addAttrs = (node: SvgNode, attrs: SvgAttrs): SvgNode => {
-  const merged: SvgAttrs = { ...node.attrs };
-  for (const [k, v] of Object.entries(attrs)) if (v !== undefined) (merged as Record<string, unknown>)[k] = v;
+  const merged: SvgAttrs = {
+    ...node.attrs,
+    ...mergeProperties([attrs], { shouldOverride: value => value !== undefined }),
+  };
   return { ...node, attrs: merged };
 };
 

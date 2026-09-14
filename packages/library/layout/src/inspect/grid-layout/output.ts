@@ -1,8 +1,8 @@
 import type { InspectorContext } from '@retikz/inspect';
 
 import type { GridLayoutArtifact } from '../../composites/grid-layout';
+import type { CanonicalGridLayoutInspectOptions } from '../resolve/grid-layout';
 import type { LayoutInspectionChild, LayoutInspectionLineMark, LayoutInspectionMark } from '../shared';
-import type { ResolvedGridLayoutInspectOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
@@ -16,7 +16,7 @@ import {
 /** 把 Grid 布局产物转换为普通 Core 辅助子元素 */
 export const inspectGridLayoutArtifact = (
   artifact: GridLayoutArtifact,
-  context: InspectorContext<ResolvedGridLayoutInspectOptions>,
+  context: InspectorContext<CanonicalGridLayoutInspectOptions>,
 ): ReadonlyArray<LayoutInspectionChild> => {
   const base = inspectLayoutArtifactBase(artifact.container, artifact.items, context.options, context.appearance);
   const structure: Array<LayoutInspectionMark> = [];

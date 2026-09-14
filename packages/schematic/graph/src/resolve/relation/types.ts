@@ -30,6 +30,9 @@ export type CanonicalRelation = Readonly<{
 /** Relation appearance resolver 的 Theme 与 definition 上下文 */
 export type RelationAppearanceResolveContext = GraphMemberAppearanceResolveContext;
 
+/** Relation structure resolver 的 Theme 与 definition 上下文 */
+export type RelationStructureResolveContext = GraphMemberAppearanceResolveContext;
+
 /** Relation 作者层投影所需的 definition 与 Graph context */
 export type RelationGraphLayerResolveContext = RelationResolveContext &
   Readonly<{
