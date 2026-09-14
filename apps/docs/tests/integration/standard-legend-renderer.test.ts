@@ -72,7 +72,7 @@ describe('Standard Legend renderer boundary', () => {
         items: [{ key: 'line', sample: { type: 'node', position: [0, 0], text: 'A' } }],
       },
     } satisfies InputLegend;
-    const direct = createLegend(input);
+    const direct = LegendSchema.parse(createLegend(input));
     const reactInput = createInputScene(
       createElement(Legend, {
         kind: LegendContentKind.Items,

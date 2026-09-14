@@ -3,7 +3,7 @@ import type { Release, SubVersion } from '../types';
 const diagramMilestones: Array<SubVersion> = [
   {
     version: 'alpha.1',
-    date: '2026-08-31',
+    date: '2026-09-14',
     summary: {
       zh: '首次发布 Diagram package family，以 LLM-first Flow Source、自动分层布局和 renderer-neutral artifact 完成站点逻辑图闭环。',
       en: 'First Diagram package-family release, completing site logic diagrams with an LLM-first Flow Source, automatic layered layout, and renderer-neutral artifacts.',
@@ -47,8 +47,8 @@ const diagramMilestones: Array<SubVersion> = [
       {
         label: { zh: '自动布局、固定排列与路由', en: 'Automatic layout, fixed placement, and routing' },
         content: {
-          zh: '`layered` 支持四个主方向、显式 rank、cycle、parallel relation、递归 scope、跨 scope relation、可见 Group endpoint，以及 straight / rounded orthogonal routing。独立 `FlowLayout` 复用 Flex compiler，以 `direction`、`gap` 与 `align` 固定排列 direct children；它没有 Graph shell，也不能成为 endpoint。',
-          en: '`layered` supports four primary directions, explicit ranks, recursive scopes, cycles, parallel and cross-scope relations, visible Group endpoints, and straight or rounded orthogonal routing. Independent `FlowLayout` records reuse the Flex compiler to fix direct-child placement through `direction`, `gap`, and `align`; they have no Graph shell and cannot be endpoints.',
+          zh: 'layered 支持四方向、rank、cycle、parallel relation、递归 scope、跨 scope relation 和 Group endpoint。FlowLayout 通过 kind 选择 linear 或 grid，复用 Flex / Grid 排列直接子项；Layout 不可作为 endpoint。自动 nodeGap/rankGap 默认 48，固定排列默认横向 48、纵向 32，作者显式间距优先。',
+          en: 'layered supports four directions, ranks, cycles, parallel and cross-scope relations, recursive scopes, and Group endpoints. FlowLayout selects linear or grid by kind and reuses Flex/Grid to place direct children; Layouts cannot be endpoints. Automatic nodeGap/rankGap default to 48; fixed placement defaults to 48 horizontally and 32 vertically, with explicit author gaps taking priority.',
         },
       },
       {
@@ -64,8 +64,22 @@ const diagramMilestones: Array<SubVersion> = [
           en: 'BREAKING: Source fields follow Zod optional semantics',
         },
         content: {
-          zh: 'Diagram foundation schema 不再单独递归拒绝已知 optional 字段中的显式 `undefined`；字段缺失与显式值完全遵循 owner schema，同时继续保留空对象、空文本和跨字段不变量。Flow Layout Definition 因没有持久化 schema，仍保留独立 plain-container guard。',
-          en: 'Diagram foundation schemas no longer recursively reject explicit `undefined` in known optional fields. Missing and explicit values follow the owner schema, while empty-object, empty-text, and cross-field invariants remain. Flow Layout Definitions have no persisted schema and retain their independent plain-container guard.',
+          zh: 'Diagram foundation schema 不再单独递归拒绝已知 optional 字段中的显式 `undefined`；字段缺失与显式值完全遵循 owner schema，同时继续保留各 owner 的非空与跨字段约束（Flow Entity / Relation 文本须含非空内容）。Flow Layout Definition 因没有持久化 schema，仍保留独立 plain-container guard。',
+          en: 'Diagram foundation schemas no longer recursively reject explicit `undefined` in known optional fields. Missing and explicit values follow the owner schema, while owner-specific nonempty and cross-field constraints remain (Flow Entity/Relation text must contain nonblank content). Flow Layout Definitions have no persisted schema and retain their independent plain-container guard.',
+        },
+      },
+      {
+        label: { zh: '统一宽度与 Graph 外观', en: 'Uniform widths and Graph appearance' },
+        content: {
+          zh: 'FlowLayout.itemWidth 可为直接 Entity 统一测量宽度；Flow 接入 graphRules、Entity 状态与分组颜色。Entity、关系标签、标题与描述复用 Core TextBlock；布局仅消费真实文本测量。',
+          en: 'FlowLayout.itemWidth can unify measurement widths for direct Entities. Flow supports graphRules, Entity statuses, and group colors. Entity text, relation labels, titles, and descriptions reuse Core TextBlock and actual text measurement.',
+        },
+      },
+      {
+        label: { zh: 'Node.js 22', en: 'Node.js 22' },
+        content: {
+          zh: '最低 Node.js 版本调整为 22.12.0。',
+          en: 'The minimum Node.js version is now 22.12.0.',
         },
       },
     ],

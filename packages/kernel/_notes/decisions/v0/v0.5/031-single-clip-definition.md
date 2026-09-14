@@ -35,7 +35,7 @@ Core 默认矩形 definition 同时完成 rect spec 校验、JSON-safe shape 解
 以下形态冻结单一扩展边界；具体只读修饰与类型擦除由实现保持等价：
 
 ```ts
-type ClipShape = IRJsonObject & {
+type ClipShape = JsonObject & {
   kind: string;
 };
 
@@ -69,7 +69,7 @@ type CompileProviderOptions = {
 type CoreProviderCapability = 'clip' /* | ... */;
 ```
 
-`defineClip` 是唯一 author-facing helper。spec 经 `schema` 解析后才进入 `resolve`；其返回值先复制为纯 JSON snapshot，再由同一 definition 的 `shapeSchema` 校验并确认 `shape.kind === definition.kind`，之后才能进入 `lower`。递归 `context.resolve` 与 `context.lower` 都使用当前 Clip registry，并共享现有 cycle / depth 保护。lowering 产出的 `SceneClipPath` 继续经过 Core 的 canonical path 校验与规范化。
+`defineClip` 是唯一 author-facing helper。spec 经 `schema` 解析后才进入 `resolve`；其返回值由同一 definition 的 `shapeSchema` 直接解析并确认 `shape.kind === definition.kind`，之后才能进入 `lower`；精确 schema 的输出不再经过通用 JSON 二次解析，遵循 [ADR-035](./035-json-undefined-field-contracts.md)。递归 `context.resolve` 与 `context.lower` 都使用当前 Clip registry，并共享现有 cycle / depth 保护。lowering 产出的 `SceneClipPath` 继续经过 Core 的 canonical path 校验与规范化。
 
 ## 行为、失败语义与兼容性
 

@@ -5,9 +5,9 @@ keywords: 'UML、Relation、kind、dependency、association、generalization、u
 
 # ADR-015：UML Relation kind 目录与结构默认
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-02
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Relation contract](./008-relation-data-geometry.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
+- 关联：[Graph roadmap](./roadmap.md) · [Relation contract](./008-relation-data-geometry.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
 
 ## 背景与目标
 
@@ -30,7 +30,7 @@ Relation 已有开放的 `role → kind → predicate` Definition / registry 链
 
 内置 kind 只保留相对所属 role 有独立路径或端点结构的 UML 关系。没有 stereotype 文本时，usage、abstraction、binding、permission、manifestation、deployment 与 substitution 都不能提供独立可见结构，因此不作为内置 kind；领域需要保留这些语义时使用 label、meta 或自定义 kind。`uml.realization` 从原先的 `generalization` role 移到 `dependency` role，符合其 UML 依赖关系性质；其空心三角保留为 kind 的结构 delta
 
-已有 role 的默认结构保持不变：`association` 的默认 direction 为 `forward`，target 端使用实心菱形；`dependency` 使用实线与开放 Straight Barb；`generalization` 使用实线与实心 normal 箭头。只有 UML kind 通过所属 role 的 direction recipe 覆盖结构：`uml.association` 使用无 marker 实线，aggregation / composition 使用菱形，`uml.generalization` 使用空心三角，UML dependency kind 使用虚线。`flow` 与 `influence` 仍是 Graph 的通用 role，不作为内置 UML kind
+本决策取代 ADR-008 的旧内置目录与 role 默认结构；其余 Relation 契约保持有效。最终 role 默认结构为：`association` 的默认 direction 为 `forward`，target 端使用实心菱形；`dependency` 使用实线与开放 Straight Barb；`generalization` 使用实线与实心 normal 箭头。只有 UML kind 通过所属 role 的 direction recipe 覆盖结构：`uml.association` 使用无 marker 实线，aggregation / composition 使用菱形，`uml.generalization` 使用空心三角，UML dependency kind 使用虚线。`flow` 与 `influence` 仍是 Graph 的通用 role，不作为内置 UML kind
 
 ## 基础数据结构与公开契约
 
@@ -42,4 +42,4 @@ Relation 已有开放的 `role → kind → predicate` Definition / registry 链
 
 直接 IR、React 与 Vanilla 必须产生同一 Relation Source，并由同一 registry 解析内置 kind。kind 与 role 不匹配、未注册 kind、或 kind 收窄后不允许的 direction 继续 fail-loud，不回退到 role 默认外观
 
-这是破坏性视觉与内置目录变更：未指定 kind 的 association、dependency 与 generalization 采用新的 UML 默认结构；`uml.realization` 必须使用 `dependency` role；`provenance.derivation` 不再是内置 key。Relation 不自动插入任何文本标签、stereotype 或额外图元
+这是破坏性视觉与内置目录变更：未指定 kind 的 association 与 dependency 采用本决策的默认结构，generalization 保留 normal 箭头；`uml.realization` 必须使用 `dependency` role；`provenance.derivation` 不再是内置 key。Relation 不自动插入任何文本标签、stereotype 或额外图元

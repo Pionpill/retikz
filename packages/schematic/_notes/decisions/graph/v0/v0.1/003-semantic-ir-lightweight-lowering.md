@@ -12,6 +12,8 @@ keywords: 'Graph、semantic、Source、Core、lowering、role、predicate、grap
 
 > Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](./017-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
 
+> 本文四类基础 composite 的命名和组合决策继续成立；[ADR-013](./013-block-open-content.md) 扩展 Block、BlockHeader、BlockSection 与 BlockRow，当前 GraphType 还包含这些开放内容组件。
+
 ## 背景与目标
 
 Graph 语义需要在持久化、LLM / 工具处理和跨 adapter 交换时保留，但 Core、Scene 与 renderer 不应解释 Graph 的 role、kind、predicate、direction 或 grouping 词汇。Graph Source 因此只保存领域事实与适用的 Core lower-facing 字段，并在 Graph owner 的 Definition / resolve / lowering 边界消费领域语义
@@ -34,7 +36,7 @@ Entity 与 Relation 分别只下沉为一个普通 Core Node / Path。Graph disc
 
 ### Graph 与 Group 的上下文 lowering
 
-Graph 下沉为一个保留完整 Scope surface 的 Core Scope，并把 `graphTheme` 只投影给 Source tree 中可见的 Entity / Relation。Group 组合 Scope、Surface、Layout caption 与 Core Node labels，形成一个可引用的外框和任意 authored body；它同样只把 `graphTheme` 投影给可见的 Entity / Relation 后代
+Graph 下沉为一个保留完整 Scope surface 的 Core Scope，并按 ADR-017 把作者 defaults/rules 投影给可见 Entity / Relation 与后代 Group / Block shell。Group 组合 Scope、Surface、Layout caption 与 Core Node labels，形成一个可引用的外框和任意 authored body；它同样按同一契约投影 defaults/rules
 
 Graph 与 Group 使用 Core layout-aware composite contract，是为了在同次 compile 中保留 Scope / Surface allocation、child replay 与 Group label host 几何；这不表示 Graph 拥有独立 Layout solver 或 Scene
 

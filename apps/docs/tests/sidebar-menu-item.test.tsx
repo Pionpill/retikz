@@ -332,9 +332,9 @@ describe('<AppSidebar>', () => {
         ].includes(label),
       ),
     ).toEqual([
-      'kernel.pkgFoundationValidationErrors',
-      'kernel.pkgFoundationTypesSchemas',
       'kernel.pkgFoundationUtilities',
+      'kernel.pkgFoundationTypesSchemas',
+      'kernel.pkgFoundationValidationErrors',
     ]);
     expect(container.textContent).toContain('kernel.pkgGroupCore');
     expect(container.textContent).toContain('kernel.pkgGroupExtension');

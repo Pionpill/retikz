@@ -133,13 +133,13 @@ describe('changelog data', () => {
     const serialized = JSON.stringify(graphBlocks);
 
     for (const block of graphBlocks) {
-      expect(block.subVersions.map(version => version.version)).toEqual(expect.arrayContaining(['alpha.1', 'alpha.2']));
+      expect(block.subVersions.map(version => version.version)).toEqual(['alpha.2', 'alpha.1']);
       const alpha1 = block.subVersions.find(version => version.version === 'alpha.1');
       const alpha2 = block.subVersions.find(version => version.version === 'alpha.2');
       expect(alpha1?.date).toBe('2026-08-28');
       expect(alpha1?.items).toHaveLength(9);
-      expect(alpha2?.date).toBe('2026-08-29');
-      expect(alpha2?.items).toHaveLength(5);
+      expect(alpha2?.date).toBe('2026-09-14');
+      expect(alpha2?.items).toHaveLength(9);
     }
 
     expect(JSON.stringify(byPackage.get('@retikz/graph'))).toContain('IRGraph.children');

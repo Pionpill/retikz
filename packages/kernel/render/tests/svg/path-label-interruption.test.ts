@@ -17,7 +17,7 @@ const closedPath = (extra: Partial<IRPath> = {}): IRScene => ({
   children: [
     {
       type: 'path',
-      label: { text: 'close', position: 0.9, sloped: true },
+      label: { text: 'close', position: 0.9, sloped: true, gap: 0 },
       children: [
         { type: 'step', kind: 'move', to: [0, 0] },
         { type: 'step', kind: 'line', to: [100, 0] },
@@ -31,7 +31,10 @@ const closedPath = (extra: Partial<IRPath> = {}): IRScene => ({
 });
 
 describe('SVG Stroke Path label interruption', () => {
-  it('serializes a centered label as two disjoint stroke paths instead of a continuous segment', () => {
+  it.each([
+    { gap: undefined, left: 35.5, right: 64.5 },
+    { gap: 0, left: 39.5, right: 60.5 },
+  ])('serializes a centered label with gap=$gap as two disjoint stroke paths', ({ gap, left, right }) => {
     const svg = render({
       version: 1,
       type: 'scene',
@@ -39,7 +42,7 @@ describe('SVG Stroke Path label interruption', () => {
         {
           type: 'path',
           id: 'edge',
-          label: { text: 'gap', sloped: true },
+          label: { text: 'gap', sloped: true, gap },
           children: [
             { type: 'step', kind: 'move', to: [0, 0] },
             { type: 'step', kind: 'line', to: [100, 0] },
@@ -49,8 +52,8 @@ describe('SVG Stroke Path label interruption', () => {
       ],
     });
 
-    expect(svg).toContain('d="M 0 0 L 39.5 0"');
-    expect(svg).toContain('d="M 60.5 0 L 100 0"');
+    expect(svg).toContain(`d="M 0 0 L ${left} 0"`);
+    expect(svg).toContain(`d="M ${right} 0 L 100 0"`);
     expect(svg).not.toContain('d="M 0 0 L 100 0"');
   });
 

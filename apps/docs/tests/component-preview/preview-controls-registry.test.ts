@@ -285,7 +285,7 @@ describe('preview controls registry', () => {
   });
 
   it('优先解析单文件多语言图，同时保留旧双语 demo 回退', () => {
-    const inspectSegments = ['kernel', 'packages', 'inspect', 'principles'];
+    const inspectSegments = ['kernel', 'packages', 'inspect', 'mechanism'];
     const inspectKey = buildComponentKey(inspectSegments, 'inspect-compile-flow');
 
     expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'zh')).toBe(inspectKey);
@@ -1872,11 +1872,14 @@ describe('preview controls registry', () => {
       if (!contract) continue;
 
       const englishKey = key.replace(/\.controls\.ts$/u, '.en.controls.ts');
-      const englishModule = controlModules[englishKey];
+      if (controlModules[englishKey] === undefined) {
+        expect(mod?.createPreviewControlContract, key).toBeTypeOf('function');
+      }
+      const englishModule = controlModules[englishKey] ?? mod;
       expect(englishModule, englishKey).toBeDefined();
       expect(Object.hasOwn(englishModule ?? {}, 'previewControlContract'), englishKey).toBe(true);
 
-      const englishContract = resolvePreviewControlContract(englishModule);
+      const englishContract = resolvePreviewControlContract(englishModule, 'en');
       expect(englishContract, englishKey).toBeDefined();
       if (!englishContract) continue;
 

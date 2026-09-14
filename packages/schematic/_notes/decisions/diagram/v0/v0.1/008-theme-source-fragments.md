@@ -7,7 +7,7 @@ keywords: 'Diagram、Flow、Defaults、Theme、presentation.title、presentation
 
 - 状态：Accepted
 - 决策日期：2026-09-05
-- 主责：Diagram，目标版本 0.1.0-alpha.1
+- 主责：Diagram
 - 关联：[v0.1 roadmap](./roadmap.md) · [Presentation](./001-diagram-assembly-presentation.md) · [Frame](./002-diagram-frame-spacing-appearance.md) · [Flow Source](./007-flow-catalog-source-layout-groups.md) · [Graph Theme 片段](../../../graph/v0/v0.1/017-theme-source-fragments.md)
 
 ## 背景与目标
@@ -40,9 +40,9 @@ Diagram presentation 的 Source 同名区域当前只存文本，Theme 却存格
 
 ### Flow 实例字段
 
-Flow 根新增正式 `layout` 与 `routing`：layout 只含 direction/nodeGap/rankGap，routing 复用既有 straight/orthogonal 判别契约。Root 和 Group 的 routing 分别声明当前 scope 的关系路由默认；Relation 的 routing 为单条覆盖。旧 layout.routing 与 Relation.layout 删除。显式 Layout catalog 仍用 direction/gap/align 固定排列其 children，不获得 routing 或 Graph identity。
+Flow 根新增正式 `layout` 与 `routing`：layout 只含 direction/nodeGap/rankGap，routing 复用 straight/orthogonal 判别契约，并由 ADR-011 扩展单折角模式。Root 和 Group 的 routing 分别声明当前 scope 的关系路由默认；Relation 的 routing 为单条覆盖。旧 layout.routing 与 Relation.layout 删除。显式 Layout catalog 仍用 direction/gap/align 固定排列其 children，不获得 routing 或 Graph identity。
 
-Flow Entity.style 保留现有 Graph 允许的直接视觉字段和 font；align/lineHeight/maxTextWidth 移入 Entity.layout，与 minimumSize/margin 共存。不得引入 Graph Entity 禁止的 padding 或角色几何。
+Flow Entity.style 保留现有 Graph 允许的直接视觉字段和 font；align/lineHeight/maxTextWidth 移入 Entity.layout，与 width/minimumSize/margin 共存。不得引入 Graph Entity 禁止的 padding 或角色几何。
 
 Flow Relation.style 只承载当前 Graph-compatible Path style。sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity 移至 Relation 同名根字段，沿用 Graph 公开值契约。label 仍是可选非空文本，routing 与这些表现字段分离；不改变 Relation 的有序、无 identity Source。
 
@@ -84,9 +84,9 @@ Flow 样式先解析同名 Flow definition，再应用 flowDefaults，最后应�
 
 这些已确定的 Flow 字段作为 Graph 的显式输入，优先于 Graph baseline/rules；没有 Flow 覆盖的字段继续委托 Graph 同名 definition 和状态规则。Graph role padding、shape、minimumSize 下限与 Relation marker/dash 结构限制不能被 Flow 绕过。测量与最终物化必须消费同一个已确定片段和同一组 Graph definitions，避免测量时的字体与最终绘制不同。
 
-布局配置从低到高为：所选 Layout Definition 默认 → 当前有效 Flow 默认片段的 nodeGap/rankGap（先 definition、后 flowDefaults） → 祖先有效 scope layout → 当前 Root/Group 显式 layout。只有间距可以来自 Theme 生成值或 flowDefaults；direction 只来自 provider 默认、祖先与当前 Source。显式 Layout 的 direction/gap/align 保留其固定排列优先级，缺少 gap 时沿用已有最近有效间距语义。
+布局配置从低到高为：所选 Layout Definition 默认 → 当前有效 Flow 默认片段的 nodeGap/rankGap（先 definition、后 flowDefaults） → 祖先有效 scope layout → 当前 Root/Group 显式 layout。只有间距可以来自 Theme 生成值或 flowDefaults；direction 只来自 provider 默认、祖先与当前 Source。显式 Layout 的 direction/gap/align 保留其固定排列优先级，缺少 gap 时优先继承作者间距，再使用 Definition 的物理轴 placementGap 默认；自动布局补出的 nodeGap 不作为作者值继承。
 
-routing 独立继承：所选 Layout Definition 默认 → Root routing → 各祖先 Group routing → Relation 所属最近公共 layout scope 的有效 routing → Relation.routing。显式 Layout 不开启新的 routing 配置层。straight 是完整替换，不能携带 cornerRadius；orthogonal 在省略 cornerRadius 时只继承同 kind 的有效值，再使用 provider 的 orthogonalCornerRadius，最后为 0。mode/style 不改变路由策略或方向。
+routing 独立继承：所选 Layout Definition 默认 → Root routing → 各祖先 Group routing → Relation 所属最近公共 layout scope 的有效 routing → Relation.routing。显式 Layout 不开启新的 routing 配置层。straight 是完整替换，不能携带 cornerRadius；orthogonal 在省略 cornerRadius 时继承祖先轴对齐路由的有效值（包括 ADR-011 的单折角模式），再使用 provider 的 orthogonalCornerRadius，最后为 0。mode/style 不改变路由策略或方向。
 
 Core Scope style/defaults/reset 继续按现有 Flow drawing 与 Graph lowering 链路消费；Flow 已物化的字段是 Graph 显式字段，没有物化的字段保留原有 Core 默认能力。defaults.reset 不清除 Theme。Flow 不向 Core composite context 注入领域状态，也不新增专用 renderer 分支。
 

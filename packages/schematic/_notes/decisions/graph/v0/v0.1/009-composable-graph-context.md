@@ -1,6 +1,6 @@
 ---
-description: Graph 可选上下文与可组合 Relation 引用；背景：Graph 的长期职责只是提供可选 graphTheme 与完整 Core Scope surface
-keywords: 'Graph、Relation、graphTheme、theme、IRGraph.children、IRChild'
+description: Graph 可选上下文与可组合 Relation 引用；背景：Graph 的长期职责只是提供可选 Graph defaults/rules 与完整 Core Scope surface
+keywords: 'Graph、Relation、graphDefaults、graphRules、theme、IRGraph.children、IRChild'
 ---
 
 # ADR-009：Graph 可选上下文与可组合 Relation 引用
@@ -15,7 +15,7 @@ keywords: 'Graph、Relation、graphTheme、theme、IRGraph.children、IRChild'
 
 Entity 与 Relation 可以独立下沉为 Core Node 与 Path，但旧 Graph Source 把它们限制为 Graph root 的直接成员，并由 Graph 建立 Entity identity 索引。这让 Graph 变成成员数据库，也阻止 Relation 连接普通 Core Node 或其它已经通过 Core namespace 发布引用几何的内容
 
-Graph 的长期职责只是提供可选 `graphTheme` 与完整 Core Scope surface。它不应成为 Entity / Relation 的必需父节点，也不应复制 Core 的 identity、namespace、target lookup、样式级联和重复 id 诊断
+Graph 的长期职责只是提供可选 `graphDefaults` / `graphRules` 与完整 Core Scope surface。它不应成为 Entity / Relation 的必需父节点，也不应复制 Core 的 identity、namespace、target lookup、样式级联和重复 id 诊断
 
 ## 决策
 
@@ -23,9 +23,9 @@ Graph 的长期职责只是提供可选 `graphTheme` 与完整 Core Scope surfac
 
 `IRGraph.children` 与 Core `IRChild` 同源，可以包含 Graph semantic composite、普通 Core 内容、Layout、Plot、Table 和其它已注册 composite。Graph 不维护成员白名单、集合、索引、membership 或 Graph-root 重复检查
 
-Graph 组合完整 `IRScopeProps`，并原样下沉为一个 Core Scope。id、localNamespace、Core `theme`、transform、placement、default channels、resetStyle、zIndex、clip、boundingShape、meta 和 animations 保持 Core 的字段名、默认、继承与诊断。Graph 不自动建立 local namespace，也不生成默认 id
+Graph 组合完整 `IRScopeProps`，并原样下沉为一个 Core Scope。id、localNamespace、Core `theme`、transform、placement、defaults 默认通道与 defaults.reset、zIndex、clip、boundingShape、meta 和 animations 保持 Core 的字段名、默认、继承与诊断。Graph 不自动建立 local namespace，也不生成默认 id
 
-`graphTheme` 是 Graph 唯一新增的领域上下文，只影响 Entity / Relation。Graph 本身不拥有 child layout；独立渲染时由普通 Layout host 建立 Scene，嵌入已有 Scene 时只贡献该 Scope。width、height、viewBox、renderer、runtime 和 DOM props 属于 standalone host，不进入 Source IR
+`graphDefaults` / `graphRules` 是 Graph 的领域上下文，按 ADR-017 影响可见后代 Entity / Relation 与 Group / Block shell。Graph 本身不拥有 child layout；独立渲染时由普通 Layout host 建立 Scene，嵌入已有 Scene 时只贡献该 Scope。width、height、viewBox、renderer、runtime 和 DOM props 属于 standalone host，不进入 Source IR
 
 ### Entity 与 Relation 是独立 composite
 
@@ -35,11 +35,11 @@ Graph、Entity 与 Relation 的 id 都保持可选。省略 id 时不生成 Sour
 
 ### Graph Theme 传播边界
 
-`graphTheme` 沿 schema 可见的 Source 内容树向 Entity / Relation 传播：
+`graphDefaults` / `graphRules` 沿 schema 可见的 Source 内容树向 Entity / Relation 传播：
 
 - 普通 Core Scope 不切断继承
 - 嵌套 Graph / Group 按从外到内的顺序叠加显式 layer
-- 带显式 Core `theme` 的 Scope、Graph 或 Group 建立新 baseline，并切断外层 `graphTheme`
+- 带显式 Core `theme` 的 Scope、Graph 或 Group 建立新 baseline，但保留祖先作者 defaults/rules
 - 第三方 composite 内部保持不透明，Graph 不猜测其生成内容
 
 该上下文只存在于 lowering 的中间消费态，不进入 authored Source，不增加 Core context bag，也不改变普通 Core、Plot、Table 或 renderer。Entity / Relation 的显式 appearance 始终具有最高优先级
@@ -59,7 +59,8 @@ type IRGraph = IRScopeProps &
   Readonly<{
     namespace: 'graph';
     type: 'graph';
-    graphTheme?: IRGraphThemeLayer;
+    graphDefaults?: IRGraphDefaults;
+    graphRules?: ReadonlyArray<IRGraphRule>;
     children?: ReadonlyArray<IRChild>;
   }>;
 ```
@@ -74,7 +75,7 @@ Direct IR、React 与 Vanilla 构造同一 Graph / Entity / Relation Source IR�
 - Entity / Relation 没有 Graph 祖先时仍可 resolve / lower
 - 省略 id 不产生任何 identity；只有显式 id 参与 Core namespace
 - Relation endpoint 使用 Core NodeTarget 的 lookup、anchor、boundary、offset 与诊断
-- `theme` 保持 Core Theme 语义，`graphTheme` 只影响可见 Entity / Relation
+- `theme` 保持 Core Theme 语义，`graphDefaults` / `graphRules` 影响可见 Entity / Relation 与 Group / Block shell
 - 旧 Graph-local `theme`、Graph-only endpoint、成员索引、隐式 Graph wrapper 和 Variant 轴直接删除，不保留 alias 或 fallback
 
 ## 结果

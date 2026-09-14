@@ -36,14 +36,14 @@ LayoutProposal
   -> replay(result, wrapper) 或 raise(failure)
 ```
 
-Core 拥有 proposal 校验、上下文化 child 求值、resolved slot、真实 bounds、guide、probe transaction、failure isolation、replay 与 occurrence diagnostics。Standard 拥有 Box、Flex、Grid 与 Overlay solver 的领域规则：如何发 proposal、如何形成 line / track、如何分配和使用 item slot，以及 alignment、overflow、clip 与 artifact。
+Core 拥有 proposal 校验、上下文化 child 求值、resolved slot、真实 bounds、guide、probe transaction、failure isolation、replay 与 occurrence diagnostics。Layout 拥有 Box、Flex、Grid 与 Overlay solver 的领域规则：如何发 proposal、如何形成 line / track、如何分配和使用 item slot，以及 alignment、overflow、clip 与 artifact。
 
 ### Proposal 公共类型
 
 `ChildLayoutAxisConstraint` 与 `ChildLayoutConstraint` 删除，由完整双轴 proposal 取代：
 
 ```ts
-import type { ValueOf } from '../../shared';
+import type { ValueOf } from '@retikz/foundation';
 
 export const LayoutAxisProposalKind = {
   Intrinsic: 'intrinsic',
@@ -237,24 +237,11 @@ export type LayoutChildFailure = Readonly<{
 
 运行时合法性不依赖 TypeScript brand，而由 compile-local owner table 与 failure object identity 校验；spread / copy 后的新对象不属于该 owner。
 
-`layoutChild()` 的 catch boundary 固定为：proposal 完成校验、clone / freeze 与 sandbox state 创建之后，进入 probed child 的唯一 `compileChildrenToPrimitives` dispatch 之前开始；child dispatch 完成并且 result / transaction 通过 Core contract validation 后结束。只有该边界内的 recoverable child compile failure 转成 `failed` outcome，此前产生的 primitive、resource、warning、artifact、namespace、identity、observation 与 replay state 全部留在失败 transaction 中。未选中的 failure 对最终 `CompileResult` 零可观察。
+child 输入、provider、引用或文字度量执行失败可以形成 opaque failed probe；未选中失败对最终 CompileResult 不产生可观察影响。非法 callback / provider 输出、replay / failure ownership 误用和 Core invariant 属于立即失败，不能伪装成可丢弃候选
 
-内部必须用不可伪造的错误类别区分 recoverable child failure、公开 callback / provider output contract violation与 Core invariant，不允许按 message 文本判断：
+失败保留原始 cause、provider、Source path 与 probe occurrence；raise 在原 callback 中提升同一失败，不把来源改成 raise 调用位置。最终 replay 将候选来源映射为实际输出 occurrence，跨层诊断不重复包裹
 
-- `LayoutProbeRecoverableError` 表示 candidate child 的输入或环境在真实 compile 中失败，包括 provider / schema resolution、未注册或未解析引用、nonlocal reference、composite depth / cycle、第三方 provider 普通抛错、text / TeX lowerer 与 injected measurer 抛错。
-- `CompositeContractError` 表示 definition callback 返回 malformed result、非 JSON / hostile output child、无效顶层 child discriminator、result / failure / replay / scope ownership misuse或其它公开 callback contract violation。已完成 detached snapshot 且顶层 discriminator 合法的普通 `IRChild` 仍进入既有 compile dispatch；其详细 schema / provider 可编译性、既有 warning 与 recoverable failure 语义不前移到 callback output boundary。
-- `CompileInvariantError` 表示 Core 自身不可能状态与 transaction invariant 破坏。
-
-分类与转换遵守以下边界：
-
-1. `layoutChild()` 收到公开 contract violation 或 Core invariant 时原样 fail-loud；recoverable child failure 转为 public failed probe；其它 ordinary throw 先安全规范化为 recoverable failure。
-2. provider 主动抛出的普通错误属于 candidate failure；provider 一旦返回，malformed primitive、geometry、metrics、iterator 或 callback handle 属于公开 contract violation，不得伪装成可丢弃 probe。
-3. 任何继续参与 layout、resource、artifact 或 Scene 提交的 callback / provider 返回值，都必须先形成 detached snapshot 或单次读取为局部值；后续校验与消费不能再次读取 raw object。
-4. probed child 输入或 options 的 schema failure 保持 candidate failure；layout-aware definition 自身返回值违反 Core contract 时立即 fail-loud。
-
-第三方 provider 直接抛出的 ordinary `Error` 由 `layoutChild()` catch boundary 规范化为 recoverable error；非 `Error` throw 被规范化为带稳定 message 的 `Error`，原始 thrown value 保存在 `cause` 中。创建 failure 时立即快照原始 cause、failing provider / composite key、source path 与完整 expansion occurrence，不在后续 `raise()` 的调用位置重新猜测。Public `LayoutChildFailure` 仍不暴露这些内部字段。
-
-`CompileOccurrenceLocator.expansionPath` 以 `probe[index]` 记录 callback 内真实 `layoutChild()` candidate dispatch，以 `replay[index]` 记录最终 output commit。Nested failure 逐层 `raise()` 时必须保留完整 probe 链；resolved transaction 提交时仍把 probe-origin 前缀重映射为最终 replay output index，成功 artifact 的既有 replay occurrence 不漂移。内部 recoverable error 另存不含 provider / occurrence 外壳的 raw detail，跨层提升只格式化一次公开诊断，不能嵌套重复 wrapper message。
+Provider 精确 schema 的解析结果按 [ADR-035](./035-json-undefined-field-contracts.md) 消费；变异隔离不建立第二套输入准入契约。所有继续参与编译的输出遵循所属公开 contract，不能通过重新读取可变 callback 返回值改变已验证事实
 
 以下 fatal error 仍立即 fail-loud，不包装成 probe failure：
 
@@ -291,10 +278,6 @@ ADR-015 的 one-use replay、runtime Scope output、显式 composite allocation 
 5. `visualBounds` 保持 probe 时未受 parent wrapper clip 影响的 child-local包络；最终 Scene visual contribution 继续按 wrapper clip / transform 计算。
 
 Replay 仍是 callback-local、compile-local、opaque、one-use。重复 replay、跨 compile、跨 callback、伪造 result 或把 discarded result 直接放入 `scope()` 都在任何 sink 写入前 fail-loud。
-
-### Compile owner 放置
-
-新增逻辑按既有分层拆成稳定 owner：Composite contract 层拥有 proposal、guide、probe、failure 与 context 公共表面；compile orchestration 拥有 validation、detached result、resolved slot、failure classification、sandbox、outcome 与 replay / raise；Scene contract 统一验证 renderer-neutral provider output；Node 与 Text 继续拥有真实 built-in layout；bounds 层只计算 allocation / visual geometry，不选择 slot 或从 bounds 推导 guide。Occurrence 使用结构化 segment 区分候选 probe 与最终 replay，消费方不得从 message 文本反向解析层级。
 
 ## DSL / API 表面
 
@@ -348,33 +331,13 @@ React 与 Vanilla 继续通过现有 compile options 注入完全相同的 Compo
 
 下游 consumer 必须按 breaking contract 迁移 proposal、probe outcome、guides 与 failure raising；Standard 继续拥有自己的 solver 语义
 
-## 长期边界
-
-- Flex line formation、grow / shrink、wrap、free-space distribution
-- Grid track、fraction、span、auto-placement、subgrid 或 masonry
-- Overlay participation、z-order、LayoutItem、item key 与 Standard artifact
-- CSS writing mode、百分比、aspect-ratio transfer 与完整 min-content / max-content
-- primitive geometry scale、renderer bounds readback、DOM reflow 或异步 measurer
-- 跨 compile replay / probe cache、incremental layout solver 与 layout-aware subtree 局部复用
-- Plot、Table、Gantt、Graph 或其它领域 IR / solver
-- React / Vanilla layout authoring sugar
-
 ## 最终实现摘要
 
-实现沿用现有 Composite registry 与 child compile 主链，没有新增 IR、Scene primitive、layout registry 或 renderer API：
-
-- `LayoutProposal` 支持双轴 intrinsic minimum / natural、range 与 exact；所有输入严格校验、detached、deep-frozen，并把 `-0` 规范为 `0`
-- `LayoutChildResult` 同时返回 proposal 求值后的无原点 `slotSize`、真实 `allocationBounds`、最终 `visualBounds`、可选 alignment guides 与 one-use replay
-- plain text 在同一 injected measurer 与 authored-line 规则上计算 minimum / natural contribution，并在有限宽度下重排；mixed / TeX 与固定几何可拒绝 proposal，真实 allocation 不被伪装成 slot
-- child probe 在 forked namespace、resource、identity、warning、artifact、observation 与 topology transaction 中执行；未选中的 resolved / failed probe 对最终 `CompileResult` 零可观察
-- 普通 provider 执行失败形成 opaque recoverable failure；非法 provider output、replay misuse 与 Core invariant 保持 fatal，只有选中的 failure 可由原 callback 通过 `raise()` 提升
-- replay / runtime Scope output 在提交前递归完成 whole-tree preflight，包含 wrapper 与 nested Scope clip；预检成功后统一消费 handle 与 token，避免部分提交
-- first / last baseline 来自同次真实 text metrics；translate 与轴保持 scale 可传播，无法继续表示为单一轴标量的 guide 被省略
-- Table consumer 已迁移到完整 proposal / probe contract；React `<Text>` 与内置 contour provider 同步移除显式 `undefined`，保证相关 authoring / provider output 保持 JSON-safe
+双轴 proposal、opaque probe/failure、one-use replay 和真实 alignment guide 已由 Core 的统一 compile 契约提供。容器 solver 由 Layout 拥有，固定 Node 宽度另按 ADR-038 在同一文字与 shape 路径消费，不改变 slot 与 allocation 的区别。
 
 ## 遗留风险与后续
 
 - 本合同只冻结同步、compile-local probe / replay；不支持异步测量、跨 compile cache 或 incremental layout solver
 - mixed / TeX 当前保持原子 contribution；完整 run-level intrinsic sizing、CSS writing mode、百分比与 aspect-ratio transfer 不在本 ADR 范围
 - 非轴保持变换后的 alignment guide 被省略；需要二维直线、点或区域 guide 时应另立公开空间引用能力
-- Standard 仍需在自己的 ADR 中实现并验证 Box / Flex / Grid / Overlay slot 规则、baseline policy、overflow 与 clip；Core 不拥有这些 solver 语义
+- Layout 继续拥有 Box / Flex / Grid / Overlay slot 规则、baseline policy、overflow 与 clip；Core 不拥有这些 solver 语义

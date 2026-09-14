@@ -70,7 +70,7 @@ type IRNode = {
 };
 ```
 
-`IRNodeStyle` 组合既有 graphic paint、opacity、stroke width、effects、`dashed` / `dotted` / `dashPattern` / `dashOffset`、`textColor` 与 `font`；`IRNodeLayout` 组合 `minimumSize`、`padding`、`margin`、`align`、`lineHeight` 与 `maxTextWidth`。Node 的 `shape`、`boundary`、`cornerRadius`、`rotate` 与 `scale` 仍是显式几何事实。`scale` 保留原有尺寸与连接点语义，不因影响布局而改成布局策略。
+`IRNodeStyle` 组合既有 graphic paint、opacity、stroke width、effects、`dashed` / `dotted` / `dashPattern` / `dashOffset`、`textColor` 与 `font`；`IRNodeLayout` 组合 ADR-038 的 `width`、`minimumSize`、`padding`、`margin`、`align`、`lineHeight` 与 `maxTextWidth`。Node 的 `shape`、`boundary`、`cornerRadius`、`rotate` 与 `scale` 仍是显式几何事实。`scale` 保留原有尺寸与连接点语义，不因影响布局而改成布局策略。
 
 Path 把既有 graphic paint、opacity、effects、`strokeWidth`、`dashPattern`、`dashOffset`、`lineCap`、`lineJoin` 与 `fillRule` 收进 `style`。provider 选择、显式步骤、标签、marks、圆角和整体几何变换保持根层：
 

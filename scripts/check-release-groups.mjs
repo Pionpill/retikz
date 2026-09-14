@@ -106,8 +106,8 @@ export function validateEsmPublishContract(manifest) {
     diagnostics.push(`${packageName} must set type to module`);
   }
 
-  if (manifest.engines?.node !== '>=24') {
-    diagnostics.push(`${packageName} must set engines.node to >=24`);
+  if (manifest.engines?.node !== '>=22.12.0') {
+    diagnostics.push(`${packageName} must set engines.node to >=22.12.0`);
   }
 
   const sourceExports = manifest.exports;

@@ -84,7 +84,7 @@ type IRFlowLayout =
     }>;
 ```
 
-Linear 保留一维排列语义：`direction` 必填，`align` 缺省为 `center`，`gap` 缺省使用进入该 Layout 时的有效 `nodeGap`。Grid 的 `rowGap`、`columnGap` 独立缺省为进入该 Layout 时的有效 `nodeGap`，`reserveLabelSpace` 缺省为 `true`；显式 `0` 仍为有效间距，开启 label 预留时可被对应标签尺寸扩张。两者均为有限非负数，不把 `rankGap` 解释成网格行距。
+Linear 保留一维排列语义：`direction` 必填，`align` 缺省为 `center`，`gap` 缺省优先使用作者设置的有效 `nodeGap`，否则按物理轴使用 Definition 的 placementGap。Grid 的 `rowGap`、`columnGap` 独立优先继承作者设置的有效 `nodeGap`，否则分别使用 Definition 的 vertical/horizontal placementGap（内置 32/48），`reserveLabelSpace` 缺省为 `true`；显式 `0` 仍为有效间距，开启 label 预留时可被对应标签尺寸扩张。两者均为有限非负数，不把 `rankGap` 解释成网格行距。
 
 Grid 不接受 Linear 的 `direction`、`gap` 或 `align`；Linear 不接受 Grid 字段。`rank` 在两种变体中都只约束整个 Layout 在外层自动布局中的层级，不影响内部单元格位置。
 
@@ -122,5 +122,5 @@ artifact 继续使用 `kind: 'layout'`、authored id、bounds 和有序 elements
 - 非法矩阵单元格或对象映射、重复 child、重叠坐标、placement 缺失、非 direct child 引用和行列范围超限在 Source 边界拒绝，诊断定位到 Layout 及相应 `placements` 字段；已有未知 child、重复包含和循环包含继续沿用 Flow 引用与 containment 诊断
 - 不支持的 placement kind 使用 `DIAGRAM_FLOW_LAYOUT_CAPABILITY_UNSUPPORTED`，给出 Definition、Layout id 与缺失的 placement kind
 - provider 改写固定 placement 或输出错误的 child 尺寸时使用 `DIAGRAM_FLOW_LAYOUT_OUTPUT_INVALID`；执行组合失败保留底层 cause，沿用 Diagram 物化失败边界，不静默降级
-- 本决策被采纳并实施时，替代 ADR-007 的一维专属 Layout 形态，并更新 ADR-004/005 的 placement 输入、能力预检和结果保证；其余 Graph 语义、包含关系、identity 与同步执行边界保持有效
+- 本决策替代 ADR-007 的一维专属 Layout 形态，并更新 ADR-004/005 的 placement 输入、能力预检和结果保证；其余 Graph 语义、包含关系、identity 与同步执行边界保持有效
 - 所有 Linear Source 和 authoring 调用显式补 `kind: 'linear'`，自定义 Flow layout Definition 显式声明 `placementKinds`。无 kind 的旧 Layout 不自动推断为 Linear，不保留旧 schema、alias 或双轨入口

@@ -5,13 +5,13 @@ keywords: 'Block、width、minWidth、height、minHeight'
 
 # ADR-012：Block 整体宽度约束
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-08-29
-- 关联：[Graph v0.1 alpha.2 roadmap](./roadmap.md) · [Block 开放内容与布局容器](./013-block-open-content.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
+- 关联：[Graph v0.1 roadmap](./roadmap.md) · [Block 开放内容与布局容器](./013-block-open-content.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
 
 ## 背景与目标
 
-Block 的任意有序 children 可以根据内容形成自然宽度，但代码和工程结构图通常需要多个 Block 保持统一或至少不小于某个阅读宽度。当前 Block 只能由内容贡献宽度，作者无法声明外层边框应采用的固定宽度或最小宽度
+Block 的任意有序 children 可以根据内容形成自然宽度，但代码和工程结构图通常需要多个 Block 保持统一或至少不小于某个阅读宽度。仅由内容贡献宽度无法表达作者对外层边框固定宽度或最小宽度的要求
 
 本决策为 Block 增加外层宽度约束，同时保持宽度计算属于 Layout / Surface 的既有 allocation 语义。它只解决 Block 的水平整体尺寸，不扩展高度、单个 child 尺寸或 Diagram 布局结果
 
