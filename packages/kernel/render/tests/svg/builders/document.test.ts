@@ -140,16 +140,16 @@ describe('renderToSvgString —— 尺寸注入', () => {
     expect(out).toContain('height="240"');
   });
 
-  it('只给 width → 仅注入 width，不注入 height 属性', () => {
+  it('只给 width → 按内容比例推导 height', () => {
     const out = renderToSvgString(sized(), { idPrefix: 's', width: 320 });
     expect(out).toContain('width="320"');
-    expect(out).not.toMatch(/\bheight="/);
+    expect(out).toContain('height="320"');
   });
 
-  it('缺省 width/height → 不写显示尺寸属性，viewBox 仍由 scene.layout 决定', () => {
+  it('缺省 width/height → 使用 scene.layout 的固有尺寸', () => {
     const out = renderToSvgString(sized(), { idPrefix: 's' });
-    expect(out).not.toMatch(/\bwidth="/);
-    expect(out).not.toMatch(/\bheight="/);
+    expect(out).toContain('width="10"');
+    expect(out).toContain('height="10"');
     expect(out).toContain('viewBox="0 0 10 10"');
   });
 

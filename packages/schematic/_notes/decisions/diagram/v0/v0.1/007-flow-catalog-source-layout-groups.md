@@ -33,7 +33,7 @@ Flow Source 已采用平级 catalog 与 owner-side `children`：Entity、Group �
 
 ### Group 只表示可见语义边界
 
-`IRFlowGroup` 不再有 `kind`。它始终投影为 Graph Group，可配置 `label`、`style`、`rank`、自身直接 children 的自动 `layout`，并可作为 Relation endpoint。
+`IRFlowGroup` 不再有 `kind`。它始终投影为 Graph Group，按 ADR-008 配置 `caption.title`、Surface 同名字段、`rank`、自身直接 children 的自动 `layout` 与独立 `routing`，并可作为 Relation endpoint。
 
 Group 的 `layout` 是 Flow layout provider 的局部意图：provider 可以依据 Relation、rank 和 direction 自动排列其直接 children。Group 继续拥有真实 shell minimum、content insets、Graph identity、artifact 与 `role: 'group'` 的 spatial handle。
 
@@ -41,7 +41,7 @@ Group 的 `layout` 是 Flow layout provider 的局部意图：provider 可以依
 
 `IRFlowLayout` 使用必填 `kind: 'linear' | 'grid'` 闭合联合，完整字段与行列语义由 [Flow Grid 二维对齐布局](./010-flow-grid-layout.md) 定义。两种布局共享 `id`、`rank` 和 `children`。
 
-Linear 的 `direction` 必填，`gap` 省略时继承有效 `nodeGap`，`align` 省略时为 `center`。Grid 的 `placements` 推荐以二维矩阵指定直接 children 的单元格，`null` 保留空格，也支持 `{ childId: { row, column } }` 映射；两种结构均保持两轴居中，行列间距独立继承有效 `nodeGap`。`rank` 只约束整个 Layout 在外层自动布局中的位置。
+Linear 的 `direction` 必填，`gap` 省略时继承作者有效 `nodeGap`，否则取 Definition 物理轴默认，`align` 省略时为 `center`。Grid 的 `placements` 推荐以二维矩阵指定直接 children 的单元格，`null` 保留空格，也支持 `{ childId: { row, column } }` 映射；两种结构均保持两轴居中，行列间距独立继承作者有效 `nodeGap`，否则分别取 Definition vertical/horizontal 默认。`rank` 只约束整个 Layout 在外层自动布局中的位置。
 
 Layout 无 label、style、shell、Graph identity 或 endpoint 能力，可以和 Group 相互嵌套。Linear 按 children 顺序排列；Grid 的 children 只决定包含与绘制顺序，placements 决定空间位置。Layout 内 Relation 不产生 rank edge，也不重排 children；所有 Relation 都在完整 bounds 产生后统一 routing。
 
@@ -104,7 +104,7 @@ type FlowRelationsProps = Readonly<{
 }>;
 ```
 
-字符串 Entity item 确定性展开为 `{ id: value, text: value }`，不 slug 化、不生成序号，也不维护隐藏 identity。需要稳定 id、国际化文本或其它字段时必须使用对象形式。Relation tuple 只表达 `source` 与 `target`；label、role、kind、status、direction、style 或 layout 使用对象形式。React 不解析 `"A -> B"` 等 Relation 字符串语法。
+字符串 Entity item 确定性展开为 `{ id: value, text: value }`，不 slug 化、不生成序号，也不维护隐藏 identity。需要稳定 id、国际化文本或其它字段时必须使用对象形式。Relation tuple 只表达 `source` 与 `target`；label、role、kind、status、direction、style 或 routing 使用对象形式。React 不解析 `"A -> B"` 等 Relation 字符串语法。
 
 `complete` 默认为 `false`，此时批量 marker 只是追加收集器：`FlowEntities` 可以作为 Flow 根、Group 或 Layout 的 child；每个 item 在 marker 所在位置按数组顺序加入对应 catalog 与 owner `children`。`FlowRelations` 只允许位于 Flow 根，并按数组顺序加入根 `relations`。两个批量 marker 都可与单项 marker、Fragment 和其它批量 marker 混用；整体顺序按 JSX traversal 与各 `items` 顺序确定。空 `items` 是无操作，最终 Flow Source 是否满足非空要求仍由现有 schema 与 resolve 判断。
 
@@ -122,14 +122,6 @@ type FlowRelationsProps = Readonly<{
 - React 批量 Relation 的 tuple 只在 Flow 根有效；放入 Group 或 Layout 时沿用现有 `relation-outside-root` authoring 失败
 - React `complete` marker 与当前 owner 的其它同类 marker 冲突时使用 `DIAGRAM_REACT_FLOW_CHILD_INVALID`；Entity reason 为 `complete-entities-conflict`，Relation reason 为 `complete-relations-conflict`
 - 旧 `groups[].kind` 与 `groupKind` artifact 字段为非法或不存在，不提供 migration、alias 或双轨
-
-## 权衡与边界
-
-平级 catalog 优化的是 LLM 局部编辑、类别辨识和持久化深度，不降低真实 containment 与 routing 的计算复杂度。Layout 的固定 placement 能组合出复杂二维结构，但它不是任意 constraint solver，不提供 wrap、grow、shrink、absolute positioning 或 Relation 驱动排序。
-
-W3C Flexbox 验证了一维容器和嵌套组合的成熟模型；ELK 与 Graphviz 则证明 compound graph scope 和关系布局属于另一类问题。因此 Flow 明确分开 Layout placement 与 Group / Relation layout，而不是继续用一个 Group 变体承载两者。
-
-Graph Block、Port、Layout endpoint、共享 child DAG、Editor 状态和可解析文本 DSL 不属于本决策范围。字符串 Entity item 是 React typed authoring shorthand，不建立 Flow 文本 grammar。
 
 ## 结果
 

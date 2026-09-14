@@ -1,5 +1,5 @@
 {
-  "node": "24.x",
+  "node": "22.x",
   "browser": "chromium",
   "playwright": "1.62.0",
   "viewport": {

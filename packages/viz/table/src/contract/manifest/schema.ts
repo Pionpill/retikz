@@ -6,7 +6,7 @@ import {
   PositiveIntegerSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
+import type { infer as ZodInfer, RefinementCtx, ZodArray, ZodEnum, ZodOptional } from 'zod';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';
@@ -207,7 +207,15 @@ export const TableDefaultsSourceRecordSchema = strictObject({
   defaults: TableDefaultsSchema.optional().describe('Sparse defaults contributed by this source.'),
 }).describe('One Table defaults source preserved in effective cascade order.');
 
-export const TableManifestStyleSchema = strictObject({
+/** 显式引用已有 schema，避免声明生成时展开深层 defaults 而丢失类型 */
+export const TableManifestStyleSchema: ReturnType<
+  typeof strictObject<{
+    style: ZodOptional<typeof NonBlankStringSchema>;
+    themeMode: ZodEnum<typeof ThemeMode>;
+    defaults: typeof TableDefaultsSchema;
+    layers: ZodArray<typeof TableDefaultsSourceRecordSchema>;
+  }>
+> = strictObject({
   style: NonBlankStringSchema.optional().describe(
     'Optional Core Theme style selecting a host-injected Table definition.',
   ),
@@ -341,7 +349,30 @@ const validateBorderDefaultsProvenance = (
   });
 };
 
-export const TableLayoutManifestSchema = strictObject({
+/** 复用各 manifest 字段的 schema 类型，保留发布声明中的精确 JSON 契约 */
+export const TableLayoutManifestSchema: ReturnType<
+  typeof strictObject<{
+    tableId: ZodOptional<typeof NonBlankStringSchema>;
+    allocationBounds: typeof TableManifestBoundsSchema;
+    visualOverflowBounds: typeof TableManifestBoundsSchema;
+    rows: ZodArray<typeof TableTrackManifestEntrySchema>;
+    columns: ZodArray<typeof TableTrackManifestEntrySchema>;
+    cells: ZodArray<typeof TableCellManifestEntrySchema>;
+    borders: ZodArray<typeof TableBorderManifestEntrySchema>;
+    style: typeof TableManifestStyleSchema;
+    encodings: ZodArray<
+      ReturnType<
+        typeof strictObject<{
+          id: typeof NonBlankStringSchema;
+          channel: ZodEnum<typeof TableVisualChannel>;
+          scaleName: typeof NonBlankStringSchema;
+          cellIndices: ZodArray<typeof NonNegativeIntegerSchema>;
+        }>
+      >
+    >;
+    legendDescriptors: ZodArray<typeof TableLegendDescriptorSchema>;
+  }>
+> = strictObject({
   tableId: NonBlankStringSchema.optional().describe('Optional public Table id.'),
   allocationBounds: TableManifestBoundsSchema.describe('Tracks and gaps allocation bounds.'),
   visualOverflowBounds: TableManifestBoundsSchema.describe('Visible Cell and border union in Table-local space.'),

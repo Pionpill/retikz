@@ -11,7 +11,7 @@ keywords: 'GeometryLabel、label、标签断线、路径、stroke'
 
 ## 背景与目标
 
-`Path.label` 与 `step.label` 已能在路径或单段的归一化位置完成文字测量、定位和旋转，但目前只接受单行内容。Graph Relation 直接复用该标签，Flow Relation 也投影到它；任一上层自行解释换行都会让测量、路由预留、绘制与断线拥有多份不一致的文字语义。标签与宿主描边仍作为彼此独立的 Scene 内容输出，居中标签时描边会穿过正文；依赖不透明背景覆盖只能在已知纯色表面上近似隐藏路径，也不会同步改变 Canvas 命中几何
+`Path.label` 与 `step.label` 已能在路径或单段的归一化位置完成文字测量、定位和旋转，原先只接受单行内容。Graph Relation 直接复用该标签，Flow Relation 也投影到它；任一上层自行解释换行都会让测量、路由预留、绘制与断线拥有多份不一致的文字语义。标签与宿主描边仍作为彼此独立的 Scene 内容输出，居中标签时描边会穿过正文；依赖不透明背景覆盖只能在已知纯色表面上近似隐藏路径，也不会同步改变 Canvas 命中几何
 
 目标是让 Path label 与 Node 正文使用同一 `TextBlock` 表达多行内容，并让无填充的内置 Stroke Path 在整个居中标签视觉盒处产生真实、renderer-agnostic 的描边断口。作者可以在单个标签上覆盖默认策略；标签定位、路径 identity、dash、mark、箭头与命中仍从同一条逻辑路径派生。Ribbon、其它 Path kind 与填充拓扑不进入断线能力
 
@@ -23,7 +23,7 @@ keywords: 'GeometryLabel、label、标签断线、路径、stroke'
 
 断线围绕标签原始采样锚点建立局部区间。区间长度由整个已测量文字块视觉盒在该处路径切线方向上的投影决定，并包含实际描边与线帽不会侵入文字视觉盒所需的确定性余量。Core 从最终 Stroke Path 几何移除该区间的描边，但不改变逻辑路径的参数域、采样位置或身份。多个有效区间重叠时取并集，不生成相互覆盖的碎片
 
-`interrupt: true` 对非居中标签使用同一切断规则，断口仍以该标签在宿主路径上的采样锚点为中心；`interrupt: false` 保持连续。该布尔字段只选择是否切断，不提供第二套间距、碰撞或路由配置
+`interrupt: true` 对非居中标签使用同一切断规则，断口仍以该标签在宿主路径上的采样锚点为中心；`interrupt: false` 保持连续。该布尔字段只选择是否切断；独立 gap 表示断口每侧的额外用户单位留白，缺省为 4，接受有限非负数，显式 0 不加额外留白，不改变标签位置或路由
 
 曲线的纯数值计算下沉到 `@retikz/math`：公开的 `CurveSegment` 与 `curve` 操作只描述 line、二次 / 三次贝塞尔、圆弧和椭圆弧的参数采样、近似弧长反解与保形切片。Core 把最终 `PathCommand` 映射为这些 plain geometry data 后消费结果；`@retikz/math` 不认识 PathCommand、标签、断口、文字度量、Scene、dash、箭头或 renderer。这样同一套曲线算法可被其它绘图或领域包复用，而 Core 继续是所有 Drawing 语义的唯一 owner
 
@@ -43,6 +43,7 @@ type IRGeometryLabel = {
   text: IRTextBlock;
   // other existing fields
   interrupt?: boolean;
+  gap?: number;
 };
 ```
 

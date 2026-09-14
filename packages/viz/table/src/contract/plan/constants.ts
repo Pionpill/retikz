@@ -64,6 +64,8 @@ export const TableCellAppearanceTracePath = {
   ContentNodeDefaultLineHeight: '/content/defaults/node/layout/lineHeight',
   /** Node 默认文本最大宽度 */
   ContentNodeDefaultMaxTextWidth: '/content/defaults/node/layout/maxTextWidth',
+  /** Node 默认精确边框宽度 */
+  ContentNodeDefaultWidth: '/content/defaults/node/layout/width',
   /** Node 默认虚线开关 */
   ContentNodeDefaultDashed: '/content/defaults/node/style/dashed',
   /** Node 默认点线开关 */

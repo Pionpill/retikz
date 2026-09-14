@@ -10,7 +10,7 @@
   "description": "retikz chart (Tier 3): family-aware Source, presentation, and typed recipes built on @retikz/plot.",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22.12.0"
   },
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

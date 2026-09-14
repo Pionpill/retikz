@@ -54,6 +54,7 @@ Core `polygon { sides: 6 }` 表达顶点均布在外接圆上的正六边形。S
 
 | 名称组                    | 长期几何语义                             |
 | ------------------------- | ---------------------------------------- |
+| `straightBarb`            | 两条直线构成的开放倒钩箭头               |
 | `bar`                     | 垂直于路径末端切线的开放线段             |
 | `crowFoot`                | 以路径接触点为汇合点的三条开放射线       |
 | `diamond` / `openDiamond` | 默认长宽比为 `2:1` 的对称扁菱形          |
@@ -64,7 +65,7 @@ Core `polygon { sides: 6 }` 表达顶点均布在外接圆上的正六边形。S
 
 `bar` 与 `crowFoot` 是继承当前 path stroke 的 hollow marker，不消费 fill，也不绑定阻断、cardinality 等领域含义。Diamond、Kite 与 Square 的实心变体使用 arrow fill，未显式设置时继承 path stroke；open 变体只描边并忽略 fill。显式 `length` 与 `width` 继续由 Core Arrow host 独立缩放
 
-所有 Marker 都提供确定的 line contact、tip extent 与 bounds，并复用 Core 的 Path shrink、start / end 放置、反向路径、双端 marker、hollow 外缘修正与主路径半描边接头覆盖。Standard 不增加 renderer 分支、递归 marker IR 或第二套端点参数模型
+所有 Marker 都按 Core ADR-034 提供必填 backX，并与 lineContactX、tipX 共同满足后缘、接合点、尖端的有限有序约束；同时提供确定的 bounds，并复用 Core 的 Path shrink、start / end 放置、反向路径、双端 marker、hollow 外缘修正与主路径半描边接头覆盖。Standard 不增加 renderer 分支、递归 marker IR 或第二套端点参数模型
 
 ### 装配与领域边界
 

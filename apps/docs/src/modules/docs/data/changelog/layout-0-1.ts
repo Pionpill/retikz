@@ -29,6 +29,30 @@ export const layoutV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.2',
+          date: '2026-09-14',
+          summary: {
+            zh: '统一稀疏 Source 与领域解析，支持省略 LayoutItem key。',
+            en: 'Unifies sparse Source and domain resolution and allows omitted LayoutItem keys.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：稀疏 Source', en: 'BREAKING: sparse Source' },
+              content: {
+                zh: '默认值在领域 resolve 中补全；factory、React 与 Vanilla 保留作者省略字段。LayoutItem key 可省略，有效 key 按容器内 Source 顺序确定且不写回 Source；显式重复 key 仍报错。',
+                en: 'Defaults are completed during domain resolution; factories, React, and Vanilla preserve omitted author fields. LayoutItem keys may be omitted: effective keys follow container Source order without being written back. Duplicate explicit keys still fail.',
+              },
+            },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.1',
           date: '2026-08-28',
           summary: {
@@ -64,6 +88,30 @@ export const layoutV01: Release = {
       highlights: [],
       subVersions: [
         {
+          version: 'alpha.2',
+          date: '2026-09-14',
+          summary: {
+            zh: '统一稀疏 Source 与领域解析，支持省略 LayoutItem key。',
+            en: 'Unifies sparse Source and domain resolution and allows omitted LayoutItem keys.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：稀疏 Source', en: 'BREAKING: sparse Source' },
+              content: {
+                zh: '默认值在领域 resolve 中补全；factory、React 与 Vanilla 保留作者省略字段。LayoutItem key 可省略，有效 key 按容器内 Source 顺序确定且不写回 Source；显式重复 key 仍报错。',
+                en: 'Defaults are completed during domain resolution; factories, React, and Vanilla preserve omitted author fields. LayoutItem keys may be omitted: effective keys follow container Source order without being written back. Duplicate explicit keys still fail.',
+              },
+            },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.1',
           date: '2026-08-28',
           items: [
@@ -87,6 +135,30 @@ export const layoutV01: Release = {
       },
       highlights: [],
       subVersions: [
+        {
+          version: 'alpha.2',
+          date: '2026-09-14',
+          summary: {
+            zh: '统一稀疏 Source 与领域解析，支持省略 LayoutItem key。',
+            en: 'Unifies sparse Source and domain resolution and allows omitted LayoutItem keys.',
+          },
+          items: [
+            {
+              label: { zh: 'BREAKING：稀疏 Source', en: 'BREAKING: sparse Source' },
+              content: {
+                zh: '默认值在领域 resolve 中补全；factory、React 与 Vanilla 保留作者省略字段。LayoutItem key 可省略，有效 key 按容器内 Source 顺序确定且不写回 Source；显式重复 key 仍报错。',
+                en: 'Defaults are completed during domain resolution; factories, React, and Vanilla preserve omitted author fields. LayoutItem keys may be omitted: effective keys follow container Source order without being written back. Duplicate explicit keys still fail.',
+              },
+            },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.1',
           date: '2026-08-28',

@@ -6,7 +6,7 @@ import * as diagramReactExports from '../src';
 describe('@retikz/diagram-react package shell', () => {
   it('declares the Diagram adapter release metadata', () => {
     expect(manifest.name).toBe('@retikz/diagram-react');
-    expect(manifest.version).toBe('0.1.0-alpha.1');
+    expect(manifest.version).toBe('0.1.0-alpha.2');
     expect(manifest.retikz).toEqual({
       domain: 'schematic',
       releaseGroup: 'diagram',

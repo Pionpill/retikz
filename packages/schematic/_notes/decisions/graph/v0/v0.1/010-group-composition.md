@@ -27,11 +27,11 @@ Group 是闭合结构能力，不建立 role、kind、predicate 或新的 Defini
 
 ### Scope、identity 与 Graph context
 
-Group 组合完整 `IRScopeProps`。id、localNamespace、Core `theme`、transform、placement、default channels、resetStyle、zIndex、clip、boundingShape、meta 与 animations 保持 Core 名称、默认、继承和诊断
+Group 组合完整 `IRScopeProps`。id、localNamespace、Core `theme`、transform、placement、defaults 默认通道与 defaults.reset、zIndex、clip、boundingShape、meta 与 animations 保持 Core 名称、默认、继承和诊断
 
 显式 Group id 对应最终 Surface 外框，并在父 namespace 中发布可引用几何；省略 id 时不生成任何 identity。Relation 连接 Group 时复用 Core NodeTarget，不建立 Group 专属 endpoint
 
-Group 可以声明 `graphTheme`，并沿用 ADR-009 的传播边界：只影响可见 Entity / Relation；普通 Core Scope 不切断继承；显式 Core `theme` 建立新 baseline；嵌套 Graph / Group 从外到内叠加；第三方 composite 内部保持不透明
+Group 可以声明 `graphDefaults` / `graphRules`，并沿用 ADR-009 的传播边界：影响可见 Entity / Relation 与后代 Group / Block shell；普通 Core Scope 不切断继承；显式 Core `theme` 建立新 baseline，但保留祖先作者 defaults/rules；嵌套 Graph / Group 从外到内叠加；第三方 composite 内部保持不透明
 
 ### Surface 外框
 
@@ -87,7 +87,8 @@ type IRGroup = IRScopeProps &
   Readonly<{
     namespace: 'graph';
     type: 'group';
-    graphTheme?: IRGraphThemeLayer;
+    graphDefaults?: IRGraphDefaults;
+    graphRules?: ReadonlyArray<IRGraphRule>;
     caption?: IRGroupCaption;
     labels?: ReadonlyArray<IRNodeLabel>;
     padding?: SurfaceInput['padding'];

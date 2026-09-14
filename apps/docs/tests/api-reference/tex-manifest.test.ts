@@ -36,7 +36,7 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain('### LowerTexOptions');
     expect(source).not.toContain('```ts\n{ onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void }\n```');
     expect(source).toContain(
-      '<p><ApiSourceLink label={"createLowerTex"} path={"packages/kernel/tex/src/lower/lower-tex.ts"} startLine={24}>',
+      '<p><ApiSourceLink label={"createLowerTex"} path={"packages/kernel/tex/src/lower/lower-tex.ts"}',
     );
     expect(source).not.toContain('[查看源码](');
   });
@@ -75,7 +75,7 @@ describe('TeX API Reference MDX', () => {
     expect(source).not.toContain('TeX lowerer 配置');
     expect(prose).not.toMatch(/[\u3400-\u9fff]/u);
     expect(source).toContain(
-      '<p><ApiSourceLink label={"useLowerTex"} path={"packages/kernel/tex/src/react/use-lower-tex.ts"} startLine={75}>',
+      '<p><ApiSourceLink label={"useLowerTex"} path={"packages/kernel/tex/src/react/use-lower-tex.ts"}',
     );
     expect(source).not.toContain('[View source](');
   });

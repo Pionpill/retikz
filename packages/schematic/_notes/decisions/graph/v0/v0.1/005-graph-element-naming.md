@@ -10,6 +10,8 @@ keywords: 'Graph、Group、Entity、Relation、GraphNode、GraphConnector'
 - 修订日期：2026-08-28
 - 关联：[Graph package family](./001-graph-package-family.md) · [Graph semantic Source IR](./003-semantic-ir-lightweight-lowering.md) · [Group contract](./010-group-composition.md)
 
+> 本文四类基础 composite 的命名和组合决策继续成立；[ADR-013](./013-block-open-content.md) 扩展 Block、BlockHeader、BlockSection 与 BlockRow，当前 GraphType 还包含这些开放内容组件。
+
 ## 背景与目标
 
 Graph package 已经提供领域语境，`GraphNode` 与 `GraphConnector` 的重复前缀不能准确表达图内部的语义单元，也会让 schema、Definition、factory、React 与 Vanilla 名称冗长。当前能力还包含可选 Graph 上下文和可见 Group 边界，需要一套能直接推断职责的稳定名称
