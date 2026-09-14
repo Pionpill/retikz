@@ -1,5 +1,4 @@
 import type { AnyCoordinateDefinition } from '../../../contract';
-
 import { extractCoordinateType } from '../../../contract';
 import { CARTESIAN_COORDINATES, POLAR_COORDINATES } from '../features';
 

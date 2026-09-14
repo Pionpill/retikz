@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeOwnerDefinition } from '../../src';
-
 import { createRuntimeOwnerRegistry, defineRuntimeOwner, RetikzRuntimeErrorCode } from '../../src';
 
 const defineNumberOwner = (key: string) =>

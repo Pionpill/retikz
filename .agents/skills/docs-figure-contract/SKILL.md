@@ -200,7 +200,7 @@ import { LogicFigureFrame, LogicFigureFrameTitle } from '@/modules/docs/componen
 
 按改动范围选择验证：
 
-- 只改正文说明：`pnpm exec prettier --write <changed-files>` + `git diff --check`。
+- 只改正文说明：`pnpm exec oxfmt <changed-files>` + `git diff --check`。
 - 新增 / 修改 ComponentPreview 插图：`pnpm --filter @retikz/docs exec tsc --noEmit`。条件允许（本地页面可访问，且浏览器或截图能力可用）时，必须打开真实文档页面，必要时获取整图与窄屏截图做视觉检查；不要只依赖源码审阅或类型检查。
 
 Codex Node REPL 提供 Playwright 时，导入 [`scripts/check-figure-preview.mjs`](scripts/check-figure-preview.mjs) 并传入页面 URL 与中英文 H2；脚本会检查四种组合并把临时截图写到 `notes/reports/figure-preview/`。运行时没有 Playwright 时，手动执行同一检查矩阵，不安装新的仓库依赖。

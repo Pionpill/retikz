@@ -6,7 +6,6 @@ import type {
   LayoutProposal,
   ThemeStyleDefinition,
 } from '@retikz/core';
-
 import {
   ChildSchema,
   compileToScene,
@@ -21,7 +20,6 @@ import { PathClipProvider } from '@retikz/standard/clip';
 import { literal } from 'zod';
 
 import type { DiagramDefinitionOptions, ResolvedDiagramDefinitionOptions } from '../src/_diagram';
-
 import {
   DiagramDefaultsSchema,
   DiagramFrameSchema,

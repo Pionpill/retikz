@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TexLoweringDiagnostic } from '../../src';
-
 import { createMathJaxLowerTex } from '../../src';
 
 const TIMEOUT = 20_000;

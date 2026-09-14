@@ -1,7 +1,6 @@
+import { compileToScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
-
-import { compileToScene } from '@retikz/core';
 import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';

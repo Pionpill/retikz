@@ -1,8 +1,7 @@
 import type { IRNodeTarget } from '../node-target';
+import type { IROffsetPosition } from '../offset-position';
 import type { PolarPosition } from '../polar-position';
-
-import { type IROffsetPosition } from '../offset-position';
-import { type IRPosition } from '../position';
+import type { IRPosition } from '../position';
 
 /**
  * 自包含端点类型（partway between 的端点）

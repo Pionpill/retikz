@@ -1,13 +1,17 @@
-import type { CSSProperties, FC, ReactNode, RefObject } from 'react';
-
 import { PanelLeftOpen } from 'lucide-react';
+import type { CSSProperties, FC, ReactNode, RefObject } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
-import { cn } from '@/lib';
 import type { Lang } from '@/i18n';
+import { cn } from '@/lib';
 
+import { ToolbarIconButton } from '../components';
+import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
+import { mergePreviewControlSlots } from '../controls';
 import type { PreviewPanelState } from '../preview-panel';
+import { PreviewPanel } from '../preview-panel';
+import { usePreviewTheme } from '../theme';
 import type {
   PreviewControlContract,
   ComponentPreviewDemoComponent,
@@ -18,12 +22,6 @@ import type {
   PreviewThemeStyleSelection,
   RendererMode,
 } from '../types';
-
-import { ToolbarIconButton } from '../components';
-import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
-import { mergePreviewControlSlots } from '../controls';
-import { PreviewPanel } from '../preview-panel';
-import { usePreviewTheme } from '../theme';
 import { PreviewControlPanel } from './PreviewControlPanel';
 import { PreviewResizeHandle } from './PreviewResizeHandle';
 

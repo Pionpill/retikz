@@ -7,11 +7,10 @@ import type {
   RowSelection,
   TransformContext,
 } from '../../contract';
-import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../schemas';
-import type { ExternalRow } from '../../shared';
-
 import { extractStatisticOperation } from '../../contract';
 import { RetikzDataError } from '../../error';
+import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 import { BUILTIN_STATISTICS_REDUCERS } from './reducers';
 import { BUILTIN_ROW_SELECTORS } from './selectors';
 

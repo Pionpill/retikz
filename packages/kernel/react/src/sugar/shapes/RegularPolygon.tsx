@@ -1,10 +1,9 @@
 import type { FC } from 'react';
 
-import type { PathVisualProps } from './shape-helpers';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
+import type { PathVisualProps } from './shape-helpers';
 import { pickPathVisual, regularPolygonVertices, requireXY } from './shape-helpers';
 
 /** `<RegularPolygon>` 形态：中心 + 外接圆半径（或边长）+ 边数 */

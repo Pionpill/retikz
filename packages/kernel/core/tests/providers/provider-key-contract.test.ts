@@ -1,10 +1,8 @@
-import type { ZodType } from 'zod';
-
 import { describe, expect, it } from 'vitest';
+import type { ZodType } from 'zod';
 import { literal, number, object, string, union } from 'zod';
 
 import type { IRScene, RetikzCoreErrorCodeValue } from '../../src';
-
 import {
   BUILTIN_PATH_KINDS,
   BUILTIN_SHAPES,

@@ -1,5 +1,4 @@
 import type { LayoutChildResult } from '@retikz/core';
-
 import { LayoutAlignmentGuideDimension } from '@retikz/core';
 
 import type {
@@ -11,10 +10,9 @@ import type {
   LayoutOverflowValue,
   LayoutSpacingArtifact,
 } from '../shared';
-import type { LayoutInsets, LayoutRect } from './geometry';
-
 import { LayoutAlignment, LayoutOverflow, LayoutSpacingKind } from '../shared';
 import { layoutEpsilon } from './distribution';
+import type { LayoutInsets, LayoutRect } from './geometry';
 import { outsetLayoutRect } from './geometry';
 
 /** Layout item artifact 基础字段的构造输入 */

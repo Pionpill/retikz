@@ -1,11 +1,9 @@
+import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotGuide } from '@retikz/plot';
-
-import { DataFieldType, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import { PlotGuide, PlotScale } from '@retikz/plot';
 
 import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
-
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { pointRecipeId } from './plot';
 

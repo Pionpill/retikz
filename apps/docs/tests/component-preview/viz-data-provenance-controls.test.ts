@@ -1,19 +1,18 @@
-import type { PlotLineageRun } from '@retikz/plot';
-
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import type { PlotLineageRun } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 
+import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls/define-preview-controls';
 import type {
   PreviewControlContract,
   PreviewControlsDefinition,
 } from '../../src/modules/docs/components/component-preview/types';
-
-import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls/define-preview-controls';
-import { previewControlContract as plotLineageZh } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.controls';
-import { previewControlContract as plotLineageEn } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.en.controls';
 import * as plotLineageOptions from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage-options';
 import { buildPlotLineageOptions } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage-options';
+import { previewControlContract as plotLineageZh } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.controls';
+import { previewControlContract as plotLineageEn } from '../../src/modules/docs/contents/viz/data/provenance/plot/plot-lineage.en.controls';
 
 const comparableContract = (contract: PreviewControlContract) => ({
   controls: JSON.parse(

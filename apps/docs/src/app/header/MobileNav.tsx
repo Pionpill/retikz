@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Menu } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useLocation } from 'react-router';
 

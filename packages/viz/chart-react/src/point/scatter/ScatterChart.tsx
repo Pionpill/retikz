@@ -1,10 +1,8 @@
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
 import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
-
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import type { IRScatterChart } from '@retikz/chart/point/scatter';
 
 import type { TypedChartCommonProps } from '../shared';
-
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectScatterChartDeclarations } from './declaration-collection';
 

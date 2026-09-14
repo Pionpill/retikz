@@ -1,5 +1,4 @@
 import type { RuntimeRevision } from '@retikz/runtime';
-
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject } from 'zod';
 
@@ -15,8 +14,6 @@ import type {
   LayoutProposal,
   ScenePrimitive,
 } from '../../src';
-import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
-
 import {
   ChildSchema,
   compileToScene,
@@ -35,6 +32,7 @@ import { NamespaceStack } from '../../src/compile/namespace';
 import { createCompileContext } from '../../src/compile/orchestration/context';
 import { createRuntimeTopologyTracker } from '../../src/compile/orchestration/runtime-topology';
 import { compileChildrenToPrimitives } from '../../src/compile/orchestration/traversal';
+import type { CompositeCompileSession } from '../../src/compile/orchestration/types';
 
 const scene = (children: IRScene['children']): IRScene => ({
   version: 1,

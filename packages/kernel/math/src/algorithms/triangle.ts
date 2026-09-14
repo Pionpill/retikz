@@ -1,8 +1,7 @@
-import type { Position } from '../primitives';
-import type { Circle } from './circle';
-
 import { DEFAULT_EPSILON } from '../constants';
+import type { Position } from '../primitives';
 import { vector2 } from '../primitives';
+import type { Circle } from './circle';
 
 /** 三角形外接圆与内切圆构造 */
 export const triangle = {

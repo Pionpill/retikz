@@ -1,10 +1,8 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlot } from '../../src/schemas';
-
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 const rows = [
@@ -114,7 +112,7 @@ const firstPathOf = (scope: IRScope): IRPath => scope.children.find(isPath) as I
 
 const moveXOf = (path: IRPath): number => {
   const move = path.children.find(step => step.kind === 'move');
-  return (move?.to as [number, number])[0];
+  return (move!.to as [number, number])[0];
 };
 
 const allNodes = (child: IRChild): Array<IRNode> => {

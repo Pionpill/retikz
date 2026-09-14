@@ -1,17 +1,23 @@
-# ADR-NN：<一句话标题>
+---
+description: 本决策解决的问题与检索边界，复制后替换为具体摘要
+keywords: 中文术语、EnglishTerm
+---
 
-> 起新 ADR：`cp _template.md <FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/NN-<slug>.md`
+# ADR-NNN：<一句话标题>
+
+> 起新 ADR：复制本模板到 `<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/NNN-<slug>.md`
 >
-> - 目录层级为 family / major / minor / channel；PATCH 不开 ADR 目录。
-> - 编号在 milestone 内从 `01` 重新开始，slug 用 kebab-case；各 viz family 独立演进。
-> - 本模板对应 [`develop-design`](../../../../../../../../.agents/skills/develop-design/SKILL.md)；结构变化时同步更新。
+> - 保留 family / major / minor，不设 patch / alpha / beta / rc 子目录。
+> - 同一 family / minor 从 `001` 连续编号，后续取最大编号加一，不复用、不随发布重排；slug 用 kebab-case。
+> - 本模板遵循 `develop-design`；复制后按目标位置填写关联链接并删除本说明。
+> - Roadmap 只管理中版本能力目标，可关联 ADR，但不按预发布序号分配任务；Accepted 表示设计获批，不表示实现或发布完成。
 > - ADR 从 Proposed 起就是长期功能与架构文档，不写施工细节，也不在 Accepted / 发布前再做“压缩”。
 > - 起 ADR 时同步在 ignored 镜像路径创建简略 `PLAN.md`；人工确认 ADR 后再细化 plan，并创建 `TEST_CONTRACT.md`、必要的 `TASK_STATE.md` 与 `REVIEW.md`。
 > - 简略 plan 记录目标 / 非目标、功能与包边界、能力完备性、同类设计、被否决方案、测试策略和待细化项。
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[所属家族 v0 roadmap §<段>](../../roadmap.md) · [能力域 completeness 文档](../../../../../architecture/<...>.md) · [架构设计 §<段>](../../../../../architecture/<...>.md)
+- 关联：<目标中版本 roadmap、适用 completeness 与架构设计的有效相对链接>
 
 ## 背景与目标
 

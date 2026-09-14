@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { StripChart } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { stripPalmerPenguinsData } from './strip-palmer-penguins.data';
 

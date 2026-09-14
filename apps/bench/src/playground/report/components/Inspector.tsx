@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Braces, CircleCheck, FileDiff, HeartPulse, TerminalSquare } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';

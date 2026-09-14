@@ -1,6 +1,3 @@
-import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
-import type { FC, ReactNode } from 'react';
-
 import {
   createFlexLayout,
   createGridLayout,
@@ -15,7 +12,9 @@ import {
 } from '@retikz/layout';
 import { FlexLayout, GridLayout, LayoutItem, OverlayLayout } from '@retikz/layout-react';
 import { createInputScene, Node } from '@retikz/react';
+import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import { normalizeScene } from '@retikz/vanilla';
+import type { FC, ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 type ForeignProps = Readonly<{ id: string }>;

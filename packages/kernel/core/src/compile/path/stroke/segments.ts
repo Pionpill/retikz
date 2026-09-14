@@ -1,15 +1,14 @@
 import { curve, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
 import type { IRPosition } from '../../../schemas';
+import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
+import { clipTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 import type { PathCommandEmitter } from './commands';
 import type { StrokePreviousTarget } from './cursor';
 import type { StrokeSamplingCollector } from './sampling';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
-import { bendControlPoints, foldSegmentSample, outInControlPoints } from '../../../shared/geometry';
-import { clipTarget, foldCornersOf, isAutoBoundaryTarget, samePoint } from '../host';
 
 /** 连接前驱目标与当前目标的普通 path segment step */
 export type StrokeSegmentStep = Extract<

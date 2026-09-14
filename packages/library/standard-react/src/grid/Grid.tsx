@@ -1,7 +1,6 @@
 import type { GridInput } from '@retikz/standard';
-import type { FC } from 'react';
-
 import { GridInputEmbedAdapter } from '@retikz/standard-vanilla';
+import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
 

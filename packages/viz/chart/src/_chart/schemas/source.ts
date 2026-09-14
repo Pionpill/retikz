@@ -1,10 +1,9 @@
 import type { JsonObject } from '@retikz/foundation';
-import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
-
 import { JsonObjectSchema, JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotSchema } from '@retikz/plot';
 import { SurfaceBackgroundSchema } from '@retikz/standard';
+import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 import { array, literal, number, object, strictObject } from 'zod';
 
 import { CHART_NAMESPACE } from '../constants';

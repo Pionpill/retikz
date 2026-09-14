@@ -1,10 +1,9 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformResultView } from '@/modules/docs/preview';
 
-import { boxplotSamples } from './transform-boxplot.data';
 import { boxOutlierOperationOf, boxSummaryOperationOf } from './transform-boxplot-preview';
+import { boxplotSamples } from './transform-boxplot.data';
 
 /** 箱线图统计组合的中文控件 */
 export const transformBoxplotControls = definePreviewControls({

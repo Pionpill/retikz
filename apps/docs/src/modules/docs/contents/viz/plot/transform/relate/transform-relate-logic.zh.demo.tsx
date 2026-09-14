@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** relate 的分组、双端点选择、字段投影与关系行输出 */
 const Demo: FC = () => (

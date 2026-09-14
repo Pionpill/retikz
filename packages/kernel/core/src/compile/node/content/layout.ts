@@ -1,10 +1,9 @@
 import type { TextLine } from '../../../contract';
 import type { CanonicalFont } from '../../../resolve';
-import type { LaidLine, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
-import type { NodeTextLayoutContext } from '../types';
-
 import { resolveTextLine } from '../../../resolve';
+import type { LaidLine, LineLayoutContext, TextFont, TextMeasurer } from '../../text';
 import { layoutInlineLine, normalizeTextMetrics } from '../../text';
+import type { NodeTextLayoutContext } from '../types';
 import { measureMinimumTextWidth, wrapText } from './text';
 
 /** 节点正文布局输入 */

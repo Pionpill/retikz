@@ -1,5 +1,4 @@
 import type { ValueOf } from '@retikz/foundation';
-
 import { RetikzError } from '@retikz/foundation';
 
 /** Graph Vanilla package 的稳定错误码 */

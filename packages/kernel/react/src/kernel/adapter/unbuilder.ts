@@ -1,12 +1,10 @@
 import type { IRNode, IRScene, IRStep, LoweredIRChild, LoweredIRScope, LowerIRToKernelOptions } from '@retikz/core';
-import type { ReactNode } from 'react';
-
 import { lowerIRToKernel } from '@retikz/core';
+import type { ReactNode } from 'react';
 import { createElement } from 'react';
 
-import type { NodeProps, ScopeProps } from '../components';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import type { NodeProps, ScopeProps } from '../components';
 import { Coordinate, Node, Path, Scope, Step } from '../components';
 import { NODE_FIELDS, PATH_FIELDS, pickDefined, SCOPE_FIELDS } from './fields';
 

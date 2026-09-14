@@ -1,10 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
-
 import { Frown, Meh, Smile } from 'lucide-react';
 
 import type { I18nKey } from '@/modules/docs/data';
 import type { DocDifficultyValue } from '@/modules/docs/data';
-
 import { DocDifficulty } from '@/modules/docs/data';
 
 /** 单个难度等级的共享视觉配置。 */

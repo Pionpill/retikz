@@ -1,13 +1,9 @@
 import type { RuntimeRevision } from '@retikz/runtime';
-
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
 
 import type { AnyCompositeDefinition, CompileObserverDefinition, CompileObserverOutput, Scene } from '../contract';
 import type { IRScene } from '../schemas';
 import type { RuntimePrimitiveMetadataTable } from './orchestration';
-import type { CompileOptions, CompileResult, CompositeArtifactOf, ObservedCompileResult } from './types';
-import type { CompileWarning, CompileWarningInput } from './warning';
-
 import {
   compileChildrenToPrimitives,
   createCompileContext,
@@ -19,6 +15,8 @@ import {
 } from './orchestration';
 import { materializeSpatialHandleIndex } from './orchestration/spatial-handle';
 import { assertFiniteLayout, computeLayoutFromBounds, viewBoxToLayout } from './scene';
+import type { CompileOptions, CompileResult, CompositeArtifactOf, ObservedCompileResult } from './types';
+import type { CompileWarning, CompileWarningInput } from './warning';
 import { formatCompileWarning } from './warning';
 
 export { CompileWarningCode } from './constants';

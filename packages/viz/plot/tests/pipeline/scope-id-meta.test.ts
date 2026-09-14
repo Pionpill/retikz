@@ -1,14 +1,12 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { SOURCE_INDEX } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlot } from '../../src/schemas';
-
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 /**

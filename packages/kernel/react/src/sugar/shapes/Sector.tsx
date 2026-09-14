@@ -2,12 +2,11 @@ import type { IRStepAnisotropicRadius } from '@retikz/core';
 import type { InputStepLabel } from '@retikz/vanilla';
 import type { FC, ReactElement } from 'react';
 
-import type { DslTarget } from '../../kernel/components';
-import type { AngleInput, PathVisualProps } from './shape-helpers';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import type { DslTarget } from '../../kernel/components';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
+import type { AngleInput, PathVisualProps } from './shape-helpers';
 import { pickPathVisual, polarXY, requireXY, resolveAngles } from './shape-helpers';
 
 /**

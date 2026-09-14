@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { defineArrow } from '@retikz/core';
 import { Draw, Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 颜色继承：Bracket 箭头是空心 stroke，emit 把 ctx.stroke 原样交给 marker。

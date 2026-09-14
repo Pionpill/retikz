@@ -145,26 +145,26 @@ zero scale 作为纯视觉变换合法；需要跨该 chain 反投影目标时�
     {
       label: 'transform 输入收敛',
       path: 'packages/kernel/core/src/compile/scope.ts',
-      startLine: 52,
-      endLine: 105,
+      startLine: 51,
+      endLine: 104,
     },
     {
       label: '相对定位解析',
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 43,
-      endLine: 82,
+      startLine: 42,
+      endLine: 81,
     },
     {
       label: 'scope chain 投影上下文',
       path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 63,
-      endLine: 101,
+      startLine: 62,
+      endLine: 100,
     },
     {
       label: 'path 延迟解析与原位回填',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 283,
-      endLine: 315,
+      startLine: 280,
+      endLine: 311,
     },
   ]}
 />
@@ -182,26 +182,26 @@ zero scale 作为纯视觉变换合法；需要跨该 chain 反投影目标时�
     {
       label: 'namespace frame 生命周期',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 156,
-      endLine: 183,
+      startLine: 155,
+      endLine: 182,
     },
     {
       label: 'namespace 注册',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 185,
-      endLine: 215,
+      startLine: 184,
+      endLine: 214,
     },
     {
       label: 'namespace inside-out 查找',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 241,
-      endLine: 253,
+      startLine: 240,
+      endLine: 252,
     },
     {
       label: 'Scope 父子 frame 编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 733,
-      endLine: 878,
+      startLine: 728,
+      endLine: 873,
     },
   ]}
 />
@@ -219,26 +219,26 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
     {
       label: 'Scope 固有包络',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 521,
-      endLine: 532,
+      startLine: 516,
+      endLine: 527,
     },
     {
       label: 'Scope Group 输出与子树编排',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 700,
-      endLine: 878,
+      startLine: 695,
+      endLine: 873,
     },
     {
       label: '矩形与圆形 synthetic layout',
       path: 'packages/kernel/core/src/compile/node/synthetic.ts',
-      startLine: 80,
-      endLine: 137,
+      startLine: 78,
+      endLine: 135,
     },
     {
       label: 'clip 解析与资源注册',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 238,
-      endLine: 328,
+      startLine: 237,
+      endLine: 327,
     },
   ]}
 />
@@ -247,19 +247,19 @@ Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 
 
 ### 上下文与输出
 
-| 属性             | 类型                                    | 默认值        | 描述                                                                                           |
-| ---------------- | --------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------- |
-| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / 嵌套 Scope                                                          |
-| `theme`          | `IRTheme`                               | 继承          | 逐字段覆盖后代 Composite 的有效 Theme；不改变 Core 图元样式                                    |
-| `transforms`     | `Array<InputTransform>`                 | —             | 七种局部变换；数组最后一项先作用                                                               |
-| `placement`      | `IRScopePlacement`                      | —             | 把 transforms 后的 `selfAnchor`（缺省 center）对齐父坐标系 target                              |
-| `id`             | `string`                                | —             | 把 Scope 包络注册成外部可引用句柄                                                              |
-| `localNamespace` | `boolean`                               | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                                             |
-| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | `scope.id` 的矩形或圆形包络                                                                    |
-| `clip`           | `IRClip`                                | —             | Scope 局部坐标中的内置或自定义裁剪区                                                           |
-| `zIndex`         | `number`（整数）                        | `0`           | Scope 整体在父层的稳定栈序                                                                     |
-| `meta`           | `Record<string, JSON 值>`               | —             | 透传到 GroupPrim，不参与布局或继承                                                             |
-| `animations`     | `Array<IRAnimationTrack>`               | —             | Scope 整体动画，不下传 children                                                                |
+| 属性             | 类型                                    | 默认值        | 描述                                                                                    |
+| ---------------- | --------------------------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / 嵌套 Scope                                                   |
+| `theme`          | `IRTheme`                               | 继承          | 逐字段覆盖后代 Composite 的有效 Theme；不改变 Core 图元样式                             |
+| `transforms`     | `Array<InputTransform>`                 | —             | 七种局部变换；数组最后一项先作用                                                        |
+| `placement`      | `IRScopePlacement`                      | —             | 把 transforms 后的 `selfAnchor`（缺省 center）对齐父坐标系 target                       |
+| `id`             | `string`                                | —             | 把 Scope 包络注册成外部可引用句柄                                                       |
+| `localNamespace` | `boolean`                               | `false`       | 隔离内部 id；`scope.id` 仍对外可见                                                      |
+| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | `scope.id` 的矩形或圆形包络                                                             |
+| `clip`           | `IRClip`                                | —             | Scope 局部坐标中的内置或自定义裁剪区                                                    |
+| `zIndex`         | `number`（整数）                        | `0`           | Scope 整体在父层的稳定栈序                                                              |
+| `meta`           | `Record<string, JSON 值>`               | —             | 透传到 GroupPrim，不参与布局或继承                                                      |
+| `animations`     | `Array<IRAnimationTrack>`               | —             | Scope 整体动画，不下传 children                                                         |
 | `on<Event>`      | `ScopeProps['onClick']`                 | —             | 与 `onClick` 同签名；需要 `id`，完整事件列表见[水合](/kernel/packages/render/hydration) |
 
 检查能力由 `@retikz/layout-react/inspect` 的 `LayoutInspectScope` 提供。`request` 可为一个或多个检查器请求；`request={false}` 是后代不能越过的硬屏障。该运行时标记不进入 `IRScope`。如果嵌套 Scope 的贡献无法精确定位，检查编译会直接报错，避免把辅助图元错误归属到外层 Scope。完整规则见 [Layout 布局检查器](/library/layout/reference/runtime#布局检查器)。

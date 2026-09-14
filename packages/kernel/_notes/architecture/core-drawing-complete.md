@@ -1,6 +1,6 @@
 # Core 绘图完备设计
 
-> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 Drawing Complete 能力域的边界与检测方法，主责包是 `@retikz/core`。总纲见 [`notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责以 [`packages/kernel/AGENTS.md`](../../AGENTS.md) 及各包就近 `AGENTS.md` 为准。本文不覆盖 plot / chart 等数据语义、具体 renderer 的实现便利或 React / Vanilla 的体验封装。
+> **状态：长期架构真源，不跟随单个版本维护功能清单。** 本文定义 Drawing Complete 能力域的边界与检测方法，主责包是 `@retikz/core`。总纲见 [`../../../../notes/architecture/capability-design.md`](../../../../notes/architecture/capability-design.md)，当前包职责以 [`../../AGENTS.md`](../../AGENTS.md) 及各包就近 `AGENTS.md` 为准。本文不覆盖 plot / chart 等数据语义、具体 renderer 的实现便利或 React / Vanilla 的体验封装。
 
 ---
 

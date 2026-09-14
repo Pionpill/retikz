@@ -6,7 +6,6 @@ import type {
   LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
-
 import {
   LayoutAlignmentGuideDimension,
   LayoutAlignmentGuideName,
@@ -15,15 +14,10 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { CanonicalGridLayout, CanonicalGridLayoutItem } from '../../resolve/grid-layout';
-import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
-import type { LayoutSpacingArtifact } from '../shared';
-import type { GridTrackConstraint } from './tracks';
-import type { GridLayoutArtifact, LayoutTrackSourceKindValue } from './types';
-import type { IRGridLayout } from './types';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import type { CanonicalGridLayout, CanonicalGridLayoutItem } from '../../resolve/grid-layout';
 import { resolveGridLayout } from '../../resolve/grid-layout';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import {
   alignAllocationInSlot,
   alignResolvedLayoutSlot,
@@ -40,6 +34,7 @@ import {
   resolveLayoutAxisSize,
   sortLayoutSpacing,
 } from '../internal';
+import type { LayoutSpacingArtifact } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow, LayoutSpacingKind } from '../shared';
 import { LayoutTrackSourceKind } from './constants';
 import { resolveGridPlacements } from './placement';
@@ -51,7 +46,10 @@ import {
   positionGridTracks,
   resolveGridRowMetrics,
 } from './solve';
+import type { GridTrackConstraint } from './tracks';
 import { solveGridTracks } from './tracks';
+import type { GridLayoutArtifact, LayoutTrackSourceKindValue } from './types';
+import type { IRGridLayout } from './types';
 
 type MeasuredGridItem = Readonly<{
   authored: EffectiveLayoutItem<CanonicalGridLayoutItem>;

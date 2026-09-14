@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { Grid } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** Grid 常见语义变体的中文并列对比 */
 const Demo: FC = () => (

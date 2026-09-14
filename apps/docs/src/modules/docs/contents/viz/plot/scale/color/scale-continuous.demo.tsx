@@ -1,5 +1,4 @@
 import type { IRPlot, IRPlotScale } from '@retikz/plot';
-
 import { Plot } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -57,4 +56,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在同一散点图中切换连续与发散颜色比例尺 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

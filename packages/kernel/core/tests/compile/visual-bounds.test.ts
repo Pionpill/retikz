@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRAnimationTrack, IRScene, PathCommand, ScenePrimitive, SceneResource } from '../../src';
-
 import { compileToScene, defineArrow } from '../../src';
 import { visualBoundsOfPrimitives } from '../../src/compile/orchestration/visual-bounds';
 

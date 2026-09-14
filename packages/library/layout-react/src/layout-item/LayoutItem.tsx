@@ -1,8 +1,7 @@
 import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput } from '@retikz/layout';
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { InputEmbedContribution } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
-
-import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 
 type IRChild = InputEmbedContribution['node'];
 

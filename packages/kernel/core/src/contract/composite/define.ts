@@ -1,12 +1,10 @@
 import type { JsonValue } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-
 import { assertNonEmptyString } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { ZodLiteral, ZodObject, ZodUnion } from 'zod';
 
-import type { CompositeDefinition } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { CompositeDefinition } from './types';
 
 /** 把 composite registration schema 规范化为可读取 provider key 的对象分支 */
 const objectSchemasOf = (schema: ZodType): Array<ZodObject> => {

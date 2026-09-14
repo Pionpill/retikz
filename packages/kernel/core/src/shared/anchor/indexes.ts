@@ -1,8 +1,7 @@
 import type { Vector2 } from '@retikz/math';
 
-import type { AnchorValue, CornerValue, SideValue } from './types';
-
 import { Corner, Side } from './constants';
+import type { AnchorValue, CornerValue, SideValue } from './types';
 
 export const SideValues = [Side.Top, Side.Right, Side.Bottom, Side.Left] as const satisfies Readonly<Array<SideValue>>;
 

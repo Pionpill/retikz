@@ -1,8 +1,7 @@
 import type { CompileArtifact, CompileArtifactOptions, IRScene } from '@retikz/core';
-import type { FC } from 'react';
-
 import { isNodeLayoutCompileArtifact } from '@retikz/core';
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 import { useCallback, useState } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';

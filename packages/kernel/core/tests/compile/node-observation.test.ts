@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { CompileObservation, CompileOptions, IRNode, IRScene, PathCommand, ShapeDefinition } from '../../src';
-
 import {
   BUILTIN_SHAPES,
   compileToScene,

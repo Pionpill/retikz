@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import type { IRScene, Scene } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

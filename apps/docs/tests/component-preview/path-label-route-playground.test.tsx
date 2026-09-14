@@ -1,11 +1,8 @@
 import type { ComponentType } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import {
@@ -18,6 +15,7 @@ import {
 } from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.en.controls';
 import EnglishPathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.en.demo';
 import PathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.zh.demo';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type PlaygroundScenario = {
   Demo: ComponentType;

@@ -1,9 +1,9 @@
-import type { CompileOptions } from '@mdx-js/mdx';
-
-import { compile } from '@mdx-js/mdx';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+
+import type { CompileOptions } from '@mdx-js/mdx';
+import { compile } from '@mdx-js/mdx';
 import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';

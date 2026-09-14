@@ -1,0 +1,255 @@
+---
+description: 用 Typed Artifact、Definition 与等价 Adapter 收口布局容器；背景：Flex/Grid/Overlay 能产生正确 Scene 还不等于能力闭环
+keywords: 'Typed、Artifact、Definition、Adapter、LayoutArtifactRectSchema、LayoutArtifactOverflowSchema、LayoutArtifactAlignmentGuideSchema、LayoutArtifactItemBaseSchema'
+---
+
+# ADR-011：用 Typed Artifact、Definition 与等价 Adapter 收口布局容器
+
+- 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09；直接 Definition 原则仍由 [ADR-021](./021-direct-definition-loading.md) 统一）
+- 决策日期：2026-07-30
+- 关联：[alpha.2 roadmap](./roadmap.md) · [ADR-007](./007-box-layout-item-vocabulary.md) · [ADR-008](./008-flex-layout.md) · [ADR-009](./009-grid-layout.md) · [ADR-010](./010-overlay-layout.md) · [ADR-005](./005-capability-loading.md)
+- 后继：[Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md) 接管 artifact、Definition 与 adapter owner；本 ADR 保留 Standard 验证期历史
+
+## 背景
+
+本 ADR 的 typed artifact、layout adapter、authoring 与 Core layout-aware contract 仍然有效。文中 alpha.1 capability loading 的历史接线仅作为实施记录保留；当前直接 IR 以 v0.1 ADR-021 的 direct definition contract 为准
+
+Flex/Grid/Overlay 能产生正确 Scene 还不等于能力闭环。上层 Tier 2、headless 工具和调试器需要稳定读取 container/item slot、真实 bounds、line/track/placement与 overflow；React、Vanilla和直接 JSON必须通过同一 Standard IR与Core registry得到等价结果。
+
+Core layout-aware Composite已经提供typed artifact envelope、occurrence locator和artifact schema验证。Standard应返回领域内artifact payload，而不是把solver对象、replay token或Scene primitive泄漏给调用方。三项布局 Definition 直接进入 Core `CompileOptions.composites`，不需要布局专属 registry 或 Standard 组合层。
+
+## 决策：公开三种可判别 artifact，并沿用直接 Definition 完成三包接线
+
+### Shared artifact contract
+
+三种artifact共用strict JSON schema：
+
+```ts
+export type LayoutArtifactRect = Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}>;
+
+export type LayoutArtifactItemBase = Readonly<{
+  key: string;
+  sourceIndex: number;
+  marginBounds: LayoutArtifactRect;
+  slotBounds: LayoutArtifactRect;
+  allocationBounds: LayoutArtifactRect;
+  visualBounds: LayoutArtifactRect;
+  visibleBounds: LayoutArtifactRect | null;
+  translation: Readonly<{ x: number; y: number }>;
+  overflow: Readonly<{
+    allocation: Readonly<{ x: boolean; y: boolean }>;
+    visual: Readonly<{ x: boolean; y: boolean }>;
+    clipped: boolean;
+  }>;
+  alignmentGuide?: Readonly<{
+    name: string;
+    position: number;
+    fallback: boolean;
+  }>;
+}>;
+
+export type LayoutArtifactContainer = Readonly<{
+  allocationBounds: LayoutArtifactRect;
+  contentBounds: LayoutArtifactRect;
+  visualBounds: LayoutArtifactRect;
+  visibleBounds: LayoutArtifactRect | null;
+}>;
+
+export type LayoutTrackArtifact = Readonly<{
+  index: number;
+  start: number;
+  size: number;
+  sourceKind: 'fixed' | 'content-minimum' | 'content-natural' | 'fraction' | 'minmax';
+  implicit: boolean;
+}>;
+```
+
+上述代码只展示schema inferred output的形状，不是手写类型真源。实现以公开strict `LayoutArtifactRectSchema`、`LayoutArtifactOverflowSchema`、`LayoutArtifactAlignmentGuideSchema`、`LayoutArtifactItemBaseSchema`、`LayoutArtifactContainerSchema`、`LayoutTrackArtifactSchema`为单一真源，所有同名类型均用`z.infer`。
+
+rect都位于当前container allocation coordinate，x/y有限，width/height有限非负：
+
+- `slotBounds` 是父solver最终分配的无margin child slot；`marginBounds = outset(slotBounds, resolvedMargin)`
+- `allocationBounds`/`visualBounds` 是child local rect应用最终translation后的结果，不允许假定local origin为零
+- `visibleBounds`：visualBounds有正面积且overflow=visible时等于visualBounds；clip时取visualBounds与container allocationBounds交集；visualBounds自身无正面积、交集无正面积或zero-area clip时为null
+- item `overflow.allocation.x/y` 表示translated allocationBounds在该轴超出slotBounds；`overflow.visual.x/y`表示visualBounds在该轴超出slotBounds
+- `overflow.clipped`只在overflow=clip且visualBounds确有任何部分落在container allocationBounds外时为true；仅启用clip但没有裁切为false
+- `alignmentGuide`只记录该item本次alignment实际采用的first/last真实guide或edge fallback；position是应用最终translation/offset后的container-local坐标，fallback区分是否使用边缘
+- container visualBounds为所有item visualBounds的union；visibleBounds为所有非null item visibleBounds的union，全部item均不可见时为null，不得先union未裁切visualBounds再与container求交。默认content/content、零padding且空items时使用canonical `(0,0,0,0)`，visibleBounds为null。fixed/fill空container仍保留其非零allocation/content rect，但visual保持canonical zero
+
+artifact不重复Core envelope的namespace/type/occurrence，不保存proposal、probe failure、replay token、definition、函数、Map/Set或child私有IR。item key只在当前container内解释；nested layout有自己的artifact envelope与key空间。
+
+### Container-specific artifact
+
+```ts
+export type FlexLayoutArtifact = Readonly<{
+  kind: 'flex';
+  container: LayoutArtifactContainer;
+  items: ReadonlyArray<LayoutArtifactItemBase & { line: number }>;
+  lines: ReadonlyArray<{
+    index: number;
+    itemKeys: ReadonlyArray<string>;
+    mainAxis: 'x' | 'y';
+    mainStart: number;
+    mainSize: number;
+    crossStart: number;
+    crossSize: number;
+  }>;
+}>;
+
+export type GridLayoutArtifact = Readonly<{
+  kind: 'grid';
+  container: LayoutArtifactContainer;
+  items: ReadonlyArray<
+    LayoutArtifactItemBase & {
+      column: number;
+      row: number;
+      columnSpan: number;
+      rowSpan: number;
+    }
+  >;
+  columns: ReadonlyArray<LayoutTrackArtifact>;
+  rows: ReadonlyArray<LayoutTrackArtifact>;
+}>;
+
+export type OverlayLayoutArtifact = Readonly<{
+  kind: 'overlay';
+  container: LayoutArtifactContainer;
+  items: ReadonlyArray<
+    LayoutArtifactItemBase & {
+      placement: 'aligned' | 'positioned';
+      sizeParticipation: 'include' | 'exclude';
+      zIndex: number;
+    }
+  >;
+  paintOrder: ReadonlyArray<string>;
+}>;
+```
+
+track index必须是从0连续递增；start是container allocation coordinate中的物理x或y坐标，数组按物理start升序，size有限非负。`sourceKind`来自authored/implicit track最外层kind，content细分minimum/natural；minmax统一为minmax。`implicit`在index超出对应authored显式track数组时为true。Grid item placement使用resolved连续track indexes，所有`start + span`必须落在artifact track数组内。
+
+Flex items数组保持authored sourceIndex顺序；lines按最终物理cross placement编号，`itemKeys`按该line layout traversal顺序，并且全部lines对items key形成无重复、无遗漏的精确partition。每个`item.line`必须指向存在的连续line，且该item key恰好出现在该line的itemKeys中；反向也必须一致。wrap-reverse可以使line index与formation顺序不同。Grid items同样保持authored顺序；columns/rows各自连续且resolved placement有效。Overlay items保持authored顺序；paintOrder是全部item key恰好一次的全排列，按zIndex升序、同值sourceIndex升序。
+
+这些跨字段条件由各`artifactSchema.superRefine()`验证，而不是只依赖definition“应该生成正确”：duplicate/missing key、非连续track/line index、越界span、错误paintOrder或sourceIndex不连续都由Core artifactSchema validation fail-loud。
+
+每个definition声明对应artifactSchema并返回artifact。公开：
+
+- `LayoutArtifactRectSchema` / `LayoutArtifactRect`
+- `LayoutArtifactOverflowSchema` / `LayoutArtifactOverflow`
+- `LayoutArtifactAlignmentGuideSchema` / `LayoutArtifactAlignmentGuide`
+- `LayoutArtifactItemBaseSchema` / `LayoutArtifactItemBase`
+- `LayoutArtifactContainerSchema` / `LayoutArtifactContainer`
+- `LayoutTrackArtifactSchema` / `LayoutTrackArtifact`
+- `FlexLayoutArtifactSchema` / `FlexLayoutArtifact` / `FlexLayoutCompileArtifact`
+- `GridLayoutArtifactSchema` / `GridLayoutArtifact` / `GridLayoutCompileArtifact`
+- `OverlayLayoutArtifactSchema` / `OverlayLayoutArtifact` / `OverlayLayoutCompileArtifact`
+- `LayoutArtifactSchema` / `LayoutArtifact` 三种payload union
+
+上述schema/type全部从`composites/shared/layout`与三container public barrel进入Standard包根；不存在引用private rect DTO的public type。compile artifact envelope类型使用Core `CompositeArtifactOf<typeof XxxDefinition>` 推导，不手写平行namespace/type。
+
+overflow是正常可观察状态，不自动发warning。非法输入、solver非有限状态、selected failure和Core contract violation继续fail-loud；clip只把artifact `clipped`/visibleBounds与Scene Scope表现对齐。
+
+三种item schema完成后，`composites/layout/` family root 统一做公共聚合：
+
+```ts
+export const LayoutItemSchema = z.discriminatedUnion('kind', [
+  FlexLayoutItemSchema,
+  GridLayoutItemSchema,
+  OverlayLayoutItemSchema,
+]);
+
+export type IRLayoutItem = z.infer<typeof LayoutItemSchema>;
+```
+
+各container仍直接消费自己的精确item schema，不通过宽union后再运行时猜kind。该聚合不拥有solver或registry，只为通用authoring、schema registry和类型收窄提供单一公共入口。
+
+### Direct Definition loading
+
+每个 layout composite 直接提供自己的 Definition：
+
+```ts
+const layoutCompile = {
+  composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+};
+```
+
+直接 Definition、React / Vanilla adapter contribution 与第三方 Definition 全部交给 Core 唯一 Composite registry。重复 Definition 不在 Standard 去重，由 Core 给出权威冲突诊断。
+
+不新增 `defineLayout`、layout registry、compile option或package subpath。
+
+### React authoring
+
+公开 `FlexLayout`、`GridLayout`、`OverlayLayout` 与只能作为三者直接语义child的 `LayoutItem`。
+
+`LayoutItemProps` 是以 `kind` 判别的三种item props union：
+
+- JSON字段 `key` 在React中命名 `itemKey`，不读取React保留的 `key`
+- 恰好选择一种child输入：一个React drawable child，或显式 `ir: IRChild`
+- React child经公开Kernel转换入口必须恰好得到一个IRChild
+- transparent Fragment可以包裹LayoutItem，但一个LayoutItem内部不能展开成多个IRChild
+- item kind必须与父container匹配；LayoutItem脱离container或container出现普通direct child均fail-loud
+- 默认值只由Standard schema产生，adapter不复制solver或schema defaults
+
+嵌套 Standard Layout JSX 必须闭环。三个 React adapter 共用 `standard.layout` contribution namespace 与同一组 Flex / Grid / Overlay definition provider contract，并保持稳定顺序；Kernel 按 namespace 聚合时不得向 Core 注册重复 definition
+
+Layout container解析每个LayoutItem的drawable child时调用React公开JSX转换入口并读取contributions：零个或多个IRChild都fail-loud；恰好一个IRChild时，只接受所有contribution均满足`namespace === 'standard.layout'`、`makeComposites === makeReactStandardLayoutComposites`且datasets为空。符合者折叠为该container自己的同一family contribution；任一foreign namespace、不同maker或非空datasets立即抛稳定`Standard LayoutItem cannot forward foreign Tier 2 contributions`诊断。
+
+LayoutItem中的foreign Tier 2 React embeddable若产生额外contribution必须fail-loud，并提示改用该领域包后续的内部Standard适配，或使用 `ir` 加宿主显式definitions；不得静默丢失nesteddefinition。这个限制只属于当前React authoring协议，不限制规范Standard IR接受任意合法IRChild。
+
+### Vanilla authoring
+
+公开：
+
+- `flexLayout(id, input)` / `FlexLayoutVanillaAdapter`
+- `gridLayout(id, input)` / `GridLayoutVanillaAdapter`
+- `overlayLayout(id, input)` / `OverlayLayoutVanillaAdapter`
+- shallow-frozen `StandardLayoutVanillaAdapters`，顺序Flex/Grid/Overlay
+
+三个Vanilla adapter同样精确使用namespace `standard.layout`、同一个Vanilla包模块级`makeVanillaStandardLayoutComposites`引用与空datasets；maker每次返回 `[FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition]` Array 副本并保持 Flex / Grid / Overlay 顺序。React与Vanilla只需各自在本包内共享稳定引用，不要求跨包函数identity相同。`StandardVanillaAdapters`在现有Grid/Axes/Frame后追加三项。Vanilla nested layout child只能是`createFlexLayout/createGridLayout/createOverlayLayout`返回的canonical IRChild；`InputEmbed`只允许出现在宿主spec traversal层，不能塞进Layout item的JSON `child`。plain input/factory直接使用Standard schema；adapter不保存DOM、renderer或layout state。
+
+foreign/custom canonical IR child 的 definitions 仍由宿主 compile options 显式提供，Standard 不扫描 IR 猜测 registry；重复 family definition 继续由 Core 权威诊断。
+
+## DSL / API 表面
+
+```tsx
+<Layout>
+  <FlexLayout direction="row" gap={8}>
+    <LayoutItem kind="flex" itemKey="plot" grow={1}>
+      <GridLayout columns={[{ kind: 'fraction', factor: 1 }]}>
+        <LayoutItem kind="grid" itemKey="mark">
+          <Node position={[0, 0]}>Mark</Node>
+        </LayoutItem>
+      </GridLayout>
+    </LayoutItem>
+  </FlexLayout>
+</Layout>
+```
+
+```ts
+const result = compileToScene(ir, {
+  composites: [FlexLayoutDefinition, GridLayoutDefinition, OverlayLayoutDefinition],
+});
+
+const flex = result.artifacts.find(artifact => artifact.kind === 'composite' && artifact.type === 'flexLayout');
+const flexValue = FlexLayoutArtifactSchema.parse(flex?.value);
+```
+
+`composites` 直接接收通用 Definition 数组，因此只判断 envelope type 不会让 `value` 在 TypeScript 中自动收窄；headless 调用方使用公开 payload schema 解析，或直接携带精确 Definition tuple 取得 `CompositeArtifactOf` 类型。
+
+## 长期边界
+
+- Plot/Table/Gantt适配或领域artifact/provenance
+- 通用nestedTier2 React contribution协议修改
+- artifact增量diff、跨compile cache或interactive inspection runtime
+- renderer-specific layout debug overlay
+- package subpath、global registration 或隐式 Definition 收集
+
+## 遗留风险
+
+- Plot、Table、Gantt 等 Tier 2 适配明确延期，各包采用的具体容器仍是内部实现细节
+- foreign Tier 2 nested JSX 尚无通用 contribution 协议；直接 canonical IR 配合显式 definitions 仍可编译
+- artifact 暂不提供增量 diff、跨 compile cache 或 renderer-specific debug overlay

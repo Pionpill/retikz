@@ -1,7 +1,6 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import { CompositeBaseSchema, PolarPositionSchema, PositionSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveIntegerSchema, PositiveNumberSchema } from '@retikz/foundation';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';

@@ -1,6 +1,5 @@
-import type { FC, KeyboardEvent } from 'react';
-
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
+import type { FC, KeyboardEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,7 +10,6 @@ import { cn } from '@/lib';
 import { MarkdownInline } from '@/modules/docs/components';
 
 import type { Conversation } from '../conversations-storage';
-
 import { useAiChatStore } from '../useAiChatStore';
 
 /** AI 历史会话列表。 */

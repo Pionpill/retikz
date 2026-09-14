@@ -1,7 +1,6 @@
 import { PathCurve } from '@retikz/plot';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { PATH_CURVE_CONTROL_ID, PATH_CURVE_CONTROL_IDS, PATH_CURVE_SHOW_POINTS_ID } from './line-curve.controls';

@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 

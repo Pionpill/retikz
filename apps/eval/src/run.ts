@@ -1,7 +1,7 @@
-import { type AssertionResult } from './assert/types';
-import { type CorpusPrompt } from './corpus/types';
+import type { AssertionResult } from './assert/types';
+import type { CorpusPrompt } from './corpus/types';
 import { extractJson } from './extract/json';
-import { type LlmClient } from './llm/types';
+import type { LlmClient } from './llm/types';
 import { buildPrompt } from './prompt/build';
 import { scoreL1 } from './score/l1';
 import { scoreL2 } from './score/l2';

@@ -1,10 +1,9 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
 import type { IRFlexLayout } from '../../composites/flex-layout/schemas';
-import type { CanonicalFlexLayout } from './types';
-
 import { FlexLayoutItemSchema, FlexLayoutSchema } from '../../composites/flex-layout/schemas';
 import { resolveLayoutContainerBox } from '../shared';
+import type { CanonicalFlexLayout } from './types';
 
 /** 在测量前确定 Flex 的容器及子项配置 */
 export const resolveFlexLayout = (source: IRFlexLayout): CanonicalFlexLayout => {

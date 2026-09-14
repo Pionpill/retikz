@@ -1,12 +1,11 @@
-// @vitest-environment jsdom
-import type { FC } from 'react';
-
 import { ChartData } from '@retikz/chart-react';
 import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
 import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
 import { useTheme } from '@retikz/react';
+// @vitest-environment jsdom
+import type { FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';

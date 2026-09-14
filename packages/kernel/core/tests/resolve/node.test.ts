@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RetikzCoreError} from '../../src/error';
-import type { StyleResolveFrame } from '../../src/resolve/style';
-import type { IRNode, IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { RetikzCoreError } from '../../src/error';
 import { RetikzCoreErrorCode } from '../../src/error';
 import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveShapeRegistry } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
+import type { StyleResolveFrame } from '../../src/resolve/style';
 import { createStyleResolveFrame } from '../../src/resolve/style';
+import type { IRNode, IRScene } from '../../src/schemas';
 
 const node = (overrides: Partial<IRNode> = {}): IRNode => ({
   type: 'node',

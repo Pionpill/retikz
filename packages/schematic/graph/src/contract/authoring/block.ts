@@ -10,7 +10,6 @@ import type {
   IRBlockRow,
   IRBlockSection,
 } from '../../schemas';
-
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
 /** 对 union 的每个成员分别移除作者不可写字段 */

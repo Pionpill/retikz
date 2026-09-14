@@ -1,11 +1,9 @@
 import type { LowerTex } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview, usePreviewControls } from '@/modules/docs/preview';
 
 import { previewControlContract, texPlaygroundControls } from './tex-playground.controls';

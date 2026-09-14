@@ -1,10 +1,8 @@
 import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
-
 import { boundsOf, boundsToRect, expandBounds, isFiniteBoundsRect } from '@retikz/math';
 
-import type { IRPosition } from '../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRPosition } from '../../schemas';
 
 /** 对 layout 四字段应用输出精度 */
 export const roundLayout = ({ height, width, x, y }: BoundsRect, round: (n: number) => number): BoundsRect => ({

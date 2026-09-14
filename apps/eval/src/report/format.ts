@@ -1,4 +1,4 @@
-import { type PassRates, type Report } from './aggregate';
+import type { PassRates, Report } from './aggregate';
 
 /** 失败明细在 markdown 里最多列多少条（其余折叠成计数说明） */
 const MAX_FAILURE_ROWS = 20;

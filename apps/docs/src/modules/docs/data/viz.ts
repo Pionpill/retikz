@@ -1,5 +1,4 @@
 import type { DocPageMetadataOverride, Section } from './types';
-
 import { DocDifficulty } from './types';
 
 /** 标记以 Definition / registry 为主线的 Plot 扩展指南。 */

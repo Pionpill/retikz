@@ -23,4 +23,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, () => 
 export const previewSource = controlledPreview.source;
 
 /** Shows positive and negative segments accumulating on opposite sides of zero */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

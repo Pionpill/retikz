@@ -1,7 +1,6 @@
 import type { IRGeometryLabel } from '@retikz/core';
-import type { ReactNode } from 'react';
-
 import { Layout, Node, Path, Step } from '@retikz/react';
+import type { ReactNode } from 'react';
 
 import type { PathLabelRoutePlaygroundValues } from './path-label-route-playground.controls';
 

@@ -1,12 +1,10 @@
 import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
-
-import type { GridLayoutArtifact, IRGridLayout } from './types';
 
 import { LAYOUT_NAMESPACE } from '../../shared';
 import { compileGridLayout } from './pipeline';
 import { GridLayoutArtifactSchema, GridLayoutSchema } from './schema';
+import type { GridLayoutArtifact, IRGridLayout } from './types';
 
 /** Layout GridLayout 的官方 Core layout-aware composite definition */
 export const GridLayoutDefinition: LayoutCompositeDefinition<

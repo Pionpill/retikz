@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Arc / Sector Sugar 展开为 Path + Step 的局部流程图 */
 const Demo: FC = () => (

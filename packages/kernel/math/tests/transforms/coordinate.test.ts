@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CenteredShape } from '../../src';
-
 import { localToWorld, worldToLocal } from '../../src';
 
 /*

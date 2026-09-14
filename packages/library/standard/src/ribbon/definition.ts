@@ -1,14 +1,12 @@
 import type { PathKindDefinition } from '@retikz/core';
-
 import { definePathKind } from '@retikz/core';
-
-import type { RibbonWidthProfileDefinition } from './profile-types';
-import type { IRRibbonPath } from './types';
 
 import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
 import { emitRibbonPrimitive } from './geometry';
 import { RibbonPathSchema } from './path-schema';
 import { resolveRibbonWidthProfileRegistry } from './profile-registry';
+import type { RibbonWidthProfileDefinition } from './profile-types';
+import type { IRRibbonPath } from './types';
 
 const createDefinition = (profiles: ReadonlyArray<RibbonWidthProfileDefinition>): PathKindDefinition<IRRibbonPath> => {
   const profileRegistry = resolveRibbonWidthProfileRegistry(BUILTIN_RIBBON_WIDTH_PROFILES, profiles);

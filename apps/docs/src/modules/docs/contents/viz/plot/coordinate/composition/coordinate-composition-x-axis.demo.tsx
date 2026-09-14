@@ -63,4 +63,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 两个横轴分别绑定经过天数与日历日期 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,7 +1,6 @@
 import type { TableStructureContext, TableStructureOutput } from '../../contract/structure';
-import type { IRManualTableStructure } from '../../schemas';
-
 import { RetikzTableError } from '../../error';
+import type { IRManualTableStructure } from '../../schemas';
 import { TableCellLocation, TableCellRole, TableRowKind } from '../../schemas';
 import { TableCellSourceKind } from '../../shared';
 

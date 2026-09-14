@@ -1,13 +1,11 @@
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
 import type { IRPlot, LowerPlotsOptions, PlotLineageRun } from '@retikz/plot';
-import type { ResolveLabelMap } from '@retikz/plot-vanilla';
-
 import { lowerPlotWithLineage } from '@retikz/plot';
+import type { ResolveLabelMap } from '@retikz/plot-vanilla';
 import { normalizePlotIR, resolveLabelOf } from '@retikz/plot-vanilla';
 
-import type { PlotProps } from './Plot';
-
 import { collectPlotDeclarations } from './adapter';
+import type { PlotProps } from './Plot';
 
 /** `Plot` props 的完整 authoring 结果 */
 export type ResolvedPlotAuthoring = Readonly<{

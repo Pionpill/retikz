@@ -8,10 +8,9 @@ import type {
   TableLayoutManifestSchema,
   TableLegendDescriptor,
 } from '../../contract';
+import { RetikzTableError } from '../../error';
 import type { TableBorderEdge, TableLayout } from '../layout';
 import type { ResolvedTableCellPlan, ResolvedTableDefaults, ResolvedTableEncoding } from '../rule';
-
-import { RetikzTableError } from '../../error';
 
 /** manifest 中的 style、plan 与 encoding lineage 输入 */
 export type BuildTableManifestContext = Readonly<{

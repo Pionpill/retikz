@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { BubbleChart } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { bubbleMinimalData } from './bubble-minimal.data';
 

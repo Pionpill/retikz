@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, Scene, ScenePrimitive, Transform } from '../../src';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { applyTransformChain } from '../../src/compile/transform';

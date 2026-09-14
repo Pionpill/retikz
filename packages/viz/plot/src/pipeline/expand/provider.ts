@@ -1,14 +1,12 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-
 import { BUILTIN_RIBBON_WIDTH_PROFILES, createRibbonProviderContribution } from '@retikz/standard/ribbon';
 import { ContourShapeProvider, SectorShapeProvider } from '@retikz/standard/shape';
-
-import type { LowerPlotsOptions } from './types';
 
 import { RetikzPlotError } from '../../error';
 import { PLOT_NAMESPACE } from '../../schemas';
 import { lowerPlots } from './lower';
+import type { LowerPlotsOptions } from './types';
 
 const PlotRuntimeOptions = Symbol('retikz.plot.runtimeOptions');
 const PlotRuntimeReferencePrefix = '@@retikz/plot/runtime/';

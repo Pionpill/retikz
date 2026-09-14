@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** smooth 的有限点筛选、OLS 拟合、区间采样与预测输出 */
 const Demo: FC = () => (

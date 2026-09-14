@@ -1,5 +1,4 @@
 import type { GroupPrim, IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive } from '@retikz/core';
-
 import {
   ChildSchema,
   compileToScene,

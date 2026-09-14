@@ -1,7 +1,7 @@
-import type { JSONOutput } from 'typedoc';
-
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+
+import type { JSONOutput } from 'typedoc';
 import { Application, normalizePath, OptionDefaults } from 'typedoc';
 
 import { translateTexApiReference } from './tex.en';

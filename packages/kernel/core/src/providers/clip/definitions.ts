@@ -1,14 +1,12 @@
-import type { ZodType } from 'zod';
-
 import { NonNegativeNumberSchema } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { literal, number, strictObject } from 'zod';
 
 import type { ClipDefinition } from '../../contract';
 import type { RectClipShape } from '../../contract';
-import type { IRRectClip } from '../../schemas';
-
 import { defineClip } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRRectClip } from '../../schemas';
 import { RectClipSchema } from '../../schemas';
 import { defineKeyedProviderArray } from '../registry/index';
 

@@ -1,12 +1,10 @@
 import type { LayoutCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
 
-import type { ResolvedFlowDiagramDefinitionOptions } from '../providers';
-import type { FlowDiagramArtifact, IRFlowDiagram } from '../schemas';
-
 import { DIAGRAM_NAMESPACE } from '../../_diagram';
+import type { ResolvedFlowDiagramDefinitionOptions } from '../providers';
 import { resolveFlowDiagramDefinitionOptions } from '../providers';
+import type { FlowDiagramArtifact, IRFlowDiagram } from '../schemas';
 import { FlowDiagramArtifactSchema, FlowDiagramSchema } from '../schemas';
 import { FLOW_TYPE } from '../shared';
 import { createCompileFlowDiagram } from './flow';

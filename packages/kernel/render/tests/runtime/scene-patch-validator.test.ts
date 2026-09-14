@@ -1,5 +1,4 @@
 import type { IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import {
   createRuntimeIdentity,

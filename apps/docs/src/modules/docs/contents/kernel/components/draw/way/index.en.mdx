@@ -92,20 +92,20 @@ Finally, `<Draw>` passes `way`, stroke, fill, arrows, and related visual props t
     {
       label: 'WayItem classification and following-target validation',
       path: 'packages/kernel/core/src/parse/way.ts',
-      startLine: 240,
-      endLine: 333,
+      startLine: 239,
+      endLine: 332,
     },
     {
       label: 'Sequential way reduction and pending-label state',
       path: 'packages/kernel/core/src/parse/way.ts',
-      startLine: 450,
-      endLine: 511,
+      startLine: 449,
+      endLine: 510,
     },
     {
       label: 'Draw forwarding input to Path',
       path: 'packages/kernel/react/src/sugar/path/Draw.tsx',
-      startLine: 29,
-      endLine: 33,
+      startLine: 28,
+      endLine: 32,
     },
   ]}
 />
@@ -121,20 +121,20 @@ Finally, `<Draw>` passes `way`, stroke, fill, arrows, and related visual props t
     {
       label: 'Object-form relative-coordinate normalization',
       path: 'packages/kernel/core/src/parse/way.ts',
-      startLine: 229,
-      endLine: 240,
+      startLine: 228,
+      endLine: 239,
     },
     {
       label: 'String-form relative-coordinate normalization',
       path: 'packages/kernel/core/src/parse/target-sugar.ts',
-      startLine: 10,
-      endLine: 29,
+      startLine: 9,
+      endLine: 28,
     },
     {
       label: 'Relative-coordinate resolution and prevEnd updates',
       path: 'packages/kernel/core/src/resolve/path/resolve.ts',
-      startLine: 365,
-      endLine: 461,
+      startLine: 364,
+      endLine: 460,
     },
   ]}
 />
@@ -148,7 +148,7 @@ Finally, `<Draw>` passes `way`, stroke, fill, arrows, and related visual props t
 | Node id                 | `'a'`                                                                                           | Reference a Node in the same diagram; endpoint auto-attaches to border                   |
 | Explicit anchor         | `{ id: 'a', anchor: 'top' }` or `'a.top'`                                                       | Lock to a named anchor / angle / edge proportional point; object form is the IR contract |
 | Cartesian               | `[120, 0]`                                                                                      | Literal coordinate                                                                       |
-| Polar                   | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | Polar coordinate; see [Positioning](/kernel/components/basic/position)                     |
+| Polar                   | `{ origin: 'a', angle: 60, radius: 80 }`                                                        | Polar coordinate; see [Positioning](/kernel/components/basic/position)                   |
 | Offset placement        | `{ of: 'a', offset: [10, 5] }`                                                                  | Base + `(dx, dy)`, same offset form as `<Node position>`                                 |
 | Proportional placement  | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                        | Proportional point along A → B                                                           |
 | Relative                | `{ position: [10, 0], type: DrawWay.Relative }` or `'+10,0'`                                    | Offset from the previous step endpoint without updating prevEnd                          |

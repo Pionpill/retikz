@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRAnchorPosition } from '../../src/schemas';
-
 import { AnchorPositionSchema, CoordinateSchema, NodeSchema } from '../../src/schemas';
 
 describe('Node anchor-to-anchor position schema', () => {

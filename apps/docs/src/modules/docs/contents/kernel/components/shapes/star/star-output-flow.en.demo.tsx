@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Star Sugar 与 Node shape 的几何消费路径 */
 const Demo: FC = () => (

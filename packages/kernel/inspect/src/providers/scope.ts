@@ -1,11 +1,9 @@
 import type { IRChild, IRPosition, IRStep, ScopeOwnerOutput } from '@retikz/core';
-import type { output as ZodOutput } from 'zod';
-
 import { ScopeOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
+import type { output as ZodOutput } from 'zod';
 
 import type { InspectorContext } from '../contract';
-
 import { defineInspector } from '../contract';
 import { ScopeInspectOptionsSchema } from '../schema';
 import {

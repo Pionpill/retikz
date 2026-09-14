@@ -8,27 +8,17 @@ import type {
   CompileResult,
   IRScene,
 } from '@retikz/core';
-import type { JsonValue } from '@retikz/foundation';
-
 import {
   categoricalColorAt,
   isCompileObservationOwnerEqual,
   isCompileOccurrenceEqual,
   observeCompileToScene,
 } from '@retikz/core';
+import type { JsonValue } from '@retikz/foundation';
 
 import type { InspectorContext } from '../contract';
-import type { InspectorRegistry } from '../providers';
-import type {
-  InspectionCompileResult,
-  InspectionDiagnostic,
-  InspectionDiagnosticOrigin,
-  InspectionPlaneEntry,
-  InspectionSelection,
-  ResolvedInspectionRequest,
-} from './types';
-
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
+import type { InspectorRegistry } from '../providers';
 import { getResolvedInspectorRegistry } from '../providers';
 import { INSPECTION_OBSERVER_KEY } from './constants';
 import { wrapInspectionError } from './diagnostics';
@@ -38,6 +28,14 @@ import {
   canInspectionSelectionRequestSite,
   resolveAdmittedInspectionSelection,
 } from './selection';
+import type {
+  InspectionCompileResult,
+  InspectionDiagnostic,
+  InspectionDiagnosticOrigin,
+  InspectionPlaneEntry,
+  InspectionSelection,
+  ResolvedInspectionRequest,
+} from './types';
 
 type CapturedObservation = Readonly<{ observation: CompileObservation; context: CompileObservationContext }>;
 type InspectionObserverOutput = Readonly<{

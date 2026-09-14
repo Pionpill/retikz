@@ -1,16 +1,14 @@
-import type { FC } from 'react';
-
 import { BotMessageSquare, ChevronsDownUp, ChevronsUpDown, X } from 'lucide-react';
+import type { FC } from 'react';
 import { memo } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib';
 
-import type { SourcePanelState } from './useSourcePanelState';
-
 import { HighlightCode } from '../../highlight-code';
 import { ToolbarIconButton } from '../components';
 import { SourcePanel } from './SourcePanel';
+import type { SourcePanelState } from './useSourcePanelState';
 
 /** 已查看源码后的折叠高度上限，等于 15 行代码。 */
 const COLLAPSED_CODE_MAX_H = '[&_pre]:max-h-[calc(15*1.5em)] [&_pre]:overflow-y-auto';

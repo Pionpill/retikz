@@ -1,5 +1,4 @@
 import type { SceneClipPath } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { applyClip } from '../../src/canvas/path-geometry';

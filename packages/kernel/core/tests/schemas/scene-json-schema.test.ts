@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import type { IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { IRScene } from '../../src/schemas';
 import { SceneSchema } from '../../src/schemas';
 
 const toSceneJsonSchema = () => toJSONSchema(SceneSchema, { unrepresentable: 'any' });

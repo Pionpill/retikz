@@ -1,7 +1,6 @@
 import type { PlotLineageOptions, PlotRowValueOptions } from '../../contract';
-import type { EffectivePlotLineageOptions } from './types';
-
 import { RetikzPlotError } from '../../error';
+import type { EffectivePlotLineageOptions } from './types';
 
 /** 校验 rowValues，避免默认记录整行 */
 const resolvePlotRowValueOptions = (value: false | PlotRowValueOptions | undefined): false | PlotRowValueOptions => {

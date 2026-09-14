@@ -1,20 +1,18 @@
 import type { CompileObservation, CompileObservationOwner, IRChild, IRScene } from '@retikz/core';
+import { compareCompileOccurrences, isCompileObservationOwnerEqual, isCompileOccurrenceEqual } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 
-import { compareCompileOccurrences, isCompileObservationOwnerEqual, isCompileOccurrenceEqual } from '@retikz/core';
-
+import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import type { InspectorRegistry } from '../providers';
+import { formatInspectorRegistryKey, getResolvedInspectorRegistry } from '../providers';
+import { createInspectionSelectionDiagnosticOrigin, wrapInspectionError } from './diagnostics';
+import { cloneAndFreezeInspectionJson } from './output';
 import type {
   InspectionSelection,
   InspectionSelectionRule,
   InspectionSelectionTarget,
   ResolvedInspectionRequest,
 } from './types';
-
-import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
-import { formatInspectorRegistryKey, getResolvedInspectorRegistry } from '../providers';
-import { createInspectionSelectionDiagnosticOrigin, wrapInspectionError } from './diagnostics';
-import { cloneAndFreezeInspectionJson } from './output';
 
 type IndexedRule = Readonly<{
   index: number;

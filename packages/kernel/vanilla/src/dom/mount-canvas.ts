@@ -1,9 +1,5 @@
 import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
-import type { PrimAnimationResolution } from '@retikz/render/canvas';
-import type { HydrationController } from '@retikz/render/hydration';
-import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-
 import {
   createClock,
   createIdClockRegistry,
@@ -13,7 +9,9 @@ import {
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
 } from '@retikz/render/animation';
+import type { PrimAnimationResolution } from '@retikz/render/canvas';
 import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
+import type { HydrationController } from '@retikz/render/hydration';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -22,8 +20,14 @@ import {
   isCanvasAnimationIdVisible,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
+import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
+import { computeDisplaySize } from '../runtime';
+import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
+import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
+import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import type {
   CanvasView,
   HydrateOptions,
@@ -39,12 +43,6 @@ import type {
   StaticRawCanvasView,
   VanillaRetainedRuntimeOptions,
 } from '../runtime/types';
-
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { computeDisplaySize } from '../runtime';
-import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
-import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
-import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import { createRetainedProcessingController } from './retained';
 
 /** 设备像素比：取有限正数、否则回退 1（镜像 react CanvasHost） */

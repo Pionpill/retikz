@@ -35,7 +35,7 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 alpha.1
 
 ## 当前状态
 
-Graph v0.1 alpha.1 的 ADR-01～10 与 alpha.2 ADR-01～03 均已形成 Accepted、Proposed 或 Superseded 的当前状态。现行契约包含独立 Graph、Group、Block family、Entity 与 Relation Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphDefaults` 为可见后代 Entity / Relation / Group / Block 提供默认，`graphRules` 只匹配 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
+Graph ADR 按 v0 / v0.1 保存独立设计记录；状态不代替实现或发布证明。现行契约包含独立 Graph、Group、Block family、Entity 与 Relation Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；`graphDefaults` 为可见后代 Entity / Relation / Group / Block 提供默认，`graphRules` 只匹配 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
 
 ## 验证
 

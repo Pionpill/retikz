@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 对比 fixed child 拒绝较小 slot 时 visible 与 clip 的表现 */
 const Demo: FC = () => (

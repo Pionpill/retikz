@@ -1,5 +1,3 @@
-import type { RefinementCtx } from 'zod';
-
 import {
   ArrowEndDetailSchema,
   ContextualColorSchema,
@@ -23,6 +21,7 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import { LayoutGapSchema } from '@retikz/layout';
+import type { RefinementCtx } from 'zod';
 import {
   array,
   boolean,

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** stack 的分组、排序、边界计算与逐行写回 */
 const Demo: FC = () => (

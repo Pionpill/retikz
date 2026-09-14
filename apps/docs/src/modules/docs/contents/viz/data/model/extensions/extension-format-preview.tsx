@@ -1,5 +1,4 @@
 import type { IRDataModel } from '@retikz/data';
-
 import { defineFieldFormat } from '@retikz/data';
 import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 

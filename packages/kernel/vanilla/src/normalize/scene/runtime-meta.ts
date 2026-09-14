@@ -5,12 +5,11 @@ import type { InputLayerMeta, InputRuntimeMeta } from './types';
 /** 复制并冻结输入 runtime metadata */
 export const createInputRuntimeMetaSnapshot = (input: InputRuntimeMeta): InputRuntimeMeta => {
   const layers = Object.freeze(
-    input.layers.map(
-      (layer): InputLayerMeta =>
-        Object.freeze({
-          ...layer,
-          childIds: Object.freeze([...layer.childIds]),
-        }),
+    input.layers.map((layer): InputLayerMeta =>
+      Object.freeze({
+        ...layer,
+        childIds: Object.freeze([...layer.childIds]),
+      }),
     ),
   );
   const identityIndex = createReadonlyMap(

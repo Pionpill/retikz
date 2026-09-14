@@ -7,9 +7,8 @@ import type {
   IRTableMinmaxTrackSize,
   IRTableTrackSize,
 } from '../../src';
-import type { PropagateTableSpanContributionsInput } from '../../src/pipeline/layout';
-
 import { TableTrackSizeKind } from '../../src';
+import type { PropagateTableSpanContributionsInput } from '../../src/pipeline/layout';
 import { propagateTableSpanContributions, resolveTableTrackSizes, solveTableTracks } from '../../src/pipeline/layout';
 
 const fixed = (value: number): IRTableFixedTrackSize => ({ kind: TableTrackSizeKind.Fixed, value });

@@ -1,8 +1,7 @@
 import type { IRAnimationOrigin, IRAnimationTrack } from '@retikz/core';
-import type { FC } from 'react';
-
 import { scaleIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

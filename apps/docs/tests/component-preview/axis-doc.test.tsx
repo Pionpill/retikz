@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview';
-
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import {
   axisCartesianPlaygroundControls,

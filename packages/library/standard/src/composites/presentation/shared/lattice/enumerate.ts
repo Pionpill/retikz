@@ -1,8 +1,7 @@
 import type { WithOptionalProperties } from '@retikz/foundation';
 
-import type { LatticeOptions, LatticeValue } from './types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors';
+import type { LatticeOptions, LatticeValue } from './types';
 
 /** 单轴 lowering 允许生成的最大格点数 */
 export const MAX_LATTICE_VALUES_PER_AXIS = 10_000;

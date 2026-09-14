@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 两条等价路径

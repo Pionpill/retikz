@@ -7,11 +7,10 @@ import type {
   ScenePatch,
   SceneRuntimeSnapshot,
 } from '../../contract';
+import { CORE_OWNER_KEY } from '../../contract';
 import type { CompileOptions, CompileResult, CompositeArtifactOf } from '../types';
 import type { CompileWarning } from '../warning';
 import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
-
-import { CORE_OWNER_KEY } from '../../contract';
 
 /** Core compile Program 的固定 identity */
 export const CORE_PROGRAM_ID = Object.freeze({ owner: CORE_OWNER_KEY, key: 'compile' } as const);

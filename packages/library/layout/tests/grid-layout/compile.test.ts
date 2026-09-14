@@ -1,5 +1,4 @@
 import type { IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive, TranslateTransform } from '@retikz/core';
-
 import {
   ChildSchema,
   compileToScene,
@@ -14,7 +13,6 @@ import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
 import type { GridLayoutCompileArtifact } from '../../src';
-
 import {
   createGridLayout,
   GridLayoutDefinition,

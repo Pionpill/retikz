@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { extensionFormatControls, previewControlContract } from './extension-format.en.controls';
 import { renderExtensionFormatPreview } from './extension-format-preview';
+import { extensionFormatControls, previewControlContract } from './extension-format.en.controls';
 
 /** Controls fallback for the named-format example */
 export const previewControls = extensionFormatControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** Complete Definition, injection, and model-reference example */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { Axes } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** Side-by-side comparison of common Axes semantics in English */
 const Demo: FC = () => (

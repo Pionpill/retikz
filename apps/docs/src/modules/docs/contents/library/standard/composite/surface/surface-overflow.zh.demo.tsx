@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Draw, Layout } from '@retikz/react';
 import { Surface } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** 对比 Surface visible 与 clip overflow 的中文示例 */
 const Demo: FC = () => (

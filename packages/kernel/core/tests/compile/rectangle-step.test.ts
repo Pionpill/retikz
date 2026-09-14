@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene } from '../../src';
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import { RectangleStepSchema } from '../../src/schemas';
 import { arc, close, line, move } from '../helpers/path-command-factory';
 

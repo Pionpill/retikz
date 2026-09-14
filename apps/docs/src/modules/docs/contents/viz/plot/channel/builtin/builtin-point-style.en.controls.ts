@@ -1,7 +1,6 @@
 import { BuiltinShape } from '@retikz/core';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { pointStyleRows } from './builtin-point-style.data';

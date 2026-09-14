@@ -34,8 +34,8 @@ description: Use when an approved large retikz task is functionally or architect
 大型任务维护 ignored 状态文件。Alpha 使用 ADR 镜像目录；其它任务使用 `.gitignore` 覆盖的 `notes/plans/` 或就近 `**/_notes/plans/`：
 
 ```text
-packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
--> packages/<group>/_notes/plans/<relative>/<NN>-<slug>/TASK_STATE.md
+packages/<group>/_notes/decisions/<owner-and-major>/<major.minor>/<NNN>-<slug>.md
+-> packages/<group>/_notes/plans/<owner-and-major>/<major.minor>/<NNN>-<slug>/TASK_STATE.md
 
 # 非 ADR 大型任务
 notes/plans/<task>/TASK_STATE.md

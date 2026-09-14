@@ -1,14 +1,12 @@
 import type { LayoutChildResult } from '@retikz/core';
-
 import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
 
 import type { CanonicalOverlayPlacement } from '../../resolve/overlay-layout';
 import type { LayoutInsets, LayoutRect } from '../internal';
-import type { LayoutAlignmentValue } from '../shared';
-import type { LayoutSizeParticipationValue } from './types';
-
 import { alignAllocationInSlot, compensatedLayoutSum, positionedLayoutSlotOf } from '../internal';
+import type { LayoutAlignmentValue } from '../shared';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
+import type { LayoutSizeParticipationValue } from './types';
 
 /** Overlay 单个 profile 的结构输入 */
 export type OverlayProfileItem = Readonly<{

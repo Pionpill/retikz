@@ -4,6 +4,8 @@ import type { JsonObject } from '@retikz/foundation';
 
 import type { AnyScaleDefinition, CoordinateFrame, DimensionRole } from '../../../contract';
 import type { ProvenanceContext } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
+import { resolveCoordinateRegistry } from '../../../providers';
 import type {
   CompositionAxisPolicyValue,
   CompositionLayout,
@@ -15,13 +17,6 @@ import type {
   SharedScaffold,
 } from '../../../resolve/composition';
 import type { CoordinateScopeRegistry, CoordinateScopeRegistryEntry } from '../../../resolve/composition';
-import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
-import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } from '../../../schemas';
-import type { Rect } from '../../../shared';
-import type { LowerPlotsOptions } from '../types';
-
-import { RetikzPlotError } from '../../../error';
-import { resolveCoordinateRegistry } from '../../../providers';
 import {
   axisGridApplyToOf,
   axisGridSelectorOf,
@@ -34,13 +29,17 @@ import {
   resolveArrangementPolicy,
   withAxisGapOffsets,
 } from '../../../resolve/composition';
+import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from '../../../resolve/coordinate';
 import { resolveCoordinateDefinition, resolveCoordinateFrame } from '../../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../resolve/guide';
+import type { IRPlot, IRPlotAxisGuide, IRPlotCoordinateOperation, IRPlotGuide } from '../../../schemas';
 import { AxisGridApplyTo, CoordinateViewPlacementKind, PlotGuide, ScaffoldFrameMode } from '../../../schemas';
+import type { Rect } from '../../../shared';
 import { DEFAULT_FONT_SIZE } from '../../../shared';
 import { lowerCustomAxis, lowerGuide } from '../../guide';
 import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from '../composition';
 import { legendReserveOf } from '../legend';
+import type { LowerPlotsOptions } from '../types';
 
 /** scoped/scaffold frame 解析所需的显式上下文 */
 export type ScopedFramesResolveContext = {

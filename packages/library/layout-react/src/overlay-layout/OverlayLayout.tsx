@@ -1,14 +1,12 @@
 import type { OverlayLayoutInput } from '@retikz/layout';
+import { LayoutItemKind } from '@retikz/layout';
 import type { InputOverlayLayout } from '@retikz/layout-vanilla';
+import { OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { LayoutItemKind } from '@retikz/layout';
-import { OverlayLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
-import { withInputEmbedAdapters } from '@retikz/react';
-
 import type { LayoutEmbeddableComponent } from '../shared';
-
 import { createInputLayoutItems } from '../shared';
 
 /** Overlay 布局的 React 属性 */

@@ -1,9 +1,8 @@
-import { type IRNodeLabel } from '@retikz/core';
+import type { IRNodeLabel } from '@retikz/core';
 
 import type { MarkChannelDefinition, ResolveLabel } from '../../../contract';
-
 import { ChannelDefinitionKind } from '../../../contract';
-import { type IRPlotMarkLabelContent, type IRPlotMarkOperation, type IRPlotTextChannel } from '../../../schemas';
+import type { IRPlotMarkLabelContent, IRPlotMarkOperation, IRPlotTextChannel } from '../../../schemas';
 import { labelOf } from '../shared';
 
 /** 内置文本通道 definition 的按名称索引类型 */

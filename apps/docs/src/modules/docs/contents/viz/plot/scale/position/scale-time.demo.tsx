@@ -30,4 +30,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, () => 
 export const previewSource = controlledPreview.source;
 
 /** 通过 temporal 字段契约自动派生 time scale */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

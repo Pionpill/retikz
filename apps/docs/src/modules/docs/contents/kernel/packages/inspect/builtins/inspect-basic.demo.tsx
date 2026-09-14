@@ -1,8 +1,7 @@
-import type { FC } from 'react';
-
 import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 import { Layout, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 

@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { fadeIn, stagger } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 // 错峰：3 个节点同样 fadeIn，依次延迟 0 / 150 / 300ms 入场
 const [a, b, c] = stagger([fadeIn(), fadeIn(), fadeIn()], 150);

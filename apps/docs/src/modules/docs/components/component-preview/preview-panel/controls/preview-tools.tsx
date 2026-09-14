@@ -1,8 +1,7 @@
 import { Download, Hand, Maximize2, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 
-import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../../types';
-
 import { SIZE_KEYS } from '../../constants';
+import type { PreviewControlSlot, RendererMode, SizeKey, Transform } from '../../types';
 import { downloadPreviewImage } from '../commands';
 import {
   PreviewToolbar,

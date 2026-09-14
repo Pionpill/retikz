@@ -7,9 +7,8 @@ import type {
   LayoutArtifactRect,
   LayoutSpacingArtifact,
 } from '../../composites/shared';
-import type { CanonicalBaseLayoutInspectOptions } from '../resolve/shared';
-
 import { LayoutSpacingKind } from '../../composites/shared';
+import type { CanonicalBaseLayoutInspectOptions } from '../resolve/shared';
 
 /** 布局辅助边界使用的标准虚线周期 */
 const LayoutInspectionDashPattern = Object.freeze([6, 4]);

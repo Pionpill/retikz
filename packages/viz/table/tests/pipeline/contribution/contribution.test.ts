@@ -1,5 +1,4 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -11,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { LowerTablesOptions, TableStructureOutput } from '../../../src';
-
 import {
   createTableRuntimeContribution,
   defineCellFormatter,

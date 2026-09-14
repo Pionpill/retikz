@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
-import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { ScenePrimitive, ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { localToWorld, worldToLocal } from '../../src/shared/geometry/transform';
 import { flattenPrims } from '../helpers/flatten';

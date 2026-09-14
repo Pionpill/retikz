@@ -45,4 +45,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** Linear trend playground for prediction count and extrapolation extent */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

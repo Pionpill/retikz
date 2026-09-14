@@ -1,5 +1,4 @@
 import type { CurveSegmentSample, Position } from '@retikz/math';
-
 import { curve, point } from '@retikz/math';
 
 /*

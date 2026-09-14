@@ -12,14 +12,12 @@ import type {
   InputStepLabel,
 } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
-
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
-import type { CoordinateProps, NodeProps, PathProps, ScopeProps, StepProps, TextProps } from '../components';
-import type { ScopeStyleProps } from '../protocol';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import type { CoordinateProps, NodeProps, PathProps, ScopeProps, StepProps, TextProps } from '../components';
 import { Scope } from '../components';
+import type { ScopeStyleProps } from '../protocol';
 import {
   createInputEmbedProps,
   getDisplayName,

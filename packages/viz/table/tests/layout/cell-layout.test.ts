@@ -2,7 +2,6 @@ import { resolveBoxSpacing } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { TableTrackLayout } from '../../src/pipeline/layout';
-
 import {
   computeTableCellBox,
   computeTableCellContentBox,

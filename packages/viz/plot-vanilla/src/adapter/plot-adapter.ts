@@ -1,17 +1,15 @@
 import type { CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
-import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
-
 import {
   createPlotProvider as createPlotDependencyProvider,
   createPlotProviderContribution,
   PLOT_NAMESPACE,
 } from '@retikz/plot';
+import type { InputEmbedAdapter, InputScope } from '@retikz/vanilla';
 import { normalizeScopeWithChildren } from '@retikz/vanilla';
 
 import type { InputPlotEmbed } from '../spec';
-
 import { plotIROf } from '../spec';
 
 /** 将 Plot 根节点包进可选的面板 Scope */

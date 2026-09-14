@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** jitter 的字段选择、确定性偏移与 pre-scale 数据流 */
 const Demo: FC = () => (

@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Node, Scope } from '@retikz/react';
 import { CircleClipDefinition, CompoundClipDefinition } from '@retikz/standard/clip';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

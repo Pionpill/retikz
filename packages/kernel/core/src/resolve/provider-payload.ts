@@ -1,5 +1,4 @@
 import type { ZodType } from 'zod';
-
 import { ZodError } from 'zod';
 
 import { createLayoutProbeRecoverableError, safeThrownDetail } from './diagnostics';

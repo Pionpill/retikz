@@ -1,7 +1,6 @@
-import type { ZodType } from 'zod';
-
 import { ScalarValueSchema } from '@retikz/data';
 import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, string, union } from 'zod';
 
 import { TableCellSourceKind } from '../../shared';

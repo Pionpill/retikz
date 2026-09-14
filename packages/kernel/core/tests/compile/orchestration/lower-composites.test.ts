@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, string, union } from 'zod';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../../src';
-
 import { compileToScene, CompileWarningCode, CompositeBaseSchema, defineComposite } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 

@@ -6,13 +6,12 @@ import type {
   SemanticTableCell,
   TableCellContext,
 } from '../../contract';
-import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './types';
-
 import { RetikzTableError } from '../../error';
 import { resolveCellPresentationRegistry } from '../../providers';
 import { TableCellPayloadKind, TableCellPresentation } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { applyTableCellContentStyle, presentCellValue } from './present';
+import type { PresentTableOptions, ResolvedTableCellPresentationInput } from './types';
 
 /** 从 canonical Cell 构造 detached、递归冻结的 presentation context */
 const presentationContextOf = (cell: SemanticTableCell): TableCellContext =>

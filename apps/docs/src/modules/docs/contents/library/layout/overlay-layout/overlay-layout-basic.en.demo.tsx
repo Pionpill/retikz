@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Demonstrates aligned and positioned items, anchors, exclusion, and stable zIndex */
 const Demo: FC = () => (

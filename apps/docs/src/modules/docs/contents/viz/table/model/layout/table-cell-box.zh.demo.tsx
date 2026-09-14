@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 
 const BOX_HALF_WIDTH = 100;
 const BOX_HALF_HEIGHT = 55;

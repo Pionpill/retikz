@@ -8,7 +8,6 @@ import type {
   FlowLayoutRelationInput,
   FlowLayoutRelationOutput,
 } from '../../../contract';
-
 import { FlowRoutingKind } from '../../../shared';
 
 type RoutingIndex = Readonly<{

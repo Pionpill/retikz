@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-
 import { parseWay } from '@retikz/core';
 import {
   BlockHeaderSchema,

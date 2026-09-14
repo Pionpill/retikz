@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 // fallback measurer 不提供 ascent / descent，Node label 规范化为上下对称视觉盒
 const visualMiddle = (t: TextPrim): number => t.y;
 

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { AlertTriangle, ChevronLeft, Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,10 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib';
 
+import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../constants';
 import type { CustomProvider } from '../providers';
 import type { ProviderId } from '../providers';
-
-import { DEFAULT_BASE_URLS, PROVIDER_LABEL } from '../constants';
 import { PROVIDER_IDS } from '../providers';
 import { useAiChatStore } from '../useAiChatStore';
 

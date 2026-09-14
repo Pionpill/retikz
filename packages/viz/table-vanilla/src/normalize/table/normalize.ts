@@ -1,9 +1,7 @@
 import type { IRCustomTable, IRDetailTable, IRManualTable, IRTable } from '@retikz/table';
-
 import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 
 import type { InputTableVariant } from './types';
-
 import { InputTableKind } from './types';
 
 /** 将 Table authoring 输入归一化为唯一的 Table Source IR */

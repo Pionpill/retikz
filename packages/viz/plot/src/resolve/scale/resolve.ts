@@ -1,5 +1,4 @@
 import type { DataFieldTypeValue, IRDataFieldDefinition } from '@retikz/data';
-
 import { coerceTimestamp, DataFieldType, FieldOrderMode, inferCategoryDomain } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
@@ -10,14 +9,13 @@ import type {
   PositionScale,
   PositionScaleContinuityValue,
 } from '../../contract';
-import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
-import type { ScaleResolveContext } from './types';
-
 import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { safeExtent } from '../../providers';
+import type { IRPlotMarkOperation, IRPlotScale, IRPlotScaleOperation } from '../../schemas';
 import { isBuiltinMark, PathClosureKind, PlotMark, PlotScale } from '../../schemas';
 import { resolvePaddedDomain } from './domain';
+import type { ScaleResolveContext } from './types';
 
 /**
  * 查找并校验 scale definition

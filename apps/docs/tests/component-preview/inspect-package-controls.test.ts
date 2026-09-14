@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
-
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
+import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
 import { previewControlContract as inspectSelectionContract } from '../../src/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-selection.controls';
 import { previewControlContract as inspectSelectionEnContract } from '../../src/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-selection.en.controls';
 

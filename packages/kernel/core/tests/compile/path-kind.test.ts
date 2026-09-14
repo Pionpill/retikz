@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { CompileWarning, IRScene, PathPrim, ScenePrimitive } from '../../src';
-
 import { compileToScene, CompileWarningCode, definePathGenerator, definePathKind, PathSchema } from '../../src';
 
 const steps = [

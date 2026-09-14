@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
 import { DEFAULT_LABEL_DISTANCE } from '../../src/compile/constants';
+import type { ScenePrimitive, TextPrim } from '../../src/contract';
+import type { IRScene } from '../../src/schemas';
 
 const collectTexts = (prims: Array<ScenePrimitive>): Array<TextPrim> => {
   const out: Array<TextPrim> = [];

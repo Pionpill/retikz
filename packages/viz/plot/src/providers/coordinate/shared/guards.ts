@@ -1,7 +1,6 @@
 import type { CoordinateFrame, PolarCoordinateFrame } from '../../../contract';
-import type { CartesianCoordinateFrame } from '../features';
-
 import { PlotCoordinate } from '../../../schemas';
+import type { CartesianCoordinateFrame } from '../features';
 
 /**
  * 判断运行时坐标帧是否为内置二维笛卡尔帧。

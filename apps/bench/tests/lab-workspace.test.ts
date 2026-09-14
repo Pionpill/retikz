@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabRunSession } from '../src/playground/modules/kernel';
-
 import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
 import { benchModules, defaultBenchModule } from '../src/playground/app/module-registry';
 import {
@@ -11,6 +9,7 @@ import {
   getModuleTestGroups,
 } from '../src/playground/app/test-catalog';
 import { getModuleTestSuites } from '../src/playground/app/test-suites';
+import type { LabRunSession } from '../src/playground/modules/kernel';
 
 const session: LabRunSession = {
   id: 'run-1',

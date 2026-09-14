@@ -1,13 +1,12 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
 
+import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import { ChartWarningCode } from '../../warning';
 import type { ChartMarkBinding } from '../contract/mark';
 import type { ChartRecipeDefinition, ChartRecipeResolution, ChartSlotConsumption } from '../contract/recipe';
 import type { IRChartSource } from '../schemas';
 import type { ChartResolveWarning, InheritedChartMarkSlots } from './types';
-
-import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { ChartWarningCode } from '../../warning';
 
 type AuthoredChartMarkResolution = Readonly<{
   kind: string;

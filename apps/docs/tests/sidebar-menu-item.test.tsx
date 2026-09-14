@@ -2,10 +2,9 @@
 
 import type { ComponentProps } from 'react';
 import type { Root } from 'react-dom/client';
-import type * as ReactI18nextModule from 'react-i18next';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
+import type * as ReactI18nextModule from 'react-i18next';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

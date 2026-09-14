@@ -1,14 +1,12 @@
 import type { CompileArtifact, CompileOptions, CompileResult, IRScene, Scene } from '@retikz/core';
 import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-
 import { EMPTY_READONLY_LAYERS } from '@retikz/render/runtime';
 
-import type { InputAuthoringSite, InputRuntimeMeta } from '../normalize';
-import type { CommonOptions, RenderInput } from './types';
-
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
+import type { InputAuthoringSite, InputRuntimeMeta } from '../normalize';
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import { prepareProcessingInput, processToStaticInputResult } from '../processing';
+import type { CommonOptions, RenderInput } from './types';
 
 /** 为非 InputScene 输入创建独立的空 runtime metadata */
 export const createEmptyRuntimeMeta = (): InputRuntimeMeta => createEmptyInputRuntimeMetaSnapshot();

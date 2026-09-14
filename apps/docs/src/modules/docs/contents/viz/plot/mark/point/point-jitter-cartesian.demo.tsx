@@ -1,11 +1,10 @@
-import type { FC } from 'react';
-
 import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { jitterPoints } from './point-jitter.data';
 import { cartesianJitterOperationOf, previewControlContract } from './point-jitter-cartesian.controls';
+import { jitterPoints } from './point-jitter.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Plot data={jitterPoints} width={400} height={280}>

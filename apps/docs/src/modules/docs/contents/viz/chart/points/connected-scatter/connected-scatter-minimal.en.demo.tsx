@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { ConnectedScatterChart } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { connectedScatterMinimalData } from './connected-scatter-minimal.data';
 

@@ -1,11 +1,9 @@
 import type { CoordinateOwnerOutput, IRChild } from '@retikz/core';
-import type { output as ZodOutput } from 'zod';
-
 import { CoordinateOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
+import type { output as ZodOutput } from 'zod';
 
 import type { InspectorContext } from '../contract';
-
 import { defineInspector } from '../contract';
 import { CoordinateInspectOptionsSchema } from '../schema';
 import { isolateInspectionChildren, labelNode, markerNode } from './geometry';

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Plot 下沉元数据与运行时链路两条独立路径 */
 const Demo: FC = () => (

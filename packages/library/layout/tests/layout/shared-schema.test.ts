@@ -2,7 +2,6 @@ import { ChildSchema, LayoutAxisProposalKind, LayoutIntrinsicMode } from '@retik
 import { describe, expect, it } from 'vitest';
 
 import type { LayoutAxisSizeInput, LayoutContainerBoxInput, LayoutItemBaseInput, LayoutSizeInput } from '../../src';
-
 import {
   LayoutAlignment,
   LayoutAlignmentSchema,

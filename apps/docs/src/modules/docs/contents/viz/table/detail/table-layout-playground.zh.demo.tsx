@@ -1,11 +1,9 @@
-import type { IRTableTrackSize } from '@retikz/table';
-
 import { Layout } from '@retikz/react';
+import type { IRTableTrackSize } from '@retikz/table';
 import { DetailColumn } from '@retikz/table-react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/preview';
-
 import { PreviewDetailTable as DetailTable } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, tableLayoutPlaygroundControls } from './table-layout-playground.controls';
@@ -127,4 +125,6 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 /** 操作轨道、Cell 内容策略与 Border Graph 的 DetailTable 试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

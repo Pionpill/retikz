@@ -1,6 +1,5 @@
 import type { IRStep } from '@retikz/core';
 import type { Position } from '@retikz/math';
-
 import { DEFAULT_EPSILON, isFiniteNumber, pointAtArcAngle } from '@retikz/math';
 
 import type {
@@ -13,9 +12,8 @@ import type {
   PositionScale,
   TickSet,
 } from '../../../contract';
-import type { IRPlotCoordinate, IRPlotPolar1DCoordinate, PolarInterpolationValue } from '../../../schemas';
-
 import { cellInterval, PositionScaleContinuity, RETIKZ_POLAR_SEGMENT_SAMPLES } from '../../../contract';
+import type { IRPlotCoordinate, IRPlotPolar1DCoordinate, PolarInterpolationValue } from '../../../schemas';
 import { PlotCoordinate, PlotScale, Polar1DSchema, Polar2DSchema, PolarInterpolation } from '../../../schemas';
 import { computePolarCoordinate } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';

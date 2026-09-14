@@ -1,7 +1,6 @@
 import type { AnyChannelDefinition, ScopeChannelDefinition } from '../../../contract';
-import type { IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
-
 import { defineScopeChannel } from '../../../contract';
+import type { IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 import { MarkValueKind } from '../../../schemas';
 import { OPACITY_MIN, STROKE_WIDTH_MAX, STROKE_WIDTH_MIN } from './node';
 

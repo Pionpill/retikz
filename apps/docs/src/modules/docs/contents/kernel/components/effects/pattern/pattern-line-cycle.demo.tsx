@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 展示每 N 条主线与任意线型序列两种周期表达 */
 const Demo: FC = () => (

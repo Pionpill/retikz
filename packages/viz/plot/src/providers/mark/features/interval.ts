@@ -1,6 +1,5 @@
+import type { IRChild, IRNode, IRNodeLabel, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
-import { type IRChild, type IRNode, type IRNodeLabel, type IRScope } from '@retikz/core';
 import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 import { DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 
@@ -18,16 +17,15 @@ import type {
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import type { IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
-import type { CartesianCoordinateFrame } from '../../coordinate';
-import type { MarkPaint } from '../shared';
-
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotIntervalBound, IRPlotIntervalMark, IRPlotMark } from '../../../schemas';
 import { IntervalBoundKind, IntervalMarkSchema, PlotCoordinate, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
+import type { CartesianCoordinateFrame } from '../../coordinate';
 import { isCartesianCoordinateFrame, isGenericCoordinateFrame, isPolarCoordinateFrame } from '../../coordinate';
 import { cellGeometryNode, cellLayer } from '../private';
+import type { MarkPaint } from '../shared';
 import { channelForRole } from '../shared';
 import {
   applyNodeChannelDeliveries,

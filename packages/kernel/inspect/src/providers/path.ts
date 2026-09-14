@@ -1,5 +1,4 @@
 import type { IRChild, IRPosition, IRStep, PathCommand, StrokePathOwnerOutput } from '@retikz/core';
-
 import { StrokePathOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 

@@ -15,6 +15,8 @@ description: Use when editing apps/docs React components, shared components, lay
 
 ## React 组件
 
+- 涉及 React Compiler 配置或运行时 gating 时，按官方契约核对配置及 gating 函数的导入、布尔返回语义；此项由 LLM 自审，不依赖 Oxlint 自动覆盖
+
 - 组件使用 `FC<Props>`，Props 类型独立声明并导出，命名为 `XxxProps`。
 - props 在函数体内解构，不在参数列表里展开复杂结构。
 - 组件文件用 PascalCase；hook / store / context 文件按 `useXxx`、`useXxxStore`、`useXxxContext` 命名；其他非组件文件和目录用 kebab-case。
@@ -66,7 +68,7 @@ export const ExamplePanel: FC<ExamplePanelProps> = props => {
 修改 `apps/docs/src` 代码后至少执行：
 
 ```bash
-pnpm --filter @retikz/docs exec eslint . --fix
+pnpm --filter @retikz/docs exec oxlint . --fix
 pnpm --filter @retikz/docs exec tsc --noEmit
 git diff --check
 ```

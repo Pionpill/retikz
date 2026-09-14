@@ -1,12 +1,10 @@
-import type { FC } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { compileToScene } from '@retikz/core';
 import { LegendArtifactSchema, LegendDefinition, LegendSchema } from '@retikz/standard';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import type { PreviewControlsDefinition } from '@/modules/docs/preview';
 
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
@@ -23,6 +21,7 @@ import {
 } from '@/modules/docs/contents/library/standard/composite/legend/legend-playground.en.controls';
 import LegendRampEnDemo from '@/modules/docs/contents/library/standard/composite/legend/legend-ramp.en.demo';
 import LegendRampZhDemo from '@/modules/docs/contents/library/standard/composite/legend/legend-ramp.zh.demo';
+import type { PreviewControlsDefinition } from '@/modules/docs/preview';
 
 const legendRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/composite/legend');
 const changelogPath = resolve(process.cwd(), 'src/modules/docs/data/changelog/standard-0-1.ts');

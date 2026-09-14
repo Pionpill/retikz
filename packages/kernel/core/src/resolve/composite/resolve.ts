@@ -8,9 +8,8 @@ import type {
   LayoutCompositeCompileResult,
 } from '../../contract';
 import type { IRComposite } from '../../schemas';
-import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
-
 import { parseProviderPayload } from '../provider-payload';
+import type { CompositeBinding, CompositeRegistry, CompositeResolution, RegisteredCompositeBinding } from './types';
 
 type CallableExpandComposite = Readonly<{
   schema: ZodType;

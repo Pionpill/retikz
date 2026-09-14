@@ -1,9 +1,8 @@
 import type { CanonicalFont } from '../../../resolve';
-import type { TextMeasurer } from '../../text';
-import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
-
 import { resolveFont, resolveTextLine } from '../../../resolve';
+import type { TextMeasurer } from '../../text';
 import { layoutInlineLine, normalizeTextMetrics } from '../../text';
+import type { MeasuredNodeLabel, NodeLabelLayout, NodeLayout, NodeTextLayoutContext } from '../types';
 import { resolveNodeLabelGeometry } from './geometry';
 
 /** 节点附属 label 布局输入 */

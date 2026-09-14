@@ -4,11 +4,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { describe, expect, it } from 'vitest';
 
-import type { LabPolicyResult } from '../src/playground/modules/kernel';
-
 import { BenchmarkView } from '../src/playground/app/case/BenchmarkView';
 import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
 import { getBenchTestCase } from '../src/playground/app/test-catalog';
+import type { LabPolicyResult } from '../src/playground/modules/kernel';
 import {
   LabBackend,
   LabLifecycleAvailability,

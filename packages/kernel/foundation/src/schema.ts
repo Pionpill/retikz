@@ -1,5 +1,4 @@
 import type { ZodType } from 'zod';
-
 import { enum as zodEnum, json, number, record, string, union } from 'zod';
 
 import type { JsonValue, OpenString, ValueOf } from './types';

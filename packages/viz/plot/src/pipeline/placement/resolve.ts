@@ -11,10 +11,9 @@ import type {
   RolePositionAdjustmentResultTarget,
   ScreenPositionAdjustmentResultTarget,
 } from '../../contract';
-import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
+import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
 
 /** 构造只读 target 快照，避免外部 initializer 原地修改输入绕过输出守门 */
 const readonlyMappedTargets = (

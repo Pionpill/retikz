@@ -1,10 +1,8 @@
 import type { GridLayoutInspectOptions } from '@retikz/layout/inspect';
+import { GRID_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import type { FC } from 'react';
 
-import { GRID_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
-
 import type { GridLayoutProps } from '../grid-layout';
-
 import { GridLayout as BaseGridLayout } from '../grid-layout';
 import { createLayoutReactAuthoring } from './authoring';
 

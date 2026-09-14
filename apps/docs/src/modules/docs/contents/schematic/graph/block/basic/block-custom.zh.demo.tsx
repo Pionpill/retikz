@@ -1,10 +1,8 @@
-import type { FC } from 'react';
-
 import { Block, BlockHeader, Graph } from '@retikz/graph-react';
 import { Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { blockCustomControls, previewControlContract } from './block-custom.controls';

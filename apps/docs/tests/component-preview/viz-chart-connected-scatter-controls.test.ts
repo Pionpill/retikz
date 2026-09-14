@@ -1,16 +1,14 @@
-import type { ReactNode } from 'react';
-
 import { ConnectedScatterEncodings } from '@retikz/chart-react/point';
+import type { ReactNode } from 'react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import type { PreviewSourceConfig } from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as connectedZh } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.controls';
 import { previewControlContract as connectedEn } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.controls';
 import { previewSource as connectedEnSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.en.demo';
 import { previewSource as connectedZhSource } from '../../src/modules/docs/contents/viz/chart/points/connected-scatter/connected-scatter-basic.zh.demo';
+import type { PreviewSourceConfig } from '../../src/modules/docs/preview';
 
 const canonicalDeclarationProps = (source: PreviewSourceConfig): Record<string, unknown> => {
   const chart = source.canonicalRender?.();

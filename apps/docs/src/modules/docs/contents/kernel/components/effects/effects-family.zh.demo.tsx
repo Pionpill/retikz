@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 效果家族从图元输入到 Scene 的职责关系图 */
 const Demo: FC = () => (

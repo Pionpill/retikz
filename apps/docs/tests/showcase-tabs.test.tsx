@@ -2,14 +2,12 @@
 
 import type { Context } from 'react';
 import type { Root } from 'react-dom/client';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewProps } from '@/modules/docs/components/component-preview';
-
 import { ShowcaseTabs } from '@/modules/docs/components/showcase';
 
 vi.mock('@/modules/docs/components/component-preview', async () => {

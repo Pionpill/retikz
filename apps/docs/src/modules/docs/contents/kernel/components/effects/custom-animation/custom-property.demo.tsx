@@ -1,12 +1,10 @@
 import type { IRAnimationTrack } from '@retikz/core';
+import { createInputScene, Layout, Node } from '@retikz/react';
 import type { AnimationPropertyDefinition } from '@retikz/render/animation';
+import { normalizeScene } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { createInputScene, Layout, Node } from '@retikz/react';
-import { normalizeScene } from '@retikz/vanilla';
-
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
-
 import { usePreviewControls } from '@/modules/docs/preview';
 
 import { customPropertyControls, previewControlContract } from './custom-property.controls';

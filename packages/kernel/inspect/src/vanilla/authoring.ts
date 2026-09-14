@@ -3,7 +3,6 @@ import type { InputAuthoringSite } from '@retikz/vanilla';
 
 import type { InspectionSelectionRule } from '../compile';
 import type { InspectorKey } from '../contract';
-
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
 const INSPECTION_VANILLA_AUTHORING_TOKEN = Object.freeze({});

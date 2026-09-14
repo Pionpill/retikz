@@ -1,7 +1,6 @@
 import type { AxesInput } from '@retikz/standard';
-import type { FC } from 'react';
-
 import { AxesInputEmbedAdapter } from '@retikz/standard-vanilla';
+import type { FC } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
 

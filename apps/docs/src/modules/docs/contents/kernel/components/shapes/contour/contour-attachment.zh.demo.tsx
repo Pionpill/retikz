@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** contour 自动连接与标准方位 anchor 的两条解析路径 */
 const Demo: FC = () => (

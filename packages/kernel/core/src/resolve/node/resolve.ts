@@ -1,5 +1,6 @@
 import type { BoundsInsets } from '@retikz/math';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
   IRAxisScale,
   IRBoxSize,
@@ -11,7 +12,13 @@ import type {
   IRPaintValue,
   IRTextRun,
 } from '../../schemas';
+import { resolvePaint } from '../resource';
+import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
+import { resolveDashPattern, resolveDropShadow } from '../style';
 import type { ResolvedInlineSourceRun, ResolvedLabelTextContent, ResolvedTextLine } from '../text';
+import { resolveBoundaryReference } from './boundary';
+import { resolveNodeShape } from './shape';
+import { resolveNodeTextColor } from './text-color';
 import type {
   CanonicalNode,
   CanonicalNodeLabel,
@@ -21,14 +28,6 @@ import type {
   ResolvedNodeLabelPin,
   ResolvedNodeSource,
 } from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { resolvePaint } from '../resource';
-import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
-import { resolveDashPattern, resolveDropShadow } from '../style';
-import { resolveBoundaryReference } from './boundary';
-import { resolveNodeShape } from './shape';
-import { resolveNodeTextColor } from './text-color';
 
 /** Node 缺省内边距 */
 const DEFAULT_NODE_PADDING = 8;

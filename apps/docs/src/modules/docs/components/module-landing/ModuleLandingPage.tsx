@@ -1,13 +1,11 @@
-import type { FC, ReactNode } from 'react';
-
 import { TriangleAlert } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 import type { ComponentPreviewProps } from '../component-preview';
-
 import { ComponentPreview, DemoLocationContext } from '../component-preview';
 
 export type ModuleLandingDemo = {

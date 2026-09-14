@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Plus } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,10 +1,8 @@
 import type { GridLayoutItemInput } from '@retikz/layout';
+import { createGridLayout, GridLayoutProvider } from '@retikz/layout';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { createGridLayout, GridLayoutProvider } from '@retikz/layout';
-
 import type { InputGridLayout } from './normalize';
-
 import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Grid 布局嵌入项的稳定类别 */

@@ -1,8 +1,7 @@
 import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
 
-import type { InputRangedDotChart } from './types';
-
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import type { InputRangedDotChart } from './types';
 
 /** 将 Ranged Dot Vanilla Input 组装为 exact Source */
 export const normalizeRangedDotChart = (input: InputRangedDotChart): IRRangedDotChart => {

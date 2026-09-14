@@ -1,5 +1,3 @@
-import type { InputChild, InputEmbedContext, NormalizedInputEmbedChildren } from '@retikz/vanilla';
-
 import {
   BlockHeaderProviderKey,
   BlockProviderKey,
@@ -10,10 +8,10 @@ import {
   GroupProviderKey,
   RelationProviderKey,
 } from '@retikz/graph';
-
-import type { InputGraphChild, InputGraphMember } from './normalize';
+import type { InputChild, InputEmbedContext, NormalizedInputEmbedChildren } from '@retikz/vanilla';
 
 import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';
+import type { InputGraphChild, InputGraphMember } from './normalize';
 
 type GraphSemanticProviderKey = typeof GraphProviderKey;
 

@@ -1,5 +1,4 @@
 import type { IRPlot } from '@retikz/plot';
-
 import { PlotSchema } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 

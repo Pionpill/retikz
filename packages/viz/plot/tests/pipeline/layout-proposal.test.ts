@@ -1,6 +1,4 @@
 import type { LayoutChildResult, LayoutProposal } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
-
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -9,13 +7,13 @@ import {
   LayoutChildProbeKind,
   NaturalLayoutProposal,
 } from '@retikz/core';
+import type { ExternalDatasets } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlot } from '../../src/schemas';
-
 import { lowerPlots } from '../../src/pipeline/expand';
+import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 const datasets: ExternalDatasets = {

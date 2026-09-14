@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 
 import type { CollectedPointChartDeclarations } from '../shared';
-import type { ScatterEncodingsProps } from './ScatterEncodings';
-import type { ScatterChartMark, ScatterMarkProps } from './ScatterMark';
-import type { ScatterPropertiesProps } from './ScatterProperties';
-
 import { collectPointChartDeclarations } from '../shared';
+import type { ScatterEncodingsProps } from './ScatterEncodings';
 import { ScatterEncodings } from './ScatterEncodings';
+import type { ScatterChartMark, ScatterMarkProps } from './ScatterMark';
 import { ScatterMark } from './ScatterMark';
+import type { ScatterPropertiesProps } from './ScatterProperties';
 import { ScatterProperties } from './ScatterProperties';
 
 /** ScatterChart direct-child declarations 的完整收集结果 */

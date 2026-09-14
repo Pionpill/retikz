@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
-
 import { LANGS } from '@/i18n';
 import { parseDocSource } from '@/modules/docs/lib';
 

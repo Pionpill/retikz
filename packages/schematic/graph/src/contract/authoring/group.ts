@@ -1,7 +1,6 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type { GroupSchema, IRGroup } from '../../schemas';
-
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
 /** Group Source 工厂输入 */

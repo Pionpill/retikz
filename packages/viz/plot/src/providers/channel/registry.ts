@@ -1,7 +1,6 @@
 import type { AnyChannelDefinition } from '../../contract';
-import type { BuiltinTextChannelOptions } from './features';
-
 import { RetikzPlotError } from '../../error';
+import type { BuiltinTextChannelOptions } from './features';
 import { createBuiltinPaintChannels, createBuiltinTextChannels, DELIVERY_CHANNELS } from './features';
 
 /**

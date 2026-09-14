@@ -1,10 +1,8 @@
 import type { RefObject } from 'react';
-
 import { useEffect, useRef, useState } from 'react';
 
 import type { PreviewPanelControlsDefinition } from '../../types';
 import type { PreviewControlColumnSection, PreviewControlLayoutMetrics } from '../utils';
-
 import { indexPreviewControlSections, layoutPreviewControlSections } from '../utils';
 
 const TWO_COLUMN_MIN_WIDTH = 300;

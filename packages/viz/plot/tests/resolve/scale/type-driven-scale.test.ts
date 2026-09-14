@@ -1,10 +1,7 @@
-import type { DataFieldTypeValue } from '@retikz/data';
-
 import { compileToScene } from '@retikz/core';
+import type { DataFieldTypeValue } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
-
-import type { IRPlot } from '../../../src/schemas';
 
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { resolveScaleRegistry } from '../../../src/providers';
@@ -12,6 +9,7 @@ import {
   assertScaleFieldCompatible as assertScaleFieldCompatibleOp,
   derivePositionScale,
 } from '../../../src/resolve/scale';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 // 内置 scale registry：compat 校验经 registry isFieldCompatible 谓词，测试包一层省去逐处传参

@@ -1,13 +1,12 @@
 import type { IRScene } from '@retikz/core';
-import type { RenderRuntimeConfigInput, RetainedRendererFactory } from '@retikz/render/runtime';
-import type { PerformanceTraceRecord, RuntimeSession } from '@retikz/runtime';
-
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import type { RenderRuntimeConfigInput, RetainedRendererFactory } from '@retikz/render/runtime';
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
   RenderRuntimeOwnerDefinition,
 } from '@retikz/render/runtime';
+import type { PerformanceTraceRecord, RuntimeSession } from '@retikz/runtime';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,

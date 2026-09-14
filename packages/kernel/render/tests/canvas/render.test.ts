@@ -1,10 +1,8 @@
 import type { Scene } from '@retikz/core';
-
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RenderReadonlyLayer } from '../../src/runtime';
-
 import { renderFrameToCanvas, renderToCanvas } from '../../src/canvas';
+import type { RenderReadonlyLayer } from '../../src/runtime';
 
 type CanvasCall = {
   name: string;

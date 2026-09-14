@@ -1,3 +1,5 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { isCompileOccurrenceEqual } from '../occurrence';
 import type {
   QualifiedSpatialHandle,
   SpatialHandleIndex,
@@ -5,9 +7,6 @@ import type {
   SpatialHandleSelector,
   SpatialOwnerSelector,
 } from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { isCompileOccurrenceEqual } from '../occurrence';
 
 const ownerMatches = (owner: SpatialHandleOwner, selector: SpatialOwnerSelector): boolean =>
   owner.namespace === selector.namespace &&

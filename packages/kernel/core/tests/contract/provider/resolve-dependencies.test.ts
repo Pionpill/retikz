@@ -8,7 +8,6 @@ import type {
   CoreProviderContribution,
   CoreProviderKey,
 } from '../../../src';
-
 import { defineArrow, defineClip, defineComposite, defineShape, resolveCoreProviderDependencies } from '../../../src';
 
 const shapeKey = (name: string): CoreProviderKey => ({ capability: 'shape', name });

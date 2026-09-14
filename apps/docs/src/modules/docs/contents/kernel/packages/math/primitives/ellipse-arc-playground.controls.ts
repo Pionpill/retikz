@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { ellipseArcPlaygroundI18n } from './ellipse-arc-playground.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 椭圆与圆弧 playground 的稳定字段 id */
 export const EllipseArcPlaygroundControlId = {

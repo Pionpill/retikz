@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRAbsoluteTarget, IRBetweenPosition } from '../../src/schemas';
-
 import { AbsoluteTargetSchema, BetweenPositionSchema } from '../../src/schemas';
 
 describe('两端点之间按比例取点的端点形态', () => {

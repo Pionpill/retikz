@@ -1,5 +1,4 @@
 import type { LayoutChildResult } from '@retikz/core';
-
 import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

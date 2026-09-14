@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { IRChild, IRScene, ResolvedTheme } from '../../src';
-
 import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '../../src';
 
 const sceneOf = (children: Array<IRChild>, theme?: IRScene['theme']): IRScene => ({

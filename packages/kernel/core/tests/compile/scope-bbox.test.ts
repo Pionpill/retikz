@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
-import type { NodeLayout } from '../../src/compile/node';
-import type { TextMeasurer } from '../../src/compile/text';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { createScopeRectangleLayout } from '../../src/compile/node';
 import { computeScopeBoundingBox } from '../../src/compile/scope';
+import type { TextMeasurer } from '../../src/compile/text';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 
 const scene = (children: IRScene['children']): IRScene => ({

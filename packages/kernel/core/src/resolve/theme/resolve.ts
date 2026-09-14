@@ -1,12 +1,11 @@
-import type { IRTheme } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import {
   resolveCoreThemeStyleColors,
   resolveDefaultCoreThemeColors,
   resolveThemeStyleRegistry,
 } from '../../providers/theme';
+import type { IRTheme } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import { ThemeMode } from '../../shared';
 
 /** Core resolve 的 Theme 基线 */

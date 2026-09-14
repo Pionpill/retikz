@@ -1,5 +1,4 @@
 import type { IRPlot, IRPlotScale } from '@retikz/plot';
-
 import { Plot } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -73,4 +72,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在同一份偏斜数据上比较等宽、业务阈值与等频分档 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

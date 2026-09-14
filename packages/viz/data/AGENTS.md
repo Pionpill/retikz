@@ -33,7 +33,7 @@ pipeline/     数据流编排，消费 providers / contract
 改 `@retikz/data` 结构化文件后至少运行：
 
 ```bash
-pnpm --filter @retikz/data exec eslint . --fix
+pnpm --filter @retikz/data exec oxlint . --fix
 pnpm --filter @retikz/data exec tsc --noEmit
 pnpm --filter @retikz/data test:changed
 ```

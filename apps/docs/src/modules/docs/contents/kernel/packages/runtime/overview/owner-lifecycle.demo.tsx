@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Owner candidate 只有通过完整状态比较与校验后才能替换 current */
 const Demo: FC = () => (

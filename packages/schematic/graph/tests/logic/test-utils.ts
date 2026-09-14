@@ -6,8 +6,6 @@ import type {
   LayoutProposal,
   ScenePrimitive,
 } from '@retikz/core';
-import type { infer as ZodInfer } from 'zod';
-
 import {
   ChildSchema,
   compileToScene,
@@ -17,6 +15,7 @@ import {
   LayoutChildProbeKind,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 import { boolean, custom, literal, number } from 'zod';
 
 const LogicTestNamespace = 'standard-logic-test';

@@ -1,10 +1,9 @@
-import type { ChartResolution } from '../resolve';
-import type { IRChartSource } from '../schemas';
-import type { ChartProviderResolveContext } from './types';
-
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import type { ChartResolution } from '../resolve';
 import { resolveSelectedChart } from '../resolve';
+import type { IRChartSource } from '../schemas';
 import { chartThemeDefinitionsOf } from './theme';
+import type { ChartProviderResolveContext } from './types';
 
 /** 从 active provider registry 选择 recipe 并委托 Chart resolver 完成解析 */
 export const resolveChartFromProvider = (

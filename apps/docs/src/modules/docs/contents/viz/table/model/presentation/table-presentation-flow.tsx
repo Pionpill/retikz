@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 流程图中一个职责节点的双层文本 */
 export type TablePresentationFlowStageLabel = Readonly<{

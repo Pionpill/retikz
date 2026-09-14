@@ -1,9 +1,10 @@
+import { globSync, readFileSync } from 'node:fs';
+import { relative } from 'node:path';
+
 import * as corePackage from '@retikz/core';
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { resolvePlotTheme } from '@retikz/plot';
 import { resolveTableThemeDefaults } from '@retikz/table';
-import { globSync, readFileSync } from 'node:fs';
-import { relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {

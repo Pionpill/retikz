@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 
 import type { CollectedPointChartDeclarations } from '../shared';
-import type { StripEncodingsProps } from './StripEncodings';
-import type { StripChartMark, StripMarkProps } from './StripMark';
-import type { StripPropertiesProps } from './StripProperties';
-
 import { collectPointChartDeclarations } from '../shared';
+import type { StripEncodingsProps } from './StripEncodings';
 import { StripEncodings } from './StripEncodings';
+import type { StripChartMark, StripMarkProps } from './StripMark';
 import { StripMark } from './StripMark';
+import type { StripPropertiesProps } from './StripProperties';
 import { StripProperties } from './StripProperties';
 
 /** StripChart direct-child declarations 的完整收集结果 */

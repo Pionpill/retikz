@@ -1,5 +1,4 @@
 import type { IRDataSortTransform } from '@retikz/data';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { monthlyRevenue } from './transform-sort.data';

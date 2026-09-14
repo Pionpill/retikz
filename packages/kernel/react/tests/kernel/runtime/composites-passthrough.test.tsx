@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

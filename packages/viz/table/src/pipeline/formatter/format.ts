@@ -1,5 +1,4 @@
 import type { IRChild } from '@retikz/core';
-
 import { ScalarValueSchema } from '@retikz/data';
 
 import type {
@@ -10,12 +9,11 @@ import type {
   SemanticTableModel,
   TableCellContext,
 } from '../../contract';
-import type { ResolvedTableCellPlan } from '../rule';
-
 import { RetikzTableError } from '../../error';
 import { cellFormatterDefinitionOf, resolveCellFormatterRegistry } from '../../providers';
 import { TableCellPayloadKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
+import type { ResolvedTableCellPlan } from '../rule';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 

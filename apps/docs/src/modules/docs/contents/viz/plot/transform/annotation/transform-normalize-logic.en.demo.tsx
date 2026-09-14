@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** normalize grouping, group sums, zero-sum protection, and row-preserving output */
 const Demo: FC = () => (

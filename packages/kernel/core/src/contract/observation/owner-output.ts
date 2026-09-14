@@ -1,6 +1,5 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { NonBlankStringSchema } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 import { array, literal, number, strictObject, tuple, union } from 'zod';
 
 import { ClipFillRuleSchema, PathCommandSchema, PositionSchema } from '../../schemas';

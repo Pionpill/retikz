@@ -8,7 +8,6 @@ import type {
   IRScene,
   LayoutChildProbeKindValue,
 } from '../../src';
-
 import * as core from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });

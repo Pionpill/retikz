@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { type CorpusPrompt } from '../src/corpus/types';
-import { type LlmClient } from '../src/llm/types';
+import type { CorpusPrompt } from '../src/corpus/types';
+import type { LlmClient } from '../src/llm/types';
 import { runEval } from '../src/run';
 import { fakeClient } from './llm/fake';
 

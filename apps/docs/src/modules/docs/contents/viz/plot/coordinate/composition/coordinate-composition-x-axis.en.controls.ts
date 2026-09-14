@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS } from './coordinate-composition-x-axis.controls';

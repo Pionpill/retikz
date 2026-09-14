@@ -1,5 +1,4 @@
 import type { CoreProviderContribution, GroupPrim, IRChild, ScenePrimitive, TextPrim } from '@retikz/core';
-
 import {
   compileToScene,
   DEFAULT_RESOLVED_THEME,
@@ -11,6 +10,8 @@ import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@ret
 import { LegendSchema } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
+import { defineDiagramThemeStyle } from '../../src/_diagram';
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   FlowLayoutDefinition,
   FlowLayoutExecutionContext,
@@ -18,14 +19,11 @@ import type {
   FlowLayoutOutput,
   IRFlowEntity,
 } from '../../src/flow';
-import type { FlowMeasurement } from '../../src/flow/pipeline/flow/types';
-
-import { defineDiagramThemeStyle } from '../../src/_diagram';
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import * as Flow from '../../src/flow';
 import { defineFlowLayout } from '../../src/flow';
 import * as FlowPipeline from '../../src/flow/pipeline';
 import { materializeFlowGraph } from '../../src/flow/pipeline/flow/materialize';
+import type { FlowMeasurement } from '../../src/flow/pipeline/flow/types';
 import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers/theme';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 import { parseTestFlowDiagram } from './fixtures';

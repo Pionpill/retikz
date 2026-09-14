@@ -2,7 +2,6 @@ import type { IRDropShadow, ScenePrimitive } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
 import type { SvgNode } from '../types';
-
 import { hashKey } from './arrow-collect';
 import { compact } from './attrs';
 

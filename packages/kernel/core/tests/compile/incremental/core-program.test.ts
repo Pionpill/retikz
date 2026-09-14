@@ -1,5 +1,4 @@
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-
 import {
   createRuntimeChangeSet,
   createRuntimeIdentity,
@@ -27,7 +26,6 @@ import type {
   RuntimeScenePrimitive,
   ShapeDefinition,
 } from '../../../src';
-
 import {
   BUILTIN_SHAPES,
   compileToScene,

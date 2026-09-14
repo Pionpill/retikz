@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { EntityRole } from '@retikz/graph';
 import { Entity } from '@retikz/graph-react';
+import type { FC } from 'react';
 
 import { LogicFigure } from '@/modules/docs/components/logic-figure';
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';

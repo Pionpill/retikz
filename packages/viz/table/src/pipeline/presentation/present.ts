@@ -1,13 +1,11 @@
 import type { IRChild } from '@retikz/core';
-
 import { ChildSchema } from '@retikz/core';
 
 import type { AnyCellPresentationDefinition, CellPresentationInput } from '../../contract';
-import type { IRTableCellContentStyle, IRTablePresentationRef } from '../../schemas';
-import type { DeepReadonly } from '../../shared';
-
 import { RetikzTableError } from '../../error';
 import { cellPresentationDefinitionOf } from '../../providers';
+import type { IRTableCellContentStyle, IRTablePresentationRef } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
 import { deepFreeze } from '../../shared';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));

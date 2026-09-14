@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { ChevronRight } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
@@ -20,7 +19,6 @@ import {
 
 import type { BenchModule } from '../module-registry';
 import type { BenchCaseStatusValue, BenchTestDirection } from '../test-catalog';
-
 import { BenchCaseStatus, BenchCaseView, getBenchCasePath, getModuleTestGroups } from '../test-catalog';
 
 /** 测试目录导航属性 */

@@ -1,5 +1,4 @@
 import type { IRPosition, PathCommand, Rect, ShapeDefinition } from '@retikz/core';
-
 import {
   CenterAnchor,
   DEFAULT_EPSILON,

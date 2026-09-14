@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** density finite-sample filtering, bandwidth resolution, KDE sampling, and output */
 const Demo: FC = () => (

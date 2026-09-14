@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
 
 import { circuitMeter, Meter } from './circuit-01-meters.meter';
 import { at, Battery, circuitShapes, Resistor, Rheostat, Switch } from './circuit-shapes';

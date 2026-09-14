@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ResolvedTableBorderLine, TableBorderContribution, TableBorderSource } from '../../src/contract/manifest';
+import {
+  ResolvedTableBorderLineSchema,
+  TableBorderContributionSchema,
+  TableBorderManifestEntrySchema,
+  TableBorderPathMetaSchema,
+} from '../../src/contract/manifest';
 import type {
   BuildTableBorderGraphInput,
   ResolvedTableBorderAtom,
@@ -8,13 +14,6 @@ import type {
   TableBorderAtom,
   TableTrackLayout,
 } from '../../src/pipeline/layout';
-
-import {
-  ResolvedTableBorderLineSchema,
-  TableBorderContributionSchema,
-  TableBorderManifestEntrySchema,
-  TableBorderPathMetaSchema,
-} from '../../src/contract/manifest';
 import { buildTableBorderGraph, mergeTableBorderAtoms, resolveTableBorderAtoms } from '../../src/pipeline/layout';
 
 const line = (override: Partial<ResolvedTableBorderLine> = {}): ResolvedTableBorderLine => ({

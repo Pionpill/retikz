@@ -1,12 +1,10 @@
 import type { IRStripChart } from '@retikz/chart/point/strip';
-
 import { createStripChartProviderContribution } from '@retikz/chart/point/strip';
 
 import type { ChartAuthoringResult } from '../../shared';
-import type { CreateStripChartInput } from './types';
-
 import { createPointChart, typedChartPartsOf } from '../shared';
 import { normalizeStripChart } from './normalize';
+import type { CreateStripChartInput } from './types';
 
 /** 创建确定形态的 StripChart */
 export const createStripChart = (input: CreateStripChartInput): ChartAuthoringResult<IRStripChart> => {

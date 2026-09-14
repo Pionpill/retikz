@@ -1,5 +1,4 @@
 import type { FieldFormatDefinition } from '@retikz/data';
-
 import * as DataPublic from '@retikz/data';
 import { DataFieldFormat, defineFieldFormat, resolveFormatRegistry } from '@retikz/data';
 import { DataModelSchema, FieldDefinitionSchema } from '@retikz/data';
@@ -7,9 +6,8 @@ import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { prepareRows } from '../../../src/pipeline/expand';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /**

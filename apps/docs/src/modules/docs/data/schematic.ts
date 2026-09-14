@@ -1,5 +1,4 @@
 import type { Section } from './types';
-
 import { DocDifficulty } from './types';
 
 /** Schematic 图式元素与后续图结构能力的文档导航 */

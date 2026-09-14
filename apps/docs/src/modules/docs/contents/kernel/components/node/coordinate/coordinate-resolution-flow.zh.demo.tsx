@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Coordinate 登记与两类引用时机的编译流程图 */
 const Demo: FC = () => (

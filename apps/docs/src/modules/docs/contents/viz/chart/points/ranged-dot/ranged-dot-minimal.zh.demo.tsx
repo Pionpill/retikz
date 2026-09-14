@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { RangedDotChart } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { rangedDotMinimalData } from './ranged-dot-minimal.data';
 

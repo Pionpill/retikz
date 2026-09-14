@@ -1,8 +1,7 @@
 import { Pause, Play, RotateCcw, Square } from 'lucide-react';
 
-import type { PreviewControlSlot } from '../types';
-
 import { PreviewToolbar, PreviewToolbarButton } from '../preview-panel';
+import type { PreviewControlSlot } from '../types';
 
 export const ANIMATION_PAUSED_CONTROL_ID = 'animation-paused';
 

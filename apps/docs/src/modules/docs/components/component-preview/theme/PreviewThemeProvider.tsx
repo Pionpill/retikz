@@ -1,13 +1,11 @@
-import type { FC, ReactNode } from 'react';
-
 import { ChartThemeProvider } from '@retikz/chart-react';
 import { GraphThemeProvider } from '@retikz/graph-react';
 import { PlotThemeProvider } from '@retikz/plot-react';
 import { ThemeProvider } from '@retikz/react';
 import { TableThemeProvider } from '@retikz/table-react';
+import type { FC, ReactNode } from 'react';
 
 import type { PreviewTheme } from './constants';
-
 import { PreviewThemeDefinitionBundle, PreviewThemeDefinitionsContext } from './presets';
 import { usePreviewTheme } from './usePreviewTheme';
 

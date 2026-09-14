@@ -2,10 +2,9 @@ import { circle } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
-import type { NodeLayout } from '../../src/compile/node';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { createScopeCircleLayout } from '../../src/compile/node';
 import { collectScopeCornerPoints } from '../../src/compile/scope';

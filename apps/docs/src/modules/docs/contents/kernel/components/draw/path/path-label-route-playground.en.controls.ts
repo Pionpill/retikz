@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { PathLabelRoutePlaygroundControlId } from './path-label-route-playground.controls';

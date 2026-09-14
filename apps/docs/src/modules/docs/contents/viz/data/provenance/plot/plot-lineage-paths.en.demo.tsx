@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Independent Plot paths for lowered metadata and runtime lineage */
 const Demo: FC = () => (

@@ -2,14 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { number, strictObject } from 'zod';
 
 import type { CompileOptions } from '../../../src/compile/compile';
-import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
-import type { IRBoundary, IRScene } from '../../../src/schemas';
-import type { Rect } from '../../../src/shared/geometry/rect';
-
 import { compileToScene } from '../../../src/compile/compile';
+import type { BoundaryDefinition, ScenePrimitive } from '../../../src/contract';
 import { defineBoundary, defineShape } from '../../../src/contract';
 import { BUILTIN_BOUNDARIES } from '../../../src/providers/boundary';
+import type { IRBoundary, IRScene } from '../../../src/schemas';
 import { BoundarySchema } from '../../../src/schemas/boundary';
+import type { Rect } from '../../../src/shared/geometry/rect';
 import { flattenPrims } from '../../helpers/flatten';
 
 const lineEndpoint = (options: CompileOptions, boundary?: IRBoundary): [number, number] => {

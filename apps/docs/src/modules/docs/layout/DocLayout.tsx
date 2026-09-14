@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { useLayoutEffect } from 'react';
 import { Outlet, useLocation } from 'react-router';
 

@@ -1,5 +1,4 @@
 import type { Scene } from '@retikz/core';
-
 import { compileToScene, SceneSchema } from '@retikz/core';
 
 /** L1 打分结果：两层（zod / compile）布尔 + 首个失败的归因；compile 通过时带出 scene 供 L2 复用 */

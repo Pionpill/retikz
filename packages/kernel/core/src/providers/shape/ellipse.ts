@@ -1,13 +1,11 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { ellipse as mathEllipse } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, strictObject } from 'zod';
 
 import type { PathCommand, ScenePrimitive } from '../../contract';
-import type { Rect } from '../../shared';
-
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
+import type { Rect } from '../../shared';
 import { CenterAnchor, ellipse, isDirectionalAnchor, localToWorld, RAD_TO_DEG } from '../../shared';
 import { ellipsePrimitiveStyle } from './style';
 

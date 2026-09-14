@@ -1,5 +1,3 @@
-import type { Dispatch, FC } from 'react';
-
 import {
   BarChart3,
   Box,
@@ -12,6 +10,7 @@ import {
   Play,
   Settings2,
 } from 'lucide-react';
+import type { Dispatch, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 
@@ -30,12 +29,11 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import type { LabBackendValue, LabPolicyIdValue } from '../../modules/kernel';
+import { kernelLabPolicies, LabBackend } from '../../modules/kernel';
 import type { LabState, LabStateAction } from '../lab-state';
+import { LabActionType, LabStatus } from '../lab-state';
 import type { BenchModule } from '../module-registry';
 import type { BenchCaseViewValue, BenchTestCase } from '../test-catalog';
-
-import { kernelLabPolicies, LabBackend } from '../../modules/kernel';
-import { LabActionType, LabStatus } from '../lab-state';
 import { BenchCaseView, getBenchCasePath, getBenchTestCaseContext } from '../test-catalog';
 import { PolicyGuideDialog } from './PolicyGuideDialog';
 

@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { vectorNormalI18n } from './vector-normal.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 向量 playground 的稳定字段 id */
 export const VectorNormalControlId = {

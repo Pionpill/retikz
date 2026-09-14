@@ -2,7 +2,6 @@ import type { CoreDependencyProvider } from '@retikz/core';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from './options';
-
 import { mergeGraphDefinitionOptions, resolveGraphDefinitionOptions } from './options';
 
 const GraphRuntimeOptions = Symbol('retikz.graph.runtimeOptions');

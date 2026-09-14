@@ -1,5 +1,4 @@
 import type { IRDataModel } from '@retikz/data';
-
 import {
   DataFieldType,
   DataTransformBindingClass,

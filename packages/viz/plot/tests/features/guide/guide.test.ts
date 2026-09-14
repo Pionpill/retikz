@@ -1,16 +1,14 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, PositionScale } from '../../../src/contract';
 import type { GuideContext } from '../../../src/contract';
-import type { IRPlot } from '../../../src/schemas';
-
 import { createCoordinateFrame } from '../../../src/contract';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerCustomAxis, lowerGuide } from '../../../src/pipeline/guide';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 测试用最小 PositionScale：guide 只调 coordinate，其余成员给占位 */

@@ -6,7 +6,6 @@ import type {
   CompileObserverOutput,
   CompileObserverSession,
 } from '../../contract';
-
 import { defineCompileObserver } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 

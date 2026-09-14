@@ -1,11 +1,9 @@
 import type { RuntimeChangeSet, RuntimeIdentity } from '@retikz/runtime';
-
 import { createRuntimeIdentity, createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { CoreChange } from '../../contract';
-import type { IRChild, IRScene, IRScope } from '../../schemas';
-
 import { CORE_OWNER_KEY } from '../../contract';
+import type { IRChild, IRScene, IRScope } from '../../schemas';
 import { jsonStructuralEquals } from '../../shared/json';
 
 /** Snapshot Diff 中由 document root 拥有的 Scene 根字段 */

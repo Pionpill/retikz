@@ -1,10 +1,9 @@
 import type { FC } from 'react';
 
-import type { PathVisualProps } from './shape-helpers';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
+import type { PathVisualProps } from './shape-helpers';
 import { pickPathVisual, requireXY, starVertices } from './shape-helpers';
 
 /** `<Star>` 形态：中心 + 外/内半径（或外半径 + 内半径比例）+ 角数 */

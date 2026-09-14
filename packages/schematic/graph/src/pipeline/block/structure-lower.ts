@@ -1,7 +1,5 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { IRFlexLayout, IRFlexLayoutItem } from '@retikz/layout';
-import type { IRSurface } from '@retikz/standard';
-
 import {
   createFlexLayout,
   FlexLayoutDirection,
@@ -9,6 +7,7 @@ import {
   LayoutDistribution,
   LayoutOverflow,
 } from '@retikz/layout';
+import type { IRSurface } from '@retikz/standard';
 import { createSurface, STANDARD_NAMESPACE, SURFACE_TYPE } from '@retikz/standard';
 
 import type { IRBlockHeader, IRBlockRow, IRBlockSection, IRBlockText } from '../../schemas';

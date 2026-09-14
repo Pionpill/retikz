@@ -1,7 +1,6 @@
+import { pulse } from '@retikz/core';
 // @vitest-environment jsdom
 import type { HydrationContext } from '@retikz/render/hydration';
-
-import { pulse } from '@retikz/core';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';

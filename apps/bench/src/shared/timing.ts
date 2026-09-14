@@ -1,6 +1,5 @@
-import type { WallClockScenarioReport } from './report';
-
 import { stableHash } from './hash';
+import type { WallClockScenarioReport } from './report';
 
 /** 单个已审查 timing baseline 场景 */
 export type TimingBaselineScenario = Readonly<{

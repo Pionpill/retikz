@@ -1,7 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { GraphThemeStyleDefinition } from '../../contract';
-
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 
 /** 注册 Graph Theme styles，并拒绝同名 definition */

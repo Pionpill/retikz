@@ -1,6 +1,5 @@
-import type { PathProps } from '../../kernel/components';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
+import type { PathProps } from '../../kernel/components';
 
 /**
  * sugar 组件共用的视觉 props

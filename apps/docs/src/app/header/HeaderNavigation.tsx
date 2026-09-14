@@ -1,9 +1,8 @@
 import type { FC } from 'react';
 
-import type { DocNavigationContext } from '@/modules/docs/layout';
-
 import { NavigationMenu, NavigationMenuList } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib';
+import type { DocNavigationContext } from '@/modules/docs/layout';
 
 import { AboutNav } from './AboutNav';
 import { ModuleNav } from './ModuleNav';

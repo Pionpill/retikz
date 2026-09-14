@@ -1,6 +1,5 @@
-import type { SchemaPathSegment } from './types';
-
 import { serializeSchemaPath } from './schema-path';
+import type { SchemaPathSegment } from './types';
 
 type DescriptionMap = Record<string, string>;
 

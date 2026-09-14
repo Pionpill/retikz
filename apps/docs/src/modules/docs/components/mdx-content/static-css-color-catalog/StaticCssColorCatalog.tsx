@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { parseStaticCssColor, StaticCssNamedColorHexByName } from '@retikz/foundation';
 import { Search } from 'lucide-react';
+import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 
 import { Input } from '@/components/ui/input';

@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRNode } from '../../src/schemas/node';
-import type { ContourSegment } from '../../src/shared/geometry/path';
-
 import { NamespaceStack } from '../../src/compile/namespace';
 import { boundaryPointOf, layoutNode } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
@@ -10,6 +7,8 @@ import { resolveBoundaryRegistry } from '../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { resolveNode } from '../../src/resolve/node';
+import type { IRNode } from '../../src/schemas/node';
+import type { ContourSegment } from '../../src/shared/geometry/path';
 import { filletContour } from '../../src/shared/geometry/path';
 
 const measureText = (): { width: number; height: number; ascent: number } => ({

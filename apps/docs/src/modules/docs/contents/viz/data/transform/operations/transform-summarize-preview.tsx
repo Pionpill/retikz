@@ -1,5 +1,4 @@
 import type { IRDataReducerMetrics, IRDataSummarizeTransform } from '@retikz/data';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { orders } from './transform-summarize.data';

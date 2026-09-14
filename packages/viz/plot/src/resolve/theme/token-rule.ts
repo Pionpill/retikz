@@ -1,5 +1,4 @@
 import type { IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
-
 import { applyPlotDefaults, mergePlotDefaults } from './mapping';
 
 const doesPlotAxisRuleMatchDimension = (dimension: string | ReadonlyArray<string>, candidate: string): boolean =>

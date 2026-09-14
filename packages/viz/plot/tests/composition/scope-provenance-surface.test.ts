@@ -1,11 +1,9 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
-
-import type { IRPlot } from '../../src/schemas';
 
 import { createPlotLocator } from '../../src';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 const weatherRows = [

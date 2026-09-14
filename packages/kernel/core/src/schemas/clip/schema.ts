@@ -1,11 +1,9 @@
-import type { ZodType } from 'zod';
-
 import { JsonObjectSchema, NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { enum as zodEnum, intersection, lazy, literal, number, object, strictObject, union } from 'zod';
 
-import type { IRClip } from './types';
-
 import { ClipFillRule } from './constants';
+import type { IRClip } from './types';
 
 export const ClipFillRuleSchema = zodEnum(ClipFillRule).describe('Fill rule used by path-like clip regions.');
 

@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Scope } from '@retikz/react';
 import { Surface } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** Surface 包装任意单个 Core child 的基础示例 */
 const Demo: FC = () => (

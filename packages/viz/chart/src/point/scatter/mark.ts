@@ -1,5 +1,4 @@
 import type { ChartMarkDefinition } from '../../_chart/contract';
-
 import { defineChartMark } from '../../_chart/contract';
 import { markSlotsOf, resolvePointMark } from '../shared';
 import { ScatterChartMarkSchema } from './schema';

@@ -1,8 +1,7 @@
-import type { infer as ZodInfer,RefinementCtx, ZodType } from 'zod';
-
 import { CompositeBaseSchema } from '@retikz/core';
 import { DataReferenceSchema } from '@retikz/data';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
+import type { infer as ZodInfer, RefinementCtx, ZodType } from 'zod';
 import { array, literal, never, union } from 'zod';
 
 import { TableAppearanceDefaultsSchema } from '../appearance';

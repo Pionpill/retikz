@@ -1,11 +1,9 @@
 import type { LayoutChildResult } from '@retikz/core';
 import type { LayoutRect } from '@retikz/layout/compose';
-
 import { positionedLayoutSlotOf, unionLayoutArtifactRects } from '@retikz/layout/compose';
 
-import type { CanonicalLegendRampContent } from '../../../../resolve/legend';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../../errors';
+import type { CanonicalLegendRampContent } from '../../../../resolve/legend';
 import { LegendDirection } from '../constants';
 
 /** 已取得 natural slot 的 ramp tick */

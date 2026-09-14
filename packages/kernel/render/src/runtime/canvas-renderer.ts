@@ -1,18 +1,8 @@
 import type { RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
 import type { RuntimeIdentity, RuntimePreparedCommit } from '@retikz/runtime';
-
 import { runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { AnimationControls, IdClockRegistry } from '../animation';
-import type { PrimAnimationResolution } from '../canvas';
-import type { HydrationAnimationControls, HydrationController, HydrationTarget } from '../hydration';
-import type { RenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot } from './frame';
-import type { RenderReadonlyLayer } from './readonly-layer';
-import type { RetainedCanvasRenderer, RetainedCanvasRendererImmutableOptions } from './renderer';
-import type { SceneAnimationDescriptorDiff } from './runtime-options';
-import type { RuntimeIdentityMap } from './shared';
-
 import {
   createClock,
   createIdClockRegistry,
@@ -20,8 +10,10 @@ import {
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
 } from '../animation';
+import type { PrimAnimationResolution } from '../canvas';
 import { hitTest, renderFrameToCanvas, renderToCanvas } from '../canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { HydrationAnimationControls, HydrationController, HydrationTarget } from '../hydration';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -32,14 +24,20 @@ import {
   withCanvasAnimationEventHandlers,
 } from '../hydration';
 import { computeDisplaySize, pathBounds } from '../shared';
+import type { RenderRuntimeConfig } from './config';
+import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
+import type { RenderReadonlyLayer } from './readonly-layer';
 import { validateReadonlyLayers } from './readonly-layer';
+import type { RetainedCanvasRenderer, RetainedCanvasRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
+import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
   diffSceneAnimationDescriptors,
   materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
+import type { RuntimeIdentityMap } from './shared';
 import {
   createHydrationCleanupQueue,
   createPublicIdPrimitivePathMap,

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 对比居中默认、显式关闭、上方默认与显式开启的标签断线 */
 const Demo: FC = () => (

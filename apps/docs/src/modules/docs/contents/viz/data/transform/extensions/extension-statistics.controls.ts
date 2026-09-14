@@ -1,17 +1,16 @@
 import { DEFAULT_TRANSFORM_CONTEXT, resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformResultView } from '@/modules/docs/preview';
 
-import { scoreRows } from './extension-statistics.data';
 import {
   closestToMean,
   closestToMeanSelectOperationOf,
   midpoint,
   midpointSummaryOperationOf,
 } from './extension-statistics-preview';
+import { scoreRows } from './extension-statistics.data';
 
 const reducerContext = {
   ...DEFAULT_TRANSFORM_CONTEXT,

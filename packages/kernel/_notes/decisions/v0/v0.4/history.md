@@ -24,7 +24,7 @@
 - 依赖方向为 core → math；math 不反向依赖 core。首切即把 core 中纯向量、仿射、插值、arc 与求交原语下沉，并由 core re-export。
 - 首批能力覆盖线 / 线段交点、三角形内切 / 外接圆、点在多边形、凸包；曲线求交和伪三维矩阵后置。
 - 进包红线是“纯数学、可独立测试、无绘图业务语义”；否则留在消费域。
-- 早期曾考虑让 core geometry 与 math 短期并存，后被 alpha.1 ADR 推翻，以 [alpha.1 roadmap](./alpha.1/roadmap.md) 为准。
+- 早期曾考虑让 core geometry 与 math 短期并存，后被 alpha.1 ADR 推翻，以 [alpha.1 roadmap](./roadmap.md) 为准。
 
 ## B · 路径补强（2026-06-12 拍板）
 
@@ -32,14 +32,14 @@
 - path-path 求交依赖 math 的曲线求交原语，后置。
 - motif 装饰不自动进入 core；先评估扩展机制。
 - 沿路径放置节点 / markings 等待真实消费场景，不提前扩张 Path contract。
-- 最终实现与 contour shape 合并进 [alpha.3 roadmap](./alpha.3/roadmap.md)。
+- 最终实现与 contour shape 合并进 [alpha.3 roadmap](./roadmap.md)。
 
 ## E · 数学公式（2026-06-12 方向）
 
 - 坚持 renderer-agnostic：MathJax SVG glyph path lowering 到基础 Scene path，使 SVG、Canvas 与 Node 输出共享结果。
 - 独立为 `@retikz/tex`，避免把 MathJax 重依赖并入 core 或轻量 extension 集合。
 - MathJax 作为 optional peer，宿主控制版本和 macro。
-- 早期设想的独立 math IR 节点最终收敛为文本中的 `$...$`、`$$...$$` 与 runs，由可选 `lowerTex` 下沉；以 [alpha.5 roadmap](./alpha.5/roadmap.md) 为准。
+- 早期设想的独立 math IR 节点最终收敛为文本中的 `$...$`、`$$...$$` 与 runs，由可选 `lowerTex` 下沉；以 [alpha.5 roadmap](./roadmap.md) 为准。
 
 ## F · Scene 视觉（2026-06-13 方向）
 
@@ -47,7 +47,7 @@
 - blur 因 Node Canvas 支持与降级不稳定而后置；mask 与已有 clip 重叠，未进入首切。
 - Scene 只保存效果意图，各 renderer 翻译；不能把 DOM filter 或 Canvas 状态带进 core。
 - zIndex 还为后续深度排序提供通用底座，但不因此把三维语义放进 core。
-- 最终范围见 [alpha.4 roadmap](./alpha.4/roadmap.md)。
+- 最终范围见 [alpha.4 roadmap](./roadmap.md)。
 
 ## 历史依赖判断
 

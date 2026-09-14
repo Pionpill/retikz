@@ -130,14 +130,14 @@ Except for a single self-contained `rectangle`, a Path needs at least two Steps.
     {
       label: 'Path Step collection and label precedence',
       path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 256,
-      endLine: 421,
+      startLine: 254,
+      endLine: 419,
     },
     {
       label: 'First-step and minimum-sequence normalization',
       path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
-      startLine: 76,
-      endLine: 85,
+      startLine: 74,
+      endLine: 83,
     },
   ]}
 />
@@ -162,32 +162,32 @@ This ordering lets JSX, direct IR, and `<Draw>` sugar reuse the same geometry co
     {
       label: 'Relative-target normalization',
       path: 'packages/kernel/core/src/resolve/path/resolve.ts',
-      startLine: 342,
-      endLine: 458,
+      startLine: 341,
+      endLine: 457,
     },
     {
       label: 'Target normalization and the per-Step compile loop',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 54,
-      endLine: 260,
+      startLine: 53,
+      endLine: 259,
     },
     {
       label: 'Geometry lowering for ordinary segment Steps',
       path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
-      startLine: 41,
-      endLine: 158,
+      startLine: 40,
+      endLine: 157,
     },
     {
       label: 'Geometry lowering for generator, cycle, and rectangle Steps',
       path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
-      startLine: 85,
-      endLine: 220,
+      startLine: 84,
+      endLine: 219,
     },
     {
       label: 'Geometry lowering for arcs, circles, ellipses, and smooth',
       path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
-      startLine: 223,
-      endLine: 445,
+      startLine: 222,
+      endLine: 444,
     },
   ]}
 />
@@ -215,20 +215,20 @@ Circle and ellipse angles increase in screen coordinates, so 90° is visually do
     {
       label: 'Mapping label.position to t',
       path: 'packages/kernel/core/src/compile/path/host/label.ts',
-      startLine: 50,
-      endLine: 69,
+      startLine: 49,
+      endLine: 68,
     },
     {
       label: 'Sampling edge labels from Step geometry',
       path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
-      startLine: 41,
-      endLine: 79,
+      startLine: 40,
+      endLine: 78,
     },
     {
       label: 'Edge-label offsets and tangent rotation',
       path: 'packages/kernel/core/src/compile/path/host/label.ts',
-      startLine: 75,
-      endLine: 166,
+      startLine: 74,
+      endLine: 165,
     },
   ]}
 />
@@ -285,10 +285,10 @@ Only meaningful when `kind="fold"`. Let the unclipped source reference be `(px, 
 
 | Form                                     | Example                                                                                   | Behavior                                                                                                                                                                         |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node id                                  | `'a'`                                                                                     | Auto-attaches to Node border (see [Primitive Relations](/kernel/components/core/primitive-relations))                                                                              |
+| Node id                                  | `'a'`                                                                                     | Auto-attaches to Node border (see [Primitive Relations](/kernel/components/core/primitive-relations))                                                                            |
 | Node + connection surface                | `{ id: 'a', boundary: 'circle' }`                                                         | Per-edge override of the target node's [connection surface](/kernel/components/node/overview#visual-shape-vs-connection-geometry) (clip shape); never changes the node footprint |
 | Cartesian                                | `[60, 0]`                                                                                 | Literal `[x, y]`                                                                                                                                                                 |
-| Polar                                    | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | Polar (see [Positioning](/kernel/components/basic/position))                                                                                                                       |
+| Polar                                    | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | Polar (see [Positioning](/kernel/components/basic/position))                                                                                                                     |
 | Offset                                   | `{ of: 'a', offset: [10, 5] }`                                                            | Base + `(dx, dy)`; `of` accepts node id, Cartesian literal, or PolarPosition                                                                                                     |
 | Proportional placement                   | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                  | Proportional point along A → B; endpoints must be independently resolvable absolute targets (`{ id, anchor? }` form, or Cartesian / polar)                                       |
 | Proportional placement (explicit anchor) | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], fraction: 0.5 }` | Endpoints may carry an explicit `anchor`, resolved from that anchor instead of auto-attaching to the border                                                                      |

@@ -2,7 +2,7 @@
 
 > **状态：全仓长期架构设计。** 本文定义 schema、type、contract、Source 默认片段与纯函数的原子化边界、单一真源和上层组合规则，供 Kernel、Standard、Data、Plot、Chart、Table 及未来能力域参考。本文不冻结某个版本的具体字段、文件、preset 值、实现步骤或测试路径；这些内容由所属能力域的 ADR、代码和文档维护。
 >
-> 相关设计：[`能力完备性与模块边界`](./capability-design.md) · [`IR JSON-Schema 产物设计`](./schema-design.md) · [`通用视觉主题设计`](./visual-theme-design.md) · [`Core 原子绘图契约与 Tier 2 / Tier 3 组合边界`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/10-core-atomic-contracts.md) · [`Standard Drawing Library 设计`](../../packages/library/_notes/architecture/standard-library-design.md)
+> 相关设计：[`能力完备性与模块边界`](./capability-design.md) · [`IR JSON-Schema 产物设计`](./schema-design.md) · [`通用视觉主题设计`](./visual-theme-design.md) · [`Core 原子绘图契约与 Tier 2 / Tier 3 组合边界`](../../packages/kernel/_notes/decisions/v0/v0.5/019-core-atomic-contracts.md) · [`Standard Drawing Library 设计`](../../packages/library/_notes/architecture/standard-library-design.md)
 
 ---
 
@@ -194,8 +194,8 @@ ThemeTokenSource 的 inherit / local 保留既有来源含义，不充当全链�
 - [`能力完备性与模块边界`](./capability-design.md) 定义原子化的全仓治理原则
 - [`IR JSON-Schema 产物设计`](./schema-design.md) 负责把既有 schema 输出为工具和 AI 可消费的 JSON-Schema 产物
 - [`通用视觉主题设计`](./visual-theme-design.md) 负责 Theme environment、稀疏 Source 片段、preset、cascade 和视觉 owner
-- [`Core 原子绘图契约与 Tier 2 / Tier 3 组合边界`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/10-core-atomic-contracts.md) 冻结 Core 绘图原子的具体长期契约
-- [`可继承 Theme IR 与 Composite 编译上下文`](../../packages/kernel/_notes/decisions/v0/v0.5/alpha.2/09-inherited-theme-context.md) 冻结 Theme environment 的 Scene / Scope 继承与 Composite 消费边界
+- [`Core 原子绘图契约与 Tier 2 / Tier 3 组合边界`](../../packages/kernel/_notes/decisions/v0/v0.5/019-core-atomic-contracts.md) 冻结 Core 绘图原子的具体长期契约
+- [`可继承 Theme IR 与 Composite 编译上下文`](../../packages/kernel/_notes/decisions/v0/v0.5/018-inherited-theme-context.md) 冻结 Theme environment 的 Scene / Scope 继承与 Composite 消费边界
 - [`Standard Drawing Library 设计`](../../packages/library/_notes/architecture/standard-library-design.md) 定义 Standard 对 Core 原子的跨领域组合边界
 
 当本文与某个版本 ADR 对同一公开契约出现差异时，先修订长期设计或明确 ADR 的范围，再进入实现；不得用实现位置或单个消费方需求反向决定原子 owner。

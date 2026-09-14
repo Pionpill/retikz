@@ -1,6 +1,4 @@
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
-import type { IRScatterChart } from './schema';
-
 import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
@@ -16,6 +14,7 @@ import {
   sizeGuideOf,
 } from '../shared';
 import { ScatterMarkDefinition } from './mark';
+import type { IRScatterChart } from './schema';
 import { ScatterChartSchema } from './schema';
 
 /** Scatter exact schema、调度与消费检查共用的encoding顺序 */

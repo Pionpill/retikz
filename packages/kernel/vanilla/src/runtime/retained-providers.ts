@@ -9,7 +9,6 @@ import type {
   PatternDefinition,
   ShapeDefinition,
 } from '@retikz/core';
-
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { defineRuntimeOwner } from '@retikz/runtime';
 

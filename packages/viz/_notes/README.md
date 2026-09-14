@@ -4,13 +4,13 @@
 
 ## 目录
 
-- [`architecture/`](./architecture)：viz 能力域与 plot / chart / table 长期架构设计。
-- [`decisions/`](./decisions)：版本路线、milestone roadmap、ADR。
-- [`theme/`](./theme)：ThemeStyle 的 package owner 视觉映射；当前包含 Plot 指导。
+- [`architecture`](./architecture)：viz 能力域与 plot / chart / table 长期架构设计。
+- [`decisions`](./decisions)：各 family 的中版本能力 roadmap 与独立 ADR；保留 `v0/v0.x/`，不设预发布子目录。
+- [`theme`](./theme)：ThemeStyle 的 package owner 视觉映射；当前包含 Plot 指导。
 - `plans/`：与 ADR 相对路径镜像的 ignored implementation plan、测试契约、任务状态与评审记录；不 stage / commit。
-- [`analysis/`](./analysis)：plot / chart / table 相关一次性分析。
+- [`analysis`](./analysis)：plot / chart / table 相关一次性分析。
 
-跨包长期架构原则仍放在根 [`notes/architecture`](../../../notes/architecture)。
+跨包长期架构原则仍放在根 [`../../../notes/architecture`](../../../notes/architecture)。
 
 ## 当前入口
 
@@ -29,7 +29,6 @@
 - [`decisions/plot/v0/v0.1/roadmap.md`](./decisions/plot/v0/v0.1/roadmap.md)：plot v0.1 路线与 milestone 索引。
 - [`decisions/table/v0/roadmap.md`](./decisions/table/v0/roadmap.md)：table v0 总路线。
 - [`decisions/table/v0/v0.1/roadmap.md`](./decisions/table/v0/v0.1/roadmap.md)：table v0.1 路线与 milestone 索引。
-- [`decisions/table/v0/v0.1/alpha.1/roadmap.md`](./decisions/table/v0/v0.1/alpha.1/roadmap.md)：table alpha.1 ADR 索引与执行顺序。
 - [`decisions/data/v0/roadmap.md`](./decisions/data/v0/roadmap.md)：data v0 总路线。
 - [`decisions/chart/v0/v0.1/roadmap.md`](./decisions/chart/v0/v0.1/roadmap.md)：chart v0.1 路线与 Tier 3 `IRChart` 边界。
 - [`decisions/_template.md`](./decisions/_template.md)：viz ADR 模板。
@@ -40,7 +39,7 @@
 
 ## 规则
 
-- roadmap 可持续更新；ADR Accepted 后只增补状态 / supersede，不改历史判断。
+- roadmap 汇总中版本能力目标与进度，不分配预发布批次任务；ADR 按 family / 中版本三位连续编号，Accepted 仅代表设计接受，不代表实现或发布完成。
 - ADR 从 Proposed 起只保留长期功能与架构契约；具体文件、私有逻辑、测试 case / 命令和 review 过程写入同构 `plans/` 镜像。
 - plot / table 只消费 core 能力，不反向依赖 core 内部实现；需要通用底层能力时先补 kernel / core。
 - 本目录不进入 npm 包；`@retikz/plot` 的 `package.json` 通过 `files` 白名单只发布 `dist/**/*`、`README.md`、`LICENSE` 和 `package.json`。

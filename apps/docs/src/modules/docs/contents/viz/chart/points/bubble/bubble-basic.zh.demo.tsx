@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

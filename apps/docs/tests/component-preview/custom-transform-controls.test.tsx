@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { DEFAULT_TRANSFORM_CONTEXT } from '@retikz/data';
+import type { FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

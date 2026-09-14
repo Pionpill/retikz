@@ -1,8 +1,7 @@
 import type { ScenePrimitive } from '@retikz/core';
 import type { BuildContext } from '@retikz/render/svg';
-import type { Key, ReactElement } from 'react';
-
 import { buildPrim } from '@retikz/render/svg';
+import type { Key, ReactElement } from 'react';
 
 import { svgToReact } from './svg-to-react';
 

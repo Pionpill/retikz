@@ -2,8 +2,8 @@ import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { cities } from './legend.data';
 import { legendSizeControls, previewControlContract } from './legend-size.controls';
+import { cities } from './legend.data';
 
 /** 注册回退使用的尺寸图例控件 */
 export const previewControls = legendSizeControls;
@@ -36,4 +36,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** size 梯度符号：连续字段通过 sqrt scale 生成代表大小与数值标签 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

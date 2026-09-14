@@ -11,7 +11,7 @@
     "bench:install-browser": "playwright install chromium",
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "test": "vitest",
     "test:run": "vitest run",
     "test:changed": "vitest run --changed --passWithNoTests"

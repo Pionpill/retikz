@@ -1,8 +1,7 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
-import type { FC } from 'react';
-
 import { DEFAULT_EPSILON, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

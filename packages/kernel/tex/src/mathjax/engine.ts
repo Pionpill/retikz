@@ -1,7 +1,6 @@
-import type { MathJaxEngineOptions, MathJaxExtensionValue, MathJaxSvgEngine } from './types';
-
 import { RetikzTexError, RetikzTexErrorCode } from '../error';
 import { loadMathJaxConfigurations, resolveMathJaxExtensions } from './profiles';
+import type { MathJaxEngineOptions, MathJaxExtensionValue, MathJaxSvgEngine } from './types';
 
 type LiteAdaptor = { outerHTML: (node: unknown) => string };
 type MathDocument = { convert: (tex: string, options: { display: boolean }) => unknown };

@@ -1,7 +1,6 @@
-import type { FC, ReactElement } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
 import { StarShapeDefinition } from '@retikz/standard/shape';
+import type { FC, ReactElement } from 'react';
 
 /**
  * 显式（锁定）anchor：通用方位 anchor 走盒模型；形状专属 anchor 走真实形状

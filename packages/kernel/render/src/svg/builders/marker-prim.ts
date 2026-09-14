@@ -1,9 +1,8 @@
 import type { MarkerFill, MarkerPrimitive, PathCommand } from '@retikz/core';
 
-import type { SvgNode } from '../types';
-
 import { buildPathD } from '../path-d-builder';
 import { buildTransform } from '../transform-builder';
+import type { SvgNode } from '../types';
 import { compact } from './attrs';
 
 /**

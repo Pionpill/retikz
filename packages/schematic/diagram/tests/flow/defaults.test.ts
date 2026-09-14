@@ -1,5 +1,4 @@
 import type { ScenePrimitive } from '@retikz/core';
-
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema, resolveGraph, resolveGraphDefinitionOptions } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';

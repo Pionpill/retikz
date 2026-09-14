@@ -1,13 +1,11 @@
 import type { IRCoordinate } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
 import { resolveFieldPath } from '@retikz/data';
 
 import type { AnchorIdGenerator, AnchorOwner, AnchorRegistry } from '../contract';
-import type { IRPlotAnchorId } from '../schemas';
-
 import { slug } from '../contract';
 import { RetikzPlotError } from '../error';
+import type { IRPlotAnchorId } from '../schemas';
 
 const ownerText = (owner: AnchorOwner): string => {
   const id = owner.markId === undefined ? '' : ` id="${owner.markId}"`;

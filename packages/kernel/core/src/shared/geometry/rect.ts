@@ -1,7 +1,6 @@
 import type { Position } from '@retikz/math';
 
 import type { AnchorValue, SideValue } from '../anchor';
-
 import { Anchor } from '../anchor';
 import { EDGE_ENDS, lerpPoint } from './edge';
 import { localToWorld, worldToLocal } from './transform';

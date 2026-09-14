@@ -1,6 +1,5 @@
-import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions } from './types';
-
 import { readSse } from './sse';
+import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions } from './types';
 
 /** Anthropic Messages API provider。 */
 export const anthropicProvider: ChatProvider = {

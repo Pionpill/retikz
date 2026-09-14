@@ -7,7 +7,6 @@ import type {
   ScenePrimitive,
   TextMeasurer,
 } from '@retikz/core';
-
 import {
   BUILTIN_SHAPES,
   ChildSchema,

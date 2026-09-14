@@ -1,10 +1,8 @@
 import type { IRChild } from '@retikz/core';
-
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { OverlayLayoutInput, OverlayLayoutItemInput, OverlayPlacementInput } from '../../src';
-
 import {
   createOverlayLayout,
   LayoutAlignment,

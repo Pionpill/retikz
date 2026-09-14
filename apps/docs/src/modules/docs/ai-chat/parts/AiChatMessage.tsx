@@ -1,7 +1,6 @@
 import type { TFunction } from 'i18next';
-import type { FC, ReactNode } from 'react';
-
 import { Bot, Code, Copy, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { Fragment, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
@@ -18,9 +17,8 @@ import { cn } from '@/lib';
 import { CodeBlock } from '@/modules/docs/components';
 
 import type { ChatMessage } from '../providers';
-import type { ListItem, TableAlign } from './message-blocks';
-
 import { useAiChatStore } from '../useAiChatStore';
+import type { ListItem, TableAlign } from './message-blocks';
 import { extractFirstRetikzBlock, parseMessageBlocks } from './message-blocks';
 import { RetikzPreview, RetikzPreviewPending } from './RetikzPreview';
 

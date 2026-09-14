@@ -1,13 +1,11 @@
 import type { FC } from 'react';
-
 import { useTranslation } from 'react-i18next';
-
-import type { LabState } from '../lab-state';
-import type { BenchTestCase } from '../test-catalog';
 
 import { LabPolicyId, LabRunMode } from '../../modules/kernel';
 import { Inspector, ReportDashboard } from '../../report';
+import type { LabState } from '../lab-state';
 import { LabStatus } from '../lab-state';
+import type { BenchTestCase } from '../test-catalog';
 import { CaseStartState } from './CaseStartState';
 
 /** 基准对比页面属性 */

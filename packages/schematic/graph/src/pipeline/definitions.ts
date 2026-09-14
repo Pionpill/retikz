@@ -1,5 +1,4 @@
 import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
-
 import { FlexLayoutDefinition, FlexLayoutProvider } from '@retikz/layout';
 import { SurfaceDefinition, SurfaceProvider } from '@retikz/standard';
 import {
@@ -12,7 +11,6 @@ import { PathClipProvider } from '@retikz/standard/clip';
 import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
 
 import type { GraphDefinitionOptions } from '../contract';
-
 import { resolveGraphDefinitionOptions } from '../providers';
 import { createBlockDefinitionFromOptions } from './block/definition';
 import { BlockProvider, createBlockProvider } from './block/provider';

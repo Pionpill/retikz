@@ -1,6 +1,5 @@
-import type { FC, KeyboardEvent } from 'react';
-
 import { Send, Square } from 'lucide-react';
+import type { FC, KeyboardEvent } from 'react';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 

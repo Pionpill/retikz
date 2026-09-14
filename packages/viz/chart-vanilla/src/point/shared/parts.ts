@@ -5,9 +5,8 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 
 import type { InputChartCoordinate } from '../../normalize/chart';
 import type { ChartAuthoringResult, InputChartPanel } from '../../shared';
-import type { TypedChartCommonInput } from './types';
-
 import { createChartAuthoringResult } from '../../shared';
+import type { TypedChartCommonInput } from './types';
 
 /** 未显式提供 dataRef 时使用的稳定数据引用 */
 export const DEFAULT_CHART_DATA_REFERENCE = 'chart.data';

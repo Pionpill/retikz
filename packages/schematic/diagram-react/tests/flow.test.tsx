@@ -1,9 +1,8 @@
-import type { FC, ReactNode } from 'react';
-
-import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { createInputScene } from '@retikz/react';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import type { FC, ReactNode } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

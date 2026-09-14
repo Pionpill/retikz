@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react';
-
 import { GroupSchema } from '@retikz/graph';
 import { createInputScene, Node } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
+import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import {

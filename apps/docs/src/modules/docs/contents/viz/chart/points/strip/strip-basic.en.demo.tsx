@@ -1,8 +1,7 @@
-import type { IRStripChartEncodings } from '@retikz/chart/point/strip';
-import type { FC } from 'react';
-
 import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { StripChart, StripEncodings, StripProperties } from '@retikz/chart-react/point';
+import type { IRStripChartEncodings } from '@retikz/chart/point/strip';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

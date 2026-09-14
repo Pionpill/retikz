@@ -1,10 +1,9 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
 import type { IRGridLayout, IRGridPlacement } from '../../composites/grid-layout/schemas';
-import type { CanonicalGridLayout, CanonicalGridPlacement } from './types';
-
 import { GridLayoutSchema, GridPlacementSchema } from '../../composites/grid-layout/schemas';
 import { resolveLayoutContainerBox } from '../shared';
+import type { CanonicalGridLayout, CanonicalGridPlacement } from './types';
 
 /** 确定轴放置跨度，保留自动定位的空 start */
 export const resolveGridPlacement = (source: IRGridPlacement | undefined): CanonicalGridPlacement => ({

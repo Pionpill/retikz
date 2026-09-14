@@ -1,10 +1,9 @@
 import type { BlendModeValue, IRDropShadow, PaintValue, ResolvedArrowEnd, ScenePrimitive } from '@retikz/core';
 
-import type { SvgNode, SvgStyle } from '../types';
-
 import { firstLineDy } from '../../shared';
 import { buildPathD } from '../path-d-builder';
 import { buildTransform } from '../transform-builder';
+import type { SvgNode, SvgStyle } from '../types';
 import { compact } from './attrs';
 import { shadowHash } from './shadow-defs';
 

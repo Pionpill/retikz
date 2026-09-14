@@ -1,41 +1,36 @@
 import type { IRChartSource } from '@retikz/chart';
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
-import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
-import type { IRStripChart } from '@retikz/chart/point/strip';
-import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
-import type { CreateConnectedScatterChartInput } from '@retikz/chart-vanilla/point/connected-scatter';
-import type { CreateRangedDotChartInput } from '@retikz/chart-vanilla/point/ranged-dot';
-import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
-import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
-import type { CreateStripChartInput } from '@retikz/chart-vanilla/point/strip';
-import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
-import type { IRFlowDiagram } from '@retikz/diagram/flow';
-import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
-import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
-import type { IRPlot } from '@retikz/plot';
-import type { IRTable } from '@retikz/table';
-import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
-
-import { BubbleChartSchema } from '@retikz/chart/point/bubble';
-import { ConnectedScatterChartSchema } from '@retikz/chart/point/connected-scatter';
-import { RangedDotChartSchema } from '@retikz/chart/point/ranged-dot';
-import { RegressionChartSchema } from '@retikz/chart/point/regression';
-import { ScatterChartSchema } from '@retikz/chart/point/scatter';
-import { StripChartSchema } from '@retikz/chart/point/strip';
 import { renderChart } from '@retikz/chart-vanilla';
+import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
 import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import type { CreateConnectedScatterChartInput } from '@retikz/chart-vanilla/point/connected-scatter';
 import { createConnectedScatterChart } from '@retikz/chart-vanilla/point/connected-scatter';
+import type { CreateRangedDotChartInput } from '@retikz/chart-vanilla/point/ranged-dot';
 import { createRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
+import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
 import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
+import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
+import type { CreateStripChartInput } from '@retikz/chart-vanilla/point/strip';
 import { createStripChart } from '@retikz/chart-vanilla/point/strip';
+import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import { BubbleChartSchema } from '@retikz/chart/point/bubble';
+import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import { ConnectedScatterChartSchema } from '@retikz/chart/point/connected-scatter';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import { RangedDotChartSchema } from '@retikz/chart/point/ranged-dot';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
+import { RegressionChartSchema } from '@retikz/chart/point/regression';
+import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import { ScatterChartSchema } from '@retikz/chart/point/scatter';
+import type { IRStripChart } from '@retikz/chart/point/strip';
+import { StripChartSchema } from '@retikz/chart/point/strip';
+import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
 import { fallbackMeasurer } from '@retikz/core';
-import { FlowDiagramSchema } from '@retikz/diagram/flow';
+import type { ExternalDatasets } from '@retikz/data';
+import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
+import type { IRFlowDiagram } from '@retikz/diagram/flow';
+import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import {
   BlockDefinition,
   BlockHeaderDefinition,
@@ -54,6 +49,7 @@ import {
   RelationDefinition,
   RelationSchema,
 } from '@retikz/graph';
+import type { InputBlockChild, InputGraphChild, InputGroupChild } from '@retikz/graph-vanilla';
 import {
   block,
   blockHeader,
@@ -88,6 +84,7 @@ import {
   overlayLayout,
   OverlayLayoutInputEmbedAdapter,
 } from '@retikz/layout-vanilla';
+import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
 import {
@@ -115,12 +112,11 @@ import {
   surfaceChild,
   SurfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla';
+import type { IRTable } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
 import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import { renderToSvgString, scene, scope } from '@retikz/vanilla';
-
-import type { PreviewIR } from '../utils/build-preview-ir';
-import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
 import { PreviewThemeDefinitionBundle } from '../theme/presets';
 import {
@@ -131,6 +127,8 @@ import {
   irToVanillaCode,
   relationPreviewAuthoringInput,
 } from '../utils';
+import type { PreviewIR } from '../utils/build-preview-ir';
+import type { BuildVanillaPreviewOptions, VanillaPreviewArtifact } from './types';
 
 type CompositeChild = IRChild & { namespace: string; type: string };
 

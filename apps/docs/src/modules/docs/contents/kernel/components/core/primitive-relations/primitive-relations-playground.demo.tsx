@@ -1,10 +1,8 @@
 import type { IRNodeTarget } from '@retikz/core';
+import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import {

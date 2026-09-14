@@ -1,7 +1,6 @@
 import type { IRPlot } from '@retikz/plot';
-import type { FC } from 'react';
-
 import { Plot } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

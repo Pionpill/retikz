@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRScene } from '../../../src/schemas';
-
 import { compileToScene } from '../../../src/compile/compile';
+import type { IRScene } from '../../../src/schemas';
 import { arc, ellipseArc, line, move, quad } from '../../helpers/path-command-factory';
 import { findPathPrim } from './helpers';
 

@@ -1,7 +1,6 @@
 import { BlendMode } from '@retikz/core';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { BlendPlaygroundControlId } from './blend-playground.controls';

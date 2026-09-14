@@ -1,7 +1,6 @@
+import { compileToScene } from '@retikz/core';
 import type { AnyTransformDefinition } from '@retikz/data';
 import type { ExternalRow } from '@retikz/data';
-
-import { compileToScene } from '@retikz/core';
 import { applyTransforms, defineTransform, extractTransformKind } from '@retikz/data';
 import { DataTransform, DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
@@ -9,11 +8,10 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, object, string } from 'zod';
 
-import type { IRPlot } from '../../../src/schemas';
-
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PlotTransform } from '../../../src/schemas';
 
 const doubleDefinition = defineTransform({

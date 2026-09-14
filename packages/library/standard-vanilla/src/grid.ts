@@ -1,7 +1,6 @@
 import type { GridInput } from '@retikz/standard';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
-
 import { createGrid, GridProvider } from '@retikz/standard';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardGridEmbedKind } from './constants';
 

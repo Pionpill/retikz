@@ -26,4 +26,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, () => 
 export const previewSource = controlledPreview.source;
 
 /** 展示正值向上、负值向下分别累积的 diverging stack */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

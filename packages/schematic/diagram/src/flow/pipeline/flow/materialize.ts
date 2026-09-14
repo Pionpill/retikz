@@ -1,14 +1,12 @@
 import type { IRChild } from '@retikz/core';
 import type { IRGraph, IRGraphRelation } from '@retikz/graph';
+import { createGroupBodyAllocation, GraphType } from '@retikz/graph';
 import type { BoundsRect, Position } from '@retikz/math';
 
-import { createGroupBodyAllocation, GraphType } from '@retikz/graph';
-
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutOutput } from '../../contract';
 import type { CanonicalFlowElement, CanonicalFlowEntity, CanonicalFlowRelation } from '../../resolve';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 
 const materializationFailure = (
   label: string,

@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 import { OffsetPositionSchema, PolarPositionSchema, TargetSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

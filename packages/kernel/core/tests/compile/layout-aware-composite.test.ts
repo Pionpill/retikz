@@ -10,7 +10,6 @@ import type {
   LayoutProposal,
   TextMeasurer,
 } from '../../src';
-
 import {
   ChildSchema,
   compileToScene,

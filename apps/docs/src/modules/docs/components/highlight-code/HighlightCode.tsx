@@ -1,14 +1,12 @@
 import type { CSSProperties, FC } from 'react';
-import type { ThemedToken } from 'shiki/types';
-
 import { memo, useEffect, useState } from 'react';
 import { getTokenStyleObject } from 'shiki/core';
+import type { ThemedToken } from 'shiki/types';
 
 import { cn } from '@/lib';
 import { useThemeStore } from '@/store';
 
 import type { DiffLineKind } from '../component-preview';
-
 import { tokenizeHighlightCode } from './shiki-highlighter';
 
 export type HighlightCodeProps = {

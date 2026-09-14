@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { buildPlotIR, Plot } from '@retikz/plot-react';
+import type { FC } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -11,7 +10,6 @@ import type {
   PreviewTableControlField,
   PreviewTableRows,
 } from '../../src/modules/docs/components/component-preview';
-
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as extensionStatisticsZh } from '../../src/modules/docs/contents/viz/data/transform/extensions/extension-statistics.controls';
@@ -26,17 +24,17 @@ import AnnotateDemo from '../../src/modules/docs/contents/viz/data/transform/ope
 import { previewControlContract as selectZh } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-select.controls';
 import { previewControlContract as selectEn } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-select.en.controls';
 import SelectDemo from '../../src/modules/docs/contents/viz/data/transform/operations/transform-select.zh.demo';
+import { renderTransformSortPreview } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-sort-preview';
 import { previewControlContract as sortZh } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-sort.controls';
 import { previewControlContract as sortEn } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-sort.en.controls';
 import SortDemo from '../../src/modules/docs/contents/viz/data/transform/operations/transform-sort.zh.demo';
-import { renderTransformSortPreview } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-sort-preview';
+import { renderTransformSummarizePreview } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-summarize-preview';
 import { previewControlContract as summarizeZh } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-summarize.controls';
 import { previewControlContract as summarizeEn } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-summarize.en.controls';
 import SummarizeDemo from '../../src/modules/docs/contents/viz/data/transform/operations/transform-summarize.zh.demo';
-import { renderTransformSummarizePreview } from '../../src/modules/docs/contents/viz/data/transform/operations/transform-summarize-preview';
+import { renderTransformComponentPreview } from '../../src/modules/docs/contents/viz/data/transform/overview/transform-component-preview';
 import { previewControlContract as overviewZh } from '../../src/modules/docs/contents/viz/data/transform/overview/transform-component.controls';
 import { previewControlContract as overviewEn } from '../../src/modules/docs/contents/viz/data/transform/overview/transform-component.en.controls';
-import { renderTransformComponentPreview } from '../../src/modules/docs/contents/viz/data/transform/overview/transform-component-preview';
 import { previewControlContract as boxplotZh } from '../../src/modules/docs/contents/viz/data/transform/statistics/transform-boxplot.controls';
 import { previewControlContract as boxplotEn } from '../../src/modules/docs/contents/viz/data/transform/statistics/transform-boxplot.en.controls';
 import BoxplotDemo from '../../src/modules/docs/contents/viz/data/transform/statistics/transform-boxplot.zh.demo';

@@ -58,7 +58,7 @@ Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式�
 
 ## 发布与演进
 
-新增 Standard 能力继续由对应 milestone ADR 冻结公共契约、Definition、lowering、adapter、测试与文档。Surface 的现行 Accepted 契约见 [v0.1 alpha.3 ADR-07](../decisions/standard/v0/v0.1/alpha.3/07-arbitrary-child-surface.md)。能力迁出时，旧 ADR 原地保留并标记 Superseded，由新 owner ADR 建立后继映射；不保留跨 owner alias。
+新增 Standard 能力继续由对应 milestone ADR 冻结公共契约、Definition、lowering、adapter、测试与文档。Surface 的现行 Accepted 契约见 [v0.1 ADR-022](../decisions/standard/v0/v0.1/022-arbitrary-child-surface.md)。能力迁出时，旧 ADR 原地保留并标记 Superseded，由新 owner ADR 建立后继映射；不保留跨 owner alias。
 
 文档站在 Library 模块的 `Standard · 拓展` 分组维护 Standard 自己的介绍、组件、参考与更新日志，不承载 Layout 页面或 Layout release group 日志。
 

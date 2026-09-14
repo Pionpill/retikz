@@ -1,8 +1,7 @@
 import type { CenteredShape } from '../transforms';
+import { localToWorld, worldToLocal } from '../transforms';
 import type { BoundsHalfAxes } from './bounds';
 import type { Position } from './point';
-
-import { localToWorld, worldToLocal } from '../transforms';
 
 /** 椭圆：中心 + 半轴 + 可选旋转 */
 export type Ellipse = CenteredShape & {

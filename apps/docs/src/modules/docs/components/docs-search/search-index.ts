@@ -1,5 +1,4 @@
 import type { Lang } from '@/i18n';
-
 import { LANGS } from '@/i18n';
 import { expandMdxIncludes, parseDocSource } from '@/modules/docs/lib';
 

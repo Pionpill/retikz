@@ -1,5 +1,4 @@
 import type { AnyTransformDefinition, ExternalRow, IRDataTransform, TransformContext } from '@retikz/data';
-
 import { applyTransforms } from '@retikz/data';
 
 import type { PreviewTableView } from '../components/component-preview/author';

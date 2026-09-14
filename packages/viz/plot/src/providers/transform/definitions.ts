@@ -1,5 +1,4 @@
 import type { AnyTransformDefinition, DataTransformOutputDescriptor, TransformContext } from '@retikz/data';
-
 import {
   DataFieldType,
   DataTransformBindingClass,
@@ -24,7 +23,6 @@ import type {
   IRPlotSmoothTransform,
   IRPlotStackTransform,
 } from '../../schemas';
-
 import {
   BinTransformSchema,
   DensityTransformSchema,

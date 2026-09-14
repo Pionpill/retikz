@@ -4,7 +4,6 @@ import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';
-
 import { createTableRuntimeContribution, TABLE_NAMESPACE, TableComposite } from '../../src';
 
 describe('Table inside Standard Surface', () => {

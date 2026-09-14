@@ -1,5 +1,4 @@
 import type { AxesInput } from '@retikz/standard';
-
 import { AxesDefinition, AxesProvider, createAxes } from '@retikz/standard';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';

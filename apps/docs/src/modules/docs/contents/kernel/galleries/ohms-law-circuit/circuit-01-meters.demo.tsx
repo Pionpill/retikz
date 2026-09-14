@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Scope } from '@retikz/react';
+import type { FC } from 'react';
 
 import { circuitMeter, Meter } from './circuit-01-meters.meter';
 

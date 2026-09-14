@@ -1,17 +1,20 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
-import type { RuntimeDiagnostic } from '@retikz/runtime';
-
 import { prefersReducedMotion, resolveAnimationEnabled } from '@retikz/render/animation';
+import type { RenderHandlerContribution, RenderRuntimeConfigInput, RetainedRendererRead } from '@retikz/render/runtime';
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,
   RenderCachePolicy,
   RenderRuntimeOwnerDefinition,
 } from '@retikz/render/runtime';
+import type { RuntimeDiagnostic } from '@retikz/runtime';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '@retikz/runtime';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
+import { InputLayerCache } from '../normalize';
+import { createEmptyInputRuntimeMetaSnapshot } from '../normalize/scene/runtime-meta';
+import { createDomProcessingController } from '../processing/internal/controller';
 import type {
   InternalProcessingController,
   ProcessingParticipantUpdateInput,
@@ -19,6 +22,8 @@ import type {
   ProcessingTransactionParticipantFactory,
 } from '../processing/internal/types';
 import type { ProcessingOptions, ProcessingResult } from '../processing/types';
+import { computeDisplaySize } from '../runtime';
+import { captureRetainedUpdateOptions } from '../runtime/retained-update-options';
 import type {
   CommonOptions,
   HydrateOptions,
@@ -32,13 +37,6 @@ import type {
   VanillaAnimationOptions,
   VanillaRetainedRuntimeOptions,
 } from '../runtime/types';
-
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { InputLayerCache } from '../normalize';
-import { createEmptyInputRuntimeMetaSnapshot } from '../normalize/scene/runtime-meta';
-import { createDomProcessingController } from '../processing/internal/controller';
-import { computeDisplaySize } from '../runtime';
-import { captureRetainedUpdateOptions } from '../runtime/retained-update-options';
 
 /** 捕获 mount-lifetime composite definition record，保留 schema 与 callback identity */
 const captureCompositeDefinition = (definition: AnyCompositeDefinition): AnyCompositeDefinition =>

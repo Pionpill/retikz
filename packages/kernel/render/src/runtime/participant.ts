@@ -9,7 +9,6 @@ import type {
   SceneRuntimeSnapshot,
 } from '@retikz/core';
 import type { RuntimeCommitParticipant, RuntimePreparedCommit, RuntimeSession } from '@retikz/runtime';
-
 import {
   createRuntimeRevision,
   defineRuntimeCommitParticipant,
@@ -20,9 +19,12 @@ import {
 } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { RenderRuntimeConfig } from './config';
+import { RenderRuntimeOwnerDefinition } from './config';
 import type { RenderFrameSnapshot, StaticRenderFrame } from './frame';
 import type { RenderReadonlyLayer } from './readonly-layer';
+import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import type {
   RetainedCanvasRendererImmutableOptions,
   RetainedRenderer,
@@ -30,12 +32,8 @@ import type {
   RetainedRendererRead,
   RetainedSvgRendererImmutableOptions,
 } from './renderer';
-import type { RuntimeIdentityMap } from './shared';
-
-import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
-import { RenderRuntimeOwnerDefinition } from './config';
-import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from './readonly-layer';
 import { getRetainedRendererExecutor, isCanvasHost, isRetainedRenderer, isSvgHost } from './renderer';
+import type { RuntimeIdentityMap } from './shared';
 import { createRuntimeIdentityMap, isPlainObject, runtimeStructuralEquals } from './shared';
 import { sceneRuntimeSnapshotEquals, validateScenePatch, validateSceneRuntimeSnapshot } from './validator';
 

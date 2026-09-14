@@ -55,6 +55,7 @@ export const modules: ReadonlyArray<ModuleEntry> = [
     navigationDescription: 'kernel.navigationDescription',
     quickLinks: [
       { label: 'kernel.components', path: '/kernel/components/node/overview' },
+      { label: 'kernel.packages', path: '/kernel/packages' },
       { label: 'kernel.gallery', path: '/kernel/galleries/karl-circle' },
     ],
   },
@@ -64,10 +65,8 @@ export const modules: ReadonlyArray<ModuleEntry> = [
     navigationLabel: 'library.navigationLabel',
     navigationDescription: 'library.navigationDescription',
     quickLinks: [
-      { label: 'library.standard', path: '/library/standard/composite/grid', primary: true },
+      { label: 'library.standard', path: '/library/standard/composite/grid' },
       { label: 'library.layout', path: '/library/layout/flex-layout' },
-      { label: 'library.standardGrid', path: '/library/standard/composite/grid' },
-      { label: 'library.standardSurface', path: '/library/standard/composite/surface' },
     ],
   },
   {

@@ -1,7 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { EntityKindDefinition, EntityPredicateDefinition, EntityRoleDefinition } from '../../contract';
-
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { BUILTIN_ENTITY_ROLE_DEFINITIONS } from './definitions';
 

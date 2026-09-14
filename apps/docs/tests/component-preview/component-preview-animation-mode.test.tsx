@@ -1,16 +1,14 @@
 // @vitest-environment jsdom
 import type { IRAnimationTrack } from '@retikz/core';
 import type { AnimationMode } from '@retikz/react';
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
-
 import { PreviewPanel, usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const FADE: Array<IRAnimationTrack> = [

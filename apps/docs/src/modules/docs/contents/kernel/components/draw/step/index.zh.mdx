@@ -130,14 +130,14 @@ import { Path, Step } from '@retikz/react';
     {
       label: 'Path 收集 Step 与标签优先级',
       path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
-      startLine: 256,
-      endLine: 421,
+      startLine: 254,
+      endLine: 419,
     },
     {
       label: '首段与最短序列规范化',
       path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
-      startLine: 76,
-      endLine: 85,
+      startLine: 74,
+      endLine: 83,
     },
   ]}
 />
@@ -162,32 +162,32 @@ import { Path, Step } from '@retikz/react';
     {
       label: '相对目标归一化',
       path: 'packages/kernel/core/src/resolve/path/resolve.ts',
-      startLine: 342,
-      endLine: 458,
+      startLine: 341,
+      endLine: 457,
     },
     {
       label: '目标归一化与逐段编译主循环',
       path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
-      startLine: 54,
-      endLine: 260,
+      startLine: 53,
+      endLine: 259,
     },
     {
       label: '普通连线 Step 的几何降级',
       path: 'packages/kernel/core/src/compile/path/stroke/segments.ts',
-      startLine: 41,
-      endLine: 158,
+      startLine: 40,
+      endLine: 157,
     },
     {
       label: '生成器、闭合与矩形 Step 的几何降级',
       path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
-      startLine: 85,
-      endLine: 220,
+      startLine: 84,
+      endLine: 219,
     },
     {
       label: '圆弧、圆、椭圆与 smooth 的几何降级',
       path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
-      startLine: 223,
-      endLine: 445,
+      startLine: 222,
+      endLine: 444,
     },
   ]}
 />
@@ -215,20 +215,20 @@ import { Path, Step } from '@retikz/react';
     {
       label: 'label.position 到 t 的映射',
       path: 'packages/kernel/core/src/compile/path/host/label.ts',
-      startLine: 50,
-      endLine: 69,
+      startLine: 49,
+      endLine: 68,
     },
     {
       label: '按 Step 几何采样边标注',
       path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
-      startLine: 41,
-      endLine: 79,
+      startLine: 40,
+      endLine: 78,
     },
     {
       label: '边标注偏移与切线旋转',
       path: 'packages/kernel/core/src/compile/path/host/label.ts',
-      startLine: 75,
-      endLine: 166,
+      startLine: 74,
+      endLine: 165,
     },
   ]}
 />
@@ -285,10 +285,10 @@ import { Path, Step } from '@retikz/react';
 
 | 形态                          | 例                                                                                        | 行为                                                                                                       |
 | ----------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 节点 id                       | `'a'`                                                                                     | 自动贴 Node 边界（参看 [图元关系](/kernel/components/core/primitive-relations)）                             |
+| 节点 id                       | `'a'`                                                                                     | 自动贴 Node 边界（参看 [图元关系](/kernel/components/core/primitive-relations)）                           |
 | 节点 + 连接面                 | `{ id: 'a', boundary: 'circle' }`                                                         | 单边覆盖目标节点 [连接面](/kernel/components/node/overview#视觉形状与连接几何)（贴边形状），不改节点占位   |
 | 笛卡尔                        | `[60, 0]`                                                                                 | 直接坐标                                                                                                   |
-| 极坐标                        | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | 极坐标（参看 [定位](/kernel/components/basic/position)）                                                     |
+| 极坐标                        | `{ origin: 'a', angle: 30, radius: 50 }`                                                  | 极坐标（参看 [定位](/kernel/components/basic/position)）                                                   |
 | 偏移定位                      | `{ of: 'a', offset: [10, 5] }`                                                            | 基准 + `(dx, dy)`；`of` 三态——节点 id / 笛卡尔字面值 / PolarPosition                                       |
 | 比例定位                      | `{ between: [{ id: 'a' }, { id: 'b' }], fraction: 0.5 }`                                  | A 到 B 连线上的比例点；端点必须是可独立解析的 absolute target（`{ id, anchor? }` 形态，或笛卡尔 / 极坐标） |
 | 比例定位（显式锚点）          | `{ between: [{ id: 'a', anchor: 'right' }, { id: 'b', anchor: 'left' }], fraction: 0.5 }` | 端点可带显式 `anchor`，从锚点而非自动贴边解析                                                              |

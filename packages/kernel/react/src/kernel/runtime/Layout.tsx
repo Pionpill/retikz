@@ -19,6 +19,7 @@ import type {
   ThemeStyleDefinition,
 } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
+import { resolveAnimationEnabled } from '@retikz/render/animation';
 import type { HydrationHandlers } from '@retikz/render/hydration';
 import type { RuntimeDiagnostic } from '@retikz/runtime';
 import type {
@@ -30,13 +31,9 @@ import type {
   ProcessingSource,
   VanillaCompileDriver,
 } from '@retikz/vanilla';
-import type { CSSProperties, FC, ReactNode, Ref } from 'react';
-
-import { resolveAnimationEnabled } from '@retikz/render/animation';
 import { createProcessingController, prepareStaticProcessing } from '@retikz/vanilla';
+import type { CSSProperties, FC, ReactNode, Ref } from 'react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-
-import type { LayoutRuntimeOptions } from './runtime-options';
 
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { usePrefersReducedMotion } from '../../render/animation';
@@ -47,6 +44,7 @@ import { createInputScene } from '../adapter/input-scene';
 import { useAnimationMode } from './animation-context';
 import { collectHydrationHandlers } from './collect-hydration-handlers';
 import { useRendererMode } from './renderer-context';
+import type { LayoutRuntimeOptions } from './runtime-options';
 import { captureLayoutRuntimeOptions, LayoutRuntimeMode } from './runtime-options';
 import { mergeThemeOverlays, useTheme } from './theme-context';
 import { mergeThemeStyleDefinitions, useThemeStyles } from './theme-styles-context';

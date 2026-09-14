@@ -1,8 +1,7 @@
 import type { ZodType } from 'zod';
 
-import type { IRChild } from './scene/types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { IRChild } from './scene/types';
 
 let recursiveChildSchema: ZodType<IRChild> | null = null;
 
