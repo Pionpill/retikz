@@ -13,10 +13,10 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
-          label: { zh: '二十个 runtime 根导出', en: 'Twenty runtime root exports' },
+          label: { zh: '统一的基础根入口', en: 'Unified foundation root entry' },
           content: {
-            zh: '`@retikz/foundation` 从根入口公开无领域的 type-only 契约与二十个 runtime symbol，包括 `JsonValue` / `JsonObject`、通用递归 JSON schema、六个非变换 Zod 标量 schema、`createOpenStringSchema(values)` 以及静态颜色原子；不提供 subpath、IR、领域对象 schema 或 Diagnostic。',
-            en: '`@retikz/foundation` exposes domain-free type-only contracts and twenty runtime symbols from its root, including `JsonValue` / `JsonObject`, generic recursive JSON schemas, six non-transforming Zod scalar schemas, `createOpenStringSchema(values)`, and static color atoms. It provides no subpaths, IR, domain object schemas, or Diagnostics.',
+            zh: '`@retikz/foundation` 从根入口公开无领域的 type-only 契约与 runtime 原子，包括 `JsonValue` / `JsonObject`、通用递归 JSON schema、六个非变换 Zod 标量 schema、`createOpenStringSchema(values)` 以及静态颜色原子；不提供 subpath、IR、领域对象 schema 或 Diagnostic。',
+            en: '`@retikz/foundation` exposes domain-free type-only contracts and runtime primitives from its root, including `JsonValue` / `JsonObject`, generic recursive JSON schemas, six non-transforming Zod scalar schemas, `createOpenStringSchema(values)`, and static color atoms. It provides no subpaths, IR, domain object schemas, or Diagnostics.',
           },
         },
         {
@@ -40,7 +40,7 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.4',
-          date: '2026-09-05',
+          date: '2026-09-14',
           summary: {
             zh: '统一通用 JSON 契约归属，并移除重复的递归解析路径。',
             en: 'Consolidates generic JSON contract ownership and removes duplicate recursive parsing paths.',
@@ -56,24 +56,11 @@ export const kernelV05: Release = {
                 en: "Import `JsonValue`, `JsonObject`, `JsonValueSchema`, and `JsonObjectSchema` from the `@retikz/foundation` root. Core removes the old `IRJsonObject` name, JSON-schema forwarding, and handwritten recursive parser without compatibility aliases. Recursive validation now follows Zod's native JSON schema.",
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.5',
-          date: '2026-09-02',
-          summary: {
-            zh: '无填充内置 Stroke Path 的居中标签默认产生真实描边断口，并用 GeometryLabel.interrupt 提供逐标签覆盖。',
-            en: 'Centered labels on unfilled built-in Stroke Paths now create real stroke gaps by default, with per-label overrides through GeometryLabel.interrupt.',
-          },
-          items: [
             {
-              label: {
-                zh: 'BREAKING：居中标签默认断线',
-                en: 'BREAKING: automatic gaps for centered labels',
-              },
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
               content: {
-                zh: '`GeometryLabel.interrupt` 让无填充内置 Stroke 的 canonical center 标签（含省略 `side` 的 `sloped: true`）切出真实 Scene 描边片段；SVG、Canvas 与 hit-test 共享同一几何。这是有意的视觉变更：需要旧的连续描边时写 `interrupt: false`。`true` 可强制非居中标签断线；有效 fill 上的 `true`，以及 Ribbon / custom / 其它非内置 Stroke host 的任意显式值都会 fail-loud。',
-                en: '`GeometryLabel.interrupt` makes canonical-center labels on unfilled built-in Stroke paths — including `sloped: true` with an omitted `side` — split into real Scene stroke fragments shared by SVG, Canvas, and hit testing. This is an intentional visual change: write `interrupt: false` to retain the old continuous stroke. `true` can force a non-centered label gap; `true` on an effectively filled Stroke and any explicit value on Ribbon, custom, or another non-built-in Stroke host fail loudly.',
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
               },
             },
           ],
@@ -146,8 +133,8 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.5',
-          date: '2026-09-02',
+          version: 'alpha.4',
+          date: '2026-09-14',
           summary: {
             zh: '新增可采样、可按距离反解并可保形切片的 plain-geometry 曲线段 API。',
             en: 'Adds plain-geometry curve segments that can be sampled, inverted by distance, and sliced without changing kind.',
@@ -158,6 +145,13 @@ export const kernelV05: Release = {
               content: {
                 zh: '`CurveSegment`、`CurveSegmentSample` 与 `curve` 从 `@retikz/math` 根入口公开，覆盖直线、二次 / 三次贝塞尔、圆弧和旋转椭圆弧的参数采样、固定预算的长度 / 距离反解及保形切片。它们只接收和返回 plain geometry；PathCommand、标签、断口、Scene、dash、箭头与命中仍由 Core 拥有。',
                 en: '`CurveSegment`, `CurveSegmentSample`, and `curve` are exported from the `@retikz/math` root. They cover parameter sampling, fixed-budget length/distance inversion, and shape-preserving slices for lines, quadratic/cubic Béziers, circular arcs, and rotated elliptical arcs. They accept and return only plain geometry; Core still owns PathCommands, labels, gaps, Scene output, dashes, arrows, and hit testing.',
+              },
+            },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
               },
             },
           ],
@@ -245,6 +239,23 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.4',
+          date: '2026-09-14',
+          summary: {
+            zh: '同步 Kernel 契约与运行环境。',
+            en: 'Aligns with Kernel contracts and runtime requirements.',
+          },
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.3',
           date: '2026-08-28',
           summary: {
@@ -318,17 +329,14 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.4',
-          date: '2026-09-05',
+          date: '2026-09-14',
           summary: {
-            zh: '统一 Core Source 与开放 Definition 的 Zod owner 边界，删除同一输入上的通用 JSON 复核。',
-            en: 'Unifies Core Source and open Definition boundaries around their owning Zod schemas and removes generic JSON revalidation of the same input.',
+            zh: '统一 Source 分组与 Theme 默认片段，补齐文字、路径几何和编译观测。',
+            en: 'Unifies Source groups and Theme default fragments and extends text, path geometry, and compile observations.',
           },
           items: [
             {
-              label: {
-                zh: 'BREAKING：Source IR 语义分组',
-                en: 'BREAKING: semantic groups in Source IR',
-              },
+              label: { zh: 'BREAKING：Source IR 语义分组', en: 'BREAKING: semantic groups in Source IR' },
               content: {
                 zh: 'Node 的视觉字段移入 style，尺寸与文本排布移入 layout；Path 视觉字段移入 style；Scope 使用 style 与 defaults.node/path/label/arrow/reset。React Layout 使用 rootScope 提供隐式根 Scope，style 继续表示宿主 CSS。旧扁平入口删除；字段继承、Scene 输出与精确增量更新语义保持。',
                 en: 'Node visual fields move into style, with size and text layout in layout; Path visual fields move into style. Scope uses style and defaults.node/path/label/arrow/reset. React Layout uses rootScope for its implicit root Scope while style remains host CSS. Old flat inputs are removed; per-field inheritance, Scene output and precise incremental updates retain their semantics.',
@@ -351,16 +359,13 @@ export const kernelV05: Release = {
                 en: 'Publishes final Node, Scope, Coordinate, and per-application Clip outputs with logical ancestry on demand. Shape and Boundary providers can expose exact outlines, and Shapes can expose named key points. Node content boxes and baselines reuse the settled layout without changing the primary figure or artifacts. Custom observers must handle the new owner variants in exhaustive branches.',
               },
             },
-          ],
-        },
-        {
-          version: 'alpha.5',
-          date: '2026-09-03',
-          summary: {
-            zh: '补齐 Stroke Path 的标签断口与端点箭头重叠几何；两者都 lower 为既有 Scene path commands，SVG、Canvas 与命中测试共享结果。',
-            en: 'Completes Stroke Path label gaps and endpoint-arrow overlap geometry. Both lower to existing Scene path commands shared by SVG, Canvas, and hit testing.',
-          },
-          items: [
+            {
+              label: { zh: 'BREAKING：居中标签默认断线', en: 'BREAKING: automatic gaps for centered labels' },
+              content: {
+                zh: '`GeometryLabel.interrupt` 让无填充内置 Stroke 的 canonical center 标签（含省略 `side` 的 `sloped: true`）切出真实 Scene 描边片段；SVG、Canvas 与 hit-test 共享同一几何。这是有意的视觉变更：需要旧的连续描边时写 `interrupt: false`。`true` 可强制非居中标签断线；有效 fill 上的 `true`，以及 Ribbon / custom / 其它非内置 Stroke host 的任意显式值都会 fail-loud。',
+                en: '`GeometryLabel.interrupt` makes canonical-center labels on unfilled built-in Stroke paths — including `sloped: true` with an omitted `side` — split into real Scene stroke fragments shared by SVG, Canvas, and hit testing. This is an intentional visual change: write `interrupt: false` to retain the old continuous stroke. `true` can force a non-centered label gap; `true` on an effectively filled Stroke and any explicit value on Ribbon, custom, or another non-built-in Stroke host fail loudly.',
+              },
+            },
             {
               label: { zh: '端点箭头重叠比例', en: 'Endpoint-arrow overlap ratio' },
               content: {
@@ -373,6 +378,27 @@ export const kernelV05: Release = {
               content: {
                 zh: '`ArrowDefinition.backX` 成为必填的 marker 基础几何后缘，并与 `lineContactX`、`tipX` 分别表达后缘、主描边接合点和尖端。三者必须有限且满足 `backX <= lineContactX <= tipX`；既有自定义 definition 需要显式补齐，不提供 fallback。',
                 en: '`ArrowDefinition.backX` is now required as the marker base-geometry back, separate from the main-stroke contact in `lineContactX` and the tip in `tipX`. All three must be finite and satisfy `backX <= lineContactX <= tipX`; existing custom definitions must add it explicitly, with no fallback.',
+              },
+            },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+            {
+              label: { zh: '固定宽度与标签间距', en: 'Fixed width and label gaps' },
+              content: {
+                zh: 'Node.layout.width 支持未缩放的固定外框宽度；GeometryLabel.gap 为断口两侧各保留间距，默认 4，支持显式 0。',
+                en: 'Node.layout.width specifies a fixed unscaled outer width. GeometryLabel.gap reserves space on each side of a stroke interruption, defaults to 4, and accepts explicit 0.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：Theme 与作者默认分离', en: 'BREAKING: Theme and author defaults are separate' },
+              content: {
+                zh: 'Theme Definition 生成 Source 同构的稀疏默认片段；作者 defaults 与实例覆盖保持独立，切换 Theme 不清空祖先作者默认。Node font 采用整体替换语义。',
+                en: 'Theme Definitions generate sparse defaults shaped like Source. Author defaults and instance overrides remain independent, and Theme changes preserve ancestor author defaults. Node fonts replace as a whole.',
               },
             },
           ],
@@ -518,10 +544,10 @@ export const kernelV05: Release = {
       subVersions: [
         {
           version: 'alpha.4',
-          date: '2026-09-05',
+          date: '2026-09-14',
           summary: {
             zh: '扩展五类内置几何检查，统一批量选择、坐标约定与部分结果诊断；辅助内容仍与主图隔离。',
-            en: 'Expands built-in geometry inspection to six types with unified bulk selection, coordinate conventions, and partial-result diagnostics; auxiliary content remains isolated from the primary figure.',
+            en: 'Expands built-in geometry inspection to five types with unified bulk selection, coordinate conventions, and partial-result diagnostics; auxiliary content remains isolated from the primary figure.',
           },
           items: [
             {
@@ -550,6 +576,13 @@ export const kernelV05: Release = {
               content: {
                 zh: '显式 scene / subtree 的 Path 请求现在会绘制，不再要求 self。新增 InspectNode / InspectCoordinate 可选 React wrapper，Vanilla 使用同一 runtime authoring 通道。自定义 Inspector 可按输出片段选择 local / scene 坐标，并通过 transform、ancestors 与 warn 消费最终上下文；缺失可选几何仅报告 UnsupportedGeometry，非法 provider 输出仍失败。',
                 en: 'Explicit scene and subtree Path requests now draw without requiring self. Optional InspectNode and InspectCoordinate React wrappers use the same runtime authoring channel as Vanilla. Custom Inspectors can choose local or scene coordinates per output fragment and use transform, ancestors, and warn. Missing optional geometry reports UnsupportedGeometry; invalid provider output still fails.',
+              },
+            },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
               },
             },
           ],
@@ -606,6 +639,23 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-09-14',
+          summary: {
+            zh: '同步 Kernel 契约与运行环境。',
+            en: 'Aligns with Kernel contracts and runtime requirements.',
+          },
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',
@@ -675,13 +725,28 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.5',
-          date: '2026-09-03',
+          version: 'alpha.4',
+          date: '2026-09-14',
           summary: {
             zh: '`<Path>` 与 `<Draw>` 新增 `arrowPlacement`，等价透传端点共享 overlap 与 `start` / `end` 覆盖。',
             en: '`<Path>` and `<Draw>` add `arrowPlacement`, forwarding shared endpoint overlap and `start` / `end` overrides equivalently.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：Source authoring 同步', en: 'BREAKING: Source authoring alignment' },
+              content: {
+                zh: '同步 Core 的 style / layout / defaults 分组、TextBlock、固定宽度和标签断口；旧扁平字段按新 Source 契约迁移。',
+                en: 'Aligns with Core style/layout/defaults groups, TextBlock, fixed width, and label interruptions. Legacy flat fields move to the new Source contract.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.3',
@@ -745,13 +810,28 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
-          version: 'alpha.5',
-          date: '2026-09-03',
+          version: 'alpha.4',
+          date: '2026-09-14',
           summary: {
             zh: 'plain spec 新增 `arrowPlacement`，按 nullish 规则合并共享与逐端 overlap，并对没有对应端点箭头的配置明确报错。',
             en: 'Plain specs add `arrowPlacement`, nullishly merging shared and per-end overlap while failing explicitly when no matching endpoint arrow exists.',
           },
-          items: [],
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：Source authoring 同步', en: 'BREAKING: Source authoring alignment' },
+              content: {
+                zh: '同步 Core 的 style / layout / defaults 分组、TextBlock、固定宽度和标签断口；旧扁平字段按新 Source 契约迁移。',
+                en: 'Aligns with Core style/layout/defaults groups, TextBlock, fixed width, and label interruptions. Legacy flat fields move to the new Source contract.',
+              },
+            },
+          ],
         },
         {
           version: 'alpha.3',
@@ -821,6 +901,23 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.4',
+          date: '2026-09-14',
+          summary: {
+            zh: '同步 Kernel 契约与运行环境。',
+            en: 'Aligns with Kernel contracts and runtime requirements.',
+          },
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.3',
           date: '2026-08-28',

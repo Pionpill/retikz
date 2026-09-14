@@ -3,10 +3,10 @@ import type { Release, SubVersion } from '../types';
 const graphMilestones: Array<SubVersion> = [
   {
     version: 'alpha.2',
-    date: '2026-08-29',
+    date: '2026-09-14',
     summary: {
-      zh: '新增可承载任意内容的 Block 布局容器，以及可独立组合的 Header、Section 与 Row。',
-      en: 'Adds an open-content Block layout container plus independently composable Header, Section, and Row components.',
+      zh: '交付开放 Block、UML 关系、状态与分组颜色，并统一 Source 和默认级联。',
+      en: 'Ships open Blocks, UML relations, statuses, and group colors, with unified Source and default cascades.',
     },
     items: [
       {
@@ -47,93 +47,35 @@ const graphMilestones: Array<SubVersion> = [
           en: 'Replace `graphTheme` with separate `graphDefaults` and `graphRules`. Definitions return `{ defaults?, rules? }`; `tokens` and rule `appearance` wrappers are removed. Generated and authored defaults reuse the same sparse Source fragments. Empty fragments and optional `undefined` do not override values, while valid zero values remain effective. Node fonts replace as a whole and Relation labelFont fields merge. Core Theme changes and reset preserve author layers; legacy entries have no compatibility aliases.',
         },
       },
-    ],
-  },
-  {
-    version: 'alpha.7',
-    date: '2026-08-23',
-    summary: {
-      zh: '⚠️ 将 Graph 收敛为可选的 Core Scope 薄壳，并让 Entity、Relation 成为可独立编译和嵌入的 Source composite。',
-      en: '⚠️ Reduces Graph to an optional Core Scope shell and makes Entity and Relation independently compilable and embeddable Source composites.',
-    },
-    items: [
       {
-        label: { zh: 'BREAKING：组合结构', en: 'BREAKING: composition structure' },
+        label: { zh: 'UML 关系与默认端点', en: 'UML relations and default markers' },
         content: {
-          zh: '`IRGraph.children` 直接保存任意 Core / Tier 2 child，不再维护成员集合。Entity 与 Relation 可以脱离 Graph 使用；Container 契约及其文档已删除。',
-          en: '`IRGraph.children` now stores arbitrary Core and Tier 2 children directly instead of member collections. Entity and Relation can be used without Graph, and the Container contract and docs are removed.',
+          zh: '补齐 association、aggregation、composition、generalization、dependency、realization 六种 UML kind。Relation role 默认结构同步更新：association 使用 diamond，dependency 使用 straightBarb，flow 使用 stealth，influence 使用 circle；realization 归属 dependency。',
+          en: 'Adds six UML kinds: association, aggregation, composition, generalization, dependency, and realization. Role defaults use diamond for association, straightBarb for dependency, stealth for flow, and circle for influence. Realization belongs to dependency.',
         },
       },
       {
-        label: { zh: 'BREAKING：上下文与引用', en: 'BREAKING: context and references' },
+        label: { zh: '状态与分组颜色', en: 'Statuses and group colors' },
         content: {
-          zh: 'Graph 复用完整 Core Scope 公共面；`theme` 回归 Core Theme，Graph-local 外观规则迁移到 `graphTheme`。Relation endpoint 迁移到 `IRNodeTarget`，引用与 unresolved / duplicate-id 诊断统一交给 Core namespace。',
-          en: 'Graph reuses the complete Core Scope surface. `theme` returns to Core Theme while Graph-local appearance rules move to `graphTheme`. Relation endpoints migrate to `IRNodeTarget`, with references and unresolved / duplicate-id diagnostics delegated to Core namespace.',
+          zh: 'Entity 支持 error / success / warning / disabled 状态与 group 颜色分组；Graph Theme、作者 defaults/rules 和实例字段使用同一优先级，显式外观最终优先。',
+          en: 'Entities support error/success/warning/disabled statuses and group colors. Graph Theme, author defaults/rules, and instance fields share one cascade, with explicit appearance taking final priority.',
         },
       },
       {
-        label: { zh: 'BREAKING：authoring 入口', en: 'BREAKING: authoring entries' },
+        label: { zh: 'BREAKING：文本与布局分组', en: 'BREAKING: text and layout groups' },
         content: {
-          zh: 'React 的 `<Graph>` 顶层建立 Scene、嵌入时只建立局部 Scope；`<Entity>` 与 `<Relation>` 可独立嵌入。Vanilla 改用 `graph()`、`entity()`、`relation()` 三个 builder 与对应 adapters；traversal id 不再生成 authored `id`。',
-          en: 'Top-level React `<Graph>` creates a Scene and embedded Graph creates only a local Scope, while `<Entity>` and `<Relation>` can embed independently. Vanilla now exposes `graph()`, `entity()`, and `relation()` with matching adapters; traversal ids no longer generate authored `id` values.',
+          zh: 'Entity 文本使用 Core TextBlock，排版与固定宽度进入 layout，外观进入 style；Relation 多行标签复用 Core GeometryLabel，旧 provenance.derivation kind 删除。',
+          en: 'Entity text uses Core TextBlock, with text layout and fixed width in layout and appearance in style. Multiline Relation labels reuse Core GeometryLabel. The old provenance.derivation kind is removed.',
         },
       },
       {
-        label: { zh: 'BREAKING：Relation Path 与 label 复用', en: 'BREAKING: Relation Path and label reuse' },
+        label: { zh: 'Node.js 22', en: 'Node.js 22' },
         content: {
-          zh: 'Relation 直接复用除语义冲突项外的 Core Path 字段与完整 `IRGeometryLabel`。Theme 只提供默认；显式 Path 字段、dash pattern 与单个 label 外观最终优先，旧 Graph-only Relation label 类型已删除。',
-          en: 'Relation now directly reuses non-conflicting Core Path fields and complete `IRGeometryLabel` values. Theme only supplies defaults; explicit Path fields, dash patterns, and per-label appearance take final precedence, and the Graph-only Relation label type is removed.',
-        },
-      },
-      {
-        label: { zh: 'BREAKING：Variant 迁移到 Theme', en: 'BREAKING: Variant moves to Theme' },
-        content: {
-          zh: '删除 Entity / Relation `variant`、Graph `entityVariant` 及对应 Definition registry。原 `fill` 视觉意图迁到 docs Vibrant reference style，`mixed` 迁到 Clean reference style；精确单例外观继续使用 Core-compatible 实例字段。Entity role 与 Relation role / kind 仍在 TypeScript 和 JSON Schema 中提供开放词汇提示。',
-          en: 'Removes Entity / Relation `variant`, Graph `entityVariant`, and their Definition registries. The former `fill` intent moves to the docs Vibrant reference style and `mixed` moves to Clean; precise one-off appearance continues through Core-compatible instance fields. Entity role and Relation role / kind remain open vocabularies with TypeScript and JSON Schema hints.',
-        },
-      },
-      {
-        label: { zh: '稀疏 Graph Theme style', en: 'Sparse Graph Theme styles' },
-        content: {
-          zh: '`GraphThemeStyleDefinition.resolve()` 现在返回相对默认 preset 的稀疏 `GraphThemeStyleOverrides`。Graph resolver 补全未声明的 Entity / Relation tokens，保留默认 rules，并在其后追加自定义 style rules。',
-          en: '`GraphThemeStyleDefinition.resolve()` now returns sparse `GraphThemeStyleOverrides` relative to the default preset. Graph resolve fills omitted Entity / Relation tokens, retains default rules, and appends custom style rules after them.',
-        },
-      },
-      {
-        label: { zh: 'Entity role 轮廓调整', en: 'Entity role contour updates' },
-        content: {
-          zh: '`activity` 默认保持实线描边；`resource` 改用 Standard `ellipticCapsule`，由上下半椭圆端与两侧直线形成单一外轮廓，不再绘制 Cylinder 的内部端盖弧，并通过对称纵向 padding 让文本垂直居中。',
-          en: "`activity` keeps a solid outline by default. `resource` now uses Standard `ellipticCapsule`, forming one outer contour from two half-elliptic caps and straight sides without Cylinder's internal cap divider, with symmetric vertical padding keeping text vertically centered.",
+          zh: '最低 Node.js 版本调整为 22.12.0。',
+          en: 'The minimum Node.js version is now 22.12.0.',
         },
       },
     ],
-  },
-  {
-    version: 'alpha.6',
-    date: '2026-08-21',
-    summary: {
-      zh: '⚠️ 将 Entity 与 Relation 收敛为最小单 record Graph Source IR，删除 presentation / geometry wrappers；位置、路径、尺寸与内容直接复用 Core-compatible 字段，省略项与默认值仅在 resolve / compile 中处理。',
-      en: '⚠️ Consolidates Entity and Relation into a minimal single-record Graph Source IR and removes presentation / geometry wrappers. Position, route, size, and content reuse Core-compatible fields directly, while omitted values and defaults are handled only during resolve / compile.',
-    },
-    items: [],
-  },
-  {
-    version: 'alpha.5',
-    date: '2026-08-16',
-    summary: {
-      zh: '建立 assembly-local Entity Definition registry 与 Graph Theme style，为后续三成员统一 registry/resolve 契约提供基础。',
-      en: 'Introduces assembly-local Entity Definition registries and Graph Theme styles as the foundation for the unified three-member registry and resolve contracts.',
-    },
-    items: [],
-  },
-  {
-    version: 'alpha.3',
-    date: '2026-08-10',
-    summary: {
-      zh: '⚠️ 撤回缺少真实场景验证的 Callout 公共契约，不保留兼容入口。',
-      en: '⚠️ Removes the unvalidated public Callout contract without a compatibility entry.',
-    },
-    items: [],
   },
   {
     version: 'alpha.1',
@@ -208,7 +150,7 @@ const graphMilestones: Array<SubVersion> = [
       },
     ],
   },
-].sort((left, right) => right.date.localeCompare(left.date));
+];
 
 /** Graph v0.1 里程碑 */
 export const graphV01: Release = {

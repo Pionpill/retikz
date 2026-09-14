@@ -30,12 +30,19 @@ export const standardV01: Release = {
       subVersions: [
         {
           version: 'alpha.5',
-          date: '2026-09-05',
+          date: '2026-09-14',
           summary: {
-            zh: 'Ribbon profile 参数只由命中的精确 schema 解析，未声明 schema 时继续使用 JSON object fallback。',
-            en: 'Ribbon profile parameters are parsed only by the matched exact schema, with the JSON-object fallback retained when no schema is declared.',
+            zh: '新增 straightBarb，统一箭头后缘几何，并同步稀疏 Source 与精确 schema 解析。',
+            en: 'Adds straightBarb, unifies arrow back geometry, and aligns sparse Source with exact-schema parsing.',
           },
           items: [
+            {
+              label: { zh: 'straightBarb 与箭头后缘', en: 'straightBarb and arrow backs' },
+              content: {
+                zh: '/arrow 新增 straightBarb，继承路径描边并支持端点双向放置。所有箭头 Definition 补齐 backX，与 Core endpointOverlap 使用同一几何契约。',
+                en: 'The /arrow entry adds straightBarb with inherited path strokes and placement at either endpoint. All arrow Definitions provide backX and share Core endpointOverlap geometry.',
+              },
+            },
             {
               label: {
                 zh: 'BREAKING：profile transform 结果直接消费',
@@ -46,14 +53,28 @@ export const standardV01: Release = {
                 en: 'A custom Ribbon width profile now passes its `paramsSchema` transform result directly to the resolver without a second generic JSON-schema check. Definitions without `paramsSchema` continue to use `JsonObjectSchema` as their sole input boundary.',
               },
             },
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+            {
+              label: { zh: 'BREAKING：保留稀疏 Source', en: 'BREAKING: preserve sparse Source' },
+              content: {
+                zh: 'Standard factory 与适配器保留作者输入，默认值统一在领域 resolve 补全，并适配 Core style / layout 分组。',
+                en: 'Standard factories and adapters preserve authored input, complete defaults during domain resolution, and align with Core style/layout groups.',
+              },
+            },
           ],
         },
         {
           version: 'alpha.4',
           date: '2026-08-28',
           summary: {
-            zh: '补充五种可容纳内容的通用图式 Shape、九种 Standard 端点 marker，并修复圆柱近端端盖填充。',
-            en: 'Adds five content-bearing diagram Shapes, nine Standard endpoint markers, and correct near-cap fill for cylinders.',
+            zh: '补充五种可容纳内容的通用图式 Shape、八种 Standard 端点 marker，并修复圆柱近端端盖填充。',
+            en: 'Adds five content-bearing diagram Shapes, eight Standard endpoint markers, and correct near-cap fill for cylinders.',
           },
           items: [
             {
@@ -66,8 +87,8 @@ export const standardV01: Release = {
             {
               label: { zh: '开放描边端点', en: 'Open stroke endpoints' },
               content: {
-                zh: '`@retikz/standard/arrow` 新增 bar、crowFoot 与 straightBarb。三者都继承路径描边、支持 Core 的 length、width、lineWidth、color 与 opacity，并在 start、end、反向和双端路径上沿用统一 marker 放置与 shrink。',
-                en: '`@retikz/standard/arrow` adds bar, crowFoot, and straightBarb. All three inherit path strokes, support Core length, width, lineWidth, color, and opacity, and share marker placement and shrink across start, end, reversed, and double-ended paths.',
+                zh: '`@retikz/standard/arrow` 新增 bar 与 crowFoot。两者都继承路径描边、支持 Core 的 length、width、lineWidth、color 与 opacity，并在 start、end、反向和双端路径上沿用统一 marker 放置与 shrink。',
+                en: '`@retikz/standard/arrow` adds bar and crowFoot. Both inherit path strokes, support Core length, width, lineWidth, color, and opacity, and share marker placement and shrink across start, end, reversed, and double-ended paths.',
               },
             },
             {
@@ -265,6 +286,23 @@ export const standardV01: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-14',
+          summary: {
+            zh: '同步 Standard 新契约与 Core Source authoring。',
+            en: 'Aligns with new Standard contracts and Core Source authoring.',
+          },
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
+        {
           version: 'alpha.4',
           date: '2026-08-28',
           summary: {
@@ -377,6 +415,23 @@ export const standardV01: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-14',
+          summary: {
+            zh: '同步 Standard 新契约与 Core Source authoring。',
+            en: 'Aligns with new Standard contracts and Core Source authoring.',
+          },
+          items: [
+            {
+              label: { zh: 'Node.js 22', en: 'Node.js 22' },
+              content: {
+                zh: '最低 Node.js 版本调整为 22.12.0。',
+                en: 'The minimum Node.js version is now 22.12.0.',
+              },
+            },
+          ],
+        },
         {
           version: 'alpha.4',
           date: '2026-08-28',
