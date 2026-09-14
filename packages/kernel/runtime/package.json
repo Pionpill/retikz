@@ -10,7 +10,7 @@
   "description": "retikz runtime: domain-neutral ownership, transactions, scheduling, and execution tracing.",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22.12.0"
   },
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

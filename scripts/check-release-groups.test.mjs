@@ -11,7 +11,7 @@ import { releaseGroups } from './release-groups.config.mjs';
 const createRootPublishContract = () => ({
   type: 'module',
   engines: {
-    node: '>=24',
+    node: '>=22.12.0',
   },
   exports: {
     '.': './src/index.ts',
@@ -380,7 +380,7 @@ test('valid root and subpath ESM publish contracts have no diagnostics', () => {
     name: '@retikz/render',
     type: 'module',
     engines: {
-      node: '>=24',
+      node: '>=22.12.0',
     },
     exports: Object.fromEntries(renderSubpaths.map(subpath => [subpath, `./src/${subpath.slice(2)}/index.ts`])),
     publishConfig: {
@@ -491,7 +491,7 @@ test('packages without a root export reject publish-time root fields', () => {
     name: '@retikz/render',
     type: 'module',
     engines: {
-      node: '>=24',
+      node: '>=22.12.0',
     },
     exports: {
       './svg': './src/svg/index.ts',
