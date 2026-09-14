@@ -1,12 +1,11 @@
-import { EntityRole, GraphStatus } from '@retikz/graph';
-
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
+import { LogicFigureEntityKind } from '@/modules/docs/components/logic-figure';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Entity 样式 playground 使用的稳定字段 id */
 export const EntityStyleControlId = {
-  Role: 'role',
+  Kind: 'kind',
   Status: 'status',
   Content: 'content',
   Fill: 'fill',
@@ -27,17 +26,13 @@ export const entityStyleControls = definePreviewControls({
       controls: [
         {
           kind: 'select',
-          id: EntityStyleControlId.Role,
-          label: '角色',
-          defaultValue: EntityRole.Activity,
+          id: EntityStyleControlId.Kind,
+          label: '类型',
+          defaultValue: LogicFigureEntityKind.Algorithm,
           options: [
-            { value: EntityRole.Participant, label: '参与主体 - participant' },
-            { value: EntityRole.Activity, label: '活动 - activity' },
-            { value: EntityRole.Event, label: '事件 - event' },
-            { value: EntityRole.State, label: '状态 - state' },
-            { value: EntityRole.Gateway, label: '网关 - gateway' },
-            { value: EntityRole.Resource, label: '资源 - resource' },
-            { value: EntityRole.Concept, label: '概念 - concept' },
+            { value: LogicFigureEntityKind.Important, label: '重要逻辑内容 - docs.logic.important' },
+            { value: LogicFigureEntityKind.Secondary, label: '次要或背景内容 - docs.logic.secondary' },
+            { value: LogicFigureEntityKind.Algorithm, label: '算法、高复杂度或性能逻辑 - docs.logic.algorithm' },
           ],
         },
         {
@@ -71,8 +66,8 @@ export const entityStyleControls = definePreviewControls({
     {
       label: '节点样式',
       controls: [
-        { kind: 'color', id: EntityStyleControlId.Fill, label: '填充色', defaultValue: '#e2e8f0' },
-        { kind: 'color', id: EntityStyleControlId.Stroke, label: '描边色', defaultValue: '#2563eb' },
+        { kind: 'color', id: EntityStyleControlId.Fill, label: '填充色', defaultValue: 'currentColor' },
+        { kind: 'color', id: EntityStyleControlId.Stroke, label: '描边色', defaultValue: 'currentColor' },
         {
           kind: 'range',
           id: EntityStyleControlId.StrokeWidth,
@@ -102,18 +97,18 @@ export const entityStyleControls = definePreviewControls({
 export const previewControlContract = {
   controls: entityStyleControls,
   canonicalValues: {
-    role: EntityRole.Activity,
+    kind: LogicFigureEntityKind.Algorithm,
     status: '',
     content: 'Process Order',
-    fill: '#e2e8f0',
-    stroke: '#2563eb',
+    fill: 'currentColor',
+    stroke: 'currentColor',
     strokeWidth: 2,
     dashed: false,
     opacity: 1,
     textColor: '#0f172a',
   },
   relatedApis: [
-    'Entity.role',
+    'Entity.kind',
     'Entity.status',
     'Entity.children',
     'Node.style.fill',
@@ -124,3 +119,4 @@ export const previewControlContract = {
     'Node.style.textColor',
   ],
 } satisfies PreviewControlContract;
+import { GraphStatus } from '@retikz/graph';

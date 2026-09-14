@@ -5,6 +5,9 @@ import type { EntityKindDefinition, EntityPredicateDefinition, EntityRoleDefinit
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { BUILTIN_ENTITY_ROLE_DEFINITIONS } from './definitions';
 
+/** 按 role 分组的 Entity kind definitions */
+export type EntityKindRegistry = ReadonlyMap<string, ReadonlyMap<string, EntityKindDefinition>>;
+
 const duplicateDefinition = (capability: string, key: string): RetikzGraphError =>
   new RetikzGraphError({
     code: RetikzGraphErrorCode.DefinitionDuplicate,
@@ -26,6 +29,22 @@ const invalidDefinition = (label: string, value: string): RetikzGraphError =>
     details: { capability: 'entity-registry', key: value, reason: `${label} must be a non-empty string.` },
   });
 
+/** 读取一个 role 内注册的 Entity kind definition */
+export const entityKindDefinitionOf = (
+  registry: EntityKindRegistry,
+  role: string,
+  kind: string,
+): EntityKindDefinition | undefined => registry.get(role)?.get(kind);
+
+/** 收集在任一 role 注册过的 Entity kind key，供 Theme selector 校验 */
+export const entityKindKeys = (registry: EntityKindRegistry): ReadonlySet<string> => {
+  const keys = new Set<string>();
+  for (const kinds of registry.values()) {
+    for (const kind of kinds.keys()) keys.add(kind);
+  }
+  return keys;
+};
+
 /** 合并内置与自定义 Entity roles，并拒绝重复 key */
 export const resolveEntityRoleRegistry = (
   custom: ReadonlyArray<EntityRoleDefinition> | undefined = undefined,
@@ -44,12 +63,12 @@ export const resolveEntityRoleRegistry = (
   return registry;
 };
 
-/** 合并 Entity kinds，并校验所属 role */
+/** 合并 Entity kinds，并以 role 与 kind 的组合身份校验重复注册 */
 export const resolveEntityKindRegistry = (
   custom: ReadonlyArray<EntityKindDefinition> | undefined,
   roles: ReadonlyMap<string, EntityRoleDefinition>,
-): ReadonlyMap<string, EntityKindDefinition> => {
-  const registry = new Map<string, EntityKindDefinition>();
+): EntityKindRegistry => {
+  const registry = new Map<string, Map<string, EntityKindDefinition>>();
   for (const definition of custom ?? []) {
     assertNonEmptyString(definition.kind, 'Entity kind', invalidDefinition('Entity kind', definition.kind));
     assertNonEmptyString(
@@ -65,8 +84,16 @@ export const resolveEntityKindRegistry = (
     if (!roles.has(definition.role)) {
       throw missingDefinition(`Entity kind '${definition.kind}' parent role`, definition.role, roles.keys());
     }
-    if (registry.has(definition.kind)) throw duplicateDefinition('entity-kind', definition.kind);
-    registry.set(definition.kind, definition);
+    const kinds = registry.get(definition.role) ?? new Map<string, EntityKindDefinition>();
+    if (kinds.has(definition.kind)) {
+      throw new RetikzGraphError({
+        code: RetikzGraphErrorCode.DefinitionDuplicate,
+        message: `Entity kind '${definition.kind}' is already registered for role '${definition.role}'.`,
+        details: { capability: 'entity-kind', key: definition.kind, reason: `role '${definition.role}'` },
+      });
+    }
+    kinds.set(definition.kind, definition);
+    registry.set(definition.role, kinds);
   }
   return registry;
 };
@@ -75,7 +102,7 @@ export const resolveEntityKindRegistry = (
 export const resolveEntityPredicateRegistry = (
   custom: ReadonlyArray<EntityPredicateDefinition> | undefined,
   roles: ReadonlyMap<string, EntityRoleDefinition>,
-  kinds: ReadonlyMap<string, EntityKindDefinition>,
+  kinds: EntityKindRegistry,
 ): ReadonlyMap<string, EntityPredicateDefinition> => {
   const registry = new Map<string, EntityPredicateDefinition>();
   for (const definition of custom ?? []) {
@@ -97,16 +124,13 @@ export const resolveEntityPredicateRegistry = (
     for (const kindKey of definition.kinds ?? []) {
       if (seenKinds.has(kindKey)) throw duplicateDefinition(`Entity predicate '${definition.name}' kind`, kindKey);
       seenKinds.add(kindKey);
-      const kind = kinds.get(kindKey);
+      const kind = entityKindDefinitionOf(kinds, definition.role, kindKey);
       if (kind === undefined) {
-        throw missingDefinition(`Entity predicate '${definition.name}' kind`, kindKey, kinds.keys());
-      }
-      if (kind.role !== definition.role) {
-        throw new RetikzGraphError({
-          code: RetikzGraphErrorCode.DefinitionConflict,
-          message: `Entity predicate '${definition.name}' kind '${kindKey}' belongs to role '${kind.role}', not '${definition.role}'.`,
-          details: { capability: 'entity-predicate-kind', key: kindKey },
-        });
+        throw missingDefinition(
+          `Entity predicate '${definition.name}' kind`,
+          kindKey,
+          kinds.get(definition.role)?.keys() ?? [],
+        );
       }
     }
     if (registry.has(definition.name)) throw duplicateDefinition('entity-predicate', definition.name);

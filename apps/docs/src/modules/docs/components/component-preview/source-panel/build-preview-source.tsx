@@ -1,10 +1,17 @@
 import type { IRScene } from '@retikz/core';
-import type { FC } from 'react';
 
 import { SceneSchema } from '@retikz/core';
 import { Layout } from '@retikz/react';
 
-import type { ComponentPreviewFileConfig, ComponentRenderSource, PreviewSourceConfig, RendererMode } from '../types';
+import type { Lang } from '@/i18n';
+
+import type {
+  ComponentPreviewDemoComponent,
+  ComponentPreviewFileConfig,
+  ComponentRenderSource,
+  PreviewSourceConfig,
+  RendererMode,
+} from '../types';
 import type { PreviewIR } from '../utils';
 
 import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite } from '../utils';
@@ -14,7 +21,9 @@ import { RawSvgFrame } from './RawSvgFrame';
 /** 构建组件预览源码视图所需的输入。 */
 export type BuildPreviewSourceInput = {
   /** demo 组件。 */
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** demo 模块声明的源码派生能力。 */
   previewSource?: PreviewSourceConfig;
   /** 主 demo id。 */
@@ -62,6 +71,7 @@ const errorMessage = (error: unknown): string => (error instanceof Error ? error
 export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreviewSourceResult => {
   const {
     Component,
+    lang = 'zh',
     previewSource,
     name,
     key,
@@ -94,6 +104,10 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
   });
   const extraSourceFiles = reactFiles.filter(file => !file.isMain);
 
+  if (previewSource?.buildViews !== undefined) {
+    return { source: { react: { files: reactFiles }, ...previewSource.buildViews({ lang, theme }) }, previewIr: null };
+  }
+
   let resolvedPreviewIr: UnvalidatedPreviewIR | null = null;
   let irJson = '';
   if (irJsonOverride !== undefined) {
@@ -125,14 +139,14 @@ export const buildPreviewSource = (input: BuildPreviewSourceInput): BuildPreview
     }
   } else if (previewSource?.canonicalRender !== undefined) {
     try {
-      resolvedPreviewIr = buildPreviewIR(previewSource.canonicalRender);
+      resolvedPreviewIr = buildPreviewIR(() => previewSource.canonicalRender!(lang));
       irJson = formatIR(resolvedPreviewIr.sourceIr);
     } catch (error) {
       irJson = `// Failed to compute IR: ${errorMessage(error)}`;
     }
   } else if (previewSource?.deriveIR !== false) {
     try {
-      resolvedPreviewIr = buildPreviewIR(Component);
+      resolvedPreviewIr = buildPreviewIR(Component, lang);
       irJson = formatIR(resolvedPreviewIr.sourceIr);
     } catch (error) {
       irJson = `// Failed to compute IR: ${errorMessage(error)}`;

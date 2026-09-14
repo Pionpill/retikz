@@ -94,7 +94,7 @@ A handwritten `IRGrid` without a loaded definition is never silently interpreted
 
 ## API Reference
 
-`GridProps` is a public alias of `GridInput`, and the Vanilla adapter accepts that same `GridInput`. `createGrid` validates it and returns `IRGrid` with schema defaults applied. `Position` and `PolarPosition` in the table below come from Core's positioning contract.
+`GridProps` is a public alias of `GridInput`, and the Vanilla adapter accepts that same `GridInput`. `createGrid` only assembles sparse `IRGrid`. `GridSchema.parse()` validates external JSON and materializes static defaults; compilation resolution reuses those defaults and handles context. `Position` and `PolarPosition` in the table below come from Core's positioning contract.
 
 ### `GridInput`
 

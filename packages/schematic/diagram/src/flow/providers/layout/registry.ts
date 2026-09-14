@@ -5,7 +5,7 @@ import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundat
 import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { FlowDirection, FlowRoutingKind } from '../../shared';
+import { FlowDirection, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 import { BUILTIN_FLOW_LAYOUT_DEFINITIONS } from './definitions';
 import { LayeredFlowLayoutDefinition } from './layered';
 
@@ -26,6 +26,7 @@ const ROUTING_KINDS = new Set(Object.values(FlowRoutingKind));
 const FLOW_DIRECTIONS = new Set(Object.values(FlowDirection));
 const DEFINITION_KEYS = new Set(['name', 'description', 'capabilities', 'defaults', 'layout']);
 const CAPABILITY_KEYS = new Set([
+  'placementKinds',
   'compoundScopes',
   'groupEndpoints',
   'crossScopeRelations',
@@ -36,7 +37,8 @@ const CAPABILITY_KEYS = new Set([
   'relationDirections',
   'routingKinds',
 ]);
-const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'routing']);
+const DEFAULT_KEYS = new Set(['direction', 'nodeGap', 'rankGap', 'placementGap', 'routing']);
+const PLACEMENT_GAP_KEYS = new Set(['horizontal', 'vertical']);
 const ROUTING_DEFAULT_KEYS = new Set(['kind', 'orthogonalCornerRadius']);
 
 const invalidDefinition = (definition: FlowLayoutDefinition, reason: string, cause?: unknown): never => {
@@ -109,6 +111,7 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   }
   validateExactKeys(capabilities, CAPABILITY_KEYS, 'capabilities', definition);
   validateExactKeys(defaults, DEFAULT_KEYS, 'defaults', definition);
+  validateExactKeys(defaults.placementGap, PLACEMENT_GAP_KEYS, 'defaults.placementGap', definition);
   validateExactKeys(defaults.routing, ROUTING_DEFAULT_KEYS, 'defaults.routing', definition, new Set(['kind']));
   if (capabilities.groupEndpoints && !capabilities.compoundScopes) {
     invalidDefinition(definition, 'groupEndpoints requires compoundScopes.');
@@ -118,16 +121,27 @@ export const validateFlowLayoutDefinition = (definition: FlowLayoutDefinition): 
   }
   validateUniqueValues(capabilities.relationDirections, RELATION_DIRECTIONS, 'relationDirections', definition);
   validateUniqueValues(capabilities.routingKinds, ROUTING_KINDS, 'routingKinds', definition);
+  validateUniqueValues(
+    capabilities.placementKinds,
+    new Set(Object.values(FlowPlacementKind)),
+    'placementKinds',
+    definition,
+  );
   if (!FLOW_DIRECTIONS.has(defaults.direction)) invalidDefinition(definition, 'defaults.direction is unsupported.');
   validateFiniteNonNegative(defaults.nodeGap, 'defaults.nodeGap', definition);
   validateFiniteNonNegative(defaults.rankGap, 'defaults.rankGap', definition);
+  validateFiniteNonNegative(defaults.placementGap.horizontal, 'defaults.placementGap.horizontal', definition);
+  validateFiniteNonNegative(defaults.placementGap.vertical, 'defaults.placementGap.vertical', definition);
   if (!capabilities.routingKinds.includes(defaults.routing.kind)) {
     invalidDefinition(definition, 'defaults.routing.kind is not declared by routingKinds.');
   }
-  const supportsOrthogonal = capabilities.routingKinds.includes(FlowRoutingKind.Orthogonal);
+  const supportsOrthogonal = capabilities.routingKinds.some(kind => kind !== FlowRoutingKind.Straight);
   const radius = defaults.routing.orthogonalCornerRadius;
   if (supportsOrthogonal !== (radius !== undefined)) {
-    invalidDefinition(definition, 'orthogonalCornerRadius must exist exactly when orthogonal routing is supported.');
+    invalidDefinition(
+      definition,
+      'orthogonalCornerRadius must exist exactly when an axis-aligned routing kind is supported.',
+    );
   }
   if (radius !== undefined) validateFiniteNonNegative(radius, 'defaults.routing.orthogonalCornerRadius', definition);
   if (typeof definition.layout !== 'function') invalidDefinition(definition, 'layout must be a synchronous function.');

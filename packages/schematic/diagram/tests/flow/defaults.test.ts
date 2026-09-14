@@ -50,6 +50,120 @@ const baseFlow = {
 };
 
 describe('Flow defaults and formal Source fragments', () => {
+  it.each([undefined, 0, 48])(
+    'uses custom axis defaults below automatic scopes but inherits authored parent gap: %s',
+    gap => {
+      const inputs: Array<Flow.FlowLayoutInput> = [];
+      const definition = Flow.defineFlowLayout({
+        ...Flow.LayeredFlowLayoutDefinition,
+        name: 'custom-axis-spacing',
+        defaults: { ...Flow.LayeredFlowLayoutDefinition.defaults, placementGap: { horizontal: 60, vertical: 24 } },
+        layout: (input, context) => {
+          inputs.push(input);
+          return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        },
+      });
+      compileFlow(
+        {
+          ...baseFlow,
+          entities: [
+            { id: 'a', text: 'A' },
+            { id: 'b', text: 'B' },
+          ],
+          groups: [{ id: 'group', children: ['grid'] }],
+          layouts: [
+            { kind: 'linear', id: 'outer', direction: 'right', gap, children: ['group'] },
+            {
+              kind: 'grid',
+              id: 'grid',
+              rowGap: gap === undefined ? undefined : 0,
+              children: ['a', 'b'],
+              placements: [['a', 'b']],
+            },
+          ],
+          children: ['outer'],
+        },
+        { flowLayouts: [definition], defaultFlowLayout: definition.name },
+      );
+      const outer = inputs[0].elements[0];
+      if (outer.kind !== 'layout') throw new Error('Expected Layout');
+      expect(outer.placement).toMatchObject({ gap: gap ?? 60 });
+      const group = outer.elements[0];
+      if (group.kind !== 'group') throw new Error('Expected Group');
+      const grid = group.elements[0];
+      if (grid.kind !== 'layout') throw new Error('Expected Grid');
+      expect(grid.placement).toMatchObject({ rowGap: gap === undefined ? 24 : 0, columnGap: gap ?? 60 });
+    },
+  );
+
+  it.each(['right', 'left', 'down', 'up'] as const)(
+    'uses physical-axis defaults for %s placement without changing automatic layout',
+    direction => {
+      const inputs: Array<Flow.FlowLayoutInput> = [];
+      const definition = Flow.defineFlowLayout({
+        ...Flow.LayeredFlowLayoutDefinition,
+        name: 'observe-axis-defaults',
+        layout: (input, context) => {
+          inputs.push(input);
+          return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+        },
+      });
+      compileFlow(
+        {
+          ...baseFlow,
+          entities: [
+            { id: 'a', text: 'A' },
+            { id: 'b', text: 'B' },
+          ],
+          groups: [{ id: 'outer', children: ['lane'] }],
+          layouts: [{ kind: 'linear', id: 'lane', direction, children: ['a', 'b'] }],
+          children: ['outer'],
+        },
+        { flowLayouts: [definition], defaultFlowLayout: definition.name },
+      );
+      expect(inputs[0].layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
+      const outer = inputs[0].elements[0];
+      if (outer.kind !== 'group') throw new Error('Expected Group');
+      expect(outer.layout).toMatchObject({ nodeGap: 48, rankGap: 48 });
+      const lane = outer.elements[0];
+      if (lane.kind !== 'layout') throw new Error('Expected Layout');
+      expect(lane.placement).toMatchObject({ gap: direction === 'down' || direction === 'up' ? 32 : 48 });
+    },
+  );
+
+  it.each([undefined, 0, 48, 19])('inherits only authored nodeGap into Grid through nested layouts: %s', nodeGap => {
+    const inputs: Array<Flow.FlowLayoutInput> = [];
+    const definition = Flow.defineFlowLayout({
+      ...Flow.LayeredFlowLayoutDefinition,
+      name: 'observe-grid-defaults',
+      layout: (input, context) => {
+        inputs.push(input);
+        return Flow.LayeredFlowLayoutDefinition.layout(input, context);
+      },
+    });
+    compileFlow(
+      {
+        ...baseFlow,
+        flowDefaults: { layout: { nodeGap } },
+        entities: [
+          { id: 'a', text: 'A' },
+          { id: 'b', text: 'B' },
+        ],
+        layouts: [
+          { kind: 'linear', id: 'outer', direction: 'right', children: ['grid'] },
+          { kind: 'grid', id: 'grid', children: ['a', 'b'], placements: [['a'], ['b']] },
+        ],
+        children: ['outer'],
+      },
+      { flowLayouts: [definition], defaultFlowLayout: definition.name },
+    );
+    const outer = inputs[0].elements[0];
+    if (outer.kind !== 'layout') throw new Error('Expected Layout');
+    const grid = outer.elements[0];
+    if (grid.kind !== 'layout') throw new Error('Expected Grid');
+    expect(grid.placement).toMatchObject({ rowGap: nodeGap ?? 32, columnGap: nodeGap ?? 48 });
+  });
+
   it('keeps Flow private entities outside ancestor Graph defaults and rules', () => {
     const flow = Flow.FlowDiagramSchema.parse(baseFlow);
     const source = GraphSchema.parse({
@@ -108,7 +222,9 @@ describe('Flow defaults and formal Source fragments', () => {
           children: ['source'],
         },
       ],
-      layouts: [{ id: 'lane', direction: 'down', gap: 4, align: 'center', children: ['target'] }],
+      layouts: [
+        { kind: 'linear' as const, id: 'lane', direction: 'down', gap: 4, align: 'center', children: ['target'] },
+      ],
       children: ['group', 'lane'],
       relations: [
         {
@@ -240,7 +356,7 @@ describe('Flow defaults and formal Source fragments', () => {
           children: ['lane'],
         },
       ],
-      layouts: [{ id: 'lane', direction: 'right', gap: 0, children: ['source', 'target'] }],
+      layouts: [{ kind: 'linear' as const, id: 'lane', direction: 'right', gap: 0, children: ['source', 'target'] }],
       children: ['group'],
       relations: [{ source: 'source', target: 'target' }],
     };
@@ -332,7 +448,7 @@ describe('Flow defaults and formal Source fragments', () => {
           { id: 'outer', children: ['lane'] },
           { id: 'inner', layout: { nodeGap: 0 }, children: ['node'] },
         ],
-        layouts: [{ id: 'lane', direction: 'down', children: ['inner'] }],
+        layouts: [{ kind: 'linear' as const, id: 'lane', direction: 'down', children: ['inner'] }],
         children: ['outer'],
       },
       { flowLayouts: [layout], defaultFlowLayout: layout.name },

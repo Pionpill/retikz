@@ -48,9 +48,8 @@ describe('CoordinateSchema (contract)', () => {
 
 describe('CoordinateSchema polar2D (contract)', () => {
   // Happy path
-  it('polar2d_minimal_valid_with_defaults', () => {
+  it('polar2d_parse_materializes_static_defaults', () => {
     const parsed = CoordinateSchema.parse({ type: 'polar2D', angle: 'a', radius: 'r' });
-    // 默认值填充：startAngle=0 / endAngle=360 / innerRadius=0
     expect(parsed).toEqual({ type: 'polar2D', angle: 'a', radius: 'r', startAngle: 0, endAngle: 360, innerRadius: 0 });
   });
 
@@ -69,12 +68,7 @@ describe('CoordinateSchema polar2D (contract)', () => {
 
     const parsed = CoordinateSchema.parse(coordinate);
 
-    expect(parsed).toEqual({
-      ...coordinate,
-      startAngle: 0,
-      endAngle: 360,
-      innerRadius: 0,
-    });
+    expect(parsed).toEqual({ ...coordinate, startAngle: 0, endAngle: 360, innerRadius: 0 });
     expect(CoordinateSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 

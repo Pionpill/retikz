@@ -22,6 +22,7 @@ import type {
   ResolvedNodeSource,
 } from './types';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolvePaint } from '../resource';
 import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectiveNodeStyle } from '../style';
 import { resolveDashPattern, resolveDropShadow } from '../style';
@@ -365,6 +366,12 @@ export const resolveNode = (source: IRNode, context: NodeResolveContext): NodeRe
     labelWasArray,
   );
   const node = canonicalizeNode(dependentColorsResolved);
+  if (node.width !== undefined && node.width < node.minimumSize.width) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Resolve,
+      `${context.irPath}.layout.width must not be smaller than the effective minimum width`,
+    );
+  }
   const shape = resolveNodeShape({
     node,
     shapes: context.shapes,

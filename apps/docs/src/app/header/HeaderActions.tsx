@@ -89,6 +89,8 @@ export const HeaderActions: FC = () => {
   const hasToc = useTocStore(state => state.hasToc);
   const layout = useLayoutStore(s => s.layout);
   const toggleLayout = useLayoutStore(s => s.toggleLayout);
+  const sidebarOpen = useLayoutStore(s => s.sidebarOpen);
+  const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
@@ -112,7 +114,7 @@ export const HeaderActions: FC = () => {
 
   const ThemeIcon = theme === 'light' ? Sun : Moon;
   const themeLabel = theme === 'light' ? t('common.themeLight') : t('common.themeDark');
-  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId, docLocation?.sectionId);
+  const showPreviewThemeStyle = isPreviewThemeStyleDocument(docLocation?.moduleId);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -205,6 +207,12 @@ export const HeaderActions: FC = () => {
                 {t('view.groupLabel')}
               </DropdownMenuLabel>
               <DropdownMenuGroup>
+                <DropdownMenuCheckboxItem checked={sidebarOpen} onCheckedChange={setSidebarOpen}>
+                  {t('common.sidebar')}
+                  <DropdownMenuShortcut className="max-lg:hidden">
+                    <Shortcut keys={['mod', 'B']} className="tracking-normal" />
+                  </DropdownMenuShortcut>
+                </DropdownMenuCheckboxItem>
                 {hasToc && (
                   <DropdownMenuCheckboxItem checked={tocOpen} onCheckedChange={setTocOpen}>
                     {t('toc.outline')}

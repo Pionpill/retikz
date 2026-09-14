@@ -22,6 +22,8 @@ description: Use when writing or editing a leaf apps/docs concept page to explai
 
 ## 定位
 
+以输入到输出的内部执行过程和源码阅读为主线时，改用 [`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)；本 skill 保留概念模型与架构关系的写法，不要求原理页重复入门教学
+
 概念页讲**抽象概念 / 心智模型 / 架构**——读者不是来查 API，是来「搞懂这套模型怎么运作、什么时候该用哪一层」。与其它 section 的边界：
 
 | Section                 | 服务什么                                                                              |
@@ -108,7 +110,7 @@ H2 进右侧 TOC；同一概念下的细分点用 H3。
 硬约束：
 
 - **图必须和正文绑定**——正文要引用图里的标注（如「箭头上 `anchors` 代表的依赖」），否则图是孤儿
-- **流程图善用 edge label**——`<Draw>` 的 `{ label: { text, side, textColor } }` 在箭头中点标注每段处理 / 中间产物
+- **流程图使用 Flow 的 Relation label**——用 `FlowRelations` 的关系标签在箭头中点标注关键处理 / 中间产物；真实执行或数据先后默认用 `FlowDiagram`，不手写 `<Draw>` 重建流程
 - **画法细节全部交给 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)**：`stroke="none"` 当文字锚点、配色、y 轴朝下、宽度自适应、双语拆分条件、验证规则——本 skill 不重复
 
 ## 表格优先
@@ -132,6 +134,7 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 - **先结果 / 类比，后内部**：先讲抽象对用户意味着什么，再展开机制
 - **抽象 / 糖类概念给等价或展开示例**：声称「高层写法不引入新能力 / X 等价 Y」时，给两段**编译 / 下沉同构**的代码证明它（core 的 `<Draw way>` ↔ `<Path><Step/>` 是一例；plot 的高层 mark ↔ 下沉后的 Tier 1 同理），而不是只下断言
 - **深机制点到为止 + 链出**：两趟编译、lowering 管线这类实现细节，讲清「做了什么 / 为什么有先后」即可，铺满实现细节链到 `reference/` 或专页
+- **高难度原理页配源码入口**：解析原理、编译机制等讲解实现的文档通常在相关小节末尾使用 `<SourceLinks>`，链接直接支撑正文结论的契约、关键分支或执行入口；不要只链接 demo 或将全部入口堆在页尾
 
 ## 保持与当前版本一致
 

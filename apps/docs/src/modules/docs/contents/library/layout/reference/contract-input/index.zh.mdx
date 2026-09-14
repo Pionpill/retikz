@@ -7,6 +7,8 @@ description: 查询 Layout 布局容器与 LayoutItem 联合的 JSON schema、�
 
 > 这里说明可保存和校验的输入结构。Definition、Core 编译与宿主接线见[运行时](/library/layout/reference/runtime)，求解后的可观察结果见[产物契约](/library/layout/reference/contract-artifact)。
 
+`createFlexLayout` / `createGridLayout` / `createOverlayLayout` 只组装类型化 Source，保留省略字段与简写。唯一的 Layout schema 声明静态默认值；直接 `parse()` 会校验并物化这些默认值，得到可持久化快照。编译期 resolver 从同一 schema 获取缺省值，再展开间距简写与上下文语义，不改写原始配置。
+
 ## 容器输入
 
 ### FlexLayoutSchema

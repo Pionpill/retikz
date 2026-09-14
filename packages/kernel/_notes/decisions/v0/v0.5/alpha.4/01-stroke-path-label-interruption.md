@@ -1,20 +1,22 @@
-# ADR-01：Stroke Path 标签自动断线
+# ADR-01：Path 标签多行文本与 Stroke 自动断线
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-02
 - 关联：[alpha.4 roadmap](./roadmap.md) · [v0.5 roadmap](../roadmap.md) · [Core 绘图完备设计](../../../../architecture/core-drawing-complete.md)
 
 ## 背景与目标
 
-`Path.label` 与 `step.label` 已能在路径或单段的归一化位置完成文字测量、定位和旋转，但标签与宿主描边仍作为彼此独立的 Scene 内容输出。标签位于路径中心时，描边会穿过正文；依赖不透明背景覆盖只能在已知纯色表面上近似隐藏路径，也不会同步改变 Canvas 命中几何
+`Path.label` 与 `step.label` 已能在路径或单段的归一化位置完成文字测量、定位和旋转，但目前只接受单行内容。Graph Relation 直接复用该标签，Flow Relation 也投影到它；任一上层自行解释换行都会让测量、路由预留、绘制与断线拥有多份不一致的文字语义。标签与宿主描边仍作为彼此独立的 Scene 内容输出，居中标签时描边会穿过正文；依赖不透明背景覆盖只能在已知纯色表面上近似隐藏路径，也不会同步改变 Canvas 命中几何
 
-目标是让无填充的内置 Stroke Path 在居中标签处产生真实、renderer-agnostic 的描边断口。作者可以在单个标签上覆盖默认策略；标签定位、路径 identity、dash、mark、箭头与命中仍从同一条逻辑路径派生。Ribbon、其它 Path kind 与填充拓扑不进入本能力
+目标是让 Path label 与 Node 正文使用同一 `TextBlock` 表达多行内容，并让无填充的内置 Stroke Path 在整个居中标签视觉盒处产生真实、renderer-agnostic 的描边断口。作者可以在单个标签上覆盖默认策略；标签定位、路径 identity、dash、mark、箭头与命中仍从同一条逻辑路径派生。Ribbon、其它 Path kind 与填充拓扑不进入断线能力
 
-## 决策：Geometry Label 声明 interrupt，Core 切断无填充 Stroke Path 的描边
+## 决策：Geometry Label 复用 TextBlock，Core 按整块视觉盒切断无填充 Stroke Path 的描边
+
+`GeometryLabel.text` 复用 Core `TextBlock`。单个字符串沿用既有硬换行语义；非空行数组允许逐行文字、逐行样式或混排文字 / 数学行。每行先按 Core 的现有文字规则解析、度量并绘制，整块再以既有 Path label 的水平居中与固定行高倍率、统一的位置、side 与 sloped 变换放在同一个路径采样锚点。GeometryLabel 不新增 Node 专属 `align`、`lineHeight` 或 `maxTextWidth` 字段。行不是独立的 Path label：它们不能拥有不同的 position、side、distance、rotation 或 interrupt。
 
 `GeometryLabel` 增加可选布尔字段 `interrupt`。Core 在标签位置、方向、字体与文字视觉盒已经确定后解析有效断线策略：字段显式值优先；省略时，仅 canonical `side` 为 `center` 且宿主是无填充内置 Stroke Path 的标签自动启用。现有 `sloped: true` 且未显式设置 `side` 的标签会得到 canonical `center`，因此默认断线
 
-断线围绕标签原始采样锚点建立局部区间。区间长度由已测量文字视觉盒在该处路径切线方向上的投影决定，并包含实际描边与线帽不会侵入文字视觉盒所需的确定性余量。Core 从最终 Stroke Path 几何移除该区间的描边，但不改变逻辑路径的参数域、采样位置或身份。多个有效区间重叠时取并集，不生成相互覆盖的碎片
+断线围绕标签原始采样锚点建立局部区间。区间长度由整个已测量文字块视觉盒在该处路径切线方向上的投影决定，并包含实际描边与线帽不会侵入文字视觉盒所需的确定性余量。Core 从最终 Stroke Path 几何移除该区间的描边，但不改变逻辑路径的参数域、采样位置或身份。多个有效区间重叠时取并集，不生成相互覆盖的碎片
 
 `interrupt: true` 对非居中标签使用同一切断规则，断口仍以该标签在宿主路径上的采样锚点为中心；`interrupt: false` 保持连续。该布尔字段只选择是否切断，不提供第二套间距、碰撞或路由配置
 
@@ -33,7 +35,8 @@
 
 ```ts
 type IRGeometryLabel = {
-  // existing fields
+  text: IRTextBlock;
+  // other existing fields
   interrupt?: boolean;
 };
 ```
@@ -49,7 +52,7 @@ const shouldInterrupt =
 
 `@retikz/math` 额外公开 `CurveSegment`、`CurveSegmentSample` 和 `curve`。`curve.sampleAt()` 以参数位置返回点与单位切线；`curve.approximateLength()` 与 `curve.parameterAtDistance()` 在固定采样预算内把距离映射回参数；`curve.slice()` 对贝塞尔使用 De Casteljau、对弧使用有向参数扫描，返回同种 curve segment。它们接收和返回 plain geometry data，不创建 Path、IR 或 Scene
 
-字段的 JSON 形态由 Geometry Label schema 校验；是否允许中断需要同时知道最终 Path kind 与有效 fill，因此由 Path resolve 按标签字段路径确定并诊断。`interrupt: false` 在内置 Stroke Path 上始终是合法的禁用覆盖；其它 Path kind 显式携带任一布尔值都不合法
+字段的 JSON 形态由 Geometry Label schema 校验；`text` 与 Node 正文使用同一 `TextBlock` schema，不建立 Path、Graph 或 Flow 专属 line schema。是否允许中断需要同时知道最终 Path kind 与有效 fill，因此由 Path resolve 按标签字段路径确定并诊断。`interrupt: false` 在内置 Stroke Path 上始终是合法的禁用覆盖；其它 Path kind 显式携带任一布尔值都不合法
 
 该能力不新增 Scene primitive、renderer option、Definition 或 registry。一个逻辑 Path 可以下沉为多个既有路径片段；这些片段共同保留原 Path 的 identity 和元数据，断口端不产生新的语义端点
 
@@ -57,8 +60,9 @@ const shouldInterrupt =
 
 - 默认行为：无填充内置 Stroke Path 的 canonical `side: 'center'` 标签自动断线；其它 side 保持连续。显式 `interrupt` 覆盖 side 默认
 - 标签定位：`Path.label` 继续按整条未切断路径定位，`step.label` 继续按所属原始段定位。断线不重新参数化后续标签或 mark，不改变 `position` 的含义
+- 多行标签：字符串中的换行与 `TextBlock` 行数组都按 Core 既有规则形成物理行；每个标签只有一个锚点、side、sloped 变换与 visual bounds。块宽取各行最大视觉宽度，块高由各行度量与既有 Path label 固定行高倍率确定，标签整体的水平居中、旋转和 opacity 保持一致
 - 曲线与倒角：直线、Bezier、圆弧、椭圆弧、折线、倒角结果和 generator 下沉结果均按最终描边几何切断；片段保持原路径形状，不以折线近似替换公开几何
-- 多标签：每个有效标签先产生自己的局部断线区间；重叠或相接区间合并。标签仍按声明顺序输出
+- 多标签：每个有效标签块先产生自己的局部断线区间；重叠或相接区间合并。标签仍按声明顺序输出
 - 描边样式：颜色、宽度、opacity、line cap、line join 和 blend 继续来自原 Path。断口尺寸必须计入有效描边与线帽外延，不能让片段重新侵入文字视觉盒
 - 虚线：dash pattern 与 dash offset 按未切断逻辑路径连续推进；断口只抑制对应区间的描边，不让每个可见片段重新从 dash pattern 起点开始
 - 装饰：端点箭头只属于原 Path 的首尾，不出现在断口端。中段 mark、标签与端点装饰继续按未切断路径采样；断线不负责隐藏与标签重叠的 mark 或箭头
@@ -70,4 +74,5 @@ const shouldInterrupt =
 - animation：不增加标签专用动画契约。断线作用于既有 Path 的 settled 几何；已有动画仍属于逻辑 Path，不改变时间、触发或 ownership 语义
 - 兼容性 / breaking：`interrupt` 字段是 additive；但无填充 Stroke Path 上既有居中标签会从连续描边改为默认断线，属于有意的视觉行为变更。非居中标签、填充 Path、Ribbon 与未携带居中标签的既有输入保持原行为，不提供旧行为 alias 或兼容模式；需要连续描边时显式写 `interrupt: false`
 - React / Vanilla 等价性：React 与 Vanilla 只透传已类型化布尔字段，最终默认、限制、诊断和 Scene 几何统一由 Core 决定；直接 JSON 使用同一 schema 与 compile 路径
+- 文字入口等价性：直接 JSON、Vanilla 与 React 以同一 `TextBlock` 表达 Path label；Graph Relation 不改变其 `GeometryLabel` 复用边界，Flow Relation 将同一文本块投影给 Graph。任何入口都不得把换行拆为平行 Relation、多个标签或 adapter-local Text primitive
 - Math 兼容性：新增曲线数值 API 是 additive；Core 映射后得到的 Scene 几何、标签锚点和断口规则保持相同。调用方若需要标签断口仍应使用 Core `Path` 与 `interrupt`，不能直接用 Math API 创建 Drawing 语义

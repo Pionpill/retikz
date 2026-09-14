@@ -1,11 +1,16 @@
-import type { IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
+import type { IRChild } from '@retikz/core';
+import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 
+import { mergeProperties } from '@retikz/foundation';
 import {
   EntityRole,
   GraphType,
   mergeGraphDefaults,
+  projectEntityGraphLayers,
+  projectRelationGraphLayers,
   RelationRole,
   resolveEntity,
+  resolveGraph,
   resolveGraphDefinitionOptions,
   resolveRelation,
 } from '@retikz/graph';
@@ -39,6 +44,7 @@ type FlowContainmentOwner = Readonly<{
 
 type ResolveState = Readonly<{
   graph: ReturnType<typeof resolveGraphDefinitionOptions>;
+  graphLayers: ReadonlyArray<Readonly<{ rules?: IRFlowDiagram['graphRules'] }>>;
   defaults: IRFlowDefaults;
   ids: Map<string, FlowSourcePath>;
   entities: Map<string, IRFlowEntity>;
@@ -179,9 +185,6 @@ const assertCompleteContainment = (source: IRFlowDiagram, state: ResolveState): 
   }
 };
 
-const definedFields = <T extends object>(value: T): Partial<T> =>
-  Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>;
-
 const entityDefaultsOf = (defaults: IRFlowDefaults['entity'], source: IRFlowEntity) => {
   const sourceOverride =
     source.style === undefined && source.layout === undefined
@@ -206,16 +209,20 @@ const resolveEntityRecord = (source: IRFlowEntity, path: FlowSourcePath, state: 
     text: source.text,
     role: source.role ?? EntityRole.Concept,
     ...(source.kind === undefined ? {} : { kind: source.kind }),
+    ...(source.group === undefined ? {} : { group: source.group }),
     ...(source.status === undefined ? {} : { status: source.status }),
     ...(Object.keys(style).length === 0 ? {} : { style }),
     ...(Object.keys(layout).length === 0 ? {} : { layout }),
   };
-  resolveEntity(graph, state.graph);
+  const projectedGraph = projectEntityGraphLayers(resolveEntity(graph, state.graph), {
+    ...state.graph,
+    layers: state.graphLayers,
+  });
   return {
     type: 'entity',
     id: source.id,
     source,
-    graph,
+    graph: projectedGraph,
     ...(source.rank === undefined ? {} : { rank: source.rank }),
     style,
     layout,
@@ -254,13 +261,13 @@ const resolveGroupRecord = (source: IRFlowGroup, path: FlowSourcePath, state: Re
       : {
           title: {
             text: sourceCaption.text,
-            ...definedFields(titleDefaults ?? {}),
+            ...mergeProperties([titleDefaults ?? {}], { shouldOverride: value => value !== undefined }),
           },
         };
   const { caption: _caption, ...groupSurface } = groupDefaults;
   void _caption;
   const surface = {
-    ...definedFields(groupSurface),
+    ...mergeProperties([groupSurface], { shouldOverride: value => value !== undefined }),
     ...(source.overflow === undefined ? {} : { overflow: source.overflow }),
   };
   const graph: IRGroup = {
@@ -298,10 +305,15 @@ const resolveElementRecord = (id: string, state: ResolveState): CanonicalFlowEle
       id: layoutSource.id,
       source: layoutSource,
       ...(layoutSource.rank === undefined ? {} : { rank: layoutSource.rank }),
-      layout: mergeFlowLayoutIntent(undefined, {
-        direction: layoutSource.direction,
-        ...(layoutSource.gap === undefined ? {} : { nodeGap: layoutSource.gap }),
-      }),
+      layout: mergeFlowLayoutIntent(
+        undefined,
+        layoutSource.kind === 'linear'
+          ? {
+              direction: layoutSource.direction,
+              ...(layoutSource.gap === undefined ? {} : { nodeGap: layoutSource.gap }),
+            }
+          : {},
+      ),
       elements: layoutSource.children.map(childId => resolveElementRecord(childId, state)),
       path,
     };
@@ -354,6 +366,7 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     ...(source.kind === undefined ? {} : { kind: source.kind }),
     ...(source.status === undefined ? {} : { status: source.status }),
     ...(source.direction === undefined ? {} : { direction: source.direction }),
+    ...(source.group === undefined ? {} : { group: source.group }),
     ...(source.label === undefined ? {} : { labels: [{ text: source.label }] }),
     ...(defaults?.style === undefined ? {} : { style: defaults.style }),
     ...(defaults?.sourceMarker === undefined ? {} : { sourceMarker: defaults.sourceMarker }),
@@ -363,11 +376,65 @@ const resolveRelationRecord = (source: IRFlowRelation, index: number, state: Res
     ...(defaults?.labelOpacity === undefined ? {} : { labelOpacity: defaults.labelOpacity }),
   };
   const canonical = resolveRelation(graph, state.graph);
+  const projectedGraph = projectRelationGraphLayers(canonical, {
+    ...state.graph,
+    layers: state.graphLayers,
+  });
   return {
     source,
-    graph: { ...graph, direction: canonical.effectiveDirection },
+    graph: { ...projectedGraph, direction: canonical.effectiveDirection },
     ...(source.routing === undefined ? {} : { routing: source.routing }),
     path,
+  };
+};
+
+const isGraphRelation = (child: IRChild): child is IRGraphRelation =>
+  'namespace' in child && child.namespace === 'graph' && child.type === GraphType.Relation;
+
+const isGraphEntity = (child: IRChild): child is IRGraphEntity =>
+  'namespace' in child && child.namespace === 'graph' && child.type === GraphType.Entity;
+
+const projectFlowElementGroupColors = (
+  elements: ReadonlyArray<CanonicalFlowElement>,
+  graphByEntityId: ReadonlyMap<string, IRGraphEntity>,
+): Array<CanonicalFlowElement> =>
+  elements.map(element => {
+    if (element.type === 'entity') return { ...element, graph: graphByEntityId.get(element.id)! };
+    return { ...element, elements: projectFlowElementGroupColors(element.elements, graphByEntityId) };
+  });
+
+/** 通过 Graph root 的唯一投影为 Flow Entity 与 Relation 应用自动分组颜色 */
+const projectFlowGroups = (
+  elements: ReadonlyArray<CanonicalFlowElement>,
+  relations: ReadonlyArray<CanonicalFlowRelation>,
+  state: ResolveState,
+  theme: FlowResolveContext['theme'],
+): Readonly<{ elements: Array<CanonicalFlowElement>; relations: Array<CanonicalFlowRelation> }> => {
+  const entities: Array<CanonicalFlowEntity> = [];
+  const collectEntities = (candidates: ReadonlyArray<CanonicalFlowElement>): void => {
+    candidates.forEach(candidate => {
+      if (candidate.type === 'entity') {
+        entities.push(candidate);
+        return;
+      }
+      collectEntities(candidate.elements);
+    });
+  };
+  collectEntities(elements);
+  const graph: IRGraph = {
+    namespace: 'graph',
+    type: GraphType.Graph,
+    children: [...entities.map(entity => entity.graph), ...relations.map(relation => relation.graph)],
+  };
+  const projected = resolveGraph(graph, state.graph, theme);
+  const graphByEntityId = new Map(projected.filter(isGraphEntity).map(entity => [entity.id!, entity] as const));
+  const projectedRelations = projected.filter(isGraphRelation);
+  return {
+    elements: projectFlowElementGroupColors(elements, graphByEntityId),
+    relations: relations.map((relation, relationIndex) => ({
+      ...relation,
+      graph: projectedRelations[relationIndex],
+    })),
   };
 };
 
@@ -376,6 +443,7 @@ export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveCo
   const defaults = resolveFlowTheme(context.theme, context.flowThemeStyles, source.flowDefaults);
   const state: ResolveState = {
     graph: resolveGraphDefinitionOptions(context.graph),
+    graphLayers: source.graphRules === undefined ? [] : [{ rules: source.graphRules }],
     defaults,
     ids: new Map(),
     entities: new Map(),
@@ -387,14 +455,19 @@ export const resolveFlowDiagram = (source: IRFlowDiagram, context: FlowResolveCo
   registerCatalogs(source, state);
   assertCompleteContainment(source, state);
   const elements = source.children.map(id => resolveElementRecord(id, state));
-  const relations = (source.relations ?? []).map((relation, index) => resolveRelationRecord(relation, index, state));
+  const groups = projectFlowGroups(
+    elements,
+    (source.relations ?? []).map((relation, index) => resolveRelationRecord(relation, index, state)),
+    state,
+    context.theme,
+  );
   return {
     source,
     defaults,
     layout: mergeFlowLayoutIntent(defaults.layout, source.layout),
     ...(source.routing === undefined ? {} : { routing: source.routing }),
-    elements,
-    relations,
+    elements: groups.elements,
+    relations: groups.relations,
     elementPaths: state.elementPaths,
   };
 };

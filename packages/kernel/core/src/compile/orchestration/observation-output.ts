@@ -12,7 +12,9 @@ import { compileObservedFragment } from './observation-fragment';
 const ownerKeyOf = (entry: PendingCompileObservation): string =>
   entry.owner.kind === 'composite'
     ? `composite:${entry.owner.namespace}.${entry.owner.type}`
-    : `pathKind:${entry.owner.name}`;
+    : entry.owner.kind === 'path'
+      ? `path:${entry.owner.name}`
+      : entry.owner.kind;
 
 /** 把 observation entry 的 scope chain 投影为局部坐标到 Scene 坐标的仿射矩阵 */
 const matrixOf = (entry: PendingCompileObservation): readonly [number, number, number, number, number, number] => {
@@ -51,6 +53,14 @@ export const dispatchCompileObservations = (
     const observation: CompileObservation = Object.freeze({
       owner: entry.owner,
       occurrence,
+      ancestors: Object.freeze(
+        entry.ancestors.map(ancestor =>
+          Object.freeze({
+            owner: Object.freeze({ ...ancestor.owner }),
+            occurrence: freezeOccurrence(ancestor.occurrence),
+          }),
+        ),
+      ),
       value: entry.value,
       transform: matrixOf(entry),
       provenance: Object.freeze({
@@ -59,6 +69,7 @@ export const dispatchCompileObservations = (
       }),
     });
     const observationContext: CompileObservationContext = Object.freeze({
+      round: context.round,
       theme: entry.theme,
       compileFragment: children => compileObservedFragment(entry, children, context),
     });

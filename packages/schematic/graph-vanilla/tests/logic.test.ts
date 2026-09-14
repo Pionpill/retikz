@@ -104,6 +104,15 @@ describe('@retikz/graph-vanilla package boundary', () => {
 });
 
 describe('normalizeBlock', () => {
+  it('归一化普通 Vanilla sugar 并保留零值，不接受丢失 authoring 的独立调用', () => {
+    expect(normalizeBlock({ children: [{ position: [0, 0], text: 'label', style: { opacity: 0 } }] })).toMatchObject({
+      children: [{ type: 'node', position: [0, 0], text: 'label', style: { opacity: 0 } }],
+    });
+    expect(() => normalizeBlock({ children: [{ type: 'scope', children: [], authoring: { inspect: true } }] })).toThrow(
+      /outer normalizeScene embed context/,
+    );
+  });
+
   it('keeps string Header and Section text as sparse Source values', () => {
     expect(normalizeBlockHeader({ title: 'User', description: 'Domain entity' })).toEqual({
       namespace: 'graph',

@@ -192,7 +192,7 @@ describe('Diagram Foundation resolve', () => {
       },
     });
     const outer = flexOf(lowerDiagramFoundation(result, drawing).child);
-    const heading = outer.children[0]?.child;
+    const heading = outer.children?.[0]?.child;
     if (!isScope(heading)) throw new Error('Expected heading Scope');
     const title = heading.children[0];
     expect(title).toMatchObject({
@@ -242,22 +242,22 @@ describe('Diagram Foundation lowering', () => {
     const outer = flexOf(surface.child);
 
     expect(outer.direction).toBe(FlexLayoutDirection.Column);
-    expect(outer.gap).toEqual({ column: 16, row: 16 });
+    expect(outer.gap).toBe(16);
     expect(outer.children).toHaveLength(2);
-    const headingScope = outer.children[0]?.child;
+    const headingScope = outer.children?.[0]?.child;
     if (!isScope(headingScope)) throw new Error('Expected presentation reset Scope');
     expect(headingScope.defaults?.reset).toEqual(['node']);
     const heading = flexOf(headingScope.children[0]);
     expect(heading.direction).toBe(FlexLayoutDirection.Column);
-    expect(heading.gap).toEqual({ column: 6, row: 6 });
-    expect(heading.children[0]?.child).toMatchObject({
+    expect(heading.gap).toBe(6);
+    expect(heading.children?.[0]?.child).toMatchObject({
       type: 'node',
       text: presentation.title?.text,
       style: { fill: 'none', stroke: 'none', textColor: '#000000', opacity: 1, font: { size: 18, weight: 600 } },
       layout: { padding: 0, margin: 0, minimumSize: 0 },
     });
-    expect(heading.children[1]?.child).toMatchObject({ type: 'node', text: 'Description' });
-    expect(outer.children[1]?.child).toEqual(drawing);
+    expect(heading.children?.[1]?.child).toMatchObject({ type: 'node', text: 'Description' });
+    expect(outer.children?.[1]?.child).toEqual(drawing);
     expect(JSON.stringify(headingScope)).not.toContain('"id":"drawing"');
   });
 
@@ -274,11 +274,11 @@ describe('Diagram Foundation lowering', () => {
       const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation, frame }), drawing).child);
 
       expect(main.direction).toBe(direction);
-      expect(main.gap).toEqual({ column: 9, row: 9 });
-      expect(main.children[legendIndex]).toMatchObject({ alignSelf: LayoutAlignment.Center, child: legend });
-      expect(main.children[drawingIndex]).toMatchObject({ alignSelf: LayoutAlignment.Stretch, child: drawing });
-      expect(main.children[legendIndex]?.child).toEqual(legend);
-      expect(main.children[legendIndex]?.child).not.toHaveProperty('direction');
+      expect(main.gap).toBe(9);
+      expect(main.children?.[legendIndex]).toMatchObject({ alignSelf: LayoutAlignment.Center, child: legend });
+      expect(main.children?.[drawingIndex]).toMatchObject({ alignSelf: LayoutAlignment.Stretch, child: drawing });
+      expect(main.children?.[legendIndex]?.child).toEqual(legend);
+      expect(main.children?.[legendIndex]?.child).not.toHaveProperty('direction');
     },
   );
 
@@ -286,7 +286,7 @@ describe('Diagram Foundation lowering', () => {
     const presentation = DiagramPresentationSchema.parse({ legend: rampLegend });
     const main = flexOf(lowerDiagramFoundation(resolveFoundation({ presentation }), drawing).child);
 
-    expect(main.children[1]?.child).toEqual(rampLegend);
+    expect(main.children?.[1]?.child).toEqual(rampLegend);
   });
 });
 

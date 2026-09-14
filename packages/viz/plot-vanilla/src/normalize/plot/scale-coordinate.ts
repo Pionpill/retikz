@@ -214,11 +214,6 @@ export const buildShortcutTransforms = (
   );
 };
 
-/** polar coordinate IR 的角向区间 / 内半径默认值（与 Polar2DSchema 的 .default() 一致，buildPlotIR 即填满，等价手写无需再补） */
-const POLAR_DEFAULT_START_ANGLE = 0;
-const POLAR_DEFAULT_END_ANGLE = 360;
-const POLAR_DEFAULT_INNER_RADIUS = 0;
-
 /** coordinate 入口判别串（缺省 cartesian2D）；字符串简写与对象 .type 统一取值 */
 export const BUILTIN_COORDINATE_INPUT_TYPES = new Set(['cartesian2D', 'polar2D', 'cartesian1D', 'polar1D']);
 
@@ -233,29 +228,18 @@ export const coordinateTypeOf = (
     : 'custom';
 };
 
-/** 归一化 polar2D coordinate 选项为配置（非 polar2D 返回 undefined），缺省字段填 schema 默认值 */
-export type PolarConfig = {
-  innerRadius: number;
-  startAngle: number;
-  endAngle: number;
-  interpolation?: InputPlotPolar2DCoordinate['interpolation'];
-};
+/** 作者显式提供的 polar2D 配置 */
+export type PolarConfig = Pick<InputPlotPolar2DCoordinate, 'innerRadius' | 'startAngle' | 'endAngle' | 'interpolation'>;
 
-/** 提取并补全 polar2D 配置，其他坐标返回 `undefined` */
+/** 提取稀疏 polar2D 配置，其他坐标返回 `undefined` */
 export const toPolarConfig = (coordinate: InputPlotCoordinate | undefined): PolarConfig | undefined => {
-  if (coordinate === 'polar2D') {
-    return {
-      innerRadius: POLAR_DEFAULT_INNER_RADIUS,
-      startAngle: POLAR_DEFAULT_START_ANGLE,
-      endAngle: POLAR_DEFAULT_END_ANGLE,
-    };
-  }
+  if (coordinate === 'polar2D') return {};
   if (typeof coordinate === 'object' && coordinate.type === 'polar2D') {
     const polar = coordinate as InputPlotPolar2DCoordinate;
     return {
-      innerRadius: polar.innerRadius ?? POLAR_DEFAULT_INNER_RADIUS,
-      startAngle: polar.startAngle ?? POLAR_DEFAULT_START_ANGLE,
-      endAngle: polar.endAngle ?? POLAR_DEFAULT_END_ANGLE,
+      ...(polar.innerRadius === undefined ? {} : { innerRadius: polar.innerRadius }),
+      ...(polar.startAngle === undefined ? {} : { startAngle: polar.startAngle }),
+      ...(polar.endAngle === undefined ? {} : { endAngle: polar.endAngle }),
       ...(polar.interpolation !== undefined ? { interpolation: polar.interpolation } : {}),
     };
   }

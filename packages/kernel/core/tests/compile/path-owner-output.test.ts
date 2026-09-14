@@ -12,7 +12,7 @@ const steps = [
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });
 
-const observe = (ownerKind: 'pathKind' | 'composite' = 'pathKind'): CompileObserverDefinition => ({
+const observe = (ownerKind: 'path' | 'composite' = 'path'): CompileObserverDefinition => ({
   key: 'path-owner-output',
   createSession: () => ({
     select: site => site.owner.kind === ownerKind,

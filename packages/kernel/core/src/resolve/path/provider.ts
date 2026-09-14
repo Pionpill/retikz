@@ -10,6 +10,7 @@ import type {
   PathResolution,
   PathResolveContext,
   ResolvedArrowMark,
+  ResolvedPathSource,
   StrokePathResolution,
 } from './types';
 
@@ -24,7 +25,11 @@ const ARROW_GEOMETRY_BASE_SIZE = 10;
 const ARROW_PATH_CONTACT_OVERLAP = 0.5;
 
 /** 解析 path kind provider */
-export const resolvePathKind = (path: IRPathBase, context: PathResolveContext, irPath: string): PathKindResolution => {
+export const resolvePathKind = (
+  path: ResolvedPathSource,
+  context: PathResolveContext,
+  irPath: string,
+): PathKindResolution => {
   const kind = path.kind ?? 'stroke';
   const definition = providerDefinitionOf(context.pathKinds, kind, {
     capability: 'path kind',

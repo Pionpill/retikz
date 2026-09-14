@@ -6,8 +6,10 @@ import type {
 } from '../../src/modules/docs/components/component-preview/types';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as texPlaygroundContract } from '../../src/modules/docs/contents/kernel/packages/tex/overview/tex-playground.controls';
-import { previewControlContract as texPlaygroundEnContract } from '../../src/modules/docs/contents/kernel/packages/tex/overview/tex-playground.en.controls';
+import {
+  createPreviewControlContract,
+  previewControlContract as texPlaygroundContract,
+} from '../../src/modules/docs/contents/kernel/packages/tex/authoring/tex-playground.controls';
 
 const fieldContractOf = (definition: PreviewControlsDefinition) => {
   const fields = getPreviewControlFields(definition);
@@ -30,6 +32,7 @@ const presetContractOf = (contract: PreviewControlContract) =>
 
 describe('@retikz/tex package playground controls', () => {
   it('提供完整且双语一致的面板契约', () => {
+    const texPlaygroundEnContract = createPreviewControlContract('en');
     const zhFields = fieldContractOf(texPlaygroundContract.controls);
     const enFields = fieldContractOf(texPlaygroundEnContract.controls);
 

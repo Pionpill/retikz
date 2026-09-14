@@ -4,8 +4,17 @@ import type { CompileObservationOwner } from './types';
 export const isCompileObservationOwnerEqual = (
   left: CompileObservationOwner,
   right: CompileObservationOwner,
-): boolean =>
-  left.kind === right.kind &&
-  (left.kind === 'pathKind'
-    ? right.kind === 'pathKind' && left.name === right.name
-    : right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type);
+): boolean => {
+  if (left.kind !== right.kind) return false;
+  switch (left.kind) {
+    case 'path':
+      return right.kind === 'path' && left.name === right.name;
+    case 'composite':
+      return right.kind === 'composite' && left.namespace === right.namespace && left.type === right.type;
+    case 'node':
+    case 'scope':
+    case 'coordinate':
+    case 'clip':
+      return true;
+  }
+};

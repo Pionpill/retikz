@@ -1,7 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { ZodType } from 'zod';
 
-import type { IRGeometryLabel, IRMathRun, IRPathBase, IRPosition, IRStep, IRTextRun } from '../../schemas';
+import type { IRGeometryLabel, IRLine, IRMathRun, IRPathBase, IRPosition, IRStep, IRTextRun } from '../../schemas';
 import type { CompileOwnerOutputDefinition, CompileOwnerOutputPublisher } from '../observation';
 import type { PathCommand, PathPrim, ScenePrimitive } from '../scene';
 import type { StrokePathOwnerOutput } from './owner-output';
@@ -71,11 +71,14 @@ export type ResolvedPathKindAppearance = Readonly<
 
 type PathKindInlineRun<T> = T extends unknown ? Omit<T, 'fill'> & { fill?: string } : never;
 
-type PathKindLabelText =
+type PathKindLabelTextLine =
   | string
+  | (Omit<Extract<IRLine, { text: string }>, 'fill'> & { fill?: string })
   | {
       runs: Array<PathKindInlineRun<IRTextRun | IRMathRun>>;
     };
+
+type PathKindLabelText = PathKindLabelTextLine | Array<PathKindLabelTextLine>;
 
 /** Path kind 请求宿主标签编译时提供的已定位几何信息，不包含 Stroke 专属 interruption */
 export type PathKindLabel = Omit<

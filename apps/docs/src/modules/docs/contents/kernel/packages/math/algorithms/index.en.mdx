@@ -17,6 +17,29 @@ Use the panel to switch between lines, segments, line/circle, and circle/circle 
   caption="Switch the geometric relation and observe intersections and degenerate cases"
 />
 
+### Algorithm notes
+
+Lines and segments first use the same parameter form: $p=a_1+t\mathbf d_a$ and $q=b_1+u\mathbf d_b$. Equating them and using the two-dimensional cross product removes one unknown:
+
+$$
+\det=\mathbf d_a\times\mathbf d_b,\qquad t=\frac{(b_1-a_1)\times\mathbf d_b}{\det}
+$$
+
+`det` says whether the directions are parallel: near zero means no unique intersection. `lineLine` uses $t$ to locate the infinite-line intersection. `segmentSegment` also requires both $t$ and $u$ to lie in $[0,1]$; that is the step that limits the result to the two finite segments.
+
+For a line and circle, substituting $p=origin+s\,direction$ into the circle equation gives a quadratic in $s$. A negative discriminant means no candidate point, while zero makes the two roots coincide. For two circles, the center distance $d$ first rejects separated and contained cases; $a$ locates the midpoint of the common chord and the perpendicular offset $h$ produces points on either side. At tangency $h=0$, so two coincident coordinates are retained.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Line, segment, and circle intersections',
+      path: 'packages/kernel/math/src/algorithms/intersect.ts',
+      startLine: 42,
+      endLine: 108,
+    },
+  ]}
+/>
+
 ### API reference
 
 The input types are `LineLineInput` (two lines or segments defined by endpoints), `LineCircleInput` (a line and a circle), and `CircleCircleInput` (two circles). The table lists the intersection methods
@@ -33,6 +56,23 @@ The input types are `LineLineInput` (two lines or segments defined by endpoints)
 Ray-arc input includes a circle center, radius, start angle, and end angle. `intersectRayWithArc` returns a ray parameter `s`; the actual point is `origin + s * direction`. Only intersections in the ray's forward direction are kept.
 
 <ComponentPreview files="ray-arc" size="md" caption="Purple points mark the intersections between the arc and ray" />
+
+### Algorithm notes
+
+Ray/arc intersection does not solve a new equation directly. It first extends the ray into a line and solves the circle equation for two candidate parameters $s$. It then filters twice: $s$ must exceed the tolerance, keeping only the ray's forward direction; the candidate point's `atan2` angle about the center must lie within the arc's actual sweep.
+
+The returned $s$ locates the point in `origin + s * direction`; it is not a geometric distance when `direction` is not normalized. Sorting the survivors means the first result is always the first arc point reached by the ray.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Ray candidates and arc-sweep filtering',
+      path: 'packages/kernel/math/src/algorithms/arc-intersection.ts',
+      startLine: 20,
+      endLine: 52,
+    },
+  ]}
+/>
 
 ### Ray-arc API
 
@@ -52,6 +92,29 @@ The demo shows only the selected construction, keeping these different geometric
   files="circle-constructions"
   size="md"
   caption="Compare a triangle's circumcircle and incircle with a point set's minimal enclosing circle"
+/>
+
+### Algorithm notes
+
+The circumcircle uses the signed area of three points as its denominator $d$; when $d$ is near zero, the points are collinear and cannot determine one circle uniquely. The incircle weights each vertex by the opposite side length to find the center, then uses $r=\mathrm{area}/\mathrm{semiperimeter}$ for the radius, which makes its distance to all three sides equal.
+
+The minimal enclosing circle starts with a current circle that covers earlier points. When a new point $i$ falls outside, $i$ must be on the result boundary: first try the diameter circle through $i$ and an earlier point $j$; if another point $k$ is still outside, all three $i,j,k$ determine the result, so the algorithm uses their circumcircle. For collinear triples, it falls back to the largest of the three two-point diameter circles.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Triangle circumcircle and incircle',
+      path: 'packages/kernel/math/src/algorithms/triangle.ts',
+      startLine: 14,
+      endLine: 42,
+    },
+    {
+      label: 'Incremental minimal-enclosing candidates',
+      path: 'packages/kernel/math/src/algorithms/circle.ts',
+      startLine: 48,
+      endLine: 64,
+    },
+  ]}
 />
 
 ### API reference
@@ -78,6 +141,29 @@ The demo uses a light-gray line for the original polygon and an orange line for 
 
 The result for a boundary point from `polygon.containsPoint` is undefined; add an explicit point-on-segment test when boundary ownership matters. `convexHull` de-duplicates points and drops collinear middle points. With fewer than three points or an all-collinear set, it returns the sorted endpoint set.
 
+### Algorithm notes
+
+Containment casts a ray to the right from the test point and checks whether each polygon edge crosses it. Every crossing flips `inside`; an odd number ends inside and an even number ends outside. This even-odd rule gives the same result for clockwise and counter-clockwise vertex order.
+
+The hull sorts and de-duplicates points by $(x,y)$, then builds a lower chain from left to right and an upper chain in reverse. Whenever the cross product of the last two edges and the new edge is non-positive, it removes the middle point: it either turns the route inward or is merely a collinear middle point. Joining the chains after removing duplicate endpoints yields the outer boundary in counter-clockwise order.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Even-odd polygon containment',
+      path: 'packages/kernel/math/src/algorithms/polygon.ts',
+      startLine: 10,
+      endLine: 20,
+    },
+    {
+      label: 'Andrew monotone-chain convex hull',
+      path: 'packages/kernel/math/src/algorithms/hull.ts',
+      startLine: 11,
+      endLine: 45,
+    },
+  ]}
+/>
+
 ### API reference
 
 | API                     | Complexity                  | Purpose                                                                  |
@@ -103,6 +189,57 @@ Use the panel to switch curve kinds and move the sample position and slice bound
 
 `slice` also clamps and orders its two parameters. Quadratic and cubic Béziers use De Casteljau subdivision; circular and elliptical arcs retain their directed sweep, center, radii, and ellipse rotation. Zero-length or zero-derivative segments still return a deterministic point and `[1, 0]` tangent, while distance inversion returns the start parameter.
 
+### Algorithm notes
+
+First, `t` here is the curve's internal $0–1$ parameter: `t=0` selects its start and `t=1` selects its end. It chooses a position in the curve definition, not “pixels already travelled,” and is usually not a fraction of the total length. Only lines and circular arcs move at a uniform rate, so `t=0.5` is exactly halfway by distance for those curves; Béziers and elliptical arcs usually do not.
+
+Imagine an arrow that should stop after travelling 80px along a curve, or a highlight that should cover the portion from 20px to 80px. The curve itself only knows its parameter $t$, not “pixels travelled”; on a Bézier curve, equal changes in $t$ do not necessarily cover equal physical distances.
+
+This group of algorithms therefore does three connected jobs: estimate the distance from the start to a given $t$; turn a requested distance back into its $t$; then cut that parameter range from the original curve. The curve is not converted into a polyline—the polyline is only a measuring aid.
+
+The diagram shows one search attempt: take a midpoint $t$ from the current range, estimate the travelled length there, then compare it with the target distance. The loop from the diamond instead of the edge to “Parameter $t$” means “not close enough”: shrink $[lo,hi]$ according to whether the length is too large or too small, then take a new midpoint. Only a result within tolerance produces the parameter.
+
+<ComponentPreview files="curve-distance-search-flow" size="sm" hideCode />
+
+Mathematically, each tiny parameter change contributes distance according to the curve's instantaneous speed. Adding those contributions gives the true arc length from the start to $t$:
+
+$$
+L(t)=\int_0^t\lVert p'(u)\rVert\,du
+$$
+
+Lines and circular arcs can compute this length directly. For Béziers and elliptical arcs, the implementation temporarily treats the trip as $m$ short straight steps: sample points, measure each adjacent pair, and add the distances. That is the code's discrete approximation of the integral:
+
+$$
+L(t)\approx\sum_{i=1}^{m}\left\lVert p\!\left(\frac{it}{m}\right)-p\!\left(\frac{(i-1)t}{m}\right)\right\rVert,\qquad m=\max(4,\lceil sampleCount\cdot t\rceil)
+$$
+
+This is the `sampleCount` trade-off: shorter steps make the polyline follow the curve more closely and usually improve the estimate, but require more sampled points. `parameterAtDistance` answers “which parameter is 80px along?” It repeatedly tries a midpoint $t$, checks whether its accumulated length is too large or too small, then narrows the range with bisection. Lines and circular arcs have uniform length, so they can use a direct ratio.
+
+A cached `totalLength` must use the same `sampleCount`; otherwise total distance and travelled distance come from different approximations and the recovered position can disagree. To take the section from 20px to 80px, first obtain both parameters with `parameterAtDistance`, then pass them to `slice`. Bézier slicing then uses De Casteljau to retain the original curve shape instead of returning the measuring polyline.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Polyline length approximation',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 282,
+      endLine: 298,
+    },
+    {
+      label: 'Bisection from distance to parameter',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 424,
+      endLine: 448,
+    },
+    {
+      label: 'Shape-preserving curve slicing',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 342,
+      endLine: 399,
+    },
+  ]}
+/>
+
 ### API reference
 
 | API                         | Complexity              | Purpose                                                                                                                |
@@ -124,7 +261,22 @@ Use the panel to compare uneven spacing, zigzags, and coincident points, then mo
 
 <ComponentPreview files="curve-playground" size="md" caption="Compare point sets, tension, and cubic Bézier segments" />
 
-At least two knots are required. The function returns `knots.length - 1` segments, and each segment ends exactly at the next knot. Open ends use one-sided tangents; coincident knots still produce finite output, but arbitrary inputs are not guaranteed to be self-intersection-free.
+### Algorithm notes
+
+Internally, this uses [centripetal Catmull–Rom](https://www.cemyuksel.com/research/catmullrom_param/) ($\alpha=0.5$): each segment derives local tangents from its endpoints and neighbouring knots, then converts them into two Bézier control points. Its parameter spacing follows point distance, which reduces the risk of cusps or unwanted loops when spacing is highly uneven. `tension` scales only the handle lengths; the curve still passes exactly through every knot.
+
+At least two knots are required. The function returns `knots.length - 1` segments, and each segment ends exactly at the next knot. Open ends repeat their endpoint to form one-sided tangents; coincident knots use a tiny spacing to avoid division by zero, so output remains finite, but arbitrary inputs are not guaranteed to be self-intersection-free.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'centripetal Catmull–Rom to cubic Bézier segments',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 124,
+      endLine: 181,
+    },
+  ]}
+/>
 
 ### API reference
 

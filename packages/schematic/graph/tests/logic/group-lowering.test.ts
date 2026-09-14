@@ -1,4 +1,4 @@
-import type { CompileWarning } from '@retikz/core';
+import type { CompileWarning, IRNode } from '@retikz/core';
 
 import { compileToScene, defineThemeStyle, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
@@ -123,11 +123,11 @@ describe('Group layout-aware lowering', () => {
   });
 
   it('arranges bottom caption after a non-empty body and includes bodyGap in allocation', () => {
-    const body = {
+    const body: IRNode = {
       type: 'node',
       position: [10, 5],
       layout: { minimumSize: { width: 20, height: 10 }, padding: 0 },
-    } as const;
+    };
     const withoutGap = compileInHarness(
       Graph.createGroup({
         padding: 0,

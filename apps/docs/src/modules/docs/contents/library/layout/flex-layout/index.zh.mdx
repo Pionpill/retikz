@@ -88,7 +88,7 @@ FlexLayout 先用 `intrinsic.minimum` 与 `intrinsic.natural` 测量子图形，
 
 ## API 参考
 
-`FlexLayoutInput` 是工厂函数接受的作者输入；`IRFlexLayout` 是应用默认值后可 JSON 序列化的持久化形态。
+`FlexLayoutInput` 是工厂函数接受的作者输入；`IRFlexLayout` 允许省略字段与简写。工厂保留原始写法，`FlexLayoutSchema.parse()` 则会补齐 schema 声明的静态默认值；编译期 resolver 复用这些默认值并展开简写。
 
 React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把可选 JSON `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
 

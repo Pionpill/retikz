@@ -103,7 +103,7 @@ describe('Docs module navigation domain', () => {
     expect(container.querySelector('a[href="/library"]')).not.toBeNull();
     expect(container.querySelector('a[href="/schematic"]')).not.toBeNull();
     expect(container.querySelector('a[href="/viz"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/about/overview"][data-variant="default"]')?.textContent).toBe(
+    expect(container.querySelector('a[href="/about/introduction"][data-variant="default"]')?.textContent).toBe(
       'docs.homeAbout',
     );
     expect(
@@ -173,13 +173,13 @@ describe('Docs module navigation domain', () => {
     expect(deepLink.querySelector('[data-doc-page]')?.textContent).toBe('/viz/chart/points/scatter');
 
     deepLink.remove();
-    const about = renderRoutes('/about/overview');
-    expect(about.querySelector('[data-doc-page]')?.textContent).toBe('/about/overview');
+    const about = renderRoutes('/about/introduction');
+    expect(about.querySelector('[data-doc-page]')?.textContent).toBe('/about/introduction');
     expect(useDocModuleStore.getState().scope).toBe('viz');
 
     about.remove();
     const aboutRoot = renderRoutes('/about');
-    expect(aboutRoot.querySelector('[data-location]')?.textContent).toBe('/about/overview');
+    expect(aboutRoot.querySelector('[data-location]')?.textContent).toBe('/about/introduction');
 
     aboutRoot.remove();
     const aboutBlog = renderRoutes('/about/blog');

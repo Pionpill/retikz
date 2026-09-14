@@ -3,11 +3,12 @@ import type { infer as ZodInfer } from 'zod';
 import { ellipse as mathEllipse } from '@retikz/math';
 import { enum as zodEnum, strictObject } from 'zod';
 
-import type { ScenePrimitive } from '../../contract';
+import type { PathCommand, ScenePrimitive } from '../../contract';
+import type { Rect } from '../../shared';
 
 import { defineShape } from '../../contract';
 import { BuiltinShape } from '../../schemas';
-import { CenterAnchor, ellipse, isDirectionalAnchor } from '../../shared';
+import { CenterAnchor, ellipse, isDirectionalAnchor, localToWorld, RAD_TO_DEG } from '../../shared';
 import { ellipsePrimitiveStyle } from './style';
 
 const ellipseParamsSchema = strictObject({
@@ -19,6 +20,40 @@ const ellipseParamsSchema = strictObject({
 });
 
 type EllipseParams = ZodInfer<typeof ellipseParamsSchema>;
+
+/** 生成与 ellipse emit 共用半轴的闭合椭圆轮廓 */
+const ellipseOutline = (bounds: Rect): Array<PathCommand> => {
+  const radiusX = bounds.width / 2;
+  const radiusY = bounds.height / 2;
+  const rotation = (bounds.rotate ?? 0) * RAD_TO_DEG;
+  const start = localToWorld(bounds, [radiusX, 0]);
+  return [
+    { kind: 'move', to: start },
+    {
+      kind: 'ellipseArc',
+      center: [bounds.x, bounds.y],
+      radiusX,
+      radiusY,
+      startAngle: 0,
+      endAngle: 360,
+      ...(rotation === 0 ? {} : { rotation }),
+    },
+    { kind: 'close' },
+  ];
+};
+
+/** 生成 ellipse 的中心和两条轴端点关键点 */
+const ellipseKeyPoints = (bounds: Rect) => {
+  const radiusX = bounds.width / 2;
+  const radiusY = bounds.height / 2;
+  return [
+    { name: 'center', position: [bounds.x, bounds.y] as [number, number] },
+    { name: 'right', position: localToWorld(bounds, [radiusX, 0]) },
+    { name: 'bottom', position: localToWorld(bounds, [0, radiusY]) },
+    { name: 'left', position: localToWorld(bounds, [-radiusX, 0]) },
+    { name: 'top', position: localToWorld(bounds, [0, -radiusY]) },
+  ];
+};
 
 /**
  * ellipse 注册项
@@ -44,6 +79,8 @@ export const ellipseShape = defineShape<EllipseParams>({
     }
     return { halfWidth, halfHeight };
   },
+  outline: bounds => ellipseOutline(bounds),
+  keyPoints: bounds => ellipseKeyPoints(bounds),
   *emit(r, style, round): Iterable<ScenePrimitive> {
     yield {
       type: 'ellipse',

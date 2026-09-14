@@ -9,6 +9,8 @@ import type {
   FlowLayoutRelationOutput,
 } from '../../../contract';
 
+import { FlowRoutingKind } from '../../../shared';
+
 type RoutingIndex = Readonly<{
   scopes: ReadonlyMap<string, ReadonlyArray<string>>;
   layouts: ReadonlyMap<string, EffectiveFlowLayout>;
@@ -104,21 +106,27 @@ const labelBoundsFor = (
   points: ReadonlyArray<Position>,
   size: NonNullable<FlowLayoutRelationInput['labelSize']>,
 ): Readonly<BoundsRect> => {
-  let selectedIndex = 0;
-  let selectedLength = -1;
-  points.slice(1).forEach((point, index) => {
+  const lengths = points.slice(1).map((point, index) => {
     const previous = points[index];
-    const length = Math.abs(point[0] - previous[0]) + Math.abs(point[1] - previous[1]);
-    if (length > selectedLength) {
-      selectedLength = length;
-      selectedIndex = index;
-    }
+    return Math.abs(point[0] - previous[0]) + Math.abs(point[1] - previous[1]);
   });
-  const source = points[selectedIndex];
-  const target = points[selectedIndex + 1];
+  const midpoint = lengths.reduce((total, length) => total + length, 0) / 2;
+  let travelled = 0;
+  let selectedIndex = 0;
+  for (const [index, length] of lengths.entries()) {
+    if (travelled + length >= midpoint) {
+      selectedIndex = index;
+      break;
+    }
+    travelled += length;
+  }
+  const source = points[selectedIndex] ?? [0, 0];
+  const target = points[selectedIndex + 1] ?? source;
+  const length = lengths[selectedIndex] ?? 0;
+  const ratio = length === 0 ? 0 : (midpoint - travelled) / length;
   const horizontal = source[1] === target[1];
-  const centerX = (source[0] + target[0]) / 2;
-  const centerY = (source[1] + target[1]) / 2;
+  const centerX = source[0] + (target[0] - source[0]) * ratio;
+  const centerY = source[1] + (target[1] - source[1]) * ratio;
   const gap = 4;
   return {
     x: centerX - size.width / 2 + (horizontal ? 0 : gap),
@@ -166,17 +174,21 @@ export const routeLayeredRelations = (
     const points =
       relation.routing.kind === 'straight'
         ? [source, target]
-        : orthogonalPoints(
-            relation,
-            source,
-            target,
-            sourceBounds,
-            targetBounds,
-            scopeLayout.direction,
-            laneOffset,
-            envelope,
-            scopeLayout.rankGap,
-          );
+        : relation.routing.kind === FlowRoutingKind.HorizontalThenVertical
+          ? collapsePoints([source, [target[0], source[1]], target])
+          : relation.routing.kind === FlowRoutingKind.VerticalThenHorizontal
+            ? collapsePoints([source, [source[0], target[1]], target])
+            : orthogonalPoints(
+                relation,
+                source,
+                target,
+                sourceBounds,
+                targetBounds,
+                scopeLayout.direction,
+                laneOffset,
+                envelope,
+                scopeLayout.rankGap,
+              );
     return {
       points,
       ...(relation.labelSize === undefined ? {} : { labelBounds: labelBoundsFor(points, relation.labelSize) }),

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { createInputScene, Layout, Node, Path, Step } from '@retikz/react';
-import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendDefinition, LegendProvider, LegendSchema } from '@retikz/standard';
 import { normalizeScene } from '@retikz/vanilla';
 import { forwardRef, Fragment, memo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -171,7 +171,6 @@ describe('<Legend>', () => {
     );
 
     const invalidOffsets = [
-      { offset: undefined, error: /offset/i },
       { offset: Number.NaN, error: /offset/i },
       { offset: Number.POSITIVE_INFINITY, error: /offset/i },
       { offset: -0.1, error: /offset/i },
@@ -179,28 +178,32 @@ describe('<Legend>', () => {
     ];
     for (const { offset, error } of invalidOffsets) {
       expect(() =>
+        LegendSchema.parse(
+          contribute({
+            kind: LegendContentKind.Ramp,
+            children: (
+              <>
+                <LegendRamp>{itemSample}</LegendRamp>
+                <LegendTick tickKey="invalid" offset={offset} />
+              </>
+            ),
+          }).node,
+        ),
+      ).toThrow(error);
+    }
+    expect(() =>
+      LegendSchema.parse(
         contribute({
           kind: LegendContentKind.Ramp,
           children: (
             <>
               <LegendRamp>{itemSample}</LegendRamp>
-              <LegendTick tickKey="invalid" offset={offset as number} />
+              <LegendTick tickKey="high" offset={0.8} />
+              <LegendTick tickKey="low" offset={0.2} />
             </>
           ),
-        }),
-      ).toThrow(error);
-    }
-    expect(() =>
-      contribute({
-        kind: LegendContentKind.Ramp,
-        children: (
-          <>
-            <LegendRamp>{itemSample}</LegendRamp>
-            <LegendTick tickKey="high" offset={0.8} />
-            <LegendTick tickKey="low" offset={0.2} />
-          </>
-        ),
-      }),
+        }).node,
+      ),
     ).toThrow(/offset/i);
   });
 

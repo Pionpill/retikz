@@ -1,6 +1,16 @@
-import type { AnyInspectorDefinition } from '../contract';
+import type { AnyInspectorDefinitionInput } from '../contract';
 
-import { STROKE_PATH_INSPECTOR } from './stroke-path';
+import { CLIP_INSPECTOR } from './clip';
+import { COORDINATE_INSPECTOR } from './coordinate';
+import { NODE_INSPECTOR } from './node';
+import { PATH_INSPECTOR } from './path';
+import { SCOPE_INSPECTOR } from './scope';
 
 /** 默认 registry 使用的内置 Inspector definitions */
-export const BUILTIN_INSPECTORS: ReadonlyArray<AnyInspectorDefinition> = Object.freeze([STROKE_PATH_INSPECTOR]);
+export const BUILTIN_INSPECTORS: ReadonlyArray<AnyInspectorDefinitionInput> = Object.freeze([
+  PATH_INSPECTOR,
+  NODE_INSPECTOR,
+  CLIP_INSPECTOR,
+  SCOPE_INSPECTOR,
+  COORDINATE_INSPECTOR,
+]);

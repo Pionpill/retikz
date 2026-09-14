@@ -77,17 +77,23 @@ export const emitLabelPrimitive = (
   const labelOpacity = combineOpacity(label.opacity, hostOpacity);
 
   const gatingOn = texCtx?.gatingOn ?? false;
-  const resolved = resolveTextLine(label.text, {
-    rootFontSize,
-    inheritedFont: font,
-    gatingOn,
-    warn: texCtx?.warn ?? ((): void => {}),
-    warningMessage: 'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
-  });
-  const isMixed = resolved.mixed;
+  const sourceLines = Array.isArray(label.text)
+    ? label.text
+    : typeof label.text === 'string'
+      ? label.text.split('\n')
+      : [label.text];
+  const resolvedLines = sourceLines.map(text =>
+    resolveTextLine(text, {
+      rootFontSize,
+      inheritedFont: font,
+      gatingOn,
+      warn: texCtx?.warn ?? ((): void => {}),
+      warningMessage: 'Unbalanced `$` in edge label; the trailing fragment is kept literal.',
+    }),
+  );
 
-  // 含公式：走混排布局（逐 run TextPrim / glyph group），按 side 求行起点与基线
-  if (isMixed) {
+  // 单行纯文本沿用既有 TextPrim 输出；其它内容统一按一个文本块布局。
+  if (sourceLines.length > 1 || resolvedLines[0].mixed) {
     const ctx: LineLayoutContext = {
       measureText,
       lowerTex: texCtx?.lowerTex,
@@ -96,30 +102,41 @@ export const emitLabelPrimitive = (
       opacity: labelOpacity,
       warn: texCtx?.warn ?? ((): void => {}),
     };
-    const laid = layoutInlineLine(resolved.runs, ctx);
+    const laidLines = resolvedLines.map(line => layoutInlineLine(line.runs, ctx));
+    const slots = laidLines.map(line => Math.max(fontSize * LABEL_LINE_HEIGHT_FACTOR, line.ascent + line.descent));
+    const blockWidth = Math.max(...laidLines.map(line => line.width));
+    const blockHeight = slots.reduce((height, slot) => height + slot, 0);
     const ax = sample.point[0];
     const ay = sample.point[1];
-    let originX: number;
-    let baselineY: number;
+    let left: number;
+    let top: number;
     if (side === 'bottom') {
-      originX = ax - laid.width / 2;
-      baselineY = ay + sideOffset + laid.ascent;
+      left = ax - blockWidth / 2;
+      top = ay + sideOffset;
     } else if (side === 'left') {
-      originX = ax - sideOffset - laid.width;
-      baselineY = ay + (laid.ascent - laid.descent) / 2;
+      left = ax - sideOffset - blockWidth;
+      top = ay - blockHeight / 2;
     } else if (side === 'right') {
-      originX = ax + sideOffset;
-      baselineY = ay + (laid.ascent - laid.descent) / 2;
+      left = ax + sideOffset;
+      top = ay - blockHeight / 2;
     } else if (side === 'center') {
-      originX = ax - laid.width / 2;
-      baselineY = ay + (laid.ascent - laid.descent) / 2;
+      left = ax - blockWidth / 2;
+      top = ay - blockHeight / 2;
     } else {
-      // top：水平居中，按 sideOffset 放到采样点上方。
-      originX = ax - laid.width / 2;
-      baselineY = ay - sideOffset - laid.descent;
+      left = ax - blockWidth / 2;
+      top = ay - sideOffset - blockHeight;
     }
-    const children = laid.emit(originX, baselineY, round);
+    let verticalOffset = 0;
+    const children = laidLines.flatMap((laid, index) => {
+      const slot = slots[index];
+      const naturalHeight = laid.ascent + laid.descent;
+      const baselineY = top + verticalOffset + (slot - naturalHeight) / 2 + laid.ascent;
+      verticalOffset += slot;
+      return laid.emit(left + (blockWidth - laid.width) / 2, baselineY, round);
+    });
     const group: GroupPrim = { type: 'group', children };
+    const right = left + blockWidth;
+    const bottom = top + blockHeight;
 
     if (sloped) {
       const angleDeg = Math.atan2(sample.tangent[1], sample.tangent[0]) * RAD_TO_DEG;
@@ -128,21 +145,20 @@ export const emitLabelPrimitive = (
         transforms: [{ kind: 'rotate', degrees: round(angleDeg), cx: round(ax), cy: round(ay) }],
         children: [group],
       };
-      const r = Math.max(laid.width / 2, (laid.ascent + laid.descent) / 2);
+      const angleRad = angleDeg / RAD_TO_DEG;
+      const cos = Math.cos(angleRad);
+      const sin = Math.sin(angleRad);
+      const boundsPoints = [
+        [left, top],
+        [right, top],
+        [left, bottom],
+        [right, bottom],
+      ].map(([x, y]): IRPosition => [ax + (x - ax) * cos - (y - ay) * sin, ay + (x - ax) * sin + (y - ay) * cos]);
       return {
         primitive: rotated,
-        boundsPoints: [
-          [ax - r, ay - r],
-          [ax + r, ay - r],
-          [ax - r, ay + r],
-          [ax + r, ay + r],
-        ],
+        boundsPoints,
       };
     }
-    const left = originX;
-    const right = originX + laid.width;
-    const top = baselineY - laid.ascent;
-    const bottom = baselineY + laid.descent;
     return {
       primitive: group,
       boundsPoints: [
@@ -155,6 +171,7 @@ export const emitLabelPrimitive = (
   }
 
   // 纯文本：维持既有 TextPrim 路径（gating 时用反转义后的文字，否则原字符串、零回归）
+  const resolved = resolvedLines[0];
   const text = resolved.plainText;
   const lineHeight = fontSize * LABEL_LINE_HEIGHT_FACTOR;
   const m = normalizeTextMetrics(measureText(text, font));

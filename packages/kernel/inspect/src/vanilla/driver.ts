@@ -13,12 +13,14 @@ import type { InspectorRegistry } from '../providers';
 
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
-import { inspectionPlaneToReadonlyLayers } from '../render';
+import { getResolvedInspectorRegistry } from '../providers';
 import { inspectionSelectionRulesFromVanillaSite } from './authoring';
+import { inspectionPlaneToReadonlyLayers } from './readonly-layers';
 
 const EMPTY_SELECTION: InspectionSelection = { rules: [] };
 
 type ObservationOwnerCounts = {
+  kernel: Map<string, number>;
   pathKinds: Map<string, number>;
   composites: Map<string, Map<string, number>>;
 };
@@ -31,12 +33,17 @@ const allocateObservationOwnerIndex = (
 ): number => {
   let counts = countsBySourcePath.get(sourcePath);
   if (counts === undefined) {
-    counts = { pathKinds: new Map(), composites: new Map() };
+    counts = { pathKinds: new Map(), composites: new Map(), kernel: new Map() };
     countsBySourcePath.set(sourcePath, counts);
   }
-  if (owner.kind === 'pathKind') {
+  if (owner.kind === 'path') {
     const index = counts.pathKinds.get(owner.name) ?? 0;
     counts.pathKinds.set(owner.name, index + 1);
+    return index;
+  }
+  if (owner.kind !== 'composite') {
+    const index = counts.kernel.get(owner.kind) ?? 0;
+    counts.kernel.set(owner.kind, index + 1);
     return index;
   }
   let typeCounts = counts.composites.get(owner.namespace);
@@ -111,10 +118,10 @@ const resolveVanillaSelection = (
     const occurrenceIndex =
       owner === undefined ? undefined : allocateObservationOwnerIndex(occurrenceCounts, site.sourcePath, owner);
     return siteRules.map(rule => {
-      if (rule.kind !== 'request' || rule.target.kind !== 'self' || rule.target.locator.kind !== 'authored') {
+      if (rule.kind !== 'request' || rule.target.kind !== 'self') {
         return rule;
       }
-      const definitionOwner = registry.require(rule.inspector).owner;
+      const definitionOwner = getResolvedInspectorRegistry(registry).require(rule.inspector).owner;
       if (owner !== undefined && !isCompileObservationOwnerEqual(owner, definitionOwner)) {
         throw new RetikzInspectError(
           RetikzInspectErrorCode.Vanilla,

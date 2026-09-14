@@ -7,7 +7,7 @@ import { strictObject } from 'zod';
 import type { ScenePrimitive } from '../../contract';
 import type { ContourSegment, Rect } from '../../shared';
 
-import { defineShape } from '../../contract';
+import { defineShape, rectOutlinePathCommands } from '../../contract';
 import { verticesToSegments } from '../../contract';
 import { BuiltinShape } from '../../schemas';
 import {
@@ -62,6 +62,16 @@ export const rectangle = defineShape<RectangleParams>({
   },
   edgePoint: (r, side, t) => rect.edgePoint(r, side, t),
   connectionEnvelope: boundsConnectionEnvelope,
+  outline: (bounds, params) => rectOutlinePathCommands(bounds, params.cornerRadius),
+  keyPoints: bounds => {
+    const vertices = rectVertices(bounds);
+    return [
+      { name: 'top-left', position: vertices[0] },
+      { name: 'top-right', position: vertices[1] },
+      { name: 'bottom-right', position: vertices[2] },
+      { name: 'bottom-left', position: vertices[3] },
+    ];
+  },
   *emit(r, style, round, params): Iterable<ScenePrimitive> {
     const halfW = r.width / 2;
     const halfH = r.height / 2;

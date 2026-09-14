@@ -1,0 +1,71 @@
+---
+title: Inspect Schema reference
+description: Look up configuration fields, defaults, and validation for the five built-in Inspectors
+---
+
+This page displays the configuration schemas exported by `@retikz/inspect`. They constrain inspection options, not complete inspection requests or Scenes; see the [API reference](/kernel/packages/inspect/api-reference) for runtime selection rules, registries, and callback types.
+
+These defaults apply only after explicitly selecting the Inspector. Every input field is optional: authored options merge per field before schema defaults apply. Registering an Inspector does not activate it.
+
+## PathInspectOptionsSchema
+
+Inspects control handles, vertices, and arc construction from final Path commands. Label indices refer to final commands, not authored steps.
+
+<ZodSchema
+  name="PathInspectOptionsSchema"
+  description="Stroke Path inspection options; defaults apply after authored options are merged."
+  descriptions={{
+    controlPoints: 'Whether control handles and control points are visible; defaults to true',
+    vertices: 'Whether subpath endpoints and closure start points are visible; defaults to false',
+    ellipseAxes: 'Whether ellipse axes are visible independently of arcGeometry; defaults to false',
+    arcGeometry: 'Whether arc centers, endpoints, and radii are visible; defaults to true',
+    labels:
+      'Whether labels for selected geometry are visible; defaults to false. Bézier control-point labels can also be shown separately',
+  }}
+/>
+
+## NodeInspectOptionsSchema
+
+Inspects Node-local geometry, settled text layout, and the Scene-space AABB. Content boxes and baselines exclude external labels.
+
+<ZodSchema name="NodeInspectOptionsSchema" />
+
+## ClipInspectOptionsSchema
+
+Inspects the complete boundary of each clip application, including holes, without computing intersections of nested clips.
+
+<ZodSchema
+  name="ClipInspectOptionsSchema"
+  description="Clip application inspection options; defaults apply after authored options are merged."
+  descriptions={{
+    outline: 'Whether all edges of the final lowered path are visible; defaults to true',
+    labels: 'Whether Clip application labels are visible; defaults to false',
+  }}
+/>
+
+## ScopeInspectOptionsSchema
+
+Inspects the intrinsic envelope and local coordinate system. With no contributing child layout, only the enabled origin, axes, and labels are drawn.
+
+<ZodSchema
+  name="ScopeInspectOptionsSchema"
+  description="Scope inspection options; defaults apply after authored options are merged."
+  descriptions={{
+    envelope: 'Whether the intrinsic Scope envelope is visible; defaults to true',
+    origin: 'Whether the local origin is visible; defaults to true',
+    axes: 'Whether the local forward axes are visible; defaults to false',
+    labels: 'Whether logical hierarchy labels are visible; defaults to false',
+  }}
+/>
+
+## CoordinateInspectOptionsSchema
+
+Inspects the resolved coordinate point.
+
+<ZodSchema
+  name="CoordinateInspectOptionsSchema"
+  description="Coordinate inspection options; defaults apply after authored options are merged."
+  descriptions={{ labels: 'Whether authored id labels are visible; defaults to false' }}
+/>
+
+See [Built-in inspection](/kernel/packages/inspect/builtins) for usage and [Extending inspection](/kernel/packages/inspect/extensions) for custom Inspector option contracts.

@@ -1,0 +1,58 @@
+---
+title: MathJax Configuration
+description: Choose the MathJax formula syntax set used by @retikz/tex through profiles and extensions
+---
+
+`@retikz/tex` provides base TeX syntax by default. When you need AMS, command definitions, brackets, cancellation, cases, or color, set `profile` and `extensions` while creating a lowerer or calling `useLowerTex`. For injecting the result into React or Vanilla, see [Installation & integration](/kernel/packages/tex).
+
+## Profiles and Extensions
+
+`MathJaxEngineOptions.profile` chooses the base configuration, while `extensions` appends public extensions after it. This demo always enables the complete public extension set, so formula examples only change the formula content instead of toggling extensions. `math` enables the built-in math extension set at once:
+
+<ComponentPreview
+  files="tex-extensions"
+  size="sm"
+  caption="Formula examples only change the content; the preview shows the fixed enabled extensions set."
+/>
+
+| Profile | Contents                    | Use it for                                          |
+| ------- | --------------------------- | --------------------------------------------------- |
+| `base`  | MathJax base TeX syntax     | Ordinary operators, fractions, roots, and scripts   |
+| `math`  | Built-in math extension set | AMS, commands, brackets, cancellation, cases, color |
+
+### MathJaxProfile
+
+`profile` selects the extension set available when the engine starts. Omitting it uses `base`; `extensions` are always appended after the profile, and duplicates are removed in public order.
+
+| Value  | Preloaded extensions             | What it does                                                                                         |
+| ------ | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `base` | None                             | Uses MathJax base TeX only, for ordinary operators, fractions, roots, and scripts                    |
+| `math` | All nine public extensions below | Enables common mathematical syntax at once. Equivalent to `base` plus every `MathJaxExtension` value |
+
+### MathJaxExtension
+
+With `base`, add only the extensions a formula needs to avoid loading unrelated configurations at engine initialization. With `math`, adding the same value again has no additional effect. Every value below may appear in the `extensions` array.
+
+| Value        | Enabled syntax                                         | When to use it and example                                               |
+| ------------ | ------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `ams`        | AMS environments and commands                          | Multi-line alignment and structured math, such as `aligned`              |
+| `newcommand` | `\newcommand`                                          | Define and reuse a command within one TeX source                         |
+| `boldsymbol` | `\boldsymbol`                                          | Bold mathematical symbols, including Greek letters                       |
+| `braket`     | `\bra`, `\ket`, and `\braket`                          | Dirac bra-ket notation                                                   |
+| `cancel`     | `\cancel` and `\bcancel`                               | Mark terms that are cancelled or excluded                                |
+| `cases`      | Piecewise and numbered environments such as `numcases` | Piecewise definitions, especially with annotations or numbers per branch |
+| `centernot`  | `\centernot`                                           | Center a negation mark over a relation symbol                            |
+| `mathtools`  | mathtools commands such as `\coloneqq`                 | Supplementary mathematical typography, such as a definition equality     |
+| `color`      | `\color` and `\colorbox`                               | Apply a foreground or background color to formula fragments              |
+
+The internal `empheq` dependency required by `cases` is added automatically and is not part of the public extension set.
+
+## Configuration API
+
+| Field                                      | Type, default, and behavior                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `MathJaxEngineOptions`<br />`.profile?`    | `MathJaxProfileValue`, default `'base'`. Selects a built-in syntax set                                        |
+| `MathJaxEngineOptions`<br />`.extensions?` | `Array<MathJaxExtensionValue>`, default `[]`. Appends public extensions and normalizes them into stable order |
+| `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`. Used by `createMathJaxLowerTex` and `useLowerTex`                   |
+
+In React, `useLowerTex(options)` shares an asynchronous engine by effective extension set. It returns `loading` during startup or a configuration change, injectable `lowerTex` when ready, and `error` when initialization fails. See [Installation & integration](/kernel/packages/tex) for the integration code and state rendering.

@@ -12,7 +12,8 @@ import LearningPathSpineDemo from '../src/modules/docs/contents/kernel/galleries
 import LearningPathStacksDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-03-stacks.demo';
 import LearningPathPathsDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-04-paths.demo';
 import LearningPathDashedDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-05-dashed.demo';
-import InspectCustomDemo from '../src/modules/docs/contents/kernel/packages/inspect/overview/inspect-custom.demo';
+import InspectCustomDemo from '../src/modules/docs/contents/kernel/packages/inspect/extensions/inspect-custom.demo';
+import AiRoadmapDemo from '../src/modules/docs/contents/about/blog/origin/ai-roadmap';
 import { previewSource as RibbonGeometryPreviewSource } from '../src/modules/docs/contents/library/standard/extension/ribbon/ribbon-geometry.demo';
 import { previewSource as LegendColorFormsEnPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.en.demo';
 import { previewSource as LegendColorFormsPreviewSource } from '../src/modules/docs/contents/viz/plot/guide/legend/legend-color-forms.zh.demo';
@@ -35,6 +36,7 @@ describe('Docs 质量巡检回归', () => {
     ['Learning Path 步骤 3', LearningPathStacksDemo],
     ['Learning Path 步骤 4', LearningPathPathsDemo],
     ['Learning Path 步骤 5', LearningPathDashedDemo],
+    ['Origin 博客 AI 路线图', AiRoadmapDemo],
   ] satisfies Array<readonly [string, FC]>)('%s 的 canonical IR 是 JSON-safe', (_name, Demo) => {
     expectCanonicalPreviewToBeJsonSafe(Demo);
   });

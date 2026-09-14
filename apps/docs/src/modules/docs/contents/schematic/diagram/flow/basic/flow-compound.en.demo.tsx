@@ -35,7 +35,7 @@ export const renderFlowCompoundPreview = (
   values: PreviewControlValuesFor<typeof flowCompoundControls>,
 ): ReactElement => (
   <FlowDiagram viewBox={{ x: -100, y: -86, width: 400, height: 460 }}>
-    <FlowLayout id="sections" direction="down" gap={28} align="center">
+    <FlowLayout kind="linear" id="sections" direction="down" gap={28} align="center">
       <FlowGroup
         id="service"
         caption={{ title: { text: 'Service entry' } }}
@@ -50,6 +50,7 @@ export const renderFlowCompoundPreview = (
         <FlowEntity id="authorize" text="Authorize" role="activity" />
       </FlowGroup>
       <FlowLayout
+        kind="linear"
         id="storage"
         direction={flowDirectionOf(values.layoutDirection)}
         gap={values.layoutGap}

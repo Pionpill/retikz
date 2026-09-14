@@ -136,8 +136,7 @@ describe('Core observed compile', () => {
       [observer],
     );
 
-    expect(order).toHaveLength(1);
-    expect(order[0]).toContain('composite');
+    expect(order).toEqual(['composite:', 'node:replay']);
     expect(result.observerOutputs[0]?.value).toEqual(order);
   });
 

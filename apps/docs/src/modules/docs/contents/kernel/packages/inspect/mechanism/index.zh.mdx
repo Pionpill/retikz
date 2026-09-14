@@ -1,0 +1,235 @@
+---
+title: 实现原理
+description: 沿一次观测编译理解选择准入、最终产物收集、实例匹配和辅助场景输出，并定位关键源码
+---
+
+默认你已读过 [Inspect 用法](/kernel/packages/inspect) 与 [内置观测](/kernel/packages/inspect/builtins)。本页追踪“给一条曲线显示控制点”的一次编译：输入是主图 IR、观测规则和可用的观测实现，输出是主图、辅助内容与诊断；宿主再把辅助内容接为只读图层。
+
+例子始终是一条曲线及其控制点观测。下文内部函数是源码阅读入口，不是可导入的公共 API；主线止于辅助图层交付，不展开 renderer 的绘制实现。
+
+## 整体流程
+
+先区分这次编译中的三个角色：
+
+- `selection`（选择规则）：声明“观察哪些对象、显示哪些辅助信息”，只表达意图，不执行绘制。
+- `Inspector`（观测实现）：读取对象编译后的几何，生成控制点、辅助线等绘图描述，不修改主图。
+- `registry`（注册表）：按名称保存可用的 Inspector，让选择规则能找到对应实现。
+
+在曲线例子中，selection 表达“这条曲线要显示控制点”，registry 提供路径 Inspector，后者拿到曲线最终几何后才生成控制点。下面沿这条协作关系看完整过程。
+
+先校验选择规则，再由 Core 编译主图并发布候选结果；Inspect 收集完这一批结果，才精确匹配实例、调用观测器并隔离编译辅助内容。主图与辅助支路分别产出，最后一起交给宿主。
+
+<ComponentPreview
+  files="inspect-compile-flow"
+  size="lg"
+  hideCode
+  caption="蓝色链路保留主图结果，橙色链路生成辅助观测内容，两路最终一起交给 Render。"
+/>
+
+Core 负责提供最终产物与隔离编译能力，Inspect 负责选择、观测器调度和辅助结果；辅助支路没有返回修改主图的步骤。
+
+<SourceLinks sources={[{ label: '观测编译入口与最终组装', path: 'packages/kernel/inspect/src/compile/driver.ts' }]} />
+
+## 选择准入
+
+先看选择规则如何找到实现。下图实线表示规则处理，注册表从下方提供定义；“查找定义”不等于立即调用 Inspector，真正执行还要等待最终几何。
+
+<ComponentPreview files="inspect-role-flow" size="sm" hideCode />
+
+准入就是在编译主图前，先确认选择规则能被合法执行。selection 中有两类规则：
+
+- `request`（观测请求）：选择一个 Inspector、一个作用范围及显示选项，例如“对这条曲线显示控制点”。
+- `barrier`（屏障）：封锁一个范围，阻止其中的对象重新开启观测；具体继承效果在最终匹配阶段说明。
+
+一条 request 用 `inspector` 指定实现、`target` 指定范围、`options` 指定选项。它此时仍只是配置，不会立即生成控制点。定位输入对象还需要区分：
+
+- authored 对象（作者对象）：用户在输入 IR 中写下的对象，例如这条曲线。
+- source path（来源路径）：该对象在输入树中的位置，用于把请求关联到输入对象。
+
+一个输入对象可能经展开产生多个最终实例，所以准入只能先定位输入，不能提前选定最终几何。
+
+`createInspectionObserver()` 在 Core 遍历前捕获 selection，并调用 `admitInspectionSelection()`。它核对 authored 定位是否存在、Inspector 是否注册、同一目标是否重复请求，以及启用规则的 options 是否合法。
+
+准入时已经按请求名称从 registry 取得 Inspector 定义，才能使用它的选项 schema；最终匹配时再使用定义中的 owner 与选项解析能力，driver 随后调用该定义的 `inspect`。registry 不是等到回调执行前才第一次参与。
+
+曲线上的请求此时只绑定作者来源路径，还没有最终几何。准入会保留稀疏的原始 options，校验通过不等于把默认值提前覆盖到子级配置。即使规则最终没有匹配或被覆盖，非法配置仍会在这里失败。
+
+<SourceLinks
+  sources={[{ label: '校验规则并保留作者 options', path: 'packages/kernel/inspect/src/compile/selection.ts' }]}
+/>
+
+## 收集最终产物
+
+Core 需要把“哪类对象的哪次最终结果”告诉 Inspect，先区分通知与接收者：
+
+- `observation`（产物通知）：Core 对一个最终结果发出的记录，携带类别、实例位置和几何数据。
+- `observer`（观察会话）：接收并收集这些通知，等本轮收集结束后再调度 Inspector；它本身不是生成辅助图形的 Inspector。
+
+每条通知通过三个字段说明结果：
+
+- `owner`（所属类别）：标识结果属于哪类对象；Path 还按 `name` 区分路径种类，不是 Inspector 的注册名。
+- `occurrence`（实例定位）：区分编译中实际产生的各个最终实例，不存储几何本身。
+- `value`（产物数据）：保存该实例已求出的几何等结果，供 Inspector 读取。
+
+对例子中的普通曲线，请求先指向输入树中的曲线位置，编译后再关联它的最终实例及几何。如果同一来源产生两个最终实例，两条通知可共享来源路径，却各有 occurrence 和 value；最终匹配才能从中选择第一个或第二个。
+
+Core 遍历候选站点时，通过 observer 的 `select()` 调用 `canInspectionSelectionRequestSite()`，判断某个 owner 与来源路径是否可能需要观测。这是站点筛选，不是最终实例匹配；例如选择第 N 个实例仍需等待最终实例集。
+
+曲线完成编译后，Core 才发布包含最终几何的 observation。Inspect 的 `observe()` 只保存产物和上下文为 `CapturedObservation`，不立即调用 `inspect()`。这里 observer 是连接 Core 通知的收集会话，Inspector 才是后面生成辅助图形的实现。Core 在这一轮成功编译的最终通知全部派发后调用一次 `complete()`，不是每条曲线各调用一次；会话也可能没有收到任何通知。
+
+理解这条流程后，再看 Core 通过哪些字段把结果和编译能力交给 Inspect。`owner` 标识被观测对象的所属者，request 则是用户发出的观测请求：
+
+| Core 提供的内容                               | Inspect 如何使用                                                           |
+| --------------------------------------------- | -------------------------------------------------------------------------- |
+| `CompileObservation.owner` 与 `occurrence`    | 让 request 按所属者与实例位置，精确匹配被观测对象的最终实例                |
+| `CompileObservation.value`                    | 作为 `subjectSchema` 校验的最终产物，供 `inspect()` 读取                   |
+| `CompileObservationContext.theme`             | 为辅助内容分配与当前 occurrence 一致的主题与语义颜色                       |
+| `CompileObservationContext.compileFragment()` | 在当前 Theme、Scope 样式和 provider 环境中隔离编译 Inspector 返回的普通 IR |
+
+因此，自定义观测器的前提是：对应对象已经能在 Core 中发布最终产物。仅仅注册一个 Inspector，不会让原本不支持观测的对象自动产生 observation。Core 只提供这套通知与隔离编译能力，不负责查找 Inspector 或决定辅助内容的样式。
+
+曲线例子只使用 `path`；以下是 Core 当前支持的 observation owner 清单：`path`（按名称区分的最终 Path kind）、`node`（Node 的几何与正文布局）、`scope`（Scope 固有包络）、`coordinate`（已解析坐标点）、`clip`（一次逻辑 Clip application）和 `composite`（按命名空间与类型区分的复合组件）。内置 Inspector 分别绑定这些 owner；owner 没有发布最终产物时，注册 Inspector 也不会凭空增加观测。
+
+每条 observation 还带有从外到内排列的 `ancestors`，记录它所在的 Scope / composite 链条及各自 occurrence。Inspector 可以用它解释层级或区分同一 owner 在不同容器中的实例，而不必从 source path 猜测父级。
+
+<SourceLinks
+  sources={[
+    { label: 'Core 观测上下文与隔离编译契约', path: 'packages/kernel/core/src/contract/observation/types.ts' },
+    { label: 'Core 最终观测通知的派发', path: 'packages/kernel/core/src/compile/orchestration/observation-output.ts' },
+  ]}
+/>
+
+<SourceLinks
+  sources={[{ label: 'select、observe 与 complete 的会话接线', path: 'packages/kernel/inspect/src/compile/driver.ts' }]}
+/>
+
+## 匹配实例与合并选项
+
+下图假设同一个输入对象产生两个最终实例，并请求 `occurrenceIndex: 1`。按上排从左到右，再接下排阅读：准入先检查输入规则，Core 编译并收集通知后，才能选中第二个最终实例。索引从 0 开始；普通曲线并不必然产生多个实例。
+
+<ComponentPreview files="inspect-occurrence-flow" size="sm" hideCode />
+
+`complete()` 进入 `compileInspectionObserverOutput()` 后，首先调用 `resolveAdmittedInspectionSelection()`。现在最终 observation 集已经齐全，才能按稳定实例顺序选择目标，并将从整图到对象的规则应用到曲线上。
+
+前面声明的 request 现在才真正落到最终实例上。准入检查输入定位、注册关系和选项是否合法；这里检查未被屏障封锁的启用 self 请求是否存在最终结果、owner 是否相符。`occurrenceIndex` 超出最终集合也会因没有匹配结果而失败；scene / subtree 批量规则则允许没有匹配结果。不能在准入时仅凭输入树断言这些最终条件。
+
+request 可以声明在场景、authored 子树或对象上；其 `options: true` 使用默认参数，`options: false` 则在当前位置关闭该 Inspector。
+
+下图以支持整图选择、且对象 owner 匹配的同一个 Inspector 为例。连线表示父子结构；蓝色表示开启，灰色虚线框表示关闭或封锁。A 继承父级开启；B 在子树关闭后可由对象重新开启；C 设置屏障后，对象即使请求开启也无效。开关只影响辅助观测，所有对象的主图仍正常绘制。
+
+<ComponentPreview files="inspect-selection-tree" size="md" hideCode />
+
+这里 B 的 `options: false` 只关闭指定 Inspector，C 的 `barrier` 则封锁子树内全部 Inspector；React 中可用 `<InspectScope request={false}>` 声明这个屏障。
+
+这些选择不是持久化图形数据，而是在每次编译时决定哪些最终 occurrence 交给 Inspector 的运行时规则：
+
+| 结构                              | 含义                                                                            |
+| --------------------------------- | ------------------------------------------------------------------------------- |
+| `InspectionSelectionRule` request | 以 `inspector`、`target`、`options` 选择 Inspector 与范围                       |
+| `InspectionSelectionRule` barrier | 在整图或 authored 子树阻止后代重新开启 Inspector                                |
+| scene target                      | 匹配整张图中属于指定 owner 的最终实例                                           |
+| subtree target                    | 匹配一个 authored Scope 下的最终实例                                            |
+| self target                       | 按当前 authored 对象的来源路径匹配；可用 occurrence index 选中其第 N 个最终实例 |
+
+对 Path 做批量选择时，scene target 会匹配整张图中所有 owner 相符的最终 Path；subtree target 会匹配某个 authored Scope 子树中的所有 Path；只有 self target（React 的 `<InspectPath>`）才把请求限制到当前 authored Path。一个 authored 对象经编译产生多个最终实例时，`occurrenceIndex` 按稳定的最终实例顺序选择其中一个。因而可以在 `<InspectLayout request>` 上统一打开一类 Path 检查，也可以用 `<InspectScope request>` 只打开一个子树；无需为每条 Path 重复声明同一 request。
+
+`InspectionSelection` 和宿主 wrapper（如 React 的 `<InspectPath>`、`<InspectScope>`，负责把声明转换成选择规则）是使用入口。规则的准入、最终实例匹配与 options 级联由 Inspect compile driver 在内部完成；这些实现函数不是可导入 API，使用方不需要也不应直接调用。
+
+下面的试验场把两条曲线放在独立子树中。切换目标、控制点和标签，再开启右侧屏障，观察局部 request 如何在 Core 的最终实例上解析：
+
+<ComponentPreview
+  files="inspect-selection"
+  size="md"
+  caption="A、B 是两条独立的普通路径；右侧屏障开启后，B 的局部 request 也不能重新开启检查。"
+/>
+
+同一位置可以请求多个不同 Inspector。同一 Inspector 的稀疏 options 从整图到子树再到当前实例合并；普通 `false` 只关闭当前位置的一个 Inspector，barrier 则阻止后代重新开启任何 Inspector。
+
+合并使用作者传入的原始配置，随后由唯一的 `optionsSchema` 补默认值，再交给 `resolveOptions` 展开简写。例如父级 `labels: true`、子级 `{}` 会继续显示标签；子级显式 `labels: false` 才会关闭。每条启用规则仍会在准入时校验，即使未匹配或随后被覆盖也不能携带非法选项。
+
+直接调用 `PathInspectOptionsSchema.parse({})` 会得到包含 `labels: false` 的完整默认快照；再把它作为子级配置时，`false` 就是显式覆盖。保存原始配置才能保留省略意图；保存 parse 结果则保存已物化的默认值。
+
+<SourceLinks
+  sources={[
+    { label: 'request 转换为目标规则与屏障', path: 'packages/kernel/inspect/src/vanilla/authoring.ts' },
+    { label: '范围匹配、屏障与 options 级联合并', path: 'packages/kernel/inspect/src/compile/selection.ts' },
+  ]}
+/>
+
+## 生成辅助描述
+
+上一阶段解决的是“对哪个实例、用什么配置”；这一阶段解决的是“读取该实例的哪些结果，画出什么辅助内容”。合并后的 options 经 `optionsSchema` 补默认值和 `resolveOptions` 展开简写后成为回调配置；observation 的 `value` 则走另一条数据通道，经 `subjectSchema` 校验后成为回调读取的 subject。配置与被观测几何不能混为一谈。
+
+对于匹配请求，driver 先用 `subjectSchema` 校验并冻结 observation 的 value，再把它作为 subject 交给 `inspect(subject, context)`。控制点观测因此读取 Core 已求出的曲线几何，返回控制点和辅助线的普通 IR，不重新计算主图。
+
+图中两路输入在 `inspect()` 汇合：左侧配置决定“显示什么”，右侧几何提供“画在哪里”。下排承接回调输出，依次整理片段、隔离编译，再由宿主转换为只读图层；箭头表示数据交接，不表示配置与几何校验并发执行。
+
+<ComponentPreview files="inspect-output-flow" size="md" hideCode />
+
+例如打开控制点选项后，Inspector 从 subject 读取控制点位置，返回点和线的 IR。此时还没有可显示的图层；片段编译与宿主交付见下一节。
+
+下面补充图中未展开的坐标空间约定。最终 `occurrence` 仍会作为 Inspector callback、辅助平面结果和 diagnostic 的上下文，用于说明本次编译实际处理的是哪个实例；它不是选择 target 的用户输入。Inspector callback 返回的普通 Core IR child 默认使用 occurrence-local 坐标，Inspect 用 `context.transform` 将其放回主 Scene。需要显式指定空间时，返回 `InspectorFragment`：`{ type: 'fragment', coordinateSpace: 'local' | 'scene', child }`。`scene` 片段使用单位变换，同一次回调可混合两种空间；内置 Node Inspector 的局部几何与场景坐标下的轴对齐包围盒（AABB）就共享这一通道。
+
+Inspect 的常规辅助颜色按有效观测请求的顺序，从 Core 当前主题的分类色板中选取。同一请求生成的辅助线、控制点与标签共用一种颜色，便于识别它们对应的对象；控制点标签背景透明。
+
+Inspect 沿用 Core 的色板与语义颜色，不提供独立的 Inspect Theme 配色配置。内置观测器也不提供 Core 绘图组件那样自由的样式定制：例如路径观测器只开放控制点、顶点、圆弧几何与标签的显示开关，线宽、虚线和字号由实现统一决定。它的定位是帮助理解主图的辅助内容，因此优先保证清晰、一致与克制。
+
+自定义 Inspector 仍可在返回的普通 Core IR 中定义样式；这是观测器扩展能力，不属于内置观测器的样式选项。
+
+<SourceLinks
+  sources={[
+    { label: '色板与语义颜色的分配', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: '内置控制点、辅助线与标签样式', path: 'packages/kernel/inspect/src/providers/path.ts' },
+  ]}
+/>
+
+## 隔离编译与交付
+
+driver 将回调输出经 `snapshotInspectorOutput()` 整理为片段，逐个调用捕获上下文的 `compileFragment()`。该上下文保留对应实例的 Theme、Scope 样式与 provider 环境；片段编译得到独立 Scene，再经 `sealInspectionScene()` 整理并冻结。
+
+曲线控制点至此已经成为辅助平面中的 Scene entry。local 片段保存 occurrence 的变换，scene 片段使用单位变换。Inspect 编译返回的 `InspectionCompileResult.inspection` 是这个平面，还不是宿主图层。
+
+之后，宿主调用 `inspectionPlaneToReadonlyLayers()`，将平面转换为不可命中的只读图层，再交给 Render 显示；这里只转换一次。主图与辅助层属于同一次编译版本，只有一起成功才提交，不会先显示新主图、再补上旧版本的辅助内容。辅助场景也不会保留公开身份、元数据和动画语义。
+
+普通绘图不需要加载 Inspect。启用后，若没有匹配结果或所有观测器都返回空内容，InspectionPlane 为 `null`，不会生成辅助图层；额外成本来自选中对象的观测、观测器回调和非空辅助片段的编译。
+
+`inspect(subject, context)` 还可以调用 `context.warn(code, message)` 报告某个可选几何 facet 无法提供的原因，同时返回其余可用辅助内容。这个 warning 会进入同一次 `InspectionCompileResult.diagnostics`；它不会改写主图，也不会把一个局部缺失升级成整次主编译失败。
+
+<SourceLinks
+  sources={[
+    { label: 'observe 收集与 complete 生成辅助内容', path: 'packages/kernel/inspect/src/compile/driver.ts' },
+    { label: '辅助场景转换为只读图层', path: 'packages/kernel/inspect/src/vanilla/readonly-layers.ts' },
+  ]}
+/>
+
+## 结果与错误
+
+| 字段                                  | 含义                                          |
+| ------------------------------------- | --------------------------------------------- |
+| `InspectionCompileResult.primary`     | 未被辅助内容修改的普通 Core 编译结果          |
+| `InspectionCompileResult.inspection`  | 有序辅助平面；所有 callback 无输出时为 `null` |
+| `InspectionCompileResult.diagnostics` | 观测器回调与隔离片段产生的结构化警告列表      |
+
+`RetikzInspectError.details.origin.stage` 标明失败发生在选择、最终产物（`subjectSchema`）校验、`inspect` callback、输出规范化、辅助片段编译或最终组装。重复 registry key、未注册 request、owner 不匹配以及 schema 失败都会终止该次检查编译，不会交付部分辅助结果。
+
+<SourceLinks
+  sources={[{ label: '编译结果、辅助平面与诊断结构', path: 'packages/kernel/inspect/src/compile/types.ts' }]}
+/>
+
+<SourceLinks sources={[{ label: '分阶段错误包装与终止位置', path: 'packages/kernel/inspect/src/compile/driver.ts' }]} />
+
+## 完整实现流程
+
+下图展开“准入 → 收集 → 匹配 → 辅助输出”的主线。多个 occurrence 汇入同一会话；`complete()` 的内部顺序是解析选择、校验 subject、调用 `inspect()`、隔离编译片段，然后生成 `InspectionPlane`。图中的选择函数和被观测集都是内部实现成员。
+
+<ComponentPreview files="inspect-observer-batch-flow" size="lg" hideCode />
+
+图中的 N 是本轮最终通知的数量，可能为 0；`observe()` 每条通知执行一次，`complete()` 则在这一轮成功编译的通知派发结束后执行一次。
+
+从 `compileInspectionToScene()` 看总调度，再进入 `createInspectionObserver()` 看 select / observe / complete 时机，随后读 `resolveAdmittedInspectionSelection()` 的精确匹配与选项级联。最后回到 driver 看回调、片段编译与结果组装，并读 `inspectionPlaneToReadonlyLayers()` 看宿主交付。
+
+<SourceLinks sources={[{ label: '1. 编译与 observer 会话', path: 'packages/kernel/inspect/src/compile/driver.ts' }]} />
+
+<SourceLinks sources={[{ label: '2. 最终实例与规则级联', path: 'packages/kernel/inspect/src/compile/selection.ts' }]} />
+
+<SourceLinks sources={[{ label: '3. 只读图层交付', path: 'packages/kernel/inspect/src/vanilla/readonly-layers.ts' }]} />

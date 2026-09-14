@@ -15,9 +15,12 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
+import type { CanonicalOverlayLayout, CanonicalOverlayLayoutItem } from '../../resolve/overlay-layout';
 import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
-import type { IROverlayLayout, IROverlayLayoutItem, OverlayLayoutArtifact } from './types';
+import type { OverlayLayoutArtifact } from './types';
+import type { IROverlayLayout } from './types';
 
+import { resolveOverlayLayout } from '../../resolve/overlay-layout';
 import {
   alignResolvedLayoutSlot,
   compensatedLayoutSum,
@@ -27,7 +30,6 @@ import {
   createLayoutArtifactContainer,
   createLayoutArtifactItem,
   layoutClipOf,
-  normalizeLayoutSpacing,
   resolveLayoutAxisSize,
 } from '../internal';
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow } from '../shared';
@@ -37,7 +39,7 @@ import { overlayStructuralGuideOffset, placeOverlayItem, resolveOverlayProfile, 
 type IntrinsicMode = 'minimum' | 'natural';
 
 type MeasuredOverlayItem = Readonly<{
-  authored: EffectiveLayoutItem<IROverlayLayoutItem>;
+  authored: EffectiveLayoutItem<CanonicalOverlayLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
 }>;
@@ -48,11 +50,11 @@ type OverlayProfileResults = Readonly<{
 }>;
 
 type PlacedOverlayItem = Readonly<{
-  authored: EffectiveLayoutItem<IROverlayLayoutItem>;
+  authored: EffectiveLayoutItem<CanonicalOverlayLayoutItem>;
   sourceIndex: number;
   margin: LayoutInsets;
   slotBounds: LayoutRect;
-  alignment: IROverlayLayout['alignItems'];
+  alignment: CanonicalOverlayLayout['alignItems'];
   result: LayoutChildResult;
   translation: Readonly<{ x: number; y: number }>;
 }>;
@@ -76,7 +78,7 @@ const boundedProposal = (max: number): LayoutAxisProposal => ({
 /** 执行一次必需的 child probe，并在失败时保留 Core occurrence 提升错误 */
 const requiredProbe = (
   context: LayoutCompositeCompileContext,
-  child: IROverlayLayoutItem['child'],
+  child: CanonicalOverlayLayoutItem['child'],
   proposal: LayoutProposal,
 ): LayoutChildResult => {
   const probe = context.layoutChild(child, proposal);
@@ -86,7 +88,7 @@ const requiredProbe = (
 
 /** 计算当前轴在求 contribution 前可确定的有限 content-box 上限 */
 const finiteContentLimitOf = (
-  node: IROverlayLayout,
+  node: CanonicalOverlayLayout,
   axis: 'x' | 'y',
   proposal: LayoutAxisProposal,
   padding: LayoutInsets,
@@ -127,7 +129,7 @@ const finiteContentLimitOf = (
 /** 求一个 Overlay item 在指定 intrinsic profile 下的物理 x→y probe 链 */
 const probeOverlayProfile = (
   context: LayoutCompositeCompileContext,
-  node: IROverlayLayout,
+  node: CanonicalOverlayLayout,
   item: MeasuredOverlayItem,
   mode: IntrinsicMode,
   finiteXLimit: number | undefined,
@@ -202,15 +204,15 @@ const outgoingOverlayGuide = (
 
 /** 编译 Layout OverlayLayout 的双 profile probe、placement、stacking 与 replay 流程 */
 export const compileOverlayLayout = (
-  node: IROverlayLayout,
+  sourceLayout: IROverlayLayout,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<OverlayLayoutArtifact> => {
-  const padding = normalizeLayoutSpacing(node.padding);
+  const node = resolveOverlayLayout(sourceLayout);
+  const padding = node.padding;
   const finiteXLimit = finiteContentLimitOf(node, 'x', context.proposal.x, padding);
   const finiteYLimit = finiteContentLimitOf(node, 'y', context.proposal.y, padding);
   const measured: ReadonlyArray<MeasuredOverlayItem> = createEffectiveLayoutItems(node.children).map(
-    (authored, sourceIndex) =>
-      Object.freeze({ authored, sourceIndex, margin: normalizeLayoutSpacing(authored.margin) }),
+    (authored, sourceIndex) => Object.freeze({ authored, sourceIndex, margin: authored.margin }),
   );
   const minimumResults = measured.map(item =>
     probeOverlayProfile(context, node, item, 'minimum', finiteXLimit, finiteYLimit),

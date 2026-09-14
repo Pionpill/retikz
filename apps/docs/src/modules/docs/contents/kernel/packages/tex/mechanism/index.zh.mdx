@@ -1,0 +1,164 @@
+---
+title: 实现原理
+description: 沿一次公式请求理解 TeX 如何经引擎排版、SVG lowering 与 Core 基线布局生成普通 Scene 图元
+---
+
+默认你已读过 [TeX 用法](/kernel/packages/tex)，了解 lowerer 的注入方式。本页追踪一段 `$x^2$` 从 Core 文本输入到 Scene 图元的过程；以引擎已经就绪为主路径，初始化和重复请求另行说明。renderer 如何执行 Scene 不在本页展开。
+
+## 整体流程
+
+公式先被识别，再由引擎排版为 SVG，转换为带度量的路径，最后交回 Core 排版。TeX 包拥有中间的排版接入与 SVG 转换；Core 拥有文本入口和 Scene 输出。
+
+<ComponentPreview files="tex-overview-flow" size="xs" hideCode />
+
+下面沿同一个 `x^2` 公式展开四个阶段。末尾的详细图会把这些阶段对应到真实代码成员；内部成员仅用于读源码，不是新增公共 API。
+
+<SourceLinks
+  sources={[{ label: '同步 lowerer 的入口与返回值', path: 'packages/kernel/core/src/compile/text/tex.ts' }]}
+/>
+
+## 识别公式
+
+math run 是文本行中的一个公式片段，与普通文字片段相区别。宿主注入 `lowerTex` 后，Core 才把字符串中的 `$...$` / `$$...$$` 识别为公式片段：前者使用行内（inline）模式，后者使用展示（display）模式。例子中的 `$x^2$` 因此成为公式内容 `x^2` 与 inline 模式；没有 lowerer 时，它仍是普通文字。
+
+调用方也可以直接在结构化文本中声明公式片段，这就是“显式 math run”，不需要从美元符号中识别。它已经明确要求公式排版，因此缺少 lowerer 时会跳过该片段并报告诊断，而不是退回普通文字。
+
+Core 将公式内容、`displayMode`、字号和颜色传入同步 `LowerTex`。这一步把文本布局与公式引擎隔开，Core 不需要知道 MathJax 如何排版。
+
+本文沿 inline 例子展开；display 模式同样通过 `layoutInlineLine()` 调用 lowerer，并把 `displayMode` 传给引擎，不是另一套 SVG 转换链路。
+
+<SourceLinks
+  sources={[
+    { label: '字符串公式识别与 gating', path: 'packages/kernel/core/src/resolve/text/inline.ts' },
+    { label: '公式片段的 lowering 调用', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+  ]}
+/>
+
+## 引擎排版
+
+这里选择 MathJax 的原因是它能把 TeX 公式排版为 SVG 几何，而不是把公式留成宿主 DOM 文本。内置 engine 使用 SVG output jax，并设置 `fontCache: 'none'`，使返回 SVG 中的字形以路径形式内联；Tex 包随后可把这些轮廓转换为后端中立的路径数据。
+
+MathJax 也提供按 package 组合的 TeX 语法能力，正好对应 `profile` 与 `extensions` 的公开配置。`mathjax-full` 作为 optional peer 按需动态加载，不使用公式能力时，Core 和 renderer 都不会依赖或初始化它。
+
+这并不是把 Retikz 锁定为 MathJax：MathJax 只是内置 engine。只要其它 engine 同步返回本包支持的 SVG 子集，就可以复用同一条 SVG lowering 链路。
+
+Core 只依赖同步的 `LowerTex`：
+
+```ts
+type LowerTex = (
+  content: { tex: string; displayMode?: boolean },
+  style: { fontSize: number; color?: string },
+) => LoweredTex | null;
+```
+
+`LoweredTex` 包含按绘制顺序排列的 paths，以及公式的 `width`、`height`、`depth`。每条 path 自带 fill / stroke、透明度和路径命令，因此 Core 可以继续布局和渲染。Tex 包消费的最小 engine 契约是同步的 `MathJaxSvgEngine.convert(tex, { display }) => string`；自定义 engine 必须返回本包支持的 SVG 子集。
+
+`mathjax-full` 因此保持为可选依赖：不使用公式能力的 Core 使用者不会承担 MathJax 包体积。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'MathJax engine 最小抽象与 optional peer 边界',
+      path: 'packages/kernel/tex/src/mathjax/engine.ts',
+    },
+    {
+      label: 'Core 的 LowerTex 与 LoweredTex 契约',
+      path: 'packages/kernel/core/src/compile/text/tex.ts',
+    },
+  ]}
+/>
+
+## 转换字形与度量
+
+缓存未命中时，`engine.convert()` 为 `x^2` 生成 SVG 字符串；`lowerMathJaxSvg()` 随后遍历受支持的节点，解析 paint、transform 和 path data，将字形转换为结构化 `PathCommand`。
+
+输出 `LoweredTex` 包含按绘制顺序排列的 paths，以及 `width`、`height`、`depth`。公式此时已不再是 TeX 字符串或 SVG 文档，而是 Core 可以测量和发出的路径数据。不支持的节点、样式或变换会拒绝整段公式，不交付部分字形。
+
+这里不是通用 SVG 导入器：支持的绘制节点包括 `path`、`rect`、`line`、`polygon` 及受限的 `use` 引用，容器包括 `svg`、`g`、`mjx-container`。例如 `text`、`foreignObject`、嵌套 SVG viewport 和 `clip-path` 会被拒绝；可见描边还要求相似变换。自定义 engine 需继续核对下方 SVG lowering 源码中的节点、paint 和变换限制，不能只凭返回了 SVG 就判断兼容。
+
+<SourceLinks
+  sources={[
+    { label: 'SVG 遍历与公式度量', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
+    { label: 'path data 转换', path: 'packages/kernel/tex/src/svg/path-d.ts' },
+  ]}
+/>
+
+## 基线布局与输出
+
+基线是同一行文字和公式对齐的参考线，不是包围框底边。`height` 表示从公式底部到顶部的总高度，包含基线以下部分，`depth` 表示基线以下的部分，所以基线上方空间是 `height - depth`。例如某个公式总高 12、下探 3，就需要基线上方 9、下方 3 的空间；这只是度量示例，不是 `x^2` 的固定尺寸。
+
+`layoutInlineLine()` 校验并冻结 lowering 结果，将 `height - depth` 作为基线上方高度，并将 `depth` 纳入基线下方空间。例子中的上标因此参与整行布局，而不是在 renderer 中额外定位。
+
+Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 放入文本行。公式颜色等 paint 在这个边界结合宿主样式处理；renderer 最终只看到普通 Scene 图元，无需理解 TeX、MathJax 或 SVG。
+
+<SourceLinks
+  sources={[{ label: '基线度量与 PathPrim 发出', path: 'packages/kernel/core/src/compile/text/layout.ts' }]}
+/>
+
+## 缓存、失败与重试
+
+公式在文本重排、组件重渲染或同一内容多次出现时可能被重复 lowering。缓存保存完整的 `LoweredTex`，命中后同时跳过 MathJax 的 `engine.convert()` 排版，以及 SVG 节点、path data 和 transform 到 `PathCommand` 的解析与归一化；它解决的是这两段重复计算的成本，而不是只针对其中一个步骤。
+
+下图只说明一次公式请求如何命中缓存，或经 MathJax 解析后把结果回写缓存：
+
+<ComponentPreview files="tex-lower-cache" size="sm" hideCode />
+
+`createLowerTex` 为每个 lowerer 建立内存缓存，key 包含 TeX source、inline / display 模式、字号和宿主颜色。成功结果与确定性的 MathJax / SVG 失败会缓存；`engine.convert` 抛出的异常视为瞬态失败，不缓存，下一次调用仍可重试。每次公开 lowering 失败都会调用最新的 `onDiagnostic`。
+
+失败诊断有两层：Tex lowerer 通过 `onDiagnostic` 报告具体原因；Core 收到 `null` 后报告统一的 `TEX_INVALID`，表示该公式无法参与布局。因此一次失败可能分别出现在两个诊断通道，不代表发生了两次独立失败。
+
+表中的“错误节点”指返回的 SVG 中含有 MathJax 的 `data-mml-node="merror"` 标记，不是 engine 返回了另一种数据类型。
+
+| 场景                           | 可观察结果                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| 未注入 lowerer 的字符串公式    | `$...$` / `$$...$$` 保持普通文字，不进入公式解析                                                       |
+| 未注入 lowerer 的显式 math run | 跳过该片段并报告 `TEX_LOWERER_MISSING`；同一行的 text run 继续渲染                                     |
+| MathJax 返回错误节点           | lowerer 返回 `null`，报告 `mathjax-error`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存               |
+| SVG 不支持或格式错误           | 拒绝整段公式，报告 `unsupported-svg` 或 `malformed-svg`，Core 再报告 `TEX_INVALID`；该确定性失败会缓存 |
+| `engine.convert` 抛出异常      | lowerer 返回 `null`，报告 `engine-error`，Core 再报告 `TEX_INVALID`；该瞬态失败不缓存                  |
+
+<SourceLinks
+  sources={[
+    {
+      label: 'TeX lowering 缓存与失败结果',
+      path: 'packages/kernel/tex/src/lower/lower-tex.ts',
+    },
+  ]}
+/>
+
+## 引擎初始化
+
+以下是主流程开始前的异步准备，不是每次公式转换都执行一次。准备好 lowerer 后，每次公式 lowering 仍是同步调用。
+
+`@retikz/tex/react` 导出的 `useLowerTex` 只服务 React。它以最终生效的 extension 集合作为共享 MathJax engine 的 key；Vanilla 调用方自行 `await createMathJaxLowerTex()` 并注入 `compile.lowerTex`。
+
+宿主负责连接准备与编译：React 在 hook 就绪后将返回的 lowerer 放入 compile 配置；Vanilla 等待创建完成后再用该 lowerer 编译。需要首次输出就包含公式时，应等待就绪再提交该次编译；如果提前在没有 lowerer 的情况下编译，则遵循上面的普通字符串／显式片段分支，并不会自动等待引擎。
+
+<ComponentPreview files="tex-react-lifecycle" size="xs" hideCode />
+
+切换集合时，hook 立即进入 `loading` 并清空旧 lowerer；已卸载或过期请求的异步结果不会写回。`mathjax-full` 缺失或 engine 初始化失败时，hook 返回 `error` 并删除共享失败项，使后续挂载可以重试。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React engine 共享与生命周期',
+      path: 'packages/kernel/tex/src/react/use-lower-tex.ts',
+    },
+  ]}
+/>
+
+## 完整实现流程
+
+下图展开前面的四个阶段，表示引擎就绪且缓存未命中的一次成功请求。缓存命中直接返回已有 `LoweredTex`，跳过引擎排版与 SVG 转换；失败分支见前文。图中的 `layoutInlineLine()` 在调用 lowerer 和接收结果两个位置出现，属于同一次文本布局调用。
+
+<ComponentPreview files="tex-conversion-flow" size="md" hideCode />
+
+建议先读 `createLowerTex()` 看请求编排与缓存，再进入 `lowerMathJaxSvg()` 和 path parser，最后回到 Core 的 `layoutInlineLine()` 看度量如何变成图元。异步初始化单独从 `useLowerTex` 阅读。
+
+<SourceLinks
+  sources={[
+    { label: '1. 请求编排', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
+    { label: '2. SVG lowering', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
+    { label: '3. Core 输出', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+  ]}
+/>

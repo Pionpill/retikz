@@ -16,7 +16,7 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 
 ## 输入
 
-- alpha：状态为 `Proposed` 的长期 ADR，Architecture Gate 与 Plan Gate 已 PASS，人工已确认 ADR 并授权实现；镜像 `PLAN.md` / `TEST_CONTRACT.md` 完整且可未提交。
+- alpha：状态为 `Accepted` 的长期 ADR；人工执行批准时已完成接受，Architecture Gate 与 Plan Gate 已 PASS，镜像 `PLAN.md` / `TEST_CONTRACT.md` 完整且可未提交。
 - beta：已登记的 roadmap TODO，scope 与预估 level 已明确。
 - 当前受影响文件、已有测试、相关 docs 页面。
 

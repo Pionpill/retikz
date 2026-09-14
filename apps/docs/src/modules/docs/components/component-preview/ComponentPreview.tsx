@@ -3,6 +3,8 @@ import type { FC, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { Lang } from '@/i18n';
+
 import { cn } from '@/lib';
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 
@@ -25,11 +27,11 @@ import { usePreviewResources } from './hooks';
 import { buildConfiguredControlSlots } from './preview-panel';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
-import { isPreviewThemeStyleDocument, usePreviewTheme } from './theme';
+import { isPreviewThemeStyleDocument, PreviewThemeStyle, usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
-  /** 主 demo 与附加源码文件；主 demo id 不含 `.demo.tsx` 后缀。 */
+  /** 主 demo 与附加源码文件；主 demo id 不含后缀，以 / 开头时相对 contents 根目录，其余相对当前页面 */
   files: ComponentPreviewFiles;
   /** React 源码视图默认选中的附加文件；缺省显示主 demo。 */
   defaultSourceFile?: string;
@@ -37,6 +39,10 @@ export type ComponentPreviewProps = {
   controls?: PreviewControlsOptions;
   /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
   controlPanelDefaultOpen?: boolean;
+  /** 属性面板的默认尺寸百分比。桌面端为宽度，窄屏时等比作为高度
+   * @default 25
+   */
+  controlPanelDefaultSize?: number;
   /** 全屏弹窗 header 动作。 */
   dialogActions?: Array<PreviewActionSlot>;
   /** 渲染区垂直对齐，默认 center */
@@ -60,6 +66,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     defaultSourceFile,
     controls,
     controlPanelDefaultOpen,
+    controlPanelDefaultSize,
     dialogActions,
     align = 'center',
     size = 'md',
@@ -73,12 +80,14 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const { name, diffFrom, sourceFiles } = useMemo(() => normalizeComponentPreviewFiles(files), [files]);
   const loc = useDocLocation();
   const { i18n } = useTranslation();
-  const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
-  const previewTheme = usePreviewTheme(themeStyleSelection);
+  const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
-  const enableThemeSwitch = isPreviewThemeStyleDocument(segments?.[0], segments?.[1]);
+  const isSchematicPreview = segments?.[0] === 'schematic' || name.startsWith('/schematic/');
+  const enableThemeSwitch = !isSchematicPreview && isPreviewThemeStyleDocument(segments?.[0]);
+  const effectiveThemeStyleSelection = enableThemeSwitch ? themeStyleSelection : PreviewThemeStyle.Default;
+  const previewTheme = usePreviewTheme(effectiveThemeStyleSelection);
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
   const resourceRequest = useMemo(
@@ -105,8 +114,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const controlContract: PreviewControlContract | undefined = controlsDisabled
     ? undefined
     : explicitControlsName === null
-      ? (resolvePreviewControlContract(controlModule) ?? resolvePreviewControlContract(mod))
-      : resolvePreviewControlContract(controlModule);
+      ? (resolvePreviewControlContract(controlModule, lang) ?? resolvePreviewControlContract(mod, lang))
+      : resolvePreviewControlContract(controlModule, lang);
   const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
   const baselineRawSource = resources?.baselineRawSource;
   const irJsonOverride = resources?.irJsonOverride;
@@ -135,6 +144,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             vanillaOverride,
             vanillaSvg,
             theme: previewTheme,
+            lang,
           })
         : { source: undefined, previewIr: null },
     [
@@ -153,6 +163,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       vanillaOverride,
       vanillaSvg,
       previewTheme,
+      lang,
     ],
   );
 
@@ -220,7 +231,13 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     <ComponentPreviewCard
       name={name}
       Component={Component}
+      lang={lang}
       source={sourceResult.source}
+      buildSourceViews={
+        previewSource?.buildViews === undefined
+          ? undefined
+          : values => previewSource.buildViews!({ lang, theme: previewTheme, values })
+      }
       defaultSourceFile={defaultSourceFile}
       align={align}
       size={size}
@@ -229,10 +246,11 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlContract={controlContract}
       controlDefinition={controlDefinition}
       controlPanelDefaultOpen={controlPanelDefaultOpen}
+      controlPanelDefaultSize={controlPanelDefaultSize}
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}
-      themeStyleSelection={themeStyleSelection}
+      themeStyleSelection={effectiveThemeStyleSelection}
       onThemeStyleChange={setThemeStyleSelection}
       caption={caption}
     />

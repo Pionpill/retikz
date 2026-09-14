@@ -31,7 +31,7 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 - 数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
 - `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
 - 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
-- 中文页面的 controls 面板必须提供完整中文文案：title、section、字段 label、option label、preset label 与帮助文字都使用中文；API 名可按需作为补充，但不得充当唯一 label
+- 中文页面的 controls 面板必须提供完整中文文案：title、section、字段 label、option label、preset label 与帮助文字都使用中文；API 名可按需作为补充，但不得充当唯一 label。双语 demo 的这些可见文案与图内文本统一放同级 `<name>.i18n.ts`，controls 只按当前 `Lang` 读取，不维护 `*.en.controls.ts` 等平行翻译文件
 - API、枚举和数据字段的 `value` 保持原值；只本地化用户可见 label，不翻译代码中的标识符
 - label 简短，让用户能直接判断控制目标，不重复括号说明
 - 范围覆盖有意义的最小值、最大值和代表性极值；默认值保持可读、可比较
@@ -39,7 +39,7 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 
 ## 稳定文档契约
 
-每个 controls 模块显式导出 `previewControlContract`，不要依赖 registry 从任意命名导出推断：
+每个 controls 模块显式导出 `previewControlContract`，不要依赖 registry 从任意命名导出推断。双语 controls 则显式导出按 `Lang` 读取同级 i18n 字典的 contract 工厂，由预览器按当前文档语言调用；字段 id、默认值、范围、canonicalValues 与 relatedApis 仍保持语言无关：
 
 ```ts
 import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';

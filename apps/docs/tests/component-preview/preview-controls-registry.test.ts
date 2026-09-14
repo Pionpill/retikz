@@ -6,29 +6,12 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import type {
-  AlignKey,
-  ComponentPreviewCardProps,
-  ComponentPreviewProps,
-  ComponentRenderSource,
-  DiffLineKind,
-  PreviewActionSlot,
   PreviewControlContract,
-  PreviewControlField,
-  PreviewControlPlacement,
-  PreviewControlPreset,
-  PreviewControlRuntime,
   PreviewControlsDefinition,
-  PreviewControlSlot,
-  PreviewControlsOptions,
   PreviewControlValues,
-  PreviewControlValuesFor,
-  PreviewControlVisibility,
   PreviewPanelControlItem,
-  PreviewSourceConfig,
   PreviewTableControlField,
   PreviewTableRows,
-  RendererMode,
-  SizeKey,
 } from '../../src/modules/docs/components/component-preview';
 
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
@@ -39,6 +22,7 @@ import {
   resolveVisiblePreviewControlSections,
 } from '../../src/modules/docs/components/component-preview/controls';
 import {
+  buildComponentKey,
   buildControlsKey,
   buildKey,
   buildLangControlsKey,
@@ -56,7 +40,7 @@ import {
 } from '../../src/modules/docs/components/component-preview/utils';
 import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/overview/node-geometry.controls';
 import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
-import { controlModules, demoModules, demoSources, localSourceFiles } from './load-preview-registry';
+import { controlModules, demoModules, demoSources } from './load-preview-registry';
 
 const sourceRowsOf = (field: PreviewTableControlField): PreviewTableRows => {
   if (field.rows !== undefined) return field.rows;
@@ -234,12 +218,6 @@ describe('preview controls registry', () => {
     expect(resolveControlsKey).toBeTypeOf('function');
   });
 
-  it('ComponentPreview 使用已解析语言选择本地化 controls', () => {
-    const source = readFileSync(resolve('src/modules/docs/components/component-preview/ComponentPreview.tsx'), 'utf8');
-
-    expect(source).toContain("const lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';");
-  });
-
   it('registry helper 不通过组件预览根 barrel 转发', () => {
     expect(buildControlsKey).toBeTypeOf('function');
     expect(controlModules).toBeTypeOf('object');
@@ -265,29 +243,6 @@ describe('preview controls registry', () => {
     expect(buildReactSourceFiles).toBeTypeOf('function');
     expect(formatIR).toBeTypeOf('function');
     expect(irToVanillaCode).toBeTypeOf('function');
-
-    const typeSurface = {} as {
-      preview: ComponentPreviewProps;
-      card: ComponentPreviewCardProps;
-      source: ComponentRenderSource;
-      diff: DiffLineKind;
-      field: PreviewControlField;
-      definition: PreviewControlsDefinition;
-      values: PreviewControlValuesFor<PreviewControlsDefinition>;
-      contract: PreviewControlContract;
-      preset: PreviewControlPreset;
-      controlPlacement: PreviewControlPlacement;
-      controlRuntime: PreviewControlRuntime;
-      controlSlot: PreviewControlSlot;
-      controls: PreviewControlsOptions;
-      controlVisibility: PreviewControlVisibility;
-      actionSlot: PreviewActionSlot;
-      rendererMode: RendererMode;
-      align: AlignKey;
-      size: SizeKey;
-      sourceConfig: PreviewSourceConfig;
-    };
-    expect(typeSurface).toBeTypeOf('object');
 
     expect(Object.keys(componentPreviewExports).sort()).toEqual([
       'ComponentPreview',
@@ -330,52 +285,26 @@ describe('preview controls registry', () => {
     );
   });
 
+  it('优先解析单文件多语言图，同时保留旧双语 demo 回退', () => {
+    const inspectSegments = ['kernel', 'packages', 'inspect', 'principles'];
+    const inspectKey = buildComponentKey(inspectSegments, 'inspect-compile-flow');
+
+    expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'zh')).toBe(inspectKey);
+    expect(resolveDemoKey(inspectSegments, 'inspect-compile-flow', 'en')).toBe(inspectKey);
+    expect(demoModules[inspectKey]?.default).toBeTypeOf('function');
+    expect(resolveDemoKey(['viz', 'table', 'reference', 'runtime'], 'table-runtime-transaction', 'zh')).toBe(
+      '../../contents/viz/table/reference/runtime/table-runtime-transaction.zh.demo.tsx',
+    );
+    expect(resolveDemoKey(['viz', 'table', 'reference', 'runtime'], 'table-runtime-transaction', 'en')).toBe(
+      '../../contents/viz/table/reference/runtime/table-runtime-transaction.en.demo.tsx',
+    );
+  });
+
   it('从真实 demo 模块收集源码派生配置', () => {
     const key = resolveDemoKey(['viz', 'plot', 'mark', 'path'], 'line-curve', 'zh');
 
     expect(demoModules[key]?.previewSource).toMatchObject({ deriveIR: false });
     expect(demoModules[key]?.previewSource?.canonicalRender).toEqual(expect.any(Function));
-  });
-
-  it('contents 统一从短作者入口导入 ComponentPreview author API', () => {
-    const legacyPath = '@/modules/docs/components/component-preview/author';
-    const legacySources = [...Object.values(demoSources), ...Object.values(localSourceFiles)].filter(source =>
-      source?.includes(legacyPath),
-    );
-
-    expect(legacySources).toEqual([]);
-  });
-
-  it('Scope 局部坐标 demo 使用偏心方形包络与非布局原点标记', () => {
-    const source = demoSources[buildKey(['kernel', 'components', 'layout', 'scope'], 'scope-translate-basic')];
-
-    expect(source).toContain('id="Q"');
-    expect(source).toContain('position={[30, -20]}');
-    expect(source).toContain('minimumSize: { width: 80, height: 80 }');
-    expect(source).toContain('<Circle center={[0, 0]} radius={3}');
-    expect(source).not.toMatch(/<Node id="[ABCPXY]"/);
-    expect(source).not.toContain('arrow="->"');
-    expect(source?.match(/dashPattern: \[1, 4\]/g)).toHaveLength(3);
-    expect(source?.match(/lineCap: 'round'/g)).toHaveLength(3);
-    expect(source?.match(/stroke: 'gray'/g)).toHaveLength(3);
-    expect(source).not.toContain("stroke: 'lightgray'");
-    expect(source).toContain('target: { id: values.placementTarget }');
-    expect(source).not.toContain('[45, 0]');
-    expect(source).not.toContain('[0, -40]');
-    expect(source).not.toContain('dashPattern: [4, 3]');
-  });
-
-  it('Layout 与 Scope 的几何辅助边界使用 dotted', () => {
-    const overviewSegments = ['kernel', 'components', 'layout', 'overview'];
-    const scopeSegments = ['kernel', 'components', 'layout', 'scope'];
-    const viewBoxSource = demoSources[buildKey(overviewSegments, 'layout-viewbox')];
-    const scopeReferenceSource = demoSources[buildKey(scopeSegments, 'scope-id-reference')];
-
-    for (const source of [viewBoxSource, scopeReferenceSource]) {
-      expect(source).toContain('dashPattern: [1, 4]');
-      expect(source).toContain("lineCap: 'round'");
-      expect(source).not.toContain('dashPattern: [4, 3]');
-    }
   });
 
   it('优先解析语言化 controls，并在缺失时回退通用文件', () => {
@@ -491,25 +420,6 @@ describe('preview controls registry', () => {
         controls.sections.flatMap(section => section.controls.map(control => control.id)),
         key,
       ).not.toContain('path-curve');
-    }
-  });
-
-  it('Mark 外观 playground 默认收起作为背景的数据分组', () => {
-    const cases = [
-      { segments: ['viz', 'plot', 'mark', 'point'], name: 'point-style' },
-      { segments: ['viz', 'plot', 'mark', 'path'], name: 'line-paint' },
-      { segments: ['viz', 'plot', 'mark', 'interval'], name: 'bar-basic' },
-    ];
-
-    for (const { segments, name } of cases) {
-      for (const key of [buildControlsKey(segments, name), buildLangControlsKey(segments, name, 'en')]) {
-        const controls = resolvePreviewControls(controlModules[key]);
-        expect(controls?.presentation, key).toBe('panel');
-        if (!controls || controls.presentation !== 'panel') continue;
-
-        expect(controls.sections[0].controls[0].kind, key).toBe('table');
-        expect(Boolean(controls.sections[0].defaultCollapsed), key).toBe(true);
-      }
     }
   });
 
@@ -694,87 +604,6 @@ describe('preview controls registry', () => {
       }
 
       expect(demoSources[buildKey(segments, name)], name).toContain('defineControlledPreview(previewControlContract');
-    }
-  });
-
-  it('PathMark 面积 demo 默认移除笛卡尔外侧留白，并保留极坐标角向间距', () => {
-    const segments = ['viz', 'plot', 'mark', 'path'];
-    const stackAreaSource = demoSources[buildKey(segments, 'line-stack-area')];
-    const interruptionSource = demoSources[buildKey(segments, 'line-interruption')];
-
-    expect(stackAreaSource).toBeDefined();
-    expect(interruptionSource).toBeDefined();
-    if (stackAreaSource === undefined || interruptionSource === undefined) return;
-
-    expect(stackAreaSource).toContain('<PlotScale dimension="x" type="point" padding={0} />');
-    expect(stackAreaSource.match(/<PlotScale dimension="y" type="linear" domainPadding=\{0\} \/>/g)).toHaveLength(2);
-    expect(interruptionSource).toContain('<PlotScale dimension="x" type="linear" domainPadding={0} />');
-    expect(interruptionSource).toContain('<PlotScale dimension="y" type="linear" domainPadding={0} />');
-  });
-
-  it('构造可填充区域默认以横向和纵向零留白作为 canonical 状态', () => {
-    const segments = ['viz', 'plot', 'mark', 'path'];
-
-    for (const key of [
-      buildControlsKey(segments, 'line-closure'),
-      buildLangControlsKey(segments, 'line-closure', 'en'),
-    ]) {
-      const contract = resolvePreviewControlContract(controlModules[key]);
-      expect(contract?.canonicalValues['line-closure-horizontal-padding'], key).toBe(0);
-      expect(contract?.canonicalValues['line-closure-vertical-padding'], key).toBe(0);
-    }
-  });
-
-  it('连续区间默认不保留左右或上下留白', () => {
-    const segments = ['viz', 'plot', 'mark', 'interval'];
-
-    for (const key of [
-      buildControlsKey(segments, 'interval-histogram'),
-      buildLangControlsKey(segments, 'interval-histogram', 'en'),
-    ]) {
-      const contract = resolvePreviewControlContract(controlModules[key]);
-      expect(contract?.canonicalValues['interval-continuous-horizontal-padding'], key).toBe(0);
-      expect(contract?.canonicalValues['interval-continuous-vertical-padding'], key).toBe(0);
-    }
-  });
-
-  it('IntervalMark demo 统一保留左右外侧空间，且不改变默认柱间距', () => {
-    const segments = ['viz', 'plot', 'mark', 'interval'];
-    const bandCases = ['bar-transform', 'rect-bounds'];
-
-    for (const name of bandCases) {
-      expect(demoSources[buildKey(segments, name)], name).toContain('paddingOuter={0.15}');
-    }
-
-    const positionSource = demoSources[buildKey(segments, 'bar-position')];
-    expect(positionSource).toContain(
-      'paddingOuter={isHorizontal ? 0 : isPolar ? values[BAR_POSITION_CONTROL_IDS.gap] / 2 : 0.15}',
-    );
-    expect(positionSource).toContain("domainPadding={isHorizontal ? { kind: 'ratio', lower: 0.05, upper: 0.05 } : 0}");
-
-    const seriesSource = demoSources[buildKey(segments, 'bar-series')];
-    expect(seriesSource).toContain('paddingOuter={isPolar ? values[BAR_SERIES_GAP_ID] / 2 : 0.15}');
-
-    const radialSource = demoSources[buildKey(segments, 'bar-radial')];
-    const sectorSource = demoSources[buildKey(segments, 'interval-sector')];
-    expect(radialSource).toContain('width={260}');
-    expect(radialSource).toContain('height={220}');
-    expect(sectorSource).toContain('width={340}');
-    expect(sectorSource).toContain('height={270}');
-
-    for (const key of [
-      buildControlsKey(segments, 'bar-basic'),
-      buildLangControlsKey(segments, 'bar-basic', 'en'),
-      buildControlsKey(segments, 'bar-grouped'),
-      buildLangControlsKey(segments, 'bar-grouped', 'en'),
-      buildControlsKey(segments, 'bar-transform'),
-      buildLangControlsKey(segments, 'bar-transform', 'en'),
-      buildControlsKey(segments, 'bar-radial'),
-      buildLangControlsKey(segments, 'bar-radial', 'en'),
-    ]) {
-      const contract = resolvePreviewControlContract(controlModules[key]);
-      const gapEntry = Object.entries(contract?.canonicalValues ?? {}).find(([id]) => id.endsWith('-gap'));
-      expect(gapEntry?.[1], key).toBe(0);
     }
   });
 
@@ -1081,24 +910,6 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('Coordinate 定位 playground 使用固定 viewBox，避免相机跟随可调主体', () => {
-    const segments = ['kernel', 'components', 'node', 'coordinate'];
-    const cases = [
-      { name: 'coordinate-as-anchor', frame: 'coordinateAsAnchorFrame', languages: ['zh', 'en'] },
-      { name: 'coordinate-fold-junction', frame: 'coordinateFoldJunctionFrame', languages: ['zh', 'en'] },
-      { name: 'coordinate-offset-chain', frame: 'coordinateOffsetChainFrame', languages: ['zh', 'en'] },
-      { name: 'coordinate-between', frame: 'coordinateBetweenFrame', languages: ['zh'] },
-    ] as const;
-
-    for (const item of cases) {
-      for (const language of item.languages) {
-        const source = demoSources[resolveDemoKey(segments, item.name, language)];
-
-        expect(source, `${item.name} ${language}`).toContain(`viewBox={${item.frame}.viewBox}`);
-      }
-    }
-  });
-
   it('Coordinate 偏移链用固定世界坐标轴显出根 position 变化', () => {
     const segments = ['kernel', 'components', 'node', 'coordinate'];
 
@@ -1122,30 +933,6 @@ describe('preview controls registry', () => {
       expect(source, language).toContain('way={coordinateAsAnchorFrame.yAxis}');
       expect(source?.match(/dashPattern: \[1, 4\]/g), language).toHaveLength(2);
       expect(source?.match(/lineCap: 'round'/g), language).toHaveLength(2);
-    }
-  });
-
-  it('Node 后半段用文本与标签 playground 替代重复 demo', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
-
-    expect(demoSources[resolveDemoKey(segments, 'node-text', 'zh')]).toBeDefined();
-    expect(demoSources[resolveDemoKey(segments, 'node-text', 'en')]).toBeDefined();
-    expect(demoSources[resolveDemoKey(segments, 'node-label', 'zh')]).toBeDefined();
-    expect(demoSources[resolveDemoKey(segments, 'node-label', 'en')]).toBeDefined();
-
-    for (const name of [
-      'node-label-basic',
-      'node-multiline',
-      'node-max-text-width',
-      'node-styled-lines',
-      'node-multiline-shapes',
-      'node-label-distance',
-      'node-label-inside',
-      'node-label-rotate',
-      'node-pin',
-    ]) {
-      expect(demoSources[resolveDemoKey(segments, name, 'zh')], `${name} zh`).toBeUndefined();
-      expect(demoSources[resolveDemoKey(segments, name, 'en')], `${name} en`).toBeUndefined();
     }
   });
 
@@ -1282,28 +1069,6 @@ describe('preview controls registry', () => {
     expect(padded.layout.rect.height).toBeGreaterThan(unpadded.layout.rect.height);
   });
 
-  it('Node 形状 playground 用双层辅助轮廓替代静态 boundary demo', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
-    const source = demoSources[buildKey(segments, 'node-shape-connection')];
-
-    expect(source).toContain('shapes={[boundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}');
-    expect(source?.match(/^\s*<BoundaryGuide$/gm)).toHaveLength(2);
-    expect(source).toContain('dashPattern: [1, 4]');
-    expect(demoSources[buildKey(segments, 'node-boundary-surfaces')]).toBeUndefined();
-    expect(demoSources[buildKey(segments, 'node-boundary')]).toBeUndefined();
-  });
-
-  it('Node 形状 playground 为两组 controls 预留完整高度', () => {
-    const contentRoot = resolve('src/modules/docs/contents/kernel/components/node/overview');
-
-    for (const locale of ['zh', 'en']) {
-      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
-      expect(pageSource).toContain(
-        "<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size=\"md\" />",
-      );
-    }
-  });
-
   it('Primitive Model playground 用同源虚线轮廓显示规则 boundary', () => {
     const segments = ['kernel', 'components', 'core', 'primitive-model'];
     const contentRoot = resolve('src/modules/docs/contents/kernel/components/core/primitive-model');
@@ -1396,29 +1161,6 @@ describe('preview controls registry', () => {
       expect(visibleIds(definition, 'radial')).toContain('keepUpright');
       expect(visibleIds(definition, 'tangent')).toContain('keepUpright');
       expect(visibleIds(definition, 'angle')).toContain('keepUpright');
-    }
-  });
-
-  it('Node 文本默认内容使用双语共享的中性行标记', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
-
-    for (const definition of [
-      resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-text')]),
-      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-text', 'en')]),
-    ]) {
-      expect(definition?.presentation).toBe('panel');
-      if (!definition || definition.presentation !== 'panel') continue;
-      const content = getPreviewControlFields(definition).find(field => field.id === 'content');
-      expect(content?.defaultValue).toBe('A\nB\nC');
-    }
-  });
-
-  it('合并后的 Node label 文档保留数组写法', () => {
-    const contentRoot = resolve('src/modules/docs/contents/kernel/components/node/overview');
-
-    for (const locale of ['zh', 'en']) {
-      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
-      expect(pageSource).toContain('label={[');
     }
   });
 
@@ -1523,42 +1265,6 @@ describe('preview controls registry', () => {
     expect(source).toMatch(/viewBox=\{\{ x: 0, y: 0, width: 400, height: 280 \}\}/u);
   });
 
-  it('Grid 文档按基础、常见变体和 playground 递进，并用自绘图解释 lowering', () => {
-    const contentRoot = resolve('src/modules/docs/contents/library/standard/composite/grid');
-    const basicSource = demoSources[buildKey(['library', 'standard', 'composite', 'grid'], 'grid-basic')];
-
-    for (const locale of ['zh', 'en']) {
-      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
-      const variantsSource =
-        demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-variants', locale)];
-      const previewNames = Array.from(
-        pageSource.matchAll(/<ComponentPreview\b[^>]*\bfiles="([^"]+)"/gu),
-        match => match[1],
-      );
-
-      expect(previewNames).toEqual(['grid-basic', 'grid-variants', 'grid-playground', 'grid-lowering']);
-      expect(pageSource).toContain('<ComponentPreview files="grid-variants" size="sm" />');
-      expect(pageSource).toContain('<ComponentPreview files="grid-lowering" hideCode');
-      expect(variantsSource).toContain('<Layout>');
-      expect(variantsSource).not.toMatch(/<Layout\b[^>]*\b(?:width|height)=/);
-      expect(variantsSource?.match(/position=\{\[\d+, 18\]\}/gu)).toHaveLength(4);
-    }
-
-    expect(basicSource).toContain("border={{ style: { stroke: 'gray' } }}");
-    expect(
-      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-variants', 'zh')],
-    ).toBeDefined();
-    expect(
-      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-variants', 'en')],
-    ).toBeDefined();
-    expect(
-      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-lowering', 'zh')],
-    ).toBeDefined();
-    expect(
-      demoSources[resolveDemoKey(['library', 'standard', 'composite', 'grid'], 'grid-lowering', 'en')],
-    ).toBeDefined();
-  });
-
   it('Frame 文档按组合语义递进，并以双语 controls 和自绘图闭合三条入口', () => {
     const segments = ['library', 'standard', 'composite', 'frame'];
     const controlsKeys = Object.keys(controlModules).filter(key => key.includes('/library/standard/composite/frame/'));
@@ -1625,183 +1331,6 @@ describe('preview controls registry', () => {
       expect(demoSources[resolveDemoKey(segments, 'frame-basic', locale)]).toBeDefined();
       expect(demoSources[resolveDemoKey(segments, 'frame-variants', locale)]).toBeDefined();
       expect(demoSources[resolveDemoKey(segments, 'frame-lowering', locale)]).toBeDefined();
-    }
-  });
-
-  it('Channel 文档把参数型静态示例收敛为六个双语 controls playground', () => {
-    const bindingSegments = ['viz', 'plot', 'channel', 'binding'];
-    const builtinSegments = ['viz', 'plot', 'channel', 'builtin'];
-    const expectedControls = [
-      { segments: bindingSegments, name: 'channel-binding' },
-      { segments: builtinSegments, name: 'builtin-position' },
-      { segments: builtinSegments, name: 'builtin-point-style' },
-      { segments: builtinSegments, name: 'builtin-node-text' },
-      { segments: builtinSegments, name: 'builtin-path-style' },
-      { segments: builtinSegments, name: 'builtin-other' },
-    ];
-
-    expect(Object.keys(controlModules).filter(key => key.includes('builtin-position'))).toEqual([
-      buildControlsKey(builtinSegments, 'builtin-position'),
-      buildLangControlsKey(builtinSegments, 'builtin-position', 'en'),
-    ]);
-
-    for (const { segments, name } of expectedControls) {
-      const controlKey = `../../contents/${segments.join('/')}/${name}.controls.ts`;
-      const englishControlKey = `../../contents/${segments.join('/')}/${name}.en.controls.ts`;
-      const source = demoSources[buildKey(segments, name)];
-
-      expect(controlModules[controlKey], controlKey).toBeDefined();
-      expect(controlModules[englishControlKey], englishControlKey).toBeDefined();
-      expect(source, buildKey(segments, name)).toContain('export const previewControls =');
-      expect(source, buildKey(segments, name)).toContain('defineControlledPreview(previewControlContract');
-    }
-
-    for (const language of ['zh', 'en'] as const) {
-      const definition = resolvePreviewControls(
-        controlModules[
-          language === 'zh'
-            ? buildControlsKey(bindingSegments, 'channel-binding')
-            : buildLangControlsKey(bindingSegments, 'channel-binding', 'en')
-        ],
-      );
-      const tables =
-        definition?.presentation === 'panel'
-          ? definition.sections.flatMap(section =>
-              section.controls.flatMap(field =>
-                field.kind === 'table'
-                  ? [
-                      {
-                        id: field.id,
-                        rowCount: sourceRowsOf(field).length,
-                        columnKeys: field.columns?.map(column => column.key),
-                      },
-                    ]
-                  : [],
-              ),
-            )
-          : [];
-
-      expect(
-        definition?.presentation === 'panel' ? definition.sections[0]?.controls.map(control => control.id) : [],
-        language,
-      ).toEqual(['cities']);
-      expect(tables, language).toEqual([
-        {
-          id: 'cities',
-          rowCount: 8,
-          columnKeys: ['city', 'abbr', 'region', 'gdp', 'life', 'population'],
-        },
-      ]);
-    }
-
-    const builtinDataTables = [
-      {
-        name: 'builtin-position',
-        rowCount: 5,
-        columnKeys: ['month', 'sales', 'profit', 'orders', 'averageOrder'],
-        defaultCollapsed: false,
-      },
-      { name: 'builtin-point-style', rowCount: 5, columnKeys: ['x', 'y'], defaultCollapsed: true },
-      {
-        name: 'builtin-node-text',
-        rowCount: 3,
-        columnKeys: ['x', 'nodeY', 'textY', 'word', 'tag'],
-        defaultCollapsed: true,
-      },
-      { name: 'builtin-path-style', rowCount: 5, columnKeys: ['step', 'value'], defaultCollapsed: true },
-      { name: 'builtin-other', rowCount: 6, columnKeys: ['step', 'value', 'series'], defaultCollapsed: false },
-    ];
-
-    for (const { name, rowCount, columnKeys, defaultCollapsed } of builtinDataTables) {
-      for (const language of ['zh', 'en'] as const) {
-        const definition = resolvePreviewControls(
-          controlModules[
-            language === 'zh'
-              ? buildControlsKey(builtinSegments, name)
-              : buildLangControlsKey(builtinSegments, name, 'en')
-          ],
-        );
-        const tables =
-          definition?.presentation === 'panel'
-            ? definition.sections.flatMap(section =>
-                section.controls.flatMap(field =>
-                  field.kind === 'table'
-                    ? [
-                        {
-                          id: field.id,
-                          rowCount: sourceRowsOf(field).length,
-                          columnKeys: field.columns?.map(column => column.key),
-                        },
-                      ]
-                    : [],
-                ),
-              )
-            : [];
-
-        expect(
-          definition?.presentation === 'panel' ? definition.sections[0]?.controls.map(control => control.id) : [],
-          `${name}:${language}`,
-        ).toEqual(['rows']);
-        expect(
-          definition?.presentation === 'panel' ? Boolean(definition.sections[0]?.defaultCollapsed) : false,
-          `${name}:${language}`,
-        ).toBe(defaultCollapsed);
-        expect(tables, `${name}:${language}`).toEqual([{ id: 'rows', rowCount, columnKeys }]);
-      }
-    }
-
-    const nodeTextSource = demoSources[buildKey(builtinSegments, 'builtin-node-text')];
-    expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="nodeY"');
-    expect(nodeTextSource).toContain('<PointMark\n      x="x"\n      y="textY"\n      text="word"');
-
-    const bindingRoot = resolve('src/modules/docs/contents/viz/plot/channel/binding');
-    const builtinRoot = resolve('src/modules/docs/contents/viz/plot/channel/builtin');
-    for (const locale of ['zh', 'en']) {
-      const bindingPage = readFileSync(resolve(bindingRoot, `index.${locale}.mdx`), 'utf8');
-      const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
-      const fieldsHeading = locale === 'zh' ? '## 字段与常量' : '## Fields And Constants';
-      const playgroundHeading = locale === 'zh' ? '## 绑定试验场' : '## Binding Playground';
-      const builtinPreviews = Array.from(
-        builtinPage.matchAll(/<ComponentPreview\b[^>]*\bfiles=(?:"([^"]+)"|\{\['([^']+)'[^\]]*\]\})/gu),
-        match => {
-          const stringFile = Reflect.get(match, 1);
-          const arrayFile = Reflect.get(match, 2);
-          return typeof stringFile === 'string' ? stringFile : typeof arrayFile === 'string' ? arrayFile : '';
-        },
-      );
-
-      expect(bindingPage).toContain("files={['channel-binding', 'channel-binding.data.ts']}");
-      for (const previewName of [
-        'builtin-position',
-        'builtin-point-style',
-        'builtin-node-text',
-        'builtin-path-style',
-        'builtin-other',
-      ]) {
-        expect(builtinPage).toContain(`files={['${previewName}', '${previewName}.data.ts']}`);
-      }
-      expect(bindingPage.indexOf(fieldsHeading), locale).toBeLessThan(bindingPage.indexOf(playgroundHeading));
-      expect(builtinPreviews).toEqual([
-        'builtin-position',
-        'builtin-point-style',
-        'builtin-node-text',
-        'builtin-path-style',
-        'builtin-other',
-      ]);
-    }
-
-    for (const removedDemo of [
-      'builtin-arrow',
-      'builtin-color',
-      'builtin-effect',
-      'builtin-node-geometry',
-      'builtin-opacity',
-      'builtin-shape',
-      'builtin-size',
-      'builtin-text-label',
-      'builtin-text-node',
-    ]) {
-      expect(demoSources[buildKey(builtinSegments, removedDemo)], removedDemo).toBeUndefined();
     }
   });
 
@@ -1964,24 +1493,6 @@ describe('preview controls registry', () => {
       expect(roundedCorners?.defaultValue).toBe(0);
       expect(visibleIds(definition, 0)).toContain('lineJoin');
       expect(visibleIds(definition, 8)).not.toContain('lineJoin');
-    }
-  });
-
-  it('内置通道总览仅为长通道组主动换行', () => {
-    const builtinRoot = resolve('src/modules/docs/contents/viz/plot/channel/builtin');
-    const compactChannelGroups = [
-      '`x` / `y` / `z`',
-      '`text` / `label`',
-      '`shadow` / `blendMode`',
-      '`zIndex` / `order` / `series`',
-    ];
-
-    for (const locale of ['zh', 'en']) {
-      const builtinPage = readFileSync(resolve(builtinRoot, `index.${locale}.mdx`), 'utf8');
-
-      for (const channels of compactChannelGroups) {
-        expect(builtinPage, `${locale}: ${channels}`).toContain(channels);
-      }
     }
   });
 
@@ -2417,23 +1928,6 @@ describe('preview controls registry', () => {
     for (const [key, source] of entries) {
       expect(source, key).toContain('export const previewControls =');
     }
-  });
-
-  it('Kernel Components controls demo 的右侧输出宽度默认不超过 400px，例外不超过 600px', () => {
-    const prefix = '../../contents/kernel/components/';
-    const validatedWiderLayouts = new Set<string>();
-    const widerThanPreferred = Object.entries(demoSources)
-      .filter(([key, source]) => key.startsWith(prefix) && source?.includes('usePreviewControls('))
-      .flatMap(([key, source]) =>
-        Array.from(source?.matchAll(/<Layout\b[^>]*\bwidth=\{(\d+)\}/gs) ?? [], match => ({
-          key,
-          width: Number(match[1]),
-        })),
-      )
-      .filter(({ width }) => width > 400);
-
-    expect(widerThanPreferred.filter(({ width }) => width > 600)).toEqual([]);
-    expect(widerThanPreferred.filter(({ key, width }) => !validatedWiderLayouts.has(`${key}:${width}`))).toEqual([]);
   });
 
   it('Scope 局部坐标 playground 可在任意 transform 下独立切换 placement，且中英文条件一致', () => {

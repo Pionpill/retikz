@@ -130,6 +130,29 @@ test('accepts a structurally aligned bilingual page', async () => {
   }
 });
 
+test('accepts a single localized ComponentPreview figure', async () => {
+  const fixture = await createFixture();
+  try {
+    await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.zh.mdx', validPage());
+    await fixture.write('apps/docs/src/modules/docs/contents/kernel/components/example/index.en.mdx', validPage());
+    await fixture.write(
+      'apps/docs/src/modules/docs/contents/kernel/components/example/basic.tsx',
+      'export default () => null;\n',
+    );
+    await fixture.write('packages/example.ts', 'export const a = 1;\nexport const b = 2;\n');
+
+    const result = await auditDocs({
+      contentsRoot: fixture.contentsRoot,
+      repoRoot: fixture.repoRoot,
+      scope: 'kernel/components',
+    });
+
+    assert.deepEqual(result.errors, []);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('reports a missing English peer outside blog', async () => {
   const fixture = await createFixture();
   try {

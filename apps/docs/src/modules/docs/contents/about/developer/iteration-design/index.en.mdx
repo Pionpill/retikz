@@ -1,0 +1,131 @@
+---
+title: Iteration design
+description: Learn how retikz separates durable decisions from one-off execution through ADRs, two gates, and cross-package design principles.
+---
+
+Iteration design is not about adding procedural steps. It keeps long-lived architectural decisions separate from the construction details of one task. First establish ownership and boundaries, then confirm that implementation is actionable, so a local patch does not grow into a parallel path.
+
+## Durable decisions and disposable plans
+
+An ADR is the durable source of truth for one capability or architecture iteration. It retains only conclusions that must remain understandable and binding: the problem, core decisions, necessary public contracts, observable behavior, failure semantics, and compatibility.
+
+The mirrored plan is the execution source of truth. It lives in an ignored plan directory and holds research, design checks, file scope, tests, and risks. It may be discarded after the task; it is not a long-term record.
+
+| Artifact      | What it retains                                        | What it does not carry                                            |
+| ------------- | ------------------------------------------------------ | ----------------------------------------------------------------- |
+| ADR           | Durable decisions, contracts, behavior, and boundaries | Construction details such as file lists, commands, and test cases |
+| Mirrored plan | Design checks and actionable execution arrangements    | Authority to redefine the ADR's public contracts or owner         |
+
+This split keeps ADRs short and stable while plans may evolve with the task. If a plan uncovers a change to public contracts, defaults, or failure semantics, return to the ADR rather than silently widening implementation.
+
+## Two gates
+
+The two gates ask whether the direction is correct and whether construction is actionable. They provide review evidence, but neither one automatically authorizes implementation, commits, or other external writes.
+
+| Gate              | Core question                                                                                                 | What passing enables                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Architecture Gate | Is capability ownership sound, with valid package boundaries, reuse, extension paths, and an end-to-end loop? | The ADR can be submitted for human confirmation and implementation planning can begin |
+| Plan Gate         | Can the plan trace to the ADR and cover files, dependencies, tests, documentation, and risks sufficiently?    | Product code may change after implementation authorization is granted                 |
+
+The Architecture Gate examines the ADR and its brief plan. It checks whether similar capabilities already have a composable foundation, whether built-in and custom capabilities share an extension path, and whether the path from input to downstream output is complete.
+
+The Plan Gate examines the refined plan and test contract. It does not redefine ownership or public surface; it ensures that the implementation covers necessary code, tests, documentation, and verification.
+
+The two gates in the figure stop at different decisions: people confirm the ADR after the Architecture Gate; even after the Plan Gate passes, implementation starts only with authorization for the current task.
+
+<ComponentPreview files="iteration-gates" hideCode size="sm" />
+
+## Cross-package design principles
+
+These principles come from repository-wide architecture design. They guide capability ownership and dependency collaboration; details of a specific domain package belong in its ADR, package rules, and source code guide.
+
+The figure narrows a cross-package design from left to right: a problem is assigned to an owner, the owner defines an atomic contract, built-in and custom capability share one extension path into downstream consumers, and an end-to-end loop verifies the result.
+
+<ComponentPreview files="cross-package-design" hideCode size="xs" />
+
+### Atomic contracts and composition
+
+<strong className="font-semibold">Problem addressed:</strong> A higher-level capability may copy a larger schema,
+geometry model, or processing chain for one need. When several packages maintain the same base semantic independently,
+changes, diagnostics, and extension diverge.
+
+<strong className="font-semibold">Approach:</strong> First identify durable semantics, invariants, and extension
+boundaries, then collect them into public contracts that are small enough to be composed. Higher-level capabilities
+compose those atomic contracts rather than rebuilding the same lower-level expression.
+
+Atomicity does not mean splitting every piece of code. A semantic should move down into a general capability only when multiple domains reuse it and it remains valid after its domain vocabulary is removed. Details serving one scenario stay with that domain's owner. The question is not whether something can be extracted, but whether it retains a stable, independent responsibility after extraction.
+
+### Single source of truth and owner
+
+<strong className="font-semibold">Problem addressed:</strong> When multiple packages retain, default, or decide the same
+semantic, schemas, registries, resolvers, and runtimes that look alike gradually drift. It also becomes unclear who must
+fix a defect.
+
+<strong className="font-semibold">Approach:</strong> Every durable semantic has a clear owner. It defines the source of
+facts, performs resolution and diagnostics, and exposes a public contract for other packages to consume. Downstream code
+may derive projections for rendering, authoring, or a host environment, but it does not store or decide the same facts
+again.
+
+That rules out parallel schemas, registries, resolvers, and runtimes within one domain. When consumers need the same derived result, first decide whether it is stable shared semantics; only then extract a pure helper instead of writing cache or adapter fields back into the public model.
+
+### Bounded completeness
+
+<strong className="font-semibold">Problem addressed:</strong> “A built-in runs” does not mean that a capability can
+evolve. If custom behavior bypasses the built-in path, or only one adapter can display it, the next similar need adds an
+allowlist, special case, or second processing path.
+
+<strong className="font-semibold">Approach:</strong> New capabilities are checked across internal expression, external
+extension, and the end-to-end loop: whether the owner can express it, whether built-in and custom definitions share
+contracts, registries, and consumption paths, and whether inputs, outputs, tests, and documentation align.
+
+Completeness is bounded, not an invitation to reserve everything in advance. A need that the shared mechanism cannot carry must explicitly move down, move up, defer, or remain unsupported; built-in allowlists, adapter-specific branches, and a second compile path must not hide the gap.
+
+### Extend after a minimal loop
+
+<strong className="font-semibold">Problem addressed:</strong> Adding variants, configuration, or indirection before
+input, processing, and downstream integration connect usually designs for consumers that do not exist. The real gap is
+then hidden by abstractions that have not been validated.
+
+<strong className="font-semibold">Approach:</strong> A cross-package capability first establishes one minimal end-to-end
+path: author or upstream input reaches its owner, necessary processing produces something downstream can consume, and
+tests and documentation confirm observable behavior. Only then should verified needs add variants, configuration, or
+optimization.
+
+This exposes whether a missing piece belongs to the owner, a dependency capability, an adapter, or a renderer. A capability that an adapter can display but its owner cannot express is still only a local implementation; extension has a reliable place only after the loop is verified.
+
+### Package responsibility and dependency direction
+
+<strong className="font-semibold">Problem addressed:</strong> Placing a capability by the location of current code or
+the convenience of one caller turns packages into catch-all containers. Cross-owner deep imports, reverse dependencies,
+and temporary parallel paths connect quickly but erase responsibility, input-output boundaries, and the scope of later
+changes.
+
+<strong className="font-semibold">Approach:</strong> Packages are divided by the problem they solve and their
+input-output boundaries, not by the location of current code or the convenience of one caller. Cross-package
+collaboration uses the other package's public entry points, with a one-way dependency direction: higher layers consume
+published lower-layer capabilities, while lower layers do not read or copy higher-level domain semantics.
+
+When a change crosses owners, first decide whether it belongs in the existing domain, should move down into a dependency domain, or is only a host or adapter concern. That decision gives long-term ownership to APIs, tests, documentation, and diagnostics as well.
+
+## Further reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/about/developer/source-code-guide">
+    <span className="font-semibold">Source code guide</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand package boundaries, extension patterns, and the API adapter layer
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/about/developer/ai-assisted-development">
+    <span className="font-semibold">AI-assisted development</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      Understand human-AI collaboration, authorization boundaries, and skill categories
+    </span>
+  </LinkedCard>
+  <LinkedCard href="/about/releases/roadmap">
+    <span className="font-semibold">Roadmap</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">
+      See the current direction for release stages and package groups
+    </span>
+  </LinkedCard>
+</div>

@@ -1,5 +1,11 @@
-export * from './constants';
-export * from './driver';
-export * from './output';
-export * from './selection';
-export * from './types';
+export { compileInspectionToScene, createInspectionObserver, resolveInspectionObserverOutput } from './driver';
+export type {
+  InspectionCompileResult,
+  InspectionDiagnostic,
+  InspectionDiagnosticOrigin,
+  InspectionPlane,
+  InspectionPlaneEntry,
+  InspectionSelection,
+  InspectionSelectionRule,
+  InspectionSelectionTarget,
+} from './types';

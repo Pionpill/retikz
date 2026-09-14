@@ -6,7 +6,11 @@ const makeGridLayoutDefinition = () => GridLayoutDefinition;
 
 /** GridLayout 的 Core Composite dependency provider */
 export const GridLayoutProvider: CoreDependencyProvider = Object.freeze({
-  key: Object.freeze({ capability: 'composite', namespace: GridLayoutDefinition.namespace, type: GridLayoutDefinition.type }),
+  key: Object.freeze({
+    capability: 'composite',
+    namespace: GridLayoutDefinition.namespace,
+    type: GridLayoutDefinition.type,
+  }),
   dependencies: Object.freeze([]),
   datasets: Object.freeze({}),
   makeDefinition: makeGridLayoutDefinition,

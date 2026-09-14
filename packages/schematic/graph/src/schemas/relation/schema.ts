@@ -10,7 +10,7 @@ import {
   StepSchema,
 } from '@retikz/core';
 import { createOpenStringSchema } from '@retikz/foundation';
-import { array, enum as zodEnum, literal, strictObject, union } from 'zod';
+import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType, RelationKind, RelationRole } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
@@ -100,6 +100,7 @@ export const RelationSchema = strictObject({
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   direction: RelationDirectionSchema.optional().describe('Explicit semantic direction overriding role defaults.'),
+  group: string().optional().describe('Optional Graph-root relation color grouping identifier.'),
   labels: array(GeometryLabelSchema)
     .optional()
     .describe('Optional complete Core Geometry Labels attached to the Relation path.'),

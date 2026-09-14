@@ -1,9 +1,12 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { RelationPredicateDefinition } from '../../contract';
 import type {
   IRGraphRelation,
   IRGraphRelationDefaults,
   IRGraphRelationDefaultsStyle,
   IRGraphRelationRule,
+  IRGraphRelationRuleStructure,
   IRGraphRelationStructureTokenOverrides,
 } from '../../schemas';
 import type {
@@ -14,6 +17,7 @@ import type {
   RelationAppearanceResolveContext,
   RelationGraphLayerResolveContext,
   RelationResolveContext,
+  RelationStructureResolveContext,
 } from './types';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
@@ -124,8 +128,29 @@ const resolvePredicateStructure = (relation: CanonicalRelation): IRGraphRelation
   }
 };
 
-/** 按 role、kind、predicate 顺序解析 Relation 的完整结构 */
-export const resolveRelationStructure = (relation: CanonicalRelation): EffectiveRelationStructure => {
+const resolveRelationThemeStructure = (
+  relation: CanonicalRelation,
+  context: RelationStructureResolveContext,
+): IRGraphRelationRuleStructure | undefined => {
+  const graphTheme = resolveGraphTheme(context.theme, context.graphThemeStyles);
+  const selectorContext = selectorContextOf(context);
+  const subject = relationSubject(relation);
+  let structure: IRGraphRelationRuleStructure | undefined;
+  for (const rule of graphTheme.rules) {
+    if (rule.type !== 'relation') continue;
+    validateGraphThemeSelector(rule.selector, selectorContext);
+    if (matchesGraphThemeSelector(rule.selector, subject) && rule.structure !== undefined) {
+      structure = rule.structure;
+    }
+  }
+  return structure;
+};
+
+/** 按 role、kind、predicate、Theme 顺序解析 Relation 的完整结构 */
+export const resolveRelationStructure = (
+  relation: CanonicalRelation,
+  context: RelationStructureResolveContext,
+): EffectiveRelationStructure => {
   const roleStructure = relation.roleDefinition.directions[relation.effectiveDirection];
   if (roleStructure === undefined) {
     throw new RetikzGraphError({
@@ -135,7 +160,10 @@ export const resolveRelationStructure = (relation: CanonicalRelation): Effective
     });
   }
   const kindStructure = relation.kindDefinition?.directions?.[relation.effectiveDirection];
-  return applyStructure(applyStructure(roleStructure, kindStructure), resolvePredicateStructure(relation));
+  return applyStructure(
+    applyStructure(applyStructure(roleStructure, kindStructure), resolvePredicateStructure(relation)),
+    resolveRelationThemeStructure(relation, context),
+  );
 };
 
 const mergeRelationAppearance = (
@@ -193,6 +221,25 @@ const resolveRelationAuthorAppearance = (
   return appearance;
 };
 
+const resolveRelationAuthorStructure = (
+  relation: CanonicalRelation,
+  context: RelationGraphLayerResolveContext,
+): IRGraphRelationRuleStructure | undefined => {
+  const selectorContext = selectorContextOf(context);
+  const subject = relationSubject(relation);
+  let structure: IRGraphRelationRuleStructure | undefined;
+  for (const layer of context.layers) {
+    for (const rule of layer.rules ?? []) {
+      if (rule.type !== 'relation') continue;
+      validateGraphThemeSelector(rule.selector, selectorContext);
+      if (matchesGraphThemeSelector(rule.selector, subject) && rule.structure !== undefined) {
+        structure = rule.structure;
+      }
+    }
+  }
+  return structure;
+};
+
 const relationSourceAppearanceOf = (source: IRGraphRelation): IRGraphRelationDefaults => {
   const style = source.style;
   const sourceStyle: IRGraphRelationDefaultsStyle | undefined =
@@ -220,22 +267,19 @@ const relationSourceAppearanceOf = (source: IRGraphRelation): IRGraphRelationDef
   };
 };
 
-const projectDefinedFields = <T extends object>(value: T | undefined): Partial<T> =>
-  value === undefined
-    ? {}
-    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
-
 /** 把作者 Graph defaults/rules 按层投影到 Relation Source */
 export const projectRelationGraphLayers = (
   relation: CanonicalRelation,
   context: RelationGraphLayerResolveContext,
 ): IRGraphRelation => {
   const authorAppearance = resolveRelationAuthorAppearance(relation, context);
-  if (Object.keys(authorAppearance).length === 0) return relation.source;
+  const authorStructure = resolveRelationAuthorStructure(relation, context);
+  if (Object.keys(authorAppearance).length === 0 && authorStructure === undefined) return relation.source;
   const projected = mergeRelationAppearance(authorAppearance, relationSourceAppearanceOf(relation.source));
   const style = {
-    ...projectDefinedFields(projected.style),
-    ...projectDefinedFields(relation.source.style),
+    ...mergeProperties([projected.style], { shouldOverride: value => value !== undefined }),
+    ...(authorStructure === undefined ? {} : { dashPattern: authorStructure.dashPattern }),
+    ...mergeProperties([relation.source.style], { shouldOverride: value => value !== undefined }),
   };
   return {
     ...relation.source,

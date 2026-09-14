@@ -1,6 +1,6 @@
 # ADR-08：Relation 语义封装与 Core Path 复用
 
-- 状态：Accepted
+- 状态：Accepted；多行标签承接 Core ADR-01 Proposed
 - 决策日期：2026-08-22
 - 修订日期：2026-08-23
 - 关联：[Entity contract](./07-entity-data-geometry.md) · [Graph context](./09-composable-graph-context.md) · [Standard Shape 与 Marker](../../../../../../../library/_notes/decisions/standard/v0/v0.1/alpha.4/01-diagram-shapes-and-endpoint-markers.md)
@@ -19,7 +19,7 @@ Relation 是带稳定端点和 Graph 语义、最终下沉为一个 Core Path �
 
 Relation 保存两个有序 Core `NodeTarget` endpoint。source / target 确定记录和 route 的稳定顺序；有效语义方向依次取显式 direction、kind refinement 或 role default，不从页面位置、Path 顺序、marker 或布局方向反推
 
-Relation 可以独立出现在任意 Core 内容树。它直接保存 Core-compatible route、labels 与允许的 Path 实例字段，不保存 routing provider、布局状态、marker geometry 或 renderer 对象。省略 route 时生成 source → target 的直接 Core Path；需要普通无 Graph 语义的线时直接使用 Core Path
+Relation 可以独立出现在任意 Core 内容树。它直接保存 Core-compatible route、labels 与允许的 Path 实例字段，不保存 routing provider、布局状态、marker geometry 或 renderer 对象。`labels` 的每项就是 Core `GeometryLabel`；在 Core ADR-01 落地后，其 `text` 随 Core 复用完整 `TextBlock`，Graph Relation 便原生支持硬换行、行数组、逐行样式和混排文字 / 数学行。Graph 不新增 Relation text、line 或 bbox 模型。省略 route 时生成 source → target 的直接 Core Path；需要普通无 Graph 语义的线时直接使用 Core Path
 
 ### role、kind、predicate 与 direction
 
@@ -66,13 +66,13 @@ appearance = Graph Theme baseline 与有序 rules
            > Relation / label 显式 Core-compatible 字段
 ```
 
-结构决定 marker family、marker existence 和规范 dash；Theme 只能改变颜色、线宽、opacity、marker paint 与 label appearance，不能增删 marker、切换 provider 或改变语义 direction。单个实例的 Path、marker 和 label 字段最终覆盖适用的默认值
+结构决定 marker family、marker existence 和规范 dash；Theme / graphRules 只能通过受限 `structure.dashPattern` 覆盖箭身 dash，其余只改变颜色、线宽、opacity、marker paint 与 label appearance，不能增删 marker、切换 provider 或改变语义 direction。单个实例的 Path、marker 和 label 字段最终覆盖适用的默认值
 
 Relation selector 可以匹配 role、kind、predicate name、Canonical params 与 direction。字段按 AND 匹配；params 使用递归子集匹配，并且必须同时声明 predicate name。规则按声明顺序执行，后匹配项逐字段覆盖先匹配项
 
 ### Core Path、Arrow 与 Standard 的边界
 
-Relation route 是当前 Core 内容树坐标空间中的完整 Path step sequence；step 复用 Core variant，但不携带 label。Relation labels 直接复用 `GeometryLabel`，避免 route step 与 host labels 形成双入口
+Relation route 是当前 Core 内容树坐标空间中的完整 Path step sequence；step 复用 Core variant，但不携带 label。Relation labels 直接复用 `GeometryLabel`，避免 route step 与 host labels 形成双入口。多行仍是单个 GeometryLabel 的整体视觉盒、定位和 interrupt 语义，不转写为多个 Relation labels
 
 Graph 不解析 Position、不比较 route 与 endpoint 几何，也不复制 Core namespace 或 NodeTarget lookup。显式 route 的连通性由提供它的作者、Diagram 或 Editor 负责；Core compile 负责解析 route、NodeTarget、namespace、anchor 和 boundary
 

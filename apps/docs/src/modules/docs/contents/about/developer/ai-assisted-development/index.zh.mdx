@@ -1,167 +1,79 @@
 ---
 title: AI 辅助开发
-description: retikz 在 v0.x 以分阶段的人机协作运转：alpha 人工设计 + AI 实现，beta 人工主导优化 + 多 LLM 评估，rc API 冻结后聚焦文档、验收与兼容修复。
+description: 了解 retikz 如何按任务规模与发布阶段组织人机协作，并以明确的计划、验证和授权边界交付改动
 ---
 
-retikz 的实现劳动大部分由 AI 完成——节点 / 路径 / 边标注 / 占位锚点这些 IR 字段的代码、对应的测试用例、配套的文档段落，绝大多数 commit 都有 `Co-Authored-By: Claude`。这不是技术博客噱头，是项目从 v0.1 起的实际工作模式。
+retikz 将 AI 视为工程协作者，而不是自动提交器。AI 可以完成调研、方案起草、实现、验证和文档；人负责能力边界、范围取舍和对外写入的最终决定。流程的目标不是增加步骤，而是让每项改动都有清楚的所有权、证据和授权来源。
 
-本文说明这套模式怎么运转、人工与 AI 各自管什么、有哪些硬约束防止 AI 胡来。
+## 协作边界
 
-## 工作前提
+每个任务先根据语义风险、依赖与验证复杂度确定规模，再选择相应流程。AI 的工作范围由当前任务的确认计划决定；计划外的文件、能力边界、审查轮次或外部操作都必须重新交由人确认。
 
-把 AI 接进开发流程不等于"让 AI 替你写代码"，而是把人工的精力从实现劳动转移到**决策劳动**。两条铁律：
+| 重点       | 当前做法                                                                            |
+| ---------- | ----------------------------------------------------------------------------------- |
+| 能力与范围 | 人决定公开契约、包边界、非目标与优先级；AI 基于已有约束提出证据与实施方案           |
+| 实施与验证 | AI 按已确认范围实现，并用受影响模块的检查、测试和页面证据验证结果                   |
+| 审查与协作 | 默认由主 agent 负责；只有计划明确授权时才加入独立 reviewer、worker 或交叉评审       |
+| 外部写入   | commit、push、tag、publish 均需当前对话中的明确人工授权，不能从旧计划或相似任务推断 |
 
-1. **架构 / Schema 决策必须人工**——IR 字段名 / 默认值 / 选项之间的取舍这类不可逆改动，由人写 ADR 决策。AI 只在 ADR 提供选项分析与 trade-off 描述。
-2. **AI 永远不替人 commit / publish**——写完代码必须停下来等人工审阅 + 显式授权。这是项目工作流的硬边界，无任何例外（auto mode、长任务、看似无害的小改、预先批准过类似改动……一律不豁免，每次都要重新拿授权）。
+这也意味着 AI 不会用兼容层、跳过检查或扩大改动来“完成”一个任务。若实现发现公开契约、默认语义或包职责需要改变，流程会停在设计决策处，而不是把变化混入原任务。
 
-剩下的"中间劳动"（写 spec / 写实现 / 写测试 / 写文档 / 起草 changelog）AI 可以接力跑完，人工只在关键节点介入审稿。
+## 按任务规模工作
 
-## 项目设计原则：AI 一等公民
+小任务直接处理并验证受影响范围，例如局部文案、格式、私有命名或明确的 bugfix。中型任务先在对话中确认一次执行计划，明确目标、非目标、文件范围和验证方式；默认仍由主 agent 完成。大型任务用于 ADR 实施、公开能力重塑或跨包架构变更，需要在实现前完成设计与计划关卡。
 
-这套工作流不是工程化炫技——它服务一个明确的产品立项主张：**retikz 是 AI 一等公民的绘图库，IR 是为 AI 设计的**。
+| 规模 | 适用改动                                       | AI 的工作方式                                         |
+| ---- | ---------------------------------------------- | ----------------------------------------------------- |
+| 小   | 局部文档、明确 bugfix、机械调整                | 直接实施，完成受影响验证后交付                        |
+| 中   | 文档主线重写、范围清楚的多文件改动、优化型重构 | 先确认计划；按计划实施、验证与自审                    |
+| 大   | ADR、公开能力、跨包架构或复杂功能重构          | 先确认 ADR 与实施计划；通过设计与计划关卡后再进入实现 |
 
-具体含义：
+任务规模不由代码行数决定。少量文件也可能改变公开契约；反过来，大量但机械的文档修订仍可以是小任务。必要时还会根据问题的不确定性和错误代价选择合适的主模型，但模型选择不会自动扩大 AI 的操作权限。
 
-- **AI 接口走 IR JSON 而非 JSX**——LLM 用 OpenAI Structured Outputs / Anthropic Tool Use 强制 schema 校验时输出 100% 合法
-- **zod schema 是单一来源**——同时产出 TS 类型、JSON Schema、运行时校验、LLM tool definition；任何漂移都不被允许
-- **每个字段都有英文 `.describe(...)`**——是 LLM Tool Use 的契约，缺一即不合格
-- **IR 100% JSON 可序列化**——禁用 `z.any()` / `z.unknown()` / 函数 / class / ReactNode / Symbol / Map / Set；任何运行时才算得出的值都不进 IR
-- **字段命名沿用成熟绘图词汇 + 不缩写**——保留对 LLM 训练数据的亲和力（zero-shot 能力远超自创 DSL）
-- **支持 JSON Patch (RFC 6902) 增量编辑**——LLM 改局部成本远低于重写整个 IR
+## 按发布阶段收敛
 
-<Comparison target="tikz" title="字段命名来源">
+发布通道决定 AI 可以做什么，而不是只改变版本号。能力越接近交付，允许的变动越小，证据要求越高。
 
-retikz 的 node / path / anchor / step 等字段词汇有意贴近 TikZ 训练语料，而不是创造一套只在本项目内部成立的新 DSL。
+| 阶段  | 主要目标                | 流程边界                                                                         |
+| ----- | ----------------------- | -------------------------------------------------------------------------------- |
+| Alpha | 设计并实现新的稳定能力  | 以 ADR 明确能力归属、公开契约和非目标；实现前完成 Architecture Gate 与 Plan Gate |
+| Beta  | 收敛已确认的优化与 TODO | 不伪装新增功能；重点检查重构回归、breaking 影响、性能、测试和文档一致性          |
+| RC    | 可靠交付已冻结的公开面  | 只接受兼容 bugfix、文档补齐与发布验证；需要破坏 API 时停止并交由人决定           |
 
-</Comparison>
+所有阶段都遵循同一条原则：先跑通最小端到端闭环，再扩展已验证的需求。用户可见行为变更必须同步文档，中英文内容与实际公开入口保持一致。
 
-### 这套原则如何穿透到实现 / 测试
+## 验证与交付
 
-5 阶段流程不是孤立约束，每阶段都为这条原则服务——
+验证优先覆盖受影响的 workspace：格式、类型、测试、文档完整性和浏览器页面按改动类型选择。跨包公开契约、发布候选或用户明确要求时，验证范围才扩大到发布组或全仓。独立评审的价值在于提供新的证据视角，不是固定的仪式；它只在已确认计划中出现。
 
-| 阶段   | 如何守 AI 一等公民                                                                                                                            |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 设计 | ADR 选项分析时第一过 AI 友好性这一关；字段命名 / 默认值决策必须服务 LLM 生成                                                                  |
-| 2 实现 | Spec Writer 必须含 ≥ 1 个 JSON round-trip 测试 + ≥ 1 个 zod parse 错误路径测试；实现 Agent 不允许在 schema 中引入非 JSON 类型                 |
-| 3 自测 | Bug Hunter 优先攻击四类契约破坏：JSON round-trip 失真、zod 报错含糊到 LLM 修不动、schema 不变量违反、discriminator 失稳——这些直接破坏立项理由 |
-| 4 文档 | mdx 描述与 schema `.describe` 必须语义等同；demo 可被 LLM 学习作 few-shot 范例                                                                |
-| 5 收尾 | Contract Auditor 对账 ADR / changelog / mdx / 实际行为四方一致——任何"实现里有但 ADR 没列"的字段都是契约破坏                                   |
+完成实现不等于可以对外写入。AI 会报告修改范围、验证结果和仍存风险；是否暂存、提交、推送、打 tag 或发布始终由人逐项授权。这样，无论任务由一个 agent 还是多个 agent 协作，都能追溯“为什么改、如何验证、谁允许交付”。
 
-任何阶段产物**只能让人用、LLM 用不了**（如返回函数引用、依赖运行时上下文、字段名缩写到 LLM 猜不出语义），都是不合格的。
+## Skill 分类与自动化边界
 
-## 5 阶段流程
+retikz 将绝大部分可抽象、可复核的机械流程交给 LLM 处理：检索约束、生成计划、实现、格式化、受影响范围验证、文档同步与审查证据整理。skill 把这些重复工作收束为可复用的检查表；它不替人决定产品方向、公开契约或对外写入。
 
-alpha 阶段每条 ADR / 每条新功能都按 5 阶段走，编排在 [`flow-alpha`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) SKILL：
+| 分组       | 职能                                       | 举例                                           |
+| ---------- | ------------------------------------------ | ---------------------------------------------- |
+| `flow`     | 按 Alpha、Beta、RC 组织阶段与关卡          | `flow-alpha`：ADR 能力从设计到收尾             |
+| `develop`  | 为设计、实现、文档、收尾等工作提供阶段规则 | `develop-document`：用户可见改动的文档同步     |
+| `standard` | 约束源码分层、命名、契约与编译边界         | `standard-structure`：确认 owner 与依赖方向    |
+| `docs`     | 指导页面结构、双语、demo 与文档校验        | `docs-doc-principle`：所有 Docs 改动的基础规则 |
+| `test`     | 定义测试契约与既有测试的审查方式           | `test-contract`：明确可观察行为与最低测试层    |
+| `theme`    | 约束参考主题的设计、实现与文档             | `theme-academic`：Academic 主题的统一规则      |
+| `cross`    | 处理需要独立视角的交叉工作                 | `cross-review`：多 LLM 的固定快照交叉评审      |
+| `package`  | 组织发布前审计、版本与发布门禁             | `package-publish`：发布组的契约与 tag 审计     |
 
-| 阶段    | 主体                                                      | 输出                                                    |
-| ------- | --------------------------------------------------------- | ------------------------------------------------------- |
-| 1. 设计 | **人工**主导 / AI 辅助起草                                | ADR（schema 字段表 / 文件 scope / 测试象限 / 选项决策） |
-| 2. 实现 | AI（红色改动走 Spec-First TDD）                           | spec test diff + 实现 diff（经人工授权后按粒度提交）    |
-| 3. 自测 | AI（Adversarial Bug Hunter sub-Agent）                    | bug 修复 + 加固测试                                     |
-| 4. 文档 | AI（衔接 docs-doc-principle SKILL）                       | 双语 mdx + demo + API 表                                |
-| 5. 收尾 | AI 起草 / Adversarial Contract Auditor / **人工**最终 ack | changelog + ADR 标 Accepted + roadmap 勾掉              |
+当任务命中某类工作时，AI 先加载对应 skill，再在已授权范围内执行。没有匹配 skill 的简单工作不会被强行复杂化；需要新的能力归属、扩大范围或执行 commit、push、tag、publish 时，则回到人工决策与授权。
 
-**人工只动 1 和 5**——中间的 2、3、4 由独立 sub-Agent 接力完成，每阶段设硬关卡（lint / tsc / 测试 / 对账报告）不过即 halt。
+## 延伸阅读
 
-每个阶段对应一个独立的子 SKILL：[`develop-design`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) / [`develop-implement`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) / [`develop-test`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) / [`develop-document`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) / [`develop-wrapup`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md)。SKILL 文件里写明输入、输出、子 Agent prompt、失败 / 升级阈值。
-
-## beta / rc 阶段
-
-v0.2 以后，alpha 之外也有独立编排，但边界更窄：
-
-| 阶段 | 编排                                                                                          | 边界                                                                                      |
-| ---- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| beta | [`flow-beta`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) | 不开新功能 ADR；做重构、命名、测试、性能、文档与最后一轮破坏性整理；核心关卡是多 LLM 评估 |
-| rc   | [`flow-rc`](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md)     | 公开 API 冻结；只做兼容 bug fix、文档站补齐、安装验收、迁移说明与 release notes           |
-
-也就是说，AI 的自由度会随着版本通道逐步收窄：alpha 可以协助实现新契约；beta 主要帮人收敛和查回归；rc 只协助把已经冻结的 API 交付得可靠。
-
-## 三个 sub-Agent 角色
-
-实现阶段（Stage 2、3、5）会派出 3 种独立 sub-Agent，**全部走独立 session**（互不可见上下文）：
-
-### Spec Writer
-
-- **输入**：ADR + 受影响的现有 schema（只读）+ ≤ 3 个无关测试文件作风格示例
-- **输出**：zod schema stub + vitest 测试文件
-- **为什么独立**：写实现的 LLM 既出题又答题——同上下文写出的测试，覆盖范围被实现 LLM 心里的 case 限制。Spec Writer 在独立 session 里只看 ADR 不看实现，按测试象限（≥ 9 case：happy ≥ 3 / 边界 ≥ 2 / 错误路径 ≥ 2 / 交互 ≥ 2）展开。
-
-实现 Agent 接到 Spec 后**不允许动测试文件 / 不允许改 schema 字段名**——发现测试错了或字段定义错了，必须 halt 报告，由主 AI 决定退回 Spec Writer 重写还是裁决人工。
-
-如果本轮流程已经得到人工明确授权，Spec commit 用 `:construction:` emoji 标 WIP（测试此刻必然 fail，因为实现还没写），与项目惯例对齐。没有授权时，它只是待审的 diff / stage 内容，不由 AI 自行提交。
-
-### Adversarial Bug Hunter
-
-- **输入**：ADR + 当前实现 diff + 现有测试
-- **输出**：BLOCKING / WARNING / INFO 三档报告
-- **任务**：构造让实现挂的输入。重点关注引用环 / 自引用、极端数值（NaN / Infinity / 0 / 负零）、Unicode / 长字符串 id、嵌套深度、JSON round-trip、zod parse 反例、与已有功能的怪异交叉。
-
-它不修代码，只报告"我以为会挂、实际过了"和"我跑挂的"。BLOCKING 列表非空就转化为正式测试 case，让实现 Agent 修；3 轮没收敛 halt。
-
-### Adversarial Contract Auditor
-
-- **输入**：ADR + changelog 草稿 + commit 历史 + mdx / demo diff + schema diff
-- **输出**：四方一致性报告
-- **任务**：对账。ADR 承诺什么 / changelog 写什么 / mdx 描述什么 / 实际行为什么——找四者不一致的地方。常见类型：悄然加码（实现里有但 ADR 没列）、悄然减码、默认值偏移、命名漂移、mdx 与代码脱节。
-
-这关在收尾阶段（Stage 5）跑，避免"代码已 commit、文档已写、最后一刻发现承诺与实际不符"。
-
-## 同模型不同角色：怎么避免盲区一致
-
-retikz 当前三个 sub-Agent 默认全部用 Claude Opus 4.7。同 model 同上下文最大风险是**思维盲区一致**——A 写代码漏的 case，B 也漏。
-
-对策：**prompt 角度故意错开**——
-
-- Spec Writer = **建设视角**：写规格、想覆盖
-- Bug Hunter = **破坏视角**：构造让实现挂的输入
-- Contract Auditor = **审计视角**：对账承诺与实现
-
-加上独立 session（互不可见上下文），三种视角在同一 model 里也产出明显不同的关注点。
-
-此外用户可以**手动把同一份输入贴给其它 LLM**（如 ChatGPT）跑同 prompt，把意见与 Anthropic 这边取并集——多 vendor 模型的盲区差异更大，是值得的低成本加固。主 AI 不会自动调用其它 vendor，用户手动同步即可，主 AI 负责合并 BLOCKING 列表。
-
-## 红线
-
-项目工作流里的硬约束，AI 全程必须遵守：
-
-| 约束                                 | 说明                                                                                                                                 |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 不缩写命名                           | IR schema 字段 / public API / 函数 / 类型一律拼全（`direction` 不写 `dir`、`reference` 不写 `ref` 除非 React `useRef`）              |
-| 不绕过 lint / tsc / 测试             | 不允许 `as any` / `@ts-ignore` / `it.skip`；不允许 `eslint-disable` 绕过；commit 前 lint + tsc + vitest 全过                         |
-| 不自行 commit / push / publish       | 写完代码停下来等人工授权；每次 commit 都要重新拿授权（一次授权 ≠ 永久授权）                                                          |
-| 文档随代码同步                       | 用户可见改动（新 prop / 改默认值 / 删字段）必须同 commit 改文档；只改 zh 不改 en 视为未完成                                          |
-| IR Schema 全 `.describe`             | zod schema 每个字段必须有英文 `.describe(...)`，给 LLM 工具调用作契约                                                                |
-| ADR 永久保留 + 按 milestone 重置编号 | 被新版决策覆盖的 ADR 标 `Superseded by <milestone> ADR-NN`，不删；每个 milestone 目录下编号从 01 重新起，跨 milestone 引用带前缀消歧 |
-
-## 仓库里看哪里
-
-| 想了解什么                                                | 看哪里                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Schema / LLM 契约设计                                     | [schema-design.md](https://github.com/Pionpill/retikz/blob/main/notes/architecture/schema-design.md)                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| 全部 SKILL（开发流程、发版、文档写作）                    | [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills)                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| alpha / beta / rc 编排器                                  | [flow-alpha](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-alpha/SKILL.md) · [flow-beta](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-beta/SKILL.md) · [flow-rc](https://github.com/Pionpill/retikz/blob/main/.agents/skills/flow-rc/SKILL.md)                                                                                                                                                                                                                                                       |
-| 设计 / 实现 / 测试 / 文档 / 收尾子 SKILL                  | [develop-design](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-design/SKILL.md) · [develop-implement](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-implement/SKILL.md) · [develop-test](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-test/SKILL.md) · [develop-document](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-document/SKILL.md) · [develop-wrapup](https://github.com/Pionpill/retikz/blob/main/.agents/skills/develop-wrapup/SKILL.md) |
-| 发版 SKILL（版本号 / changelog / roadmap / npm 发布守门） | [package-publish SKILL](https://github.com/Pionpill/retikz/blob/main/.agents/skills/package-publish/SKILL.md)                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 文档写作 SKILL                                            | [docs-doc-principle](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-principle/SKILL.md) · [docs-doc-component](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-component/SKILL.md) · [docs-doc-example](https://github.com/Pionpill/retikz/blob/main/.agents/skills/docs-doc-example/SKILL.md)                                                                                                                                                                                                   |
-| ADR 决策档案                                              | [packages/kernel/\_notes/decisions/](https://github.com/Pionpill/retikz/tree/main/packages/kernel/_notes/decisions)（含 [模板](https://github.com/Pionpill/retikz/blob/main/packages/kernel/_notes/decisions/_template.md) 与 [索引](https://github.com/Pionpill/retikz/blob/main/notes/README.md)）                                                                                                                                                                                                                                        |
-
-实际工作时主 AI 先对齐项目约束与对应 SKILL，再按 SKILL 流程派 sub-Agent。每个 sub-Agent 只看自己角色 prompt + 给定输入，互不交叉污染。
-
-## 透明度
-
-retikz 不假装"全人工"——commit 历史里大部分实现 commit 带 `Co-Authored-By: Claude`。透明披露 AI 参与方式比掩饰更可信。同时——
-
-- **决策由人**：每条 ADR 状态 Accepted 之前由人审；每次 npm publish 由人当次授权（含 2FA OTP 由人输入）
-- **AI 不替人对外发声**：commit message、PR 描述、issue 回复都是 AI 起草、人工 review，不存在 AI 直发
-- **可逆性兜底**：预发布分别走 `alpha` / `beta` / `next` dist-tag，下游 `pnpm add @retikz/...` 默认只拉稳定版——出问题不污染 latest 通道
-
-## 局限
-
-- alpha 流程最重，beta / rc 虽有独立编排，但仍以人工确认和人工审稿为关键门槛
-- ADR 模板硬要求测试象限 ≥ 9 case——简单改动可能感觉繁琐，但项目预期 alpha 期改动都涉及 IR 或核心，门槛设这里换的是后期回归成本可控
-- 多模型并行（同时跑 Anthropic + OpenAI 同 prompt）目前靠用户手动同步——主 AI 不会自动调用其它 vendor，用户贴回来主 AI 才合并意见
-- Adversarial sub-Agent 找出的 BLOCKING 通常是 corner case；happy path 的 bug 多数被 Spec Writer 覆盖。这套流程对"复杂逻辑 + 数值边界"型 bug 抓得好，对"用户体验 / 视觉效果不对"型问题抓不到——后者仍需人工 review demo
-
----
-
-把这套流程落到你自己的开源项目里，retikz 的 [.agents/skills/](https://github.com/Pionpill/retikz/tree/main/.agents/skills) 在 MIT 许可下可参考、改写、迁移。流程的关键不在工具，而在**人工与 AI 的边界划得多清楚**：决策给人、实现给 AI、对账给独立 sub-Agent、发布给人。
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/about/developer/source-code-guide">
+    <span className="font-semibold">源码指南</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">了解包边界、扩展方式与 API 适配层</span>
+  </LinkedCard>
+  <LinkedCard href="/about/releases/roadmap">
+    <span className="font-semibold">路线图</span>
+    <span className="mt-1 text-center text-sm text-muted-foreground">查看发布阶段与分组的当前方向</span>
+  </LinkedCard>
+</div>

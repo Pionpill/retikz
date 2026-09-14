@@ -1,6 +1,12 @@
+import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
+
+const theme = {
+  mode: ThemeMode.Light,
+  colors: resolveDefaultCoreThemeColors(ThemeMode.Light),
+} as const;
 
 const relation = (input: Record<string, unknown> = {}) =>
   Graph.RelationSchema.parse({
@@ -31,7 +37,7 @@ describe('Relation data resolution', () => {
       kindDefinition: { kind: 'uml.realization', role: 'dependency' },
       source: { source: { id: 'source' }, target: { id: 'target' } },
     });
-    expect(Graph.resolveRelationStructure(canonical)).toEqual({
+    expect(Graph.resolveRelationStructure(canonical, { ...Graph.resolveGraphDefinitionOptions(), theme })).toEqual({
       sourceMarker: false,
       targetMarker: { shape: 'open' },
       dashPattern: [6, 4],

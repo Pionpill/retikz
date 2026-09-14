@@ -49,13 +49,11 @@ export const LayoutAxisSizeSchema = discriminatedUnion('kind', [
   })
   .describe('Physical-axis allocation size policy for a Layout container.');
 
-const ContentAxisSizeDefault = Object.freeze({ kind: LayoutAxisSizeKind.Content });
-
 export const LayoutSizeSchema = strictObject({
-  x: LayoutAxisSizeSchema.default(ContentAxisSizeDefault).describe('Horizontal allocation size policy.'),
-  y: LayoutAxisSizeSchema.default(ContentAxisSizeDefault).describe('Vertical allocation size policy.'),
+  x: LayoutAxisSizeSchema.default({ kind: LayoutAxisSizeKind.Content }).describe('Horizontal allocation size policy.'),
+  y: LayoutAxisSizeSchema.default({ kind: LayoutAxisSizeKind.Content }).describe('Vertical allocation size policy.'),
 })
-  .default({ x: ContentAxisSizeDefault, y: ContentAxisSizeDefault })
+  .default({ x: { kind: LayoutAxisSizeKind.Content }, y: { kind: LayoutAxisSizeKind.Content } })
   .describe('Physical x and y allocation size policies.');
 
 const LayoutSpacingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(

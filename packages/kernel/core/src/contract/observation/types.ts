@@ -10,7 +10,19 @@ import type { Scene } from '../scene';
 /** 能够声明最终编译产物的领域中立所属者 */
 export type CompileObservationOwner =
   | Readonly<{ kind: 'composite'; namespace: string; type: string }>
-  | Readonly<{ kind: 'pathKind'; name: string }>;
+  | Readonly<{ kind: 'path'; name: string }>
+  | Readonly<{ kind: 'node' }>
+  | Readonly<{ kind: 'scope' }>
+  | Readonly<{ kind: 'coordinate' }>
+  | Readonly<{ kind: 'clip' }>;
+
+/** 最终 observation 所属的逻辑容器链条项 */
+export type CompileObservationAncestor = Readonly<{
+  /** 容器所属者；不包含当前 observation 自身 */
+  owner: Extract<CompileObservationOwner, { kind: 'scope' | 'composite' }>;
+  /** 容器对应的最终 occurrence */
+  occurrence: CompileOccurrenceLocator;
+}>;
 
 /** 所属者产物的 JSON schema 契约 */
 export type CompileOwnerOutputDefinition<TValue extends JsonValue = JsonValue> = Readonly<{
@@ -90,6 +102,8 @@ export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<
   owner: CompileObservationOwner;
   /** 最终逻辑树中的 occurrence */
   occurrence: CompileOccurrenceLocator;
+  /** 从外到内排列的最终逻辑容器链条，不包括当前 observation 自身 */
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
   /** 已按所属者 schema 校验并冻结的产物 */
   value: TValue;
   /** 从所属者局部坐标到主 Scene 坐标的仿射矩阵 */
@@ -100,6 +114,8 @@ export type CompileObservation<TValue extends JsonValue = JsonValue> = Readonly<
 
 /** observer 在一次 observed compile 中使用的上下文 */
 export type CompileObservationContext = Readonly<{
+  /** 按本次主图编译精度舍入数值 */
+  round: (value: number) => number;
   /** 当前最终 occurrence 的完整、只读 Theme */
   theme: ResolvedTheme;
   /** 在当前 occurrence 环境中编译隔离的普通 IR 片段 */

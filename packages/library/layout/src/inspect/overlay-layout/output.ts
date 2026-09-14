@@ -1,8 +1,8 @@
 import type { InspectorContext } from '@retikz/inspect';
 
 import type { OverlayLayoutArtifact } from '../../composites/overlay-layout';
+import type { CanonicalOverlayLayoutInspectOptions } from '../resolve/overlay-layout';
 import type { LayoutInspectionChild, LayoutInspectionMark } from '../shared';
-import type { ResolvedOverlayLayoutInspectOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
@@ -15,7 +15,7 @@ import {
 /** 把 Overlay 布局产物转换为普通 Core 辅助子元素 */
 export const inspectOverlayLayoutArtifact = (
   artifact: OverlayLayoutArtifact,
-  context: InspectorContext<ResolvedOverlayLayoutInspectOptions>,
+  context: InspectorContext<CanonicalOverlayLayoutInspectOptions>,
 ): ReadonlyArray<LayoutInspectionChild> => {
   const base = inspectLayoutArtifactBase(artifact.container, artifact.items, context.options, context.appearance);
   const structure: Array<LayoutInspectionMark> = [];

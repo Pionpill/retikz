@@ -38,17 +38,18 @@ Graph、Group、Block 的作者输入采用两个独立字段；默认目标片�
 
 ### 默认化字段集合
 
-| 目标           | 允许字段                                                                                                                                           | 保持的限制                                                                                                                 |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| entity.style   | color、textColor、fill、stroke、fillOpacity、strokeWidth、strokeOpacity、opacity、shadow、blendMode、dashed、dotted、dashPattern、dashOffset、font | 逐字段复用 Entity Source；不开放角色 shape、boundary、cornerRadius                                                         |
-| entity.layout  | align、lineHeight、maxTextWidth、minimumSize、margin                                                                                               | 复用 Entity layout；不允许 padding，minimumSize 不能缩小 role 的尺寸下限                                                   |
-| relation.style | color、stroke、strokeWidth、strokeOpacity、opacity、shadow、blendMode、lineCap、lineJoin、dashOffset                                               | 不开放 fill/fillOpacity/fillRule；dashPattern 仍由结构 recipe 与显式 Relation Source 决定                                  |
-| relation       | sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity                                                                           | 保持 Relation 同名根字段；marker 仅允许现有 color/fill/opacity/lineWidth，不创建 marker 或改变其 shape/size；不生成 labels |
-| group / block  | background、border、cornerRadius                                                                                                                   | 保持正式 Source 的 Surface 根字段；不主题化 width/minWidth、padding、gap、overflow、caption、children                      |
+| 目标                    | 允许字段                                                                                                                                           | 保持的限制                                                                                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| entity.style            | color、textColor、fill、stroke、fillOpacity、strokeWidth、strokeOpacity、opacity、shadow、blendMode、dashed、dotted、dashPattern、dashOffset、font | 逐字段复用 Entity Source；不开放角色 shape、boundary、cornerRadius                                                         |
+| entity.layout           | align、lineHeight、maxTextWidth、minimumSize、margin                                                                                               | 复用 Entity layout；不允许 padding，minimumSize 不能缩小 role 的尺寸下限                                                   |
+| relation.style          | color、stroke、strokeWidth、strokeOpacity、opacity、shadow、blendMode、lineCap、lineJoin、dashOffset                                               | 不开放 fill/fillOpacity/fillRule；dashPattern 不进入 style，仍由结构 recipe 与显式 Relation Source 决定                    |
+| relation rule structure | `structure.dashPattern`                                                                                                                            | 唯一允许的 Theme / graphRules 结构覆盖；只改变箭身虚线，不创建 marker、也不改变 marker family / shape / size               |
+| relation                | sourceMarker、targetMarker、labelTextForeground、labelFont、labelOpacity                                                                           | 保持 Relation 同名根字段；marker 仅允许现有 color/fill/opacity/lineWidth，不创建 marker 或改变其 shape/size；不生成 labels |
+| group / block           | background、border、cornerRadius                                                                                                                   | 保持正式 Source 的 Surface 根字段；不主题化 width/minWidth、padding、gap、overflow、caption、children                      |
 
 字段必须从本表指定的 owner Source 片段派生；Core 后续新增字段不自动扩大白名单。Graph defaults 不包含实例 id、position、text、role、kind、status、predicate、direction、route、children 或关系端点。
 
-Entity rules 只允许上述 entity.style 中除 font 外的字段；不允许 layout。Relation rules 允许上述 relation.style 与五个根字段。selector 仍按已确定的 role、kind、predicate、status，以及 Relation direction 匹配；匹配条件不成为赋值。
+Entity rules 只允许上述 entity.style 中除 font 外的字段；不允许 layout。Relation rules 允许上述 relation.style、五个根字段，以及唯一的 `structure.dashPattern`。selector 仍按已确定的 role、kind、predicate、status，以及 Relation direction 匹配；匹配条件不成为赋值。
 
 Neutral 状态规则保留 error/success/warning/disabled 的 Core semantic color 消费。Relation 的状态色继续同步已有两端 marker 的 color；不改变 fill、opacity、尺寸、方向或 marker 存在性。其它匹配规则仍可在其允许字段内覆盖状态默认。
 
@@ -66,7 +67,7 @@ Graph 局部级联从低到高为：Neutral defaults → 当前同名 Graph defi
 
 本决策保持 Graph 对 Core 默认通道的既有消费关系：Graph 已确定并物化的字段作为 Core 元素字段进入编译，优先于外层 Scope style/defaults；Graph 未给定的字段仍由 Core 原默认通道决定。新增可选 font/layout 在 definition 或作者 defaults 均未给值时保持稀疏，不为填满有效结果而抢占 Core defaults。Scope defaults.reset 仍只切断指定 Core 通道，不清除 Theme 环境或作者 graphDefaults/graphRules；不能把 reset 当作回到 Neutral。
 
-显式 Entity/Relation 作者字段始终胜过 Graph 默认与 rules。role 的结构约束独立裁决：Entity minimumSize 是有效作者/主题需求与 role 下限的逐轴最大值，padding、shape 等仍由 role 决定；Relation 的 dash/marker 结构仍按其 role/kind/predicate/direction 与显式 Source 契约确定。
+显式 Entity/Relation 作者字段始终胜过 Graph 默认与 rules。role 的结构约束独立裁决：Entity minimumSize 是有效作者/主题需求与 role 下限的逐轴最大值，padding、shape 等仍由 role 决定；Relation 的 marker 仍按 role/kind/predicate/direction 确定，dash 先按该结构确定、再由匹配 Theme 或 graphRules 的 `structure.dashPattern` 覆盖，最后由显式 Source `style.dashPattern` 覆盖。
 
 style/layout 按独立字段覆盖。Node font 整体替换，不混合两层 font 的子字段；Relation labelFont 按 Core label font 的字段补全，其后单个 label.font 再按字段覆盖。marker appearance 按其现有字段覆盖；不存在的 marker 不因 appearance 出现而被创建。background、border、paint、shadow、margin 与其它复合值保持正式 Source 的整体替换粒度，不通用递归合并。
 

@@ -14,7 +14,7 @@
 
 当前 alpha.1 已在包内建立 Presentation / Frame / Diagram Theme、固定区域装配 Foundation 与 FlowDiagram MVP。Flow 通过三个包对称的 `./flow` 子入口公开，不从包根聚合；不得添加占位 drawing core、schema、类型、provider、算法或 fallback
 
-当前 Flow Source 支持 Entity、Group、Layout 与 Relation：三类 element 在平级 catalog 中声明，根、Group 与 Layout 的 `children` 是唯一包含事实源。Group 始终下沉为可见 Graph Group 并可作为 Relation endpoint；Layout 以 `direction`、`gap` 与 `align` 固定排列 children，不绘制、没有 Graph identity 且不能作为 endpoint。Graph Block 在其结构与连接契约稳定并出现真实 Flow 消费者后再通过独立设计引入；当前不预留 Block schema、Theme token、adapter、artifact 或兼容入口
+当前 Flow Source 支持 Entity、Group、Layout 与 Relation：三类 element 在平级 catalog 中声明，根、Group 与 Layout 的 `children` 是唯一包含事实源。Group 始终自动布局并下沉为可见 Graph Group，可作为 Relation endpoint；Layout 必填 `kind`，以 `linear` 顺序排列或 `grid` 共享行列中心，复用 Layout 的 Flex/Grid，不绘制、没有 Graph identity 且不能作为 endpoint。Graph Block 在其结构与连接契约稳定并出现真实 Flow 消费者后再通过独立设计引入；当前不预留 Block schema、Theme token、adapter、artifact 或兼容入口
 
 ## 源码组织与导出
 

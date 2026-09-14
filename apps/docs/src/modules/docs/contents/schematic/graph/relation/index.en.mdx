@@ -5,6 +5,8 @@ description: Store general Core endpoints, relation semantics, labels, and an op
 
 Relation expresses who is related to whom. It uses Core NodeTarget to reference a Node, Coordinate, Scope, or target published by an upper composite, and stores source/target, role, direction, and optional kind/predicate. The route only describes how to draw the relationship and independently lowers to an ordinary Core Path. Graph is optional context rather than a member container. Numeric stroke, label foreground, and marker color derive from the final Relation master; marker fill then derives from the resolved marker color
 
+`labels[].text` directly reuses Core GeometryLabel TextBlock: `\n` in a string or an array of lines both form one multi-line relation label. Graph adds no text or measurement model; the final Path uses the whole block's visual bounds for placement and any optional stroke gap.
+
 ## Responsibilities
 
 | Topic       | Responsibility                                      | Reach for it when                  |

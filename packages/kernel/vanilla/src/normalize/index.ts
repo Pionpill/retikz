@@ -1,3 +1,4 @@
+export * from './coordinate';
 export * from './embed';
 export * from './helpers';
 export * from './node';

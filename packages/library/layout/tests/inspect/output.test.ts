@@ -39,8 +39,15 @@ const contextOf = <TOptions extends JsonObject>(
   owner: InspectorContext<TOptions>['owner'],
 ): InspectorContext<TOptions> =>
   Object.freeze({
-    inspectorKey: { namespace: 'layout', type: owner.kind === 'composite' ? owner.type : owner.name },
+    inspectorKey: {
+      namespace: 'layout',
+      type: owner.kind === 'composite' ? owner.type : owner.kind === 'path' ? owner.name : owner.kind,
+    },
     owner,
+    round: (value: number) => value,
+    ancestors: [],
+    transform: [1, 0, 0, 1, 0, 0] as const,
+    warn: () => undefined,
     occurrence: { sourcePath: 'children[0]', expansionPath: [] },
     provenance: {
       origin: { sourcePath: 'children[0]', expansionPath: [] },
@@ -97,19 +104,28 @@ describe('Layout inspect output', () => {
     const flexOutput = ordinaryChildren(
       FLEX_LAYOUT_INSPECTOR.inspect(
         flexArtifact,
-        contextOf(FLEX_LAYOUT_INSPECTOR.optionsSchema.parse({ labels: true }), FLEX_LAYOUT_INSPECTOR.owner),
+        contextOf(
+          FLEX_LAYOUT_INSPECTOR.resolveOptions(FLEX_LAYOUT_INSPECTOR.optionsSchema.parse({ labels: true })),
+          FLEX_LAYOUT_INSPECTOR.owner,
+        ),
       ),
     );
     const gridOutput = ordinaryChildren(
       GRID_LAYOUT_INSPECTOR.inspect(
         gridArtifact,
-        contextOf(GRID_LAYOUT_INSPECTOR.optionsSchema.parse({}), GRID_LAYOUT_INSPECTOR.owner),
+        contextOf(
+          GRID_LAYOUT_INSPECTOR.resolveOptions(GRID_LAYOUT_INSPECTOR.optionsSchema.parse({})),
+          GRID_LAYOUT_INSPECTOR.owner,
+        ),
       ),
     );
     const overlayOutput = ordinaryChildren(
       OVERLAY_LAYOUT_INSPECTOR.inspect(
         overlayArtifact,
-        contextOf(OVERLAY_LAYOUT_INSPECTOR.optionsSchema.parse({ anchors: true }), OVERLAY_LAYOUT_INSPECTOR.owner),
+        contextOf(
+          OVERLAY_LAYOUT_INSPECTOR.resolveOptions(OVERLAY_LAYOUT_INSPECTOR.optionsSchema.parse({ anchors: true })),
+          OVERLAY_LAYOUT_INSPECTOR.owner,
+        ),
       ),
     );
 

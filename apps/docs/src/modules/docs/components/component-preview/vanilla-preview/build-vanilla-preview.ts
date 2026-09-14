@@ -440,6 +440,7 @@ const convertGraphChild = (
       const children = input.children?.map(convertGraphInputChild);
       return graph(nextGraphId('graph', state), {
         ...input,
+        entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         ...(children === undefined ? {} : { children }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
@@ -991,11 +992,13 @@ const flowAuthoringInput = (source: IRFlowDiagram): InputFlowDiagram => {
 const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: BuildVanillaPreviewOptions): string => {
   const authoring = {
     ...flowAuthoringInput(source),
+    entityKinds: '__GRAPH_ENTITY_KINDS__',
     diagramThemeStyles: '__DIAGRAM_THEME_STYLES__',
     flowThemeStyles: '__FLOW_THEME_STYLES__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   const authoringCode = formatVanillaValue(authoring)
+    .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
     .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
     .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
     .replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
@@ -1019,6 +1022,7 @@ const buildFlowPreview = (
     children: [
       flowDiagram('preview-flow-1', {
         ...flowAuthoringInput(source),
+        entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,
         flowThemeStyles: PreviewThemeDefinitionBundle.flow,
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,

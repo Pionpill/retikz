@@ -22,7 +22,7 @@ Entity owns three independent Definition families:
 | Definition              | Responsibility                                                                    |
 | ----------------------- | --------------------------------------------------------------------------------- |
 | `defineEntityRole`      | Defines primary semantics and complete shape, padding, and minimum-size structure |
-| `defineEntityKind`      | Defines a stable semantic subtype within one role                                 |
+| `defineEntityKind`      | Defines a stable semantic subtype within one role; identity is `(role, kind)`     |
 | `defineEntityPredicate` | Validates JSON params with Zod                                                    |
 
 Each role owns its shape and base structure. Kinds and predicates do not duplicate that shape. Graph Theme rules match Canonical semantics to supply appearance defaults, and explicit non-structural Node appearance fields on Entity Source take final precedence
@@ -66,7 +66,7 @@ Vanilla can pass the same options to `entity(id, input)` or `graph(id, input)`. 
 
 ## Execution model
 
-The current provider assembly merges built-in and custom definitions into local registries, validates `role → kind → predicate`, then applies matching Graph Theme appearance rules in order. Lowering overlays explicit non-structural Entity Node fields, writes role structure, and merges `minimumSize` per axis. The final Entity is still one ordinary Core `Node`
+The current provider assembly merges built-in and custom definitions into local registries, validates kinds by `(role, kind)`, then validates predicates and applies matching Graph Theme appearance rules in order. The same lexical kind may be registered for different roles, while a Theme selector still matches the lexical kind. Lowering overlays explicit non-structural Entity Node fields, writes role structure, and merges `minimumSize` per axis. The final Entity is still one ordinary Core `Node`
 
 <SourceLinks
   sources={[
@@ -82,22 +82,22 @@ The current provider assembly merges built-in and custom definitions into local 
 
 ## Errors and limits
 
-- Blank keys, duplicate keys, built-in key replacement, or different Definition objects competing for one key in an assembly fail loudly
-- An unregistered role / kind / predicate, role mismatch, or invalid predicate params fail loudly
+- Blank keys, duplicate `(role, kind)` identities, built-in key replacement, or different Definition objects competing for one identity in an assembly fail loudly
+- An unregistered role / kind / predicate, a kind missing for the current role, or invalid predicate params fail loudly
 - Custom shapes remain Core Shape registry entries; a missing provider never falls back to a rectangle
 - Entity data, predicate params, and `meta` must be JSON-safe; functions, ReactNode values, and renderer resources cannot enter Source IR
 - `<Entity>` can be embedded independently, but its children remain Node-compatible text; other drawing content must be a sibling
 
 ## API Reference
 
-| Public export                                              | Purpose                                                          |
-| ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| `defineEntityRole` / `EntityRoleDefinition`                | Defines complete role structure and shape                        |
-| `defineEntityKind` / `EntityKindDefinition`                | Defines a stable subtype within a role                           |
-| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | Defines a predicate with type-safe JSON params                   |
-| `EntityRole`                                               | Lists built-in open role keys                                    |
-| `GraphRuleSchema` / `IRGraphRule`                          | Authors one ordered appearance rule; graphRules accepts an array |
-| `GraphDefinitionOptions`                                   | Assembles the three Entity Definition families                   |
+| Public export                                              | Purpose                                                                                     |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `defineEntityRole` / `EntityRoleDefinition`                | Defines complete role structure and shape                                                   |
+| `defineEntityKind` / `EntityKindDefinition`                | Defines a stable subtype within a role; the same kind may be registered for different roles |
+| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | Defines a predicate with type-safe JSON params                                              |
+| `EntityRole`                                               | Lists built-in open role keys                                                               |
+| `GraphRuleSchema` / `IRGraphRule`                          | Authors one ordered appearance rule; graphRules accepts an array                            |
+| `GraphDefinitionOptions`                                   | Assembles the three Entity Definition families                                              |
 
 ## Related
 

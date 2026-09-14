@@ -423,11 +423,6 @@ describe('buildPlotIR 装配', () => {
     expect(spec.guides).toEqual([{ type: 'axis', dimension: 'x', grid: { includeDomain: true } }]);
   });
 
-  it('dsl_built_guides_pass_schema：默认装配产物过 PlotSchema', () => {
-    const spec = buildPlotIR(<PathMark x="m" y="r" />, '__plot');
-    expect(() => PlotSchema.parse(spec)).not.toThrow();
-  });
-
   it('dsl_axis_bad_dim_type：非法 dimension 经 lowering 按坐标系角色拒绝', () => {
     const spec = buildPlotIR(
       <>

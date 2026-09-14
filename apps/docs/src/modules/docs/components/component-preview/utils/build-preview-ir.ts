@@ -7,6 +7,8 @@ import { createElement, isValidElement } from 'react';
 
 import { buildPreviewSourceIR, collectPreviewChartSources } from './build-preview-source-ir';
 import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
+import type { ComponentPreviewDemoComponent } from '../types';
+import type { Lang } from '@/i18n';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
 
@@ -68,8 +70,8 @@ export type PreviewIR = {
 };
 
 /** 从 React demo 派生 preview IR。 */
-export const buildPreviewIR = (Component: FC): PreviewIR => {
-  const rootElement = resolvePreviewRootElement(Component({}));
+export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: Lang = 'zh'): PreviewIR => {
+  const rootElement = resolvePreviewRootElement(Component({ lang }));
   const props = (rootElement?.props ?? {}) as PreviewRootProps & Record<string, unknown>;
   const isEmbeddableRoot = isEmbeddableMarked(rootElement?.type);
   const EmbeddableRoot = rootElement?.type as FC<Record<string, unknown>> | undefined;

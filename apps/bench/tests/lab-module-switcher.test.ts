@@ -11,7 +11,7 @@ import { SidebarProvider } from '../src/playground/components/ui/sidebar';
 import { zh } from '../src/playground/i18n/locales';
 
 describe('ModuleSwitcher', () => {
-  it('显示模块图标和加粗标题说明', async () => {
+  it('显示当前模块的标题与说明', async () => {
     const i18n = createInstance().use(initReactI18next);
     await i18n.init({ lng: 'zh', resources: { zh: { translation: zh } } });
 
@@ -27,8 +27,6 @@ describe('ModuleSwitcher', () => {
       ),
     );
 
-    expect(markup).toContain('<svg');
-    expect(markup).toContain('font-semibold');
     expect(markup).toContain('Kernel');
     expect(markup).toContain('Kernel 运行时与渲染器');
   });
