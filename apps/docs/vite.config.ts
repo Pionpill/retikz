@@ -82,6 +82,8 @@ export default defineConfig(({ command, mode }) => ({
   },
   test: {
     environment: 'node',
+    // API 文档生成与 MathJax 编译较重，限制并发以避免冷启动资源争用导致超时
+    maxWorkers: 4,
     experimental: {
       fsModuleCache: true,
     },

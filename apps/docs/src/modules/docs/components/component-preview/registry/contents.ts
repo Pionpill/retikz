@@ -87,15 +87,16 @@ export const filenameFromKey = (key: string) => key.slice(key.lastIndexOf('/') +
 
 /**
  * 解析 demo key。
- * @description 优先单文件 `<name>.tsx`，再回退旧的 `<name>.demo.tsx` 与 `<name>.<lang>.demo.tsx`。
+ * @description 优先匹配语言的 demo，避免同名共享组件遮蔽预览入口；否则选择单文件图或通用 demo
  */
 export const resolveDemoKey = (segments: Array<string>, name: string, lang: string): string => {
+  const langKey = buildLangKey(segments, name, lang);
+  if (demoModuleLoaders[langKey] !== undefined) return langKey;
   const componentKey = buildComponentKey(segments, name);
   if (demoModuleLoaders[componentKey] !== undefined) return componentKey;
   const demoKey = buildKey(segments, name);
   if (demoModuleLoaders[demoKey] !== undefined) return demoKey;
-  const langKey = buildLangKey(segments, name, lang);
-  return demoModuleLoaders[langKey] !== undefined ? langKey : demoKey;
+  return demoKey;
 };
 
 /** 解析附加源码文件对应的 diff baseline 文件名。 */
