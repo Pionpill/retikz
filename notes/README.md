@@ -4,21 +4,21 @@
 
 ## 当前结构
 
-| 目录                              | 内容                                                             | 生命周期                                     |
-| --------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
-| [`architecture/`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。             |
-| [`plans/`](./plans)               | 长任务执行计划、状态和临时 review 材料。                         | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
-| [`reports/`](./reports)           | 只读审计、阶段性 review 报告。                                   | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
+| 目录                             | 内容                                                             | 生命周期                                     |
+| -------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
+| [`architecture`](./architecture) | 全仓长期架构真源。只放跨包原则、IR / Scene / schema 等底层契约。 | 永久；重大架构调整直接更新原文。             |
+| [`plans`](./plans)               | 长任务执行计划、状态和临时 review 材料。                         | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
+| [`reports`](./reports)           | 只读审计、阶段性 review 报告。                                   | 本地临时产物；被 `.gitignore` 忽略，不提交。 |
 
 包或发布组专属文档已经下沉到对应目录：
 
-| 目录                                                        | 内容                                                                                               |
-| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`../packages/kernel/_notes/`](../packages/kernel/_notes)   | kernel 七包（math / runtime / core / render / react / vanilla / tex）的 roadmap、ADR、架构与分析。 |
-| [`../packages/viz/_notes/`](../packages/viz/_notes)         | data、plot、table 等 viz 能力域与发布组的架构、roadmap、ADR、分析。                                |
-| [`../packages/library/_notes/`](../packages/library/_notes) | Standard 官方可选绘图库的架构、roadmap 与 ADR。                                                    |
-| [`../packages/schematic/_notes/`](../packages/schematic/_notes) | Schematic 领域 Graph / Diagram 能力的架构、roadmap 与 ADR。                                        |
-| [`../apps/eval/_notes/`](../apps/eval/_notes)               | eval 应用的评测设计、语料与 runner 方案。                                                          |
+| 目录                                                           | 内容                                                                                               |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`../packages/kernel/_notes`](../packages/kernel/_notes)       | kernel 七包（math / runtime / core / render / react / vanilla / tex）的 roadmap、ADR、架构与分析。 |
+| [`../packages/viz/_notes`](../packages/viz/_notes)             | data、plot、table 等 viz 能力域与发布组的架构、roadmap、ADR、分析。                                |
+| [`../packages/library/_notes`](../packages/library/_notes)     | Standard 官方可选绘图库的架构、roadmap 与 ADR。                                                    |
+| [`../packages/schematic/_notes`](../packages/schematic/_notes) | Schematic 领域 Graph / Diagram 能力的架构、roadmap 与 ADR。                                        |
+| [`../apps/eval/_notes`](../apps/eval/_notes)                   | eval 应用的评测设计、语料与 runner 方案。                                                          |
 
 ## 写到哪里
 

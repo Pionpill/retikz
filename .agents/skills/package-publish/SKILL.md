@@ -84,7 +84,7 @@ Roadmap 只管理中版本能力目标，不按 alpha / beta / rc 序号安排 A
 - 包列表与每个包的 `old -> target`；
 - 递归解析后的上游发布闭包、按发布组汇总的更新内容、相关 ADR 的实现证据、未纳入项、真实阻塞项与发布顺序；
 - `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件的 note 范围；
-- 是否需要同步 module badge 或中版本 roadmap 的能力进度 / 阶段门槛。
+- 是否需要同步 module badge；版本重点功能或必要依赖发生获批变化时，是否需要调整 roadmap。
 
 ## 版本连续性
 
@@ -117,7 +117,7 @@ npm view @retikz/standard dist-tags --registry=https://registry.npmjs.org/
 1. **包版本号**：发布组内每个包都改到目标版本。
 2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
 3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/modules/docs/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
-4. **roadmap**：仅在能力进度、目标范围或阶段门槛实际改变时更新中版本 roadmap；不创建下一 alpha 任务清单或搬迁未完成 ADR。
+4. **roadmap**：仅在重点功能、目标或必要依赖发生获批变化时按 `develop-design` 更新；不回填发布记录、ADR 细节或阶段检查清单，不搬迁未完成 ADR。
 5. **ADR 检查**：按下方“ADR 长期一致性门禁”逐篇审计本次交付及依赖涉及的 ADR；发现混入施工细节、状态错误或契约不一致时停下，先走 `develop-wrapup` 修正。
 6. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。
 
@@ -231,7 +231,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 闭包内各组的实际交付与必需能力已核对；相关 ADR 有实现证据，未纳入项与真实阻塞项已写入确认表。
 - [ ] 用户可见行为变化已更新对应 changelog 数据文件。
 - [ ] 只有需要改变可见徽章时才更新 `module.ts`。
-- [ ] roadmap 仅反映中版本能力进度与阶段门槛；未按预发布序号排期或搬迁 ADR。
+- [ ] roadmap 保持重点功能概览；ADR 只用编号链接，未追加发布日志、阶段检查清单或预发布排期。
 - [ ] 已逐篇阅读全文审计本次相关 ADR，未用状态、roadmap 或提交说明替代。
 - [ ] 生效 ADR 从 Proposed 起保持长期形态并为 `Accepted`；被替代 ADR 为 `Superseded`，且替代关系明确。
 - [ ] ADR 未混入具体文件、私有逻辑、逐项测试、命令、commit 或 review 过程；ignored plan 未被误提交。

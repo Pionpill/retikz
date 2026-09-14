@@ -1,9 +1,10 @@
-# ADR-NN：<一句话标题>
+# ADR-NNN：<一句话标题>
 
-> 起新 ADR：`cp _template.md <FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/NN-<slug>.md`
+> 起新 ADR：复制本模板到 `<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/NNN-<slug>.md`
 >
-> - 目录层级为 family / major / minor / channel；PATCH 不开 ADR 目录
-> - 编号在 milestone 内从 `01` 重新开始，slug 用 kebab-case；各 Schematic family 独立演进
+> - 保留 family / major / minor，不设 patch / alpha / beta / rc 子目录
+> - 同一 family / minor 从 `001` 连续编号，后续取最大编号加一，不复用、不随发布重排；slug 用 kebab-case
+> - Roadmap 只管理中版本能力目标，可关联 ADR，但不按预发布序号分配任务；Accepted 表示设计获批，不表示实现或发布完成
 > - 本模板对应 [`develop-design`](../../../../.agents/skills/develop-design/SKILL.md)
 > - ADR 从 Proposed 起就是长期功能与架构文档，不写施工文件、命令、case 或 review 记录
 > - 起 ADR 时同步在 ignored 镜像路径创建简略 `PLAN.md`；人工确认 ADR 后再细化 plan，并创建 `TEST_CONTRACT.md`、必要的状态与 review 记录
@@ -11,7 +12,7 @@
 
 - 状态：Proposed
 - 决策日期：YYYY-MM-DD
-- 关联：[所属 roadmap](./roadmap.md) · [能力域 completeness 文档](../../architecture/<...>.md) · [架构设计](../../../../notes/architecture/schematic-design.md)
+- 关联：<复制到目标位置后填写中版本 roadmap、completeness 与架构设计的有效相对链接>
 
 ## 背景与目标
 

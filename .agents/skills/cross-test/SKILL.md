@@ -279,7 +279,7 @@ notes/reports/cross-test-YYYY-MM-DD-<scope>.md
 
 如果发现的问题暂不适合立即修：
 
-- beta 非破坏优化：登记到当前中版本的 ignored 实施 plan；roadmap 只汇总能力 / 质量目标，不按 beta.N 新建目录或任务清单。
+- beta 非破坏优化：登记到当前中版本的 ignored 实施 plan；不把测试发现或质量 TODO 写入重点功能 roadmap，也不按 beta.N 新建目录。
 - 需要改 IR schema / public API：不要塞进 beta，登记为下次 alpha 候选。
 - 文档不一致：登记 docs TODO；若当轮改了用户可见行为，必须同步 docs。
 

@@ -2,7 +2,7 @@
 
 > **状态：长期技术语义参考，当前公开契约以代码、用户文档和 Accepted ADR 为准。** 本文讨论坐标系、数据映射、mark、guide、layer 与 lowering 边界，不定义已发布 API，也不维护实现排期。
 >
-> §6 记录 viz domain 中 data / plot / table / geo 及各自框架绑定包的结构与命名；当前实际包与 release group 以 [`包拓扑`](../../../../notes/architecture/package-topology.md) 和 [`scripts/release-groups.config.mjs`](../../../../scripts/release-groups.config.mjs) 为准。
+> §6 记录 viz domain 中 data / plot / table / geo 及各自框架绑定包的结构与命名；当前实际包与 release group 以 [`包拓扑`](../../../../notes/architecture/package-topology.md) 和 [`../../../../scripts/release-groups.config.mjs`](../../../../scripts/release-groups.config.mjs) 为准。
 
 ## 1. 核心判断
 

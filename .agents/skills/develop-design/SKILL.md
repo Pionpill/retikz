@@ -12,11 +12,18 @@ description: Use when planning a retikz architecture direction, version roadmap,
 | 产物                | 负责                                                                | 不负责                                               |
 | ------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
 | Architecture design | 长期问题、整体结构、能力归属、功能边界、关键原则与演进方向          | 版本字段、具体实现和执行步骤                         |
-| 版本 roadmap        | 中版本能力目标、范围、能力依赖、进度与阶段门槛；可链接相关 ADR      | 预发布批次排期、ADR 完成清单、API、算法和测试 case   |
+| 版本 roadmap        | 当前版本重点功能、目标与必要边界 / 依赖；ADR 仅用编号链接           | ADR 细节、实施进度、历史排期、执行及发布记录         |
 | ADR                 | 单项功能、核心决策、基础数据结构 / 公开契约、行为、失败语义与兼容性 | 设计检查材料、文件 scope、测试策略和执行过程         |
 | Mirror plan         | 设计检查结论；ADR 确认后再细化文件 scope、逻辑、测试、命令和风险    | 改写 ADR 的公开契约、默认 / 失败语义或 breaking 行为 |
 
 当前任务只要求 architecture design 或 roadmap 时，完成对应文档并交人工 review 后停止，不提前进入 ADR 或 plan。进入 ADR 设计时，ADR 与镜像简略 `PLAN.md` 是同一阶段的配套产物。
+
+## Roadmap 内容契约
+
+- 中版本 roadmap 保持 100–300 行：版本目标、`重点能力 | 目标 | 相关 ADR` 总览表、按方向说明主要场景 / 规划内容 / 预期效果，以及必要边界 / 依赖；不逐篇枚举 ADR，也不靠空行或重复规则凑篇幅。
+- ADR 列只放可点击的三位编号，不重复标题、状态、方案或实现细节；无相关 ADR 写 `—`，不为填表补造 ADR。跨 owner 引用先标 owner / 中版本，再列编号链接。
+- 大版本 roadmap 只保留方向概览、版本导航与关键边界；候选仍标候选，不因整理文档改变范围或承诺。
+- 历史排期从正文移除并由 Git 留存；TODO、进度与验证证据进入 ignored plan，设计细节进入 ADR，发布记录进入 changelog。阶段门禁按对应 flow / publish skill 执行，不复制进 roadmap。
 
 ## 必读
 
@@ -103,7 +110,7 @@ ADR 与简略 plan 完成后、人工 ack 前，使用 `develop-completeness` �
 
 ## Implementation plan 细化
 
-人工明确接受设计时将 ADR 标为 `Accepted`；明确批准执行也包含接受设计，但单独接受设计不授权实现。Accepted 不代表实现完成；实现进度由 plan / 任务证据跟踪，roadmap 只汇总能力进度，发布事实由 changelog、tag 与 registry 核验。获准实施后，重新阅读全文 ADR 与简略 plan，并在同一镜像目录细化 `PLAN.md`、创建其它执行产物：
+人工明确接受设计时将 ADR 标为 `Accepted`；明确批准执行也包含接受设计，但单独接受设计不授权实现。Accepted 不代表实现完成；实现进度由 plan / 任务证据跟踪，roadmap 只概览重点功能，发布事实由 changelog、tag 与 registry 核验。获准实施后，重新阅读全文 ADR 与简略 plan，并在同一镜像目录细化 `PLAN.md`、创建其它执行产物：
 
 ```text
 packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md

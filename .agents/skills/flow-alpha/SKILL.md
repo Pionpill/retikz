@@ -169,4 +169,4 @@ Stage 3–5 完成并通过验证后，按 `flow-long-task` 执行计划中声�
 - Spec-First 需要时能证明测试先于实现，且实现未擅改基础契约。
 - Adversarial BLOCKING 清空，docs / changelog zh-en 对齐。
 - 已按执行计划完成最终主 agent 检查或获授权的 `cross-review`。
-- plan 记录实现证据，roadmap 只汇总中版本能力进度，不因 Alpha 发布移动未完成 ADR；commit、push、发布均有独立授权。
+- plan 记录实现证据，roadmap 按 `develop-design` 只概览版本重点功能，不因 Alpha 发布移动未完成 ADR；commit、push、发布均有独立授权。

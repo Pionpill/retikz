@@ -1,6 +1,6 @@
 ---
 name: flow-beta
-description: Use when retikz beta-stage roadmap TODO work needs refactoring, renaming, test hardening, error-message, performance, or documentation cleanup after alpha feature work.
+description: Use when retikz beta-stage plan TODO work needs refactoring, renaming, test hardening, error-message, performance, or documentation cleanup after alpha feature work.
 ---
 
 # beta 优化主流程
@@ -12,8 +12,8 @@ description: Use when retikz beta-stage roadmap TODO work needs refactoring, ren
 启动前确认：
 
 1. 当前任务确属 beta 阶段或用户明确要求按 beta TODO 做。
-2. 当前中版本 roadmap 已有能力 / 质量目标；Stage 0 可生成或刷新实施 plan 的候选 TODO，不按 beta.N 新开目录。
-3. 进入 Stage 1 前，获批 TODO 已登记在对应 ignored 实施 plan，并已取得当前任务的实施授权；roadmap 只汇总能力 / 质量目标进度。
+2. 当前中版本 roadmap 提供重点功能范围；质量目标与 Stage 0 生成的候选 TODO 进入实施 plan，不按 beta.N 新开目录。
+3. 进入 Stage 1 前，获批 TODO 已登记在对应 ignored 实施 plan，并已取得当前任务的实施授权；roadmap 不记录实施进度。
 4. 任务不是“净新增公开能力 / 公开组件 / IR 形态 / schema 字段 / 用户可见行为契约”。
 
 发现需要新功能时立即 halt，登记到下个 alpha 窗口，改走 `flow-alpha`。
@@ -22,19 +22,19 @@ Beta 优化通常是中型任务；执行前按根规则一次确认 scope、步
 
 ## 阶段
 
-| #   | 阶段         | 执行                                | 通过条件                                                                    |
-| --- | ------------ | ----------------------------------- | --------------------------------------------------------------------------- |
-| 0   | 全局入口审计 | `develop-completeness` `code-audit` | 三能力域结论完成；候选 TODO scope 经人工确认                                |
-| 1   | 实现         | `develop-implement` 简化路径        | 受影响模块 lint / tsc / 测试全过                                            |
-| 2   | TODO 评估    | 主 agent 或计划内单 reviewer        | BLOCKING 清空，WARNING 经人工裁决                                           |
-| 3   | TODO 收尾    | `develop-wrapup` 简化路径           | plan TODO 有完成证据；roadmap 汇总能力进度；按需 changelog；人工授权 commit |
-| 4   | 全局出口复审 | `develop-completeness` `code-audit` | 最新三能力域结论均 PASS；或熔断后等待人工裁决                               |
+| #   | 阶段         | 执行                                | 通过条件                                              |
+| --- | ------------ | ----------------------------------- | ----------------------------------------------------- |
+| 0   | 全局入口审计 | `develop-completeness` `code-audit` | 三能力域结论完成；候选 TODO scope 经人工确认          |
+| 1   | 实现         | `develop-implement` 简化路径        | 受影响模块 lint / tsc / 测试全过                      |
+| 2   | TODO 评估    | 主 agent 或计划内单 reviewer        | BLOCKING 清空，WARNING 经人工裁决                     |
+| 3   | TODO 收尾    | `develop-wrapup` 简化路径           | plan TODO 有完成证据；按需 changelog；人工授权 commit |
+| 4   | 全局出口复审 | `develop-completeness` `code-audit` | 最新三能力域结论均 PASS；或熔断后等待人工裁决         |
 
 beta 不开新功能 ADR，不走 alpha 的设计 / adversarial 自测 / 必选文档阶段。用户可见改动仍按 docs skills 补文档。Stage 0 / 4 是 milestone 级门禁，不替代每条 TODO 的 Stage 2。
 
 ## Stage 0 全局入口审计
 
-任何 beta TODO 实施、建批量 worktree 或修改 roadmap 状态前，检查三个能力域：
+任何 beta TODO 实施或建批量 worktree 前，检查三个能力域：
 
 | 能力域        | `develop-completeness` 参数                   | 范围                                          |
 | ------------- | --------------------------------------------- | --------------------------------------------- |
@@ -100,7 +100,7 @@ beta 的核心风险是重构回归和 breaking 漏迁移。Stage 2 始终由主
 - visible：按用户影响决定是否写 changelog / docs。
 - internal：通常只在 commit message 体现。
 - 不改 ADR 状态；beta 无新 ADR。
-- 实施 plan 的 TODO 标完成，获准提交后记录真实 commit hash；roadmap 只汇总中版本能力 / 质量目标，不维护 ADR 完成清单或 beta.N 排期。
+- 实施 plan 的 TODO 标完成，获准提交后记录真实 commit hash；roadmap 按 `develop-design` 只概览重点功能，不追加任务或验收记录。
 - commit 必须等待当前对话人工授权；多 TODO 可按 review 友好的逻辑块分批 commit。
 - 完工 review 按任务开始时确认的计划执行，不在提交前重新追加 subagent 询问。
 
@@ -138,7 +138,7 @@ Beta 不提供自动 subagent 权限。只有用户明确要求交叉验证时�
 - 实现和必要测试已落。
 - 受影响模块验证通过。
 - 评估 / 自审合并，BLOCKING 清空，WARNING 已裁决。
-- 实施 plan TODO 有完成证据，roadmap 能力 / 质量进度与实际一致。
+- 实施 plan TODO 有完成证据，未把进度和验收记录回填 roadmap。
 - breaking 有 changelog + 迁移路径；visible 按需文档同步。
 - Stage 4 最新 Drawing / Data / Visualization 结论均 PASS；或已熔断并停止等待人工，未伪装完成。
 - 用户明确 ack 后才 commit / 进入下一条 TODO。

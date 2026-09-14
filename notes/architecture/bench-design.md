@@ -2,7 +2,7 @@
 
 > **状态：Active 架构总则。** `@retikz/bench` 已具备自动化 benchmark 与首版 Kernel Performance Lab；后续能力继续按本文边界演进。
 >
-> 关联：[`性能与增量运行时设计`](./performance-design.md) · [`交互与增量运行时设计`](./interaction-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`@retikz/bench`](../../apps/bench/README.md)
+> 关联：[`性能与增量运行时设计`](./performance-design.md) · [`交互与增量运行时设计`](./interaction-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`../../apps/bench/README.md`](../../apps/bench/README.md)
 >
 > 本文只确定长期方向、整体结构和功能边界。具体场景、数据结构、界面布局、文件组织与测试清单在后续 ADR 或 implementation plan 中设计。
 

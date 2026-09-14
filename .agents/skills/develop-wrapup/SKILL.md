@@ -1,11 +1,11 @@
 ---
 name: develop-wrapup
-description: Use when retikz implementation, adversarial testing, and docs are complete, and an ADR or beta TODO needs changelog, contract consistency review, roadmap status updates, or final human acknowledgement.
+description: Use when retikz implementation, adversarial testing, and docs are complete, and an ADR or beta TODO needs changelog, contract consistency review, or final human acknowledgement.
 ---
 
 # Stage 5: 收尾
 
-把已实现、已测试、已文档化的改动封口：changelog、对账、人工确认、ADR / roadmap 状态更新。commit / push / publish 仍按根 AGENTS 的当次授权规则。
+把已实现、已测试、已文档化的改动封口：changelog、对账、人工确认与 plan 完成证据。commit / push / publish 仍按根 AGENTS 的当次授权规则。
 
 ## 输入
 
@@ -58,10 +58,11 @@ ADR 从 Proposed 起就应是长期功能与架构记录，不采用“先提交
 
 ## 人工确认后落盘
 
-人工接受设计或执行批准时已经记录 Accepted；收尾不把决策状态当作实现或发布状态，只更新最终摘要、能力进度与 changelog：
+人工接受设计或执行批准时已经记录 Accepted；收尾不把决策状态当作实现或发布状态，只更新最终摘要、plan 进度与 changelog：
 
-- alpha：逐段审计 ADR 与最终行为一致性，补完工摘要；实施任务在镜像 plan 记录完成证据，仅当能力目标整体完成时更新中版本 roadmap；用户可见改动写入待发布 changelog，不提前指定 alpha 批次。
-- beta：实施 plan 的 TODO 标完成，获准提交后记录真实 commit；roadmap 只汇总能力 / 质量目标进度；breaking / visible 按需写 changelog，不改 ADR 状态。
+- alpha：逐段审计 ADR 与最终行为一致性，补完工摘要；实施任务在镜像 plan 记录完成证据；用户可见改动写入待发布 changelog，不提前指定 alpha 批次。
+- beta：实施 plan 的 TODO 标完成，获准提交后记录真实 commit；breaking / visible 按需写 changelog，不改 ADR 状态。
+- 仅当重点功能、目标或必要依赖发生获批变化时，按 `develop-design` 更新 roadmap；不追加完工记录、ADR 摘要或发布日志。
 
 这些文件可按逻辑分块提交。每块提交前展示文件清单和建议 message；没有当前对话授权不提交。
 
@@ -71,7 +72,7 @@ ADR 从 Proposed 起就应是长期功能与架构记录，不采用“先提交
 
 ## 完成标志
 
-- changelog、ADR / roadmap 状态与实际行为一致。
+- changelog、ADR 契约与 plan 完成证据和实际行为一致。
 - ADR 始终保持长期功能与架构记录，不含只服务执行的临时材料。
 - 镜像 plan、测试矩阵、状态与 review 记录保持 ignored，未被误提交。
 - Contract Auditor BLOCKING 清空或人工明确裁决。

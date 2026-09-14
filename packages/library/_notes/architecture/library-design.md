@@ -2,7 +2,7 @@
 
 > **状态：长期分组边界已确认并落地。** Library 由 Standard 与 Layout 两条相互独立的能力轴组成；排版布局由 Layout package family 唯一拥有，Standard 只通过公开 capability 消费。
 >
-> 关联：[`packages/library/AGENTS.md`](../../AGENTS.md) · [`Standard 拓展库设计`](./standard-library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+> 关联：[`../../AGENTS.md`](../../AGENTS.md) · [`Standard 拓展库设计`](./standard-library-design.md) · [`Layout 布局库设计`](./layout-library-design.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
 
 ---
 

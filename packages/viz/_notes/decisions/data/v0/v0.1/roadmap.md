@@ -1,33 +1,101 @@
-# @retikz/data v0.1 Roadmap
+# data v0.1 Roadmap
 
-> 状态：Done · 关联：[data v0 roadmap](../roadmap.md) · [plot v0.1 roadmap](../../../plot/v0/v0.1/roadmap.md)
+## 版本目标
 
-## 定位
+建立可供多个可视化包共享的数据契约与处理底座。
 
-v0.1 建立独立 `@retikz/data` 边界，拥有 JSON-safe 数据模型、字段解析与格式化、共享 transform definition / registry / pipeline、statistics 与 runtime-only lineage。Plot、Table 与后续宿主可以消费这些通用能力，而不反向依赖 `@retikz/plot`。
+## 重点功能
 
-## Milestones
+| 重点能力     | 目标                                     | 相关 ADR                                                                      |
+| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------- |
+| 共享数据边界 | 迁出可被多个可视化包复用的数据层         | [001](./001-plot-data-migration.md)、[002](./002-shared-provider-boundary.md) |
+| 字段与格式化 | 统一数据模型、字段解释与显示值处理       | [001](./001-plot-data-migration.md)、[003](./003-ir-data-type-naming.md)      |
+| 变换与统计   | 提供可组合的数据操作和统计处理           | [001](./001-plot-data-migration.md)、[002](./002-shared-provider-boundary.md) |
+| 开放接入     | 明确 Definition、provider 与消费者的职责 | [002](./002-shared-provider-boundary.md)                                      |
+| 类型与追溯   | 统一 IRData 命名与运行时 lineage         | [003](./003-ir-data-type-naming.md)、[004](./004-data-lineage-trace.md)       |
 
-| Milestone | 长期能力                                                           | ADR                                  |
-| --------- | ------------------------------------------------------------------ | ------------------------------------ |
-| beta.1    | 从 Plot 迁出通用数据层，固定 Data / Plot provider 与 pipeline 边界 | [`beta.1`](./beta.1/roadmap.md)（2） |
-| beta.2    | 统一 `IRDataXxx` 命名、statistics 所有权与 runtime lineage         | [`beta.2`](./beta.2/roadmap.md)（2） |
+## 功能规划
 
-## RC 与 stable 收口
+### 共享数据边界
 
-- RC 冻结 schema、definition / registry、pipeline 与 lineage 公共契约，只接收兼容性 bug、诊断、文档和发布修正
-- stable 收口补齐统计输出字段冲突的 fail-loud 诊断，避免覆盖既有数据，并完成 Data / Plot 最终 owner 对账
-- `0.1.0` 以 npm `latest` 发布，annotated tag 为 `data-v0.1.0`
+主要场景：
 
-## Stable 契约
+- Plot、Chart 与 Table 需要共享通用数据处理。
+- 一个消费者不应为了数据能力依赖另一个绘图包。
 
-- schema-derived 公共类型使用 `IRDataXxx` owner 前缀
-- 通用 transform 与 statistics 属于 Data；依赖坐标、scale、mark 或图形几何的 transform 属于 Plot
-- lineage 保持 runtime-only，不写入 JSON IR 或 Scene meta
-- canonical data-view preparation 与宿主共享 view lifecycle 延期到后续版本
+规划内容：
 
-## 验证策略
+- 从 Plot 迁出经验证的数据模型与处理能力。
+- 建立独立 Data owner，保持可视化语义仍由消费方负责。
 
-- Data schema、field、format、transform、statistics、registry、pipeline 与 lineage 测试
-- Plot 的导入边界、公开导出、lowering 与 adapter 兼容性验证
-- 发布声明、packed ESM / TypeScript 与 clean-consumer 依赖闭包验证
+预期效果：
+
+共享数据能力成为独立依赖，避免可视化包之间为数据处理形成耦合。
+
+### 字段与格式化
+
+主要场景：
+
+- 同一字段在多个可视化场景中需要一致解释。
+- 显示文字需要由值和格式化规则共同产生。
+
+规划内容：
+
+- 统一数据模型、字段解析、format 与公开数据词汇。
+- 区分数据语义与颜色、位置等绘图映射，避免扩大 Data 的职责。
+
+预期效果：
+
+同一数据输入在不同消费方中具有可对齐的字段与格式化含义。
+
+### 变换与统计
+
+主要场景：
+
+- 输入数据需要过滤、变换、聚合或统计处理。
+- 处理结果要继续交给不同可视化包消费。
+
+规划内容：
+
+- 提供共享 transform、statistics 与 pipeline 能力。
+- 明确统计输出和字段冲突的诊断，保持结果可被继续追溯。
+
+预期效果：
+
+常用处理能够组合复用，统计结果及失败具有明确解释。
+
+### 开放接入
+
+主要场景：
+
+- 消费方需要显式提供所需数据能力。
+- 自定义数据操作需要与内置实现按同一路径被消费。
+
+规划内容：
+
+- 明确 Definition、provider、registry 与 pipeline 的职责。
+- 避免把 Plot 专属注册逻辑或可视化依赖留在共享层。
+
+预期效果：
+
+内置和扩展数据操作由同一契约接入，消费者无需复制处理机制。
+
+### 类型与追溯
+
+主要场景：
+
+- 工具需要区分持久化数据描述与运行时结果。
+- 可视化元素需要追溯到数据来源和处理过程。
+
+规划内容：
+
+- 统一 IRData 命名并提供 runtime-only lineage。
+- 追溯不反向写入 JSON IR / Scene，保持数据描述可持久化。
+
+预期效果：
+
+可视化结果可以追溯来源，同时持久化输入保持简单和稳定。
+
+## 边界与依赖
+
+不承载绘图、布局或 renderer 语义；canonical data-view preparation 与共享 view lifecycle 留给后续版本。
