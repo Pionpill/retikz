@@ -5,9 +5,9 @@ keywords: 'Relation、Core、Path、forward、both、association、reverse'
 
 # ADR-008：Relation 语义封装与 Core Path 复用
 
-- 状态：Accepted；多行标签承接 [Core v0.5 ADR-033](../../../../../../kernel/_notes/decisions/v0/v0.5/033-stroke-path-label-interruption.md) Proposed
+- 状态：Accepted
 - 决策日期：2026-08-22
-- 修订日期：2026-08-23
+- 修订日期：2026-09-14
 - 关联：[Entity contract](./007-entity-data-geometry.md) · [Graph context](./009-composable-graph-context.md) · [Standard Shape 与 Marker](../../../../../../library/_notes/decisions/standard/v0/v0.1/028-diagram-shapes-and-endpoint-markers.md)
 
 > Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](./017-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
@@ -24,7 +24,7 @@ Relation 是带稳定端点和 Graph 语义、最终下沉为一个 Core Path �
 
 Relation 保存两个有序 Core `NodeTarget` endpoint。source / target 确定记录和 route 的稳定顺序；有效语义方向依次取显式 direction、kind refinement 或 role default，不从页面位置、Path 顺序、marker 或布局方向反推
 
-Relation 可以独立出现在任意 Core 内容树。它直接保存 Core-compatible route、labels 与允许的 Path 实例字段，不保存 routing provider、布局状态、marker geometry 或 renderer 对象。`labels` 的每项就是 Core `GeometryLabel`；在 [Core v0.5 ADR-033](../../../../../../kernel/_notes/decisions/v0/v0.5/033-stroke-path-label-interruption.md) 落地后，其 `text` 随 Core 复用完整 `TextBlock`，Graph Relation 便原生支持硬换行、行数组、逐行样式和混排文字 / 数学行。Graph 不新增 Relation text、line 或 bbox 模型。省略 route 时生成 source → target 的直接 Core Path；需要普通无 Graph 语义的线时直接使用 Core Path
+Relation 可以独立出现在任意 Core 内容树。它直接保存 Core-compatible route、labels 与允许的 Path 实例字段，不保存 routing provider、布局状态、marker geometry 或 renderer 对象。`labels` 的每项就是 Core `GeometryLabel`；其 `text` 按 [Core v0.5 ADR-033](../../../../../../kernel/_notes/decisions/v0/v0.5/033-stroke-path-label-interruption.md) 复用完整 `TextBlock`，Graph Relation 原生支持硬换行、行数组、逐行样式和混排文字 / 数学行。Graph 不新增 Relation text、line 或 bbox 模型。省略 route 时生成 source → target 的直接 Core Path；需要普通无 Graph 语义的线时直接使用 Core Path
 
 ### role、kind、predicate 与 direction
 
@@ -38,22 +38,15 @@ role 与 kind 使用 `createOpenStringSchema(values)` 暴露内置词汇提示�
 
 | role             | default   | allowed                              | marker family |
 | ---------------- | --------- | ------------------------------------ | ------------- |
-| `association`    | `none`    | `none`、`forward`、`reverse`、`both` | kite          |
-| `dependency`     | `forward` | `forward`                            | stealth       |
+| `association`    | `forward` | `none`、`forward`、`reverse`、`both` | diamond       |
+| `dependency`     | `forward` | `forward`                            | straightBarb  |
 | `generalization` | `forward` | `forward`                            | normal        |
-| `flow`           | `forward` | `forward`、`reverse`、`both`         | circle        |
-| `influence`      | `forward` | `forward`、`reverse`、`both`         | square        |
+| `flow`           | `forward` | `forward`、`reverse`、`both`         | stealth       |
+| `influence`      | `forward` | `forward`、`reverse`、`both`         | circle        |
 
-`association.none` 两端无 marker；其它方向把同一 family 的实心 marker 放到对应 endpoint，`both` 放到两端。全部内置 role 的基础 path 为实线
+`association.none` 两端无 marker；其它方向把同一 family 的 marker 放到对应 endpoint，`both` 放到两端。全部内置 role 的基础 path 为实线
 
-内置 kind 的稳定 delta 为：
-
-| kind                    | role             | direction      | 结构 delta                      |
-| ----------------------- | ---------------- | -------------- | ------------------------------- |
-| `uml.aggregation`       | `association`    | `none`         | source `openDiamond`，target 无 |
-| `uml.composition`       | `association`    | `none`         | source `diamond`，target 无     |
-| `uml.realization`       | `generalization` | 继承 `forward` | target `open`                   |
-| `provenance.derivation` | `dependency`     | 继承 `forward` | target `openStealth`            |
+内置 UML kind 的目录与结构 delta 由 [ADR-015](./015-uml-relation-kind-catalog.md) 决定，包括 association、aggregation、composition、generalization、dependency 与 realization 六种关系；realization 属于 dependency role。旧 provenance.derivation 不再内置。
 
 Workflow 等上层语义通过同一 registry 注册自己的 kind / predicate。Graph 只保存、校验并确定通用关系语义，不执行条件、状态机或领域判断
 
@@ -67,13 +60,13 @@ structure = role recipe
           > predicate(params) delta
 
 appearance = Graph Theme baseline 与有序 rules
-           > 从外到内 graphTheme rules
+           > 从外到内 graphDefaults 与 graphRules
            > Relation / label 显式 Core-compatible 字段
 ```
 
 结构决定 marker family、marker existence 和规范 dash；Theme / graphRules 只能通过受限 `structure.dashPattern` 覆盖箭身 dash，其余只改变颜色、线宽、opacity、marker paint 与 label appearance，不能增删 marker、切换 provider 或改变语义 direction。单个实例的 Path、marker 和 label 字段最终覆盖适用的默认值
 
-Relation selector 可以匹配 role、kind、predicate name、Canonical params 与 direction。字段按 AND 匹配；params 使用递归子集匹配，并且必须同时声明 predicate name。规则按声明顺序执行，后匹配项逐字段覆盖先匹配项
+Relation selector 可以匹配 role、kind、predicate name、Canonical params、direction 与 status。字段按 AND 匹配；params 使用递归子集匹配，并且必须同时声明 predicate name。规则按声明顺序执行，后匹配项逐字段覆盖先匹配项
 
 ### Core Path、Arrow 与 Standard 的边界
 
@@ -103,10 +96,14 @@ type IRGraphRelation = Readonly<{
   kind?: string;
   predicate?: IRGraphPredicateRef;
   direction?: RelationDirection;
+  status?: GraphStatus;
+  group?: string;
   labels?: ReadonlyArray<IRGeometryLabel>;
   route?: ReadonlyArray<IRGraphRelationRouteStep>;
 }> &
-  Omit<IRPath, 'type' | 'kind' | 'kindOptions' | 'children' | 'label' | 'marks' | 'fill' | 'fillOpacity' | 'fillRule'>;
+  Omit<IRPath, 'type' | 'kind' | 'kindOptions' | 'children' | 'label' | 'marks' | 'style'> & {
+    style?: Omit<NonNullable<IRPath['style']>, 'fill' | 'fillOpacity' | 'fillRule'>;
+  };
 ```
 
 role Definition 必须覆盖全部 allowed directions；kind 的 allowed directions 必须是 role 的非空子集，default 必须属于最终集合。predicate callback 只接收通过自身 schema 的 Canonical params。三类 Definition 分别使用公开 define helper，并进入同一 `GraphDefinitionOptions`
