@@ -41,7 +41,7 @@ const withGraphThemeStyles = <TProps extends { graphThemeStyles?: GraphProps['gr
   graphThemeStyles:
     props.graphThemeStyles === undefined
       ? PreviewThemeDefinitionBundle.graph
-      : [...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles],
+      : [...new Set([...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles])],
 });
 
 /** docs preview 的 Graph 边界，显式覆盖 Layout-embedded runtime definitions */
@@ -93,7 +93,7 @@ const withFlowThemeStyles = (props: FlowDiagramProps): FlowDiagramProps => ({
   graphThemeStyles:
     props.graphThemeStyles === undefined
       ? PreviewThemeDefinitionBundle.graph
-      : [...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles],
+      : [...new Set([...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles])],
 });
 
 /** docs preview 的 FlowDiagram 边界，显式覆盖全部同名 Theme definitions */

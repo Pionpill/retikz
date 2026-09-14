@@ -19,7 +19,12 @@ description: 沿一次观测编译理解选择准入、最终产物收集、实�
 
 先校验选择规则，再由 Core 编译主图并发布候选结果；Inspect 收集完这一批结果，才精确匹配实例、调用观测器并隔离编译辅助内容。主图与辅助支路分别产出，最后一起交给宿主。
 
-<ComponentPreview files="inspect-compile-flow" size="lg" hideCode />
+<ComponentPreview
+  files="inspect-compile-flow"
+  size="lg"
+  hideCode
+  caption="蓝色链路保留主图结果，橙色链路生成辅助观测内容，两路最终一起交给 Render。"
+/>
 
 Core 负责提供最终产物与隔离编译能力，Inspect 负责选择、观测器调度和辅助结果；辅助支路没有返回修改主图的步骤。
 

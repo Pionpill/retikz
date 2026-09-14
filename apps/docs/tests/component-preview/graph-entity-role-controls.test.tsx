@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -7,6 +7,7 @@ import type { PreviewControlContract, PreviewControlValues } from '@/modules/doc
 
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
+import { PreviewThemeProvider } from '@/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
 import { previewControlContract as activityZh } from '@/modules/docs/contents/schematic/graph/entity/basic/entity-activity.controls';
 import { previewControlContract as activityEn } from '@/modules/docs/contents/schematic/graph/entity/basic/entity-activity.en.controls';
@@ -64,6 +65,9 @@ import EntityDefinitionDemo, {
 } from '@/modules/docs/contents/schematic/graph/entity/extension/entity-definition.zh.demo';
 
 type PreviewSource = typeof participantZhSource;
+
+const renderPreviewMarkup = (element: ReactNode): string =>
+  renderToStaticMarkup(<PreviewThemeProvider theme={{ mode: 'light' }}>{element}</PreviewThemeProvider>);
 
 type RoleScenario = Readonly<{
   role: string;
@@ -153,7 +157,7 @@ const getCanonicalViewBox = (source: PreviewSource) =>
   buildPreviewIR(() => source.canonicalRender?.() ?? null).ir.viewBox;
 
 const renderWithValues = (scenario: RoleScenario, values: Readonly<PreviewControlValues>): string =>
-  renderToStaticMarkup(
+  renderPreviewMarkup(
     <PreviewControlStateContext.Provider
       value={{
         canonicalValues: scenario.chinese.canonicalValues,
@@ -207,7 +211,7 @@ describe('Graph Entity role controls', () => {
     const semanticColorByKind = {
       'docs.logic.important': '#1e90ff',
       'docs.logic.importantData': '#ff8c00',
-      'docs.logic.secondary': '#808080',
+      'docs.logic.secondary': '#e4e4e4',
       'docs.logic.algorithm': '#9400d3',
     } as const;
 
@@ -234,7 +238,12 @@ describe('Graph Entity role controls', () => {
         const markup = renderWithValues(scenario, { ...scenario.chinese.canonicalValues, kind });
 
         expect(markup, `${scenario.role}: ${kind}`).toContain(semanticColor);
-        expect(markup, `${scenario.role}: ${kind}`).not.toContain(`fill="${semanticColor}"`);
+        if (kind === 'docs.logic.secondary') {
+          expect(markup).toContain('stroke="none"');
+          expect(markup).toContain(`fill="${semanticColor}"`);
+        } else {
+          expect(markup, `${scenario.role}: ${kind}`).not.toContain(`fill="${semanticColor}"`);
+        }
       }
     }
   });
@@ -256,14 +265,14 @@ describe('Graph Entity role controls', () => {
     }
   });
 
-  it('默认 Scene IR 中的 Graph record 直接保存 Entity 字段，不写入 Theme', () => {
+  it('默认 Scene IR 保留 Entity 字段与站点语义 Theme 选择器', () => {
     for (const scenario of scenarios) {
       const source = buildPreviewIR(() => scenario.chineseSource.canonicalRender?.() ?? null).ir.children[0] as {
         theme?: unknown;
         children?: ReadonlyArray<unknown>;
       };
 
-      expect(source, scenario.role).not.toHaveProperty('theme');
+      expect(source, scenario.role).toHaveProperty('theme.style', 'docs.logic');
       expect(source.children, scenario.role).toEqual([
         {
           namespace: 'graph',
@@ -279,7 +288,7 @@ describe('Graph Entity role controls', () => {
 
 describe('Graph Entity style playground', () => {
   const renderStyleWithValues = (values: Readonly<PreviewControlValues>): string =>
-    renderToStaticMarkup(
+    renderPreviewMarkup(
       <PreviewControlStateContext.Provider
         value={{
           canonicalValues: styleZh.canonicalValues,
@@ -333,7 +342,7 @@ describe('Graph Entity style playground', () => {
     expect(baseline).toContain('<svg');
     const semanticColors = {
       'docs.logic.important': '#1e90ff',
-      'docs.logic.secondary': '#808080',
+      'docs.logic.secondary': '#e4e4e4',
       'docs.logic.algorithm': '#9400d3',
     } as const;
     for (const [kind, color] of Object.entries(semanticColors)) {
@@ -376,7 +385,7 @@ describe('Graph Entity style playground', () => {
 
 describe('Graph Entity predicate controls', () => {
   const renderDefinition = (values: Readonly<PreviewControlValues>): string =>
-    renderToStaticMarkup(
+    renderPreviewMarkup(
       <PreviewControlStateContext.Provider
         value={{
           canonicalValues: definitionZh.canonicalValues,

@@ -28,7 +28,9 @@ The seven built-in roles define only upper-level semantics and a base shape reci
 
 Entity examples use the default style and support light and dark modes. Each demo below can precisely control instance color and text; use Graph defaults and conditional rules to customize appearance across entities
 
-The default style uses a complete master-color outline with a light same-color `fill: 0.08`. Explicit instance `style.fill`, `style.stroke`, and `style.textColor` values take precedence; for example, `style.stroke: 'none'` removes the outline
+The default master color is `#666666` in light mode and `#999999` in dark mode, both opaque neutral colors. The default style uses a complete master-color outline with a light same-color `fill: 0.08`. Explicit instance `style.fill`, `style.stroke`, and `style.textColor` values take precedence; for example, `style.stroke: 'none'` removes the outline
+
+The site kind `docs.logic.secondary` represents secondary, supporting, or derived content. It retains the role shape, removes the outline, and uses `#e4e4e4` fill in light mode or `#1b1b1b` in dark mode. The neutral fill is independent of `group` and the categorical-color toggle. Text is muted (`#555555` in light mode, `#bbbbbb` in dark mode), `status` is expressed through text color, and explicit instance styles still take precedence.
 
 ### participant: an active subject
 
@@ -41,7 +43,7 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-participant"
   size="sm"
-  caption="Start with no kind; select docs.logic.important or docs.logic.secondary to observe blue or gray semantic appearance."
+  caption="Start with no kind; select docs.logic.important or docs.logic.secondary to observe blue emphasis or an outline-free neutral fill."
 />
 
 ### activity: work and action
@@ -55,7 +57,7 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-activity"
   size="sm"
-  caption="Start with no kind; select docs.logic.important, docs.logic.secondary, or docs.logic.algorithm to observe blue, gray, or violet semantic appearance."
+  caption="Start with no kind; select docs.logic.important, docs.logic.secondary, or docs.logic.algorithm to observe blue emphasis, an outline-free neutral fill, or violet emphasis."
 />
 
 ### event: a point in time
@@ -69,7 +71,7 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-event"
   size="sm"
-  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange emphasis or an outline-free neutral fill."
 />
 
 ### state: a persistent condition
@@ -83,7 +85,7 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-state"
   size="sm"
-  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange emphasis or an outline-free neutral fill."
 />
 
 ### gateway: a semantic control point
@@ -97,7 +99,7 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-gateway"
   size="sm"
-  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange emphasis or an outline-free neutral fill."
 />
 
 ### resource: an object that is used or stored
@@ -111,7 +113,7 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-resource"
   size="sm"
-  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange or gray semantic appearance and the resource outline."
+  caption="Start with no kind; select docs.logic.importantData or docs.logic.secondary to observe orange emphasis or an outline-free neutral fill and the resource outline."
 />
 
 ### concept: an abstract knowledge object
@@ -125,18 +127,18 @@ The default style uses a complete master-color outline with a light same-color `
 <ComponentPreview
   files="entity-concept"
   size="sm"
-  caption="Start with no kind; select docs.logic.important or docs.logic.secondary to observe blue or gray semantic appearance."
+  caption="Start with no kind; select docs.logic.important or docs.logic.secondary to observe blue emphasis or an outline-free neutral fill."
 />
 
 ### Semantic status
 
-`status` preserves a directly readable Graph state on an Entity. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. `disabled` also uses a `[6, 4]` dashed stroke, distinguishing it from the gray `docs.logic.secondary` kind. Omitting the field means no special marker; Graph does not write a `normal` value. This is distinct from the `state` role: status describes the current diagram semantics, while that role represents a persistent condition
+`status` preserves a directly readable Graph state on an Entity. `error`, `success`, `warning`, and `disabled` use the current Core Theme's `semantic.error`, `semantic.success`, `semantic.warning`, and `semantic.guide` respectively. Ordinary Entities also use a `[6, 4]` dashed stroke for `disabled`; `docs.logic.secondary` remains outline-free and expresses status through text color. Omitting the field means no special marker; Graph does not write a `normal` value. This is distinct from the `state` role: status describes the current diagram semantics, while that role represents a persistent condition
 
-Every role demo and the combined style playground can switch between no status and the four status values. With no status, demos with a site kind show the kind semantic color; once a status is selected, the current Theme status color takes precedence. You can also write `status` directly in any Entity Source. Explicit Core Node-compatible appearance such as `style.color`, `style.fill`, and `style.stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
+Every role demo and the combined style playground can switch between no status and the four status values. With no status, demos with a site kind show the kind semantic color; once a status is selected, the current Theme status color takes precedence. Secondary changes only its text color and retains the neutral fill. You can also write `status` directly in any Entity Source. Explicit Core Node-compatible appearance such as `style.color`, `style.fill`, and `style.stroke` still overrides the status default without removing `status` from Source. A predicate's `params.status` remains domain data interpreted by that predicate and is never mapped to Graph status
 
 ### Style adjustments
 
-The combined playground uses the `activity` role to switch among its three registered site kinds: `docs.logic.important` is blue, `docs.logic.secondary` is gray, and `docs.logic.algorithm` is violet. Event, state, gateway, and resource also support the orange `docs.logic.importantData`. Fill and stroke defer to the kind rule by default; choosing a concrete color overrides that semantic color
+The combined playground uses the `activity` role to switch among its three registered site kinds: `docs.logic.important` is blue, `docs.logic.secondary` has an outline-free neutral fill, and `docs.logic.algorithm` is violet. Event, state, gateway, and resource also support the orange `docs.logic.importantData`. Fill and stroke defer to the kind rule by default; choosing a concrete color overrides that semantic color
 
 <ComponentPreview
   files="entity-style"

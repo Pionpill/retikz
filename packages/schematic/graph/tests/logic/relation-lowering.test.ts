@@ -282,7 +282,7 @@ describe('Relation lowering', () => {
       primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'default label'),
     );
 
-    expect(label).toMatchObject({ type: 'text', fill: '#000000', fontSize: 14 });
+    expect(label).toMatchObject({ type: 'text', fill: '#666666', fontSize: 14 });
   });
 
   it.each([

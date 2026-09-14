@@ -60,7 +60,7 @@ describe('Entity lowering', () => {
       shape: { type: 'hexagon' },
       layout: { padding: { x: 0, y: 8 }, minimumSize: { width: 80, height: 36 } },
       style: {
-        color: '#000000',
+        color: '#666666',
         textColor: 'contrast',
         fill: 0.08,
         stroke: 1,

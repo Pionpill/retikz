@@ -5,7 +5,7 @@ import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/f
 import type { Lang } from '@/i18n';
 
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
-import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { inspectOccurrenceFlowI18n } from './inspect-occurrence-flow.i18n';
 export type InspectOccurrenceFlowProps = Readonly<{ lang?: Lang }>;
@@ -18,18 +18,18 @@ const InspectOccurrenceFlow: FC<InspectOccurrenceFlowProps> = props => {
         <FlowLayout kind="linear" id="row0" direction="right" gap={32} align="center">
           <FlowEntities
             items={[
-              { id: 'source', text: i18n.source, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'admit', text: i18n.admit, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'compile', text: i18n.compile, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'source', text: i18n.source, role: 'activity' },
+              { id: 'admit', text: i18n.admit, role: 'activity' },
+              { id: 'compile', text: i18n.compile, role: 'activity' },
             ]}
           />
         </FlowLayout>
         <FlowLayout kind="linear" id="row1" direction="right" gap={32} align="center">
           <FlowEntities
             items={[
-              { id: 'instances', text: i18n.instances, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'match', text: i18n.match, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'selected', text: i18n.selected, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'instances', text: i18n.instances, role: 'activity' },
+              { id: 'match', text: i18n.match, role: 'activity' },
+              { id: 'selected', text: i18n.selected, role: 'activity' },
             ]}
           />
         </FlowLayout>

@@ -20,7 +20,7 @@ export const CrossPackageDesignFigure: FC<CrossPackageDesignFigureProps> = props
       <FlowLayout kind="linear" id="cross-package-design" direction="right" align="center" gap={32}>
         <FlowEntities
           items={[
-            { id: 'problem', text: i18n.problem, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+            { id: 'problem', text: i18n.problem, role: 'activity' },
             { id: 'owner', text: i18n.owner, role: 'activity', kind: LogicFigureEntityKind.Important },
             { id: 'contract', text: i18n.contract, role: 'activity', kind: LogicFigureEntityKind.Important },
             {
@@ -29,7 +29,7 @@ export const CrossPackageDesignFigure: FC<CrossPackageDesignFigureProps> = props
               role: 'activity',
               kind: LogicFigureEntityKind.Important,
             },
-            { id: 'loop', text: i18n.loop, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+            { id: 'loop', text: i18n.loop, role: 'activity' },
           ]}
         />
       </FlowLayout>

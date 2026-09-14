@@ -21,7 +21,7 @@ export const IterationGatesFigure: FC<IterationGatesFigureProps> = props => {
         <FlowLayout kind="linear" id="design" direction="right" align="center" gap={28}>
           <FlowEntities
             items={[
-              { id: 'adr', text: i18n.adr, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'adr', text: i18n.adr, role: 'activity' },
               {
                 id: 'architecture-gate',
                 text: i18n.architectureGate,
@@ -32,7 +32,6 @@ export const IterationGatesFigure: FC<IterationGatesFigureProps> = props => {
                 id: 'confirm-adr',
                 text: i18n.confirmAdr,
                 role: 'activity',
-                kind: LogicFigureEntityKind.Secondary,
               },
             ]}
           />
@@ -40,7 +39,7 @@ export const IterationGatesFigure: FC<IterationGatesFigureProps> = props => {
         <FlowLayout kind="linear" id="planning" direction="right" align="center" gap={28}>
           <FlowEntities
             items={[
-              { id: 'plan', text: i18n.plan, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'plan', text: i18n.plan, role: 'activity' },
               {
                 id: 'plan-gate',
                 text: i18n.planGate,
@@ -51,7 +50,6 @@ export const IterationGatesFigure: FC<IterationGatesFigureProps> = props => {
                 id: 'implementation',
                 text: i18n.implementation,
                 role: 'activity',
-                kind: LogicFigureEntityKind.Secondary,
               },
             ]}
           />

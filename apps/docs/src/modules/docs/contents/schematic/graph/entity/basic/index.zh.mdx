@@ -28,7 +28,9 @@ import { Layout } from '@retikz/react';
 
 Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 demo 都允许精确调整实例颜色和文本；需要统一定制外观时，可使用 Graph 默认值与条件规则
 
-默认风格使用完整主色描边和 `fill: 0.08` 的同色轻填充。实例显式提供的 `style.fill`、`style.stroke` 与 `style.textColor` 优先；例如 `style.stroke: 'none'` 可移除描边
+默认主色在亮色模式为 `#666666`，暗色模式为 `#999999`，均为不透明中性色。默认风格使用完整主色描边和 `fill: 0.08` 的同色轻填充。实例显式提供的 `style.fill`、`style.stroke` 与 `style.textColor` 优先；例如 `style.stroke: 'none'` 可移除描边
+
+站点 `docs.logic.secondary` 表示次要、辅助或派生内容：保留 role 的形状，移除描边，亮色使用 `#e4e4e4` 填充、暗色使用 `#1b1b1b` 填充。中性底色不随 `group` 或类别配色开关改变；文字适度弱化（亮色 `#555555`、暗色 `#bbbbbb`），`status` 通过文字颜色表达，实例样式仍可覆盖。
 
 ### participant：参与主体
 
@@ -41,7 +43,7 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-participant"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.important 或 docs.logic.secondary，查看蓝色或灰色语义外观。"
+  caption="默认不写 kind；选择 docs.logic.important 或 docs.logic.secondary，查看蓝色强调或无描边中性底色。"
 />
 
 ### activity：工作与动作
@@ -55,7 +57,7 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-activity"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.important、docs.logic.secondary 或 docs.logic.algorithm，观察蓝色、灰色或紫色语义外观。"
+  caption="默认不写 kind；选择 docs.logic.important、docs.logic.secondary 或 docs.logic.algorithm，观察蓝色强调、无描边中性底色或紫色强调。"
 />
 
 ### event：发生点
@@ -69,7 +71,7 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-event"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色或灰色语义外观。"
+  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色强调或无描边中性底色。"
 />
 
 ### state：持续条件
@@ -83,7 +85,7 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-state"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色或灰色语义外观。"
+  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色强调或无描边中性底色。"
 />
 
 ### gateway：语义控制点
@@ -97,7 +99,7 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-gateway"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色或灰色语义外观。"
+  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色强调或无描边中性底色。"
 />
 
 ### resource：被使用或保存的对象
@@ -111,7 +113,7 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-resource"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色或灰色语义外观与 resource 轮廓。"
+  caption="默认不写 kind；选择 docs.logic.importantData 或 docs.logic.secondary，查看橙色强调或无描边中性底色与 resource 轮廓。"
 />
 
 ### concept：抽象知识对象
@@ -125,18 +127,18 @@ Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 
 <ComponentPreview
   files="entity-concept"
   size="sm"
-  caption="默认不写 kind；选择 docs.logic.important 或 docs.logic.secondary，查看蓝色或灰色语义外观。"
+  caption="默认不写 kind；选择 docs.logic.important 或 docs.logic.secondary，查看蓝色强调或无描边中性底色。"
 />
 
 ### 语义状态
 
-`status` 为 Entity 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。`disabled` 还会以 `[6, 4]` 的描边虚线与灰色的 `docs.logic.secondary` 区分。省略它表示没有特别标记，不写入 `normal`。这里的状态不同于 `state` role：前者说明当前图式语义，后者说明节点所表示对象是一种持续条件
+`status` 为 Entity 保存可直接读取的图式状态：`error`、`success`、`warning` 与 `disabled` 分别使用当前 Core Theme 的 `semantic.error`、`semantic.success`、`semantic.warning` 与 `semantic.guide`。普通 Entity 的 `disabled` 还会使用 `[6, 4]` 描边虚线；`docs.logic.secondary` 保持无描边，以文字颜色表达状态。省略它表示没有特别标记，不写入 `normal`。这里的状态不同于 `state` role：前者说明当前图式语义，后者说明节点所表示对象是一种持续条件
 
-每个 role demo 与综合样式 demo 都可在“无状态”和这四种状态之间切换。无状态时，带站点 kind 的 demo 显示 kind 语义色；选择状态后，当前 Theme 的 status 色优先。也可以直接在任意 Entity Source 写入 `status`；显式 `style.color`、`style.fill`、`style.stroke` 等 Core Node-compatible appearance 仍会覆盖 status 的默认外观，但不会删除 Source 中的 `status`。领域 predicate 的 `params.status` 仍由 predicate 定义解释，不会自动映射为 Graph status
+每个 role demo 与综合样式 demo 都可在“无状态”和这四种状态之间切换。无状态时，带站点 kind 的 demo 显示 kind 语义色；选择状态后，当前 Theme 的 status 色优先；Secondary 仅改变文字颜色，保留中性底色。也可以直接在任意 Entity Source 写入 `status`；显式 `style.color`、`style.fill`、`style.stroke` 等 Core Node-compatible appearance 仍会覆盖 status 的默认外观，但不会删除 Source 中的 `status`。领域 predicate 的 `params.status` 仍由 predicate 定义解释，不会自动映射为 Graph status
 
 ### 样式调整
 
-下面的综合示例以 `activity` role 切换它已注册的三个站点 kind：`docs.logic.important` 为蓝色，`docs.logic.secondary` 为灰色，`docs.logic.algorithm` 为紫色。event、state、gateway 与 resource 还可使用 `docs.logic.importantData` 的橙色。填充色与描边色默认让出给 kind 规则；选择具体颜色后才覆盖语义色
+下面的综合示例以 `activity` role 切换它已注册的三个站点 kind：`docs.logic.important` 为蓝色，`docs.logic.secondary` 为无描边中性底色，`docs.logic.algorithm` 为紫色。event、state、gateway 与 resource 还可使用 `docs.logic.importantData` 的橙色。填充色与描边色默认让出给 kind 规则；选择具体颜色后才覆盖语义色
 
 <ComponentPreview
   files="entity-style"

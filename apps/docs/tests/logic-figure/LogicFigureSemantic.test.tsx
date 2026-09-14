@@ -4,9 +4,12 @@ import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { Entity } from '@retikz/graph-react';
 import { createInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
+import { PreviewThemeProvider } from '@/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
+import { buildVanillaPreview } from '@/modules/docs/components/component-preview/vanilla-preview';
 import {
   LogicFigure,
   LogicFigureEntityKind,
@@ -16,6 +19,7 @@ import {
   LogicFigureRelationKind,
 } from '@/modules/docs/components/logic-figure';
 import OpaqueColorFlow from '@/modules/docs/contents/kernel/packages/foundation/utilities/opaque-color-flow';
+import InspectCompileFlow from '@/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-compile-flow';
 import AffineCompositionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/affine-composition-flow';
 import CoordinateConversionFlow from '@/modules/docs/contents/kernel/packages/math/transforms/coordinate-conversion-flow';
 
@@ -26,6 +30,52 @@ const readLogicFigure = (element: ReactNode) => {
 };
 
 describe('LogicFigure semantic vocabulary', () => {
+  it.each([
+    { mode: 'light' as const, fill: '#e4e4e4', text: '#555555' },
+    { mode: 'dark' as const, fill: '#1b1b1b', text: '#bbbbbb' },
+  ])('Secondary 在 $mode 下保持无描边中性底色并允许实例覆盖', ({ mode, fill, text }) => {
+    const Figure = () => (
+      <LogicFigure semanticColors={false}>
+        <Entity role="activity" kind={LogicFigureEntityKind.Secondary} group="branch" position={[0, 0]}>
+          Derived
+        </Entity>
+        <Entity
+          role="activity"
+          kind={LogicFigureEntityKind.Secondary}
+          position={[200, 0]}
+          style={{ fill: 'red', stroke: 'blue' }}
+        >
+          Override
+        </Entity>
+      </LogicFigure>
+    );
+    const reactSvg = renderToStaticMarkup(
+      <PreviewThemeProvider theme={{ mode }}>
+        <Figure />
+      </PreviewThemeProvider>,
+    );
+    const vanilla = buildVanillaPreview(buildPreviewIR(Figure), { theme: { mode } });
+    expect(vanilla.svg, vanilla.code).toBeDefined();
+    const vanillaSvg = vanilla.svg;
+    for (const svg of [reactSvg, vanillaSvg]) {
+      expect(svg).toContain(`fill="${fill}"`);
+      expect(svg).toContain('stroke="none"');
+      expect(svg).toContain(`fill="${text}"`);
+      expect(svg).toContain('fill="red"');
+      expect(svg).toContain('stroke="blue"');
+    }
+  });
+
+  it('Inspect 总览使用普通实体，通过 group 区分主图与观测支路', () => {
+    const figure = FlowDiagramSchema.parse(buildPreviewIR(InspectCompileFlow).sourceIr.children[0]);
+    expect(figure.entities.every(entity => entity.kind === undefined)).toBe(true);
+    expect(figure.entities.filter(entity => entity.group === 'inspection').map(entity => entity.id)).toEqual([
+      'observation',
+      'inspect',
+      'fragment',
+    ]);
+  });
+
   it('defines site Entity kinds for important, important data, secondary, and algorithmic content', () => {
     expect(LogicFigureEntityKind).toEqual({
       Important: 'docs.logic.important',
@@ -110,7 +160,7 @@ describe('LogicFigure semantic vocabulary', () => {
       expect.arrayContaining(
         [
           { id: 'inputs', role: 'participant' },
-          { id: 'weight', role: 'activity', kind: LogicFigureEntityKind.Secondary },
+          { id: 'weight', role: 'activity' },
           { id: 'parse', role: 'activity', kind: LogicFigureEntityKind.Important },
           { id: 'colors', role: 'resource', kind: LogicFigureEntityKind.Secondary },
           { id: 'backdrop', role: 'activity', kind: LogicFigureEntityKind.Important },
@@ -120,6 +170,7 @@ describe('LogicFigure semantic vocabulary', () => {
       ),
     );
     expect(figure.entities.find(entity => entity.id === 'inputs')?.kind).toBeUndefined();
+    expect(figure.entities.find(entity => entity.id === 'weight')?.kind).toBeUndefined();
     expect(figure.entities.find(entity => entity.id === 'output')?.kind).toBeUndefined();
     expect(figure.layouts).toEqual(
       expect.arrayContaining([

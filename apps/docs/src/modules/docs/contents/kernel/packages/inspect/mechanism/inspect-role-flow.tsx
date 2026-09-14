@@ -18,9 +18,9 @@ const InspectRoleFlow: FC<InspectRoleFlowProps> = props => {
         <FlowLayout kind="linear" id="row0" direction="right" gap={32} align="center">
           <FlowEntities
             items={[
-              { id: 'selection', text: i18n.selection, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'lookup', text: i18n.lookup, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'inspector', text: i18n.inspector, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'selection', text: i18n.selection, role: 'activity' },
+              { id: 'lookup', text: i18n.lookup, role: 'activity' },
+              { id: 'inspector', text: i18n.inspector, role: 'activity' },
             ]}
           />
         </FlowLayout>

@@ -7,6 +7,7 @@ import { createElement, isValidElement } from 'react';
 import type { PreviewSourceConfig } from '../components/component-preview/types';
 
 import { PreviewGraph } from '../components/component-preview/theme';
+import { LogicFigure, logicFigureGraphProps, logicFigureRelationKinds } from '../components/logic-figure';
 
 type GraphPreviewRootProps = GraphLayoutHostProps & {
   children?: ReactNode;
@@ -20,7 +21,15 @@ const graphCanonicalRender = (node: ReactNode): ReactNode => {
   if (node.type === Layout) return node;
 
   const element = node as ReactElement<GraphPreviewRootProps>;
-  const { children, width, height, viewBox, className, renderer, themeStyles, ...graphProps } = element.props;
+  const resolvedProps =
+    node.type === LogicFigure
+      ? {
+          ...element.props,
+          ...logicFigureGraphProps(element.props.semanticColors),
+          relationKinds: logicFigureRelationKinds,
+        }
+      : element.props;
+  const { children, width, height, viewBox, className, renderer, themeStyles, ...graphProps } = resolvedProps;
   // LogicFigure 的 Docs-only 选项不能进入严格的 Graph Source schema
   delete graphProps.semanticColors;
   const hostProps: GraphLayoutHostProps = {

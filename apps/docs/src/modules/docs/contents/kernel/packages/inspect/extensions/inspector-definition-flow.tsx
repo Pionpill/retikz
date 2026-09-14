@@ -26,14 +26,12 @@ export const InspectorDefinitionFlow: FC<InspectorDefinitionFlowProps> = props =
                   id: 'final-output',
                   text: i18n.finalOutput,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                   layout: { minimumSize: { width: 0, height: 56 } },
                 },
                 {
                   id: 'user-options',
                   text: i18n.userOptions,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                   layout: { minimumSize: { width: 0, height: 56 }, margin: { bottom: 5 } },
                 },
               ]}
@@ -55,7 +53,6 @@ export const InspectorDefinitionFlow: FC<InspectorDefinitionFlowProps> = props =
                     layout: { minimumSize: { width: 0, height: 56 } },
                     text: i18n.subjectSchema,
                     role: 'activity',
-                    kind: LogicFigureEntityKind.Secondary,
                   },
                 ]}
               />
@@ -74,7 +71,6 @@ export const InspectorDefinitionFlow: FC<InspectorDefinitionFlowProps> = props =
                       layout: { minimumSize: { width: 0, height: 56 } },
                       text: i18n.optionsSchema,
                       role: 'activity',
-                      kind: LogicFigureEntityKind.Secondary,
                     },
                     {
                       id: 'resolve-options',
@@ -92,9 +88,9 @@ export const InspectorDefinitionFlow: FC<InspectorDefinitionFlowProps> = props =
         <FlowLayout id="output" kind="linear" direction="right" gap={24} align="center">
           <FlowEntities
             items={[
-              { id: 'ir', text: i18n.ir, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'ir', text: i18n.ir, role: 'activity' },
               { id: 'compile', text: i18n.compile, role: 'activity', kind: LogicFigureEntityKind.Important },
-              { id: 'scene', text: i18n.scene, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'scene', text: i18n.scene, role: 'activity' },
             ]}
           />
         </FlowLayout>

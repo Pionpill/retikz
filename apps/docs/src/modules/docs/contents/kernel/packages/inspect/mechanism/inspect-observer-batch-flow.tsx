@@ -26,13 +26,11 @@ export const InspectObserverBatchFlow: FC<InspectObserverBatchFlowProps> = props
                   id: 'occurrence-1',
                   text: i18n.occurrence1,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                 },
                 {
                   id: 'occurrence-n',
                   text: i18n.occurrence2,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                 },
               ]}
             />
@@ -52,13 +50,11 @@ export const InspectObserverBatchFlow: FC<InspectObserverBatchFlowProps> = props
                     id: 'admit',
                     text: i18n.admit,
                     role: 'activity',
-                    kind: LogicFigureEntityKind.Secondary,
                   },
                   {
                     id: 'request-site',
                     text: i18n.requestSite,
                     role: 'activity',
-                    kind: LogicFigureEntityKind.Secondary,
                   },
                 ]}
               />
@@ -82,7 +78,7 @@ export const InspectObserverBatchFlow: FC<InspectObserverBatchFlowProps> = props
             items={[
               { id: 'fragment', text: i18n.fragment, role: 'activity', kind: LogicFigureEntityKind.Important },
               { id: 'plane', text: i18n.inspectionPlane, role: 'resource', kind: LogicFigureEntityKind.ImportantData },
-              { id: 'layers', text: i18n.layers, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'layers', text: i18n.layers, role: 'activity' },
             ]}
           />
         </FlowLayout>

@@ -5,7 +5,7 @@ import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/f
 import type { Lang } from '@/i18n';
 
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
-import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { inspectCompileFlowI18n } from './inspect-compile-flow.i18n';
 
@@ -22,8 +22,8 @@ export const InspectCompileFlowFigure: FC<InspectCompileFlowFigureProps> = props
         <FlowLayout kind="linear" id="authoring" direction="down" align="center">
           <FlowEntities
             items={[
-              { id: 'input', text: i18n.input, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'compile', text: i18n.compile, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'input', text: i18n.input, role: 'activity' },
+              { id: 'compile', text: i18n.compile, role: 'activity' },
             ]}
           />
         </FlowLayout>
@@ -34,7 +34,6 @@ export const InspectCompileFlowFigure: FC<InspectCompileFlowFigureProps> = props
                 id: 'primary',
                 text: i18n.primary,
                 role: 'activity',
-                kind: LogicFigureEntityKind.Secondary,
                 group: 'primary',
               },
             ]}
@@ -46,30 +45,25 @@ export const InspectCompileFlowFigure: FC<InspectCompileFlowFigureProps> = props
                   id: 'observation',
                   text: i18n.observation,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                   group: 'inspection',
                 },
                 {
                   id: 'inspect',
                   text: i18n.inspect,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                   group: 'inspection',
                 },
                 {
                   id: 'fragment',
                   text: i18n.fragment,
                   role: 'activity',
-                  kind: LogicFigureEntityKind.Secondary,
                   group: 'inspection',
                 },
               ]}
             />
           </FlowLayout>
         </FlowLayout>
-        <FlowEntities
-          items={[{ id: 'render', text: i18n.render, role: 'activity', kind: LogicFigureEntityKind.Secondary }]}
-        />
+        <FlowEntities items={[{ id: 'render', text: i18n.render, role: 'activity' }]} />
       </FlowLayout>
       <FlowRelations
         items={[

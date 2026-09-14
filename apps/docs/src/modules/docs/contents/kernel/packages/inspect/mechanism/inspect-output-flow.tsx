@@ -5,7 +5,7 @@ import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/f
 import type { Lang } from '@/i18n';
 
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
-import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { inspectOutputFlowI18n } from './inspect-output-flow.i18n';
 export type InspectOutputFlowProps = Readonly<{ lang?: Lang }>;
@@ -18,18 +18,18 @@ const InspectOutputFlow: FC<InspectOutputFlowProps> = props => {
         <FlowLayout kind="linear" id="row0" direction="right" gap={32} align="center">
           <FlowEntities
             items={[
-              { id: 'options', text: i18n.options, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'inspect', text: i18n.inspect, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'subject', text: i18n.subject, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'options', text: i18n.options, role: 'activity' },
+              { id: 'inspect', text: i18n.inspect, role: 'activity' },
+              { id: 'subject', text: i18n.subject, role: 'activity' },
             ]}
           />
         </FlowLayout>
         <FlowLayout kind="linear" id="row1" direction="right" gap={32} align="center">
           <FlowEntities
             items={[
-              { id: 'fragment', text: i18n.fragment, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'compile', text: i18n.compile, role: 'activity', kind: LogicFigureEntityKind.Secondary },
-              { id: 'layers', text: i18n.layers, role: 'activity', kind: LogicFigureEntityKind.Secondary },
+              { id: 'fragment', text: i18n.fragment, role: 'activity' },
+              { id: 'compile', text: i18n.compile, role: 'activity' },
+              { id: 'layers', text: i18n.layers, role: 'activity' },
             ]}
           />
         </FlowLayout>

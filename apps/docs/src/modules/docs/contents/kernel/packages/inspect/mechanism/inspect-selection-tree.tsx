@@ -43,7 +43,6 @@ export const InspectSelectionTree: FC<InspectSelectionTreeProps> = props => {
               id: 'disable',
               text: i18n.disable,
               role: 'activity',
-              kind: LogicFigureEntityKind.Secondary,
               status: 'disabled',
             },
             { id: 'reopened', text: i18n.reopened, role: 'activity', kind: LogicFigureEntityKind.Important },
@@ -55,14 +54,12 @@ export const InspectSelectionTree: FC<InspectSelectionTreeProps> = props => {
               id: 'barrier',
               text: i18n.barrier,
               role: 'activity',
-              kind: LogicFigureEntityKind.Secondary,
               status: 'disabled',
             },
             {
               id: 'blocked',
               text: i18n.blocked,
               role: 'activity',
-              kind: LogicFigureEntityKind.Secondary,
               status: 'disabled',
             },
           ]}

@@ -19,7 +19,12 @@ For our curve, selection requests control points, the registry provides the Path
 
 Validate selection rules first, then let Core compile the primary figure and publish candidate results. After collecting the batch, Inspect matches final instances, invokes Inspectors, and compiles their auxiliary output in isolation. Primary and auxiliary branches produce separate results delivered together to the host.
 
-<ComponentPreview files="inspect-compile-flow" size="lg" hideCode />
+<ComponentPreview
+  files="inspect-compile-flow"
+  size="lg"
+  hideCode
+  caption="The blue branch preserves the primary result; the orange branch generates auxiliary inspection content. Both are delivered to Render together."
+/>
 
 Core provides final outputs and isolated compilation. Inspect owns selection, Inspector dispatch, and auxiliary results; no auxiliary stage rewrites the primary figure.
 

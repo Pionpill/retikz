@@ -1,19 +1,19 @@
 import type { FC } from 'react';
 
-import type { Lang } from '@/i18n';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import { RelationRole } from '@retikz/graph';
 
-import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import type { Lang } from '@/i18n';
 
-import { opaqueColorFlowI18n } from './opaque-color-flow.i18n';
+import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import {
   LogicFigureEntityKind,
   logicFigureGraphProps,
   LogicFigureRelationKind,
   logicFigureRelationKinds,
 } from '@/modules/docs/components/logic-figure';
+
+import { opaqueColorFlowI18n } from './opaque-color-flow.i18n';
 
 /** 展示 compositeOpaqueColor 的正常解析与预合成链路 */
 export type OpaqueColorFlowI18nFigureProps = Readonly<{ lang?: Lang }>;
@@ -33,7 +33,6 @@ const Demo: FC<OpaqueColorFlowI18nFigureProps> = props => {
                 id: 'weight',
                 text: i18n.label2,
                 role: 'activity',
-                kind: LogicFigureEntityKind.Secondary,
               },
               { id: 'parse', text: i18n.label3, role: 'activity', kind: LogicFigureEntityKind.Important },
               { id: 'colors', text: i18n.label4, role: 'resource', kind: LogicFigureEntityKind.Secondary },

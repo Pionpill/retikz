@@ -1,7 +1,9 @@
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import type { GraphProps } from '@retikz/graph-react';
 
-import { defineEntityKind, defineRelationKind, RelationRole } from '@retikz/graph';
+import { defineThemeStyle, ThemeMode } from '@retikz/core';
+import { defineFlowThemeStyle } from '@retikz/diagram/flow';
+import { defineEntityKind, defineGraphThemeStyle, defineRelationKind, RelationRole } from '@retikz/graph';
 
 /** Docs 逻辑图使用的稳定 Entity kind */
 export const LogicFigureEntityKind = {
@@ -22,7 +24,8 @@ export const LogicFigureRelationKind = {
 /** Docs 逻辑图使用的 Relation kind 值 */
 export type LogicFigureRelationKindValue = (typeof LogicFigureRelationKind)[keyof typeof LogicFigureRelationKind];
 
-const logicFigureEntityDefinitions = [
+/** Docs 逻辑图在 React 与 Vanilla 中共用的 Entity kind definitions */
+export const logicFigureEntityDefinitions = [
   defineEntityKind({
     kind: LogicFigureEntityKind.Important,
     role: 'participant',
@@ -109,7 +112,44 @@ export const logicFigureRelationKinds: NonNullable<GraphProps['relationKinds']> 
   }),
 ] as const;
 
-type LogicFigureFlowGraphProps = Pick<FlowDiagramProps, 'entityKinds' | 'graphRules'>;
+const logicFigureThemeName = 'docs.logic';
+
+/** 站点逻辑图沿用 Core 默认色板，只在 Graph 层提供语义外观 */
+export const logicFigureCoreThemeStyle = defineThemeStyle({ name: logicFigureThemeName, resolve: () => ({}) });
+
+/** 站点逻辑图不覆盖 Diagram 布局默认值 */
+export const logicFigureDiagramThemeStyle = {
+  name: logicFigureThemeName,
+  resolve: () => ({}),
+};
+
+/** 站点逻辑图不覆盖 Flow 布局默认值 */
+export const logicFigureFlowThemeStyle = defineFlowThemeStyle({ name: logicFigureThemeName, resolve: () => ({}) });
+
+/** Secondary 使用独立于主色与 group 的中性浅底，状态由文字颜色保留 */
+export const logicFigureGraphThemeStyle = defineGraphThemeStyle({
+  name: logicFigureThemeName,
+  resolve: theme => ({
+    rules: [
+      {
+        type: 'entity',
+        selector: { kind: LogicFigureEntityKind.Secondary },
+        style: {
+          stroke: 'none',
+          fill: theme.mode === ThemeMode.Light ? '#e4e4e4' : '#1b1b1b',
+          textColor: theme.mode === ThemeMode.Light ? '#555555' : '#bbbbbb',
+        },
+      },
+      ...(['error', 'success', 'warning', 'disabled'] as const).map(status => ({
+        type: 'entity' as const,
+        selector: { kind: LogicFigureEntityKind.Secondary, status },
+        style: { textColor: theme.colors.semantic[status === 'disabled' ? 'guide' : status] },
+      })),
+    ],
+  }),
+});
+
+type LogicFigureFlowGraphProps = Pick<FlowDiagramProps, 'entityKinds' | 'graphRules' | 'theme' | 'graphThemeStyles'>;
 
 const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
   {
@@ -121,11 +161,6 @@ const logicFigureRules: NonNullable<LogicFigureFlowGraphProps['graphRules']> = [
     type: 'entity',
     selector: { kind: LogicFigureEntityKind.ImportantData },
     style: { color: 'darkorange' },
-  },
-  {
-    type: 'entity',
-    selector: { kind: LogicFigureEntityKind.Secondary },
-    style: { color: 'gray' },
   },
   {
     type: 'entity',
@@ -141,6 +176,8 @@ export const logicFigureRelationRoleByKind: Readonly<Record<LogicFigureRelationK
 
 /** 为需要自行决定 semantic rule 优先级的 Graph 提供 Docs logic vocabulary 参数 */
 export const logicFigureGraphProps = (semanticColors = true): LogicFigureFlowGraphProps => ({
+  theme: { style: logicFigureThemeName },
+  graphThemeStyles: [logicFigureGraphThemeStyle],
   entityKinds: logicFigureEntityDefinitions,
   ...(semanticColors ? { graphRules: logicFigureRules } : {}),
 });
