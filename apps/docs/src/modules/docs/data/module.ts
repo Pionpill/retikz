@@ -64,10 +64,8 @@ export const modules: ReadonlyArray<ModuleEntry> = [
     navigationLabel: 'library.navigationLabel',
     navigationDescription: 'library.navigationDescription',
     quickLinks: [
-      { label: 'library.standard', path: '/library/standard/composite/grid', primary: true },
+      { label: 'library.standard', path: '/library/standard/composite/grid' },
       { label: 'library.layout', path: '/library/layout/flex-layout' },
-      { label: 'library.standardGrid', path: '/library/standard/composite/grid' },
-      { label: 'library.standardSurface', path: '/library/standard/composite/surface' },
     ],
   },
   {
