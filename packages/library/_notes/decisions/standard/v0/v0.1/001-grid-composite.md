@@ -1,3 +1,8 @@
+---
+description: 将 Grid 迁移为 Standard Tier 2 composite；背景：原 <Grid> 是 @retikz/react 的 Sugar，只在 JSX 构建期生成多条 Path
+keywords: 'Grid、Standard、Tier、composite、GridDefinition、origin、standard.grid、IRGrid'
+---
+
 # ADR-001：将 Grid 迁移为 Standard Tier 2 composite
 
 - 状态：Accepted

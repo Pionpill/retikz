@@ -1,3 +1,8 @@
+---
+description: Plot 主题 token 所有权与 Chart 消费边界重构；背景：Plot 是数据语义到 Core 图形语义的 Grammar-of-Graphics owner；Chart 是建立在 Plot 之上的封闭类型封装
+keywords: 'Plot、token、Chart、IRPlotTheme、colors、IRPlotTheme.background、plot.surface.fill'
+---
+
 # ADR-001：Plot 主题 token 所有权与 Chart 消费边界重构
 
 - 状态：Accepted

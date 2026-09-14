@@ -1,3 +1,8 @@
+---
+description: 以 qualified spatial handle sidecar 保持 Composite 空间透明
+keywords: 'qualified、spatial、handle、sidecar、Composite、ownerPath、instanceId、occurrence'
+---
+
 # ADR-028：以 qualified spatial handle sidecar 保持 Composite 空间透明
 
 - 状态：Accepted

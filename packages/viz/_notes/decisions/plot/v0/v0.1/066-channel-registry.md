@@ -1,3 +1,8 @@
+---
+description: visual channel registry
+keywords: 'visual、channel、registry、channel.ts、VisualChannelDefinition、defineVisualChannel、ordinal'
+---
+
 # ADR-066：visual channel registry
 
 状态：Accepted

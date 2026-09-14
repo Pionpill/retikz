@@ -1,3 +1,8 @@
+---
+description: Diagram Assembly 与 Presentation；背景：本决策冻结所有具体 Diagram 类型可复用的 Presentation 内容契约、固定槽位、Legend 来源和统一输出边界
+keywords: 'Diagram、Assembly、Presentation、IRTextBlock、IRLegend、IRDiagramPresentation、legend'
+---
+
 # ADR-001：Diagram Assembly 与 Presentation
 
 - 状态：Accepted

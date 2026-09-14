@@ -1,3 +1,8 @@
+---
+description: 将 Ribbon 完整迁移为 Standard Path Kind；背景：因此只把 ribbonPathKind definition 移到 Standard 不会形成真正的能力迁移，也不会显著缩小 Core
+keywords: 'Ribbon、Standard、Path、Kind、ribbon、kindOptions、bulge、RibbonPathKindDefinition'
+---
+
 # ADR-024：将 Ribbon 完整迁移为 Standard Path Kind
 
 - 状态：Accepted

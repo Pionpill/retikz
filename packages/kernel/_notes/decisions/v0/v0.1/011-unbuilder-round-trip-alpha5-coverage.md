@@ -1,3 +1,8 @@
+---
+description: unbuilder round-trip 等价性
+keywords: 'unbuilder、round-trip、arrowDetail、OffsetPosition、StepLabel.position'
+---
+
 # ADR-011：unbuilder round-trip 等价性
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: axis-level grid targeting；背景：因此需要把职责重新切开：
+keywords: 'axis-level、grid、targeting、composition.guidePolicy.grid、Axis.grid、select'
+---
+
 # ADR-086: axis-level grid targeting
 
 - 状态：Superseded

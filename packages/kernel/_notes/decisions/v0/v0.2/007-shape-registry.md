@@ -1,3 +1,8 @@
+---
+description: Shape Registry（NodeShape 开放为字符串 + ShapeDefinition 注入面 + 内置 4 shape 改造为注册项）
+keywords: 'Shape、Registry、NodeShape、ShapeDefinition、shape、anchor、Rect、boundaryPoint'
+---
+
 # ADR-007：Shape Registry（NodeShape 开放为字符串 + ShapeDefinition 注入面 + 内置 4 shape 改造为注册项）
 
 - 状态：Accepted（已实现）

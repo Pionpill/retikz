@@ -1,3 +1,8 @@
+---
+description: stroke paint 支持；背景：IRPaint 与 SceneResource 已能让 fill 使用渐变、pattern 和 image，但 stroke 仍偏向纯色
+keywords: 'stroke、paint'
+---
+
 # ADR-014：stroke paint 支持
 
 - 状态：Accepted（已实现）

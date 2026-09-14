@@ -1,3 +1,8 @@
+---
+description: Axis grid 来源与样式策略；背景：但 grid 仍有几个长期缺口
+keywords: 'Axis、grid、lineCap、grid.ticks、grid.density'
+---
+
 # ADR-097：Axis grid 来源与样式策略
 
 - 状态：Accepted

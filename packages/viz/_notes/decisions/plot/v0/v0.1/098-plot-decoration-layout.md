@@ -1,3 +1,8 @@
+---
+description: Plot decoration 空间布局与 placement 策略；背景：早期布局使用 margin convention 估算 plot area：按 axis、tick label 和 legend reserve 推导四边 margin
+keywords: 'Plot、decoration、placement、labels、GeometryLabelPosition、reserveSpace、layout.autoPadding'
+---
+
 # ADR-098：Plot decoration 空间布局与 placement 策略
 
 - 状态：Accepted

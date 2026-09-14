@@ -1,3 +1,8 @@
+---
+description: 条件视觉 encoding、color scale 与 Legend descriptor；背景：Rule 可以给选中的 Cell 写固定 appearance，却不能把一组 raw values 映射成连续色带、分类颜色或阈值色档
+keywords: 'encoding、color、scale、Legend、descriptor、domain、range、edges'
+---
+
 # ADR-020：条件视觉 encoding、color scale 与 Legend descriptor
 
 - 状态：Proposed

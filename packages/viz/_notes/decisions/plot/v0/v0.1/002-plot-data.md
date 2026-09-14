@@ -1,3 +1,8 @@
+---
+description: Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）；背景：1. 进 IR 的：data 槽位形态——具名引用 ref + 可选数据模型 model（字段名 + 类型），JSON-safe
+keywords: 'Plot、DataRef、DataModel、model、data、field、a.b.c'
+---
+
 # ADR-002：Plot 数据引用与数据模型（DataRef / DataModel + 外部数据契约）
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: outerSep 对齐 TikZ outer sep——外推所有 border anchor 并计入布局占位；背景：retikz 的 outerSep（对称别名 margin）声称对应 TikZ 的 outer sep，但当前实现把它窄化成「只作用于自动连线端点」，与 TikZ 语义不一致：
+keywords: 'outerSep、TikZ、outer、sep、border、anchor、anchorOf、margin'
+---
+
 # ADR-029：`outerSep` 对齐 TikZ outer sep——外推所有 border anchor 并计入布局占位
 
 - 状态：Accepted

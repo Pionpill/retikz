@@ -1,3 +1,8 @@
+---
+description: 带文本 Node 输出始终包 <g>（emit 以 Node 为 stacking / DOM 单位）
+keywords: 'Node、emit、stacking、DOM、GroupPrim、rotate、layout.lines、transforms'
+---
+
 # ADR-010：带文本 Node 输出始终包 `<g>`（emit 以 Node 为 stacking / DOM 单位）
 
 - 状态：Accepted（已实现）

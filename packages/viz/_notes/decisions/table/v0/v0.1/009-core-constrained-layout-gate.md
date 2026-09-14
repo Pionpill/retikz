@@ -1,3 +1,8 @@
+---
+description: Table 消费 Core 通用 child 约束布局的前置能力与职责边界
+keywords: 'IRChild、layout、约束布局、Core'
+---
+
 # ADR-009：Core 通用 IRChild 受约束布局前置门禁
 
 - 状态：Accepted

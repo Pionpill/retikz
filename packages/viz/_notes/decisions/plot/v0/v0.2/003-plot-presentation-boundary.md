@@ -1,3 +1,8 @@
+---
+description: Plot 绘图边界与 Chart presentation 归属；背景：Plot 是把数据、scale、coordinate、mark 与 guide 映射为 Core 图形语义的 Grammar-of-Graphics owner
+keywords: 'Plot、Chart、presentation、typography、labelText、labels、layout'
+---
+
 # ADR-003：Plot 绘图边界与 Chart presentation 归属
 
 - 状态：Accepted

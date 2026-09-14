@@ -1,3 +1,8 @@
+---
+description: Builtin path generator and ribbon width profile
+keywords: 'Builtin、path、generator、and、ribbon、width、profile、parabola'
+---
+
 # ADR-033: Builtin path generator and ribbon width profile
 
 - 状态：Accepted

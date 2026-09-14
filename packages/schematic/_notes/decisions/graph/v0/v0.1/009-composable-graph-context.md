@@ -1,3 +1,8 @@
+---
+description: Graph 可选上下文与可组合 Relation 引用；背景：Graph 的长期职责只是提供可选 graphTheme 与完整 Core Scope surface
+keywords: 'Graph、Relation、graphTheme、theme、IRGraph.children、IRChild'
+---
+
 # ADR-009：Graph 可选上下文与可组合 Relation 引用
 
 - 状态：Accepted

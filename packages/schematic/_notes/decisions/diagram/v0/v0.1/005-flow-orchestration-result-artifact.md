@@ -1,3 +1,8 @@
+---
+description: Flow Orchestration、Result 与 Artifact
+keywords: 'Flow、Orchestration、Result、Artifact、IRFlowDiagram、FlowDiagramArtifact、elements、CompileResult'
+---
+
 # ADR-005：Flow Orchestration、Result 与 Artifact
 
 - 状态：Accepted

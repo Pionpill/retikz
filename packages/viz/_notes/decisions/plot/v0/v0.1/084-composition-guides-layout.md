@@ -1,3 +1,8 @@
+---
+description: composition guides, axes, grid, spacing；背景：如果这些策略散落在 facet / overlay / track 各自 ADR 里，会出现三套 axis / grid / spacing 字段
+keywords: 'composition、guides、axes、grid、spacing、layout、guidePolicy、axisGap'
+---
+
 # ADR-084：composition guides, axes, grid, spacing
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: core 注释 / .describe() 去 SVG-imposing 语言
+keywords: 'core、describe、SVG-imposing、textAnchor、PathPrim.commands、GroupPrim.transforms、arcSvgFlags'
+---
+
 # ADR-008：core 注释 / `.describe()` 去 SVG-imposing 语言
 
 - 状态：Accepted（已实现）

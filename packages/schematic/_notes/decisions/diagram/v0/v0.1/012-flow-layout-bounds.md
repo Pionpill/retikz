@@ -1,3 +1,8 @@
+---
+description: Flow 布局边界贡献控制；背景：Flow 的一个主体可以关联独立的附属节点或子布局
+keywords: 'Flow、placeLayout、bounds、excludeFromBounds、linear'
+---
+
 # ADR-012：Flow 布局边界贡献控制
 
 - 状态：Accepted

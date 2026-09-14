@@ -1,3 +1,8 @@
+---
+description: Source IR 浅层语义分组；背景：此前 Node、Path 与 Scope Source IR 把结构、identity、几何、视觉覆盖、布局参数与继承默认值展开到根层
+keywords: 'Source、style、defaults、layout、theme'
+---
+
 # ADR-036：Source IR 浅层语义分组
 
 - 状态：Accepted

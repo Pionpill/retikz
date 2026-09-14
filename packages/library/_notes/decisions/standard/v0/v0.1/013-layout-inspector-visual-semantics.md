@@ -1,3 +1,8 @@
+---
+description: 统一 Layout Inspector 的颜色、纹理与线型语义；背景：矩形也只有 outline | fill，无法后端等价表达 margin、padding 与 gap
+keywords: 'Layout、Inspector、colorScope、spacing、distributed、recommended'
+---
+
 # ADR-013：统一 Layout Inspector 的颜色、纹理与线型语义
 
 - 状态：Superseded

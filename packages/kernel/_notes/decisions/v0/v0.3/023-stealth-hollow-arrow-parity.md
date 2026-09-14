@@ -1,3 +1,8 @@
+---
+description: openStealth 空心箭头——补齐默认箭头的实心/空心对称 + SVG/Canvas marker parity；背景：内置箭头注册表 BUILTIN_ARROWS 有 7 项：normal / open / stealth / diamond / openDiamond / circle / openCircle
+keywords: 'openStealth、SVG、Canvas、marker、parity、open、stealth、openDiamond'
+---
+
 # ADR-023：`openStealth` 空心箭头——补齐默认箭头的实心/空心对称 + SVG/Canvas marker parity
 
 - 状态：Accepted

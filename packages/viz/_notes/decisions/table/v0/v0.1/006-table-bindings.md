@@ -1,3 +1,8 @@
+---
+description: Table / DetailTable / ManualTable React 与 Vanilla 绑定；背景：只有 @retikz/table IR 与 lowering，用户仍需手动包 Scene、注册 composites 和调用 renderer
+keywords: 'Table、DetailTable、ManualTable、React、Vanilla、composites、onManifest、IRTable'
+---
+
 # ADR-006：Table / DetailTable / ManualTable React 与 Vanilla 绑定
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: 独立 Strip recipe 与离散角色 Jitter；背景：Strip Chart 用一个离散位置角色和一个连续位置角色展示逐条观测分布
+keywords: 'Strip、recipe、Jitter、span、jitter、step、sigma'
+---
+
 # ADR-008：独立 Strip recipe 与离散角色 Jitter
 
 - 状态：Accepted

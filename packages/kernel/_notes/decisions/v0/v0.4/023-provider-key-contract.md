@@ -1,3 +1,8 @@
+---
+description: Provider key contract；背景：统一 registry 后，definition 的 key 必须有单一、可诊断且不与 IR discriminant 漂移的来源
+keywords: 'Provider、key、contract、ShapeDefinition.name、node.shape、ArrowDefinition.name、arrowDetail.shape'
+---
+
 # ADR-023：Provider key contract
 
 - 状态：Accepted

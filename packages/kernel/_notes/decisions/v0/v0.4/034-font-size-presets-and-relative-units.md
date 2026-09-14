@@ -1,3 +1,8 @@
+---
+description: Font Size Presets And Relative Units
+keywords: 'Font、Size、Presets、And、Relative、Units、FontSchema.size、CompileOptions.fontSize'
+---
+
 # ADR-034: Font Size Presets And Relative Units
 
 - 状态：Accepted

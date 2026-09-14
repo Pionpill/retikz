@@ -1,3 +1,8 @@
+---
+description: Adapter surface and provider authoring docs；背景：用户通常通过 React <Layout> 或 Vanilla processing 注入 provider
+keywords: 'Adapter、surface、and、provider、authoring、docs、shapes、arrows'
+---
+
 # ADR-025：Adapter surface and provider authoring docs
 
 - 状态：Accepted

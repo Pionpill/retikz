@@ -1,3 +1,8 @@
+---
+description: 统一二维仿射矩阵原子；背景：Retikz 的 TeX SVG lowering 与 Render hydration 都需要把二维平移、缩放和旋转组合为六元组仿射矩阵，再将矩阵应用于平面坐标
+keywords: 'Position、AffineMatrix、inner、outer'
+---
+
 # ADR-025：统一二维仿射矩阵原子
 
 - 状态：Accepted

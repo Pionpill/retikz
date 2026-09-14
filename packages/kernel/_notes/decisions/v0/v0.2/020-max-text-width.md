@@ -1,3 +1,8 @@
+---
+description: maxTextWidth 自动换行（折行阈值 + 短文本收缩）
+keywords: 'maxTextWidth、TextMeasurer、IRLine、align'
+---
+
 # ADR-020：maxTextWidth 自动换行（折行阈值 + 短文本收缩）
 
 - 状态：Accepted（已实现）

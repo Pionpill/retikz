@@ -1,3 +1,8 @@
+---
+description: Block 开放内容与布局容器；背景：Graph 需要一种可以作为关系节点使用、同时允许作者自由组织内部视觉内容的结构容器
+keywords: 'Block、IRChild、width、minWidth、direction'
+---
+
 # ADR-013：Block 开放内容与布局容器
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Mark label surface follows core label hosts
+keywords: 'Mark、label、surface、follows、core、hosts、Path.label、Node.label'
+---
+
 # ADR-079：Mark label surface follows core label hosts
 
 - 状态：Accepted

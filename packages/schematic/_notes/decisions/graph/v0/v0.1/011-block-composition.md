@@ -1,3 +1,8 @@
+---
+description: Block 结构化内容与局部连接点；背景：Blender、Gaea 等节点图同样要求关系连接到节点内部的具体行或区域
+keywords: 'Block、localNamespace、IRChild、shape'
+---
+
 # ADR-011：Block 结构化内容与局部连接点
 
 - 状态：Superseded

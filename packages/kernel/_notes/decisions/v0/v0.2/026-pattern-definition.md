@@ -1,3 +1,8 @@
+---
+description: PatternDefinition 注册面（自定义 pattern motif + 内置 3 降注册项）
+keywords: 'PatternDefinition、pattern、motif、MarkerPrimitive、pattern.shape、paintDefs.tsx'
+---
+
 # ADR-026：PatternDefinition 注册面（自定义 pattern motif + 内置 3 降注册项）
 
 - 状态：Accepted（已实现）

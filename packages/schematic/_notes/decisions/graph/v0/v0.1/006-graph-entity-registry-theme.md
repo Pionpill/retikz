@@ -1,3 +1,8 @@
+---
+description: 建立 Graph 语义注册与主题样式；背景：Entity 与 Relation 需要开放的语义词汇、可替换的结构 Definition，以及随 Core Theme 变化的领域外观默认
+keywords: 'Graph、color、currentColor、graphTheme、variant'
+---
+
 # ADR-006：建立 Graph 语义注册与主题样式
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: 数据健壮性——统一归一化（消两模式割裂）+ 非法/缺失值策略 + bigint ingest；背景：2. 非法/缺失值策略单薄：coercion 失败就静默跳过；validateData 只能抽样二元 fail-loud，不报哪个字段、多少非法/缺失
+keywords: 'bigint、ingest、invalid、validateBoundData、coerceNumber'
+---
+
 # ADR-035：数据健壮性——统一归一化（消两模式割裂）+ 非法/缺失值策略 + bigint ingest
 
 - 状态：Superseded

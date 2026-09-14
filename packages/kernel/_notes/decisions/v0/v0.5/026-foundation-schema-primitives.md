@@ -1,3 +1,8 @@
+---
+description: 由 Foundation 统一无领域基础 Schema 原子；背景：Kernel、Standard、Graph、Data、Plot、Chart 与 Table 已反复定义相同的非空白字符串、正数、非负数、正整数、非负整数和归一化比例约束
+keywords: 'Foundation、Schema、NormalizedFractionSchema、NonBlankStringSchema、assertNonEmptyString、PositiveNumberSchema'
+---
+
 # ADR-026：由 Foundation 统一无领域基础 Schema 原子
 
 - 状态：Accepted

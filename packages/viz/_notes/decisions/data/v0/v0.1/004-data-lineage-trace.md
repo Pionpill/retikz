@@ -1,3 +1,8 @@
+---
+description: data 提供可配置的数据链路追踪；背景：@retikz/data 已有 Symbol provenance：tagSourceIndex 标记原始行，groupProvenance 标记聚合来源集合
+keywords: 'data、TransformContext.lineage、rowSamples、calculationDetails、tagSourceIndex'
+---
+
 # ADR-004：data 提供可配置的数据链路追踪
 
 - 状态：Accepted

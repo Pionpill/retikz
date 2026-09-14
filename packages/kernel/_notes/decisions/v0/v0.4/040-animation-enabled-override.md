@@ -1,3 +1,8 @@
+---
+description: 动画开关采用显式值覆盖系统偏好的三态语义；背景：Layout.animate 与 Vanilla animation.enabled 的旧语义把“省略”和显式 true 混在一起：reduced-motion 环境会同时关闭二者
+keywords: 'Layout.animate、animation.enabled、LayoutProps.animate、VanillaAnimationOptions.enabled'
+---
+
 # ADR-040：动画开关采用显式值覆盖系统偏好的三态语义
 
 - 状态：Accepted

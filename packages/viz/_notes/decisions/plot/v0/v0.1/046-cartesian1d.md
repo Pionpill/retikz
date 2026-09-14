@@ -1,3 +1,8 @@
+---
+description: 一维坐标系族——cartesian1D（直线）+ polar1D（圆周）+ 1D 轴 guide；背景：二者是降维的一对：cartesian1D = cartesian2D 去一维，polar1D = polar2D 去 radius、只留 angle
+keywords: 'cartesian1D、polar1D、guide、linear1D、orientation、angle'
+---
+
 # ADR-046：一维坐标系族——cartesian1D（直线）+ polar1D（圆周）+ 1D 轴 guide
 
 - 状态：Accepted

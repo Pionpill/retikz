@@ -1,3 +1,8 @@
+---
+description: Point family 的 Scatter recipe
+keywords: 'Point、family、Scatter、recipe、scatter、point、encodings、properties'
+---
+
 # ADR-004：Point family 的 Scatter recipe
 
 - 状态：Proposed

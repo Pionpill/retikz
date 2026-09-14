@@ -1,3 +1,8 @@
+---
+description: Plot 通道与标度的共享解析及 PointMark 大小通道，讨论 radius 映射
+keywords: 'PointMark、size、radius、scale、大小通道'
+---
+
 # ADR-038：通用「通道 → scale」抽象 + size 通道（仅 PointMark，radius scale）
 
 - 状态：Superseded

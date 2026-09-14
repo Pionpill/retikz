@@ -1,3 +1,8 @@
+---
+description: Graph 接口实体节点，覆盖接口内容组织与 Block 组合；不承担代码执行
+keywords: 'InterfaceBlock、interface、接口、Block'
+---
+
 # ADR-020：InterfaceBlock
 
 - 状态：Proposed

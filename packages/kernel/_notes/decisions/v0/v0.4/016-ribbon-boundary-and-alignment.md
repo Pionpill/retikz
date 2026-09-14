@@ -1,3 +1,8 @@
+---
+description: Ribbon 边界、对齐与采样语义；背景：Variable-width ribbon 需要稳定的中心线、边界、宽度采样、端点方向和对齐语义，否则同一份 IR 会在不同 renderer 或上层包中生成不同轮廓
+keywords: 'Ribbon、Path.ribbon、width、start、interpolation'
+---
+
 # ADR-016：Ribbon 边界、对齐与采样语义
 
 - 状态：被 ADR-021 收敛

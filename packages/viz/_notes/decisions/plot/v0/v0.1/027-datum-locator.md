@@ -1,3 +1,8 @@
+---
+description: datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数，不逐点预注册；背景：即：给一个逻辑地址 <plotId>.datum.3，不需要事先把第 3 行注册成具名 Node，而是按需把它在 scene 里的落点算出来
+keywords: 'datum、locator、mark.ts、nodeIndex、createPlotLocator、datumAnchor'
+---
+
 # ADR-027：datum locator 命中预演——逻辑地址 → 位置/元素的确定性正向解析纯函数，不逐点预注册
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: 可插拔字段解析 resolveField——运行时逃生舱按字段覆盖类型 + 自定义值解析，不进 IR；背景：同类库的做法：Vega-Lite 在 field/encoding 上有声明式 format / timeUnit（可序列化）；d3 靠 d3-time-format 等运行时函数解析
+keywords: 'resolveField、format、model、bigint、fieldMaps'
+---
+
 # ADR-031：可插拔字段解析 `resolveField`——运行时逃生舱按字段覆盖类型 + 自定义值解析，不进 IR
 
 - 状态：Superseded

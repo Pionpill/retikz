@@ -1,3 +1,8 @@
+---
+description: 绘图区布局（margin convention：整图 → 估算 label/axis 占位 → plot area；mark 改投影到 plot area）
+keywords: 'margin、convention、label、axis、plot、area、mark、measureText'
+---
+
 # ADR-011：绘图区布局（margin convention：整图 → 估算 label/axis 占位 → plot area；mark 改投影到 plot area）
 
 - 状态：Superseded

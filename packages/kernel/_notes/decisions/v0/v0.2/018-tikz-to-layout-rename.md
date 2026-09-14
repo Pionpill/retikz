@@ -1,3 +1,8 @@
+---
+description: <TikZ> → <Layout> 顶层容器命名整理（deprecated alias + 文档 / 白名单 / system prompt 同步）
+keywords: 'TikZ、Layout、deprecated、alias、system、prompt、TikZ.tsx、Layout.tsx'
+---
+
 # ADR-018：`<TikZ>` → `<Layout>` 顶层容器命名整理（deprecated alias + 文档 / 白名单 / system prompt 同步）
 
 - 状态：Accepted（已实现）

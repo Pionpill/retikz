@@ -1,3 +1,8 @@
+---
+description: Sector pull visual offset；背景：polar interval 已能表达 pie、donut 与 radial bar
+keywords: 'Sector、pull、visual、offset、explode、IntervalMark、padAngle'
+---
+
 # ADR-078：Sector pull visual offset
 
 - 状态：Accepted

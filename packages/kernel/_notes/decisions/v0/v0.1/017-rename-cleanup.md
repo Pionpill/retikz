@@ -1,3 +1,8 @@
+---
+description: 改名 + 命名清理（NodeTextSchema → TextBlockSchema、_builder 去 _ 前缀、renderPrim ctx→context）
+keywords: 'NodeTextSchema、TextBlockSchema、builder、renderPrim、ctx、context、IRNodeText'
+---
+
 # ADR-017：改名 + 命名清理（`NodeTextSchema` → `TextBlockSchema`、`_builder` 去 `_` 前缀、`renderPrim` `ctx`→`context`）
 
 - 状态：Accepted（已实现）

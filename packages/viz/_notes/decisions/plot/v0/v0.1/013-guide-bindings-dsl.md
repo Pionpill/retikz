@@ -1,3 +1,8 @@
+---
+description: 三包 guide 露出（<Axis> 子组件（含 grid prop）、默认自动出、bare 开关）
+keywords: 'guide、Axis、grid、prop、bare、axis.grid、tickLabels'
+---
+
 # ADR-013：三包 guide 露出（`<Axis>` 子组件（含 `grid` prop）、默认自动出、`bare` 开关）
 
 - 状态：Superseded

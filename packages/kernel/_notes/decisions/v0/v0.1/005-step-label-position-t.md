@@ -1,3 +1,8 @@
+---
+description: StepLabel.position 扩充（7 keyword + 任意 t 数值 + 多 kind 参数化规则）
+keywords: 'StepLabel、position、keyword、kind、StepLabel.position、midway、line'
+---
+
 # ADR-005：`StepLabel.position` 扩充（7 keyword + 任意 t 数值 + 多 kind 参数化规则）
 
 - 状态：Accepted（已实现）

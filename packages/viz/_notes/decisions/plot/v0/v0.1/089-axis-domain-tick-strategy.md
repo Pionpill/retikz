@@ -1,3 +1,8 @@
+---
+description: Axis domain padding 与 tick 策略；背景：@retikz/plot 的连续位置 scale 默认 domain 来自数据 extent；nice 只调用 d3 scale 的 .nice()
+keywords: 'Axis、domain、padding、tick、domainPadding、tickLabels.format、sqrt、singleValueSpan'
+---
+
 # ADR-089：Axis domain padding 与 tick 策略
 
 - 状态：Accepted

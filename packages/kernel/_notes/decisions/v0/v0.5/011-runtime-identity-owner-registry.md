@@ -1,3 +1,8 @@
+---
+description: Runtime Identity 与 Owner Registry；背景：Core、Render、Data、Plot、Table 与 adapter 都需要跨更新稳定地描述领域 owner、完整 Snapshot 和实体 identity
+keywords: 'Runtime、Identity、Owner、Registry、TRead、unknown、VanillaRuntimeMeta、RuntimeRevision'
+---
+
 # ADR-011：Runtime Identity 与 Owner Registry
 
 - 状态：Accepted

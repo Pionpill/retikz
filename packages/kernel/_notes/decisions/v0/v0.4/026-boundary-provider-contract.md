@@ -1,3 +1,8 @@
+---
+description: Boundary provider contract；背景：boundary 决定路径端点和部分 anchor 的连接面
+keywords: 'Boundary、provider、contract、boundary、circle、rectangle、ellipse'
+---
+
 # ADR-026：Boundary provider contract
 
 - 状态：Accepted

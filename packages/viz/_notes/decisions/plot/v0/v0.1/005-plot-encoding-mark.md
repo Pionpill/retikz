@@ -1,3 +1,8 @@
+---
+description: Plot 编码与图元（Channel / Encoding + Point / Line / Mark union）
+keywords: 'Plot、Channel、Encoding、Point、Line、Mark、union、encoding'
+---
+
 # ADR-005：Plot 编码与图元（Channel / Encoding + Point / Line / Mark union）
 
 - 状态：Superseded

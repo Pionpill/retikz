@@ -1,3 +1,8 @@
+---
+description: 开放自定义 mark；背景：coordinate、scale、transform 都已经朝 runtime definition / registry 方向收敛，但 mark 仍缺少公开自定义入口
+keywords: 'mark、markDefinitions、IRPlot.marks、IRPlotMarkOperation、MarkDefinition'
+---
+
 # ADR-064：开放自定义 mark
 
 状态：Accepted

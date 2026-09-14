@@ -1,3 +1,8 @@
+---
+description: <Layout> 顶层支持 Scope 级联样式（隐式根 Scope）；背景：1. 样板重复：几乎每张要统一样式的图都重复这套两层嵌套（文档站 ohms-law-circuit / karl-circle 等 demo 都被迫多套一层根 <Scope>）
+keywords: 'Layout、Scope、IRScope、stroke、tikzpicture、LayoutProps'
+---
+
 # ADR-030：`<Layout>` 顶层支持 Scope 级联样式（隐式根 Scope）
 
 - 状态：Accepted（已实现）

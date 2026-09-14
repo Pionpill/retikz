@@ -1,3 +1,8 @@
+---
+description: 建立 Graph package family；背景：图式实体、关系和可见分组表达的是 Schematic 领域语义，而不是移除领域词汇后仍成立的通用绘图能力
+keywords: 'Graph、package、family、graph、graphTheme、Group'
+---
+
 # ADR-001：建立 Graph package family
 
 - 状态：Accepted

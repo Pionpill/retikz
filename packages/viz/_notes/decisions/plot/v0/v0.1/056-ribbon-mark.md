@@ -1,3 +1,8 @@
+---
+description: ribbon mark——「源/目标/宽度 → 可填充曲带 Path」的几何 primitive，端点为字段对（经坐标系投影）；sankey 布局明确划出范围；背景：塑造本决策的几条硬约束：
+keywords: 'ribbon、mark、Path、primitive、sankey、transform、endWidth、NodeTarget'
+---
+
 # ADR-056：ribbon mark——「源/目标/宽度 → 可填充曲带 Path」的几何 primitive，端点为字段对（经坐标系投影）；sankey 布局明确划出范围
 
 - 状态：Superseded

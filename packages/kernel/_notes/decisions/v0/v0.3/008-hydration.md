@@ -1,3 +1,8 @@
+---
+description: SVG 与 Canvas 统一 hydration 事件语义；背景：SSR/静态输出需要在客户端把 handler 绑定回图元
+keywords: 'SVG、Canvas、hydration'
+---
+
 # ADR-008：SVG 与 Canvas 统一 hydration 事件语义
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: React 包根公共面收口；背景：React 包根曾聚合 Kernel、Render 和 Sugar
+keywords: 'React、CanvasHost、CanvasHostProps、ArrowMarker、ClipDefs'
+---
+
 # ADR-038：React 包根公共面收口
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Ribbon arc cap；背景：Circular flow、chord 和极坐标流图需要沿圆弧连接 ribbon 两侧边界；只支持直线闭合会造成不自然的轮廓和命中区域
+keywords: 'Ribbon、arc、cap、Path.ribbon.start.cap、Path.ribbon.end.cap'
+---
+
 # ADR-017：Ribbon arc cap
 
 - 状态：被 ADR-021 收敛

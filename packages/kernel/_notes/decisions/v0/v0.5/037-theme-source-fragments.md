@@ -1,3 +1,8 @@
+---
+description: Theme 来源与稀疏 Source 默认值协议；背景：Source 已用 style、layout、defaults 区分实例视觉、布局与后代默认
+keywords: 'Theme、Source、xxxDefaults、theme'
+---
+
 # ADR-037：Theme 来源与稀疏 Source 默认值协议
 
 - 状态：Proposed

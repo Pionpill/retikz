@@ -1,3 +1,8 @@
+---
+description: 显式 zIndex（Node / Path / Scope 栈序覆盖，compile 末端稳定排序）
+keywords: 'zIndex、Node、Path、Scope、compile、NodeDefaultSchema、PathDefaultSchema、GroupPrim.meta'
+---
+
 # ADR-009：显式 zIndex（Node / Path / Scope 栈序覆盖，compile 末端稳定排序）
 
 - 状态：Accepted（已实现）

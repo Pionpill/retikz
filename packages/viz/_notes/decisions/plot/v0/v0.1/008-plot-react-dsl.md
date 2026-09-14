@@ -1,3 +1,8 @@
+---
+description: React 组合 DSL（<Plot> + <LineMark> / <PointMark>，自动推断 scale / coordinate）
+keywords: 'React、DSL、Plot、LineMark、PointMark、scale、coordinate、buildPlotIR'
+---
+
 # ADR-008：React 组合 DSL（`<Plot>` + `<LineMark>` / `<PointMark>`，自动推断 scale / coordinate）
 
 - 状态：Superseded

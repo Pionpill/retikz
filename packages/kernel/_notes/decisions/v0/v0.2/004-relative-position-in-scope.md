@@ -1,3 +1,8 @@
+---
+description: scope 下相对定位（Polar / At / Offset）语义
+keywords: 'scope、Polar、Offset、resolvePosition、applyScopeTransform、inverseScopeTransform、distance'
+---
+
 # ADR-004：scope 下相对定位（Polar / At / Offset）语义
 
 - 状态：Accepted（已实现）

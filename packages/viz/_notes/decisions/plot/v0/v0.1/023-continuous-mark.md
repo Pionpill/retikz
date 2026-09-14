@@ -1,3 +1,8 @@
+---
+description: 连续 mark（area 新建 + line/area polar 投影 + closed 雷达）；背景：polar 落地带来两个新问题：
+keywords: 'mark、area、line、polar、closed、Path、frame.project、CoordinateFrame'
+---
+
 # ADR-023：连续 mark（area 新建 + line/area polar 投影 + closed 雷达）
 
 > 在 ADR-021 的 `CoordinateFrame` 之上落「连续」家族：新建 area mark（线↔baseline 区域，cartesian + polar），line / area 在 polar 投影成弯弧 Path，加 `closed`（首尾相连）支撑雷达 / 填充雷达。下沉 core `Path`。

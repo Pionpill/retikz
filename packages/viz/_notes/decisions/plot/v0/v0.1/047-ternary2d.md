@@ -1,3 +1,8 @@
+---
+description: ternary2D 坐标系 + a/b/c 位置角色通道 + 三角轴 guide；背景：三元图把满足 a + b + c = 常量 的三元组（成分占比、配比、得票分布）投影到等边三角形内，三顶点各代表一分量 100%，重心坐标定位
+keywords: 'ternary2D、guide、PositionEncodingSchema、GuideDimension、Ternary2DSchema'
+---
+
 # ADR-047：ternary2D 坐标系 + a/b/c 位置角色通道 + 三角轴 guide
 
 - 状态：Superseded

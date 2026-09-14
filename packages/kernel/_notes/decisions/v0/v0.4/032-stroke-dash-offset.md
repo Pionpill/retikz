@@ -1,3 +1,8 @@
+---
+description: Stroke dash offset；背景：Core 已以 dashPattern 表达通用虚线
+keywords: 'Stroke、dash、offset、dashPattern、lineDashOffset、dashOffset、dashed'
+---
+
 # ADR-032: Stroke dash offset
 
 - 状态：Accepted

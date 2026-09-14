@@ -1,3 +1,8 @@
+---
+description: Node label rotate（label 文本绕自身中心自旋 + 修 rotated-Node label 坐标空间）
+keywords: 'Node、label、rotate、rotated-Node、labelCenter、inner、Node.label'
+---
+
 # ADR-011：Node label `rotate`（label 文本绕自身中心自旋 + 修 rotated-Node label 坐标空间）
 
 - 状态：Accepted（已实现）

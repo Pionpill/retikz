@@ -1,3 +1,8 @@
+---
+description: Graph 函数实体节点，覆盖函数内容组织与 Block 组合；不承担代码执行
+keywords: 'FunctionBlock、function、函数、Block'
+---
+
 # ADR-021：FunctionBlock
 
 - 状态：Proposed

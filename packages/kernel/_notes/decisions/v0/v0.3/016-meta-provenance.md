@@ -1,3 +1,8 @@
+---
+description: IR meta provenance 透传到 Scene；背景：Tier 2 lowering 将 root/series/mark 等领域结构下沉为 Scope、Node、Path 后，用户需要的 datum/series/layer 来源信息会丢失
+keywords: 'meta、provenance、Scene'
+---
+
 # ADR-016：IR meta provenance 透传到 Scene
 
 - 状态：Accepted

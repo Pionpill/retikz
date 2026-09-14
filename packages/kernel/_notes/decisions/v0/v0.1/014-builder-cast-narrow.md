@@ -1,3 +1,8 @@
+---
+description: _builder.ts as cast 收敛到边界、parseTargetSugar 参数窄化
+keywords: 'builder、cast、parseTargetSugar、Children.forEach、unknown、child.props'
+---
+
 # ADR-014：`_builder.ts` `as` cast 收敛到边界、`parseTargetSugar` 参数窄化
 
 - 状态：Accepted（已实现）

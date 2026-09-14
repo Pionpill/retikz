@@ -1,3 +1,8 @@
+---
+description: time scale（scaleUtc 刻度 / 格式 + 时间轴；UTC 语义，domain 用 epoch ms 进 IR）
+keywords: 'time、scale、scaleUtc、UTC、domain、epoch、Date、scaleTime'
+---
+
 # ADR-019：time scale（scaleUtc 刻度 / 格式 + 时间轴；UTC 语义，domain 用 epoch ms 进 IR）
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: circlePath / ellipsePath 部分裁剪（startAngle / endAngle / closed）；背景：原 circlePath / ellipsePath 只能画整圆 / 整椭圆（compile 走全 sweep emitEllipseArc(center, r, r, 0, 360)）
+keywords: 'circlePath、ellipsePath、startAngle、endAngle、closed'
+---
+
 # ADR-013：circlePath / ellipsePath 部分裁剪（startAngle / endAngle / closed）
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: FieldDef.type 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）；背景：这把 model 强行绑死了两件本应分开的事：
+keywords: 'FieldDef、type、model、name-only、resolveFieldTypes、FieldDef.type、IRDataFieldDefinition'
+---
+
 # ADR-032：`FieldDef.type` 改可选——部分声明 model，name-only 字段自动推断（解耦「字段存在」与「测量类型」）
 
 - 状态：Superseded

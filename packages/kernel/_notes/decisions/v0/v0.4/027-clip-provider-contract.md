@@ -1,3 +1,8 @@
+---
+description: Clip provider contract
+keywords: 'Clip、provider、contract、Scope.clip、ClipResource、Scope.clip.kind、ClipDefinition'
+---
+
 # ADR-027：Clip provider contract
 
 - 状态：Accepted

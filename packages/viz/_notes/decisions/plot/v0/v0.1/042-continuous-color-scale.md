@@ -1,3 +1,8 @@
+---
+description: 连续色阶——sequential / diverging color scale + 配色方案词表；背景：连续色编码是 GoG 基础能力，同类库共识清晰：
+keywords: 'sequential、diverging、color、scale、color.field、PlotScale、ordinal'
+---
+
 # ADR-042：连续色阶——sequential / diverging color scale + 配色方案词表
 
 - 状态：Accepted

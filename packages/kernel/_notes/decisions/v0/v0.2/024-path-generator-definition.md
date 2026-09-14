@@ -1,3 +1,8 @@
+---
+description: PathGeneratorDefinition 注册面（外部曲线生成器 + JSON params + definePathGenerator）
+keywords: 'PathGeneratorDefinition、JSON、params、definePathGenerator、JsonObjectSchema、targetParams'
+---
+
 # ADR-024：PathGeneratorDefinition 注册面（外部曲线生成器 + JSON params + definePathGenerator）
 
 - 状态：Accepted（已实现）

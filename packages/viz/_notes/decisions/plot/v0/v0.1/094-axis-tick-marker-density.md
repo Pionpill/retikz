@@ -1,3 +1,8 @@
+---
+description: Axis tick 来源、标记与密度策略；背景：count 与 values 之间还缺少一种常见表达：按固定间隔生成 ticks
+keywords: 'Axis、tick、ticks.values、count、values、ticks.count'
+---
+
 # ADR-094：Axis tick 来源、标记与密度策略
 
 - 状态：Accepted

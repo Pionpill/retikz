@@ -1,3 +1,8 @@
+---
+description: Provider registry contract
+keywords: 'Provider、registry、contract、ReadonlyMap'
+---
+
 # ADR-022：Provider registry contract
 
 - 状态：Accepted

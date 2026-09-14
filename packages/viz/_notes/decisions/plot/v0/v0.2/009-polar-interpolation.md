@@ -1,3 +1,8 @@
+---
+description: Polar2D 插值模式与继承；背景：polar2D 同时承载连续角度图和离散雷达图
+keywords: 'Polar2D、chord、polar、polar2D、closed'
+---
+
 # ADR-009：Polar2D 插值模式与继承
 
 - 状态：Accepted（2026-09-02 按人工确认的共享模式与覆盖契约完成收口）

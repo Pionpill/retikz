@@ -1,3 +1,8 @@
+---
+description: 字段表互锁通用做法 + 两处应用（builder/unbuilder + stableArrowKey）；背景：内部有若干"字段表"（硬编码字段名列表 / map）期望与对应类型 key 集合完备一致，但手写、与类型脱钩，新加字段时容易漏写：TS 不抓、运行时不报错、只在用户命中漏字段时暴露
+keywords: 'builder、unbuilder、stableArrowKey、AssertEqual、buildNode、nodePropsFromIR'
+---
+
 # ADR-013：字段表互锁通用做法 + 两处应用（builder/unbuilder + `stableArrowKey`）
 
 - 状态：Accepted（已实现）

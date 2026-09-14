@@ -1,3 +1,8 @@
+---
+description: 单一 Clip Definition 扩展契约；背景：本决策保留 ClipShape 作为 JSON-safe 的内部阶段与递归组合数据契约，但将 spec 解析、shape 校验和 Scene path lowering 合并到一个 ClipDefinition
+keywords: 'Clip、Definition、SceneClipPath、ClipDefinition、ClipShapeDefinition、clips'
+---
+
 # ADR-031：单一 Clip Definition 扩展契约
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: circle 作为 ellipse 的 equal preset
+keywords: 'circle、ellipse、equal、preset'
+---
+
 # ADR-010：circle 作为 ellipse 的 equal preset
 
 - 状态：Accepted

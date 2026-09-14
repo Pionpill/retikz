@@ -1,3 +1,8 @@
+---
+description: guide IR（Axis + grid 子属性，Guide union 可扩展，绑 coordinate scope）
+keywords: 'guide、Axis、grid、Guide、union、coordinate、scope、dimension'
+---
+
 # ADR-009：guide IR（Axis + grid 子属性，Guide union 可扩展，绑 coordinate scope）
 
 - 状态：Superseded

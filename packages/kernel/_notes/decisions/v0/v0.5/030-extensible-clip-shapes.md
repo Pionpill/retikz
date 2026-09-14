@@ -1,3 +1,8 @@
+---
+description: 可扩展 ClipShape 与统一裁剪路径；背景：Core 已允许第三方用 ClipDefinition 注册新的 IRClip.kind，但 definition 的输出仍被限制为 Core 内置的封闭 ClipShape 联合
+keywords: 'ClipShape、SceneClipPath、rect、ClipDefinition、polygon'
+---
+
 # ADR-030：可扩展 ClipShape 与统一裁剪路径
 
 - 状态：Superseded（由 [ADR-031](./031-single-clip-definition.md) 取代）

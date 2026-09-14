@@ -1,3 +1,8 @@
+---
+description: Layout-aware Composite 的完整 Scope 输出契约；背景：这会使 Tier 2 在 lower 到 Scope 时出现接受但未消费、把根属性复制到每个 child、或在 adapter 中自行合并 style / transform / clip 的风险
+keywords: 'Layout-aware、Composite、Scope、IRScopeProps、transforms、clip、meta'
+---
+
 # ADR-020：Layout-aware Composite 的完整 Scope 输出契约
 
 - 状态：Accepted

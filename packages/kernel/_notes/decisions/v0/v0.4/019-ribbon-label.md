@@ -1,3 +1,8 @@
+---
+description: Ribbon host label；背景：Ribbon 需要沿中心线或带状区域承载标签
+keywords: 'Ribbon、host、label、Path.label、GeometryLabelSchema、position、side'
+---
+
 # ADR-019：Ribbon host label
 
 - 状态：被 ADR-021 收敛

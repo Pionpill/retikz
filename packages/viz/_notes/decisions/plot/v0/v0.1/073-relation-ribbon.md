@@ -1,3 +1,8 @@
+---
+description: Relation ribbon；背景：plot 的 relation 需要表达有流量宽度的边，例如 Sankey、alluvial 或 flow relation
+keywords: 'Relation、ribbon、RelationMark、Path、path.route'
+---
+
 # ADR-073：Relation ribbon
 
 - 状态：Accepted

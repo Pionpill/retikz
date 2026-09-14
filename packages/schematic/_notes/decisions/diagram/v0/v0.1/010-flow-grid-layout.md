@@ -1,3 +1,8 @@
+---
+description: Flow 网格布局，覆盖行列对齐、嵌套布局与尺寸约束；不负责连线路由
+keywords: 'grid、网格、行列对齐、IRFlowLayout、GridLayout'
+---
+
 # ADR-010：Flow Grid 二维对齐布局
 
 - 状态：Accepted

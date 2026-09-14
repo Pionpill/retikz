@@ -1,3 +1,8 @@
+---
+description: Flow 正交折线路由，覆盖水平与竖直连接、转折和节点边界协作；不负责节点自动排列
+keywords: 'elbow、routing、折线、正交路由'
+---
+
 # ADR-011：Flow 单折角路由
 
 - 状态：Accepted

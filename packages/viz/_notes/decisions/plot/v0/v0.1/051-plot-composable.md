@@ -1,3 +1,8 @@
+---
+description: 让 <Plot> 可被组合
+keywords: 'Plot、Scope、IRPlot.width、height、IRPlot.id'
+---
+
 # ADR-051：让 `<Plot>` 可被组合
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Ranged Dot 的 projected Relation 端点原子性；背景：Ranged Dot 用同一行数据中的起点、终点和连接线比较一个类别的两个值
+keywords: 'Ranged、Dot、projected、Relation、point、category、start、endpoints.source'
+---
+
 # ADR-007：Ranged Dot 的 projected Relation 端点原子性
 
 - 状态：Proposed

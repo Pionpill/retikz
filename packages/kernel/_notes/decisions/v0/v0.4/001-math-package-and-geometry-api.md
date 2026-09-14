@@ -1,3 +1,8 @@
+---
+description: '@retikz/math 零依赖纯计算几何包；背景：Core 中已有私有的求交和弧几何，但纯数学、IR 类型和 TikZ 语义混在同一层'
+keywords: 'retikz、math'
+---
+
 # ADR-001：@retikz/math 零依赖纯计算几何包
 
 - 状态：Accepted（已实现）

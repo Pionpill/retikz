@@ -1,3 +1,8 @@
+---
+description: arrow shrink 几何中性化
+keywords: 'arrow、shrink、viewBox、refX、lineContactX、tipX'
+---
+
 # ADR-022: arrow shrink 几何中性化
 
 - 状态：Accepted（已实现）

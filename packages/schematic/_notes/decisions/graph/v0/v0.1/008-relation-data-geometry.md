@@ -1,3 +1,8 @@
+---
+description: Relation 语义封装与 Core Path 复用；背景：Relation 是带稳定端点和 Graph 语义、最终下沉为一个 Core Path 的正式元素
+keywords: 'Relation、Core、Path、forward、both、association、reverse'
+---
+
 # ADR-008：Relation 语义封装与 Core Path 复用
 
 - 状态：Accepted；多行标签承接 [Core v0.5 ADR-033](../../../../../../kernel/_notes/decisions/v0/v0.5/033-stroke-path-label-interruption.md) Proposed

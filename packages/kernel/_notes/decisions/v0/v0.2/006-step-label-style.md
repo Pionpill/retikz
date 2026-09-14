@@ -1,3 +1,8 @@
+---
+description: StepLabel 样式扩展（textColor / opacity / font + label 继承顺序）；背景：对照 NodeLabelSchema（node 边挂标签）已有 textColor / opacity / font，StepLabel（path 段标注）缺这套、两类 label 样式能力不对称
+keywords: 'StepLabel、textColor、opacity、font、label、StepLabelSchema'
+---
+
 # ADR-006：StepLabel 样式扩展（textColor / opacity / font + label 继承顺序）
 
 - 状态：Accepted（已实现）

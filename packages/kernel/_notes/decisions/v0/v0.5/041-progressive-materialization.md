@@ -1,3 +1,8 @@
+---
+description: 图形渐进物化的候选设计，讨论逐步产生可消费结果及其边界
+keywords: 'progressive materialization、渐进物化'
+---
+
 # ADR-041：Progressive Materialization
 
 - 状态：Proposed（未排期）

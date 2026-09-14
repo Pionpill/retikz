@@ -1,3 +1,8 @@
+---
+description: Standard Legend 消费、外围组合与追溯
+keywords: 'Standard、Legend、IRChild、edges、IRLegend、LegendDefinition'
+---
+
 # ADR-024：Standard Legend 消费、外围组合与追溯
 
 - 状态：Proposed

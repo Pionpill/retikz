@@ -1,3 +1,8 @@
+---
+description: Plot 标度的开放注册与统一消费，讨论内置和自定义 scale 的接入
+keywords: 'scale、registry、标度、注册'
+---
+
 # ADR-063：scale registry
 
 状态：Accepted

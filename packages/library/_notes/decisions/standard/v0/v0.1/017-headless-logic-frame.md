@@ -1,3 +1,8 @@
+---
+description: Headless GraphFrame（历史验证）；背景：逻辑图经常需要比单行流程节点更丰富的内容，例如输入、配置、伪代码、输出、类成员、schema、context 与 payload
+keywords: 'Headless、GraphFrame、IRChild、padding、sections'
+---
+
 # ADR-017：Headless GraphFrame（历史验证）
 
 - 状态：Superseded（由 [Graph ADR-001](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/001-graph-package-family.md) 取代；2026-08-15）

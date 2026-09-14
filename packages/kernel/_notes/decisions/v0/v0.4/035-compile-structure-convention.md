@@ -1,3 +1,8 @@
+---
+description: Compile Structure Convention
+keywords: 'Compile、Structure、Convention、resolve、normalize、lower、layout'
+---
+
 # ADR-035: Compile Structure Convention
 
 - 状态：Accepted

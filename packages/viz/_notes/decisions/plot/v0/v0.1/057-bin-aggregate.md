@@ -1,3 +1,8 @@
+---
+description: Plot 分箱与聚合统计变换的职责和数据输出
+keywords: 'bin、aggregate、分箱、聚合'
+---
+
 # ADR-057：bin + aggregate transform
 
 状态：Superseded

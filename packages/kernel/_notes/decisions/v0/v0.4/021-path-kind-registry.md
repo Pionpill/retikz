@@ -1,3 +1,8 @@
+---
+description: Path kind registry
+keywords: 'Path、kind、registry、ribbon、RibbonSchema、IRRibbon、DrawableStyleSchema'
+---
+
 # ADR-021：Path kind registry
 
 - 状态：Accepted

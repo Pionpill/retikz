@@ -1,3 +1,8 @@
+---
+description: Table 单元格尺寸、矩形跨行跨列与基于实际边界的对齐
+keywords: 'Cell、span、alignment、跨行、跨列、对齐'
+---
+
 # ADR-011：Cell box、矩形 span 与 bounds-aware alignment
 
 - 状态：Accepted

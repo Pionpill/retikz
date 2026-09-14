@@ -1,3 +1,8 @@
+---
+description: Path / Ribbon shared contract
+keywords: 'Path、Ribbon、shared、contract、DrawableStyleSchema、DrawableMetaSchema、Path.ribbon、Path.label'
+---
+
 # ADR-020：Path / Ribbon shared contract
 
 - 状态：被 ADR-021 收敛

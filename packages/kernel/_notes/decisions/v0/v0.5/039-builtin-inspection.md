@@ -1,3 +1,8 @@
+---
+description: 扩展 Core 元素观测与内置 Inspector；背景：原有 Inspect 内置辅助内容只解释 stroke Path 的二次、三次贝塞尔控制点
+keywords: 'Core、Inspector、outline、bounds、keyPoints、boundary'
+---
+
 # ADR-039：扩展 Core 元素观测与内置 Inspector
 
 - 状态：Accepted

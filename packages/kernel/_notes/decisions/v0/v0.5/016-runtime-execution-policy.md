@@ -1,3 +1,8 @@
+---
+description: 'Runtime 执行模式与更新策略；背景：一个 incremental: boolean 无法区分“完全关闭 Runtime 状态”和“保留 Runtime 但关闭局部更新”'
+keywords: 'Runtime、full、static、updateStrategy、replaceScene'
+---
+
 # ADR-016：Runtime 执行模式与更新策略
 
 - 状态：Accepted

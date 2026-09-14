@@ -1,3 +1,8 @@
+---
+description: RelationMark + anchor id contract
+keywords: 'RelationMark、anchor、contract、LinkMark、link、AnchorId'
+---
+
 # ADR-069：RelationMark + anchor id contract
 
 状态：Accepted

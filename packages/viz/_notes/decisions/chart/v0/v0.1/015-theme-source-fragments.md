@@ -1,3 +1,8 @@
+---
+description: Chart Source 默认片段与 Plot 转发；背景：Chart 的 Source theme 同时接受命名选择与内联 token，presentation 只保存文字，格式却使用另一套平铺字段
+keywords: 'Chart、Source、Plot、chartDefaults、plotExtension.plotDefaults、plotExtension.plotRules、recipe.guides'
+---
+
 # ADR-015：Chart Source 默认片段与 Plot 转发
 
 - 状态：Proposed

@@ -1,3 +1,8 @@
+---
+description: scope-aware id 绑定 + meta 透传——下沉元素绑 <plotId>. 命名 id + 写来源 meta，让 plot 不再是丢了来源的几何黑盒
+keywords: 'scope-aware、meta、plotId、plot、Scope、provenance、sourceIndex、Scope.id'
+---
+
 # ADR-026：scope-aware id 绑定 + meta 透传——下沉元素绑 `<plotId>.` 命名 id + 写来源 meta，让 plot 不再是丢了来源的几何黑盒
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Table 单元格格式化扩展与格式化值阶段，区分原始数据、显示内容和呈现
+keywords: 'CellFormatter、formatter、formatted value、格式化'
+---
+
 # ADR-017：Cell Formatter Definition 与格式化值阶段
 
 - 状态：Proposed

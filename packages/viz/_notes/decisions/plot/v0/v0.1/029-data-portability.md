@@ -1,3 +1,8 @@
+---
+description: 数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 DataFieldType 值强制；背景：「数据不进 IR」（plot-design §3.1）的红利本应是：spec 是可移植产物，数据源可换
+keywords: 'fieldMaps、DataFieldType、Date、data.model、lowerPlots'
+---
+
 # ADR-029：数据模型作为可移植契约——逻辑字段 + 绑定期 fieldMaps 映射 + 按 DataFieldType 值强制
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
+keywords: 'out、self-loop、marking、PathSchema、bend、bendDirection、bendAngle'
+---
+
 # ADR-025：out/in 曲线 + self-loop / 路径整体变换 / 中段 marking（三搭车项）
 
 - 状态：Accepted（已实现）

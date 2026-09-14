@@ -1,3 +1,8 @@
+---
+description: '@retikz/tex 与公式降解能力；背景：公式必须进入 renderer-agnostic Scene，但 core 不能依赖 MathJax、DOM、字体状态或具体 renderer'
+keywords: 'retikz、tex'
+---
+
 # ADR-011：@retikz/tex 与公式降解能力
 
 - 状态：Accepted（已实现；最终随 ADR-013 收敛）

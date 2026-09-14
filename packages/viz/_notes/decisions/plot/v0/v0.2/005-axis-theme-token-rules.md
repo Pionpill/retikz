@@ -1,3 +1,8 @@
+---
+description: Axis 主题 Token 作用域规则
+keywords: 'Axis、Token、plotThemeTokens、PlotGridType、plotTheme.axis.title.padding、tokens'
+---
+
 # ADR-005：Axis 主题 Token 作用域规则
 
 - 状态：Proposed

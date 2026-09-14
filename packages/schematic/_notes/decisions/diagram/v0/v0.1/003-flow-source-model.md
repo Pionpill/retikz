@@ -1,3 +1,8 @@
+---
+description: Flow Source 模型与 LLM-first Authoring；背景：FlowDiagram 面向站点中的架构、数据、控制、依赖、传播与反馈图
+keywords: 'Flow、Source、LLM-first、Authoring、IRFlowDiagram、relations、flowTheme、entities'
+---
+
 # ADR-003：Flow Source 模型与 LLM-first Authoring
 
 - 状态：Accepted

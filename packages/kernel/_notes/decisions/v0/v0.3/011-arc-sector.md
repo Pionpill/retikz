@@ -1,3 +1,8 @@
+---
+description: arc/sector 参数化形状；背景：Core 需要一等、可连接的弧和环楔形状，以支持 polar bar、pie、donut、rose 和角度标注
+keywords: 'arc、sector'
+---
+
 # ADR-011：arc/sector 参数化形状
 
 - 状态：Accepted

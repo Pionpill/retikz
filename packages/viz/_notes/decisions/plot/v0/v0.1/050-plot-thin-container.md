@@ -1,3 +1,8 @@
+---
+description: 退化 <Plot> 为薄容器
+keywords: 'Plot、bare、scaleX、scaleY、buildPlotIR'
+---
+
 # ADR-050：退化 `<Plot>` 为薄容器
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: shape 通道（仅 PointMark）；背景：shape 是 StyleEncodingSchema 注释里「later」的最后一个通道
+keywords: 'shape、PointMark、rectangle、circle、diamond'
+---
+
 # ADR-041：shape 通道（仅 PointMark）
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: 从 plot 迁出通用数据层；背景：@retikz/plot 在 alpha 阶段同时承担 GoG 图形语义和通用数据处理
+keywords: 'plot、TransformOperation'
+---
+
 # ADR-001：从 plot 迁出通用数据层
 
 - 状态：Accepted

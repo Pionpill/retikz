@@ -1,3 +1,8 @@
+---
+description: Cell payload 与基础 Presentation Definition；背景：Cell 是 Table 的语义和布局槽位，不应被建模为 Core Node
+keywords: 'Cell、payload、Presentation、Definition、IRChild、options、optionsSchema、cellId'
+---
+
 # ADR-003：Cell payload 与基础 Presentation Definition
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Flow 平级 Source、Group 与 Layout；背景：复杂架构图和流程图通常同时包含两类结构：可见的语义分组，以及只负责左右、上下排列和对齐的空间布局
+keywords: 'Flow、Source、Group、Layout、rank、layout、complete、entities'
+---
+
 # ADR-007：Flow 平级 Source、Group 与 Layout
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: scope.id 的矩形/圆形多态包络；背景：scope.id 会注册 synthetic layout，供 name.north、name.30 和连线使用
+keywords: 'scope'
+---
+
 # ADR-005：scope.id 的矩形/圆形多态包络
 
 - 状态：Accepted（MVP 已实现；polygon/ellipse 缓做）

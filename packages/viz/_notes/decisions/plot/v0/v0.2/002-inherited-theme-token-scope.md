@@ -1,3 +1,8 @@
+---
+description: Plot Theme owner 与 shared categorical projection
+keywords: 'Plot、Theme、owner、shared、categorical、projection、plotTheme、plotThemeTokens'
+---
+
 # ADR-002：Plot Theme owner 与 shared categorical projection
 
 - 状态：Accepted

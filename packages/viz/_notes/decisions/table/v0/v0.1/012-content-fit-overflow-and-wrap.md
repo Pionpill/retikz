@@ -1,3 +1,8 @@
+---
+description: Cell content fit、overflow、clip 与 wrap；背景：轨道和 Cell box 确定后，内容仍可能比 content box 大
+keywords: 'Cell、content、fit、overflow、clip、wrap、visible、IRTableCellLayout'
+---
+
 # ADR-012：Cell content fit、overflow、clip 与 wrap
 
 - 状态：Accepted

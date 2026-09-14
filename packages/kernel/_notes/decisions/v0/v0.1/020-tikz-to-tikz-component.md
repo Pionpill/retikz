@@ -1,3 +1,8 @@
+---
+description: <Tikz> → <TikZ> 组件改名
+keywords: 'Tikz、TikZ、TikZProps、TikzProps'
+---
+
 # ADR-020：`<Tikz>` → `<TikZ>` 组件改名
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: type-driven scale 默认选型 + guide 格式化；背景：数据模型提供「用户源字段 → DataFieldTypeValue」类型映射
+keywords: 'type-driven、scale、guide、continuous、categorical、temporal、scales'
+---
+
 # ADR-030：type-driven scale 默认选型 + guide 格式化
 
 - 状态：Accepted

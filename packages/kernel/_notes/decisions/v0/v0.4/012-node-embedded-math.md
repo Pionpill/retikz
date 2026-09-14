@@ -1,3 +1,8 @@
+---
+description: 节点内嵌公式与带框公式，讨论数学内容和节点边框、布局的组合
+keywords: 'math、公式、Node、embedded math'
+---
+
 # ADR-012：带框公式
 
 - 状态：Accepted（已实现；最终随 ADR-013 收敛）

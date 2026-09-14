@@ -1,3 +1,8 @@
+---
+description: 统一 data IR 类型的 owner 命名
+keywords: 'data、owner、FieldDef、DataModel、DataRef、Transform'
+---
+
 # ADR-003：统一 data IR 类型的 owner 命名
 
 - 状态：Accepted

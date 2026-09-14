@@ -1,3 +1,8 @@
+---
+description: Block 整体宽度约束；背景：Block 的任意有序 children 可以根据内容形成自然宽度，但代码和工程结构图通常需要多个 Block 保持统一或至少不小于某个阅读宽度
+keywords: 'Block、width、minWidth、height、minHeight'
+---
+
 # ADR-012：Block 整体宽度约束
 
 - 状态：Proposed

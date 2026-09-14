@@ -1,3 +1,8 @@
+---
+description: Runtime Program Graph 与同步事务生命周期，覆盖隔离候选、完整结果和原子提交
+keywords: 'Runtime、Program、transaction、事务、原子提交'
+---
+
 # ADR-012：Program Graph 与同步 Transaction Lifecycle
 
 - 状态：Accepted

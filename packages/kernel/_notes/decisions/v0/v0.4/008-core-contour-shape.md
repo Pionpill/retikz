@@ -1,3 +1,8 @@
+---
+description: 任意顶点环 contour shape；背景：自定义坐标系投影可能产生四边均为曲线的任意闭合轮廓
+keywords: 'contour、shape'
+---
+
 # ADR-008：任意顶点环 contour shape
 
 - 状态：Accepted（已实现）

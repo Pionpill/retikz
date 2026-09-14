@@ -1,3 +1,8 @@
+---
+description: Path 箭头重设计（删 arrowShape，加 arrowDetail 对象 + 起末分别配置）
+keywords: 'Path、arrowShape、arrowDetail、arrow、scale'
+---
+
 # ADR-006：Path 箭头重设计（删 `arrowShape`，加 `arrowDetail` 对象 + 起末分别配置）
 
 - 状态：Accepted（已实现）

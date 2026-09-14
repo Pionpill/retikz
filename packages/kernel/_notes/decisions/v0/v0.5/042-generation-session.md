@@ -1,3 +1,8 @@
+---
+description: 生成会话的候选设计，讨论渐进生成内容与会话边界
+keywords: 'generation session、生成会话、渐进生成'
+---
+
 # ADR-042：Generation Session 与 LLM 渐进生成
 
 - 状态：Proposed（未排期）

@@ -1,3 +1,8 @@
+---
+description: Core Runtime Program 与安全增量编译；背景：compileToScene() 是无状态完整编译入口
+keywords: 'Core、Runtime、Program、replaceScene、update、CompileResult、SceneRuntimeSnapshot'
+---
+
 # ADR-013：Core Runtime Program 与安全增量编译
 
 - 状态：Accepted

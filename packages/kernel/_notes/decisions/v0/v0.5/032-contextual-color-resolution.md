@@ -1,3 +1,8 @@
+---
+description: Foundation 颜色原子、上下文颜色权重与 Tier 2 Theme 适配；背景：目标是在 JSON-safe Core IR 中提供一种紧凑的上下文颜色写法：字符串继续表达精确 CSS/SVG 颜色，归一化数值表达最终主色在当前 Theme 模式基准底色上的权重
+keywords: 'Foundation、Tier、Theme、color、currentColor、backdrop、stroke'
+---
+
 # ADR-032：Foundation 颜色原子、上下文颜色权重与 Tier 2 Theme 适配
 
 - 状态：Accepted

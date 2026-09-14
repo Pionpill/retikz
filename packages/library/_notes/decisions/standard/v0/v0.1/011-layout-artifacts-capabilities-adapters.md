@@ -1,3 +1,8 @@
+---
+description: 用 Typed Artifact、Definition 与等价 Adapter 收口布局容器；背景：Flex/Grid/Overlay 能产生正确 Scene 还不等于能力闭环
+keywords: 'Typed、Artifact、Definition、Adapter、LayoutArtifactRectSchema、LayoutArtifactOverflowSchema、LayoutArtifactAlignmentGuideSchema、LayoutArtifactItemBaseSchema'
+---
+
 # ADR-011：用 Typed Artifact、Definition 与等价 Adapter 收口布局容器
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09；直接 Definition 原则仍由 [ADR-021](./021-direct-definition-loading.md) 统一）

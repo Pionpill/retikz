@@ -1,3 +1,8 @@
+---
+description: ArrowDefinition 注册面（自定义 arrow + MarkerPrimitive + 内置 7 降注册项）
+keywords: 'ArrowDefinition、arrow、MarkerPrimitive、lineContactX、hollow、PaintValue.contextStroke'
+---
+
 # ADR-023：ArrowDefinition 注册面（自定义 arrow + MarkerPrimitive + 内置 7 降注册项）
 
 - 状态：Accepted（已实现）

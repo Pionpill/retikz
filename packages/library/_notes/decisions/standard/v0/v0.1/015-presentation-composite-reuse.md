@@ -1,3 +1,8 @@
+---
+description: Presentation Composite 的 lower target 完整复用；背景：这类问题不是某一个字段的遗漏，而是 Tier 2 composite 对 lower target 的复用边界没有冻结
+keywords: 'Presentation、Composite、lower、target、zIndex、clip、border.style、IRScopeProps'
+---
+
 # ADR-015：Presentation Composite 的 lower target 完整复用
 
 - 状态：Accepted

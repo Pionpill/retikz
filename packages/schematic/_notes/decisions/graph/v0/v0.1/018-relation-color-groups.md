@@ -1,3 +1,8 @@
+---
+description: Entity / Relation 自动颜色分组；背景：一张 Graph 或 Flow 可以同时表达多条彼此独立的关系链
+keywords: 'Entity、Relation、group、theme.colors.categorical'
+---
+
 # ADR-018：Entity / Relation 自动颜色分组
 
 - 状态：Proposed

@@ -1,3 +1,8 @@
+---
+description: Manual Table 使用行优先二维持久化结构；背景：原 manual Structure 要求作者同时声明数字 rows / columns，再用包含零基 address 与 payload 的扁平 cells 填充网格
+keywords: 'Manual、Table、rows、columns、address、payload'
+---
+
 # ADR-016：Manual Table 使用行优先二维持久化结构
 
 - 状态：Accepted

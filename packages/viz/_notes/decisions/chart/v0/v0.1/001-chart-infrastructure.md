@@ -1,3 +1,8 @@
+---
+description: Chart 基础设施与封闭 recipe 主链；背景：Chart 是 Plot 之上的 Tier 3 类型封装，不是新的绘图引擎
+keywords: 'Chart、recipe、coordinate、composition、IRChart、chart.chart'
+---
+
 # ADR-001：Chart 基础设施与封闭 recipe 主链
 
 - 状态：Superseded（2026-08-22，由 [ADR-009](./009-family-recipe-chart-schema.md) 替代；Chart → Plot 正式主链与精确 schema 原则已由 ADR-009 重述）

@@ -1,3 +1,8 @@
+---
+description: 三包 DSL 露出（&lt;BarMark&gt;、series/stack/color props、scale 类型选择；vanilla / docs 同步）
+keywords: 'DSL、BarMark、series、stack、color、props、scale、vanilla'
+---
+
 # ADR-020：三包 DSL 露出（&lt;BarMark&gt;、series/stack/color props、scale 类型选择；vanilla / docs 同步）
 
 - 状态：Superseded

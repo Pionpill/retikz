@@ -1,3 +1,8 @@
+---
+description: Tier 2 IR lowering 后反向转换为 Kernel JSX
+keywords: 'Tier、lowering、Kernel、JSX、convertIRToReactNode、IRScene、options.composites、lowerIRToKernel'
+---
+
 # ADR-039：Tier 2 IR lowering 后反向转换为 Kernel JSX
 
 - 状态：Accepted

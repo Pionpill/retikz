@@ -1,3 +1,8 @@
+---
+description: 自定义 viewBox override（覆盖自动包围盒的逃生口）；背景：viewBox 原先全自动：core 算 scene Layout（{ x, y, width, height }，按内容 + padding），react formatViewBox 只是格式化，无覆盖入口
+keywords: 'viewBox、override、Layout、formatViewBox、CompileOptions'
+---
+
 # ADR-029：自定义 viewBox override（覆盖自动包围盒的逃生口）
 
 - 状态：Accepted（已实现）

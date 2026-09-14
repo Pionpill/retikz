@@ -1,3 +1,8 @@
+---
+description: FieldDef.order——分类轴顺序 + 有序性参数（不复活 ordinal 类型，有序由参数判定）；背景：不复活 ordinal 类型（那会让类型集重新膨胀、且与「3 类简单心智」决策冲突）
+keywords: 'FieldDef、order、ordinal、def.domain、FieldDef.order、domain'
+---
+
 # ADR-034：`FieldDef.order`——分类轴顺序 + 有序性参数（不复活 ordinal 类型，有序由参数判定）
 
 - 状态：Superseded

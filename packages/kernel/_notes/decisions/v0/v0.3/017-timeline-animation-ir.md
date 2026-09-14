@@ -1,3 +1,8 @@
+---
+description: 时间轴动画 IR 契约；背景：动画是可序列化的“时间到属性值”数据，和水合的 handler 函数正交
+keywords: 'timeline animation ir'
+---
+
 # ADR-017：时间轴动画 IR 契约
 
 - 状态：Accepted

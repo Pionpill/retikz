@@ -1,3 +1,8 @@
+---
+description: React / Vanilla authoring、runtime 与文档闭环；背景：Formatter、rules、encodings、style tokens 与 Legend descriptor 都是用户可见能力
+keywords: 'React、Vanilla、authoring、runtime、style、containerStyle、legendLayout、spec.style'
+---
+
 # ADR-022：React / Vanilla authoring、runtime 与文档闭环
 
 - 状态：Proposed

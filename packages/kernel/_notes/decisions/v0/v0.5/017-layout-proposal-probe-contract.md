@@ -1,3 +1,8 @@
+---
+description: Child Layout Proposal、Probe 与 Alignment Guide 合同；背景：现有结果也没有 alignment guide
+keywords: 'Child、Layout、Proposal、Probe、Alignment、Guide、slotSize、allocationBounds'
+---
+
 # ADR-017：Child Layout Proposal、Probe 与 Alignment Guide 合同
 
 - 状态：Accepted

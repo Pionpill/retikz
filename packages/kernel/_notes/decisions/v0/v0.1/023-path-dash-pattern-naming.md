@@ -1,3 +1,8 @@
+---
+description: Path dash pattern 命名对齐 TikZ
+keywords: 'Path、dash、pattern、TikZ、strokeDasharray、lineCap、lineJoin、dashPattern'
+---
+
 # ADR-023: Path dash pattern 命名对齐 TikZ
 
 - 状态：Accepted（已实现）

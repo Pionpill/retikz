@@ -1,3 +1,8 @@
+---
+description: Core 边界输入与错误语义，覆盖路径、图形范围和渲染边界诊断
+keywords: '边界输入、错误、diagnostics'
+---
+
 # ADR-016：边界输入与错误语义
 
 - 状态：Accepted（已实现）

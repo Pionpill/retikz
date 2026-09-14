@@ -1,3 +1,8 @@
+---
+description: Plot background 限定为绘图区背景；背景：Plot theme 已拥有绘图表面背景，但现有顶层 background 会覆盖整个 Plot 外框，把坐标轴标签区、图例预留区和 facet 间隙一并着色
+keywords: 'Plot、background、plot.surface.fill、plotArea.fill、plot.area.fill'
+---
+
 # ADR-004：Plot background 限定为绘图区背景
 
 - 状态：Proposed

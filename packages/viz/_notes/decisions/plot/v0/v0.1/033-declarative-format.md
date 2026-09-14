@@ -1,3 +1,8 @@
+---
+description: 声明式 FieldDef.format——可序列化的字段值解析词表，让 resolveField 退为纯逃生舱
+keywords: 'FieldDef、format、resolveField、temporal、continuous'
+---
+
 # ADR-033：声明式 `FieldDef.format`——可序列化的字段值解析词表，让 `resolveField` 退为纯逃生舱
 
 - 状态：Superseded

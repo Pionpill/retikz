@@ -1,3 +1,8 @@
+---
+description: same-panel multi-axis overlay
+keywords: 'same-panel、multi-axis、overlay、coordinateScope、placement、zIndex、coordinateView'
+---
+
 # ADR-082：same-panel multi-axis overlay
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: Scene ViewBox → Layout 抽象
+keywords: 'Scene、ViewBox、Layout、viewBox、computeLayout'
+---
+
 # ADR-019：Scene `ViewBox` → `Layout` 抽象
 
 - 状态：Accepted（已实现）

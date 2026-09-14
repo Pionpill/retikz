@@ -1,3 +1,8 @@
+---
+description: Vanilla runtime 与 Kernel 依赖图；背景：无框架和 SSR 用户需要直接消费 IR/Scene，但不应自行复制 Scene 到 SVG/Canvas 的渲染逻辑
+keywords: 'Vanilla、runtime、Kernel、mountSvg、renderToSvgString、view.root、update'
+---
+
 # ADR-003：Vanilla runtime 与 Kernel 依赖图
 
 - 状态：Accepted（已实现；SVG 的字符串渲染、`mountSvg` 和 DOM 物化已闭环，Canvas runtime 入口后置到 alpha.4）

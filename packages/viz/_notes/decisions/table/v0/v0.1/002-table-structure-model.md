@@ -1,3 +1,8 @@
+---
+description: manual/detail 结构与 SemanticTableModel；背景：同时，结构必须允许后续新增 pivot/matrix 和自定义 structure
+keywords: 'manual、detail、SemanticTableModel、sourceIndex、TableStructureOutput、body、location'
+---
+
 # ADR-002：manual/detail 结构与 SemanticTableModel
 
 - 状态：Accepted

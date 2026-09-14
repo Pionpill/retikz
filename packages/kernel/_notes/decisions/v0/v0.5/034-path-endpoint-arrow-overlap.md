@@ -1,3 +1,8 @@
+---
+description: Path 端点箭头重叠；背景：Path 默认把端点箭头放在逻辑端点外侧，并把主描边缩短到箭头的线接触位置
+keywords: 'Path、backX、endpointOverlap、ArrowDefinition.backX、lineContactX'
+---
+
 # ADR-034：Path 端点箭头重叠
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Statistical transform algebra；背景：后续极值点、top-N、均值线、分位数、组内排名、最低点到最高点连线等需求都属于 Statistics 层
+keywords: 'Statistical、transform、algebra、relate、summarize、select、annotate'
+---
+
 # ADR-072：Statistical transform algebra
 
 状态：Accepted

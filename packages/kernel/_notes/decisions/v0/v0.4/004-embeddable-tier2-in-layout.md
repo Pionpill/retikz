@@ -1,3 +1,8 @@
+---
+description: 可嵌入 Tier 2 组件的 Layout 静态贡献
+keywords: 'Tier、Layout'
+---
+
 # ADR-004：可嵌入 Tier 2 组件的 Layout 静态贡献
 
 - 状态：Accepted MVP（已实现）

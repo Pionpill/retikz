@@ -1,3 +1,8 @@
+---
+description: rule mark——数据驱动的常量位置参考标注，line 形态下沉 core Path、band 形态复用 ADR-052 projectCell；与 reference-line guide 划清「数据 vs scale 派生」分工
+keywords: 'rule、mark、line、core、Path、band、ADR-052、projectCell'
+---
+
 # ADR-054：rule mark——数据驱动的常量位置参考标注，line 形态下沉 core `Path`、band 形态复用 ADR-052 `projectCell`；与 reference-line guide 划清「数据 vs scale 派生」分工
 
 - 状态：Superseded

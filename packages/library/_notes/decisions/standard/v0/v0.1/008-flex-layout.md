@@ -1,3 +1,8 @@
+---
+description: 提供确定性 FlexLayout；背景：FlexLayout 只解决一维 Box Layout
+keywords: 'FlexLayout、intrinsic.natural、nowrap、stretch、gap.column'
+---
+
 # ADR-008：提供确定性 FlexLayout
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09）

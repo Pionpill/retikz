@@ -1,3 +1,8 @@
+---
+description: Standard 单一 Clip Definition 接入
+keywords: 'Standard、Clip、Definition、StandardClipShapeDefinitions、rect、StandardClipDefinitions、ClipShape'
+---
+
 # ADR-027：Standard 单一 Clip Definition 接入
 
 - 状态：Accepted

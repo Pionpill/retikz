@@ -1,3 +1,8 @@
+---
+description: Plot 统计与几何的结构化协作，覆盖统计输出和对应 mark 表达
+keywords: 'stat、geom、boxplot、density、smooth、统计几何'
+---
+
 # ADR-077：Stat / geom structural surface
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: coordinate composition registry + guide binding；背景：当前 IRPlot 只有一个顶层 coordinate
+keywords: 'coordinate、composition、registry、guide、binding、coordinateScope、IRPlot'
+---
+
 # ADR-080：coordinate composition registry + guide binding
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: Node 文本自动对比色
+keywords: 'Node、currentColor、Node.textColor、contrast、Scope.nodeDefault.textColor'
+---
+
 # ADR-004：Node 文本自动对比色
 
 - 状态：Accepted

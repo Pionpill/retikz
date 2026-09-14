@@ -1,3 +1,8 @@
+---
+description: 以 framework-neutral descriptor 为核心的 SVG 渲染；背景：Scene 已是 renderer-agnostic 契约，原 React SVG 渲染层的属性摆放、资源表和 marker 去重逻辑几乎不依赖 React，却无法被 SSR、Vanilla 或其他框架复用
+keywords: 'framework-neutral、descriptor、SVG、SvgNode、idPrefix、SvgAttrs、renderToSvgString'
+---
+
 # ADR-001：以 framework-neutral descriptor 为核心的 SVG 渲染
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: Diagram Frame、Spacing 与 Appearance；背景：如果把这些选择交给宿主，各入口仍会得到不同的完整图示；如果 Diagram 自建排版、Surface、文字或 Theme 基础机制，又会复制 Layout、Standard 与 Core
+keywords: 'Diagram、Frame、Spacing、Appearance、IRDiagramTheme、frame、padding、background'
+---
+
 # ADR-002：Diagram Frame、Spacing 与 Appearance
 
 - 状态：Accepted

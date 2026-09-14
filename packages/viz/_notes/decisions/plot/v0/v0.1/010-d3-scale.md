@@ -1,3 +1,8 @@
+---
+description: Plot 采用 d3-scale 作为标度、刻度与格式化基础的设计取舍
+keywords: 'd3-scale、scale、ticks、标度、刻度'
+---
+
 # ADR-010：采用 d3-scale 作 scale / 刻度 / 格式化基础（回溯 alpha.1 自写 linear）
 
 - 状态：Accepted

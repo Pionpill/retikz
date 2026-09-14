@@ -1,3 +1,8 @@
+---
+description: Node label 边挂标签
+keywords: 'Node、label、Step.label、angleBoundaryOf、label.distance'
+---
+
 # ADR-003：Node `label` 边挂标签
 
 - 状态：Accepted（已实现）

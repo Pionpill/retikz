@@ -1,3 +1,8 @@
+---
+description: coordinate registry；背景：coordinate 是 mark、guide、locator 的投影底座
+keywords: 'coordinate、registry、options.coordinates、CoordinateDefinition、defineCoordinate、CoordinateResolveContext'
+---
+
 # ADR-061：coordinate registry
 
 状态：Accepted

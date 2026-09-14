@@ -1,3 +1,8 @@
+---
+description: Plot 根节点（plot composite 节点 + 数据引用 + JSON 透传约束）
+keywords: 'Plot、plot、composite、JSON、meta、plot.plot、lowerComposites'
+---
+
 # ADR-001：Plot 根节点（`plot` composite 节点 + 数据引用 + JSON 透传约束）
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: sector 几何（polar interval→径向柱/玫瑰 + sector mark 饼图/环图）；背景：两类「扇形」语义需分清（都下沉 core sector，但角 / 径来源不同）：
+keywords: 'sector、polar、interval、mark、CoordinateFrame、startField、endField'
+---
+
 # ADR-022：sector 几何（polar interval→径向柱/玫瑰 + sector mark 饼图/环图）
 
 > 在 ADR-021 的 `CoordinateFrame` 之上落「区间 / 扇形」家族：interval 在 polar 下成 sector（径向柱 / 玫瑰），新增 sector mark（饼图 / 环图）。两者都下沉 core 参数化可连接 `sector` Node。**累积角是 transform 阶段职责**，不进 mark。

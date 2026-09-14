@@ -1,3 +1,8 @@
+---
+description: rect mark——双维 band 正交 cell 的 heatmap 格，复用 ADR-052 projectCell 几何 + sequential color 取值
+keywords: 'rect、mark、band、cell、heatmap、ADR-052、projectCell、sequential'
+---
+
 # ADR-053：rect mark——双维 band 正交 cell 的 heatmap 格，复用 ADR-052 `projectCell` 几何 + sequential color 取值
 
 - 状态：Superseded

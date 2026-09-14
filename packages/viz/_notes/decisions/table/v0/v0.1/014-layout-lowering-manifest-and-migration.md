@@ -1,3 +1,8 @@
+---
+description: Table 布局事务与绘图结果追溯，统一布局、lowering 和 manifest 的消费
+keywords: 'Table、transaction、lowering、manifest、布局事务'
+---
+
 # ADR-014：Table layout transaction、lowering、manifest 与迁移
 
 - 状态：Accepted

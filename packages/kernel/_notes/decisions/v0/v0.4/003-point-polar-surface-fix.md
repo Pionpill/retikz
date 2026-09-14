@@ -1,3 +1,8 @@
+---
+description: 将 point.toPolar / equalPolar 迁入 polar；背景：PolarPosition 可能携带节点 id，是 IR 类型，不能进入零 IR 的 math.point
+keywords: 'point、toPolar、equalPolar、polar'
+---
+
 # ADR-003：将 point.toPolar / equalPolar 迁入 polar
 
 - 状态：Accepted（已实现）

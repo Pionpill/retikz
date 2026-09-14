@@ -1,3 +1,8 @@
+---
+description: Chart presentation token 与 Plot theme 转发；背景：Chart 不再重复拥有 Plot surface、guide、label 或 palette 的 token vocabulary
+keywords: 'Chart、presentation、token、Plot、theme、plotThemeTokens、plotTheme、themeMode'
+---
+
 # ADR-002：Chart presentation token 与 Plot theme 转发
 
 - 状态：Superseded（2026-08-22，由 [ADR-009](./009-family-recipe-chart-schema.md) 的三 owner Theme slice 与 Core mode / style cascade 替代）

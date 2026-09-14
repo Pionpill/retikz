@@ -1,3 +1,8 @@
+---
+description: transform registry；背景：旧 transform 层把内置 transform 写进两处并行 switch：applyTransforms 执行数据变换，collectTransformFields 声明输入 / 输出字段
+keywords: 'transform、registry、dataTransforms、defineTransform、applyTransforms、collectTransformFields'
+---
+
 # ADR-062：transform registry
 
 状态：Accepted

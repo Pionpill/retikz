@@ -1,3 +1,8 @@
+---
+description: Runtime 协作式并发调度的候选设计，讨论任务让出、取消与一致性边界
+keywords: 'Runtime、concurrent、协作并发、调度'
+---
+
 # ADR-040：Cooperative Concurrent Runtime
 
 - 状态：Proposed（未排期）

@@ -1,3 +1,8 @@
+---
+description: Node label 视觉盒间距
+keywords: 'Node、label、NodeLabel.distance、distance、NodeLabelLayout.centerOffset、NodeLabelSchema.distance'
+---
+
 # ADR-005：Node label 视觉盒间距
 
 - 状态：Accepted

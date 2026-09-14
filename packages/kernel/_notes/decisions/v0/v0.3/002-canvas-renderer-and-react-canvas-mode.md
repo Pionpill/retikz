@@ -1,3 +1,8 @@
+---
+description: Canvas 2D renderer 与 React Canvas 模式；背景：Canvas 是与 SVG 并列的第二条 Scene 输出路径
+keywords: 'Canvas、renderer、React、currentColor、CanvasRenderingContext2D、save、restore'
+---
+
 # ADR-002：Canvas 2D renderer 与 React Canvas 模式
 
 - 状态：Accepted（已实现；gradient、pattern、image、clip、marker、`currentColor`、主题响应、文本基线、弧方向和尺寸对齐均已支持）

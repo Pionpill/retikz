@@ -1,3 +1,8 @@
+---
+description: Regression 的分组拟合与复合 semantic mark；背景：Regression 需要同时展示原始观测点与拟合趋势，并允许按一个稳定的数据角色为每组生成独立趋势线
+keywords: 'Regression、semantic、mark、series、RegressionMark、Smooth、components'
+---
+
 # ADR-006：Regression 的分组拟合与复合 semantic mark
 
 - 状态：Accepted

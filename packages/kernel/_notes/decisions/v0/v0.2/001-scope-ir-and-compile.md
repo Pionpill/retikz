@@ -1,3 +1,8 @@
+---
+description: <Scope> IR 容器 + compile 下沉到 GroupPrim
+keywords: 'Scope、compile、GroupPrim、IRScope、transforms、ChildSchema'
+---
+
 # ADR-001：`<Scope>` IR 容器 + compile 下沉到 GroupPrim
 
 - 状态：Accepted（已实现）

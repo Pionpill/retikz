@@ -1,3 +1,8 @@
+---
+description: 公开 union 类型拆 named type + JSDoc 补全（StepProps / PathCommand / Transform / TextLine）
+keywords: 'union、named、type、JSDoc、StepProps、PathCommand、Transform、TextLine'
+---
+
 # ADR-009：公开 union 类型拆 named type + JSDoc 补全（`StepProps` / `PathCommand` / `Transform` / `TextLine`）
 
 - 状态：Accepted（已实现）

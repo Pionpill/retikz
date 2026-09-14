@@ -1,3 +1,8 @@
+---
+description: guide lowering（Axis（含 grid 子属性）+ ticks + plot area → core Path / Node(text)，绑 anchor id）
+keywords: 'guide、lowering、Axis、grid、ticks、plot、area、core'
+---
+
 # ADR-012：guide lowering（Axis（含 grid 子属性）+ ticks + plot area → core Path / Node(text)，绑 anchor id）
 
 - 状态：Accepted

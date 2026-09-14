@@ -3,6 +3,8 @@
   "type": "module",
   "packageManager": "pnpm@11.7.0",
   "scripts": {
+    "adr:search": "node scripts/adr-search.mjs",
+    "test:adr-search": "node --experimental-strip-types --test tests/adr-search.test.ts",
     "bench:check": "pnpm --filter @retikz/bench bench:check",
     "bench:install-browser": "pnpm --filter @retikz/bench bench:install-browser",
     "bench:report": "pnpm --filter @retikz/bench bench:report",
@@ -63,6 +65,7 @@
     "typescript-eslint": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "yaml": "catalog:"
   }
 }

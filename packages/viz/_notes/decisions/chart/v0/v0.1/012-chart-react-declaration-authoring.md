@@ -1,3 +1,8 @@
+---
+description: Chart React 根配置与 headless 声明收敛；背景：具体 Chart React 组件既是图表身份入口，也是最容易被应用直接消费的配置入口
+keywords: 'Chart、React、headless、layout、coordinate、plotExtension、data'
+---
+
 # ADR-012：Chart React 根配置与 headless 声明收敛
 
 - 状态：Accepted（2026-08-31 人工确认 concrete Chart 根组件完整配置入口）

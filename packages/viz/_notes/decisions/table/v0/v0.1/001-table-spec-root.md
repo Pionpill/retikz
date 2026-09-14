@@ -1,3 +1,8 @@
+---
+description: Table composite 根节点与外部数据边界；背景：Table 家族已经确定为与 Plot 平行的 Tier 2 能力，但当前只有包级 AGENTS.md，没有 npm package、Table IR 或 Core composite 注册入口
+keywords: 'Table、composite、table、data、meta、AGENTS.md'
+---
+
 # ADR-001：Table composite 根节点与外部数据边界
 
 - 状态：Accepted

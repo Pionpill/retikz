@@ -1,3 +1,8 @@
+---
+description: shape 参数化泛化——注册的 type + params；背景：ShapeDefinition 原先只能接收 Rect，形状专属参数又散落在 Node 顶层，无法表达扇形、星形等参数化形状
+keywords: 'shape、type、params'
+---
+
 # ADR-009：shape 参数化泛化——注册的 type + params
 
 - 状态：Accepted

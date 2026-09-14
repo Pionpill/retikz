@@ -1,3 +1,8 @@
+---
+description: Capability provider migration；背景：仅定义 registry 规则而不迁移现有 capability，会让新旧 provider 形态并存，继续复制差异并使 Core、adapter 与上层包的 authoring 心智不一致
+keywords: 'Capability、provider、migration、CompileOptions、resolveXxxRegistry、ReadonlyMap'
+---
+
 # ADR-024：Capability provider migration
 
 - 状态：Accepted

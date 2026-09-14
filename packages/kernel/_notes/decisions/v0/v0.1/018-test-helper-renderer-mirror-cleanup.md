@@ -1,3 +1,8 @@
+---
+description: core 测试 helper 去除 renderer mirror 漂移风险；背景：两个 helper 主动镜像 react adapter 的实现（JSDoc 已显式登记"镜像 buildPathD/buildTransform"），带两个风险：
+keywords: 'core、helper、renderer、mirror、buildPathD、buildTransform、PathCommand、quad'
+---
+
 # ADR-018：core 测试 helper 去除 renderer mirror 漂移风险
 
 - 状态：Accepted（已实现）

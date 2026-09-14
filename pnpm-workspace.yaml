@@ -72,5 +72,6 @@ catalog:
   vite: ^8.0.10
   vite-plugin-dts: ^4.5.4
   vitest: ^4.1.10
+  yaml: 2.8.4
   zod: ^4.4.3
   zustand: ^5.0.12

@@ -1,3 +1,8 @@
+---
+description: ordinal·color scale + color 非位置通道（首个非位置通道，按系列着色）
+keywords: 'ordinal、color、scale、range、scaleOrdinal'
+---
+
 # ADR-017：ordinal·color scale + color 非位置通道（首个非位置通道，按系列着色）
 
 - 状态：Accepted

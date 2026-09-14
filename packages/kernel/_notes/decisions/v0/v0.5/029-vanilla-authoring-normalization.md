@@ -1,3 +1,8 @@
+---
+description: Vanilla 统一 Authoring 与框架无关处理；背景：目标是收敛既有职责和公开表面，不增加绘图语义、IR 字段、Scene primitive、renderer 行为或新的通用扩展能力
+keywords: 'Vanilla、Authoring、InputXxx、InputScene、IRScene、InputEmbed'
+---
+
 # ADR-029：Vanilla 统一 Authoring 与框架无关处理
 
 - 状态：Accepted

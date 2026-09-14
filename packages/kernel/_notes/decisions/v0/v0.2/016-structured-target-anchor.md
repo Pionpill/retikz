@@ -1,3 +1,8 @@
+---
+description: 结构化 Target / Anchor（path target 对象唯一 + AnchorRef + parseNodeTarget 单一真源）
+keywords: 'Target、Anchor、path、target、AnchorRef、parseNodeTarget、TargetSchema、parseNodeRef'
+---
+
 # ADR-016：结构化 Target / Anchor（path target 对象唯一 + AnchorRef + parseNodeTarget 单一真源）
 
 - 状态：Accepted（已实现）

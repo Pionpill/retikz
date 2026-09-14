@@ -1,3 +1,8 @@
+---
+description: Node 锚点对齐定位；背景：上层 Composite 若按 Node 的真实文本、shape、padding、margin、scale 与 rotate 结果排列节点，不能自行预估尺寸，否则会复制 Core 布局语义
+keywords: 'Node、Node.position、target.offset、AnchorPositionSchema、NodeSchema.position'
+---
+
 # ADR-001：Node 锚点对齐定位
 
 - 状态：Accepted

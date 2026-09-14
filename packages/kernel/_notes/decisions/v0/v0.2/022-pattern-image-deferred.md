@@ -1,3 +1,8 @@
+---
+description: pattern / image 填充
+keywords: 'pattern、image、IRPaint、PaintValue、SceneResource、PaintSchema'
+---
+
 # ADR-022：pattern / image 填充
 
 - 状态：Accepted（已实现）

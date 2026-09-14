@@ -1,3 +1,8 @@
+---
+description: Axis title 布局与锚点策略；背景：当前 AxisTitleSchema 仍有几处长期风险
+keywords: 'Axis、title、GeometryLabelPosition、padding、align、placement'
+---
+
 # ADR-096：Axis title 布局与锚点策略
 
 - 状态：Accepted

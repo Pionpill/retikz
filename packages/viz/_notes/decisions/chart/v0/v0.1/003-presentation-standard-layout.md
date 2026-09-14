@@ -1,3 +1,8 @@
+---
+description: Chart canonical presentation 与 adapter authoring；背景：Chart 同时服务完整 Plot authoring 和 type-first recipe authoring
+keywords: 'Chart、canonical、presentation、adapter、authoring、createChart、IRBaseChart、normalizeXxx'
+---
+
 # ADR-003：Chart canonical presentation 与 adapter authoring
 
 - 状态：Superseded（2026-08-22，由 [ADR-009](./009-family-recipe-chart-schema.md) 替代；Vanilla normalize、React 复用 Vanilla 与 Standard presentation 边界已由 ADR-009 重述）

@@ -1,3 +1,8 @@
+---
+description: Layout 独立包及排版所有权迁移，覆盖 Flex、Grid、Overlay、组合与检查入口；不负责自动图布局
+keywords: 'FlexLayout、GridLayout、OverlayLayout、排版、布局迁移'
+---
+
 # ADR-001：建立 Layout package family 并迁移排版布局
 
 - 状态：Accepted（2026-08-09，人工确认）

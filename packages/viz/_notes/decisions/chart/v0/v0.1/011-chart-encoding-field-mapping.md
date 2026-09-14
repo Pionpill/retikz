@@ -1,3 +1,8 @@
+---
+description: Chart encoding 字段映射计划；背景：Chart 原先把 recipe.encodings 的值限制为字段名字符串
+keywords: 'Chart、encoding、normalize、facet、plotExtension.marks、ChartFacet'
+---
+
 # ADR-011：Chart encoding 字段映射计划
 
 - 状态：Proposed

@@ -1,3 +1,8 @@
+---
+description: 连接面与视觉形状解耦；背景：视觉形状不总是适合作为连接面：星形的尖角会使连线跳动，polar/sector 也需要稳定 compass 锚点
+keywords: 'connection surface'
+---
+
 # ADR-014：连接面与视觉形状解耦
 
 - 状态：Accepted

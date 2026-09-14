@@ -1,3 +1,8 @@
+---
+description: Node label 附着对齐；背景：Core Node label 当前只把文字视觉盒的中心放在 attachment point
+keywords: 'Node、label、align、middle、start、center'
+---
+
 # ADR-008：Node label 附着对齐
 
 - 状态：Accepted

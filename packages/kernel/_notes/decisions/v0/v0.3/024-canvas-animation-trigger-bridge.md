@@ -1,3 +1,8 @@
+---
+description: Canvas 动画触发桥——复用 per-id 虚拟时钟，补 onEvent / visible 接线与隔离测试
+keywords: 'Canvas、per-id、onEvent、visible、manual、load、evaluateTrack'
+---
+
 # ADR-024：Canvas 动画触发桥——复用 per-id 虚拟时钟，补 onEvent / visible 接线与隔离测试
 
 - 状态：Accepted

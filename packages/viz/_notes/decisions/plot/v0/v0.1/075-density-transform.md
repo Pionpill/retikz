@@ -1,3 +1,8 @@
+---
+description: Density transform；背景：density plot 需要把原始样本转换成连续采样点，再交给 path/area 类 mark 绘制
+keywords: 'Density、transform、PathMark、DensityMark、density、extent'
+---
+
 # ADR-075：Density transform
 
 - 状态：Accepted

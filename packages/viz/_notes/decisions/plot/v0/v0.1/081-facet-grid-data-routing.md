@@ -1,3 +1,8 @@
+---
+description: facet grid data routing；背景：分面（facet）解决的是“按数据字段把一张图拆成多个小图”
+keywords: 'facet、grid、data、routing、column、order、coordinate、IRPlot'
+---
+
 # ADR-081：facet grid data routing
 
 - 状态：Superseded

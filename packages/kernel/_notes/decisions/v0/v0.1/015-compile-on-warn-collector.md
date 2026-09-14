@@ -1,3 +1,8 @@
+---
+description: CompileOptions.onWarn 收集器——路径解析 silent fail → 显式 warning
+keywords: 'CompileOptions、onWarn、silent、fail、warning、console.warn、CompileOptions.onWarn、CompileWarning.code'
+---
+
 # ADR-015：`CompileOptions.onWarn` 收集器——路径解析 silent fail → 显式 warning
 
 - 状态：Accepted（已实现）

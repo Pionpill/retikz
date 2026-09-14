@@ -1,3 +1,8 @@
+---
+description: 上下文化 Composite 布局事务；背景：本提案最初尝试让 Tier 2 Composite 在一次 Core compile 中测量任意 child、根据真实布局反馈求解，并复用选中结果生成最终 Scene
+keywords: 'Composite'
+---
+
 # ADR-009：上下文化 Composite 布局事务
 
 - 状态：Superseded（由 [ADR-007](./007-layout-aware-composite.md) 取代）

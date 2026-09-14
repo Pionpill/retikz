@@ -1,3 +1,8 @@
+---
+description: transform 阶段（sort / stack；groupBy 作为 stack 的分组参数）
+keywords: 'transform、sort、stack、groupBy、expandPlot、order、rows'
+---
+
 # ADR-016：transform 阶段（sort / stack；groupBy 作为 stack 的分组参数）
 
 - 状态：Superseded

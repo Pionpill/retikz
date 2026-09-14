@@ -1,3 +1,8 @@
+---
+description: Vite tsconfig paths 原生化与依赖清理——先确认 Vite 8 原生选项可用，再统一替换 7 处 vite-tsconfig-paths；背景：测试输出提示：Vite 已原生支持 tsconfig paths resolution，可用原生选项替代 vite-tsconfig-paths 插件
+keywords: 'Vite、tsconfig、paths、vite-tsconfig-paths、vite.config.ts、package.json、resolve.tsconfigPaths'
+---
+
 # ADR-028：Vite tsconfig paths 原生化与依赖清理——先确认 Vite 8 原生选项可用，再统一替换 7 处 `vite-tsconfig-paths`
 
 - 状态：Accepted

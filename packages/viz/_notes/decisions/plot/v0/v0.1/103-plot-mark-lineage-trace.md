@@ -1,3 +1,8 @@
+---
+description: plot 提供图元链路；背景：plot 不应复制 data transform，也不应保存 SQL、权限或 AI prompt
+keywords: 'plot、rowValues、lowerPlots、createPlotLocator、PlotLineageOptions'
+---
+
 # ADR-103：plot 提供图元链路
 
 - 状态：Accepted

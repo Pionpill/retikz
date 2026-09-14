@@ -1,3 +1,8 @@
+---
+description: 参数化图式 Shape 与端点 Marker；背景：这些形态移除 Graph、Workflow、UML、ER 等领域词汇后仍然成立，因此由 Standard 拥有 Definition 与静态 provider
+keywords: 'Shape、Marker、ellipticCapsule、capDepth、hexagon、shoulderDepth'
+---
+
 # ADR-028：参数化图式 Shape 与端点 Marker
 
 - 状态：Accepted

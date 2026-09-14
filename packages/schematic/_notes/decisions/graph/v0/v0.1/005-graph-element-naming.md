@@ -1,3 +1,8 @@
+---
+description: Graph 元素采用 Graph / Group / Entity / Relation 命名
+keywords: 'Graph、Group、Entity、Relation、GraphNode、GraphConnector'
+---
+
 # ADR-005：Graph 元素采用 Graph / Group / Entity / Relation 命名
 
 - 状态：Accepted

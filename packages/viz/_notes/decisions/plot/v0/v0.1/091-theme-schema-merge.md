@@ -1,3 +1,8 @@
+---
+description: Plot Theme schema 与合并优先级，覆盖轴、网格、图例、字体及背景默认样式
+keywords: 'Theme、schema、merge、主题、合并优先级'
+---
+
 # ADR-091：Plot theme schema 与合并优先级
 
 - 状态：Accepted

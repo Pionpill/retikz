@@ -1,3 +1,8 @@
+---
+description: Smooth regression transform；背景：trend line / regression line 是 plot grammar 的基础统计能力，但不应该以 RegressionMark 或 chart preset 形式进入
+keywords: 'Smooth、regression、transform、RegressionMark、smooth、groupBy、extent'
+---
+
 # ADR-076：Smooth regression transform
 
 - 状态：Accepted

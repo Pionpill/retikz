@@ -1,3 +1,8 @@
+---
+description: geometry 4 shape 共享 localToWorld / worldToLocal + 死 *Anchor 类型清理
+keywords: 'geometry、shape、localToWorld、worldToLocal、Anchor、RectAnchor、CenteredShape'
+---
+
 # ADR-010：geometry 4 shape 共享 `localToWorld` / `worldToLocal` + 死 `*Anchor` 类型清理
 
 - 状态：Accepted（已实现）

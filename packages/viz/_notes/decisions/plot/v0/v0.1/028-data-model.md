@@ -1,3 +1,8 @@
+---
+description: 数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
+keywords: 'encoding、model、data.model、proportion、endField'
+---
+
 # ADR-028：数据模型类型层——字段类型集补全 + 缺省推断 + encoding 字段引用/类型校验
 
 - 状态：Superseded

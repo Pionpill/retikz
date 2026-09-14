@@ -1,3 +1,8 @@
+---
+description: compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序）
+keywords: 'compile、transform-free、frame、scopeChain、primitives、indexOf、GroupPrim'
+---
+
 # ADR-008：compile 输出 IR 顺序回归（占位槽回填恢复 transform-free frame 的声明序）
 
 - 状态：Accepted（已实现）

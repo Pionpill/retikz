@@ -1,3 +1,8 @@
+---
+description: 文档与包描述当前能力面刷新——清掉「只提供 React adapter」「v0.1 core」「仅 SVG」等陈旧表述；背景：但多处文档与包描述仍停在旧能力面
+keywords: 'React、adapter、core、SVG、mountCanvas、hydrate、v0.1、mountSvg'
+---
+
 # ADR-027：文档与包描述当前能力面刷新——清掉「只提供 React adapter」「v0.1 core」「仅 SVG」等陈旧表述
 
 - 状态：Accepted

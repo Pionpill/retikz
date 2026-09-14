@@ -1,3 +1,8 @@
+---
+description: RelationMark derived data and routing strategy；背景：这些计算属于 Statistics 层，不应塞进 RelationMark.source / target 的 target 解析里；几何 routing 也不应读取原始数据字段做统计
+keywords: 'RelationMark、derived、data、and、routing、strategy、RelationMark.source、target'
+---
+
 # ADR-070：RelationMark derived data and routing strategy
 
 状态：Accepted

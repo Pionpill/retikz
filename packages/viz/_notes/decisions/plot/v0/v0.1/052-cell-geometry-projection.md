@@ -1,3 +1,8 @@
+---
+description: 区间类几何投影契约——frame.projectCell 统一 interval / sector / 曲线轴下沉，闭式快路 ⊕ contour 兜底
+keywords: 'frame、projectCell、interval、sector、contour、boundaryPoint、CellGeometry'
+---
+
 # ADR-052：区间类几何投影契约——`frame.projectCell` 统一 interval / sector / 曲线轴下沉，闭式快路 ⊕ contour 兜底
 
 - 状态：Accepted

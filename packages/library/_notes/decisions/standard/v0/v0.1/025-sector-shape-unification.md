@@ -1,3 +1,8 @@
+---
+description: 以 Sector 作为弧形与扇形 Node shape 的统一定义；背景：Standard Node shape 同时维护 arc 与 sector 两套几何定义
+keywords: 'Sector、Node、shape、sector、ArcShapeDefinition、ArcShapeProvider、ArcShapeParams'
+---
+
 # ADR-025：以 Sector 作为弧形与扇形 Node shape 的统一定义
 
 - 状态：Accepted（2026-08-15，Sector 统一定义与公开面收敛完成）

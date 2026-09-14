@@ -1,3 +1,8 @@
+---
+description: 扩宽 temporal 推断识别器——认空格分隔的带时区 ISO datetime（SQL 时间戳），归一化空格→T
+keywords: 'temporal、ISO、datetime、SQL、coerceTimestamp、resolveField、isIsoDateString、format'
+---
+
 # ADR-036：扩宽 temporal 推断识别器——认空格分隔的带时区 ISO datetime（SQL 时间戳），归一化空格→T
 
 - 状态：Superseded

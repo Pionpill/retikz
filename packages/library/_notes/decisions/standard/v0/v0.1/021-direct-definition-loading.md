@@ -1,3 +1,8 @@
+---
+description: 直接使用 CompositeDefinition 接入 Standard 能力
+keywords: 'CompositeDefinition、Standard、CompileOptions.composites、StandardCapabilityModule、StandardBundle、StandardAllPreset'
+---
+
 # ADR-021：直接使用 CompositeDefinition 接入 Standard 能力
 
 - 状态：Accepted（2026-08-03，人工确认）

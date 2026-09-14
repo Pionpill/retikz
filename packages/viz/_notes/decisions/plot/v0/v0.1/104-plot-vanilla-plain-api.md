@@ -1,3 +1,8 @@
+---
+description: Plot Vanilla plain authoring 与 Tier2 adapter 边界；背景：@retikz/plot-vanilla 曾以 plotBuilder(config).mark(...).axis(...).build() 作为主要 authoring 入口
+keywords: 'Plot、Vanilla、plain、authoring、Tier2、adapter、IRPlot、PlotInputEmbedAdapter'
+---
+
 # ADR-104：Plot Vanilla plain authoring 与 Tier2 adapter 边界
 
 - 状态：Accepted

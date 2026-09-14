@@ -1,3 +1,8 @@
+---
+description: 重构 Frame 为带 Node-like header 的语义分组框；背景：Frame 的长期语义是有默认边框、可组合 header 和稳定身份的分组框
+keywords: 'Frame、Node-like、header、border、padding、zIndex、IRAnchorPosition'
+---
+
 # ADR-004：重构 Frame 为带 Node-like header 的语义分组框
 
 - 状态：Accepted

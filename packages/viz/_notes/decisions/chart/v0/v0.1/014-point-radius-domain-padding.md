@@ -1,3 +1,8 @@
+---
+description: Point family 按最大点半径预留 domain range；背景：Point family 当前用固定 domain 比例为位置 scale 留白：Bubble 使用 0.04，其余 Point chartType 使用 0.02
+keywords: 'Point、family、domain、range、domainPadding、size、right、plotExtension.marks'
+---
+
 # ADR-014：Point family 按最大点半径预留 domain range
 
 - 状态：Accepted（2026-09-01 人工确认 Point 最大半径 range 留白契约）

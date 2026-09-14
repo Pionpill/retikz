@@ -1,3 +1,8 @@
+---
+description: Flow Layout Definition 与 Registry
+keywords: 'Flow、Layout、Definition、Registry、layered、IRFlowDiagram、defaultFlowLayout、placeLayout'
+---
+
 # ADR-004：Flow Layout Definition 与 Registry
 
 - 状态：Accepted

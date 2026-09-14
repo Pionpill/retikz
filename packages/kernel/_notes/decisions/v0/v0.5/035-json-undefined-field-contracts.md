@@ -1,3 +1,8 @@
+---
+description: 以 Zod parse 统一 Source 输入校验边界；背景：这些额外步骤没有形成独立的领域契约
+keywords: 'Zod、parse、Source、cloneAndFreezeJson、IRXxx、JsonObject'
+---
+
 # ADR-035：以 Zod parse 统一 Source 输入校验边界
 
 - 状态：Accepted

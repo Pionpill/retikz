@@ -1,3 +1,8 @@
+---
+description: Border Graph 与共享边冲突解析；背景：Table border 同时来自 Table defaults 与 Cell 四边
+keywords: 'Border、Graph、collapse、separate、currentColor、IRTableCellLayout.borders'
+---
+
 # ADR-013：Border Graph 与共享边冲突解析
 
 - 状态：Accepted

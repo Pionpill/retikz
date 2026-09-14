@@ -1,3 +1,8 @@
+---
+description: 抽象 mark 模型 + mark registry
+keywords: 'mark、registry、point、interval、line、sector'
+---
+
 # ADR-059：抽象 mark 模型 + mark registry
 
 状态：Accepted

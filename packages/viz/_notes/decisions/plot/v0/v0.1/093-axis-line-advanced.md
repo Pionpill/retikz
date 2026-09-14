@@ -1,3 +1,8 @@
+---
+description: "Axis line 进阶几何；背景：底层 core Path 已经支持路径上的 arrow mark：marks: [{ pos, mark: { kind: 'arrow', ... } }]"
+keywords: 'Axis、line、lineCap、line.arrow、line.extent、origin'
+---
+
 # ADR-093：Axis line 进阶几何
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Flow 根级 Graph 规则投影；背景：Flow 已将 Entity 与 Relation 的 role、kind、status 投影为 Graph record，并复用 Graph definition registry 校验
+keywords: 'Flow、Graph、graphRules、IRGraphRule、role、status'
+---
+
 # ADR-009：Flow 根级 Graph 规则投影
 
 - 状态：Accepted

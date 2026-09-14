@@ -1,3 +1,8 @@
+---
+description: Chart family、recipe 与 mark Source IR；背景：现有 Chart Source IR 让根 type 同时承担用户分类、具体 recipe 身份与分发职责，并把具体图形配置放在 config
+keywords: 'Chart、family、recipe、mark、Source、plotExtension、theme、chartType'
+---
+
 # ADR-009：Chart family、recipe 与 mark Source IR
 
 - 状态：Accepted（2026-08-22；2026-08-23 修订 Source 根字段命名、按 chartType 装配边界与 semantic mark override）

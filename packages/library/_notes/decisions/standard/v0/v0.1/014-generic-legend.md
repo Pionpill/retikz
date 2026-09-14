@@ -1,3 +1,8 @@
+---
+description: 通用 Legend 的已解析呈现契约；背景：Plot 已经可以根据 channel、scale 与 guide 解析 color、size、opacity、shape 等 Legend，并把解析结果排版为 swatch、ramp 或 symbol
+keywords: 'Legend、contentAlign、IRChild、sampleGap、titleGap'
+---
+
 # ADR-014：通用 Legend 的已解析呈现契约
 
 - 状态：Accepted

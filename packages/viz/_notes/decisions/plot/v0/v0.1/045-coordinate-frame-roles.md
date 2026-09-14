@@ -1,3 +1,8 @@
+---
+description: Plot 坐标维度与位置通道角色，覆盖 coordinate frame、encoding 和 guide 维度约束
+keywords: 'coordinate、frame、encoding、维度、位置通道'
+---
+
 # ADR-045：coordinate frame N 通道泛化 + 位置 encoding 角色化 + 每坐标系维度契约 + guide 维度校验
 
 - 状态：Accepted

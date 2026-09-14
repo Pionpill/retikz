@@ -1,3 +1,8 @@
+---
+description: Scene 图元级 blend mode；背景：SVG mix-blend-mode 与 Canvas globalCompositeOperation 对 W3C 分离式 blend mode 有共同交集
+keywords: 'Scene、blend、mode'
+---
+
 # ADR-010：Scene 图元级 blend mode
 
 - 状态：Accepted（已实现）

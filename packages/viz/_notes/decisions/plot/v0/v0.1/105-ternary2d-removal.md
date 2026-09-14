@@ -1,3 +1,8 @@
+---
+description: 移除内置 ternary2D 并保留自定义坐标扩展路径；背景：ternary2D 曾作为内置三变量约束投影进入 Plot：它拥有专用坐标判别值、三角色投影、三角轴、mark 分支以及 React / Vanilla authoring 表面
+keywords: 'ternary2D、CoordinateDefinition、cartesian2D、polar2D'
+---
+
 # ADR-105：移除内置 ternary2D 并保留自定义坐标扩展路径
 
 - 状态：Accepted

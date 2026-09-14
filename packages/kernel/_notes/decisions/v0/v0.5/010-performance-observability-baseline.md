@@ -1,3 +1,8 @@
+---
+description: 性能观测与 Baseline；背景：Kernel 当前没有可复现的性能 harness、phase tracing、实体访问计数或持续更新基准
+keywords: 'Baseline、visited、commit、RuntimeProgramContext、durationMs'
+---
+
 # ADR-010：性能观测与 Baseline
 
 - 状态：Accepted

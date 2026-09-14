@@ -1,3 +1,8 @@
+---
+description: 提供显式 Track 与稳定 Auto-placement 的 GridLayout；背景：Plot panels、legend matrices、label bands、Gantt 区块和未来简单文档排布需要二维行列轨道、span 和稳定自动放置
+keywords: 'Track、Auto-placement、GridLayout、intrinsic.natural、intrinsic.minimum、IRGridLayout、GridLayoutItemInput'
+---
+
 # ADR-009：提供显式 Track 与稳定 Auto-placement 的 GridLayout
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09）

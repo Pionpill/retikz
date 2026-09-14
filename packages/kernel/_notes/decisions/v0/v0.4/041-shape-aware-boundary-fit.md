@@ -1,3 +1,8 @@
+---
+description: Shape-aware boundary fit；背景：boundary 允许视觉 shape 与连接面解耦，但仅凭视觉 AABB 构造 circle / ellipse 要么穿过稀疏 shape，要么留下过大空隙
+keywords: 'Shape-aware、boundary、fit、connectionEnvelope、bounds、tight'
+---
+
 # ADR-041：Shape-aware boundary fit
 
 - 状态：Accepted

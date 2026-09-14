@@ -1,3 +1,8 @@
+---
+description: Core 最小内置集合与 Standard provider 子入口；背景：这使 Core 同时承担“绘图语言和编译机制 owner”与“官方扩展内容全集”两种职责
+keywords: 'Core、Standard、provider、circle、ellipse、compound、rectangle'
+---
+
 # ADR-023：Core 最小内置集合与 Standard provider 子入口
 
 - 状态：Accepted（2026-08-15，公开契约、Tier 2 装配与跨入口闭环完成）

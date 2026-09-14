@@ -1,3 +1,8 @@
+---
+description: 提供对齐与定位双模式的 OverlayLayout；背景：图形本体、label、badge、annotation、background/foreground和未来甘特标记经常需要共享一个 container-local 坐标空间并叠放
+keywords: 'OverlayLayout、intrinsic.natural、IROverlayLayout、OverlayLayoutInput、standard.overlayLayout'
+---
+
 # ADR-010：提供对齐与定位双模式的 OverlayLayout
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09）

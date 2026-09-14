@@ -1,3 +1,8 @@
+---
+description: Quantile-band statistics + boxplot composition；背景：boxplot 是常见统计图，但 retikz plot 的方向不是内置 chart preset，而是提供可组合的 transform/reducer/mark grammar
+keywords: 'Quantile-band、statistics、boxplot、composition、PointMark、BoxPlotMark、BoxPlot、minMax'
+---
+
 # ADR-074：Quantile-band statistics + boxplot composition
 
 - 状态：Accepted

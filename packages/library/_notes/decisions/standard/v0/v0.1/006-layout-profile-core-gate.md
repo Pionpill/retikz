@@ -1,3 +1,8 @@
+---
+description: 冻结 Layout Profile 并以公开行为验收 Core Gate；背景：这里的双轴是物理 x/y 尺寸轴，不是 Plot 坐标轴，也不引入 writing mode
+keywords: 'Layout、Profile、Core、Gate、slotSize、allocationBounds、LayoutProposal、LayoutCompositeCompileContext'
+---
+
 # ADR-006：冻结 Layout Profile 并以公开行为验收 Core Gate
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09）

@@ -1,3 +1,8 @@
+---
+description: shared scaffold tracks；背景：用户给出的径向信息图和环形组学图都有一个共同特征：多个局部图层共享一部分坐标基底，但另一部分 range 分成不同带
+keywords: 'shared、scaffold、tracks、sharedRoles、track、IRPlot.composition'
+---
+
 # ADR-083：shared scaffold tracks
 
 - 状态：Superseded

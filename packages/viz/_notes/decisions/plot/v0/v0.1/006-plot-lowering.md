@@ -1,3 +1,8 @@
+---
+description: 最薄 lowering 纵向闭环（lowerPlots：Plot IR + 数据 → core IR）
+keywords: 'lowering、lowerPlots、Plot、core、Node、Scope、Path、CompileOptions.composites'
+---
+
 # ADR-006：最薄 lowering 纵向闭环（lowerPlots：Plot IR + 数据 → core IR）
 
 - 状态：Accepted

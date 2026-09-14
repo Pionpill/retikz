@@ -1,3 +1,8 @@
+---
+description: plot 自行注册 plot-only transform
+keywords: 'plot、plot-only、transform、stack、normalize、density、resolvePlotTransformRegistry'
+---
+
 # ADR-102：plot 自行注册 plot-only transform
 
 - 状态：Accepted

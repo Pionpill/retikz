@@ -1,3 +1,8 @@
+---
+description: 将 Frame 加入 Standard Tier 2 composite；背景：可视分组需要根据一组 Node 的真实布局自动计算边界，再绘制外框与标题
+keywords: 'Frame、Standard、Tier、composite、label、border、Scope、standard.frame'
+---
+
 # ADR-003：将 Frame 加入 Standard Tier 2 composite
 
 - 状态：Superseded（由 [ADR-004](./004-frame-header-composition.md) 替代公开契约）

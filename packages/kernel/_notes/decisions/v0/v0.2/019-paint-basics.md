@@ -1,3 +1,8 @@
+---
+description: Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
+keywords: 'Paint、PaintValue、SceneResource、discriminated、gradient、PaintValue.contextStroke、IRPaint'
+---
+
 # ADR-019：Paint 基础（PaintValue 词汇表 + SceneResource discriminated 资源表 + gradient）
 
 - 状态：Accepted（已实现）

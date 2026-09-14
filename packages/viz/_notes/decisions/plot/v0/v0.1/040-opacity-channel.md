@@ -1,3 +1,8 @@
+---
+description: PointMark 透明度通道与数据驱动的不透明度映射
+keywords: 'PointMark、opacity、透明度'
+---
+
 # ADR-040：opacity 通道（仅 PointMark）
 
 - 状态：Superseded

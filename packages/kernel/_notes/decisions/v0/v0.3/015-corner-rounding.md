@@ -1,3 +1,8 @@
+---
+description: 统一 cornerRadius 与 rounded-contour 几何；背景：rectangle 已有圆角，polygon、star、sector 只有尖角；且 Node/ShapeStyle 使用 roundedCorners，而 primitive 使用 cornerRadius
+keywords: 'cornerRadius、rounded-contour'
+---
+
 # ADR-015：统一 cornerRadius 与 rounded-contour 几何
 
 - 状态：Accepted

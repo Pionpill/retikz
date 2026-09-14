@@ -1,3 +1,8 @@
+---
+description: Legend、palette 与 guide family theme；背景：Legend 是 guide family 的另一半
+keywords: 'Legend、palette、guide、family、theme、colors、scheme、range'
+---
+
 # ADR-092：Legend、palette 与 guide family theme
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: '{ side, t } 边上比例点几何（真实边界 + ShapeDefinition.edgePoint）'
+keywords: 'side、ShapeDefinition、edgePoint、resolveEdgePoint、ShapeDefinition.edgePoint'
+---
+
 # ADR-017：`{ side, t }` 边上比例点几何（真实边界 + ShapeDefinition.edgePoint）
 
 - 状态：Accepted（已实现）

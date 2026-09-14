@@ -1,3 +1,8 @@
+---
+description: Mark Placement 管线与 Position Adjustment；背景：Mark 的最终位置不总能由 Data transform 或 position scale 独立决定
+keywords: 'Mark、Placement、Position、Adjustment、span、step、distribution、sigma'
+---
+
 # ADR-010：Mark Placement 管线与 Position Adjustment
 
 - 状态：Accepted

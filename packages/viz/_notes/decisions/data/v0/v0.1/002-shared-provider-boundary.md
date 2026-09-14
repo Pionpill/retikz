@@ -1,3 +1,8 @@
+---
+description: 收敛 data 内置 provider 边界
+keywords: 'data、provider、sort、summarize、select、annotate'
+---
+
 # ADR-002：收敛 data 内置 provider 边界
 
 - 状态：Accepted

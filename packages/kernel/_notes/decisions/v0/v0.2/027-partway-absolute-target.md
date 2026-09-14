@@ -1,3 +1,8 @@
+---
+description: 比例 partway 定位（AbsoluteTarget + BetweenPosition）；背景：两个结构性硬约束塑造了设计：
+keywords: 'partway、AbsoluteTarget、BetweenPosition、TargetSchema、lerpPoint'
+---
+
 # ADR-027：比例 partway 定位（AbsoluteTarget + BetweenPosition）
 
 - 状态：Accepted（已实现）

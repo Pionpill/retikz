@@ -1,3 +1,8 @@
+---
+description: Connector 路由与显式 Callout；背景：独立逻辑节点和 Block 需要通过 flow、branch、dependency、feedback 等局部关系形成可读逻辑图
+keywords: 'Connector、Callout、section、bottom、right、left'
+---
+
 # ADR-019：Connector 路由与显式 Callout
 
 - 状态：Superseded（由 [Graph ADR-001](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/001-graph-package-family.md) 取代；2026-08-15）

@@ -1,3 +1,8 @@
+---
+description: normalize + derive-interval + jitter
+keywords: 'normalize、derive-interval、jitter、stack、DataTransform.Normalize'
+---
+
 # ADR-058：normalize + derive-interval + jitter
 
 状态：Accepted

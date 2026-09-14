@@ -1,3 +1,8 @@
+---
+description: Core 既有视觉能力的完整性审计与收口边界，不把审计维度扩为新功能
+keywords: 'Drawing Complete、视觉效果、完整性、审计'
+---
+
 # ADR-028：Drawing complete × alpha.4 视觉效果收口审计
 
 - 状态：Accepted

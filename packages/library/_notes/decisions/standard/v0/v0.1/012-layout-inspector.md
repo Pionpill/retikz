@@ -1,3 +1,8 @@
+---
+description: 以内置 Layout Inspector 可视化布局求解结果；背景：布局容器同时存在父级分配的 slot、子图形真实占用和视觉包络
+keywords: 'Layout、Inspector、inspect、CompileResult、InputScope.inspect、inspectionCapability'
+---
+
 # ADR-012：以内置 Layout Inspector 可视化布局求解结果
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09）

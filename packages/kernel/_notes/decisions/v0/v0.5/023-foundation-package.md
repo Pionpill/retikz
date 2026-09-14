@@ -1,3 +1,8 @@
+---
+description: 建立 Foundation 基础契约包并统一 Kernel 底层依赖；背景：Retikz 已有若干跨包同义复用、却不包含绘图、几何、Runtime 状态或领域可视化语义的原子能力
+keywords: 'Foundation、Kernel、cause、ValueOf、AssertEqual、OpenString'
+---
+
 # ADR-023：建立 Foundation 基础契约包并统一 Kernel 底层依赖
 
 - 状态：Accepted

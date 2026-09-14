@@ -1,3 +1,8 @@
+---
+description: Table React 组合式 authoring，覆盖明细列和手工单元格的声明式组织
+keywords: 'Table、DetailTable、ManualTable、React、组合式'
+---
+
 # ADR-008：Table React 组合式 authoring API
 
 - 状态：Accepted

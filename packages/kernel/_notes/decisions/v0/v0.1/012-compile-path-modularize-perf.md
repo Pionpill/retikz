@@ -1,3 +1,8 @@
+---
+description: compile/path.ts 拆目录 + findPrev O(n²)→O(n) + THICKNESS_TO_WIDTH 与 enum 互锁
+keywords: 'compile、path、findPrev、THICKNESS、WIDTH、enum、emitPathPrimitive、lastDrawnIdx'
+---
+
 # ADR-012：`compile/path.ts` 拆目录 + `findPrev` O(n²)→O(n) + `THICKNESS_TO_WIDTH` 与 enum 互锁
 
 - 状态：Accepted（已实现）

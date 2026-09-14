@@ -1,3 +1,8 @@
+---
+description: 坐标系局部标架与实验性 custom coordinate
+keywords: 'custom、coordinate、frameAlong、roles、CoordinateFrame、origin'
+---
+
 # ADR-049：坐标系局部标架与实验性 custom coordinate
 
 - 状态：Superseded

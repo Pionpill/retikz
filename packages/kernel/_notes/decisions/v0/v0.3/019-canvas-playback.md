@@ -1,3 +1,8 @@
+---
+description: Canvas 动画播放与共享插值引擎；背景：Canvas 是即时模式，绘制完成后没有可挂载 CSS/WAAPI 的 retained node
+keywords: 'Canvas'
+---
+
 # ADR-019：Canvas 动画播放与共享插值引擎
 
 - 状态：Accepted

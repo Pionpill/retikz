@@ -1,3 +1,8 @@
+---
+description: React axis binding sugar for overlay scopes；背景：这对“左轴画 temperature，右轴画 rainfall”这类常见图表来说过重
+keywords: 'React、axis、binding、sugar、for、overlay、scopes、yAxisId'
+---
+
 # ADR-087: React axis binding sugar for overlay scopes
 
 - 状态：Superseded

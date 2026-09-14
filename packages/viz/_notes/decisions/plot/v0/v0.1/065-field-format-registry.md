@@ -1,3 +1,8 @@
+---
+description: FieldFormat registry；背景：data 层复审后，整体数据模型并不适合全面 registry 化：字段类型、字段解析、label resolver 等仍有横切语义或函数 hook
+keywords: 'FieldFormat、registry、coerce.ts、fieldType、resolveField、resolveLabel'
+---
+
 # ADR-065：FieldFormat registry
 
 状态：Superseded

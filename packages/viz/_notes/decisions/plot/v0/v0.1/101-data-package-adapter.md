@@ -1,3 +1,8 @@
+---
+description: 适配 @retikz/data 数据层
+keywords: 'retikz、data、applyTransforms、IRDataModel、ExternalDatasets、defineTransform'
+---
+
 # ADR-101：适配 @retikz/data 数据层
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: 连续 scale 家族——log / pow / sqrt 连续 scale + L1 baseline 限制；背景：1. 跨数量级：人口、收入、计数、地震能量等跨多个 10 倍区间的数据，线性轴把小值压成一团，需 log 轴
+keywords: 'scale、log、pow、sqrt、baseline、size、PlotScale.Sqrt、trans'
+---
+
 # ADR-037：连续 scale 家族——log / pow / sqrt 连续 scale + L1 baseline 限制
 
 - 状态：Accepted

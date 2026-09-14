@@ -1,3 +1,8 @@
+---
+description: 后端中立的裁剪资源与引用，讨论 clip、资源复用及渲染消费边界
+keywords: 'clip、裁剪、ClipResource、clipRef'
+---
+
 # ADR-028：clip 裁切（renderer-agnostic ClipResource + clipRef，复用 alpha.7 资源表）
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: Cell selector、rule 与确定性级联
+keywords: 'Cell、selector、rule、negate、payloadKinds、rules、roles.any'
+---
+
 # ADR-019：Cell selector、rule 与确定性级联
 
 - 状态：Proposed

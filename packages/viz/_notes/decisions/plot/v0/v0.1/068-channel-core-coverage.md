@@ -1,3 +1,8 @@
+---
+description: channel core coverage 对账；背景：对照 core IR 可见，IRNode、IRPath、IRScope 共享大量样式属性，如 opacity、strokeWidth、fillOpacity、drawOpacity、zIndex
+keywords: 'channel、core、coverage、opacity、strokeWidth、fillOpacity、drawOpacity'
+---
+
 # ADR-068：channel core coverage 对账
 
 状态：Accepted

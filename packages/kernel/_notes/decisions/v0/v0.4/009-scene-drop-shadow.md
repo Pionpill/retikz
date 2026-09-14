@@ -1,3 +1,8 @@
+---
+description: Scene 图元级 drop shadow；背景：drop shadow 是 SVG、浏览器 Canvas 和 Node Canvas 的共同原生能力，不需要 backend-only 的 blur filter
+keywords: 'Scene、drop、shadow'
+---
+
 # ADR-009：Scene 图元级 drop shadow
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: Plot Source 默认片段与 Axis 规则；背景：当前 Plot 把同一组默认值拆成 flat token、token rule 与结构化 plotTheme
+keywords: 'Plot、Source、Axis、plotDefaults、plotTheme、axis、plotArea'
+---
+
 # ADR-011：Plot Source 默认片段与 Axis 规则
 
 - 状态：Proposed

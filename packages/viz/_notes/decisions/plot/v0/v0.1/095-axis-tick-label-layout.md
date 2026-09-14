@@ -1,3 +1,8 @@
+---
+description: Axis tick label 自适应布局；背景：同类库大多把 axis label 视为独立能力
+keywords: 'Axis、tick、label、rotate、tickLabels.layout、hide、layout.hide'
+---
+
 # ADR-095：Axis tick label 自适应布局
 
 - 状态：Accepted

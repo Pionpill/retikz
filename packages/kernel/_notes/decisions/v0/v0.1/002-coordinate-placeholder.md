@@ -1,3 +1,8 @@
+---
+description: <Coordinate> 占位节点的 IR 表达
+keywords: 'Coordinate、IRChild、at.of、position、NodeLayout'
+---
+
 # ADR-002：`<Coordinate>` 占位节点的 IR 表达
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: TeX 数学语法兼容
+keywords: 'TeX、LoweredTex.commands、cases、LoweredTex、stroke'
+---
+
 # ADR-006：TeX 数学语法兼容
 
 - 状态：Accepted

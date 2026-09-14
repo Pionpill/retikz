@@ -1,3 +1,8 @@
+---
+description: 框架绑定脚手架 + 薄包装（plot-react <Plot> / plot-vanilla renderPlot）
+keywords: 'plot-react、Plot、plot-vanilla、renderPlot、renderToSvgString、PlotSchema.parse、width、height'
+---
+
 # ADR-007：框架绑定脚手架 + 薄包装（plot-react `<Plot>` / plot-vanilla `renderPlot`）
 
 - 状态：Superseded

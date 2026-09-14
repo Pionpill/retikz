@@ -1,3 +1,8 @@
+---
+description: Table Source 默认片段；背景：Table 以 tableThemeTokens 持久化扁平键值，并由 style definition 生成同一种 token map
+keywords: 'Table、Source、appearanceDefaults、layout.borders、visualDefaults、tableDefaults'
+---
+
 # ADR-023：Table Source 默认片段
 
 - 状态：Proposed

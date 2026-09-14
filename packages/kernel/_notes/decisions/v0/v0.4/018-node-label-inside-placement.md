@@ -1,3 +1,8 @@
+---
+description: Node label inside placement；背景：Bar、cell、sector 等 node-like 图元需要把文字放在图元内部，并稳定表达顶部中点、右侧比例等边界位置；把该语义留在 Plot 会复制 Core 的 label 几何和 provenance
+keywords: 'Node、label、inside、placement、outside、Node.label'
+---
+
 # ADR-018：Node label inside placement
 
 - 状态：Accepted

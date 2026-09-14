@@ -1,3 +1,8 @@
+---
+description: Standard 裁剪形状与两级 Provider
+keywords: 'Standard、Provider、rect、polygon、compound、circle'
+---
+
 # ADR-026：Standard 裁剪形状与两级 Provider
 
 - 状态：Superseded（由 [ADR-027](./027-single-clip-definition.md) 取代）

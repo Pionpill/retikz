@@ -1,3 +1,8 @@
+---
+description: coordinate 抽象通用化 + polar2D 投影；背景：polar2D 落地必须先把这些写死处抽象出来
+keywords: 'coordinate、polar2D、CoordinateFrame、PositionScale、bandwidth'
+---
+
 # ADR-021：coordinate 抽象通用化 + polar2D 投影
 
 > 本 milestone 的唯一真叶子：把 alpha.1~alpha.3 写死的 cartesian 投影抽象成「坐标系可插拔的中间层」，并补 polar2D 投影几何 + 完整 `ResolvedCoordinateFrame` 契约（供 ADR-022/023/04 共用）。

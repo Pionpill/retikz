@@ -1,3 +1,8 @@
+---
+description: Plot 比例尺（LinearScale + Scale union）
+keywords: 'Plot、LinearScale、Scale、union、linear、domain、range、nice'
+---
+
 # ADR-003：Plot 比例尺（LinearScale + Scale union）
 
 - 状态：Accepted

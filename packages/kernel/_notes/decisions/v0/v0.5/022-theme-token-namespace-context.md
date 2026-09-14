@@ -1,3 +1,8 @@
+---
+description: Theme Token Namespace Context 与共享颜色；背景：颜色还缺少稳定的跨包 value contract
+keywords: 'Theme、Token、Namespace、Context、style、mode、core、InspectionAppearanceContext'
+---
+
 # ADR-022：Theme Token Namespace Context 与共享颜色
 
 - 状态：Superseded

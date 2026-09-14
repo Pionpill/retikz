@@ -1,3 +1,8 @@
+---
+description: Vanilla 命令式 builder API；背景：Vanilla 原先只能接收 IR 或 Scene
+keywords: 'Vanilla、builder、API、Figure、measureText、draw、coordinate'
+---
+
 # ADR-004：Vanilla 命令式 builder API
 
 - 状态：Accepted（已实现）

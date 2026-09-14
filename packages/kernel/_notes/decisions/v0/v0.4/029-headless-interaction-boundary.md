@@ -1,3 +1,8 @@
+---
+description: Headless interaction manifest 边界登记
+keywords: 'Headless、interaction、manifest、hovered、selected、focused、dragging'
+---
+
 # ADR-029：Headless interaction manifest 边界登记
 
 - 状态：Accepted

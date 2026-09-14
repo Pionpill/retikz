@@ -1,3 +1,8 @@
+---
+description: 建立 Box、LayoutItem 与共享布局词汇；背景：Flex、Grid、Overlay 都需要表达容器尺寸、padding、item margin、alignment、overflow 和稳定 item identity
+keywords: 'Box、LayoutItem、LayoutAlignment、LayoutEdgeAlignmentValue、LayoutDistribution、LayoutOverflow'
+---
+
 # ADR-007：建立 Box、LayoutItem 与共享布局词汇
 
 - 状态：Superseded by [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md)（2026-08-09）

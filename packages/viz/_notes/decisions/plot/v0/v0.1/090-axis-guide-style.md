@@ -1,3 +1,8 @@
+---
+description: Axis guide 部件槽位与样式 token；背景：Guide 的几何还要跨 cartesian、polar、ternary、自定义坐标系成立
+keywords: 'Axis、guide、token、ticks、tickLabels、style、grid'
+---
+
 # ADR-090：Axis guide 部件槽位与样式 token
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Legend size symbol 布局与缩放策略；背景：当前 size legend 直接复用 size 通道 descriptor 的半径范围
+keywords: 'Legend、size、symbol、symbolSize、symbolScale、swatchSize、preserve'
+---
+
 # ADR-099: Legend size symbol 布局与缩放策略
 
 - 状态：Accepted

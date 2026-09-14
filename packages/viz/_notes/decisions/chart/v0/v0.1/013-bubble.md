@@ -1,3 +1,8 @@
+---
+description: Bubble 的必需尺寸字段语义；背景：Scatter 与 Bubble 都以 Plot Point 表达观测值，但两者的长期身份不同：Scatter 只要求二维位置，size 是可选视觉通道；Bubble 必须用第三个数据字段控制点的面积感知尺寸
+keywords: 'Bubble、size、BubbleMark、bubble、domainPadding'
+---
+
 # ADR-013：Bubble 的必需尺寸字段语义
 
 - 状态：Accepted

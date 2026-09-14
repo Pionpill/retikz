@@ -1,3 +1,8 @@
+---
+description: Plot 元素层级与 zIndex 策略；背景：Plot 当前的可见元素不止 mark 和 guide
+keywords: 'Plot、zIndex、mark.zIndex、layer.zIndex、mark.layer.zIndex'
+---
+
 # ADR-100: Plot 元素层级与 zIndex 策略
 
 - 状态：Accepted

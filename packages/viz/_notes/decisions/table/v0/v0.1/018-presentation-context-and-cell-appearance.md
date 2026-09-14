@@ -1,3 +1,8 @@
+---
+description: Presentation context 与 Cell appearance
+keywords: 'Presentation、context、Cell、appearance、IRChild、cellId、fillOpacity、borders'
+---
+
 # ADR-018：Presentation context 与 Cell appearance
 
 - 状态：Proposed

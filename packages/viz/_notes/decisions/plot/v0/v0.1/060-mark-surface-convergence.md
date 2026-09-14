@@ -1,3 +1,8 @@
+---
+description: mark 公开表面收敛；背景：v0.1 的 viz 三包采用 lockstep 发布，plot 本体、React adapter、Vanilla adapter 与文档必须作为同一个用户可见表面一起收敛
+keywords: 'mark、format、angle、stack、series'
+---
+
 # ADR-060：mark 公开表面收敛
 
 状态：Accepted

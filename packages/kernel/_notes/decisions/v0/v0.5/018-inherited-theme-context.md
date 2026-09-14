@@ -1,3 +1,8 @@
+---
+description: 可继承 Theme IR 与 Composite 编译上下文；背景：Chart、Table 与未来 Geo 等领域都需要在同一张图中选择一致的视觉人格和明暗环境
+keywords: 'Theme、Composite、IRScope、style、mode、IRScene'
+---
+
 # ADR-018：可继承 Theme IR 与 Composite 编译上下文
 
 - 状态：Accepted

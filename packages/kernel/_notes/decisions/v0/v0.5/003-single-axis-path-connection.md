@@ -1,3 +1,8 @@
+---
+description: 单轴路径连接；背景：现有 fold 只能表达两段正交折线；用户还需要只沿 x 或 y 连接 target，以及在两处转折间插入可调位置的中间段
+keywords: 'fraction、fold、horizontalTo、verticalTo'
+---
+
 # ADR-003：单轴路径连接
 
 - 状态：Accepted

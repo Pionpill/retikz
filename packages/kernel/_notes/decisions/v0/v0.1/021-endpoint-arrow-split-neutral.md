@@ -1,3 +1,8 @@
+---
+description: endpoint arrow split 命名中性化
+keywords: 'endpoint、arrow、split、arrowStart、arrowEnd、splitSubPathsForEndpointArrows、splitSubPathsForMarkers'
+---
+
 # ADR-021: endpoint arrow split 命名中性化
 
 - 状态：Accepted（已实现）

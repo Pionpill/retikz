@@ -1,3 +1,8 @@
+---
+description: ScenePrimitive reference 与发布文案收口
+keywords: 'ScenePrimitive、reference、shadow、blendMode、RectPrim、EllipsePrim'
+---
+
 # ADR-031：ScenePrimitive reference 与发布文案收口
 
 - 状态：Accepted

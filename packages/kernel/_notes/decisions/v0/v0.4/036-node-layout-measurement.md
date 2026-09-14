@@ -1,3 +1,8 @@
+---
+description: Node layout measurement surface
+keywords: 'Node、layout、measurement、surface、NodeLayout、compileToScene、onNodeLayout、content.size'
+---
+
 # ADR-036: Node layout measurement surface
 
 - 状态：Accepted

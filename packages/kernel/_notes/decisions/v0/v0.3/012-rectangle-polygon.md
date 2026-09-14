@@ -1,3 +1,8 @@
+---
+description: rectangle/polygon 参数化与 diamond preset；背景：roundedCorners 是 rectangle 专属字段却位于 Node 顶层；diamond 又是 4-gon 的重复几何
+keywords: 'rectangle、polygon、diamond、preset'
+---
+
 # ADR-012：rectangle/polygon 参数化与 diamond preset
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: ComponentPreview vanilla 代码视图补齐——stepsToWay 逆映射对齐 parseWay 正向语法（零漂移），way 表达不了的走 IR fallback；背景：path 的 way 由 stepsToWay 从 path.children 反推
+keywords: 'ComponentPreview、vanilla、stepsToWay、parseWay、way、fallback、bend、circlePath'
+---
+
 # ADR-026：ComponentPreview vanilla 代码视图补齐——`stepsToWay` 逆映射对齐 `parseWay` 正向语法（零漂移），way 表达不了的走 IR fallback
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Graph semantic Source IR 与 Core lowering
+keywords: 'Graph、semantic、Source、Core、lowering、role、predicate、graphTheme'
+---
+
 # ADR-003：Graph semantic Source IR 与 Core lowering
 
 - 状态：Accepted

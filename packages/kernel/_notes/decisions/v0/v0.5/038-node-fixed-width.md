@@ -1,3 +1,8 @@
+---
+description: Node 固定宽度与内容重排；背景：Core Node 目前可以以 minimumSize 扩大可见外框，并以 maxTextWidth 约束文本折行；两者不能表达“外框必须恰好为指定宽度”
+keywords: 'Node、width、maxTextWidth、minimumSize、IRNodeLayout'
+---
+
 # ADR-038：Node 固定宽度与内容重排
 
 - 状态：Accepted

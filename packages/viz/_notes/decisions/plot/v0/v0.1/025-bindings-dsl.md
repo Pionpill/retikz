@@ -1,3 +1,8 @@
+---
+description: 三包 polar authoring 表面 + 文档露出 + 端到端验收；背景：这些表面只懂 cartesian
+keywords: 'polar、authoring、closed、color、angle、buildPlotIR'
+---
+
 # ADR-025：三包 polar authoring 表面 + 文档露出 + 端到端验收
 
 > **无 IR schema 改动**（消费 ADR-021~024）。

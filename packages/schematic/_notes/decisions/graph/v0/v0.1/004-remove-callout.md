@@ -1,3 +1,8 @@
+---
+description: 撤回缺少用例验证的 Callout 公共契约；背景：Callout 曾同时尝试表达目标附属说明、任意内容容器、可选 leader、previous-only placement 与布局 artifact，但没有真实用例证明这些字段属于同一个稳定 Graph 语义
+keywords: 'Callout'
+---
+
 # ADR-004：撤回缺少用例验证的 Callout 公共契约
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Core 纯几何按函数粒度下沉到 @retikz/math；背景：Core 的 geometry 公开面被多个 adapter 使用，但形状模块同时包含纯射线数学和 TikZ anchor/IR 语义
+keywords: 'Core、retikz、math'
+---
+
 # ADR-002：Core 纯几何按函数粒度下沉到 @retikz/math
 
 - 状态：Accepted（已实现）

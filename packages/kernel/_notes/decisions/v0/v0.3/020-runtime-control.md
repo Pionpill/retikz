@@ -1,3 +1,8 @@
+---
+description: runtime 播放控制、trigger 与静态截帧
+keywords: 'runtime、trigger'
+---
+
 # ADR-020：runtime 播放控制、trigger 与静态截帧
 
 - 状态：Accepted

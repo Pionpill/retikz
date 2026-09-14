@@ -1,3 +1,8 @@
+---
+description: legend guide——非位置 scale 的图例（swatch / 色带 ramp / 分箱）+ 估算布局占位；背景：legend 是 GoG 一等 guide（plot-design §3.9）：与 axis 并列、由 scale 派生、最终 lowering 成 core Node/Path/Scope
+keywords: 'legend、guide、scale、swatch、ramp、Axis、GuideSchema、IRPlot.scales'
+---
+
 # ADR-044：legend guide——非位置 scale 的图例（swatch / 色带 ramp / 分箱）+ 估算布局占位
 
 - 状态：Accepted

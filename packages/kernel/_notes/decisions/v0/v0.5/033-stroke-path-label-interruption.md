@@ -1,3 +1,8 @@
+---
+description: Core 路径居中标签断线，覆盖标签占用空间与可见描边的协作
+keywords: 'GeometryLabel、label、标签断线、路径、stroke'
+---
+
 # ADR-033：Path 标签多行文本与 Stroke 自动断线
 
 - 状态：Accepted

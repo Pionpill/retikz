@@ -1,3 +1,8 @@
+---
+description: Axis grid 值域端点主题默认；背景：这条边界使默认 preset 与宿主 style 无法完整表达自己的 Axis 参考框架
+keywords: 'Axis、grid、grid.includeDomain、axis.grid.enabled、axis.grid.includeDomain、plotThemeTokens'
+---
+
 # ADR-007：Axis grid 值域端点主题默认
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: text mark——datum label 数据标签，优先挂宿主 Node.label、兜底新建带 text 的核心 Node
+keywords: 'text、mark、datum、label、Node、field、Node.text'
+---
+
 # ADR-055：text mark——datum label 数据标签，优先挂宿主 Node.label、兜底新建带 `text` 的核心 Node
 
 - 状态：Superseded

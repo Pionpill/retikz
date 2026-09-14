@@ -1,3 +1,8 @@
+---
+description: custom visual channel
+keywords: 'custom、visual、channel、encoding.channels、defineVisualChannel、options.visualChannelDefinitions、VisualChannelDefinition.deliver'
+---
+
 # ADR-067：custom visual channel
 
 状态：Accepted

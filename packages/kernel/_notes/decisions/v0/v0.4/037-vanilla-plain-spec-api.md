@@ -1,3 +1,8 @@
+---
+description: Vanilla plain spec API 与 Tier 2 增量边界；背景：旧 Vanilla Figure builder 同时承载构图、挂载和 SSR，带方法与闭包状态，不利于 LLM 生成、结构化比较、序列化和后续 identity / diff 边界
+keywords: 'Vanilla、plain、spec、API、Tier、Figure、update、makeComposites'
+---
+
 # ADR-037：Vanilla plain spec API 与 Tier 2 增量边界
 
 - 状态：Accepted

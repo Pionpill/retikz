@@ -1,3 +1,8 @@
+---
+description: arc step 加显式 center + 椭圆弧（radiusX / radiusY）
+keywords: 'arc、step、center、radiusX、radiusY、radius、prev.anchor、ArcStepSchema'
+---
+
 # ADR-012：arc step 加显式 center + 椭圆弧（radiusX / radiusY）
 
 - 状态：Accepted（已实现）

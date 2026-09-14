@@ -1,3 +1,8 @@
+---
+description: Axis grid 包含值域端点；背景：Axis grid 已经能够复用可见轴刻度，或通过独立 tick source 与 density 生成主网格位置
+keywords: 'Axis、grid、grid.ticks、includeDomain、bandPosition、grid.ticks.values'
+---
+
 # ADR-006：Axis grid 包含值域端点
 
 - 状态：Accepted

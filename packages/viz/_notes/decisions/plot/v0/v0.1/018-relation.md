@@ -1,3 +1,8 @@
+---
+description: relation —— series + group(dodge) + stack（多系列柱 / 折线几何）
+keywords: 'relation、series、group、dodge、stack、arrangement、y0Field、y1Field'
+---
+
 # ADR-018：relation —— series + group(dodge) + stack（多系列柱 / 折线几何）
 
 - 状态：Superseded

@@ -1,3 +1,8 @@
+---
+description: Core 轻量 Theme 与 Style 解析，替代持久化 namespace token bag 和全局 token registry
+keywords: 'Theme、Style、主题、style definition、token'
+---
+
 # ADR-024：轻量 Theme IR 与可扩展 Style 解析
 
 - 状态：Accepted

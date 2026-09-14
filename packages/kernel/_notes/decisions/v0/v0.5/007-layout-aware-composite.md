@@ -1,3 +1,8 @@
+---
+description: 布局感知 Composite 与显式编译产物；背景：Tier 2 layout composite 需要在完整 Core compile 环境中测量任意 IRChild，求解真实尺寸后反馈约束并复用选中结果
+keywords: 'Composite、expand、IRChild、onNodeLayout、defineComposite'
+---
+
 # ADR-007：布局感知 Composite 与显式编译产物
 
 - 状态：Accepted

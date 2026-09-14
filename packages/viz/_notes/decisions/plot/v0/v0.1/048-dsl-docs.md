@@ -1,3 +1,8 @@
+---
+description: 三包 DSL + 文档露出（cartesian1D / polar1D / ternary2D 表面 + 端到端验收）
+keywords: 'DSL、cartesian1D、polar1D、ternary2D、CoordinateInput、PointMarkProps、coordinate'
+---
+
 # ADR-048：三包 DSL + 文档露出（cartesian1D / polar1D / ternary2D 表面 + 端到端验收）
 
 - 状态：Superseded

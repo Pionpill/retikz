@@ -1,3 +1,8 @@
+---
+description: 以 Core provider graph 聚合可复用绘图能力依赖；背景：Tier 2 能力会同时依赖自身与其它 owner 的 Composite、Shape、Arrow、Clip 或 Path Generator definition
+keywords: 'Core、provider、graph、shapes、arrows、clips、pathGenerators'
+---
+
 # ADR-027：以 Core provider graph 聚合可复用绘图能力依赖
 
 - 状态：Accepted

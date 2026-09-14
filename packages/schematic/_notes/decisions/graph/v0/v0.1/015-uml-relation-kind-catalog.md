@@ -1,3 +1,8 @@
+---
+description: UML Relation kind 目录与结构默认；背景：Relation 已有开放的 role → kind → predicate Definition / registry 链路，但内置 kind 仅覆盖部分 UML 关系，还混入了 Provenance 语义
+keywords: 'UML、Relation、kind、dependency、association、generalization、uml.realization'
+---
+
 # ADR-015：UML Relation kind 目录与结构默认
 
 - 状态：Proposed

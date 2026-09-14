@@ -1,3 +1,8 @@
+---
+description: Scene Patch 与 Retained Renderer
+keywords: 'Scene、Patch、Retained、Renderer、parent、rendererFactory、VanillaLayerCache、SceneRuntimeSnapshot'
+---
+
 # ADR-014：Scene Patch 与 Retained Renderer
 
 - 状态：Accepted

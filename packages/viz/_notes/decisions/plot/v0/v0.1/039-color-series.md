@@ -1,3 +1,8 @@
+---
+description: color 真通道收口 + series 一等化（B/C 规则）；背景：color 通道名义上是「真 scale 通道」，实则半成品，且 color 与 series 的边界含糊：
+keywords: 'color、series、color.field、makeColorResolver'
+---
+
 # ADR-039：color 真通道收口 + series 一等化（B/C 规则）
 
 - 状态：Superseded

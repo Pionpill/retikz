@@ -1,3 +1,8 @@
+---
+description: Ribbon 可变宽度路径；背景：Sankey、alluvial、flow map 等图形需要同时表达关系走向和可变宽度
+keywords: 'Ribbon、IRRibbon'
+---
+
 # ADR-015：Ribbon 可变宽度路径
 
 - 状态：被 ADR-021 收敛

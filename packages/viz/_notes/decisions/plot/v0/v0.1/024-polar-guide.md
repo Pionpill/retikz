@@ -1,3 +1,8 @@
+---
+description: 极坐标辅助线，覆盖角度轴、径向轴、同心圆网格与辐条
+keywords: 'polar、guide、axis、grid、极坐标'
+---
+
 # ADR-024：polar guide（angular / radial axis + 同心环 / 辐条 grid）
 
 > 在 ADR-021 的 `CoordinateFrame` 之上落极坐标 guide：angular axis（刻度绕圆周）、radial axis（刻度沿辐条）、polar grid（同心环 + 角向辐条）。**只做 guide 几何、消费 ADR-021 的 frame，不定 layout。** 下沉 core `Path`（弧 / 直段）+ `Node`（标签）。

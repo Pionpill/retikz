@@ -1,3 +1,8 @@
+---
+description: Path smooth step；背景：已有 curve、cubic、bend 需要用户手算控制点，缺少从点列生成平滑过点曲线的 Kernel step
+keywords: 'Path、smooth、step'
+---
+
 # ADR-007：Path smooth step
 
 - 状态：Accepted（已实现；cursor-less smooth 跳过 path 并发出 PATH_TOO_SHORT warning）

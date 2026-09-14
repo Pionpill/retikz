@@ -1,3 +1,8 @@
+---
+description: Table 轨道尺寸与单轴分配，覆盖列行差异、内容尺寸、剩余空间份额和上下界
+keywords: 'track sizing、solver、轨道、尺寸、fraction'
+---
+
 # ADR-010：轨道尺寸 schema 与确定性单轴求解
 
 - 状态：Accepted

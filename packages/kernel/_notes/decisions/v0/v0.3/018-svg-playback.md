@@ -1,3 +1,8 @@
+---
+description: SVG 动画播放——load 用 CSS，交互用 WAAPI；背景：Scene 携带完整 base 和 AnimationTrack
+keywords: 'SVG、load、CSS、WAAPI'
+---
+
 # ADR-018：SVG 动画播放——load 用 CSS，交互用 WAAPI
 
 - 状态：Accepted

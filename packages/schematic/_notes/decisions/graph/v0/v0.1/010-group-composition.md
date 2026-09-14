@@ -1,3 +1,8 @@
+---
+description: Group 通用包含与边界呈现；背景：Graph 需要一种可持久化的包含语义，表达“这些内容共同属于一个可见分组”
+keywords: 'Group、theme、lightgray、IRGroup.children、IRChild'
+---
+
 # ADR-010：Group 通用包含与边界呈现
 
 - 状态：Accepted

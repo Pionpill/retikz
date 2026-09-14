@@ -1,3 +1,8 @@
+---
+description: 撤销 GraphNode Variant 视觉轴；背景：早期 GraphNode 使用 role 表达语义，并用闭合的 variant 词汇选择共享视觉层级
+keywords: 'GraphNode、Variant、variant、role、graphTheme、graphNodeVariant'
+---
+
 # ADR-002：撤销 GraphNode Variant 视觉轴
 
 - 状态：Superseded by [ADR-006](./006-graph-entity-registry-theme.md)（2026-08-23 breaking revision）

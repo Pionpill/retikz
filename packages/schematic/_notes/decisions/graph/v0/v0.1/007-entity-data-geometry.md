@@ -1,3 +1,8 @@
+---
+description: Entity 语义封装与 Core Node 复用；背景：Entity 是带 Graph 语义并最终下沉为一个 Core Node 的正式元素
+keywords: 'Entity、Core、Node、IRChild、participant、activity、event'
+---
+
 # ADR-007：Entity 语义封装与 Core Node 复用
 
 - 状态：Accepted

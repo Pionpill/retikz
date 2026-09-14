@@ -1,3 +1,8 @@
+---
+description: 可选 Node Canvas 服务端导出入口——薄复用 drawScene + conditional exports 隔离 + optional peer 依赖
+keywords: 'Node、Canvas、drawScene、conditional、exports、optional、peer、renderToCanvas'
+---
+
 # ADR-025：可选 Node Canvas 服务端导出入口——薄复用 `drawScene` + conditional exports 隔离 + optional peer 依赖
 
 - 状态：Accepted

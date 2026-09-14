@@ -1,3 +1,8 @@
+---
+description: Group 与 Block 继承 Graph Theme 外观
+keywords: 'Group、Block、Graph、Theme、theme.style、academic、background、border'
+---
+
 # ADR-014：Group 与 Block 继承 Graph Theme 外观
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: 以 Standard Surface 包装任意 Core child
+keywords: 'Standard、Surface、Core、child、IRSurface、allocationBounds、visualBounds、zIndex'
+---
+
 # ADR-022：以 Standard Surface 包装任意 Core child
 
 - 状态：Accepted（2026-08-11，Architecture Gate 与 Plan Gate 通过并经人工确认）

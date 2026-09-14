@@ -1,3 +1,8 @@
+---
+description: Graph Defaults、Rules 与 Theme 来源；背景：本决策将作者显式默认命名为 graphDefaults，条件覆盖独立命名为 graphRules
+keywords: 'Graph、Defaults、Rules、Theme、structure.dashPattern、graphRules、GraphThemeStyleDefinition、graphDefaults'
+---
+
 # ADR-017：Graph Defaults、Rules 与 Theme 来源
 
 - 状态：Accepted

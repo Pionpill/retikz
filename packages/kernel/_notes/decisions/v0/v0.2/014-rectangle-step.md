@@ -1,3 +1,8 @@
+---
+description: 新增 rectangle step（圆角矩形）；背景：矩形是 TikZ 最常用图元之一（(a) rectangle (b)）
+keywords: 'rectangle、step、RectPrim、RectangleStepSchema、label、rectSegmentSample'
+---
+
 # ADR-014：新增 rectangle step（圆角矩形）
 
 - 状态：Accepted（已实现）

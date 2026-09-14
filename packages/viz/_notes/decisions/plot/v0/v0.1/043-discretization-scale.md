@@ -1,3 +1,8 @@
+---
+description: 离散化 scale——quantize / threshold / quantile（连续 domain → 离散 color 档）；背景：这三种正是 d3 / GoG 的三个离散化 scale：
+keywords: 'scale、quantize、threshold、quantile、domain、color、scaleQuantize、scaleThreshold'
+---
+
 # ADR-043：离散化 scale——quantize / threshold / quantile（连续 domain → 离散 color 档）
 
 - 状态：Accepted

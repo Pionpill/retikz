@@ -1,3 +1,8 @@
+---
+description: Domain padding 的比例与 range 单位；背景：连续位置 scale 现有 domainPadding 只把数值解释为 source domain span 的比例
+keywords: 'Domain、padding、range、domainPadding、lower、upper'
+---
+
 # ADR-008：Domain padding 的比例与 range 单位
 
 - 状态：Accepted（2026-09-01 人工确认 range 默认与显式 ratio 契约）

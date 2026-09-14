@@ -1,3 +1,8 @@
+---
+description: Tier 2 JSX authoring、expand 上下文与 lowering cache
+keywords: 'Tier、JSX、authoring、expand、lowering、cache'
+---
+
 # ADR-007：Tier 2 JSX authoring、expand 上下文与 lowering cache
 
 - 状态：Accepted（延后方案已采纳；三项均未实现、未排期）

@@ -1,3 +1,8 @@
+---
+description: Graph Entity 与 Relation 的语义状态；背景：流程图和关系图常需表达对象或连线当前异常、成功、警告或被禁用
+keywords: 'Graph、Entity、Relation、status、normal、disabled、params.status'
+---
+
 # ADR-016：Graph Entity 与 Relation 的语义状态
 
 - 状态：Proposed

@@ -1,3 +1,8 @@
+---
+description: band / point scale（分类域 + bandwidth；projector 抽象为 PositionScale）
+keywords: 'band、point、scale、bandwidth、projector、PositionScale、scaleBand、scalePoint'
+---
+
 # ADR-014：band / point scale（分类域 + bandwidth；projector 抽象为 PositionScale）
 
 - 状态：Accepted

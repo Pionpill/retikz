@@ -1,3 +1,8 @@
+---
+description: Logic Diagram 跨 adapter authoring 与内部 recipe
+keywords: 'Logic、Diagram、adapter、authoring、recipe、position、IRNode、graphFrame'
+---
+
 # ADR-020：Logic Diagram 跨 adapter authoring 与内部 recipe
 
 - 状态：Superseded（由 [Graph ADR-001](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/001-graph-package-family.md) 取代；2026-08-15）

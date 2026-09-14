@@ -1,3 +1,8 @@
+---
+description: Tier 2 领域节点与可注册 lowering 管线
+keywords: 'Tier、lowering'
+---
+
 # ADR-006：Tier 2 领域节点与可注册 lowering 管线
 
 - 状态：Accepted（已实现）

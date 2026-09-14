@@ -1,3 +1,8 @@
+---
+description: Mark-local transform for all marks；背景：transform 是 Statistics 层能力，不是 relation 几何能力
+keywords: 'Mark-local、transform、for、all、marks、spec.transform、rootRows、mark.transform'
+---
+
 # ADR-071：Mark-local transform for all marks
 
 状态：Accepted

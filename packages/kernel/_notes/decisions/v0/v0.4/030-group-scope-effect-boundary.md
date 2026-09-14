@@ -1,3 +1,8 @@
+---
+description: Group 与 Scope 整体视觉效果的范围边界，区分组效果与单图元阴影、混合
+keywords: 'Group、Scope、shadow、blendMode、组效果'
+---
+
 # ADR-030：Group / Scope 级视觉效果延期边界
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: GraphNode role 语义（历史验证）；背景：流程图和架构图需要少量稳定的逻辑词汇：流程起止、处理步骤、条件分支和分叉/汇合点
+keywords: 'GraphNode、role、Node、IRNode、GraphNode.role、namespace'
+---
+
 # ADR-018：GraphNode role 语义（历史验证）
 
 - 状态：Superseded（由 [Graph ADR-001](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/001-graph-package-family.md) 取代；2026-08-15）

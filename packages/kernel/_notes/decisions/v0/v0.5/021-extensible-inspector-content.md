@@ -1,3 +1,8 @@
+---
+description: 将 Inspector 抽离为可选扩展包；背景：这使一个默认关闭的开发期能力进入基础编译、渲染和宿主入口
+keywords: 'Inspector、sourcePath、InspectorDefinition、inspect、IRChild'
+---
+
 # ADR-021：将 Inspector 抽离为可选扩展包
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: Node at 节点间相对定位
+keywords: 'Node、positioning、position、resolvePosition、AtPosition'
+---
+
 # ADR-001：Node `at` 节点间相对定位
 
 - 状态：Accepted（已实现）

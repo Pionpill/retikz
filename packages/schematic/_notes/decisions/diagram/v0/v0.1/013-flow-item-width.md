@@ -1,3 +1,8 @@
+---
+description: Flow 子项固定宽度；背景：流程图中的一个步骤组通常需要用一致的节点外框宽度表达它们属于同一视觉层级
+keywords: 'Flow、itemWidth、FlowLayout、layout.width、minimumSize'
+---
+
 # ADR-013：Flow 子项固定宽度
 
 - 状态：Accepted

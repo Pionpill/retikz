@@ -1,3 +1,8 @@
+---
+description: Flow Element 复用 Core 富文本；背景：Flow 的基础排布示例需要在 Entity 中同时呈现主文本和较低强调的说明文本；Relation 也需要在不拆成多条关系的前提下表达多行说明
+keywords: 'Flow、Element、Core、TextBlock、opacity、font、style.align'
+---
+
 # ADR-006：Flow Element 复用 Core 富文本
 
 - 状态：Accepted；Relation label 扩展待 [Core v0.5 ADR-033](../../../../../../kernel/_notes/decisions/v0/v0.5/033-stroke-path-label-interruption.md) 接受并实施

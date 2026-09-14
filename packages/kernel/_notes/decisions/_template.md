@@ -1,3 +1,8 @@
+---
+description: 本决策解决的问题与检索边界，复制后替换为具体摘要
+keywords: 中文术语、EnglishTerm
+---
+
 # ADR-NNN：<一句话标题>
 
 > 起新 ADR：复制本模板到 `v<MAJOR>/v<MAJOR>.<MINOR>/NNN-<slug>.md`

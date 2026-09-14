@@ -1,3 +1,8 @@
+---
+description: 水合事件处理的后端中立上下文，覆盖命中元素、几何与动画控制
+keywords: 'hydration、context、水合、事件上下文'
+---
+
 # ADR-022：hydration handler 的 renderer-neutral context
 
 - 状态：Accepted

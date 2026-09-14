@@ -1,3 +1,8 @@
+---
+description: nodeIndex / anchor 跨 scope 解析语义
+keywords: 'nodeIndex、anchor、scope、localNamespace、Scope.localNamespace、NameStack、pushFrame'
+---
+
 # ADR-002：nodeIndex / anchor 跨 scope 解析语义
 
 - 状态：Accepted（已实现）

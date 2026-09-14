@@ -1,3 +1,8 @@
+---
+description: 文本 run 与行内 TeX 混排；背景：常见文本会同时包含普通文字和公式，例如“当 $v=d/t$ 时”
+keywords: 'run、TeX'
+---
+
 # ADR-013：文本 run 与行内 TeX 混排
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: Core 原子绘图契约与 Tier 2 / Tier 3 组合边界；背景：Core 当前已经拥有若干可复用的叶子契约，但完整的路径基础契约同时承载了实例身份、通用图形样式、描边、填充、路径几何、provider 选择、标记、标签和结构字段
+keywords: 'Core、Tier、omit、strokeWidth、GraphicStyleSchema、pick'
+---
+
 # ADR-019：Core 原子绘图契约与 Tier 2 / Tier 3 组合边界
 
 - 状态：Accepted

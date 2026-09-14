@@ -1,3 +1,8 @@
+---
+description: locator, provenance, and adapters surface；背景：当前 locator 以 markIndex / transformedIndex / series 为主，默认假设单 coordinate frame
+keywords: 'locator、provenance、and、adapters、surface、coordinateScope、facet、track'
+---
+
 # ADR-085：locator, provenance, and adapters surface
 
 - 状态：Superseded

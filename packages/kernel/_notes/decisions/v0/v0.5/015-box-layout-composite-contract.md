@@ -1,3 +1,8 @@
+---
+description: Box Layout Composite 双轴约束与回放合同；背景：这足以支持 Table 的定宽换行，却不能表达 Flex、Grid、Overlay 共同需要的双轴 available space、stretch slot、空容器尺寸与 item clip
+keywords: 'Box、Layout、Composite、allocationBounds、slotSize、ChildLayoutConstraint、constrained.maxWidth'
+---
+
 # ADR-015：Box Layout Composite 双轴约束与回放合同
 
 - 状态：Accepted

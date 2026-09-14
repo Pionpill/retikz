@@ -1,3 +1,8 @@
+---
+description: React / Vanilla authoring、宿主接线与文档闭环；背景：Table 的 schema、layout 与 manifest 只有在 React、Vanilla、SSR、embedded 与文档中共享同一 transaction 才算可用
+keywords: 'React、Vanilla、authoring、composites、TableLayoutHostProps、onManifest、compile.composites'
+---
+
 # ADR-015：React / Vanilla authoring、宿主接线与文档闭环
 
 - 状态：Accepted

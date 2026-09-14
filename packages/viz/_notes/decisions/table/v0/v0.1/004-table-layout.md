@@ -1,3 +1,8 @@
+---
+description: 固定轨道 TableLayout；背景：Table lowering 必须先得到确定的行列几何
+keywords: 'TableLayout、rowHeight、headerHeight、IRChild、columnWidth'
+---
+
 # ADR-004：固定轨道 TableLayout
 
 - 状态：Accepted

@@ -1,3 +1,8 @@
+---
+description: 将 SVG 与 Canvas 合并为 @retikz/render 子路径；背景：SVG 和 Canvas 是并列后端，React 与 Vanilla 都需要它们；未来还会增加 WebGL 等后端
+keywords: 'SVG、Canvas、retikz、render、csstype、canvas、SvgNode'
+---
+
 # ADR-005：将 SVG 与 Canvas 合并为 `@retikz/render` 子路径
 
 - 状态：Accepted（已实现）

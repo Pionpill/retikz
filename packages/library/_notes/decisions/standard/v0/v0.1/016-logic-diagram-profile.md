@@ -1,3 +1,8 @@
+---
+description: Standard Logic Diagram Profile；背景：retikz 的文档、架构说明和流程示例反复需要开始 / 结束、处理步骤、条件判断、分叉 / 汇合、带结构化内容的说明块以及它们之间的连接
+keywords: 'Standard、Logic、Diagram、Profile、section、GraphFrame、CompositeDefinition、LogicDiagramPoint'
+---
+
 # ADR-016：Standard Logic Diagram Profile
 
 - 状态：Superseded（由 [Graph ADR-001](../../../../../../schematic/_notes/decisions/graph/v0/v0.1/001-graph-package-family.md) 取代；2026-08-15）

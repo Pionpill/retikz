@@ -1,3 +1,8 @@
+---
+description: 参数化 star shape
+keywords: 'star、shape'
+---
+
 # ADR-013：参数化 star shape
 
 - 状态：Accepted

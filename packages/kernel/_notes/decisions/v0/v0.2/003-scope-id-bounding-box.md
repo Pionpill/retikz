@@ -1,3 +1,8 @@
+---
+description: scope.id 注册 synthetic bounding-box 进父 namespace frame
+keywords: 'scope、synthetic、bounding-box、namespace、frame、scope.id、NodeLayout、boundingBox'
+---
+
 # ADR-003：`scope.id` 注册 synthetic bounding-box 进父 namespace frame
 
 - 状态：Accepted（已实现）

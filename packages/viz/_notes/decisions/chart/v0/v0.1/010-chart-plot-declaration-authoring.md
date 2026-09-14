@@ -1,3 +1,8 @@
+---
+description: Chart / Plot 声明组件分层与命名；背景：Chart 以精确 recipe 压缩常见图表的 Source IR，并用 plotExtension 保留完整 Plot 出口
+keywords: 'Chart、Plot、ChartFacet、plotExtension、recipe.facet、PlotXxx'
+---
+
 # ADR-010：Chart / Plot 声明组件分层与命名
 
 - 状态：Accepted

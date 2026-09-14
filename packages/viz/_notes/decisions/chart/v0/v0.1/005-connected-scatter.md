@@ -1,3 +1,8 @@
+---
+description: Point family 的 Connected Scatter recipe；背景：Connected Scatter 用离散观测点和按显式顺序连接的开放轨迹共同表达变化过程
+keywords: 'Point、family、Connected、Scatter、recipe、order、series、zIndex'
+---
+
 # ADR-005：Point family 的 Connected Scatter recipe
 
 - 状态：Proposed

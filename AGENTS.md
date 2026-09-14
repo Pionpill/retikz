@@ -29,6 +29,7 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 ## 动态规则
 
 - 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
+- 查找 ADR 先用 `pnpm adr:search <关键词> --owner <owner>` 检索摘要，可加 `--version v0.x`；未命中时换词、扩大范围或加 `--body` 补查。再阅读全文命中 ADR 并追踪前置 / 替代关系，不默认全量读取；检索规范见 `develop-design`，发布全文审计不因此省略。
 - 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-resolve` / `standard-normalize` / `standard-pipeline-compile` / `standard-tier2-reuse`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。

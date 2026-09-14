@@ -1,3 +1,8 @@
+---
+description: Graph 代码实体的共享内容与 Block 基础，供接口、函数及后续代码节点复用
+keywords: 'CodeBlock、Block、代码实体、共享内容'
+---
+
 # ADR-019：代码实体 Tier 3 与共享内容契约
 
 - 状态：Proposed

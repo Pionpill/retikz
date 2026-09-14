@@ -1,3 +1,8 @@
+---
+description: 将 Axes 加入 Standard Tier 2 composite；背景：静态数学插图经常重复组合轴线、箭头、刻度、文字与可选网格
+keywords: 'Axes、Standard、Tier、composite、grid、label、IRAxes、AxesDefinition'
+---
+
 # ADR-002：将 Axes 加入 Standard Tier 2 composite
 
 - 状态：Accepted

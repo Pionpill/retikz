@@ -1,3 +1,8 @@
+---
+description: 具名动画 preset factory；背景：AnimationTrack 原语功能完整，但手写 keyframes 冗长且容易出错
+keywords: 'preset、factory'
+---
+
 # ADR-021：具名动画 preset factory
 
 - 状态：Accepted（preset 与等价测试已实现；文档动画页待补）

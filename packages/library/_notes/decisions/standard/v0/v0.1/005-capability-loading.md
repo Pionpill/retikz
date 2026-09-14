@@ -1,3 +1,8 @@
+---
+description: 建立 Standard capability module 与显式 preset；背景：Grid、Axes、Frame 都通过 Core CompositeDefinition 注册
+keywords: 'Standard、capability、module、preset、StandardAllPreset、StandardCapabilityModule、StandardVanillaAdapters、CompositeDefinition'
+---
+
 # ADR-005：建立 Standard capability module 与显式 preset
 
 - 状态：Superseded（由 [ADR-021](./021-direct-definition-loading.md) 取代）

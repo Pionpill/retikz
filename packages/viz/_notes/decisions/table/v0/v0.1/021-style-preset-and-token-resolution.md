@@ -1,3 +1,8 @@
+---
+description: Table style preset 与 inherited token resolution；背景：Table 的 Cell、header、border 与 conditional encoding 需要稳定的视觉默认，但 Table 不应再维护一套独立的 style / mode environment
+keywords: 'Table、style、preset、inherited、token、resolution、tableThemeTokens、data.categorical'
+---
+
 # ADR-021：Table style preset 与 inherited token resolution
 
 - 状态：Superseded by [ADR-023](./023-table-source-default-fragments.md)

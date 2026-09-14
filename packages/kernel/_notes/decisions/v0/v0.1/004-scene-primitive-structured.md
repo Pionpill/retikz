@@ -1,3 +1,8 @@
+---
+description: Scene PathPrim + GroupPrim 结构化（去 SVG 字符串）
+keywords: 'Scene、PathPrim、GroupPrim、SVG、PathPrim.d、GroupPrim.transform、ctx.ellipse、boundsHint'
+---
+
 # ADR-004：Scene `PathPrim` + `GroupPrim` 结构化（去 SVG 字符串）
 
 - 状态：Accepted（已实现）

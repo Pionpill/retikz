@@ -1,3 +1,8 @@
+---
+description: Diagram / Flow 显式 Defaults 与 Theme 来源；背景：本决策让可主题化字段首先具有正式 Source 路径，再复用为作者 xxxDefaults 与 Theme definition 的生成片段
+keywords: 'Diagram、Flow、Defaults、Theme、presentation.title、presentation.description、diagramDefaults.presentation.title、presentation.legend'
+---
+
 # ADR-008：Diagram / Flow 显式 Defaults 与 Theme 来源
 
 - 状态：Accepted

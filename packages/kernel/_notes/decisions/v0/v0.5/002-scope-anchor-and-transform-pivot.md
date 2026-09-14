@@ -1,3 +1,8 @@
+---
+description: Scope 自身锚点与变换基点
+keywords: 'Scope、placement.selfAnchor、scale.y、IRScope.placement、ScopeProps.placement'
+---
+
 # ADR-002：Scope 自身锚点与变换基点
 
 - 状态：Accepted

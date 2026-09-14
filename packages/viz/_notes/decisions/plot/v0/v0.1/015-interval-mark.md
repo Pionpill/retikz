@@ -1,3 +1,8 @@
+---
+description: interval(bar) mark（baseline→value 矩形，bandwidth 定柱宽，下沉 rectangle Node）
+keywords: 'interval、bar、mark、baseline、value、bandwidth、rectangle、Node'
+---
+
 # ADR-015：interval(bar) mark（baseline→value 矩形，bandwidth 定柱宽，下沉 rectangle Node）
 
 - 状态：Superseded

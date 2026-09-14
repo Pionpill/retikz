@@ -1,3 +1,8 @@
+---
+description: Composition data structure and authoring API redesign；背景：retikz 仍然需要比这些库更底层：它要同时覆盖 cartesian、polar、自定义坐标、shared tracks、overlay scopes，并保持 JSON-safe IR
+keywords: 'Composition、data、structure、and、authoring、API、redesign、composition'
+---
+
 # ADR-088: Composition data structure and authoring API redesign
 
 - 状态：Accepted

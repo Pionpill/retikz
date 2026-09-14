@@ -1,3 +1,8 @@
+---
+description: Scope 样式继承，覆盖节点与路径默认样式、主色级联及 resetStyle 隔离
+keywords: 'Scope、resetStyle、color、样式继承、级联'
+---
+
 # ADR-005：Scope 样式继承（扁平 every-X 默认 + 主色 color + resetStyle 屏障）
 
 - 状态：Accepted（已实现）

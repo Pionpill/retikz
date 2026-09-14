@@ -1,3 +1,8 @@
+---
+description: Node.position / Coordinate.position 加 OffsetPosition（任意 offset 相对定位）
+keywords: 'Node、position、Coordinate、OffsetPosition、offset、calc、Node.position、Coordinate.position'
+---
+
 # ADR-007：`Node.position` / `Coordinate.position` 加 `OffsetPosition`（任意 offset 相对定位）
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: 精确 Table 变体 schema 与统一根 union；背景：这种宽根 schema 会把结构差异藏在跨字段校验中
+keywords: 'Table、schema、union、TableSchema、IRTable、structure.kind、data'
+---
+
 # ADR-007：精确 Table 变体 schema 与统一根 union
 
 - 状态：Accepted

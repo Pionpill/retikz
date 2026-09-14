@@ -1,3 +1,8 @@
+---
+description: Path 任意折线的 roundedCorners；背景：已有 shape contour 可以倒角，但 Path 的任意开放折线仍只有尖角
+keywords: 'Path、roundedCorners'
+---
+
 # ADR-006：Path 任意折线的 roundedCorners
 
 - 状态：Accepted（已实现；step label 倒角后重定位延后）

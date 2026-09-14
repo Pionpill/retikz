@@ -1,3 +1,8 @@
+---
+description: Path-level shape sugar 跨组件约定（点位契约 / 命名 / 几何下沉 / 等价性）
+keywords: 'Path-level、shape、sugar、resolvePosition、center、TargetSchema、position'
+---
+
 # ADR-015：Path-level shape sugar 跨组件约定（点位契约 / 命名 / 几何下沉 / 等价性）
 
 - 状态：Accepted（已实现）

@@ -1,3 +1,8 @@
+---
+description: Table lowering 与最小 layout manifest；背景：Core CompositeDefinition.expand 只返回 IRChild | Array<IRChild>，不能携带 manifest
+keywords: 'Table、lowering、layout、manifest、cellId、CompositeDefinition.expand、presented.semantic、presented.cells'
+---
+
 # ADR-005：Table lowering 与最小 layout manifest
 
 - 状态：Accepted

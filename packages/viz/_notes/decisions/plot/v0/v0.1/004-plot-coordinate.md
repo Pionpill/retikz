@@ -1,3 +1,8 @@
+---
+description: Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定）
+keywords: 'Plot、Cartesian2D、Coordinate、union、scale、cartesian2D、scales、coordinate'
+---
+
 # ADR-004：Plot 坐标系（Cartesian2D + Coordinate union，持有位置 scale 绑定）
 
 - 状态：Accepted
