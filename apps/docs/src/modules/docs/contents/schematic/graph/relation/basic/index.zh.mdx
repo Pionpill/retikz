@@ -34,7 +34,7 @@ Relation 直接复用大部分 Core Path 字段。默认 Graph Theme 使用 `sm`
 
 五个内置 role 定义关系的上位语义、source / target 基础解释、允许 direction 与 marker family。Relation **没有内置 predicate**；只有先在当前 provider assembly 注册 predicate definition，才能使用对应 `predicate.name` 和 params
 
-Relation 的整体外观统一由 Theme 管理。下面的 controls 只开放当前 role 真正支持的 kind、direction 和精确 Relation 颜色；页面顶部的 Theme selector 负责切换整体视觉风格
+Relation 的示例统一使用默认风格，并支持明暗模式。下面的 controls 只开放当前 role 真正支持的 kind、direction 和精确 Relation 颜色；需要统一定制外观时，可使用 Graph 默认值与条件规则
 
 内置 `kind` 提供 UML 类图与组件图常用关系。它们只确定路径与端点；不会自动添加构造型、多重性或其它文本图元
 

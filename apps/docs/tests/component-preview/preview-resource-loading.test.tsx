@@ -20,22 +20,35 @@ import {
   buildVanillaKey,
   loadPreviewResources,
 } from '@/modules/docs/components/component-preview/registry';
+import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
+import { useComponentPreviewStore } from '@/modules/docs/store';
 
 beforeAll(async () => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe = vi.fn();
+      unobserve = vi.fn();
+      disconnect = vi.fn();
+    },
+  );
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   await i18n.changeLanguage('zh');
 });
 
 afterAll(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
+const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
 
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
+  useComponentPreviewStore.getState().setThemeStyle(originalThemeStyle);
   document.body.replaceChildren();
 });
 
@@ -49,6 +62,57 @@ const renderAtRoute = (path: string, node: ReactNode): string =>
   );
 
 describe('ComponentPreview 资源加载', () => {
+  it.each([
+    { module: 'schematic', section: 'graph', page: 'entity', subPage: 'basic', name: 'entity-event' },
+    { module: 'schematic', section: 'diagram', page: 'flow', subPage: 'basic', name: 'flow-basic' },
+    { module: 'kernel', section: 'packages', page: 'math', subPage: 'primitives', name: 'bounds-candidate-flow' },
+  ])(
+    '$module/$section 中的图式示例固定默认风格并保留明暗切换',
+    async ({ module, section, page, subPage, name }) => {
+      useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Vibrant);
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      roots.push(root);
+
+      act(() => {
+        root.render(
+          <MemoryRouter initialEntries={[`/${module}/${section}/${page}/${subPage}`]}>
+            <DemoLocationContext.Provider value={[module, section, page, subPage]}>
+              <ComponentPreview files={name} />
+            </DemoLocationContext.Provider>
+          </MemoryRouter>,
+        );
+      });
+      await vi.waitFor(
+        async () => {
+          await act(async () => {
+            await Promise.resolve();
+          });
+          const error = container.querySelector<HTMLElement>('.text-destructive');
+          if (error) throw new Error(error.textContent);
+          expect(container.querySelector('[data-slot="preview-workspace"] svg')).not.toBeNull();
+        },
+        { timeout: 15_000 },
+      );
+      expect(container.querySelector('button[aria-label="Theme style"]')).toBeNull();
+      const darkButton = container.querySelector<HTMLButtonElement>('button[aria-label="Preview theme dark"]');
+      expect(darkButton).not.toBeNull();
+      const preview = container.querySelector('[data-slot="preview-workspace"]');
+      const shapes = () =>
+        Array.from(preview?.querySelectorAll('svg [fill]') ?? []).map(shape => ({
+          fill: shape.getAttribute('fill'),
+          stroke: shape.getAttribute('stroke'),
+        }));
+      const lightShapes = shapes();
+      act(() => useComponentPreviewStore.getState().setThemeStyle(PreviewThemeStyle.Clean));
+      expect(shapes()).toEqual(lightShapes);
+      act(() => darkButton?.click());
+      expect(shapes()).not.toEqual(lightShapes);
+    },
+    20_000,
+  );
+
   it('跨目录伴随资源使用同一 contents 根路径', () => {
     const segments = ['kernel', 'components', 'introduction'];
     const name = '/about/blog/core-philosophy/pipeline';

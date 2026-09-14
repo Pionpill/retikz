@@ -26,9 +26,9 @@ import { Layout } from '@retikz/react';
 
 The seven built-in roles define only upper-level semantics and a base shape recipe. Graph **does not maintain a built-in catalog of Entity kinds or predicates**: a `kind` or `predicate.name` can be used only after it is registered in the current provider assembly. Docs logic figures register four kinds: `docs.logic.important`, `docs.logic.importantData`, `docs.logic.secondary`, and `docs.logic.algorithm`. The same kind can be registered independently for multiple roles. Every role demo starts without a kind, and its Kind control lists only the site kinds registered for that role
 
-Theme owns the complete Entity visual language. Each demo below can precisely control instance color and text, while the page-level Theme selector switches the overall style among Academic, Vibrant, Clean, and other choices
+Entity examples use the default style and support light and dark modes. Each demo below can precisely control instance color and text; use Graph defaults and conditional rules to customize appearance across entities
 
-Neutral uses a complete master-color outline with a light same-color `fill: 0.08`. Graph Clean explicitly removes the Entity fill while retaining that outline and uses black or white body text for the current mode; explicit instance `style.fill` and `style.textColor` values still take precedence
+The default style uses a complete master-color outline with a light same-color `fill: 0.08`. Explicit instance `style.fill`, `style.stroke`, and `style.textColor` values take precedence; for example, `style.stroke: 'none'` removes the outline
 
 ### participant: an active subject
 

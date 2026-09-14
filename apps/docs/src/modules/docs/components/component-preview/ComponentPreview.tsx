@@ -27,7 +27,7 @@ import { usePreviewResources } from './hooks';
 import { buildConfiguredControlSlots } from './preview-panel';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
-import { isPreviewThemeStyleDocument, usePreviewTheme } from './theme';
+import { isPreviewThemeStyleDocument, PreviewThemeStyle, usePreviewTheme } from './theme';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {
@@ -81,11 +81,13 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
   const loc = useDocLocation();
   const { i18n } = useTranslation();
   const lang: Lang = (i18n.resolvedLanguage ?? 'zh').startsWith('zh') ? 'zh' : 'en';
-  const previewTheme = usePreviewTheme(themeStyleSelection);
 
   const ctxSegments = useDemoLocationContext();
   const segments = useMemo(() => ctxSegments ?? (loc ? docPathSegments(loc) : null), [ctxSegments, loc]);
-  const enableThemeSwitch = isPreviewThemeStyleDocument(segments?.[0], segments?.[1]);
+  const isSchematicPreview = segments?.[0] === 'schematic' || name.startsWith('/schematic/');
+  const enableThemeSwitch = !isSchematicPreview && isPreviewThemeStyleDocument(segments?.[0]);
+  const effectiveThemeStyleSelection = enableThemeSwitch ? themeStyleSelection : PreviewThemeStyle.Default;
+  const previewTheme = usePreviewTheme(effectiveThemeStyleSelection);
   const controlsDisabled = controlOptions.name === false;
   const explicitControlsName = typeof controlOptions.name === 'string' ? controlOptions.name : null;
   const resourceRequest = useMemo(
@@ -248,7 +250,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       controlSlots={resolvedControlSlots}
       dialogActions={dialogActions}
       enableThemeSwitch={enableThemeSwitch}
-      themeStyleSelection={themeStyleSelection}
+      themeStyleSelection={effectiveThemeStyleSelection}
       onThemeStyleChange={setThemeStyleSelection}
       caption={caption}
     />

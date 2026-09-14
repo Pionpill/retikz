@@ -9,8 +9,6 @@ import { createContext, useContext } from 'react';
 
 import { PreviewChartThemeDefinitions } from './chart';
 import { PreviewCoreThemeStyles } from './core';
-import { PreviewDiagramThemeStyles, PreviewFlowThemeStyles } from './diagram';
-import { PreviewGraphThemeStyles } from './graph';
 import { PreviewPlotThemeStyles } from './plot';
 import { PreviewTableThemeStyles } from './table';
 
@@ -28,12 +26,12 @@ export type PreviewThemeDefinitions = Readonly<{
 /** docs reference preset 的稳定 definition bundle */
 export const PreviewThemeDefinitionBundle: PreviewThemeDefinitions = Object.freeze({
   core: PreviewCoreThemeStyles,
-  diagram: PreviewDiagramThemeStyles,
-  flow: PreviewFlowThemeStyles,
+  diagram: [],
+  flow: [],
   plot: PreviewPlotThemeStyles,
   chart: PreviewChartThemeDefinitions,
   table: PreviewTableThemeStyles,
-  graph: PreviewGraphThemeStyles,
+  graph: [],
 });
 
 export const PreviewThemeDefinitionsContext = createContext<PreviewThemeDefinitions>(PreviewThemeDefinitionBundle);

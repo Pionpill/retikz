@@ -45,8 +45,7 @@ export const PreviewThemeStyleLabelKeys = {
 } as const;
 
 /** 判断当前文档路由是否提供 ComponentPreview 主题风格切换 */
-export const isPreviewThemeStyleDocument = (moduleId: string | null | undefined, sectionId?: string | null): boolean =>
-  moduleId === 'viz' || (moduleId === 'schematic' && (sectionId === 'graph' || sectionId === 'diagram'));
+export const isPreviewThemeStyleDocument = (moduleId: string | null | undefined): boolean => moduleId === 'viz';
 
 /** 返回主题风格对应的图标组件 */
 export const getPreviewThemeStyleIcon = (themeStyle: PreviewThemeStyleValue): LucideIcon =>

@@ -14,11 +14,6 @@ import { normalizeScene, renderToSvgString as renderVanillaToSvgString, scene } 
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PreviewCoreThemeStyles,
-  PreviewGraphThemeStyles,
-  PreviewThemeStyle,
-} from '../../src/modules/docs/components/component-preview/theme';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 
@@ -79,8 +74,7 @@ const sceneOf = (graphSource: IRGraph, theme?: IRScene['theme']): Scene =>
       children: [graphSource],
     },
     {
-      composites: createGraphDefinitions({ graphThemeStyles: PreviewGraphThemeStyles }),
-      themeStyles: PreviewCoreThemeStyles,
+      composites: createGraphDefinitions(),
       padding: 0,
     },
   ).scene;
@@ -162,7 +156,7 @@ describe('Graph renderer integration', () => {
 
   it('用唯一 Graph adapter 生成可运行 Vanilla preview', () => {
     const vanilla = buildVanillaPreview(buildPreviewIR(ReactGraph), {
-      theme: { style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light },
+      theme: { mode: ThemeMode.Light },
     });
 
     expect(vanilla.code).toContain("graph('preview-graph-1'");
@@ -262,40 +256,43 @@ describe('Graph renderer integration', () => {
     expect(JSON.stringify(compiled)).not.toContain('"type":"block"');
   });
 
-  it.each([PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean])(
-    '让 Graph reference style 的同一 Scene appearance 同时被 SVG 与 Canvas 消费：%s',
-    style => {
-      const compiled = sceneOf(normalizeGraph(graphInput), { style, mode: ThemeMode.Light });
+  it.each([ThemeMode.Light, ThemeMode.Dark])(
+    '让 Graph 默认风格 的同一 Scene appearance 同时被 SVG 与 Canvas 消费：%s',
+    mode => {
+      const compiled = sceneOf(normalizeGraph(graphInput), { mode });
       const calls: Array<string> = [];
       const serialized = JSON.stringify(compiled.primitives);
 
       expect(serialized).toContain('strokeWidth');
-      expect(renderToSvgString(compiled, { idPrefix: `graph-${style}` })).toContain('<svg');
+      expect(renderToSvgString(compiled, { idPrefix: `graph-${mode}` })).toContain('<svg');
       expect(() => drawScene(recordingContext(calls), compiled)).not.toThrow();
       expect(calls.length).toBeGreaterThan(0);
     },
   );
 
-  it.each([PreviewThemeStyle.Academic, PreviewThemeStyle.Vibrant, PreviewThemeStyle.Clean])(
-    '让 Graph reference style 的 Entity 正文解析为确定的对比色：%s',
-    style => {
-      const compiled = sceneOf(normalizeGraph(graphInput), { style, mode: ThemeMode.Light });
-      const entityText = primitivesOf(compiled.primitives).find(
-        primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'Start'),
-      );
+  it.each([ThemeMode.Light, ThemeMode.Dark])('让 Graph 默认风格 的 Entity 正文解析为确定的对比色：%s', mode => {
+    const compiled = sceneOf(normalizeGraph(graphInput), { mode });
+    const entityText = primitivesOf(compiled.primitives).find(
+      primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'Start'),
+    );
 
-      expect(entityText?.type).toBe('text');
-      if (entityText?.type !== 'text') return;
-      expect(['#000000', '#ffffff']).toContain(entityText.fill);
-    },
-  );
+    expect(entityText?.type).toBe('text');
+    if (entityText?.type !== 'text') return;
+    expect(['#000000', '#ffffff']).toContain(entityText.fill);
+  });
 
-  it.each([ThemeMode.Light, ThemeMode.Dark])('让 Graph Clean Entity 无填充且不改变 Neutral 默认外观：%s', mode => {
+  it.each([ThemeMode.Light, ThemeMode.Dark])('显式无填充不改变默认 Entity 外观：%s', mode => {
     const neutral = sceneOf(normalizeGraph(graphInput), { mode });
-    const clean = sceneOf(normalizeGraph(graphInput), { style: PreviewThemeStyle.Clean, mode });
+    const explicit = sceneOf(
+      normalizeGraph({
+        children: [
+          { type: 'entity', id: 'plain', role: 'activity', text: 'Plain', position: [40, 80], style: { fill: 'none' } },
+        ],
+      }),
+      { mode },
+    );
 
     expect(entityShapeFillOf(neutral, 'start')).not.toBe('none');
-    expect(entityShapeFillOf(clean, 'start')).toBe('none');
-    expect(entityShapeFillOf(clean, 'step')).toBe('none');
+    expect(entityShapeFillOf(explicit, 'plain')).toBe('none');
   });
 });

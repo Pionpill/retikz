@@ -10,8 +10,7 @@ import { Entity as RuntimeEntity, Graph as RuntimeGraph, Relation as RuntimeRela
 import { Plot as RuntimePlot } from '@retikz/plot-react';
 import { DetailTable as RuntimeDetailTable, ManualTable as RuntimeManualTable } from '@retikz/table-react';
 
-import { PreviewDiagramThemeStyles, PreviewFlowThemeStyles } from './presets/diagram';
-import { PreviewGraphThemeStyles } from './presets/graph';
+import { PreviewThemeDefinitionBundle } from './presets/context';
 import { PreviewPlotThemeStyles } from './presets/plot';
 import { PreviewTableThemeStyles } from './presets/table';
 
@@ -41,8 +40,8 @@ const withGraphThemeStyles = <TProps extends { graphThemeStyles?: GraphProps['gr
   ...props,
   graphThemeStyles:
     props.graphThemeStyles === undefined
-      ? PreviewGraphThemeStyles
-      : [...PreviewGraphThemeStyles, ...props.graphThemeStyles],
+      ? PreviewThemeDefinitionBundle.graph
+      : [...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles],
 });
 
 /** docs preview 的 Graph 边界，显式覆盖 Layout-embedded runtime definitions */
@@ -85,16 +84,16 @@ const withFlowThemeStyles = (props: FlowDiagramProps): FlowDiagramProps => ({
   ...props,
   diagramThemeStyles:
     props.diagramThemeStyles === undefined
-      ? PreviewDiagramThemeStyles
-      : [...PreviewDiagramThemeStyles, ...props.diagramThemeStyles],
+      ? PreviewThemeDefinitionBundle.diagram
+      : [...PreviewThemeDefinitionBundle.diagram, ...props.diagramThemeStyles],
   flowThemeStyles:
     props.flowThemeStyles === undefined
-      ? PreviewFlowThemeStyles
-      : [...PreviewFlowThemeStyles, ...props.flowThemeStyles],
+      ? PreviewThemeDefinitionBundle.flow
+      : [...PreviewThemeDefinitionBundle.flow, ...props.flowThemeStyles],
   graphThemeStyles:
     props.graphThemeStyles === undefined
-      ? PreviewGraphThemeStyles
-      : [...PreviewGraphThemeStyles, ...props.graphThemeStyles],
+      ? PreviewThemeDefinitionBundle.graph
+      : [...PreviewThemeDefinitionBundle.graph, ...props.graphThemeStyles],
 });
 
 /** docs preview 的 FlowDiagram 边界，显式覆盖全部同名 Theme definitions */

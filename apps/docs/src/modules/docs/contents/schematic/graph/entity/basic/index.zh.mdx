@@ -26,9 +26,9 @@ import { Layout } from '@retikz/react';
 
 七个内置 role 只定义上位语义和基础 shape recipe。Graph **不维护 Entity kind 或 predicate 的内置目录**；`kind` 与 `predicate.name` 必须先在当前 provider assembly 注册后才能使用。站点逻辑图在 Docs 层注册四种 kind：`docs.logic.important`、`docs.logic.importantData`、`docs.logic.secondary` 与 `docs.logic.algorithm`。相同 kind 可以分别注册给多个 role；下面每个 role demo 默认不写 kind，右侧“类型”只列出该 role 已注册的站点 kind
 
-Entity 的整体外观统一由 Theme 管理。下面每个 demo 都允许精确调整实例颜色和文本；页面顶部的 Theme selector 统一切换 Academic、Vibrant、Clean 等整体视觉风格
+Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 demo 都允许精确调整实例颜色和文本；需要统一定制外观时，可使用 Graph 默认值与条件规则
 
-Neutral 默认使用完整主色描边和 `fill: 0.08` 的同色轻填充。Graph Clean 在此基础上显式移除 Entity 填充，保留主色描边，并按当前 mode 使用黑色或白色正文；实例显式提供的 `style.fill` 与 `style.textColor` 仍然优先
+默认风格使用完整主色描边和 `fill: 0.08` 的同色轻填充。实例显式提供的 `style.fill`、`style.stroke` 与 `style.textColor` 优先；例如 `style.stroke: 'none'` 可移除描边
 
 ### participant：参与主体
 
