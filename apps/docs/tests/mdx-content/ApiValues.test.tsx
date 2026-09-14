@@ -1,10 +1,10 @@
-import { WebFontSizePreset } from '@retikz/core';
 import { globSync, readFileSync } from 'node:fs';
+
+import { WebFontSizePreset } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { ApiValueRegistryEntry } from '@/modules/docs/components/mdx-content/api-values';
-
 import { API_VALUE_REGISTRY, ApiValues } from '@/modules/docs/components/mdx-content/api-values';
 import { mdxComponents } from '@/modules/docs/components/mdx-content/components';
 

@@ -7,9 +7,9 @@ import type {
   IRPlotMarkOperation,
   IRPlotScaleOperation,
 } from '@retikz/plot';
-
 import { PlotCoordinate, PlotGuide, PlotMark, PlotScale, resolvePlotFacetComposition } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
 import type {
   InputPlotFacet,
   InputPlotGuide,
@@ -18,8 +18,6 @@ import type {
   NormalizedPlotBindings,
   PlotBindingsNormalizationContext,
 } from './input';
-
-import { RetikzPlotVanillaError } from '../../error';
 
 type Composition = NonNullable<IRPlot['composition']>;
 type CoordinateView = NonNullable<Composition['views']>[number];

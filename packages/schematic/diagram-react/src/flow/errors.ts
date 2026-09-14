@@ -1,5 +1,4 @@
 import type { ValueOf } from '@retikz/foundation';
-
 import { RetikzError } from '@retikz/foundation';
 
 /** Diagram React Flow authoring 的稳定错误码 */

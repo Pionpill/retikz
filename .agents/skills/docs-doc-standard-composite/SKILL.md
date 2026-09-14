@@ -95,7 +95,7 @@ API 默认值必须同时核对 schema default、factory parse 和 lowering fall
 
 ```bash
 node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope standard/composite/<capability>
-pnpm exec prettier --write <changed-files>
+pnpm exec oxfmt <changed-files>
 pnpm --filter @retikz/docs exec tsc --noEmit
 pnpm --filter @retikz/docs exec vitest run <related-preview-tests>
 git diff --check

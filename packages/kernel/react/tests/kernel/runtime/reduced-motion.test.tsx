@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import type { IRAnimationTrack } from '@retikz/core';
 import type { Root } from 'react-dom/client';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

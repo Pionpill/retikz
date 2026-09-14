@@ -1,14 +1,12 @@
 import type { LoweredTex, LoweredTexPaint, LoweredTexPath } from '@retikz/core';
-import type { AffineMatrix } from '@retikz/math';
-
 import { assertPositiveNumber } from '@retikz/foundation';
+import type { AffineMatrix } from '@retikz/math';
 import { AFFINE_IDENTITY, getAffineSimilarityScale, isFiniteNonSingularAffine, multiplyAffine } from '@retikz/math';
 
-import type { TexLoweringResult } from '../lower';
-import type { PointMapper, SvgPathCommand } from './path-d';
-
 import { RetikzTexError, RetikzTexErrorCode } from '../error';
+import type { TexLoweringResult } from '../lower';
 import { parseSvgTransform } from './matrix';
+import type { PointMapper, SvgPathCommand } from './path-d';
 import { parsePathD, transformSvgPathCommands } from './path-d';
 
 type SvgNode = {

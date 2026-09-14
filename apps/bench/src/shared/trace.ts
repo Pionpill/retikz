@@ -4,7 +4,6 @@ import type {
   PerformanceTraceUnitValue,
   RuntimeTraceReporter,
 } from '@retikz/runtime';
-
 import { PerformanceTraceOutcome } from '@retikz/runtime';
 
 /** 校验一次 full-path trace 的发射基数、诊断与精确工作量 */

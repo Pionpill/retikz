@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
-
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';

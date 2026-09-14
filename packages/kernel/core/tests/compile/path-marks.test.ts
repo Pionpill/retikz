@@ -1,12 +1,10 @@
 import type { WithOptionalProperties } from '@retikz/foundation';
-
 import { curve } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { IRPath, IRScene, ScenePrimitive } from '../../src';
-import type { ArrowDefinition } from '../../src/contract';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { ArrowDefinition } from '../../src/contract';
 import { flattenPrims } from '../helpers/flatten';
 
 type TestArrowDefinition = WithOptionalProperties<ArrowDefinition, 'name'>;

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Core 源码目录的数据主线与能力依赖 */
 const Demo: FC = () => (

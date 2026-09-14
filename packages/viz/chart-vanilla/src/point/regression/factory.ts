@@ -1,12 +1,10 @@
 import type { IRRegressionChart } from '@retikz/chart/point/regression';
-
 import { createRegressionChartProviderContribution } from '@retikz/chart/point/regression';
 
 import type { ChartAuthoringResult } from '../../shared';
-import type { CreateRegressionChartInput } from './types';
-
 import { createPointChart, typedChartPartsOf } from '../shared';
 import { normalizeRegressionChart } from './normalize';
+import type { CreateRegressionChartInput } from './types';
 
 /** 创建确定形态的 RegressionChart */
 export const createRegressionChart = (input: CreateRegressionChartInput): ChartAuthoringResult<IRRegressionChart> => {

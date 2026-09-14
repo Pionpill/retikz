@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRNode } from '../../../src/schemas';
-
 import { NamespaceStack } from '../../../src/compile/namespace';
 import { angleBoundaryOf, boundaryPointOf, layoutNode } from '../../../src/compile/node';
 import { createPositionResolveContext } from '../../../src/compile/orchestration/position-context';
@@ -11,6 +9,7 @@ import { resolveBoundaryRegistry } from '../../../src/providers/boundary';
 import { resolvePatternRegistry } from '../../../src/providers/pattern';
 import { BUILTIN_SHAPES } from '../../../src/providers/shape';
 import { resolveNode } from '../../../src/resolve/node';
+import type { IRNode } from '../../../src/schemas';
 import { BoundaryKeyword, BoundarySchema } from '../../../src/schemas/boundary';
 import { NodeSchema } from '../../../src/schemas/node';
 import { NodeTargetSchema } from '../../../src/schemas/path/target';

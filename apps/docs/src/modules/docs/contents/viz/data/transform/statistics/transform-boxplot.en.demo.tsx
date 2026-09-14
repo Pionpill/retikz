@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, transformBoxplotControls } from './transform-boxplot.en.controls';
 import { renderTransformBoxplotPreview } from './transform-boxplot-preview';
+import { previewControlContract, transformBoxplotControls } from './transform-boxplot.en.controls';
 
 /** Registers fallback controls for the boxplot statistics example */
 export const previewControls = transformBoxplotControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** Synchronizes box, whisker, and outlier boundaries from one controlled state */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

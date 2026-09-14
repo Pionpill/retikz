@@ -6,7 +6,6 @@
 import type { Scene } from '@retikz/core';
 
 import type { EasingRegistry } from '../animation';
-
 import { evaluateTrack, isAutoplayTrigger } from '../animation';
 
 /**

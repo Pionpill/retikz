@@ -26,4 +26,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** Binning playground for count, step, and thresholds */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

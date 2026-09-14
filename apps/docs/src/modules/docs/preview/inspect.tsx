@@ -1,12 +1,11 @@
 import type { InspectionSelection } from '@retikz/inspect';
 import type { InspectLayoutProps } from '@retikz/inspect/react';
-import type { InputScene } from '@retikz/vanilla';
-import type { FC, ReactNode } from 'react';
-
 import { InspectLayout } from '@retikz/inspect/react';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
 import { createInputScene } from '@retikz/react';
+import type { InputScene } from '@retikz/vanilla';
 import { renderToSvgString } from '@retikz/vanilla';
+import type { FC, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -17,7 +16,6 @@ import type {
   PreviewControlValuesFor,
   PreviewSourceConfig,
 } from '../components/component-preview';
-
 import { usePreviewControls } from '../components/component-preview/context';
 import { buildPreviewControlDefaults } from '../components/component-preview/controls';
 import { RawSvgFrame } from '../components/component-preview/source-panel';

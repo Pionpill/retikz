@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "arrowParens": "avoid",
+  "printWidth": 120,
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "useTabs": false,
+  "trailingComma": "all",
+  "sortImports": true,
+  "sortPackageJson": false,
+  "ignorePatterns": ["**/components/ui/**", "**/hooks/use-mobile.ts"]
+}

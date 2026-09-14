@@ -1,9 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { jitterPoints } from './point-jitter.data';
 import { POINT_JITTER_CARTESIAN_CONTROL_IDS } from './point-jitter-cartesian.controls';
+import { jitterPoints } from './point-jitter.data';
 
 /** 直角坐标位置散布的英文属性面板 */
 export const pointJitterCartesianControls = definePreviewControls({

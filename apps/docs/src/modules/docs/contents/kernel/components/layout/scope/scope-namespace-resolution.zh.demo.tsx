@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Scope 命名空间 lookup、注册与重复 id 处理图 */
 const Demo: FC = () => (

@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
+import type { IRScene } from '../../src/schemas';
 import { close, ellipseArc, line, move } from '../helpers/path-command-factory';
 
 const silent = { onWarn: () => {} };

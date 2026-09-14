@@ -1,8 +1,7 @@
 import type { Position } from '@retikz/math';
 
-import type { Rect } from './rect';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { Rect } from './rect';
 
 /** 规则连接面包络种类 */
 type ConnectionEnvelopeKind = 'circle' | 'ellipse' | 'rectangle';

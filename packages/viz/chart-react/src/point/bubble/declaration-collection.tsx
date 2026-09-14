@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 
 import type { CollectedPointChartDeclarations } from '../shared';
-import type { BubbleEncodingsProps } from './BubbleEncodings';
-import type { BubbleChartMark, BubbleMarkProps } from './BubbleMark';
-import type { BubblePropertiesProps } from './BubbleProperties';
-
 import { collectPointChartDeclarations } from '../shared';
+import type { BubbleEncodingsProps } from './BubbleEncodings';
 import { BubbleEncodings } from './BubbleEncodings';
+import type { BubbleChartMark, BubbleMarkProps } from './BubbleMark';
 import { BubbleMark } from './BubbleMark';
+import type { BubblePropertiesProps } from './BubbleProperties';
 import { BubbleProperties } from './BubbleProperties';
 
 /** BubbleChart direct-child declarations 的完整收集结果 */

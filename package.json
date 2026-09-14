@@ -3,6 +3,8 @@
   "type": "module",
   "packageManager": "pnpm@11.7.0",
   "scripts": {
+    "adr:search": "node scripts/adr-search.mjs",
+    "test:adr-search": "node --experimental-strip-types --test tests/adr-search.test.ts",
     "bench:check": "pnpm --filter @retikz/bench bench:check",
     "bench:install-browser": "pnpm --filter @retikz/bench bench:install-browser",
     "bench:report": "pnpm --filter @retikz/bench bench:report",
@@ -26,10 +28,10 @@
     "coverage:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec vitest run --coverage --coverage.reporter=text-summary --coverage.reporter=json-summary",
     "dev:bench": "pnpm --filter @retikz/bench dev",
     "dev:docs": "pnpm --filter @retikz/docs dev",
-    "lint": "eslint . --cache",
-    "lint:apps": "pnpm --filter @retikz/docs --filter @retikz/eval --filter @retikz/bench -r exec eslint .",
-    "lint:kernel": "pnpm --filter @retikz/foundation --filter @retikz/math --filter @retikz/runtime --filter @retikz/core --filter @retikz/inspect --filter @retikz/render --filter @retikz/react --filter @retikz/vanilla --filter @retikz/tex -r exec eslint .",
-    "lint:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec eslint .",
+    "lint": "oxlint .",
+    "lint:apps": "pnpm --filter @retikz/docs --filter @retikz/eval --filter @retikz/bench -r exec oxlint .",
+    "lint:kernel": "pnpm --filter @retikz/foundation --filter @retikz/math --filter @retikz/runtime --filter @retikz/core --filter @retikz/inspect --filter @retikz/render --filter @retikz/react --filter @retikz/vanilla --filter @retikz/tex -r exec oxlint .",
+    "lint:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec oxlint .",
     "temp:test": "node scripts/run-temp-test.mjs",
     "test": "pnpm run test:full",
     "test:apps": "pnpm --filter @retikz/docs --filter @retikz/eval --filter @retikz/bench -r --if-present run test:run",
@@ -47,22 +49,20 @@
     "typecheck:apps": "pnpm --filter @retikz/docs --filter @retikz/eval --filter @retikz/bench -r exec tsc --noEmit",
     "typecheck:full": "pnpm -r exec tsc --noEmit",
     "typecheck:kernel": "pnpm --filter @retikz/foundation --filter @retikz/math --filter @retikz/runtime --filter @retikz/core --filter @retikz/inspect --filter @retikz/render --filter @retikz/react --filter @retikz/vanilla --filter @retikz/tex -r exec tsc --noEmit",
-    "typecheck:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec tsc --noEmit"
+    "typecheck:viz": "pnpm --filter @retikz/data --filter @retikz/plot --filter @retikz/plot-react --filter @retikz/plot-vanilla --filter @retikz/table --filter @retikz/table-react --filter @retikz/table-vanilla -r exec tsc --noEmit",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
   },
   "devDependencies": {
-    "@eslint/js": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
-    "eslint-plugin-react-hooks": "catalog:",
-    "eslint-plugin-react-refresh": "catalog:",
-    "eslint-plugin-simple-import-sort": "catalog:",
-    "globals": "catalog:",
-    "prettier": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "catalog:",
     "vite": "catalog:",
     "vite-plugin-dts": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "yaml": "catalog:"
   }
 }

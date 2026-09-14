@@ -1,5 +1,4 @@
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-
 import {
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,
@@ -10,7 +9,6 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { IRScene } from '../../src';
-
 import {
   compileToScene,
   CompositeBaseSchema,

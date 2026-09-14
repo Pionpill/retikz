@@ -1,11 +1,8 @@
 import type { ComponentType } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import CartesianJitterDemo from '@/modules/docs/contents/viz/plot/mark/point/point-jitter-cartesian.demo';
@@ -30,6 +27,7 @@ import {
   previewControlContract as textContract,
 } from '@/modules/docs/contents/viz/plot/mark/point/point-text.controls';
 import TextDemo from '@/modules/docs/contents/viz/plot/mark/point/point-text.demo';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type CoordinateScenario = {
   name: string;

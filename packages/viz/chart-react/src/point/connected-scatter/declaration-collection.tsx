@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 
 import type { CollectedPointChartDeclarations } from '../shared';
-import type { ConnectedScatterEncodingsProps } from './ConnectedScatterEncodings';
-import type { ConnectedScatterChartMark, ConnectedScatterMarkProps } from './ConnectedScatterMark';
-import type { ConnectedScatterPropertiesProps } from './ConnectedScatterProperties';
-
 import { collectPointChartDeclarations } from '../shared';
+import type { ConnectedScatterEncodingsProps } from './ConnectedScatterEncodings';
 import { ConnectedScatterEncodings } from './ConnectedScatterEncodings';
+import type { ConnectedScatterChartMark, ConnectedScatterMarkProps } from './ConnectedScatterMark';
 import { ConnectedScatterMark } from './ConnectedScatterMark';
+import type { ConnectedScatterPropertiesProps } from './ConnectedScatterProperties';
 import { ConnectedScatterProperties } from './ConnectedScatterProperties';
 
 /** ConnectedScatterChart 直接子声明的收集结果 */

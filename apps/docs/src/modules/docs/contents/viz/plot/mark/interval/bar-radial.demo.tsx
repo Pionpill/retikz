@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { IntervalMark, Plot, PlotScale } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

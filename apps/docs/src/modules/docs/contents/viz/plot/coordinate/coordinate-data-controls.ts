@@ -1,5 +1,4 @@
 import type { PreviewControlContract, PreviewTableColumn } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 坐标系数据面板的本地化文案 */

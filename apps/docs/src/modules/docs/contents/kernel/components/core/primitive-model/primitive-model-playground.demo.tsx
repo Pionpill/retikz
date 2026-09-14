@@ -1,15 +1,13 @@
 import type { IRBoundary } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import type { BoundaryChoice, BoundaryFitChoice, ShapeChoice } from './primitive-model-playground-boundary';
-
-import { previewControlContract, primitiveModelPlaygroundControls } from './primitive-model-playground.controls';
 import { nodeShapeOf, primitiveModelBoundaryGuideShape } from './primitive-model-playground-boundary';
+import { previewControlContract, primitiveModelPlaygroundControls } from './primitive-model-playground.controls';
 
 export const previewControls = primitiveModelPlaygroundControls;
 

@@ -1,6 +1,5 @@
-import type { ComponentProps, FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { ComponentProps, FC } from 'react';
 
 import type { Lang } from '@/i18n';
 

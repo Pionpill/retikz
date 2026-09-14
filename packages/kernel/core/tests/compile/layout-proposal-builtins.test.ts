@@ -12,7 +12,6 @@ import type {
   TextMeasurer,
   TextPrim,
 } from '../../src';
-
 import {
   BUILTIN_SHAPES,
   ChildSchema,

@@ -1,9 +1,8 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FlowLayoutDefinition } from '../../src/flow';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
+import type { FlowLayoutDefinition } from '../../src/flow';
 import { defineFlowLayout, FlowDiagramSchema, getFlowLayoutCatalog } from '../../src/flow';
 import { resolveFlowLayoutRegistry, resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
 import { assertFlowLayoutCapabilities, deriveFlowLayoutCapabilities, resolveFlowDiagram } from '../../src/flow/resolve';

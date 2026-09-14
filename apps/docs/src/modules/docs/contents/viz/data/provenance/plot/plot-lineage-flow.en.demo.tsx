@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Runtime flow where Plot enriches Data lineage with visual semantics */
 const Demo: FC = () => (

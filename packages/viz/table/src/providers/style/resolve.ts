@@ -2,15 +2,14 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { strictObject } from 'zod';
 
 import type { TableThemeStyleDefinition } from '../../contract';
-import type { IRTableDefaults } from '../../schemas';
-import type { DeepReadonly } from '../../shared';
-import type { TableThemeContext, TableThemeDefaultsResolution, TableThemeDefaultsSource } from './types';
-
 import { RetikzTableError } from '../../error';
+import type { IRTableDefaults } from '../../schemas';
 import { TableDefaultsSchema } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
 import { deepFreeze } from '../../shared';
 import { getDefaultTableDefaults } from './presets';
 import { resolveTableThemeStyleRegistry } from './registry';
+import type { TableThemeContext, TableThemeDefaultsResolution, TableThemeDefaultsSource } from './types';
 
 const defaultTheme: TableThemeContext = {
   mode: ThemeMode.Light,

@@ -1,6 +1,5 @@
 import type { CompileArtifact, CompileResult, Scene } from '@retikz/core';
 import type { AnimationControls } from '@retikz/render/animation';
-
 import {
   bindWaapiDescriptors,
   prefersReducedMotion,
@@ -17,7 +16,12 @@ import {
 } from '@retikz/render/hydration';
 import { buildSvgFrameDocument } from '@retikz/render/svg';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputRuntimeMeta } from '../normalize';
+import { computeDisplaySize } from '../runtime';
+import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
+import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
+import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import type {
   HydrateOptions,
   HydrationHandle,
@@ -33,12 +37,6 @@ import type {
   VanillaRetainedRuntimeOptions,
   VanillaView,
 } from '../runtime/types';
-
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
-import { computeDisplaySize } from '../runtime';
-import { DEFAULT_ID_PREFIX, VanillaViewMode } from '../runtime/constants';
-import { captureVanillaRuntimeOptions } from '../runtime/runtime-options';
-import { createEmptyRuntimeMeta, toSceneResult } from '../runtime/to-scene';
 import { createRetainedProcessingController } from './retained';
 import { applyAttrs, svgNodeToDom } from './svg-dom';
 

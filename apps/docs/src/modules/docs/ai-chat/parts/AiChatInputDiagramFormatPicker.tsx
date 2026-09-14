@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
-import type { FC } from 'react';
-
 import { Braces, FileCode2, Sparkles } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib';
 
 import type { DiagramFormatPreference } from '../composeSystemPrompt';
-
 import { useAiChatStore } from '../useAiChatStore';
 
 const PREFERENCES: ReadonlyArray<DiagramFormatPreference> = ['auto', 'ir', 'tsx'];

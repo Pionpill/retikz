@@ -1,8 +1,7 @@
-import type { ResolvedTableCellPresentationInput } from '../presentation';
-import type { ResolvedTableCellPlan } from './types';
-
 import { TableCellPayloadKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
+import type { ResolvedTableCellPresentationInput } from '../presentation';
+import type { ResolvedTableCellPlan } from './types';
 
 /** 把 resolved Cell plans 按 canonical 顺序投影为 Presentation 阶段 carrier */
 export const presentationInputsOfTableCellPlans = (

@@ -1,5 +1,5 @@
 import { ArrowUpRight, Bot } from 'lucide-react';
-import { type FC } from 'react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAiChatStore } from '../useAiChatStore';

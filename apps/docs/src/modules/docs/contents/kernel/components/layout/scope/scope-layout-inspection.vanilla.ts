@@ -1,13 +1,12 @@
-import type { InputFlexLayout } from '@retikz/layout-vanilla';
-
 import { createInspectionVanillaAuthoring } from '@retikz/inspect/vanilla';
-import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
+import type { InputFlexLayout } from '@retikz/layout-vanilla';
 import { LayoutInputEmbedAdapters } from '@retikz/layout-vanilla';
 import {
   createLayoutInspectionBarrier,
   createLayoutInspectionVanillaDriver,
   inspectFlexLayout,
 } from '@retikz/layout-vanilla/inspect';
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { renderToSvgString, scene, scope } from '@retikz/vanilla';
 
 const flexInput = (first: string, second: string): InputFlexLayout => ({

@@ -1,7 +1,6 @@
 import react from '@vitejs/plugin-react';
 
 import { defineRetikzLibraryConfig } from '../../../config/vite/library-config';
-
 import pkg from './package.json' with { type: 'json' };
 
 export default defineRetikzLibraryConfig({

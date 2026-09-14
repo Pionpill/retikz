@@ -1,17 +1,14 @@
 import type { IRBoundary, IRNodeTarget } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import type { NodeBoundaryChoice, NodeShapeChoice } from './node-shape-connection-boundary';
-
-import { nodeShapeConnectionControls, previewControlContract } from './node-shape-connection.controls';
 import { boundaryGuideShape, nodeShapeOf } from './node-shape-connection-boundary';
+import { nodeShapeConnectionControls, previewControlContract } from './node-shape-connection.controls';
 
 export const previewControls = nodeShapeConnectionControls;
 

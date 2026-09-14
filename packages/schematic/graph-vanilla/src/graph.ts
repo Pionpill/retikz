@@ -1,11 +1,9 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
+import { GraphProviderKey } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { GraphProviderKey } from '@retikz/graph';
-
-import type { InputGraph } from './normalize';
-
 import { GraphEmbedKind } from './constants';
+import type { InputGraph } from './normalize';
 import { normalizeGraph } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';

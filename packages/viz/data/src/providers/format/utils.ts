@@ -1,5 +1,4 @@
 import type { DataFieldFormatValue } from '../../schemas';
-
 import { BUILTIN_FIELD_FORMATS } from './constants';
 
 /** 是否内置格式名（收窄到 DataFieldFormatValue） */

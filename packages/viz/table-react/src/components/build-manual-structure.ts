@@ -1,15 +1,13 @@
 import type { IRManualTableCell, ManualTableInput, TableRowKindValue } from '@retikz/table';
-import type { ReactElement, ReactNode } from 'react';
-
 import { TableRowKind } from '@retikz/table';
+import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
 
-import type { CellProps } from './cell';
-import type { RowProps } from './row';
-
 import { RetikzTableReactError } from '../error';
+import type { CellProps } from './cell';
 import { Cell } from './cell';
 import { visitTableChildren } from './child-traversal';
+import type { RowProps } from './row';
 import { Row } from './row';
 
 /** ManualTable children 收集后交给 plain constructor 的矩形结构输入 */

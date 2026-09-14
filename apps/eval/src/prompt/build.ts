@@ -1,4 +1,4 @@
-﻿import { type CorpusPrompt } from '../corpus/types';
+﻿import type { CorpusPrompt } from '../corpus/types';
 
 /**
  * 组装自由生成 prompt：schema 契约作上下文 + 任务描述 + 严格输出约束。

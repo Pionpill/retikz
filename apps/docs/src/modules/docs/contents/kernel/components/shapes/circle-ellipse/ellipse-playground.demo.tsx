@@ -1,10 +1,8 @@
 import type { EllipseProps } from '@retikz/react';
+import { Draw, Ellipse, Layout, Rectangle } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Draw, Ellipse, Layout, Rectangle } from '@retikz/react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { ellipsePlaygroundControls, previewControlContract } from './ellipse-playground.controls';

@@ -1,8 +1,7 @@
 import type { IRPlotFacetOptions, IRPlotPartitionDimension } from '@retikz/plot';
 
-import type { ChartEncodingSpatialResolution } from '../../_chart/contract/recipe';
-
 import { ChartEncodingSpatialKind } from '../../_chart/contract';
+import type { ChartEncodingSpatialResolution } from '../../_chart/contract/recipe';
 import { pointRecipeId } from './plot';
 
 type PointSpatialEncodings = Readonly<{

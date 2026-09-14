@@ -1,9 +1,9 @@
-import type { Plugin } from 'vitest/config';
+import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'node:path';
 import { loadEnv } from 'vite';
+import type { Plugin } from 'vitest/config';
 import { defineConfig } from 'vitest/config';
 
 import { resolveDocsPort } from '../dev-port';

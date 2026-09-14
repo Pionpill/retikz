@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 矩形 Node 从内容内框到可连接边界的布局流程图 */
 const Demo: FC = () => (

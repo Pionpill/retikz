@@ -1,12 +1,10 @@
 import type { IRBubbleChart } from '@retikz/chart/point/bubble';
-
 import { createBubbleChartProviderContribution } from '@retikz/chart/point/bubble';
 
 import type { ChartAuthoringResult } from '../../shared';
-import type { CreateBubbleChartInput } from './types';
-
 import { createPointChart, typedChartPartsOf } from '../shared';
 import { normalizeBubbleChart } from './normalize';
+import type { CreateBubbleChartInput } from './types';
 
 /** 创建确定形态的 BubbleChart */
 export const createBubbleChart = (input: CreateBubbleChartInput): ChartAuthoringResult<IRBubbleChart> => {

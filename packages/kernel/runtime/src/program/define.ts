@@ -1,4 +1,6 @@
 import type { RuntimeDiagnostic } from '../diagnostic';
+import { RuntimeDiagnosticCode } from '../diagnostic';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeOwnerToken } from '../owner';
 import type { RuntimeRevision } from '../owner';
 import type { RuntimeTracePhaseDefinition } from '../trace';
@@ -13,9 +15,6 @@ import type {
   RuntimeRunResult,
   RuntimeUpdateResult,
 } from './types';
-
-import { RuntimeDiagnosticCode } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 
 /** Program prepare 完成但尚未发布的 artifact 与双层 read cache */
 export type RuntimePreparedProgramArtifact<TArtifact, TProgramRead, TPublicRead> = Readonly<{

@@ -1,5 +1,4 @@
 import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
-
 import {
   applyTransforms as applyDataTransforms,
   DEFAULT_TRANSFORM_CONTEXT,

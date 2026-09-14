@@ -1,11 +1,10 @@
 import type { IRPlot } from '@retikz/plot';
 import type { BuildPlotOptions, PlotAuthoringContext, ResolvedPlotExtensionAuthoring } from '@retikz/plot-vanilla';
-import type { ReactNode } from 'react';
-
 import {
   normalizePlotIR,
   resolvePlotExtensionAuthoring as normalizePlotExtensionAuthoring,
 } from '@retikz/plot-vanilla';
+import type { ReactNode } from 'react';
 
 import { collectPlotDeclarations } from './collector';
 

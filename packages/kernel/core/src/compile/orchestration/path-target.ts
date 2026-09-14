@@ -1,5 +1,6 @@
 import type { NodeReferenceView, PathTargetView, TargetResolution } from '../../resolve';
 import type { PositionTargetResolveContext } from '../../resolve/position';
+import { resolvePositionTarget } from '../../resolve/position';
 import type {
   FoldStepViaValue,
   IRNodeTarget,
@@ -8,8 +9,6 @@ import type {
   IRRelativeTarget,
   IRTarget,
 } from '../../schemas';
-
-import { resolvePositionTarget } from '../../resolve/position';
 import { FoldStepVia } from '../../schemas';
 import { isNodeTargetLike, isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../shared';
 import { point } from '../../shared/geometry';

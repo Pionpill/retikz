@@ -1,9 +1,7 @@
 import type { LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
-
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
 import type { IRBlockHeader, IRBlockRow, IRBlockSection } from '../../schemas';
-
 import { lowerBlockHeaderLayout, lowerBlockRowSurface, lowerBlockSectionSurface } from './structure-lower';
 
 const replayStructureChild = (

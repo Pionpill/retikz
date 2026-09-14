@@ -1,14 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeProgramDefinitionInput } from '../../src/program';
-import type { RuntimeSessionUpdate } from '../../src/transaction';
-
 import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
+import type { RuntimeProgramDefinitionInput } from '../../src/program';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
+import type { RuntimeSessionUpdate } from '../../src/transaction';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 
 const defineOwner = () =>

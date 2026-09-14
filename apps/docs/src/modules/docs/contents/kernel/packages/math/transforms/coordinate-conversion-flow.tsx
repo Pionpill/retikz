@@ -1,18 +1,16 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import { RelationRole } from '@retikz/graph';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { RelationRole } from '@retikz/graph';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
-
-import { coordinateConversionFlowI18n } from './coordinate-conversion-flow.i18n';
 import {
   logicFigureGraphProps,
   LogicFigureRelationKind,
   logicFigureRelationKinds,
 } from '@/modules/docs/components/logic-figure';
+
+import { coordinateConversionFlowI18n } from './coordinate-conversion-flow.i18n';
 
 /** 展示围绕 CenteredShape 的双向局部与世界坐标转换 */
 export type CoordinateConversionFlowI18nFigureProps = Readonly<{ lang?: Lang }>;

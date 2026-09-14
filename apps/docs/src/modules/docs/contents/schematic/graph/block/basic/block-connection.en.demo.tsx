@@ -1,7 +1,6 @@
 import type { IRPosition } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Block, BlockHeader, BlockRow, BlockSection, Entity, Graph, Relation } from '@retikz/graph-react';
+import type { FC } from 'react';
 
 import { createGraphPreviewSource } from '@/modules/docs/preview';
 

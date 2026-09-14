@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TextMeasurer } from '../../src';
-import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from '../../src/compile/text';
+import type { GroupPrim, ScenePrimitive, TextPrim } from '../../src/contract';
+import type { IRScene } from '../../src/schemas';
 
 const findTextPrims = (prims: Array<ScenePrimitive>): Array<TextPrim> =>
   prims.filter((p): p is TextPrim => p.type === 'text');

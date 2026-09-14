@@ -1,6 +1,5 @@
-import type { IRNodeTarget } from '../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { IRNodeTarget } from '../schemas';
 import { parseAnchorAlias, SupportedAnchorSugarNames } from './anchor-alias';
 
 /** 纯数字识别 `A.30` / `A.-45` / `A.180.5` */

@@ -1,6 +1,4 @@
 import type { IRStep } from '@retikz/core';
-import type { RefinementCtx, ZodType } from 'zod';
-
 import {
   ArrowEndDetailSchema,
   GeometryLabelSchema,
@@ -10,6 +8,7 @@ import {
   StepSchema,
 } from '@retikz/core';
 import { createOpenStringSchema } from '@retikz/foundation';
+import type { RefinementCtx, ZodType } from 'zod';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType, RelationKind, RelationRole } from '../../shared';

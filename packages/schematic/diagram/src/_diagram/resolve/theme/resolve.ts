@@ -1,15 +1,13 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { resolveBoxSpacing } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
-import type { DiagramThemeStyleDefinition } from '../../contract';
-import type { IRDiagramDefaults, IRDiagramDefaultsPresentationText, IRDiagramPresentationText } from '../../schemas';
-import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { DiagramThemeStyleDefinition } from '../../contract';
 import { getDefaultDiagramTheme } from '../../providers';
+import type { IRDiagramDefaults, IRDiagramDefaultsPresentationText, IRDiagramPresentationText } from '../../schemas';
 import { DiagramDefaultsSchema } from '../../schemas';
+import type { EffectiveDiagramTextAppearance, EffectiveDiagramTheme, EffectiveDiagramThemeFrame } from './types';
 
 type DiagramDefaultsFrame = NonNullable<IRDiagramDefaults['frame']>;
 type DiagramDefaultsTextStyle = NonNullable<IRDiagramDefaultsPresentationText['style']>;

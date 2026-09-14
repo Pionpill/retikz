@@ -1,8 +1,7 @@
-import type { IRPlotScaleOperation, IRPlotTransform } from '@retikz/plot';
-import type { ZodType } from 'zod';
-
 import { DataScalarReducerOperationSchema } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import type { IRPlotScaleOperation, IRPlotTransform } from '@retikz/plot';
+import type { ZodType } from 'zod';
 import { strictObject, union } from 'zod';
 
 export const createChartScaleBindingSchema = <TOperation extends IRPlotScaleOperation>(

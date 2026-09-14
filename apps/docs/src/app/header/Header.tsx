@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { useLocation } from 'react-router';
 
 import { ButtonGroup } from '@/components/ui/button-group';

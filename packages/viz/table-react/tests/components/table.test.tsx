@@ -1,10 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
-import type { IRTable, TableStructureOutput } from '@retikz/table';
-import type { InputTable } from '@retikz/table-vanilla';
-import type { InputEmbedContext } from '@retikz/vanilla';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { Layout, ThemeProvider } from '@retikz/react';
+import type { IRTable, TableStructureOutput } from '@retikz/table';
 import {
   createDetailTableIR,
   createManualTableIR,
@@ -15,7 +12,9 @@ import {
   TableComposite,
   TableRowKind,
 } from '@retikz/table';
+import type { InputTable } from '@retikz/table-vanilla';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, strictObject, string } from 'zod';

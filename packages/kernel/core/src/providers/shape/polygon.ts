@@ -1,14 +1,12 @@
+import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 import type { infer as ZodInfer } from 'zod';
-
-import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
 import { number, strictObject } from 'zod';
 
 import type { ScenePrimitive, ShapeAnchorName } from '../../contract';
-import type { ContourSegment, Rect } from '../../shared';
-
 import { contourToPathCommands, contourToPathPrimitive, defineShape, verticesToSegments } from '../../contract';
 import { BuiltinShape } from '../../schemas';
+import type { ContourSegment, Rect } from '../../shared';
 import {
   boundaryFromContour,
   CenterAnchor,

@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { NodeLayout } from '../../src/compile/node';
-import type { ShapeDefinition } from '../../src/contract';
-import type { BuiltinShapeValue } from '../../src/schemas';
-
 import { boxInsets } from '../../src/compile/node';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
+import type { ShapeDefinition } from '../../src/contract';
 import { defineShape } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { BuiltinShapeValue } from '../../src/schemas';
 
 /** 构造一个最简 NodeLayout，rect 已是全局坐标 */
 const makeLayout = (

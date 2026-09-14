@@ -1,5 +1,4 @@
 import type { ArrowDefinition } from '../../contract';
-
 import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_ARROWS } from './definitions';
 

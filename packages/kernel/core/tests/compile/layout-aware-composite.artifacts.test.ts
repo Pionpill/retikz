@@ -9,7 +9,6 @@ import type {
   LayoutCompositeCompileContext,
   LayoutProposal,
 } from '../../src';
-
 import {
   compileToScene,
   CompileWarningCode,

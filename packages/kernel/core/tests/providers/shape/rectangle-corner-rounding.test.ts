@@ -1,10 +1,8 @@
 import type { Position } from '@retikz/math';
-
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../../src/shared/geometry/rect';
-
 import { rectangle } from '../../../src/providers/shape';
+import type { Rect } from '../../../src/shared/geometry/rect';
 import { rect as rectOps } from '../../../src/shared/geometry/rect';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;

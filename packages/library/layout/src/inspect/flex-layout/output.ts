@@ -3,7 +3,6 @@ import type { InspectorContext } from '@retikz/inspect';
 import type { FlexLayoutArtifact } from '../../composites/flex-layout';
 import type { CanonicalFlexLayoutInspectOptions } from '../resolve/flex-layout';
 import type { LayoutInspectionChild, LayoutInspectionLineMark } from '../shared';
-
 import {
   inspectLayoutArtifactBase,
   inspectLayoutSpacing,

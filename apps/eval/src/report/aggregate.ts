@@ -1,4 +1,4 @@
-import { type RunRecord } from '../run';
+import type { RunRecord } from '../run';
 
 /** Two-layer pass rates and sample count for a group of records */
 export type PassRates = {

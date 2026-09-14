@@ -1,9 +1,7 @@
 import type { ExternalDatasets, IRDataReference, IRDataScalarValue } from '@retikz/data';
-
 import { resolveFieldPath, resolveFieldTypes, ScalarValueSchema } from '@retikz/data';
 
 import type { TableStructureContext } from '../../contract/structure';
-
 import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
 

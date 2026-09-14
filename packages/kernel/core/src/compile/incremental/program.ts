@@ -1,5 +1,4 @@
 import type { RuntimeTraceReporter } from '@retikz/runtime';
-
 import {
   defineRuntimeProgram,
   PerformanceTraceOutcome,
@@ -10,25 +9,24 @@ import {
 } from '@retikz/runtime';
 
 import type { AnyCompositeDefinition } from '../../contract';
+import { CoreOwnerDefinition } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { compileCoreSnapshot } from '../compile';
+import { CompileWarningCode } from '../constants';
 import type { CompileWarning } from '../warning';
+import { formatCompileWarning } from '../warning';
+import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from './diff';
+import { copyCoreProgramOptions } from './options';
 import type {
   CoreProgramDefinition,
   CoreProgramOptions,
   CoreProgramPublicRead,
   CoreProgramRuntimeOptions,
 } from './public';
-import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
-
-import { CoreOwnerDefinition } from '../../contract';
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { compileCoreSnapshot } from '../compile';
-import { CompileWarningCode } from '../constants';
-import { formatCompileWarning } from '../warning';
-import { coreChangeSetMatchesSnapshots, createCoreSnapshotIndex } from './diff';
-import { copyCoreProgramOptions } from './options';
 import { CORE_PROGRAM_ID } from './public';
 import { tryCompileRootNodeStyleUpdate } from './root-node-style';
 import { createFullSceneRuntimeSnapshot, freezeProgramOutput } from './snapshot';
+import type { CoreProgramArtifact, CoreProgramArtifactInput, CoreProgramRead } from './types';
 
 /** 缺省 warning sink 与 compileToScene 保持一致 */
 const dispatchDefaultWarning = (warning: CompileWarning): void => {

@@ -1,5 +1,4 @@
 import type { Localized, PackageId, Release } from '../types';
-
 import { PACKAGE_GROUPS } from '../types';
 import { diagramV01 } from './diagram-0-1';
 import { graphV01 } from './graph-0-1';

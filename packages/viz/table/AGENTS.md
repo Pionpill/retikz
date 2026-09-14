@@ -43,7 +43,7 @@ pipeline/     数据接入、结构规范化、呈现、布局、lowering 与 lo
 结构化改动后运行：
 
 ```bash
-pnpm --filter @retikz/table exec eslint . --fix
+pnpm --filter @retikz/table exec oxlint . --fix
 pnpm --filter @retikz/table exec tsc --noEmit
 pnpm --filter @retikz/table test:changed
 ```

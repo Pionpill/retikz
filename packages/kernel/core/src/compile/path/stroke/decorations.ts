@@ -1,13 +1,12 @@
 import type { CurveSegmentSample } from '@retikz/math';
 
 import type { PathCommand, ResolvedArrowEnd, ScenePrimitive } from '../../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { ArrowMarkResolution, CanonicalPath } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { PathPrimitiveEmitResult } from '../types';
-import type { PathBasePropsWithStrokeWidth } from './output';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { buildMarkMarkerGroup, markerContextStroke } from './marks';
+import type { PathBasePropsWithStrokeWidth } from './output';
 import { sampleStrokePath } from './sampling';
 import { emitEndpointArrowMark, emitMarkArrow } from './shrink';
 

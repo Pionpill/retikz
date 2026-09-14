@@ -1,12 +1,10 @@
 import type { ExpandCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
-
-import type { IRAxes } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { lowerAxes } from './pipeline';
 import { AxesSchema } from './schemas';
+import type { IRAxes } from './types';
 
 /** Standard Axes 的官方 Core composite definition */
 export const AxesDefinition = defineComposite({

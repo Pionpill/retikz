@@ -1,15 +1,15 @@
 import type { IRChartPlotExtension, IRChartSource } from '@retikz/chart';
 import type { ChartAuthoringResult, ChartInput } from '@retikz/chart-vanilla';
 import type { InputChartCoordinate } from '@retikz/chart-vanilla';
+import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import type { IRScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import type { FC, ReactNode } from 'react';
-
-import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
 import { resolvePlotExtensionAuthoring, usePlotThemeStyles } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
+import type { FC, ReactNode } from 'react';
 import { createElement, useMemo } from 'react';
 
+import { RetikzChartReactError } from '../../error';
 import type {
   ChartDataProps,
   ChartDeclarationPath,
@@ -21,8 +21,6 @@ import type {
   CollectedChartDeclarations,
   InputEmbeddableChartComponent,
 } from '../../shared';
-
-import { RetikzChartReactError } from '../../error';
 import {
   assertChartExtensionChildren,
   mergeThemeDefinitions,

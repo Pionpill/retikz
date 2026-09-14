@@ -1,4 +1,4 @@
-import { type LlmClient } from '../../src/llm/types';
+import type { LlmClient } from '../../src/llm/types';
 
 /**
  * 测试用 fake client：按调用次序返回预置文本，循环复用最后一条。

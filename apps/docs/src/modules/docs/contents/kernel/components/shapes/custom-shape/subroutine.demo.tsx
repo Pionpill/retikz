@@ -1,8 +1,7 @@
 import type { ShapeDefinition } from '@retikz/core';
-import type { FC } from 'react';
-
 import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 /**

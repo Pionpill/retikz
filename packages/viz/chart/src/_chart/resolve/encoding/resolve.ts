@@ -1,9 +1,8 @@
 import type { ChartEncodingResolution, ChartEncodingResolveContext } from '../../contract/recipe';
 import type { IRChartSource } from '../../schemas';
-import type { ChartEncodingFieldConsumer } from './types';
-
 import { resolveChartEncodingScales } from './scale';
 import { resolveChartEncodingTransforms } from './transform';
+import type { ChartEncodingFieldConsumer } from './types';
 
 /**
  * 把 exact recipe field mappings 解析为 direct bindings 与有序 Plot operations

@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NodeLayout } from '../../src/compile/node';
-import type { ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { resolveAnchor, resolveEdgePoint } from '../../src/compile/reference';
+import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { IRScene } from '../../src/schemas';
 import { NodeSchema } from '../../src/schemas';
 import { line, move } from '../helpers/path-command-factory';
 

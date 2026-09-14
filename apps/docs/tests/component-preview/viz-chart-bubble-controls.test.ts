@@ -1,15 +1,8 @@
-import type { ReactNode } from 'react';
-
 import { ChartExtension, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { BubbleEncodings, BubbleProperties } from '@retikz/chart-react/point';
+import type { ReactNode } from 'react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import type {
-  PreviewControlContract,
-  PreviewControlsDefinition,
-  PreviewSourceConfig,
-} from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as basicZh } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.controls';
@@ -22,6 +15,11 @@ import {
 import { previewControlContract as basicEn } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.controls';
 import { previewSource as basicEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.demo';
 import { previewSource as basicZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.zh.demo';
+import type {
+  PreviewControlContract,
+  PreviewControlsDefinition,
+  PreviewSourceConfig,
+} from '../../src/modules/docs/preview';
 
 const comparable = (contract: PreviewControlContract) => ({
   controls: JSON.parse(

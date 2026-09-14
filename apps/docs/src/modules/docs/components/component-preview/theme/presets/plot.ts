@@ -1,6 +1,5 @@
 import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
 import type { IRPlotAxisRule, IRPlotDefaults } from '@retikz/plot';
-
 import { definePlotThemeStyle, PlotColorScheme, PlotDefaultsSchema, PlotShapePaletteSchema } from '@retikz/plot';
 
 import { PreviewThemeStyle } from '../constants';

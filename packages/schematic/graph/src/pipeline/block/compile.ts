@@ -4,14 +4,12 @@ import type {
   LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
-
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
 import type { CanonicalBlock } from '../../resolve';
-import type { IRBlock } from '../../schemas';
-
 import { resolveBlock } from '../../resolve';
+import type { IRBlock } from '../../schemas';
 import { lowerBlockSurface } from './lower';
 
 const blockAxisProposal = (

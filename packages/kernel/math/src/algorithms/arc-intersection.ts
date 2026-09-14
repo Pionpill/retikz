@@ -1,6 +1,5 @@
-import type { ArcBoundingCandidatesInput, Position } from '../primitives';
-
 import { DEFAULT_EPSILON } from '../constants';
+import type { ArcBoundingCandidatesInput, Position } from '../primitives';
 import { isAngleWithinArcSweep } from '../primitives';
 
 /** 射线与圆弧求交参数 */

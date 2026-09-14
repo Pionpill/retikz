@@ -1,6 +1,5 @@
-import type { FC, KeyboardEvent as ReactKeyboardEvent } from 'react';
-
 import { Bot, HelpCircle, History, Plus, Settings, X } from 'lucide-react';
+import type { FC, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

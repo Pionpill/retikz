@@ -1,11 +1,10 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import {
   NonNegativeIntegerSchema,
   NonNegativeNumberSchema,
   PositiveIntegerSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { LAYOUT_NAMESPACE } from '../../shared';

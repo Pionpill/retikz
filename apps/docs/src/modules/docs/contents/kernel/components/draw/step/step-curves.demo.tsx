@@ -1,9 +1,7 @@
+import { Circle, Draw, Layout, Node, Path, Step } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { Circle, Draw, Layout, Node, Path, Step } from '@retikz/react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, stepCurvesControls } from './step-curves.controls';

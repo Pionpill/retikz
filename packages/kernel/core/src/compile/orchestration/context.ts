@@ -9,12 +9,6 @@ import type {
   ShapeDefinition,
   ThemeStyleDefinition,
 } from '../../contract';
-import type { IRScene } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
-import type { CompileOptions } from '../types';
-import type { CompileWarningInput } from '../warning';
-import type { CompileObservationRuntime } from './observation';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { resolveArrowRegistry } from '../../providers/arrow';
 import { resolveBoundaryRegistry } from '../../providers/boundary';
@@ -26,12 +20,17 @@ import { resolvePatternRegistry } from '../../providers/pattern';
 import { resolveShapeRegistry } from '../../providers/shape';
 import { resolveThemeStyleRegistry } from '../../providers/theme';
 import { DEFAULT_RESOLVED_THEME, resolveTheme } from '../../resolve';
+import type { IRScene } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import { DEFAULT_FONT_SIZE, DEFAULT_LABEL_DISTANCE, DEFAULT_LAYOUT_PADDING, DEFAULT_NODE_DISTANCE } from '../constants';
 import { createClipRegistry, createPaintRegistry, DEFAULT_MAX_CLIP_DEPTH } from '../resource';
 import { createRound, DEFAULT_PRECISION } from '../scene';
 import { fallbackMeasurer } from '../text';
+import type { CompileOptions } from '../types';
+import type { CompileWarningInput } from '../warning';
 import { formatCompileWarning } from '../warning';
 import { DEFAULT_MAX_COMPOSITE_DEPTH } from './composite';
+import type { CompileObservationRuntime } from './observation';
 
 /**
  * 标准化后的 compile 依赖上下文

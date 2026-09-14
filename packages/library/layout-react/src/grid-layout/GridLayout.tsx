@@ -1,14 +1,12 @@
 import type { GridLayoutInput } from '@retikz/layout';
+import { LayoutItemKind } from '@retikz/layout';
 import type { InputGridLayout } from '@retikz/layout-vanilla';
+import { GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { LayoutItemKind } from '@retikz/layout';
-import { GridLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
-import { withInputEmbedAdapters } from '@retikz/react';
-
 import type { LayoutEmbeddableComponent } from '../shared';
-
 import { createInputLayoutItems } from '../shared';
 
 /** Grid 布局的 React 属性 */

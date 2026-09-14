@@ -1,7 +1,6 @@
 import { GraphStatus, RelationRole } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Relation 样式 playground 使用的稳定字段 id */

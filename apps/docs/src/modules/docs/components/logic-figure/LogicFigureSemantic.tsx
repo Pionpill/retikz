@@ -1,10 +1,8 @@
 import type { GraphProps, RelationProps } from '@retikz/graph-react';
+import { Graph, Relation } from '@retikz/graph-react';
 import type { FC } from 'react';
 
-import { Graph, Relation } from '@retikz/graph-react';
-
 import type { LogicFigureRelationKindValue } from './logic-figure-vocabulary';
-
 import {
   logicFigureGraphProps,
   logicFigureRelationKinds,

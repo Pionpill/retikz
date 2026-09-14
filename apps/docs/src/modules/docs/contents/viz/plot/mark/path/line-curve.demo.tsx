@@ -1,8 +1,7 @@
 import type { PathCurveValue } from '@retikz/plot';
-import type { FC } from 'react';
-
 import { PathMark, PlotAxis, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';

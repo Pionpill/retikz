@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { ChevronRight } from 'lucide-react';
+import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';

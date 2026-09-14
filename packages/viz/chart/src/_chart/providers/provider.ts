@@ -1,18 +1,16 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
-import type { LowerPlotsOptions } from '@retikz/plot';
-
 import { FlexLayoutProvider } from '@retikz/layout';
+import type { LowerPlotsOptions } from '@retikz/plot';
 import { PlotProviderKey } from '@retikz/plot';
 import { SurfaceProvider } from '@retikz/standard';
 
-import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
-import type { IRChartSource } from '../schemas';
-import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
-
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';
 import { eraseChartRecipeDefinition } from '../contract';
+import type { IRChartSource } from '../schemas';
 import { chartProviderKeyOf, createChartDefinition } from './definition';
 import { resolveChartProviderRegistry } from './registry';
+import type { ChartProviderContribution, ChartRecipeProviderContribution } from './types';
 
 const ChartRecipeProviderEnvelopeKey = Symbol('retikz.chart.recipeProvider');
 const ChartRecipeProviderReferencePrefix = '@@retikz/chart/recipeProvider/';

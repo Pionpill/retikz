@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { WayDSL } from '../../src/parse/way';
-import type { IRStep, IRTarget } from '../../src/schemas';
-
 import { DrawWay, parseWay } from '../../src/parse/way';
+import type { IRStep, IRTarget } from '../../src/schemas';
 
 /** 测试 helper：cycle / arc / circlePath / ellipsePath 没 to，统一返回 undefined；其他 kind 返回 .to */
 const toOf = (s: IRStep): IRTarget | undefined => ('to' in s ? s.to : undefined);

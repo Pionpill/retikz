@@ -3,7 +3,6 @@ import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { InputLegend } from '../src';
-
 import { legend, LegendInputEmbedAdapter } from '../src';
 
 const input = {

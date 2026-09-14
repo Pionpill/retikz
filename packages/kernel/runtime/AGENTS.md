@@ -39,7 +39,7 @@ src/
 结构化改动后至少运行：
 
 ```bash
-pnpm --filter @retikz/runtime exec eslint . --fix
+pnpm --filter @retikz/runtime exec oxlint . --fix
 pnpm --filter @retikz/runtime exec tsc --noEmit
 pnpm --filter @retikz/runtime test:changed
 ```

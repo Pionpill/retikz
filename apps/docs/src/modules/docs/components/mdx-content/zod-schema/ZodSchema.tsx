@@ -1,14 +1,12 @@
 ﻿import type { FC } from 'react';
-
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import type { ObjectField, SchemaPathSegment, TableRow, TypeRepr } from './types';
 
 import { RenderTable } from './RenderTable';
 import { RenderType } from './RenderType';
 import { parseSchemaPath, serializeSchemaPath } from './schema-path';
 import { SCHEMA_REGISTRY } from './schema-registry';
+import type { ObjectField, SchemaPathSegment, TableRow, TypeRepr } from './types';
 import { walk } from './walker';
 
 /** Zod schema 文档表格的渲染参数 */

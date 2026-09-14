@@ -1,6 +1,5 @@
-import type { ComponentPreviewFileConfig, ComponentSourceFile } from '../types';
-
 import { buildSourceFileKey, filenameFromKey, langOfFilename, resolveSourceBaselineFilename } from '../registry';
+import type { ComponentPreviewFileConfig, ComponentSourceFile } from '../types';
 import { computeUnifiedDiff } from './diff';
 
 /** 构建 React 源码视图文件列表。 */

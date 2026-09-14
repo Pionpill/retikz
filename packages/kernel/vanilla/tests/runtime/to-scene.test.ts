@@ -1,5 +1,4 @@
 import type { IRNode, IRScene, Scene } from '@retikz/core';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';

@@ -6,10 +6,6 @@ import type {
   LayoutChildResult,
   LayoutCompositeCompileContext,
 } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
-import type { JsonObject } from '@retikz/foundation';
-import type { BoundsRect } from '@retikz/math';
-
 import {
   ChildSchema,
   LayoutAxisProposalKind,
@@ -19,27 +15,17 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
+import type { ExternalDatasets } from '@retikz/data';
 import { ScalarValueSchema } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import type { BoundsRect } from '@retikz/math';
 import { discriminatedUnion, literal, strictObject } from 'zod';
 
 import type { PresentedTableModel, SemanticTableCell } from '../../contract';
-import type { IRTable, IRTableBorder, IRTableCellBorders, IRTableDefaults, IRTableLayout } from '../../schemas';
-import type { DeepReadonly } from '../../shared';
-import type { ResolvedTableDefaults } from '../rule';
-import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
-import type { LowerTablesOptions } from '../types';
-import type { ResolvedTableBorderCandidate, TableBorderSide } from './border';
-import type {
-  ResolvedTableTrackSize,
-  TableCellLayout,
-  TableLayout,
-  TableTrackContribution,
-  TableTrackLayout,
-} from './types';
-
 import { RetikzTableError, RetikzTableErrorCode } from '../../error';
 import { mergeTableDefaults, resolveTableThemeDefaults } from '../../providers/style';
+import type { IRTable, IRTableBorder, IRTableCellBorders, IRTableDefaults, IRTableLayout } from '../../schemas';
 import {
   TableBorderKind,
   TableBorderMode,
@@ -48,19 +34,31 @@ import {
   TableCellPayloadKind,
   TableRowKind,
 } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
 import { deepFreeze } from '../../shared';
 import { formatTable } from '../formatter';
 import { emitTableBorderScope, emitTableBoundsSentinel, emitTableCellBackground } from '../lower';
 import { buildTableLayoutManifest } from '../manifest';
 import { normalizeTableStructure } from '../normalize';
 import { presentTable } from '../presentation';
+import type { ResolvedTableDefaults } from '../rule';
+import type { ResolvedTablePlan, TableCellAppearanceTrace } from '../rule';
 import { presentationInputsOfTableCellPlans, resolveTableCellPlans } from '../rule';
+import type { LowerTablesOptions } from '../types';
+import type { ResolvedTableBorderCandidate, TableBorderSide } from './border';
 import { buildTableBorderGraph } from './border';
 import { computeTableCellBox, computeTableCellContentBox, computeTableCellOuterSize } from './cell';
 import { computeTableCellContentPlacement } from './content';
 import { resolveTableLayout, resolveTableTrackSizes } from './resolve';
 import { propagateTableSpanContributions } from './span';
 import { solveTableTracks } from './track';
+import type {
+  ResolvedTableTrackSize,
+  TableCellLayout,
+  TableLayout,
+  TableTrackContribution,
+  TableTrackLayout,
+} from './types';
 
 /** 同次 Table compile transaction 的输出 */
 export type ResolvedTableTransaction = Readonly<{

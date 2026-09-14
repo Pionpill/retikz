@@ -1,5 +1,4 @@
 import type { JsonObject } from '@retikz/foundation';
-
 import {
   createOpenStringSchema,
   JsonObjectSchema,

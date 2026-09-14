@@ -1,6 +1,5 @@
 import type { TFunction } from 'i18next';
 import type { LucideIcon } from 'lucide-react';
-
 import { ChartScatter } from 'lucide-react';
 
 import type { DocNavigationAreaId, DocSidebarIcon, Page, Section, SubPage } from '@/modules/docs/data';

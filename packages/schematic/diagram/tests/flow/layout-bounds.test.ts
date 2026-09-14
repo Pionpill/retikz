@@ -2,7 +2,6 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramArtifact, FlowDiagramDefinitionOptions } from '../../src/flow';
-
 import {
   createFlowDiagramProviderContribution,
   defineFlowLayout,

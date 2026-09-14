@@ -1,7 +1,6 @@
 import type { PointMarkProps } from '@retikz/plot-react';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { points } from './point-api.data';

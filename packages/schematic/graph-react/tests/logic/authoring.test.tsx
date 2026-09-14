@@ -1,7 +1,3 @@
-import type { InputGraph } from '@retikz/graph-vanilla';
-import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-import type { FC } from 'react';
-
 import {
   defineEntityRole,
   defineGraphThemeStyle,
@@ -11,15 +7,17 @@ import {
   GraphSchema,
   RelationProviderKey,
 } from '@retikz/graph';
+import type { InputGraph } from '@retikz/graph-vanilla';
 import { normalizeGraph } from '@retikz/graph-vanilla';
 import { createInputScene, Node, Step, Text } from '@retikz/react';
+import type { InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
+import type { FC } from 'react';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { GraphProps } from '../../src';
-
 import {
   Block,
   BlockHeader,

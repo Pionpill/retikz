@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Sector } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 整体变换：rotate / scale 把整条 path 绕包围盒中心变换（免包 Scope）。

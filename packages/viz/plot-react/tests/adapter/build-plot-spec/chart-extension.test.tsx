@@ -1,4 +1,5 @@
 import type { ExternalRow } from '@retikz/data';
+import { isRetikzError, RetikzError } from '@retikz/foundation';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
 import type {
   PlotAuthoringContext,
@@ -6,10 +7,8 @@ import type {
   PlotDeclarationPath,
   PlotDeclarationSource,
 } from '@retikz/plot-vanilla';
-import type { ReactNode } from 'react';
-
-import { isRetikzError, RetikzError } from '@retikz/foundation';
 import { RetikzPlotVanillaError, RetikzPlotVanillaErrorCode } from '@retikz/plot-vanilla';
+import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { resolvePlotExtensionAuthoring } from '../../../src';

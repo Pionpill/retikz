@@ -1,10 +1,8 @@
 import type { Scene } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
-import type { SpyCanvasContext } from './helpers';
-
 import { drawScene } from '../../../src/canvas';
+import type { SpyCanvasContext } from './helpers';
 import { createSpyCanvasContext } from './helpers';
 
 describe('drawScene 图案填充', () => {

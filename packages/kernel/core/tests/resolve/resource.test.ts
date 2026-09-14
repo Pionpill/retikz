@@ -2,15 +2,14 @@ import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it, vi } from 'vitest';
 import { array, intersection, literal, number, object, strictObject, tuple } from 'zod';
 
-import type { ClipDefinition, ClipResolveContext, MarkerPrimitive, PatternDefinition } from '../../src/contract';
-import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
 import { createRound } from '../../src/compile/scene';
+import type { ClipDefinition, ClipResolveContext, MarkerPrimitive, PatternDefinition } from '../../src/contract';
 import { defineClip, definePattern } from '../../src/contract';
 import { resolveClipRegistry } from '../../src/providers/clip';
 import { resolvePatternRegistry } from '../../src/providers/pattern';
 import { resolveClip, resolvePaint } from '../../src/resolve/resource';
+import type { IRClip, IRPaint, IRScene } from '../../src/schemas';
 
 const round = createRound(3);
 

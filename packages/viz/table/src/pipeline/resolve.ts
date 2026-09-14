@@ -1,15 +1,13 @@
 import type { LayoutCompositeDefinition } from '@retikz/core';
+import { defineComposite } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { output as ZodOutput } from 'zod';
 
-import { defineComposite } from '@retikz/core';
-
-import type { IRTable } from '../schemas';
-import type { LowerTablesOptions } from './types';
-
 import { TableLayoutManifestSchema } from '../contract';
+import type { IRTable } from '../schemas';
 import { TABLE_NAMESPACE, TableComposite, TableSchema } from '../schemas';
 import { resolveTableTransaction } from './layout';
+import type { LowerTablesOptions } from './types';
 
 /** 构造 Table 的 layout-aware composite definition，供 Core compile options 注入 */
 export const lowerTables = (

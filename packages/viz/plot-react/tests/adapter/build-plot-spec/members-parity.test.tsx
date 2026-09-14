@@ -1,7 +1,6 @@
 import type { IRPlot } from '@retikz/plot';
-import type { ReactNode } from 'react';
-
 import { resolveLabelOf } from '@retikz/plot-vanilla';
+import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Check, Copy } from 'lucide-react';
+import type { FC } from 'react';
 
 import { ToolbarIconButton } from '../components';
 

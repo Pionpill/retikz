@@ -1,11 +1,10 @@
+import { run } from '@mdx-js/mdx';
 import type { MDXContent as MDXContentType } from 'mdx/types';
 import type { FC } from 'react';
-
-import { run } from '@mdx-js/mdx';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import * as jsxDevRuntime from 'react/jsx-dev-runtime';
 import * as jsxRuntime from 'react/jsx-runtime';
-import { useLocation } from 'react-router';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { DemoLocationContext } from '@/modules/docs/components/component-preview/context';

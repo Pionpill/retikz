@@ -7,7 +7,6 @@ import type {
   ScenePrimitive,
   TranslateTransform,
 } from '@retikz/core';
-
 import {
   ChildSchema,
   compileToScene,
@@ -21,18 +20,17 @@ import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, strictObject, string } from 'zod';
 
-import type { LegendCompileArtifact } from '../../src/composites/presentation/legend/definition';
-import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/types';
-import type { LegendInput } from '../../src/composites/presentation/legend/types';
-
 import {
   LegendContentKind,
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
 } from '../../src/composites/presentation/legend/constants';
+import type { LegendCompileArtifact } from '../../src/composites/presentation/legend/definition';
 import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
 import { createLegend } from '../../src/composites/presentation/legend/factory';
+import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/types';
+import type { LegendInput } from '../../src/composites/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({

@@ -1,10 +1,8 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlot } from '../../src/schemas';
-
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { AxisGridApplyTo, PlotSchema } from '../../src/schemas';
 
 const salesRows = [
@@ -165,7 +163,7 @@ const firstPathOf = (scope: IRScope): IRPath => scope.children.find(isPath) as I
 
 const firstMoveX = (scope: IRScope): number => {
   const move = firstPathOf(scope).children.find(step => step.kind === 'move');
-  return (move?.to as [number, number])[0];
+  return (move!.to as [number, number])[0];
 };
 
 const panelScopesOf = (scope: IRScope): Array<IRScope> =>

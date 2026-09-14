@@ -2,10 +2,9 @@ import type { IRPosition, PathCommand } from '@retikz/core';
 import type { Vector2 } from '@retikz/math';
 
 import type { IRRibbonCap, RibbonAlignmentValue } from '../../types';
-import type { RibbonSegment } from '../types';
-
 import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from '../caps';
 import { sampleAtDistance } from '../centerline';
+import type { RibbonSegment } from '../types';
 import { ribbonCrossSection } from './cross-section';
 
 export type OutlineCommandsInput = {

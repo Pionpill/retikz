@@ -1,6 +1,5 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { coordinateSpacesI18n } from './coordinate-spaces.i18n';

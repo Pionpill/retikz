@@ -1,7 +1,6 @@
 import { CHART_NAMESPACE } from '@retikz/chart';
 
 import type { InputChartCoordinate, InputChartPresentation } from '../../normalize/chart';
-
 import { normalizeChartCoordinate, normalizeChartPresentation } from '../../normalize/chart';
 
 type PointPartitionEncodings = Readonly<{

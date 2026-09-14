@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,7 +7,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib';
 
 import type { PreviewControlValues, PreviewTableControlField, PreviewTableRows, PreviewTableView } from '../types';
-
 import {
   formatPreviewTableCell,
   PREVIEW_TABLE_DEFAULT_VISIBLE_ROWS,

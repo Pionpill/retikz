@@ -14,11 +14,10 @@ import type {
   InputPlotPanel,
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
-import type { LayoutProps } from '@retikz/react';
-import type { FC, ReactNode } from 'react';
-
 import { PlotInputEmbedAdapter } from '@retikz/plot-vanilla';
+import type { LayoutProps } from '@retikz/react';
 import { Layout } from '@retikz/react';
+import type { FC, ReactNode } from 'react';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { RetikzPlotReactError } from './error';

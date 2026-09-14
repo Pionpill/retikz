@@ -1,12 +1,10 @@
 import type { DataFieldTypeValue, IRDataScalarValue } from '@retikz/data';
 import type { ValueOf } from '@retikz/foundation';
 import type { ZodType } from 'zod';
-
 import { ZodLiteral, ZodObject } from 'zod';
 
-import type { IRPlotScale, IRPlotScaleOperation } from '../schemas';
-
 import { RetikzPlotError } from '../error';
+import type { IRPlotScale, IRPlotScaleOperation } from '../schemas';
 import { BUILTIN_SCALE_TYPES } from '../schemas';
 
 /** 刻度值 + 标签集（axis 与同维 grid 复用同一份） */

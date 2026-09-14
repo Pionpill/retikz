@@ -1,10 +1,9 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { LowerTablesOptions } from '../types';
-import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
-
 import { RetikzTableError } from '../../error';
+import type { LowerTablesOptions } from '../types';
 import { createTableNestedDefinitionProvider, createTableProvider } from './provider';
+import type { TableRuntimeContribution, TableRuntimeContributionInput } from './types';
 
 /** 把任意 JSON 字符串编码为稳定且无碰撞的 runtime reference 片段 */
 const encodeRuntimeReference = (reference: string): string =>

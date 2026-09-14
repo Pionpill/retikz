@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** scope.id synthetic 边界与 clip 资源流程图 */
 const Demo: FC = () => (

@@ -1,22 +1,20 @@
 import type { IRDropShadow, ResolvedArrowEnd, Scene, ScenePrimitive } from '@retikz/core';
 import type { RuntimeTraceReporter } from '@retikz/runtime';
-
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../../animation';
 import type { StaticRenderFrame } from '../../runtime';
-import type { SvgNode } from '../types';
-import type { BuildContext } from './prim';
-
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '../../runtime';
 import { countScenePrimitiveOccurrences } from '../../shared';
 import { createSvgAnimationCollector } from '../animation';
 import { toSafeSvgToken } from '../safe-token';
+import type { SvgNode } from '../types';
 import { formatViewBox } from '../view-box';
 import { collectArrowEnds, hashKey, stableArrowKey } from './arrow-collect';
 import { buildArrowMarker } from './arrow-markers';
 import { buildClipDef } from './clip-defs';
 import { buildPaintDef } from './paint-defs';
+import type { BuildContext } from './prim';
 import { buildPrim } from './prim';
 import { buildSvgReadonlyLayer } from './readonly-layer';
 import { buildShadowDef, collectShadows, shadowHash, stableShadowKey } from './shadow-defs';

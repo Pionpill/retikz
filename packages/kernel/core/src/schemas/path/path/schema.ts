@@ -1,5 +1,3 @@
-import type { infer as ZodInfer } from 'zod';
-
 import {
   createOpenStringSchema,
   JsonObjectSchema,
@@ -7,6 +5,7 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 import { array, enum as zodEnum, literal, object, strictObject, union, unknown } from 'zod';
 
 import { DrawableInstanceSchema, DrawableStyleSchema } from '../../drawable';

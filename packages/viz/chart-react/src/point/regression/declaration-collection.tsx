@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 
 import type { CollectedPointChartDeclarations } from '../shared';
-import type { RegressionEncodingsProps } from './RegressionEncodings';
-import type { RegressionChartMark, RegressionMarkProps } from './RegressionMark';
-import type { RegressionPropertiesProps } from './RegressionProperties';
-
 import { collectPointChartDeclarations } from '../shared';
+import type { RegressionEncodingsProps } from './RegressionEncodings';
 import { RegressionEncodings } from './RegressionEncodings';
+import type { RegressionChartMark, RegressionMarkProps } from './RegressionMark';
 import { RegressionMark } from './RegressionMark';
+import type { RegressionPropertiesProps } from './RegressionProperties';
 import { RegressionProperties } from './RegressionProperties';
 
 /** RegressionChart direct-child declarations 的完整收集结果 */

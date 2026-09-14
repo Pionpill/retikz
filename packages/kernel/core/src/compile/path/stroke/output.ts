@@ -4,7 +4,6 @@ import type { IRPosition } from '../../../schemas';
 import type { PaintInput, PaintResolver } from '../../resource';
 import type { PathPrimitiveEmitResult } from '../types';
 import type { PathBaseProps } from './split';
-
 import { bboxCenter, buildPathTransforms, projectPathTransformPoints } from './transform';
 
 /** 已物化默认值后的 PathPrim 公共样式属性 */

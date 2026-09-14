@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Node polygon 从内容内框收敛为渲染与连接轮廓的局部流程图 */
 const Demo: FC = () => (

@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 // @vitest-environment jsdom
 import { coordinate, node, path, renderToSvgString, scene, scope } from '@retikz/vanilla';
 import { mountSvg } from '@retikz/vanilla/dom';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createInspectorRegistry, PATH_INSPECTOR_KEY } from '../../src';

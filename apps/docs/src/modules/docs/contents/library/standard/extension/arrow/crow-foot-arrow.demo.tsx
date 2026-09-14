@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Draw, Layout } from '@retikz/react';
 import { CrowFootArrowDefinition } from '@retikz/standard/arrow';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

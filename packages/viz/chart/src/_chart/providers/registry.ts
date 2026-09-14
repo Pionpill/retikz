@@ -1,23 +1,21 @@
-import type { ZodType } from 'zod';
-
 import { resolveRowSelectorRegistry, resolveStatisticsReducerRegistry } from '@retikz/data';
 import { createReadonlyMap } from '@retikz/foundation';
 import { resolveCoordinateRegistry, resolvePlotTransformRegistry, resolveScaleRegistry } from '@retikz/plot';
+import type { ZodType } from 'zod';
 import { union, ZodLiteral, ZodObject } from 'zod';
 
+import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import { CHART_NAMESPACE } from '../constants';
 import type { AnyChartRecipeDefinition, ChartEncodingRuntime, ChartThemeDefinition } from '../contract';
+import { eraseChartRecipeDefinition } from '../contract';
 import type { IRChartSource } from '../schemas';
+import { parseChartThemeDefinition, validateChartThemeBases } from './theme';
 import type {
   ChartProviderRegistry,
   ChartRecipeProviderContribution,
   ChartRecipeProviderContributionInput,
   ChartRuntimeDefinitionOptions,
 } from './types';
-
-import { RetikzChartError, RetikzChartErrorCode } from '../../error';
-import { CHART_NAMESPACE } from '../constants';
-import { eraseChartRecipeDefinition } from '../contract';
-import { parseChartThemeDefinition, validateChartThemeBases } from './theme';
 
 const invalidRegistry = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({

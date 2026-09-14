@@ -1,12 +1,10 @@
 import type { ParsedCssColor } from '@retikz/foundation';
-
 import { parseStaticCssColor } from '@retikz/foundation';
 
 import type { IRLine, IRNode, IRNodeLabel } from '../../schemas';
+import { NodeTextColor } from '../../schemas';
 import type { EffectiveLabelDefault } from '../style';
 import type { PrimaryColorResolvedNode } from './types';
-
-import { NodeTextColor } from '../../schemas';
 
 /** 判断正文行是否仍消费 Node 文字颜色 */
 const bodyLineInheritsNodeTextColor = (line: IRLine): boolean => {

@@ -1,10 +1,8 @@
 import type { OverlayLayoutItemInput } from '@retikz/layout';
+import { createOverlayLayout, OverlayLayoutProvider } from '@retikz/layout';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { createOverlayLayout, OverlayLayoutProvider } from '@retikz/layout';
-
 import type { InputOverlayLayout } from './normalize';
-
 import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Overlay 布局嵌入项的稳定类别 */

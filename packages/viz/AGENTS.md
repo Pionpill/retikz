@@ -52,14 +52,14 @@
 改 `@retikz/plot` 结构化文件后至少运行：
 
 ```bash
-pnpm --filter @retikz/plot exec eslint . --fix
+pnpm --filter @retikz/plot exec oxlint . --fix
 pnpm --filter @retikz/plot exec tsc --noEmit
 ```
 
 改 `@retikz/table` 结构化文件后至少运行：
 
 ```bash
-pnpm --filter @retikz/table exec eslint . --fix
+pnpm --filter @retikz/table exec oxlint . --fix
 pnpm --filter @retikz/table exec tsc --noEmit
 ```
 

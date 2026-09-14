@@ -1,9 +1,7 @@
 import type { Position } from '@retikz/math';
-
 import { DEFAULT_EPSILON } from '@retikz/math';
 
 import type { AnchorValue, SideValue } from '../anchor';
-
 import { Anchor, Side } from '../anchor';
 import { polylineViaVertex } from './edge';
 import { localToWorld, worldToLocal } from './transform';

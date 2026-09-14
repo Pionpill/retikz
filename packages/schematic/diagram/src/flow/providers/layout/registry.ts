@@ -1,10 +1,8 @@
+import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundation';
 import type { RelationDirectionValue } from '@retikz/graph';
 
-import { assertNonEmptyString, assertPlainDataContainers } from '@retikz/foundation';
-
-import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { FlowLayoutCatalogEntry, FlowLayoutDefinition } from '../../contract';
 import { FlowDirection, FlowPlacementKind, FlowRoutingKind } from '../../shared';
 import { BUILTIN_FLOW_LAYOUT_DEFINITIONS } from './definitions';
 import { LayeredFlowLayoutDefinition } from './layered';

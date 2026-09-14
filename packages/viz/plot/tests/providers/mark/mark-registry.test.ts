@@ -1,16 +1,14 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import type { infer as ZodInfer } from 'zod';
-
 import { describe, expect, it } from 'vitest';
+import type { infer as ZodInfer } from 'zod';
 import { literal, number, object, strictObject } from 'zod';
-
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
 
 import * as plot from '../../../src';
 import { defineMark, defineNodeChannel, extractMarkType } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_MARKS, resolveMarkRegistry } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { BUILTIN_MARK_TYPES, EncodingSchema, MarkOperationSchema, PlotSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

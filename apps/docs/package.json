@@ -9,9 +9,9 @@
     "check:site": "pnpm run check:static && pnpm run check:build && pnpm run check:runtime",
     "check:static": "node scripts/check-doc-static.mjs",
     "dev": "vite",
-    "generate:api-reference": "tsx scripts/generate-api-references.ts && prettier --write src/modules/docs/contents/**/_includes/generated.*.mdx",
+    "generate:api-reference": "tsx scripts/generate-api-references.ts && oxfmt src/modules/docs/contents/**/_includes/generated.*.mdx",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -89,12 +89,12 @@
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "playwright": "catalog:",
-    "prettier": "catalog:",
     "tailwindcss": "catalog:",
     "tailwindcss-animate": "catalog:",
     "tsx": "catalog:",
     "typedoc": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "oxfmt": "catalog:"
   }
 }

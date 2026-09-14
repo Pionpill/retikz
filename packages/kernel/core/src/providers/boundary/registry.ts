@@ -1,5 +1,4 @@
 import type { BoundaryDefinition } from '../../contract';
-
 import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_BOUNDARIES } from './definitions';
 

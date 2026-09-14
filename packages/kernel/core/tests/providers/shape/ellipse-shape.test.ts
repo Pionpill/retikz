@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ScenePrimitive } from '../../../src/contract';
-import type { IRScene } from '../../../src/schemas';
-
 import { compileToScene } from '../../../src/compile/compile';
+import type { ScenePrimitive } from '../../../src/contract';
 import { ellipseShape } from '../../../src/providers/shape';
+import type { IRScene } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(

@@ -1,9 +1,8 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import type { I18nKey } from '../src/modules/docs/data';
-
 import { en } from '../src/i18n/locales';
+import type { I18nKey } from '../src/modules/docs/data';
 import { modules } from '../src/modules/docs/data';
 import { collectDocManifest, writeDocArtifacts } from './docs-manifest';
 

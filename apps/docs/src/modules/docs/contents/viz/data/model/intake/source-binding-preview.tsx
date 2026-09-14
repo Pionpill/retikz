@@ -1,11 +1,9 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
-
 import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { sourceBindingControls } from './source-binding.controls';
-
 import { currentSales, financeFeed, forecastSales } from './source-binding.data';
 
 type SourceBindingValues = PreviewControlValuesFor<typeof sourceBindingControls>;

@@ -1,16 +1,14 @@
 import type { FC } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
-import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
-
 import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls';
+import type { PreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
 import {
   buildConfiguredControlSlots,
   usePreviewPanelState,
 } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
 
 type ProbeProps = {
   controlState: PreviewControlState;

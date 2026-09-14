@@ -9,9 +9,9 @@ import type {
   IRPlotRelationPathGeometry,
   IRPlotTextChannel,
 } from '@retikz/plot';
-
 import { PlotMark } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
 import type { NormalizationState } from './contracts';
 import type {
   InputPlotDatumLabel,
@@ -20,8 +20,6 @@ import type {
   InputPlotRelationMark,
 } from './input-marks';
 import type { StyleSugarContext } from './style-sugar';
-
-import { RetikzPlotVanillaError } from '../../error';
 import {
   extensionChannelEncoding,
   nodeStylePropsOf,

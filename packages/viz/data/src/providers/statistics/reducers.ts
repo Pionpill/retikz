@@ -1,8 +1,7 @@
 import type { AnyStatisticsReducerDefinition } from '../../contract';
-import type { ExternalRow } from '../../shared';
-
 import { defineStatisticsReducer } from '../../contract';
 import { BuiltinReducerOperationSchemas, DataFieldType } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 import { freezeDefinitions } from '../shared';
 import { finiteFieldValuesOf } from '../transform';
 import {

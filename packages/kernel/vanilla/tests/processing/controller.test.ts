@@ -1,13 +1,11 @@
 // @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
 import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver, VanillaCompileDriverSession } from '../../src';
-
 import {
   createProcessingController,
   prepareProcessingInput,

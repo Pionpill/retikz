@@ -1,11 +1,5 @@
 import type { Scene } from '@retikz/core';
 import type { AnimationControls, IdClockRegistry } from '@retikz/render/animation';
-import type { PrimAnimationResolution } from '@retikz/render/canvas';
-import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
-import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
-import type { StaticRenderFrame } from '@retikz/render/runtime';
-import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
-
 import {
   createClock,
   createIdClockRegistry,
@@ -13,7 +7,10 @@ import {
   sceneHasAnimations,
   sceneHasAutoplayTrigger,
 } from '@retikz/render/animation';
+import type { PrimAnimationResolution } from '@retikz/render/canvas';
+import type { AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/canvas';
 import { hitTest, renderFrameToCanvas } from '@retikz/render/canvas';
+import type { BuildContext, HydrationHandlers } from '@retikz/render/hydration';
 import {
   collectCanvasVisibleAnimationIds,
   createCanvasIdAnimationControls,
@@ -23,6 +20,8 @@ import {
   metaOf,
   withCanvasAnimationEventHandlers,
 } from '@retikz/render/hydration';
+import type { StaticRenderFrame } from '@retikz/render/runtime';
+import type { CSSProperties, FC, MutableRefObject, Ref } from 'react';
 import { useEffect, useReducer, useRef } from 'react';
 
 import { computeDisplaySize } from '../display-size';

@@ -1,6 +1,5 @@
-import type { DocLayoutVariant } from '@/modules/docs/data';
-
 import { mdxHasToc } from '@/modules/docs/components/mdx-content/utils';
+import type { DocLayoutVariant } from '@/modules/docs/data';
 
 export type ResolveDocPagePresentationInput = {
   /** 当前页显式声明的阅读布局 */

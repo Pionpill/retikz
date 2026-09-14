@@ -1,10 +1,8 @@
-import type { ZodType } from 'zod';
-
 import { describe, expect, it } from 'vitest';
+import type { ZodType } from 'zod';
 import { literal, number, strictObject } from 'zod';
 
 import type { ClipShape, SceneClipPath } from '../../src';
-
 import { defineClip } from '../../src';
 
 type TicketClip = {

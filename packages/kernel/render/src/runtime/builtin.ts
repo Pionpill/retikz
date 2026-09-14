@@ -1,6 +1,5 @@
-import type { RetainedRenderer, RetainedRendererFactory, RetainedRendererFactoryInput } from './renderer';
-
 import { createBuiltinCanvasRetainedRenderer } from './canvas-renderer';
+import type { RetainedRenderer, RetainedRendererFactory, RetainedRendererFactoryInput } from './renderer';
 import { createBuiltinSvgRetainedRenderer } from './svg-renderer';
 
 const createBuiltinRetainedRenderer = (input: RetainedRendererFactoryInput): RetainedRenderer => {

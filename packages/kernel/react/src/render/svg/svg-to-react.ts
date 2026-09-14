@@ -1,6 +1,5 @@
 import type { SvgNode, SvgStyle } from '@retikz/render/svg';
 import type { CSSProperties, Key, ReactElement } from 'react';
-
 import { createElement } from 'react';
 
 /**

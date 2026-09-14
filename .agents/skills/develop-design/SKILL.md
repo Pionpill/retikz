@@ -12,11 +12,18 @@ description: Use when planning a retikz architecture direction, version roadmap,
 | 产物                | 负责                                                                | 不负责                                               |
 | ------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
 | Architecture design | 长期问题、整体结构、能力归属、功能边界、关键原则与演进方向          | 版本字段、具体实现和执行步骤                         |
-| 版本 roadmap        | 版本目标、milestone、候选 ADR、依赖顺序与退出条件                   | API、算法、文件和测试 case                           |
+| 版本 roadmap        | 当前版本重点功能、目标与必要边界 / 依赖；ADR 仅用编号链接           | ADR 细节、实施进度、历史排期、执行及发布记录         |
 | ADR                 | 单项功能、核心决策、基础数据结构 / 公开契约、行为、失败语义与兼容性 | 设计检查材料、文件 scope、测试策略和执行过程         |
 | Mirror plan         | 设计检查结论；ADR 确认后再细化文件 scope、逻辑、测试、命令和风险    | 改写 ADR 的公开契约、默认 / 失败语义或 breaking 行为 |
 
 当前任务只要求 architecture design 或 roadmap 时，完成对应文档并交人工 review 后停止，不提前进入 ADR 或 plan。进入 ADR 设计时，ADR 与镜像简略 `PLAN.md` 是同一阶段的配套产物。
+
+## Roadmap 内容契约
+
+- 中版本 roadmap 保持 100–300 行：版本目标、`重点能力 | 目标 | 相关 ADR` 总览表、按方向说明主要场景 / 规划内容 / 预期效果，以及必要边界 / 依赖；不逐篇枚举 ADR，也不靠空行或重复规则凑篇幅。
+- ADR 列只放可点击的三位编号，不重复标题、状态、方案或实现细节；无相关 ADR 写 `—`，不为填表补造 ADR。跨 owner 引用先标 owner / 中版本，再列编号链接。
+- 大版本 roadmap 只保留方向概览、版本导航与关键边界；候选仍标候选，不因整理文档改变范围或承诺。
+- 历史排期从正文移除并由 Git 留存；TODO、进度与验证证据进入 ignored plan，设计细节进入 ADR，发布记录进入 changelog。阶段门禁按对应 flow / publish skill 执行，不复制进 roadmap。
 
 ## 必读
 
@@ -24,31 +31,42 @@ description: Use when planning a retikz architecture direction, version roadmap,
 - 能力性迭代读取 `notes/architecture/capability-design.md` 和所属能力域 completeness 文档。
 - 涉及 Core / Plot、Vanilla、框架 adapter、authoring Input、Source IR 规范化或 DOM 子入口时，读取 `notes/architecture/package-responsibility-design.md`。
 - 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取适用 `standard-*` skill。
-- 对应分组的 `_notes/decisions/_template.md` 与当前 milestone `roadmap.md`。
+- 对应分组的 `_notes/decisions/_template.md` 与目标中版本 `roadmap.md`。
 
 ## ADR 位置
 
-新建 ADR 的 milestone 以主责 package 当前 `package.json` 的 `version` 为准：
+新建 ADR 先确认主责 owner 与目标中版本；用户明确指定的目标优先，否则读取主责 package 当前 `package.json` 的 major / minor：
 
-- 按实际 major、minor 与 prerelease channel 定位；例如 `0.5.0-alpha.4` 只能进入 `v0/v0.5/alpha.4/`
-- 不得根据最大目录编号、旧 roadmap、其它 checkout 或计划中的下一版本猜测位置；选定 milestone 后再计算 ADR 编号
-- 跨 package ADR 先确认主责 package；主责不清、协作 package 版本不一致或 roadmap 与 package version 冲突时，停止创建并先完成对齐
+- `0.5.0-alpha.4`、`0.5.0-beta.1` 与 `0.5.0` 均归入 `v0/v0.5/`，不为 patch 或预发布阶段建子目录，也不为放置 ADR 预 bump 包版本
+- 在同一 owner / 中版本内取最大编号加一，使用至少三位十进制编号，从 `001` 起；不复用删除或 Superseded 的编号，不随发布重排
+- 跨组 ADR 按能力所有权确定主责，协作组可有独立版本线；主责或目标范围不清时先对齐，不从最大目录或其它 checkout 猜测
 
 ```text
-packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
-packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<channel.N>/<NN>-<slug>.md
+packages/kernel/_notes/decisions/v<MAJOR>/v<MAJOR>.<MINOR>/<NNN>-<slug>.md
+packages/viz/_notes/decisions/<FAMILY>/v<MAJOR>/v<MAJOR>.<MINOR>/<NNN>-<slug>.md
 ```
 
-其它分组沿用同形态。模板来自所属分组的 `_notes/decisions/_template.md`；编号在 milestone 目录内从 `01` 起。创建 ADR 时同步创建镜像目录和简略 plan：
+其它分组沿用同形态。模板优先使用所属分组的 `_notes/decisions/_template.md`；该分组无模板时复用 Viz 的 family 模板，并按实际位置填写引用。Roadmap 不要求每个目标对应 ADR；新增长期决策才建 ADR，bugfix / 优化不为发包补造 ADR。创建 ADR 时同步创建镜像目录和简略 plan：
 
 ```text
-packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
--> packages/viz/_notes/plans/chart/v0/v0.1/alpha.1/01-example/PLAN.md
+packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
+-> packages/viz/_notes/plans/chart/v0/v0.1/001-example/PLAN.md
 ```
 
 `**/_notes/plans/` 由 `.gitignore` 覆盖；简略 plan 默认不 stage、不 commit。
 
 ## ADR 内容契约
+
+### 检索元数据与读取顺序
+
+- 正式 ADR 使用 YAML frontmatter：`description` 为 1–200 字符单行摘要，说明主题与必要边界；`keywords` 为顿号 `、` 分隔的 1–12 个短关键词，保持一行，优先中英文术语与真实公开名称。正文调整时同步维护，不写状态或发布结论。
+- owner、版本、编号从路径推导，状态仍以正文为准，不复制字段或维护手写索引；元数据仅用于发现，不证明决策生效或实现完成。
+- 先用 `pnpm adr:search <关键词...> --owner <owner> [--version v0.x]`；多词全部命中，默认最多 10 条，`--limit` 上限 100，`--json` 返回结构化结果。
+- 未命中先换同义词 / 公开名称或扩大范围，再用 `--body` 或 `rg` 补查正文。没有摘要命中不等于没有相关设计，不默认把所有 ADR 全文送入上下文。
+- 命中后阅读全文并追踪前置、Superseded 与替代决策；历史 ADR 不自动过滤。实现、设计裁决与发布审计仍以相关全文和当前代码为依据。
+- 新建、迁移或修改元数据后运行 `pnpm adr:search --check`；命令动态读文档，不生成重复索引。
+
+### 正文
 
 ADR 至少包含：
 
@@ -103,11 +121,11 @@ ADR 与简略 plan 完成后、人工 ack 前，使用 `develop-completeness` �
 
 ## Implementation plan 细化
 
-人工明确批准执行 ADR 时，该批准默认同时接受 ADR。执行者先将 ADR 标为 `Accepted`，再重新阅读全文 ADR 与简略 plan，并在同一镜像目录细化 `PLAN.md`、创建其它执行产物：
+人工明确接受设计时将 ADR 标为 `Accepted`；明确批准执行也包含接受设计，但单独接受设计不授权实现。Accepted 不代表实现完成；实现进度由 plan / 任务证据跟踪，roadmap 只概览重点功能，发布事实由 changelog、tag 与 registry 核验。获准实施后，重新阅读全文 ADR 与简略 plan，并在同一镜像目录细化 `PLAN.md`、创建其它执行产物：
 
 ```text
-packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
--> packages/viz/_notes/plans/chart/v0/v0.1/alpha.1/01-example/
+packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
+-> packages/viz/_notes/plans/chart/v0/v0.1/001-example/
    PLAN.md
    TEST_CONTRACT.md
    TASK_STATE.md      # 长任务需要
@@ -122,10 +140,10 @@ Plan 写完后必须完成 Plan Gate；默认由主 agent 自审，执行计划�
 
 ## 完成标志
 
-- ADR 为长期形态且状态为 `Proposed`，不含施工细节或临时压缩段。
-- ADR、roadmap 与镜像 plan 的 milestone 均与主责 package 当前版本一致，且没有指向错误版本目录的残留引用。
+- ADR 为长期形态，不含施工细节或临时压缩段；草案为 `Proposed`，人工接受后为 `Accepted`。
+- ADR 与镜像 plan 的 owner / 目标中版本一致，引用有效；roadmap 没有按 alpha / beta / rc 序号分配任务。
 - 镜像简略 `PLAN.md` 已同步创建并承载完整设计检查结论。
 - 能力性迭代已完成 Architecture Gate PASS；或达到计划循环上限后已停止等待人工。
-- ADR 保持 `Proposed`，直到人工明确批准执行；单独确认设计不改变状态，也不授权实现。
+- ADR 保持 `Proposed`，直到人工明确接受设计或批准执行；接受设计只改变决策状态，不授权实现。
 - 需要实现时，人工执行批准会自动将 ADR 置为 `Accepted`；随后细化 plan 并创建 `TEST_CONTRACT.md`，且未用 plan 反向改写 ADR。
 - 未经当前对话授权不 commit / push。

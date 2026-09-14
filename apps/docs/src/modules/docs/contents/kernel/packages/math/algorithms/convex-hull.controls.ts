@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { convexHullI18n } from './convex-hull.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 凸包 playground 的稳定字段 id */
 export const ConvexHullPlaygroundControlId = {

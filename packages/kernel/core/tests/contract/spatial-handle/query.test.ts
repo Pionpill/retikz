@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { QualifiedSpatialHandle, SpatialHandleIndex } from '../../../src';
-
 import { resolveSpatialHandle, selectSpatialHandles } from '../../../src';
 
 const occurrence = (sourcePath: string, index = 0) => ({

@@ -2,8 +2,8 @@ import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { cities } from './legend.data';
 import { legendShapeOpacityControls, previewControlContract } from './legend-shape-opacity.controls';
+import { cities } from './legend.data';
 
 /** 注册回退使用的形状与透明度图例控件 */
 export const previewControls = legendShapeOpacityControls;
@@ -39,4 +39,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** shape + opacity：分类形状和连续透明度各自生成独立图例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

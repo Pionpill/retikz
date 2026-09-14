@@ -1,6 +1,5 @@
 import type { PreviewControlSlot, PreviewControlsOptions } from '../types';
 import type { PreviewIR } from '../utils';
-
 import { irHasAnimations } from '../utils';
 import { buildAnimationControlSlots } from './animation-controls';
 

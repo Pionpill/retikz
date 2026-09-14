@@ -5,9 +5,6 @@ import type {
   IRDataReducerOperation,
   TransformContext,
 } from '@retikz/data';
-import type { JsonObject } from '@retikz/foundation';
-import type { IRPlotTransform } from '@retikz/plot';
-
 import {
   DataTransform,
   DataTransformBindingClass,
@@ -15,13 +12,14 @@ import {
   DataTransformPhase,
   DEFAULT_TRANSFORM_CONTEXT,
 } from '@retikz/data';
-
-import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
-import type { IRChartSource } from '../../schemas';
-import type { ChartEncodingFieldConsumer, FieldConsumer, FieldProducer, TransformOperationRecord } from './types';
+import type { JsonObject } from '@retikz/foundation';
+import type { IRPlotTransform } from '@retikz/plot';
 
 import { RetikzChartError } from '../../../error';
+import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
+import type { IRChartSource } from '../../schemas';
 import { directFieldsOf, invalidEncoding, mappingKindOf, mappingPathOf, objectValueOf } from './shared';
+import type { ChartEncodingFieldConsumer, FieldConsumer, FieldProducer, TransformOperationRecord } from './types';
 
 const transformPhaseOrder: ReadonlyArray<DataTransformPhaseValue> = [
   DataTransformPhase.RowShape,

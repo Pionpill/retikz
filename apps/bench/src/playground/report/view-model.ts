@@ -1,7 +1,6 @@
 import type { BenchLabReport } from '../../shared';
-import type { LabPolicyIdValue, LabPolicyResult, LabRunSession, LabTraceEntry } from '../modules/kernel';
-
 import { BenchReportStatus } from '../../shared';
+import type { LabPolicyIdValue, LabPolicyResult, LabRunSession, LabTraceEntry } from '../modules/kernel';
 import {
   LabBackend,
   LabLifecycleAvailability,

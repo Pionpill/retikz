@@ -1,10 +1,8 @@
 import type { BoundsRect } from '@retikz/math';
-
 import { boundsOf, boundsToRect } from '@retikz/math';
 
 import type { GroupPrim, PathCommand, PathPrim, ScenePrimitive, SceneResource, Transform } from '../../contract';
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';
-
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { CANONICAL_STROKE_MITER_LIMIT } from '../constants';
 import { buildMarkMarkerGroup } from '../path';

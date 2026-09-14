@@ -1,23 +1,10 @@
 import type { FC, ReactNode } from 'react';
-
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
-
 import { cn } from '@/lib';
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
-
-import type {
-  AlignKey,
-  ComponentPreviewFiles,
-  PreviewActionSlot,
-  PreviewControlContract,
-  PreviewControlsDefinition,
-  PreviewControlsOptions,
-  PreviewThemeStyleSelection,
-  SizeKey,
-} from './types';
 
 import { ComponentPreviewCard } from './ComponentPreviewCard';
 import { sizeClass } from './constants';
@@ -28,6 +15,16 @@ import { buildConfiguredControlSlots } from './preview-panel';
 import { resolvePreviewControlContract } from './registry';
 import { buildPreviewSource } from './source-panel';
 import { isPreviewThemeStyleDocument, PreviewThemeStyle, usePreviewTheme } from './theme';
+import type {
+  AlignKey,
+  ComponentPreviewFiles,
+  PreviewActionSlot,
+  PreviewControlContract,
+  PreviewControlsDefinition,
+  PreviewControlsOptions,
+  PreviewThemeStyleSelection,
+  SizeKey,
+} from './types';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewProps = {

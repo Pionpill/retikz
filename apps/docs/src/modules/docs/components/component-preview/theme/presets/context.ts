@@ -5,7 +5,6 @@ import type { GraphThemeStyleDefinition } from '@retikz/graph';
 import type { EntityKindDefinition } from '@retikz/graph';
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { TableThemeStyleDefinition } from '@retikz/table';
-
 import { createContext, useContext } from 'react';
 
 import {

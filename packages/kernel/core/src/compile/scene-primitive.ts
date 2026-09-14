@@ -1,9 +1,7 @@
+import { JsonObjectSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 
-import { JsonObjectSchema } from '@retikz/foundation';
-
 import type { MarkerPrimitive, ScenePrimitive } from '../contract';
-
 import { createCompositeContractError } from '../resolve/diagnostics';
 import { withProviderOutputValidationBoundary as validateProviderOutput } from '../resolve/provider-validation';
 import {

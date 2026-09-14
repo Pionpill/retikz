@@ -342,9 +342,9 @@ type PreviewControlValueForField<TField extends PreviewPanelControlItem> = TFiel
 
 /** 从声明式定义推导出的控件值对象 */
 export type PreviewControlValuesFor<TDefinition extends PreviewControlsDefinition> = {
-  [TField in PreviewControlFieldOf<TDefinition> as TField extends PreviewTableControlField
-    ? never
-    : TField['id']]: PreviewControlValueForField<TField>;
+  [
+    TField in PreviewControlFieldOf<TDefinition> as TField extends PreviewTableControlField ? never : TField['id']
+  ]: PreviewControlValueForField<TField>;
 };
 
 /** 预览控件运行时值集合 */

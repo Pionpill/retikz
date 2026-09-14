@@ -1,15 +1,12 @@
 import type { IRScene } from '@retikz/core';
-import type { FC } from 'react';
-
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
+import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';
-import type { PreviewControlContract } from '../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../src/modules/docs/components/component-preview/controls';
 import { PreviewCoreThemeStyles, PreviewThemeStyle } from '../src/modules/docs/components/component-preview/theme';
+import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
 import IrCentricDemo from '../src/modules/docs/contents/about/blog/core-philosophy/pipeline';
@@ -25,6 +22,7 @@ import { previewControlContract as FlowThemeControlContract } from '../src/modul
 import { previewControlContract as FlowThemeEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.controls';
 import { previewSource as FlowThemeEnPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.demo';
 import { previewSource as FlowThemePreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.zh.demo';
+import type { PreviewControlContract } from '../src/modules/docs/preview';
 
 const source = FlowDiagramSchema.parse({
   namespace: 'diagram',

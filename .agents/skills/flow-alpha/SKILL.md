@@ -11,7 +11,7 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 使用：
 
-- 开始新的 Alpha ADR 或执行已有 Proposed ADR。
+- 开始新的 Alpha ADR，或执行已有 Proposed / 已 Accepted 但未完成的 ADR。
 - roadmap 的 Alpha 功能需要设计、实现、测试、文档和收尾。
 - 单条或多条 ADR 需要批量 worktree 执行。
 
@@ -31,7 +31,7 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 Alpha ADR 执行属于大型任务。进入流程前先按根 `AGENTS.md` 给出完整执行计划，一次确认 scope、阶段、subagent、常规单 reviewer、最终 `cross-review`、Git 身份和操作权限。含“批量 / 一次跑完 / 离线”或至少两个 ADR 编号时，还要确认候选 ADR、依赖与 base 分支。不存在自动 subagent 授权。
 
-新 ADR 的设计和既有 ADR 的执行分成两次授权边界：设计任务的计划只覆盖 Stage 1，交付 ADR 与同步简略 plan 后结束；人工明确批准执行 ADR 时，该批准默认同时接受 ADR：先将状态改为 `Accepted`，再以新的大型执行计划连续执行 Stage 2–6。单独确认设计结论不等于实现授权，也不改变 ADR 状态。
+新 ADR 的设计和既有 ADR 的执行分成两次授权边界：设计任务的计划只覆盖 Stage 1，交付 ADR 与同步简略 plan 后结束；人工接受设计时标为 `Accepted`，但不授权实现。人工明确批准执行 ADR 也包含接受设计，再以获批大型执行计划连续执行 Stage 2–6。Accepted 不表示实现或发布完成；ADR 归属 owner / 中版本，与具体 alpha 发布批次无关。
 
 ## 六阶段
 
@@ -64,8 +64,8 @@ Gate finding 按真源修订：公开契约、默认 / 失败语义和 breaking 
 镜像目录和简略 `PLAN.md` 已在 Stage 1 创建。人工明确批准执行后，执行者先将 ADR 置为 `Accepted`，再重新阅读全文 ADR 与简略 plan，在同一目录细化计划并创建其余产物：
 
 ```text
-packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
--> packages/<group>/_notes/plans/<relative>/<NN>-<slug>/
+packages/<group>/_notes/decisions/<owner-and-major>/<major.minor>/<NNN>-<slug>.md
+-> packages/<group>/_notes/plans/<owner-and-major>/<major.minor>/<NNN>-<slug>/
    PLAN.md
    TEST_CONTRACT.md
    TASK_STATE.md      # 长任务需要
@@ -169,4 +169,4 @@ Stage 3–5 完成并通过验证后，按 `flow-long-task` 执行计划中声�
 - Spec-First 需要时能证明测试先于实现，且实现未擅改基础契约。
 - Adversarial BLOCKING 清空，docs / changelog zh-en 对齐。
 - 已按执行计划完成最终主 agent 检查或获授权的 `cross-review`。
-- roadmap 状态与实际完成一致；commit、push、发布均有独立授权。
+- plan 记录实现证据，roadmap 按 `develop-design` 只概览版本重点功能，不因 Alpha 发布移动未完成 ADR；commit、push、发布均有独立授权。

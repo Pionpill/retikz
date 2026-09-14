@@ -1,5 +1,8 @@
 import type { DimensionRole } from '../../contract';
+import { RetikzPlotError } from '../../error';
+import { defaultOriginAxisTickSideOf } from '../../providers';
 import type { IRPlot, IRPlotAxisGuide, IRPlotFacetConfiguration, IRPlotGuide } from '../../schemas';
+import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
 import type { Margins } from '../../shared';
 import type {
   CompositionAxisPolicyValue,
@@ -18,10 +21,6 @@ import type {
   ScaffoldTrack,
   SharedScaffold,
 } from './types';
-
-import { RetikzPlotError } from '../../error';
-import { defaultOriginAxisTickSideOf } from '../../providers';
-import { AxisGridApplyTo, CoordinateArrangementKind, CoordinateViewPlacementKind, PlotGuide } from '../../schemas';
 
 const DEFAULT_COORDINATE_SCOPE_ID = 'default';
 

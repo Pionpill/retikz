@@ -1,11 +1,9 @@
 import type { Position } from '@retikz/math';
-import type { FC } from 'react';
-
 import { convexHull } from '@retikz/math';
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { convexHullPlaygroundControls, previewControlContract } from './convex-hull.controls';

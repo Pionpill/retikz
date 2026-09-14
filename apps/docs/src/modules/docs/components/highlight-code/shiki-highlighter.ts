@@ -1,6 +1,5 @@
-import type { ThemedToken } from 'shiki/types';
-
 import { createHighlighter } from 'shiki';
+import type { ThemedToken } from 'shiki/types';
 
 export type HighlightTheme = 'light' | 'dark';
 

@@ -1,5 +1,4 @@
 import type { MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from 'react';
-
 import { useEffect, useRef, useState } from 'react';
 
 import type { Transform } from '../types';

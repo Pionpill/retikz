@@ -1,6 +1,4 @@
 import type { CompileWarning, IRNode, LayoutProposal } from '@retikz/core';
-import type { FlexLayoutCompileArtifact } from '@retikz/layout';
-
 import {
   compileToScene,
   CompileWarningCode,
@@ -8,6 +6,7 @@ import {
   LayoutAxisProposalKind,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
+import type { FlexLayoutCompileArtifact } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';

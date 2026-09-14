@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { RegressionChart } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { regressionMinimalData } from './regression-minimal.data';
 

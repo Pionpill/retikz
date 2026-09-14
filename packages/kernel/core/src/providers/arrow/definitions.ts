@@ -1,5 +1,4 @@
 import type { ArrowDefinition, ArrowEmitContext, MarkerPrimitive } from '../../contract';
-
 import { defineArrow } from '../../contract';
 import { BuiltinArrowShape } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';

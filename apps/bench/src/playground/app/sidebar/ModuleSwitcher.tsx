@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Check, ChevronsUpDown } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -15,7 +14,6 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 
 import type { BenchModule } from '../module-registry';
-
 import { benchModules } from '../module-registry';
 
 /** 模块切换器属性 */

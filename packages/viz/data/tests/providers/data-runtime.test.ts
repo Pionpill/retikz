@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DataFieldTypeMap, ExternalRow } from '../../src';
-
 import {
   applyFieldResolver,
   assertAllValuesValid,

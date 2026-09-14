@@ -1,5 +1,5 @@
 import { Database, Keyboard, KeyRound, Lock } from 'lucide-react';
-import { type FC, type ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';

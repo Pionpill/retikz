@@ -1,15 +1,24 @@
 // @vitest-environment jsdom
 import type { FC, ReactNode } from 'react';
-import type { Root } from 'react-dom/client';
-
 import { useMemo, useState } from 'react';
+import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ResizableModule from '../../src/components/ui/resizable';
+import i18n from '../../src/i18n';
+import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import type { PreviewControlLayoutMetrics } from '../../src/modules/docs/components/component-preview/control-panel';
+import {
+  layoutPreviewControlSections,
+  PreviewControlPanel,
+  PreviewWorkspace,
+  splitPreviewControlSections,
+} from '../../src/modules/docs/components/component-preview/control-panel';
+import { usePreviewControlState } from '../../src/modules/docs/components/component-preview/hooks';
+import { usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
 import type {
   PreviewControlContract,
   PreviewControlPreset,
@@ -19,17 +28,6 @@ import type {
   PreviewPanelControlsDefinition,
   PreviewThemeMode,
 } from '../../src/modules/docs/components/component-preview/types';
-
-import i18n from '../../src/i18n';
-import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
-import {
-  layoutPreviewControlSections,
-  PreviewControlPanel,
-  PreviewWorkspace,
-  splitPreviewControlSections,
-} from '../../src/modules/docs/components/component-preview/control-panel';
-import { usePreviewControlState } from '../../src/modules/docs/components/component-preview/hooks';
-import { usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
 
 vi.mock('../../src/components/ui/resizable', () => ({
   ResizablePanelGroup: ({

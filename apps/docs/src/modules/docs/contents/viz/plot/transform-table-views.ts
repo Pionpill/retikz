@@ -1,9 +1,7 @@
 import type { IRPlotTransform } from '@retikz/plot';
-
 import { resolvePlotTransformRegistry } from '@retikz/plot';
 
 import type { PreviewTableView, TransformTableRows, TransformTableViewOptions } from '@/modules/docs/preview';
-
 import { createTransformResultView, createTransformTableViews } from '@/modules/docs/preview';
 
 /** Plot transform table view 的可选运行时依赖 */

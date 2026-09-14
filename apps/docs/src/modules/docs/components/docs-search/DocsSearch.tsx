@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Search } from 'lucide-react';
+import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';

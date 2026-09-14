@@ -1,8 +1,7 @@
 import type { Position } from '@retikz/math';
 
-import type { SharedPolarPosition } from '../position';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { SharedPolarPosition } from '../position';
 import { isPositionTuple } from '../position';
 import { DEG_TO_RAD, RAD_TO_DEG } from './angle';
 

@@ -8,12 +8,10 @@ import type {
   IRStep,
   IRTarget,
 } from '@retikz/core';
-
 import { AxisLineTargetSchema, parseTargetSugar, parseWay, THICKNESS_TO_WIDTH } from '@retikz/core';
 
-import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
-
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
+import type { InputAxisLineTarget, InputPath, InputStep, InputTarget } from './types';
 
 /** 从路径箭头细节生成单端 Source IR 标记 */
 const arrowMarkFromDetail = (detail: InputPath['arrowDetail'], endpoint: 'start' | 'end'): IRArrowMark => {

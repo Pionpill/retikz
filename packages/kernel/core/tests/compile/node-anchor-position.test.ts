@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompiledNodeLayout, CompileOptions } from '../../src/compile';
+import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { RectPrim } from '../../src/contract';
+import { defineBoundary } from '../../src/contract';
 import type { IRNode, IRScene } from '../../src/schemas';
 import type { Rect } from '../../src/shared/geometry';
-
-import { compileToScene, isNodeLayoutCompileArtifact } from '../../src/compile';
-import { defineBoundary } from '../../src/contract';
 import { rect as rectOps } from '../../src/shared/geometry';
 import { flattenPrims } from '../helpers/flatten';
 

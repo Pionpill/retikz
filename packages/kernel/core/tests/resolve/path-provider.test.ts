@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
 
-import type { IRPathBase } from '../../src/schemas';
-
 import {
   definePathGenerator,
   definePathKind,
@@ -11,6 +9,7 @@ import {
   resolvePathGeneratorRegistry,
   resolvePathKindRegistry,
 } from '../../src';
+import type { IRPathBase } from '../../src/schemas';
 import { resolvePathWithBuiltinProviders, resolveStrokePathWithBuiltinProviders } from './path-helper';
 
 const steps = [

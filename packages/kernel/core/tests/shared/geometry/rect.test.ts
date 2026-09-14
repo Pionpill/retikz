@@ -1,9 +1,8 @@
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { Rect } from '../../../src/shared/geometry/rect';
-
 import { Anchor, CenterAnchor, Corner, isAnchor, isDirectionalAnchor, isSide, Side } from '../../../src/shared';
+import type { Rect } from '../../../src/shared/geometry/rect';
 import { rect } from '../../../src/shared/geometry/rect';
 
 const r10x6: Rect = { x: 0, y: 0, width: 10, height: 6 };

@@ -1,7 +1,6 @@
-import { type FC, type ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 import type { RendererMode } from './renderer-context';
-
 import { RendererModeContext } from './renderer-context';
 
 export type RendererModeProviderProps = {

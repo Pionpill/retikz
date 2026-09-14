@@ -1,9 +1,7 @@
+import { GraphStatus } from '@retikz/graph';
 import type { InputRelation } from '@retikz/graph-vanilla';
 
-import { GraphStatus } from '@retikz/graph';
-
 import type { PreviewControlContract, PreviewPanelControlItem } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Relation role demo 共用的稳定字段 id */

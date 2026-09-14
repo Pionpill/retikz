@@ -1,7 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { AnyCellPresentationDefinition } from '../../contract';
-
 import { RetikzTableError } from '../../error';
 import { BUILTIN_CELL_PRESENTATIONS } from './definitions';
 

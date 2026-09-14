@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { DrawWay } from '@retikz/core';
 import { Draw, Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

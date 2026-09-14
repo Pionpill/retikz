@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { defineEntityKind, defineEntityPredicate, defineEntityRole } from '@retikz/graph';
 import { Entity, Graph } from '@retikz/graph-react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';

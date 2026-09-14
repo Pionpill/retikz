@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * multiply 叠色

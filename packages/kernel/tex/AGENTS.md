@@ -23,7 +23,7 @@
 结构化改动后至少运行：
 
 ```bash
-pnpm --filter @retikz/tex exec eslint . --fix
+pnpm --filter @retikz/tex exec oxlint . --fix
 pnpm --filter @retikz/tex exec tsc --noEmit
 pnpm --filter @retikz/tex test:changed
 ```

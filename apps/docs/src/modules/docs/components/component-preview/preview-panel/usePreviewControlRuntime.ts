@@ -1,5 +1,4 @@
 import type { RefObject } from 'react';
-
 import { useState } from 'react';
 
 import type { PreviewControlRuntime, PreviewControlState, RendererMode } from '../types';

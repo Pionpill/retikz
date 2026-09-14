@@ -1,15 +1,13 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
 import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
-import type { RolePositionAdjustmentDefinition, ScreenPositionAdjustmentDefinition } from '../../src/contract';
-import type { IRPlot } from '../../src/schemas';
-
 import { createPlotLocator } from '../../src';
+import type { RolePositionAdjustmentDefinition, ScreenPositionAdjustmentDefinition } from '../../src/contract';
 import { createCoordinateFrame, defineCoordinate } from '../../src/contract';
 import { lowerPlotWithDataArtifact } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 const rows = [

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Scope } from '@retikz/react';
+import type { FC } from 'react';
 
 import { Battery, circuitShapes, Resistor, Rheostat, Switch } from './circuit-shapes';
 

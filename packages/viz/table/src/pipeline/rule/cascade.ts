@@ -1,10 +1,9 @@
 import type { TableCellAppearanceTracePathValue, TableCellPlanSource } from '../../contract';
-import type { IRTableCellAppearance } from '../../schemas';
-import type { TableCellAppearanceTrace } from './types';
-
 import { TableCellAppearanceTracePathSchema } from '../../contract';
+import type { IRTableCellAppearance } from '../../schemas';
 import { TableCellAppearanceSchema, TableCellContentStyleSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
+import type { TableCellAppearanceTrace } from './types';
 
 const CONTENT_ATOMIC_FIELDS = [
   'color',

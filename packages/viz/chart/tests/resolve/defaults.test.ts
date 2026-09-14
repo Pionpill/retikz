@@ -1,5 +1,4 @@
 import type { ScenePrimitive } from '@retikz/core';
-
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { createPlotProviderContribution } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';

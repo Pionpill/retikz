@@ -1,9 +1,8 @@
-import type { LayoutDistributionValue } from '../shared';
-import type { IRGridTrack } from './types';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from '../internal/distribution';
+import type { LayoutDistributionValue } from '../shared';
 import { LayoutDistribution } from '../shared';
+import type { IRGridTrack } from './types';
 
 /** 同一 Grid track span 的 minimum 与 natural contribution */
 export type GridTrackConstraint = Readonly<{

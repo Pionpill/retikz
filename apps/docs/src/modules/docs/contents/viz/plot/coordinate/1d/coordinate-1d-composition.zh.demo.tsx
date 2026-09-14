@@ -1,5 +1,4 @@
 import type { IRPlotRelationRouting } from '@retikz/plot';
-
 import { Plot, PlotAxis, PlotScale, PointMark, RelationMark } from '@retikz/plot-react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -112,4 +111,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 展示一维映射后的节点如何继续参与关系组合 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

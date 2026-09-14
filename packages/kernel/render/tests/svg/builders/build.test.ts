@@ -1,5 +1,4 @@
 import type { GroupPrim, MarkerPrimitive, PaintResource, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { collectArrowEnds } from '../../../src/svg/builders/arrow-collect';

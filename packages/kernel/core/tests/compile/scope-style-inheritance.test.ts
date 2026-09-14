@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type {
   EllipsePrim,
   MarkerFill,
@@ -11,8 +12,6 @@ import type {
   TextPrim,
 } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 
 /** 递归展开 GroupPrim，把所有叶子 primitive 拍平（scope 子元素在 GroupPrim 内） */

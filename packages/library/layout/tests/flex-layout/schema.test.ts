@@ -1,10 +1,8 @@
 import type { IRChild } from '@retikz/core';
-
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { FlexLayoutInput, FlexLayoutItemInput } from '../../src';
-
 import {
   createFlexLayout,
   FlexLayoutDirection,

@@ -3,9 +3,8 @@ import type { IRPlotScaleOperation } from '@retikz/plot';
 
 import type { ChartEncodingResolveContext, ChartResolvedFieldMapping } from '../../contract/recipe';
 import type { IRChartSource } from '../../schemas';
-import type { ChartEncodingFieldConsumer, ResolvedScaleSource } from './types';
-
 import { invalidEncoding, mappingPathOf, mappingScaleOf, objectValueOf } from './shared';
+import type { ChartEncodingFieldConsumer, ResolvedScaleSource } from './types';
 
 type ResolvedScaleOperation = Readonly<{
   operation: IRPlotScaleOperation;

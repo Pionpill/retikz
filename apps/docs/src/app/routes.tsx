@@ -1,10 +1,8 @@
 import type { FC } from 'react';
-
 import { useEffect, useRef } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from 'react-router';
 
 import type { Section } from '@/modules/docs/data';
-
 import { DOC_ABOUT_ID, getSectionsByArea, isDocModuleId } from '@/modules/docs/data';
 import { DocLayout, DocPage } from '@/modules/docs/layout';
 import { useDocModuleStore } from '@/modules/docs/store';

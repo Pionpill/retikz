@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 展示 grid 横纵方向可分别继承和覆盖线型 */
 const Demo: FC = () => (

@@ -1,13 +1,11 @@
 import type { AnyTransformDefinition, DataView, ExternalRow, TransformContext } from '@retikz/data';
-
 import { applyTransforms as applyDataTransforms, applyTransformsToDataView, DataFieldType } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotTransform } from '../../../src/schemas';
-
 import { resolvePlotTransformRegistry } from '../../../src/providers';
+import type { IRPlotTransform } from '../../../src/schemas';
 
 const PLOT_TRANSFORM_REGISTRY = resolvePlotTransformRegistry();
 

@@ -1,5 +1,4 @@
 import type { PreviewControlContract, PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Path 标签路线 playground 使用的稳定字段 id */

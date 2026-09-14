@@ -1,6 +1,4 @@
 import type { IRClip, IRPathBase, IRScene } from '@retikz/core';
-import type { ReactElement } from 'react';
-
 import {
   CompositeBaseSchema,
   CURRENT_IR_VERSION,
@@ -9,6 +7,7 @@ import {
   NodeTextColor,
   SceneSchema,
 } from '@retikz/core';
+import type { ReactElement } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';

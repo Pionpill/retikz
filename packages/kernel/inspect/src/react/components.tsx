@@ -1,13 +1,11 @@
 import type { CoordinateProps, LayoutProps, NodeProps, PathProps, ScopeProps } from '@retikz/react';
-import type { FC } from 'react';
-
 import { Coordinate, Layout, Node, Path, Scope } from '@retikz/react';
+import type { FC } from 'react';
 import { useMemo } from 'react';
 
 import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
 import type { InspectorRegistry } from '../providers';
 import type { InspectionVanillaAuthoringInput } from '../vanilla';
-
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../vanilla';
 
 /** 只选择当前 Node 的可选 Inspector wrapper props */

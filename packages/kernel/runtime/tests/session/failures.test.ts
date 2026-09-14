@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeSession } from '../../src/session';
-
 import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
 import { RetikzRuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
+import type { RuntimeSession } from '../../src/session';
 import { createRuntimeSession } from '../../src/session';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 

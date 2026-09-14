@@ -1,7 +1,6 @@
 import type { GroupProps } from '@retikz/graph-react';
-import type { FC, ReactNode } from 'react';
-
 import { Group } from '@retikz/graph-react';
+import type { FC, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
 type LogicFigureFrameCaption = NonNullable<GroupProps['caption']>;

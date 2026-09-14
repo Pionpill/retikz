@@ -1,5 +1,4 @@
 import type { CompileOccurrenceLocator } from '../contract';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 
 const layoutProbeRecoverableErrors = new WeakSet<object>();

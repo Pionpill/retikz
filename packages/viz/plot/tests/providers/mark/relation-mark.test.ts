@@ -1,15 +1,13 @@
 import type { IRCoordinate, IRNode, IRPath, IRScope, IRStep } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { definePathChannel } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { createPolarCoordinate, lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 200, height: 100 };

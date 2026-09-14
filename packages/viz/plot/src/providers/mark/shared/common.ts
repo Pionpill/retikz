@@ -9,7 +9,6 @@ import type {
   IRScope,
 } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
 import { readSourceIndex, readSourceIndices } from '@retikz/data';
 
 import type {
@@ -22,17 +21,16 @@ import type {
   MarkLoweringContext,
   MarkProvenance,
 } from '../../../contract';
-
 import { ChannelDefinitionKind, datumMeta, markLayerId, markLayerMeta } from '../../../contract';
-import {
-  type IRPlotAnchorId,
-  type IRPlotIntervalMark,
-  type IRPlotMark,
-  type IRPlotMarkGeometryLabel,
-  type IRPlotMarkNodeLabel,
-  type IRPlotMarkOperation,
-  type IRPlotPathMark,
-  type IRPlotPointMark,
+import type {
+  IRPlotAnchorId,
+  IRPlotIntervalMark,
+  IRPlotMark,
+  IRPlotMarkGeometryLabel,
+  IRPlotMarkNodeLabel,
+  IRPlotMarkOperation,
+  IRPlotPathMark,
+  IRPlotPointMark,
 } from '../../../schemas';
 import { BUILTIN_NODE_CHANNELS, BUILTIN_PATH_CHANNELS, labelOf } from '../../channel';
 

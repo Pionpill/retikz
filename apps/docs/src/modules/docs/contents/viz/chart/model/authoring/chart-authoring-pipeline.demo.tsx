@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** React、Vanilla 与 JSON Chart 输入汇入统一 parse、recipe 和 resolve 主链 */
 const Demo: FC = () => (

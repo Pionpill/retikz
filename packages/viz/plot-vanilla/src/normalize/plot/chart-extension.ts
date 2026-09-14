@@ -1,7 +1,8 @@
 import type { IRPlotCoordinateOperation, IRPlotScaleOperation } from '@retikz/plot';
-
 import { PlotGuide } from '@retikz/plot';
 
+import { RetikzPlotVanillaError, RetikzPlotVanillaErrorCode } from '../../error';
+import { normalizePlotBindings } from './bindings';
 import type {
   AxisBoundGuide,
   InputPlotCoordinate,
@@ -16,9 +17,6 @@ import type {
   PlotMemberFragment,
 } from './contracts';
 import type { InputPlotScale } from './input-scales';
-
-import { RetikzPlotVanillaError, RetikzPlotVanillaErrorCode } from '../../error';
-import { normalizePlotBindings } from './bindings';
 import { buildPositionScale, collectExplicitScales, coordinateTypeOf } from './scale-coordinate';
 import { assembledTransformsOf } from './topology';
 

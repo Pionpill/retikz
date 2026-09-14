@@ -7,18 +7,17 @@ import {
 } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { CanonicalStep, PathGeneratorResolution, PathTargetView } from '../../../resolve';
-import type { IRPosition, IRTarget } from '../../../schemas';
-import type { PathCommandEmitter } from './commands';
-import type { StrokeCursor } from './cursor';
-import type { StrokeSamplingCollector } from './sampling';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { CanonicalStep, PathGeneratorResolution, PathTargetView } from '../../../resolve';
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import { rectOutline, rectPerimeterSample } from '../../../shared/geometry';
 import { CompileWarningCode } from '../../constants';
 import { clipTarget, isAutoBoundaryTarget, pointOfTarget, samePoint } from '../host';
+import type { PathCommandEmitter } from './commands';
+import type { StrokeCursor } from './cursor';
 import { lowerGeneratorStepToCommands } from './lower';
+import type { StrokeSamplingCollector } from './sampling';
 
 /** 由几何形状或生成器产生路径命令的 shape step */
 export type StrokeShapeStep = Extract<

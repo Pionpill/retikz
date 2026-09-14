@@ -1,11 +1,9 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { PlotThemeStyleDefinition } from '../../src/contract';
-
 import * as plot from '../../src';
+import type { PlotThemeStyleDefinition } from '../../src/contract';
 import { getNeutralPlotDefaults } from '../../src/providers/theme';
 import { resolvePlotAxisDefaults } from '../../src/resolve/theme';
 import { PlotDefaultsSchema, PlotThemeResolutionSchema } from '../../src/schemas';

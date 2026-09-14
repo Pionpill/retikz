@@ -1,9 +1,6 @@
-import type { ZodType } from 'zod';
-
 import { PositiveNumberSchema } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { array, discriminatedUnion, lazy, literal, number, strictObject, union } from 'zod';
-
-import type { IRChild } from './types';
 
 import { AnimationTrackSchema } from '../animation';
 import { CompositeNodeSchema } from '../composite';
@@ -13,6 +10,7 @@ import { PathSchema } from '../path';
 import { registerRecursiveChildSchema } from '../recursive';
 import { ScopeSchema } from '../scope';
 import { ThemeSchema } from '../theme';
+import type { IRChild } from './types';
 
 export const ChildSchema: ZodType<IRChild> = lazy(() =>
   union([

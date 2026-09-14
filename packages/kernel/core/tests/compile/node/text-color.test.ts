@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CompileWarning } from '../../../src/compile/warning';
-import type { TextPrim } from '../../../src/contract';
-import type { IRNode, IRNodeStyle, IRScene } from '../../../src/schemas';
-
 import { CompileWarningCode } from '../../../src';
 import { compileToScene } from '../../../src/compile/compile';
+import type { CompileWarning } from '../../../src/compile/warning';
+import type { TextPrim } from '../../../src/contract';
 import { chooseBlackOrWhiteForLuminance } from '../../../src/resolve/node';
+import type { IRNode, IRNodeStyle, IRScene } from '../../../src/schemas';
 import { flattenPrims } from '../../helpers/flatten';
 
 const AUTO_CONTRAST = 'contrast' as const;

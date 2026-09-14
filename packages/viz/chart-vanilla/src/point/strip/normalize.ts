@@ -1,8 +1,7 @@
 import type { IRStripChart } from '@retikz/chart/point/strip';
 
-import type { InputStripChart } from './types';
-
 import { chartSourceOf } from '../shared';
+import type { InputStripChart } from './types';
 
 /** 将 Strip Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeStripChart = (input: InputStripChart): IRStripChart => {

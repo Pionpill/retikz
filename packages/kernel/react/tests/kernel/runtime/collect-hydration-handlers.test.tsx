@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { forwardRef, Fragment, memo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { buildPreviewControlDefaults } from '../controls';
 import type {
   PreviewControlsDefinition,
   PreviewControlState,
   PreviewControlValues,
   PreviewRangeControlField,
 } from '../types';
-
-import { buildPreviewControlDefaults } from '../controls';
 
 const DEFAULT_RANGE_PLAYBACK_DURATION = 2000;
 

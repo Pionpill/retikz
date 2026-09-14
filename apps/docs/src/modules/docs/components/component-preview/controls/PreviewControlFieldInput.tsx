@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Pause, Play } from 'lucide-react';
+import type { FC } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,7 +12,6 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
 
 import type { PreviewControlValue, PreviewRangeControlField, PreviewStateControlField } from '../types';
-
 import { PreviewPointControlInput } from './PreviewPointControlInput';
 
 /** 判断运行时值是否是有限二维坐标 */

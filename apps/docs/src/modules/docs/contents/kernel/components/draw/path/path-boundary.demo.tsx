@@ -1,11 +1,9 @@
 import type { IRBoundary } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Circle, Draw, Layout, Node } from '@retikz/react';
 import { StarShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { pathBoundaryControls, previewControlContract } from './path-boundary.controls';

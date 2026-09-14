@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TimingBaseline, WallClockScenarioReport } from '../src/shared';
-
 import {
   assertTimingGatePassed,
   compareTimingReports,

@@ -1,5 +1,3 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import { NonBlankStringSchema } from '@retikz/foundation';
 import {
   BandScaleSchema,
@@ -24,6 +22,7 @@ import {
   ThresholdColorScaleSchema,
   TimeScaleSchema,
 } from '@retikz/plot';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { strictObject, union } from 'zod';
 
 import {

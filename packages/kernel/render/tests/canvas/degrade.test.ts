@@ -1,7 +1,7 @@
-import type { Scene } from '@retikz/core';
-
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+
+import type { Scene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { drawScene } from '../../src/canvas';

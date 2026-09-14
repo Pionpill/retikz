@@ -1,13 +1,11 @@
 import type { IRPosition } from '@retikz/core';
 import type { CurveSegmentSample, Vector2 } from '@retikz/math';
-
 import { isFinitePoint, vector2 } from '@retikz/math';
 
-import type { RibbonAlignmentValue } from '../../types';
-import type { RibbonCrossSection } from '../types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
+import type { RibbonAlignmentValue } from '../../types';
 import { alignTangentNormal, blendTangent } from '../centerline';
+import type { RibbonCrossSection } from '../types';
 
 const ENDPOINT_DIRECTION_BLEND_SPAN = 0.18;
 

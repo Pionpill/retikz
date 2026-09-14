@@ -1,12 +1,11 @@
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
+import { createRuntimeTraceReporter } from '../trace';
 import type {
   RuntimeCommitParticipant,
   RuntimeCommitParticipantDefinitionInput,
   RuntimeCommitParticipantExecutor,
   RuntimeCommitParticipantToken,
 } from './types';
-
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
-import { createRuntimeTraceReporter } from '../trace';
 
 const runtimeCommitParticipants = new WeakSet<object>();
 const participantExecutors = new WeakMap<object, RuntimeCommitParticipantExecutor>();

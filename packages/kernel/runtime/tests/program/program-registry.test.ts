@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeOwnerToken, RuntimeRevision } from '../../src/owner';
-import type { RuntimeCandidateView, RuntimeProgramDefinition, RuntimeProgramToken } from '../../src/program';
-import type { PerformanceTraceOutcomeValue } from '../../src/trace';
-
 import { RetikzRuntimeErrorCode } from '../../src';
+import type { RuntimeOwnerToken, RuntimeRevision } from '../../src/owner';
 import { defineRuntimeOwner } from '../../src/owner';
+import type { RuntimeCandidateView, RuntimeProgramDefinition, RuntimeProgramToken } from '../../src/program';
 import {
   defineRuntimeProgram,
   getRuntimeProgramDefinitionExecutor,
@@ -14,6 +12,7 @@ import {
   RuntimeProgramPhase,
 } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry, sortRuntimeProgramGraph } from '../../src/registry';
+import type { PerformanceTraceOutcomeValue } from '../../src/trace';
 import {
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,

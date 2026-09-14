@@ -1,9 +1,8 @@
 import { Brush, LineDotRightHorizontal } from 'lucide-react';
-import { type FC } from 'react';
-
-import type { RendererMode } from '../types';
+import type { FC } from 'react';
 
 import { ToolbarIconButton } from '../components';
+import type { RendererMode } from '../types';
 
 /** 渲染模式切换按钮。 */
 export type RendererModeButtonProps = {

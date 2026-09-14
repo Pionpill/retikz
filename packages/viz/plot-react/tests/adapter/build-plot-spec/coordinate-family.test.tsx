@@ -45,8 +45,6 @@ describe('buildPlotIR 坐标系族 cartesian1D / polar1D', () => {
     expect(() =>
       PlotSchema.parse(buildPlotIR(<PointMark x="v" />, '__plot', { coordinate: 'cartesian1D' })),
     ).not.toThrow();
-    expect(() =>
-      PlotSchema.parse(buildPlotIR(<PointMark x="h" />, '__plot', { coordinate: 'polar1D' })),
-    ).not.toThrow();
+    expect(() => PlotSchema.parse(buildPlotIR(<PointMark x="h" />, '__plot', { coordinate: 'polar1D' }))).not.toThrow();
   });
 });

@@ -1,7 +1,6 @@
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ExternalRow } from '../../shared';
-
 import { resolveFieldPath } from '../data';
 
 /** transform 分组结果，保留分组键、成员行和回写到输出行的分组字段值 */

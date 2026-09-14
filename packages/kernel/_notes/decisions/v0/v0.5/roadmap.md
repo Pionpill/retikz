@@ -1,173 +1,135 @@
-# v0.5 路线总计划
+# kernel v0.5 Roadmap
 
-> 状态：`v0.5.0-alpha.1` 与 `v0.5.0-alpha.2` 已完成；alpha.3 只交付上下文颜色；alpha.4 的 Path 端点箭头视觉后缘重叠与 Source owner schema 单次 parse 边界统一已完成，Core Source IR 浅层语义分组已完成，Stroke Path 居中标签断线仍为 Proposed，Headless Interaction 仍只登记候选边界；Concurrent、progressive materialization 与 generation session 仍是未排期 Proposed
->
-> 每条 Proposed ADR 必须按 `flow-alpha` 独立完成能力完备性、包边界、define-registry、测试契约与端到端闭环检查，不能因共用同一 milestone 跳过 Gate。
+## 版本目标
 
-## 版本边界
+完善跨图元机制、组合能力与增量运行时底座。
 
-v0.5 继续补充跨图元、跨 adapter 或影响 IR / compile 的纵向机制。具体图形、领域布局和单一 renderer 特性仍不进入 Kernel。
+## 重点功能
 
-下方索引、各节候选边界与进入条件保留 alpha.1 立项时的筛选记录。已交付能力的字段名、DSL 与公开契约以 Accepted ADR、公开类型和用户文档为准。
+| 重点能力       | 目标                                                                   | 相关 ADR                                                                                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 几何与文字     | 完善锚点、单轴连接、标签间距、对比色、TeX 与固定宽度                   | [001](./001-node-anchor-position.md)、[002](./002-scope-anchor-and-transform-pivot.md)、[003](./003-single-axis-path-connection.md)、[004](./004-node-text-auto-contrast.md)、[005](./005-node-label-box-spacing.md)、[006](./006-tex-math-syntax-compatibility.md)、[038](./038-node-fixed-width.md) |
+| 布局与组合     | 支持上下文布局、完整 Scope 输出及跨 namespace 空间引用                 | [007](./007-layout-aware-composite.md)、[009](./009-contextual-composite-layout.md)、[017](./017-layout-proposal-probe-contract.md)、[020](./020-layout-aware-scope-output.md)、[028](./028-qualified-spatial-handles.md)                                                                             |
+| 增量运行时     | 统一 identity、事务、增量编译与 retained renderer                      | [011](./011-runtime-identity-owner-registry.md)、[012](./012-program-transaction-lifecycle.md)、[013](./013-incremental-core-compile.md)、[014](./014-scene-patch-retained-renderer.md)、[016](./016-runtime-execution-policy.md)                                                                     |
+| 基础契约与入口 | 建立 Foundation、统一 authoring 与能力依赖接入                         | [019](./019-core-atomic-contracts.md)、[023](./023-foundation-package.md)、[026](./026-foundation-schema-primitives.md)、[027](./027-composite-dependency-provider-graph.md)、[029](./029-vanilla-authoring-normalization.md)                                                                         |
+| 颜色与 Source  | 统一颜色解析、Theme 来源、Source 分组与 schema 边界                    | [024](./024-lightweight-theme-resolution.md)、[032](./032-contextual-color-resolution.md)、[035](./035-json-undefined-field-contracts.md)、[036](./036-source-ir-semantic-grouping.md)、[037](./037-theme-source-fragments.md)                                                                        |
+| 路径与诊断     | 完善裁剪、居中标签断线、箭头重叠与 Inspect                             | [021](./021-extensible-inspector-content.md)、[031](./031-single-clip-definition.md)、[033](./033-stroke-path-label-interruption.md)、[034](./034-path-endpoint-arrow-overlap.md)、[039](./039-builtin-inspection.md)                                                                                 |
+| 候选方向       | Headless Interaction、协作并发、渐进物化与生成会话；不作为本版本必交项 | [040](./040-cooperative-concurrent-runtime.md)、[041](./041-progressive-materialization.md)、[042](./042-generation-session.md)                                                                                                                                                                       |
 
-## 里程碑索引
+## 功能规划
 
-| 方向                      | 解决的问题                                                                                       | 当前归属                                                                                                                         |
-| ------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Node 锚点对齐定位         | 基于真实 Node 布局把自身 anchor 对齐已完成实体 anchor                                            | [ADR-01 Accepted](./alpha.1/01-node-anchor-position.md)                                                                          |
-| Scope 自身锚点与变换基点  | 放置、旋转或缩放子图时不再泄漏内部坐标                                                           | [ADR-02 Accepted](./alpha.1/02-scope-anchor-and-transform-pivot.md)                                                              |
-| 单轴路径连接              | 只沿垂直或水平轴连接，不强制补齐正交折线的第二段                                                 | [ADR-03 Accepted](./alpha.1/03-single-axis-path-connection.md)                                                                   |
-| Node 文本自动对比色       | 根据实际填充明度选择黑色或白色文字，保持可读性                                                   | [ADR-04 Accepted](./alpha.1/04-node-text-auto-contrast.md)                                                                       |
-| Node label 包围盒间距     | 长标签按自身尺寸离开节点边界，避免左右标签与节点重叠                                             | [ADR-05 Accepted](./alpha.1/05-node-label-box-spacing.md)                                                                        |
-| Node label 附着对齐       | 让标签视觉盒沿 attachment tangent 以 start / middle / end 对齐                                   | [ADR-08 Accepted](./alpha.1/08-node-label-alignment.md)                                                                          |
-| TeX 数学语法兼容          | 正确解析 MathJax 支持的 TeX 语法并保留跨后端视觉语义                                             | [ADR-06 Accepted](./alpha.1/06-tex-math-syntax-compatibility.md)                                                                 |
-| 布局感知 Composite        | 让 Tier 2 在同次 compile 内测量、约束、replay 并返回 artifact                                    | [ADR-07 Accepted](./alpha.1/07-layout-aware-composite.md)                                                                        |
-| Box Layout Composite 合同 | 让任意 child 接受双轴 slot、反馈真实占用并带外层 transform / clip replay                         | [alpha.2 ADR-06 Accepted](./alpha.2/06-box-layout-composite-contract.md)                                                         |
-| 增量性能与作者链路收敛    | 用 Diff、局部 compile 与 retained renderer 减少持续更新成本，并统一框架到 Core 的 authoring 主链 | [alpha.2：ADR-01～20 的现行状态见 roadmap](./alpha.2/roadmap.md)                                                                 |
-| Foundation 与 Source 边界 | Foundation 只拥有无领域原子契约；各领域 owner schema 是 Source 输入唯一校验与结构投影边界        | [alpha.2 ADR-14](./alpha.2/14-foundation-package.md) · [alpha.4 ADR-03 Accepted](./alpha.4/03-json-undefined-field-contracts.md) |
-| 二维仿射矩阵原子          | 为 Render hydration 与 TeX SVG lowering 提供同一纯数值矩阵真源                                   | [alpha.2 ADR-16 Accepted](./alpha.2/16-affine-matrix-primitives.md)                                                              |
-| Composite 依赖装配        | 以完整 key、roots 与稳定拓扑聚合跨 namespace definitions / datasets                              | [alpha.2 ADR-18 Proposed](./alpha.2/18-composite-dependency-provider-graph.md)                                                   |
-| Qualified 空间句柄        | 让嵌套 Composite 发布同 revision、renderer-neutral 的 world-space sidecar                        | [alpha.2 ADR-19 Proposed](./alpha.2/19-qualified-spatial-handles.md)                                                             |
-| Concurrent 与渐进生成     | 可让出、取消地准备候选结果                                                                       | [未排期 Proposed](./candidates/01-cooperative-concurrent-runtime.md)                                                             |
-| 上下文颜色                | 数值权重随最终主色确定                                                                           | [alpha.3 ADR-01 Accepted](./alpha.3/01-contextual-color-resolution.md)                                                           |
-| Headless Interaction      | 补齐 renderer-agnostic target、behavior、intent 与 ownership                                     | [alpha.4 候选](./alpha.4/roadmap.md)                                                                                             |
-| Path 标签与端点箭头       | 居中标签产生真实描边断口；端点箭头可从默认位置推进到视觉后缘完整进入逻辑端点                     | [alpha.4 roadmap](./alpha.4/roadmap.md)                                                                                          |
-| Source IR 语义分组        | 以浅层分组区分覆盖与领域事实，保持继承并同步迁移实际 Source 消费契约                             | [alpha.4 ADR-04 Accepted](./alpha.4/04-source-ir-semantic-grouping.md)                                                           |
-| Theme 来源与默认值协议    | 区分 Theme 生成值与作者 defaults，按目标提供同构稀疏默认                                         | [alpha.4 ADR-05 Proposed](./alpha.4/05-theme-source-fragments.md)                                                                |
+### 几何与文字
 
-## alpha.1 执行批次
+主要场景：
 
-| 批次 | ADR          | 目的                                                           | 进入条件                         |
-| ---- | ------------ | -------------------------------------------------------------- | -------------------------------- |
-| 0    | ADR-01       | 交付 Node anchor-to-anchor 定位                                | 已完成                           |
-| 1    | ADR-02/03/05 | 先稳定 Scope 几何参照、单轴连接与 label 视觉盒间距             | 已完成                           |
-| 2    | ADR-04/06    | 收口文本可读性与 TeX 语法 / 样式语义                           | 已完成                           |
-| 3    | ADR-07       | 建立通用 child layout、compile-local replay 与 typed artifacts | 已完成；Table alpha.2 以此为前置 |
+- 节点与 Scope 需要明确的对齐点、固定宽度和变换参照。
+- 标签、箭头与公式在组合图中需要更可靠的视觉定位。
 
-批次只规定设计与集成顺序，不授权实现、commit 或发布。单条 ADR 未通过 Gate 时保持 Proposed，不得以“同属 alpha.1”为由绕过。
+规划内容：
 
-Headless interaction 与 progressive compile 的 ADR、实现、测试与文档已于 2026-07-25 撤回。后续版本若重新承接，必须重新建立 Proposed ADR、测试契约并通过独立 Architecture Gate，不沿用本轮实现授权。
+- 完善锚点定位、单轴连接、标签间距和宽度表达。
+- 补齐文字自动对比色、标签对齐与 TeX 数学语义。
 
-## 后续 Alpha 排期
+预期效果：
 
-| 版本    | 交付边界                                                                                                                                                                                                               | 上位设计                                                                                                                                                                                                                                                                                                           |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| alpha.2 | `sync + atomic + incremental`；补齐 Box Layout、跨 namespace Composite assembly、qualified spatial sidecar、跨包 Math affine 原子与 Vanilla 统一 authoring / framework-neutral processing                              | [性能设计](../../../../../../notes/architecture/performance-design.md) · [ADR-06](./alpha.2/06-box-layout-composite-contract.md) · [ADR-18](./alpha.2/18-composite-dependency-provider-graph.md) · [ADR-19](./alpha.2/19-qualified-spatial-handles.md) · [ADR-20](./alpha.2/20-vanilla-authoring-normalization.md) |
-| alpha.3 | 上下文颜色：Foundation 颜色原子、Core 最终确定化与 Tier 2 Theme 主色链统一适配                                                                                                                                         | [视觉 Theme 设计](../../../../../../notes/architecture/visual-theme-design.md)                                                                                                                                                                                                                                     |
-| alpha.4 | 无填充 Stroke Path 的居中标签自动断线仍为 Proposed；端点箭头按归一化比例推进到视觉后缘完整进入与 Source owner Zod schema 单次 parse 已完成；Core Source IR 浅层固定语义分组已完成；Headless Interaction 只保留候选边界 | [ADR-01](./alpha.4/01-stroke-path-label-interruption.md) · [ADR-02](./alpha.4/02-path-endpoint-arrow-overlap.md) · [ADR-03](./alpha.4/03-json-undefined-field-contracts.md) · [ADR-04](./alpha.4/04-source-ir-semantic-grouping.md) · [交互设计](../../../../../../notes/architecture/interaction-design.md)       |
+复杂组合中的文字、标签和连接位置更可控，减少宿主侧手工修正。
 
-未来 Concurrent 与 Headless Interaction 仍须共享 identity、revision、ownership、transaction 与 retained Scene，不建立平行 Runtime。未实现能力不能由版本排期或候选 ADR 代替公开契约
+### 布局与组合
 
-## Node 锚点对齐定位
+主要场景：
 
-### 根问题
+- 嵌套 composite 要在父容器约束下完成布局。
+- 一个组合需要引用另一个 namespace 中公开的空间位置。
 
-上层 composite 需要按普通 Node 的真实文本、shape、padding、margin、scale 与 rotate 结果排列节点。现有 position 只能先解析内容盒中心；上层若自行估算 anchor，会复制 core 布局语义并在自定义 shape / boundary 或文本测量变化时漂移。
+规划内容：
 
-### 决策边界
+- 统一上下文布局、proposal / probe 和完整 Scope 输出。
+- 支持空间引用与跨组合装配，保留真实布局边界及公开职责。
 
-- 只扩展 `Node.position`，用结构化 `IRAnchorPosition` 表达当前 Node anchor 与已完成目标 anchor 的对齐。
-- 目标复用现有 `IRNodeTarget`，覆盖 Node、Coordinate 与 resolved Scope；target / self anchor 默认 center。
-- Node 先完成自身几何布局，再整体平移；Scene 与 renderer 不新增字段。
-- undefined、later、self 与正在布局的祖先 Scope 全部 fail-loud；已解析空 Scope 合法。
-- 详细设计、测试矩阵与文件 scope 见 [alpha.1 ADR-01](./alpha.1/01-node-anchor-position.md)。
+预期效果：
 
-## Scope 自身锚点与变换基点
+组合内容在容器约束和跨区域引用下仍能形成完整布局结果。
 
-### 根问题
+### 增量运行时
 
-当前 Scope 的平移、旋转和缩放以局部 `[0, 0]` 或手写坐标为基准。复用子图时，调用方必须知道内部原点和内容尺寸，Scope 还不能像 Node 一样按自身中心或边界锚点放置。
+主要场景：
 
-### 立项候选边界（历史）
+- 宿主持续修改图形，希望复用未受影响的计算与显示。
+- 一组修改需要作为完整更新被运行时消费。
 
-- 自身点至少覆盖局部 `origin`、`center`、四边、四角，并保留显式 `[x, y]` 逃生口。
-- 平移类输入区分“外部目标参照点”和“Scope 自身对齐锚点”；例如把 `Scope.center` 放到某个极坐标目标，而不是把两者混入 `polar-translate.origin`。
-- `rotate` / `scale` 可声明自身 pivot；缺省仍为局部 `origin`，不改变 v0.4 语义。
-- 自身锚点复用 `scope.id` 的包络与 `boundingShape` 契约，不建立第二套边界计算；空 Scope 回退到局部原点。
-- 立项时要求 ADR 解决“先算 children 包络还是先解析 transforms”的编译顺序，以及子元素位置与自身 transform 互相依赖时的循环诊断。
+规划内容：
 
-## 单轴路径连接
+- 建立 identity、事务、增量编译和 Scene patch 的共同底座。
+- 明确执行策略与 retained renderer 的协作边界。
 
-### 根问题
+预期效果：
 
-现有 `|-` / `-|` 表达完整正交折线：先沿一个轴，再沿另一个轴到达目标。用户只需要垂直连接时，`|-` 仍会追加水平段，只能手动计算投影点。
+持续修改可以复用已有工作，并以完整事务观察每次更新。
 
-### 立项候选边界（历史）
+### 基础契约与入口
 
-- 提供“保持当前 x、只连接到目标 y”的纯垂直语义；同时评估是否应成对提供纯水平语义，避免单边特例。
-- 优先作为 Path / Way 的语义 sugar lower 到现有 line / target 能力；只有现有 Kernel 无法完整表达时才扩展 IR。
-- 不改变 `|-` / `-|` 的既有两段折线语义，也不在 renderer 增加特殊路径命令。
-- 立项时要求 ADR 覆盖笛卡尔点、Node / anchor target、Scope transform、forward reference、零长度段，以及 React Way 与 Vanilla 写法的一致性。
+主要场景：
 
-## Node 文本自动对比色
+- 多个包需要共享原子契约与基础 schema。
+- 作者和扩展包需要一致的输入规范化与能力依赖表达。
 
-### 根问题
+规划内容：
 
-`currentColor` 跟随主题或外层颜色，不能根据 Node 的实际填充判断文字是否清晰。深色填充需要白字、浅色填充需要黑字时，用户目前必须重复计算和配置。
+- 建立 Foundation，收敛通用契约和基础 schema 所有权。
+- 统一 authoring 入口与 composite 依赖接入，减少平行解释。
 
-### 立项候选边界（历史）
+预期效果：
 
-- 以显式 opt-in 能力提供，不改变 `currentColor` 与现有 `color` 默认语义。
-- 对可解析的纯色 fill 计算相对明度，并在黑 / 白中选择对比度更高的文字颜色；算法与阈值必须在 Core 契约中固定，SVG / Canvas 不得各自判断。
-- 明确透明色与背景的合成基准，以及渐变、pattern、image、CSS 变量等无法静态确定明度时的 fallback / 诊断策略。
-- 只影响 Node 文本及明确纳入的 label 通道，不应意外改写 stroke、fill 或 Scope 的其它级联字段。
-- 立项时要求 ADR 确认该能力进入持久化 IR，还是由 React / Vanilla 共享 authoring helper 展开；两条入口必须得到一致结果。
+跨包基础概念有独立真源，扩展和作者输入不再重复定义共同机制。
 
-## Node label 包围盒间距
+### 颜色与 Source
 
-### 根问题
+主要场景：
 
-当前 Node label 的 `distance` 是“节点边界到 label 中心”的固定偏移，没有计入 label 自身尺寸。长文本放在节点左侧或右侧时，即使 `distance` 为正，label 仍可能大面积穿入节点；上下位置的实际边缘间距也会随字体高度变化，和用户设置的数值不一致。
+- 主题需要继承、覆盖并投影到不同能力 owner。
+- Source 默认片段与颜色来源需要保持清晰且可组合。
 
-该行为符合 v0.4 schema 对 center distance 的字面描述，因此改成视觉盒间距会改变既有 label 坐标、pin 长度与自动 viewBox，作为 v0.5 可见行为修正处理，不回灌已冻结的 v0.4 RC。
+规划内容：
 
-### 立项候选边界（历史）
+- 统一轻量 Theme、上下文颜色与 Source 语义分组。
+- 收敛默认片段和 schema 边界，使源输入不承载冗余派生状态。
 
-- 将 `distance` 定义为节点边界与 label 视觉盒沿放置方向的间距，而不是到 label 中心的距离；默认值与非负约束可保持不变。
-- 上下方向的中心偏移为 label 半高 + `distance`，左右方向为 label 半宽 + `distance`。对角 anchor、数值角度和 `{ boundary, fraction }` 统一使用旋转后 label OBB 在放置方向上的投影半径，避免维护轴向特例。
-- Node label layout 保存统一的 `measuredWidth` / `measuredHeight`；纯文本、混排 / TeX、Scene `TextPrim`、bbox 与 pin 引线必须消费同一视觉盒，不能继续以 `fontSize` 代替整体高度。
-- `placement: 'outside'` / `'inside'` 复用同一 box extent，只反转偏移方向；inside 只保证相对所选边界的定向间距，不承诺超大 label 完整容纳于节点内部。
-- `position: 'center'` 继续直接落在节点中心；`keepUpright` 的 180° 翻转不改变 box extent。任意非凸 shape 的全局 label 碰撞避让不纳入本项。
-- 立项时要求 ADR 覆盖长文本的 left / right、top / bottom、对角与数值角度、显式 / radial / tangent rotate、inside、混排 / TeX、旋转 Node、pin 端点、自动 viewBox，以及 `distance: 0` 的贴边语义。
+预期效果：
 
-## TeX 数学语法兼容
+作者可以理解颜色和默认配置的来源，并在嵌套组合中精确覆盖。
 
-### 根问题
+### 路径与诊断
 
-当前 `@retikz/tex` 只覆盖有限的 MathJax TeX 输入与单一路径 lowering，部分 LaTeX 数学语法无法启用，公式内部颜色等视觉语义也会在进入 Scene 前丢失。v0.5 需要把目标明确为兼容 MathJax 支持的 TeX 数学语法，而不是完整 LaTeX 文档编译器。
+主要场景：
 
-### 立项候选边界（历史）
+- 路径中部标签与端点箭头会影响连线的可见范围。
+- 宿主需要检查当前图形、布局与扩展能力的结果。
 
-- `@retikz/tex` 负责 MathJax 扩展的选择性加载及公式字形与样式 lowering；Core 继续拥有后端中立的 `LowerTex` / `LoweredTex` 与 Scene 契约。
-- 立项时把具体 profile、扩展包集合、数据结构与兼容性取舍留给该 milestone 的 ADR 确认。
-- 立项时要求 ADR 覆盖 SVG / Canvas 等后端的一致性、样式继承、无法表达的语法与样式诊断、浏览器包体与初始化成本，以及缓存键的完整性。
+规划内容：
 
-## 布局感知 Composite
+- 完善裁剪、居中标签断线和箭头视觉重叠处理。
+- 扩展 Inspect 内容与内置检查能力，不把诊断实现混入领域模型。
 
-> 2026-07-25：三轮 Architecture Gate 未取得自动 PASS 后，人工确认修订后的设计并授权实现与提交；实现、自测、双语文档和 changelog 完成后 ADR-07 转为 Accepted。该 override 不等同 Gate PASS，也不包含 push 或发布。
+预期效果：
 
-### 根问题
+路径呈现与检查工具能反映真实图形关系，便于理解和诊断。
 
-`CompositeDefinition.expand()` 在完整 compile context 创建前做结构展开；按 ADR-09 只读取继承的有效 Theme，仍无法让上层布局组件根据任意 `IRChild` 的真实测量、provider、引用和父级约束反馈求解，也不能复用已完成布局生成最终 Scene。Table alpha.2 若在自身复制 Core 测量或二次 lower，会形成平行布局语义。
+### 候选方向
 
-### 决策边界
+主要场景：
 
-- 在现有 Composite registry 中增加与 `expand` 互斥的 `compile` 分支，不新增 registry。
-- `layoutChild()` 支持 intrinsic / constrained layout，返回 allocation bounds、visual bounds 与 compile-local replay。
-- 最终 replay 只提交与 emit，不重复 composite expansion、文字 / TeX 测量或 layout；discarded probe 无 namespace、resource、warning 或 artifact 副作用。
-- `compileToScene()` 同次显式返回 Scene 与 typed artifacts；artifact 用 compile-local occurrence locator 标识，不进入 Scene，也不通过全局 Map 或 definition callback capture。
-- `lowerIRToKernel()` 遇到 layout-aware composite 以 provider key + IR path fail-loud，不回退到不完整 lowering。
-- 详细设计、测试矩阵与文件 scope 见 [alpha.1 ADR-07](./alpha.1/07-layout-aware-composite.md)。
+- 复杂内容可能需要协作调度、渐进呈现或生成会话。
+- 后续交互能力需要宿主无关的共享底座。
 
-## Standard Drawing Library
+规划内容：
 
-官方可选的跨领域绘图能力库已移交独立的 [`packages/library`](../../../../../library/_notes/architecture/standard-library-design.md) 分组。它不再是 Kernel lockstep 的 v0.5 候选；Core 继续拥有公开 extension 契约，Library 的 Standard 包家族由首个具体能力 ADR 建立独立 release group、package manifest 和 React / Vanilla 接入。
+- 保留 Headless Interaction、Concurrent、渐进物化与生成会话候选。
+- 候选不作为必交项；设计接受、实现授权与实际交付分别判断。
 
-## 进入 alpha.1 实现的条件（历史）
+预期效果：
 
-1. 从真实示例确认最小用户语法，不以 controls 或单个 demo 反推公共 API。
-2. 对照 `core-drawing-complete.md` 确认能力归属、包边界和下游闭环。
-3. 每条 ADR 分别补齐实现契约和 ignored `test-contract` 矩阵。
-4. 每条 ADR 分别完成 Alpha Architecture Gate；最多三轮，未通过则交人工决策。
-5. ADR 明确公开契约、错误路径、测试象限和文档同步范围，并获得人工确认后，才进入实现。
-6. 候选可以用 Gate PASS + 人工接受的 Deferred 结论关闭设计待办；这不表示能力已交付，不进入 implementation / docs 验收，未来只能由新 Proposed ADR 重开。
+后续能力保留明确探索入口，但不会绑架已完成内容的正常发布。
+
+## 边界与依赖
+
+领域图形、自动图布局、编辑器与单一 renderer 特性不进入 Kernel；候选是否进入执行须独立确认。

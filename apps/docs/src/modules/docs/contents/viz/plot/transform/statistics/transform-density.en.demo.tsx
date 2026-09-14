@@ -33,4 +33,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** Dynamic playground for KDE bandwidth and sample count */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

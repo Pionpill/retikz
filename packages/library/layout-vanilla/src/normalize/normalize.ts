@@ -1,7 +1,6 @@
 import type { FlexLayoutItemInput, GridLayoutItemInput, OverlayLayoutItemInput } from '@retikz/layout';
-import type { InputChild, InputEmbedContext, InputEmbedContribution } from '@retikz/vanilla';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
+import type { InputChild, InputEmbedContext, InputEmbedContribution } from '@retikz/vanilla';
 
 type LayoutItem = FlexLayoutItemInput | GridLayoutItemInput | OverlayLayoutItemInput;
 type CoreProviderContribution = InputEmbedContribution['providerDependencies'];

@@ -1,12 +1,10 @@
 import type { AnimationMode } from '@retikz/react';
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { PreviewThemeStyleValue } from '@/modules/docs/components/component-preview/theme';
-import type { PreviewThemeMode } from '@/modules/docs/components/component-preview/types';
-
 import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewThemeMode } from '@/modules/docs/components/component-preview/types';
 
 /** ComponentPreview 全局开关 */
 export type ComponentPreviewState = {

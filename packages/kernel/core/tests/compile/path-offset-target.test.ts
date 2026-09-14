@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
-import type { PathPrim, ScenePrimitive } from '../../src/contract';
-import type { IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import { defineBoundary, definePathKind } from '../../src/contract';
+import type { IRScene } from '../../src/schemas';
 import { PathSchema, TargetSchema } from '../../src/schemas';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {

@@ -1,11 +1,11 @@
-import type { Scene } from '@retikz/core';
 import type { Buffer } from 'node:buffer';
 
-import type { CanvasNodeImageFormat, RenderSceneToImageOptions } from './types';
+import type { Scene } from '@retikz/core';
 
 import { drawScene } from '../canvas';
 import { createCssColorNormalizer, sceneFitMatrix } from '../canvas/internal';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { CanvasNodeImageFormat, RenderSceneToImageOptions } from './types';
 
 type NapiCanvas = {
   width: number;

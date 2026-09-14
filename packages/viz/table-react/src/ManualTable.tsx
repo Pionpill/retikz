@@ -1,10 +1,8 @@
 import type { ManualTableInput } from '@retikz/table';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { FC, ReactNode } from 'react';
 
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
-
 import type { InputEmbeddableTableComponent, TableCommonProps } from './Table';
-
 import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';
 

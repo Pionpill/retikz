@@ -1,6 +1,5 @@
-import type { FC, ReactNode } from 'react';
-
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib';

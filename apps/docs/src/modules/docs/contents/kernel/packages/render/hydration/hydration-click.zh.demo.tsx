@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 import { useState } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';

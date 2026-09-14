@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { boundsPlaygroundI18n } from './bounds-playground.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 边界 playground 的稳定字段 id */
 export const BoundsPlaygroundControlId = {

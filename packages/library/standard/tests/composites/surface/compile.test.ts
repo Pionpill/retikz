@@ -1,5 +1,4 @@
 import type { IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
-
 import {
   ChildSchema,
   compileToScene,
@@ -12,7 +11,6 @@ import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
 import type { SurfaceInput } from '../../../src';
-
 import { createSurface, SurfaceDefinition } from '../../../src';
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;

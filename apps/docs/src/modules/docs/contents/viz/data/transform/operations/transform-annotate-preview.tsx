@@ -1,5 +1,4 @@
 import type { IRDataAnnotateTransform, IRDataReducerMetrics } from '@retikz/data';
-
 import { PathMark, Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 
 import { storeRevenue } from './transform-annotate.data';

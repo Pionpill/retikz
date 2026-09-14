@@ -1,5 +1,4 @@
 import type { PreviewLoader } from '../../src/modules/docs/components/component-preview/registry';
-
 import {
   controlModuleLoaders,
   demoModuleLoaders,

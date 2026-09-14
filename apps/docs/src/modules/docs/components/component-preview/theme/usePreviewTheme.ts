@@ -5,7 +5,6 @@ import { useThemeStore } from '@/store';
 
 import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
 import type { PreviewTheme } from './constants';
-
 import { resolvePreviewTheme } from './constants';
 
 /** 从持久化 docs 偏好生成稳定的 preview Theme */

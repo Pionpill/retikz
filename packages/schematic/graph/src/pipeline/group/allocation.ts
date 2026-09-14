@@ -4,11 +4,10 @@ import type {
   IRChild,
   LayoutCompositeDefinition,
 } from '@retikz/core';
-import type { BoundsRect } from '@retikz/math';
-import type { output as ZodOutput } from 'zod';
-
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { LayoutArtifactRectSchema } from '@retikz/layout';
+import type { BoundsRect } from '@retikz/math';
+import type { output as ZodOutput } from 'zod';
 import { literal } from 'zod';
 
 import { GRAPH_NAMESPACE } from '../../shared';

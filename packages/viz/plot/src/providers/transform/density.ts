@@ -1,11 +1,9 @@
 import type { ExternalRow, TransformContext } from '@retikz/data';
-
 import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { IRPlotDensityTransform } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
+import type { IRPlotDensityTransform } from '../../schemas';
 import { DensityBandwidthKind } from '../../schemas';
 
 const DEFAULT_DENSITY_SAMPLE_COUNT = 64;

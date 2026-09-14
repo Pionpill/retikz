@@ -3,7 +3,6 @@
  * @description SVG（svg/animation）与 Canvas（canvas/drawScene）共用，避免两端通道语义漂移
  */
 import type { IRAnimationOrigin, IRAnimationTrack, ScenePrimitive } from '@retikz/core';
-
 import { Anchor, AnimationProperty, CenterAnchor } from '@retikz/core';
 
 /** transform 类通道（落 transform，需支点 origin） */

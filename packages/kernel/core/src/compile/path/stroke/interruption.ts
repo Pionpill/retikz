@@ -1,11 +1,9 @@
 import type { CurveSegment, CurveSegmentSample } from '@retikz/math';
-
 import { curve, isFinitePoint } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
-import type { IRPosition } from '../../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { IRPosition } from '../../../schemas';
 
 const DISTANCE_EPSILON = 1e-7;
 const PARAMETER_BISECTION_STEPS = 32;

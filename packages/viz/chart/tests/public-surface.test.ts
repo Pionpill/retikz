@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { boolean, literal, strictObject } from 'zod';
 
 import type { ChartLocatorOptions } from '../src';
-
 import * as chart from '../src';
 import * as point from '../src/point';
 import * as bubble from '../src/point/bubble';

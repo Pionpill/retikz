@@ -7,9 +7,8 @@ import type {
   IRTranslateTransform,
   PolarPosition,
 } from '../../schemas';
-import type { PositionResolution, PositionResolveContext } from './types';
-
 import { resolvePosition } from './resolve';
+import type { PositionResolution, PositionResolveContext } from './types';
 
 /** Position resolver 支持的 translate transform Source IR */
 export type IRTranslationTransform =

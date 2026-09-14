@@ -1,12 +1,11 @@
 import { boundsOf, boundsToRect } from '@retikz/math';
 
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
+import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '../../contract';
 import type { IRPosition } from '../../schemas';
+import { applyTransformChain, projectLayoutToGlobal } from '../transform';
 import type { CompiledNodeLayout } from '../types';
 import type { NodeLayout } from './types';
-
-import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '../../contract';
-import { applyTransformChain, projectLayoutToGlobal } from '../transform';
 
 const isEffectiveIdentityRotation = (degrees: number): boolean => Object.is(degrees % 360, -0) || degrees % 360 === 0;
 

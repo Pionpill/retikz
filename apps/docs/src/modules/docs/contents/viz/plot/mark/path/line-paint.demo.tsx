@@ -1,7 +1,6 @@
 import type { IRPaint } from '@retikz/core';
-import type { FC } from 'react';
-
 import { PathMark, Plot, PlotAxis } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

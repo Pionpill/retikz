@@ -1,58 +1,118 @@
 # plot v0.2 Roadmap
 
-> 本文件汇总 plot v0.2 minor 的路线与 milestone 索引。具体执行记录放各 milestone 的 `roadmap.md`，长期决策放同目录 `NN-*.md` ADR。
-> 关联：[`plot v0 roadmap`](../roadmap.md) · [`plot v0.1 roadmap`](../v0.1/roadmap.md) · [`plot-design.md §5 / §10 / §13`](../../../../architecture/plot-design.md)
-> ⚠️ 草案：本 minor 由 2026-07-05「v0.1 GoG 基座完成后的能力轴」讨论开出，并于 2026-08-04 按映射、Kernel 前置能力与交互顺序重排，待人工 review。
+## 版本目标
 
-## 定位
+完善主题与空间映射，并发展增量处理和交互能力。
 
-**v0.2 先收回 Plot 领域主题所有权并重构空间映射关系，再在 Kernel 底层能力就绪后补性能与交互。**
+## 重点功能
 
-v0.1 已完成 GoG 基座：data / encoding / scale / coordinate / mark / stat / coordinate composition / guide / theme 都已进入 IRPlot 语义。v0.2 先修正早期 Chart-owned Plot token 的所有权倒置，再按三条有依赖的能力轴推进：
+| 重点能力       | 目标                                                          | 相关 ADR                                                                                                                                                                                                                                                     |
+| -------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 主题所有权     | 统一 Plot 主题、共享颜色投影与 Source 默认片段                | [001](./001-chart-layering.md)、[002](./002-inherited-theme-token-scope.md)、[011](./011-theme-source-fragments.md)                                                                                                                                          |
+| 绘图区与 Guide | 完善绘图区、Axis 规则、网格端点与域边距                       | [003](./003-plot-presentation-boundary.md)、[004](./004-plot-area-background.md)、[005](./005-axis-theme-token-rules.md)、[006](./006-axis-grid-domain-endpoints.md)、[007](./007-axis-grid-theme-domain-endpoints.md)、[008](./008-domain-padding-units.md) |
+| 空间映射       | 发展结构化映射、内容端口、局部坐标与开放坐标扩展              | [009](./009-polar-interpolation.md)                                                                                                                                                                                                                          |
+| Mark Placement | 统一位置调整、坐标投影与屏幕空间初始化                        | [010](./010-position-jitter.md)                                                                                                                                                                                                                              |
+| 性能           | 基于 Kernel 增量底座建立领域失效与增量 lowering               | —                                                                                                                                                                                                                                                            |
+| 交互           | 基于 Kernel Headless Interaction 建立数据、系列与视图交互语义 | —                                                                                                                                                                                                                                                            |
 
-- **领域主题闭环**：Plot 消费 Core effective Theme 与 `theme.tokens` 中继承的 Plot namespace，拥有 Plot surface、typography / label、Axis / Legend 视觉 token、palette、preset、resolver、mapping 与 inspection；Chart 只转发 Plot 公开 token / theme 输入。
+## 功能规划
 
-- **空间映射与 Mark Placement 重构**：把坐标系映射与结构化算法映射统一提升为 `Spatial Mapping` 概念，同时保留 `Coordinate Mapping` 与 `Structured Mapping` 的专门契约；允许 `nodes`、`links` 等任意命名内容，建立通用局部坐标契约，并从 dimension / axis 粒度扩展坐标系及其法向 / 切向组合关系。在 position scale 与 mark geometry 之间建立完整 Mark Placement 管线，依次容纳 role-space adjustment、coordinate projection 与 screen-space initializer；v0.2 必须实现 screen-space initializer，使投影后且依赖整组屏幕位置、视觉通道或 plot dimensions 的 placement 算法不再进入单个 Mark 或 renderer 私有分支。
-- **性能优化**：待 Kernel 提供 identity、revision、transaction、incremental、retained Scene 等底层能力后，Plot 只负责自身领域依赖、最小失效边界、增量 lowering 与 provenance，不复制 Kernel Runtime。
-- **交互优化**：待 Kernel 提供 headless interaction 的事件、ownership、behavior、presentation 与 intent 基础后，Plot 负责 datum / series / view / panel 等领域交互语义，不复制事件归一化或通用行为状态机。
+### 主题所有权
 
-`@retikz/chart v0.1` 与本 minor 并行迭代。Chart 需求不单独形成 Plot milestone：若需求暴露的是通用 Plot 缺口，就插入最匹配的 alpha；Chart-specific recipe、type、presentation 与默认值仍归 Chart。所有 Chart 能力必须继续 lower 成 IRPlot，不能反向改变 Plot 的领域边界。
+主要场景：
 
-同时继续收敛 v0.1 的通用 decoration 呈现：Plot 拥有 axis / legend / label 的领域解析、coordinate view 绑定、guide resolve、provenance / locator 与交互意图；Standard alpha.2 就绪后，Plot 把外围 Box Layout 和 Legend 的视觉结构、内部布局与 layout-aware compile 迁到 `@retikz/standard`，不维护平行呈现主链。
+- 直接 Plot 与 Chart 内部 Plot 需要一致主题。
+- 默认配置需要在 Source 层清晰继承和覆盖。
 
-## 前置能力
+规划内容：
 
-- **plot v0.1**：GoG 基座、thin Plot、guide / theme、scope identity、locator / provenance、layer zIndex 与 coordinate registry。
-- **data v0.1 beta**：共享字段、数据引用、formatter、通用 transform 基础契约。
-- **Kernel**：alpha.1 映射重构只消费现有静态 Core lowering；alpha.2 性能优化必须等待 Kernel 的同步原子增量链路；alpha.3 交互优化还必须等待 Kernel 的 headless interaction 基础。
-- **standard v0.1**：alpha.2 Box Layout 与 Legend、直接 Definition 传递、领域无关 layout artifact；Plot 不在 Standard 缺口闭合前建立私有 fallback。
+- 统一 Plot 主题所有权、共享颜色投影与默认片段。
+- Chart 只传递或组合公开输入，不维护另一套 Plot 主题。
 
-## Milestones
+预期效果：
 
-| Milestone                            | 主题                                                        | 模块 / 产出                                                                                                                                                                                                                                                                                    | 状态                                                                             |
-| ------------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| [v0.2-alpha.1](./alpha.1/roadmap.md) | **Plot 主题所有权 + Spatial Mapping / Mark Placement 重构** | 先冻结 Plot token scope / owner contribution / shared color projection 与 Chart 转发边界，再建立 Coordinate Mapping / Structured Mapping、任意内容端口、通用局部坐标、自定义坐标扩展，以及 role-space adjustment → coordinate projection → screen-space initializer 的完整 Mark Placement 主线 | 主题 ADR-01～02 Accepted；Spatial Mapping 草拟中；Mark Placement ADR-13 Accepted |
-| [v0.2-alpha.2](./alpha.2/roadmap.md) | **性能优化**                                                | 消费 Kernel 增量运行时，建立 Plot 领域依赖、失效、增量 lowering、fallback 与性能观测闭环                                                                                                                                                                                                       | 待 Kernel 前置能力                                                               |
-| [v0.2-alpha.3](./alpha.3/roadmap.md) | **交互优化**                                                | 消费 Kernel headless interaction，建立 Plot datum / series / view / panel 的交互目标、意图与 presentation 协作边界                                                                                                                                                                             | 待 Kernel 前置能力                                                               |
+主题在直接 Plot 与高层封装中保持一致，默认与覆盖关系可理解。
 
-具体结构化算法与 Chart type 不预先批量排入 Plot。只有 Chart 或其它下游提出通用缺口时，才在上述 alpha 中增加候选 ADR，并先确认能力归属。
+### 绘图区与 Guide
 
-## 版本顺序
+主要场景：
 
-```text
-alpha.1 Spatial Mapping + Mark Placement
-  → alpha.2 Plot incremental performance
-  → alpha.3 Plot interaction
-```
+- 图形边缘需要合理留白且保留明确的标度含义。
+- 轴、网格端点与绘图区需要一致呈现。
 
-alpha.2 与 alpha.3 可以提前规划，但在对应 Kernel 能力未 Accepted 前不进入 Plot 实现。alpha.3 依赖 alpha.2 的稳定 identity、依赖传播与增量提交边界；三包仍保持 Plot、Plot React、Plot Vanilla 的等价契约。
+规划内容：
 
-## 与 v0.1 / v0.3 的关系
+- 完善绘图区、Axis 规则、网格端点与 domain padding。
+- 将语义策略留在 Plot，不下放为 renderer 或 Chart 补丁。
 
-v0.1 = GoG 基座完整；v0.2 = Plot 领域主题所有权修正、空间映射与完整 Mark Placement 重构，以及 Kernel 能力就绪后的性能与交互；v0.3 = 渐进式 AI 生成与跨域复合候选。
+预期效果：
 
-v0.2 的复合范围只限 Plot 自身映射、性能 / 交互语义与 decoration 领域编排；复用 Standard 通用绘图 composite 不算 Plot / Table 领域耦合。具体 Chart type、业务 presentation、dashboard 状态与跨域 composition 不因本 roadmap 进入 Plot。
+绘图区和辅助线更贴合数据范围，边缘内容有明确的空间处理。
 
-## ADR 约定
+### 空间映射
 
-每个 milestone 独立编号，从 `01` 起。`roadmap.md` 可更新；`NN-*.md` 是 ADR，Accepted 后只增补状态 / supersede。模板见 [`../../../_template.md`](../../../_template.md)。
+主要场景：
+
+- 结构化可视化需要不止常规二维坐标的组织方式。
+- 嵌套内容需要局部坐标、端口与一致空间关系。
+
+规划内容：
+
+- 发展 Structured Mapping、内容端口、局部坐标和开放坐标扩展。
+- 以既有 coordinate 与插值能力为基础，具体新增契约另由 ADR 冻结。
+
+预期效果：
+
+更复杂的可视化组织拥有统一扩展方向，而不是逐类特例布局。
+
+### Mark Placement
+
+主要场景：
+
+- 离散数据需要展示抖动或其它位置调整。
+- mark 需要在映射后与屏幕空间约束协作。
+
+规划内容：
+
+- 统一 role-space adjustment、coordinate projection 与 screen-space initializer。
+- 保留原始数据含义，避免单个 mark 拥有私有位置处理链。
+
+预期效果：
+
+展示位置可以调整而不污染数据事实，不同 mark 共用位置处理能力。
+
+### 性能
+
+主要场景：
+
+- 持续更新时希望只重做受影响的领域处理。
+- 静态语法需要平稳接入 Kernel 的增量运行时。
+
+规划内容：
+
+- 发展领域失效与增量 lowering。
+- 依赖 Kernel identity、revision、事务和增量机制，不建立平行底座。
+
+预期效果：
+
+反复更新时，Plot 能利用底座增量能力而不维护独立运行时。
+
+### 交互
+
+主要场景：
+
+- 宿主希望按数据、系列、视图或面板表达交互。
+- 展示反馈与数据变更需要保持清晰的职责差异。
+
+规划内容：
+
+- 发展 Plot 领域交互语义与宿主接入。
+- 以 Kernel Headless Interaction 为前置，不提前建立私有替代机制。
+
+预期效果：
+
+交互可以围绕领域对象表达，并由共同底座与宿主协作执行。
+
+## 边界与依赖
+
+空间映射复用 Core，性能依赖 Kernel 增量链路，交互依赖 Headless Interaction；布局与 Legend 呈现复用 Layout / Standard。

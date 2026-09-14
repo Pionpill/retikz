@@ -1,14 +1,12 @@
-import type { ParsedFieldValue, ResolveField } from '@retikz/data';
-
 import { compileToScene } from '@retikz/core';
+import type { ParsedFieldValue, ResolveField } from '@retikz/data';
 import { applyFieldResolver, normalizeRows } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlot } from '../../../src/schemas';
-
 import { createPlotLocator } from '../../../src/pipeline';
 import { lowerPlots, prepareRows } from '../../../src/pipeline/expand';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** cartesian point spec，model 可选（部分声明走 contract），无 scales → 走 type-driven 派生 */

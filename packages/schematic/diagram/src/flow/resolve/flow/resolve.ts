@@ -1,7 +1,6 @@
 import type { IRChild } from '@retikz/core';
-import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
-
 import { mergeProperties } from '@retikz/foundation';
+import type { IRGraph, IRGraphEntity, IRGraphRelation, IRGroup } from '@retikz/graph';
 import {
   EntityRole,
   GraphType,
@@ -15,6 +14,7 @@ import {
   resolveRelation,
 } from '@retikz/graph';
 
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   IRFlowDefaults,
   IRFlowDiagram,
@@ -23,6 +23,7 @@ import type {
   IRFlowLayout,
   IRFlowRelation,
 } from '../../schemas';
+import { mergeFlowDefaults, mergeFlowLayoutIntent, resolveFlowTheme } from '../theme';
 import type {
   CanonicalFlowDiagram,
   CanonicalFlowElement,
@@ -33,9 +34,6 @@ import type {
   FlowResolveContext,
   FlowSourcePath,
 } from './types';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { mergeFlowDefaults, mergeFlowLayoutIntent, resolveFlowTheme } from '../theme';
 
 type FlowContainmentOwner = Readonly<{
   id?: string;

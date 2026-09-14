@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 

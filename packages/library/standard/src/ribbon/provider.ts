@@ -1,12 +1,10 @@
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '@retikz/core';
-
 import { assertNonEmptyString } from '@retikz/foundation';
-
-import type { RibbonWidthProfileDefinition } from './profile-types';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
 import { BUILTIN_RIBBON_WIDTH_PROFILES } from './bulge';
 import { createRibbonPathKindDefinition } from './definition';
+import type { RibbonWidthProfileDefinition } from './profile-types';
 
 const ribbonKey: CoreProviderKey = { capability: 'pathKind', name: 'ribbon' };
 

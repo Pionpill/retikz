@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, transformAnnotateControls } from './transform-annotate.controls';
 import { renderTransformAnnotatePreview } from './transform-annotate-preview';
+import { previewControlContract, transformAnnotateControls } from './transform-annotate.controls';
 
 /** 注册回退使用的统计标注控件 */
 export const previewControls = transformAnnotateControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 切换广播统计量且保留原始明细点的动态示例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

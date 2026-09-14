@@ -1,15 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { LowerTex, TextMeasurer, TextMetrics } from '../../src/compile/text';
-import type { CompileWarning } from '../../src/compile/warning';
-import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
-import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
-
 import { isNodeLayoutCompileArtifact } from '../../src/compile/artifact';
 import { compileToScene } from '../../src/compile/compile';
 import { CompileWarningCode } from '../../src/compile/constants';
+import type { LowerTex, TextMeasurer, TextMetrics } from '../../src/compile/text';
 import { normalizeTextMetrics } from '../../src/compile/text';
+import type { CompileWarning } from '../../src/compile/warning';
+import type { PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import { RetikzCoreError } from '../../src/error';
+import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
 import { NodeLabelSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

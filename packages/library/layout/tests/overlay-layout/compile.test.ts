@@ -1,5 +1,4 @@
 import type { IRChild, LayoutChildResult, LayoutProposal, ScenePrimitive, TranslateTransform } from '@retikz/core';
-
 import {
   ChildSchema,
   compileToScene,

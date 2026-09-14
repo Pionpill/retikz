@@ -1,7 +1,6 @@
 import type { CompileOccurrenceLocator, LayoutChildFailure } from '../contract';
-import type { LayoutProbeRecoverableError } from '../resolve/diagnostics';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { LayoutProbeRecoverableError } from '../resolve/diagnostics';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,

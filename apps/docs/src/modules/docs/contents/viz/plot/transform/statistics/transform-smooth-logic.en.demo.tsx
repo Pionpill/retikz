@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** smooth finite-pair filtering, OLS fit, extent sampling, and predicted output */
 const Demo: FC = () => (

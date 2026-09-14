@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { GridLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 展示显式 tracks、fraction、span 与自动放置 */
 const Demo: FC = () => (

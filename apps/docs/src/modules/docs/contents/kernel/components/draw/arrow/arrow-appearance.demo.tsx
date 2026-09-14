@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
 import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

@@ -1,7 +1,8 @@
 import type { IRPlotCoordinateOperation, IRPlotScale } from '@retikz/plot';
-
 import { PlotCoordinate, PlotGuide, PlotMark } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
+import { normalizePlotBindings } from './bindings';
 import type {
   AxisBoundGuide,
   NormalizationState,
@@ -10,9 +11,6 @@ import type {
   PlotMemberFragment,
 } from './contracts';
 import type { PolarConfig } from './scale-coordinate';
-
-import { RetikzPlotVanillaError } from '../../error';
-import { normalizePlotBindings } from './bindings';
 import {
   buildAngleScale,
   buildCartesianXScale,

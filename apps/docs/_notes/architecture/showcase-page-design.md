@@ -4,7 +4,7 @@
 >
 > **效力：** 约束 `apps/docs` 的页面布局、内容组织、Showcase 元数据与 `ComponentPreview` 复用边界；普通文章页继续遵守既有组件页、概念页、示例页与 Reference 页规则。
 >
-> **当前基线：** 不跟具体版本。关联真源为 [`apps/docs/AGENTS.md`](../../AGENTS.md) 与仓库的 docs skills。
+> **当前基线：** 不跟具体版本。关联真源为 [`../../AGENTS.md`](../../AGENTS.md) 与仓库的 docs skills。
 
 ---
 

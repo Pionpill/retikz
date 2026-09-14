@@ -29,11 +29,13 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 ## 动态规则
 
 - 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
+- 查找 ADR 先用 `pnpm adr:search <关键词> --owner <owner>` 检索摘要，可加 `--version v0.x`；未命中时换词、扩大范围或加 `--body` 补查。再阅读全文命中 ADR 并追踪前置 / 替代关系，不默认全量读取；检索规范见 `develop-design`，发布全文审计不因此省略。
 - 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-resolve` / `standard-normalize` / `standard-pipeline-compile` / `standard-tier2-reuse`。
 - 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
 - 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
 - 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
-- 所有发布组发包前都必须按 `package-publish` 逐篇阅读全文审计本次 milestone ADR 的长期一致性、状态与当前公开契约；ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
+- ADR 按 owner / 大版本 / 中版本归档，文件用三位编号 `001-xxx.md`，不设 alpha / beta / rc 子目录；roadmap 只保留版本重点功能、目标与必要边界 / 依赖，ADR 仅用编号链接，细则见 `develop-design`。ADR `Accepted` 表示设计获批，不代表实现或发布完成。
+- 所有发布组发包前都必须按 `package-publish` 从实际交付改动及依赖识别相关 ADR，逐篇阅读全文审计长期一致性、状态与当前公开契约；未纳入本次交付且不影响发布快照的未完成能力不阻塞发布、不因 alpha 递增迁移。ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
 - 问答中若发现用户新偏好、流程调整或规则适合沉淀进 `AGENTS.md` / skill，完成当前任务后主动告知并征求同意；用户不同意时不得自行修改。
 - 向 `AGENTS.md` / skill 添加规则必须简洁干练，只写可执行约束，不扩写背景、不放长例子，优先节省 token。
@@ -99,24 +101,27 @@ pnpm dev:docs
 
 ## 验证策略
 
+- import 排序和格式化统一由 Oxfmt 执行；Oxlint 负责原生 lint 与类型感知规则，正式类型检查仍使用 `tsc --noEmit`。
+- 泛型命名、export 顺序、错误类契约及 React Compiler config/gating 由 LLM 按 `standard-name`、本文件错误规范和 `develop-review` 自审；lint 通过不代表这些约束已自动验证。
+
 默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。日常校验中，范围明确且改动较小时优先运行受影响包的 `test:changed`；仅在大范围重构或功能大改时运行受影响模块的全量测试。
 
 ```bash
-pnpm exec prettier --write <changed-files-or-scope>
-pnpm --filter <pkg> exec eslint . --fix
+pnpm exec oxfmt <changed-files-or-scope>
+pnpm --filter <pkg> exec oxlint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
 pnpm --filter <pkg> test:changed
 pnpm --filter <pkg> exec vitest run <test-file>
 pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 ```
 
-- 改完内容先用 Prettier 格式化相关文件或目录，再按改动类型继续验证。
-- 改 `*.ts` / `*.tsx` / `*.json` / 配置等结构化文件：先跑受影响包 `eslint --fix`，再跑对应 `tsc --noEmit` 和必要测试。
-- 只改纯 MDX 正文、表格、站内链接：先跑 Prettier，再至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
+- 改完内容先用 Oxfmt 格式化相关文件或目录，再按改动类型继续验证。
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置等结构化文件：先跑受影响包 `oxlint --fix`，再跑对应 `tsc --noEmit` 和必要测试。
+- 只改纯 MDX 正文、表格、站内链接：先跑 Oxfmt，再至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 docs skills 的分级规则验证，通常需要 docs 包类型检查。
 - 提交 `apps/docs` 改动前必须运行 `pnpm --filter @retikz/docs run check:static`；完成后询问用户是否运行 `check:build` 和 `check:runtime`，仅在用户明确要求时执行。用户明确要求运行时巡检时，包含其所需的生产构建。
 - 类型检查只用 `tsc --noEmit`。不要在 packages 下运行会 emit 的 `tsc` / `tsc -b`；若已污染源码树，先清理生成物。
-- ESLint / TS 报错要修干净。不要用 `eslint-disable`、`@ts-ignore`、`as any` 绕过；确实不可避时写最小作用域和原因。
+- Oxlint / TS 报错要修干净。不要用 `oxlint-disable`、`@ts-ignore`、`as any` 绕过；确实不可避时写最小作用域和原因。
 
 ## 文档同步
 

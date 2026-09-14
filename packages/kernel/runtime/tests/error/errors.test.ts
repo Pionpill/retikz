@@ -2,7 +2,6 @@ import { isRetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 
 import type { RuntimeDiagnostic, RuntimeProgramId } from '../../src';
-
 import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeDiagnosticCode, RuntimeOwnerPhase } from '../../src';
 
 const program: RuntimeProgramId = { owner: 'owner', key: 'program' };

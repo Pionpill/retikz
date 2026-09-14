@@ -1,5 +1,4 @@
 import type { Scene } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { CHECKERS } from '../../src/assert/checkers';

@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Draw, Layout } from '@retikz/react';
 import { Surface } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** English comparison of visible and clipped Surface overflow */
 const Demo: FC = () => (

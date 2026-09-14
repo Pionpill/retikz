@@ -1,8 +1,7 @@
 import type { IRScene } from '@retikz/core';
-import type { FC } from 'react';
-
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 /** 柱宽 / 柱间距 / 满高（user units）——展示用常量，与 IR 无关 */

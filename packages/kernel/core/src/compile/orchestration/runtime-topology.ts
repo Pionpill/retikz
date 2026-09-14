@@ -1,13 +1,11 @@
 import type { RuntimeIdentity, RuntimeRevision } from '@retikz/runtime';
-
 import { createRuntimeIdentity } from '@retikz/runtime';
 
 import type { ScenePrimitive } from '../../contract';
-import type { IRChild } from '../../schemas';
-import type { RuntimePrimitiveMetadata, RuntimeSemanticOwner, RuntimeTopologyTracker } from './types';
-
 import { CORE_OWNER_KEY } from '../../contract';
+import type { IRChild } from '../../schemas';
 import { createCompileInvariantError } from '../probe-failure';
+import type { RuntimePrimitiveMetadata, RuntimeSemanticOwner, RuntimeTopologyTracker } from './types';
 
 const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);
 

@@ -1,5 +1,4 @@
 import type { IRScene, LowerTex } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../src';

@@ -1,8 +1,7 @@
-import type { FC } from 'react';
-
 import { BuiltinShape } from '@retikz/core';
 import { DataFieldType } from '@retikz/data';
 import { Plot, PlotAxis, PlotLegend, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

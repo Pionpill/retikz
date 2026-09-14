@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { ScopeIdReferenceControlId, ScopeIdReferenceVisibleWhen } from './scope-id-reference.controls';

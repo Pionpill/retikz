@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import type { IRAnimationTrack, IRScene } from '@retikz/core';
-import type { AnimationControls } from '@retikz/render/animation';
-
 import { cameraTo, fadeIn, spin } from '@retikz/core';
+import type { AnimationControls } from '@retikz/render/animation';
 import { createRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';

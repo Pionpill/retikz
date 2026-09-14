@@ -1,10 +1,8 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { ZodError } from 'zod';
 
-import type { ChartThemeDefinition } from '../contract';
-
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import type { ChartThemeDefinition } from '../contract';
 import { ChartThemeDefinitionSchema } from '../schemas';
 
 const pathOf = (prefix: ReadonlyArray<string | number>, error: ZodError): ReadonlyArray<string | number> => {

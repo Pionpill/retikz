@@ -1,7 +1,6 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import { BoxSpacingSchema, ChildSchema, LayoutAlignmentGuideDimension } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeIntegerSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { boolean, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import {

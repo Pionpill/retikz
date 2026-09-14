@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject } from 'zod';
 
 import type { AnyCompositeDefinition, IRComposite } from '../../src';
-
 import { CompositeBaseSchema, defineComposite } from '../../src';
 import { bindComposite, resolveComposite } from '../../src/resolve';
 

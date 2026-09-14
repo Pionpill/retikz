@@ -5,14 +5,12 @@ import type {
   LayoutCompositeCompileContext,
   LayoutProposal,
 } from '@retikz/core';
-
 import { LayoutAxisProposalKind, LayoutChildProbeKind, LayoutIntrinsicMode } from '@retikz/core';
 
 import type { LayoutArtifactItemBase, LayoutOverflowValue } from '../shared';
-import type { LayoutRect } from './geometry';
-
 import { LayoutOverflow } from '../shared';
 import { createLayoutArtifactItem } from './artifact';
+import type { LayoutRect } from './geometry';
 import { layoutClipOf } from './geometry';
 
 /** 绑定一个待布局 child 与稳定的 authored occurrence */

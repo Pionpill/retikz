@@ -1,6 +1,5 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { NodeLayoutSchema, NodeStyleSchema, TextBlockSchema } from '@retikz/core';
+import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 /** Chart presentation 区域的视觉覆盖字段 */

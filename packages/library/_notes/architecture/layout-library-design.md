@@ -2,7 +2,7 @@
 
 > **状态：长期边界已人工确认并由 Layout v0.1 alpha.1 落地。** Layout 三包是排版布局的唯一 owner；Standard 只通过公开 capability 消费，不保留转发或兼容 namespace。
 >
-> 关联：[`Library 能力库设计`](./library-design.md) · [`Standard 拓展库设计`](./standard-library-design.md) · [`Core layout-aware composite ADR`](../../../kernel/_notes/decisions/v0/v0.5/alpha.1/07-layout-aware-composite.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
+> 关联：[`Library 能力库设计`](./library-design.md) · [`Standard 拓展库设计`](./standard-library-design.md) · [`Core layout-aware composite ADR`](../../../kernel/_notes/decisions/v0/v0.5/007-layout-aware-composite.md) · [`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md)
 
 ---
 

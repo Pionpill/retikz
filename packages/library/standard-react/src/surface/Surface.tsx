@@ -1,11 +1,10 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
-import type { SurfaceInput } from '@retikz/standard';
-import type { InputSurface } from '@retikz/standard-vanilla';
-import type { FC, ReactNode } from 'react';
-
 import { createInputScene, withInputEmbedAdapters } from '@retikz/react';
+import type { SurfaceInput } from '@retikz/standard';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
+import type { InputSurface } from '@retikz/standard-vanilla';
 import { SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla';
+import type { FC, ReactNode } from 'react';
 
 import type { StandardEmbeddableComponent } from '../shared';
 

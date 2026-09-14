@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Draw 家族从便捷写法到 Kernel 路径的职责关系图 */
 const Demo: FC = () => (

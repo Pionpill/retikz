@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ComponentPreviewFiles } from '../../src/modules/docs/components/component-preview/types';
-
 import { normalizeComponentPreviewFiles } from '../../src/modules/docs/components/component-preview/utils/preview-files';
 
 describe('ComponentPreview files 配置', () => {

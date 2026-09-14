@@ -1,15 +1,13 @@
 import type { IRNode, IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { PLOT_SHAPE_PALETTE } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };

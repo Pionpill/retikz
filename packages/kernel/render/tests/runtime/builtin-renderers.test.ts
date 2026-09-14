@@ -1,9 +1,8 @@
 ﻿// @vitest-environment jsdom
 import type { Canvas as NapiCanvas } from '@napi-rs/canvas';
 import type { IRScene, RuntimeScenePrimitive, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
-
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import type { RuntimeCommitParticipantToken } from '@retikz/runtime';
 import {
   createRuntimeIdentity,
   createRuntimeOwnerInput,
@@ -17,13 +16,12 @@ import {
 } from '@retikz/runtime';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
-import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput } from '../../src/runtime';
-
 import { bindWaapiDescriptors } from '../../src/animation';
 import { bindWaapiDescriptorElements, isWaapiAnimationStyleOwned } from '../../src/animation/retained';
 import { renderToCanvas } from '../../src/canvas';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
+import type { HydrationAnimationControls, HydrationContext } from '../../src/hydration';
+import type { RenderFrameSnapshot, RenderReadonlyLayer, RenderRuntimeConfigInput } from '../../src/runtime';
 import {
   builtinRetainedRendererFactory,
   createRetainedRenderParticipant,

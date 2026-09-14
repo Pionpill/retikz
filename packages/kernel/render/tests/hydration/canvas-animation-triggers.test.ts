@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
 import type { Scene } from '@retikz/core';
-
 import { describe, expect, it, vi } from 'vitest';
 
 import type { HydrationContext, HydrationHandlers } from '../../src/hydration';
-
 import {
   collectCanvasAnimationEventTriggers,
   collectCanvasVisibleAnimationIds,

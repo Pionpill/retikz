@@ -1,5 +1,4 @@
 import type { IRTable } from '@retikz/table';
-
 import { compileTable } from '@retikz/table';
 import { renderToSvgString } from '@retikz/vanilla';
 

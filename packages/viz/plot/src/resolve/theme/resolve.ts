@@ -1,13 +1,11 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { strictObject } from 'zod';
 
 import type { PlotThemeStyleDefinition } from '../../contract';
-import type { IRPlot, IRPlotAxisRule, IRPlotAxisRules, IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
 import { getNeutralPlotDefaults, resolvePlotThemeStyleRegistry } from '../../providers/theme';
 import { getNeutralAxisRules } from '../../providers/theme/preset';
+import type { IRPlot, IRPlotAxisRule, IRPlotAxisRules, IRPlotDefaults, IRPlotThemeResolution } from '../../schemas';
 import { PlotAxisRulesSchema, PlotDefaultsSchema, PlotThemeLayerKind, PlotThemeResolutionSchema } from '../../schemas';
 import { applyPlotDefaults } from './mapping';
 

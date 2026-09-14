@@ -1,20 +1,7 @@
 import type { DataFieldTypeValue, ExternalRow } from '@retikz/data';
-
 import { DataFieldType, FieldOrderMode, resolveFieldPath } from '@retikz/data';
 
 import type { AnyCoordinateDefinition, DimensionRole, TickSet } from '../../contract';
-import type {
-  IRPlot,
-  IRPlotAxisGuide,
-  IRPlotChannel,
-  IRPlotCoordinateOperation,
-  IRPlotIntervalMark,
-  IRPlotMarkOperation,
-  IRPlotScaleOperation,
-} from '../../schemas';
-import type { CategoryOrder } from '../scale';
-import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
-
 import { isBuiltinScaleOperation } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import {
@@ -24,7 +11,17 @@ import {
   proportionalIntervalDomainValues,
   resolveIntervalBound,
 } from '../../providers';
+import type {
+  IRPlot,
+  IRPlotAxisGuide,
+  IRPlotChannel,
+  IRPlotCoordinateOperation,
+  IRPlotIntervalMark,
+  IRPlotMarkOperation,
+  IRPlotScaleOperation,
+} from '../../schemas';
 import { IntervalBoundKind, isBuiltinMark, PathClosureKind, PlotGuide, PlotMark, PlotScale } from '../../schemas';
+import type { CategoryOrder } from '../scale';
 import {
   assertBaselineScaleCompatible,
   assertScaleFieldCompatible,
@@ -33,6 +30,7 @@ import {
   resolvePositionScale,
   resolvePositionScaleContinuity,
 } from '../scale';
+import type { CoordinateFrameResolution, CoordinateResolveContext, MarkDataView } from './types';
 
 /** 查找当前 coordinate operation 对应的 definition，并集中报告未注册坐标系 */
 export const resolveCoordinateDefinition = (

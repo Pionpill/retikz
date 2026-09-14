@@ -8,8 +8,6 @@ import type {
   TimingBaseline,
   TimingRunnerEnvironment,
 } from '../shared';
-import type { BrowserRunnerEnvironment } from './browser-runner';
-
 import {
   assertTimingGatePassed,
   compareDeterministicResults,
@@ -20,6 +18,7 @@ import {
   runCoreWallClockReport,
   runTimingGateAttempts,
 } from '../shared';
+import type { BrowserRunnerEnvironment } from './browser-runner';
 import { runBrowserBenchmark } from './browser-runner';
 import { readTimingRunnerEnvironment } from './runner-environment';
 

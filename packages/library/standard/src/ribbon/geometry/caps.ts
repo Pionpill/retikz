@@ -1,12 +1,10 @@
 import type { IRPosition, PolarPosition } from '@retikz/core';
-import type { Vector2 } from '@retikz/math';
-
 import { isPositionTuple, polar } from '@retikz/core';
+import type { Vector2 } from '@retikz/math';
 import { point } from '@retikz/math';
 
-import type { IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+import type { IRRibbonArcCap, IRRibbonCap, RibbonAlignmentValue } from '../types';
 
 const ARC_CAP_POINT_COUNT = 8;
 

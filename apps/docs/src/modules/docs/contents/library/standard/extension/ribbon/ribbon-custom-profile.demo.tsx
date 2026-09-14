@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Path, Step } from '@retikz/react';
 import { createRibbonPathKindDefinition, defineRibbonWidthProfile } from '@retikz/standard/ribbon';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 const pulseProfile = defineRibbonWidthProfile({

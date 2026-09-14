@@ -6,9 +6,8 @@
  */
 import type { IRAnimationTrack } from '@retikz/core';
 
-import type { CubicBezier, EasingFn, EasingRegistry } from './types';
-
 import { lerpColorOklch } from './oklch';
+import type { CubicBezier, EasingFn, EasingRegistry } from './types';
 
 const LINEAR: EasingFn = t => t;
 const NAMED_BEZIER: Record<string, CubicBezier | undefined> = {

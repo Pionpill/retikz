@@ -1,6 +1,5 @@
 import type { PathPrim, Rect, ShapeDefinition } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
-
 import { describe, expect, it } from 'vitest';
 
 import {

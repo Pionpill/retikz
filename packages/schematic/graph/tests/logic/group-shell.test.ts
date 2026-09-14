@@ -1,13 +1,11 @@
 import type { IRChild, LayoutCompositeCompileContext } from '@retikz/core';
-import type { BoundsInsets, BoundsRect } from '@retikz/math';
-
 import { compileToScene, CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
+import type { BoundsInsets, BoundsRect } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { GraphDefinitionOptions, IRGroup } from '../../src';
-
 import * as Graph from '../../src';
 import { compileInHarness, naturalProposal, primitivesOf } from './test-utils';
 

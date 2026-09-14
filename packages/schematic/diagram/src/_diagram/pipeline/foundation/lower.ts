@@ -1,14 +1,12 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
-import type { IRFlexLayoutItem } from '@retikz/layout';
-import type { IRSurface } from '@retikz/standard';
-
 import { Side } from '@retikz/core';
+import type { IRFlexLayoutItem } from '@retikz/layout';
 import { createFlexLayout, FlexLayoutDirection, LayoutAlignment } from '@retikz/layout';
+import type { IRSurface } from '@retikz/standard';
 import { createSurface } from '@retikz/standard';
 
 import type { DiagramFoundationResolution } from '../../resolve';
 import type { EffectiveDiagramTextAppearance } from '../../resolve/theme';
-
 import { resolveDiagramPresentationTextAppearance } from '../../resolve/theme';
 
 const flexItem = (key: string, child: IRChild, alignSelf?: IRFlexLayoutItem['alignSelf']): IRFlexLayoutItem => ({

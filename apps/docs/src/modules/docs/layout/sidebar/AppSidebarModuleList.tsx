@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { Fragment } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -7,9 +6,8 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib';
 import { DocDifficultyDot } from '@/modules/docs/components';
 
-import type { SidebarModuleData } from './types';
-
 import { AppSidebarMenuItem } from './AppSidebarMenuItem';
+import type { SidebarModuleData } from './types';
 
 export type AppSidebarModuleListProps = {
   /** 当前列表中的文档入口。 */

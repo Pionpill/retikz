@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Unified compilation path from Standard Definitions to the Scene */
 const Demo: FC = () => (

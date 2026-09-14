@@ -1,17 +1,16 @@
 import type { CoreProviderContribution, IRScene } from '@retikz/core';
-import type { ExternalDatasets } from '@retikz/data';
-import type { JsonObject } from '@retikz/foundation';
-import type { LowerPlotsOptions } from '@retikz/plot';
-
 import {
   compileToScene,
   resolveCoreProviderDependencies,
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
+import type { ExternalDatasets } from '@retikz/data';
 import { DataTransformBindingClass, DataTransformFieldEffect, DataTransformPhase, defineTransform } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { FlexLayoutArtifactSchema } from '@retikz/layout';
+import type { LowerPlotsOptions } from '@retikz/plot';
 import { createPlotProviderContribution, PointMarkSchema } from '@retikz/plot';
 import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';

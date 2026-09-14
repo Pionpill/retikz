@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { DiagramThemeStyleDefinition } from '../../contract';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { DiagramThemeStyleDefinition } from '../../contract';
 
 /** 组装 Diagram Theme style registry */
 export const resolveDiagramThemeStyleRegistry = (

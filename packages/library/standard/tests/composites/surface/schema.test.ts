@@ -1,5 +1,4 @@
 import type { IRNode } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 

@@ -30,4 +30,6 @@ const preview = defineControlledBuiltinInspectPreview(
 
 /** Derive all views from the same drawing and current controls. */
 export const previewSource = preview.source;
-export default preview.Component;
+const Preview = preview.Component;
+
+export default Preview;

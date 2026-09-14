@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { DetailTableInput, ManualTableInput } from '../../../src';
-
 import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE, TableComposite, TableSchema } from '../../../src';
 
 describe('Table plain authoring', () => {

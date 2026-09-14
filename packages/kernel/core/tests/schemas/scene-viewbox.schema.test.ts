@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRViewBox } from '../../src';
-
 import { SceneSchema, ViewBoxSchema } from '../../src';
 
 describe('ViewBoxSchema 合法形态', () => {

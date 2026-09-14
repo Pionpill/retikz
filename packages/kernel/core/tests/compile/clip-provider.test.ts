@@ -1,10 +1,8 @@
-import type { ZodType } from 'zod';
-
 import { describe, expect, it, vi } from 'vitest';
+import type { ZodType } from 'zod';
 import { array, literal, number, strictObject, string } from 'zod';
 
 import type { ClipDefinition, ClipShape, IRClip, IRScene, PathCommand } from '../../src';
-
 import { compileToScene, defineClip, PathCommandSchema, resolveCoreProviderDependencies } from '../../src';
 
 const clippedIr = (clip: IRClip): IRScene => ({

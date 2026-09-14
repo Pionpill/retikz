@@ -1,14 +1,12 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { createInputScene } from '@retikz/react';
+import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import type { InputLegend } from '@retikz/standard-vanilla';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
-
-import { createInputScene } from '@retikz/react';
-import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { LegendItemProps, LegendRampProps, LegendTickProps, LegendTitleProps } from './LegendMarkers';
-
 import { LegendItem, LegendRamp, LegendTick, LegendTitle } from './LegendMarkers';
 
 type LegendChild = NonNullable<InputLegend['title']>;

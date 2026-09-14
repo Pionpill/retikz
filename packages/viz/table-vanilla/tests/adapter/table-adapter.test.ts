@@ -1,8 +1,7 @@
-import type { IRDetailTable } from '@retikz/table';
-import type { InputEmbedContext } from '@retikz/vanilla';
-
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
+import type { IRDetailTable } from '@retikz/table';
 import { createManualTableIR, RetikzTableError, TableSchema } from '@retikz/table';
+import type { InputEmbedContext } from '@retikz/vanilla';
 import { embed, layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';

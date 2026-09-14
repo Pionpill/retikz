@@ -1,9 +1,8 @@
-import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
-
 import { RetikzTableError } from '../../error';
 import { TableTrackSizeKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { solveTableTracks } from './track';
+import type { ResolvedTableTrackSize, TableTrackContribution } from './types';
 
 /** 单个 spanning Cell 对一个 canonical 轴的自然尺寸要求 */
 export type TableSpanConstraint = Readonly<{

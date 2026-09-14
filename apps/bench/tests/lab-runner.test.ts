@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { LabPolicyResult } from '../src/playground/modules/kernel';
-
 import {
   LabBackend,
   LabLifecycleAvailability,

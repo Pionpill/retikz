@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRClip, IRScene, PathCommand } from '../../src';
-
 import { compileToScene } from '../../src';
 
 const clippedIr = (clip: IRClip): IRScene => ({

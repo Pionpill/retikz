@@ -1,9 +1,8 @@
 import type { IRNode } from '@retikz/core';
 
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import type { CanonicalEntity, EffectiveEntityAppearance } from '../../resolve';
 import type { IRGraphEntity } from '../../schemas';
-
-import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 
 type NodeMinimumSize = NonNullable<IRNode['layout']>['minimumSize'];
 

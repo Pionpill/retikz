@@ -1,15 +1,13 @@
 import type { LayoutItemKindValue } from '@retikz/layout';
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
 import type { InputFlexLayoutItem, InputGridLayoutItem, InputOverlayLayoutItem } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { createInputScene } from '@retikz/react';
 import type { AnyInputEmbedAdapter, InputChild } from '@retikz/vanilla';
 import type { ReactElement, ReactNode } from 'react';
-
-import { RetikzLayoutError, RetikzLayoutErrorCode } from '@retikz/layout';
-import { createInputScene } from '@retikz/react';
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { LayoutItemProps } from '../layout-item';
-
 import { LayoutItem } from '../layout-item';
 
 type LayoutItemInputByKind = Readonly<{

@@ -1,5 +1,7 @@
 import type { Scene } from '@retikz/core';
 
+import { mountCanvas } from './mount-canvas';
+import { mountSvg } from './mount-svg';
 import type {
   CanvasView,
   MountCanvasOptions,
@@ -20,9 +22,6 @@ import type {
   StaticSvgView,
   VanillaView,
 } from './types';
-
-import { mountCanvas } from './mount-canvas';
-import { mountSvg } from './mount-svg';
 
 /** Vanilla mount renderer selector. */
 export type MountRenderer = 'svg' | 'canvas';

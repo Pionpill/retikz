@@ -1,10 +1,8 @@
 import type { GroupPrim, IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive, TextPrim } from '@retikz/core';
-
 import { compileToScene as compileCoreToScene, StepLabelSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
-
 import { RibbonPathKindDefinition, RibbonPathSchema } from '../../src/ribbon';
 
 const ASCENT_FACTOR = 0.8;

@@ -1,9 +1,8 @@
 import type { LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGraph } from '../../schemas';
-
 import { resolveGraph } from '../../resolve';
+import type { IRGraph } from '../../schemas';
 import { graphScopeProps } from './lower';
 
 /** 创建把 Graph context 投影结果放进唯一 Core Scope 的 layout-aware compile callback */

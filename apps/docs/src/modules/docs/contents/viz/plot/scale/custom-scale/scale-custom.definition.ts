@@ -1,5 +1,4 @@
 import type { PositionScale } from '@retikz/plot';
-
 import { defineScale, PositionScaleContinuity } from '@retikz/plot';
 import { z } from 'zod';
 

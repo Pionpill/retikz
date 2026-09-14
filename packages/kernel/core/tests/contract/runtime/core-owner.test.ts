@@ -10,7 +10,6 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../src';
-
 import { CORE_OWNER_KEY, CoreOwnerDefinition } from '../../../src';
 
 const sceneWithText = (text: string): IRScene => ({

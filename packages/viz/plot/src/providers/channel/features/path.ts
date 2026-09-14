@@ -1,19 +1,17 @@
 import type { IRPathScale } from '@retikz/core';
 import type { PathThicknessValue } from '@retikz/core';
-import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
-import type { JsonValue } from '@retikz/foundation';
-
 import { DropShadowSchema, PathScaleSchema, PathThickness, THICKNESS_TO_WIDTH } from '@retikz/core';
+import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { AnyChannelDefinition, ChannelResolution, PathChannelDefinition } from '../../../contract';
-import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
-
 import { definePathChannel, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlot, IRPlotLinearScale, IRPlotMarkOperation, IRPlotPointNumberStyle } from '../../../schemas';
 import { MarkValueKind, PlotScale } from '../../../schemas';
 import { resolveLinearScale } from '../../scale';
 import { makeMarkValueResolver } from '../shared';

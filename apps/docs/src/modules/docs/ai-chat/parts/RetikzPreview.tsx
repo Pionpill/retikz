@@ -1,18 +1,16 @@
 import type { IRScene } from '@retikz/core';
-import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
-
 import { SceneSchema } from '@retikz/core';
 import { createInputScene, Layout } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import { AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import type { ErrorInfo, FC, ReactElement, ReactNode } from 'react';
 import { cloneElement, Component as ReactComponent, isValidElement, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import type { ComponentRenderSource } from '@/modules/docs/components';
 
 import { Button } from '@/components/ui/button';
 import { parseRetikzJsx } from '@/lib';
 import { cn } from '@/lib';
+import type { ComponentRenderSource } from '@/modules/docs/components';
 import { CodeBlock, ComponentPreviewCard, formatIR } from '@/modules/docs/components';
 
 import { formatZodError } from '../retikz-validation';

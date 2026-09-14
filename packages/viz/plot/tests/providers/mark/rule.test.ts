@@ -1,20 +1,18 @@
 import type { IRNode, IRScope, ScenePrimitive } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
-
 import { compileToScene } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 import { SectorShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
 import type { Cell, CoordinateFrame, PositionScale } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot, IRPlotReferenceMark } from '../../../src/schemas';
-
 import { createCoordinateFrame, defineCoordinate, densifyCellContour } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { resolveMarkOperation } from '../../../src/resolve/mark';
+import type { IRPlot, IRPlotReferenceMark } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 /** core Path 的最小形态（鸭子类型断言端点；避免引入 core 内部 IRPath 类型耦合） */

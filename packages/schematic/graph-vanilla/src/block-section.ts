@@ -1,11 +1,9 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
+import { BlockSectionProviderKey } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockSectionProviderKey } from '@retikz/graph';
-
-import type { InputBlockSection } from './normalize';
-
 import { BlockSectionEmbedKind } from './constants';
+import type { InputBlockSection } from './normalize';
 import { normalizeBlockSection } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';

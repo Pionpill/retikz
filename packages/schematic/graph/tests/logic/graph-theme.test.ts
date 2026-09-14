@@ -1,5 +1,4 @@
 import type { CompileWarning, ResolvedTheme } from '@retikz/core';
-
 import {
   compileToScene,
   DEFAULT_RESOLVED_THEME,

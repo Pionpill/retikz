@@ -7,11 +7,10 @@ import type {
   DataSourceIdentityOptions,
   DataValueSampleOptions,
 } from '../contract';
-import type { ExternalRow } from '../shared';
-
 import { DataSourceIdentityMode } from '../contract';
 import { RetikzDataError } from '../error';
 import { resolveFieldPath } from '../providers';
+import type { ExternalRow } from '../shared';
 import { readSourceIndicesOf } from './provenance';
 
 const DEFAULT_SOURCE_IDENTITY_LIMIT = 20;

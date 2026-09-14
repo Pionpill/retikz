@@ -1,13 +1,11 @@
-import type { FC } from 'react';
-
 import { ChevronRight } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import type { Lang } from '@/i18n';
-import type { PackageId, Release } from '@/modules/docs/data';
-
 import { InlineMdx } from '@/modules/docs/components';
+import type { PackageId, Release } from '@/modules/docs/data';
 import { changelogVersionSlug } from '@/modules/docs/data';
 
 /** Viz 分区的更新日志主包，用于概览摘要 */

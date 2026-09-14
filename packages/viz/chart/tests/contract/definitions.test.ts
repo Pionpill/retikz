@@ -1,6 +1,5 @@
-import type { JsonObject } from '@retikz/foundation';
-
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 

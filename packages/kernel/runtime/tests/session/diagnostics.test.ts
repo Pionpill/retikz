@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeCommitEvent, RuntimeProgramTraceReporter } from '../../src/program';
-import type { RuntimeSession } from '../../src/session';
-
 import { RetikzRuntimeErrorCode, RuntimeDiagnosticCode } from '../../src';
 import { RetikzRuntimeError } from '../../src/error';
 import { defineRuntimeOwner } from '../../src/owner';
+import type { RuntimeCommitEvent, RuntimeProgramTraceReporter } from '../../src/program';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
+import type { RuntimeSession } from '../../src/session';
 import { createRuntimeSession } from '../../src/session';
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '../../src/trace';
 import { createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';

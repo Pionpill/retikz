@@ -1,10 +1,8 @@
 import type { FC } from 'react';
-
 import { useTranslation } from 'react-i18next';
 
-import type { DocDifficultyValue } from '@/modules/docs/data';
-
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { DocDifficultyValue } from '@/modules/docs/data';
 
 import { DocDifficultyVisuals } from './doc-difficulty-config';
 

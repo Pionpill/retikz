@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import { PreviewManualTable as ManualTable } from '@/modules/docs/components/component-preview/theme';
 

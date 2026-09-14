@@ -1,5 +1,4 @@
 import type { IRChild, IRNode } from '@retikz/core';
-
 import { defineMark, EncodingSchema } from '@retikz/plot';
 import { z } from 'zod';
 

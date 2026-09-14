@@ -1,5 +1,4 @@
 import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
-
 import {
   createBlock,
   createBlockHeader,
@@ -12,6 +11,7 @@ import {
 } from '@retikz/graph';
 import { normalizePath, normalizeScene } from '@retikz/vanilla';
 
+import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from '../../errors';
 import type {
   InputBlock,
   InputBlockHeader,
@@ -23,8 +23,6 @@ import type {
   InputGroup,
   InputRelation,
 } from './types';
-
-import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from '../../errors';
 
 /** 将 Entity authoring 输入组装为单个 Source record */
 export const normalizeEntity = (input: InputEntity) => {

@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { categoricalRows, continuousRows, funnelRows, temporalRows } from './field-contract-playground.data';

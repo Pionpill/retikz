@@ -1,14 +1,14 @@
 import type { AnyPathKindDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
-import type { FC, ReactElement, ReactNode } from 'react';
-
 import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
+import type { FC, ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement } from 'react';
 
+import type { Lang } from '@/i18n';
+
+import type { ComponentPreviewDemoComponent } from '../types';
 import { buildPreviewSourceIR, collectPreviewChartSources } from './build-preview-source-ir';
 import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
-import type { ComponentPreviewDemoComponent } from '../types';
-import type { Lang } from '@/i18n';
 
 const COMPONENT_EXPANSION_LIMIT = 16;
 

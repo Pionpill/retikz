@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { array, literal, number, strictObject } from 'zod';
 
 import type { ClipShape, IRClip, IRScene, PathCommand } from '../../src';
-
 import {
   compileToScene,
   CompositeBaseSchema,

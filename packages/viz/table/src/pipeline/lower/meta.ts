@@ -2,9 +2,8 @@ import type { JsonObject } from '@retikz/foundation';
 
 import type { TableBorderPathMeta } from '../../contract';
 import type { SemanticTableCell } from '../../contract';
-import type { TableBorderEdge } from '../layout';
-
 import { TableCellSourceKind } from '../../shared';
+import type { TableBorderEdge } from '../layout';
 
 /** 构造不含原始值的最小 Cell Core meta */
 export const tableCellMetaOf = (cell: SemanticTableCell): JsonObject => ({

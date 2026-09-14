@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene } from '../../src';
-import type { GroupPrim, ScenePrimitive } from '../../src/contract';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { GroupPrim, ScenePrimitive } from '../../src/contract';
 
 // ---------------------------------------------------------------------------
 // helpers：构造测试 IR

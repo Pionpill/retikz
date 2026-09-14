@@ -36,4 +36,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** Dynamic playground for comparing stack baseline strategies */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;
