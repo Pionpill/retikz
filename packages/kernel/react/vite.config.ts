@@ -10,9 +10,8 @@ export default defineRetikzLibraryConfig({
   plugins: [react()],
   test: {
     environment: 'node',
-    experimental: {
-      fsModuleCache: true,
-    },
+    maxWorkers: 4,
+    fsModuleCache: true,
     include: ['tests/**/*.test.{ts,tsx}'],
     pool: 'threads',
   },

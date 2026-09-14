@@ -16,9 +16,7 @@ export default defineRetikzLibraryConfig({
   ],
   test: {
     environment: 'node',
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
     include: ['tests/**/*.test.{ts,tsx}'],
     pool: 'threads',
   },
