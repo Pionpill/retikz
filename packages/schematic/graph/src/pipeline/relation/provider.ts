@@ -1,5 +1,4 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
-
 import {
   DiamondArrowProvider,
   OpenDiamondArrowProvider,
@@ -8,7 +7,6 @@ import {
 } from '@retikz/standard/arrow';
 
 import type { GraphDefinitionOptions } from '../../contract';
-
 import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { createRelationDefinitionFromOptions } from './definition';

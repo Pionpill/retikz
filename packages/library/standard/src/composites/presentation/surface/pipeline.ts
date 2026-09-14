@@ -6,16 +6,14 @@ import type {
   LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
-
 import { LayoutAxisProposalKind, rectOutline } from '@retikz/core';
 import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
-import type { CanonicalSurface } from '../../../resolve/surface';
-import type { IRSurface } from './types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
+import type { CanonicalSurface } from '../../../resolve/surface';
 import { resolveSurface } from '../../../resolve/surface';
 import { SURFACE_HANDLE_KEY, SURFACE_HANDLE_ROLE } from './constants';
+import type { IRSurface } from './types';
 
 type SurfaceAxis = 'x' | 'y';
 

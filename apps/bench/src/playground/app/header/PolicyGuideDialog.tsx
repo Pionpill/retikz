@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { CircleHelp, GitCompareArrows, X } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button, buttonVariants } from '@/components/ui/button';

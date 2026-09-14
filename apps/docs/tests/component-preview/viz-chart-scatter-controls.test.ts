@@ -1,17 +1,11 @@
-import type { ReactNode } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { ScatterEncodings, ScatterProperties } from '@retikz/chart-react/point';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import type { ReactNode } from 'react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import type {
-  PreviewControlContract,
-  PreviewControlsDefinition,
-  PreviewSourceConfig,
-} from '../../src/modules/docs/preview';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as fertilityWorkZh } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.controls';
@@ -26,6 +20,11 @@ import { previewControlContract as worldCupZh } from '../../src/modules/docs/con
 import { previewControlContract as worldCupEn } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.controls';
 import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
 import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
+import type {
+  PreviewControlContract,
+  PreviewControlsDefinition,
+  PreviewSourceConfig,
+} from '../../src/modules/docs/preview';
 
 const comparable = (contract: PreviewControlContract) => ({
   controls: JSON.parse(

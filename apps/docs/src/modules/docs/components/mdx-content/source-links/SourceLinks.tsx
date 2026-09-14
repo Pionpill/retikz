@@ -1,12 +1,10 @@
-import type { FC } from 'react';
-
 import { ArrowUpRight } from 'lucide-react';
+import type { FC } from 'react';
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { SourceLinkItem } from '@/modules/docs/source-viewer';
-
 import { buildBlobUrl } from '@/modules/docs/lib';
+import type { SourceLinkItem } from '@/modules/docs/source-viewer';
 import { useRightPanelStore } from '@/modules/docs/store';
 
 export type { SourceLinkItem } from '@/modules/docs/source-viewer';

@@ -1,16 +1,14 @@
 import type { IRChild } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import type { ZodType } from 'zod';
-
 import { ZodLiteral, ZodObject } from 'zod';
 
+import { RetikzPlotError } from '../error';
 import type { IRPlotMark, IRPlotMarkOperation } from '../schemas';
 import type { MarkLoweringContext } from './anchor';
 import type { ChannelDefinitionKindValue, FieldCollector, MarkChannels } from './channel';
 import type { Cell, CoordinateFrame } from './coordinate';
 import type { MarkPlacementTarget } from './position-adjustment';
-
-import { RetikzPlotError } from '../error';
 
 /**
  * 区间柱（interval mark）摆放上下文：lowering 与 locator 共享的一次性派生量

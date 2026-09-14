@@ -1,13 +1,11 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { InputGroup } from '@retikz/graph-vanilla';
+import { GroupInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { GroupInputEmbedAdapter } from '@retikz/graph-vanilla';
-import { withInputEmbedAdapters } from '@retikz/react';
-
 import type { GraphEmbeddableComponent } from '../shared';
-
 import { collectGroupInput } from './authoring';
 
 /** Group Source 的 React 编写参数 */

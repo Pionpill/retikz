@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { positionAdjustmentRows } from './position-adjustment.data';
 import { screenNudge } from './position-adjustment.definition';

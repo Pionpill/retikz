@@ -1,8 +1,7 @@
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
 
-import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './types';
-
 import { VanillaViewMode } from './constants';
+import type { VanillaRetainedRuntimeOptions, VanillaRuntimeOptions } from './types';
 
 const invalidRuntimeOptions = (cause: unknown): never => {
   throw new RetikzRenderError({

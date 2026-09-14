@@ -1,5 +1,7 @@
 import type { RuntimeDiagnostic, RuntimeDiagnosticPhaseValue } from '../diagnostic';
+import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
 import type { RuntimeOwnerLifecycleDiagnostic } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type {
   RuntimeOwnerDefinition,
   RuntimeOwnerExecutor,
@@ -7,6 +9,7 @@ import type {
   RuntimePreparedOwnerValue,
   RuntimeRevision,
 } from '../owner';
+import { createRuntimeOwnerExecutor } from '../owner';
 import type {
   RuntimeCommitParticipant,
   RuntimeCommitParticipantToken,
@@ -14,6 +17,12 @@ import type {
   RuntimePreparedCommit,
 } from '../participant';
 import type { RuntimeCommitParticipantExecutor } from '../participant/internal';
+import {
+  claimRuntimeCommitParticipants,
+  consumeRuntimeCommitParticipant,
+  getRuntimeCommitParticipantExecutor,
+  isRuntimeCommitParticipant,
+} from '../participant/internal';
 import type {
   RuntimeCandidateLookup,
   RuntimeCandidateView,
@@ -27,29 +36,18 @@ import type {
   RuntimeProgramPhaseValue,
   RuntimeProgramToken,
 } from '../program';
+import { RuntimeProgramExecution, RuntimeProgramKind, RuntimeProgramPhase } from '../program';
 import type { RuntimeOwnerRegistry } from '../registry';
+import { getRuntimeProgramOwnerRegistry, getRuntimeProgramRegistryExecutor } from '../registry';
 import type { PerformanceTraceDiagnostic, RuntimeTraceReporter } from '../trace';
+import { createRuntimeTraceReporter } from '../trace';
+import { observeRuntimeTraceReporterDiagnostics } from '../trace/internal';
 import type {
   RuntimeOwnerCommandExecutor,
   RuntimeSessionResult,
   RuntimeSessionUpdate,
   RuntimeSnapshot,
 } from '../transaction';
-import type { RuntimeSession, RuntimeSessionOptions } from './types';
-
-import { RuntimeDiagnosticCode, RuntimeDiagnosticPhase } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
-import { createRuntimeOwnerExecutor } from '../owner';
-import {
-  claimRuntimeCommitParticipants,
-  consumeRuntimeCommitParticipant,
-  getRuntimeCommitParticipantExecutor,
-  isRuntimeCommitParticipant,
-} from '../participant/internal';
-import { RuntimeProgramExecution, RuntimeProgramKind, RuntimeProgramPhase } from '../program';
-import { getRuntimeProgramOwnerRegistry, getRuntimeProgramRegistryExecutor } from '../registry';
-import { createRuntimeTraceReporter } from '../trace';
-import { observeRuntimeTraceReporterDiagnostics } from '../trace/internal';
 import {
   createNextRuntimeRevision,
   createRuntimeRevision,
@@ -57,6 +55,7 @@ import {
   isRuntimeRevision,
 } from '../transaction';
 import { RuntimeUpdateStrategy } from './constants';
+import type { RuntimeSession, RuntimeSessionOptions } from './types';
 
 type RuntimeOwnerState = Readonly<{
   command: RuntimeOwnerCommandExecutor;

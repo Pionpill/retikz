@@ -1,5 +1,4 @@
 import type { RuntimeRevision } from '@retikz/runtime';
-
 import { createRuntimeIdentity } from '@retikz/runtime';
 
 import type {
@@ -9,10 +8,9 @@ import type {
   SceneRuntimeNode,
   SceneRuntimeSnapshot,
 } from '../../contract';
-import type { RuntimePrimitiveMetadataTable } from '../orchestration';
-
 import { CORE_OWNER_KEY } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { RuntimePrimitiveMetadataTable } from '../orchestration';
 
 /** 递归冻结 Program 新创建且尚未对外暴露的 plain output */
 export const freezeProgramOutput = <T>(value: T): T => {

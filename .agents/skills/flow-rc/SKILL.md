@@ -62,7 +62,7 @@ rc 是公开 API 冻结后的验收窗口。目标是让外部用户能从 npm �
 普通结构化改动：
 
 ```bash
-pnpm --filter @retikz/<pkg> exec eslint . --fix
+pnpm --filter @retikz/<pkg> exec oxlint . --fix
 pnpm --filter @retikz/<pkg> exec tsc --noEmit
 pnpm --filter @retikz/<pkg> exec vitest run
 ```

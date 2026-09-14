@@ -8,11 +8,10 @@ import type {
   FieldCollector,
   TransformContext,
 } from '../contract';
-import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
-import type { ExternalRow } from '../shared';
-
 import { RetikzDataError } from '../error';
 import { resolveTransformRegistry } from '../providers';
+import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
+import type { ExternalRow } from '../shared';
 import { createDataLineageRecorder } from './lineage';
 import { readSourceIndex, readSourceIndices, tagSourceIndex, withGroupProvenance } from './provenance';
 

@@ -1,5 +1,4 @@
 import type { IRNode, IRPath, ScenePrimitive } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

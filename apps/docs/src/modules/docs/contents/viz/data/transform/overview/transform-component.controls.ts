@@ -1,10 +1,9 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { regionalOrders } from './transform-component.data';
 import { transformComponentOperationsOf } from './transform-component-preview';
+import { regionalOrders } from './transform-component.data';
 
 /** Transform 声明顺序示例的中文控件 */
 export const transformComponentControls = definePreviewControls({

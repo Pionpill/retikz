@@ -1,4 +1,5 @@
 import type { CompileObservationOwner } from '@retikz/core';
+import { isCompileObservationOwnerEqual } from '@retikz/core';
 import type {
   VanillaCompileDriver,
   VanillaCompileDriverInput,
@@ -6,13 +7,10 @@ import type {
   VanillaCompileOutput,
 } from '@retikz/vanilla';
 
-import { isCompileObservationOwnerEqual } from '@retikz/core';
-
 import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
-import type { InspectorRegistry } from '../providers';
-
 import { createInspectionObserver, resolveInspectionObserverOutput } from '../compile';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
+import type { InspectorRegistry } from '../providers';
 import { getResolvedInspectorRegistry } from '../providers';
 import { inspectionSelectionRulesFromVanillaSite } from './authoring';
 import { inspectionPlaneToReadonlyLayers } from './readonly-layers';

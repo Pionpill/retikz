@@ -3,7 +3,6 @@ import type { InputPath } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../protocol';
-
 import { TIKZ_PATH } from '../protocol';
 
 export type PathProps = HydrationEventProps & {

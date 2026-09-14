@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** stack grouping, ordering, bound calculation, and row-preserving output */
 const Demo: FC = () => (

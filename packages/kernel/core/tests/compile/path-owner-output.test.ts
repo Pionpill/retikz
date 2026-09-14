@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, strictObject, string } from 'zod';
 
 import type { CompileObserverDefinition, IRScene } from '../../src';
-
 import * as core from '../../src';
 
 const steps = [

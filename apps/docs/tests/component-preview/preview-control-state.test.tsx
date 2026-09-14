@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import type { FC } from 'react';
-import type { Root } from 'react-dom/client';
-
 import { useState } from 'react';
+import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -12,7 +11,6 @@ import type {
   PreviewControlState,
   PreviewControlValues,
 } from '../../src/modules/docs/components/component-preview';
-
 import { definePreviewControls, usePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import { usePreviewControlState } from '../../src/modules/docs/components/component-preview/hooks';

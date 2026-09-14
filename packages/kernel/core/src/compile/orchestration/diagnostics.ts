@@ -1,10 +1,9 @@
 import type { CompileOccurrenceLocator } from '../../contract';
+import { compareCompileOccurrences } from '../../contract';
 import type { IRTransform } from '../../schemas';
+import { CompileWarningCode } from '../constants';
 import type { DuplicateRegisterInfo } from '../namespace';
 import type { CompileWarning, CompileWarningInput } from '../warning';
-
-import { compareCompileOccurrences } from '../../contract';
-import { CompileWarningCode } from '../constants';
 import { freezeOccurrence } from './artifact';
 
 const compileWarningOccurrence = Symbol('compileWarningOccurrence');

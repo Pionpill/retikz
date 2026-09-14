@@ -1,7 +1,6 @@
 import type { Position } from '@retikz/math';
 
 import type { AnchorValue } from './anchor';
-
 import { Anchor } from './anchor';
 
 /**

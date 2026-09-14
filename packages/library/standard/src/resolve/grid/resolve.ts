@@ -1,10 +1,9 @@
-import type { IRGrid, IRGridLine } from '../../composites/presentation/grid/schemas';
-import type { CanonicalGrid, CanonicalGridLine } from './types';
-
 import { computeGridBounds } from '../../composites/presentation/grid/geometry';
+import type { IRGrid, IRGridLine } from '../../composites/presentation/grid/schemas';
 import { GridLineInputSchema, GridSchema } from '../../composites/presentation/grid/schemas';
 import { getLatticeRangeError } from '../../composites/presentation/shared/lattice';
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+import type { CanonicalGrid, CanonicalGridLine } from './types';
 
 /** 在下沉前确定 Grid 的局部边界与方向配置 */
 export const resolveGrid = (source: IRGrid): CanonicalGrid => {

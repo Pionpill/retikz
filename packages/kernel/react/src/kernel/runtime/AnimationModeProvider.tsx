@@ -1,7 +1,6 @@
 import type { FC, ReactNode } from 'react';
 
 import type { AnimationMode } from './animation-context';
-
 import { AnimationModeContext } from './animation-context';
 
 /** 动画模式 Provider 属性 */

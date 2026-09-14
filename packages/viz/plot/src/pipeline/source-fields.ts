@@ -1,11 +1,10 @@
 import type { AnyTransformDefinition, TransformContext } from '@retikz/data';
-
 import { collectTransformFields } from '@retikz/data';
 
-import { type AnyMarkDefinition } from '../contract';
+import type { AnyMarkDefinition } from '../contract';
 import { createFieldCollector, resolveMarkRegistry, resolvePlotTransformRegistry } from '../providers';
 import { collectMarkFields } from '../resolve/mark';
-import { type IRPlot, type IRPlotMarkOperation, type IRPlotTransform } from '../schemas';
+import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../schemas';
 
 const markTransformOf = (mark: IRPlotMarkOperation): Array<IRPlotTransform> | undefined =>
   (mark as { transform?: Array<IRPlotTransform> }).transform;

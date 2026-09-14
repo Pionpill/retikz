@@ -4,7 +4,6 @@ import type { PathCommand, ScenePrimitive } from '../../../contract';
 import type { CanonicalGeometryLabel, CanonicalStep } from '../../../resolve';
 import type { IRPathBase, IRPosition } from '../../../schemas';
 import type { LowerTex, TextMeasurer } from '../../text';
-
 import { emitLabelPrimitive } from '../host';
 import { sampleStrokePathGeometry, sampleStrokeStepGeometry, sampleStrokeStepParameterGeometry } from './interruption';
 import { sampleRoundedCommands } from './rounded-corners';

@@ -1,7 +1,6 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { ChartMarkDefinition } from '../../_chart/contract';
-
 import { defineChartMark } from '../../_chart/contract';
 import { markSlotsOf, resolvePointMark } from '../shared';
 import { BubbleChartMarkSchema } from './schema';

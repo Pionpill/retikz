@@ -1,9 +1,8 @@
-import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
-import type { GraphProps } from '@retikz/graph-react';
-
 import { defineThemeStyle, ThemeMode } from '@retikz/core';
+import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
 import { defineFlowThemeStyle } from '@retikz/diagram/flow';
 import { defineEntityKind, defineGraphThemeStyle, defineRelationKind, RelationRole } from '@retikz/graph';
+import type { GraphProps } from '@retikz/graph-react';
 
 /** Docs 逻辑图使用的稳定 Entity kind */
 export const LogicFigureEntityKind = {

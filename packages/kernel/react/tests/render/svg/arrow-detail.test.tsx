@@ -1,6 +1,5 @@
 import type { MarkerPrimitive, PathPrim, ResolvedArrowEnd } from '@retikz/core';
-
-import { type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { renderPrim } from '../../../src/render/svg';

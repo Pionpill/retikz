@@ -1,18 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { GraphInputEmbedProps, InputGraph } from '@retikz/graph-vanilla';
+import { GraphInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { Layout, withInputEmbedAdapters } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
-
-import { GraphInputEmbedAdapter } from '@retikz/graph-vanilla';
-import { Layout, withInputEmbedAdapters } from '@retikz/react';
 import { useId, useMemo } from 'react';
 
-import type { GraphEmbeddableComponent } from '../shared';
-import type { GraphLayoutHostProps } from './authoring';
-
 import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
+import type { GraphEmbeddableComponent } from '../shared';
 import { useGraphThemeStyles } from '../theme-context';
+import type { GraphLayoutHostProps } from './authoring';
 import { collectGraphChildren, graphLayoutHostPropKeys, graphLayoutHostPropsOf } from './authoring';
 
 export type { GraphLayoutHostProps } from './authoring';

@@ -1,6 +1,4 @@
 ﻿import type { LucideIcon } from 'lucide-react';
-import type { FC } from 'react';
-
 import {
   BlocksIcon,
   BoxesIcon,
@@ -15,10 +13,9 @@ import {
   TableIcon,
   WorkflowIcon,
 } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
-
-import type { DocModuleId, I18nKey, Section } from '@/modules/docs/data';
 
 import {
   NavigationMenu,
@@ -27,6 +24,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib';
+import type { DocModuleId, I18nKey, Section } from '@/modules/docs/data';
 import { getNavigationSectionsByArea, modules } from '@/modules/docs/data';
 import { buildDocPath } from '@/modules/docs/layout';
 

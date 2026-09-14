@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Circle / Ellipse Sugar 输入归一化到 Path Step 的局部流程图 */
 const Demo: FC = () => (

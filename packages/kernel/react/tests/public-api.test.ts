@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ConvertIRToReactNodeOptions } from '../src';
-
 import * as react from '../src';
 
 const PUBLIC_RUNTIME_EXPORTS = [

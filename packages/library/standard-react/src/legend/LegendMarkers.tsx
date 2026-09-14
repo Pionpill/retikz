@@ -1,6 +1,5 @@
-import type { FC, ReactNode } from 'react';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
+import type { FC, ReactNode } from 'react';
 
 /** Standard Legend 标题 marker 的属性 */
 export type LegendTitleProps = Readonly<{

@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { GridLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Demonstrates explicit tracks, fractions, spans, and auto placement */
 const Demo: FC = () => (

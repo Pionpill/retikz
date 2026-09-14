@@ -1,8 +1,7 @@
 import type { IRPosition, PathCommand, ShapeDefinition } from '@retikz/core';
-import type { FC } from 'react';
-
 import { DEFAULT_EPSILON, defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 type Position = IRPosition;

@@ -1,5 +1,4 @@
 import type { CoreDependencyProvider } from '@retikz/core';
-
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';

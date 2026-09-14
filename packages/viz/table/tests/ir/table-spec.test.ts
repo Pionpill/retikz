@@ -2,7 +2,6 @@ import { defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';
-
 import {
   CustomTableSchema,
   DetailTableSchema,

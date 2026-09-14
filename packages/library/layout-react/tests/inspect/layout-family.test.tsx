@@ -1,9 +1,8 @@
 import type { InspectionCompileResult } from '@retikz/inspect';
-import type { ReactNode } from 'react';
-
 import { createLayoutInspectionVanillaDriver } from '@retikz/layout-vanilla/inspect';
 import { createInputScene, Node } from '@retikz/react';
 import { normalizeScene, prepareStaticProcessing } from '@retikz/vanilla';
+import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

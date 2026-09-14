@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout } from '@retikz/react';
 import { Axes } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 const Demo: FC = () => (
   <Layout>

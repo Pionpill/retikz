@@ -1,5 +1,4 @@
 import type { TableThemeStyleDefinition } from '@retikz/table';
-
 import { createContext, useContext } from 'react';
 
 /** Table-owned ambient Theme definitions context */

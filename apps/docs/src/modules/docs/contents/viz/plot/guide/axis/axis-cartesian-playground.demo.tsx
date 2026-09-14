@@ -1,7 +1,6 @@
 import { IntervalMark, PathMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { axisCartesianPlaygroundControls, previewControlContract } from './axis-cartesian-playground.controls';
@@ -145,4 +144,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 在一个笛卡尔试验场中组合刻度、网格、标签、原点、箭头与交点控制 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

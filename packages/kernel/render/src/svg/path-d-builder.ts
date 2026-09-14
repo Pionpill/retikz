@@ -1,5 +1,4 @@
 import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz/core';
-
 import { DEFAULT_EPSILON } from '@retikz/math';
 
 import { commandArcStart, commandArcSweep, commandEndpoint, ellipseArcPointAt } from '../shared';

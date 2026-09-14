@@ -1,5 +1,4 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
-
 import { createGraphProviders } from '@retikz/graph';
 
 import { RetikzGraphVanillaError, RetikzGraphVanillaErrorCode } from './errors';

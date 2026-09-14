@@ -1,5 +1,4 @@
 import type { GroupPrim, IRAnimationTrack, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {

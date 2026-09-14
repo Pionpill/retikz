@@ -1,9 +1,7 @@
+import { Block, BlockHeader, BlockRow, BlockSection, Graph } from '@retikz/graph-react';
 import type { FC } from 'react';
 
-import { Block, BlockHeader, BlockRow, BlockSection, Graph } from '@retikz/graph-react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/preview';
 
 import { blockStyleControls, previewControlContract } from './block-style.en.controls';

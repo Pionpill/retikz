@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../../src';
-
 import {
   applyReducerOperation,
   applySelectorOperation,

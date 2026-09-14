@@ -1,17 +1,15 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
-
 import { DataFieldType } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { CoordinateFrame } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { defineMark, defineScale } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { linearPositionScale, resolveLinearScale } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 /**

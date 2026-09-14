@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 布局家族示意图

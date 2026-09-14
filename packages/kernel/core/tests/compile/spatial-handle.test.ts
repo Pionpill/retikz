@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
 import type { IRChild, IRScene } from '../../src';
-
 import { compileToScene, CompositeBaseSchema, defineComposite } from '../../src';
 
 const card = defineComposite({

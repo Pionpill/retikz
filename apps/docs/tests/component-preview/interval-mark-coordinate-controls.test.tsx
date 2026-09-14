@@ -1,11 +1,8 @@
 import type { ComponentType } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import {
   getPreviewControlFields,
@@ -24,6 +21,7 @@ import { previewControlContract as sectorContract } from '@/modules/docs/content
 import { previewControlContract as cellContract } from '@/modules/docs/contents/viz/plot/mark/interval/rect-bounds.controls';
 import CellDemo from '@/modules/docs/contents/viz/plot/mark/interval/rect-bounds.demo';
 import { previewControlContract as cellEnglishContract } from '@/modules/docs/contents/viz/plot/mark/interval/rect-bounds.en.controls';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type CoordinateScenario = {
   name: string;

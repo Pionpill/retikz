@@ -1,7 +1,7 @@
+import { cloneAndFreezeJson } from '@retikz/foundation';
 import type { BoundsInsets, BoundsRect, Position } from '@retikz/math';
 
-import { cloneAndFreezeJson } from '@retikz/foundation';
-
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowLayoutDefinition,
   FlowLayoutElementInput,
@@ -12,8 +12,6 @@ import type {
   FlowLayoutPlacementOutput,
   FlowLayoutRelationInput,
 } from '../../contract';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { FlowRoutingKind } from '../../shared';
 
 type PlainRecord = Readonly<Record<string, unknown>>;

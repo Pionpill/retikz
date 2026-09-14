@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { LayoutItem, OverlayLayout } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 展示 aligned、positioned、anchor、exclude 与稳定 zIndex */
 const Demo: FC = () => (

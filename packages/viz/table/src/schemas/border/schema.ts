@@ -53,10 +53,18 @@ export const TableCellBordersSchema = strictObject({
 
 /** Table Cell defaults 的稀疏物理侧边框片段，null 用于清除低优先级候选 */
 export const TableCellBordersDefaultsSchema = strictObject({
-  top: TableBorderSchema.nullable().optional().describe('Optional top-side border candidate or null to clear defaults.'),
-  right: TableBorderSchema.nullable().optional().describe('Optional right-side border candidate or null to clear defaults.'),
-  bottom: TableBorderSchema.nullable().optional().describe('Optional bottom-side border candidate or null to clear defaults.'),
-  left: TableBorderSchema.nullable().optional().describe('Optional left-side border candidate or null to clear defaults.'),
+  top: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional top-side border candidate or null to clear defaults.'),
+  right: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional right-side border candidate or null to clear defaults.'),
+  bottom: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional bottom-side border candidate or null to clear defaults.'),
+  left: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional left-side border candidate or null to clear defaults.'),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table Cell border defaults'))
   .describe('Sparse physical-side border defaults for an existing Table Cell.');
@@ -71,9 +79,15 @@ export const TableOuterBordersSchema = strictObject({
 /** Table outer defaults 的稀疏物理侧片段，null 用于清除低优先级候选 */
 export const TableOuterBordersDefaultsSchema = strictObject({
   top: TableBorderSchema.nullable().optional().describe('Optional top-side outer candidate or null to clear defaults.'),
-  right: TableBorderSchema.nullable().optional().describe('Optional right-side outer candidate or null to clear defaults.'),
-  bottom: TableBorderSchema.nullable().optional().describe('Optional bottom-side outer candidate or null to clear defaults.'),
-  left: TableBorderSchema.nullable().optional().describe('Optional left-side outer candidate or null to clear defaults.'),
+  right: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional right-side outer candidate or null to clear defaults.'),
+  bottom: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional bottom-side outer candidate or null to clear defaults.'),
+  left: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional left-side outer candidate or null to clear defaults.'),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table outer border defaults'))
   .describe('Sparse physical-side defaults for the Table outer boundary.');
@@ -87,9 +101,13 @@ export const TableBordersSchema = strictObject({
 
 /** Table defaults 的边框布局片段，null 用于清除低优先级模式或候选 */
 export const TableBordersDefaultsSchema = strictObject({
-  mode: TableBorderModeSchema.nullable().optional().describe('Optional border topology mode or null to clear defaults.'),
+  mode: TableBorderModeSchema.nullable()
+    .optional()
+    .describe('Optional border topology mode or null to clear defaults.'),
   outer: TableOuterBordersDefaultsSchema.nullable().optional().describe('Optional outer-boundary defaults.'),
-  horizontal: TableBorderSchema.nullable().optional().describe('Optional horizontal candidate or null to clear defaults.'),
+  horizontal: TableBorderSchema.nullable()
+    .optional()
+    .describe('Optional horizontal candidate or null to clear defaults.'),
   vertical: TableBorderSchema.nullable().optional().describe('Optional vertical candidate or null to clear defaults.'),
 })
   .refine(value => Object.keys(value).length > 0, requireAtLeastOneField('Table border defaults'))

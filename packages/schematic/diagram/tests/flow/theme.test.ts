@@ -1,11 +1,9 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FlowThemeStyleDefinition } from '../../src/flow';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
+import type { FlowThemeStyleDefinition } from '../../src/flow';
 import { defineFlowThemeStyle } from '../../src/flow';
 import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';

@@ -1,5 +1,4 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

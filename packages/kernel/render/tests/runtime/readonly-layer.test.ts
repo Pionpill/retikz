@@ -1,11 +1,10 @@
-import type { Scene } from '@retikz/core';
-
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+import type { Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { RenderReadonlyLayer } from '../../src/runtime';
-
 import * as runtime from '../../src/runtime';
 import { validateReadonlyLayers } from '../../src/runtime';
 

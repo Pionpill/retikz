@@ -1,6 +1,5 @@
-import type { PreviewControlSlot, PreviewOverlayControlField } from '../../types';
-
 import { PreviewControlFieldInput } from '../../controls';
+import type { PreviewControlSlot, PreviewOverlayControlField } from '../../types';
 import { PreviewToolbar } from '../PreviewToolbar';
 
 /** 将声明式配置转换成预览控制插槽。 */

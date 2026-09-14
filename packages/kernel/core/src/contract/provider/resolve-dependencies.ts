@@ -1,3 +1,4 @@
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ArrowDefinition } from '../arrow';
 import type { BoundaryDefinition } from '../boundary';
 import type { ClipDefinition } from '../clip';
@@ -14,8 +15,6 @@ import type {
   CoreProviderKey,
   ResolveCoreProviderDependenciesOptions,
 } from './dependency-provider';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { CoreProviderCapability } from './dependency-provider';
 
 type ProviderEntry = {

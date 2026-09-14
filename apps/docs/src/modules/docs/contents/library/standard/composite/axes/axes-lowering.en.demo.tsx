@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** English logic figure for lowering Axes IR to Core Paths and Nodes */
 const Demo: FC = () => (

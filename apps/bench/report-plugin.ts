@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
+
 import type { Plugin } from 'vite';
 
 import type { BenchReportStore } from './report-store';
-import type { WriteBenchReportInput } from './src/shared/lab-report';
-
 import { BenchReportValidationError, createReportStore } from './report-store';
+import type { WriteBenchReportInput } from './src/shared/lab-report';
 import { isBenchReportStatus } from './src/shared/lab-report';
 
 /** Vite Connect 中间件的继续回调 */

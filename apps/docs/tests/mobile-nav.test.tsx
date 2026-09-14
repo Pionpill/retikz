@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react';
 import type { Root } from 'react-dom/client';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { MemoryRouter, useLocation } from 'react-router';

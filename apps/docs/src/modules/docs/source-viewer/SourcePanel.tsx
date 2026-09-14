@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { ExternalLink, Eye, EyeOff, FileCode, RotateCcw, X } from 'lucide-react';
+import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

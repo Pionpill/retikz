@@ -1,12 +1,10 @@
 import type { ScenePrimitive } from '@retikz/core';
-import type { ReactElement } from 'react';
-
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema } from '@retikz/graph';
+import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PreviewPanelControlItem } from '../src/modules/docs/components/component-preview';
-
 import {
   loadPreviewResources,
   resolvePreviewControlContract,

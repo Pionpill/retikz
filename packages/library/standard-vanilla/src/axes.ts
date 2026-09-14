@@ -1,7 +1,6 @@
 import type { AxesInput } from '@retikz/standard';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
-
 import { AxesProvider, createAxes } from '@retikz/standard';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardAxesEmbedKind } from './constants';
 

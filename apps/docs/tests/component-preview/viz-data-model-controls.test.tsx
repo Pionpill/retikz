@@ -1,31 +1,30 @@
 // @vitest-environment jsdom
 
-import type { FC } from 'react';
-
-import { buildPlotIR } from '@retikz/plot-react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import { buildPlotIR } from '@retikz/plot-react';
+import type { FC } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import i18n from '../../src/i18n';
 import type {
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewOverlayControlField,
   PreviewPanelControlItem,
 } from '../../src/modules/docs/components/component-preview';
-
-import i18n from '../../src/i18n';
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import { PreviewControlPanel } from '../../src/modules/docs/components/component-preview/control-panel';
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { usePreviewControlState } from '../../src/modules/docs/components/component-preview/hooks';
+import { renderDataModelOrderPreview } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order-preview';
 import { previewControlContract as orderZh } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order.controls';
 import { previewControlContract as orderEn } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order.en.controls';
 import OrderDemo from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order.zh.demo';
-import { renderDataModelOrderPreview } from '../../src/modules/docs/contents/viz/data/model/contract/data-model-order-preview';
 import { previewControlContract as fieldContractZh } from '../../src/modules/docs/contents/viz/data/model/contract/field-contract-playground.controls';
 import { previewControlContract as fieldContractEn } from '../../src/modules/docs/contents/viz/data/model/contract/field-contract-playground.en.controls';
 import FieldContractDemo from '../../src/modules/docs/contents/viz/data/model/contract/field-contract-playground.zh.demo';
@@ -39,10 +38,10 @@ import SourceBindingDemo from '../../src/modules/docs/contents/viz/data/model/in
 import { previewControlContract as valueParsingZh } from '../../src/modules/docs/contents/viz/data/model/intake/value-parsing.controls';
 import { previewControlContract as valueParsingEn } from '../../src/modules/docs/contents/viz/data/model/intake/value-parsing.en.controls';
 import ValueParsingDemo from '../../src/modules/docs/contents/viz/data/model/intake/value-parsing.zh.demo';
+import { renderValidationPolicyPreview } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy-preview';
 import { previewControlContract as validationZh } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy.controls';
 import { previewControlContract as validationEn } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy.en.controls';
 import ValidationDemo from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy.zh.demo';
-import { renderValidationPolicyPreview } from '../../src/modules/docs/contents/viz/data/model/validation/validation-policy-preview';
 
 const roots: Array<ReturnType<typeof createRoot>> = [];
 

@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../src/compile/compile';
+import { compileToScene } from '../../src/compile/compile';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const findText = (prims: Array<ScenePrimitive>): TextPrim | undefined =>

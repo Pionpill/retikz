@@ -1,16 +1,14 @@
 import type { ExternalDatasets } from '@retikz/data';
-import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
-import type { InputEmbed } from '@retikz/vanilla';
-
 import { assertNonEmptyString } from '@retikz/foundation';
+import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import { PLOT_NAMESPACE } from '@retikz/plot';
+import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
 
-import type { InputPlot } from '../normalize/plot';
-import type { InputPlotEmbed, PlotSource } from './types';
-
 import { RetikzPlotVanillaError } from '../error';
+import type { InputPlot } from '../normalize/plot';
 import { normalizePlot } from '../normalize/plot';
+import type { InputPlotEmbed, PlotSource } from './types';
 
 /** 从 plain authoring input 创建 Plot Source IR */
 export const plot = (input: InputPlot): IRPlot => normalizePlot(input);

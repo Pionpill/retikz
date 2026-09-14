@@ -6,7 +6,6 @@ import type {
   IRPlotPointMark,
   IRPlotScaleOperation,
 } from '@retikz/plot';
-
 import {
   isBuiltinMark,
   isBuiltinScaleOperation,
@@ -21,9 +20,8 @@ import {
 } from '@retikz/plot';
 
 import type { ChartScaleDefaultsResolveContext } from '../../_chart/contract';
-import type { IRPointPositionDomainPadding } from './schema';
-
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
+import type { IRPointPositionDomainPadding } from './schema';
 
 const pointContinuousPositionScaleTypes = new Set<string>([
   PlotScale.Linear,

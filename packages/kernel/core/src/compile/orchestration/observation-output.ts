@@ -1,12 +1,11 @@
 import type { CompileObservation, CompileObservationContext, CompileObserverOutput } from '../../contract';
-import type { CompileContext } from './context';
-import type { CompileObservationRuntime } from './observation';
-import type { PendingCompileObservation } from './types';
-
 import { compareCompileOccurrences } from '../../contract';
 import { applyTransformChain } from '../transform';
 import { freezeOccurrence } from './artifact';
+import type { CompileContext } from './context';
+import type { CompileObservationRuntime } from './observation';
 import { compileObservedFragment } from './observation-fragment';
+import type { PendingCompileObservation } from './types';
 
 /** 把 owner identity 转为同 occurrence 下的稳定排序键 */
 const ownerKeyOf = (entry: PendingCompileObservation): string =>

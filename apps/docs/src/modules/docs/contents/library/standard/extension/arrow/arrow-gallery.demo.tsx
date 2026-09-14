@@ -1,5 +1,3 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
 import {
   BarArrowDefinition,
@@ -12,6 +10,7 @@ import {
   SquareArrowDefinition,
   StraightBarbArrowDefinition,
 } from '@retikz/standard/arrow';
+import type { FC } from 'react';
 
 const entries = [
   { shape: 'diamond', column: 0, row: 0 },

@@ -3,7 +3,6 @@ import type { InputTransform } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
-
 import { TIKZ_SCOPE } from '../protocol';
 
 /**

@@ -2,9 +2,9 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { CHART_PRESENTATION_CONTROL_IDS } from './chart-presentation.constants';
 import { previewControlContract } from './chart-presentation-layout.en.controls';
 import { ChartPresentationLayoutPreview } from './chart-presentation-preview';
+import { CHART_PRESENTATION_CONTROL_IDS } from './chart-presentation.constants';
 
 const copy = {
   title: 'Change across five observations',

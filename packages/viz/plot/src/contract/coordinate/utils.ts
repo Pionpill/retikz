@@ -1,10 +1,8 @@
 import type { ZodType } from 'zod';
-
 import { ZodLiteral, ZodObject } from 'zod';
 
-import type { CellProjectableCoordinate, CoordinateFrame } from './types';
-
 import { RetikzPlotError } from '../../error';
+import type { CellProjectableCoordinate, CoordinateFrame } from './types';
 
 /**
  * 判断坐标帧是否支持 cell 类几何投影。

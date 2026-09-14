@@ -1,6 +1,5 @@
 import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
-
 import { useMemo } from 'react';
 
 import { mergeThemeOverlays, ThemeContext, useTheme } from './theme-context';

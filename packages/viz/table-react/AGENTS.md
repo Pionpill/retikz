@@ -28,7 +28,7 @@
 结构化改动后运行：
 
 ```bash
-pnpm --filter @retikz/table-react exec eslint . --fix
+pnpm --filter @retikz/table-react exec oxlint . --fix
 pnpm --filter @retikz/table-react exec tsc --noEmit
 pnpm --filter @retikz/table-react test:changed
 ```

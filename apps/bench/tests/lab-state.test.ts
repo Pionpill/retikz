@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { LabRunSession } from '../src/playground/modules/kernel';
-
 import { createInitialLabState, reduceLabState } from '../src/playground/app/lab-state';
 import { BenchModuleId } from '../src/playground/app/module-registry';
 import { labPreviewSizePresets } from '../src/playground/app/preview-size';
+import type { LabRunSession } from '../src/playground/modules/kernel';
 import { isValidLabPreviewSize } from '../src/playground/modules/kernel';
 
 describe('Performance Lab state', () => {

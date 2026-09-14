@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene, IRTarget } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 
 const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim | undefined =>
   prims.find((x): x is PathPrim => x.type === 'path');

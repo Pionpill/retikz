@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** normalize 的分组求和、零和保护与逐行占比写回 */
 const Demo: FC = () => (

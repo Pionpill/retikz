@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Position, Vector2 } from '../../src';
-
 import { isFiniteNumber, isFinitePoint, isInfiniteNumber, lerp, point, vector2 } from '../../src';
 
 describe('point / vector2 原语', () => {

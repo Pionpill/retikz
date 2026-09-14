@@ -1,11 +1,9 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
+import { RelationProviderKey } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { RelationProviderKey } from '@retikz/graph';
-
-import type { InputRelation } from './normalize';
-
 import { RelationEmbedKind } from './constants';
+import type { InputRelation } from './normalize';
 import { normalizeRelation } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 

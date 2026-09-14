@@ -1,8 +1,7 @@
-import type { FC } from 'react';
-
 import { Layout, Node, Path, Step } from '@retikz/react';
 import { LegendContentKind } from '@retikz/standard';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** 用真实线型样本解释逻辑关系语义 */
 const Demo: FC = () => (

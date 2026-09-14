@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** AnimationTrack 从声明到后端播放或静态求值的局部流程图 */
 const Demo: FC = () => (

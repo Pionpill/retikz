@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-
 import { SceneSchema } from '@retikz/core';
 import { Layout } from '@retikz/react';
 
@@ -13,7 +12,6 @@ import type {
   RendererMode,
 } from '../types';
 import type { PreviewIR } from '../utils';
-
 import { buildPreviewIR, buildReactSourceFiles, formatIR, irHasComposite } from '../utils';
 import { browserMeasurer, buildVanillaPreview } from '../vanilla-preview';
 import { RawSvgFrame } from './RawSvgFrame';

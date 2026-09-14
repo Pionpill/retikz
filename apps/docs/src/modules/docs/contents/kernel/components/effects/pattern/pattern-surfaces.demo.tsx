@@ -1,7 +1,6 @@
 import type { IRPaint } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Layout, Node, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 const pattern = {
   kind: 'pattern',

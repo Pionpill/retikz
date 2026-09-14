@@ -1,11 +1,10 @@
-import type { LanguageModel } from 'ai';
-
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createOpenAI } from '@ai-sdk/openai';
+import type { LanguageModel } from 'ai';
 import { generateText } from 'ai';
 
-import { type LlmClient } from './types';
+import type { LlmClient } from './types';
 
 /**
  * provider 登记表：id / env key / 默认模型 id（仅 anthropic 有权威默认）/ provider 工厂。

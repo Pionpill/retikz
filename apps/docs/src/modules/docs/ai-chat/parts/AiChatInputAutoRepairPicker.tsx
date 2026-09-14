@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
-import type { FC } from 'react';
-
 import { Ban, Infinity as InfinityIcon, Wrench } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib';
 
 import type { AutoRepairMode } from '../useAiChatStore';
-
 import { useAiChatStore } from '../useAiChatStore';
 
 const MODES: ReadonlyArray<AutoRepairMode> = ['off', 'limited', 'always'];

@@ -1,7 +1,6 @@
 import type { FC } from 'react';
 
 import type { LabPolicyResult } from '../../modules/kernel';
-
 import { ComparisonChart } from './ComparisonChart';
 import { MetricsSummary } from './MetricsSummary';
 

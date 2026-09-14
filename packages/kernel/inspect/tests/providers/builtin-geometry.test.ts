@@ -1,5 +1,4 @@
 import type { IRScene, ScenePrimitive } from '@retikz/core';
-
 import { BUILTIN_SHAPES, compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

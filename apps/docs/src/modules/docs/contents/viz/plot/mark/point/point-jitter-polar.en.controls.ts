@@ -1,9 +1,8 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
-import { polarJitterPoints } from './point-jitter.data';
 import { POINT_JITTER_POLAR_CONTROL_IDS } from './point-jitter-polar.controls';
+import { polarJitterPoints } from './point-jitter.data';
 
 /** 极坐标位置散布的英文属性面板 */
 export const pointJitterPolarControls = definePreviewControls({

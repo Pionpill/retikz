@@ -1,7 +1,6 @@
 import type { RenderReadonlyLayer } from '../runtime';
-import type { DrawOptions } from './types';
-
 import { drawScene } from './draw-scene';
+import type { DrawOptions } from './types';
 
 /** 在当前 Canvas frame transform 内执行一个普通只读 Scene 图层 */
 export const drawReadonlyLayer = (

@@ -1,12 +1,11 @@
 import type { IRChild, Scene } from '@retikz/core';
-import type { InputLegend } from '@retikz/standard-vanilla';
-
 import { compileToScene } from '@retikz/core';
 import { createInputScene, Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { createLegend, LegendContentKind, LegendDefinition, LegendSchema } from '@retikz/standard';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
+import type { InputLegend } from '@retikz/standard-vanilla';
 import { legend, LegendInputEmbedAdapter } from '@retikz/standard-vanilla';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { createElement, Fragment } from 'react';

@@ -1,12 +1,10 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { definePathKind, PathBaseSchema } from '@retikz/core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import type { infer as ZodInfer } from 'zod';
 import { literal } from 'zod';
 
 import type { LayoutProps, LayoutRuntimeOptions } from '../../../src';
-
 import { Layout, LayoutRuntimeMode, Node } from '../../../src';
 
 describe('Layout public API', () => {

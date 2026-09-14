@@ -1,6 +1,5 @@
-import type { ScaleContinuousNumeric as D3ScaleContinuousNumeric } from 'd3-scale';
-
 import { extent as d3Extent } from 'd3-array';
+import type { ScaleContinuousNumeric as D3ScaleContinuousNumeric } from 'd3-scale';
 import {
   interpolateBlues as d3InterpolateBlues,
   interpolateBrBG as d3InterpolateBrBG,
@@ -27,9 +26,8 @@ import {
 } from 'd3-scale-chromatic';
 
 import type { TickSet } from '../../../contract';
-import type { PlotColorSchemeValue } from '../../../schemas';
-
 import { RetikzPlotError } from '../../../error';
+import type { PlotColorSchemeValue } from '../../../schemas';
 import { PlotColorScheme } from '../../../schemas';
 import { BUILTIN_COLOR_SCHEMES } from './constants';
 

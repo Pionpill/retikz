@@ -1,8 +1,7 @@
 import type { IRChild, IRNode, IRNodeLabelBoundaryPosition, IRScope } from '@retikz/core';
 import type { IRFlexLayoutItem } from '@retikz/layout';
-import type { IRSurface } from '@retikz/standard';
-
 import { createFlexLayout, FlexLayoutDirection, LayoutAlignment, LayoutOverflow } from '@retikz/layout';
+import type { IRSurface } from '@retikz/standard';
 import { createSurface } from '@retikz/standard';
 
 import type { CanonicalGroup } from '../../resolve';

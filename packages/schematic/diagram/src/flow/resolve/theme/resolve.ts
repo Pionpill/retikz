@@ -1,8 +1,8 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { mergeProperties } from '@retikz/foundation';
 import { mergeGraphDefaults } from '@retikz/graph';
 
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowThemeStyleDefinition } from '../../contract';
 import type {
   IRFlowDefaults,
@@ -10,8 +10,6 @@ import type {
   IRFlowDefaultsGroupCaptionTitle,
   IRFlowLayoutIntent,
 } from '../../schemas';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { FlowDefaultsSchema } from '../../schemas';
 
 const mergeFields = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {

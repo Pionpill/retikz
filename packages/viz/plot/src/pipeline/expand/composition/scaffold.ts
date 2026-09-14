@@ -1,9 +1,8 @@
 import type { IRChild, IRNode, IRPathBase, IRScope } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 
-import type { IRPlotAxisGuide, IRPlotGuide } from '../../../schemas';
-
 import { isAxisGuide } from '../../../resolve/composition';
+import type { IRPlotAxisGuide, IRPlotGuide } from '../../../schemas';
 import { PlotGuide } from '../../../schemas';
 
 /** 判断 guide 是否为 legend */

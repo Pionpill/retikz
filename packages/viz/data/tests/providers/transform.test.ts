@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, object, strictObject } from 'zod';
 
 import type { ExternalRow } from '../../src';
-
 import {
   applyTransforms,
   DataTransformBindingClass,

@@ -2,7 +2,6 @@ import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { InputFrame } from '../src';
-
 import {
   axes,
   AxesInputEmbedAdapter,

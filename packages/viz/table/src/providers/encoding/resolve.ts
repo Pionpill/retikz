@@ -1,6 +1,5 @@
-import type { IRDataScalarValue } from '@retikz/data';
-
 import { CssColorSchema } from '@retikz/core';
+import type { IRDataScalarValue } from '@retikz/data';
 import { ScalarValueSchema } from '@retikz/data';
 import { array, enum as zodEnum, number } from 'zod';
 
@@ -9,9 +8,8 @@ import type {
   CellVisualScaleResolution,
   CellVisualScaleResolveContext,
 } from '../../contract';
-import type { IRTableVisualScaleRef } from '../../schemas';
-
 import { RetikzTableError } from '../../error';
+import type { IRTableVisualScaleRef } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { cellVisualScaleDefinitionOf } from './registry';
 

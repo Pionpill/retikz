@@ -4,12 +4,12 @@
 
 ## 目录
 
-- [`decisions/`](./decisions)：版本路线、milestone roadmap、ADR。
+- [`decisions`](./decisions)：中版本能力 roadmap 与独立 ADR；保留 `v0/v0.x/`，不设预发布子目录。
 - `plans/`：与 ADR 相对路径镜像的 ignored implementation plan、测试契约、任务状态与评审记录；不 stage / commit。
-- [`architecture/`](./architecture)：kernel / core 长期架构设计与能力准入标准。
-- [`analysis/`](./analysis)：kernel / core 相关一次性分析。
+- [`architecture`](./architecture)：kernel / core 长期架构设计与能力准入标准。
+- [`analysis`](./analysis)：kernel / core 相关一次性分析。
 
-跨包长期架构原则仍放在根 [`notes/architecture`](../../../notes/architecture)。
+跨包长期架构原则仍放在根 [`../../../notes/architecture`](../../../notes/architecture)。
 
 ## 当前入口
 
@@ -24,6 +24,6 @@
 
 ## 规则
 
-- roadmap 可持续更新；ADR Accepted 后只增补状态 / supersede，不改历史判断。
+- roadmap 汇总中版本能力目标与进度，不分配预发布批次任务；ADR 按中版本三位连续编号，Accepted 仅代表设计接受，不代表实现或发布完成。
 - ADR 长期一致性与发版审计规则以 `.agents/skills/package-publish/SKILL.md` 为准。
 - 本目录不进入 npm 包；发布包由各自 `package.json` 的 `files` 白名单控制。

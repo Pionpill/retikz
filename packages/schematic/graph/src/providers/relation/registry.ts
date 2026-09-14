@@ -1,9 +1,8 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { RelationKindDefinition, RelationPredicateDefinition, RelationRoleDefinition } from '../../contract';
-import type { RelationDirectionValue } from '../../schemas';
-
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
+import type { RelationDirectionValue } from '../../schemas';
 import { BUILTIN_RELATION_KIND_DEFINITIONS, BUILTIN_RELATION_ROLE_DEFINITIONS } from './definitions';
 
 const duplicateDefinition = (capability: string, key: string): RetikzGraphError =>

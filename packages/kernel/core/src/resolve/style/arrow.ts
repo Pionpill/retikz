@@ -1,9 +1,8 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPathBase } from '../../schemas';
-import type { StyleResolveFrame } from './types';
-
 import { cutsStyleChannel } from './frame';
+import type { StyleResolveFrame } from './types';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
 const mergeArrowEnd = (

@@ -1,13 +1,12 @@
-import type { PathResolution, PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
-import type { IRPathBase } from '../../src/schemas';
-
 import {
   resolveArrowRegistry,
   resolvePathGeneratorRegistry,
   resolvePathKindRegistry,
   resolvePatternRegistry,
 } from '../../src';
+import type { PathResolution, PathResolveContext, StrokePathResolution } from '../../src/resolve/path';
 import { resolvePath, resolveStrokePathProviders } from '../../src/resolve/path';
+import type { IRPathBase } from '../../src/schemas';
 
 type BuiltinProviderContext = Omit<Partial<PathResolveContext>, 'pathKinds' | 'pathGenerators' | 'arrows'> &
   Partial<Pick<PathResolveContext, 'pathKinds' | 'pathGenerators' | 'arrows' | 'patterns' | 'round'>>;

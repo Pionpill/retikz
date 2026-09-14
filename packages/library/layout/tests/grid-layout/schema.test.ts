@@ -1,5 +1,4 @@
 import type { IRChild } from '@retikz/core';
-
 import { ChildSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
@@ -10,7 +9,6 @@ import type {
   GridTrackBreadthInput,
   GridTrackInput,
 } from '../../src';
-
 import {
   createGridLayout,
   GRID_LAYOUT_MAX_TRACKS_PER_AXIS,

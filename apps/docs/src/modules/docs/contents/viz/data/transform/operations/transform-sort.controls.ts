@@ -1,10 +1,9 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { monthlyRevenue } from './transform-sort.data';
 import { transformSortOperationOf } from './transform-sort-preview';
+import { monthlyRevenue } from './transform-sort.data';
 
 /** 行排序示例的中文控件 */
 export const transformSortControls = definePreviewControls({

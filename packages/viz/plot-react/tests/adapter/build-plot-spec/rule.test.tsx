@@ -85,15 +85,11 @@ describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
   });
 
   it('rulemark-bound-mismatch：绑 x 却给 yTo → fail-loud', () => {
-    expect(() => buildPlotIR(<ReferenceMark x={5} yTo={10} />, '__plot')).toThrow(
-      /yTo|match the bound dimension|xTo/i,
-    );
+    expect(() => buildPlotIR(<ReferenceMark x={5} yTo={10} />, '__plot')).toThrow(/yTo|match the bound dimension|xTo/i);
   });
 
   it('rulemark-bound-mismatch-y：绑 y 却给 xTo → fail-loud', () => {
-    expect(() => buildPlotIR(<ReferenceMark y={5} xTo={10} />, '__plot')).toThrow(
-      /xTo|match the bound dimension|yTo/i,
-    );
+    expect(() => buildPlotIR(<ReferenceMark y={5} xTo={10} />, '__plot')).toThrow(/xTo|match the bound dimension|yTo/i);
   });
 
   it('rulemark-extent-unpaired：仅 extentField → fail-loud', () => {
@@ -103,9 +99,7 @@ describe('buildPlotIR rule 装配（alpha.11 ADR-03）', () => {
   });
 
   it('rulemark-region-missing-bound：region 缺 yTo → fail-loud', () => {
-    expect(() => buildPlotIR(<ReferenceMark kind="region" x={1} xTo={2} y={3} />, '__plot')).toThrow(
-      /region|xTo|yTo/i,
-    );
+    expect(() => buildPlotIR(<ReferenceMark kind="region" x={1} xTo={2} y={3} />, '__plot')).toThrow(/region|xTo|yTo/i);
   });
 
   it('rulemark-region-extent：region 不接收 extent → fail-loud', () => {

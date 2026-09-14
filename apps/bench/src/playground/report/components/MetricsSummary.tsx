@@ -1,12 +1,10 @@
-import type { FC } from 'react';
-
 import { Gauge, GitBranch, Layers, Zap } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 
 import type { LabPolicyResult } from '../../modules/kernel';
-
 import { LabPolicyId } from '../../modules/kernel';
 import { createLabSummary } from '../view-model';
 

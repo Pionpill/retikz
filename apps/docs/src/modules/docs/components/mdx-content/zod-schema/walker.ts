@@ -1,8 +1,7 @@
 ﻿import { z } from 'zod';
 
-import type { DiscriminatedUnionBranch, ObjectField, SchemaPathLiteral, SchemaRepr, TypeRepr } from './types';
-
 import { lookupSchema } from './schema-registry';
+import type { DiscriminatedUnionBranch, ObjectField, SchemaPathLiteral, SchemaRepr, TypeRepr } from './types';
 
 type AnySchema = z.core.$ZodType;
 

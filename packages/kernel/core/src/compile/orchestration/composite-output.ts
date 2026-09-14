@@ -7,14 +7,13 @@ import type {
   CompositeReplayWrapper,
   Transform,
 } from '../../contract';
-import type { IRChild } from '../../schemas';
-import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
-
 import { validateSpatialHandleDeclarations } from '../../contract';
 import { createCompositeContractError } from '../../resolve/diagnostics';
+import type { IRChild } from '../../schemas';
 import { ScopePropsSchema } from '../../schemas';
 import { cloneAndFreezeJson } from '../../shared/json';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
+import type { CompositeCompileOwner, CompositeCompileSession, CompositeRuntimeOutputChild } from './types';
 
 /** 把通用 declaration validator 的失败提升为带 provider owner 的 contract error */
 export const validateCompositeSpatialHandles = (owner: string, value: unknown) => {

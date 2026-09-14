@@ -1,12 +1,10 @@
 import type { AnyCompositeDefinition, CompileObserverDefinition, CoreProgramOutput, IRScene } from '@retikz/core';
-import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-
 import { compileToScene } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
+import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { VanillaCompileDriver, VanillaCompileOutput } from '../../src';
-
 import {
   compileVanillaWithDriver,
   createVanillaCompileDriverSession,

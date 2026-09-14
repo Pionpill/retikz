@@ -16,8 +16,6 @@ import type {
   LayoutProposal,
   ScenePrimitive,
 } from '../../../src';
-import type { RuntimePrimitiveMetadataTable } from '../../../src/compile/orchestration';
-
 import {
   compileToScene,
   CompileWarningCode,
@@ -30,6 +28,7 @@ import {
   PathSchema,
 } from '../../../src';
 import { compileCoreSnapshot } from '../../../src/compile/compile';
+import type { RuntimePrimitiveMetadataTable } from '../../../src/compile/orchestration';
 
 const identityKey = (identity: { owner: string; path: ReadonlyArray<string> }): string =>
   `${identity.owner}:${identity.path.join('/')}`;

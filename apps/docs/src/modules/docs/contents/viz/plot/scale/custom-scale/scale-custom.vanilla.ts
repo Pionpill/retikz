@@ -1,5 +1,4 @@
 import type { IRPlot } from '@retikz/plot';
-
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { scaleCustomRows } from './scale-custom.data';

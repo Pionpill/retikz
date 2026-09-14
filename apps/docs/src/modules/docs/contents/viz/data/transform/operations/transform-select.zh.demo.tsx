@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, transformSelectControls } from './transform-select.controls';
 import { renderTransformSelectPreview } from './transform-select-preview';
+import { previewControlContract, transformSelectControls } from './transform-select.controls';
 
 /** 注册回退使用的代表行选择控件 */
 export const previewControls = transformSelectControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 切换 selector、排名数与平局策略的动态示例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** density 的有限样本筛选、带宽解析、KDE 采样与输出 */
 const Demo: FC = () => (

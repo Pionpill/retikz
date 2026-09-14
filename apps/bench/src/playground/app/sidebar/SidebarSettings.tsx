@@ -1,6 +1,5 @@
-import type { Dispatch, FC } from 'react';
-
 import { Check, ChevronsUpDown, Languages, Moon, Settings2, SlidersHorizontal, Sun } from 'lucide-react';
+import type { Dispatch, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -15,10 +14,9 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
 import type { LanguageValue } from '../../i18n/preferences';
-import type { LabStateAction } from '../lab-state';
-
 import { Language } from '../../i18n/preferences';
 import { Theme, useThemeStore } from '../../store';
+import type { LabStateAction } from '../lab-state';
 import { LabActionType } from '../lab-state';
 
 /** Workspace 全局操作属性 */

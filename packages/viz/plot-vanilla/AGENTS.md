@@ -23,6 +23,6 @@
 结构化改动后运行：
 
 ```bash
-pnpm --filter @retikz/plot-vanilla exec eslint . --fix
+pnpm --filter @retikz/plot-vanilla exec oxlint . --fix
 pnpm --filter @retikz/plot-vanilla exec tsc --noEmit
 ```

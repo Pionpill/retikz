@@ -1,5 +1,4 @@
 import type { AnyCompositeDefinition, CoreProgramOutput } from '@retikz/core';
-
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import {
   createRuntimeOwnerInput,
@@ -12,21 +11,12 @@ import {
   RetikzRuntimeError,
 } from '@retikz/runtime';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
   VanillaCompileDriver,
   VanillaCompileDriverInput,
   VanillaCompileDriverSession,
 } from '../../runtime/compile-driver';
-import type {
-  PreparedProcessingInput,
-  ProcessingController,
-  ProcessingOptions,
-  ProcessingResult,
-  ProcessingSource,
-} from '../types';
-import type { InternalProcessingController, ProcessingTransactionParticipantFactory } from './types';
-
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import {
   commitVanillaCompileOutput,
   createVanillaCompileDriverSession,
@@ -35,6 +25,14 @@ import {
 } from '../../runtime/compile-driver';
 import { createRetainedCompositeDefinitions, VanillaCompositeRevisionOwnerDefinition } from '../composites';
 import { prepareProcessingInput } from '../prepare';
+import type {
+  PreparedProcessingInput,
+  ProcessingController,
+  ProcessingOptions,
+  ProcessingResult,
+  ProcessingSource,
+} from '../types';
+import type { InternalProcessingController, ProcessingTransactionParticipantFactory } from './types';
 
 /** 自定义编译驱动下一 revision 的领域中立失效标识 */
 const VanillaCompileDriverRevisionOwnerDefinition = defineRuntimeOwner<number, number, number, never>({

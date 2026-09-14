@@ -1,7 +1,6 @@
 import type { ThemeModeValue } from '@retikz/core';
 
 import type { IRPlotDefaults } from '../../../schemas';
-
 import { LegendSymbolFit } from '../../../schemas';
 
 /** 读取 mode-aware Neutral Legend defaults */

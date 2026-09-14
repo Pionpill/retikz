@@ -1,5 +1,4 @@
 import type { IRAnimationOrigin, IRAnimationTrack } from '../schemas';
-
 import { AnimationProperty } from '../schemas';
 
 /** preset 公共可调项（各 preset 在此之上加专有项；默认值由各 preset 给） */

@@ -1,5 +1,4 @@
 import type { InputEmbedContext } from '@retikz/vanilla';
-
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 

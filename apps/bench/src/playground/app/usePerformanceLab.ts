@@ -1,17 +1,15 @@
 import type { Dispatch, RefObject } from 'react';
-
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { LabRunModeValue } from '../modules/kernel';
-import type { LabState, LabStateAction } from './lab-state';
-import type { BenchModule } from './module-registry';
-import type { BenchTestCase } from './test-catalog';
-
 import { BenchReportStatus } from '../../shared';
+import type { LabRunModeValue } from '../modules/kernel';
 import { runKernelLab } from '../modules/kernel';
 import { createLabSessionReportStatus, saveBenchReport } from '../report';
+import type { LabState, LabStateAction } from './lab-state';
 import { createInitialLabState, LabActionType, reduceLabState } from './lab-state';
+import type { BenchModule } from './module-registry';
+import type { BenchTestCase } from './test-catalog';
 
 /** Performance Lab 页面交互出口 */
 export type UsePerformanceLabValue = Readonly<{

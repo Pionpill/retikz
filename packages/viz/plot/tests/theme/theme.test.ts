@@ -1,9 +1,6 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
-
-import type { IRPlot, IRPlotAxisGuide } from '../../src/schemas';
 
 import { lowerPlots } from '../../src/pipeline';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
@@ -14,6 +11,7 @@ import {
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../src/resolve/theme';
+import type { IRPlot, IRPlotAxisGuide } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 const ROWS = [

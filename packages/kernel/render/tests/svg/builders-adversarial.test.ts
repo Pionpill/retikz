@@ -1,5 +1,4 @@
 import type { PathCommand, Transform } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { buildPathD, buildTransform } from '../../src/svg';

@@ -1,5 +1,4 @@
 import type { RuntimeRevision, RuntimeTraceReporter } from '@retikz/runtime';
-
 import {
   createRuntimeIdentity,
   PerformanceTracePhase,
@@ -14,15 +13,14 @@ import type {
   SceneRuntimeNode,
   SceneRuntimeSubtree,
 } from '../../contract';
-import type { IRNode, IRScene } from '../../schemas';
-import type { CoreSnapshotIndexRead } from './diff';
-import type { CoreProgramOptions } from './public';
-import type { CoreProgramArtifactInput, CoreProgramRead } from './types';
-
 import { CORE_OWNER_KEY } from '../../contract';
+import type { IRNode, IRScene } from '../../schemas';
 import { jsonStructuralEquals } from '../../shared/json';
 import { compileCoreSnapshot } from '../compile';
+import type { CoreSnapshotIndexRead } from './diff';
+import type { CoreProgramOptions } from './public';
 import { createFullSceneRuntimeSnapshot, freezeProgramOutput } from './snapshot';
+import type { CoreProgramArtifactInput, CoreProgramRead } from './types';
 
 /** 单个 root Node 样式更新产生的 private incremental candidate */
 export type CoreRootNodeStyleCandidate<TComposites extends ReadonlyArray<AnyCompositeDefinition>> = Readonly<{

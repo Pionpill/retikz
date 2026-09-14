@@ -5,11 +5,9 @@
  *   自定义通道 → 注册表 interpolate + applyCanvas，未注册 warn+skip。viewBox 是 scene 根镜头、不在元素级
  */
 import type { ScenePrimitive } from '@retikz/core';
-
 import { AnimationProperty } from '@retikz/core';
 
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
-
 import {
   classifyProperty,
   evaluateTrack,

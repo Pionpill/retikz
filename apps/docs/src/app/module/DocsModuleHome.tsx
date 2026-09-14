@@ -1,15 +1,13 @@
 import type { FC } from 'react';
-
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-
-import type { ModuleLandingDemo } from '@/modules/docs/components';
-import type { DocModuleId, I18nKey } from '@/modules/docs/data';
 
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { cn } from '@/lib/utils';
+import type { ModuleLandingDemo } from '@/modules/docs/components';
 import { MODULE_LANDING_PREVIEW, ModuleLandingPage } from '@/modules/docs/components';
+import type { DocModuleId, I18nKey } from '@/modules/docs/data';
 import { modules } from '@/modules/docs/data';
 
 type ModuleHomeConfiguration = {

@@ -1,10 +1,8 @@
 import type { IRPathBase, IRScene, IRStep, PathPrim, ScenePrimitive } from '@retikz/core';
-
 import { compileToScene as compileCoreToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { IRRibbonPathOptions } from '../../src/ribbon';
-
 import {
   createRibbonPathKindDefinition,
   defineRibbonWidthProfile,

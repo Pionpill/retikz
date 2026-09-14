@@ -1,5 +1,4 @@
 import type { CoreDependencyProvider } from '@retikz/core';
-
 import { defineArrow } from '@retikz/core';
 
 import { StandardArrowName } from '../constants';

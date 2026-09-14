@@ -1,12 +1,10 @@
 import type { ScenePrimitive } from '@retikz/core';
-import type { Position } from '@retikz/math';
-
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import type { Position } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
-import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
-
 import { RetikzDiagramErrorCode } from '../../src/errors';
+import type { FlowLayoutInput, FlowLayoutOutput } from '../../src/flow';
 import {
   createFlowDiagramProviderContribution,
   FlowDiagramArtifactSchema,

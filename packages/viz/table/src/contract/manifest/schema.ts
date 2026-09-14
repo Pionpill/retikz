@@ -1,5 +1,3 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import { CssColorSchema, OpacitySchema, PaintValueSchema, ThemeMode } from '@retikz/core';
 import {
   NonBlankStringSchema,
@@ -8,6 +6,7 @@ import {
   PositiveIntegerSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { TableCellLocationSchema, TableCellRoleSchema } from '../../schemas';

@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { texExtensionsI18n } from './tex-extensions.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 拓展用法 demo 的控件 id */
 export const TexExtensionsControlId = {

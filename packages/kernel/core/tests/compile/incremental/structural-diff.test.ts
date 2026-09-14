@@ -10,7 +10,6 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import type { CoreChange, IRScene } from '../../../src';
-
 import { CompileWarningCode, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '../../../src';
 
 const rootIdentity = createRuntimeIdentity(CORE_OWNER_KEY, ['root']);

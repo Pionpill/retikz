@@ -1,5 +1,4 @@
 import type { AxisAlignedBounds, BoundsRect } from '@retikz/math';
-
 import { boundsOf, expandBounds, mergeBounds } from '@retikz/math';
 
 import type { IRPosition, ResolvedDropShadow } from '../../schemas';

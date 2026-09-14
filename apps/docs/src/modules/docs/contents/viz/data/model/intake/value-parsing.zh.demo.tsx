@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, valueParsingControls } from './value-parsing.controls';
 import { renderValueParsingPreview } from './value-parsing-preview';
+import { previewControlContract, valueParsingControls } from './value-parsing.controls';
 
 /** 注册回退使用的值解析控件 */
 export const previewControls = valueParsingControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 比较内置转换与声明式格式的动态试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

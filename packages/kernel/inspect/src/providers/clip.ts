@@ -1,11 +1,9 @@
 import type { ClipOwnerOutput, IRChild, IRPosition, PathCommand } from '@retikz/core';
-import type { output as ZodOutput } from 'zod';
-
 import { ClipOwnerOutputSchema } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
+import type { output as ZodOutput } from 'zod';
 
 import type { InspectorContext } from '../contract';
-
 import { defineInspector } from '../contract';
 import { ClipInspectOptionsSchema } from '../schema';
 import { isolateInspectionChildren, labelNode, pathCommandsToChildren, pathStyle, pointAtArcCommand } from './geometry';

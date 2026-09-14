@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import type { ComparisonChartRow } from '../view-model';
 

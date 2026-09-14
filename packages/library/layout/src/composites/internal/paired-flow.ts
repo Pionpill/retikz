@@ -1,13 +1,11 @@
+import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import type { GridTrackConstraint } from '../grid-layout/tracks';
+import { solveGridTracks } from '../grid-layout/tracks';
 import type { IRGridTrack } from '../grid-layout/types';
 import type { LayoutAlignmentValue } from '../shared';
-import type { FlexMainItem } from './flex-engine';
-import type { LayoutRect } from './geometry';
-
-import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
-import { solveGridTracks } from '../grid-layout/tracks';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum } from './distribution';
+import type { FlexMainItem } from './flex-engine';
 import {
   formFlexLines,
   resolveFlexItemCrossSlotStart,
@@ -16,6 +14,7 @@ import {
   resolveFlexLinesCrossProfile,
   resolveFlexLinesMainProfile,
 } from './flex-engine';
+import type { LayoutRect } from './geometry';
 
 /** 一个已取得 minimum/natural 结构尺寸的布局 child */
 export type PairedFlowMeasuredChild = Readonly<{
@@ -98,13 +97,12 @@ export const translatePairedFlowPlan = (
       height: rect.height,
     });
   const slots = Object.freeze(
-    plan.slots.map(
-      (slot): PairedFlowSlot =>
-        Object.freeze({
-          sourceIndex: slot.sourceIndex,
-          primary: translate(slot.primary),
-          secondary: slot.secondary === null ? null : translate(slot.secondary),
-        }),
+    plan.slots.map((slot): PairedFlowSlot =>
+      Object.freeze({
+        sourceIndex: slot.sourceIndex,
+        primary: translate(slot.primary),
+        secondary: slot.secondary === null ? null : translate(slot.secondary),
+      }),
     ),
   );
   return Object.freeze({

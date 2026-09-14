@@ -1,12 +1,10 @@
 import type { IRDataScalarValue } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
-import type { ZodType } from 'zod';
-
 import { describe, expect, it } from 'vitest';
+import type { ZodType } from 'zod';
 import { array, strictObject, string } from 'zod';
 
 import type { AnyCellVisualScaleDefinition } from '../../src';
-
 import { defineCellVisualScale, resolveCellVisualScaleRegistry, RetikzTableErrorCode } from '../../src';
 import { resolveCellVisualScale } from '../../src/providers/encoding';
 

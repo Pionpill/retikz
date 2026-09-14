@@ -32,8 +32,8 @@ description: Use when adding or changing retikz unit, integration, or regression
 Alpha 在 ADR 人工确认且获准进入实现准备后，读取长期 ADR 与已同步创建的镜像 `PLAN.md`；Beta 读取 TODO / plan。再读取公开类型或 schema、相关实现边界、已有测试与 docs 页面。把详细矩阵写入与 ADR / TODO 同构的 ignored plan：
 
 ```text
-packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
--> packages/viz/_notes/plans/chart/v0/v0.1/alpha.1/01-example/TEST_CONTRACT.md
+packages/viz/_notes/decisions/chart/v0/v0.1/001-example.md
+-> packages/viz/_notes/plans/chart/v0/v0.1/001-example/TEST_CONTRACT.md
 ```
 
 测试策略摘要和关键证据层保留在 `PLAN.md`；长期 ADR 不保留测试策略、逐项 case、文件索引、路径、命令或执行清单。`TEST_CONTRACT.md` 与其它 plan 文件默认不 stage、不 commit。

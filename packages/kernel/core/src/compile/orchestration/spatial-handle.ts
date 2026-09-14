@@ -1,5 +1,4 @@
 import type { BoundsRect } from '@retikz/math';
-
 import { boundsOf, boundsToRect } from '@retikz/math';
 
 import type {
@@ -10,10 +9,9 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import type { IRPosition } from '../../schemas';
-
 import { CompileExpansionKind } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRPosition } from '../../schemas';
 import { applyTransformChain } from '../transform';
 import { canonicalizeBoundsRect } from './bounds';
 

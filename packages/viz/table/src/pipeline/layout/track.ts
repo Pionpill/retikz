@@ -1,7 +1,6 @@
-import type { ResolvedTableTrackSize, SolveTableTracksInput } from './types';
-
 import { RetikzTableError } from '../../error';
 import { TableTrackSizeKind } from '../../schemas';
+import type { ResolvedTableTrackSize, SolveTableTracksInput } from './types';
 
 /** 单个轨道在 constrained 求解阶段的数值状态 */
 type TrackState = Readonly<{

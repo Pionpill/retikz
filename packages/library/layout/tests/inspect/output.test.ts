@@ -1,11 +1,9 @@
 import type { IRChild } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { InspectorContext } from '@retikz/inspect';
-
 import { describe, expect, it } from 'vitest';
 
 import type { FlexLayoutArtifact, GridLayoutArtifact, OverlayLayoutArtifact } from '../../src';
-
 import { FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR } from '../../src/inspect';
 
 const rect = (x: number, y: number, width: number, height: number) => ({ x, y, width, height });

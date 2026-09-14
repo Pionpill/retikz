@@ -3,7 +3,6 @@ import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import type { BenchLabReport, BenchReportList, WriteBenchReportInput } from './src/shared/lab-report';
-
 import { createBenchReportSummary, isBenchLabReport, isBenchReportStatus } from './src/shared/lab-report';
 
 /** 查询本地报告的过滤条件 */

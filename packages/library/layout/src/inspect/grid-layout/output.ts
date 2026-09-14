@@ -3,7 +3,6 @@ import type { InspectorContext } from '@retikz/inspect';
 import type { GridLayoutArtifact } from '../../composites/grid-layout';
 import type { CanonicalGridLayoutInspectOptions } from '../resolve/grid-layout';
 import type { LayoutInspectionChild, LayoutInspectionLineMark, LayoutInspectionMark } from '../shared';
-
 import {
   inspectLayoutArtifactBase,
   inspectLayoutLine,

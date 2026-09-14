@@ -1,6 +1,5 @@
-import type { core as ZodCore, ZodType } from 'zod';
-
 import { describe, expect, it } from 'vitest';
+import type { core as ZodCore, ZodType } from 'zod';
 import { toJSONSchema } from 'zod';
 
 import * as Graph from '../../src';

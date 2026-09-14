@@ -2,8 +2,6 @@ import type { Position } from '@retikz/math';
 
 import type { BoundaryDefinition, ConnectionEnvelopeKind, ShapeDefinition } from '../../contract';
 import type { BoundaryReferenceResolution } from '../../resolve';
-import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
-
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -14,6 +12,7 @@ import {
 import { boundsConnectionEnvelope, isDirectionalAnchor, rect as rectOps } from '../../shared';
 import { CompileWarningCode } from '../constants';
 import { withProviderOutputValidationBoundary } from '../scene-primitive';
+import type { BoundaryGeometryDefinition, BoundaryGeometryResolution, BoundaryGeometryResolveContext } from './types';
 
 /** 同一 layout 在局部 / 全局投影后尺寸可能不同，缓存 key 必须包含 rect 几何 */
 const connectionEnvelopeCacheKey = (

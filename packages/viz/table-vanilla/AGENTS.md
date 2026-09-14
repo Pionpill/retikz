@@ -28,7 +28,7 @@
 结构化改动后运行：
 
 ```bash
-pnpm --filter @retikz/table-vanilla exec eslint . --fix
+pnpm --filter @retikz/table-vanilla exec oxlint . --fix
 pnpm --filter @retikz/table-vanilla exec tsc --noEmit
 pnpm --filter @retikz/table-vanilla test:changed
 ```

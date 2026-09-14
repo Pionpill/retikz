@@ -1,5 +1,4 @@
 import type { ClipDefinition } from '../../contract';
-
 import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_CLIPS } from './definitions';
 

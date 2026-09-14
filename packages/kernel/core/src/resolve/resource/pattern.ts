@@ -1,10 +1,9 @@
 import type { ResolvedPatternLineStyle, ResolvedPatternLineStyleCycle } from '../../contract';
-import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
-import type { PatternStyleResolution } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRPatternLineStyle, IRPatternPaint } from '../../schemas';
 import { PatternLineStyleCycleSchema, PatternLineStyleSchema } from '../../schemas';
 import { resolveDashPattern } from '../style';
+import type { PatternStyleResolution } from './types';
 
 const hasOwn = (value: object, key: PropertyKey): boolean => Object.prototype.hasOwnProperty.call(value, key);
 

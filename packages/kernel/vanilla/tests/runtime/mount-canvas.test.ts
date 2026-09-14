@@ -1,6 +1,5 @@
 ﻿// @vitest-environment jsdom
 import type { IRScene } from '@retikz/core';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mountCanvas } from '../../src/dom';

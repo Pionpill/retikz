@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { DocScopeId } from '@/modules/docs/data';
-
 import { isDocScopeId } from '@/modules/docs/data';
 
 /** 文档模块选择偏好状态。 */

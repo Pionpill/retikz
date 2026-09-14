@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 最小 <Text> 用法：在 <Node> 里写一行带样式的行。 */
 const Demo: FC = () => (

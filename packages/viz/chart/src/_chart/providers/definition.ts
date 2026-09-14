@@ -1,13 +1,11 @@
 import type { CompositeCoreProviderKey, LayoutAxisProposal, LayoutCompositeDefinition } from '@retikz/core';
-
 import { defineComposite, LayoutAxisProposalKind, LayoutChildProbeKind } from '@retikz/core';
-
-import type { IRChartSource } from '../schemas';
-import type { ChartProviderRegistry } from './types';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { CHART_NAMESPACE } from '../constants';
+import type { IRChartSource } from '../schemas';
 import { resolveChartFromProvider } from './resolve';
+import type { ChartProviderRegistry } from './types';
 
 /** 创建当前 family 使用的 Core composite key */
 export const chartProviderKeyOf = (family: string): CompositeCoreProviderKey =>

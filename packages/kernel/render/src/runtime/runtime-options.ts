@@ -4,7 +4,6 @@ import type { RuntimeIdentity } from '@retikz/runtime';
 
 import type { EasingRegistry } from '../animation';
 import type { RenderRuntimeConfig } from './config';
-
 import { createRuntimeIdentityMap, runtimeStructuralEquals } from './shared';
 
 /** 把 deeply readonly config easing tuples 复制为 renderer 消费形态 */

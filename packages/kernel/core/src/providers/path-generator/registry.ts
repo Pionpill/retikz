@@ -1,5 +1,4 @@
 import type { PathGeneratorDefinition } from '../../contract';
-
 import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_PATH_GENERATORS } from './definitions';
 

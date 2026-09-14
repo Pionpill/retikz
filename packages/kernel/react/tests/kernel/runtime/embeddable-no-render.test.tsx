@@ -1,8 +1,7 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
-
-import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { Fragment, useEffect, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

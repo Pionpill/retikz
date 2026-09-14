@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { IntervalMark, PathMark, Plot, PlotAxis } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { quarterlyPerformance } from './cartesian-bar-line.data';
 

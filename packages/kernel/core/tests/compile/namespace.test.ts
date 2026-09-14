@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { DuplicateRegisterInfo } from '../../src/compile/namespace';
-import type { NodeLayout } from '../../src/compile/node';
-
 import { NamespaceStack } from '../../src/compile/namespace';
+import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
 

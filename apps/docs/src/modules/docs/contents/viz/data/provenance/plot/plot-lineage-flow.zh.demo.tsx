@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Plot 在 Data 链路上补充图形语义的运行时流程 */
 const Demo: FC = () => (

@@ -1,22 +1,21 @@
 import { isFinitePoint } from '@retikz/math';
 
 import type { ScenePrimitive } from '../../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import type { CanonicalStep, PathTargetView, StrokePathResolution } from '../../../resolve';
 import type { IRPosition, IRTarget } from '../../../schemas';
-import type { PaintResolver } from '../../resource';
-import type { TextMeasurer } from '../../text';
-import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
-import type { StrokeInterruptionProtectedRange } from './interruption';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { isRelativeAccumulateTargetLike, isRelativeTargetLike } from '../../../shared';
 import { cloneAndFreezeJson } from '../../../shared/json';
 import { CompileWarningCode } from '../../constants';
+import type { PaintResolver } from '../../resource';
+import type { TextMeasurer } from '../../text';
 import { fallbackMeasurer } from '../../text';
 import { emitLabelPrimitive, pointOfTarget } from '../host';
+import type { PathEmitOptions, PathPrimitiveEmitResult } from '../types';
 import { createPathCommandEmitter } from './commands';
 import { createStrokeCursor, isStrokeTargetStep } from './cursor';
 import { emitInlineMarkPrimitives, emitPathEndpointDecorations, pathEndpointArrows } from './decorations';
+import type { StrokeInterruptionProtectedRange } from './interruption';
 import {
   createStrokeInterruptionIntervals,
   createStrokePathGeometry,

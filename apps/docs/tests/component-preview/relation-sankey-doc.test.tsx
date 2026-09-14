@@ -1,6 +1,5 @@
 import type { IRScope } from '@retikz/core';
 import type { FC } from 'react';
-
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';

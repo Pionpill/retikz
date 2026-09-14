@@ -1,9 +1,8 @@
 import type { CoreDependencyProvider, IRNode, ThemeModeValue } from '@retikz/core';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
-import type { FC } from 'react';
-
 import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
 import { Layout, Scope } from '@retikz/react';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
@@ -62,15 +61,13 @@ const themeCardComposite = defineComposite({
       },
       layout: { minimumSize: { width: 132, height: 54 }, padding: 8 },
     };
-    const swatches = visibleCategorical.map(
-      (color, index): IRNode => ({
-        type: 'node',
-        position: [swatchStartX + index * 18, 32],
-        shape: 'circle',
-        style: { fill: color, stroke: 'none' },
-        layout: { minimumSize: 12, padding: 0 },
-      }),
-    );
+    const swatches = visibleCategorical.map((color, index): IRNode => ({
+      type: 'node',
+      position: [swatchStartX + index * 18, 32],
+      shape: 'circle',
+      style: { fill: color, stroke: 'none' },
+      layout: { minimumSize: 12, padding: 0 },
+    }));
     return { children: [card, ...swatches] };
   },
 });

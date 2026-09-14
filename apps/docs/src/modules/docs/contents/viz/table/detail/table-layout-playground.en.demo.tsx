@@ -1,11 +1,9 @@
-import type { IRTableTrackSize } from '@retikz/table';
-
 import { Layout } from '@retikz/react';
+import type { IRTableTrackSize } from '@retikz/table';
 import { DetailColumn } from '@retikz/table-react';
 
-import type { PreviewSourceConfig } from '@/modules/docs/preview';
-
 import { PreviewDetailTable as DetailTable } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, tableLayoutPlaygroundControls } from './table-layout-playground.en.controls';
@@ -127,4 +125,6 @@ export const previewSource = {
 } satisfies PreviewSourceConfig;
 
 /** DetailTable playground for tracks, Cell content policy, and the Border Graph */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

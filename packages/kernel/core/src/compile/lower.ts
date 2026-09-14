@@ -1,9 +1,8 @@
-import type { IRScene } from '../schemas';
-import type { LoweredIRScene, LowerIRToKernelOptions } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { resolveCompositeRegistry, resolveThemeStyleRegistry } from '../providers';
+import type { IRScene } from '../schemas';
 import { lowerComposites } from './orchestration';
+import type { LoweredIRScene, LowerIRToKernelOptions } from './types';
 
 /**
  * 把完整 IR 中的 composite 递归展开成可由 Kernel 直接消费的 Tier 1 IR。

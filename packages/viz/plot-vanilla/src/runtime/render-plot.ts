@@ -1,4 +1,5 @@
 import type { IRScene, ThemeStyleDefinition } from '@retikz/core';
+import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type {
   IRPlot,
@@ -7,8 +8,6 @@ import type {
   PlotLineageOptions,
   PlotLineageRun,
 } from '@retikz/plot';
-
-import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { createPlotProviderContribution, lowerPlotWithLineage } from '@retikz/plot';
 import { renderToSvgString } from '@retikz/vanilla';
 

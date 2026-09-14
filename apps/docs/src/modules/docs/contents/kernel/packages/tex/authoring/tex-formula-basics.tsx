@@ -1,13 +1,12 @@
 import type { LowerTex } from '@retikz/core';
-import type { Lang } from '@/i18n';
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { useLowerTex } from '@retikz/tex/react';
+import type { FC } from 'react';
+
+import type { Lang } from '@/i18n';
+import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
 
 import { texFormulaBasicsI18n } from './tex-formula-basics.i18n';
-
-import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';
 
 export const previewSource = {
   deriveIR: false,

@@ -1,7 +1,6 @@
 import type { IRPatternLineStyle, IRPatternPaint } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

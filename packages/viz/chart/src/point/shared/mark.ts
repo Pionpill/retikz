@@ -1,12 +1,10 @@
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-
 import { PlotMark, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkResolveContext } from '../../_chart/contract/mark';
-import type { IRPointEncoding, IRPointProperties } from './schema';
-
 import { pointFieldMappingOf, requiredFieldOf } from './encoding';
+import type { IRPointEncoding, IRPointProperties } from './schema';
 
 /** 将 Chart 字段 / 常量 slot 转为 Plot mark style value */
 export const markValueOf = (encodings: JsonObject, properties: JsonObject, name: string): JsonObject | undefined => {

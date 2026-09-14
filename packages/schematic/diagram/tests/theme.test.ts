@@ -1,10 +1,8 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { DEFAULT_RESOLVED_THEME, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { DiagramThemeStyleDefinition, IRDiagramDefaults } from '../src/_diagram';
-
 import {
   defineDiagramThemeStyle,
   DiagramDefaultsSchema,

@@ -1,15 +1,14 @@
 import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type { ShapeDefinition } from '../../contract';
-import type { ProviderCollection } from '../../providers/registry';
-import type { IRNode, IRShapeRef } from '../../schemas';
-import type { ShapeResolution } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { ProviderCollection } from '../../providers/registry';
 import { providerDefinitionOf } from '../../providers/registry';
+import type { IRNode, IRShapeRef } from '../../schemas';
 import { BuiltinShape } from '../../schemas';
 import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../provider-validation';
+import type { ShapeResolution } from './types';
 
 /** 节点 shape 解析输入 */
 export type NodeShapeResolveInput = {

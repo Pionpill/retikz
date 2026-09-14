@@ -80,15 +80,13 @@ describe('Performance Lab report history', () => {
         results: [],
       },
     };
-    vi.stubGlobal(
-      'fetch',
-      (input: RequestInfo | URL): Promise<Response> =>
-        Promise.resolve(
-          new Response(
-            JSON.stringify(String(input).includes('runId=run-1') ? { report: detail } : { reports, diagnostics: [] }),
-            { status: 200, headers: { 'content-type': 'application/json' } },
-          ),
+    vi.stubGlobal('fetch', (input: RequestInfo | URL): Promise<Response> =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify(String(input).includes('runId=run-1') ? { report: detail } : { reports, diagnostics: [] }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
         ),
+      ),
     );
     const container = document.createElement('div');
     document.body.append(container);

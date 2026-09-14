@@ -1,5 +1,3 @@
-import type { CSSProperties, FC } from 'react';
-
 import {
   ArrowDown,
   ArrowLeft,
@@ -13,28 +11,15 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
+import type { CSSProperties, FC } from 'react';
 import { useState } from 'react';
 
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
-import type { Lang } from '@/i18n';
-
-import type {
-  AlignKey,
-  ComponentPreviewDemoComponent,
-  ComponentRenderSource,
-  PreviewActionSlot,
-  PreviewControlContract,
-  PreviewControlsDefinition,
-  PreviewControlSlot,
-  PreviewControlState,
-  PreviewThemeMode,
-  PreviewThemeStyleSelection,
-  SizeKey,
-} from './types';
 
 import { ToolbarIconButton } from './components';
 import { alignClass } from './constants';
@@ -50,6 +35,19 @@ import {
   ZOOM_FACTOR,
 } from './preview-panel';
 import { SourcePanel, useSourcePanelState } from './source-panel';
+import type {
+  AlignKey,
+  ComponentPreviewDemoComponent,
+  ComponentRenderSource,
+  PreviewActionSlot,
+  PreviewControlContract,
+  PreviewControlsDefinition,
+  PreviewControlSlot,
+  PreviewControlState,
+  PreviewThemeMode,
+  PreviewThemeStyleSelection,
+  SizeKey,
+} from './types';
 import { buildAskAiPrompt } from './utils';
 
 export type ComponentPreviewDialogProps = {

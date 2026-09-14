@@ -1,13 +1,11 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-
 import { PlotPositionAdjustment, PointMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkDefinition } from '../../_chart/contract';
-import type { IRStripChartJitter } from './schema';
-
 import { defineChartMark } from '../../_chart/contract';
 import { markSlotsOf, resolvePointMark } from '../shared';
+import type { IRStripChartJitter } from './schema';
 import { StripChartMarkSchema } from './schema';
 
 /** 把 Strip jitter shorthand 下沉到 Plot Point placement */

@@ -6,14 +6,12 @@ import type {
   CoreProgramOutput,
   IRScene,
 } from '@retikz/core';
-import type { RenderReadonlyLayer } from '@retikz/render/runtime';
-
 import { compileToScene, observeCompileToScene } from '@retikz/core';
+import type { RenderReadonlyLayer } from '@retikz/render/runtime';
 import { EMPTY_READONLY_LAYERS, validateReadonlyLayers } from '@retikz/render/runtime';
 
-import type { InputAuthoringSite } from '../normalize';
-
 import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
+import type { InputAuthoringSite } from '../normalize';
 
 type VanillaCoreProgramOutput = CoreProgramOutput<ReadonlyArray<AnyCompositeDefinition>>;
 

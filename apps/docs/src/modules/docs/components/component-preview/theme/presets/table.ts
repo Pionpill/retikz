@@ -1,6 +1,5 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { IRTableDefaults } from '@retikz/table';
-
 import { defineTableThemeStyle, TableDefaultsSchema } from '@retikz/table';
 
 import { PreviewThemeStyle } from '../constants';

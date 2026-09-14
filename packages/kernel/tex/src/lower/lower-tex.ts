@@ -1,9 +1,8 @@
 import type { LowerTex } from '@retikz/core';
 
 import type { MathJaxSvgEngine } from '../mathjax';
-import type { LowerTexOptions, TexLoweringResult } from './types';
-
 import { lowerMathJaxSvg } from '../svg';
+import type { LowerTexOptions, TexLoweringResult } from './types';
 
 /**
  * 把同步 SVG engine 适配为 Core `LowerTex`，并缓存确定的解析结果

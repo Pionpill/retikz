@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { RibbonWidthProfileDefinition } from './profile-types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
+import type { RibbonWidthProfileDefinition } from './profile-types';
 
 /** 合并 Standard Ribbon 内置与调用方 profile，并拒绝同名冲突 */
 export const resolveRibbonWidthProfileRegistry = (

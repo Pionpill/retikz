@@ -1,10 +1,8 @@
-import type { IRStripChart } from '@retikz/chart/point/strip';
 import type { CreateStripChartInput } from '@retikz/chart-vanilla/point/strip';
-
 import { createStripChart } from '@retikz/chart-vanilla/point/strip';
+import type { IRStripChart } from '@retikz/chart/point/strip';
 
 import type { TypedChartCommonProps } from '../shared';
-
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectStripChartDeclarations } from './declaration-collection';
 

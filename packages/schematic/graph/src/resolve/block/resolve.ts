@@ -1,13 +1,11 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
 import type { IRBlock } from '../../schemas';
-import type { CanonicalBlock } from './types';
-
 import { resolveBlockSource } from '../graph';
 import { resolveGraphTheme } from '../theme';
+import type { CanonicalBlock } from './types';
 
 const DEFAULT_BLOCK_MIN_WIDTH = 240;
 

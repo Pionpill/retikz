@@ -1,7 +1,6 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
 import type { AnyCellVisualScaleDefinition } from '../../contract';
-
 import { RetikzTableError } from '../../error';
 import { BUILTIN_CELL_VISUAL_SCALES } from './definitions';
 

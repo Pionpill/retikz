@@ -1,11 +1,9 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { LucideIcon } from 'lucide-react';
-
 import { Gauge, MousePointer2, RefreshCw, Sparkles, Zap } from 'lucide-react';
 
-import type { BenchModuleIdValue } from './module-registry';
-
 import { KernelLabScenarioId } from '../modules/kernel';
+import type { BenchModuleIdValue } from './module-registry';
 
 /** Bench 用例页面类型 */
 export const BenchCaseView = {

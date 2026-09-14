@@ -1,6 +1,5 @@
-import type { FC, ReactNode } from 'react';
-
 import { Braces, Check, ChevronDown, Database, FileCode2, FileSymlink } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 
 import { JsonIcon, ReactIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';

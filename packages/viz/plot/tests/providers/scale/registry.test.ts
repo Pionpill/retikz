@@ -1,16 +1,13 @@
 import type { IRNode, IRScope } from '@retikz/core';
-
 import { DataFieldType } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, object, string } from 'zod';
 
-import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import * as plot from '../../../src';
+import type { AnyScaleDefinition, ChannelScaleResolveContext } from '../../../src/contract';
 import { defineScale, extractScaleType } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { BUILTIN_SCALES, linearPositionScale, resolveLinearScale, resolveScaleRegistry } from '../../../src/providers';
 import {
@@ -19,6 +16,7 @@ import {
   resolveChannelScale,
   resolvePositionScale,
 } from '../../../src/resolve/scale';
+import type { IRPlot } from '../../../src/schemas';
 import { BUILTIN_SCALE_TYPES, PlotSchema } from '../../../src/schemas';
 
 /** 自定义 position scale：把内置 linear 包一层，仅验证 registry 分派（type 'unit'，固定 domain [0,1]） */

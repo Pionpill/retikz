@@ -62,4 +62,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 两个纵轴分别绑定温度与降雨量 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

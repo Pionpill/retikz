@@ -1,7 +1,6 @@
 import type { PositionChannelDefinition } from '../../../contract';
-
 import { ChannelDefinitionKind } from '../../../contract';
-import { type IRPlotChannel } from '../../../schemas';
+import type { IRPlotChannel } from '../../../schemas';
 
 /** 内置 position channel definition 的扩展形态 */
 export type BuiltinPositionChannelDefinition = PositionChannelDefinition & {

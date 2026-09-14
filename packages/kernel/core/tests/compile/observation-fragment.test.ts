@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import type { CompileObserverDefinition, IRScene } from '../../src';
-
 import * as core from '../../src';
 
 const scene = (children: IRScene['children']): IRScene => ({ version: 1, type: 'scene', children });

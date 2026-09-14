@@ -1,5 +1,4 @@
 import type { IRPlot } from '@retikz/plot';
-
 import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 同一内容框在 proportional / equal 外接策略下的边界对照图 */
 const Demo: FC = () => (

@@ -1,12 +1,10 @@
 import type { GraphLayoutHostProps } from '@retikz/graph-react';
-import type { ReactElement, ReactNode } from 'react';
-
 import { Layout } from '@retikz/react';
+import type { ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement } from 'react';
 
-import type { PreviewSourceConfig } from '../components/component-preview/types';
-
 import { PreviewGraph } from '../components/component-preview/theme';
+import type { PreviewSourceConfig } from '../components/component-preview/types';
 import { LogicFigure, logicFigureGraphProps, logicFigureRelationKinds } from '../components/logic-figure';
 
 type GraphPreviewRootProps = GraphLayoutHostProps & {

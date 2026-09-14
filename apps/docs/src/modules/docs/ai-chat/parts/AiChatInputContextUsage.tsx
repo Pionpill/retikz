@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Minimize2 } from 'lucide-react';
+import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

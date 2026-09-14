@@ -1,10 +1,9 @@
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeProgramId } from '../identity';
 import type { RuntimeProgramDefinition, RuntimeProgramErasedExecutor, RuntimeProgramToken } from '../program';
-import type { RuntimeOwnerRegistry, RuntimeProgramRegistry, RuntimeProgramRegistryInput } from './types';
-
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import { getRuntimeProgramDefinitionExecutor, isRuntimeProgramDefinition } from '../program';
 import { isRuntimeOwnerRegistry } from './owner-registry';
+import type { RuntimeOwnerRegistry, RuntimeProgramRegistry, RuntimeProgramRegistryInput } from './types';
 
 type RuntimeProgramRegistryState = Readonly<{
   owners: RuntimeOwnerRegistry;

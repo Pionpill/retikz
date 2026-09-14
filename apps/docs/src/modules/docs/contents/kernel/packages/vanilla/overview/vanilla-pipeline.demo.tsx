@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** @retikz/vanilla 将 InputScene 归一为 Core IR，再交给 Core 编译为 Scene */
 const Demo: FC = () => (

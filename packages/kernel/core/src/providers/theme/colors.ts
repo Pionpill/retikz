@@ -1,6 +1,8 @@
 import { array, strictObject } from 'zod';
 
 import type { ThemeStyleColorOverrides } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { CssColorSchema } from '../../schemas';
 import type {
   CoreSemanticColors,
   CssColorValue,
@@ -8,9 +10,6 @@ import type {
   ResolvedThemeColors,
   ThemeModeValue,
 } from '../../shared';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { CssColorSchema } from '../../schemas';
 import { ThemeMode } from '../../shared';
 
 type CategoricalTone = Readonly<{

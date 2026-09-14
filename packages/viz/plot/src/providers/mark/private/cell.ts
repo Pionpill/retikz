@@ -1,10 +1,9 @@
-import { type IRNode, type IRNodeDefault, type IRScope } from '@retikz/core';
+import type { IRNode, IRNodeDefault, IRScope } from '@retikz/core';
 
 import type { CellGeometry, ChannelValueResolver } from '../../../contract';
-import type { MarkPaint } from '../shared';
-
 import { cellGeometryAnchor } from '../../../contract';
-import { type IRPlotMark } from '../../../schemas';
+import type { IRPlotMark } from '../../../schemas';
+import type { MarkPaint } from '../shared';
 import { colorGroupedScope, constantNodeStyleOverrides, DEFAULT_FILL } from '../shared';
 
 /** 柱 node 样式（rectangle + padding0 + 无描边，使 minimumSize 即真实柱尺寸） */

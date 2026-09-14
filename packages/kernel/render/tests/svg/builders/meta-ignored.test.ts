@@ -1,5 +1,4 @@
 import type { GroupPrim, PathPrim, RectPrim, Scene } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { renderToSvgString } from '../../../src/svg';

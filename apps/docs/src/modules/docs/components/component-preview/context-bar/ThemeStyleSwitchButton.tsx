@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Globe2 } from 'lucide-react';
+import type { FC } from 'react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,9 +15,8 @@ import {
 import { cn } from '@/lib';
 
 import type { PreviewThemeStyleValue } from '../theme';
-import type { PreviewThemeStyleSelection } from '../types';
-
 import { getPreviewThemeStyleIcon, PreviewThemeStyleLabelKeys, PreviewThemeStyleOptions } from '../theme';
+import type { PreviewThemeStyleSelection } from '../types';
 
 export type ThemeStyleSwitchButtonProps = {
   /** 当前局部选择；inherit 表示跟随全局。 */

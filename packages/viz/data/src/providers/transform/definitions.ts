@@ -1,13 +1,6 @@
 import { createReadonlyMap } from '@retikz/foundation';
 
 import type { AnyTransformDefinition } from '../../contract';
-import type {
-  IRDataAnnotateTransform,
-  IRDataSelectTransform,
-  IRDataSortTransform,
-  IRDataSummarizeTransform,
-} from '../../schemas';
-
 import {
   DataTransformBindingClass,
   DataTransformFieldEffect,
@@ -16,6 +9,12 @@ import {
   extractTransformKind,
 } from '../../contract';
 import { RetikzDataError } from '../../error';
+import type {
+  IRDataAnnotateTransform,
+  IRDataSelectTransform,
+  IRDataSortTransform,
+  IRDataSummarizeTransform,
+} from '../../schemas';
 import {
   AnnotateTransformSchema,
   SelectTransformSchema,

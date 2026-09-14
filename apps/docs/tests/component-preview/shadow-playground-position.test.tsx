@@ -1,9 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
-
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
+import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
 import ShadowPlayground from '../../src/modules/docs/contents/kernel/components/effects/shadow/shadow-playground.demo';
 
 const renderAtOffset = (offsetX: number, offsetY: number) => {

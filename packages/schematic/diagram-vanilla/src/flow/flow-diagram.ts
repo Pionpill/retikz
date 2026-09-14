@@ -1,11 +1,9 @@
 import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
+import { createFlowDiagramProviderContribution } from '@retikz/diagram/flow';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { createFlowDiagramProviderContribution } from '@retikz/diagram/flow';
-
-import type { InputFlowDiagram } from './normalize';
-
 import { FlowDiagramEmbedKind } from './constants';
+import type { InputFlowDiagram } from './normalize';
 import { normalizeFlowDiagram } from './normalize';
 import { flowDiagramDefinitionOptionsOf } from './providers';
 

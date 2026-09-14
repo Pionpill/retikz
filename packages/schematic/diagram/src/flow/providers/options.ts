@@ -1,13 +1,11 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
-
 import { mergeGraphDefinitionOptions } from '@retikz/graph';
 
 import type { DiagramThemeStyleDefinition } from '../../_diagram';
-import type { FlowDiagramDefinitionOptions, FlowThemeStyleDefinition } from '../contract';
-import type { ResolvedFlowLayoutRegistry } from './layout';
-
 import { resolveDiagramThemeStyleRegistry } from '../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../errors';
+import type { FlowDiagramDefinitionOptions, FlowThemeStyleDefinition } from '../contract';
+import type { ResolvedFlowLayoutRegistry } from './layout';
 import { resolveFlowLayoutRegistry } from './layout';
 import { resolveFlowThemeStyleRegistry } from './theme';
 

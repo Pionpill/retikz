@@ -1,4 +1,3 @@
-import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
 import type {
   FlowDiagramInputEmbedProps,
   InputFlowDiagram,
@@ -7,15 +6,14 @@ import type {
   InputFlowLayout,
   InputFlowRelation,
 } from '@retikz/diagram-vanilla/flow';
+import type { FlowDiagramDefinitionOptions } from '@retikz/diagram/flow';
 import type { LayoutProps, ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactElement, ReactNode } from 'react';
-
 import { Children, Fragment, isValidElement } from 'react';
 
+import { RetikzDiagramReactFlowError, RetikzDiagramReactFlowErrorCode } from './errors';
 import type { FlowEntitiesProps, FlowEntityItem } from './FlowEntities';
 import type { FlowRelationItem, FlowRelationsProps } from './FlowRelations';
-
-import { RetikzDiagramReactFlowError, RetikzDiagramReactFlowErrorCode } from './errors';
 
 /** Flow standalone 模式承接的完整 Layout 宿主属性 */
 export type FlowDiagramLayoutHostProps = Pick<

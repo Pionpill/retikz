@@ -25,4 +25,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** Dynamic playground for normalization basis and grouping scope */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

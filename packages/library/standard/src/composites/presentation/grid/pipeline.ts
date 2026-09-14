@@ -1,13 +1,12 @@
 import type { IRPath, IRScope } from '@retikz/core';
 
 import type { CanonicalGridLine } from '../../../resolve/grid';
-import type { IRStandardPathBorderStyle, IRStandardPathStrokeStyle } from '../shared/types';
-import type { GridNumericBounds } from './geometry';
-import type { IRGrid } from './types';
-
 import { resolveGrid } from '../../../resolve/grid';
 import { enumerateLattice } from '../shared/lattice';
+import type { IRStandardPathBorderStyle, IRStandardPathStrokeStyle } from '../shared/types';
 import { GridBorderOrder } from './constants';
+import type { GridNumericBounds } from './geometry';
+import type { IRGrid } from './types';
 
 type GridBounds = {
   minX: number;

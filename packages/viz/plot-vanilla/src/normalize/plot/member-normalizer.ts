@@ -9,9 +9,9 @@ import type {
   IRPlotTextChannel,
   IRPlotTransform,
 } from '@retikz/plot';
-
 import { IntervalBoundKind, PlotGuide, PlotMark, PlotTransform } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
 import type {
   NormalizationState,
   PlotAuthoringDeclaration,
@@ -30,9 +30,6 @@ import type {
   InputPlotRelationMark,
 } from './input-marks';
 import type { InputPlotScale } from './input-scales';
-import type { StyleSugarContext } from './style-sugar';
-
-import { RetikzPlotVanillaError } from '../../error';
 import {
   buildMarkLabel,
   canonicalGeometryLabel,
@@ -43,6 +40,7 @@ import {
   recordMarkColor,
   recordResolveLabel,
 } from './mark-normalizers';
+import type { StyleSugarContext } from './style-sugar';
 import {
   boxSpacingStyleOf,
   colorChannel,

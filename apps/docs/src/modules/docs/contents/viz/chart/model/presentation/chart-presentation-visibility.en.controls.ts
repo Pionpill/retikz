@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { CHART_PRESENTATION_CONTROL_IDS } from './chart-presentation.constants';

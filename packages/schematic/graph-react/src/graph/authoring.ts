@@ -1,3 +1,4 @@
+import { mergeProperties } from '@retikz/foundation';
 import type {
   EntityInputEmbedProps,
   GroupInputEmbedProps,
@@ -6,19 +7,16 @@ import type {
   RelationInputEmbedProps,
 } from '@retikz/graph-vanilla';
 import type { LayoutProps } from '@retikz/react';
-import type { AnyInputEmbedAdapter, InputChild, InputPath } from '@retikz/vanilla';
-import type { ReactElement, ReactNode } from 'react';
-
-import { mergeProperties } from '@retikz/foundation';
 import { createInputScene, Node, Path, Step, Text } from '@retikz/react';
+import type { AnyInputEmbedAdapter, InputChild, InputPath } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
+import type { ReactElement, ReactNode } from 'react';
 import { Children, createElement, Fragment, isValidElement } from 'react';
 
+import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
 import type { EntityProps } from './Entity';
 import type { GroupProps } from './Group';
 import type { RelationProps } from './Relation';
-
-import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
 
 /** Graph standalone 模式承接的 Layout 宿主属性，style 由 Graph 绘图契约拥有 */
 export type GraphLayoutHostProps = Pick<

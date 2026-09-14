@@ -1,0 +1,46 @@
+---
+description: 后端中立的裁剪资源与引用，讨论 clip、资源复用及渲染消费边界
+keywords: 'clip、裁剪、ClipResource、clipRef'
+---
+
+# ADR-028：clip 裁切（renderer-agnostic ClipResource + clipRef，复用 alpha.7 资源表）
+
+- 状态：Accepted（已实现）
+- 决策日期：2026-05-24
+- 关联： · tikz-gap-analysis §6 Scene（历史分析已删除） · [ADR-019 Paint](./019-paint-basics.md)（`SceneResource` discriminated 资源表 + adapter 物化范式）· [alpha.1 Scope](./)（裁剪作用域挂点）· 本 milestone [ADR-027](./027-partway-absolute-target.md) / [ADR-029](./029-viewbox-override.md)
+
+## 背景 / 约束
+
+retikz 原先无任何裁剪机制。TikZ `\clip` 设区域，之后绘制只在区域内可见、外部裁掉；SVG 靠 `<clipPath>` + `clip-path="url(#id)"`。
+
+关键约束：`ScenePrimitive` 必须渲染无关（`primitive/scene.ts` 明列 marker / filter / imageData 等 SVG-only 为禁项），`<clipPath>` 同属 SVG-only——**core 不能直接产 `<clipPath>`**，须 renderer-agnostic 资源 + 引用，由 adapter 物化。v0.2 ADR-019 已把 `SceneResource` 定成 discriminated（正是为此可扩展性），clip 加 `{ kind:'clip' }` 分支即可，不破契约。
+
+## 决策：`ClipResource` 进 alpha.7 资源表 + `clipRef` + Scope 级裁剪
+
+core 产 renderer-agnostic 的 `ClipResource`（`{ kind:'clip', id, region }`，`region` 为 rect / path commands 等渲染无关形态）+ 在 `GroupPrim` 上挂 `clipRef`；`ScopeSchema.clip?` 编译成该 scope 的 `GroupPrim.clipRef`，裁组内所有子元素。adapter 物化：`ClipResource` → `<clipPath>`，`clipRef` → `clip-path="url(#id)"`。去重 / 稳定 id 复用 alpha.7 同款资源收集器。
+
+理由：
+
+1. **复用 alpha.7 资源表**：`SceneResource` 加 `{ kind:'clip' }` 分支，去重 / 稳定 id / adapter 物化全复用，不破契约。
+2. **守渲染无关契约**：core 只产 `ClipResource` + `clipRef`，`<clipPath>` 物化在 adapter；core Scene 输出无 SVG 泄漏。
+3. **Scope 级最实用**：裁一组子元素是主用例，挂 alpha.1 的 Scope / GroupPrim。
+
+设计细节（具体决策）：
+
+- **clip region 坐标系 = scope-local**：`Scope.clip` 的 `region` 用 scope 局部坐标，随该 Scope 的 `transforms` 一起生效（与组内子元素同坐标系）；adapter SVG 物化 `<clipPath>` 设 `clipPathUnits="userSpaceOnUse"` + 必要 transform，保证裁剪区与被裁内容同系。**不**用 world-space region（否则与 scope transform 脱钩）。
+- **裁剪源形态**：首批 `rect`（x/y/w/h）+ `path`（PathCommand 区域）。
+- **clip 不改 layout 包围盒**：裁剪是视觉裁切，不缩 bbox；与 ADR-029 viewBox 各自独立。
+- **嵌套 clip**：scope 套 scope 各带 clip → 交集（SVG clipPath 嵌套天然交集）。
+
+## 长期边界
+
+- **单 primitive 级 clip**（`primitive.clipRef`）：首批只做 Scope/Group 级。
+- **shape 引用裁剪**（引用某 node shape 边界当裁剪区，如裁成圆形头像）：留扩展。
+- **`SceneResource` 资源表 / 去重 / 物化基建**→ v0.2 ADR-019（本篇加 clip 分支、复用基建）。
+- **partway 定位**→ [ADR-027](./027-partway-absolute-target.md)；**viewBox override**→ [ADR-029](./029-viewbox-override.md)。
+
+---
+
+## 最终实现结果
+
+已实现本 ADR 的核心决策。兼容性：向后兼容纯叠加、零破坏；其余默认行为、失败语义与公开契约以正文为准。

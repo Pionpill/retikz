@@ -1,5 +1,3 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import { ChildSchema, CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
 import {
@@ -10,6 +8,7 @@ import {
   LayoutContainerBoxSchema,
   LayoutGapSchema,
 } from '@retikz/layout';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { STANDARD_NAMESPACE } from '../../shared';

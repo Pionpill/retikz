@@ -1,5 +1,3 @@
-import type { infer as ZodInfer } from 'zod';
-
 import {
   BlendMode,
   CssColorSchema,
@@ -12,6 +10,7 @@ import {
   StrokeDashPatternSchema,
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
+import type { infer as ZodInfer } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { createChartSourceSchema } from '../../_chart/schemas';

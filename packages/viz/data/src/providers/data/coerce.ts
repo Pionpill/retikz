@@ -1,7 +1,6 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeValue } from '../../schemas';
-
 import { DataFieldType } from '../../schemas';
 import { isIsoDateString } from './field';
 

@@ -1,10 +1,9 @@
 import type { ExternalRow } from '@retikz/data';
+import { Draw, Layout, Node, Scope, Text } from '@retikz/react';
 import type { IRTableCellPayload } from '@retikz/table';
 import type { DetailTableProps } from '@retikz/table-react';
-import type { FC } from 'react';
-
-import { Draw, Layout, Node, Scope, Text } from '@retikz/react';
 import { DetailColumn, DetailTable } from '@retikz/table-react';
+import type { FC } from 'react';
 
 const COLUMN_WIDTH = 64;
 const ROW_HEIGHT = 26;

@@ -6,11 +6,10 @@ import type {
   ClipShape,
   SceneClipPath,
 } from '@retikz/core';
-import type { ZodType } from 'zod';
-
 import { defineClip, PathBaseSchema, StrokePathOwnerOutputSchema } from '@retikz/core';
 import { RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { describe, expect, it } from 'vitest';
+import type { ZodType } from 'zod';
 import { boolean, literal, number, strictObject } from 'zod';
 
 import {

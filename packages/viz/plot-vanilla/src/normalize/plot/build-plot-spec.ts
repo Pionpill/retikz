@@ -1,7 +1,7 @@
 import type { IRPlot, IRPlotGuide } from '@retikz/plot';
-
 import { PLOT_NAMESPACE, PlotComposite, PlotCoordinate, PlotGuide } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
 import type {
   BuildPlotOptions,
   PlotAuthoringContext,
@@ -10,8 +10,6 @@ import type {
   PlotMemberFragment,
   ResolveLabelMap,
 } from './contracts';
-
-import { RetikzPlotVanillaError } from '../../error';
 import { normalizePlotDeclarations } from './normalize';
 
 export type {

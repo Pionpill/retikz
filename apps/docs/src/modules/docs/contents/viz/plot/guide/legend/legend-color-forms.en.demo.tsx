@@ -1,13 +1,11 @@
 import type { IRPlot, IRPlotLegendGuide, IRPlotScale } from '@retikz/plot';
-
 import { Plot } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { cities } from './legend.data';
 import { legendColorFormsControls, previewControlContract } from './legend-color-forms.en.controls';
+import { cities } from './legend.data';
 
 /** 注册回退使用的颜色图例形态控件 */
 export const previewControls = legendColorFormsControls;
@@ -81,4 +79,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在固定散点图中比较分类、连续与分箱颜色图例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,5 +1,4 @@
 import type { PatternDefinition } from '../../contract';
-
 import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_PATTERNS } from './definitions';
 

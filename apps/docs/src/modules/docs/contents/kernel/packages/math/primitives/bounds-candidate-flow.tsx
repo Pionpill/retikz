@@ -1,13 +1,11 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { boundsCandidateFlowI18n } from './bounds-candidate-flow.i18n';
-import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 /** 展示不同几何输入如何汇入候选点集，再计算边界 */
 export type BoundsCandidateFlowI18nFigureProps = Readonly<{ lang?: Lang }>;

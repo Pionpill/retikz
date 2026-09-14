@@ -4,16 +4,14 @@ import type { AssertEqual, ValueOf } from '@retikz/foundation';
 import type { LayoutProps } from '@retikz/react';
 import type { LowerTablesOptions, ManualTableInput, TableDetailColumnInput, TableLayoutManifest } from '@retikz/table';
 import type { InputDetailTable, InputManualTable, InputTable, InputTableVariant } from '@retikz/table-vanilla';
-
 import { inputTableFromIR, InputTableKind } from '@retikz/table-vanilla';
-
-import type { DetailTableProps } from './DetailTable';
-import type { ManualTableProps } from './ManualTable';
-import type { TableCommonProps, TableLayoutHostProps, TableProps } from './Table';
 
 import { buildDetailColumns } from './components/build-detail-columns';
 import { buildManualStructure } from './components/build-manual-structure';
+import type { DetailTableProps } from './DetailTable';
 import { RetikzTableReactError } from './error';
+import type { ManualTableProps } from './ManualTable';
+import type { TableCommonProps, TableLayoutHostProps, TableProps } from './Table';
 
 /** React Table runtime 的入口类型 */
 export const ReactTableRuntimeKind = {

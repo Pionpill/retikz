@@ -214,26 +214,26 @@ Anchor placement runs only after that provisional layout exists. It resolves bot
     {
       label: 'Resolve content and geometry into a Node layout',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 131,
-      endLine: 311,
+      startLine: 130,
+      endLine: 310,
     },
     {
       label: 'Emit shape, content, and labels as Scene primitives',
       path: 'packages/kernel/core/src/compile/node/emit.ts',
-      startLine: 225,
-      endLine: 244,
+      startLine: 224,
+      endLine: 243,
     },
     {
       label: 'Resolve the rotated visual box and distance into a label center',
       path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
-      startLine: 150,
-      endLine: 176,
+      startLine: 148,
+      endLine: 174,
     },
     {
       label: 'Register names and collect automatic viewBox bounds',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
-      endLine: 286,
+      startLine: 208,
+      endLine: 283,
     },
   ]}
 />
@@ -257,26 +257,26 @@ A regular connection surface first derives its rectangle from `fit`, then applie
     {
       label: 'Tight envelopes, fallback, and cache',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 49,
-      endLine: 94,
+      startLine: 48,
+      endLine: 93,
     },
     {
       label: 'Built-in boundary fit and gap',
       path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
-      startLine: 12,
-      endLine: 103,
+      startLine: 10,
+      endLine: 101,
     },
     {
       label: 'Route visual contours, boundaries, and anchors',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 58,
-      endLine: 117,
+      startLine: 57,
+      endLine: 116,
     },
     {
       label: 'Apply margin by anchor category',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 10,
-      endLine: 52,
+      startLine: 9,
+      endLine: 51,
     },
   ]}
 />
@@ -292,26 +292,26 @@ Path / Draw endpoints use a different phase. A path first reserves its drawing-o
     {
       label: 'Resolve Node positions',
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 43,
-      endLine: 82,
+      startLine: 42,
+      endLine: 81,
     },
     {
       label: 'Register ids after Node layout',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
-      endLine: 286,
+      startLine: 208,
+      endLine: 283,
     },
     {
       label: 'Queue paths for deferred emission',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 318,
-      endLine: 343,
+      startLine: 313,
+      endLine: 338,
     },
     {
       label: 'Resolve paths after name registration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 183,
-      endLine: 209,
+      startLine: 180,
+      endLine: 206,
     },
   ]}
 />
@@ -322,7 +322,7 @@ Path / Draw endpoints use a different phase. A path first reserves its drawing-o
 | ----------- | ---------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`        | `string`                     | —       | Unique identifier; referenced by `<Path>` / `<Draw>`                                                                                                                                                                                                                                                                                                                 |
 | `meta`      | `Record<string, JSON value>` | —       | Provenance metadata, passed through verbatim onto this node's rendered output; ignored by renderers and never part of layout / connection / style. Typically injected by a higher-level layer (e.g. plot) to tag which datum / series / layer it came from, so an interaction layer can trace a hit primitive back to its source. Must be a JSON-serializable object |
-| `on<Event>` | `NodeProps['onClick']`       | —       | Hydration events with the same signature as `onClick`, including pointer events and wheel; requires `id`. See [Hydration](/kernel/packages/render/hydration) for the complete list                                                                                                                                                                            |
+| `on<Event>` | `NodeProps['onClick']`       | —       | Hydration events with the same signature as `onClick`, including pointer events and wheel; requires `id`. See [Hydration](/kernel/packages/render/hydration) for the complete list                                                                                                                                                                                   |
 
 The four API sections below document the remaining props with their defaults and examples.
 

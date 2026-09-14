@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Data 来源产物进入不同宿主的消费边界 */
 const Demo: FC = () => (

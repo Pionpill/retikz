@@ -1,10 +1,8 @@
 import type { FlexLayoutInspectOptions } from '@retikz/layout/inspect';
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import type { FC } from 'react';
 
-import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
-
 import type { FlexLayoutProps } from '../flex-layout';
-
 import { FlexLayout as BaseFlexLayout } from '../flex-layout';
 import { createLayoutReactAuthoring } from './authoring';
 

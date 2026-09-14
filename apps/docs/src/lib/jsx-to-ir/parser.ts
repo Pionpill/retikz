@@ -1,5 +1,3 @@
-import type { FC, ReactElement, ReactNode } from 'react';
-
 import {
   Arc,
   Circle,
@@ -21,6 +19,7 @@ import {
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
+import type { FC, ReactElement, ReactNode } from 'react';
 import { createElement } from 'react';
 
 const JsxParser = Parser.extend(jsx());

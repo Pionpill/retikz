@@ -1,12 +1,11 @@
 import type { Transform } from '../../contract';
 import type { BoundaryReferenceResolution, BoundaryReferenceResolver, NodeReferenceView } from '../../resolve';
+import { boundaryKey } from '../../resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../resolve/position';
+import { resolvePositionTarget } from '../../resolve/position';
 import type { IRBetweenPosition, IRNodeTarget, IRPosition } from '../../schemas';
 import type { NamespaceStack } from '../namespace';
 import type { NodeLayout } from '../node';
-
-import { boundaryKey } from '../../resolve';
-import { resolvePositionTarget } from '../../resolve/position';
 import { resolveAnchorRef } from '../reference';
 import { applyTransformChain, inverseTransformChain } from '../transform';
 

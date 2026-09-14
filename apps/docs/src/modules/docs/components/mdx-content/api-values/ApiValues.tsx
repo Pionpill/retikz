@@ -3,7 +3,6 @@ import type { FC } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import type { ApiValueRegistryEntry } from './constants';
-
 import { API_VALUE_REGISTRY } from './constants';
 
 /** API 值集合提示组件属性 */

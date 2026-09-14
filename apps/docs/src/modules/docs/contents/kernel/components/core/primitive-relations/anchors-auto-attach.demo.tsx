@@ -1,6 +1,5 @@
-import type { FC, ReactElement } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC, ReactElement } from 'react';
 
 const DIRS: Array<{ id: string; pos: [number, number]; label: string }> = [
   { id: 'n', pos: [0, -65], label: 'N' },

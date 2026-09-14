@@ -1,13 +1,11 @@
 import type { IRNode, IRScope } from '@retikz/core';
-
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { OPACITY_MIN } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };

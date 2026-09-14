@@ -1,8 +1,7 @@
 import type { Position } from '@retikz/math';
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { ContourShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

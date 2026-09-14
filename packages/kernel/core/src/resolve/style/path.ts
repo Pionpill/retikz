@@ -1,11 +1,10 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { IRGeometryLabel, IRPathBase, IRPathDefault, IRPathStyle, IRStep } from '../../schemas';
-import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
-
 import { resolvePathMarks } from './arrow';
 import { cutsStyleChannel } from './frame';
 import { resolveEffectiveLabelDefault, resolveGeometryLabel } from './label';
+import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
 const resolveStepLabels = (

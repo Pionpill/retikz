@@ -1,9 +1,7 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-
 import type { Lang } from '@/i18n';
-
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 
 import { flowBoundsI18n } from './flow-bounds.i18n';

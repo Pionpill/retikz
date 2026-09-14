@@ -5,9 +5,8 @@ import type {
   PatternEmitContext,
   ResolvedPatternLineStyle,
 } from '../../contract';
-import type { BuiltinPatternName } from '../../schemas';
-
 import { definePattern } from '../../contract';
+import type { BuiltinPatternName } from '../../schemas';
 import { PatternShape } from '../../schemas';
 import { defineBuiltinProviderArray } from '../registry/index';
 

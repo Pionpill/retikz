@@ -1,9 +1,8 @@
-import type { FC } from 'react';
-
-import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { LayoutItem } from '@retikz/layout-react';
 import { InspectFlexLayout, LayoutInspectLayout, LayoutInspectScope } from '@retikz/layout-react/inspect';
+import { FLEX_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import { Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 

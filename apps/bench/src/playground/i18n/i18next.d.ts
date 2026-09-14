@@ -1,5 +1,4 @@
 import 'i18next';
-
 import type { I18nResources } from './locales';
 
 declare module 'i18next' {

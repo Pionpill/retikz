@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompileWarning, IRPosition, IRScene, IRStep, ScenePrimitive } from '../../../src';
-
 import { compileToScene, CompileWarningCode, definePathGenerator } from '../../../src';
 import { arrowMarks } from '../../helpers/arrow-marks';
 import { flattenPrims } from '../../helpers/flatten';

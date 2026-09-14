@@ -1,9 +1,6 @@
-import type { infer as ZodInfer, output as ZodOutput } from 'zod';
-
 import { NonBlankStringSchema, NonNegativeIntegerSchema } from '@retikz/foundation';
+import type { infer as ZodInfer, output as ZodOutput } from 'zod';
 import { array, literal, strictObject, union } from 'zod';
-
-import type { DeepReadonly } from '../../shared';
 
 import {
   TableCellLayoutSchema,
@@ -13,6 +10,7 @@ import {
   TableCellSpanSchema,
   TableRowKindSchema,
 } from '../../schemas';
+import type { DeepReadonly } from '../../shared';
 import { TableCellSourceKind } from '../../shared';
 
 /** Cell 最小来源信息 schema */

@@ -1,10 +1,8 @@
 ﻿import type { IRChild } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 import { strictObject, string } from 'zod';
 
 import type { AnyCellPresentationDefinition, IRManualTableCell } from '../../src';
-
 import { defineCellPresentation, resolveCellPresentationRegistry } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';

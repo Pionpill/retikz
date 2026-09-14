@@ -1,4 +1,4 @@
-import { type AnyChannelDefinition } from '../../../contract';
+import type { AnyChannelDefinition } from '../../../contract';
 import { NODE_CHANNELS } from './node';
 import { PATH_CHANNELS } from './path';
 import { SCOPE_CHANNELS } from './scope';

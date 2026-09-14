@@ -8,12 +8,11 @@ import type {
   AnyTableStructureDefinition,
   TableThemeStyleDefinition,
 } from '../../contract';
-import type { LowerTablesOptions } from '../types';
-
 import { RetikzTableError } from '../../error';
 import { extractTableStructureKind } from '../../providers';
 import { TABLE_NAMESPACE, TableComposite } from '../../schemas';
 import { lowerTables } from '../resolve';
+import type { LowerTablesOptions } from '../types';
 
 const TableRuntimeEnvelopeMarker = Symbol('retikz.table.runtimeEnvelope');
 const STRUCTURE_DEFINITIONS_KEY = 'structureDefinitions';

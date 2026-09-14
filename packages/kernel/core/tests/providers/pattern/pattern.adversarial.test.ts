@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileOptions } from '../../../src/compile/compile';
+import { compileToScene } from '../../../src/compile/compile';
 import type {
   MarkerPrimitive,
   PaintResource,
@@ -9,8 +10,6 @@ import type {
   SceneResource,
 } from '../../../src/contract';
 import type { IRPaint, IRScene } from '../../../src/schemas';
-
-import { compileToScene } from '../../../src/compile/compile';
 
 /**
  * Pattern 注册面 emit-in-compile 对抗回归。

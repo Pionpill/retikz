@@ -1,9 +1,8 @@
 import type { ResolvedTableBorderLine } from '../../../contract/manifest';
-import type { ResolvedTableBorderAtom, TableBorderEdge, TableBorderVertex } from './types';
-
 import { TableBorderContributionSchema } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
+import type { ResolvedTableBorderAtom, TableBorderEdge, TableBorderVertex } from './types';
 
 /** 递归比较 JSON-safe style，忽略对象属性插入顺序 */
 const equalJson = (left: unknown, right: unknown): boolean => {

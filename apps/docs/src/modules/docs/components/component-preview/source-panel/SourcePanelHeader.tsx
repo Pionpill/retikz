@@ -1,10 +1,9 @@
 import type { FC, ReactNode } from 'react';
 
-import type { SourcePanelState } from './useSourcePanelState';
-
 import { CopyButton } from './CopyButton';
 import { DiffModePicker } from './DiffModePicker';
 import { SourceViewBar } from './SourceViewBar';
+import type { SourcePanelState } from './useSourcePanelState';
 
 /** 源码面板头部属性。 */
 export type SourcePanelHeaderProps = {

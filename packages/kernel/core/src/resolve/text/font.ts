@@ -1,8 +1,7 @@
-import type { FontSizePresetValue, IRFont } from '../../schemas';
-import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { FontSizePresetValue, IRFont } from '../../schemas';
 import { WebFontSizeRatio } from '../../schemas';
+import type { CanonicalFont, FontResolveContext, FontSizeResolveContext } from './types';
 
 /** 文本默认行高系数 */
 export const DEFAULT_TEXT_LINE_HEIGHT_FACTOR = 1.2;

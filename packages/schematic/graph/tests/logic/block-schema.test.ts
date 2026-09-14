@@ -1,5 +1,4 @@
 import type { IRNode } from '@retikz/core';
-
 import { createSurface } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 

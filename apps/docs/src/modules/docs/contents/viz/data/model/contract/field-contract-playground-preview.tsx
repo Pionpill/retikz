@@ -1,11 +1,9 @@
 import type { IRDataModel } from '@retikz/data';
-
 import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { fieldContractControls } from './field-contract-playground.controls';
-
 import { categoricalRows, continuousRows, funnelRows, temporalRows } from './field-contract-playground.data';
 
 type FieldContractValues = PreviewControlValuesFor<typeof fieldContractControls>;

@@ -1,9 +1,8 @@
-import type { ReactNode } from 'react';
-
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
 import { Entity } from '@retikz/graph-react';
 import { createInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
+import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

@@ -1,11 +1,9 @@
-import type { FC } from 'react';
-
 import { BarChart3 } from 'lucide-react';
+import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { LabPolicyResult } from '../../modules/kernel';
-
 import { createComparisonChartRows } from '../view-model';
 import { ComparisonPlot } from './ComparisonPlot';
 

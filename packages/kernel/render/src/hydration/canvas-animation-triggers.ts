@@ -1,8 +1,7 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 
-import type { ElementHandlers, HydrationHandlers, RetikzEventValue } from './events';
-
 import { geometryOf } from './context';
+import type { ElementHandlers, HydrationHandlers, RetikzEventValue } from './events';
 import { RetikzEvent } from './events';
 
 const EVENT_NAMES = new Set<string>(Object.values(RetikzEvent));

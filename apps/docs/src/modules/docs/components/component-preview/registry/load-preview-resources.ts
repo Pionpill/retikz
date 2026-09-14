@@ -1,6 +1,5 @@
 import type { ComponentPreviewFileConfig } from '../types';
 import type { PreviewDemoModule, PreviewLoader, PreviewVanillaModule } from './contents';
-
 import {
   buildIrJsonKey,
   buildSourceFileKey,

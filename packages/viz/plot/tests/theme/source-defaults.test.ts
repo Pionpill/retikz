@@ -1,5 +1,4 @@
 import type { ScenePrimitive } from '@retikz/core';
-
 import { compileToScene, DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

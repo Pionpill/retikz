@@ -1,11 +1,10 @@
 import type { BoundsRect } from '@retikz/math';
 
-import type { TableCellAlignment, TableCellTranslation } from './cell';
-import type { TableCellFit, TableCellFitScale } from './fit';
-
 import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
+import type { TableCellAlignment, TableCellTranslation } from './cell';
 import { computeTableCellTranslation } from './cell';
+import type { TableCellFit, TableCellFitScale } from './fit';
 import { computeTableCellFitScale, projectTableCellBounds } from './fit';
 
 /** Cell 内容 overflow 计算支持的策略 */

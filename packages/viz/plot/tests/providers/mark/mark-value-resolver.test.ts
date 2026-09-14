@@ -1,9 +1,8 @@
 ﻿import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlotPointNumberStyle } from '../../../src/schemas';
-
 import { makeMarkValueResolver } from '../../../src/providers';
+import type { IRPlotPointNumberStyle } from '../../../src/schemas';
 
 describe('makeMarkValueResolver', () => {
   it('resolves_constant_mark_value', () => {

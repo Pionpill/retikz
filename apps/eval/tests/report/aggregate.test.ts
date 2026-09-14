@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { aggregate } from '../../src/report/aggregate';
-import { type RunRecord } from '../../src/run';
+import type { RunRecord } from '../../src/run';
 
 const rec = (over: Partial<RunRecord>): RunRecord => ({
   promptId: 'c1',

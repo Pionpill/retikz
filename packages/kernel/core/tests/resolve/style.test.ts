@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRPathBase, IRScope } from '../../src/schemas';
-
 import {
   createStyleResolveFrame,
   cutsStyleChannel,
@@ -10,6 +8,7 @@ import {
   resolveEffectiveNodeStyle,
   resolveEffectivePath,
 } from '../../src/resolve/style';
+import type { IRPathBase, IRScope } from '../../src/schemas';
 import { GeometryLabelSchema, NodeSchema, PathBaseSchema, SHADOW_PRESETS } from '../../src/schemas';
 
 const styleScope = (properties: Partial<IRScope>): IRScope => ({

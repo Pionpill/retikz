@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { RetikzRuntimeError, RuntimeSession, RuntimeSessionOptions } from '../../src';
-
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,

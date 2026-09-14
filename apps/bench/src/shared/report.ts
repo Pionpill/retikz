@@ -7,9 +7,8 @@ import {
   createRuntimeSession,
 } from '@retikz/runtime';
 
-import type { SampleSummary } from './stats';
-
 import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
+import type { SampleSummary } from './stats';
 import { summarizeSamples } from './stats';
 
 /** 单个 wall-clock 场景报告 */

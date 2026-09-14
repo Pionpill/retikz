@@ -3,10 +3,9 @@ import type { FC, ReactNode } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib';
 
-import type { SourcePanelState } from './useSourcePanelState';
-
 import { HighlightCode } from '../../highlight-code';
 import { SourcePanelHeader } from './SourcePanelHeader';
+import type { SourcePanelState } from './useSourcePanelState';
 
 /** 完整源码面板属性。 */
 export type SourcePanelProps = {

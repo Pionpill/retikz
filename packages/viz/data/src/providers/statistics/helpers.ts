@@ -1,9 +1,8 @@
 ﻿import { isFiniteNumber } from '@retikz/math';
 
 import type { DataSortOrderValue, IRDataOrderBy } from '../../schemas';
-import type { ExternalRow } from '../../shared';
-
 import { DataSortOrder } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 import { compareRowsByFieldPath, resolveFieldPath } from '../data';
 
 /** quantile-band spread whisker 的默认倍率 */

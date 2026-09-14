@@ -1,13 +1,11 @@
-import type { FC, ReactNode } from 'react';
-
 import { PlotSchema } from '@retikz/plot';
+import type { FC, ReactNode } from 'react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
-
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
+import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import {
   coordinateCartesianControls,

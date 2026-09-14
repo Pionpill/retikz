@@ -1,7 +1,6 @@
 import { BlendMode, NodeTextAlign, ShadowPreset } from '@retikz/core';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { nodeTextRows } from './builtin-node-text.data';

@@ -1,19 +1,17 @@
 import type { IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import type { infer as ZodInfer } from 'zod';
-
 import { defineTransform } from '@retikz/data';
 import { JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
+import type { infer as ZodInfer } from 'zod';
 import { array, literal, looseObject, object } from 'zod';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { defineMark } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { EncodingSchema, PlotSchema, TransformSchema } from '../../../src/schemas';
 
 type Datasets = Record<string, Array<Record<string, unknown>>>;

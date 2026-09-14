@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { ScatterChart } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { scatterMinimalData } from './scatter-minimal.data';
 

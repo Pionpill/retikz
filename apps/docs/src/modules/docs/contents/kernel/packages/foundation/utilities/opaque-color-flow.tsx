@@ -1,10 +1,8 @@
-import type { FC } from 'react';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import { RelationRole } from '@retikz/graph';
+import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import {
   LogicFigureEntityKind,

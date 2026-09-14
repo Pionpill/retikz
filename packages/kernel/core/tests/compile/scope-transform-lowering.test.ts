@@ -1,16 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { NodeLayout } from '../../src/compile/node';
-import type { Transform } from '../../src/contract';
-import type { PositionResolveContext } from '../../src/resolve/position';
-import type { IRTransform } from '../../src/schemas';
-
 import { NamespaceStack } from '../../src/compile/namespace';
+import type { NodeLayout } from '../../src/compile/node';
 import { boxInsets } from '../../src/compile/node';
 import { createPositionResolveContext } from '../../src/compile/orchestration/position-context';
 import { lowerScopeTransforms } from '../../src/compile/scope';
 import { projectLayoutToGlobal } from '../../src/compile/transform';
+import type { Transform } from '../../src/contract';
 import { BUILTIN_SHAPES } from '../../src/providers/shape';
+import type { PositionResolveContext } from '../../src/resolve/position';
+import type { IRTransform } from '../../src/schemas';
 
 /** 把 id → 中心 entries 灌进新建的 namespaceStack，便于 lower 单测验证 referent lookup */
 const makeStack = (entries: Array<[string, [number, number]]>): NamespaceStack => {

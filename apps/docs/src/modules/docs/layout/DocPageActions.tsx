@@ -1,12 +1,9 @@
-import type { FC, ReactNode } from 'react';
-
 import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronDown, Copy, FileCode, Plug } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-
-import type { DocDifficultyValue } from '@/modules/docs/data';
 
 import { ChatGptIcon, ClaudeIcon, DeepSeekIcon, GitHubIcon } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -20,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DocDifficultyIndicator } from '@/modules/docs/components';
+import type { DocDifficultyValue } from '@/modules/docs/data';
 import { getDocDifficultyReadingCoefficient } from '@/modules/docs/data';
 import { buildAiUrl, buildDocPageLinks } from '@/modules/docs/lib';
 

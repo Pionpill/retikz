@@ -1,5 +1,4 @@
 import type { Section } from './types';
-
 import { DocDifficulty } from './types';
 
 export const aboutSection: Array<Section> = [

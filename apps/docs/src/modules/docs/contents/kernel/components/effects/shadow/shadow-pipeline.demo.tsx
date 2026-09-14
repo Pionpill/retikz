@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** shadow 配置到双后端的局部管线图 */
 const Demo: FC = () => (

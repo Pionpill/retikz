@@ -1,16 +1,15 @@
-import type { FC } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
 import { createGrid, LegendContentKind } from '@retikz/standard';
 import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import type { FC } from 'react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlSection } from '../../src/modules/docs/components/component-preview';
-
 import { resolvePreviewControlContract } from '../../src/modules/docs/components/component-preview/registry';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';

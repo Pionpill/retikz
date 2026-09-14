@@ -1,8 +1,7 @@
 import type { Transform } from '../../../contract';
 import type { CanonicalStep, PathTargetView } from '../../../resolve';
-import type { IRPosition, IRTarget } from '../../../schemas';
-
 import { nodeIdFromResolvableTarget } from '../../../resolve/position';
+import type { IRPosition, IRTarget } from '../../../schemas';
 import { CompileWarningCode } from '../../constants';
 import { pointOfTarget } from '../host';
 

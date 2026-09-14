@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Arc, Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 const Demo: FC = () => (
   <Layout>

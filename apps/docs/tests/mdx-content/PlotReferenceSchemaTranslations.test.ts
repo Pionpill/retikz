@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import type { ObjectField } from '@/modules/docs/components/mdx-content/zod-schema/types';
-
 import { SCHEMA_REGISTRY } from '@/modules/docs/components/mdx-content/zod-schema/schema-registry';
+import type { ObjectField } from '@/modules/docs/components/mdx-content/zod-schema/types';
 import { walk } from '@/modules/docs/components/mdx-content/zod-schema/walker';
 
 type TranslationGap = {

@@ -9,11 +9,9 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { AffineMatrix, BoundsRect } from '@retikz/math';
-
 import { AFFINE_IDENTITY, applyAffine, multiplyAffine } from '@retikz/math';
 
 import type { IdClockRegistry } from '../animation';
-
 import { pathControlPoints } from '../shared';
 
 /**

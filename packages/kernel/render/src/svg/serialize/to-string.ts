@@ -1,12 +1,11 @@
 import type { Scene } from '@retikz/core';
 
 import type { StaticRenderFrame } from '../../runtime';
-import type { BuildDocumentOptions } from '../builders';
-import type { SvgNode, SvgStyle } from '../types';
-
 import { EMPTY_READONLY_LAYERS } from '../../runtime';
 import { computeDisplaySize } from '../../shared';
+import type { BuildDocumentOptions } from '../builders';
 import { buildSvgFrameDocument } from '../builders';
+import type { SvgNode, SvgStyle } from '../types';
 
 /** 转义 attribute 值里的 XML 特殊字符（`&` 必须先转，避免二次转义） */
 const escapeAttr = (value: string): string =>

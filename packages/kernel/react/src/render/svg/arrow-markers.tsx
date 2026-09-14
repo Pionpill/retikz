@@ -1,7 +1,6 @@
 import type { ResolvedArrowEnd } from '@retikz/core';
-import type { FC, ReactElement } from 'react';
-
 import { buildArrowMarker } from '@retikz/render/svg';
+import type { FC, ReactElement } from 'react';
 
 import { svgToReact } from './svg-to-react';
 

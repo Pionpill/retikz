@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { DataFieldType } from '@retikz/data';
 import { Plot, PlotAxis, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

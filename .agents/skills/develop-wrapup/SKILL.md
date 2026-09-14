@@ -1,17 +1,17 @@
 ---
 name: develop-wrapup
-description: Use when retikz implementation, adversarial testing, and docs are complete, and an ADR or beta TODO needs changelog, contract consistency review, roadmap status updates, or final human acknowledgement.
+description: Use when retikz implementation, adversarial testing, and docs are complete, and an ADR or beta TODO needs changelog, contract consistency review, or final human acknowledgement.
 ---
 
 # Stage 5: 收尾
 
-把已实现、已测试、已文档化的改动封口：changelog、对账、人工确认、ADR / roadmap 状态更新。commit / push / publish 仍按根 AGENTS 的当次授权规则。
+把已实现、已测试、已文档化的改动封口：changelog、对账、人工确认与 plan 完成证据。commit / push / publish 仍按根 AGENTS 的当次授权规则。
 
 ## 输入
 
 - alpha：状态为 `Accepted` 的 ADR、实现 / 测试 / 文档 diff、Bug Hunter 结果。
 - alpha 镜像 `PLAN.md`、`TEST_CONTRACT.md`、`TASK_STATE.md` / `REVIEW.md`。
-- beta：已完成的 roadmap TODO、diff、多 LLM 评估结果。
+- beta：已完成的实施 plan TODO、diff、计划内评估结果。
 - 文档页和 demo 路径。
 
 ## Changelog
@@ -51,17 +51,18 @@ ADR 从 Proposed 起就应是长期功能与架构记录，不采用“先提交
 
 - 对账 ADR 的核心决策、基础数据结构 / 公开契约、默认 / 失败语义与兼容性，以及 reviewed plan 的功能边界和架构检查是否与最终实现一致。
 - 补充简短最终实现摘要与真实遗留风险；不写具体文件、私有命名、业务步骤、验证过程、测试 case、命令或 commit 历史。
-- 执行批准前，`Proposed` -> `Accepted` 必须在同一改动中删除、压缩或迁出非长期内容，不得只更新状态；仍服务执行的材料进入 ignored plan，其余直接删除
+- 接受设计或批准执行时，`Proposed` -> `Accepted` 必须在同一改动中删除、压缩或迁出非长期内容，不得只更新状态；仍服务执行的材料进入 ignored plan，其余直接删除
 - 若发现待执行 ADR 已混入设计检查或施工细节，把仍服务当前执行的内容迁回镜像 plan 后再更新状态；不要把膨胀全文保存在 Proposed commit 或等待发布阶段清理。审计历史 Accepted ADR 时，若 ignored plan 已丢失，只清除或重述不属于长期契约的内容，不要求从 git 历史复原临时执行材料。
 - 若最终行为改变了公开契约、能力归属或功能边界，不能用收尾摘要掩盖；回到 ADR 修订、Architecture Gate 和必要的 Plan Gate。
 - plan、测试矩阵、状态与 review 记录始终 ignored，不因 ADR Accepted 而提交。
 
 ## 人工确认后落盘
 
-人工执行批准时已经记录 Accepted；收尾只更新最终摘要、roadmap 与 changelog：
+人工接受设计或执行批准时已经记录 Accepted；收尾不把决策状态当作实现或发布状态，只更新最终摘要、plan 进度与 changelog：
 
-- alpha：逐段压缩 ADR 并确认其与最终行为一致，补完工摘要；对应 roadmap 勾选或标完成；changelog 写入最终稿。
-- beta：roadmap TODO 标完成并记录 commit；breaking / visible 按需写 changelog；不改 ADR 状态。
+- alpha：逐段审计 ADR 与最终行为一致性，补完工摘要；实施任务在镜像 plan 记录完成证据；用户可见改动写入待发布 changelog，不提前指定 alpha 批次。
+- beta：实施 plan 的 TODO 标完成，获准提交后记录真实 commit；breaking / visible 按需写 changelog，不改 ADR 状态。
+- 仅当重点功能、目标或必要依赖发生获批变化时，按 `develop-design` 更新 roadmap；不追加完工记录、ADR 摘要或发布日志。
 
 这些文件可按逻辑分块提交。每块提交前展示文件清单和建议 message；没有当前对话授权不提交。
 
@@ -71,7 +72,7 @@ ADR 从 Proposed 起就应是长期功能与架构记录，不采用“先提交
 
 ## 完成标志
 
-- changelog、ADR / roadmap 状态与实际行为一致。
+- changelog、ADR 契约与 plan 完成证据和实际行为一致。
 - ADR 始终保持长期功能与架构记录，不含只服务执行的临时材料。
 - 镜像 plan、测试矩阵、状态与 review 记录保持 ignored，未被误提交。
 - Contract Auditor BLOCKING 清空或人工明确裁决。

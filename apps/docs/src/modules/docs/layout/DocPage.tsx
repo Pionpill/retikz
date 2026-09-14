@@ -1,11 +1,9 @@
 import type { FC, HTMLAttributes } from 'react';
-
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { MdxFrontmatter } from '@/modules/docs/components';
-
 import { cn } from '@/lib';
+import type { MdxFrontmatter } from '@/modules/docs/components';
 import {
   ChangelogOverview,
   ChangelogVersionDetail,

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Effects family responsibilities from primitive input to Scene output */
 const Demo: FC = () => (

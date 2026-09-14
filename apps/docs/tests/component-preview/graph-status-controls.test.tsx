@@ -1,9 +1,7 @@
 import type { FC, ReactNode } from 'react';
-
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlContract } from '@/modules/docs/components/component-preview';
-
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
 import { relationStatusOf } from '@/modules/docs/contents/schematic/graph/relation/basic/relation-role-controls';

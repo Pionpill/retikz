@@ -1,6 +1,5 @@
-import type { LayoutAlignmentValue, LayoutDistributionValue } from '../shared';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import type { LayoutAlignmentValue, LayoutDistributionValue } from '../shared';
 import { LayoutAlignment, LayoutDistribution } from '../shared';
 import { compensatedLayoutSum, distributeWeightedLayoutSizes, layoutEpsilon } from './distribution';
 

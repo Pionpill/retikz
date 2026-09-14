@@ -1,7 +1,6 @@
 import type { ThemeModeValue } from '@retikz/core';
 
 import type { IRTableDefaults } from '../../schemas';
-
 import { TableDefaultsSchema } from '../../schemas';
 import { deepFreeze } from '../../shared';
 

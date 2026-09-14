@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRNode, IRNodeLabel, IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 import { NodeLabelSchema, SceneSchema } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 

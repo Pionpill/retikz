@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { CompileObservation, CompileObservationSite, CompileOptions, IRScene } from '../../src';
-
 import {
   compileToScene,
   CompositeBaseSchema,

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 颜色比例尺从自动派生或显式配置到图元与图例共用映射的解析链路 */
 const Demo: FC = () => (

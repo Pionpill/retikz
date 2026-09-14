@@ -1,11 +1,9 @@
 import type { IRDataFieldDefinition } from '@retikz/data';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { dataModelOrderControls } from './data-model-order.controls';
-
 import { sizeSales } from './data-model-order.data';
 
 type DataModelOrderValues = PreviewControlValuesFor<typeof dataModelOrderControls>;

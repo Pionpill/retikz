@@ -1,9 +1,7 @@
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { Draw, Layout, Node } from '@retikz/react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { drawOrthogonalControls, previewControlContract } from './draw-orthogonal.controls';

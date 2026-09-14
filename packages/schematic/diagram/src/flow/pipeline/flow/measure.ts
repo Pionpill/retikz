@@ -1,7 +1,6 @@
 import type { IRNode, LayoutCompositeCompileContext } from '@retikz/core';
-import type { GraphDefinitionOptions } from '@retikz/graph';
-
 import { resolveBoxSpacing } from '@retikz/core';
+import type { GraphDefinitionOptions } from '@retikz/graph';
 import {
   measureGroupShell,
   resolveGraphDefinitionOptions,
@@ -10,13 +9,12 @@ import {
 } from '@retikz/graph';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutDefinition, FlowLayoutElementInput, FlowLayoutRelationInput } from '../../contract';
 import type { CanonicalFlowDiagram, CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
+import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 import type { IRFlowLayoutIntent } from '../../schemas';
 import type { FlowElementMeasurement, FlowMeasurement } from './types';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
-import { mergeFlowLayoutIntent, resolveEffectiveFlowLayout, resolveEffectiveFlowPlacement } from '../../resolve';
 
 /** 用当前 Graph Source 测量一个 Flow Entity，并把唯一最终 Source 记录在 measurement 中 */
 const measureEntity = (

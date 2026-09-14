@@ -1,8 +1,7 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
-import type * as RetikzReact from '@retikz/react';
-
 import { definePlotThemeStyle } from '@retikz/plot';
+import type * as RetikzReact from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -51,7 +50,7 @@ describe('Plot React InputEmbed routing', () => {
     expect(layout).not.toHaveProperty('ir');
     expect(layout).not.toHaveProperty('composites');
     expect(Reflect.has(Plot, 'inputEmbedAdapter')).toBe(true);
-    expect((layout?.children as { type?: unknown }).type).toBe(Plot);
+    expect((layout!.children as { type?: unknown }).type).toBe(Plot);
   });
 
   it('keeps ambient Plot style definitions on the InputEmbed props', () => {
@@ -64,7 +63,7 @@ describe('Plot React InputEmbed routing', () => {
     );
 
     const layout = capturedLayouts.at(-1);
-    expect((layout?.children as { props?: { plotThemeStyles?: unknown } }).props?.plotThemeStyles).toEqual([
+    expect((layout!.children as { props?: { plotThemeStyles?: unknown } }).props?.plotThemeStyles).toEqual([
       plotThemeStyle,
     ]);
   });

@@ -1,11 +1,9 @@
 import type { LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
-
 import { requiredLayoutProbe } from '@retikz/layout/compose';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGroup } from '../../schemas';
-
 import { resolveGroup } from '../../resolve';
+import type { IRGroup } from '../../schemas';
 import { groupScopeProps, lowerGroupLabelHost } from './lower';
 import { composeGroupShell } from './shell';
 

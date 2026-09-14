@@ -1,11 +1,10 @@
 import type { Position } from '@retikz/math';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRAnchorRef, IRBoundary, IRPosition } from '../../schemas';
 import type { SideValue } from '../../shared';
 import type { NodeLayout } from '../node';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 type AnchorLayout = NodeLayout | NodeReferenceView;
 

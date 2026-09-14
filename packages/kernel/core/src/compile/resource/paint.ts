@@ -5,13 +5,12 @@ import type {
   ResolvedPatternTile,
   SceneResource,
 } from '../../contract';
-import type { PaintResolution, PaintResolutionInput, PatternResolution } from '../../resolve/resource';
-
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import type { PaintResolution, PaintResolutionInput, PatternResolution } from '../../resolve/resource';
 import { validateMarkerPrimitives } from './marker-primitive';
 
 /** Paint resource registry 输入：resolve 阶段已绑定的 paint */

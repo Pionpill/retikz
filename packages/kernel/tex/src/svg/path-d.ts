@@ -1,6 +1,5 @@
 import type { PathCommand } from '@retikz/core';
 import type { AffineMatrix } from '@retikz/math';
-
 import { applyAffine } from '@retikz/math';
 
 import { RetikzTexError, RetikzTexErrorCode } from '../error';

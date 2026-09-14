@@ -6,9 +6,6 @@ import type {
   LayoutCompositeDefinition,
   ResolvedTheme,
 } from '@retikz/core';
-import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
-import type { JsonObject } from '@retikz/foundation';
-
 import {
   categoricalColorAt,
   defineComposite,
@@ -17,8 +14,10 @@ import {
   resolveDefaultCoreThemeColors,
   ThemeMode,
 } from '@retikz/core';
+import type { DataLineageOptions, DataLineageRun, DataView, ExternalDatasets } from '@retikz/data';
 import { applyTransformsToDataView, applyTransformsToDataViewWithLineage, tagSourceIndex } from '@retikz/data';
 import { assertAllValuesValid, validateBoundData } from '@retikz/data';
+import type { JsonObject } from '@retikz/foundation';
 
 import type {
   AnyScaleDefinition,
@@ -27,7 +26,12 @@ import type {
   DimensionRole,
   ProvenanceContext,
 } from '../../contract';
+import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
+import { RetikzPlotError } from '../../error';
+import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
+import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
 import type { ChannelResolveContext } from '../../resolve/channel';
+import { resolveMarkChannels } from '../../resolve/channel';
 import type {
   CompositionLayout,
   CompositionResolution,
@@ -39,23 +43,6 @@ import type {
   FacetScalar,
   GridTargetSelector,
 } from '../../resolve/composition';
-import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../resolve/coordinate';
-import type {
-  IRPlot,
-  IRPlotAxisGuide,
-  IRPlotCoordinateOperation,
-  IRPlotGuide,
-  IRPlotMarkOperation,
-  IRPlotTransform,
-} from '../../schemas';
-import type { Rect } from '../../shared';
-import type { LowerPlotsOptions, MarkDataView } from './types';
-
-import { PositionScaleContinuity, rootMeta, slug } from '../../contract';
-import { RetikzPlotError } from '../../error';
-import { isPolarCoordinateFrame, resolveCoordinateRegistry } from '../../providers';
-import { lowerMark, makeColorSchemeResolver, resolveChannelRegistry } from '../../providers';
-import { resolveMarkChannels } from '../../resolve/channel';
 import {
   axisGridApplyToOf,
   axisGridSelectorOf,
@@ -77,6 +64,7 @@ import {
   scalarSelectorIncludes,
   withAxisGapOffsets,
 } from '../../resolve/composition';
+import type { CoordinateFrameResolution, CoordinateResolveContext } from '../../resolve/coordinate';
 import { resolveCoordinateFrame } from '../../resolve/coordinate';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
 import { resolveMarkOperation } from '../../resolve/mark';
@@ -87,6 +75,14 @@ import {
   resolvePlotGuideTheme,
   resolvePlotTheme,
 } from '../../resolve/theme';
+import type {
+  IRPlot,
+  IRPlotAxisGuide,
+  IRPlotCoordinateOperation,
+  IRPlotGuide,
+  IRPlotMarkOperation,
+  IRPlotTransform,
+} from '../../schemas';
 import {
   AxisGridApplyTo,
   CoordinateViewPlacementKind,
@@ -95,6 +91,7 @@ import {
   PlotLayerZIndex,
   PlotSchema,
 } from '../../schemas';
+import type { Rect } from '../../shared';
 import { DEFAULT_FONT_SIZE, DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
 import { createAnchorRegistry } from '../anchors';
 import { lowerCustomAxis, lowerGuide } from '../guide';
@@ -104,6 +101,7 @@ import { withEnabledAxisGrid, withoutAxisGrid, withScopeContext } from './compos
 import { applyMarkTransforms, prepareRows } from './data';
 import { resolveScopedFrames } from './frame';
 import { buildLegendLayers, collectChannelDescriptors, legendReserveOf, reserveLegendBands } from './legend';
+import type { LowerPlotsOptions, MarkDataView } from './types';
 
 /** 判断坐标帧是否具有可承载背景与区域锚点的二维绘图区 */
 const supportsPlotArea = (frame: CoordinateFrame | undefined): boolean =>

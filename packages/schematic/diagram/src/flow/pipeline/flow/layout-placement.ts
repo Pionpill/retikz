@@ -1,6 +1,4 @@
 import type { LayoutCompositeCompileContext } from '@retikz/core';
-import type { BoundsRect } from '@retikz/math';
-
 import { createGroupBodyAllocation } from '@retikz/graph';
 import {
   createFlexLayout,
@@ -10,8 +8,10 @@ import {
   LayoutItemKind,
 } from '@retikz/layout';
 import { compileFlexLayout, compileGridLayout, intrinsicLayoutProposal } from '@retikz/layout/compose';
+import type { BoundsRect } from '@retikz/math';
 import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
 
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type {
   FlowLayoutElementInput,
   FlowLayoutExecutionContext,
@@ -20,8 +20,6 @@ import type {
   FlowLayoutPlacementOutput,
 } from '../../contract';
 import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '../../shared';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 
 const flexDirection = (direction: FlowDirectionValue) => {
   if (direction === 'right') return FlexLayoutDirection.Row;

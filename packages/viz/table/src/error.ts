@@ -1,5 +1,4 @@
 import type { ValueOf } from '@retikz/foundation';
-
 import { RetikzError } from '@retikz/foundation';
 
 /** Table 包稳定错误码 */

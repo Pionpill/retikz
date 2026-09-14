@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal } from 'zod';
 
 import type { IRScene, SpatialHandleDeclaration } from '../../../src';
-
 import { compileToScene, CompositeBaseSchema, defineComposite } from '../../../src';
 
 const scene: IRScene = {

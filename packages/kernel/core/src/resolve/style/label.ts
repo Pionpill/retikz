@@ -1,9 +1,8 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { IRFont, IRGeometryLabel, IRLabelDefault } from '../../schemas';
-import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
-
 import { cutsStyleChannel } from './frame';
+import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 
 /** fold labelDefault 通道 */
 export const resolveEffectiveLabelDefault = (stack: ReadonlyArray<StyleResolveFrame>): EffectiveLabelDefault => {

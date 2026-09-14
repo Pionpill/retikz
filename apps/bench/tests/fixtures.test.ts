@@ -1,5 +1,4 @@
 import type { ScenePrimitive } from '@retikz/core';
-
 import { compileToScene, NodeSchema } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

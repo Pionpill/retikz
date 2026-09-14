@@ -1,10 +1,8 @@
 import type { FC, ReactNode } from 'react';
-
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 
 import type { ComponentPreviewProps } from '../component-preview';
-
 import { ComponentPreview, ComponentPreviewThumbnail } from '../component-preview';
 import { MarkdownInline } from '../inline-markdown';
 import { ShowcaseTabs } from './ShowcaseTabs';

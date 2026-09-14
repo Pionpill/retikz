@@ -1,8 +1,10 @@
 import type { IRNode } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
 import { resolveFieldPath } from '@retikz/data';
 
+import { slug } from '../../contract';
+import { RetikzPlotError } from '../../error';
+import { FacetEmptyPolicy } from '../../schemas';
 import type {
   FacetDimension,
   FacetDimensionItem,
@@ -14,10 +16,6 @@ import type {
   FacetScalar,
   FacetTuple,
 } from './types';
-
-import { slug } from '../../contract';
-import { RetikzPlotError } from '../../error';
-import { FacetEmptyPolicy } from '../../schemas';
 
 /** 判断 facet header 是否启用 */
 export const isFacetHeaderVisible = (facet: FacetGrid, dimension: FacetLabelDimension): boolean => {

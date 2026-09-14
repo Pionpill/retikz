@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_TICK_COUNT, resolveLinearScale, resolveScaleRegistry, scaleTicks } from '../../../src/providers';
 import { resolvePositionScale as resolvePositionScaleOp } from '../../../src/resolve/scale';
-import { type IRPlotScaleOperation } from '../../../src/schemas';
+import type { IRPlotScaleOperation } from '../../../src/schemas';
 
 // 内置 scale registry：position 分派经 registry，测试包一层省去逐处传参
 const scaleRegistry = resolveScaleRegistry();

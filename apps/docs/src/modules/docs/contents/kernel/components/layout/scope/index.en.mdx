@@ -149,26 +149,26 @@ A zero scale remains legal as a purely visual transform. Any operation that must
     {
       label: 'Converge transform inputs',
       path: 'packages/kernel/core/src/compile/scope.ts',
-      startLine: 52,
-      endLine: 105,
+      startLine: 51,
+      endLine: 104,
     },
     {
       label: 'Resolve relative positions',
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 43,
-      endLine: 82,
+      startLine: 42,
+      endLine: 81,
     },
     {
       label: 'Scope-chain projection context',
       path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
-      startLine: 63,
-      endLine: 101,
+      startLine: 62,
+      endLine: 100,
     },
     {
       label: 'Deferred Path resolution and in-place backfill',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 283,
-      endLine: 315,
+      startLine: 280,
+      endLine: 311,
     },
   ]}
 />
@@ -186,26 +186,26 @@ Equal ids in different frames are valid shadowing. A duplicate in one frame emit
     {
       label: 'Namespace frame lifecycle',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 156,
-      endLine: 183,
+      startLine: 155,
+      endLine: 182,
     },
     {
       label: 'Namespace registration',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 185,
-      endLine: 215,
+      startLine: 184,
+      endLine: 214,
     },
     {
       label: 'Namespace inside-out lookup',
       path: 'packages/kernel/core/src/compile/namespace.ts',
-      startLine: 241,
-      endLine: 253,
+      startLine: 240,
+      endLine: 252,
     },
     {
       label: 'Parent and child frame orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 733,
-      endLine: 878,
+      startLine: 728,
+      endLine: 873,
     },
   ]}
 />
@@ -223,26 +223,26 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
     {
       label: 'Scope intrinsic envelope',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 521,
-      endLine: 532,
+      startLine: 516,
+      endLine: 527,
     },
     {
       label: 'Scope Group output and child orchestration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 700,
-      endLine: 878,
+      startLine: 695,
+      endLine: 873,
     },
     {
       label: 'Rectangle and circle synthetic layouts',
       path: 'packages/kernel/core/src/compile/node/synthetic.ts',
-      startLine: 80,
-      endLine: 137,
+      startLine: 78,
+      endLine: 135,
     },
     {
       label: 'Clip resolution and resource registration',
       path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 238,
-      endLine: 328,
+      startLine: 237,
+      endLine: 327,
     },
   ]}
 />
@@ -251,19 +251,19 @@ The Scope envelope collects node, coordinate, and nested-Scope layouts, not path
 
 ### Context and output
 
-| Prop             | Type                                    | Default       | Description                                                                                                               |
-| ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                                   |
-| `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                        |
-| `transforms`     | `Array<InputTransform>`                 | —             | Seven local transforms; the last acts first                                                                               |
-| `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                                      |
-| `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                             |
-| `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                             |
-| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                               |
-| `clip`           | `IRClip`                                | —             | Built-in or custom clip in local coordinates                                                                              |
-| `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                                  |
-| `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                             |
-| `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                                |
+| Prop             | Type                                    | Default       | Description                                                                                                        |
+| ---------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `children`       | `ReactNode`                             | —             | Node / Path / Coordinate / nested Scope                                                                            |
+| `theme`          | `IRTheme`                               | Inherited     | Per-field Theme override for descendant composites; does not style Core primitives                                 |
+| `transforms`     | `Array<InputTransform>`                 | —             | Seven local transforms; the last acts first                                                                        |
+| `placement`      | `IRScopePlacement`                      | —             | Align transformed `selfAnchor` (center by default) with a target in the parent frame                               |
+| `id`             | `string`                                | —             | Register the Scope envelope as a group handle                                                                      |
+| `localNamespace` | `boolean`                               | `false`       | Isolate child ids; `scope.id` remains visible                                                                      |
+| `boundingShape`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Rectangle or circle envelope for `scope.id`                                                                        |
+| `clip`           | `IRClip`                                | —             | Built-in or custom clip in local coordinates                                                                       |
+| `zIndex`         | `number` (integer)                      | `0`           | Stable sibling order for the whole Scope                                                                           |
+| `meta`           | `Record<string, JSON value>`            | —             | Forwarded to GroupPrim, not layout or cascade                                                                      |
+| `animations`     | `Array<IRAnimationTrack>`               | —             | Group animation, not inherited by children                                                                         |
 | `on<Event>`      | `ScopeProps['onClick']`                 | —             | Uses the `onClick` signature and requires `id`; see [Hydration](/kernel/packages/render/hydration) for every event |
 
 Inspection support comes from `LayoutInspectScope` in `@retikz/layout-react/inspect`. Its `request` accepts one or more Inspector requests; `request={false}` is the hard barrier descendants cannot cross. This runtime marker never enters `IRScope`. If a nested Scope contribution cannot be located precisely, inspection compilation fails loudly instead of attributing guides to the outer Scope. See [Layout Inspector](/library/layout/reference/runtime#layout-inspector) for the complete rules.

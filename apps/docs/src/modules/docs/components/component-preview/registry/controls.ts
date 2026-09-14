@@ -1,9 +1,8 @@
 import type { Lang } from '@/i18n';
 
+import { buildPreviewControlDefaults, definePreviewControls, getPreviewControlFields } from '../controls';
 import type { PreviewControlContract, PreviewControlsDefinition, PreviewControlValues } from '../types';
 import type { PreviewLoader } from './contents';
-
-import { buildPreviewControlDefaults, definePreviewControls, getPreviewControlFields } from '../controls';
 import { buildSourceFileKey } from './contents';
 
 /** 收集 contents 下 canonical 与本地化 controls definition 模块 */

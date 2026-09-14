@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 阴影对象写法：preset 调色 + 完整显式

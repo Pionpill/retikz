@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import type { IRTable } from '../../src';
-
 import {
   compileTable,
   defineTableStructure,

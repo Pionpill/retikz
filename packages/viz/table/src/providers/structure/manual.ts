@@ -1,6 +1,5 @@
-import type { IRManualTableCell, IRTableCellPayload } from '../../schemas';
-
 import { defineTableStructure } from '../../contract';
+import type { IRManualTableCell, IRTableCellPayload } from '../../schemas';
 import {
   ManualTableStructureSchema,
   TableCellLocation,

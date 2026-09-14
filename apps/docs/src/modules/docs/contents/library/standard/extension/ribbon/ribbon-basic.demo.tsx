@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Path, Step } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+import type { FC } from 'react';
 
 const Demo: FC = () => (
   <Layout pathKinds={[RibbonPathKindDefinition]} rootScope={{ style: { color: '#172033' } }}>

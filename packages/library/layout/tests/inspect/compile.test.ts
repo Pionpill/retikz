@@ -1,5 +1,4 @@
 import type { IRChild, IRScene } from '@retikz/core';
-
 import { compileInspectionToScene, createInspectorRegistry } from '@retikz/inspect';
 import { describe, expect, it } from 'vitest';
 

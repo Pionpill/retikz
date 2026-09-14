@@ -1,5 +1,4 @@
 import type { infer as ZodInfer } from 'zod';
-
 import { array, strictObject } from 'zod';
 
 import { PathCommandSchema, TransformSchema } from '../../schemas';

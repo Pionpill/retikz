@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 以同一视觉层级呈现一种 Structure 输入 */
 const structureInput = (id: string, y: number, title: string, detail: string) => (

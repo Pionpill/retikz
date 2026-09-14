@@ -1,3 +1,7 @@
+import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
+import { isFiniteNumber } from '@retikz/math';
+import { extent as d3Extent } from 'd3-array';
 import type {
   ScaleBand as D3ScaleBand,
   ScaleContinuousNumeric as D3ScaleContinuousNumeric,
@@ -5,11 +9,6 @@ import type {
   ScalePoint as D3ScalePoint,
   ScaleTime as D3ScaleTime,
 } from 'd3-scale';
-
-import { coerceTimestamp, inferCategoryDomain } from '@retikz/data';
-import { DataFieldType } from '@retikz/data';
-import { isFiniteNumber } from '@retikz/math';
-import { extent as d3Extent } from 'd3-array';
 import {
   scaleBand as d3ScaleBand,
   scaleLinear as d3ScaleLinear,
@@ -22,6 +21,8 @@ import {
 } from 'd3-scale';
 
 import type { AnyScaleDefinition, PositionScale, TickSet } from '../../../contract';
+import { defineScale } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type {
   IRPlotBandScale,
   IRPlotLinearScale,
@@ -33,9 +34,6 @@ import type {
   IRPlotSymlogScale,
   IRPlotTimeScale,
 } from '../../../schemas';
-
-import { defineScale } from '../../../contract';
-import { RetikzPlotError } from '../../../error';
 import {
   BandScaleSchema,
   LinearScaleSchema,

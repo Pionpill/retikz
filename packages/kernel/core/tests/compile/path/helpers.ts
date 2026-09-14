@@ -1,7 +1,6 @@
-﻿import type { PathCommand, PathPrim, Scene, ScenePrimitive } from '../../../src/contract';
+﻿import { compileToScene } from '../../../src/compile/compile';
+import type { PathCommand, PathPrim, Scene, ScenePrimitive } from '../../../src/contract';
 import type { IRChild, IRPathBase, IRScene, IRStep } from '../../../src/schemas';
-
-import { compileToScene } from '../../../src/compile/compile';
 
 export const findPathPrim = (prims: Array<ScenePrimitive>): PathPrim => {
   const p = prims.find((x): x is PathPrim => x.type === 'path');

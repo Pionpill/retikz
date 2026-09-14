@@ -1,28 +1,22 @@
 // @vitest-environment jsdom
 
-import type { FC, ReactNode } from 'react';
-import type { Root } from 'react-dom/client';
-
 import { fadeIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import type { FC, ReactNode } from 'react';
+import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-
-import type { ComponentPreviewCardProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
-import type { PreviewDemoModule } from '../../src/modules/docs/components/component-preview/registry';
-import type {
-  PreviewControlContract,
-  PreviewControlSlot,
-} from '../../src/modules/docs/components/component-preview/types';
 
 import i18n from '../../src/i18n';
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreview } from '../../src/modules/docs/components/component-preview/ComponentPreview';
+import type { ComponentPreviewCardProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import { DemoLocationContext } from '../../src/modules/docs/components/component-preview/context';
 import { mergePreviewControlSlots } from '../../src/modules/docs/components/component-preview/controls';
 import { buildConfiguredControlSlots } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type { PreviewDemoModule } from '../../src/modules/docs/components/component-preview/registry';
 import {
   buildControlsKey,
   buildKey,
@@ -30,6 +24,10 @@ import {
   demoModuleLoaders,
   demoSourceLoaders,
 } from '../../src/modules/docs/components/component-preview/registry';
+import type {
+  PreviewControlContract,
+  PreviewControlSlot,
+} from '../../src/modules/docs/components/component-preview/types';
 
 const RegistryAnimatedDemo: FC = () => (
   <Layout width={40} height={20}>

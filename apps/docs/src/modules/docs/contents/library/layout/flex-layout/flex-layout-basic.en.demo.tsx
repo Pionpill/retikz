@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Demonstrates FlexLayout grow, gaps, and cross alignment through React authoring */
 const Demo: FC = () => (

@@ -1,14 +1,10 @@
-import type { ReactElement } from 'react';
-
 import { ScatterChart } from '@retikz/chart-react/point';
+import type { ReactElement } from 'react';
 import { createElement, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewSourceConfig } from '../../src/modules/docs/preview';
-
 import { buildPreviewIR, previewEmbedPropsOf } from '../../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
-import { CHART_PRESENTATION_CONTROL_IDS } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation.constants';
 import { previewControlContract as presentationLayoutZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-layout.controls';
 import { previewControlContract as presentationLayoutEnContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-layout.en.controls';
 import {
@@ -18,10 +14,12 @@ import {
 import { previewControlContract as presentationVisibilityZhContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.controls';
 import { previewControlContract as presentationVisibilityEnContract } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.en.controls';
 import { previewSource as presentationVisibilityZhSource } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation-visibility.zh.demo';
+import { CHART_PRESENTATION_CONTROL_IDS } from '../../src/modules/docs/contents/viz/chart/model/presentation/chart-presentation.constants';
 import { previewSource as fertilityWorkEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.en.demo';
 import { previewSource as fertilityWorkZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-fertility-work.zh.demo';
 import { previewSource as worldCupEnPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.en.demo';
 import { previewSource as worldCupZhPreviewSource } from '../../src/modules/docs/contents/viz/chart/points/scatter/scatter-world-cup-shots.zh.demo';
+import type { PreviewSourceConfig } from '../../src/modules/docs/preview';
 
 const canonicalScatterChartOf = (source: PreviewSourceConfig): ReactElement => {
   const chart = source.canonicalRender?.();

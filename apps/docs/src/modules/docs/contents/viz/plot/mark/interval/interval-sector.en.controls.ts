@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { INTERVAL_SECTOR_CONTROL_IDS } from './interval-sector.controls';

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Node 从 props 收敛到可见图元与命名几何的流程图 */
 const Demo: FC = () => (

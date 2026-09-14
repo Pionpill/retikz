@@ -1,6 +1,5 @@
-import type { ProviderId } from './providers';
-
 import { FALLBACK_MODEL_PRICE, LLMS_TXT_CACHE_TTL_MS, MODEL_PRICES } from './constants';
+import type { ProviderId } from './providers';
 
 let llmsTxtCache: { text: string; at: number } | null = null;
 let llmsTxtInflight: Promise<string> | null = null;

@@ -1,10 +1,7 @@
-import type { FC } from 'react';
-
 import { ArrowUpRight, Languages, Moon, MoreHorizontal, Sun } from 'lucide-react';
+import type { FC } from 'react';
 import { createElement } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import type { PreviewThemeStyleValue } from '@/modules/docs/components/component-preview/theme';
 
 import { GitHubIcon } from '@/components/icons';
 import { Shortcut } from '@/components/shared';
@@ -28,6 +25,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
+import type { PreviewThemeStyleValue } from '@/modules/docs/components/component-preview/theme';
 import {
   getPreviewThemeStyleIcon,
   isPreviewThemeStyleDocument,

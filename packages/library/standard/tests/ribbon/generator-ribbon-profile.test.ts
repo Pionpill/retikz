@@ -1,11 +1,9 @@
 import type { IRScene, PathPrim, ScenePrimitive } from '@retikz/core';
-
 import { BUILTIN_PATH_GENERATORS, compileToScene as compileCoreToScene, definePathGenerator } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { object } from 'zod';
 
 import type { RibbonWidthProfileDefinition } from '../../src/ribbon';
-
 import {
   BUILTIN_RIBBON_WIDTH_PROFILES,
   createRibbonPathKindDefinition,

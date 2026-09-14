@@ -2,7 +2,6 @@ import type { LowerPlotsOptions } from '@retikz/plot';
 
 import type { ChartThemeDefinition } from '../../_chart/contract';
 import type { ChartProviderContribution } from '../../_chart/providers';
-
 import { createChartProviderContribution } from '../../_chart/providers';
 import { ChartFamily } from '../constants';
 import { ConnectedScatterChartDefinition } from './recipe';

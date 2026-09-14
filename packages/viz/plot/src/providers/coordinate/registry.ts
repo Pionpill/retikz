@@ -1,5 +1,4 @@
 import type { AnyCoordinateDefinition } from '../../contract';
-
 import { extractCoordinateType } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { BUILTIN_COORDINATES } from './private';

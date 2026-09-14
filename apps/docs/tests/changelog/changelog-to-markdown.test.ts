@@ -1,8 +1,7 @@
 ﻿import { describe, expect, it } from 'vitest';
 
-import type { Release } from '@/modules/docs/data';
-
 import { changelogToMarkdown } from '@/modules/docs/components';
+import type { Release } from '@/modules/docs/data';
 
 const fixture: Array<Release> = [
   {

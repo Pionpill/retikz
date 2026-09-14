@@ -1,6 +1,6 @@
 # 包拓扑
 
-> **状态：当前包与发布组拓扑真源的可读说明。** 机器可读真源是 [`scripts/release-groups.config.mjs`](../../scripts/release-groups.config.mjs)；新增、删除或调整 release group 时必须同步本文。领域职责以根与就近 `AGENTS.md` 为准。
+> **状态：当前包与发布组拓扑真源的可读说明。** 机器可读真源是 [`../../scripts/release-groups.config.mjs`](../../scripts/release-groups.config.mjs)；新增、删除或调整 release group 时必须同步本文。领域职责以根与就近 `AGENTS.md` 为准。
 
 ---
 
@@ -10,12 +10,12 @@ retikz 将包的代码归属和发布节奏分开管理。
 
 文件目录按领域组织：
 
-| 领域      | 目录                 | 职责                                                         |
-| --------- | -------------------- | ------------------------------------------------------------ |
-| kernel    | `packages/kernel/*`  | 运行时、核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
-| library   | `packages/library/*` | 相对 Core 可选、供作者与官方 Tier 2 包跨领域复用的绘图能力库 |
+| 领域      | 目录                   | 职责                                                         |
+| --------- | ---------------------- | ------------------------------------------------------------ |
+| kernel    | `packages/kernel/*`    | 运行时、核心绘图、渲染、adapter 和可选 Kernel 集成（如 TeX） |
+| library   | `packages/library/*`   | 相对 Core 可选、供作者与官方 Tier 2 包跨领域复用的绘图能力库 |
 | schematic | `packages/schematic/*` | 通用关系图、显式几何与自动图示布局能力                       |
-| viz       | `packages/viz/*`     | 可视化底座和 plot 等上层功能包                               |
+| viz       | `packages/viz/*`       | 可视化底座和 plot 等上层功能包                               |
 
 领域目录只表达代码归属和依赖方向，不表示同目录下所有包必须共享版本。
 

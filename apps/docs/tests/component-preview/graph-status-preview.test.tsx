@@ -1,18 +1,16 @@
-// @vitest-environment jsdom
-import type { FC } from 'react';
-
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { compositeOpaqueColor } from '@retikz/foundation';
 import { GraphStatus } from '@retikz/graph';
+// @vitest-environment jsdom
+import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { PreviewControlState } from '../../src/modules/docs/components/component-preview';
-import type { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';
-
 import { PreviewPanel, usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';
 import { previewControlContract } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-event.controls';
 import EntityEventDemo from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-event.zh.demo';
 

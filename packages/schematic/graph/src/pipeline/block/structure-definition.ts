@@ -1,9 +1,7 @@
 import type { LayoutCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
 
 import type { IRBlockHeader, IRBlockRow, IRBlockSection } from '../../schemas';
-
 import { BlockHeaderSchema, BlockRowSchema, BlockSectionSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { compileBlockHeader, compileBlockRow, compileBlockSection } from './structure-compile';

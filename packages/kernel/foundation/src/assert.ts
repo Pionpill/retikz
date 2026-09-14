@@ -1,5 +1,4 @@
 import type { RetikzError } from './error';
-
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
 import { NonBlankStringSchema, PositiveNumberSchema } from './schema';
 

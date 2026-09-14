@@ -1,10 +1,8 @@
 import type { FC, ReactNode } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlContract, PreviewControlValues } from '@/modules/docs/components/component-preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { PreviewThemeProvider } from '@/modules/docs/components/component-preview/theme';

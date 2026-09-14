@@ -1,5 +1,4 @@
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
-
 import { PlotGuide, PositionScaleContinuity, readCoordinateScaleNames } from '@retikz/plot';
 
 import type {
@@ -7,8 +6,6 @@ import type {
   ChartRecipeDefinition,
   ChartRecipeResolveContext,
 } from '../../_chart/contract';
-import type { IRStripChart, IRStripChartProperties } from './schema';
-
 import { defineChartRecipe } from '../../_chart/contract';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
@@ -23,6 +20,7 @@ import {
   sizeGuideOf,
 } from '../shared';
 import { resolveStripPointMark, StripMarkDefinition } from './mark';
+import type { IRStripChart, IRStripChartProperties } from './schema';
 import { StripChartSchema } from './schema';
 
 /** Strip exact schema、调度与消费检查共用的 encoding 顺序 */

@@ -3,6 +3,7 @@ import { mkdtemp } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createBenchReportRequestHandler } from '../report-plugin';

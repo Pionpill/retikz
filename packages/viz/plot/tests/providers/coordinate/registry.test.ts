@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { literal, number, object, string } from 'zod';
 
-import type { AnyCoordinateDefinition } from '../../../src/contract';
-
 import * as plot from '../../../src';
+import type { AnyCoordinateDefinition } from '../../../src/contract';
 import {
   bindCoordinateScaleNames,
   createCoordinateFrame,

@@ -1,5 +1,4 @@
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
-
 import { boundsToRect, mergeBounds, rectToBounds } from '@retikz/math';
 
 import type {
@@ -12,9 +11,8 @@ import type {
   FlowLayoutRelationInput,
 } from '../../../contract';
 import type { FlowDirectionValue } from '../../../shared';
-import type { LayeredRankEdge } from './topology';
-
 import { routeLayeredRelations } from './routing';
+import type { LayeredRankEdge } from './topology';
 import { resolveLayeredRanks } from './topology';
 
 type LayeredInputIndex = Readonly<{

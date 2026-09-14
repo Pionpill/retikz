@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Compares visible and clipped output when fixed geometry refuses a smaller slot */
 const Demo: FC = () => (

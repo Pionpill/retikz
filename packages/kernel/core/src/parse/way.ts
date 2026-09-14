@@ -1,6 +1,7 @@
 import { NormalizedFractionSchema } from '@retikz/foundation';
 import { enum as zodEnum, strictObject } from 'zod';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type {
   IRArcStep,
   IRAxisLineStep,
@@ -20,10 +21,8 @@ import type {
   IRStepRadius,
   IRTarget,
 } from '../schemas';
-import type { Side } from '../shared';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { AxisLineTargetSchema, FoldStepVia } from '../schemas';
+import type { Side } from '../shared';
 import { parseSideAlias } from './anchor-alias';
 import { parseTargetSugar } from './target-sugar';
 

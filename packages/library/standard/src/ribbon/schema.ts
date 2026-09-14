@@ -1,5 +1,3 @@
-import type { ZodType } from 'zod';
-
 import { PolarPositionSchema, PositionSchema, Vector2Schema } from '@retikz/core';
 import { AngleDegreesSchema } from '@retikz/core';
 import { StepSchema } from '@retikz/core';
@@ -10,9 +8,8 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, object, union } from 'zod';
-
-import type { IRRibbonDirection } from './types';
 
 import {
   RibbonAlignment,
@@ -23,6 +20,7 @@ import {
   RibbonWidthInterpolation,
   RibbonWidthProfile,
 } from './constants';
+import type { IRRibbonDirection } from './types';
 
 /** Standard 内置 Ribbon profile 与自定义注册名共享的开放名称 schema */
 export const RibbonWidthProfileNameSchema = createOpenStringSchema(RibbonWidthProfile).describe(

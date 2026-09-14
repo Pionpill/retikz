@@ -1,6 +1,10 @@
 import type { EntityPredicateDefinition } from '../../contract';
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import type { EntityKindRegistry } from '../../providers';
+import { entityKindDefinitionOf, entityKindKeys } from '../../providers';
 import type { IRGraphEntity, IRGraphEntityDefaults, IRGraphEntityRule } from '../../schemas';
+import { mergeGraphDefaults } from '../theme';
+import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 import type {
   CanonicalEntity,
   CanonicalEntityPredicate,
@@ -9,11 +13,6 @@ import type {
   EntityGraphLayerResolveContext,
   EntityResolveContext,
 } from './types';
-
-import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
-import { entityKindDefinitionOf, entityKindKeys } from '../../providers';
-import { mergeGraphDefaults } from '../theme';
-import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
   const definition = registry.get(key);

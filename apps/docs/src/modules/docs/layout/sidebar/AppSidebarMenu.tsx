@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { Fragment } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -7,9 +6,8 @@ import { Separator } from '@/components/ui/separator';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
 
-import type { SidebarCategoryData } from './types';
-
 import { AppSidebarModuleList } from './AppSidebarModuleList';
+import type { SidebarCategoryData } from './types';
 
 export type AppSidebarMenuProps = {
   /** 分组化的菜单数据 */

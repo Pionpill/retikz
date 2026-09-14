@@ -1,9 +1,8 @@
 import type { TableBorderContribution } from '../../../contract/manifest';
-import type { ResolvedTableBorderAtom, TableBorderAtom } from './types';
-
 import { TableBorderContributionSchema } from '../../../contract/manifest';
 import { RetikzTableError } from '../../../error';
 import { deepFreeze } from '../../../shared';
+import type { ResolvedTableBorderAtom, TableBorderAtom } from './types';
 import { tableBorderSourceOrderKey } from './types';
 
 /** 按 conflict tuple 把更高优先候选排在前面 */

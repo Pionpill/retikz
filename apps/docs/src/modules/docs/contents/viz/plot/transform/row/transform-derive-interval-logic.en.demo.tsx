@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** derive-interval 的英文模式优先级、逐行派生与错误出口 */
 const Demo: FC = () => (

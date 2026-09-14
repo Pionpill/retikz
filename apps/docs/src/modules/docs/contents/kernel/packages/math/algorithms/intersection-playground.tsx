@@ -1,11 +1,9 @@
 import type { Position } from '@retikz/math';
-import type { FC, ReactNode } from 'react';
-
 import { intersect, vector2 } from '@retikz/math';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
+import type { FC, ReactNode } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { intersectionPlaygroundControls, previewControlContract } from './intersection-playground.controls';

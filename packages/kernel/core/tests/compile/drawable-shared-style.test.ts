@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, PathPrim, ScenePrimitive } from '../../src';
-
 import { compileToScene, PathDefaultSchema, ScopeSchema } from '../../src';
 import { arrowMarks } from '../helpers/arrow-marks';
 

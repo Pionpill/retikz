@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 自定义形状从 JSON 引用与运行时定义汇合到 Scene 和连接几何的流程（英文标签） */
 const Demo: FC = () => (

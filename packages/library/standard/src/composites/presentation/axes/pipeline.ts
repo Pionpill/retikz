@@ -1,13 +1,12 @@
 import type { IRNode, IRPath, IRPosition, IRScope, IRTextBlock } from '@retikz/core';
 
 import type { CanonicalAxes } from '../../../resolve/axes';
-import type { IRStandardPathStrokeStyle } from '../shared/types';
-import type { IRAxes } from './types';
-
 import { resolveAxes } from '../../../resolve/axes';
 import { enumerateLattice } from '../shared/lattice';
+import type { IRStandardPathStrokeStyle } from '../shared/types';
 import { AxesArrowMode, AxesLabelEnd, AxesTickSide } from './constants';
 import { enumerateAxesTickValues } from './schemas/utils';
+import type { IRAxes } from './types';
 
 type AxesChild = IRPath | IRNode;
 type AxesAxis = CanonicalAxes['x'];

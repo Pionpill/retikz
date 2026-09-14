@@ -1,7 +1,6 @@
+import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation, IRPlotScaleOperation } from '@retikz/plot';
-
-import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
 import { defineScale, PathMarkSchema, PositionScaleContinuity } from '@retikz/plot';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
@@ -11,10 +10,9 @@ import type {
   ChartRecipeDefinition,
   ChartScaleDefaultsResolveContext,
 } from '../../src/_chart/contract';
-import type { IRChartSource } from '../../src/_chart/schemas';
-
 import { resolveChartProviderRegistry } from '../../src/_chart/providers';
 import { resolveSelectedChart } from '../../src/_chart/resolve';
+import type { IRChartSource } from '../../src/_chart/schemas';
 import { BubbleMarkDefinition } from '../../src/point/bubble/mark';
 import { BubbleChartDefinition } from '../../src/point/bubble/recipe';
 import { BubbleChartSchema } from '../../src/point/bubble/schema';

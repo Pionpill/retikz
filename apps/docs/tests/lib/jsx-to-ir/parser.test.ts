@@ -1,7 +1,6 @@
-import type { ReactElement, ReactNode } from 'react';
-
 import { createInputScene } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
+import type { ReactElement, ReactNode } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 

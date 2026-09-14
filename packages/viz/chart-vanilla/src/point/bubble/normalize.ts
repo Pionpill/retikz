@@ -1,8 +1,7 @@
 import type { IRBubbleChart } from '@retikz/chart/point/bubble';
 
-import type { InputBubbleChart } from './types';
-
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import type { InputBubbleChart } from './types';
 
 /** 将 Bubble Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeBubbleChart = (input: InputBubbleChart): IRBubbleChart => {

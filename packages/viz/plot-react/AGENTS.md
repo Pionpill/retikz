@@ -24,6 +24,6 @@
 结构化改动后运行：
 
 ```bash
-pnpm --filter @retikz/plot-react exec eslint . --fix
+pnpm --filter @retikz/plot-react exec oxlint . --fix
 pnpm --filter @retikz/plot-react exec tsc --noEmit
 ```

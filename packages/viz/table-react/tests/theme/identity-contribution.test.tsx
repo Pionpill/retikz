@@ -1,8 +1,7 @@
 import type * as RetikzReact from '@retikz/react';
-import type { InputEmbedContext } from '@retikz/vanilla';
-
 import { createManualTableIR } from '@retikz/table';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 

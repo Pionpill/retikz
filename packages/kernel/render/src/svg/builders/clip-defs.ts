@@ -1,8 +1,7 @@
 import type { SceneResource } from '@retikz/core';
 
-import type { SvgNode } from '../types';
-
 import { buildPathD } from '../path-d-builder';
+import type { SvgNode } from '../types';
 
 type ClipResource = Extract<SceneResource, { kind: 'clip' }>;
 

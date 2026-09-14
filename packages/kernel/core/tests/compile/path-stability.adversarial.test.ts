@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRPath, IRScene, ScenePrimitive } from '../../src';
-import type { Scene } from '../../src/contract';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { Scene } from '../../src/contract';
 import { arrowMarks } from '../helpers/arrow-marks';
 
 /** 递归收集 Scene 里的数值坐标（commands / transforms / layout），用于检查是否有限 */

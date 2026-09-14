@@ -1,10 +1,8 @@
 import type { IRAnimationTrack, PathPrim, RectPrim, Scene, ScenePrimitive } from '@retikz/core';
-
 import { describe, expect, it, vi } from 'vitest';
 
-import type { AnimationPropertyDefinition } from '../../src/animation/registry';
-
 import { createIdClockRegistry } from '../../src/animation';
+import type { AnimationPropertyDefinition } from '../../src/animation/registry';
 import { drawScene } from '../../src/canvas';
 
 /**

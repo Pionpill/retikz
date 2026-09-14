@@ -1,18 +1,16 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import { RelationRole } from '@retikz/graph';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { RelationRole } from '@retikz/graph';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
-
-import { affineCompositionFlowI18n } from './affine-composition-flow.i18n';
 import {
   logicFigureGraphProps,
   LogicFigureRelationKind,
   logicFigureRelationKinds,
 } from '@/modules/docs/components/logic-figure';
+
+import { affineCompositionFlowI18n } from './affine-composition-flow.i18n';
 
 /** 展示二维仿射矩阵的组合与应用顺序 */
 export type AffineCompositionFlowI18nFigureProps = Readonly<{ lang?: Lang }>;

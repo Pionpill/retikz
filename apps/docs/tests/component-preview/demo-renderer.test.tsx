@@ -1,17 +1,11 @@
-﻿// @vitest-environment jsdom
+﻿import { Layout } from '@retikz/react';
+// @vitest-environment jsdom
 import type { FC } from 'react';
-
-import { Layout } from '@retikz/react';
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import type {
-  PreviewControlRuntime,
-  PreviewControlSlot,
-} from '../../src/modules/docs/components/component-preview/types';
 
 import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls/animation-controls';
 import {
@@ -21,6 +15,10 @@ import {
   PreviewControlSlotLayer,
   RendererModeButton,
 } from '../../src/modules/docs/components/component-preview/preview-panel';
+import type {
+  PreviewControlRuntime,
+  PreviewControlSlot,
+} from '../../src/modules/docs/components/component-preview/types';
 import { useComponentPreviewStore } from '../../src/modules/docs/store/useComponentPreviewStore';
 
 const Demo: FC = () => <Layout width={40} height={20} />;

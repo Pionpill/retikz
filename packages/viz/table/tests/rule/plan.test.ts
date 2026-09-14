@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRTableCellRule, SemanticTableModel } from '../../src';
-
 import { TableCellRuleSchema } from '../../src';
 import { formatTable } from '../../src/pipeline/formatter';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';

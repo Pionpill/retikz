@@ -1,6 +1,5 @@
-import type { ErrorInfo, FC, ReactNode } from 'react';
-
 import { AlertTriangle } from 'lucide-react';
+import type { ErrorInfo, FC, ReactNode } from 'react';
 import { Component } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

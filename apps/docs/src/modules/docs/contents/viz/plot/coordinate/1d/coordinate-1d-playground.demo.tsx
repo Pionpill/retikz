@@ -1,6 +1,5 @@
-import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
-
 import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import type { InputPlotCoordinate } from '@retikz/plot-vanilla';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -64,4 +63,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 一维直线与圆周坐标系试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

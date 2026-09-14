@@ -1,3 +1,4 @@
+import { defineThemeStyle, ThemeMode } from '@retikz/core';
 // @vitest-environment jsdom
 import type {
   InputEmbedAdapter,
@@ -5,8 +6,6 @@ import type {
   VanillaCompileDriver,
   VanillaCompileDriverSession,
 } from '@retikz/vanilla';
-
-import { defineThemeStyle, ThemeMode } from '@retikz/core';
 import * as vanilla from '@retikz/vanilla';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';

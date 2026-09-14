@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import type { LoadedPreviewResources, PreviewDemoModule, PreviewResourceRequest } from '../registry';
-
 import { demoModuleLoaders, loadPreviewResources, resolvePreviewResourceTarget } from '../registry';
 
 /** ComponentPreview 的异步资源状态。 */

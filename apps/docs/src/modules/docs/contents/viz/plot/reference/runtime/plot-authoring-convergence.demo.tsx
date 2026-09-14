@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 多种 authoring 入口汇入 JSON-safe Plot IR，运行时依赖保持在 IR 外 */
 const Demo: FC = () => (

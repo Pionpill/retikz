@@ -1,26 +1,16 @@
+import type { IRAxisScale, IRBoxSize, IRChild, IRNode, IRNodeDefault, IRNodeLabel, IRScope } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 
-import {
-  type IRAxisScale,
-  type IRBoxSize,
-  type IRChild,
-  type IRNode,
-  type IRNodeDefault,
-  type IRNodeLabel,
-  type IRScope,
-} from '@retikz/core';
-
-import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
-import type { MarkPaint } from '../shared';
-
-import {
-  type CoordinateFrame,
-  type FieldCollector,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
+import type {
+  CoordinateFrame,
+  FieldCollector,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
 } from '../../../contract';
+import type { IRPlotMark, IRPlotPointMark } from '../../../schemas';
 import { PlotMark, PointMarkSchema } from '../../../schemas';
+import type { MarkPaint } from '../shared';
 import {
   attachDatumAnchor,
   attachDatumLabel,

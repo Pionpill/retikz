@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** Minimal English Frame example with a title, description, and Core Node body */
 const Demo: FC = () => (

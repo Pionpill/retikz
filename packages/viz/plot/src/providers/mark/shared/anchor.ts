@@ -1,9 +1,8 @@
-import { type ExternalRow } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
 
 import type { Cell, CoordinateFrame } from '../../../contract';
-
 import { cellGeometryAnchor, hasProjectCell } from '../../../contract';
-import { type IRPlotMark } from '../../../schemas';
+import type { IRPlotMark } from '../../../schemas';
 import { roleValues } from './roles';
 
 /** 按坐标系 roles 投影某一行的 mark 位置 */

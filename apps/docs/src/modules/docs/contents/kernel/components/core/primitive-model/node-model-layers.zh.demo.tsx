@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 
 const CONTENT_WIDTH = 82;
 const CONTENT_HEIGHT = 30;

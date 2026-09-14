@@ -2,7 +2,6 @@ import { ArrowDefaultSchema, FontSchema, LabelDefaultSchema, NodeDefaultSchema, 
 import { describe, expect, it } from 'vitest';
 
 import type { TableCellPlanSource } from '../../src';
-
 import {
   TableCellAppearanceTracePath,
   TableCellAppearanceTracePathSchema,

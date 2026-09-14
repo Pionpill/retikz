@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { BenchLabReport, BenchReportSummary } from '../../shared';
-
 import { getBenchReport, listBenchReports } from './report-client';
 
 /** 当前选择的报告身份 */

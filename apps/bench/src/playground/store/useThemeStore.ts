@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { ThemeValue } from './theme-model';
-
 import { applyThemeToRoot, defaultTheme } from './theme-model';
 
 /** Bench 主题状态 */

@@ -1,10 +1,8 @@
-import type { ZodType } from 'zod';
-
 import { NonBlankStringSchema } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { lazy, number, object, union } from 'zod';
 
 import type { SharedPolarPosition } from '../../../shared';
-
 import { AngleDegreesSchema } from '../../scalar';
 import { PositionSchema } from '../position';
 

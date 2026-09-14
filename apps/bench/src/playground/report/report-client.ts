@@ -1,7 +1,6 @@
 import type { BenchLabReport, BenchReportList, WriteBenchReportInput } from '../../shared';
-import type { LabRunSession } from '../modules/kernel';
-
 import { BenchReportStatus, isBenchLabReport, isBenchReportList } from '../../shared';
+import type { LabRunSession } from '../modules/kernel';
 import { LabOutcome } from '../modules/kernel';
 
 /** 报告客户端使用的 Fetch 边界 */

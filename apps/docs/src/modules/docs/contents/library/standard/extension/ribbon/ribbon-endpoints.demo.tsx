@@ -1,11 +1,9 @@
+import { Layout, Path, Step } from '@retikz/react';
 import type { IRRibbonPathOptions } from '@retikz/standard/ribbon';
+import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import type { FC } from 'react';
 
-import { Layout, Path, Step } from '@retikz/react';
-import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, ribbonEndpointsControls } from './ribbon-endpoints.controls';

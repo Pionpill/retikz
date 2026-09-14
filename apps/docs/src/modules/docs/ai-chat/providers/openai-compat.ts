@@ -1,6 +1,5 @@
-import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions, ProviderId } from './types';
-
 import { readSse } from './sse';
+import type { ChatChunk, ChatErrorKind, ChatProvider, ChatRequestOptions, ProviderId } from './types';
 
 /** 构建 OpenAI-Compatible provider。 */
 export const createOpenAiCompatProvider = (opts: {

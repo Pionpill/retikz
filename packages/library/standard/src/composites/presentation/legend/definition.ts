@@ -1,12 +1,10 @@
 import type { CompositeArtifactOf, LayoutCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
-
-import type { IRLegend, LegendArtifact } from './types';
 
 import { STANDARD_NAMESPACE } from '../../shared';
 import { compileLegend } from './pipeline';
 import { LegendArtifactSchema, LegendSchema } from './schema';
+import type { IRLegend, LegendArtifact } from './types';
 
 /** Standard Legend 的官方 Core layout-aware composite definition */
 export const LegendDefinition: LayoutCompositeDefinition<

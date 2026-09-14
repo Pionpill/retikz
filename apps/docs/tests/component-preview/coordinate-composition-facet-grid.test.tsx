@@ -1,28 +1,18 @@
-import type { FC, ReactNode } from 'react';
-
 import { PlotAxis } from '@retikz/plot-react';
+import type { FC, ReactNode } from 'react';
 import { Children, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-
-import type {
-  PreviewControlValues,
-  PreviewPanelControlsDefinition,
-} from '../../src/modules/docs/components/component-preview/types';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import {
   getPreviewControlFields,
   resolveVisiblePreviewControlSections,
 } from '../../src/modules/docs/components/component-preview/controls';
-import {
-  COORDINATE_COMPOSITION_FACET_CONTROL_IDS,
-  coordinateCompositionFacetControls,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet.controls';
-import FacetPreview, {
-  previewSource as facetPreviewSource,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet.demo';
-import { coordinateCompositionFacetControls as englishCoordinateCompositionFacetControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet.en.controls';
+import type {
+  PreviewControlValues,
+  PreviewPanelControlsDefinition,
+} from '../../src/modules/docs/components/component-preview/types';
 import {
   COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS,
   coordinateCompositionFacetMultilevelControls,
@@ -32,6 +22,14 @@ import MultilevelPreview, {
 } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet-multilevel.demo';
 import { coordinateCompositionFacetMultilevelControls as englishCoordinateCompositionFacetMultilevelControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet-multilevel.en.controls';
 import {
+  COORDINATE_COMPOSITION_FACET_CONTROL_IDS,
+  coordinateCompositionFacetControls,
+} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet.controls';
+import FacetPreview, {
+  previewSource as facetPreviewSource,
+} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet.demo';
+import { coordinateCompositionFacetControls as englishCoordinateCompositionFacetControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-facet.en.controls';
+import {
   COORDINATE_COMPOSITION_SCOPES_CONTROL_IDS,
   coordinateCompositionScopesControls,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-scopes.controls';
@@ -40,14 +38,6 @@ import ScopesPreview, {
 } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-scopes.demo';
 import { coordinateCompositionScopesControls as englishCoordinateCompositionScopesControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-scopes.en.controls';
 import {
-  COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS,
-  coordinateCompositionTracksControls,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks.controls';
-import TracksPreview, {
-  previewSource as tracksPreviewSource,
-} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks.demo';
-import { coordinateCompositionTracksControls as englishCoordinateCompositionTracksControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks.en.controls';
-import {
   COORDINATE_COMPOSITION_TRACKS_POLAR_CONTROL_IDS,
   coordinateCompositionTracksPolarControls,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks-polar.controls';
@@ -55,6 +45,14 @@ import PolarTracksPreview, {
   previewSource as polarTracksPreviewSource,
 } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks-polar.demo';
 import { coordinateCompositionTracksPolarControls as englishCoordinateCompositionTracksPolarControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks-polar.en.controls';
+import {
+  COORDINATE_COMPOSITION_TRACKS_CONTROL_IDS,
+  coordinateCompositionTracksControls,
+} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks.controls';
+import TracksPreview, {
+  previewSource as tracksPreviewSource,
+} from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks.demo';
+import { coordinateCompositionTracksControls as englishCoordinateCompositionTracksControls } from '../../src/modules/docs/contents/viz/plot/coordinate/composition/coordinate-composition-tracks.en.controls';
 import {
   COORDINATE_COMPOSITION_X_AXIS_CONTROL_IDS,
   coordinateCompositionXAxisControls,

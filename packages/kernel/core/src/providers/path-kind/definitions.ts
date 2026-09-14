@@ -1,8 +1,7 @@
 import type { AnyPathKindDefinition } from '../../contract';
 import type { StrokePathOwnerOutput } from '../../contract';
-import type { IRPathBase } from '../../schemas';
-
 import { definePathKind, StrokePathOwnerOutputSchema } from '../../contract';
+import type { IRPathBase } from '../../schemas';
 import { PathKind, StrokePathSchema } from '../../schemas';
 
 /** 标准描边 path kind：复用 core 的 stroke emission */

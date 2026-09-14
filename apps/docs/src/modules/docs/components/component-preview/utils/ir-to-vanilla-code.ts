@@ -12,10 +12,8 @@ import type {
   IRStep,
 } from '@retikz/core';
 import type { IRFlowDiagram } from '@retikz/diagram/flow';
-import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
-import type { InputGraphChild } from '@retikz/graph-vanilla';
-
 import { FlowDiagramSchema } from '@retikz/diagram/flow';
+import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
 import {
   BlockHeaderSchema,
   BlockRowSchema,
@@ -26,6 +24,7 @@ import {
   GroupSchema,
   RelationSchema,
 } from '@retikz/graph';
+import type { InputGraphChild } from '@retikz/graph-vanilla';
 
 import {
   entityPreviewAuthoringInput,

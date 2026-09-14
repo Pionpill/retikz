@@ -1,12 +1,10 @@
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
-
 import { createScatterChartProviderContribution } from '@retikz/chart/point/scatter';
 
 import type { ChartAuthoringResult } from '../../shared';
-import type { CreateScatterChartInput } from './types';
-
 import { createPointChart, typedChartPartsOf } from '../shared';
 import { normalizeScatterChart } from './normalize';
+import type { CreateScatterChartInput } from './types';
 
 /** 创建确定形态的 ScatterChart */
 export const createScatterChart = (input: CreateScatterChartInput): ChartAuthoringResult<IRScatterChart> => {
