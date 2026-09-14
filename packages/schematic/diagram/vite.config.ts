@@ -7,9 +7,7 @@ export default defineRetikzLibraryConfig({
   entry: ['src/index.ts', 'src/flow/index.ts'],
   test: {
     environment: 'node',
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
     include: ['tests/**/*.test.ts'],
     pool: 'threads',
   },

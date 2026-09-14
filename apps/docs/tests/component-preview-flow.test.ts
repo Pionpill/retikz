@@ -1,11 +1,12 @@
 import type { IRScene } from '@retikz/core';
 import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
+import { compositeOpaqueColor } from '@retikz/foundation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { getPreviewControlFields } from '../src/modules/docs/components/component-preview/controls';
-import { PreviewCoreThemeStyles, PreviewThemeStyle } from '../src/modules/docs/components/component-preview/theme';
+import { PreviewThemeDefinitionBundle } from '../src/modules/docs/components/component-preview/theme';
 import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
@@ -86,13 +87,13 @@ describe('Flow Diagram ComponentPreview', () => {
     expect(result.svg).toContain('Target');
   });
 
-  it('renders Graph-owned Vibrant Group and Entity appearance through the Flow preview bundle', () => {
+  it('renders Graph-owned Group and Entity appearance through the docs logic bundle', () => {
     const themedSource = FlowDiagramSchema.parse({
       namespace: 'diagram',
       type: 'flow',
       entities: [
-        { id: 'worker', text: 'Worker' },
-        { id: 'api', text: 'API' },
+        { id: 'worker', text: 'Worker', group: 'services' },
+        { id: 'api', text: 'API', group: 'services' },
       ],
       groups: [{ id: 'runtime', caption: { title: { text: 'Runtime' } }, children: ['worker'] }],
       layouts: [],
@@ -107,15 +108,19 @@ describe('Flow Diagram ComponentPreview', () => {
       height: 280,
     };
     const mode = ThemeMode.Light;
-    const core = PreviewCoreThemeStyles.find(definition => definition.name === PreviewThemeStyle.Vibrant);
-    if (core === undefined) throw new Error('missing Vibrant Core definition');
+    const core = PreviewThemeDefinitionBundle.core.find(definition => definition.name === 'docs.logic');
+    if (core === undefined) throw new Error('missing docs logic Core definition');
     const colors = resolveCoreThemeStyleColors(mode, core.resolve({ mode }));
     const result = buildVanillaPreview(preview, {
-      theme: { style: PreviewThemeStyle.Vibrant, mode },
+      theme: { style: 'docs.logic', mode },
       measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
     });
 
-    expect(result.svg).toContain(colors.categorical[0]);
+    expect(result.svg, result.code).toBeDefined();
+    for (const id of ['worker', 'api']) {
+      const stroke = result.svg?.match(new RegExp(`data-retikz-id="${id}"[\\s\\S]*?stroke="([^"]+)"`))?.[1];
+      expect(stroke).toBe(compositeOpaqueColor(colors.categorical[0], '#ffffff', 1));
+    }
     expect(result.svg).toContain('Worker');
     expect(result.svg).toContain('API');
     expect(result.code).toContain('PreviewThemeDefinitionBundle.flow');

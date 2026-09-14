@@ -33,9 +33,13 @@ describe('docs-owned theme presets', () => {
     ]) {
       expect(definitions.map(definition => definition.name)).toEqual(expected);
     }
-    expect(PreviewThemeDefinitionBundle.graph).toEqual([]);
-    expect(PreviewThemeDefinitionBundle.diagram).toEqual([]);
-    expect(PreviewThemeDefinitionBundle.flow).toEqual([]);
+    for (const definitions of [
+      PreviewThemeDefinitionBundle.graph,
+      PreviewThemeDefinitionBundle.diagram,
+      PreviewThemeDefinitionBundle.flow,
+    ]) {
+      expect(definitions.map(definition => definition.name)).toEqual(['docs.logic']);
+    }
   });
 
   it.each([ThemeMode.Light, ThemeMode.Dark])('Plot reference definitions 保留关键 Axis 与 shape 视觉值：%s', mode => {

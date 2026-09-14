@@ -147,7 +147,7 @@ export const GraphRelationRuleStructureSchema = strictObject({
 export const GraphSurfaceDefaultsSchema = strictObject({
   background: SurfaceSchema.shape.background,
   border: SurfaceSchema.shape.border,
-  cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
+  cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
 }).describe('Sparse Group or Block Surface root defaults.');
 
 export const GraphEntityDefaultsSchema = strictObject({

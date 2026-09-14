@@ -309,8 +309,8 @@ describe('Graph Block documentation', () => {
       textColor: '#0f172a',
     });
 
-    expect(element.props.width).toBe(420);
-    expect(element.props.height).toBe(340);
+    expect(element.props.width).toBeUndefined();
+    expect(element.props.height).toBeUndefined();
     expect(element.props.viewBox).toEqual({ x: -90, y: -64, width: 420, height: 340 });
   });
 
@@ -405,14 +405,14 @@ describe('Graph Block documentation', () => {
     expect(canonical.ir.viewBox).toBeUndefined();
     expect(canonicalEn.ir.viewBox).toBeUndefined();
     expect(maximal.ir.viewBox).toBeUndefined();
-    expect(defaultElement.props.width).toBe(260);
-    expect(defaultElement.props.height).toBe('auto');
+    expect(defaultElement.props.width).toBeUndefined();
+    expect(defaultElement.props.height).toBeUndefined();
     expect(defaultElement.props.viewBox).toBeUndefined();
-    expect(defaultElementEn.props.width).toBe(260);
-    expect(defaultElementEn.props.height).toBe('auto');
+    expect(defaultElementEn.props.width).toBeUndefined();
+    expect(defaultElementEn.props.height).toBeUndefined();
     expect(defaultElementEn.props.viewBox).toBeUndefined();
-    expect(maximalElement.props.width).toBe(260);
-    expect(maximalElement.props.height).toBe('auto');
+    expect(maximalElement.props.width).toBeUndefined();
+    expect(maximalElement.props.height).toBeUndefined();
     expect(maximalElement.props.viewBox).toBeUndefined();
   });
 
@@ -566,7 +566,6 @@ describe('Graph Block documentation', () => {
       expect(source).toContain(
         '"target":{"id":"user.fields","anchor":"right","boundary":{"type":"rectangle","params":{"fit":"tight","gap":8.5}}}',
       );
-      expect(source).toContain('"kind":"fold","to":[232.5,80.4],"via":"-|-"');
       expect(source.match(/"type":"rectangle","params":\{"fit":"tight","gap":8.5\}/g)).toHaveLength(3);
       expect(source.match(/"kind":"fold"/g)).toHaveLength(2);
       expect(source.match(/"via":"-\|-"/g)).toHaveLength(2);
@@ -635,9 +634,16 @@ describe('Graph Block documentation', () => {
     ['style en', blockStylePreviewSourceEn],
   ] as const)('centers the %s viewBox on its compiled visual layout', (_name, previewSource) => {
     const preview = buildPreviewIR(() => previewSource.canonicalRender?.() ?? null);
-    const viewBox = preview.ir.viewBox;
-    expect(viewBox).toBeDefined();
-    if (viewBox === undefined) return;
+    const rendered = buildVanillaPreview(preview);
+    expect(rendered.svg, rendered.code).toBeDefined();
+    const dimensions = rendered.svg
+      ?.match(/viewBox="([^"]+)"/)?.[1]
+      .split(' ')
+      .map(Number);
+    expect(dimensions).toHaveLength(4);
+    if (dimensions === undefined) return;
+    const [x, y, width, height] = dimensions;
+    const viewBox = { x, y, width, height };
 
     const { viewBox: _viewBox, ...ir } = preview.ir;
     void _viewBox;

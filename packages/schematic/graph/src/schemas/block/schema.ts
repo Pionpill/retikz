@@ -27,11 +27,11 @@ const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
 );
 
 const BlockSurfaceFields = {
-  padding: SurfaceSchema.shape.padding.removeDefault().optional(),
+  padding: SurfaceSchema.shape.padding.unwrap().optional(),
   background: SurfaceSchema.shape.background,
   border: SurfaceSchema.shape.border,
-  cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
-  overflow: SurfaceSchema.shape.overflow.removeDefault().optional(),
+  cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
+  overflow: SurfaceSchema.shape.overflow.unwrap().optional(),
 };
 
 export const BlockHeaderSchema = strictObject({

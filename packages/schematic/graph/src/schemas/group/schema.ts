@@ -53,10 +53,10 @@ export const GroupSchema = strictObject({
     .nonempty()
     .optional()
     .describe('Non-empty Core Node labels attached to the Group boundary.'),
-  padding: SurfaceSchema.shape.padding.removeDefault().optional(),
+  padding: SurfaceSchema.shape.padding.unwrap().optional(),
   background: SurfaceSchema.shape.background,
   border: SurfaceSchema.shape.border,
-  cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
-  overflow: SurfaceSchema.shape.overflow.removeDefault().optional(),
+  cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
+  overflow: SurfaceSchema.shape.overflow.unwrap().optional(),
   children: array(ChildSchema).optional().describe('Optional ordered arbitrary Core or Tier 2 children.'),
 }).describe('JSON-safe Graph Group combining Scope, Surface, caption, boundary labels and arbitrary children.');

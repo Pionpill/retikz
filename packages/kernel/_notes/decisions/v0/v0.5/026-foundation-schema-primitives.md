@@ -9,6 +9,8 @@ keywords: 'Foundation、Schema、NormalizedFractionSchema、NonBlankStringSchema
 - 决策日期：2026-08-09
 - 关联：[ADR-023](./023-foundation-package.md)
 
+> 后续扩展：[ADR-035](./035-json-undefined-field-contracts.md) 将无领域 JSON schema 与 plain-data 工具归属 Foundation；[ADR-032](./032-contextual-color-resolution.md) 补充静态颜色原子。本文标量语义继续有效，对 JSON 和颜色的一概排除不再适用。
+
 ## 背景与目标
 
 Kernel、Standard、Graph、Data、Plot、Chart 与 Table 已反复定义相同的非空白字符串、正数、非负数、正整数、非负整数和归一化比例约束。部分重复已经产生语义分叉：有的 registry key 只拒绝空串却接受全空白，有的包重新声明 Core 已有的闭区间比例；相同 string / number 叶子约束也散落在完整对象 schema、provider 检查和 adapter wrapper 中。
@@ -69,25 +71,8 @@ Foundation 不为这些闭合原子建立 Definition、registry 或 provider。�
 - 迁移边界：只有语义完全相同的定义直接迁移。`z.string().min(1)` 允许全空白，普通 non-empty array、Data 概率关系、Polar 半开区间、Table positive dash、CSS color、TextBlock 和 owner-specific error guard 不得机械替换
 - React / Vanilla 等价性：schema 原子不新增 authoring DSL；React、Vanilla、headless 与领域 adapter 继续委托同一完整 owner schema，因此对相同输入得到等价解析结果
 
-## 功能与包边界
-
-- 所属能力域与解决的问题：Kernel 基础契约层；解决跨 Drawing、Data、Visualization 与 adapter 的无领域叶子校验重复，不新增独立 Drawing / Data / Visualization 能力域
-- 主责包与协作包：Foundation 主责六个基础 schema 与开放字符串 schema factory；Core、Standard、Graph、Data、Plot、Chart、Table 与 adapter 只按真实消费直接依赖并组合，继续拥有内置词汇、完整 schema、registry、默认值、领域 refinement 与错误包装
-- 拥有：无领域、非变换的 string / number Zod 原子、从 const object enum 组合开放非空字符串 schema 的受限 factory 及其稳定边界；Zod 是唯一生产依赖
-- 不拥有：对象 / 数组 schema、IR / JSON 数据模型、parser / coercion、颜色、几何、Definition / registry、provider、compile / lowering、Scene / manifest、Diagnostic、领域错误和恢复语义
-- 外部扩展与下游闭环：闭合原子无需动态扩展；开放字符串 owner 传入自己的内置 const object enum，并继续由自己的 registry / resolver 校验实际注册状态；完整 owner schema 进入原有 contract、provider、pipeline、adapter、docs 与 schema registry 链路
-- 不支持边界：只因写法相似但具有不同开闭区间、空值、默认、唯一性、trim、错误文本或领域关系的约束不进入 Foundation；除 `createOpenStringSchema(values)` 外，Foundation 不提供参数化 schema builder 或通用 validation utils
-
 ## 完工摘要
 
 六个非变换标量 schema 与一个受限开放字符串 schema factory 已由 Foundation 根入口统一提供，Zod 是唯一生产依赖。Core 的归一化比例旧 owner 与 Graph 的非空白字符串旧公共出口均已移除；Graph 用 owner 自有的内置词汇生成开放 schema，但 registry lookup、领域对象、默认值、refinement、颜色与诊断边界仍保持在原 owner。
 
 基础标量、消费方 schema 与 adapter 等价性保持一致；无已知遗留风险需要改变本 ADR 的公开契约或包边界。
-
-## 长期边界
-
-- Foundation 对象、数组、IR、JSON-safe data、parser、coercion、transform、`createOpenStringSchema(values)` 之外的参数化 schema factory、颜色或几何 schema
-- 全仓机械替换 `z.string().min(1)`、non-empty array、positive / nonnegative 写法或领域运行时 guard
-- 修改 Scene、manifest、renderer、Definition / registry、compile / lowering 或领域默认值
-- 修复 React shape finite guard、Star 点数范围、Legend artifact key、Plot palette 空白颜色等独立行为问题
-- 新增兼容 alias、旧 owner 转发、schema subpath 或独立 schema 发布包

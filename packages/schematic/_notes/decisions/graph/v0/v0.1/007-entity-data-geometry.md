@@ -28,7 +28,7 @@ Entity 可以独立出现在任意接受 Core child 的位置。Graph / Group ch
 
 Entity schema 从 Core Node schema 排除 role-owned 结构字段后复用其余完整实例 surface。role 是 shape、boundary、padding、cornerRadius 与基础 minimum size 的唯一 owner；Entity 不能覆盖这些结构字段
 
-text、position、minimumSize、appearance、labels、animations、meta 和其它允许的 Node 字段保持 Core 的名称、JSON 形态、默认、refinement 与可观察语义。Core 新增 lower-facing Node 字段时 Entity 默认继承，只有新的字段确属 role structure 时才显式排除
+text、position、layout（含 width/minimumSize）、style、label、animations、meta 和其它允许的 Node 字段保持 Core 的名称、JSON 形态、默认、refinement 与可观察语义。Core 新增 lower-facing Node 字段时 Entity 默认继承，只有新的字段确属 role structure 时才显式排除
 
 role minimum size 是结构下限，Entity minimum size 是实例约束，两者逐轴取较大值；显式 0 保持 Core 语义。Graph Theme 提供 appearance 默认，Entity 显式 Core Node appearance 最终逐字段覆盖。Graph 不复制 Node 的测量、geometry 或 Scene 算法
 
@@ -40,7 +40,7 @@ role minimum size 是结构下限，Entity minimum size 是实例约束，两者
 
 内置 Entity role 为 `participant`、`activity`、`event`、`state`、`gateway`、`resource` 与 `concept`。role schema 使用 `createOpenStringSchema(values)` 暴露内置提示，同时接受任意非空白自定义 key；是否注册只由 resolver 判断。Graph 永不维护 Entity kind 或 predicate 的内置词汇与 catalog：两者继续使用普通非空白字符串 schema，并且每个使用到的 key 都必须由应用、领域包或其它上层通过 provider assembly 注册
 
-Theme selector 可以匹配 role、kind、predicate name 与 Canonical params，但不能改变结构、identity、内容、位置或尺寸。Entity Theme selector 的 kind 继续按词面 key 匹配，因此一条语义外观规则可以覆盖多个 role 下同名 kind。内置与自定义 role、外部 kind 与外部 predicate 共用同一 registry、provider assembly 和 resolver
+Theme selector 可以匹配 role、kind、predicate name、Canonical params 与 status，但不能改变结构、identity、内容、位置或尺寸。Entity Theme selector 的 kind 继续按词面 key 匹配，因此一条语义外观规则可以覆盖多个 role 下同名 kind。内置与自定义 role、外部 kind 与外部 predicate 共用同一 registry、provider assembly 和 resolver
 
 ### Source 契约
 
@@ -50,10 +50,14 @@ type IRGraphEntity = Readonly<{
   type: 'entity';
   role: string;
   kind?: string;
-  predicate?: Readonly<{ name: string; params?: IRJsonObject }>;
+  predicate?: Readonly<{ name: string; params?: JsonObject }>;
   position?: IRNode['position'];
 }> &
-  Omit<IRNode, 'type' | 'shape' | 'boundary' | 'padding' | 'cornerRadius' | 'position'>;
+  Omit<IRNode, 'type' | 'shape' | 'boundary' | 'layout' | 'cornerRadius' | 'position'> & {
+    layout?: Omit<NonNullable<IRNode['layout']>, 'padding'>;
+    status?: GraphStatus;
+    group?: string;
+  };
 ```
 
 `id` 来自复用的 Node surface 并保持可选。只有显式 id 才下沉到 Core namespace；adapter 不生成默认 id。Direct IR、React 与 Vanilla 构造同一个 Entity record，JSX text 只是 text 的 authoring sugar
@@ -68,7 +72,7 @@ type IRGraphEntity = Readonly<{
 - Entity、predicate params、meta、text、label、animation 与 placement 必须 JSON-safe
 - 不根据 shape、text、meta、position、Relation、拓扑或 key 前缀猜测语义
 - 旧 presentation / geometry collections 和 root member collections 直接删除，不保留 alias、fallback 或双轨输入
-- lowering 使用 Relation → Entity → decoration 的固定 paint order，并在各分支内保持 Source order
+- Graph 保留 authored child 顺序；元素内部的绘制层次由对应 Core lowering 决定，不按 Graph 类型重排容器 children
 
 ## 结果与边界
 

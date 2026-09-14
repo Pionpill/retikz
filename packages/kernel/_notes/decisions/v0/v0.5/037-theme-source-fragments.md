@@ -5,7 +5,7 @@ keywords: 'Theme、Source、xxxDefaults、theme'
 
 # ADR-037：Theme 来源与稀疏 Source 默认值协议
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-05
 - 主责：Core 的跨包 Theme 协议；领域 Source、defaults 与规则由各领域 owner 持有
 - 关联：[alpha.4 roadmap](./roadmap.md) · [ADR-036 Source 分组](./036-source-ir-semantic-grouping.md) · [Core 绘图完备设计](../../../architecture/core-drawing-complete.md) · [视觉主题设计](../../../../../../notes/architecture/visual-theme-design.md) · [原子契约设计](../../../../../../notes/architecture/atomic-contract-design.md)

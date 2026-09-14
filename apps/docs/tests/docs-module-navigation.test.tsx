@@ -95,9 +95,7 @@ describe('Docs module navigation domain', () => {
     expect(container.textContent).not.toContain('docs.homeDemosTitle');
     expect(container.textContent).not.toContain('docs.homeDemosDescription');
     expect(container.querySelector('[data-slot="module-landing-eyebrow"]')).toBeNull();
-    expect(container.querySelector('[data-slot="module-landing-development-notice"]')?.textContent).toBe(
-      'docs.developmentNotice',
-    );
+    expect(container.querySelector('[data-slot="module-landing-development-notice"]')).toBeNull();
     expect(container.querySelector('a[href="/kernel"]')).not.toBeNull();
     expect(container.querySelector('a[href="/library"]')).not.toBeNull();
     expect(container.querySelector('a[href="/schematic"]')).not.toBeNull();
@@ -136,9 +134,7 @@ describe('Docs module navigation domain', () => {
 
     expect(container.textContent).toContain('viz.homeTitle');
     expect(container.textContent).toContain('viz.homeDescription');
-    expect(container.querySelector('[data-slot="module-landing-development-notice"]')?.textContent).toBe(
-      'docs.developmentNotice',
-    );
+    expect(container.querySelector('[data-slot="module-landing-development-notice"]')).toBeNull();
     expect(container.querySelector('a[href="/viz/chart"]')).not.toBeNull();
     expect(container.querySelectorAll('[data-slot="module-landing-demo"]')).toHaveLength(5);
     expect(container.querySelector('aside')).toBeNull();

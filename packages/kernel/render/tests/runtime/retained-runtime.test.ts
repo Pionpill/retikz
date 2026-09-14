@@ -411,7 +411,7 @@ describe('createRetainedRenderParticipant', () => {
     const records: Array<PerformanceTraceRecord> = [];
     const initial = {
       ...scene('A'),
-      children: [{ ...scene('A').children[0], fill: '#ef4444' }],
+      children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }],
     };
     const { renderer, handle, session } = createHarness('entity', initial, {
       trace: record => records.push(record),
@@ -424,7 +424,7 @@ describe('createRetainedRenderParticipant', () => {
       owners: [
         createRuntimeOwnerUpdate(CoreOwnerDefinition, {
           ...initial,
-          children: [{ ...initial.children[0], fill: '#22c55e' }],
+          children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });
@@ -461,7 +461,7 @@ describe('createRetainedRenderParticipant', () => {
       owners: [
         createRuntimeOwnerUpdate(CoreOwnerDefinition, {
           ...scene('A'),
-          children: [{ ...scene('A').children[0], fill: '#22c55e' }],
+          children: [{ ...scene('A').children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });
@@ -504,7 +504,7 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('合法但 capability 不支持的 Patch 在 renderer 调用前转换为独占 replace 并报告 warning', () => {
-    const initial = { ...scene('A'), children: [{ ...scene('A').children[0], fill: '#ef4444' }] };
+    const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
     const records: Array<PerformanceTraceRecord> = [];
     const { renderer, coreProgram, session } = createHarness('none', initial, {
       trace: record => records.push(record),
@@ -517,7 +517,7 @@ describe('createRetainedRenderParticipant', () => {
       owners: [
         createRuntimeOwnerUpdate(CoreOwnerDefinition, {
           ...initial,
-          children: [{ ...initial.children[0], fill: '#22c55e' }],
+          children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });
@@ -546,7 +546,7 @@ describe('createRetainedRenderParticipant', () => {
   });
 
   it('group capability 保留 stable Group subtree update，不产生 fallback warning', () => {
-    const initial = { ...scene('A'), children: [{ ...scene('A').children[0], fill: '#ef4444' }] };
+    const initial = { ...scene('A'), children: [{ ...scene('A').children[0], style: { fill: '#ef4444' } }] };
     const { renderer, coreProgram, session } = createHarness('group', initial);
     session.diagnostics();
 
@@ -555,7 +555,7 @@ describe('createRetainedRenderParticipant', () => {
       owners: [
         createRuntimeOwnerUpdate(CoreOwnerDefinition, {
           ...initial,
-          children: [{ ...initial.children[0], fill: '#22c55e' }],
+          children: [{ ...initial.children[0], style: { fill: '#22c55e' } }],
         }),
       ],
     });

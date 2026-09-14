@@ -20,19 +20,16 @@ export const DiagramFrameBaseSchema = strictObject({
     'Physical gap between the drawing core and an explicit Legend.',
   ),
   padding: SurfaceSchema.shape.padding
-    .removeDefault()
+    .unwrap()
     .optional()
     .describe('Standard Surface padding input for the complete Diagram.'),
   background: SurfaceSchema.shape.background.describe('Standard Surface background for the complete Diagram.'),
   border: SurfaceSchema.shape.border.describe('Standard Surface border for the complete Diagram.'),
   cornerRadius: SurfaceSchema.shape.cornerRadius
-    .removeDefault()
+    .unwrap()
     .optional()
     .describe('Standard Surface corner radius for the complete Diagram.'),
-  overflow: SurfaceSchema.shape.overflow
-    .removeDefault()
-    .optional()
-    .describe('Standard Surface content overflow policy.'),
+  overflow: SurfaceSchema.shape.overflow.unwrap().optional().describe('Standard Surface content overflow policy.'),
 });
 
 /** Diagram Frame 持久化片段 schema */

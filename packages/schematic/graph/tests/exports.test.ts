@@ -16,7 +16,7 @@ describe('@retikz/graph package boundary', () => {
   it('declares the Graph release metadata and one root export', () => {
     expect(manifest).toMatchObject({
       name: '@retikz/graph',
-      version: '0.1.0-alpha.2',
+      version: '0.1.0-alpha.3',
       retikz: { domain: 'schematic', releaseGroup: 'graph' },
     });
     expect(Object.keys(manifest.exports)).toEqual(['.']);

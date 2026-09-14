@@ -12,6 +12,8 @@ keywords: 'Graph、package、family、graph、graphTheme、Group'
 
 > Theme 修订：本文的旧作者输入、生成片段和 Theme 切层语义由 [Graph Defaults、Rules 与 Theme 来源](./017-theme-source-fragments.md) 取代；其余能力与结构边界继续成立。
 
+> 本文四类基础 composite 的命名和组合决策继续成立；[ADR-013](./013-block-open-content.md) 扩展 Block、BlockHeader、BlockSection 与 BlockRow，当前 GraphType 还包含这些开放内容组件。
+
 ## 背景与目标
 
 图式实体、关系和可见分组表达的是 Schematic 领域语义，而不是移除领域词汇后仍成立的通用绘图能力。它们应复用 Core、Layout 与 Standard 的公开契约，但不能让底层包反向拥有 Graph role、relation、group 或未来 Diagram 的自动布局语义
@@ -43,7 +45,7 @@ const GraphType = {
 } as const;
 ```
 
-- `Graph`：组合完整 Core Scope surface，并增加可选 `graphTheme` 的局部上下文；它不是 Entity / Relation 的必需父节点
+- `Graph`：组合完整 Core Scope surface，并增加可选 `graphDefaults` / `graphRules` 的局部上下文；它不是 Entity / Relation 的必需父节点
 - `Group`：组合完整 Core Scope、Standard Surface、Layout caption 与 Core boundary labels，表达可嵌套的可见包含边界
 - `Entity`：保存 Graph 实体语义与非结构性 Core Node lower-facing 字段，最终下沉为一个 Core Node
 - `Relation`：保存有序 Core NodeTarget endpoints、Graph 关系语义与 Core Path-compatible route / labels / instance fields，最终下沉为一个 Core Path

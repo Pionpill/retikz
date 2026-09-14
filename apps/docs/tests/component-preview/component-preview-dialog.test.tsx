@@ -15,6 +15,7 @@ import type {
   PreviewControlSlot,
   PreviewControlState,
 } from '../../src/modules/docs/components/component-preview/types';
+import type * as DocsStore from '../../src/modules/docs/store';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -43,7 +44,8 @@ vi.mock('../../src/components/ui/resizable', () => ({
   ),
 }));
 
-vi.mock('../../src/modules/docs/store', () => {
+vi.mock('../../src/modules/docs/store', async importOriginal => {
+  const actual = await importOriginal<typeof DocsStore>();
   const state = {
     hideCode: false,
     isExpand: false,
@@ -53,6 +55,7 @@ vi.mock('../../src/modules/docs/store', () => {
     controlPanelDefaultOpen: true,
   };
   return {
+    ...actual,
     useComponentPreviewStore: Object.assign((selector: (snapshot: typeof state) => unknown) => selector(state), {
       getState: () => state,
     }),
