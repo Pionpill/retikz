@@ -1,7 +1,7 @@
 import { Side } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutAlignment } from '@retikz/layout';
-import { SurfaceInputSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard';
 import { enum as zodEnum, strictObject } from 'zod';
 
 /** Diagram Frame 的字段契约，供完整 Frame 与 defaults 片段复用 */
@@ -19,13 +19,20 @@ export const DiagramFrameBaseSchema = strictObject({
   drawingLegendGap: NonNegativeNumberSchema.optional().describe(
     'Physical gap between the drawing core and an explicit Legend.',
   ),
-  padding: SurfaceInputSchema.shape.padding.describe('Standard Surface padding input for the complete Diagram.'),
-  background: SurfaceInputSchema.shape.background.describe('Standard Surface background for the complete Diagram.'),
-  border: SurfaceInputSchema.shape.border.describe('Standard Surface border for the complete Diagram.'),
-  cornerRadius: SurfaceInputSchema.shape.cornerRadius.describe(
-    'Standard Surface corner radius for the complete Diagram.',
-  ),
-  overflow: SurfaceInputSchema.shape.overflow.describe('Standard Surface content overflow policy.'),
+  padding: SurfaceSchema.shape.padding
+    .removeDefault()
+    .optional()
+    .describe('Standard Surface padding input for the complete Diagram.'),
+  background: SurfaceSchema.shape.background.describe('Standard Surface background for the complete Diagram.'),
+  border: SurfaceSchema.shape.border.describe('Standard Surface border for the complete Diagram.'),
+  cornerRadius: SurfaceSchema.shape.cornerRadius
+    .removeDefault()
+    .optional()
+    .describe('Standard Surface corner radius for the complete Diagram.'),
+  overflow: SurfaceSchema.shape.overflow
+    .removeDefault()
+    .optional()
+    .describe('Standard Surface content overflow policy.'),
 });
 
 /** Diagram Frame 持久化片段 schema */

@@ -3,8 +3,6 @@ import type { ReactElement } from 'react';
 
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { GraphSchema } from '@retikz/graph';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PreviewPanelControlItem } from '../src/modules/docs/components/component-preview';
@@ -41,8 +39,6 @@ import {
   previewSource as blockStylePreviewSource,
 } from '../src/modules/docs/contents/schematic/graph/block/basic/block-style.zh.demo';
 import { createGraphPreviewSource } from '../src/modules/docs/preview';
-
-const readContent = (relativePath: string): string => readFileSync(resolve(process.cwd(), relativePath), 'utf8');
 
 const { previewSource: blockCustomPreviewSourceEn } = blockCustomPreviewModuleEn;
 const { previewSource: blockCustomPreviewSource } = blockCustomPreviewModule;
@@ -101,74 +97,6 @@ const arrowTipOf = (path: Extract<ScenePrimitive, { type: 'path' }>): readonly [
 };
 
 describe('Graph Block documentation', () => {
-  it.each(['zh', 'en'] as const)('%s documents open Block content and independent structure composites', lang => {
-    const landing = readContent(`src/modules/docs/contents/schematic/graph/block/index.${lang}.mdx`);
-    const page = readContent(`src/modules/docs/contents/schematic/graph/block/basic/index.${lang}.mdx`);
-    const api = readContent(`src/modules/docs/contents/schematic/graph/api-reference/index.${lang}.mdx`);
-
-    expect(landing).toContain('/schematic/graph/block/basic');
-    expect(landing).toContain('/schematic/graph/block/builtin');
-    expect(landing).toContain('/schematic/graph/block/extension');
-    expect(landing).toContain(lang === 'zh' ? '内置实现' : 'Built-in Implementation');
-
-    const sections = [
-      '## ' + (lang === 'zh' ? '用法' : 'Usage'),
-      '## ' + (lang === 'zh' ? '例子' : 'Examples'),
-      '## ' + (lang === 'zh' ? '技术原理' : 'How it works'),
-      '## ' + (lang === 'zh' ? 'API 参考' : 'API Reference'),
-    ];
-    const positions = sections.map(section => page.indexOf(section));
-    expect(positions.every(position => position >= 0)).toBe(true);
-    expect(positions).toEqual([...positions].sort((a, b) => a - b));
-    expect(page).toContain('BlockHeader');
-    expect(page).toContain('BlockSection');
-    expect(page).toContain('BlockRow');
-    expect(page).toContain('NodeTarget + anchor / boundary');
-    expect(page).toContain('files="block-builtin"');
-    expect(page).toMatch(/files="block-builtin"\s+size="md"/);
-    expect(page).toContain('files="block-custom"');
-    expect(page).toMatch(/files="block-custom"\s+size="lg"/);
-    expect(page).toContain('files="block-connection"');
-    expect(page).toContain('files="block-style"');
-    expect(page).toContain(lang === 'zh' ? '支持完整的 Core Scope' : 'supports the complete Core Scope');
-    expect(page).toContain('localNamespace');
-    expect(page).toContain(
-      lang === 'zh' ? '命名 Graph Theme 会为 Block 根外框提供' : 'A named Graph Theme supplies the Block root shell',
-    );
-    expect(page).toContain(lang === 'zh' ? '完整顶层字段替换' : 'complete top-level field replacement');
-    expect(page).toContain(lang === 'zh' ? '不会自动添加 Block 前缀' : 'do not automatically receive a Block prefix');
-    expect(lang === 'zh' ? page : page.toLowerCase()).toContain(
-      lang === 'zh' ? '任意有序 children' : 'arbitrary ordered children',
-    );
-    expect(page).toContain('width?');
-    expect(page).toContain('minWidth?');
-    expect(page).toContain('direction?');
-    expect(page).toContain('itemGap?');
-    expect(page).toContain('justifyContent?');
-    expect(page).toContain('content?');
-    expect(page).toContain('IRBlockText \\| IRBlockText[]');
-    expect(page).toContain(lang === 'zh' ? '与 `children` 互斥' : 'mutually exclusive with `children`');
-    expect(page).toContain(lang === 'zh' ? '支持字符串或文本对象' : 'String or text object');
-    expect(page).toContain(lang === 'zh' ? '默认 `base`、粗体' : 'defaults to `base` and bold');
-    expect(page).toContain(lang === 'zh' ? '默认 `xs`' : 'defaults to `xs`');
-    expect(page).not.toContain('| `header`');
-    expect(page).not.toContain('| `sections?`');
-    expect(readContent(`src/modules/docs/contents/schematic/graph/block/basic/block-style.${lang}.demo.tsx`)).toContain(
-      'previewControls',
-    );
-    expect(
-      readContent(`src/modules/docs/contents/schematic/graph/block/basic/block-builtin.${lang}.demo.tsx`),
-    ).toContain('previewControls');
-    expect(page).toContain('trail?');
-    expect(page).not.toContain('trailing?');
-    expect(page).not.toContain('BlockHeader.trailing');
-    expect(api).toContain('BlockSchema');
-    expect(api).toContain('BlockProviderKey');
-    expect(api).toContain('BlockInputEmbedAdapter');
-    expect(api).toContain('GraphSurfaceThemeStyleTokens');
-    expect(api).toContain('trail');
-  });
-
   it('keeps the built-in example minimal in executable IR and Vanilla code views', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {

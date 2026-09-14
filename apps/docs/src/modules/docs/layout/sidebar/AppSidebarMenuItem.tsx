@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 
 import { ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -47,18 +47,15 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
   const isActiveBranch = hasChildren && normalizedPathname.startsWith(`${normalizedPath}/`);
   const ItemIcon = item.Icon;
 
-  const [manualOpen, setManualOpen] = useState(false);
-  const [collapsedAtPath, setCollapsedAtPath] = useState<string | null>(null);
-  const open = isActiveBranch ? collapsedAtPath !== normalizedPathname : manualOpen;
+  const [open, setOpen] = useState(isActiveBranch);
+  const wasActiveBranch = useRef(isActiveBranch);
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (isActiveBranch) {
-      setCollapsedAtPath(nextOpen ? null : normalizedPathname);
-      return;
+  useEffect(() => {
+    if (!wasActiveBranch.current && isActiveBranch) {
+      setOpen(true);
     }
-
-    setManualOpen(nextOpen);
-  };
+    wasActiveBranch.current = isActiveBranch;
+  }, [isActiveBranch]);
 
   if (!hasChildren) {
     return (
@@ -82,7 +79,7 @@ export const AppSidebarMenuItem: FC<AppSidebarMenuItemProps> = props => {
 
   return (
     <li>
-      <Collapsible open={open} onOpenChange={handleOpenChange}>
+      <Collapsible open={open} onOpenChange={setOpen}>
         <div className={cn(baseLinkClass, isActive && activeLinkClass)}>
           <button
             type="button"

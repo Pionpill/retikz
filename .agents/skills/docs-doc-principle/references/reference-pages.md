@@ -1,10 +1,10 @@
-# Reference 与 ZodSchema 按需契约
+# Schema Reference 与 ZodSchema 按需契约
 
-仅在编写或修改 Reference 词典页、schema registry 或 `<ZodSchema>` 时读取。
+仅在编写或修改 Schema Reference 词典页、schema registry 或 `<ZodSchema>` 时读取。它不定义由公开导出和 JSDoc 自动生成的 API Reference；概念页中的少量手写说明属于“文中 API 介绍”，三类边界见上级 `docs-doc-principle`。
 
 ## 职责
 
-Reference 只提供字段完整、可扫描、可链接的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。
+Schema Reference 只提供字段完整、可扫描、可链接的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 只应链接到本页，不复制 schema 字段表。
 
 页面位于：
 

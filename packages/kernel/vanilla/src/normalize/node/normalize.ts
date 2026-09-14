@@ -13,8 +13,9 @@ const normalizeAtPosition = (input: InputNode['position']): InputNode['position'
 
 /** 将作者侧节点输入组装为 Source IR */
 export const normalizeNode = (input: InputNode): IRNode => {
-  const { type: _type, label, ...node } = input;
+  const { type: _type, label, authoring: _authoring, ...node } = input;
   void _type;
+  void _authoring;
   return {
     type: 'node',
     ...node,

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
-import { previewControlContract as inspectSelectionContract } from '../../src/modules/docs/contents/kernel/packages/inspect/overview/inspect-selection.controls';
-import { previewControlContract as inspectSelectionEnContract } from '../../src/modules/docs/contents/kernel/packages/inspect/overview/inspect-selection.en.controls';
+import { previewControlContract as inspectSelectionContract } from '../../src/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-selection.controls';
+import { previewControlContract as inspectSelectionEnContract } from '../../src/modules/docs/contents/kernel/packages/inspect/mechanism/inspect-selection.en.controls';
 
 const fieldContractOf = (definition: PreviewControlsDefinition) =>
   getPreviewControlFields(definition).map(field => ({
@@ -38,7 +38,7 @@ describe('@retikz/inspect selection playground controls', () => {
     expect(inspectSelectionContract.relatedApis).toEqual([
       'InspectPath.request',
       'InspectScope.request',
-      'StrokePathInspectOptionsInputSchema',
+      'PathInspectOptionsSchema',
     ]);
     expect(inspectSelectionEnContract.relatedApis).toEqual(inspectSelectionContract.relatedApis);
   });

@@ -1,21 +1,15 @@
 import type { FC } from 'react';
 
+import { ArrowUpRight } from 'lucide-react';
 import { Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { buildBlobUrl } from '@/modules/docs/lib';
+import type { SourceLinkItem } from '@/modules/docs/source-viewer';
 
-/** 单个仓库源码入口 */
-export type SourceLinkItem = {
-  /** 面向读者的入口名称 */
-  label: string;
-  /** 仓库根目录下的相对路径 */
-  path: string;
-  /** 起始行号 */
-  startLine?: number;
-  /** 结束行号 */
-  endLine?: number;
-};
+import { buildBlobUrl } from '@/modules/docs/lib';
+import { useRightPanelStore } from '@/modules/docs/store';
+
+export type { SourceLinkItem } from '@/modules/docs/source-viewer';
 
 /** SourceLinks props */
 export type SourceLinksProps = {
@@ -35,6 +29,7 @@ const sourceHref = (source: SourceLinkItem): string => {
 export const SourceLinks: FC<SourceLinksProps> = props => {
   const { sources } = props;
   const { t } = useTranslation();
+  const openSource = useRightPanelStore(state => state.openSource);
 
   if (sources.length === 0) return null;
 
@@ -52,13 +47,22 @@ export const SourceLinks: FC<SourceLinksProps> = props => {
                 ·
               </span>
             )}
+            <button
+              type="button"
+              data-source-link-open="true"
+              onClick={() => openSource(source)}
+              className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+            >
+              {source.label}
+            </button>
             <a
               href={sourceHref(source)}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+              aria-label={t('sourceViewer.openOnGithub')}
+              className="inline-flex text-muted-foreground transition-colors hover:text-foreground"
             >
-              {source.label}
+              <ArrowUpRight className="size-3" />
             </a>
           </Fragment>
         ))}

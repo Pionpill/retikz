@@ -13,6 +13,29 @@ description: 用 @retikz/math 计算几何对象之间的关系，并从已有�
 
 <ComponentPreview files="intersection-playground" size="md" caption="切换几何关系，观察交点和退化结果" />
 
+### 算法解析
+
+直线和线段先都写成参数方程：$p=a_1+t\mathbf d_a$、$q=b_1+u\mathbf d_b$。令两式相等后，用二维叉积消去一个未知量：
+
+$$
+\det=\mathbf d_a\times\mathbf d_b,\qquad t=\frac{(b_1-a_1)\times\mathbf d_b}{\det}
+$$
+
+`det` 衡量两条方向是否平行：接近零时没有唯一交点。`lineLine` 只用 $t$ 取得无限直线的交点；`segmentSegment` 还会检查 $t$ 与 $u$ 是否都落在 $[0,1]$，这一步才把交点限制在两条有限线段上。
+
+直线与圆把 $p=origin+s\,direction$ 代入圆方程，得到关于 $s$ 的一元二次方程。判别式小于零表示没有相交候选点；等于零时两个根重合。两个圆则先用圆心距离 $d$ 排除相离和内含情况，再用 $a$ 定位交点公共弦的中点，用垂直偏移 $h$ 得到中点两侧的交点；相切时 $h=0$，因此保留两个重合坐标。
+
+<SourceLinks
+  sources={[
+    {
+      label: '直线、线段与圆的求交',
+      path: 'packages/kernel/math/src/algorithms/intersect.ts',
+      startLine: 42,
+      endLine: 108,
+    },
+  ]}
+/>
+
 ### API 参考
 
 本节的输入类型包括 `LineLineInput`（两条由端点定义的直线或线段）、`LineCircleInput`（直线与圆）和 `CircleCircleInput`（两个圆）。下表列出实际执行求交的方法
@@ -30,6 +53,23 @@ description: 用 @retikz/math 计算几何对象之间的关系，并从已有�
 
 <ComponentPreview files="ray-arc" size="md" caption="圆弧与射线的交点以紫色点显示" />
 
+### 算法解析
+
+射线与圆弧不是直接解一个新方程。算法先把射线延长为直线，代入圆方程求两个候选参数 $s$；再按两个条件筛选：$s$ 必须大于容差，保证点在射线正方向；候选点相对圆心的 `atan2` 角度必须落在圆弧实际扫过的范围内。
+
+因此返回的 $s$ 是在 `origin + s * direction` 中定位交点的参数，而不是几何距离：`direction` 没有单位化时，距离还要乘以它的长度。最后升序排序使第一个结果始终是射线首先遇到的圆弧交点。
+
+<SourceLinks
+  sources={[
+    {
+      label: '射线候选解与圆弧范围过滤',
+      path: 'packages/kernel/math/src/algorithms/arc-intersection.ts',
+      startLine: 20,
+      endLine: 52,
+    },
+  ]}
+/>
+
 ### 射线与圆弧 API
 
 输入类型 `RayArcIntersectionInput` 描述射线起点、方向和圆弧范围。下表列出求交方法
@@ -45,6 +85,29 @@ description: 用 @retikz/math 计算几何对象之间的关系，并从已有�
 下方示意只展示当前选中的圆构造方案，避免把不同问题的结果混在一起。
 
 <ComponentPreview files="circle-constructions" size="md" caption="比较三角形外接圆、内切圆和点集最小包围圆" />
+
+### 算法解析
+
+外接圆先用三点的有向面积构成分母 $d$；$d$ 接近零说明三点共线，无法唯一决定一个圆。内切圆则用三条对边长度作为顶点权重得到圆心，再由 $r=\mathrm{area}/\mathrm{semiperimeter}$ 得到半径，所以它到三条边的距离相等。
+
+最小包围圆从一个已覆盖此前点的当前圆开始。遇到落在圆外的新点 $i$ 时，$i$ 必须成为结果的边界点：先尝试 $i$ 与此前点 $j$ 的直径圆；如果某个 $k$ 仍在外部，结果就由 $i,j,k$ 三点共同决定，改用三点外接圆。三点共线时，退化为三组两点直径圆中半径最大的一个。
+
+<SourceLinks
+  sources={[
+    {
+      label: '三角形外接圆与内切圆',
+      path: 'packages/kernel/math/src/algorithms/triangle.ts',
+      startLine: 14,
+      endLine: 42,
+    },
+    {
+      label: '最小包围圆的增量候选',
+      path: 'packages/kernel/math/src/algorithms/circle.ts',
+      startLine: 48,
+      endLine: 64,
+    },
+  ]}
+/>
 
 ### API 参考
 
@@ -65,6 +128,29 @@ description: 用 @retikz/math 计算几何对象之间的关系，并从已有�
 <ComponentPreview files="polygon-containment" size="md" caption="同时观察多边形包含判断与凸包边界" />
 
 `polygon.containsPoint` 的边界点结果未定义；如果边界归属会影响业务结果，应在调用方补充点在线段上的判断。`convexHull` 会去重并剔除共线的中间点，少于三个点或全部共线时返回排序后的端点集合。
+
+### 算法解析
+
+包含判断从测试点向右发出一条射线，逐边检查射线是否跨过边。每跨过一次就翻转 `inside`；全部边处理完后，奇数次表示在内，偶数次表示在外。这就是奇偶规则，顶点顺时针或逆时针排列不会改变结果。
+
+凸包先按 $(x,y)$ 排序并去重，再分别从左到右、从右到左建立下链和上链。每加入一点时，若末两个边与新边的叉积不大于零，就移除中间点：它要么让路径向内转，要么只是共线中间点。两条链去掉重复端点后相接，便得到逆时针的最外层边界。
+
+<SourceLinks
+  sources={[
+    {
+      label: '多边形的奇偶包含判断',
+      path: 'packages/kernel/math/src/algorithms/polygon.ts',
+      startLine: 10,
+      endLine: 20,
+    },
+    {
+      label: 'Andrew 单调链凸包',
+      path: 'packages/kernel/math/src/algorithms/hull.ts',
+      startLine: 11,
+      endLine: 45,
+    },
+  ]}
+/>
 
 ### API 参考
 
@@ -87,6 +173,57 @@ description: 用 @retikz/math 计算几何对象之间的关系，并从已有�
 
 `slice` 也会限制并升序排列两个参数。二次 / 三次贝塞尔采用 De Casteljau 切分；圆弧和椭圆弧保留原来的有向扫描、圆心、半径与椭圆旋转。零长度或零导数段仍返回确定的点和 `[1, 0]` 切线，距离反解返回起始参数。
 
+### 算法解析
+
+先明确这里的 `t`：它是曲线内部的 $0–1$ 参数，`t=0` 选中起点，`t=1` 选中终点。它用来指定曲线定义中的位置，不是“已经走过多少 px”，通常也不是整条曲线的长度比例。只有直线和圆弧的行进速度均匀时，`t=0.5` 才恰好表示走完一半距离；贝塞尔和椭圆弧通常不成立。
+
+想象一个箭头要沿曲线走 80px 后停下，或者要高亮从第 20px 到第 80px 的那一段。曲线本身只认识参数 $t$，不认识“走了多少 px”；更麻烦的是，贝塞尔曲线里相同的参数变化不一定对应相同的实际距离。
+
+所以这组算法要完成三件相连的事：先估算从起点走到某个 $t$ 的距离；再把指定距离反查成对应的 $t$；最后按这两个参数从原曲线中切出一段。它不会把曲线结果变成折线，折线只用来帮助测量长度。
+
+下图展示一次查找：先从当前区间取中点 $t$，估算走到该处的长度，再与目标距离比较。菱形没有通向“参数 $t$”的回路表示未命中：根据长度偏大或偏小收窄 $[lo,hi]$，再从新区间取中点；命中容差后才输出参数。
+
+<ComponentPreview files="curve-distance-search-flow" size="sm" hideCode />
+
+从数学上看，每一小段参数变化带来的路程由曲线当时的速度决定。把所有小段路程累加，就是从起点走到 $t$ 的真实弧长：
+
+$$
+L(t)=\int_0^t\lVert p'(u)\rVert\,du
+$$
+
+直线和圆弧可以直接求出这个长度。贝塞尔和椭圆弧则把整段行程暂时看成 $m$ 个很短的直线步：逐段取点、计算相邻两点距离、再相加。这就是代码中对积分的离散近似：
+
+$$
+L(t)\approx\sum_{i=1}^{m}\left\lVert p\!\left(\frac{it}{m}\right)-p\!\left(\frac{(i-1)t}{m}\right)\right\rVert,\qquad m=\max(4,\lceil sampleCount\cdot t\rceil)
+$$
+
+这解释了 `sampleCount` 的取舍：步子越短，折线越贴近曲线，长度通常越准确，但要多计算一些点。`parameterAtDistance` 要回答的正是“走到第 80px 时参数是多少”：它在同一个近似长度函数上反复尝试中点 $t$，看已经累计的长度偏大还是偏小，再用二分缩小范围。直线和圆弧的长度均匀，可以直接按比例换算。
+
+缓存 `totalLength` 时必须配合同一个 `sampleCount`，否则“总长度”和“走到这里的长度”来自两套近似，反查位置会不一致。要取“从 20px 到 80px”的一段时，先用 `parameterAtDistance` 得到两个参数，再交给 `slice`；贝塞尔随后通过 De Casteljau 保持原曲线形状，而不是输出用于测量的近似折线。
+
+<SourceLinks
+  sources={[
+    {
+      label: '曲线长度的折线近似',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 282,
+      endLine: 298,
+    },
+    {
+      label: '距离到参数的二分反解',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 424,
+      endLine: 448,
+    },
+    {
+      label: '保形曲线切片',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 342,
+      endLine: 399,
+    },
+  ]}
+/>
+
 ### API 参考
 
 | API                         | 复杂度                 | 作用                                                                                       |
@@ -108,7 +245,22 @@ description: 用 @retikz/math 计算几何对象之间的关系，并从已有�
 
 <ComponentPreview files="curve-playground" size="md" caption="比较点集、张力与三次贝塞尔段" />
 
-至少需要两个 knot；返回的段数为 `knots.length - 1`，每段终点严格命中下一个 knot。开放曲线两端使用单侧切线，重合 knot 仍保持有限输出，但不保证任意输入下都没有自交。
+### 算法解析
+
+内部采用 [centripetal Catmull–Rom](https://www.cemyuksel.com/research/catmullrom_param/)（$\alpha=0.5$）：每一段根据两端及其相邻 knot 计算局部切线，再转成两个贝塞尔控制点。参数间隔随点距变化，点距差异很大时能降低尖点或异常回环的风险。`tension` 只缩放控制柄长度，曲线仍严格经过每个 knot。
+
+至少需要两个 knot；返回的段数为 `knots.length - 1`，每段终点严格命中下一个 knot。开放曲线两端复用端点形成单侧切线；重合 knot 用极小间隔避免除零，所以输出仍保持有限，但不保证任意输入下都没有自交。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'centripetal Catmull–Rom 到三次贝塞尔段',
+      path: 'packages/kernel/math/src/algorithms/curve.ts',
+      startLine: 124,
+      endLine: 181,
+    },
+  ]}
+/>
 
 ### API 参考
 

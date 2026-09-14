@@ -75,7 +75,8 @@ describe('Core isolated observation fragments', () => {
       [observer],
     );
     expect(result.primary.scene.resources).toBeUndefined();
-    expect(result.observerOutputs).toEqual([{ key: 'fragment-test', value: { selectionCalls: 1 } }]);
+    // 只询问主图的 Composite 与 Node，fragment 中的 Node 不再进入 observer
+    expect(result.observerOutputs).toEqual([{ key: 'fragment-test', value: { selectionCalls: 2 } }]);
   });
 
   it('does not allow a fragment to read the primary namespace', () => {

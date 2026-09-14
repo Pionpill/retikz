@@ -1,26 +1,54 @@
-import { readFile } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
 
+import manifest from '../../package.json';
 import * as api from '../../src';
+import * as reactApi from '../../src/react';
+import * as vanillaApi from '../../src/vanilla';
 
 describe('@retikz/inspect public exports', () => {
+  it('exposes only the root and host entry points in development and publication', () => {
+    expect(Object.keys(manifest.exports).sort()).toEqual(['.', './react', './vanilla']);
+    expect(Object.keys(manifest.publishConfig.exports).sort()).toEqual(['.', './react', './vanilla']);
+    expect(manifest.exports).not.toHaveProperty('./compile');
+    expect(manifest.publishConfig.exports).not.toHaveProperty('./compile');
+  });
+
   it('exports the host-independent root API', () => {
-    expect(Object.keys(api)).toEqual(
-      expect.arrayContaining([
+    expect(Object.keys(api).sort()).toEqual(
+      [
         'defineInspector',
         'createInspectorRegistry',
         'createDefaultInspectorRegistry',
-        'resolveInspectionSelection',
+        'mergeInspectorRegistries',
         'compileInspectionToScene',
         'RetikzInspectError',
         'RetikzInspectErrorCode',
-        'STROKE_PATH_INSPECTOR',
-        'InspectionLabelsInputSchema',
-        'InspectionLabelsSchema',
-      ]),
+        'NODE_INSPECTOR_KEY',
+        'CLIP_INSPECTOR_KEY',
+        'SCOPE_INSPECTOR_KEY',
+        'COORDINATE_INSPECTOR_KEY',
+        'PathInspectOptionsSchema',
+        'NodeInspectOptionsSchema',
+        'ClipInspectOptionsSchema',
+        'ScopeInspectOptionsSchema',
+        'CoordinateInspectOptionsSchema',
+        'PATH_INSPECTOR_KEY',
+      ].sort(),
     );
-    expect(api).not.toHaveProperty('RetikzInspectionCompileError');
-    expect(api).not.toHaveProperty('inspectionPlaneToReadonlyLayers');
+    expect(Object.keys(reactApi).sort()).toEqual([
+      'InspectCoordinate',
+      'InspectLayout',
+      'InspectNode',
+      'InspectPath',
+      'InspectScope',
+    ]);
+    expect(Object.keys(vanillaApi).sort()).toEqual([
+      'createInspectionVanillaAuthoring',
+      'createInspectionVanillaDriver',
+    ]);
+    expect(api).not.toHaveProperty('admitInspectionSelection');
+    expect(api).not.toHaveProperty('resolveAdmittedInspectionSelection');
+    expect(api).not.toHaveProperty('canInspectionSelectionRequestSite');
   });
 
   it('does not evaluate optional host peers from the root entry', async () => {
@@ -38,18 +66,5 @@ describe('@retikz/inspect public exports', () => {
       throw new Error('optional React runtime evaluated');
     });
     await expect(import('../../src/index')).resolves.toBeDefined();
-    const root = await readFile(new URL('../../src/index.ts', import.meta.url), 'utf8');
-    expect(root.trim().split(/\r?\n/)).toEqual([
-      "export * from './compile';",
-      "export * from './contract';",
-      "export * from './error';",
-      "export * from './providers';",
-      "export * from './schema';",
-    ]);
-    expect(root).not.toContain('@retikz/render');
-    expect(root).not.toContain('@retikz/vanilla');
-    await expect(readFile(new URL('../../src/shared/index.ts', import.meta.url), 'utf8')).rejects.toMatchObject({
-      code: 'ENOENT',
-    });
   });
 });

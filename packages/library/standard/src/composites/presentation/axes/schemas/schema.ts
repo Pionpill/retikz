@@ -98,23 +98,19 @@ const AxesTicksSchema = strictObject({
     .describe('Optional static labels for selected emitted ticks.'),
 });
 
-const createAxesAxisSchema = (defaultLabel: 'x' | 'y') =>
-  strictObject({
-    extent: AxesExtentSchema.describe('Drawing lengths in the negative and positive directions of this axis.'),
-    line: union([literal(false), AxesLineSchema])
-      .default({ arrows: AxesArrowMode.Positive })
-      .describe('Axis baseline and endpoint arrows, or false to hide only the baseline.'),
-    ticks: union([literal(false), AxesTicksSchema])
-      .optional()
-      .describe('Ticks and optional static tick labels for this axis.'),
-    grid: union([literal(false), AxesGridSchema])
-      .optional()
-      .describe('Optional lightweight grid lines projected perpendicular to this axis.'),
-    label: AxesAxisLabelSchema.default(defaultLabel).describe('Axis name, styled label, or false to hide it.'),
-  });
-
-const AxesXAxisSchema = createAxesAxisSchema('x');
-const AxesYAxisSchema = createAxesAxisSchema('y');
+const AxesAxisSchema = strictObject({
+  extent: AxesExtentSchema.describe('Drawing lengths in the negative and positive directions of this axis.'),
+  line: union([literal(false), AxesLineSchema])
+    .optional()
+    .describe('Axis baseline and endpoint arrows, or false to hide only the baseline.'),
+  ticks: union([literal(false), AxesTicksSchema])
+    .optional()
+    .describe('Ticks and optional static tick labels for this axis.'),
+  grid: union([literal(false), AxesGridSchema])
+    .optional()
+    .describe('Optional lightweight grid lines projected perpendicular to this axis.'),
+  label: AxesAxisLabelSchema.optional().describe('Axis name, styled label, or false to hide it.'),
+});
 
 const AxesOriginLabelObjectSchema = strictObject({
   text: TextBlockSchema.describe('Static origin-label text block.'),
@@ -133,9 +129,9 @@ const AxesBaseSchema = CompositeBaseSchema.extend({
   namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: literal('axes').describe('Composite type for static Cartesian reference axes.'),
   ...ScopePropsSchema.shape,
-  origin: AxesOriginSchema.default({ position: [0, 0], label: false }),
-  x: AxesXAxisSchema.describe('Horizontal axis configuration and its perpendicular grid projection.'),
-  y: AxesYAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),
+  origin: AxesOriginSchema.default(() => AxesOriginSchema.parse({})),
+  x: AxesAxisSchema.describe('Horizontal axis configuration and its perpendicular grid projection.'),
+  y: AxesAxisSchema.describe('Vertical axis configuration and its perpendicular grid projection.'),
 });
 
 type AxesRefinementInput = ZodInfer<typeof AxesBaseSchema>;

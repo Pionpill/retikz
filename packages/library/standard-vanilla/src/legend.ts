@@ -75,6 +75,9 @@ export const LegendInputEmbedAdapter: InputEmbedAdapter<InputLegend> = {
   kind: StandardLegendEmbedKind,
   lower: (props, context) => {
     const collected: CollectedLegendSlots = { roots: [], providers: [], authoringSites: [] };
+    const { title: _title, content: _content, ...sourceProps } = props;
+    void _title;
+    void _content;
     const title =
       props.title === undefined
         ? undefined
@@ -83,41 +86,31 @@ export const LegendInputEmbedAdapter: InputEmbedAdapter<InputLegend> = {
       props.content.kind === 'items'
         ? {
             ...props.content,
-            items: props.content.items.map(item => ({
+            items: props.content.items.map(({ sample, label, ...item }) => ({
               ...item,
-              sample: normalizeLegendSlot(item.sample, `Standard Legend item '${item.key}' sample`, context, collected),
-              ...(item.label === undefined
+              sample: normalizeLegendSlot(sample, `Standard Legend item '${item.key}' sample`, context, collected),
+              ...(label === undefined
                 ? {}
                 : {
-                    label: normalizeLegendSlot(
-                      item.label,
-                      `Standard Legend item '${item.key}' label`,
-                      context,
-                      collected,
-                    ),
+                    label: normalizeLegendSlot(label, `Standard Legend item '${item.key}' label`, context, collected),
                   }),
             })),
           }
         : {
             ...props.content,
             sample: normalizeLegendSlot(props.content.sample, 'Standard Legend ramp sample', context, collected),
-            ticks: props.content.ticks.map(tick => ({
+            ticks: props.content.ticks.map(({ label, ...tick }) => ({
               ...tick,
-              ...(tick.label === undefined
+              ...(label === undefined
                 ? {}
                 : {
-                    label: normalizeLegendSlot(
-                      tick.label,
-                      `Standard Legend tick '${tick.key}' label`,
-                      context,
-                      collected,
-                    ),
+                    label: normalizeLegendSlot(label, `Standard Legend tick '${tick.key}' label`, context, collected),
                   }),
             })),
           };
     return {
       node: createLegend({
-        ...props,
+        ...sourceProps,
         ...(title === undefined ? {} : { title }),
         content,
       }),

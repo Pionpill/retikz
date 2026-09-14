@@ -17,7 +17,7 @@ import {
   LabResultSource,
   LabRunMode,
 } from '../src/playground/modules/kernel';
-import { Inspector, ReportDashboard, ReportHistory } from '../src/playground/report';
+import { ReportDashboard, ReportHistory } from '../src/playground/report';
 
 const createResult = (policyId: LabPolicyResult['policyId'], medianMs: number, reused: number): LabPolicyResult => ({
   policyId,
@@ -98,18 +98,6 @@ describe('Performance Lab report dashboard', () => {
     expect(markup.match(/data-slot="lab-metric-supporting"/g)).toHaveLength(3);
     expect(markup).toContain('data-slot="lab-comparison-chart"');
     expect(markup).toContain('最佳：静态 · 全量');
-  });
-
-  it('将运行时信息拆分为四张独立诊断卡', async () => {
-    const i18n = await createI18n();
-    const markup = renderToStaticMarkup(
-      createElement(I18nextProvider, { i18n }, createElement(Inspector, { result: results[2] })),
-    );
-
-    expect(markup).toContain('data-slot="lab-inspector"');
-    expect(markup).toContain('data-slot="lab-inspector-grid"');
-    expect(markup.match(/data-slot="lab-inspector-card"/g)).toHaveLength(4);
-    expect(markup.match(/data-slot="lab-inspector-card-title" class="[^"]*text-foreground/g)).toHaveLength(4);
   });
 
   it('让当前基准与历史报告复用同一个主仪表盘', async () => {

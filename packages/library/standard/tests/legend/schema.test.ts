@@ -1,3 +1,5 @@
+import type { IRChild } from '@retikz/core';
+
 import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
@@ -11,10 +13,11 @@ import {
 } from '../../src/composites/presentation/legend/constants';
 import { createLegend } from '../../src/composites/presentation/legend/factory';
 import { LegendSchema } from '../../src/composites/presentation/legend/schema';
+import { resolveLegend } from '../../src/resolve/legend';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
-const sample = { type: 'node', position: [0, 0], text: 'Sample' } as const;
-const label = { type: 'node', position: [0, 0], text: 'Label' } as const;
+const sample: IRChild = { type: 'node', position: [0, 0], text: 'Sample' };
+const label: IRChild = { type: 'node', position: [0, 0], text: 'Label' };
 
 const expectIssuePath = (value: unknown, path: string): void => {
   const parsed = LegendSchema.safeParse(value);
@@ -26,6 +29,14 @@ const expectIssuePath = (value: unknown, path: string): void => {
 };
 
 describe('Legend schema and factory', () => {
+  it('exports static defaults in the parsed configuration', () => {
+    expect(
+      LegendSchema.parse({ namespace: 'standard', type: 'legend', content: { kind: 'items', items: [] } }),
+    ).toMatchObject({
+      titleGap: 8,
+      content: { direction: 'vertical', sampleGap: 8 },
+    });
+  });
   it('reuses the complete Core Scope authored surface', () => {
     const parsed = LegendSchema.parse({
       namespace: 'standard',
@@ -38,14 +49,16 @@ describe('Legend schema and factory', () => {
     expect(LegendSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('creates canonical items IR with every schema default persisted', () => {
+  it('keeps authored items sparse and resolves execution defaults', () => {
     const input = {
       content: {
         kind: LegendContentKind.Items,
         items: [{ key: 'primary', sample, label }],
       },
     } satisfies LegendInput;
-    const parsed = createLegend(input);
+    const source = createLegend(input);
+    expect(source).toEqual({ namespace: 'standard', type: 'legend', ...input });
+    const parsed = resolveLegend(source);
 
     expect(parsed).toEqual({
       namespace: 'standard',
@@ -53,7 +66,7 @@ describe('Legend schema and factory', () => {
       titleGap: 8,
       contentAlign: 'start',
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
-      padding: 0,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
       overflow: 'visible',
       content: {
         kind: 'items',
@@ -78,9 +91,11 @@ describe('Legend schema and factory', () => {
       content: { kind: LegendContentKind.Items, gap: 0, items: [] },
     });
 
-    expect(uniform.content).toMatchObject({ gap: { row: 5, column: 5 } });
+    expect(uniform.content).toMatchObject({ gap: 5 });
+    expect(resolveLegend(uniform).content).toMatchObject({ gap: { row: 5, column: 5 } });
     expect(independent.content).toMatchObject({ gap: { row: 6, column: 5 } });
-    expect(zero.content).toMatchObject({ gap: { row: 0, column: 0 } });
+    expect(zero.content).toMatchObject({ gap: 0 });
+    expect(resolveLegend(zero).content).toMatchObject({ gap: { row: 0, column: 0 } });
   });
 
   it('creates canonical ramp IR and survives a real JSON round-trip', () => {
@@ -97,14 +112,14 @@ describe('Legend schema and factory', () => {
     });
     const roundTripped = LegendSchema.parse(JSON.parse(JSON.stringify(parsed)));
 
-    expect(parsed).toEqual({
+    expect(resolveLegend(parsed)).toEqual({
       namespace: 'standard',
       type: 'legend',
       title: label,
       titleGap: 8,
       contentAlign: 'start',
       size: { x: { kind: 'content' }, y: { kind: 'content' } },
-      padding: 0,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
       overflow: 'visible',
       content: {
         kind: 'ramp',
@@ -117,7 +132,7 @@ describe('Legend schema and factory', () => {
         ],
       },
     });
-    expect(roundTripped).toEqual(parsed);
+    expect(resolveLegend(roundTripped)).toEqual(resolveLegend(parsed));
   });
 
   it('persists explicit content alignment through JSON and rejects unsupported values at the root field', () => {
@@ -282,10 +297,22 @@ describe('Legend schema and factory', () => {
       { kind: typeof LegendContentKind.Items }
     >;
 
-    expect(() => createLegend({ titleGap: -1, content: items })).toThrow();
-    expect(() => createLegend({ padding: -1, content: items })).toThrow();
-    expect(() => createLegend({ content: { ...items, gap: -1 } })).toThrow();
-    expect(() => createLegend({ content: { ...items, gap: { row: Number.POSITIVE_INFINITY, column: 8 } } })).toThrow();
+    expect(() =>
+      LegendSchema.parse({ namespace: 'standard', type: 'legend', ...{ titleGap: -1, content: items } }),
+    ).toThrow();
+    expect(() =>
+      LegendSchema.parse({ namespace: 'standard', type: 'legend', ...{ padding: -1, content: items } }),
+    ).toThrow();
+    expect(() =>
+      LegendSchema.parse({ namespace: 'standard', type: 'legend', ...{ content: { ...items, gap: -1 } } }),
+    ).toThrow();
+    expect(() =>
+      LegendSchema.parse({
+        namespace: 'standard',
+        type: 'legend',
+        ...{ content: { ...items, gap: { row: Number.POSITIVE_INFINITY, column: 8 } } },
+      }),
+    ).toThrow();
     expectIssuePath(
       {
         namespace: 'standard',
@@ -294,7 +321,13 @@ describe('Legend schema and factory', () => {
       },
       'content.gap.column',
     );
-    expect(() => createLegend({ content: { ...items, sampleGap: Number.NaN } })).toThrow();
+    expect(() =>
+      LegendSchema.parse({
+        namespace: 'standard',
+        type: 'legend',
+        ...{ content: { ...items, sampleGap: Number.NaN } },
+      }),
+    ).toThrow();
     expectIssuePath(
       {
         namespace: 'standard',

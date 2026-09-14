@@ -1,24 +1,32 @@
-import type { AnyInspectorDefinition, InspectorKey } from '../contract';
+import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorKey } from '../contract';
 
 import { sealInspectorDefinition } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { BUILTIN_INSPECTORS } from './definitions';
 
-/** Inspector Definition 的 immutable registry */
+const inspectorRegistryBrand: unique symbol = Symbol('InspectorRegistry');
+
+/** 已注册 Inspector 的不透明容器 */
 export type InspectorRegistry = Readonly<{
-  /** 输入顺序稳定的 definitions */
-  definitions: ReadonlyArray<AnyInspectorDefinition>;
-  /** 按 namespace/type 查找定义 */
-  get: (key: InspectorKey) => AnyInspectorDefinition | undefined;
-  /** 按 namespace/type 获取定义，缺失时 fail-loud */
-  require: (key: InspectorKey) => AnyInspectorDefinition;
+  readonly [inspectorRegistryBrand]: true;
 }>;
+
+/** Inspector compile 路径消费的已解析 registry */
+type ResolvedInspectorRegistry = InspectorRegistry &
+  Readonly<{
+    /** 输入顺序稳定的 definitions */
+    definitions: ReadonlyArray<AnyInspectorDefinition>;
+    /** 按 namespace/type 查找定义 */
+    get: (key: InspectorKey) => AnyInspectorDefinition | undefined;
+    /** 按 namespace/type 获取定义，缺失时 fail-loud */
+    require: (key: InspectorKey) => AnyInspectorDefinition;
+  }>;
 
 /** 把公开 Inspector key 转为无歧义的 registry 内部键 */
 export const formatInspectorRegistryKey = (key: InspectorKey): string => JSON.stringify([key.namespace, key.type]);
 
 /** 创建无全局状态的 Inspector registry */
-export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition>): InspectorRegistry => {
+export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinitionInput>): InspectorRegistry => {
   const definitionsByKey = new Map<string, AnyInspectorDefinition>();
   const sealedDefinitions = definitions.map((definition, index) => {
     const candidateDefinition = sealInspectorDefinition(definition);
@@ -36,6 +44,7 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
   const get = (key: InspectorKey): AnyInspectorDefinition | undefined =>
     definitionsByKey.get(formatInspectorRegistryKey(key));
   return Object.freeze({
+    [inspectorRegistryBrand]: true as const,
     definitions: frozenDefinitions,
     get,
     require: (key: InspectorKey): AnyInspectorDefinition => {
@@ -50,6 +59,14 @@ export const createInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorD
   });
 };
 
+/** 合并多个已创建的 registry，保持各 registry 的定义顺序 */
+export const mergeInspectorRegistries = (...registries: ReadonlyArray<InspectorRegistry>): InspectorRegistry =>
+  createInspectorRegistry(registries.flatMap(registry => getResolvedInspectorRegistry(registry).definitions));
+
+/** 取得编译路径使用的已解析 registry */
+export const getResolvedInspectorRegistry = (registry: InspectorRegistry): ResolvedInspectorRegistry =>
+  registry as ResolvedInspectorRegistry;
+
 /** 创建内置优先、第三方同路的默认 Inspector registry */
-export const createDefaultInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinition> = []) =>
+export const createDefaultInspectorRegistry = (definitions: ReadonlyArray<AnyInspectorDefinitionInput> = []) =>
   createInspectorRegistry([...BUILTIN_INSPECTORS, ...definitions]);

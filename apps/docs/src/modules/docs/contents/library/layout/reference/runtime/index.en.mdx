@@ -21,7 +21,7 @@ Pass one or more of the three layout Definitions directly in `CompileOptions.com
 
 A layout container is a Core layout-aware composite. One compilation proceeds through these deterministic stages:
 
-1. **Parse input**: Core resolves the definition by `namespace` and `type`, then validates canonical IR with its schema.
+1. **Parse input**: Core resolves the definition by `namespace` and `type`; the single schema validates input and applies static defaults. The Layout resolver expands spacing shorthand and contextual semantics without rewriting authored configuration.
 2. **Probe children**: the container calls `layoutChild` for minimum, natural, ranged, or exact candidates. Results carry the parent-resolved `slotSize`, real `allocationBounds`, `visualBounds`, and available alignment guides.
 3. **Solve the container**: Layout solvers use container rules, available space, and probe measurements to resolve tracks, lines, slots, and translations.
 4. **Replay selected candidates**: each child replays only its selected candidate. Discarded probes publish no primitives, resources, namespaces, or artifacts.
@@ -101,15 +101,15 @@ Requests for one Inspector resolve in scene → outer subtree → inner subtree 
 
 ### Shared options and bounds
 
-<ZodSchema name="BaseLayoutInspectOptionsInputSchema" description="Sparse options shared by every layout inspector." />
+<ZodSchema name="BaseLayoutInspectOptionsSchema" description="Sparse options shared by every layout inspector." />
 
-### LayoutInspectSpacingOptionsInputSchema
+### LayoutInspectSpacingOptionsSchema
 
-<ZodSchema name="LayoutInspectSpacingOptionsInputSchema" />
+<ZodSchema name="LayoutInspectSpacingOptionsSchema" />
 
 <ZodSchema
-  name="LayoutInspectBoundsOptionsInputSchema"
-  description="Per-boundary sparse switches for layout overlays."
+  name="LayoutInspectBoundsOptionsSchema"
+  description="Per-boundary switches and defaults for layout overlays."
 />
 
 A request value of `true` uses one full canonical profile: container, content, slot, allocation, padding, margin, overflow, and alignment guides are on; visual bounds and labels are off. Object values override only explicit fields, so `{ spacing: { padding: false } }` disables only padding texture.
@@ -118,18 +118,12 @@ The docs playground “Recommended” profile is intentionally smaller: Flex sho
 
 ### Family options
 
-<ZodSchema
-  name="FlexLayoutInspectOptionsInputSchema"
-  description="Shared and FlexLayout-specific inspection options."
-/>
+<ZodSchema name="FlexLayoutInspectOptionsSchema" description="Shared and FlexLayout-specific inspection options." />
+
+<ZodSchema name="GridLayoutInspectOptionsSchema" description="Shared and GridLayout-specific inspection options." />
 
 <ZodSchema
-  name="GridLayoutInspectOptionsInputSchema"
-  description="Shared and GridLayout-specific inspection options."
-/>
-
-<ZodSchema
-  name="OverlayLayoutInspectOptionsInputSchema"
+  name="OverlayLayoutInspectOptionsSchema"
   description="Shared and OverlayLayout-specific inspection options."
 />
 

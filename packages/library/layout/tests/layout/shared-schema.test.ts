@@ -16,6 +16,7 @@ import {
   LayoutOverflow,
   LayoutSizeSchema,
 } from '../../src';
+import { resolveLayoutContainerBox } from '../../src/resolve/shared';
 
 describe('shared layout schema', () => {
   it('describes the public container and item object contracts', () => {
@@ -23,15 +24,20 @@ describe('shared layout schema', () => {
     expect(LayoutItemBaseSchema.description).toBe('Shared JSON-safe child item contract for Layouts.');
   });
 
-  it('parses canonical Box defaults while author inputs may omit them', () => {
+  it('materializes Box defaults only when parsing or resolving author input', () => {
     const input = {} satisfies LayoutContainerBoxInput;
 
     expect(LayoutContainerBoxSchema.parse(input)).toEqual({
+      size: { x: { kind: 'content' }, y: { kind: 'content' } },
+      padding: 0,
+      overflow: 'visible',
+    });
+    expect(resolveLayoutContainerBox(input)).toEqual({
       size: {
         x: { kind: 'content' },
         y: { kind: 'content' },
       },
-      padding: 0,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
       overflow: 'visible',
     });
   });
@@ -55,6 +61,10 @@ describe('shared layout schema', () => {
     const sizeInput = { x: { kind: 'fixed', value: 0 } } satisfies LayoutSizeInput;
 
     expect(LayoutSizeSchema.parse(sizeInput)).toEqual({
+      x: { kind: 'fixed', value: 0 },
+      y: { kind: 'content' },
+    });
+    expect(resolveLayoutContainerBox({ size: sizeInput }).size).toEqual({
       x: { kind: 'fixed', value: 0 },
       y: { kind: 'content' },
     });

@@ -74,19 +74,13 @@ export const normalizePlotRoot = (
           type: PlotCoordinate.Polar2D,
           ...(explicitScales.angle !== undefined ? { angle: AUTO_ANGLE } : {}),
           ...(explicitScales.radius !== undefined ? { radius: AUTO_RADIUS } : {}),
-          startAngle: polar.startAngle,
-          endAngle: polar.endAngle,
-          innerRadius: polar.innerRadius,
-          ...(polar.interpolation !== undefined ? { interpolation: polar.interpolation } : {}),
+          ...polar,
         }
       : {
           type: PlotCoordinate.Polar2D,
           angle: AUTO_ANGLE,
           radius: AUTO_RADIUS,
-          startAngle: polar.startAngle,
-          endAngle: polar.endAngle,
-          innerRadius: polar.innerRadius,
-          ...(polar.interpolation !== undefined ? { interpolation: polar.interpolation } : {}),
+          ...polar,
         };
     scales = [
       ...(!shouldDeferPositionScales || explicitScales.angle !== undefined ? [angleScale] : []),

@@ -2,6 +2,7 @@ import type { IRLine, IRNode } from '@retikz/core';
 import type {
   AnyInputEmbedAdapter,
   InputChild,
+  InputCoordinate,
   InputEmbed,
   InputNode,
   InputPath,
@@ -381,6 +382,7 @@ const inputNodeFromProps = (props: NodeProps): InputNode => {
     ...pickDefined(props, NODE_FIELDS),
     ...(text === undefined ? {} : { text }),
     ...(props.label === undefined ? {} : { label: props.label }),
+    ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
   };
 };
 
@@ -407,13 +409,12 @@ const inputPathFromProps = (props: PathProps): InputPath => {
   };
 };
 
-/** 把 <Coordinate> props 组装为 Source IR coordinate */
-const inputCoordinateFromProps = (
-  props: CoordinateProps,
-): { type: 'coordinate'; id: string; position: CoordinateProps['position'] } => ({
+/** 把 <Coordinate> props 组装为 Vanilla 命名坐标输入 */
+const inputCoordinateFromProps = (props: CoordinateProps): InputCoordinate => ({
   type: 'coordinate',
   id: props.id,
   position: props.position,
+  ...(props.authoring === undefined ? {} : { authoring: props.authoring }),
 });
 
 /** 把 <Scope> props 和已收集 children 组装为 Vanilla InputScope */

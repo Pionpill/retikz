@@ -21,7 +21,7 @@ description: 查询 Layout 布局 Definition、Core 测量与回放，以及 Rea
 
 布局容器是 Core 的布局感知复合组件。一次编译会按确定顺序完成以下阶段：
 
-1. **解析输入**：Core 按 `namespace` 与 `type` 找到 Definition，并使用对应 schema 校验规范 IR。
+1. **解析输入**：Core 按 `namespace` 与 `type` 找到 Definition，由唯一 schema 校验并应用静态默认值；Layout resolver 展开间距简写与上下文语义，不改写作者原始配置。
 2. **测量子图形**：容器通过 `layoutChild` 请求子图形的最小、自然、范围或精确尺寸候选。候选携带父级求值后的 `slotSize`、真实 `allocationBounds`、`visualBounds` 和可用对齐参考线。
 3. **求解容器**：Layout 的纯求解器根据容器规则、可用空间和候选测量结果决定轨道、布局行、分配区域与平移。
 4. **回放最终候选**：每个子图形只回放被选中的候选；未选候选不会发布图元、资源、命名空间或产物。
@@ -102,8 +102,8 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
 ### 通用选项与边界
 
 <ZodSchema
-  name="BaseLayoutInspectOptionsInputSchema"
-  description="所有布局检查器共享的稀疏选项。"
+  name="BaseLayoutInspectOptionsSchema"
+  description="所有布局检查器共享的选项及静态默认值。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖容器、内容、父级分配、真实占用与视觉边界。',
     spacing: 'false 关闭 padding 与 margin 纹理，true 恢复默认组合，对象形式逐项覆盖两种盒模型间距。',
@@ -113,11 +113,11 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
   }}
 />
 
-### LayoutInspectSpacingOptionsInputSchema
+### LayoutInspectSpacingOptionsSchema
 
 <ZodSchema
-  name="LayoutInspectSpacingOptionsInputSchema"
-  description="布局检查器共用的稀疏盒模型间距选择。"
+  name="LayoutInspectSpacingOptionsSchema"
+  description="布局检查器共用的盒模型间距选择及默认值。"
   descriptions={{
     padding: '是否为容器已解析的 padding 绘制阴影。',
     margin: '是否为子项已解析的 margin 绘制阴影。',
@@ -125,8 +125,8 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
 />
 
 <ZodSchema
-  name="LayoutInspectBoundsOptionsInputSchema"
-  description="布局边界辅助层的逐类稀疏开关。"
+  name="LayoutInspectBoundsOptionsSchema"
+  description="布局边界辅助层的逐类开关及默认值。"
   descriptions={{
     container: '是否显示容器最终分配边界。',
     content: '是否显示扣除内边距后的内容边界。',
@@ -143,7 +143,7 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
 ### 容器专属选项
 
 <ZodSchema
-  name="FlexLayoutInspectOptionsInputSchema"
+  name="FlexLayoutInspectOptionsSchema"
   description="FlexLayout 的通用与专属检查选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
@@ -158,7 +158,7 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
 />
 
 <ZodSchema
-  name="GridLayoutInspectOptionsInputSchema"
+  name="GridLayoutInspectOptionsSchema"
   description="GridLayout 的通用与专属检查选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',
@@ -175,7 +175,7 @@ React 必须由 `LayoutInspectLayout` 提供预注册三种 Definition 的检查
 />
 
 <ZodSchema
-  name="OverlayLayoutInspectOptionsInputSchema"
+  name="OverlayLayoutInspectOptionsSchema"
   description="OverlayLayout 的通用与专属检查选项。"
   descriptions={{
     bounds: 'false 关闭全部边界，true 恢复默认边界组合，对象形式逐项覆盖。',

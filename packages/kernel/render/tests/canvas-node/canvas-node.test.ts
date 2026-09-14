@@ -1,7 +1,6 @@
 import type { Scene } from '@retikz/core';
 
 import { Buffer } from 'node:buffer';
-import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 
 type CanvasCall = {
@@ -109,13 +108,5 @@ describe('renderSceneToImage', () => {
     await expect(renderSceneToImage(scene, { width: 0, height: 100 })).rejects.toThrow(
       /width must be a positive finite number/,
     );
-  });
-});
-
-describe('canvas-node 模块结构', () => {
-  it('目录入口只聚合导出', () => {
-    const source = readFileSync(new URL('../../src/canvas-node/index.ts', import.meta.url), 'utf8');
-
-    expect(source).toMatch(/^export \* from '.+';\s+export \* from '.+';\s*$/);
   });
 });

@@ -76,9 +76,7 @@ export const GridLayoutItemSchema = LayoutItemBaseSchema.extend({
   row: GridPlacementSchema.optional().describe('Optional explicit row placement.'),
   justifySelf: LayoutEdgeAlignmentSchema.optional().describe('Optional horizontal alignment within the grid area.'),
   alignSelf: LayoutAlignmentSchema.optional().describe('Optional vertical alignment within the grid area.'),
-}).describe('Canonical JSON-safe item owned by GridLayout.');
-
-const ImplicitTrackDefault = Object.freeze({ kind: 'content' as const, mode: 'natural' as const });
+}).describe('Sparse JSON-safe item owned by GridLayout.');
 
 const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
   namespace: literal(LAYOUT_NAMESPACE).describe('Composite namespace for Layout capabilities.'),
@@ -91,8 +89,12 @@ const GridLayoutBaseSchema = LayoutContainerBoxSchema.extend({
     .max(GRID_LAYOUT_MAX_TRACKS_PER_AXIS)
     .default([])
     .describe('Explicit physical row tracks.'),
-  implicitColumn: GridTrackSchema.default(ImplicitTrackDefault).describe('Track definition for implicit columns.'),
-  implicitRow: GridTrackSchema.default(ImplicitTrackDefault).describe('Track definition for implicit rows.'),
+  implicitColumn: GridTrackSchema.default({ kind: 'content', mode: 'natural' }).describe(
+    'Track definition for implicit columns.',
+  ),
+  implicitRow: GridTrackSchema.default({ kind: 'content', mode: 'natural' }).describe(
+    'Track definition for implicit rows.',
+  ),
   autoFlow: zodEnum(GridAutoFlow).default(GridAutoFlow.Row).describe('Non-dense fully-auto placement flow.'),
   overlap: zodEnum(GridOverlap).default(GridOverlap.Reject).describe('Policy for fully explicit authored overlap.'),
   columnGap: NonNegativeNumberSchema.default(0).describe('Physical horizontal gap between column tracks.'),
@@ -126,7 +128,11 @@ const refineGridLayout = (layout: GridLayoutRefinementInput, context: Refinement
     if (item.key !== undefined) seen.add(item.key);
     for (const axis of ['column', 'row'] as const) {
       const placement = item[axis];
-      if (placement?.start !== undefined && placement.start > GRID_LAYOUT_MAX_TRACKS_PER_AXIS - placement.span) {
+      if (
+        placement?.start !== undefined &&
+        (placement.start >= GRID_LAYOUT_MAX_TRACKS_PER_AXIS ||
+          placement.start > GRID_LAYOUT_MAX_TRACKS_PER_AXIS - placement.span)
+      ) {
         context.addIssue({
           code: 'custom',
           path: ['children', index, axis, 'start'],
@@ -138,7 +144,7 @@ const refineGridLayout = (layout: GridLayoutRefinementInput, context: Refinement
 };
 
 export const GridLayoutSchema = GridLayoutBaseSchema.superRefine(refineGridLayout).describe(
-  'Canonical JSON-safe Layout GridLayout composite.',
+  'Sparse JSON-safe Layout GridLayout composite.',
 );
 
 export const LayoutTrackArtifactSchema = strictObject({

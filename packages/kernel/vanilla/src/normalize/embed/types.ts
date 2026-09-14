@@ -12,7 +12,7 @@ import type { InputChild } from '../scene';
 /** 嵌入贡献内部按声明顺序收集的运行时作者来源 */
 export type InputEmbedAuthoringSite = Readonly<{
   /** 内部作者来源的类别 */
-  kind: 'scope' | 'path' | 'embeddable';
+  kind: 'scope' | 'path' | 'node' | 'coordinate' | 'embeddable';
   /** 对应的 Core 编译观察所属者 */
   owner?: CompileObservationOwner;
   /** 作者来源的稳定类型 */

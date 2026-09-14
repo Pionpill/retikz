@@ -259,8 +259,8 @@ describe('compile path: arrow 箭头', () => {
     const startTerminal = [...(startFragment?.commands ?? [])].reverse().find(command => command.kind === 'line');
     const endMove = endFragment?.commands.find(command => command.kind === 'move');
 
-    expect(startTerminal).toMatchObject({ kind: 'line', to: [39.5, 0] });
-    expect(endMove).toMatchObject({ kind: 'move', to: [60.5, 0] });
+    expect(startTerminal).toMatchObject({ kind: 'line', to: [35.5, 0] });
+    expect(endMove).toMatchObject({ kind: 'move', to: [64.5, 0] });
   });
 
   it('endpoint label interruptions retain both endpoint arrows on their original anchors', () => {

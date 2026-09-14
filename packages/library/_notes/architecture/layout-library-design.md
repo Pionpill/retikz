@@ -58,7 +58,7 @@ Standard 不接受、导出或生成 `standard.*Layout`，也不提供 re-export
 
 Standard Legend、GraphFrame、Plot、Table 与未来 Tier 2 可以直接组合 Layout。调用方拥有自己的领域 schema、identity、artifact 与失败语义；Layout 只拥有排版输入和结果，不把领域 composite 强制 lower 成公开嵌套 Layout IR，也不隐式注册调用方未知的 Definition。
 
-同一布局输入必须经 canonical Layout schema、solver、Core probe / replay 与 artifact 主链处理。跨 owner 组合不得 deep import Layout internal、复制 solver、从 child 类型推断尺寸或为某一 renderer 建立特殊分支。
+同一布局输入必须经唯一 Layout Source schema、领域 resolver、solver、Core probe / replay 与 artifact 主链处理。schema 声明静态默认，工厂保留作者省略；直接 parse 产出已物化快照，resolver 复用同一默认并处理上下文。跨 owner 组合不得 deep import Layout internal、复制 solver、从 child 类型推断尺寸或为某一 renderer 建立特殊分支。
 
 ## 行为与失败语义
 

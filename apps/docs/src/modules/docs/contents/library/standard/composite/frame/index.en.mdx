@@ -152,7 +152,9 @@ Both also accept public `NodeProps` except `position` and hydration event props,
 | `description?`     | `FrameDescriptionInput`     | —                                                       | JSON-safe Node-like Description without `type` or `position`                   |
 | `children`         | `Array<IRNode>`             | —                                                       | Non-empty direct Core Node body; other Frame fields match above                |
 
-`FrameHeaderDirection` is the public closed set with `Horizontal: 'horizontal'` and `Vertical: 'vertical'`. `FrameInput` does not accept discriminators. `createFrame(input)` applies schema defaults and returns `IRFrame` with fixed `namespace: 'standard'` and `type: 'frame'`.
+`FrameHeaderDirection` is the public closed set with `Horizontal: 'horizontal'` and `Vertical: 'vertical'`. `FrameInput` does not accept discriminators. `createFrame(input)` preserves omitted fields and returns `IRFrame` with fixed `namespace: 'standard'` and `type: 'frame'`.
+
+`FrameSchema.parse()` validates external configuration and materializes static defaults into a snapshot. Compilation resolution reuses the same schema defaults and determines layout from content without rewriting factory input.
 
 `FrameInput` also accepts the Core `ScopeProps` fields above; they apply to the outer Scope, while `border.style` and `border.cornerRadius` apply only to the border Path.
 

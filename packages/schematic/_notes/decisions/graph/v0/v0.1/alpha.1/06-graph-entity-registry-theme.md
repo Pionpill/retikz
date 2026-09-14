@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-16
-- 修订日期：2026-08-30
+- 修订日期：2026-09-09
 - 关联：[Entity contract](./07-entity-data-geometry.md) · [Relation contract](./08-relation-data-geometry.md) · [Graph context](./09-composable-graph-context.md)
 - 替代：[GraphNode Variant ADR](./02-graph-node-variants.md)
 
@@ -22,7 +22,7 @@ Entity 与 Relation 分别拥有 role、kind、predicate Definition、registry �
 
 Entity role 拥有 shape、boundary、padding、cornerRadius 与基础 minimum size 等结构默认；kind 和 predicate 只表达稳定语义分类。Relation role、kind 与 predicate 按 ADR-08 拥有 direction、marker 和规范 dash 等结构语义
 
-Graph 不提供 Variant Definition、registry、options 或 selector。不同对象争用同一 key、自定义项覆盖内置 key，以及缺失已引用 Definition 均 fail-loud；同一 Definition 对象的重复贡献可以按 provider assembly 规则去重
+Graph 不提供 Variant Definition、registry、options 或 selector。Entity kind 以 `(role, kind)` 为身份，因此相同词面 kind 可以分别注册给不同 role；重复的同一身份、不同对象争用同一其余 Definition key、自定义项覆盖内置 key，以及缺失已引用 Definition 均 fail-loud；同一 Definition 对象的重复贡献可以按 provider assembly 规则去重
 
 ### Graph Theme style
 
@@ -82,7 +82,8 @@ React 可以通过 `GraphThemeProvider` 组合 definitions；跨静态 InputEmbe
 - Theme callback 抛错或返回非法稀疏结构时报告 Definition callback 失败；空 token 对象无效
 - Neutral Entity 默认填充保持不透明输出，以便 `contrast` 在未知宿主表面中仍可确定解析；它不把低透明度背景作为新的隐式 backdrop 契约
 - Neutral Entity 的数值描边或填充遇到不可静态解析的最终主色时报告 Core contextual color 错误，不回退为 `currentColor`，也不静默猜测宿主颜色
-- Theme 只改变 appearance，不改变语义、结构、identity、位置、尺寸、route 或 marker family
+- Neutral 的 `disabled` status 使用 `semantic.guide` 与 `[6, 4]` 描边虚线；Relation 只虚线化箭身，marker 保持该状态颜色和既有 shape
+- Theme 只改变 appearance，以及 Relation 的受限箭身 `dashPattern`；不改变语义、identity、位置、尺寸、route 或 marker family
 - 旧 Variant schema、常量、Definition、registry、options 与导出直接删除，不保留 alias 或 fallback
 
 ## 结果

@@ -19,11 +19,11 @@ description: 用独立 Definition registry 扩展 Entity role、kind 与 predica
 
 Entity 拥有三套独立 Definition：
 
-| Definition              | 职责                                                 |
-| ----------------------- | ---------------------------------------------------- |
-| `defineEntityRole`      | 定义主要语义与完整 shape、padding、minimum size 结构 |
-| `defineEntityKind`      | 在一个 role 内定义稳定语义子类型                     |
-| `defineEntityPredicate` | 用 Zod 校验 JSON params                              |
+| Definition              | 职责                                                    |
+| ----------------------- | ------------------------------------------------------- |
+| `defineEntityRole`      | 定义主要语义与完整 shape、padding、minimum size 结构    |
+| `defineEntityKind`      | 在一个 role 内定义稳定语义子类型；身份为 `(role, kind)` |
+| `defineEntityPredicate` | 用 Zod 校验 JSON params                                 |
 
 每个 role 持有自己的 shape 与基础结构。kind 和 predicate 都不复制 role shape；Graph Theme rules 根据 Canonical semantics 提供 appearance 默认，Entity Source 上显式编写的非结构 Node 外观字段最终覆盖这些默认
 
@@ -66,7 +66,7 @@ Vanilla 可把相同 options 传给 `entity(id, input)` 或 `graph(id, input)`�
 
 ## 执行机制
 
-当前 provider assembly 先将内置与自定义 definitions 合并到局部 registries，校验 `role → kind → predicate`，再按顺序应用匹配的 Graph Theme appearance rules。lowering 随后叠加 Entity 显式非结构 Node 字段，再写入 role structure，并按轴合并 `minimumSize`；最终 Entity 仍是一个普通 Core `Node`
+当前 provider assembly 先将内置与自定义 definitions 合并到局部 registries，按 `(role, kind)` 校验 kind、再校验 predicate，然后按顺序应用匹配的 Graph Theme appearance rules。相同词面 kind 可分别注册给不同 role，Theme selector 仍按词面 kind 匹配。lowering 随后叠加 Entity 显式非结构 Node 字段，再写入 role structure，并按轴合并 `minimumSize`；最终 Entity 仍是一个普通 Core `Node`
 
 <SourceLinks
   sources={[
@@ -79,22 +79,22 @@ Vanilla 可把相同 options 传给 `entity(id, input)` 或 `graph(id, input)`�
 
 ## 错误与限制
 
-- 空 key、重复 key、覆盖内置 key，或同一 assembly 中不同对象争用同一 key 时 fail-loud
-- 未注册 role / kind / predicate、kind 与 role 不匹配、predicate params 校验失败时 fail-loud
+- 空 key、重复 `(role, kind)`、覆盖内置 key，或同一 assembly 中不同对象争用同一身份时 fail-loud
+- 未注册 role / kind / predicate、当前 role 下未注册 kind、predicate params 校验失败时 fail-loud
 - 自定义 shape 继续由 Core Shape registry 解析；缺少 provider 时不回退到 rectangle
 - Entity data、predicate params 与 `meta` 必须 JSON-safe；函数、ReactNode 和 renderer resource 不能进入 Source IR
 - `<Entity>` 可以独立 embed，但 children 仍只接受 Node-compatible 文本；任意绘图内容必须作为 sibling
 
 ## API 参考
 
-| 公开导出                                                   | 用途                                            |
-| ---------------------------------------------------------- | ----------------------------------------------- |
-| `defineEntityRole` / `EntityRoleDefinition`                | 定义完整 role 结构与 shape                      |
-| `defineEntityKind` / `EntityKindDefinition`                | 定义 role 内稳定子类型                          |
-| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | 定义带类型安全 JSON params 的 predicate         |
-| `EntityRole`                                               | 查询内置开放 role key                           |
-| `GraphRuleSchema` / `IRGraphRule`                          | 编写单条有序外观规则；graphRules 接受数组       |
-| `GraphDefinitionOptions`                                   | 在 Graph assembly 中装配三类 Entity definitions |
+| 公开导出                                                   | 用途                                                |
+| ---------------------------------------------------------- | --------------------------------------------------- |
+| `defineEntityRole` / `EntityRoleDefinition`                | 定义完整 role 结构与 shape                          |
+| `defineEntityKind` / `EntityKindDefinition`                | 定义 role 内稳定子类型；相同 kind 可注册给不同 role |
+| `defineEntityPredicate` / `EntityPredicateDefinitionInput` | 定义带类型安全 JSON params 的 predicate             |
+| `EntityRole`                                               | 查询内置开放 role key                               |
+| `GraphRuleSchema` / `IRGraphRule`                          | 编写单条有序外观规则；graphRules 接受数组           |
+| `GraphDefinitionOptions`                                   | 在 Graph assembly 中装配三类 Entity definitions     |
 
 ## 相关
 

@@ -1,13 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import type { IRNode } from '@retikz/core';
 
-import { createSurface, IRSurfaceSchema, SurfaceSchema } from '../../../src';
+import { describe, expect, it } from 'vitest';
+import { toJSONSchema } from 'zod';
+
+import { createSurface, SurfaceSchema } from '../../../src';
+import { resolveSurface } from '../../../src/resolve/surface';
 import { fullScopeProps } from '../presentation/scope-props';
 
-const node = {
+const node: IRNode = {
   type: 'node',
   position: [0, 0],
   layout: { minimumSize: { width: 20, height: 10 } },
-} as const;
+};
 
 const surface = (overrides: Record<string, unknown> = {}) => ({
   namespace: 'standard' as const,
@@ -17,8 +21,15 @@ const surface = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('SurfaceSchema', () => {
-  it('materializes canonical defaults without inventing appearance', () => {
-    const parsed = SurfaceSchema.parse(surface());
+  it('exports static shell defaults without traversing unrelated child contracts', () => {
+    expect(toJSONSchema(SurfaceSchema.pick({ padding: true, overflow: true, cornerRadius: true }))).toMatchObject({
+      properties: { padding: { default: 0 }, overflow: { default: 'visible' }, cornerRadius: { default: 0 } },
+    });
+  });
+  it('materializes static defaults without inventing appearance', () => {
+    const source = SurfaceSchema.parse(surface());
+    expect(source).toEqual({ ...surface(), padding: 0, overflow: 'visible', cornerRadius: 0 });
+    const parsed = resolveSurface(source);
 
     expect(parsed).toEqual({
       namespace: 'standard',
@@ -32,14 +43,16 @@ describe('SurfaceSchema', () => {
     expect(parsed).not.toHaveProperty('border');
   });
 
-  it('normalizes scalar and CSS-like padding once at the schema boundary', () => {
-    expect(SurfaceSchema.parse(surface({ padding: 6 })).padding).toEqual({
+  it('preserves padding shorthand until domain resolution', () => {
+    expect(resolveSurface(SurfaceSchema.parse(surface({ padding: 6 }))).padding).toEqual({
       top: 6,
       right: 6,
       bottom: 6,
       left: 6,
     });
-    expect(SurfaceSchema.parse(surface({ padding: { default: 2, x: 4, y: 6, left: 8, top: 10 } })).padding).toEqual({
+    expect(
+      resolveSurface(SurfaceSchema.parse(surface({ padding: { default: 2, x: 4, y: 6, left: 8, top: 10 } }))).padding,
+    ).toEqual({
       top: 10,
       right: 4,
       bottom: 6,
@@ -47,28 +60,15 @@ describe('SurfaceSchema', () => {
     });
   });
 
-  it('keeps canonical output padding strict and fully explicit', () => {
-    const canonical = SurfaceSchema.parse(surface({ padding: { x: 4, top: 6 } }));
-
-    expect(IRSurfaceSchema.parse(canonical)).toEqual(canonical);
-    for (const padding of [
-      4,
-      {},
-      { default: 2 },
-      { top: 1, right: 1, bottom: 1 },
-      {
-        top: 1,
-        right: 1,
-        bottom: 1,
-        left: 1,
-        x: 1,
-      },
-    ]) {
-      expect(IRSurfaceSchema.safeParse(surface({ padding, overflow: 'visible', cornerRadius: 0 })).success).toBe(false);
-    }
+  it('round-trips a defaulted snapshot without expanding shorthand', () => {
+    const source = SurfaceSchema.parse(surface({ padding: { x: 4, top: 6 } }));
+    expect(source.padding).toEqual({ x: 4, top: 6 });
+    expect(source.overflow).toBe('visible');
+    expect(SurfaceSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(source);
+    expect(resolveSurface(source).padding).toEqual({ top: 6, right: 4, bottom: 0, left: 4 });
   });
 
-  it('accepts any one Core or Tier-2 child and round-trips canonical JSON', () => {
+  it('accepts any one Core or Tier-2 child and round-trips Source JSON', () => {
     const tier2 = SurfaceSchema.parse(
       surface({
         child: { namespace: 'third', type: 'card', id: 'card-a', data: { value: 3 } },
@@ -76,7 +76,7 @@ describe('SurfaceSchema', () => {
     );
 
     expect(tier2.child).toEqual({ namespace: 'third', type: 'card', id: 'card-a', data: { value: 3 } });
-    expect(IRSurfaceSchema.parse(JSON.parse(JSON.stringify(tier2)))).toEqual(tier2);
+    expect(SurfaceSchema.parse(JSON.parse(JSON.stringify(tier2)))).toEqual(tier2);
   });
 
   it('reuses complete Scope props and closed paint/stroke appearance', () => {
@@ -114,7 +114,10 @@ describe('SurfaceSchema', () => {
     expect(invalid.every(input => !SurfaceSchema.safeParse(input).success)).toBe(true);
   });
 
-  it('creates canonical Surface IR through the public factory', () => {
-    expect(createSurface(surface({ padding: 3 }))).toEqual(SurfaceSchema.parse(surface({ padding: 3 })));
+  it('creates sparse Surface IR through the public factory', () => {
+    expect(createSurface(surface({ padding: 3 }))).toEqual(surface({ padding: 3 }));
+    expect(resolveSurface(createSurface(surface({ padding: 3 })))).toEqual(
+      resolveSurface(SurfaceSchema.parse(surface({ padding: 3 }))),
+    );
   });
 });

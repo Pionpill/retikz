@@ -1,3 +1,5 @@
+import type { GridInput } from '@retikz/standard';
+
 import { createInputScene } from '@retikz/react';
 import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
 import { normalizeScene } from '@retikz/vanilla';
@@ -42,7 +44,7 @@ describe('<Grid>', () => {
     const input = {
       bounds: { position: [20, 10], width: 40, height: 20 },
       line: { spacing: 10 },
-    } as const;
+    } satisfies GridInput;
 
     expect(normalizeReactInput(<Grid {...input} />).ir.children[0]).toEqual(createGrid(input));
   });
@@ -55,7 +57,7 @@ describe('<Grid>', () => {
         height: 10,
       },
       line: { spacing: 10 },
-    } as const;
+    } satisfies GridInput;
 
     expect(normalizeReactInput(<Grid {...input} />).ir.children[0]).toEqual(createGrid(input));
   });

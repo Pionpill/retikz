@@ -7,6 +7,8 @@ import { Outlet } from 'react-router';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { AiChatPanel, useAiChatStore } from '@/modules/docs/ai-chat';
+import { SourcePanel } from '@/modules/docs/source-viewer';
+import { useRightPanelStore } from '@/modules/docs/store';
 
 import { Header } from './header';
 
@@ -28,13 +30,13 @@ const useViewportWidth = (): number => {
 /** 根布局：主内容 + AI 面板。 */
 export const AppLayout: FC = () => {
   const { t } = useTranslation();
-  const open = useAiChatStore(s => s.open);
-  const setOpen = useAiChatStore(s => s.setOpen);
+  const panel = useRightPanelStore(s => s.panel);
+  const close = useRightPanelStore(s => s.close);
   const isGenerating = useAiChatStore(s => s.isGenerating);
   const vw = useViewportWidth();
   const isDesktop = vw >= DESKTOP_BREAKPOINT;
-  const aiOpenDesktop = open && isDesktop;
-  const aiOpenMobile = open && !isDesktop;
+  const rightPanelOpenDesktop = panel.kind !== 'none' && isDesktop;
+  const rightPanelOpenMobile = panel.kind !== 'none' && !isDesktop;
 
   const toPercent = (px: number): number => Math.min(95, (px / vw) * 100);
 
@@ -50,7 +52,7 @@ export const AppLayout: FC = () => {
           <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible!">
             <Outlet />
           </ResizablePanel>
-          {aiOpenDesktop && (
+          {rightPanelOpenDesktop && (
             <>
               <ResizableHandle />
               <ResizablePanel
@@ -61,7 +63,11 @@ export const AppLayout: FC = () => {
                 className="overflow-x-clip! overflow-y-visible! min-w-0!"
               >
                 <div className="sticky top-14 h-[calc(100dvh-3.5rem)] min-w-0 max-w-full">
-                  <AiChatPanel />
+                  {panel.kind === 'ai' ? (
+                    <AiChatPanel />
+                  ) : (
+                    <SourcePanel key={panel.source.path} source={panel.source} />
+                  )}
                 </div>
               </ResizablePanel>
             </>
@@ -69,7 +75,12 @@ export const AppLayout: FC = () => {
         </ResizablePanelGroup>
       </div>
       {!isDesktop && (
-        <Sheet open={aiOpenMobile} onOpenChange={setOpen}>
+        <Sheet
+          open={rightPanelOpenMobile}
+          onOpenChange={open => {
+            if (!open) close();
+          }}
+        >
           <SheetContent
             side="bottom"
             showCloseButton={false}
@@ -78,9 +89,17 @@ export const AppLayout: FC = () => {
               if (isGenerating) e.preventDefault();
             }}
           >
-            <SheetTitle className="sr-only">{t('ai.triggerLabel')}</SheetTitle>
-            <SheetDescription className="sr-only">{t('ai.triggerHint')}</SheetDescription>
-            <AiChatPanel />
+            <SheetTitle className="sr-only">
+              {panel.kind === 'ai' ? t('ai.triggerLabel') : t('sourceViewer.title')}
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              {panel.kind === 'ai' ? t('ai.triggerHint') : t('sourceViewer.description')}
+            </SheetDescription>
+            {panel.kind === 'ai' ? (
+              <AiChatPanel />
+            ) : panel.kind === 'source' ? (
+              <SourcePanel key={panel.source.path} source={panel.source} />
+            ) : null}
           </SheetContent>
         </Sheet>
       )}

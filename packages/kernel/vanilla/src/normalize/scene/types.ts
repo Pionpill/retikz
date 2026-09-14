@@ -8,6 +8,7 @@ import type {
 } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 
+import type { InputCoordinate } from '../coordinate';
 import type { AnyInputEmbed, AnyInputEmbedAdapter, InputEmbedThemeContextResolver } from '../embed';
 import type { InputNode } from '../node';
 import type { InputPath } from '../path';
@@ -41,7 +42,7 @@ export type InputChild =
   | InputNode
   | InputPath
   | InputScope
-  | IRCoordinate
+  | InputCoordinate
   | AnyInputEmbed
   | Exclude<IRChild, IRCoordinate>;
 
@@ -73,7 +74,7 @@ export type InputSceneLayers = InputSceneBase & {
 export type InputScene = InputSceneChildren | InputSceneLayers;
 
 /** 归一化时报告给 processing driver 的作者来源类别 */
-export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'embeddable';
+export type InputAuthoringSiteKind = 'scene' | 'scope' | 'path' | 'node' | 'coordinate' | 'embeddable';
 
 /** 框架无关的作者来源信息 */
 export type InputAuthoringSite = Readonly<{

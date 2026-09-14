@@ -14,6 +14,7 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
     name,
     description: 'Custom straight-only Flow layout.',
     capabilities: {
+      placementKinds: ['linear', 'grid'],
       compoundScopes: false,
       groupEndpoints: false,
       crossScopeRelations: false,
@@ -24,7 +25,13 @@ const customDefinition = (name = 'custom'): FlowLayoutDefinition =>
       relationDirections: ['forward'],
       routingKinds: ['straight'],
     },
-    defaults: { direction: 'down', nodeGap: 10, rankGap: 20, routing: { kind: 'straight' } },
+    defaults: {
+      direction: 'down',
+      nodeGap: 10,
+      rankGap: 20,
+      placementGap: { horizontal: 10, vertical: 10 },
+      routing: { kind: 'straight' },
+    },
     layout: () => ({ elements: [], relations: [] }),
   });
 
@@ -77,8 +84,9 @@ describe('Flow Layout registry and catalog', () => {
 
     expect(layered?.defaults).toEqual({
       direction: 'right',
-      nodeGap: 24,
+      nodeGap: 48,
       rankGap: 48,
+      placementGap: { horizontal: 48, vertical: 32 },
       routing: { kind: 'straight', orthogonalCornerRadius: 8 },
     });
   });
@@ -91,7 +99,7 @@ describe('Flow Layout capability preflight', () => {
       type: 'flow',
       entities: [{ id: 'entity', text: 'Entity' }],
       groups: [],
-      layouts: [{ id: 'layout', direction: 'right', children: ['entity'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['entity'] }],
       children: ['layout'],
     });
     const canonical = resolveFlowDiagram(source, {

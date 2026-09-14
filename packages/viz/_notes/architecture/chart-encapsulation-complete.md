@@ -117,7 +117,7 @@ Chart 封装完备要求：根字段形成稳定通用外壳；`type` 负责 fam
 - [ ] `theme` 接受注册主题名，或带可选 base 的 authored token 输入
 - [ ] inline tokens 按 `chart` / `plot` / `recipe` owner 分区
 - [ ] Chart shell token 只拥有 canvas、padding、presentation 等跨 chartType 语义
-- [ ] Chart shell 以稀疏 overrides schema 接收输入，以无默认值的完整 resolution schema 校验最终结果
+- [ ] Chart shell 以唯一稀疏 Source schema 接收输入，由 resolver 产出派生 TypeScript 执行态，不维护平行 resolution schema
 - [ ] Chart 为每个 Core mode 提供显式完整 Chart shell fallback；Chart 不复制 Core / Plot categorical palette
 - [ ] Plot token 直接复用 Plot schema、definition、preset 与 resolver，不由 Chart 复制
 - [ ] recipe token 由当前 chartType Definition 提供精确 schema

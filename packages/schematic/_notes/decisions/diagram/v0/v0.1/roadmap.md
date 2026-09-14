@@ -32,18 +32,28 @@ Diagram 只拥有完整图示的区域装配语义和 Diagram 独有行为。通
 
 ### alpha.1 FlowDiagram MVP
 
-| ADR                                                      | 主题                                   | 负责                                                                                                                                                                                 | 状态     |
-| -------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| [01](./alpha.1/01-diagram-assembly-presentation.md)      | Diagram Assembly 与 Presentation       | 公共 Presentation 片段、固定区域语义、显式 Standard Legend、统一输出边界、内部 opaque drawing child 与具体 root 延期边界                                                             | Accepted |
-| [02](./alpha.1/02-diagram-frame-spacing-appearance.md)   | Diagram Frame、Spacing 与 Appearance   | 区域排列、外框、frame padding、语义区块间距、Diagram Theme、文字继承，以及对 Layout / Standard / Core Theme 的复用与 Foundation 实施边界                                             | Accepted |
-| [03](./alpha.1/03-flow-source-model.md)                  | Flow Source 模型与 LLM-first Authoring | 具体 Source root、平级 Entity / Group / Layout catalog、引用式 containment、无 identity 的有序 Relation、rank / layout intent、扁平 token、全局与单项 style / layout、Graph lowering | Accepted |
-| [04](./alpha.1/04-flow-layout-definition-registry.md)    | Flow Layout Definition 与 Registry     | 可替换布局 Definition、内置与自定义 registry、provider catalog、布局意图默认、provider 输入输出、确定性与失败边界                                                                    | Accepted |
-| [05](./alpha.1/05-flow-orchestration-result-artifact.md) | Flow Orchestration、Result 与 Artifact | Graph Theme 下的测量、Group / Layout 递归布局、routing、provider 结果验证、render-ready Graph、renderer-neutral artifact、diagnostics 与完整 Scene 闭环                              | Accepted |
-| [06](./alpha.1/06-flow-entity-rich-text.md)              | Flow Entity Core 富文本                | Entity `text` 对 Core TextBlock 的完整投影、非空语义与三入口 / Graph 闭环                                                                                                            | Proposed |
-| [07](./alpha.1/07-flow-catalog-source-layout-groups.md)  | Flow 平级 Source、Group 与 Layout      | 平级 Entity / Group / Layout catalog、引用式唯一 containment、可见 Group、固定 Layout、Flex placement、endpoint 与 artifact 边界                                                     | Accepted |
-| [08](./alpha.1/08-theme-source-fragments.md)             | Diagram / Flow Defaults 与 Theme 来源  | 文本区域内容与格式、独立显式 defaults、Flow layout/routing 分离、Graph 受限片段消费与字段覆盖                                                                                        | Accepted |
+| ADR                                                      | 主题                                   | 负责                                                                                                                                                                                 | 状态                       |
+| -------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| [01](./alpha.1/01-diagram-assembly-presentation.md)      | Diagram Assembly 与 Presentation       | 公共 Presentation 片段、固定区域语义、显式 Standard Legend、统一输出边界、内部 opaque drawing child 与具体 root 延期边界                                                             | Accepted                   |
+| [02](./alpha.1/02-diagram-frame-spacing-appearance.md)   | Diagram Frame、Spacing 与 Appearance   | 区域排列、外框、frame padding、语义区块间距、Diagram Theme、文字继承，以及对 Layout / Standard / Core Theme 的复用与 Foundation 实施边界                                             | Accepted                   |
+| [03](./alpha.1/03-flow-source-model.md)                  | Flow Source 模型与 LLM-first Authoring | 具体 Source root、平级 Entity / Group / Layout catalog、引用式 containment、无 identity 的有序 Relation、rank / layout intent、扁平 token、全局与单项 style / layout、Graph lowering | Accepted                   |
+| [04](./alpha.1/04-flow-layout-definition-registry.md)    | Flow Layout Definition 与 Registry     | 可替换布局 Definition、内置与自定义 registry、provider catalog、布局意图默认、provider 输入输出、确定性与失败边界                                                                    | Accepted                   |
+| [05](./alpha.1/05-flow-orchestration-result-artifact.md) | Flow Orchestration、Result 与 Artifact | Graph Theme 下的测量、Group / Layout 递归布局、routing、provider 结果验证、render-ready Graph、renderer-neutral artifact、diagnostics 与完整 Scene 闭环                              | Accepted                   |
+| [06](./alpha.1/06-flow-entity-rich-text.md)              | Flow Element Core 富文本               | Entity `text` 的既有投影；Relation `label` 的 TextBlock 投影待 Core ADR-01 接受并实施                                                                                                | Accepted；Relation 待 Core |
+| [07](./alpha.1/07-flow-catalog-source-layout-groups.md)  | Flow 平级 Source、Group 与 Layout      | 平级 Entity / Group / Layout catalog、引用式唯一 containment、可见 Group、固定 Layout、Flex placement、endpoint 与 artifact 边界                                                     | Accepted                   |
+| [08](./alpha.1/08-theme-source-fragments.md)             | Diagram / Flow Defaults 与 Theme 来源  | 文本区域内容与格式、独立显式 defaults、Flow layout/routing 分离、Graph 受限片段消费与字段覆盖                                                                                        | Accepted                   |
+| [09](./alpha.1/09-flow-graph-rules.md)                   | Flow Graph 规则投影                    | Flow 根级 Graph 规则、kind 驱动的 Entity / Relation 语义外观、Graph author rule 复用与三入口等价                                                                                     | Accepted                   |
+| [10](./alpha.1/10-flow-grid-layout.md)                   | Flow Grid 二维对齐布局                 | 共享行列中心线、内容与 margin 驱动尺寸、Layout Grid 复用与三入口等价                                                                                                                 | Accepted                   |
 
 ADR-08 承接 Core Theme 来源与稀疏 defaults 协议和 Graph alpha.2 ADR-07；两者保持各自发布版本，实施时共同闭合 Graph 到 Flow 的消费链。旧 token 与混合 Theme 输入已删除，三入口使用正式 Source 路径与独立显式 defaults。
+
+ADR-10 在当前 alpha.1 补充二维固定排列，依赖 ADR-07 的独立 Layout、ADR-04/05 的统一执行与结果边界，以及 Layout 已有 Grid 组合能力。不把任意跨 Group 后代对齐或标签精确占位纳入本项；实现与验证已完成。
+
+[ADR-11：Flow 单折角路由](./alpha.1/11-flow-elbow-routing.md) 在当前 alpha.1 扩展显式转折顺序，复用 ADR-04/05 的统一 provider 与结果链路。实现与验证已完成；不改变默认路由与间距，不包含自动避障。
+
+[ADR-12：Flow 布局边界贡献控制](./alpha.1/12-flow-layout-bounds.md) 在当前 alpha.1 补充容器局部的边界贡献选择，让附属子树保留自身排列与关系，同时不扩大指定 Layout 向父级报告的占位。实现与验证已完成；完整输出与可见 Group 的包含边界仍保留全部内容，不包含 absolute 定位或自动避障。
+
+[ADR-13：Flow 子项固定宽度](./alpha.1/13-flow-item-width.md) 在当前 alpha.1 补充 Layout scope 的直接 Entity 宽度策略，支持自然最大宽度与固定可见外框宽度，并复用 Core 的测量与文本折行。实现与验证已完成；不包含横向 child wrap、跨 scope 尺寸绑定、固定高度或 provider 专属 option。
 
 上述 ADR 只表示长期决策的依赖分区，不在 roadmap 冻结字段、默认值、算法库、测试 case、文件 scope 或实现步骤
 

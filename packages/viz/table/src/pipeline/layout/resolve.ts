@@ -2,12 +2,12 @@ import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../.
 import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
 
 import { RetikzTableError } from '../../error';
-import { TableLayoutSchema, TableTrackOverridesSchema, TableTrackSizeKind, TableTrackSizeSchema } from '../../schemas';
+import { TableTrackSizeKind } from '../../schemas';
 import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
 
 /** 物化单个轨道尺寸的运行时默认值并递归冻结 */
 export const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize => {
-  const parsed = TableTrackSizeSchema.parse(size);
+  const parsed = size;
   switch (parsed.kind) {
     case TableTrackSizeKind.Fixed:
       return Object.freeze({ kind: parsed.kind, value: parsed.value });
@@ -46,14 +46,14 @@ export const resolveTableTrackSizes = (
     indexes.add(override.index);
   }
 
-  const parsedOverrides = TableTrackOverridesSchema.parse(overrides);
+  const parsedOverrides = overrides;
   const overrideByIndex = new Map(parsedOverrides.map(override => [override.index, override.size]));
   return Object.freeze(defaults.map((size, index) => resolveTableTrackSize(overrideByIndex.get(index) ?? size)));
 };
 
 /** 解析 Table layout 并物化稳定默认值 */
 export const resolveTableLayout = (spec?: IRTableLayout): ResolvedTableLayout => {
-  const parsed = TableLayoutSchema.parse(spec ?? {});
+  const parsed = spec ?? {};
   const rowSize = resolveTableTrackSize(
     parsed.rowSize ?? { kind: TableTrackSizeKind.Fixed, value: DEFAULT_TABLE_ROW_HEIGHT },
   );

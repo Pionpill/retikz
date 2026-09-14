@@ -1,7 +1,7 @@
 import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
-import { SurfaceInputSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
@@ -27,11 +27,11 @@ const BlockHeaderDirectionSchema = zodEnum(['horizontal', 'vertical']).describe(
 );
 
 const BlockSurfaceFields = {
-  padding: SurfaceInputSchema.shape.padding,
-  background: SurfaceInputSchema.shape.background,
-  border: SurfaceInputSchema.shape.border,
-  cornerRadius: SurfaceInputSchema.shape.cornerRadius,
-  overflow: SurfaceInputSchema.shape.overflow,
+  padding: SurfaceSchema.shape.padding.removeDefault().optional(),
+  background: SurfaceSchema.shape.background,
+  border: SurfaceSchema.shape.border,
+  cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
+  overflow: SurfaceSchema.shape.overflow.removeDefault().optional(),
 };
 
 export const BlockHeaderSchema = strictObject({

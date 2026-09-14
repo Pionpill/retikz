@@ -94,6 +94,11 @@ export const deriveFlowLayoutCapabilities = (
   const index = indexElementScopes(diagram);
   const scopeIds = [...index.elementsById].filter(([, element]) => element.type !== 'entity').map(([id]) => id);
   if (scopeIds.length > 0) pushEvidence(evidence, 'compoundScopes', scopeIds);
+  for (const element of index.elementsById.values()) {
+    if (element.type === 'layout' && !definition.capabilities.placementKinds.includes(element.source.kind)) {
+      pushEvidence(evidence, `placement:${element.source.kind}`, [element.id]);
+    }
+  }
 
   const unorderedPairs = new Map<string, Readonly<{ count: number; relatedIds: ReadonlyArray<string> }>>();
   for (const relation of diagram.relations) {
@@ -148,9 +153,10 @@ export const assertFlowLayoutCapabilities = (definition: FlowLayoutDefinition, d
   const required = deriveFlowLayoutCapabilities(definition, diagram);
   const unsupported = required.filter(requirement => {
     const capability = requirement.name;
-    if (capability.startsWith('direction:') || capability.startsWith('routing:')) return true;
+    if (capability.startsWith('direction:') || capability.startsWith('routing:') || capability.startsWith('placement:'))
+      return true;
     return !definition.capabilities[
-      capability as keyof Omit<typeof definition.capabilities, 'relationDirections' | 'routingKinds'>
+      capability as keyof Omit<typeof definition.capabilities, 'relationDirections' | 'routingKinds' | 'placementKinds'>
     ];
   });
   if (unsupported.length === 0) return;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { GridSchema } from '../../../src';
+import { createGrid, GridSchema } from '../../../src';
+import { resolveGrid } from '../../../src/resolve/grid';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const base = (overrides: Record<string, unknown> = {}) => ({
@@ -11,6 +12,18 @@ const base = (overrides: Record<string, unknown> = {}) => ({
 });
 
 describe('GridSchema', () => {
+  it('keeps factory and persisted source sparse while resolving default-dependent limits', () => {
+    const source = createGrid({ bounds: { start: [0, 0], end: [120, 80] }, line: { major: { every: 2 } }, border: {} });
+    expect(resolveGrid(GridSchema.parse(JSON.parse(JSON.stringify(source))))).toEqual(resolveGrid(source));
+    expect(source.line).toEqual({ major: { every: 2 } });
+    expect(resolveGrid(source)).toMatchObject({
+      line: { vertical: { spacing: 10, origin: 0, includeBoundary: false, major: { offset: 0 } } },
+      border: { padding: 0, order: 'front', extendLines: false },
+    });
+    const excessive = GridSchema.parse(base({ line: { spacing: 0.000001 } }));
+    expect(() => resolveGrid(excessive)).toThrow(/exceeds/);
+  });
+
   it('reuses the complete Core Scope authored surface', () => {
     const parsed = GridSchema.parse({
       namespace: 'standard',
@@ -23,13 +36,14 @@ describe('GridSchema', () => {
     expect(GridSchema.parse(JSON.parse(JSON.stringify(parsed)))).toEqual(parsed);
   });
 
-  it('uses both line directions with default spacing when line is omitted', () => {
+  it('preserves omitted lines and resolves both default directions', () => {
     const result = GridSchema.safeParse(base());
 
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.bounds).toEqual({ start: [0, 0], end: [120, 80] });
       expect(result.data.line).toBe(true);
+      expect(resolveGrid(result.data).line).toMatchObject({ vertical: { spacing: 10 }, horizontal: { spacing: 10 } });
     }
   });
 
@@ -161,9 +175,14 @@ describe('GridSchema', () => {
   });
 
   it('rejects lattice configurations that exceed the bounded lowering size for both bounds forms', () => {
-    const corner = GridSchema.safeParse(base({ bounds: { start: [0, 0], end: [1, 1] }, line: { spacing: 0.000001 } }));
+    const corner = GridSchema.safeParse(
+      base({ bounds: { start: [0, 0], end: [1, 1] }, line: { spacing: 0.000001, origin: 0, includeBoundary: false } }),
+    );
     const center = GridSchema.safeParse(
-      base({ bounds: { position: [0, 0], width: 1, height: 1 }, line: { spacing: 0.000001 } }),
+      base({
+        bounds: { position: [0, 0], width: 1, height: 1 },
+        line: { spacing: 0.000001, origin: 0, includeBoundary: false },
+      }),
     );
 
     expect(corner.success).toBe(false);
@@ -174,7 +193,9 @@ describe('GridSchema', () => {
 
   it('reports bounded lattice errors at the independent direction path', () => {
     const result = GridSchema.safeParse(
-      base({ line: { vertical: { spacing: 0.000001 }, horizontal: { spacing: 10 } } }),
+      base({
+        line: { vertical: { spacing: 0.000001, origin: 0, includeBoundary: false }, horizontal: { spacing: 10 } },
+      }),
     );
 
     expect(result.success).toBe(false);

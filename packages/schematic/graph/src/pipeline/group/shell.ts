@@ -2,6 +2,7 @@ import type { LayoutCompositeCompileContext } from '@retikz/core';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
+import { resolveSurface } from '@retikz/standard';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
@@ -24,6 +25,7 @@ export const composeGroupShell = (
   context: LayoutCompositeCompileContext,
 ): Readonly<{ surface: ReturnType<typeof lowerGroupSurface>; metrics: GroupShellMetrics }> => {
   const surface = lowerGroupSurface(group);
+  const { padding } = resolveSurface(surface);
   const caption = lowerGroupCaptionComposition(group.source);
   const captionSize =
     caption === undefined
@@ -32,17 +34,17 @@ export const composeGroupShell = (
           .slotSize;
   const captionHeightWithGap = caption === undefined ? 0 : captionSize.height + caption.bodyGap;
   const contentInsets = {
-    top: surface.padding.top + (caption?.side === 'top' ? captionHeightWithGap : 0),
-    right: surface.padding.right,
-    bottom: surface.padding.bottom + (caption?.side === 'bottom' ? captionHeightWithGap : 0),
-    left: surface.padding.left,
+    top: padding.top + (caption?.side === 'top' ? captionHeightWithGap : 0),
+    right: padding.right,
+    bottom: padding.bottom + (caption?.side === 'bottom' ? captionHeightWithGap : 0),
+    left: padding.left,
   };
   return {
     surface,
     metrics: {
       minimumSize: {
-        width: captionSize.width + surface.padding.left + surface.padding.right,
-        height: captionHeightWithGap + surface.padding.top + surface.padding.bottom,
+        width: captionSize.width + padding.left + padding.right,
+        height: captionHeightWithGap + padding.top + padding.bottom,
       },
       contentInsets,
     },

@@ -65,7 +65,8 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       ],
       guides: [],
     };
-    expect(spec).toEqual(expected);
+    expect(spec.coordinate).not.toHaveProperty('startAngle');
+    expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
   it('radial_bar_explicit_band_scale_forwards_gap_options', () => {
@@ -89,7 +90,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
   it('pie_equivalence：coordinate="polar2D" + <IntervalMark angle> → polar2D + linear 角向 + stack transform + interval mark', () => {
     const spec = buildPlotIR(<IntervalMark angle="value" color="label" />, '__plot', { coordinate: 'polar2D' });
     const expected = createPolarPieSpec('__plot', { angle: '__angle', radius: '__radius', color: '__color' });
-    expect(spec).toEqual(expected);
+    expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
   it('pie_color_defaults_to_angle_field：未给 color → 按 angle 值字段分类上色', () => {
@@ -120,8 +121,6 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       type: 'polar2D',
       angle: '__angle',
       radius: '__radius',
-      startAngle: 0,
-      endAngle: 360,
       innerRadius: 0.5,
     });
   });
@@ -130,7 +129,14 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
     const spec = buildPlotIR(<IntervalMark angle="value" />, '__plot', {
       coordinate: { type: 'polar2D', startAngle: -90, endAngle: 90 },
     });
-    expect(spec.coordinate).toMatchObject({ type: 'polar2D', startAngle: -90, endAngle: 90, innerRadius: 0 });
+    expect(spec.coordinate).toEqual({
+      type: 'polar2D',
+      angle: '__angle',
+      radius: '__radius',
+      startAngle: -90,
+      endAngle: 90,
+    });
+    expect(PlotSchema.parse(spec).coordinate).toMatchObject({ innerRadius: 0 });
   });
 
   it('polar_explicit_scale_dimensions：x / y 维度分别落到 __angle / __radius', () => {
@@ -169,7 +175,7 @@ describe('buildPlotIR polar coordinate / sector / area / closed / angle·radius'
       marks: [{ type: 'path', encoding: { x: { field: 'dim' }, y: { field: 'value' } } }],
       guides: [],
     };
-    expect(spec).toEqual(expected);
+    expect(PlotSchema.parse(spec)).toEqual(PlotSchema.parse(expected));
   });
 
   it('polar_line_equivalence：<PathMark closed={false}> + polar（不闭合）→ linear 角向', () => {

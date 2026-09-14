@@ -35,11 +35,11 @@ import {
   unionLayoutArtifactRects,
 } from '@retikz/layout/compose';
 
+import type { CanonicalLegend, CanonicalLegendItemsContent } from '../../../resolve/legend';
 import type { MeasuredLegendChild, MeasuredLegendItem } from './providers';
 import type {
   IRLegend,
   IRLegendItem,
-  IRLegendItemsContent,
   LegendArtifact,
   LegendArtifactGeometry,
   LegendPlacedChildArtifact,
@@ -47,6 +47,7 @@ import type {
 } from './types';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
+import { resolveLegend } from '../../../resolve/legend';
 import { LegendContentKind, LegendDirection } from './constants';
 import { pairedFlowItemsOf } from './providers';
 import { createLegendRampStructure, translateLegendRampStructure } from './providers';
@@ -66,7 +67,7 @@ type FinalPlacedChild = PlacedLayoutChild &
   }>;
 
 /** 从 Legend 领域字段中分离 authored root Scope 的 Core 属性 */
-const authoredScopePropsOf = (node: IRLegend): CompositeCompileScopeProps => {
+const authoredScopePropsOf = (node: CanonicalLegend): CompositeCompileScopeProps => {
   const {
     namespace: _namespace,
     type: _type,
@@ -170,7 +171,7 @@ const rootProfile = (
 
 /** 通过共享 Box size policy 解析 Legend 单轴 allocation */
 const resolveAxis = (
-  node: IRLegend,
+  node: CanonicalLegend,
   context: LayoutCompositeCompileContext,
   axis: 'x' | 'y',
   profile: Readonly<{ minimum: number; natural: number }>,
@@ -184,7 +185,7 @@ const resolveAxis = (
   }).allocationSize;
 
 /** 从 Legend items 语义生成共享 paired flow 的纯 layout 输入 */
-const pairedFlowOptionsOf = (content: IRLegendItemsContent, items: ReadonlyArray<PairedFlowItem>) => ({
+const pairedFlowOptionsOf = (content: CanonicalLegendItemsContent, items: ReadonlyArray<PairedFlowItem>) => ({
   direction: content.direction,
   wrap: content.wrap,
   gap: content.gap,
@@ -198,7 +199,7 @@ const pairedFlowOptionsOf = (content: IRLegendItemsContent, items: ReadonlyArray
 /** 读取 paired flow plan 在指定物理轴上的 minimum/natural profile */
 const pairedFlowAxisProfileOf = (
   plan: PairedFlowPlan,
-  direction: IRLegendItemsContent['direction'],
+  direction: CanonicalLegendItemsContent['direction'],
   axis: 'x' | 'y',
 ): Readonly<{ minimum: number; natural: number }> => {
   const mainAxis = direction === LegendDirection.Horizontal ? 'x' : 'y';
@@ -209,7 +210,7 @@ const pairedFlowAxisProfileOf = (
 
 /** 调用共享 paired flow plan，并只在需要时提供最终内容预算 */
 const pairedFlowPlanOf = (
-  content: IRLegendItemsContent,
+  content: CanonicalLegendItemsContent,
   items: ReadonlyArray<PairedFlowItem>,
   options: Readonly<{ availableMainSize?: number }> = {},
 ): PairedFlowPlan =>
@@ -235,7 +236,7 @@ const finalTitleProbe = (
 const alignedContentX = (
   contentBounds: LayoutRect,
   structuralWidth: number,
-  alignment: IRLegend['contentAlign'],
+  alignment: CanonicalLegend['contentAlign'],
 ): number => {
   if (alignment === LayoutAlignment.End) return contentBounds.x + contentBounds.width - structuralWidth;
   if (alignment === LayoutAlignment.Center) {
@@ -264,7 +265,7 @@ const placeFinalChild = (
   key: string,
   sourceIndex: number,
   containerAllocation: LayoutRect,
-  overflow: IRLegend['overflow'],
+  overflow: CanonicalLegend['overflow'],
   existingResult?: LayoutChildResult,
 ): FinalPlacedChild => {
   const placed = placeLayoutChild({
@@ -299,7 +300,7 @@ const geometryOf = (children: ReadonlyArray<FinalPlacedChild>): LegendArtifactGe
 
 /** 编译 Standard Legend ramp form 的 normalization、placement、replay 与 typed artifact */
 const compileLegendRamp = (
-  node: IRLegend,
+  node: CanonicalLegend,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<LegendRampArtifact> => {
   if (node.content.kind !== LegendContentKind.Ramp) {
@@ -430,9 +431,10 @@ const compileLegendRamp = (
 
 /** 编译 Standard Legend items form 的 probe、布局、placement、replay 与 typed artifact */
 export const compileLegend = (
-  node: IRLegend,
+  sourceLegend: IRLegend,
   context: LayoutCompositeCompileContext,
 ): LayoutCompositeCompileResult<LegendArtifact> => {
+  const node = resolveLegend(sourceLegend);
   if (node.content.kind === LegendContentKind.Ramp) return compileLegendRamp(node, context);
   const authoredScopeProps = authoredScopePropsOf(node);
 

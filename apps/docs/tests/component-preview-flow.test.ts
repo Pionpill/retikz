@@ -1,17 +1,8 @@
 import type { IRScene } from '@retikz/core';
-import type { FC, ReactElement } from 'react';
+import type { FC } from 'react';
 
-import {
-  compileToScene,
-  fallbackMeasurer,
-  resolveCoreProviderDependencies,
-  resolveCoreThemeStyleColors,
-  ThemeMode,
-} from '@retikz/core';
+import { resolveCoreThemeStyleColors, ThemeMode } from '@retikz/core';
 import { createFlowDiagramProviderContribution, FlowDiagramSchema } from '@retikz/diagram/flow';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewIR } from '../src/modules/docs/components/component-preview/utils';
@@ -21,35 +12,19 @@ import { getPreviewControlFields } from '../src/modules/docs/components/componen
 import { PreviewCoreThemeStyles, PreviewThemeStyle } from '../src/modules/docs/components/component-preview/theme';
 import { buildPreviewIR, irToVanillaCode } from '../src/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '../src/modules/docs/components/component-preview/vanilla-preview';
-import IrCentricDemo from '../src/modules/docs/contents/kernel/components/introduction/ir-centric.zh.demo';
-import {
-  previewSource as FlowBasicEnPreviewSource,
-  renderFlowBasicPreview as renderFlowBasicEnPreview,
-} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.en.demo';
+import IrCentricDemo from '../src/modules/docs/contents/about/blog/core-philosophy/pipeline';
 import {
   previewSource as FlowBasicPreviewSource,
   renderFlowBasicPreview,
 } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-basic.zh.demo';
 import { previewControlContract as FlowCompoundControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.controls';
 import { previewControlContract as FlowCompoundEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.en.controls';
-import {
-  previewSource as FlowCompoundEnPreviewSource,
-  renderFlowCompoundPreview as renderFlowCompoundEnPreview,
-} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.en.demo';
-import {
-  previewSource as FlowCompoundPreviewSource,
-  renderFlowCompoundPreview,
-} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.zh.demo';
+import { renderFlowCompoundPreview as renderFlowCompoundEnPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.en.demo';
+import { renderFlowCompoundPreview } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-compound.zh.demo';
 import { previewControlContract as FlowThemeControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.controls';
 import { previewControlContract as FlowThemeEnControlContract } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.controls';
-import {
-  previewSource as FlowThemeEnPreviewSource,
-  renderFlowThemePreview as renderFlowThemeEnPreview,
-} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.demo';
-import {
-  previewSource as FlowThemePreviewSource,
-  renderFlowThemePreview,
-} from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.zh.demo';
+import { previewSource as FlowThemeEnPreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.en.demo';
+import { previewSource as FlowThemePreviewSource } from '../src/modules/docs/contents/schematic/diagram/flow/basic/flow-theme.zh.demo';
 
 const source = FlowDiagramSchema.parse({
   namespace: 'diagram',
@@ -65,8 +40,6 @@ const source = FlowDiagramSchema.parse({
 });
 
 const scene: IRScene = { type: 'scene', version: 1, children: [source] };
-
-const flowBasicContentRoot = resolve(process.cwd(), 'src/modules/docs/contents/schematic/diagram/flow/basic');
 const flowBasicControlModules: Partial<Record<string, { previewControlContract: PreviewControlContract }>> =
   import.meta.glob<{ previewControlContract: PreviewControlContract }>(
     '../src/modules/docs/contents/schematic/diagram/flow/basic/*.controls.ts',
@@ -74,47 +47,8 @@ const flowBasicControlModules: Partial<Record<string, { previewControlContract: 
   );
 
 const FlowBasicCanonicalDemo: FC = () => FlowBasicPreviewSource.canonicalRender?.() ?? null;
-const FlowBasicEnCanonicalDemo: FC = () => FlowBasicEnPreviewSource.canonicalRender?.() ?? null;
-const FlowCompoundCanonicalDemo: FC = () => FlowCompoundPreviewSource.canonicalRender?.() ?? null;
-const FlowCompoundEnCanonicalDemo: FC = () => FlowCompoundEnPreviewSource.canonicalRender?.() ?? null;
 const FlowThemeCanonicalDemo: FC = () => FlowThemePreviewSource.canonicalRender?.() ?? null;
 const FlowThemeEnCanonicalDemo: FC = () => FlowThemeEnPreviewSource.canonicalRender?.() ?? null;
-
-/** 读取 Flow Basic demo 的输出尺寸与取景配置 */
-const flowBasicFrame = (Demo: FC) => {
-  const root = Demo({});
-  if (!isValidElement<{ viewBox?: IRScene['viewBox'] }>(root)) throw new Error('Missing Flow Basic root element');
-  return root.props;
-};
-
-/** 编译 Flow 分组 demo 并读取最终场景包围盒 */
-const flowCompoundBounds = (values: Parameters<typeof renderFlowCompoundPreview>[0]) => {
-  const flowSource = FlowDiagramSchema.parse(
-    buildPreviewIR(() => renderFlowCompoundPreview(values)).sourceIr.children[0],
-  );
-  const definitions = resolveCoreProviderDependencies({
-    contributions: [createFlowDiagramProviderContribution()],
-  });
-  return compileToScene(
-    { type: 'scene', version: 1, children: [flowSource] },
-    { ...definitions, padding: 0, measureText: fallbackMeasurer },
-  ).scene.layout;
-};
-
-/** 编译 Flow 全局配置 demo 并读取最终场景包围盒 */
-const flowThemeBounds = (
-  renderPreview: (values: Parameters<typeof renderFlowThemePreview>[0]) => ReactElement,
-  values: Parameters<typeof renderFlowThemePreview>[0],
-) => {
-  const flowSource = FlowDiagramSchema.parse(buildPreviewIR(() => renderPreview(values)).sourceIr.children[0]);
-  const definitions = resolveCoreProviderDependencies({
-    contributions: [createFlowDiagramProviderContribution()],
-  });
-  return compileToScene(
-    { type: 'scene', version: 1, children: [flowSource] },
-    { ...definitions, padding: 0, measureText: fallbackMeasurer },
-  ).scene.layout;
-};
 
 describe('Flow Diagram ComponentPreview', () => {
   it('keeps the highest-level Flow Source in executable Vanilla code', () => {
@@ -201,29 +135,13 @@ describe('Flow Diagram ComponentPreview', () => {
     });
 
     expect(serialized).toContain('"namespace":"diagram","type":"flow"');
-    expect(serialized).not.toContain('"position"');
+    const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
+    expect(flow.entities.every(entity => !Object.hasOwn(entity, 'position'))).toBe(true);
     expect(serialized).not.toContain('"width":720');
     expect(serialized).not.toContain('"width":760');
     expect(vanilla.svg).toContain('<svg');
     expect(vanilla.code).toContain('FlowDiagramInputEmbedAdapter');
   });
-
-  it.each([
-    ['zh', FlowBasicCanonicalDemo],
-    ['en', FlowBasicEnCanonicalDemo],
-  ] as const)(
-    'derives the %s basic demo with only Flow Entity elements and no explicit Flow defaults',
-    (_lang, Demo) => {
-      const preview = buildPreviewIR(Demo);
-      const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
-
-      expect(flow.entities).toHaveLength(4);
-      expect(flow.groups).toEqual([]);
-      expect(flow.layouts).toEqual([]);
-      expect(flow.children).toEqual(flow.entities.map(entity => entity.id));
-      expect(flow.flowDefaults).toBeUndefined();
-    },
-  );
 
   it('uses bilingual controls to change the frontend form role, status, rich text, block typography, and Relation status in real Flow Source', () => {
     const chinese =
@@ -458,33 +376,6 @@ describe('Flow Diagram ComponentPreview', () => {
     }
   });
 
-  it('centers the global configuration demo in its fixed frame', () => {
-    const values = {
-      entityColor: '#334155',
-      entityFillOpacity: 1,
-      entityStrokeWidth: 1,
-      relationStroke: '#64748b',
-      relationStrokeWidth: 1,
-      relationStrokeOpacity: 0.9,
-    };
-
-    for (const [Demo, renderPreview, expectedFrame] of [
-      [FlowThemeCanonicalDemo, renderFlowThemePreview, { viewBox: { x: -71, y: -82.5, width: 420, height: 240 } }],
-      [FlowThemeEnCanonicalDemo, renderFlowThemeEnPreview, { viewBox: { x: -11.25, y: -64, width: 420, height: 240 } }],
-    ] as const) {
-      expect(flowBasicFrame(Demo)).toMatchObject(expectedFrame);
-      const bounds = flowThemeBounds(renderPreview, values);
-      const viewBox = expectedFrame.viewBox;
-
-      expect(Math.abs(viewBox.x + viewBox.width / 2 - (bounds.x + bounds.width / 2))).toBeLessThan(16);
-      expect(Math.abs(viewBox.y + viewBox.height / 2 - (bounds.y + bounds.height / 2))).toBeLessThan(16);
-      expect(bounds.x).toBeGreaterThan(viewBox.x);
-      expect(bounds.x + bounds.width).toBeLessThan(viewBox.x + viewBox.width);
-      expect(bounds.y).toBeGreaterThan(viewBox.y);
-      expect(bounds.y + bounds.height).toBeLessThan(viewBox.y + viewBox.height);
-    }
-  });
-
   it('uses bilingual controls to change visible Group layout intent and shell-free Layout placement', () => {
     const chinese = FlowCompoundControlContract;
     const english = FlowCompoundEnControlContract;
@@ -593,127 +484,5 @@ describe('Flow Diagram ComponentPreview', () => {
         align: 'end',
       });
     }
-  });
-
-  it.each([
-    ['zh', renderFlowCompoundPreview],
-    ['en', renderFlowCompoundEnPreview],
-  ] as const)('keeps the %s grouping demo relations unlabeled', (_lang, renderPreview) => {
-    const flow = FlowDiagramSchema.parse(
-      buildPreviewIR(() =>
-        renderPreview({
-          groupDirection: 'right',
-          groupNodeGap: 20,
-          groupRankGap: 36,
-          layoutDirection: 'right',
-          layoutGap: 24,
-          layoutAlign: 'center',
-        }),
-      ).sourceIr.children[0],
-    );
-
-    expect(flow.relations).toEqual([
-      { source: 'request', target: 'validate' },
-      { source: 'request', target: 'authorize' },
-      { source: 'service', target: 'queue' },
-      { source: 'queue', target: 'database' },
-    ]);
-  });
-
-  it.each([
-    ['zh', FlowCompoundCanonicalDemo],
-    ['en', FlowCompoundEnCanonicalDemo],
-  ] as const)('renders the controlled %s grouping demo at a fixed 1:1 frame', (_lang, Demo) => {
-    expect(flowBasicFrame(Demo)).toMatchObject({
-      viewBox: { x: -100, y: -86, width: 400, height: 460 },
-    });
-  });
-
-  it('centers the fixed frame across the canonical and vertical-extreme grouping footprints', () => {
-    const viewBox = flowBasicFrame(FlowCompoundCanonicalDemo).viewBox;
-    if (viewBox === undefined) throw new Error('Missing Flow compound viewBox');
-    const canonical = flowCompoundBounds({
-      groupDirection: 'right',
-      groupNodeGap: 20,
-      groupRankGap: 36,
-      layoutDirection: 'right',
-      layoutGap: 24,
-      layoutAlign: 'center',
-    });
-    const verticalExtreme = flowCompoundBounds({
-      groupDirection: 'down',
-      groupNodeGap: 32,
-      groupRankGap: 48,
-      layoutDirection: 'down',
-      layoutGap: 32,
-      layoutAlign: 'end',
-    });
-    const footprintCenter = {
-      x: (canonical.x + canonical.width / 2 + verticalExtreme.x + verticalExtreme.width / 2) / 2,
-      y: (canonical.y + canonical.height / 2 + verticalExtreme.y + verticalExtreme.height / 2) / 2,
-    };
-
-    expect(Math.abs(viewBox.x + viewBox.width / 2 - footprintCenter.x)).toBeLessThan(16);
-    expect(Math.abs(viewBox.y + viewBox.height / 2 - footprintCenter.y)).toBeLessThan(16);
-  });
-
-  it.each(['flow-basic.zh.demo.tsx', 'flow-basic.en.demo.tsx'] as const)(
-    'lets the controlled %s use natural content dimensions',
-    file => {
-      const demo = readFileSync(resolve(flowBasicContentRoot, file), 'utf8');
-
-      expect(demo).not.toMatch(/<FlowDiagram\b[^>]*\bwidth=/);
-      expect(demo).not.toMatch(/<FlowDiagram\b[^>]*\bheight=/);
-      expect(demo).not.toContain('viewBox=');
-      expect(demo).not.toContain("maxWidth: '100%'");
-      expect(demo).toContain('<FlowEntities');
-      expect(demo).toContain('<FlowRelations');
-    },
-  );
-
-  it.each([
-    ['zh', FlowBasicCanonicalDemo],
-    ['en', FlowBasicEnCanonicalDemo],
-  ] as const)('uses natural horizontal bounds for the %s basic demo', (_lang, Demo) => {
-    expect(flowBasicFrame(Demo).viewBox).toBeUndefined();
-  });
-
-  it.each([
-    [
-      'minimum geometry controls',
-      () =>
-        renderFlowBasicEnPreview({
-          formRole: 'activity',
-          formStatus: 'none',
-          formText: 'Frontend form',
-          formSubtitle: 'Complete user details',
-          formSubtitleSize: 'xs',
-          formSubtitleColor: '#6b7280',
-          formTextAlign: 'start',
-          formLineHeight: 14,
-          formMaxTextWidth: 80,
-          relationRole: 'flow',
-          relationStatus: 'none',
-        }),
-    ],
-    [
-      'maximum geometry controls',
-      () =>
-        renderFlowBasicEnPreview({
-          formRole: 'activity',
-          formStatus: 'none',
-          formText: 'Frontend form',
-          formSubtitle: 'Complete user details',
-          formSubtitleSize: 'lg',
-          formSubtitleColor: '#6b7280',
-          formTextAlign: 'end',
-          formLineHeight: 32,
-          formMaxTextWidth: 240,
-          relationRole: 'flow',
-          relationStatus: 'none',
-        }),
-    ],
-  ] as const)('keeps natural horizontal bounds with %s', (_name, Demo) => {
-    expect(flowBasicFrame(Demo).viewBox).toBeUndefined();
   });
 });

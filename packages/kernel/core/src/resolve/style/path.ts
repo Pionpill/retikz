@@ -1,8 +1,10 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { IRGeometryLabel, IRPathBase, IRPathDefault, IRPathStyle, IRStep } from '../../schemas';
 import type { EffectiveLabelDefault, StyleResolveFrame } from './types';
 
 import { resolvePathMarks } from './arrow';
-import { cutsStyleChannel, pickDefinedKeys } from './frame';
+import { cutsStyleChannel } from './frame';
 import { resolveEffectiveLabelDefault, resolveGeometryLabel } from './label';
 
 /** 替换 path children 中各 step 的 label 为已解析 effective label */
@@ -40,12 +42,20 @@ export const resolveEffectivePath = (path: IRPathBase, stack: ReadonlyArray<Styl
       style = {};
     }
     const { style: pathStyle, ...geometry } = frame.pathDefault ?? {};
-    defaults = { ...defaults, ...pickDefinedKeys(geometry) };
-    style = { ...style, ...pickDefinedKeys(frame.cascade), ...pickDefinedKeys(pathStyle ?? {}) };
+    defaults = { ...defaults, ...mergeProperties([geometry], { shouldOverride: value => value !== undefined }) };
+    style = {
+      ...style,
+      ...mergeProperties<IRPathStyle>([frame.cascade, pathStyle], { shouldOverride: value => value !== undefined }),
+    };
   }
-  style = { ...style, ...pickDefinedKeys(path.style ?? {}) };
+  style = { ...style, ...mergeProperties([path.style ?? {}], { shouldOverride: value => value !== undefined }) };
   const masterColor = style.color;
-  const effective: IRPathBase = { ...defaults, ...pickDefinedKeys(path), type: path.type, style };
+  const effective: IRPathBase = {
+    ...defaults,
+    ...mergeProperties([path], { shouldOverride: value => value !== undefined }),
+    type: path.type,
+    style,
+  };
 
   const labelDefault = resolveEffectiveLabelDefault(stack);
   effective.marks = resolvePathMarks(path.marks, stack, masterColor);

@@ -47,8 +47,10 @@ docs 内容规则不复制在 AGENTS 中，按需动态加载：
 - Standard Tier 2 composite 组件页：`docs-doc-standard-composite`
 - 扩展指南：`docs-doc-extension`
 - 示例页：`docs-doc-example`
+- 包总纲页：`docs-doc-overview`
 - 分组落地页：`docs-doc-group`
 - 概念页：`docs-doc-concept`
+- 实现原理页：`docs-doc-mechanism`
 - blog：`docs-doc-blog`
 - 文档评审：`docs-doc-review`
 - 外站 markdown 转换：`docs-blog-converter`
@@ -97,6 +99,7 @@ blog 是 docs 站的顶层 module，路径为 `/blog/<sectionId>/<slug>`，复�
 ## 快捷键
 
 - `Ctrl+L`：复制当前页 URL。
+- `Ctrl+B`：切换左侧文档目录。
 - `Ctrl+Alt+B`：切换右侧 TOC 抽屉。
 
 ## 常用命令

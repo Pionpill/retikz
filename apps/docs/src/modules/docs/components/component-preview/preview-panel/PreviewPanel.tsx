@@ -5,9 +5,10 @@ import { Fragment } from 'react';
 
 import { cn } from '@/lib';
 import { useComponentPreviewStore } from '@/modules/docs/store';
+import type { Lang } from '@/i18n';
 
 import type { PreviewTheme } from '../theme';
-import type { PreviewControlSlot, RendererMode } from '../types';
+import type { ComponentPreviewDemoComponent, PreviewControlSlot, RendererMode } from '../types';
 import type { PreviewPanelState } from './usePreviewPanelState';
 
 import { PreviewControlStateContext } from '../context';
@@ -20,7 +21,9 @@ export type PreviewPanelProps = {
   /** 面板宿主创建的独立 controller。 */
   state: PreviewPanelState;
   /** 默认 React demo 组件。 */
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 当前源码视图提供的不可变渲染函数。 */
   activeRender?: (rendererMode: RendererMode) => ReactNode;
   /** 当前预览实际生效的 ThemeStyle。 */
@@ -44,6 +47,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
   const {
     state,
     Component,
+    lang = 'zh',
     activeRender,
     theme,
     controlSlots = [],
@@ -93,7 +97,7 @@ export const PreviewPanel: FC<PreviewPanelProps> = props => {
               {activeRender ? (
                 <PreviewThemeProvider theme={theme}>{activeRender(rendererMode)}</PreviewThemeProvider>
               ) : (
-                <DemoRenderer Component={Component} rendererMode={rendererMode} theme={theme} />
+                <DemoRenderer Component={Component} lang={lang} rendererMode={rendererMode} theme={theme} />
               )}
             </PreviewControlStateContext.Provider>
           </AnimationModeProvider>

@@ -43,7 +43,7 @@ export default defineConfig(({ command, mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        // mathjax-full 仅经 @retikz/tex 引擎的动态 import() 触达——单独成块，让它按需懒加载（只在数学公式 demo 挂载时下载），
+        // mathjax-full 仅经 @retikz/tex 与含公式页面的 MDX 动态 import() 触达——单独成块，让它按需懒加载，
         // 不被打进每页都加载的主 chunk
         manualChunks: (id: string) => (id.includes('mathjax-full') ? 'mathjax' : undefined),
       },

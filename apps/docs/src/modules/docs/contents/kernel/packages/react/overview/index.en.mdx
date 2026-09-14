@@ -197,7 +197,7 @@ Changing `updateStrategy` between `auto` and `full` on a retained host disposes 
 
 The base package provides only a domain-neutral `VanillaCompileDriver` and opaque authoring sites. The default driver is run by Vanilla processing for an ordinary Core compile with no observers or readonly layers. Optional `@retikz/inspect/react` wrappers—`InspectLayout`, `InspectScope`, and `InspectPath`—interpret runtime selection and connect inspection observers to the same static or retained processing. Selection never enters `IRScene`, `IRScope`, or `IRPath`.
 
-A `VanillaCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. Static processing materializes the complete frame directly, while retained processing commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect/overview) for the complete setup.
+A `VanillaCompileDriver` may inject observers for the same compile, then resolve ordered readonly layers and extension diagnostics from the Core primary result and observer outputs. Static processing materializes the complete frame directly, while retained processing commits the primary figure and layers in one revision. The Inspect package wires into this general boundary; the base React package imports no Inspector definitions, palette, or selection logic. See [`@retikz/inspect`](/kernel/packages/inspect) for the complete setup.
 
 <SourceLinks
   sources={[

@@ -35,8 +35,8 @@ describe('Shiki 代码高亮', () => {
 
   it.each([
     ['dark', '#4FC1FF'],
-    ['light', '#0070C1'],
-  ] as const)('为 %s 模式应用 Plus 调色板', async (theme, pointColor) => {
+    ['light', '#986801'],
+  ] as const)('为 %s 模式应用站点指定的调色板', async (theme, pointColor) => {
     const lines = await tokenizeHighlightCode({
       code: 'const point: number = 1;',
       lang: 'typescript',

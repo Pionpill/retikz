@@ -1,0 +1,130 @@
+---
+title: 拓展观测
+description: 定义自定义 Inspector，读取图形的编译结果并生成端点、边界等只读辅助标记
+---
+
+需要为图形添加自定义辅助标记时，可以定义一个 Inspector。内置与自定义 Inspector 共用同一条执行流程，不会修改主图。
+
+## 定义一个 Inspector
+
+下面的示例为路径端点添加圆形标记：自定义 `inspect(subject, context)` 读取路径命令并返回 Core Node，同一份源码包含 Definition、注册与请求。
+
+<ComponentPreview files="inspect-custom" size="sm" caption="自定义 inspect 回调为路径的显式端点生成辅助标记。" />
+
+## Definition 机制
+
+通过 `InspectorDefinitionInput` 描述观察什么、接受哪些选项，以及如何生成辅助内容。`defineInspector()` 的公开类型保留作者输入态；它与 registry 都在注册边界补齐默认行为，补齐后的运行态仅由 Inspect 包内部消费。被观察对象由 Core owner 标识，即负责发布该类编译结果的能力；示例中的 `stroke` owner 发布路径的最终产物。
+
+| 接口                        | 作用                                                               |
+| --------------------------- | ------------------------------------------------------------------ |
+| `namespace` / `type`        | 组成 Inspector 的注册键，供请求定位                                |
+| `owner`                     | 指定被观察的 Core owner                                            |
+| `subjectSchema`             | 校验 owner 的最终产物，确定 `subject` 类型                         |
+| `mergeOptionsInput`         | 可选；合并原始选项，省略时由更具体的输入整体替换上级输入           |
+| `optionsSchema`             | 可选；校验入参并应用默认值与变换，省略时只接受空对象               |
+| `resolveOptions`            | 可选；将解析结果转为 `context.options`，省略时直接使用 schema 输出 |
+| `inspect(subject, context)` | 读取产物与上下文，返回 Core IR 或包装它的坐标片段                  |
+
+`owner` 与 `subjectSchema` 必须匹配 Core 实际发布的产物。`optionsSchema` 的原始输入和解析输出可分别由 `z.input` 与 `z.output` 派生；先合并原始配置，再解析和展开选项。
+
+示例没有自定义选项，因此省略了 `optionsSchema` 与 `resolveOptions`。只需要 schema 的默认值或变换时，也不必写恒等 resolver；需要不同的消费态时再提供 `resolveOptions`。直接向 registry 传入定义，同样会补齐这些默认行为。
+
+下图展示产物与选项如何汇入 `inspect()`。虚线框内的契约与回调由 Definition 提供，实际由 Inspect 驱动执行；两路输入表示数据依赖，不表示并行执行。
+
+<ComponentPreview files="inspector-definition-flow" hideCode size="lg" />
+
+回调生成的辅助内容仍交由 Core 隔离编译成 Scene，不另建渲染机制。
+
+## inspect 回调
+
+以下摘录回调签名及相关类型，省略源码注释：
+
+```ts
+inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
+```
+
+### 输入上下文
+
+`subject` 是经过 `subjectSchema` 校验的最终产物；`TResolvedOptions` 是 `resolveOptions` 的输出类型，省略 resolver 时就是 schema 的解析输出类型。`context` 提供当前被观测实例（occurrence）的选项、来源与外观信息。
+
+```ts
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
+  inspectorKey: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>;
+  transform: AffineMatrix;
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
+  options: TOptions;
+  appearance: InspectionAppearanceContext;
+  warn: (code: string, message: string) => void;
+}>;
+
+export type InspectionAppearanceContext = Readonly<{
+  colorScope: number;
+  scopeColor: CssColorValue;
+  semanticColors: CoreSemanticColors;
+}>;
+```
+
+| 参数 / 属性                   | 作用                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `subject`                     | 经过校验的 Core 最终产物；只读取实际提供的几何信息                              |
+| `context.inspectorKey`        | 当前 Inspector 的 `namespace` 与 `type`                                         |
+| `context.owner`               | 发布当前产物的 Core owner                                                       |
+| `context.occurrence`          | 当前被观测的最终实例                                                            |
+| `context.provenance`          | 产物的原始实例 `origin` 与最终实例 `final`                                      |
+| `context.transform`           | 从当前局部坐标转换到主 Scene 的仿射矩阵                                         |
+| `context.ancestors`           | 从外到内排列的 Scope / composite 容器链                                         |
+| `context.options`             | 已完成解析与展开的自定义选项                                                    |
+| `context.appearance`          | `colorScope` 为请求序号；`scopeColor` 为常规颜色；`semanticColors` 为主题语义色 |
+| `context.warn(code, message)` | 报告非致命警告，例如省略不可用的几何信息                                        |
+
+产物中的部分几何信息可能缺失，例如 Node 的轮廓或关键点可能为 `null`。只处理实际可用的信息，必要时通过 `context.warn()` 说明省略的内容。
+
+### 返回内容
+
+```ts
+export type InspectorCoordinateSpace = 'local' | 'scene';
+
+export type InspectorFragment = Readonly<{
+  type: 'fragment';
+  coordinateSpace: InspectorCoordinateSpace;
+  child: IRChild;
+}>;
+
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+```
+
+| 返回形式 / 属性                     | 作用                                            |
+| ----------------------------------- | ----------------------------------------------- |
+| 普通 `IRChild`                      | 直接返回辅助图元，默认使用当前实例的局部坐标    |
+| `InspectorFragment.type`            | 固定为 `'fragment'`，标识坐标片段包装           |
+| `InspectorFragment.coordinateSpace` | `local` 使用局部坐标；`scene` 使用主 Scene 坐标 |
+| `InspectorFragment.child`           | 待编译的普通 Core IR child                      |
+| 数组                                | 返回多个辅助内容，可混合普通 child 与显式片段   |
+
+通常直接返回 Core child 即可；需要为某项输出指定坐标空间时，再使用 `InspectorFragment`。`local` 片段由 Inspect 应用 `context.transform`，`scene` 片段不再应用该变换。
+
+## 推荐写法
+
+自定义 Inspector 建议沿用官方实现的辅助视觉语言，让多个观测同时开启时仍能辨认来源，而不抢占主图的视觉重点。以下是写法建议，不是编译器自动添加的样式。
+
+1. **同一次观测共用色板颜色。** 线条、点标记和标签统一使用 `context.appearance.scopeColor`，不要为每个 Inspector 写死同一种颜色或自行维护色板。驱动按观测请求分配当前主题的分类色，减少嵌套层级与多个观测之间的混淆；色板会循环，仍需结合线型和标签区分。警告等明确语义使用 `context.appearance.semanticColors` 中的对应颜色。
+
+2. **辅助线优先使用虚线或点线。** 控制柄、参考轴、包围框等使用 dashed / dotted 的视觉形式，通过 `style.dashPattern` 表达；同色的不同观测内容可以使用不同线型。实线留给需要连续表达的真实轮廓，例如当前内置 Clip 的裁剪轮廓，不必把所有线条机械地改成虚线。
+
+3. **尽量不遮挡主图。** 轮廓默认无填充、使用细线，关键点用小标记；只有表达占用区域、间距或警告范围时才增加填充，并用低透明度或纹理保留底图可读性。标签保持透明背景、简短且略微偏离标记，安排在辅助输出的后部，避免被辅助线覆盖。
+
+4. **按观测内容拆分开关。** 像 Node 的轮廓、关键点、正文盒，Path 的控制点、顶点等，按可独立理解的内容提供选项；标签单独由 `labels` 控制。不要把每个颜色、线宽都变成配置项；没有选项时直接省略 `optionsSchema`，无需转换时省略 `resolveOptions`。
+
+5. **明确辅助样式的继承边界。** 观测片段可以继承被观察位置的环境。需要稳定的辅助外观时，像内置 Inspector 一样，用普通 Scope 的 `defaults: { reset: true }` 隔离主图默认值，再显式设置必要样式，避免主图的填充、字体或路径默认配置改变标记含义；不要借此重建另一套主题或渲染机制。
+
+<SourceLinks
+  sources={[
+    { label: 'Inspector Definition 与回调类型源码', path: 'packages/kernel/inspect/src/contract/types.ts' },
+    { label: '内置标记、标签与样式隔离', path: 'packages/kernel/inspect/src/providers/geometry.ts' },
+    { label: 'Node 观测内容与线型', path: 'packages/kernel/inspect/src/providers/node.ts' },
+    { label: 'Layout 观测的区域填充与语义颜色', path: 'packages/library/layout/src/inspect/shared/output.ts' },
+  ]}
+/>

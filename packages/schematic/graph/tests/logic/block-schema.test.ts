@@ -1,9 +1,11 @@
+import type { IRNode } from '@retikz/core';
+
 import { createSurface } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';
 
-const textChild = (text: string) => ({ type: 'node' as const, position: [0, 0] as const, text });
+const textChild = (text: string): IRNode => ({ type: 'node', position: [0, 0], text });
 
 describe('Block-family Source schemas', () => {
   it('keeps an empty Block sparse while accepting the complete Core Scope surface', () => {

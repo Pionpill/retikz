@@ -1,8 +1,8 @@
 import type { InspectorContext } from '@retikz/inspect';
 
 import type { FlexLayoutArtifact } from '../../composites/flex-layout';
+import type { CanonicalFlexLayoutInspectOptions } from '../resolve/flex-layout';
 import type { LayoutInspectionChild, LayoutInspectionLineMark } from '../shared';
-import type { ResolvedFlexLayoutInspectOptions } from './types';
 
 import {
   inspectLayoutArtifactBase,
@@ -15,7 +15,7 @@ import {
 /** 把 Flex 布局产物转换为普通 Core 辅助子元素 */
 export const inspectFlexLayoutArtifact = (
   artifact: FlexLayoutArtifact,
-  context: InspectorContext<ResolvedFlexLayoutInspectOptions>,
+  context: InspectorContext<CanonicalFlexLayoutInspectOptions>,
 ): ReadonlyArray<LayoutInspectionChild> => {
   const alignmentGuideDimension = artifact.lines[0]?.mainAxis === 'y' ? 'x' : 'y';
   const base = inspectLayoutArtifactBase(

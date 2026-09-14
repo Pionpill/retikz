@@ -149,7 +149,9 @@ Frame 还接受 Core `ScopeProps` 的其余公开字段，包括级联 graphic s
 | `description?`     | `FrameDescriptionInput`     | —                                                       | JSON-safe 类 Node Description；没有 `type`、`position` 字段 |
 | `children`         | `Array<IRNode>`             | —                                                       | 非空直接 Core Node 内容区；其它 Frame 字段与上表相同        |
 
-`FrameHeaderDirection` 是公开闭合集合，包含 `Horizontal: 'horizontal'` 与 `Vertical: 'vertical'`。`FrameInput` 不接收 discriminator。`createFrame(input)` 应用 schema 默认值，并返回固定包含 `namespace: 'standard'` 与 `type: 'frame'` 的 `IRFrame`。
+`FrameHeaderDirection` 是公开闭合集合，包含 `Horizontal: 'horizontal'` 与 `Vertical: 'vertical'`。`FrameInput` 不接收 discriminator。`createFrame(input)` 保留省略字段，并返回固定包含 `namespace: 'standard'` 与 `type: 'frame'` 的 `IRFrame`。
+
+`FrameSchema.parse()` 校验外部配置并补齐静态默认值；其结果是已物化快照。编译期解析复用同一 schema 的默认值，再结合内容确定布局，不改写工厂输入。
 
 `FrameInput` 同样接受上述 Core `ScopeProps` 字段；它们作用于整个外层 Scope，`border.style` 与 `border.cornerRadius` 只作用于边框 Path。
 

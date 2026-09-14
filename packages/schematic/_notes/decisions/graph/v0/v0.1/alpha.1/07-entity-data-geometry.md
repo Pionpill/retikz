@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 决策日期：2026-08-22
-- 修订日期：2026-08-23
+- 修订日期：2026-09-09
 - 关联：[Graph alpha.1 roadmap](./roadmap.md) · [Graph Theme](./06-graph-entity-registry-theme.md) · [Graph context](./09-composable-graph-context.md)
 
 ## 背景与目标
@@ -30,12 +30,12 @@ role minimum size 是结构下限，Entity minimum size 是实例约束，两者
 ### role、kind 与 predicate
 
 - role definition 拥有说明、shape、padding，以及可选 boundary、cornerRadius 和 minimum size
-- kind definition 声明所属 role、稳定子类型和说明，不保存 appearance
+- kind definition 声明所属 role、稳定子类型和说明，不保存 appearance。kind 的注册身份是 `(role, kind)`，因此相同词面 kind 可以分别注册给多个 role
 - predicate definition 声明所属 role、可选 kinds、params schema 和说明，只校验并产出 Canonical params
 
-内置 Entity role 为 `participant`、`activity`、`event`、`state`、`gateway`、`resource` 与 `concept`。role schema 使用 `createOpenStringSchema(values)` 暴露内置提示，同时接受任意非空白自定义 key；是否注册只由 resolver 判断。当前 kind 与 predicate 没有内置词汇，继续使用普通非空白字符串 schema
+内置 Entity role 为 `participant`、`activity`、`event`、`state`、`gateway`、`resource` 与 `concept`。role schema 使用 `createOpenStringSchema(values)` 暴露内置提示，同时接受任意非空白自定义 key；是否注册只由 resolver 判断。Graph 永不维护 Entity kind 或 predicate 的内置词汇与 catalog：两者继续使用普通非空白字符串 schema，并且每个使用到的 key 都必须由应用、领域包或其它上层通过 provider assembly 注册
 
-Theme selector 可以匹配 role、kind、predicate name 与 Canonical params，但不能改变结构、identity、内容、位置或尺寸。内置与自定义 Definition 共用同一 registry、provider assembly 和 resolver
+Theme selector 可以匹配 role、kind、predicate name 与 Canonical params，但不能改变结构、identity、内容、位置或尺寸。Entity Theme selector 的 kind 继续按词面 key 匹配，因此一条语义外观规则可以覆盖多个 role 下同名 kind。内置与自定义 role、外部 kind 与外部 predicate 共用同一 registry、provider assembly 和 resolver
 
 ### Source 契约
 
@@ -56,7 +56,8 @@ type IRGraphEntity = Readonly<{
 ## 行为、失败语义与兼容性
 
 - Entity 与 Definition key 必须是非空字符串
-- 未注册或不匹配的 role、kind、predicate，以及 params 校验失败，均由 Entity resolver fail-loud
+- 未注册 role、当前 role 下未注册的 kind、未注册 predicate，以及 params 校验失败，均由 Entity resolver fail-loud
+- Entity kind 不提供内置 key、别名、fallback 或按 key 前缀推断；每个 key 都来自当前 provider assembly 的外部注册
 - lowering 时缺少 position 必须失败，语义 resolve 不生成默认坐标
 - 显式 shape、boundary、padding 或 cornerRadius 在 schema 边界拒绝；其它允许的 Node 字段沿用 Core 语义
 - Entity、predicate params、meta、text、label、animation 与 placement 必须 JSON-safe

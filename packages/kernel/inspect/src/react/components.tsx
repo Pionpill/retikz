@@ -1,7 +1,7 @@
-import type { LayoutProps, PathProps, ScopeProps } from '@retikz/react';
+import type { CoordinateProps, LayoutProps, NodeProps, PathProps, ScopeProps } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Layout, Path, Scope } from '@retikz/react';
+import { Coordinate, Layout, Node, Path, Scope } from '@retikz/react';
 import { useMemo } from 'react';
 
 import type { InspectionCompileResult, InspectionDiagnostic, InspectionSelection } from '../compile';
@@ -9,6 +9,30 @@ import type { InspectorRegistry } from '../providers';
 import type { InspectionVanillaAuthoringInput } from '../vanilla';
 
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '../vanilla';
+
+/** 只选择当前 Node 的可选 Inspector wrapper props */
+export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
+  /** 当前 Node 的单项或多项检查请求 */
+  request: Exclude<InspectionVanillaAuthoringInput, false>;
+};
+
+/** 复用基础 Node，仅附加运行时检查请求 */
+export const InspectNode: FC<InspectNodeProps> = props => {
+  const { request, ...nodeProps } = props;
+  return <Node {...nodeProps} authoring={createInspectionVanillaAuthoring(request)} />;
+};
+
+/** 只选择当前 Coordinate 的可选 Inspector wrapper props */
+export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
+  /** 当前 Coordinate 的单项或多项检查请求 */
+  request: Exclude<InspectionVanillaAuthoringInput, false>;
+};
+
+/** 复用基础 Coordinate，仅附加运行时检查请求 */
+export const InspectCoordinate: FC<InspectCoordinateProps> = props => {
+  const { request, ...coordinateProps } = props;
+  return <Coordinate {...coordinateProps} authoring={createInspectionVanillaAuthoring(request)} />;
+};
 
 /** 可选 Inspect Path wrapper props */
 export type InspectPathProps = Omit<PathProps, 'authoring'> &

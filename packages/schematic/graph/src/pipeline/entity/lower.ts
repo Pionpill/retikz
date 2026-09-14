@@ -34,6 +34,7 @@ const ENTITY_SEMANTIC_FIELDS = new Set<keyof IRGraphEntity>([
   'type',
   'role',
   'kind',
+  'group',
   'predicate',
   'status',
 ]);

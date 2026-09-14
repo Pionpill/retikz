@@ -1,4 +1,5 @@
 import { DEFAULT_RESOLVED_THEME } from '@retikz/core';
+import { defineEntityKind, defineRelationKind, RelationRole } from '@retikz/graph';
 import { describe, expect, it } from 'vitest';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
@@ -6,10 +7,11 @@ import { FlowDiagramSchema } from '../../src/flow';
 import { resolveFlowThemeStyleRegistry } from '../../src/flow/providers';
 import { resolveFlowDiagram } from '../../src/flow/resolve';
 
-const resolve = (source: unknown) =>
+const resolve = (source: unknown, graph?: Parameters<typeof resolveFlowDiagram>[1]['graph']) =>
   resolveFlowDiagram(FlowDiagramSchema.parse(source), {
     theme: DEFAULT_RESOLVED_THEME,
     flowThemeStyles: resolveFlowThemeStyleRegistry(),
+    ...(graph === undefined ? {} : { graph }),
   });
 
 const expectDiagramError = (
@@ -38,6 +40,84 @@ const singleEntityFlow = {
 } as const;
 
 describe('Flow Source resolve', () => {
+  it('projects root Graph rules after Flow defaults and item overrides', () => {
+    const graph = {
+      entityKinds: [
+        defineEntityKind({ kind: 'docs.logic.important', role: 'activity', description: 'Important logic content' }),
+      ],
+      relationKinds: [
+        defineRelationKind({ kind: 'docs.logic.data-flow', role: RelationRole.Flow, description: 'Data flow' }),
+      ],
+    };
+    const source = {
+      namespace: 'diagram',
+      type: 'flow',
+      graphRules: [
+        { type: 'entity', selector: { kind: 'docs.logic.important' }, style: { color: 'dodgerblue' } },
+        { type: 'relation', selector: { kind: 'docs.logic.data-flow' }, style: { color: 'darkorange' } },
+      ],
+      entities: [
+        { id: 'rule', text: 'Rule', role: 'activity', kind: 'docs.logic.important' },
+        {
+          id: 'explicit',
+          text: 'Explicit',
+          role: 'activity',
+          kind: 'docs.logic.important',
+          style: { color: 'green' },
+        },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['rule', 'explicit'],
+      relations: [
+        { source: 'rule', target: 'explicit', kind: 'docs.logic.data-flow', style: { color: 'green' } },
+        { source: 'explicit', target: 'rule', kind: 'docs.logic.data-flow' },
+      ],
+      flowDefaults: { entity: { style: { fill: 'lightgray' } }, relation: { style: { strokeWidth: 2 } } },
+    };
+
+    const resolved = resolve(source, graph);
+    const rule = resolved.elements[0];
+    const explicit = resolved.elements[1];
+
+    expect(rule).toMatchObject({ type: 'entity', graph: { style: { color: 'dodgerblue', fill: 'lightgray' } } });
+    expect(explicit).toMatchObject({ type: 'entity', graph: { style: { color: 'green', fill: 'lightgray' } } });
+    expect(resolved.relations[0]?.graph.style).toMatchObject({ color: 'green', strokeWidth: 2 });
+    expect(resolved.relations[1]?.graph.style).toMatchObject({ color: 'darkorange', strokeWidth: 2 });
+  });
+
+  it('projects shared Flow Entity and Relation groups through the Graph categorical color fallback', () => {
+    const resolved = resolve({
+      namespace: 'diagram',
+      type: 'flow',
+      entities: [
+        { id: 'first', text: 'First', group: 'forward' },
+        { id: 'second', text: 'Second', group: 'reverse' },
+        { id: 'third', text: 'Third' },
+      ],
+      groups: [],
+      layouts: [],
+      children: ['first', 'second', 'third'],
+      relations: [
+        { source: 'first', target: 'second', group: 'forward' },
+        { source: 'second', target: 'third', group: 'reverse' },
+        { source: 'third', target: 'first', group: 'forward' },
+        { source: 'first', target: 'third' },
+      ],
+    });
+    const palette = DEFAULT_RESOLVED_THEME.colors.categorical;
+
+    expect(
+      resolved.elements.map(element => (element.type === 'entity' ? element.graph.style?.color : undefined)),
+    ).toEqual([palette.at(0), palette.at(1), undefined]);
+    expect(resolved.relations.map(relation => relation.graph.style?.color)).toEqual([
+      palette.at(0),
+      palette.at(1),
+      palette.at(0),
+      undefined,
+    ]);
+  });
+
   it('rebuilds one recursive Canonical tree from owner children order and catalog paths', () => {
     const resolved = resolve({
       namespace: 'diagram',
@@ -81,7 +161,7 @@ describe('Flow Source resolve', () => {
         { id: 'first', text: 'First' },
       ],
       groups: [],
-      layouts: [{ id: 'layout', direction: 'right', children: ['first'] }],
+      layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['first'] }],
       children: ['layout', 'second'],
     };
     const reordered = {
@@ -138,7 +218,7 @@ describe('Flow Source resolve', () => {
         type: 'flow',
         entities: [{ id: 'duplicate', text: 'First' }],
         groups: [],
-        layouts: [{ id: 'duplicate', direction: 'right', children: ['duplicate'] }],
+        layouts: [{ kind: 'linear' as const, id: 'duplicate', direction: 'right', children: ['duplicate'] }],
         children: ['duplicate'],
       },
       RetikzDiagramErrorCode.FlowDuplicateId,
@@ -156,7 +236,7 @@ describe('Flow Source resolve', () => {
       name: 'unknown Group child',
       source: {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['missing'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['missing'] }],
         children: ['layout'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -179,7 +259,7 @@ describe('Flow Source resolve', () => {
       name: 'multiple parents',
       source: {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['entity'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['entity'] }],
         children: ['layout', 'entity'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -198,7 +278,7 @@ describe('Flow Source resolve', () => {
       name: 'self containment',
       source: {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['layout'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['layout'] }],
         children: ['entity'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -209,7 +289,7 @@ describe('Flow Source resolve', () => {
       source: {
         ...singleEntityFlow,
         groups: [{ id: 'b', children: ['a'] }],
-        layouts: [{ id: 'a', direction: 'right', children: ['b'] }],
+        layouts: [{ kind: 'linear' as const, id: 'a', direction: 'right', children: ['b'] }],
         children: ['entity'],
       },
       path: ['layouts', 0, 'children', 0],
@@ -239,7 +319,7 @@ describe('Flow Source resolve', () => {
     expectDiagramError(
       {
         ...singleEntityFlow,
-        layouts: [{ id: 'layout', direction: 'right', children: ['entity'] }],
+        layouts: [{ kind: 'linear' as const, id: 'layout', direction: 'right', children: ['entity'] }],
         children: ['layout'],
         relations: [
           {
