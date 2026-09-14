@@ -2,9 +2,8 @@ import { inferFieldType, isIsoDateString, resolveFieldTypes } from '@retikz/data
 import { DataFieldType } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
-import type { IRPlot } from '../../../src/schemas';
-
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 构造最小可解析 IRPlot（cartesian + 给定 marks / transform / model） */

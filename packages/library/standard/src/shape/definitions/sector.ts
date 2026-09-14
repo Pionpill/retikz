@@ -1,7 +1,4 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
-import type { Position } from '@retikz/math';
-import type { infer as ZodInfer } from 'zod';
-
 import {
   boundaryFromContour,
   boundsConnectionEnvelope,
@@ -18,6 +15,7 @@ import {
   worldToLocal,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import type { Position } from '@retikz/math';
 import {
   boundsOf,
   centerOfBounds,
@@ -26,6 +24,7 @@ import {
   halfAxesOfBounds,
   pointAtArcAngle,
 } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';

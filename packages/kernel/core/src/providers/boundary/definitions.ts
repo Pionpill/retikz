@@ -1,14 +1,12 @@
 import type { infer as ZodInfer } from 'zod';
-
 import { enum as zodEnum, number, strictObject } from 'zod';
 
 import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../../contract';
-import type { BuiltinShapeValue } from '../../schemas';
-import type { Rect } from '../../shared';
-
 import { defineBoundary } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { BuiltinShapeValue } from '../../schemas';
 import { BoundaryFit, BuiltinShape } from '../../schemas';
+import type { Rect } from '../../shared';
 import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape, rectangle } from '../shape';
 

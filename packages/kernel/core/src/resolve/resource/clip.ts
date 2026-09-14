@@ -1,13 +1,12 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { ClipDefinition, ClipShape } from '../../contract';
-import type { IRClip } from '../../schemas';
-import type { ClipResolution, ClipShapeResolution } from './types';
-
 import { providerDefinitionOf } from '../../providers/registry';
+import type { IRClip } from '../../schemas';
 import { createCompositeContractError } from '../diagnostics';
 import { parseProviderPayload } from '../provider-payload';
 import { withProviderOutputValidationBoundary } from '../provider-validation';
+import type { ClipResolution, ClipShapeResolution } from './types';
 
 /** Clip provider 解析所需的 registry 和 locator 上下文 */
 export type ClipResolveContext = Readonly<{

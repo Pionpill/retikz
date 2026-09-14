@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { COORDINATE_COMPOSITION_FACET_MULTILEVEL_CONTROL_IDS } from './coordinate-composition-facet-multilevel.controls';

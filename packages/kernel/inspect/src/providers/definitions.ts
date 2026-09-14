@@ -1,5 +1,4 @@
 import type { AnyInspectorDefinitionInput } from '../contract';
-
 import { CLIP_INSPECTOR } from './clip';
 import { COORDINATE_INSPECTOR } from './coordinate';
 import { NODE_INSPECTOR } from './node';

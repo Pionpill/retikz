@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { array, literal, number, strictObject, tuple } from 'zod';
 
 import type { ClipResource, ClipShape, GroupPrim, IRPaint, IRScene, ScenePrimitive, SceneResource } from '../../src';
-
 import { compileToScene, defineClip, PositionSchema } from '../../src';
 
 type TestPolygonClipShape = ClipShape & {

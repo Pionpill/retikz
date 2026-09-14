@@ -4,7 +4,7 @@
 
 ## 实现真源
 
-- [`presets/plot.ts`](../../../../../apps/docs/src/modules/docs/components/component-preview/theme/presets/plot.ts)：docs 参考 Vibrant Light / Dark 的稀疏 token definition，其余值来自 mode 默认 preset
+- [`../../../../../apps/docs/src/modules/docs/components/component-preview/theme/presets/plot.ts`](../../../../../apps/docs/src/modules/docs/components/component-preview/theme/presets/plot.ts)：docs 参考 Vibrant Light / Dark 的稀疏 token definition，其余值来自 mode 默认 preset
 - [`resolve.ts`](../../../plot/src/resolve/theme/resolve.ts)：preset、shared colors 与显式覆盖的级联
 - [`mapping.ts`](../../../plot/src/resolve/theme/mapping.ts)：canonical token 与原生 `plotTheme` 的双向映射
 

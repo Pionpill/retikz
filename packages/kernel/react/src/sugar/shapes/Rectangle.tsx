@@ -1,11 +1,10 @@
 import type { IRTarget } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { PathVisualProps } from './shape-helpers';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
+import type { PathVisualProps } from './shape-helpers';
 import { pickPathVisual, requireXY } from './shape-helpers';
 
 /** `<Rectangle>` 形态：四选一定两对角 */

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Monitor, Moon, Sun } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,9 +7,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib';
 
 import type { PreviewThemeStyleValue } from '../theme';
-import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
-
 import { PreviewThemeStyle } from '../theme';
+import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
 import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
 
 export type PreviewContextBarProps = {

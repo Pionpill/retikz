@@ -1,7 +1,6 @@
 import type { PlotLocatorOptions } from '@retikz/plot';
 
 import type { ChartLocatorOptions } from '../../_chart/contract';
-
 import { qualifyChartLocatorOptions } from '../../_chart/contract';
 import { ChartType } from '../constants';
 import { pointRecipeId } from '../shared/plot';

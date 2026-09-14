@@ -1,7 +1,6 @@
 import { PathCurve } from '@retikz/plot';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { stackArea } from './line-stack-area.data';

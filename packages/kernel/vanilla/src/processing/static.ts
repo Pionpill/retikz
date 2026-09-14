@@ -1,7 +1,5 @@
 import type { Scene } from '@retikz/core';
 
-import type { ProcessingOptions, ProcessingResult, ProcessingSource } from './types';
-
 import { createEmptyInputRuntimeMetaSnapshot } from '../normalize';
 import {
   commitVanillaCompileOutput,
@@ -10,6 +8,7 @@ import {
   defaultVanillaCompileDriver,
 } from '../runtime/compile-driver';
 import { prepareProcessingInput } from './prepare';
+import type { ProcessingOptions, ProcessingResult, ProcessingSource } from './types';
 
 const EMPTY_ARTIFACTS = Object.freeze([]);
 const EMPTY_LAYERS = Object.freeze([]);

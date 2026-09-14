@@ -1,8 +1,7 @@
 import type { IRChild, IRScope } from '@retikz/core';
 import type { IRFlexLayoutItem } from '@retikz/layout';
-import type { IRSurface } from '@retikz/standard';
-
 import { createFlexLayout, FlexLayoutDirection, LayoutAlignment, LayoutOverflow } from '@retikz/layout';
+import type { IRSurface } from '@retikz/standard';
 import { createSurface, STANDARD_NAMESPACE, SURFACE_TYPE } from '@retikz/standard';
 
 import type { CanonicalBlock } from '../../resolve';

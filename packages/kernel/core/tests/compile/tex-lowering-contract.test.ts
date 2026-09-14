@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GroupPrim, PathPrim } from '../../src/contract';
-
 import { fallbackMeasurer, layoutInlineLine, snapshotLoweredTex } from '../../src/compile/text';
+import type { GroupPrim, PathPrim } from '../../src/contract';
 
 describe('[tex-lowering] multi-path contract', () => {
   it('按 paint order 输出多条路径并解析宿主颜色与透明度', () => {

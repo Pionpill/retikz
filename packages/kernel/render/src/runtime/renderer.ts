@@ -2,10 +2,9 @@ import type { ScenePatch } from '@retikz/core';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
+import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 import type { RenderRuntimeConfig } from './config';
 import type { RenderFrameSnapshot } from './frame';
-
-import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
 
 /** Retained renderer 增量能力等级 */
 export const RetainedRendererCapability = {

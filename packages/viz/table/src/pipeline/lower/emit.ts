@@ -1,14 +1,12 @@
 import type { IRNode, IRPath } from '@retikz/core';
+import { PaintValueSchema } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
-import { PaintValueSchema } from '@retikz/core';
-
+import { TableBorderPathMetaSchema } from '../../contract';
 import type { IRTableCellBackground } from '../../schemas';
 import type { DeepReadonly } from '../../shared';
 import type { TableBorderEdge } from '../layout';
 import type { TableLayout } from '../layout';
-
-import { TableBorderPathMetaSchema } from '../../contract';
 import { tableBorderPathMetaOf } from './meta';
 
 /** 让 Table allocation bounds 参与 Core Scene AABB */

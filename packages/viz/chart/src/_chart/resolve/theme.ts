@@ -1,7 +1,6 @@
 import type { ResolvedTheme, ThemeModeValue } from '@retikz/core';
-import type { IRPlotDefaults } from '@retikz/plot';
-
 import { ThemeMode } from '@retikz/core';
+import type { IRPlotDefaults } from '@retikz/plot';
 import { mergePlotDefaults } from '@retikz/plot';
 
 import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';

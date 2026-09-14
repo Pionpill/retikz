@@ -1,15 +1,14 @@
 import { point, pointAtArcAngle, pointAtEllipseArcAngle } from '@retikz/math';
 
 import type { ArrowEmitContext, MarkerFill, MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '../../../contract';
-import type { ArrowMarkResolution } from '../../../resolve';
-import type { IRPosition } from '../../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { ArrowMarkResolution } from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
+import type { IRPosition } from '../../../schemas';
 import { validateMarkerPrimitives } from '../../resource';
 import { arcCommandPointAt, trimArcEnd, trimArcStart } from './arc-shrink';
 

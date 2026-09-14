@@ -1,11 +1,9 @@
 import type { JsonObject } from '@retikz/foundation';
-
 import { formatDefaultLocale } from 'd3-format';
 import { describe, expect, it } from 'vitest';
 import { strictObject, string } from 'zod';
 
 import type { SemanticTableModel } from '../../src';
-
 import {
   cellFormatterDefinitionOf,
   defineCellFormatter,

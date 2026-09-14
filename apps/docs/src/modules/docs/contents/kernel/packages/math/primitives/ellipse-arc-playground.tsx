@@ -1,8 +1,7 @@
 import type { Ellipse, Position } from '@retikz/math';
-import type { FC } from 'react';
-
 import { boundsOf, boundsToRect, centerOfBounds, collectArcBoundingCandidates, ellipse } from '@retikz/math';
 import { Arc, Circle, Draw, Ellipse as EllipseShape, Layout, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

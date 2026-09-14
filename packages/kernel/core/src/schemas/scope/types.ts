@@ -3,12 +3,11 @@ import type { infer as ZodInfer } from 'zod';
 
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
+import type { IRNode } from '../node';
+import type { IRPathBase } from '../path';
 import type { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
 import type { ScopeDefaultsSchema, ScopePlacementSchema, ScopePlacementTargetSchema, ScopePropsSchema } from './schema';
-
-import { type IRNode } from '../node';
-import { type IRPathBase } from '../path';
 
 /** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
 export type IRNodeDefault = ZodInfer<typeof NodeDefaultSchema>;

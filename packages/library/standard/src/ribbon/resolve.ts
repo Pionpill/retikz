@@ -1,7 +1,7 @@
 import type { JsonObject } from '@retikz/foundation';
-
 import { JsonObjectSchema } from '@retikz/foundation';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
 import type { RibbonWidthProfileDefinition } from './profile-types';
 import type {
   CanonicalRibbonEndpoint,
@@ -11,8 +11,6 @@ import type {
   IRRibbonPathOptions,
   IRRibbonWidth,
 } from './types';
-
-import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
 
 /** Ribbon 宽度在 compile 阶段绑定的 profile 与参数 */
 export type RibbonWidthResolution = Readonly<{

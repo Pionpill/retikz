@@ -1,11 +1,8 @@
 import type { ComponentType } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { previewControlContract as basicContract } from '@/modules/docs/contents/viz/plot/mark/path/line-basic.controls';
@@ -18,6 +15,7 @@ import { previewControlContract as interruptionContract } from '@/modules/docs/c
 import InterruptionDemo from '@/modules/docs/contents/viz/plot/mark/path/line-interruption.demo';
 import { previewControlContract as seriesContract } from '@/modules/docs/contents/viz/plot/mark/path/line-series.controls';
 import SeriesDemo from '@/modules/docs/contents/viz/plot/mark/path/line-series.demo';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type CoordinateScenario = {
   name: string;

@@ -3,10 +3,9 @@ import { isRetikzError } from '@retikz/foundation';
 import { createRuntimeIdentity } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 
+import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import type { HydrationHandlers, HydrationTarget } from '../../src/hydration';
 import type { HydrationController } from '../../src/hydration';
-
-import { RetikzRenderError, RetikzRenderErrorCode } from '../../src/error';
 import { createHydrationController, locateSvg } from '../../src/hydration';
 
 /**

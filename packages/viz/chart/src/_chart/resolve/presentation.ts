@@ -1,8 +1,5 @@
 import type { IRChild, IRNode } from '@retikz/core';
 import type { FlexLayoutItemInput, IRFlexLayout } from '@retikz/layout';
-import type { IRPlot } from '@retikz/plot';
-import type { IRSurface } from '@retikz/standard';
-
 import {
   createFlexLayout,
   FlexLayoutDirection,
@@ -10,12 +7,13 @@ import {
   LayoutDistribution,
   LayoutItemKind,
 } from '@retikz/layout';
+import type { IRPlot } from '@retikz/plot';
+import type { IRSurface } from '@retikz/standard';
 import { createSurface } from '@retikz/standard';
 
+import { ChartPresentationSlot } from '../constants';
 import type { IRChartDefaults, IRChartPresentation, IRChartSource } from '../schemas';
 import type { ChartPresentationResolution, EffectiveChartLayout } from './types';
-
-import { ChartPresentationSlot } from '../constants';
 
 const DEFAULT_CARTESIAN_CHART_LAYOUT: EffectiveChartLayout = { width: 800, height: 500 };
 const DEFAULT_POLAR_CHART_LAYOUT: EffectiveChartLayout = { width: 400, height: 500 };

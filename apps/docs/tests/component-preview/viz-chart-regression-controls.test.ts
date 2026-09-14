@@ -1,17 +1,15 @@
-import type { ReactNode } from 'react';
-
 import { ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import { RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
+import type { ReactNode } from 'react';
 import { Children, isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import type {
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewSourceConfig,
 } from '../../src/modules/docs/preview';
-
-import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 
 type IrisRegressionDatum = Readonly<{
   sepalLengthCm: number;

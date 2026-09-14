@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Data 来源追溯的行级元数据与运行时事件两类产物 */
 const Demo: FC = () => (

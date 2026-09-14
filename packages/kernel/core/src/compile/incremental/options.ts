@@ -1,9 +1,8 @@
 import { ZodType } from 'zod';
 
 import type { AnyCompositeDefinition } from '../../contract';
-import type { CoreProgramOptions } from './public';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { CoreProgramOptions } from './public';
 
 /** 复制 Program 配置中的 records/arrays，保留 callback 与 schema identity */
 const copyConfigValue = <T>(value: T, ancestors: ReadonlySet<object>): T => {

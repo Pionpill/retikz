@@ -1,12 +1,10 @@
 import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
-
 import { createConnectedScatterChartProviderContribution } from '@retikz/chart/point/connected-scatter';
 
 import type { ChartAuthoringResult } from '../../shared';
-import type { CreateConnectedScatterChartInput } from './types';
-
 import { createPointChart, typedChartPartsOf } from '../shared';
 import { normalizeConnectedScatterChart } from './normalize';
+import type { CreateConnectedScatterChartInput } from './types';
 
 /** 创建 Connected Scatter Chart */
 export const createConnectedScatterChart = (

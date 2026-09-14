@@ -1,5 +1,4 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
-
 import { FlexLayoutProvider } from '@retikz/layout';
 import { SurfaceProvider } from '@retikz/standard';
 

@@ -1,6 +1,5 @@
-import type { ComponentType, FC, SVGProps } from 'react';
-
 import { Bot, Plus } from 'lucide-react';
+import type { ComponentType, FC, SVGProps } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,9 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib';
 
-import type { ProviderId } from '../providers';
-
 import { MODEL_CHOICES, PROVIDER_LABEL } from '../constants';
+import type { ProviderId } from '../providers';
 import { isBuiltInProviderId } from '../providers';
 import { PROVIDER_IDS } from '../providers';
 import { useAiChatStore } from '../useAiChatStore';

@@ -1,11 +1,9 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const opts: LowerPlotsOptions = { width: 480, height: 300 };
@@ -159,7 +157,7 @@ describe('channel core coverage (contract)', () => {
     expect(nodes[0].style?.fillOpacity).toBeCloseTo(0.2, 6);
     expect(nodes[1].style?.fillOpacity).toBeCloseTo(1, 6);
     expect(
-      (firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).defaults?.node as IRNode).style?.opacity,
+      (firstLayer(spec, { d: [{ cat: 'A', value: 1, weight: 0, alpha: 0 }] }).defaults!.node as IRNode).style?.opacity,
     ).toBe(0.9);
   });
 

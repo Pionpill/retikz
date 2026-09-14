@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { PathPrim, RectPrim, ScenePrimitive } from '../../src/contract';
 import type { IRPaint, IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 import { flattenPrims } from '../helpers/flatten';
 

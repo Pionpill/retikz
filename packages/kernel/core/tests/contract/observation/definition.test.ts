@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileObserverDefinition } from '../../../src';
-
 import * as core from '../../../src';
 
 type ObserverFactory = (definition: CompileObserverDefinition) => CompileObserverDefinition;

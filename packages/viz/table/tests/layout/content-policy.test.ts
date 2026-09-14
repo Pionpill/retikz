@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ComputeTableCellContentPlacementInput } from '../../src/pipeline/layout';
-
 import { computeTableCellContentPlacement, computeTableCellFitScale } from '../../src/pipeline/layout';
 
 describe('Table Cell content policy', () => {

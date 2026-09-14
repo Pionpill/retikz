@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../src/resolve';
 import type { PositionReferenceView, PositionTargetResolveContext } from '../../src/resolve/position';
-import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
-
-import { BUILTIN_SHAPES } from '../../src/providers/shape';
 import { resolvePosition, resolvePositionTarget, resolveTransformTranslation } from '../../src/resolve/position';
+import type { IRNodeTarget, IRPosition, IRTransform } from '../../src/schemas';
 
 const rectangleBoundary: BoundaryReferenceResolution = {
   name: 'rectangle',

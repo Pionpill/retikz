@@ -1,8 +1,7 @@
-import type { GridAutoFlowValue, GridOverlapValue, IRGridPlacement } from './types';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
 import { resolveGridPlacement } from '../../resolve/grid-layout';
 import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS, GridAutoFlow, GridOverlap } from './constants';
+import type { GridAutoFlowValue, GridOverlapValue, IRGridPlacement } from './types';
 
 /** Grid placement solver 接受的 authored item 摘要 */
 export type GridPlacementItem = Readonly<{

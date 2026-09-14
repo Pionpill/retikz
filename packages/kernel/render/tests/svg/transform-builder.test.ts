@@ -1,5 +1,4 @@
 import type { Transform } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { buildTransform } from '../../src/svg';

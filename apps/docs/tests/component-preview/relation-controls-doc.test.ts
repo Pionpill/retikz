@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -10,7 +9,6 @@ import type {
   PreviewTableControlField,
   PreviewTableRows,
 } from '../../src/modules/docs/components/component-preview';
-
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import {

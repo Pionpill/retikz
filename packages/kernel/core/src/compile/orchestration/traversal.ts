@@ -1,6 +1,5 @@
 import type { JsonValue } from '@retikz/foundation';
 import type { BoundsRect } from '@retikz/math';
-
 import { boundsToRect } from '@retikz/math';
 
 import type {
@@ -12,7 +11,6 @@ import type {
   CompositeCompileScopeProps,
   CompositeReplay,
   CompositeReplayWrapper,
-  EmitStroke,
   EmitStrokeOwnerOutputOptions,
   GroupPrim,
   LayoutChildResult,
@@ -28,43 +26,6 @@ import type {
   SpatialHandleOwner,
   Transform,
 } from '../../contract';
-import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
-import type { PositionTargetResolveContext } from '../../resolve/position';
-import type {
-  IRChild,
-  IRPathBase,
-  IRPosition,
-  IRScopePlacementTarget,
-  IRScopeSelfPoint,
-  IRStep,
-  IRTarget,
-  IRTransform,
-} from '../../schemas';
-import type { NodeLayout } from '../node';
-import type { CompositeCompileArtifact } from '../types';
-import type { CompileWarningCodeValue, CompileWarningInput } from '../warning';
-import type { CompileContext } from './context';
-import type { InternalScenePrimitive } from './primitive';
-import type {
-  CompositeCompileOwner,
-  CompositeReplayMaterializeContext,
-  CompositeReplayTransaction,
-  CompositeRuntimeOutputChild,
-  CoordinateChild,
-  EmitScopeGroupContext,
-  NodeChild,
-  PathChild,
-  PendingPathEmission,
-  RuntimeSemanticOwner,
-  ScopeChild,
-  ScopeLayoutPlaceholder,
-  ScopeLayoutPlaceholderContext,
-  TraversalCompileOptions,
-  TraversalFrame,
-  TraversalResult,
-  TraversalRuntime,
-} from './types';
-
 import {
   ClipOwnerOutputSchema,
   CompileExpansionKind,
@@ -75,6 +36,7 @@ import {
   ScopeOwnerOutputSchema,
 } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { BoundaryReferenceResolver, PathResolution, PathTargetResolver, TargetResolution } from '../../resolve';
 import {
   bindComposite,
   createStyleResolveFrame,
@@ -93,8 +55,19 @@ import {
   safeErrorMessage,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
 import { resolveClip as resolveClipValue } from '../../resolve/resource';
+import type {
+  IRChild,
+  IRPathBase,
+  IRPosition,
+  IRScopePlacementTarget,
+  IRScopeSelfPoint,
+  IRStep,
+  IRTarget,
+  IRTransform,
+} from '../../schemas';
 import { ScopeBoundingShape } from '../../schemas';
 import { Anchor } from '../../shared';
 import { rect as rectOps } from '../../shared/geometry';
@@ -102,6 +75,7 @@ import { cloneAndFreezeJson } from '../../shared/json';
 import { formatCompileOccurrence } from '../artifact';
 import { CompileWarningCode } from '../constants';
 import { NamespaceStack } from '../namespace';
+import type { NodeLayout } from '../node';
 import {
   alignmentGuidesOfNode,
   computeCompiledNodeLayout,
@@ -133,6 +107,8 @@ import {
 } from '../scene-primitive';
 import { collectScopeCornerPoints, computeScopeBoundingBox, lowerScopeTransforms } from '../scope';
 import { applyTransformChain, inverseTransformChain, projectLayoutToGlobal } from '../transform';
+import type { CompositeCompileArtifact } from '../types';
+import type { CompileWarningCodeValue, CompileWarningInput } from '../warning';
 import { cloneAlignmentGuides, resolveStructuralAlignmentGuides, transformAlignmentGuides } from './alignment-guide';
 import { filterAnimations } from './animation';
 import { freezeCompileArtifact, freezeOccurrence, orderCompileArtifacts } from './artifact';
@@ -144,6 +120,7 @@ import {
   snapshotCompositeOutputChild,
   validateExpandCompositeOutput,
 } from './composite-output';
+import type { CompileContext } from './context';
 import {
   compileWarningOccurrenceOf,
   createDuplicateWarning,
@@ -154,6 +131,7 @@ import {
 import { cloneLayoutProposal, resolveLayoutSlotSize } from './layout-proposal';
 import { bindPathTarget, pathTargetViewOf, targetKeyOf } from './path-target';
 import { createPositionResolveContext } from './position-context';
+import type { InternalScenePrimitive } from './primitive';
 import {
   collectPlaceholderLocators,
   makePathPlaceholder,
@@ -163,6 +141,25 @@ import {
 } from './primitive';
 import { createRuntimeTopologyTracker } from './runtime-topology';
 import { replayPendingSpatialHandle } from './spatial-handle';
+import type {
+  CompositeCompileOwner,
+  CompositeReplayMaterializeContext,
+  CompositeReplayTransaction,
+  CompositeRuntimeOutputChild,
+  CoordinateChild,
+  EmitScopeGroupContext,
+  NodeChild,
+  PathChild,
+  PendingPathEmission,
+  RuntimeSemanticOwner,
+  ScopeChild,
+  ScopeLayoutPlaceholder,
+  ScopeLayoutPlaceholderContext,
+  TraversalCompileOptions,
+  TraversalFrame,
+  TraversalResult,
+  TraversalRuntime,
+} from './types';
 import { optionalVisualBoundsOfPrimitives, visualBoundsOfPrimitives } from './visual-bounds';
 
 /** 只保留会改变 Scope 样式级联结果的 frame，避免空 Scope frame 触发 replay 重编译 */
@@ -310,10 +307,8 @@ export const compileChildrenToPrimitives = (
       if (!Array.isArray(rawBoundsPoints)) {
         throw createCompositeContractError(`Path kind '${kind}' must return boundsPoints as an array.`);
       }
-      const boundsPoints = Array.from(
-        rawBoundsPoints,
-        (point, index): IRPosition =>
-          snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
+      const boundsPoints = Array.from(rawBoundsPoints, (point, index): IRPosition =>
+        snapshotProviderPosition(`Path kind '${kind}' bounds point at index ${index}`, point),
       );
       return {
         result: { primitives, boundsPoints },
@@ -455,7 +450,7 @@ export const compileChildrenToPrimitives = (
             round: runtime.context.round,
             irPath,
           });
-    const emitStroke = ((nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
+    const emitStroke = (nextPath?: IRPathBase, request?: EmitStrokeOwnerOutputOptions) => {
       const source = nextPath ?? path;
       const emittedResolution = resolveStrokePathProviders(resolutionOf(source), {
         mode: pendingPath.theme.mode,
@@ -485,7 +480,7 @@ export const compileChildrenToPrimitives = (
         },
       });
       return emitted;
-    }) as EmitStroke;
+    };
     const materializePath = (input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => {
       const pathWithoutKindOptions = { ...path };
       delete pathWithoutKindOptions.kindOptions;

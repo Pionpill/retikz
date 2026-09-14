@@ -1,12 +1,10 @@
 import type { FC } from 'react';
-
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
 
-import type { DocNavigationAreaId, I18nKey } from '@/modules/docs/data';
-
 import { NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib';
+import type { DocNavigationAreaId, I18nKey } from '@/modules/docs/data';
 import { getDocPackageVersion, getNavigationSectionsByArea } from '@/modules/docs/data';
 import { buildDocPath } from '@/modules/docs/layout';
 

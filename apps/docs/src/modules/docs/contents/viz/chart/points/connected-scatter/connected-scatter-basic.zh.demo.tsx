@@ -1,11 +1,10 @@
-import type { FC } from 'react';
-
 import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
 import {
   ConnectedScatterChart,
   ConnectedScatterEncodings,
   ConnectedScatterProperties,
 } from '@retikz/chart-react/point';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

@@ -9,12 +9,20 @@ import type {
   IRStepLabel,
   IRTarget,
 } from '@retikz/core';
+import { FoldStepVia } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
+import { resolveFieldPath } from '@retikz/data';
 import type { IRRibbonPathOptions } from '@retikz/standard/ribbon';
 
-import { FoldStepVia } from '@retikz/core';
-import { resolveFieldPath } from '@retikz/data';
-
+import type {
+  CoordinateFrame,
+  FieldCollector,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
+  PolarCoordinateFrame,
+} from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type {
   IRPlotRelationEndpointGlyph,
   IRPlotRelationMark,
@@ -26,18 +34,6 @@ import type {
   PolarInterpolationValue,
   RelationOrthogonalLabelStepValue,
 } from '../../../schemas';
-import type { PolarVertex } from '../../coordinate';
-import type { MarkPaint } from '../shared';
-
-import {
-  type CoordinateFrame,
-  type FieldCollector,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
-  type PolarCoordinateFrame,
-} from '../../../contract';
-import { RetikzPlotError } from '../../../error';
 import {
   MarkValueKind,
   PolarInterpolation,
@@ -47,7 +43,9 @@ import {
   RelationRouteStepKind,
   RelationRoutingKind,
 } from '../../../schemas';
+import type { PolarVertex } from '../../coordinate';
 import { densifyPolarSegments, isPolarCoordinateFrame, toPolarVertex } from '../../coordinate';
+import type { MarkPaint } from '../shared';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,
@@ -426,18 +424,16 @@ const bendRoute = (
   targets: Array<IRTarget>,
 ): Array<IRStep> => [
   { type: 'step', kind: RelationRouteStepKind.Move, to: targets[0] },
-  ...targets.slice(1).map(
-    (to): IRStep => ({
-      type: 'step',
-      kind: RelationRouteStepKind.Bend,
-      to,
-      ...(routing.bendDirection !== undefined ? { bendDirection: routing.bendDirection } : {}),
-      ...(routing.bendAngle !== undefined ? { bendAngle: routing.bendAngle } : {}),
-      ...(routing.outAngle !== undefined ? { outAngle: routing.outAngle } : {}),
-      ...(routing.inAngle !== undefined ? { inAngle: routing.inAngle } : {}),
-      ...(routing.looseness !== undefined ? { looseness: routing.looseness } : {}),
-    }),
-  ),
+  ...targets.slice(1).map((to): IRStep => ({
+    type: 'step',
+    kind: RelationRouteStepKind.Bend,
+    to,
+    ...(routing.bendDirection !== undefined ? { bendDirection: routing.bendDirection } : {}),
+    ...(routing.bendAngle !== undefined ? { bendAngle: routing.bendAngle } : {}),
+    ...(routing.outAngle !== undefined ? { outAngle: routing.outAngle } : {}),
+    ...(routing.inAngle !== undefined ? { inAngle: routing.inAngle } : {}),
+    ...(routing.looseness !== undefined ? { looseness: routing.looseness } : {}),
+  })),
 ];
 
 const positionOf = (target: IRTarget): [number, number] | undefined =>

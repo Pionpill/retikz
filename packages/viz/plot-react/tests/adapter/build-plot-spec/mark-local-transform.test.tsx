@@ -1,5 +1,4 @@
 import type { IRPlotTransform } from '@retikz/plot';
-
 import { describe, expect, it } from 'vitest';
 
 import { buildPlotIR } from '../../../src/adapter';

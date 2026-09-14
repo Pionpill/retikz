@@ -1,5 +1,10 @@
 import type { ArrowDefinition } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import { providerDefinitionOf } from '../../providers/registry';
 import type { IRArrowMark, IRPathBase } from '../../schemas';
+import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
+import { createCompositeContractError } from '../diagnostics';
+import { parseProviderPayload } from '../provider-payload';
 import type {
   ArrowMarkGeometry,
   ArrowMarkResolution,
@@ -13,12 +18,6 @@ import type {
   ResolvedPathSource,
   StrokePathResolution,
 } from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
-import { providerDefinitionOf } from '../../providers/registry';
-import { ARROW_MARKER_DEFAULT_SIZE, ARROW_MARKER_HOLLOW_DEFAULT_LINE_WIDTH, DEFAULT_ARROW_SHAPE } from '../../schemas';
-import { createCompositeContractError } from '../diagnostics';
-import { parseProviderPayload } from '../provider-payload';
 
 const ARROW_GEOMETRY_BASE_SIZE = 10;
 /** 主路径进入 marker 接触边的描边宽度比例 */

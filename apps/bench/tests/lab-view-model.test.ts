@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { LabPolicyResult } from '../src/playground/modules/kernel';
-
 import { LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from '../src/playground/modules/kernel';
 import { createComparisonChartRows, createLabSummary, getLabRunSessionPayload } from '../src/playground/report';
 

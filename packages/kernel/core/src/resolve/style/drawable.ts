@@ -5,7 +5,6 @@ import type {
   ShadowPresetValue,
   StrokeDashPattern,
 } from '../../schemas';
-
 import { SHADOW_PRESETS } from '../../schemas';
 
 /** 虚线预设 */

@@ -7,11 +7,10 @@ import type {
   IRPlotLegendGuide,
   IRPlotThemeResolution,
 } from '../../schemas';
-import type { EffectiveLegendGuideTokens, EffectivePlotGuideTheme, EffectivePlotPalette } from './types';
-
 import { LegendSymbolFit } from '../../schemas';
 import { mergeGuideTextStyle } from './mapping';
 import { resolvePlotAxisDefaults } from './token-rule';
+import type { EffectiveLegendGuideTokens, EffectivePlotGuideTheme, EffectivePlotPalette } from './types';
 
 type GuidePathStyle = Partial<
   Pick<

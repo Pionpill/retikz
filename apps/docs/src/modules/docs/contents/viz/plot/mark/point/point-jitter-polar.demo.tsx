@@ -1,15 +1,14 @@
-import type { FC } from 'react';
-
 import { Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { polarJitterPoints } from './point-jitter.data';
 import {
   POINT_JITTER_POLAR_CONTROL_IDS,
   polarJitterOperationOf,
   previewControlContract,
 } from './point-jitter-polar.controls';
+import { polarJitterPoints } from './point-jitter.data';
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   const continuous = values[POINT_JITTER_POLAR_CONTROL_IDS.scale] === 'continuous';

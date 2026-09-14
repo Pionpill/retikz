@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** relate grouping, dual endpoint selection, projection, and relation-row output */
 const Demo: FC = () => (

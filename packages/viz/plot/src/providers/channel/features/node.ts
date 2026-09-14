@@ -1,7 +1,4 @@
 import type { IRAxisScale, IRBoundary, IRBoxSize, IRBoxSpacing, IRFont, IRShapeValue } from '@retikz/core';
-import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
-import type { JsonValue } from '@retikz/foundation';
-
 import {
   AxisScaleSchema,
   BoundarySchema,
@@ -11,8 +8,10 @@ import {
   FontSchema,
   ShapeRefSchema,
 } from '@retikz/core';
+import type { DataFieldTypeMap, ExternalRow } from '@retikz/data';
 import { inferCategoryDomain, inferFieldType, resolveFieldPath } from '@retikz/data';
 import { DataFieldType } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 import { JsonValueSchema } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
@@ -22,6 +21,8 @@ import type {
   NodeChannelDefinition,
   NodeChannelDefinitionResolveContext,
 } from '../../../contract';
+import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type {
   IRPlot,
   IRPlotLinearScale,
@@ -29,9 +30,6 @@ import type {
   IRPlotPointNumberStyle,
   IRPlotSqrtScale,
 } from '../../../schemas';
-
-import { defineNodeChannel, isBuiltinScaleOperation } from '../../../contract';
-import { RetikzPlotError } from '../../../error';
 import { MarkValueKind, PlotScale } from '../../../schemas';
 import { resolveLinearScale, resolveSqrtScale } from '../../scale';
 import { PLOT_SHAPE_PALETTE } from '../../theme';

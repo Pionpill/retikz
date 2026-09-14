@@ -1,11 +1,10 @@
 import type { ChartInput } from '@retikz/chart-vanilla';
-import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
-import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
-import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
-
 import { ChartInputEmbedAdapter } from '@retikz/chart-vanilla';
+import type { CreateBubbleChartInput } from '@retikz/chart-vanilla/point/bubble';
 import { createBubbleChart } from '@retikz/chart-vanilla/point/bubble';
+import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
 import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
+import type { CreateScatterChartInput } from '@retikz/chart-vanilla/point/scatter';
 import { createScatterChart } from '@retikz/chart-vanilla/point/scatter';
 import { PointMark } from '@retikz/plot-react';
 import { describe, expect, it } from 'vitest';

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 箭头端点解析、定义物化与路径收缩流程图 */
 const Demo: FC = () => (

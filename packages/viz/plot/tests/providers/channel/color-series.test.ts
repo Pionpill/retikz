@@ -1,12 +1,10 @@
 import type { IRNode, IRPath, IRScope } from '@retikz/core';
-
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 const cartOpts: LowerPlotsOptions = { width: 480, height: 300 };

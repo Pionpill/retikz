@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Coordinate, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 import { Fragment } from 'react';
 
 import type { Lang } from '@/i18n';

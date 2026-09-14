@@ -1,6 +1,5 @@
 import type { Vector2 } from '@retikz/math';
 import type { ZodType } from 'zod';
-
 import { number, tuple } from 'zod';
 
 export const Vector2Schema: ZodType<Vector2> = tuple([number(), number()]).describe(

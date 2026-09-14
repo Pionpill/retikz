@@ -1,8 +1,7 @@
-import type { FC } from 'react';
-
 import { Circle, Coordinate, Draw, Layout, Node, Sector } from '@retikz/react';
 import { Grid } from '@retikz/standard-react';
 import { useLowerTex } from '@retikz/tex/react';
+import type { FC } from 'react';
 import { Fragment } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/components/component-preview';

@@ -35,4 +35,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 用对应图元直接比较 band 格宽与 point 点位 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,9 +1,9 @@
 import type { IRDataModel } from '@retikz/data';
-import type { IRPlotMark, IRPlotScale, IRPlotTransform } from '@retikz/plot';
-
 import { DataFieldType } from '@retikz/data';
+import type { IRPlotMark, IRPlotScale, IRPlotTransform } from '@retikz/plot';
 import { PlotScale } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
 import type {
   InputPlotCoordinate,
   InputPlotPolar2DCoordinate,
@@ -11,8 +11,6 @@ import type {
   NormalizationState,
 } from './contracts';
 import type { InputPlotPositionScaleType, InputPlotScale, InputPlotScaleDimension } from './input-scales';
-
-import { RetikzPlotVanillaError } from '../../error';
 
 const AUTO_X = '__x';
 const AUTO_Y = '__y';

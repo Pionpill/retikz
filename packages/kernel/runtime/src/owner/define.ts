@@ -1,7 +1,6 @@
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type { RuntimeIdentity } from '../identity';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerDefinitionInput, RuntimeOwnerToken } from './types';
-
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 
 const runtimeOwnerTokens = new WeakSet<object>();
 const runtimeOwnerExecutors = new WeakMap<object, RuntimeOwnerErasedExecutor>();

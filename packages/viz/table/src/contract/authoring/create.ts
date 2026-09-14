@@ -1,7 +1,6 @@
 import type { IRDetailTable, IRManualTable, IRTableDetailColumn } from '../../schemas';
-import type { DetailTableInput, ManualTableInput, TableDetailColumnInput } from './types';
-
 import { TABLE_NAMESPACE, TableCellPayloadKind, TableComposite, TableStructureKind } from '../../schemas';
+import type { DetailTableInput, ManualTableInput, TableDetailColumnInput } from './types';
 
 /** 把 detail column 的字符串列头规范化为 value payload */
 const normalizeDetailColumn = (column: TableDetailColumnInput): IRTableDetailColumn => {

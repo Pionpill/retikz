@@ -1,6 +1,4 @@
 import type { IRAxes } from '../../composites/presentation/axes';
-import type { CanonicalAxes, CanonicalAxesAxis } from './types';
-
 import { AxesTickSourceKind } from '../../composites/presentation/axes/constants';
 import { AxesSchema } from '../../composites/presentation/axes/schemas';
 import {
@@ -10,6 +8,7 @@ import {
 } from '../../composites/presentation/axes/schemas/utils';
 import { getLatticeRangeError } from '../../composites/presentation/shared/lattice';
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+import type { CanonicalAxes, CanonicalAxesAxis } from './types';
 
 /** 补全 Axes 的作者配置，保留 Source 缺省信息 */
 export const resolveAxes = (source: IRAxes): CanonicalAxes => {

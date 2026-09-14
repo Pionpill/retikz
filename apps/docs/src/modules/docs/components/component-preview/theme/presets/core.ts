@@ -1,5 +1,4 @@
 import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue, ThemeStyleColorOverrides } from '@retikz/core';
-
 import { defineThemeStyle } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';

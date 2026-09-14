@@ -1,6 +1,3 @@
-import type { IRScene } from '@retikz/core';
-import type { FC } from 'react';
-
 import { ChartData, ChartLayout, ChartSource, ChartTitle } from '@retikz/chart-react';
 import {
   BubbleChart,
@@ -10,6 +7,7 @@ import {
   StripChart,
   StripEncodings,
 } from '@retikz/chart-react/point';
+import type { IRScene } from '@retikz/core';
 import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
@@ -17,6 +15,7 @@ import { createInputScene, Layout, Node } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
+import type { FC } from 'react';
 import { createElement, isValidElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

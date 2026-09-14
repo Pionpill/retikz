@@ -1,15 +1,14 @@
 import type { ChartLayoutProps } from '@retikz/chart-react';
-import type { FlowDiagramLayoutHostProps } from '@retikz/diagram-react/flow';
-import type { AssertEqual } from '@retikz/foundation';
-import type { PlotLineageProps } from '@retikz/plot-react';
-import type { LayoutProps } from '@retikz/react';
-import type { ReactNode } from 'react';
-
 import { ChartLayout } from '@retikz/chart-react';
 import { ScatterChart } from '@retikz/chart-react/point';
+import type { FlowDiagramLayoutHostProps } from '@retikz/diagram-react/flow';
 import { FlowDiagram } from '@retikz/diagram-react/flow';
+import type { AssertEqual } from '@retikz/foundation';
+import type { PlotLineageProps } from '@retikz/plot-react';
 import { Plot } from '@retikz/plot-react';
+import type { LayoutProps } from '@retikz/react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
+import type { ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
 type PlotStandaloneProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'> & PlotLineageProps;

@@ -1,5 +1,4 @@
 import type { Position } from '../primitives';
-
 import { vector2 } from '../primitives';
 
 /**

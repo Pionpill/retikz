@@ -1,8 +1,7 @@
-import type { InputTable } from '@retikz/table-vanilla';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
-
 import { createManualTableIR } from '@retikz/table';
+import type { InputTable } from '@retikz/table-vanilla';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { DetailTable, ManualTable, Table } from '../../src';

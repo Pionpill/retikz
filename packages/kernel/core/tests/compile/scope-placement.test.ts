@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IRScene, ScenePrimitive } from '../../src';
-
 import { compileToScene, isNodeLayoutCompileArtifact } from '../../src';
 import { applyTransformChain } from '../../src/compile/transform';
 

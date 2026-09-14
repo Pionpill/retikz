@@ -1,6 +1,4 @@
 import type { Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
-import type { Position } from '@retikz/math';
-
 import {
   boundaryFromContour,
   CenterAnchor,
@@ -13,6 +11,7 @@ import {
   rect,
   verticesToSegments,
 } from '@retikz/core';
+import type { Position } from '@retikz/math';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 

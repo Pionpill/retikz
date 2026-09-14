@@ -1,8 +1,8 @@
 import type { ExternalRow } from '@retikz/data';
-
 import { inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
+import { RetikzPlotError } from '../../error';
 import type {
   IRPlotDeriveIntervalTransform,
   IRPlotJitterTransform,
@@ -10,8 +10,6 @@ import type {
   IRPlotStackTransform,
   StackOffsetValue,
 } from '../../schemas';
-
-import { RetikzPlotError } from '../../error';
 import { JitterAxis, NormalizeBasis, StackOffset } from '../../schemas';
 
 /** 默认堆叠下界 / 上界输出字段名，对齐 IntervalMark 的 y0Field / y1Field 默认值 */

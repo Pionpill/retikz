@@ -1,13 +1,11 @@
 import type { IRNode, IRScene, IRScope, IRTarget, ScenePrimitive } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlot } from '../../src/schemas';
-
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { PlotSchema } from '../../src/schemas';
 
 // contract：plot 可被组合 —— 自描述尺寸（L1-a）+ 外部可见面板 anchor（L1-b）

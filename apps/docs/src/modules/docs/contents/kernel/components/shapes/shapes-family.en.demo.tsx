@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Layout, Node, Rectangle, RegularPolygon, Star } from '@retikz/react';
 import { ContourShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 /**
  * The two faces of the shape family

@@ -1,5 +1,4 @@
 import type { IRDataSelectTransform, IRDataSummarizeTransform } from '@retikz/data';
-
 import { IntervalMark, Plot, PlotAxis, PointMark, ReferenceMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 

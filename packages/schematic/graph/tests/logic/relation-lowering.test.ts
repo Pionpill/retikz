@@ -1,5 +1,4 @@
 import type { CompileWarning } from '@retikz/core';
-
 import {
   compileToScene,
   resolveCoreProviderDependencies,

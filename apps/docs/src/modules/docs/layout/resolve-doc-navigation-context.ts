@@ -1,9 +1,7 @@
 import type { DocModuleId, DocNavigationAreaId } from '@/modules/docs/data';
-
 import { DOC_ABOUT_ID, isDocModuleId } from '@/modules/docs/data';
 
 import type { DocLocation } from './types';
-
 import { parseDocRoutePathname, resolveDocLocation } from './useDocLocation';
 
 /** Header、移动端导航与 Sidebar 共用的 pathname 上下文。 */

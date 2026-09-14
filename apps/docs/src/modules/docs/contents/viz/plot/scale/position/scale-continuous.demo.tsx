@@ -1,6 +1,5 @@
-import type { ReactElement } from 'react';
-
 import { PathMark, Plot, PlotAxis, PlotScale, PointMark } from '@retikz/plot-react';
+import type { ReactElement } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
@@ -50,4 +49,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在同一构图中切换 linear、log、sqrt 与 symlog */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

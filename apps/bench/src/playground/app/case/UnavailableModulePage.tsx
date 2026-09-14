@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { ArrowLeft } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
@@ -8,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 import type { BenchModule } from '../module-registry';
-
 import { defaultBenchModule } from '../module-registry';
 
 /** 尚未接入执行器的模块工作区属性 */

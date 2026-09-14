@@ -1,14 +1,12 @@
 import type { FlexLayoutInput } from '@retikz/layout';
+import { LayoutItemKind } from '@retikz/layout';
 import type { InputFlexLayout } from '@retikz/layout-vanilla';
+import { FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { withInputEmbedAdapters } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { LayoutItemKind } from '@retikz/layout';
-import { FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
-import { withInputEmbedAdapters } from '@retikz/react';
-
 import type { LayoutEmbeddableComponent } from '../shared';
-
 import { createInputLayoutItems } from '../shared';
 
 /** Flex 布局的 React 属性 */

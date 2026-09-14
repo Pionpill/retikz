@@ -1,18 +1,16 @@
 import type { CompileArtifact } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
+import { Layout } from '@retikz/react';
 import type { TableCompileArtifact } from '@retikz/table';
+import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
 import type { InputTable, InputTableVariant } from '@retikz/table-vanilla';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
-
-import { Layout } from '@retikz/react';
-import { TABLE_NAMESPACE, TableComposite } from '@retikz/table';
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import { useCallback, useMemo, useRef } from 'react';
 
-import type { ReactTableRuntime } from './table-runtime';
-
 import { RetikzTableReactError } from './error';
+import type { ReactTableRuntime } from './table-runtime';
 import { useTableThemeStyles } from './theme-context';
 
 /** standalone Table 运行时交给 Layout 的内部 InputEmbed 组件属性 */

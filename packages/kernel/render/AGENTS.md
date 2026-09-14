@@ -24,7 +24,7 @@
 结构化改动后至少运行：
 
 ```bash
-pnpm --filter @retikz/render exec eslint . --fix
+pnpm --filter @retikz/render exec oxlint . --fix
 pnpm --filter @retikz/render exec tsc --noEmit
 pnpm --filter @retikz/render test:changed
 ```

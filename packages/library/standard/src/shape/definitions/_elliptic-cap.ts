@@ -1,9 +1,8 @@
 import type { PathCommand, Rect } from '@retikz/core';
-import type { Position } from '@retikz/math';
-import type { infer as ZodInfer } from 'zod';
-
 import { worldToLocal } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
+import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, strictObject } from 'zod';
 
 /** 轴向半椭圆端形状共享的严格参数 schema */

@@ -1,16 +1,14 @@
-import type { FC } from 'react';
-
 import { fadeIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
-
-import type { PreviewControlSlot } from '../../src/modules/docs/components/component-preview/types';
 
 import {
   mergePreviewControlSlots,
   resolveBuiltinControlSlots,
 } from '../../src/modules/docs/components/component-preview/controls';
+import type { PreviewControlSlot } from '../../src/modules/docs/components/component-preview/types';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 
 const StaticDemo: FC = () => (

@@ -1,6 +1,5 @@
 import type { ThemeModeValue } from '@retikz/core';
 import type { LucideIcon } from 'lucide-react';
-
 import { BrushCleaning, CircleDot, GraduationCap, Sparkles } from 'lucide-react';
 
 /** 文档站维护的闭合 Theme style 选项 */

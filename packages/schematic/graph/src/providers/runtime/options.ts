@@ -8,9 +8,8 @@ import type {
   RelationPredicateDefinition,
   RelationRoleDefinition,
 } from '../../contract';
-import type { EntityKindRegistry } from '../entity';
-
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
+import type { EntityKindRegistry } from '../entity';
 import { resolveEntityKindRegistry, resolveEntityPredicateRegistry, resolveEntityRoleRegistry } from '../entity';
 import {
   resolveRelationKindRegistry,

@@ -1,5 +1,4 @@
 import type { ClipResource } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { buildClipDef } from '../../../src/svg/builders/clip-defs';

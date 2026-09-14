@@ -1,6 +1,5 @@
 import type { ExternalDatasets, ExternalRow, IRDataModel } from '@retikz/data';
 import type { IRPlot, PlotLineageRun } from '@retikz/plot';
-
 import { definePositionAdjustment, lowerPlots } from '@retikz/plot';
 import { Layout } from '@retikz/react';
 import { renderToStaticMarkup } from 'react-dom/server';

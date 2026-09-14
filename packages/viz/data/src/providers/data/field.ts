@@ -1,11 +1,10 @@
 import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap } from '../../contract';
-import type { DataFieldTypeValue, DataSortOrderValue, IRDataModel } from '../../schemas';
-import type { ExternalRow } from '../../shared';
-
 import { RetikzDataError } from '../../error';
+import type { DataFieldTypeValue, DataSortOrderValue, IRDataModel } from '../../schemas';
 import { DataFieldType, DataSortOrder } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 
 /**
  * 解析字段路径 a.b.c，返回叶子值（任一段缺失返回 undefined）

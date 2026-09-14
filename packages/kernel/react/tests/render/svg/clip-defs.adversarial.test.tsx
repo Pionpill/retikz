@@ -1,6 +1,5 @@
 import type { GroupPrim, SceneClipPath, SceneResource } from '@retikz/core';
-
-import { type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { ClipDefs } from '../../../src/render/svg';

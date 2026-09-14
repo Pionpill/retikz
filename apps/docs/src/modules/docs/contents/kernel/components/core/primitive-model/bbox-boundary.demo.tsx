@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 
 const LX = -135;
 const RX = 135;

@@ -1,5 +1,4 @@
 import type { IRAnimationTrack } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { evaluateTrack } from '../../src/animation/evaluate';

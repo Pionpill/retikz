@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { AnimationModeProvider } from '@retikz/react';
+import type { FC } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -8,12 +7,11 @@ import { cn } from '@/lib';
 import { docPathSegments, useDocLocation } from '@/modules/docs/layout';
 import { useComponentPreviewStore } from '@/modules/docs/store';
 
-import type { ComponentPreviewFiles } from './types';
-
 import { useDemoLocationContext } from './context';
 import { usePreviewDemoModule } from './hooks';
 import { DemoRenderer } from './preview-panel';
 import { resolveDemoKey } from './registry';
+import type { ComponentPreviewFiles } from './types';
 import { normalizeComponentPreviewFiles } from './utils';
 
 export type ComponentPreviewThumbnailProps = {

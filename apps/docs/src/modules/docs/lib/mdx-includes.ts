@@ -1,5 +1,4 @@
 import type { Lang } from '@/i18n';
-
 import { LANGS } from '@/i18n';
 
 /** 异步读取一份原始 MDX 片段 */

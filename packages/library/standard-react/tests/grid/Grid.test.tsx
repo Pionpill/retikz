@@ -1,6 +1,5 @@
-import type { GridInput } from '@retikz/standard';
-
 import { createInputScene } from '@retikz/react';
+import type { GridInput } from '@retikz/standard';
 import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';

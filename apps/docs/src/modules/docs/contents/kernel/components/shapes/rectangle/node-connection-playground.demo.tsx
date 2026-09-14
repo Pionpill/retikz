@@ -1,10 +1,8 @@
 import type { IRNodeTarget } from '@retikz/core';
+import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
-import { Draw, Layout, Node } from '@retikz/react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { nodeConnectionPlaygroundControls, previewControlContract } from './node-connection-playground.controls';

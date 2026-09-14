@@ -1,10 +1,5 @@
 import type { IRChartSource } from '@retikz/chart';
-import type { IRBubbleChart } from '@retikz/chart/point/bubble';
-import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
-import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
-import type { IRScatterChart } from '@retikz/chart/point/scatter';
-import type { IRStripChart } from '@retikz/chart/point/strip';
+import { CHART_NAMESPACE } from '@retikz/chart';
 import type {
   BubbleChartProps,
   ConnectedScatterChartProps,
@@ -13,13 +8,6 @@ import type {
   ScatterChartProps,
   StripChartProps,
 } from '@retikz/chart-react/point';
-import type { IRChild, IRScene, IRScope } from '@retikz/core';
-import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
-import type { InputGraphChild, InputGraphMember } from '@retikz/graph-vanilla';
-import type { AnyInputEmbed, InputChild, InputPath, InputScene, InputScope } from '@retikz/vanilla';
-import type { ReactNode } from 'react';
-
-import { CHART_NAMESPACE } from '@retikz/chart';
 import {
   BubbleChart,
   ConnectedScatterChart,
@@ -28,7 +16,16 @@ import {
   ScatterChart,
   StripChart,
 } from '@retikz/chart-react/point';
+import type { IRBubbleChart } from '@retikz/chart/point/bubble';
+import type { IRConnectedScatterChart } from '@retikz/chart/point/connected-scatter';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
+import type { IRScatterChart } from '@retikz/chart/point/scatter';
+import type { IRStripChart } from '@retikz/chart/point/strip';
+import type { IRChild, IRScene, IRScope } from '@retikz/core';
+import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { FlowDiagramEmbedKind, normalizeFlowDiagram } from '@retikz/diagram-vanilla/flow';
+import type { InputGraphChild, InputGraphMember } from '@retikz/graph-vanilla';
 import {
   BlockEmbedKind,
   BlockHeaderEmbedKind,
@@ -47,7 +44,9 @@ import {
   normalizeRelation,
   RelationEmbedKind,
 } from '@retikz/graph-vanilla';
+import type { AnyInputEmbed, InputChild, InputPath, InputScene, InputScope } from '@retikz/vanilla';
 import { normalizeNode, normalizePath } from '@retikz/vanilla';
+import type { ReactNode } from 'react';
 import { Fragment, isValidElement } from 'react';
 
 import { previewEmbedPropsOf } from './preview-embed';

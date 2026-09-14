@@ -1,5 +1,4 @@
 import type { AffineMatrix } from '@retikz/math';
-
 import { AFFINE_IDENTITY, multiplyAffine } from '@retikz/math';
 
 import { RetikzTexError, RetikzTexErrorCode } from '../error';

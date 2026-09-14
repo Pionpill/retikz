@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** bin 的边界解析、分桶、指标规约与每箱输出 */
 const Demo: FC = () => (

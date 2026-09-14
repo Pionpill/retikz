@@ -1,6 +1,5 @@
-import type { Dispatch, FC } from 'react';
-
 import { Cpu, DatabaseZap, Monitor, RotateCcw, TimerReset, X } from 'lucide-react';
+import type { Dispatch, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
-import type { LabState, LabStateAction } from '../lab-state';
-import type { LabPreviewSizePresetIdValue } from '../preview-size';
-
 import { maximumLabPreviewDimension, maximumLabPreviewPixels } from '../../modules/kernel';
+import type { LabState, LabStateAction } from '../lab-state';
 import { LabActionType } from '../lab-state';
+import type { LabPreviewSizePresetIdValue } from '../preview-size';
 import { LabPreviewSizePresetId, labPreviewSizePresets } from '../preview-size';
 
 /** 预览尺寸设置属性 */

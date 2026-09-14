@@ -1,6 +1,5 @@
 import type { GraphThemeStyleDefinition } from '@retikz/graph';
 import type { FC, ReactNode } from 'react';
-
 import { useMemo } from 'react';
 
 import { GraphThemeStylesContext, useGraphThemeStyles } from './theme-context';

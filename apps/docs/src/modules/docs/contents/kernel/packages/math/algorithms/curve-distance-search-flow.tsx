@@ -1,13 +1,11 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { curveDistanceSearchFlowI18n } from './curve-distance-search-flow.i18n';
-import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 /** 展示如何按目标距离二分反查曲线参数 */
 export type CurveDistanceSearchFlowI18nFigureProps = Readonly<{ lang?: Lang }>;

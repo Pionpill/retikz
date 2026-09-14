@@ -39,6 +39,9 @@ git status --short
 
 ## 审查维度
 
+- 补查 Oxlint 未覆盖的约束：按 `standard-name` 检查泛型命名与 export 顺序；生产源码不得创建或调用原生 Error 家族及 `globalThis` 变体，只有 `RetikzError` 可直接继承原生错误，派生类遵循根 AGENTS 命名契约
+- 改动涉及 React Compiler 配置或 gating 时，核对官方配置契约、gating 函数的导入和布尔返回语义；不以 lint 通过代替此项审查
+
 每条 finding 必须有代码位置和成因，不能只写“可以优化”。
 
 1. **结构**：目录职责、barrel 边界、同级模块 import、文件过大 / 过碎、层级归属、Kernel / Sugar / Tier 2 边界。

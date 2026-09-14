@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
 import type { LoaderFunctionArgs, RouteObject } from 'react-router';
-
 import { redirect } from 'react-router';
 
 import type { BenchModule } from './module-registry';
-
 import { benchModules, defaultBenchModule } from './module-registry';
 import { BenchCaseView, getBenchCasePath, getDefaultBenchTestCase, getModuleTestCases } from './test-catalog';
 

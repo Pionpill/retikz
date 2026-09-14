@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Ban, Diff, Minus, Plus } from 'lucide-react';
+import type { FC } from 'react';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 

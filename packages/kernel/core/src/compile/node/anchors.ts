@@ -1,12 +1,11 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { BoundsInsets, Position } from '@retikz/math';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { BoundaryReferenceResolution, NodeReferenceView } from '../../resolve';
 import type { IRBoundary } from '../../schemas';
 import type { Rect } from '../../shared/geometry';
 import type { NodeLayout } from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 type NodeAnchorLayout = NodeLayout | NodeReferenceView;
 

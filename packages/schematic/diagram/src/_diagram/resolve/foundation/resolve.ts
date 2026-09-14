@@ -1,10 +1,9 @@
 import { resolveBoxSpacing, Side } from '@retikz/core';
 import { LayoutAlignment, LayoutOverflow } from '@retikz/layout';
 
-import type { DiagramFoundationResolution, DiagramFoundationResolveContext, DiagramFoundationSource } from './types';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { resolveDiagramTheme } from '../theme';
+import type { DiagramFoundationResolution, DiagramFoundationResolveContext, DiagramFoundationSource } from './types';
 
 /** 解析 drawing-core-agnostic 的 Diagram Foundation */
 export const resolveDiagramFoundation = (

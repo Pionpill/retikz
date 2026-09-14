@@ -1,12 +1,11 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { BoundaryDefinition, ShapeDefinition } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { ProviderCollection } from '../../providers/registry';
 import type { IRBoundary } from '../../schemas';
-import type { BoundaryReferenceResolution } from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { parseProviderPayload } from '../provider-payload';
+import type { BoundaryReferenceResolution } from './types';
 
 /** 保留字：连接面 = 节点自身视觉形状 */
 const SELF = 'shape';

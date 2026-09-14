@@ -1,7 +1,4 @@
 import type { IRChild } from '@retikz/core';
-import type { InputTable } from '@retikz/table-vanilla';
-import type { InputEmbedContext } from '@retikz/vanilla';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
 import {
   compileTable,
@@ -13,14 +10,15 @@ import {
   defineTableThemeStyle,
   TableSchema,
 } from '@retikz/table';
+import type { InputTable } from '@retikz/table-vanilla';
 import { manualTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
+import type { InputEmbedContext } from '@retikz/vanilla';
 import { Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { DetailTableProps } from '../../src';
-
 import * as TableReact from '../../src';
 import { DetailTable, ManualTable } from '../../src';
 import { buildDetailColumns } from '../../src/components/build-detail-columns';

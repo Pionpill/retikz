@@ -1,6 +1,5 @@
-import type { LabBackendValue, LabPolicyIdValue, LabPolicyResult, LabRunModeValue, LabRunSession } from './model';
-
 import { getKernelLabScenario, kernelLabPolicies } from './kernel-scenarios';
+import type { LabBackendValue, LabPolicyIdValue, LabPolicyResult, LabRunModeValue, LabRunSession } from './model';
 import { LabRunMode } from './model';
 
 /** Preview renderer 原子挂载输入 */

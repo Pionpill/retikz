@@ -1,5 +1,4 @@
 import type { JsonObject } from '@retikz/foundation';
-
 import { describe, expect, it } from 'vitest';
 
 import { resolveCellVisualScaleRegistry } from '../../src';

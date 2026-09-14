@@ -1,5 +1,4 @@
 import type { MarkerPrimitive } from '../../contract';
-
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import {
   assertProviderOutputDashPattern,

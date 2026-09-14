@@ -1,7 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { ComponentRenderSource } from '../src/modules/docs/components/component-preview';
-
 import { availableSourceViews } from '../src/modules/docs/components/component-preview/source-panel';
 
 /** 一个非空视图（有文件即「可用」） */

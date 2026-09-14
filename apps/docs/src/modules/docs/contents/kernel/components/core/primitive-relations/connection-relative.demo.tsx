@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 相对位置连接：way 用 ++ 偏移从上一段终点接力

@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
-
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
+import type { RuntimeIdentity, RuntimeIdentityLookup } from './types';
 
 type IdentityTrieNode = Readonly<{
   terminal: boolean;

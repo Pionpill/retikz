@@ -8,10 +8,9 @@ import type {
   MarkDefinition,
   MarkLoweringContext,
 } from '../../contract';
-import type { IRPlotMarkOperation, PlotMarkValue } from '../../schemas';
-
 import { extractMarkType } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import type { IRPlotMarkOperation, PlotMarkValue } from '../../schemas';
 import { PlotMark } from '../../schemas';
 import {
   intervalMarkDefinition,

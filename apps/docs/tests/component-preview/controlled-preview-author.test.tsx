@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
+
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { defineControlledPreview, definePreviewControls } from '@/modules/docs/preview';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';

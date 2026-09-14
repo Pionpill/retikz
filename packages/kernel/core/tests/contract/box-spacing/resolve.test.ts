@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRBoxSpacing } from '../../../src';
-
 import * as core from '../../../src';
 import { resolveBoxSpacing } from '../../../src';
 

@@ -1,7 +1,6 @@
 import type { InspectorRegistry } from '@retikz/inspect';
-import type { CreateInspectionVanillaDriverOptions } from '@retikz/inspect/vanilla';
-
 import { createInspectorRegistry, mergeInspectorRegistries } from '@retikz/inspect';
+import type { CreateInspectionVanillaDriverOptions } from '@retikz/inspect/vanilla';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
 import { FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR } from '@retikz/layout/inspect';
 

@@ -6,12 +6,11 @@ import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { createPlotLocator } from '../../../src/pipeline';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlots } from '../../../src/pipeline/expand';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 跑一次完整下沉（抛错路径用 expect(fn).toThrow） */

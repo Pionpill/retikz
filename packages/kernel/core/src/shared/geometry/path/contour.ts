@@ -1,5 +1,4 @@
 import type { Position } from '@retikz/math';
-
 import {
   DEFAULT_EPSILON,
   intersect,

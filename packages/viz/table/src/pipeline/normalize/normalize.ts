@@ -1,12 +1,10 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
 import type { SemanticTableModel, TableStructureOutput } from '../../contract';
-import type { IRManualTableStructure, IRTableStructureOperation } from '../../schemas';
-import type { NormalizeTableStructureOptions } from './types';
-
 import { TableStructureOutputSchema } from '../../contract/structure';
 import { RetikzTableError } from '../../error';
 import { resolveTableStructureRegistry, tableStructureDefinitionOf } from '../../providers';
+import type { IRManualTableStructure, IRTableStructureOperation } from '../../schemas';
 import {
   TableCellFit,
   TableCellOverflow,
@@ -16,6 +14,7 @@ import {
 } from '../../schemas';
 import { deepFreeze } from '../../shared';
 import { createTableStructureContext } from './context';
+import type { NormalizeTableStructureOptions } from './types';
 import { validateTableStructureOutput } from './validate';
 
 const errorMessageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));

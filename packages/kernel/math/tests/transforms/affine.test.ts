@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { AffineMatrix, Position } from '../../src';
-
 import {
   AFFINE_IDENTITY,
   applyAffine,

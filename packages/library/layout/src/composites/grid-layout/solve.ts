@@ -1,14 +1,12 @@
 import type { LayoutChildResult } from '@retikz/core';
-
 import { LayoutAlignmentGuideDimension, LayoutAlignmentGuideName } from '@retikz/core';
 
-import type { LayoutInsets, LayoutRect } from '../internal';
-import type { LayoutAlignmentValue } from '../shared';
-import type { IRGridTrack } from './types';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import type { LayoutInsets, LayoutRect } from '../internal';
 import { compensatedLayoutSum } from '../internal';
+import type { LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment } from '../shared';
+import type { IRGridTrack } from './types';
 
 /** Grid track 在 container-local 坐标中的确定位置 */
 export type PositionedGridTrack = Readonly<{

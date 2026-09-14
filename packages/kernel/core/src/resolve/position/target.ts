@@ -1,9 +1,8 @@
 import type { IRAbsoluteTarget, IRNodeTarget, IRPosition } from '../../schemas';
-import type { PositionTargetResolution, PositionTargetResolveContext, PositionTargetWorldResolution } from './types';
-
 import { isBetweenPositionLike, isNodeTargetLike } from '../../shared';
 import { lerpPoint } from '../../shared/geometry';
 import { resolvePosition } from './resolve';
+import type { PositionTargetResolution, PositionTargetResolveContext, PositionTargetWorldResolution } from './types';
 
 /** 在世界坐标叠加 NodeTarget offset */
 const addNodeTargetOffset = (point: IRPosition, target: IRNodeTarget): IRPosition =>

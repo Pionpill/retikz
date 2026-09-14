@@ -1,9 +1,8 @@
 import { resolveBoxSpacing } from '@retikz/core';
 
 import type { IRFrame } from '../../composites/presentation/frame/schemas';
-import type { CanonicalFrame } from './types';
-
 import { FrameSchema } from '../../composites/presentation/frame/schemas';
+import type { CanonicalFrame } from './types';
 
 /** 确定 Frame 默认并复用 Core 的 spacing 展开规则 */
 export const resolveFrame = (source: IRFrame): CanonicalFrame => ({

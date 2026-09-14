@@ -1,12 +1,10 @@
 import type { FC, RefObject } from 'react';
-
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { LabState } from '../lab-state';
-import type { BenchTestCase } from '../test-catalog';
-
 import { LabStatus } from '../lab-state';
+import type { BenchTestCase } from '../test-catalog';
 import { CaseStartState } from './CaseStartState';
 
 /** 真实 renderer 舞台属性 */

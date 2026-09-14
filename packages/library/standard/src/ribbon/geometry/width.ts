@@ -1,8 +1,7 @@
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 import type { RibbonWidthResolution } from '../resolve';
 import type { CanonicalRibbonSampling } from '../types';
 import type { RibbonLike } from './types';
-
-import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 
 const smoothstep = (t: number): number => t * t * (3 - 2 * t);
 

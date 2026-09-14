@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PerformanceTraceRecord, RuntimeTraceReporter } from '../../src';
-
 import {
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,

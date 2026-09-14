@@ -4,9 +4,8 @@ import { tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { prepareRows } from '../../../src/pipeline/expand';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 单字段行 → 推断类型（无 model，纯抽样推断） */

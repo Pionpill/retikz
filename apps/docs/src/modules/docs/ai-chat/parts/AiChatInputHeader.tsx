@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import type { FC } from 'react';
 
 import { AiChatInputContextChips } from './AiChatInputContextChips';
 import { AiChatInputDetailPopover } from './AiChatInputDetailPopover';

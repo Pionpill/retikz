@@ -1,15 +1,13 @@
 ﻿import type { ReactNode } from 'react';
-
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Lang } from '@/i18n';
 import type { DocNavigationAreaId, I18nKey, Page, Section } from '@/modules/docs/data';
-
 import { aboutSection, getSectionsByArea, modules } from '@/modules/docs/data';
 import { buildDocPath } from '@/modules/docs/layout';
 
-import { type IndexedPage, type SearchIndex } from './search-index';
+import type { IndexedPage, SearchIndex } from './search-index';
 
 /** 可被匹配的字段类型；优先级 label > description > heading > code */
 export type FieldKind = 'label' | 'description' | 'heading' | 'code';

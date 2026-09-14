@@ -1,5 +1,3 @@
-import type { FC } from 'react';
-
 import { LayoutItem } from '@retikz/layout-react';
 import {
   InspectFlexLayout,
@@ -8,6 +6,7 @@ import {
   LayoutInspectLayout,
 } from '@retikz/layout-react/inspect';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 

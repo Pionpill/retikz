@@ -1,5 +1,4 @@
 import type { ExternalRow, TransformContext } from '@retikz/data';
-
 import {
   applyReducerOperation,
   applySelectorOperation,
@@ -11,9 +10,8 @@ import {
 import { DEFAULT_EPSILON, isFiniteNumber } from '@retikz/math';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 
-import type { IRPlotBinTransform, IRPlotRelateTransform } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
+import type { IRPlotBinTransform, IRPlotRelateTransform } from '../../schemas';
 
 /** bin 默认输出字段名，对齐 IntervalMark 的区间消费方 */
 const DEFAULT_BIN_START_FIELD = 'binStart';

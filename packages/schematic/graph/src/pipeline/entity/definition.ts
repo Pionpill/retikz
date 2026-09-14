@@ -1,13 +1,11 @@
 import type { ExpandCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGraphEntity } from '../../schemas';
-
 import { resolveGraphDefinitionOptions } from '../../providers';
 import { resolveEntity, resolveEntityAppearance } from '../../resolve';
+import type { IRGraphEntity } from '../../schemas';
 import { EntitySchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { lowerEntity } from './lower';

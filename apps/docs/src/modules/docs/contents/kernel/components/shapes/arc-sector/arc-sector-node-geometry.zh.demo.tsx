@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Arc / Sector Node 形状从参数到几何能力的局部流程图 */
 const Demo: FC = () => (

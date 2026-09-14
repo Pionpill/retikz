@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import {
   AxisLineStepSchema,
   ContextualColorSchema,
@@ -29,8 +32,6 @@ import {
 } from '@retikz/plot';
 import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard';
 import { TableSchema } from '@retikz/table';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 

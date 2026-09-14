@@ -2,14 +2,12 @@
 
 import type { Context, FC, ReactNode } from 'react';
 import type { Root } from 'react-dom/client';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ComponentPreviewProps } from '@/modules/docs/components/component-preview';
-
 import { DemoLocationContext } from '@/modules/docs/components/component-preview';
 import * as showcaseComponents from '@/modules/docs/components/showcase';
 

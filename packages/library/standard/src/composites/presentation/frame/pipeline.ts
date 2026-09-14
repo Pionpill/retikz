@@ -7,16 +7,14 @@ import type {
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '@retikz/core';
-import type { BoundsRect } from '@retikz/math';
-
 import { NaturalLayoutProposal } from '@retikz/core';
 import { requiredLayoutProbe } from '@retikz/layout/compose';
+import type { BoundsRect } from '@retikz/math';
 
 import type { CanonicalFrame } from '../../../resolve/frame';
-import type { IRFrame, IRFrameDescription, IRFrameTitle } from './types';
-
 import { resolveFrame } from '../../../resolve/frame';
 import { FrameHeaderDirection } from './constants';
+import type { IRFrame, IRFrameDescription, IRFrameTitle } from './types';
 
 type FrameHeaderInput = IRFrameTitle | IRFrameDescription;
 

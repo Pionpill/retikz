@@ -1,5 +1,4 @@
 import type { ExternalRow } from '@retikz/data';
-
 import { finiteFieldValuesOf, groupRowsByFields, linearSamplesOf } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 

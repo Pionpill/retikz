@@ -1,7 +1,6 @@
 import type { IRChartDefaults } from '@retikz/chart';
-import type { NodeTextAlignValue } from '@retikz/core';
-
 import { ChartDefaultsSchema, defineChartTheme } from '@retikz/chart';
+import type { NodeTextAlignValue } from '@retikz/core';
 import { NodeTextAlign as TextAlign } from '@retikz/core';
 
 import { PreviewThemeStyle } from '../constants';

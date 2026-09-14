@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import {
   getPreviewControlFields,
   resolveVisiblePreviewControlSections,
@@ -21,6 +19,7 @@ import { previewControlContract as styleContract } from '@/modules/docs/contents
 import { previewControlContract as styleEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-style.en.controls';
 import { previewControlContract as textContract } from '@/modules/docs/contents/viz/plot/mark/point/point-text.controls';
 import { previewControlContract as textEnglishContract } from '@/modules/docs/contents/viz/plot/mark/point/point-text.en.controls';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
 const controlIdsOf = (contract: PreviewControlContract): Array<string> =>
   getPreviewControlFields(contract.controls).map(field => field.id);

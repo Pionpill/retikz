@@ -1,20 +1,18 @@
-import type { FC } from 'react';
-
 import { CircleAlert } from 'lucide-react';
+import type { FC } from 'react';
 import { useParams } from 'react-router';
 
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
-
-import type { BenchModule } from './module-registry';
-import type { BenchCaseStatusValue } from './test-catalog';
 
 import { LabRunMode } from '../modules/kernel';
 import { createLabSessionReportStatus, ReportHistory, useReportHistory } from '../report';
 import { BenchmarkView, PreviewView, UnavailableModulePage } from './case';
 import { ConfigurationSheet } from './configuration';
 import { Header } from './header';
+import type { BenchModule } from './module-registry';
 import { AppSidebar } from './sidebar';
+import type { BenchCaseStatusValue } from './test-catalog';
 import { BenchCaseStatus, BenchCaseView, getBenchTestCase } from './test-catalog';
 import { usePerformanceLab } from './usePerformanceLab';
 

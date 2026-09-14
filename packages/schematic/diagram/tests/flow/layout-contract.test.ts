@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { FlowLayoutDefinition } from '../../src/flow';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
+import type { FlowLayoutDefinition } from '../../src/flow';
 import { defineFlowLayout } from '../../src/flow';
 import { resolveFlowLayoutRegistry } from '../../src/flow/providers';
 

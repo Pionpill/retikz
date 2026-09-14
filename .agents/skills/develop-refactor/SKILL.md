@@ -44,7 +44,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 按根 `AGENTS.md` 的受影响模块策略验证。常见组合：
 
 ```bash
-pnpm --filter <pkg> exec eslint . --fix
+pnpm --filter <pkg> exec oxlint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
 pnpm --filter <pkg> exec vitest run [test-file]
 ```

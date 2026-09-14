@@ -1,5 +1,4 @@
 import type { PreviewControlContract, PreviewTableColumn } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Mark 数据面板中的一张只读表格 */

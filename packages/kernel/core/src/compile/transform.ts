@@ -1,10 +1,9 @@
 import type { Transform } from '../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import type { IRPosition } from '../schemas';
 import type { Rect } from '../shared/geometry';
-import type { NodeLayout } from './node';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
 import { DEG_TO_RAD, RAD_TO_DEG } from '../shared/geometry';
+import type { NodeLayout } from './node';
 
 /** 将局部点按 transform chain 投影到全局坐标 */
 export const applyTransformChain = (local: IRPosition, chain: ReadonlyArray<Transform>): IRPosition => {

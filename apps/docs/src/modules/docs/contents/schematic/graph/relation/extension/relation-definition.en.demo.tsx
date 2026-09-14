@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { defineRelationKind, defineRelationPredicate } from '@retikz/graph';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 import { createGraphPreviewSource } from '@/modules/docs/preview';

@@ -1,5 +1,3 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import {
   BlendMode,
   CssColorSchema,
@@ -14,6 +12,7 @@ import {
 } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { SmoothTransformSchema } from '@retikz/plot';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 import { createChartSourceSchema } from '../../_chart/schemas';

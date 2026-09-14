@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene } from '../../../src';
-
 import * as core from '../../../src';
 
 const emptyScene: IRScene = { version: 1, type: 'scene', children: [] };

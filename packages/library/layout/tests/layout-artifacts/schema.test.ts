@@ -9,7 +9,6 @@ import type {
   LayoutSpacingArtifact,
   OverlayLayoutArtifact,
 } from '../../src';
-
 import {
   FlexLayoutArtifactSchema,
   GridLayoutArtifactSchema,

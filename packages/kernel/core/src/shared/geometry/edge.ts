@@ -1,9 +1,7 @@
 import type { Position } from '@retikz/math';
-
 import { lerp } from '@retikz/math';
 
 import type { AnchorValue, SideValue } from '../anchor';
-
 import { Anchor, Side } from '../anchor';
 
 export { lerp as lerpPoint } from '@retikz/math';

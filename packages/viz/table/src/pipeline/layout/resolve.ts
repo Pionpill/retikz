@@ -1,9 +1,8 @@
-import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
-import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
-
 import { RetikzTableError } from '../../error';
+import type { IRTableLayout, IRTableTrackOverride, IRTableTrackSize } from '../../schemas';
 import { TableTrackSizeKind } from '../../schemas';
 import { DEFAULT_TABLE_COLUMN_WIDTH, DEFAULT_TABLE_ROW_HEIGHT, DEFAULT_TABLE_TRACK_GAP } from '../../shared';
+import type { ResolvedTableLayout, ResolvedTableTrackSize } from './types';
 
 /** 物化单个轨道尺寸的运行时默认值并递归冻结 */
 export const resolveTableTrackSize = (size: IRTableTrackSize): ResolvedTableTrackSize => {

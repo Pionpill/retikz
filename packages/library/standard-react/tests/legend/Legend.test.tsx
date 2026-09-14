@@ -1,14 +1,12 @@
-import type { ReactNode } from 'react';
-
 import { createInputScene, Layout, Node, Path, Step } from '@retikz/react';
 import { createLegend, LegendContentKind, LegendDefinition, LegendProvider, LegendSchema } from '@retikz/standard';
 import { normalizeScene } from '@retikz/vanilla';
+import type { ReactNode } from 'react';
 import { forwardRef, Fragment, memo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { LegendItemsFormProps, LegendProps, LegendRampFormProps } from '../../src';
-
 import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '../../src';
 
 const itemSample = (

@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 
 const flatten = (prims: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> => {
   const out: Array<ScenePrimitive> = [];

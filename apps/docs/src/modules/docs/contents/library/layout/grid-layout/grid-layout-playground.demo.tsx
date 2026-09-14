@@ -1,9 +1,8 @@
 import type { GridLayoutInput } from '@retikz/layout';
-import type { FC } from 'react';
-
 import { GridLayout, LayoutItem } from '@retikz/layout-react';
 import { InspectGridLayout, LayoutInspectLayout } from '@retikz/layout-react/inspect';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

@@ -1,10 +1,8 @@
 ﻿import type { IRChild } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import type { TableStructureOutput } from '../../src';
-
 import {
   defineCellPresentation,
   defineTableStructure,

@@ -1,5 +1,4 @@
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
-
 import { createContext, useContext } from 'react';
 
 /** Plot-owned ambient Theme definitions context */

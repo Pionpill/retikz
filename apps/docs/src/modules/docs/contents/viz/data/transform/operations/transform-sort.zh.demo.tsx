@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, transformSortControls } from './transform-sort.controls';
 import { renderTransformSortPreview } from './transform-sort-preview';
+import { previewControlContract, transformSortControls } from './transform-sort.controls';
 
 /** 注册回退使用的行排序控件 */
 export const previewControls = transformSortControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 对照原始行序与受控 sort 输出的动态示例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,3 +1,6 @@
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
+import { PerformanceTraceOutcome } from './constants';
+import { notifyRuntimeTraceReporterDiagnostic, recordRuntimeTraceReporterDiagnosticDrain } from './internal';
 import type {
   CreateRuntimeTraceReporterInput,
   PerformanceTraceDiagnostic,
@@ -5,10 +8,6 @@ import type {
   RuntimeTracePhaseDefinition,
   RuntimeTraceReporter,
 } from './types';
-
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
-import { PerformanceTraceOutcome } from './constants';
-import { notifyRuntimeTraceReporterDiagnostic, recordRuntimeTraceReporterDiagnosticDrain } from './internal';
 
 const isValidCount = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
 

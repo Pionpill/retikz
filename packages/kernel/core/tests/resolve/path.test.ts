@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
-
 import { compileToScene } from '../../src';
+import type { IRPathBase, IRScene, IRStep } from '../../src/schemas';
 import { resolvePathWithBuiltinProviders } from './path-helper';
 
 const path = (overrides: Partial<IRPathBase> = {}): IRPathBase => ({

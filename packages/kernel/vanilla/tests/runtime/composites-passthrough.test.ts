@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-
 import { CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';

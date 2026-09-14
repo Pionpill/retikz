@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { extensionStatisticsControls, previewControlContract } from './extension-statistics.controls';
 import { renderExtensionStatisticsPreview } from './extension-statistics-preview';
+import { extensionStatisticsControls, previewControlContract } from './extension-statistics.controls';
 
 /** 注册回退使用的统计扩展输入控件 */
 export const previewControls = extensionStatisticsControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 并列展示 reducer 与 selector 扩展职责的示例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

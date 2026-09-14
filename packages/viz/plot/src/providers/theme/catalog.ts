@@ -1,9 +1,7 @@
 import type { CssColorValue, NonEmptyReadonlyArray, ThemeModeValue } from '@retikz/core';
-
 import { resolveDefaultCoreThemeColors } from '@retikz/core';
 
 import type { IRPlotDefaults } from '../../schemas';
-
 import {
   getNeutralAxisDefaults,
   getNeutralLegendDefaults,

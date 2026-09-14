@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Layout, RegularPolygon } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

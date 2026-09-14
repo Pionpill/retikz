@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { GroupPrim, PathPrim, ScenePrimitive, TextMeasurer, TextPrim } from '../../src';
-import type { IRPath, IRScene } from '../../src/schemas';
-
 import { compileToScene } from '../../src/compile/compile';
 import { definePathGenerator } from '../../src/contract';
+import type { IRPath, IRScene } from '../../src/schemas';
 import { flattenPrims } from '../helpers/flatten';
 
 const STROKE = '#13579b';

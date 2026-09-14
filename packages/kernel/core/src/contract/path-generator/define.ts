@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { PathGeneratorDefinition } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { PathGeneratorDefinition } from './types';
 
 /**
  * 定义 path generator 注册项

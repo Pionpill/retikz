@@ -1,10 +1,8 @@
-import type { IRRegressionChart } from '@retikz/chart/point/regression';
 import type { CreateRegressionChartInput } from '@retikz/chart-vanilla/point/regression';
-
 import { createRegressionChart } from '@retikz/chart-vanilla/point/regression';
+import type { IRRegressionChart } from '@retikz/chart/point/regression';
 
 import type { TypedChartCommonProps } from '../shared';
-
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectRegressionChartDeclarations } from './declaration-collection';
 

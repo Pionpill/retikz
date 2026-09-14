@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Scope 变换 lowering 与相对定位投影流程图 */
 const Demo: FC = () => (

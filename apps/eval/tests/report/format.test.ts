@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Report } from '../../src/report/aggregate';
-
 import { aggregate } from '../../src/report/aggregate';
 import { formatMarkdown } from '../../src/report/format';
-import { type RunRecord } from '../../src/run';
+import type { RunRecord } from '../../src/run';
 
 const records: Array<RunRecord> = [
   {

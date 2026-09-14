@@ -1,7 +1,7 @@
 import type { CoreProviderContribution, IRChild, IRScope } from '@retikz/core';
-
 import { CURRENT_IR_VERSION, PathKind } from '@retikz/core';
 
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
 import type {
   AnyInputEmbed,
   InputEmbedAuthoringSite,
@@ -10,8 +10,12 @@ import type {
   NormalizedInputEmbedChildren,
 } from '../embed';
 import type { InputNode } from '../node';
+import { normalizeNode } from '../node';
 import type { InputPath } from '../path';
+import { normalizePath } from '../path';
 import type { InputScope } from '../scope';
+import { normalizeScopeWithChildren } from '../scope';
+import { createInputRuntimeMetaSnapshot } from './runtime-meta';
 import type {
   InputAuthoringSite,
   InputChild,
@@ -22,12 +26,6 @@ import type {
   InputScene,
   NormalizedInputScene,
 } from './types';
-
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../../error';
-import { normalizeNode } from '../node';
-import { normalizePath } from '../path';
-import { normalizeScopeWithChildren } from '../scope';
-import { createInputRuntimeMetaSnapshot } from './runtime-meta';
 import { InputLayerCache } from './types';
 
 /** 隐式 children 简写使用的默认 Layer 身份 */

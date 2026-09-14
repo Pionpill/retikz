@@ -1,5 +1,4 @@
 import type { AnchorInput, AnchorValue, SideValue } from '../shared';
-
 import { Anchor, CenterAnchor, Corner, isAnchor, isSide, Side } from '../shared';
 
 const SideAliasToSide: Record<string, SideValue> = {

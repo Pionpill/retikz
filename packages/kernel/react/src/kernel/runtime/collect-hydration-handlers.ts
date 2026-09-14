@@ -1,10 +1,8 @@
 import type { ElementHandlers, HydrationHandler, HydrationHandlers } from '@retikz/render/hydration';
 import type { ReactNode } from 'react';
-
 import { Children, Fragment, isValidElement } from 'react';
 
 import type { HydrationEventPropName } from '../protocol';
-
 import { getDisplayName, TIKZ_COORDINATE, TIKZ_NODE, TIKZ_PATH, TIKZ_SCOPE } from '../protocol';
 import { resolveInputEmbedAdapter } from '../protocol';
 import { EVENT_PROP_TO_NAME } from '../protocol';

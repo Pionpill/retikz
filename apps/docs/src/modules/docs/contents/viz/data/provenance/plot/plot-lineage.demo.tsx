@@ -1,20 +1,18 @@
 import type { PlotLineageRun } from '@retikz/plot';
-import type { FC } from 'react';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import type { FC } from 'react';
 import { useCallback, useState } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
-
 import { usePreviewControls } from '@/modules/docs/preview';
 
-import { plotLineageControls } from './plot-lineage.controls';
-import { sales } from './plot-lineage.data';
 import {
   buildPlotLineageOptions,
   buildPlotLineageTransforms,
   summarizePlotLineageTransformSteps,
 } from './plot-lineage-options';
+import { plotLineageControls } from './plot-lineage.controls';
+import { sales } from './plot-lineage.data';
 
 /** 注册回退使用的 Plot 溯源控件 */
 export const previewControls = plotLineageControls;

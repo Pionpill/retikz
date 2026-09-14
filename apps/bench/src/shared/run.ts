@@ -1,6 +1,5 @@
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-
 import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
@@ -14,7 +13,6 @@ import {
 } from '@retikz/runtime';
 
 import type { BenchmarkExecution, DeterministicBenchmarkResult } from './budget';
-
 import { createSimpleNodeScene, updateSimpleNodeFill } from './fixtures';
 import { stableHash } from './hash';
 import { assertFullTrace, assertSingleTraceRecord } from './trace';

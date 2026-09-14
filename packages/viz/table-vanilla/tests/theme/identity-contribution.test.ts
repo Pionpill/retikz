@@ -1,6 +1,5 @@
-import type { InputEmbedContext } from '@retikz/vanilla';
-
 import { createManualTableIR } from '@retikz/table';
+import type { InputEmbedContext } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { inputTableFromIR, TableInputEmbedAdapter } from '../../src';

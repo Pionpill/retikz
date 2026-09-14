@@ -1,5 +1,4 @@
 import type { Scene } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../../src/canvas';
@@ -344,7 +343,7 @@ describe('drawScene 渐变描边', () => {
     drawScene(context as unknown as CanvasRenderingContext2D, s);
 
     expect(
-      (context.calls.find(c => c.name === 'createLinearGradient')?.args as Array<number>).map(n => Math.round(n)),
+      (context.calls.find(c => c.name === 'createLinearGradient')!.args as Array<number>).map(n => Math.round(n)),
     ).toEqual([50, 0, 50, 50]);
     expect(context.calls.filter(c => c.name === 'addColorStop').map(c => c.args)).toEqual([
       [0, '#000'],

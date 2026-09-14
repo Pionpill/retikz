@@ -5,9 +5,8 @@ import type {
   IRFrameDescription,
   IRFrameTitle,
 } from '@retikz/standard';
-import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContribution, InputNode } from '@retikz/vanilla';
-
 import { createFrame, FrameProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
+import type { InputChild, InputEmbed, InputEmbedAdapter, InputEmbedContribution, InputNode } from '@retikz/vanilla';
 
 import { StandardFrameEmbedKind } from './constants';
 

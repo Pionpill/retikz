@@ -8,14 +8,12 @@ import type {
   SceneRuntimeSubtree,
   SceneRuntimeSubtreeNode,
 } from '@retikz/core';
-import type { RuntimeIdentity } from '@retikz/runtime';
-
 import { PathCommandSchema } from '@retikz/core';
+import type { RuntimeIdentity } from '@retikz/runtime';
 import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
-import type { RuntimeIdentityMap } from './shared';
-
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { RuntimeIdentityMap } from './shared';
 import { createRuntimeIdentityMap, runtimeStructuralEquals } from './shared';
 
 type MutableSceneNode = {

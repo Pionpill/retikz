@@ -1,15 +1,14 @@
+import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
+import { RegressionChart, RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
 import type { IRPlotSmoothMethod } from '@retikz/plot';
 import type { FC } from 'react';
 
-import { ChartData, ChartSource, ChartSubtitle, ChartTitle } from '@retikz/chart-react';
-import { RegressionChart, RegressionEncodings, RegressionProperties } from '@retikz/chart-react/point';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
+import { regressionTrendPropertiesOf } from './regression-basic-style';
 import { REGRESSION_BASIC_CONTROL_IDS } from './regression-basic.controls';
 import { irisRegressionData } from './regression-basic.data';
 import { previewControlContract } from './regression-basic.en.controls';
-import { regressionTrendPropertiesOf } from './regression-basic-style';
 
 type RegressionMethodKind = IRPlotSmoothMethod['kind'];
 

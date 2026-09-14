@@ -5,7 +5,6 @@ import type {
   IRPlotDefaults,
   IRPlotScaleOperation,
 } from '@retikz/plot';
-
 import {
   bindCoordinateScaleNames,
   mergePlotDefaults,
@@ -15,6 +14,7 @@ import {
 } from '@retikz/plot';
 import { ZodError } from 'zod';
 
+import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type {
   ChartEncodingResolution,
   ChartEncodingRuntime,
@@ -22,8 +22,6 @@ import type {
   ChartRecipeResolution,
 } from '../contract/recipe';
 import type { IRChartPlotExtension, IRChartSource } from '../schemas';
-
-import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 
 const invalidPlot = (message: string, path: ReadonlyArray<string | number>, cause?: unknown): RetikzChartError =>
   new RetikzChartError({

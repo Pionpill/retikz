@@ -1,6 +1,5 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { PlotSchema } from '@retikz/plot';
+import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 /** typed Chart 可显式追加的 Plot-owned fragment */

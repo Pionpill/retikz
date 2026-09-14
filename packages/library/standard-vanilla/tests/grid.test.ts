@@ -1,5 +1,4 @@
 import type { GridInput } from '@retikz/standard';
-
 import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';

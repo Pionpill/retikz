@@ -1,10 +1,8 @@
 import type { OverlayLayoutInspectOptions } from '@retikz/layout/inspect';
+import { OVERLAY_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
 import type { FC } from 'react';
 
-import { OVERLAY_LAYOUT_INSPECTOR_KEY } from '@retikz/layout/inspect';
-
 import type { OverlayLayoutProps } from '../overlay-layout';
-
 import { OverlayLayout as BaseOverlayLayout } from '../overlay-layout';
 import { createLayoutReactAuthoring } from './authoring';
 

@@ -1,16 +1,14 @@
 import type { LayoutCompositeCompileContext } from '@retikz/core';
-import type { BoundsInsets, BoundsRect } from '@retikz/math';
-
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
+import type { BoundsInsets, BoundsRect } from '@retikz/math';
 import { resolveSurface } from '@retikz/standard';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { CanonicalGroup } from '../../resolve';
-import type { IRGroup } from '../../schemas';
-
 import { resolveGraphDefinitionOptions } from '../../providers';
+import type { CanonicalGroup } from '../../resolve';
 import { resolveGroup } from '../../resolve';
+import type { IRGroup } from '../../schemas';
 import { lowerGroupCaptionComposition, lowerGroupSurface } from './lower';
 
 /** Group shell 对自动布局公开的最小尺寸与 body content insets */

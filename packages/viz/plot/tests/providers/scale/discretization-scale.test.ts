@@ -1,11 +1,9 @@
 import type { IRNode, IRScope } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /** 笛卡尔默认画布：x [0,..]→[0,480]，y range [300,0]（无 axis → plot area = 整图） */

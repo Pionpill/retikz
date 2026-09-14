@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Rectangle Sugar 的点位归一与闭合 Path 生成流程图 */
 const Demo: FC = () => (

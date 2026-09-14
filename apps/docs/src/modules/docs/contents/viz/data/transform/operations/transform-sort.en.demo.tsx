@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, transformSortControls } from './transform-sort.en.controls';
 import { renderTransformSortPreview } from './transform-sort-preview';
+import { previewControlContract, transformSortControls } from './transform-sort.en.controls';
 
 /** Registers fallback controls for the row-sort example */
 export const previewControls = transformSortControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** Compares source row order with the controlled sort output */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

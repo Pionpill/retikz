@@ -1,5 +1,4 @@
 import type { GraphThemeStyleDefinition } from '@retikz/graph';
-
 import { createContext, useContext } from 'react';
 
 /** Graph-owned ambient Theme definitions context */

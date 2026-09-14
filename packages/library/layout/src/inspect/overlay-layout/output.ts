@@ -3,7 +3,6 @@ import type { InspectorContext } from '@retikz/inspect';
 import type { OverlayLayoutArtifact } from '../../composites/overlay-layout';
 import type { CanonicalOverlayLayoutInspectOptions } from '../resolve/overlay-layout';
 import type { LayoutInspectionChild, LayoutInspectionMark } from '../shared';
-
 import {
   inspectLayoutArtifactBase,
   inspectLayoutLine,

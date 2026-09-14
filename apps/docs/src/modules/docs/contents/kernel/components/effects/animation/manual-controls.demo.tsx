@@ -1,11 +1,10 @@
 import type { IRAnimationTrack } from '@retikz/core';
+import { AnimationModeProvider, Layout, Node } from '@retikz/react';
 import type { AnimationControls } from '@retikz/render/animation';
 import type { FC } from 'react';
-
-import { AnimationModeProvider, Layout, Node } from '@retikz/react';
 import { useRef } from 'react';
 
-import { type PreviewSourceConfig } from '@/modules/docs/preview';
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
 export const previewSource = {
   deriveIR: false,

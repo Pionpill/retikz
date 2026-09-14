@@ -1,16 +1,14 @@
 import type { IRNode, IRScope } from '@retikz/core';
-
 import { defineTransform } from '@retikz/data';
 import { SOURCE_INDEX } from '@retikz/data';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot } from '../../../src/schemas';
-
 import { createPlotLocator } from '../../../src/pipeline';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /**

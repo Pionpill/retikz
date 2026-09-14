@@ -1,21 +1,101 @@
-# Layout v0.1 Roadmap
+# layout v0.1 Roadmap
 
-> 状态：进行中；alpha.1 已完成。关联：[Layout v0 roadmap](../roadmap.md) · [Layout 布局库设计](../../../../architecture/layout-library-design.md) · [Standard v0.1 roadmap](../../../standard/v0/v0.1/roadmap.md)
+## 版本目标
 
-## 目标
+建立领域无关的排版布局包及统一消费入口。
 
-建立独立 Layout package family 和 release group，把 Standard 已验证的 FlexLayout、GridLayout、OverlayLayout、LayoutItem、artifact、inspection 与跨宿主 authoring 迁入正确 owner，并为 Standard、Graph 与其它 Tier 2 提供稳定 composition capability。
+## 重点功能
 
-## Milestone
+| 重点能力           | 目标                                        | 相关 ADR                              |
+| ------------------ | ------------------------------------------- | ------------------------------------- |
+| 布局所有权         | 建立独立 Layout owner 与统一公开入口        | [001](./001-layout-package-family.md) |
+| Flex / Grid        | 提供线性排版和二维网格组织能力              | [001](./001-layout-package-family.md) |
+| Overlay 与共同表面 | 统一叠放、容器约束、测量与放置              | [001](./001-layout-package-family.md) |
+| 组合与诊断         | 支持跨组件复用、布局 artifact 与 inspection | [001](./001-layout-package-family.md) |
+| 跨宿主入口         | 直接 IR、React 与 Vanilla 复用同一布局契约  | [001](./001-layout-package-family.md) |
 
-| Milestone                       | 主题              | 范围                                                                                   |
-| ------------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
-| [alpha.1](./alpha.1/roadmap.md) | Layout foundation | 三包、发布组、Standard 迁移、`layout` namespace、composition、inspection、tests 与文档 |
+## 功能规划
 
-## 边界
+### 布局所有权
 
-- 不创建 `@retikz/library` 聚合包
-- 不实现 Tree、Layered、Force、GraphModel、edge routing 或编辑器状态
-- 不保留 Standard 旧入口、re-export、Definition 或 namespace 兼容层
-- 不借迁移改变既有 Flex / Grid / Overlay 的输入、默认值、求解、artifact 与失败语义
-- 不把 Core proposal / probe / replay 复制为 Layout 私有运行时
+主要场景：
+
+- 直接作者希望按排版能力安装和使用 Layout。
+- Standard、Graph 等包需要消费共同布局而不复制实现。
+
+规划内容：
+
+- 把既有排版能力从 Standard 迁入独立 Layout owner。
+- 明确公开入口与依赖方向，迁移不重新设计既有布局行为。
+
+预期效果：
+
+消费方可以直接选择布局能力，不再通过 Standard 间接获取排版。
+
+### Flex / Grid
+
+主要场景：
+
+- 条目需要按横向或纵向进行线性分配。
+- 内容需要放入二维网格，并在容器约束内组织。
+
+规划内容：
+
+- 保留 Flex 与 Grid 的输入、尺寸分配和放置语义。
+- 让直接布局与上层组合消费相同排版能力。
+
+预期效果：
+
+同类条目可以按线性或网格规则组织，复合组件沿用同一结果。
+
+### Overlay 与共同表面
+
+主要场景：
+
+- 若干内容需要在同一区域叠放或对齐。
+- 不同布局模式需要解释相同的尺寸、间距和溢出约束。
+
+规划内容：
+
+- 提供 Overlay，并统一 Box / LayoutItem 的共同表面。
+- 保持测量、allocation、overflow 与 clip 的含义一致。
+
+预期效果：
+
+不同排版模式之间可以组合，尺寸不足时仍保留真实布局信息。
+
+### 组合与诊断
+
+主要场景：
+
+- 上层 composite 需要组合布局而不是重造求解器。
+- 作者需要理解条目为何被分配到某个位置或尺寸。
+
+规划内容：
+
+- 提供跨 owner 已验证复用的布局组合能力。
+- 提供 layout artifact 与独立 inspection 入口，保留真实布局结果。
+
+预期效果：
+
+上层组件能复用布局，作者也能解释布局输出而非只看最终像素。
+
+### 跨宿主入口
+
+主要场景：
+
+- JSON IR、React 和无框架作者表达同一排版。
+- 静态输出与客户端宿主共享输入与诊断。
+
+规划内容：
+
+- 让三种入口进入同一布局契约和确定性结果。
+- adapter 只负责 authoring 与宿主接入，不拥有另一套布局解释。
+
+预期效果：
+
+宿主切换不改变布局含义，无框架和声明式作者共享能力范围。
+
+## 边界与依赖
+
+依赖 Core、Math 与 Foundation；不拥有图拓扑、自动图布局、routing、renderer 或 Editor。

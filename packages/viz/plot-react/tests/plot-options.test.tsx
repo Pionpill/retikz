@@ -1,6 +1,5 @@
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

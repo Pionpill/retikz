@@ -1,13 +1,11 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
-import type { ReactNode } from 'react';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale } from '@retikz/plot-react';
+import type { ReactNode } from 'react';
 import { Component } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { validationPolicyControls } from './validation-policy.controls';
-
 import { allInvalidRows, cleanRows, dirtyRows } from './validation-policy.data';
 
 type ValidationPolicyValues = PreviewControlValuesFor<typeof validationPolicyControls>;

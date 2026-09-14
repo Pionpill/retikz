@@ -137,7 +137,7 @@ describe('useLowerTex lifecycle', () => {
 
   it('等价的 profile shorthand 复用同一个 engine 与 lowerer', async () => {
     createMathJaxEngineMock.mockResolvedValue({ convert: () => 'math' });
-    createLowerTexMock.mockReturnValue((() => null));
+    createLowerTexMock.mockReturnValue(() => null);
     const extensions = [
       'ams',
       'newcommand',

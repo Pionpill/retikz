@@ -1,4 +1,5 @@
 import type { RuntimeOwnerExecutionResult } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 import type {
   RuntimeChangeSet,
   RuntimeOwnerDefinition,
@@ -8,8 +9,6 @@ import type {
   RuntimeRevision,
 } from '../owner';
 import type { RuntimeOwnerInput, RuntimeOwnerUpdate, RuntimeSnapshot } from './types';
-
-import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
 
 /** command 私有保存的 owner 输入与 lifecycle 入口 */
 export type RuntimeOwnerCommandExecutor = Readonly<{

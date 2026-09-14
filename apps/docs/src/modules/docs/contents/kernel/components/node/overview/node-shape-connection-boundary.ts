@@ -1,7 +1,6 @@
 import type { ConnectionEnvelopeKind, IRNode, PathPrim, Rect, ScenePrimitive, ShapeDefinition } from '@retikz/core';
-import type { JsonObject } from '@retikz/foundation';
-
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
+import type { JsonObject } from '@retikz/foundation';
 import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/shape';
 import { z } from 'zod';
 

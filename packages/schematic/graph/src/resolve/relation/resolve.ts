@@ -1,6 +1,7 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { RelationPredicateDefinition } from '../../contract';
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import type {
   IRGraphRelation,
   IRGraphRelationDefaults,
@@ -9,6 +10,9 @@ import type {
   IRGraphRelationRuleStructure,
   IRGraphRelationStructureTokenOverrides,
 } from '../../schemas';
+import { GraphRelationStructureTokenOverridesSchema } from '../../schemas';
+import { mergeGraphDefaults } from '../theme';
+import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 import type {
   CanonicalRelation,
   CanonicalRelationPredicate,
@@ -19,11 +23,6 @@ import type {
   RelationResolveContext,
   RelationStructureResolveContext,
 } from './types';
-
-import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
-import { GraphRelationStructureTokenOverridesSchema } from '../../schemas';
-import { mergeGraphDefaults } from '../theme';
-import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 
 const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, capability: string): T => {
   const definition = registry.get(key);

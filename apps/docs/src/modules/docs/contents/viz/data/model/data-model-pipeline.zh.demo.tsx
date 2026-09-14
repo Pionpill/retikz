@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 数据模型从外部行到下游消费者的整体流程 */
 const Demo: FC = () => (

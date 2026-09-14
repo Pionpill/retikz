@@ -1,15 +1,13 @@
 // @vitest-environment jsdom
 
 import type { FC } from 'react';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { ComponentPreviewDialogProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
-
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
+import type { ComponentPreviewDialogProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
 
 const dialogCapture = vi.hoisted(() => ({ props: [] as Array<ComponentPreviewDialogProps> }));
 

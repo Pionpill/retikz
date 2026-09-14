@@ -1,18 +1,16 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-
 import { PlotMark, RelationMarkSchema } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
+import { defineChartMark } from '../../_chart/contract';
+import { requiredFieldOf } from '../shared';
 import type {
   IRRangedDotChartProperties,
   IRRangedDotMark,
   IRRangedDotPointProperties,
   IRRangedDotRangeProperties,
 } from './schema';
-
-import { defineChartMark } from '../../_chart/contract';
-import { requiredFieldOf } from '../shared';
 import { RangedDotChartMarkSchema } from './schema';
 
 const endpointGlyphOf = (properties: IRRangedDotPointProperties): JsonObject => {

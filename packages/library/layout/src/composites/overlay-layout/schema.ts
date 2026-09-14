@@ -1,6 +1,5 @@
-import type { infer as ZodInfer, RefinementCtx } from 'zod';
-
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
+import type { infer as ZodInfer, RefinementCtx } from 'zod';
 import { array, discriminatedUnion, enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import { LAYOUT_NAMESPACE } from '../../shared';

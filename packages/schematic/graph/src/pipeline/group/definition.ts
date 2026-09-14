@@ -1,12 +1,10 @@
 import type { LayoutCompositeDefinition } from '@retikz/core';
-
 import { defineComposite } from '@retikz/core';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGroup } from '../../schemas';
-
 import { resolveGraphDefinitionOptions } from '../../providers';
+import type { IRGroup } from '../../schemas';
 import { GroupSchema } from '../../schemas';
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { createCompileGroup } from './compile';

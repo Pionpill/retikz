@@ -1,5 +1,4 @@
 import type { AnyCompositeDefinition, AnyExpandCompositeDefinition, AnyLayoutCompositeDefinition } from '@retikz/core';
-
 import { RetikzRenderError, RetikzRenderErrorCode } from '@retikz/render/runtime';
 import { defineRuntimeOwner } from '@retikz/runtime';
 

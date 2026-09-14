@@ -1,48 +1,101 @@
 # table v0.1 Roadmap
 
-> v0.1 的目标是建立完整的 renderer-agnostic 静态表格语法。本文只确定 milestone 边界；具体字段、Definition、算法和测试合同由各 milestone ADR 决定。
-> 关联：[`table v0 roadmap`](../roadmap.md) · [`table-design.md`](../../../../architecture/table-design.md) · [`table completeness`](../../../../architecture/table-visualization-complete.md)
-
 ## 版本目标
 
-同一份 JSON-safe IRTable 能在 React / Vanilla 中表达，并沿统一 Table pipeline 进入 Core contextual compile；renderer 不需要认识 Table 私有类型。
+建立完整的静态表格语法与可追溯绘图能力。
 
-v0.1 发布前应覆盖明细、分组、汇总与交叉表等核心静态表格形态，同时保持 Data、Core、adapter 和 data-grid 宿主边界清晰。
+## 重点功能
 
-## Milestones
+| 重点能力       | 目标                                                          | 相关 ADR                                                                                                                                                                                                                                                                                                              |
+| -------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 基础与二维布局 | 支持 manual / detail、轨道、span、border、对齐与内容 fit      | [001](./001-table-spec-root.md)、[002](./002-table-structure-model.md)、[010](./010-track-sizing-schema-and-solver.md)、[011](./011-cell-box-span-and-alignment.md)、[012](./012-content-fit-overflow-and-wrap.md)、[013](./013-border-graph-and-conflict-resolution.md)、[016](./016-manual-row-matrix-authoring.md) |
+| 呈现语法       | 支持 formatter、selector / rule、条件视觉、默认片段与图例描述 | [017](./017-cell-formatter-and-formatted-value.md)、[018](./018-presentation-context-and-cell-appearance.md)、[019](./019-cell-selector-and-rule-cascade.md)、[020](./020-conditional-visual-encoding-and-scale.md)、[023](./023-table-source-default-fragments.md)                                                   |
+| 分组与汇总     | 规划 group、hierarchy、subtotal、grand total 与 transpose     | —                                                                                                                                                                                                                                                                                                                     |
+| 交叉表         | 规划 pivot / matrix、多层 header 与表格区域语义               | —                                                                                                                                                                                                                                                                                                                     |
+| 组合与追溯     | 支持 Legend 组合，并规划分片、重复 header 与完整 lineage      | [014](./014-layout-lowering-manifest-and-migration.md)、[024](./024-standard-legend-consumption-and-traceability.md)                                                                                                                                                                                                  |
 
-| Milestone                       | 主题                           | 主要产出                                                                                                                                                      | Gating                                                                                                               | 状态                      |
-| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------- |
-| [alpha.1](./alpha.1/roadmap.md) | **最薄纵向闭环**               | IRTable、manual/detail、基础 Cell、固定轨道布局、lowering、React/Vanilla                                                                                      | Core composite 与 DataReference 已就绪                                                                               | 已完成                    |
-| [alpha.2](./alpha.2/roadmap.md) | **二维布局与持久化 authoring** | auto/fraction/minmax、span、border、bounds-aware alignment、fit/overflow、manual row-major persistence                                                        | 通用 `IRChild` constrained layout                                                                                    | 已完成                    |
-| [alpha.3](./alpha.3/roadmap.md) | **呈现语法**                   | formatter、presentation、selector/rule、条件视觉 scale、Source-shaped Table defaults、shared categorical projection、Legend descriptor / Standard Legend 消费 | alpha.2 canonical model；Core 默认协议；Standard ADR-09；Core gradient-stop semantics / replayed-child artifact link | 进行中（ADR-07 Proposed） |
-| alpha.4                         | **分组与汇总**                 | group、hierarchy、subtotal、grand total                                                                                                                       | Data aggregate / lineage                                                                                             | 计划中                    |
-| alpha.5                         | **交叉表**                     | pivot、matrix、多层 header、spanner/stub/corner/row group                                                                                                     | Data 分组与聚合能力                                                                                                  | 计划中                    |
-| [alpha.6](./alpha.6/roadmap.md) | **分片与追溯收口**             | Standard Legend 组合、fragmentation、重复 header、完整 manifest/lineage/locator/diagnostics                                                                   | Standard Legend/Flex；Core occurrence-safe artifact link                                                             | 计划中                    |
-| beta.1                          | **稳定化**                     | API 收口、adversarial tests、双语 docs、发布检查                                                                                                              | alpha completeness 全部闭环                                                                                          | 计划中                    |
+## 功能规划
 
-## 贯穿原则
+### 基础与二维布局
 
-- 数据集不进入 IR；IRTable 只保存外部数据引用和可序列化配置
-- Cell 是语义与布局槽位，内容以 Core `IRChild` 为边界
-- 显式 Plot 等 Tier 2 Cell 属于 v0.1；Table 负责其 Cell box、测量、fit、clip 与追溯，但不解析内容内部语义
-- 内置与自定义结构 / 呈现经过同一 Definition / registry 链路
-- manual / detail / pivot / matrix 是基础 structure；group / hierarchy / summary / transpose 是可组合 operation
-- Table 不复制通用 Data transform，也不建立平行 Core IR、测量或 renderer
-- Table 拥有 visual encoding 到 Legend descriptor / Standard Legend 输入的领域解析、`tableThemeTokens` mapping 与 lineage；Core 拥有 inherited namespace 与 shared colors；alpha.3 截止于 descriptor seed，通用 Legend 视觉结构、内部布局和外围 composition 由 Standard 拥有，跨 Table / Legend artifact 的 occurrence 关联由 alpha.6 收口
-- 每个 alpha 都形成 `table`、`table-react`、`table-vanilla` 可验证的纵向薄片
-- manifest、lineage 与 locator 可以分阶段丰富，但稳定 identity 与来源不能事后补造
+主要场景：
 
-## 不在 v0.1 范围
+- 作者显式组织内容，或按数据行生成明细表。
+- 单元格需要跨行列、对齐并容纳不同尺寸内容。
 
-- 虚拟滚动、滚动同步与 viewport windowing；这些大表展示能力延后到 v0.2
-- 选择、拖拽等展示交互 runtime；后续按独立 ADR 评估
-- 单元格编辑、电子表格公式与依赖计算；这些不是 Table 家族目标
-- 服务端分页、异步加载和缓存状态；这些由宿主提供
-- DOM table / ARIA grid 的具体宿主实现
-- 自动按 Table 维度生成 Plot Cell 的 PivotChart，以及跨 Plot Cell 自动训练或协调 scale、axis、grid、legend；显式 Plot Cell 仍通过 Core composite 支持
-- 统一 `viz-react` / `viz-vanilla` adapter
+规划内容：
 
-## ADR 约定
+- 覆盖 manual / detail、track sizing、span、border 与 fit / overflow。
+- 提供可持久化的二维 authoring，并保持单元格测量与放置一致。
 
-每个 milestone 在自己的目录内从 `01` 编号。ADR 状态从 Proposed 开始，完成 Architecture Gate 与人工确认后才能进入实现。
+预期效果：
+
+静态内容和明细数据能够形成有明确尺寸、边界和对齐的表格。
+
+### 呈现语法
+
+主要场景：
+
+- 不同单元格需要格式化、规则匹配和条件外观。
+- 数据大小或类别需要映射为表格内的视觉提示。
+
+规划内容：
+
+- 发展 formatter、selector / rule、条件视觉与 Source 默认片段。
+- 形成图例描述，区分数据编码与通用 Legend 绘制。
+
+预期效果：
+
+表格能承载数据解释与视觉提示，不只是统一样式的文字网格。
+
+### 分组与汇总
+
+主要场景：
+
+- 数据需要按类别或层次分组。
+- 分组内容需要小计、总计或行列转置展示。
+
+规划内容：
+
+- 保留 group、hierarchy、subtotal、grand total 与 transpose 规划。
+- 聚合与数据来源处理依赖 Data，不在 Table 内重建统计算法。
+
+预期效果：
+
+分组数据与汇总结果拥有明确展示方向，不提前假设具体实现已完成。
+
+### 交叉表
+
+主要场景：
+
+- 多维结果需要透视或矩阵表达。
+- 列组与行组需要多层表头和明确的区域语义。
+
+规划内容：
+
+- 保留 pivot / matrix 与多层 header 规划。
+- 覆盖 spanner、stub、corner、row group 等表格区域表达。
+
+预期效果：
+
+多维结构可以按表格语义规划，避免用无关联单元格拼接复杂表头。
+
+### 组合与追溯
+
+主要场景：
+
+- 长表或复合图需要分片、重复表头与外围图例。
+- 使用者需要追溯显示内容到数据与布局结果。
+
+规划内容：
+
+- 发展 Legend 组合、fragmentation 与重复 header。
+- 完善 manifest、lineage、locator 与 diagnostics，不接管交互编辑状态。
+
+预期效果：
+
+复杂表格能与外部图例组合，并保持内容、数据和布局之间的关联。
+
+## 边界与依赖
+
+依赖 Data 聚合与 lineage、Core 约束布局和 artifact、Layout 与 Standard Legend；不拥有数据算法、renderer、单元格编辑或电子表格计算。

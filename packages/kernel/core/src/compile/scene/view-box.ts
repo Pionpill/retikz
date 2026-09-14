@@ -1,10 +1,8 @@
 import type { BoundsRect } from '@retikz/math';
-
 import { isPositiveBoundsRect } from '@retikz/math';
 
-import type { IRViewBox } from '../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRViewBox } from '../../schemas';
 import { roundLayout } from './layout';
 
 /** 校验显式 viewBox 的原始输入 */

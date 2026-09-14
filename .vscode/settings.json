@@ -1,11 +1,11 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.codeActionsOnSave": {
     "source.organizeImports": "never",
-    "source.fixAll.eslint": "always",
     "source.fixAll.sortJSON": "always",
-    "source.fixAll.stylelint": "explicit"
+    "source.fixAll.stylelint": "explicit",
+    "source.fixAll.oxc": "always"
   },
   "cSpell.words": [
     "Aabb",

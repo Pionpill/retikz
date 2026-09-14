@@ -1,8 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScope } from '@retikz/core';
 import type { ExternalDatasets, ExternalRow } from '@retikz/data';
-import type { JsonObject, JsonValue } from '@retikz/foundation';
-
 import { readSourceIndex, readSourceIndices, resolveFieldPath } from '@retikz/data';
+import type { JsonObject, JsonValue } from '@retikz/foundation';
 
 import type {
   CoordinateFrame,
@@ -13,17 +12,16 @@ import type {
   PlotLocatorOptions,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { IRPlot, IRPlotMark } from '../../schemas';
-import type { LowerPlotsOptions, MarkDataView } from '../expand';
-import type { PlotDataArtifactLowerResult } from '../expand/lower';
-
 import { cellGeometryAnchor, isRenderableCellGeometry } from '../../contract';
 import { datumMeta } from '../../contract';
 import { buildIntervalContext, intervalCellGeometry, resolveMarkRegistry } from '../../providers';
 import { coordinateScopeIdOf } from '../../resolve/composition';
 import { datumAnchor } from '../../resolve/mark';
+import type { IRPlot, IRPlotMark } from '../../schemas';
 import { isBuiltinMark, PlotMark } from '../../schemas';
 import { DEFAULT_PLOT_HEIGHT, DEFAULT_PLOT_WIDTH } from '../../shared';
+import type { LowerPlotsOptions, MarkDataView } from '../expand';
+import type { PlotDataArtifactLowerResult } from '../expand/lower';
 import { lowerPlotWithDataArtifact } from '../expand/lower';
 
 type PlotFacetLocatorValue = Exclude<PlotFacetLocatorOptions['row'], undefined>;

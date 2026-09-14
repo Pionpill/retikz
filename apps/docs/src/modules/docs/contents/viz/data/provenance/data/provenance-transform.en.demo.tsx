@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Difference between row-preserving and row-changing provenance propagation */
 const Demo: FC = () => (

@@ -1,7 +1,6 @@
 import { BlendMode } from '@retikz/core';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 混合 playground 的稳定字段 id */

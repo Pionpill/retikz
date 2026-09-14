@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** contour 顶点环从任意局部原点归一到 Node position 的流程图 */
 const Demo: FC = () => (

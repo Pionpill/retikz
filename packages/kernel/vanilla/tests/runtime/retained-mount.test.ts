@@ -1,21 +1,19 @@
 // @vitest-environment jsdom
 import type { AnyCompositeDefinition, IRScene } from '@retikz/core';
+import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCoreThemeColors } from '@retikz/core';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfig,
   RetainedRendererFactory,
   RetainedRendererFactoryInput,
 } from '@retikz/render/runtime';
-import type { RuntimePreparedCommit } from '@retikz/runtime';
-
-import { compileToScene, CompositeBaseSchema, defineComposite, resolveDefaultCoreThemeColors } from '@retikz/core';
 import { defineRetainedRenderer, RetikzRenderErrorCode } from '@retikz/render/runtime';
+import type { RuntimePreparedCommit } from '@retikz/runtime';
 import { RetikzRuntimeErrorCode } from '@retikz/runtime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { enum as zodEnum, literal, strictObject, string } from 'zod';
 
 import type { InputEmbedAdapter, InputScene, VanillaCompileDriver } from '../../src';
-
 import { InputLayerCache } from '../../src';
 import { mountCanvas, mountSvg } from '../../src/dom';
 import { createRetainedCompositeDefinitions } from '../../src/processing/composites';

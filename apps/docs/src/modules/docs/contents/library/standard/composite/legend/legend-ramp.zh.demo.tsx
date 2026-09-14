@@ -1,8 +1,7 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { LegendContentKind, LegendDirection } from '@retikz/standard';
 import { Legend, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** 连续样本与归一化刻度 */
 const Demo: FC = () => (

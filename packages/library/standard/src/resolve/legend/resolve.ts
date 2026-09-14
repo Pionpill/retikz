@@ -1,10 +1,9 @@
 import { resolveLayoutContainerBox } from '@retikz/layout/compose';
 
-import type { IRLegend } from '../../composites/presentation/legend/schemas';
-import type { CanonicalLegend } from './types';
-
 import { LegendContentKind } from '../../composites/presentation/legend/constants';
+import type { IRLegend } from '../../composites/presentation/legend/schemas';
 import { LegendSchema } from '../../composites/presentation/legend/schemas';
+import type { CanonicalLegend } from './types';
 
 /** 在布局前确定 Legend 默认值并展开物理间距 */
 export const resolveLegend = (source: IRLegend): CanonicalLegend => {

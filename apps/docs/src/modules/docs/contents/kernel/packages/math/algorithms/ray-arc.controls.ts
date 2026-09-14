@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { rayArcI18n } from './ray-arc.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** 射线圆弧 playground 的稳定字段 id */
 export const RayArcPlaygroundControlId = {

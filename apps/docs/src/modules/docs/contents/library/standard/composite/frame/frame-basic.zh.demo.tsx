@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** Frame 标题、说明与 Core Node body 的最小中文示例 */
 const Demo: FC = () => (

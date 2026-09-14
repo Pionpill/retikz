@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { FlowThemeStyleDefinition } from '../../contract';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { FlowThemeStyleDefinition } from '../../contract';
 
 /** 组装 Flow Theme style registry，同一 Definition identity 只保留一次 */
 export const resolveFlowThemeStyleRegistry = (

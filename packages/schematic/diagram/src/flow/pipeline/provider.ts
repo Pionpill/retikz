@@ -1,12 +1,10 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
-
 import { GraphProviderKey } from '@retikz/graph';
 import { FlexLayoutProvider, GridLayoutProvider } from '@retikz/layout';
 import { LegendProvider } from '@retikz/standard';
 
-import type { FlowDiagramDefinitionOptions } from '../contract';
-
 import { DIAGRAM_NAMESPACE } from '../../_diagram';
+import type { FlowDiagramDefinitionOptions } from '../contract';
 import { createFlowDiagramRuntimeDatasets, resolveFlowDiagramRuntimeOptions } from '../providers';
 import { FLOW_TYPE } from '../shared';
 import { createFlowDiagramDefinitionFromOptions } from './definition';

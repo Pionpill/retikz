@@ -1,5 +1,4 @@
 import type { ClipDefinition, CoreDependencyProvider } from '@retikz/core';
-
 import { CoreProviderCapability } from '@retikz/core';
 
 import {

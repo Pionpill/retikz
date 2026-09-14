@@ -1,5 +1,4 @@
 import type { IRChild, IRPath } from '@retikz/core';
-
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

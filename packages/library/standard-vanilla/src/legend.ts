@@ -1,4 +1,5 @@
 import type { LegendInput } from '@retikz/standard';
+import { createLegend, LegendProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import type {
   InputChild,
   InputEmbed,
@@ -6,8 +7,6 @@ import type {
   InputEmbedContext,
   InputEmbedContribution,
 } from '@retikz/vanilla';
-
-import { createLegend, LegendProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 
 import { StandardLegendEmbedKind } from './constants';
 

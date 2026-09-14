@@ -1,4 +1,6 @@
 import type { IRScene, Scene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
+import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
+import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import type {
   RenderFrameSnapshot,
   RenderRuntimeConfigInput,
@@ -8,12 +10,9 @@ import type {
   RetainedRendererFactoryInput,
   RetainedSvgRenderer,
 } from '@retikz/render/runtime';
-import type { PerformanceTraceOutcomeValue, PerformanceTraceRecord } from '@retikz/runtime';
-
-import { compileToScene, CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
-import { drawScene, renderToCanvas } from '@retikz/render/canvas';
 import { builtinRetainedRendererFactory, defineRetainedRenderer } from '@retikz/render/runtime';
 import { buildSvgDocument, renderToSvgString } from '@retikz/render/svg';
+import type { PerformanceTraceOutcomeValue, PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeOwnerUpdate,
   createRuntimeTraceReporter,
@@ -29,8 +28,6 @@ import type {
   RetainedBenchmarkSession,
   WallClockScenarioReport,
 } from '../shared';
-import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
-
 import {
   assertFullTrace,
   assertSingleTraceRecord,
@@ -46,6 +43,7 @@ import {
   updateSimpleNodeFill,
   updateStableGroupFill,
 } from '../shared';
+import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
 
 /** 对真实 Canvas 像素生成 FNV-1a 32-bit 功能摘要 */
 export const hashCanvasPixels = (context: CanvasRenderingContext2D): string => {

@@ -1,6 +1,5 @@
 import type { TableThemeStyleDefinition } from '@retikz/table';
 import type { FC, ReactNode } from 'react';
-
 import { useMemo } from 'react';
 
 import { TableThemeStylesContext, useTableThemeStyles } from './theme-context';

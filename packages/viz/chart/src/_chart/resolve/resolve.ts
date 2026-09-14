@@ -1,13 +1,12 @@
+import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { ChartSlotConsumption } from '../contract/recipe';
 import type { ChartRecipeDefinition } from '../contract/recipe';
 import type { IRChartSource } from '../schemas';
-import type { ChartResolution, SelectedChartResolveContext } from './types';
-
-import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import { resolveChartMarks, resolveChartSemanticMarks } from './marks';
 import { resolveChartPlot } from './plot';
 import { resolveChartPresentation } from './presentation';
 import { resolveChartTheme } from './theme';
+import type { ChartResolution, SelectedChartResolveContext } from './types';
 
 const assertConsumedSlots = (
   source: IRChartSource,

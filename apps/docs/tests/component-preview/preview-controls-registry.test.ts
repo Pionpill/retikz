@@ -1,8 +1,8 @@
-import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
-
-import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
+import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -13,7 +13,6 @@ import type {
   PreviewTableControlField,
   PreviewTableRows,
 } from '../../src/modules/docs/components/component-preview';
-
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ToolbarIconButton } from '../../src/modules/docs/components/component-preview/components';
 import { ToolbarIconButton as DirectToolbarIconButton } from '../../src/modules/docs/components/component-preview/components/ToolbarIconButton';

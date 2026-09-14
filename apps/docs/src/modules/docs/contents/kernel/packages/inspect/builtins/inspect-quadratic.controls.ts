@@ -1,5 +1,4 @@
 import type { Lang } from '@/i18n';
-
 import { buildPreviewControlDefaults, definePreviewControls } from '@/modules/docs/preview';
 
 import { inspectQuadraticI18n } from './inspect-quadratic.i18n';

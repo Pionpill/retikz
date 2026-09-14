@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import type { CompileResult } from '@retikz/core';
-
 import {
   compileToScene,
   CompositeBaseSchema,

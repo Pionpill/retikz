@@ -1,5 +1,4 @@
 import type { ThemeStyleDefinition } from '../../contract';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 /** 合并内置与自定义 Theme styles 并拒绝同名定义 */

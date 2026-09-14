@@ -1,5 +1,4 @@
 import type { AnyCompositeDefinition, CompileOptions } from '@retikz/core';
-
 import {
   DEFAULT_RESOLVED_THEME,
   resolveCoreProviderDependencies,
@@ -13,9 +12,8 @@ import type {
   InputEmbedThemeContextResolver,
   InputScene,
 } from '../normalize';
-import type { PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
-
 import { createEmptyInputRuntimeMetaSnapshot, isInputScene, normalizeScene } from '../normalize';
+import type { PreparedProcessingInput, ProcessingOptions, ProcessingSource } from './types';
 
 const EMPTY_AUTHORING_SITES: ReadonlyArray<InputAuthoringSite> = Object.freeze([]);
 

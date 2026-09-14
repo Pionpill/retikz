@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout, Path, Step } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

@@ -1,7 +1,7 @@
 import type { Scene } from '@retikz/core';
 
 import { CHECKERS } from './checkers';
-import { type Assertion, type AssertionResult } from './types';
+import type { Assertion, AssertionResult } from './types';
 
 /** 逐条对 Scene 求值断言，返回与输入同序的结果数组 */
 export const evaluateAssertions = (scene: Scene, assertions: Array<Assertion>): Array<AssertionResult> =>

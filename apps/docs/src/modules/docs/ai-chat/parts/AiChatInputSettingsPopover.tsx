@@ -1,14 +1,12 @@
-import type { FC } from 'react';
-
 import { ArrowUpRight, SlidersHorizontal } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-import type { CustomProvider } from '../providers';
-
 import { PROVIDER_LABEL } from '../constants';
+import type { CustomProvider } from '../providers';
 import { isBuiltInProviderId, useAiChatStore } from '../useAiChatStore';
 
 const LABEL_KEY = {

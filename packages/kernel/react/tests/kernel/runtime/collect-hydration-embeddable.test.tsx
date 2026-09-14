@@ -1,6 +1,5 @@
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
-
 import { describe, expect, it, vi } from 'vitest';
 
 import { collectHydrationHandlers, Node, Scope } from '../../../src';

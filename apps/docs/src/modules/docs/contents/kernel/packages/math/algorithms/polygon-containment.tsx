@@ -1,11 +1,9 @@
 import type { Position } from '@retikz/math';
-import type { FC } from 'react';
-
 import { convexHull, polygon } from '@retikz/math';
 import { Circle, Draw, Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { polygonContainmentControls, previewControlContract } from './polygon-containment.controls';

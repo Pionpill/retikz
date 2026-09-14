@@ -1,9 +1,8 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotDefaultsSchema } from '@retikz/plot';
 import { SurfaceBackgroundSchema } from '@retikz/standard';
+import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 import { ChartPresentationDefaultsSchema } from './presentation';

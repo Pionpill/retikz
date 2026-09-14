@@ -1,8 +1,6 @@
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { IRPosition, IRResolvablePosition } from '../../schemas';
-import type { PositionResolution, PositionResolveContext } from './types';
-
 import {
   AnchorUnitVectorByAnchor,
   isAtPositionLike,
@@ -12,6 +10,7 @@ import {
   isPolarPositionLike,
   isPositionTuple,
 } from '../../shared';
+import type { PositionResolution, PositionResolveContext } from './types';
 
 /** 从 position referent 中提取诊断用节点 id；只读输入，不解析 namespace */
 export const nodeIdFromPositionReferent = (reference: unknown): string | undefined =>

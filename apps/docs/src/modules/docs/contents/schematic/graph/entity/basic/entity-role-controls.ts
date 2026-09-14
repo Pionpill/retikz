@@ -1,11 +1,9 @@
+import { GraphStatus } from '@retikz/graph';
 import type { EntityProps } from '@retikz/graph-react';
 
-import { GraphStatus } from '@retikz/graph';
-
 import type { LogicFigureEntityKindValue } from '@/modules/docs/components/logic-figure';
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { LogicFigureEntityKind } from '@/modules/docs/components/logic-figure';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Entity role demo 共用的稳定字段 id */

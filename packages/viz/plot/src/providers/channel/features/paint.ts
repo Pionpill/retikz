@@ -1,17 +1,15 @@
 import type { IRPaint } from '@retikz/core';
-import type { DataFieldTypeMap, IRDataFieldDefinition } from '@retikz/data';
-
 import { PaintSchema } from '@retikz/core';
+import type { DataFieldTypeMap, IRDataFieldDefinition } from '@retikz/data';
 import { coerceTimestamp, resolveFieldPath } from '@retikz/data';
 import { DataFieldType, FieldOrderMode } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { ChannelScaleResolveContext, MarkChannelDefinition } from '../../../contract';
 import type { ChannelPaletteContext } from '../../../contract';
-import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
-
 import { ChannelDefinitionKind, isBuiltinScaleOperation } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation } from '../../../schemas';
 import { PlotScale } from '../../../schemas';
 
 /** 颜色通道 definition 的名称、取值与图例配置 */

@@ -9,7 +9,6 @@ import type {
   ScenePrimitive,
   Transform,
 } from '../../../contract';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
 import { RAD_TO_DEG } from '../../../shared/geometry';
 

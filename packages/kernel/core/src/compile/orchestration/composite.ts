@@ -1,12 +1,11 @@
 import type { AnyCompositeDefinition, ThemeStyleDefinition } from '../../contract';
-import type { IRChild, IRScene } from '../../schemas';
-import type { ResolvedTheme } from '../../shared';
-import type { LoweredIRScene } from '../types';
-import type { CompileWarningInput } from '../warning';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { bindComposite, DEFAULT_RESOLVED_THEME, resolveComposite, resolveTheme } from '../../resolve';
+import type { IRChild, IRScene } from '../../schemas';
+import type { ResolvedTheme } from '../../shared';
 import { CompileWarningCode } from '../constants';
+import type { LoweredIRScene } from '../types';
+import type { CompileWarningInput } from '../warning';
 import { validateExpandCompositeOutput } from './composite-output';
 
 /** composite 嵌套展开最大深度 */

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Frame 从 Standard JSON IR 下沉到 Core IR 的中文逻辑图 */
 const Demo: FC = () => (

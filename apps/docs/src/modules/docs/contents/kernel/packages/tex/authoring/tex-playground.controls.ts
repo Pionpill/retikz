@@ -1,8 +1,8 @@
 import type { Lang } from '@/i18n';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+import { definePreviewControls } from '@/modules/docs/preview';
 
 import { texPlaygroundI18n } from './tex-playground.i18n';
-import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Tex playground 使用的稳定字段 id */
 export const TexPlaygroundControlId = {

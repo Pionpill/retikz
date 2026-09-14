@@ -13,15 +13,13 @@ import type {
   PositionScale,
   TickSet,
 } from '../../../contract';
+import { cellInterval } from '../../../contract';
 import type {
   Cartesian1DOrientationType,
   IRPlotCartesian1DCoordinate,
   IRPlotCoordinate,
   IRPlotScaleOperation,
 } from '../../../schemas';
-import type { Margins, Rect } from '../../../shared';
-
-import { cellInterval } from '../../../contract';
 import {
   AxisPlacementKind,
   Cartesian1DOrientation,
@@ -30,6 +28,7 @@ import {
   PlotCoordinate,
   PlotScale,
 } from '../../../schemas';
+import type { Margins, Rect } from '../../../shared';
 import { computePlotArea, estimateLabelWidth } from '../../../shared';
 import { assertUniqueAxisPlacement } from '../shared';
 

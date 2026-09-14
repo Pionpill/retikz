@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { InputPlotMark } from '../../../src';
-
 import { normalizePlotBindings } from '../../../src/normalize/plot/bindings';
 
 describe('normalizePlotBindings', () => {

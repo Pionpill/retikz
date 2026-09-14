@@ -1,9 +1,7 @@
 import type { TFunction } from 'i18next';
-
 import { describe, expect, it } from 'vitest';
 
 import type { Section } from '@/modules/docs/data';
-
 import { DocDifficulty, vizSection } from '@/modules/docs/data';
 import {
   buildSidebarCategories,

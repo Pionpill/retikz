@@ -1,11 +1,10 @@
 import type { ValueOf } from '@retikz/foundation';
 
 import type { LabBackendValue, LabPolicyIdValue, LabRunSession } from '../modules/kernel';
-import type { BenchModuleIdValue } from './module-registry';
-import type { LabPreviewSizePresetIdValue } from './preview-size';
-
 import { isValidLabPreviewSize, LabBackend, LabPolicyId } from '../modules/kernel';
+import type { BenchModuleIdValue } from './module-registry';
 import { BenchModuleId } from './module-registry';
+import type { LabPreviewSizePresetIdValue } from './preview-size';
 import { defaultLabPreviewSizePreset, getLabPreviewSizePreset, LabPreviewSizePresetId } from './preview-size';
 
 /** Performance Lab 运行状态 */

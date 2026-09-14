@@ -2,7 +2,6 @@ import type { IRDataScalarValue } from '@retikz/data';
 
 import type { SemanticTableCell } from '../../contract';
 import type { IRTableCellSelector, IRTableValuePredicate } from '../../schemas';
-
 import { TableCellPayloadKind, TableValueCompareOperator, TableValuePredicateKind } from '../../schemas';
 import { TableCellSourceKind } from '../../shared';
 

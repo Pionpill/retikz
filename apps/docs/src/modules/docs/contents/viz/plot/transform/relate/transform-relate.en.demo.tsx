@@ -63,4 +63,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** Row-pairing playground for scope and independent source / target selectors */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

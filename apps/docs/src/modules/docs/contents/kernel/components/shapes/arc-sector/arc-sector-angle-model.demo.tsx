@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Arc, Circle, Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Arc / Sector 共用的屏幕坐标角度模型 */
 const Demo: FC = () => (

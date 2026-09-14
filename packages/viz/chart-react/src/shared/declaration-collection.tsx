@@ -1,16 +1,14 @@
 import type { ReactElement, ReactNode } from 'react';
-
 import { createElement, Fragment, isValidElement } from 'react';
 
-import type { ChartCoordinateProps } from './ChartCoordinate';
-import type { ChartDataProps } from './ChartData';
-import type { ChartExtensionProps } from './ChartExtension';
-import type { ChartLayoutProps } from './ChartLayout';
-
 import { RetikzChartReactError } from '../error';
+import type { ChartCoordinateProps } from './ChartCoordinate';
 import { ChartCoordinate } from './ChartCoordinate';
+import type { ChartDataProps } from './ChartData';
 import { ChartData } from './ChartData';
+import type { ChartExtensionProps } from './ChartExtension';
 import { ChartExtension } from './ChartExtension';
+import type { ChartLayoutProps } from './ChartLayout';
 import { ChartLayout } from './ChartLayout';
 
 /** Chart declaration 在原始 children 中的稳定 slot 路径 */

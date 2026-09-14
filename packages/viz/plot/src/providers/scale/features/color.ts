@@ -10,6 +10,8 @@ import {
 } from 'd3-scale';
 
 import type { AnyScaleDefinition, ChannelScaleResolution, ChannelScaleResolveContext } from '../../../contract';
+import { defineScale } from '../../../contract';
+import { RetikzPlotError } from '../../../error';
 import type {
   IRPlotDivergingColorScale,
   IRPlotOrdinalScale,
@@ -18,10 +20,6 @@ import type {
   IRPlotSequentialColorScale,
   IRPlotThresholdColorScale,
 } from '../../../schemas';
-import type { ColorScaleEvaluator, ColorSchemeResolver } from '../shared';
-
-import { defineScale } from '../../../contract';
-import { RetikzPlotError } from '../../../error';
 import {
   DivergingColorScaleSchema,
   OrdinalScaleSchema,
@@ -32,6 +30,7 @@ import {
   SequentialColorScaleSchema,
   ThresholdColorScaleSchema,
 } from '../../../schemas';
+import type { ColorScaleEvaluator, ColorSchemeResolver } from '../shared';
 import {
   builtinColorSchemeInterpolator,
   DEFAULT_PLOT_COLORS,

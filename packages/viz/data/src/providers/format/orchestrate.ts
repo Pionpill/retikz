@@ -1,7 +1,6 @@
 import type { DataFieldTypeMap, FieldFormatDefinition, ParsedFieldValue } from '../../contract';
-import type { IRDataModel } from '../../schemas';
-
 import { RetikzDataError } from '../../error';
+import type { IRDataModel } from '../../schemas';
 import { resolveFormatRegistry } from './definitions';
 
 /**

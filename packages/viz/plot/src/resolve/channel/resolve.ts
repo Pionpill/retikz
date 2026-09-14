@@ -7,13 +7,12 @@ import type {
   ScaleDescriptor,
   ScopeChannelDelivery,
 } from '../../contract';
-import type { IRPlotMarkOperation } from '../../schemas';
-import type { ChannelResolveContext } from './types';
-
 import { ChannelDefinitionKind } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { BUILTIN_CHANNEL_NAMES } from '../../providers';
+import type { IRPlotMarkOperation } from '../../schemas';
 import { resolveMarkOperation } from '../mark';
+import type { ChannelResolveContext } from './types';
 
 const extensionChannelsOf = (mark: IRPlotMarkOperation): Record<string, unknown> =>
   (mark as { encoding?: { channels?: Record<string, unknown> } }).encoding?.channels ?? {};

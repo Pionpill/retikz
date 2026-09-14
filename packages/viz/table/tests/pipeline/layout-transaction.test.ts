@@ -1,5 +1,4 @@
 import type { LayoutCompositeCompileContext, NodeLayoutCompileArtifact } from '@retikz/core';
-
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -14,7 +13,6 @@ import { describe, expect, it } from 'vitest';
 import { enum as zodEnum, literal, number, strictObject } from 'zod';
 
 import type { IRTable, TableCompileArtifact } from '../../src';
-
 import {
   compileTable,
   lowerTables,

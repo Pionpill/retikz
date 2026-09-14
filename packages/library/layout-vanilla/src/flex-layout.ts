@@ -1,10 +1,8 @@
 import type { FlexLayoutItemInput } from '@retikz/layout';
+import { createFlexLayout, FlexLayoutProvider } from '@retikz/layout';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { createFlexLayout, FlexLayoutProvider } from '@retikz/layout';
-
 import type { InputFlexLayout } from './normalize';
-
 import { normalizeLayoutItems } from './normalize';
 
 /** Vanilla Flex 布局嵌入项的稳定类别 */

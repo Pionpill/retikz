@@ -1,10 +1,9 @@
-import type { infer as ZodInfer } from 'zod';
-import type { ZodType } from 'zod';
-
 import { BoxSpacingSchema, CssColorSchema } from '@retikz/core';
 import { ShapeNameSchema } from '@retikz/core';
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { MarkNodeLabelListSchema, PlotDomainPaddingKind } from '@retikz/plot';
+import type { infer as ZodInfer } from 'zod';
+import type { ZodType } from 'zod';
 import { array, boolean, enum as zodEnum, literal, number, strictObject, union } from 'zod';
 
 const pointPositionDomainPaddingFields = Object.keys(BoxSpacingSchema.shape);

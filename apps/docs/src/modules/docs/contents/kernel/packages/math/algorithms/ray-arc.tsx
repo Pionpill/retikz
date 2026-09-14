@@ -1,10 +1,8 @@
-import type { FC } from 'react';
-
 import { intersectRayWithArc, pointAtArcAngle } from '@retikz/math';
 import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, rayArcPlaygroundControls } from './ray-arc.controls';

@@ -1,10 +1,9 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { orders } from './transform-summarize.data';
 import { transformSummarizeOperationOf } from './transform-summarize-preview';
+import { orders } from './transform-summarize.data';
 
 /** English controls for the grouped-summary example */
 export const transformSummarizeControls = definePreviewControls({

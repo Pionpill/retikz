@@ -1,15 +1,14 @@
 import type { CompiledSceneFragment } from '../../contract';
-import type { IRChild } from '../../schemas';
-import type { CompileContext } from './context';
-import type { PendingCompileObservation } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { safeErrorMessage } from '../../resolve/diagnostics';
+import type { IRChild } from '../../schemas';
 import { CompileWarningCode } from '../constants';
 import { createClipRegistry, createPaintRegistry } from '../resource';
 import { assertFiniteLayout, computeLayoutFromBounds } from '../scene';
+import type { CompileContext } from './context';
 import { orderCompileWarnings } from './diagnostics';
 import { compileChildrenToPrimitives } from './traversal';
+import type { PendingCompileObservation } from './types';
 
 /** 辅助片段中必须提升为隔离编译失败的引用与 provider warning */
 const fatalFragmentWarningCodes = new Set<string>([

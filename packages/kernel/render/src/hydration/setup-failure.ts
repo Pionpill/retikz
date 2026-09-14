@@ -1,6 +1,5 @@
-import type { HydrationController } from './controller';
-
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { HydrationController } from './controller';
 
 const hydrationSetupFailures = new WeakMap<
   RetikzRenderError,

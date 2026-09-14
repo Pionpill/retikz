@@ -3,7 +3,6 @@ import { GRID_LAYOUT_MAX_TRACKS_PER_AXIS } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 
 import type { FlowDiagramDefinitionOptions } from '../../src/flow';
-
 import {
   createFlowDiagramProviderContribution,
   defineFlowLayout,

@@ -1,10 +1,8 @@
+import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
 import type { ReactElement } from 'react';
 
-import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
-
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { flowThemeControls, previewControlContract } from './flow-theme.en.controls';
@@ -44,4 +42,6 @@ export const renderFlowThemePreview = (values: PreviewControlValuesFor<typeof fl
 const controlledPreview = defineControlledPreview(previewControlContract, renderFlowThemePreview);
 
 export const previewSource = controlledPreview.source;
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

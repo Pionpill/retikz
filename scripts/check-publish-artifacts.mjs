@@ -1,8 +1,8 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { readPackageRecords } from './check-release-groups.mjs';

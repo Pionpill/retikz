@@ -1,6 +1,5 @@
-import type { ComponentRenderSource, DiffLineKind, DiffMode, SourceView, UnifiedDiff } from '../types';
-
 import { SOURCE_VIEW_ORDER } from '../constants';
+import type { ComponentRenderSource, DiffLineKind, DiffMode, SourceView, UnifiedDiff } from '../types';
 
 /** 从源码集合中筛出有文件的可用视图。 */
 export const availableSourceViews = (source: ComponentRenderSource): Array<SourceView> =>

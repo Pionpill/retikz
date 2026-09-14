@@ -1,7 +1,6 @@
 ﻿import { describe, expect, it } from 'vitest';
 
 import type { CurrentPage } from '@/modules/docs/ai-chat/composeSystemPrompt';
-
 import { composeSystem } from '@/modules/docs/ai-chat/composeSystemPrompt';
 
 /**

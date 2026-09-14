@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Mic, MicOff } from 'lucide-react';
+import type { FC } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

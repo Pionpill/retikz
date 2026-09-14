@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, transformAnnotateControls } from './transform-annotate.en.controls';
 import { renderTransformAnnotatePreview } from './transform-annotate-preview';
+import { previewControlContract, transformAnnotateControls } from './transform-annotate.en.controls';
 
 /** Registers fallback controls for the statistical-annotation example */
 export const previewControls = transformAnnotateControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** Switches the broadcast statistic while retaining detail points */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { LoaderCircle, Play } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';

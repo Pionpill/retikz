@@ -1,15 +1,13 @@
 import type { ExternalRow } from '@retikz/data';
-
 import { NonBlankStringSchema } from '@retikz/foundation';
 
 import type { AnyMarkDefinition, CoordinateFrame, FieldCollector, IntervalContext } from '../../contract';
-import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
-import type { MarkOperationResolution, MarkResolveContext } from './types';
-
 import { cellGeometryAnchor } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { cellAnchor, intervalCellGeometry, roleAnchor } from '../../providers';
+import type { IRPlotMark, IRPlotMarkOperation } from '../../schemas';
 import { isBuiltinMark, PlotMark } from '../../schemas';
+import type { MarkOperationResolution, MarkResolveContext } from './types';
 
 /** 查找 mark definition；未注册 type 会给出上下文明确的 fail-loud 诊断 */
 export const resolveMarkDefinition = (mark: IRPlotMarkOperation, context: MarkResolveContext): AnyMarkDefinition => {

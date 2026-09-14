@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
 import { StarShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 /**
  * margin 对不同 boundary 形状的作用

@@ -1,6 +1,5 @@
-import type { CssColorValue } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { CssColorValue } from './types';
 
 /** 从非空 categorical palette 按稳定的非负整数索引循环取色 */
 export const categoricalColorAt = <TColor extends CssColorValue>(

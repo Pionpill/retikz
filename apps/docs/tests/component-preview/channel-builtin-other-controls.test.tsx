@@ -1,10 +1,8 @@
 import type { FC } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { previewControlContract as chineseContract } from '@/modules/docs/contents/viz/plot/channel/builtin/builtin-other.controls';

@@ -1,5 +1,10 @@
 import type { TableBorderContribution, TableBorderSource } from '../../../contract/manifest';
+import { ResolvedTableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
+import { RetikzTableError } from '../../../error';
+import { deepFreeze } from '../../../shared';
 import type { TableTrackLayout } from '../types';
+import { mergeTableBorderAtoms } from './merge';
+import { resolveTableBorderAtoms } from './resolve';
 import type {
   BuildTableBorderGraphInput,
   ResolvedTableBorderCandidate,
@@ -9,12 +14,6 @@ import type {
   TableBorderSide,
   TableBorderVertex,
 } from './types';
-
-import { ResolvedTableBorderLineSchema, TableBorderContributionOrigin } from '../../../contract/manifest';
-import { RetikzTableError } from '../../../error';
-import { deepFreeze } from '../../../shared';
-import { mergeTableBorderAtoms } from './merge';
-import { resolveTableBorderAtoms } from './resolve';
 import { tableBorderSourceOrderKey } from './types';
 
 type Occupancy = ReadonlyArray<ReadonlyArray<TableBorderCellInput | undefined>>;

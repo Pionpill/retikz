@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,7 +6,6 @@ import { cn } from '@/lib';
 import { getSectionsByArea } from '@/modules/docs/data';
 
 import type { DocLocation } from '../types';
-
 import { useDocLocation } from '../useDocLocation';
 import { buildSidebarCategories } from '../utils';
 import { AppSidebarMenu } from './AppSidebarMenu';

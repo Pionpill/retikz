@@ -43,7 +43,7 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 ### 输入要求
 
-- 读取完整 Proposed ADR，检查核心决策、基础数据结构 / 公开契约、行为与失败语义。
+- 读取完整待审 ADR（Proposed，或获批设计的修订），检查核心决策、基础数据结构 / 公开契约、行为与失败语义；Accepted 不代替本轮证据或实现授权。
 - 读取同步简略 `PLAN.md`，检查目标与非目标、功能与包边界、能力完备性、同类设计、被否决方案和测试策略摘要。
 - 对照当前代码判断 ADR 是否复用既有机制；尚未实现不妨碍设计门禁。
 - 调用方提供固定快照和当前检查轮次；默认由主 agent 执行，执行计划已授权常规 reviewer 时记录其实际模型与循环上限。

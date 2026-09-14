@@ -1,6 +1,5 @@
-import type { CellPresentationInput } from '@retikz/table';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import type { CellPresentationInput } from '@retikz/table';
 import {
   defineCellFormatter,
   defineCellPresentation,

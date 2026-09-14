@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { IRTableCellSelector, SemanticTableCell } from '../../src';
-
 import { defineTableStructure } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { matchesTableCellSelector, matchesTableValuePredicate } from '../../src/pipeline/rule';

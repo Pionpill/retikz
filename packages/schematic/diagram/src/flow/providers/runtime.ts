@@ -2,7 +2,6 @@ import type { CoreDependencyProvider } from '@retikz/core';
 
 import type { FlowDiagramDefinitionOptions } from '../contract';
 import type { ResolvedFlowDiagramDefinitionOptions } from './options';
-
 import { resolveFlowDiagramDefinitionOptions } from './options';
 
 const FlowDiagramRuntimeOptions = Symbol('retikz.diagram.flow.runtimeOptions');

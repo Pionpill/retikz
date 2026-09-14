@@ -1,8 +1,7 @@
 import type { IRRegressionChart } from '@retikz/chart/point/regression';
 
-import type { InputRegressionChart } from './types';
-
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import type { InputRegressionChart } from './types';
 
 /** 将 Regression Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeRegressionChart = (input: InputRegressionChart): IRRegressionChart => {

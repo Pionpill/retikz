@@ -1,8 +1,7 @@
 import type { JsonValue } from '@retikz/foundation';
-import type { RuntimeRevision } from '@retikz/runtime';
-
 import { NonBlankStringSchema, RetikzError } from '@retikz/foundation';
 import { JsonObjectSchema } from '@retikz/foundation';
+import type { RuntimeRevision } from '@retikz/runtime';
 import { describe, expect, it, vi } from 'vitest';
 import { array, boolean, custom, enum as zodEnum, intersection, literal, number, object, strictObject } from 'zod';
 
@@ -21,7 +20,6 @@ import type {
   ScenePrimitive,
   TextMeasurer,
 } from '../../src';
-
 import {
   BUILTIN_SHAPES,
   ChildSchema,

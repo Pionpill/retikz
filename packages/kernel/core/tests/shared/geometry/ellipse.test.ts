@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Ellipse } from '../../../src/shared/geometry/ellipse';
-
 import { Anchor } from '../../../src/shared';
+import type { Ellipse } from '../../../src/shared/geometry/ellipse';
 import { ellipse } from '../../../src/shared/geometry/ellipse';
 
 const e: Ellipse = { x: 0, y: 0, rx: 10, ry: 5 };

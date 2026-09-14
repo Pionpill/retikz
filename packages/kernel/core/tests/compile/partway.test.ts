@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene, ScenePrimitive } from '../../src';
-import type { RectPrim } from '../../src/contract';
-
 import { compileToScene } from '../../src/compile/compile';
+import type { RectPrim } from '../../src/contract';
 import { flattenPrims } from '../helpers/flatten';
 
 /** 取所有 RectPrim（默认 rectangle 节点；带文本节点包 group，flatten 穿透） */

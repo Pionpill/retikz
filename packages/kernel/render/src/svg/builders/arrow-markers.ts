@@ -1,7 +1,6 @@
 import type { ResolvedArrowEnd } from '@retikz/core';
 
 import type { SvgNode } from '../types';
-
 import { compact } from './attrs';
 import { buildMarkerPrim } from './marker-prim';
 

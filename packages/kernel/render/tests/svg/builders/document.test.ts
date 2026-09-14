@@ -1,6 +1,5 @@
 import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene, SceneResource } from '@retikz/core';
 import type { SvgNode } from '@retikz/render/svg';
-
 import { describe, expect, it } from 'vitest';
 
 import { buildSvgDocument } from '../../../src/svg/builders/document';

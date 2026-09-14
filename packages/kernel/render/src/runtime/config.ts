@@ -1,12 +1,10 @@
 import type { RuntimeDeepReadonly } from '@retikz/core';
 import type { RuntimeOwnerDefinition } from '@retikz/runtime';
-
 import { defineRuntimeOwner } from '@retikz/runtime';
 
 import type { AnimationPropertyRegistry, EasingRegistry } from '../animation';
-import type { HydrationHandlers } from '../hydration';
-
 import { isRetikzRenderError, RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { HydrationHandlers } from '../hydration';
 import { RetikzEvent } from '../hydration';
 import { cloneAndFreezeRuntimeValue, isPlainObject, runtimeStructuralEquals } from './shared';
 

@@ -1,7 +1,6 @@
 import type { IRScene, IRTheme } from '@retikz/core';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, ThemeMode } from '@retikz/core';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { literal } from 'zod';

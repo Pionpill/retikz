@@ -1,13 +1,12 @@
 import type { Scene } from '@retikz/core';
 
-import type { StaticRenderFrame } from '../runtime';
-import type { RenderOptions } from './types';
-
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { StaticRenderFrame } from '../runtime';
 import { validateReadonlyLayers } from '../runtime';
 import { drawReadonlyLayer } from './draw-readonly-layer';
 import { drawScene } from './draw-scene';
 import { createCssColorNormalizer, sceneFitMatrix } from './internal';
+import type { RenderOptions } from './types';
 
 const getDevicePixelRatio = (options: RenderOptions): number => {
   if (options.devicePixelRatio !== undefined) {

@@ -1,11 +1,9 @@
 import type { ClipDefinition } from '@retikz/core';
-
 import { compileToScene, defineClip } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject } from 'zod';
 
 import type { InputEmbedAdapter, InputScene } from '../../src';
-
 import {
   createProcessingController,
   normalizeScene,

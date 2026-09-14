@@ -1,12 +1,10 @@
 import type { CenteredShape, Position } from '@retikz/math';
-import type { Lang } from '@/i18n';
-import type { FC } from 'react';
-
 import { localToWorld } from '@retikz/math';
 import { Circle, Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
+import type { Lang } from '@/i18n';
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview, usePreviewControls } from '@/modules/docs/preview';
 
 import { coordinateSpacesControls, previewControlContract } from './coordinate-spaces.controls';

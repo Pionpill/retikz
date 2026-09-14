@@ -1,11 +1,9 @@
 import type { IRNodeTarget } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Rectangle } from '@retikz/react';
 import { ContourShapeDefinition } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { contourBoundaryPlaygroundControls, previewControlContract } from './contour-boundary-playground.controls';

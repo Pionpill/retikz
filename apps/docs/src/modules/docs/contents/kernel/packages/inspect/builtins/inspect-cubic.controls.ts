@@ -1,5 +1,4 @@
 import type { Lang } from '@/i18n';
-
 import { buildPreviewControlDefaults, definePreviewControls } from '@/modules/docs/preview';
 
 import { inspectCubicI18n } from './inspect-cubic.i18n';

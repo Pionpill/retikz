@@ -1,12 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import type { FC } from 'react';
-
 import { BoxesIcon, ChartColumnIncreasingIcon, LibraryBigIcon, SparklesIcon, WorkflowIcon } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
-
-import type { DocScopeId, I18nKey } from '@/modules/docs/data';
 
 import {
   NavigationMenu,
@@ -14,6 +11,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
+import type { DocScopeId, I18nKey } from '@/modules/docs/data';
 import { modules } from '@/modules/docs/data';
 import { useDocModuleStore } from '@/modules/docs/store';
 

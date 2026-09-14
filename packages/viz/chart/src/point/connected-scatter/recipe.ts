@@ -1,12 +1,9 @@
 import type { IRPlotGuide } from '@retikz/plot';
-
 import { PlotGuide, PlotScale } from '@retikz/plot';
 
 import type { ChartRecipeDefinition, ChartRecipeResolveContext } from '../../_chart/contract';
-import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
-import type { IRConnectedScatterChart } from './schema';
-
 import { defineChartRecipe } from '../../_chart/contract';
+import type { ChartEncodingFieldConsumer } from '../../_chart/resolve';
 import { resolveChartEncodingMappings } from '../../_chart/resolve';
 import { ChartType } from '../constants';
 import {
@@ -19,6 +16,7 @@ import {
 } from '../shared';
 import { pointRecipeId } from '../shared/plot';
 import { ConnectedScatterMarkDefinition, resolveConnectedScatterMarkGroup } from './mark';
+import type { IRConnectedScatterChart } from './schema';
 import { ConnectedScatterChartSchema } from './schema';
 
 /** Connected Scatter exact schema、调度与消费检查共用的 encoding 顺序 */

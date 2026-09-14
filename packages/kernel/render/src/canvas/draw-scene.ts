@@ -13,10 +13,7 @@ import type {
   SceneResource,
   TextPrim,
 } from '@retikz/core';
-
 import { PerformanceTraceOutcome, PerformanceTracePhase, PerformanceTraceUnit } from '@retikz/runtime';
-
-import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 
 import {
   commandArcStart,
@@ -32,6 +29,7 @@ import { applyPrimAnimations } from './animate';
 import { applySceneCamera } from './camera';
 import { buildGradientStrokeStyle, fillObjectGradient } from './gradient-paint';
 import { applyClip, applyTransform, buildPath, DEG_TO_RAD, roundedRectPath } from './path-geometry';
+import type { CanvasWarning, DrawOptions, UnsupportedCanvasFeature } from './types';
 
 const warnUnsupported = (options: DrawOptions, feature: UnsupportedCanvasFeature, message: string): void => {
   const warning: CanvasWarning = { feature, message };

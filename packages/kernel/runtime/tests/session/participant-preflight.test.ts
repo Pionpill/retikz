@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { RuntimeCommitParticipant, RuntimeCommitParticipantToken } from '../../src';
-
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,

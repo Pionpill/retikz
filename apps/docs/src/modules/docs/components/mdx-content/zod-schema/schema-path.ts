@@ -49,7 +49,7 @@ export const parseSchemaPath = (path: string): Array<SchemaPathSegment> => {
   if (!path.startsWith('/')) throw new Error('Schema path must start with "/".');
   const tokens = path.slice(1).split('/');
   const segments: Array<SchemaPathSegment> = [];
-  for (let index = 0; index < tokens.length; ) {
+  for (let index = 0; index < tokens.length;) {
     const marker = tokens[index++];
     if (marker === 'array') {
       segments.push({ kind: 'array' });

@@ -1,10 +1,8 @@
 import type { Scene, ScenePrimitive } from '@retikz/core';
-
 import { ChildSchema } from '@retikz/core';
 import { cloneAndFreezeJson } from '@retikz/foundation';
 
 import type { InspectorFragment, InspectorOutput } from '../contract';
-
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 
 /** 校验、脱离并深冻结 JSON-safe plain data */

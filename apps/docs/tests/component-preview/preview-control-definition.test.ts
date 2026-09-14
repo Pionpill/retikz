@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/author';
-
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview/author';
 import {
   buildPreviewControlDefaults,

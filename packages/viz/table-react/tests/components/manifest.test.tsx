@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import type { IRChild } from '@retikz/core';
 import type { CellPresentationInput, TableLayoutManifest } from '@retikz/table';
-
 import { createManualTableIR, defineCellPresentation, defineCellVisualScale } from '@retikz/table';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';

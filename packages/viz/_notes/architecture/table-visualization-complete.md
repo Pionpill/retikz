@@ -1,6 +1,6 @@
 # Table 表格可视化完备设计
 
-> **状态：长期能力准入真源；alpha.2 布局基线已落定，alpha.3 已实现到呈现与 Legend descriptor seed，ADR 仍待治理收口。** 本文回答“什么属于 `@retikz/table`”以及“怎样才算形成表格能力闭环”，不维护具体公开字段。当前包职责与实现基线以 [`packages/viz/table/AGENTS.md`](../../table/AGENTS.md)、公开类型和用户文档为准。
+> **状态：长期能力准入真源；alpha.2 布局基线已落定，alpha.3 已实现到呈现与 Legend descriptor seed，ADR 仍待治理收口。** 本文回答“什么属于 `@retikz/table`”以及“怎样才算形成表格能力闭环”，不维护具体公开字段。当前包职责与实现基线以 [`../../table/AGENTS.md`](../../table/AGENTS.md)、公开类型和用户文档为准。
 >
 > 关联：[`能力完备性与模块边界`](../../../../notes/architecture/capability-design.md) · [`Data 能力完备设计`](./data-capability-complete.md) · [`Plot 可视化完备设计`](./plot-visualization-complete.md) · [`Core 绘图完备设计`](../../../kernel/_notes/architecture/core-drawing-complete.md) · [`Table 总设计`](./table-design.md)
 

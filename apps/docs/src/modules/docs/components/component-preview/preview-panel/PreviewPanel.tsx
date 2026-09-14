@@ -1,20 +1,18 @@
-import type { CSSProperties, FC, ReactNode } from 'react';
-
 import { AnimationModeProvider } from '@retikz/react';
+import type { CSSProperties, FC, ReactNode } from 'react';
 import { Fragment } from 'react';
 
+import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
 import { useComponentPreviewStore } from '@/modules/docs/store';
-import type { Lang } from '@/i18n';
-
-import type { PreviewTheme } from '../theme';
-import type { ComponentPreviewDemoComponent, PreviewControlSlot, RendererMode } from '../types';
-import type { PreviewPanelState } from './usePreviewPanelState';
 
 import { PreviewControlStateContext } from '../context';
+import type { PreviewTheme } from '../theme';
 import { PreviewThemeProvider } from '../theme';
+import type { ComponentPreviewDemoComponent, PreviewControlSlot, RendererMode } from '../types';
 import { DemoRenderer } from './DemoRenderer';
 import { PreviewControlSlotLayer } from './PreviewControlSlotLayer';
+import type { PreviewPanelState } from './usePreviewPanelState';
 
 /** 通用预览面板属性。 */
 export type PreviewPanelProps = {

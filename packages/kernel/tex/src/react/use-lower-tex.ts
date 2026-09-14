@@ -1,11 +1,9 @@
 import type { LowerTex } from '@retikz/core';
-
 import { useEffect, useRef, useState } from 'react';
 
 import type { MathJaxLowerTexOptions, TexLoweringDiagnostic } from '../lower';
-import type { MathJaxExtensionValue, MathJaxSvgEngine } from '../mathjax';
-
 import { createLowerTex } from '../lower';
+import type { MathJaxExtensionValue, MathJaxSvgEngine } from '../mathjax';
 import { createMathJaxEngine, resolveMathJaxExtensions } from '../mathjax';
 
 type EngineEntry = {

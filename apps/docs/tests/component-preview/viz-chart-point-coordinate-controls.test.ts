@@ -1,8 +1,6 @@
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlContract, PreviewSourceConfig } from '../../src/modules/docs/preview';
-
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import { previewControlContract as bubbleZh } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.controls';
 import { previewControlContract as bubbleEn } from '../../src/modules/docs/contents/viz/chart/points/bubble/bubble-basic.en.controls';
@@ -29,6 +27,7 @@ import { previewControlContract as stripZh } from '../../src/modules/docs/conten
 import { previewControlContract as stripEn } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.controls';
 import { previewSource as stripEnSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.en.demo';
 import { previewSource as stripZhSource } from '../../src/modules/docs/contents/viz/chart/points/strip/strip-basic.zh.demo';
+import type { PreviewControlContract, PreviewSourceConfig } from '../../src/modules/docs/preview';
 
 type PointCoordinateScenario = Readonly<{
   coordinateId: string;

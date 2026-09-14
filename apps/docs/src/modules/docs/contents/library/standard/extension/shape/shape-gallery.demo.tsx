@@ -1,5 +1,3 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import {
   ContourShapeDefinition,
@@ -12,6 +10,7 @@ import {
   StarShapeDefinition,
   TrapezoidShapeDefinition,
 } from '@retikz/standard/shape';
+import type { FC } from 'react';
 
 /** 分三行展示 Standard 的九个可选节点形状 */
 const Demo: FC = () => {

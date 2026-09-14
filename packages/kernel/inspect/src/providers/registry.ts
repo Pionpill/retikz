@@ -1,5 +1,4 @@
 import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorKey } from '../contract';
-
 import { sealInspectorDefinition } from '../contract';
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
 import { BUILTIN_INSPECTORS } from './definitions';

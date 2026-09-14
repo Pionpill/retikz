@@ -1,16 +1,14 @@
-import type { CompileOptions } from '@mdx-js/mdx';
-
-import { compile } from '@mdx-js/mdx';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import type { CompileOptions } from '@mdx-js/mdx';
+import { compile } from '@mdx-js/mdx';
 import rehypeMdxCodeProps from 'rehype-mdx-code-props';
 import rehypeSlug from 'rehype-slug';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import { describe, expect, it } from 'vitest';
-
-import type { Section } from '@/modules/docs/data';
 
 import { collectShowcasePages } from '@/modules/docs/components/showcase';
 import { bubbleMinimalData } from '@/modules/docs/contents/viz/chart/points/bubble/bubble-minimal.data';
@@ -19,6 +17,7 @@ import { rangedDotMinimalData } from '@/modules/docs/contents/viz/chart/points/r
 import { regressionMinimalData } from '@/modules/docs/contents/viz/chart/points/regression/regression-minimal.data';
 import { scatterMinimalData } from '@/modules/docs/contents/viz/chart/points/scatter/scatter-minimal.data';
 import { stripPalmerPenguinsData } from '@/modules/docs/contents/viz/chart/points/strip/strip-palmer-penguins.data';
+import type { Section } from '@/modules/docs/data';
 import { vizSection } from '@/modules/docs/data';
 
 const scatterContentPath = (lang: 'zh' | 'en') =>

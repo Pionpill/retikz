@@ -1,13 +1,11 @@
 import type { IRNode, IRPaint, IRPath, IRScope } from '@retikz/core';
-
 import { compileToScene, resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../src/pipeline/expand';
-import type { IRPlot } from '../../src/schemas';
-
 import { lowerPlots } from '../../src/pipeline/expand';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
+import type { IRPlot } from '../../src/schemas';
 import { PlotLayerZIndex, PlotSchema } from '../../src/schemas';
 import { DEFAULT_FONT_SIZE, estimateLabelWidth } from '../../src/shared';
 

@@ -5,7 +5,6 @@ import { I18nextProvider, initReactI18next } from 'react-i18next';
 import { describe, expect, it } from 'vitest';
 
 import type { LabPolicyResult } from '../src/playground/modules/kernel';
-
 import { LabLifecycleAvailability, LabOutcome, LabPolicyId, LabResultSource } from '../src/playground/modules/kernel';
 import { ComparisonChart, ComparisonPlot } from '../src/playground/report';
 

@@ -8,7 +8,6 @@ import type {
   LayoutAlignmentGuide,
   LayoutCompositeCompileContext,
 } from '../../src';
-
 import {
   compileToScene,
   CompositeBaseSchema,

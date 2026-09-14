@@ -1,5 +1,4 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
-
 import { createContext, useContext } from 'react';
 
 /** Chart-owned ambient named Theme definitions context */

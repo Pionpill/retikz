@@ -1,11 +1,9 @@
 import type { CoreProviderContribution } from '@retikz/core';
-
 import { createGraphProviders } from '@retikz/graph';
 import { GridLayoutProvider } from '@retikz/layout';
 import { LegendProvider } from '@retikz/standard';
 
 import type { FlowDiagramDefinitionOptions } from '../contract';
-
 import { createFlowDiagramProvider, FlowDiagramProviderKey } from './provider';
 
 /** 创建 Flow Diagram 及全部 Graph / Foundation 依赖的完整provider contribution */

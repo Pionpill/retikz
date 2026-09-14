@@ -4,7 +4,6 @@ import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { FrameProps } from '../../src';
-
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '../../src';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */

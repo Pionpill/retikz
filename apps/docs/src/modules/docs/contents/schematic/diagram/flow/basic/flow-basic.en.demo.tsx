@@ -1,12 +1,10 @@
 import type { FontSizePresetValue, IRLine, IRTextBlock } from '@retikz/core';
+import { FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
 import type { GraphStatusValue } from '@retikz/graph';
 import type { ReactElement } from 'react';
 
-import { FlowEntities, FlowRelations } from '@retikz/diagram-react/flow';
-
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { flowBasicControls, previewControlContract } from './flow-basic.en.controls';
@@ -107,4 +105,6 @@ export const renderFlowBasicPreview = (values: PreviewControlValuesFor<typeof fl
 const controlledPreview = defineControlledPreview(previewControlContract, renderFlowBasicPreview);
 
 export const previewSource = controlledPreview.source;
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

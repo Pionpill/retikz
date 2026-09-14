@@ -1,10 +1,9 @@
 import type { LowerTex } from '@retikz/core';
 
 import type { MathJaxEngineOptions } from '../mathjax';
-import type { LowerTexOptions } from './types';
-
 import { createMathJaxEngine } from '../mathjax';
 import { createLowerTex } from './lower-tex';
+import type { LowerTexOptions } from './types';
 
 /**
  * 一步创建 MathJax 引擎与 Core lowerer 的配置

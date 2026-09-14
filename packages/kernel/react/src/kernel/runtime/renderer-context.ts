@@ -1,5 +1,4 @@
 import type { Context } from 'react';
-
 import { createContext, useContext } from 'react';
 
 /** 渲染目标：SVG 或 Canvas 2D */

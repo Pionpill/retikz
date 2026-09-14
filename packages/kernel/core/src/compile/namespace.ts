@@ -1,5 +1,4 @@
 import type { NodeLayout } from './node';
-
 import { createCompileInvariantError } from './probe-failure';
 
 /** namespace 栈当前写入/解析阶段 */

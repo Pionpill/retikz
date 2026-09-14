@@ -1,7 +1,6 @@
 import type { IRScene } from '@retikz/core';
-import type { PerformanceTraceRecord } from '@retikz/runtime';
-
 import { CORE_OWNER_KEY, CoreOwnerDefinition } from '@retikz/core';
+import type { PerformanceTraceRecord } from '@retikz/runtime';
 import {
   createRuntimeOwnerUpdate,
   createRuntimeTraceReporter,
@@ -12,12 +11,10 @@ import {
 } from '@retikz/runtime';
 import { mountCanvas, mountSvg, VanillaViewMode } from '@retikz/vanilla/dom';
 
-import type { LabOutcomeValue, LabPolicyIdValue, LabPolicyResult } from './model';
-import type { KernelLabPolicyExecutor, KernelLabPolicyInput } from './run-kernel-lab';
-
 import { createBackendHost, createRetainedBenchmarkSession, summarizeSamples } from '../../../shared';
 import { createKernelLabScenePair } from './kernel-scenario-fixtures';
 import { getKernelLabScenario } from './kernel-scenarios';
+import type { LabOutcomeValue, LabPolicyIdValue, LabPolicyResult } from './model';
 import {
   isValidLabPreviewSize,
   LabBackend,
@@ -26,6 +23,7 @@ import {
   LabPolicyId,
   LabResultSource,
 } from './model';
+import type { KernelLabPolicyExecutor, KernelLabPolicyInput } from './run-kernel-lab';
 
 /** 公共 trace 与 wall-clock 样本到 Lab 结果的映射输入 */
 export type CreateLabPolicyResultInput = Readonly<{

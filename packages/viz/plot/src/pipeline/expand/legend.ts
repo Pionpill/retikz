@@ -1,28 +1,26 @@
 import type { IRScope } from '@retikz/core';
 import type { IRShapeValue } from '@retikz/core';
+import { categoricalColorAt } from '@retikz/core';
 import type { DataFieldTypeValue } from '@retikz/data';
+import { DataFieldType } from '@retikz/data';
 import type { JsonValue } from '@retikz/foundation';
 
-import { categoricalColorAt } from '@retikz/core';
-import { DataFieldType } from '@retikz/data';
-
 import type { AnyChannelDefinition, AnyScaleDefinition, PositionScale } from '../../contract';
-import type { ScaleDescriptor } from '../../providers';
-import type { ChannelResolveContext } from '../../resolve/channel';
-import type { EffectivePlotGuideTheme } from '../../resolve/theme';
-import type { IRPlot, IRPlotLegendGuide, IRPlotScaleOperation, LegendChannelValue } from '../../schemas';
-import type { LegendReserve, Rect } from '../../shared';
-import type { LegendEntry, LowerLegendOptions } from '../guide';
-import type { MarkDataView } from './types';
-
 import { RetikzPlotError } from '../../error';
+import type { ScaleDescriptor } from '../../providers';
 import { resolveLinearScale, resolveSqrtScale, scaleTicks } from '../../providers';
+import type { ChannelResolveContext } from '../../resolve/channel';
 import { resolveChannelDefinition, resolveMarkChannels } from '../../resolve/channel';
 import { resolveGuideTicks } from '../../resolve/guide';
 import { resolveScaleDefinition } from '../../resolve/scale';
+import type { EffectivePlotGuideTheme } from '../../resolve/theme';
 import { resolveLegendGuideTokens } from '../../resolve/theme';
+import type { IRPlot, IRPlotLegendGuide, IRPlotScaleOperation, LegendChannelValue } from '../../schemas';
 import { LegendSymbolFit, PlotLayerZIndex, PlotScale } from '../../schemas';
+import type { LegendReserve, Rect } from '../../shared';
+import type { LegendEntry, LowerLegendOptions } from '../guide';
 import { lowerLegend } from '../guide';
+import type { MarkDataView } from './types';
 
 /**
  * 收集所有 mark 在某非位置通道上的字段 descriptor（size / opacity / shape）
@@ -291,9 +289,10 @@ const resolveColorLegend = (
   }
 
   // ordinal 离散 swatch：每类别一色块 + 类别标签（domain = 类别序、range = 对应色，与实绘同源）
-  const entries: Array<LegendEntry> = resolution.domain.map(
-    (category, index): LegendEntry => ({ label: showLabels ? String(category) : '', color: resolution.range[index] }),
-  );
+  const entries: Array<LegendEntry> = resolution.domain.map((category, index): LegendEntry => ({
+    label: showLabels ? String(category) : '',
+    color: resolution.range[index],
+  }));
   return { ...base, form: 'swatch', title, entries };
 };
 

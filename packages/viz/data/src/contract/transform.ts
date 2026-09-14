@@ -1,14 +1,12 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { ZodType } from 'zod';
-
 import { ZodLiteral, ZodObject } from 'zod';
 
+import { RetikzDataError } from '../error';
 import type { DataFieldTypeValue, IRDataTransform } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { DataLineageRecorder } from './lineage';
 import type { AnyRowSelectorDefinition, AnyStatisticsReducerDefinition } from './statistics';
-
-import { RetikzDataError } from '../error';
 
 /** transform的闭合调度阶段 */
 export const DataTransformPhase = {

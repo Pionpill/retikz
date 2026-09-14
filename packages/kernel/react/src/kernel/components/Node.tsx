@@ -15,7 +15,6 @@ import type { InputAtPosition, InputNodeLabel } from '@retikz/vanilla';
 import type { FC, ReactNode } from 'react';
 
 import type { HydrationEventProps } from '../protocol';
-
 import { TIKZ_NODE } from '../protocol';
 
 export type NodeProps = HydrationEventProps & {

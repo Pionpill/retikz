@@ -1,10 +1,8 @@
-import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
 import type { CreateRangedDotChartInput } from '@retikz/chart-vanilla/point/ranged-dot';
-
 import { createRangedDotChart } from '@retikz/chart-vanilla/point/ranged-dot';
+import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
 
 import type { TypedChartCommonProps } from '../shared';
-
 import { createTypedChartComponent, createTypedChartInput } from '../shared';
 import { collectRangedDotChartDeclarations } from './declaration-collection';
 

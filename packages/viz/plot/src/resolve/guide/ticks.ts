@@ -1,19 +1,17 @@
 import type { IRDataScalarValue } from '@retikz/data';
-
 import { coerceTimestamp } from '@retikz/data';
 import { DEFAULT_EPSILON } from '@retikz/math';
 import { format as d3Format } from 'd3-format';
 import { utcFormat as d3UtcFormat } from 'd3-time-format';
 
 import type { PositionScale, TickSet } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import type {
   GuideTickTimeUnitValue,
   IRPlotAxisGuide,
   IRPlotGuideTickLabelFormat,
   IRPlotGuideTickSource,
 } from '../../schemas';
-
-import { RetikzPlotError } from '../../error';
 import { AxisTickDensityKind, GuideTickIntervalKind, GuideTickTimeUnit } from '../../schemas';
 
 const MAX_INTERVAL_TICKS = 10_000;
