@@ -45,7 +45,7 @@ Layout 不建立专用 solver registry 或 `defineLayout()` 扩展轴。三个�
 | Artifact 与 adapter   | [Standard ADR-011](../../../standard/v0/v0.1/011-layout-artifacts-capabilities-adapters.md)                                                                                    |
 | Inspector             | [Standard ADR-012](../../../standard/v0/v0.1/012-layout-inspector.md)                                                                                                          |
 
-这些旧 ADR 的 Superseded 只表示 owner 迁移；被本 ADR 明确继承的行为仍然有效，后续调整进入新的 Layout ADR
+这些旧 ADR 的 Superseded 表示 owner 迁移；算法、几何和失败语义继续继承。Source 输入以当前稀疏契约为准：IR 使用 schema 的 input 类型，factory 与 adapter 保留作者省略字段，领域 resolve 复用 schema 默认补全 Canonical，LayoutItem key 可省略且不回写自动 key。旧文中的 Standard 路径、必填默认值和 adapter contribution 限制不再是当前公开契约；跨领域 provider contribution 复用 Core 通用装配机制
 
 ### 公开入口
 

@@ -77,7 +77,7 @@ type IRRibbonPathOptions = Readonly<{
   width?:
     | number
     | Readonly<{ kind: 'stops'; stops: ReadonlyArray<RibbonWidthStop>; interpolation?: RibbonWidthInterpolation }>
-    | Readonly<{ kind: 'profile'; name: string; params?: IRJsonObject }>;
+    | Readonly<{ kind: 'profile'; name: string; params?: JsonObject }>;
   start?: RibbonEndpoint;
   end?: RibbonEndpoint;
   interpolation?: RibbonTaperInterpolation;
@@ -144,14 +144,7 @@ profile `params` 保持 JSON-safe 并由对应 definition 的 `paramsSchema` 解
 
 ## Standard Ribbon 编译与输出
 
-Standard Ribbon definition 完整拥有以下行为：
-
-1. 解析和验证 `kindOptions`
-2. 通过 Core `materializePath` 获取 centerline 或上下 boundary 的已物化开放路径
-3. 解析固定宽度、端点 taper、stops 或注册 profile，并按 fixed / adaptive 策略采样
-4. 计算横截面、alignment、caps、轮廓和 label 边界偏移
-5. 使用 Core paint / precision services 输出普通 Scene Path 与共享 host labels
-6. 返回包含带状轮廓与 labels 的 primitives，以及能覆盖真实视觉几何的 bounds points
+Standard Ribbon 拥有 kindOptions、宽度与 profile、采样、横截面、alignment、caps 和带状轮廓；路径物化、共享标签与 Scene 包装复用 Core 公共服务。所有结果只存在于同次 compile，不形成第二种 Source。
 
 centerline 必须是单条非零长度开放子路径；boundary 的 upper / lower 必须各自物化为单条合法开放子路径。多 move、close/cycle、零长度整体路径、非有限采样坐标、无效 arc cap、不能满足的 profile 或 boundary 对应关系继续 fail-loud。零长度局部段可以按既有 Ribbon 规则忽略，但不能让整体 Ribbon 静默消失。
 

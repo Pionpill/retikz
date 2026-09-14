@@ -18,7 +18,7 @@ Callout 曾同时尝试表达目标附属说明、任意内容容器、可选 le
 
 ## 决策
 
-Graph 当前稳定 discriminator 只包含：
+本决策撤回 Callout 时的基础 discriminator 为：
 
 ```ts
 type GraphTypeValue = 'graph' | 'group' | 'entity' | 'relation';
@@ -38,4 +38,4 @@ Core Node relative position、Node labels、Path target 与 Graph Relation / Gro
 
 ## 结果
 
-Graph 当前只维护 Graph、Group、Entity 与 Relation 四类已经形成 Source、authoring、resolve、lowering和文档闭环的能力。通用 annotation、leader routing、自动避障与附属内容管理不属于本版本 Graph owner
+Graph、Group、Entity 与 Relation 是基础能力；[ADR-013](./013-block-open-content.md) 另行扩展 Block 及其开放内容组件，未恢复 Callout。通用 annotation、leader routing、自动避障与附属内容管理不属于本版本 Graph owner

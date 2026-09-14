@@ -63,9 +63,9 @@ Header、Section 与 Row 不建立成员、port 或 endpoint resolver。Section 
 
 ### Graph Theme 与下游职责保持不变
 
-Block 可以提供局部 `graphTheme`，并把 Graph context 投影到可见 children 中的 Entity / Relation。投影沿用 Graph、Group、Block、Header、Section、Row 与 Core Scope 的已知内容边界，未知 Tier 2 composite 保持不透明。Graph Theme 不直接样式化 Block shell、结构组件 shell、普通 Layout / Standard / Core child 或未知 Tier 2 composite；child 显式样式仍优先
+Block 可以提供局部 `graphDefaults` / `graphRules`，并把 Graph context 投影到可见 children 中的 Entity / Relation。投影沿用 Graph、Group、Block、Header、Section、Row 与 Core Scope 的已知内容边界，未知 Tier 2 composite 保持不透明。Graph 默认可按 ADR-017 样式化后代 Group / Block shell，但不样式化结构组件 shell、普通 Layout / Standard / Core child 或未知 Tier 2 composite；child 显式样式仍优先
 
-Diagram 可以把 Block 作为自动布局节点，并从 child 的显式 identity 派生所需 endpoint 投影。Graph 不保存 Diagram layout result、routing、endpoint 所属索引或 port constraint；Editor 的交互状态、选择、拖拽、历史与运行时执行也不进入 Block Source
+Diagram 的未来专属 Source 可在独立决策后消费 Block；当前 Flow Source 尚不接受 Block，不从 child identity 自动派生端口。Graph 不保存 Diagram layout result、routing、endpoint 所属索引或 port constraint；Editor 的交互状态、选择、拖拽、历史与运行时执行也不进入 Block Source
 
 ### Direct IR、React 与 Vanilla 使用同一 Source
 
@@ -85,7 +85,8 @@ type IRBlock = IRScopeProps &
   Readonly<{
     namespace: 'graph';
     type: 'block';
-    graphTheme?: IRGraphThemeLayer;
+    graphDefaults?: IRGraphDefaults;
+    graphRules?: ReadonlyArray<IRGraphRule>;
     children?: ReadonlyArray<IRChild>;
     width?: number;
     minWidth?: number;
