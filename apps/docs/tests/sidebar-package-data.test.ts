@@ -19,14 +19,24 @@ describe('Kernel 包侧栏数据', () => {
         module.children?.map(child => [child.value, child.label]),
       ]),
     ).toEqual([
-      ['foundation', 'kernel.pkgFoundation', [['overview', 'kernel.pkgOverview']]],
+      [
+        'foundation',
+        'kernel.pkgFoundation',
+        [
+          ['utilities', 'kernel.pkgFoundationUtilities'],
+          ['types-schemas', 'kernel.pkgFoundationTypesSchemas'],
+          ['validation-errors', 'kernel.pkgFoundationValidationErrors'],
+          ['api-reference', 'kernel.pkgFoundationApiReference'],
+        ],
+      ],
       [
         'math',
         'kernel.pkgMath',
         [
-          ['transforms', 'kernel.pkgMathTransforms'],
           ['primitives', 'kernel.pkgMathPrimitives'],
+          ['transforms', 'kernel.pkgMathTransforms'],
           ['algorithms', 'kernel.pkgMathAlgorithms'],
+          ['api-reference', 'kernel.pkgMathApiReference'],
         ],
       ],
       ['core', 'kernel.pkgCore', [['overview', 'kernel.pkgOverview']]],
@@ -38,8 +48,27 @@ describe('Kernel 包侧栏数据', () => {
           ['session', 'kernel.pkgRuntimeSession'],
         ],
       ],
-      ['tex', 'kernel.pkgTex', [['overview', 'kernel.pkgOverview']]],
-      ['inspect', 'kernel.pkgInspect', [['overview', 'kernel.pkgOverview']]],
+      [
+        'tex',
+        'kernel.pkgTex',
+        [
+          ['authoring', 'kernel.pkgTexAuthoring'],
+          ['configuration', 'kernel.pkgTexConfiguration'],
+          ['mechanism', 'kernel.pkgTexMechanism'],
+          ['api-reference', 'kernel.pkgTexApiReference'],
+        ],
+      ],
+      [
+        'inspect',
+        'kernel.pkgInspect',
+        [
+          ['builtins', 'kernel.pkgInspectBuiltins'],
+          ['extensions', 'kernel.pkgInspectExtensions'],
+          ['mechanism', 'kernel.pkgInspectMechanism'],
+          ['api-reference', 'kernel.pkgInspectApiReference'],
+          ['schema-reference', 'kernel.pkgInspectSchemaReference'],
+        ],
+      ],
       ['vanilla', 'kernel.pkgVanilla', [['overview', 'kernel.pkgOverview']]],
       ['react', 'kernel.pkgReact', [['overview', 'kernel.pkgOverview']]],
       [

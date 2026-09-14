@@ -11,7 +11,7 @@ import { releaseGroups } from './release-groups.config.mjs';
 const createRootPublishContract = () => ({
   type: 'module',
   engines: {
-    node: '>=24',
+    node: '>=22.12.0',
   },
   exports: {
     '.': './src/index.ts',
@@ -380,7 +380,7 @@ test('valid root and subpath ESM publish contracts have no diagnostics', () => {
     name: '@retikz/render',
     type: 'module',
     engines: {
-      node: '>=24',
+      node: '>=22.12.0',
     },
     exports: Object.fromEntries(renderSubpaths.map(subpath => [subpath, `./src/${subpath.slice(2)}/index.ts`])),
     publishConfig: {
@@ -491,7 +491,7 @@ test('packages without a root export reject publish-time root fields', () => {
     name: '@retikz/render',
     type: 'module',
     engines: {
-      node: '>=24',
+      node: '>=22.12.0',
     },
     exports: {
       './svg': './src/svg/index.ts',
@@ -651,7 +651,7 @@ test('Foundation belongs to the kernel release group with its Zod-only publish c
   const foundationRecord = packageRecords.find(({ manifest }) => manifest.name === '@retikz/foundation');
 
   assert.ok(foundationRecord, 'Foundation package manifest must be discoverable');
-  assert.equal(foundationRecord.manifest.version, '0.5.0-alpha.4');
+  assert.equal(foundationRecord.manifest.version, '0.5.0-alpha.5');
   assert.equal(foundationRecord.manifest.retikz?.releaseGroup, 'kernel');
   assert.equal(foundationRecord.manifest.sideEffects, false);
   assert.deepEqual(Object.keys(foundationRecord.manifest.exports), ['.']);
@@ -681,7 +681,7 @@ test('Diagram is a Schematic feature release group above Graph', async () => {
     '@retikz/diagram-react',
     '@retikz/diagram-vanilla',
   ]);
-  assert.ok(diagramRecords.every(({ manifest }) => manifest.version === '0.1.0-alpha.1'));
+  assert.ok(diagramRecords.every(({ manifest }) => manifest.version === '0.1.0-alpha.2'));
   assert.ok(diagramRecords.every(({ manifest }) => manifest.retikz?.domain === 'schematic'));
   assert.ok(diagramRecords.every(({ manifest }) => manifest.retikz?.releaseGroup === 'diagram'));
 });

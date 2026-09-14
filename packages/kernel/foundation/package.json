@@ -1,6 +1,6 @@
 {
   "name": "@retikz/foundation",
-  "version": "0.5.0-alpha.4",
+  "version": "0.5.0-alpha.5",
   "retikz": {
     "domain": "kernel",
     "releaseGroup": "kernel",
@@ -10,7 +10,7 @@
   "description": "retikz foundation: cross-package type, collection, assertion, structured error, and schema primitives.",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22.12.0"
   },
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

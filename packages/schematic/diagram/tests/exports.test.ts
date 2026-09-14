@@ -8,7 +8,7 @@ import * as flowExports from '../src/flow';
 describe('@retikz/diagram package shell', () => {
   it('declares the Diagram release metadata', () => {
     expect(manifest.name).toBe('@retikz/diagram');
-    expect(manifest.version).toBe('0.1.0-alpha.1');
+    expect(manifest.version).toBe('0.1.0-alpha.2');
     expect(manifest.retikz).toEqual({
       domain: 'schematic',
       releaseGroup: 'diagram',

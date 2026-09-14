@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { definePreviewControls } from '../../src/modules/docs/components/component-preview';
 import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
 import type { ComponentPreviewDialogProps } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
+import type * as DocsStore from '../../src/modules/docs/store';
 
 const dialogCapture = vi.hoisted(() => ({ props: [] as Array<ComponentPreviewDialogProps> }));
 
@@ -22,7 +23,8 @@ vi.mock('../../src/modules/docs/components/component-preview/ComponentPreviewDia
   },
 }));
 
-vi.mock('../../src/modules/docs/store', () => {
+vi.mock('../../src/modules/docs/store', async importOriginal => {
+  const actual = await importOriginal<typeof DocsStore>();
   const state = {
     hideCode: false,
     isExpand: false,
@@ -32,6 +34,7 @@ vi.mock('../../src/modules/docs/store', () => {
     controlPanelDefaultOpen: true,
   };
   return {
+    ...actual,
     useComponentPreviewStore: Object.assign((selector: (snapshot: typeof state) => unknown) => selector(state), {
       getState: () => state,
     }),

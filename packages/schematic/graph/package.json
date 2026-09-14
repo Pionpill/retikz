@@ -1,6 +1,6 @@
 {
   "name": "@retikz/graph",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "retikz": {
     "domain": "schematic",
     "releaseGroup": "graph",
@@ -10,7 +10,7 @@
   "description": "Framework-agnostic Diagram Graph composites for retikz.",
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=22.12.0"
   },
   "author": "Pionpill",
   "homepage": "https://pionpill.github.io/retikz/",

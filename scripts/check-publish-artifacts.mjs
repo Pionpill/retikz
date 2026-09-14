@@ -426,7 +426,7 @@ async function installPackedFixture({ records, tarballsByName, taskDirectory }) 
     private: true,
     type: 'module',
     engines: {
-      node: '>=24',
+      node: '>=22.12.0',
     },
     dependencies: {
       ...tarballDependencies,
@@ -506,8 +506,8 @@ async function runPackedTypeSmoke(fixtureDirectory, specifiers) {
 async function main() {
   const nodeMajor = Number(process.versions.node.split('.')[0]);
 
-  if (nodeMajor !== 24) {
-    throw new Error(`Publish artifact checks require Node 24; received ${process.version}`);
+  if (nodeMajor !== 22) {
+    throw new Error(`Publish artifact checks require Node 22; received ${process.version}`);
   }
 
   const records = await readPublishableRecords();

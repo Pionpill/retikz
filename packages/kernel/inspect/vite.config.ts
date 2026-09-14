@@ -7,9 +7,7 @@ export default defineRetikzLibraryConfig({
   entry: ['src/index.ts', 'src/react/index.ts', 'src/vanilla/index.ts'],
   test: {
     environment: 'node',
-    experimental: {
-      fsModuleCache: true,
-    },
+    fsModuleCache: true,
     include: ['tests/**/*.test.{ts,tsx}'],
     pool: 'forks',
   },

@@ -5,9 +5,9 @@ keywords: 'Graph、Entity、Relation、status、normal、disabled、params.statu
 
 # ADR-016：Graph Entity 与 Relation 的语义状态
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-02
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
+- 关联：[Graph roadmap](./roadmap.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md) · [Schematic 制图能力域设计](../../../../../../../notes/architecture/schematic-design.md)
 
 ## 背景与目标
 
@@ -26,7 +26,7 @@ Entity 与 Relation 共享可选的闭合 `status` 词汇。省略表示正常�
 
 `status` 是图所表达的语义状态，不是 React 组件的真实 `disabled` 行为、工作流执行状态机或 Editor 交互状态。它不改变 Entity role、Relation role/kind/direction、endpoint、路径结构或布局；它也不自动生成标签、图标、marker 或动画
 
-默认 Graph Theme 为四个 status 提供上表颜色家族的 appearance 覆盖。命名 Graph Theme 可以为同一 status 选择符合自身调色板的具体颜色；status 的语义和值不随 Theme 改变。实例显式 Core-compatible appearance 字段仍有最终优先级，因此可以在保留 authored status 的同时满足局部展示需要
+默认 Graph Theme 为四个 status 提供上表颜色家族的 appearance 覆盖；disabled 同时使用虚线。命名 Graph Theme 可以为同一 status 选择符合自身调色板的具体颜色；status 的语义和值不随 Theme 改变。实例显式 Core-compatible appearance 字段仍有最终优先级，因此可以在保留 authored status 的同时满足局部展示需要
 
 领域专属的可用性、审批、部署或业务生命周期继续使用 predicate 与其 params。第一版不开放自定义 status Definition 或 registry；这四个固定值是 Graph 共享、可枚举的基础状态，而不是可扩展领域分类。需要额外稳定状态时，先由拥有业务语义的领域 Definition 表达，不把值加入 Graph 内置集合
 

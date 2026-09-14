@@ -5,10 +5,10 @@ keywords: 'Entity、Relation、group、theme.colors.categorical'
 
 # ADR-018：Entity / Relation 自动颜色分组
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-09
-- 主责：Graph，目标版本 0.1.0-alpha.2
-- 关联：[alpha.2 roadmap](./roadmap.md) · [Graph Defaults、Rules 与 Theme 来源](./017-theme-source-fragments.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md)
+- 主责：Graph
+- 关联：[Graph roadmap](./roadmap.md) · [Graph Defaults、Rules 与 Theme 来源](./017-theme-source-fragments.md) · [Schematic Graph 完备设计](../../../../architecture/schematic-graph-complete.md)
 
 ## 背景与目标
 
