@@ -55,7 +55,25 @@ Kernel 是统一发布单元：九个 publishable package 必须写同一个 ver
 
 - 同发布组内部依赖用 `workspace:*`，发布时应解析为同组目标版本。
 - 跨发布组内部依赖用 `workspace:^`，发布时应解析为兼容范围；只有依赖组发生不兼容变化且当前组需要适配时，才同时发布消费组。
-- 功能发布组不能依赖其他功能发布组；共享能力应下沉到 `@retikz/data`、`@retikz/core` 或 `@retikz/math`。
+- 跨发布组依赖须符合就近 AGENTS 的能力所有权和单向依赖边界；例如 Diagram 可消费 Graph，Chart 可消费 Plot，不因独立 release group 而禁止既定分层依赖。
+
+## 上游发布闭包与确认表
+
+开始发布准备时，先从用户指定的发布组解析所有生产 `@retikz/*` 依赖，递归检查跨发布组的 `workspace:^` 范围及官方 npm registry。若当前发布需要尚未发布的上游 API 或目标范围无法在 registry 解析到兼容版本，必须把该上游发布组及其全部 lockstep 包纳入本次发布闭包；不能只补发组内一个包。按依赖顺序先发布上游组，再发布用户指定组。
+
+对闭包内每组，从上次已发布快照以来的实际改动、changelog 草稿与必需上游能力识别本次相关 ADR，逐篇阅读全文并对照实现、公开契约、测试和 docs。Accepted 只表示设计获批，不是完成证据；bugfix / 优化无需为发包补造 ADR。真正需要的能力尚未实现、相关契约不一致、半成品污染发布快照或验证失败才阻塞受影响发布链；省略变更说明不能排除已合入的半成品代码。
+
+Roadmap 只管理中版本能力目标，不按 alpha / beta / rc 序号安排 ADR。与本次交付无关且不影响快照的未完成项列为“未纳入”，留在原中版本，不阻塞发布、不随 alpha 递增搬迁。只有人工决定改变中版本范围时才延期目标；Beta / RC / Stable 升段仍须核验对应能力、冻结与质量门槛。
+
+在改版本、changelog、roadmap 或运行发布验证前，向用户展示发布闭包表并等待确认。每个发布组只占一行，不展开组内主包与 React / Vanilla 适配包。表至少包含：
+
+| 发布顺序 | 发布组 | 已发布 -> 目标版本 | 纳入原因 | 本次用户可见更新 | 未纳入计划项 | 真实阻塞项 |
+| -------- | ------ | ------------------ | -------- | ---------------- | ------------ | ---------- |
+
+- “本次用户可见更新”从该组 changelog、公开 API / schema / adapter 改动和必要 docs 中汇总；没有用户可见更新时明确写“无”，并据此重新判断该组是否需要发布
+- “未纳入计划项”说明未完成但与本次交付无关的能力；“真实阻塞项”说明缺失能力、验证证据和受影响下游组，不以 ADR 状态代替判断
+- 表外另列出 registry 中已满足的上游组，以及不纳入本次发布的理由
+- 用户确认的对象是完整发布闭包、每组版本、更新摘要、未纳入项与真实阻塞结论；未确认前不得假定只发布最初指定包或继续写发布准备文件
 
 ## 输入确认
 
@@ -64,8 +82,9 @@ Kernel 是统一发布单元：九个 publishable package 必须写同一个 ver
 - 发布单元：以 `scripts/release-groups.config.mjs` 为准；
 - 目标版本、npm dist-tag，以及按 Kernel 特例或主包名规则推导的 git tag；
 - 包列表与每个包的 `old -> target`；
+- 递归解析后的上游发布闭包、按发布组汇总的更新内容、相关 ADR 的实现证据、未纳入项、真实阻塞项与发布顺序；
 - `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件的 note 范围；
-- 是否需要同步 module badge 或 roadmap milestone 状态。
+- 是否需要同步 module badge 或中版本 roadmap 的能力进度 / 阶段门槛。
 
 ## 版本连续性
 
@@ -98,15 +117,15 @@ npm view @retikz/standard dist-tags --registry=https://registry.npmjs.org/
 1. **包版本号**：发布组内每个包都改到目标版本。
 2. **changelog 数据**：更新 `apps/docs/src/modules/docs/data/changelog/*.ts` 中对应 release 文件，结构以 `apps/docs/src/modules/docs/data/types.ts` 为准；不要改旧 changelog MDX。
 3. **模块徽章**：只有可见模块版本变化时才改 `apps/docs/src/modules/docs/data/module.ts`，例如 minor / major 切档或 alpha -> beta -> rc -> stable。
-4. **roadmap**：按发布组当前 roadmap 的既有格式更新。
-5. **ADR 检查**：按下方“ADR 长期一致性门禁”逐篇审计本次 milestone 的全部 ADR；发现混入施工细节、状态错误或契约不一致时停下，先走 `develop-wrapup` 修正。
+4. **roadmap**：仅在能力进度、目标范围或阶段门槛实际改变时更新中版本 roadmap；不创建下一 alpha 任务清单或搬迁未完成 ADR。
+5. **ADR 检查**：按下方“ADR 长期一致性门禁”逐篇审计本次交付及依赖涉及的 ADR；发现混入施工细节、状态错误或契约不一致时停下，先走 `develop-wrapup` 修正。
 6. **lockfile**：package metadata 或依赖图变化导致 lockfile 漂移时，运行 `pnpm install`。
 
 ### ADR 长期一致性门禁
 
-全仓验证和 dry-run 前必须完成，适用于 kernel / data / plot / table / standard 全部发布组：
+全仓验证和 dry-run 前必须完成，适用于本次发布闭包内的所有发布组，包括被动纳入的上游组：
 
-1. 从本次 milestone roadmap 枚举全部 ADR，并逐篇阅读全文。
+1. 从本次实际改动与依赖列出相关 ADR，并逐篇阅读全文；核对被替代关系与本次消费的生效契约，不把整个中版本的未来 ADR 当作本次完成清单。
 2. 按 `develop-wrapup` 的“ADR 长期一致性”标准检查：ADR 从 Proposed 起只保留背景与目标、核心决策、基础数据结构 / 公开契约、行为、失败语义、兼容性和最终结果；功能与包边界、能力完备性、同类设计、被否决方案、测试策略和非目标属于 ignored plan，不得只检查状态、文件长度、roadmap 或提交说明。
 3. 最终生效 ADR 必须为 `Accepted`；被替代记录必须为 `Superseded`，并明确链接替代 ADR 与被替代原因。
 4. 对账 ADR 中的公开契约、类型示例、兼容性与最终实现、changelog、docs；任一陈旧描述都算阻断。
@@ -200,7 +219,7 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 发布成功后：
 
 1. 汇报 npm 包 URL、git tag、push 状态和安装命令。
-2. 只有 roadmap 明确写出下一开发版本时，才把本发布组预 bump 到下一开发版本；不明确就问用户。这是独立工作区改动，需要单独提交授权。
+2. 不为开始下一项开发或安置 ADR 自动预 bump；下一次发布准备时再核定目标版本。只有人工明确要求预 bump 时才作为独立改动处理，并单独获取提交授权；未完成能力继续留在原中版本 roadmap。
 
 ## 快速清单
 
@@ -209,10 +228,11 @@ pnpm --filter @retikz/<pkg> publish --access public --tag <tag> --no-git-checks 
 - [ ] 已按 npm registry 校验版本连续性。
 - [ ] `scripts/release-groups.config.mjs`、`package.json` 的 `retikz` 元信息和目标发布组一致。
 - [ ] 发布组内包版本全部等于目标版本。
+- [ ] 闭包内各组的实际交付与必需能力已核对；相关 ADR 有实现证据，未纳入项与真实阻塞项已写入确认表。
 - [ ] 用户可见行为变化已更新对应 changelog 数据文件。
 - [ ] 只有需要改变可见徽章时才更新 `module.ts`。
-- [ ] roadmap 已按既有格式更新。
-- [ ] 已从 milestone roadmap 枚举并逐篇阅读全文审计全部 ADR，未用状态、roadmap 或提交说明替代。
+- [ ] roadmap 仅反映中版本能力进度与阶段门槛；未按预发布序号排期或搬迁 ADR。
+- [ ] 已逐篇阅读全文审计本次相关 ADR，未用状态、roadmap 或提交说明替代。
 - [ ] 生效 ADR 从 Proposed 起保持长期形态并为 `Accepted`；被替代 ADR 为 `Superseded`，且替代关系明确。
 - [ ] ADR 未混入具体文件、私有逻辑、逐项测试、命令、commit 或 review 过程；ignored plan 未被误提交。
 - [ ] ADR 未保留包边界、完备性、同类设计、否决方案、测试策略或非目标等设计检查章节。
