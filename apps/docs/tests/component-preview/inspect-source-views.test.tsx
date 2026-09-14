@@ -1,16 +1,14 @@
-import type { InspectLayoutProps } from '@retikz/inspect/react';
+import { runInNewContext } from 'node:vm';
 
 import * as inspect from '@retikz/inspect';
+import type { InspectLayoutProps } from '@retikz/inspect/react';
 import * as inspectVanilla from '@retikz/inspect/vanilla';
 import { createInputScene } from '@retikz/react';
 import * as clip from '@retikz/standard/clip';
 import * as vanilla from '@retikz/vanilla';
-import { runInNewContext } from 'node:vm';
 import { isValidElement } from 'react';
 import { ModuleKind, transpileModule } from 'typescript';
 import { describe, expect, it } from 'vitest';
-
-import type { PreviewControlValues } from '../../src/modules/docs/components/component-preview/types';
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import {
@@ -18,6 +16,7 @@ import {
   buildPreviewSource,
 } from '../../src/modules/docs/components/component-preview/source-panel';
 import * as theme from '../../src/modules/docs/components/component-preview/theme';
+import type { PreviewControlValues } from '../../src/modules/docs/components/component-preview/types';
 import * as measure from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import Demo2, {
   createPreviewControlContract as contract2,

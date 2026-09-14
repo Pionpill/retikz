@@ -2,14 +2,13 @@ import type { CurveSegmentSample } from '@retikz/math';
 
 import type { GroupPrim, ScenePrimitive, TextPrim } from '../../../contract';
 import type { CanonicalFont, CanonicalGeometryLabel } from '../../../resolve';
-import type { IRPosition } from '../../../schemas';
-import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
-import type { CompileWarningCodeValue } from '../../warning';
-
 import { resolveFont, resolveTextLine } from '../../../resolve';
+import type { IRPosition } from '../../../schemas';
 import { RAD_TO_DEG } from '../../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../../constants';
+import type { LineLayoutContext, LowerTex, TextMeasurer } from '../../text';
 import { combineOpacity, layoutInlineLine, normalizeTextMetrics, toAlphabeticBaselineY } from '../../text';
+import type { CompileWarningCodeValue } from '../../warning';
 
 /** 边标注默认行高 */
 const LABEL_LINE_HEIGHT_FACTOR = 1.2;

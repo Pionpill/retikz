@@ -1,7 +1,6 @@
 import type { infer as ZodInfer } from 'zod';
 
 import type { EntitySchema, IRGraphEntity } from '../../schemas';
-
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 
 /** Entity 单 record 工厂的作者输入 */

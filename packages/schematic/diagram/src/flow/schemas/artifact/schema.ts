@@ -1,8 +1,7 @@
-import type { infer as ZodInfer, ZodType } from 'zod';
-
 import { PositionSchema } from '@retikz/core';
 import { NonBlankStringSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutArtifactRectSchema } from '@retikz/layout';
+import type { infer as ZodInfer, ZodType } from 'zod';
 import { array, discriminatedUnion, lazy, literal, strictObject, union } from 'zod';
 
 import { FlowRoutingKind } from '../../shared';

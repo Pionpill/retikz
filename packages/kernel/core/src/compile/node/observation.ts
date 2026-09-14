@@ -1,14 +1,11 @@
 import type { JsonObject } from '@retikz/foundation';
+import { NonBlankStringSchema } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
 
-import { NonBlankStringSchema } from '@retikz/foundation';
-
 import type { GeometryKeyPoint, NodeOwnerOutput, PathCommand } from '../../contract';
-import type { Rect } from '../../shared/geometry';
-import type { NodeLayout } from './types';
-
 import { createCompositeContractError } from '../../resolve/diagnostics';
 import { PathCommandSchema } from '../../schemas';
+import type { Rect } from '../../shared/geometry';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import {
   assertProviderOutputKeys,
@@ -20,6 +17,7 @@ import {
 } from '../scene-primitive';
 import { resolveBoundary } from './boundary';
 import { nodeBaselineYsOf } from './emit';
+import type { NodeLayout } from './types';
 
 /** 空 provider 参数对象 */
 const EMPTY_PARAMS: JsonObject = {};

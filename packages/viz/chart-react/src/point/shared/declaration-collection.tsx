@@ -1,9 +1,8 @@
 import type { IRTextBlock } from '@retikz/core';
 import type { FC, ReactNode } from 'react';
 
-import type { ChartDeclarationPath, CollectedChartDeclaration, CollectedChartDeclarations } from '../../shared';
-
 import { RetikzChartReactError } from '../../error';
+import type { ChartDeclarationPath, CollectedChartDeclaration, CollectedChartDeclarations } from '../../shared';
 import { collectChartDeclarations, splitPresentationMarkers } from '../../shared';
 
 /** 具体 Point chartType direct-child declarations 的共享收集结果 */

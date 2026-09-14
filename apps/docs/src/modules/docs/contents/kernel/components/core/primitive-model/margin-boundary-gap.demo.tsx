@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 
 // 每列三层嵌套：文本区（内容盒，lightgray）→ shape（内框，currentColor 实线）→ 连接面（虚线）。
 // 连接面随 margin 离 shape 越来越远；第三列把 boundary 换成 circle：margin 同样推开它，形状由 boundary 决定。

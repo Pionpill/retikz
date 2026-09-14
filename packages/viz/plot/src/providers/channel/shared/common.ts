@@ -1,10 +1,9 @@
+import type { DataFieldTypeMap, DataFieldTypeValue } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
-import { type DataFieldTypeMap, type DataFieldTypeValue } from '@retikz/data';
 
-import type { IRPlotPointNumberStyle, MarkValueKind } from '../../../schemas';
-
-import { type ChannelResolution } from '../../../contract';
+import type { ChannelResolution } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotPointNumberStyle, MarkValueKind } from '../../../schemas';
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
 type MarkStyleValue<T> =

@@ -1,9 +1,8 @@
 ﻿import type { AnyRowSelectorDefinition } from '../../contract';
-import type { RowSelectorTieValue } from '../../schemas';
-import type { ExternalRow } from '../../shared';
-
 import { defineRowSelector } from '../../contract';
+import type { RowSelectorTieValue } from '../../schemas';
 import { BuiltinSelectorOperationSchemas, DataSortOrder, RowSelectorTie } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 import { resolveFieldPath } from '../data';
 import { freezeDefinitions } from '../shared';
 import { orderRows, quantileBandStatsOf, rankedByNumericField, spreadFactorOf } from './helpers';

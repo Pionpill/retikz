@@ -1,14 +1,12 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-
 import { PathMarkSchema, PlotMark } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
-import type { IRConnectedScatterChartProperties, IRConnectedScatterMark } from './schema';
-
 import { defineChartMark } from '../../_chart/contract';
 import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
+import type { IRConnectedScatterChartProperties, IRConnectedScatterMark } from './schema';
 import { ConnectedScatterChartMarkSchema } from './schema';
 
 const seriesScaleName = pointRecipeId('connected-scatter', 'scale.series');

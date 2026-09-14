@@ -214,26 +214,26 @@ import { NodeTextColor } from '@retikz/core';
     {
       label: '内容与几何收敛为 Node 布局',
       path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 131,
-      endLine: 311,
+      startLine: 130,
+      endLine: 310,
     },
     {
       label: '形状、内容与标签输出为 Scene 图元',
       path: 'packages/kernel/core/src/compile/node/emit.ts',
-      startLine: 225,
-      endLine: 244,
+      startLine: 224,
+      endLine: 243,
     },
     {
       label: '旋转视觉框与 distance 收敛为标签中心',
       path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
-      startLine: 150,
-      endLine: 176,
+      startLine: 148,
+      endLine: 174,
     },
     {
       label: '命名注册与自动视框收集',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
-      endLine: 286,
+      startLine: 208,
+      endLine: 283,
     },
   ]}
 />
@@ -257,26 +257,26 @@ import { NodeTextColor } from '@retikz/core';
     {
       label: 'tight 包络、fallback 与缓存',
       path: 'packages/kernel/core/src/compile/node/boundary.ts',
-      startLine: 49,
-      endLine: 94,
+      startLine: 48,
+      endLine: 93,
     },
     {
       label: '内置 boundary 的 fit 与 gap',
       path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
-      startLine: 12,
-      endLine: 103,
+      startLine: 10,
+      endLine: 101,
     },
     {
       label: '视觉轮廓、连接面与 anchor 分流',
       path: 'packages/kernel/core/src/compile/node/anchors.ts',
-      startLine: 58,
-      endLine: 117,
+      startLine: 57,
+      endLine: 116,
     },
     {
       label: 'margin 与锚点类型的解析边界',
       path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
-      startLine: 10,
-      endLine: 52,
+      startLine: 9,
+      endLine: 51,
     },
   ]}
 />
@@ -292,26 +292,26 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
     {
       label: 'Node position 解析',
       path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 43,
-      endLine: 82,
+      startLine: 42,
+      endLine: 81,
     },
     {
       label: 'Node 布局后注册 id',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 211,
-      endLine: 286,
+      startLine: 208,
+      endLine: 283,
     },
     {
       label: 'Path 加入延迟输出队列',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 318,
-      endLine: 343,
+      startLine: 313,
+      endLine: 338,
     },
     {
       label: '命名注册完成后解析 Path',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 183,
-      endLine: 209,
+      startLine: 180,
+      endLine: 206,
     },
   ]}
 />
@@ -322,7 +322,7 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
 | ----------- | ------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`        | `string`                  | —      | 唯一标识；被 `<Path>` / `<Draw>` 用来引用                                                                                                                                                                 |
 | `meta`      | `Record<string, JSON 值>` | —      | provenance 元数据：随该节点原样透传到渲染产物，renderer 忽略、不参与布局 / 连接 / 样式；典型由 plot 等高层注入（标记来自哪个 datum / series / layer），供交互层命中图元后反查来源。须为 JSON 可序列化对象 |
-| `on<Event>` | `NodeProps['onClick']`    | —      | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                    |
+| `on<Event>` | `NodeProps['onClick']`    | —      | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                           |
 
 其余 props 按职责列在下方四个 API 主题；每个小节都能独立查阅对应默认值和示例。
 

@@ -1,5 +1,3 @@
-import type { RefinementCtx } from 'zod';
-
 import {
   JsonObjectSchema,
   NonBlankStringSchema,
@@ -7,6 +5,7 @@ import {
   NormalizedFractionSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
+import type { RefinementCtx } from 'zod';
 import { array, boolean, discriminatedUnion, enum as zodEnum, literal, strictObject, union } from 'zod';
 
 import { Side } from '../../../shared';

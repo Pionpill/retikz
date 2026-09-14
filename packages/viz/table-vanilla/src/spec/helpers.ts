@@ -1,13 +1,11 @@
-import type { DetailTableInput, IRDetailTable, IRManualTable, IRTable, ManualTableInput } from '@retikz/table';
-import type { InputEmbed } from '@retikz/vanilla';
-
 import { assertNonEmptyString } from '@retikz/foundation';
+import type { DetailTableInput, IRDetailTable, IRManualTable, IRTable, ManualTableInput } from '@retikz/table';
 import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE } from '@retikz/table';
+import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
 
-import type { InputTable, InputTableVariant } from '../normalize/table';
-
 import { RetikzTableVanillaError } from '../error';
+import type { InputTable, InputTableVariant } from '../normalize/table';
 import { inputTableFromIR } from '../normalize/table';
 
 /** 从 plain detail 输入构造 Table spec */

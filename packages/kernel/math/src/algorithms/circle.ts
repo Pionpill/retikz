@@ -1,6 +1,5 @@
-import type { Position } from '../primitives';
-
 import { DEFAULT_EPSILON } from '../constants';
+import type { Position } from '../primitives';
 import { vector2 } from '../primitives';
 import { triangle } from './triangle';
 

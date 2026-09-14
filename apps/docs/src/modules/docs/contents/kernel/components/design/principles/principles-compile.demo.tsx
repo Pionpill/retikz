@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Core 从 IR 到 Scene 的完整编译流程 */
 const Demo: FC = () => (

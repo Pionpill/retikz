@@ -1,7 +1,6 @@
 import type { ValueOf } from '@retikz/foundation';
 
 import type { LabPolicy, LabScenario } from './model';
-
 import { LabChangeKind, LabPolicyId } from './model';
 
 /** Kernel Performance Lab 稳定场景标识 */

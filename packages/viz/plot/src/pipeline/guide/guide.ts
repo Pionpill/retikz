@@ -2,7 +2,6 @@ import type { IRGradientStop, IRNode, IRPath, IRScope, IRStep } from '@retikz/co
 import type { IRShapeValue } from '@retikz/core';
 import type { IRDataScalarValue } from '@retikz/data';
 import type { Position } from '@retikz/math';
-
 import { pointAtArcAngle } from '@retikz/math';
 
 import type {
@@ -15,14 +14,12 @@ import type {
   TickSet,
 } from '../../contract';
 import type { ProvenanceContext } from '../../contract';
-import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
-import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
-import type { Rect } from '../../shared';
-
 import { guideLayerId, guideLayerMeta } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { defaultOriginAxisTickSideOf, polarFixedRadiusSteps } from '../../providers';
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../resolve/guide';
+import type { EffectiveLegendGuideTokens } from '../../resolve/theme';
+import type { IRPlotAxisGuide, LegendChannelValue, LegendOrientValue, LegendPositionValue } from '../../schemas';
 import {
   AxisCardinalSide,
   AxisCrossingCorner,
@@ -40,6 +37,7 @@ import {
   AxisTitlePlacementKeyword,
   PlotLayerZIndex,
 } from '../../schemas';
+import type { Rect } from '../../shared';
 import {
   DEFAULT_AXIS_LABEL_GAP,
   DEFAULT_AXIS_TICK_LENGTH,

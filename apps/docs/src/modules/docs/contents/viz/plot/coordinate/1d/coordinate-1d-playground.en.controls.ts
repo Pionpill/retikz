@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { COORDINATE_1D_PLAYGROUND_CONTROL_IDS } from './coordinate-1d-playground.controls';

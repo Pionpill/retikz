@@ -1,5 +1,4 @@
 import type { AnyScaleDefinition } from '../../contract';
-
 import { extractScaleType, PositionScaleContinuity } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { COLOR_SCALE_DEFINITIONS, POSITION_SCALE_DEFINITIONS } from './features';

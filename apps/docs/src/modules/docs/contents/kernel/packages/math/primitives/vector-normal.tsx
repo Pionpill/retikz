@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { vector2 } from '@retikz/math';
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

@@ -1,4 +1,4 @@
-import { type FC } from 'react';
+import type { FC } from 'react';
 
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
 import { isMac } from '@/lib';

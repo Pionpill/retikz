@@ -2,7 +2,6 @@ import { pointAtArcAngle } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
-
 import { DEG_TO_RAD } from '../../../shared/geometry';
 import { samePoint } from '../host';
 

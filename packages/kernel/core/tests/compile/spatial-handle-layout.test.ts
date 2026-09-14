@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
 import type { IRScene } from '../../src';
-
 import {
   compileToScene,
   CompositeBaseSchema,

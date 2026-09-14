@@ -1,13 +1,11 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
 import type { CurveSegmentSample, Vector2 } from '@retikz/math';
-
 import { curve, point } from '@retikz/math';
 
 import type { IRRibbonCap, RibbonAlignmentValue } from '../../types';
-import type { RibbonAnalyticSegment, RibbonCrossSection, RibbonSegment, RibbonSegmentInput } from '../types';
-
 import { arcCapPoints, capExtension, isArcCap, midpoint, roundedArcPoints } from '../caps';
 import { controlHandleLength } from '../centerline';
+import type { RibbonAnalyticSegment, RibbonCrossSection, RibbonSegment, RibbonSegmentInput } from '../types';
 import { ribbonCrossSection } from './cross-section';
 
 type SegmentInputToAnalyticSegmentInput = {

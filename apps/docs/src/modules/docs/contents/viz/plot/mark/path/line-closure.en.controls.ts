@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { LINE_CLOSURE_CONTROL_IDS } from './line-closure.controls';

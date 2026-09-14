@@ -132,7 +132,7 @@ pnpm --filter @retikz/react test:run
 如果写了代码或测试文件，按 `AGENTS.md` 要求跑对应包 ESLint 自动修复：
 
 ```bash
-pnpm --filter @retikz/<pkg> exec eslint . --fix
+pnpm --filter @retikz/<pkg> exec oxlint . --fix
 ```
 
 不要用 `tsc` 不带 `--noEmit`，不要用 `tsc -b`。

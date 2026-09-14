@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { RuntimeDiagnostic, RuntimeParticipantContext } from '../../src';
-
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,

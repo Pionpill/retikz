@@ -4,15 +4,10 @@
  *   transform 通道各包一层 `<g>`（避免同元素多个 transform 动画在 CSS 上冲突，且天然支持支点 transform-origin）
  */
 import type { IRAnimationTrack, Scene, ScenePrimitive } from '@retikz/core';
-
 import { AnimationProperty } from '@retikz/core';
 import { mergeProperties } from '@retikz/foundation';
 
 import type { EasingRegistry } from '../../animation';
-import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
-import type { ExpandedTrack } from './shared';
-import type { WaapiDescriptor } from './waapi';
-
 import {
   classifyProperty,
   evaluateTrack,
@@ -21,7 +16,10 @@ import {
   resolveTransformOrigin,
 } from '../../animation';
 import { toSafeSvgToken } from '../safe-token';
+import type { SvgAttrs, SvgNode, SvgStyle } from '../types';
+import type { ExpandedTrack } from './shared';
 import { easingToCss, expandTrack, iterationsToCss, transformValue } from './shared';
+import type { WaapiDescriptor } from './waapi';
 import { buildWaapiDescriptor } from './waapi';
 
 /** load 触发（缺省即 load）→ 走 CSS 自播；其余 → WAAPI 描述 */

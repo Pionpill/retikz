@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

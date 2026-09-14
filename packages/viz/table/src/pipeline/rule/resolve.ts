@@ -5,20 +5,6 @@ import type {
   TableCellPlanSource,
   TableLegendDescriptor,
 } from '../../contract';
-import type {
-  IRTableCellAppearance,
-  IRTableCellRule,
-  IRTableCellVisualEncoding,
-  IRTableFormatterRef,
-  IRTablePresentationRef,
-} from '../../schemas';
-import type {
-  ResolvedTableCellPlan,
-  ResolvedTablePlan,
-  ResolveTableCellPlansOptions,
-  TableCellAppearanceTrace,
-} from './types';
-
 import {
   TableCellAppearanceTracePathSchema,
   TableCellPlanSourceKind,
@@ -28,6 +14,13 @@ import {
 import { RetikzTableError } from '../../error';
 import { resolveCellVisualScaleRegistry } from '../../providers';
 import { resolveCellVisualScale } from '../../providers/encoding';
+import type {
+  IRTableCellAppearance,
+  IRTableCellRule,
+  IRTableCellVisualEncoding,
+  IRTableFormatterRef,
+  IRTablePresentationRef,
+} from '../../schemas';
 import {
   TableCellAppearanceSchema,
   TableCellContentStyleSchema,
@@ -42,6 +35,12 @@ import {
 import { deepFreeze } from '../../shared';
 import { cascadeTableCellAppearance } from './cascade';
 import { matchesTableCellSelector } from './match';
+import type {
+  ResolvedTableCellPlan,
+  ResolvedTablePlan,
+  ResolveTableCellPlansOptions,
+  TableCellAppearanceTrace,
+} from './types';
 
 const DEFAULT_SOURCE = { kind: TableCellPlanSourceKind.Default } as const;
 const STRUCTURE_SOURCE = { kind: TableCellPlanSourceKind.Structure } as const;

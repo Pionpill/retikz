@@ -1,6 +1,5 @@
-import type { MathJaxEngineOptions, MathJaxExtensionValue } from './types';
-
 import { MATHJAX_EXTENSION_ORDER, MathJaxProfile } from './constants';
+import type { MathJaxEngineOptions, MathJaxExtensionValue } from './types';
 
 /** 将 profile 与追加项展开为按稳定顺序去重的有效扩展 */
 export const resolveMathJaxExtensions = (options?: MathJaxEngineOptions): Array<MathJaxExtensionValue> => {

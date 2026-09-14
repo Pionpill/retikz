@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { definePattern } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 自定义 pattern motif：十字（cross）图案，与内置 lines / dots / grid 不同。

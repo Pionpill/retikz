@@ -1,5 +1,3 @@
-import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-
 import {
   BlockHeaderProviderKey,
   BlockProviderKey,
@@ -13,11 +11,11 @@ import {
   GroupProviderKey,
   RelationProviderKey,
 } from '@retikz/graph';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { normalizeScene, processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { InputBlock, InputBlockHeader, InputBlockRow, InputBlockSection, InputGraph, InputGroup } from '../src';
-
 import {
   block,
   blockHeader,

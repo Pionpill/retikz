@@ -1,11 +1,10 @@
 import { isFiniteNumber } from '@retikz/math';
 
 import type { DataFieldTypeMap, ParsedFieldValue } from '../../contract';
-import type { DataFieldTypeValue } from '../../schemas';
-import type { ExternalRow } from '../../shared';
-
 import { RetikzDataError } from '../../error';
+import type { DataFieldTypeValue } from '../../schemas';
 import { DataFieldType } from '../../schemas';
+import type { ExternalRow } from '../../shared';
 import { coerceValue } from './coerce';
 import { resolveFieldPath } from './field';
 

@@ -1,12 +1,10 @@
 import type { FC } from 'react';
-
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import type { ShowcaseFamilyValue, ShowcaseUsageValue } from './frontmatter';
-
 import { SHOWCASE_FAMILY_LABELS, SHOWCASE_USAGE_LABELS } from './frontmatter';
 
 export type ShowcaseMetadataBadgesProps = {

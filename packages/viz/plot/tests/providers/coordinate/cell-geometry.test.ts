@@ -1,16 +1,11 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
-
 import { compileToScene } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 import { ContourShapeDefinition } from '@retikz/standard/shape';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
 import type { Cell, CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
-import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { CartesianCoordinateFrame } from '../../../src/providers';
-import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
-
 import {
   cellGeometryAnchor,
   createCoordinateFrame,
@@ -18,11 +13,14 @@ import {
   densifyCellContour,
   RETIKZ_POLAR_SEGMENT_SAMPLES,
 } from '../../../src/contract';
+import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
+import type { CartesianCoordinateFrame } from '../../../src/providers';
 import { buildIntervalContext } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
+import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 import { isBuiltinMark, PlotSchema, PolarInterpolation } from '../../../src/schemas';
 
 /**

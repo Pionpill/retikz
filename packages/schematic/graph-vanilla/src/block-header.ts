@@ -1,11 +1,9 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
+import { BlockHeaderProviderKey } from '@retikz/graph';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
-import { BlockHeaderProviderKey } from '@retikz/graph';
-
-import type { InputBlockHeader, InputGraphChild } from './normalize';
-
 import { BlockHeaderEmbedKind } from './constants';
+import type { InputBlockHeader, InputGraphChild } from './normalize';
 import { normalizeBlockHeader } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';

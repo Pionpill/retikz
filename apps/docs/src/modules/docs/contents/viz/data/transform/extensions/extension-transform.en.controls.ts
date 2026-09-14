@@ -1,12 +1,11 @@
 import { resolveTransformRegistry } from '@retikz/data';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 import { createTransformTableViews } from '@/modules/docs/preview';
 
-import { customTransformRows } from './extension-transform.data';
 import { scaleField, scaleFieldOperationOf } from './extension-transform-preview';
+import { customTransformRows } from './extension-transform.data';
 
 const transformRegistry = resolveTransformRegistry([scaleField]);
 

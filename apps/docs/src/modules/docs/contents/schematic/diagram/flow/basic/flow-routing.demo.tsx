@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import type { FC } from 'react';
 
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 

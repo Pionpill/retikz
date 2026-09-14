@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { definePathGenerator } from '@retikz/core';
 import { Layout, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 const sin = definePathGenerator({

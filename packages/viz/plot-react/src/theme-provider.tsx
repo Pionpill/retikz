@@ -1,6 +1,5 @@
 import type { PlotThemeStyleDefinition } from '@retikz/plot';
 import type { FC, ReactNode } from 'react';
-
 import { useMemo } from 'react';
 
 import { PlotThemeStylesContext, usePlotThemeStyles } from './theme-context';

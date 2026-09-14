@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Standard Definition 从装载到 Scene 的统一编译路径 */
 const Demo: FC = () => (

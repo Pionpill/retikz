@@ -1,12 +1,10 @@
 import type { IRChild, IRNode, IRScope } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-
 import { defineTransform } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, object, union } from 'zod';
 
 import type { IRPlot } from '../../src';
-
 import { createPlotLineageLocator, defineNodeChannel, lowerPlotWithLineage, PlotSchema } from '../../src';
 import { lowerPlot } from '../../src/pipeline/expand/lower';
 

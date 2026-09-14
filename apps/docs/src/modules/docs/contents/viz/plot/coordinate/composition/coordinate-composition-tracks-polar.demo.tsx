@@ -68,4 +68,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 多条径向轨道共享同一组角度分类 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

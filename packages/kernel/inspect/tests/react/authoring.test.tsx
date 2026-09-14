@@ -1,7 +1,8 @@
-// @vitest-environment jsdom
-import { Step } from '@retikz/react';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+// @vitest-environment jsdom
+import { Step } from '@retikz/react';
 import { createRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';

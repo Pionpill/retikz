@@ -1,14 +1,12 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotMarkOperation } from '@retikz/plot';
-
 import { PathMarkSchema, PlotMark, PlotTransform } from '@retikz/plot';
 
 import type { ChartMarkDefinition, ChartMarkResolveContext } from '../../_chart/contract';
-import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
-
 import { defineChartMark } from '../../_chart/contract';
 import { requiredFieldOf, resolvePointMark } from '../shared';
 import { pointRecipeId } from '../shared/plot';
+import type { IRRegressionChartProperties, IRRegressionMark } from './schema';
 import { RegressionChartMarkSchema } from './schema';
 
 const trendXField = pointRecipeId('regression', 'trend.x');

@@ -3,11 +3,9 @@
  * @description CSS @keyframes（keyframes.ts）与 WAAPI 描述（waapi.ts）共用本模块，避免两端映射漂移
  */
 import type { IRAnimationTrack, ScenePrimitive } from '@retikz/core';
-
 import { AnimationProperty } from '@retikz/core';
 
 import type { CubicBezier, EasingRegistry } from '../../animation';
-
 import { classifyProperty, primHasStroke, resolveTransformOrigin, sampleColorOklch } from '../../animation';
 
 /** CSS 直属通道 → SVG/CSS 属性名（opacity / fill / stroke / stroke-width） */

@@ -1,14 +1,12 @@
 import type { AnyCompositeDefinition, CompileArtifact } from '@retikz/core';
+import { compileToScene } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 
-import { compileToScene } from '@retikz/core';
-
-import type { IRTable } from '../schemas';
-import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
-
 import { RetikzTableError } from '../error';
+import type { IRTable } from '../schemas';
 import { TABLE_NAMESPACE, TableComposite } from '../schemas';
 import { lowerTables } from './resolve';
+import type { CompileTableOptions, CompileTableResult, TableCompileArtifact } from './types';
 
 const isRootTableArtifact = (artifact: CompileArtifact): artifact is TableCompileArtifact =>
   artifact.kind === 'composite' &&

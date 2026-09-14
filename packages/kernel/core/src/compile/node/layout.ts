@@ -1,13 +1,7 @@
 import type { LayoutAxisProposal, Transform } from '../../contract';
-import type { CanonicalNode, NodeResolution } from '../../resolve';
-import type { PositionTargetResolveContext } from '../../resolve/position';
-import type { IRAnchorPosition, IRPosition } from '../../schemas';
-import type { TextMeasurer } from '../text';
-import type { CompileWarningCodeValue } from '../warning';
-import type { NodeLayout, TexLoweringContext } from './types';
-
 import { LayoutAxisProposalKind, LayoutIntrinsicMode } from '../../contract';
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { CanonicalNode, NodeResolution } from '../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -15,16 +9,21 @@ import {
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import type { PositionTargetResolveContext } from '../../resolve/position';
 import { resolvePosition, resolvePositionTargetWorld } from '../../resolve/position';
 import { resolveFont, resolveTextLineHeight } from '../../resolve/text';
+import type { IRAnchorPosition, IRPosition } from '../../schemas';
 import { CenterAnchor } from '../../shared';
 import { DEG_TO_RAD } from '../../shared/geometry';
 import { DEFAULT_FONT_SIZE } from '../constants';
 import { resolveAnchorRefUncached } from '../reference';
 import { snapshotProviderPosition, withProviderOutputValidationBoundary } from '../scene-primitive';
+import type { TextMeasurer } from '../text';
 import { inverseTransformChain, isTransformChainInvertible, projectLayoutToGlobal } from '../transform';
+import type { CompileWarningCodeValue } from '../warning';
 import { layoutNodeContent } from './content/layout';
 import { layoutNodeLabels, measureNodeLabels } from './label/layout';
+import type { NodeLayout, TexLoweringContext } from './types';
 
 /** 限制 custom circumscribe 反馈次数，保证 proposal 求值有确定上界 */
 const MAX_ALLOCATION_REFLOW_ATTEMPTS = 32;

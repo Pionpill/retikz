@@ -1,5 +1,3 @@
-import type { core, z } from 'zod';
-
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
@@ -19,6 +17,7 @@ import * as StandardIR from '@retikz/standard';
 import * as StandardClipIR from '@retikz/standard/clip';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import * as IRTable from '@retikz/table';
+import type { core, z } from 'zod';
 
 import { LegendArtifactSchemaZhLocalization, LegendSchemaZhLocalization } from './legend-schema-localizations';
 

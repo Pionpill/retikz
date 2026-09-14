@@ -68,14 +68,7 @@ import { CompoundClipDefinition } from '@retikz/standard/clip';
 
 ```ts
 type CoreProviderCapability =
-  | 'shape'
-  | 'boundary'
-  | 'clip'
-  | 'arrow'
-  | 'pattern'
-  | 'pathGenerator'
-  | 'pathKind'
-  | 'composite';
+  'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'pathGenerator' | 'pathKind' | 'composite';
 
 type CoreProviderKey =
   | Readonly<{

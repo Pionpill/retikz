@@ -1,19 +1,17 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import type { ExternalRow } from '@retikz/data';
-
 import { compileToScene } from '@retikz/core';
+import type { ExternalRow } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 
 import type { CoordinateFrame, IntervalContext, PositionScale } from '../../../src/contract';
+import type { Cell } from '../../../src/contract';
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';
-import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
-
-import { type Cell } from '../../../src/contract';
 import { lowerPlot } from '../../../src/pipeline/expand/lower';
 import { buildIntervalContext, intervalCell } from '../../../src/providers';
 import { lowerMark as lowerMarkDefinition, resolveMarkRegistry } from '../../../src/providers';
 import { createCartesianCoordinate, createPolarCoordinate } from '../../../src/providers';
 import { datumAnchor as resolveDatumAnchor, resolveMarkOperation } from '../../../src/resolve/mark';
+import type { IRPlot, IRPlotIntervalMark } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas';
 
 /**
@@ -291,7 +289,7 @@ describe('rect 缺 color', () => {
     const layer = firstLayer(heatmapSpec(), { d: rows }, cartOpts);
     // 单图层：nodeDefault 含 rectangle barStyle + 单一默认填充（图层级，无分色子 Scope）
     expect(layer.defaults?.node).toBeDefined();
-    expect((layer.defaults?.node as { shape?: string }).shape).toBe('rectangle');
+    expect((layer.defaults!.node as { shape?: string }).shape).toBe('rectangle');
     expect(layer.defaults?.node?.style?.fill).toBeTruthy();
     // 缺 color → 不分色子 Scope（children 直接是 node，非 scope）
     expect((layer.children as Array<{ type?: string }>).every(c => c.type === 'node')).toBe(true);

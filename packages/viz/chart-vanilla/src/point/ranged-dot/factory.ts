@@ -1,12 +1,10 @@
 import type { IRRangedDotChart } from '@retikz/chart/point/ranged-dot';
-
 import { createRangedDotChartProviderContribution } from '@retikz/chart/point/ranged-dot';
 
 import type { ChartAuthoringResult } from '../../shared';
-import type { CreateRangedDotChartInput } from './types';
-
 import { createPointChart, typedChartPartsOf } from '../shared';
 import { normalizeRangedDotChart } from './normalize';
+import type { CreateRangedDotChartInput } from './types';
 
 /** 创建 Ranged Dot Chart */
 export const createRangedDotChart = (input: CreateRangedDotChartInput): ChartAuthoringResult<IRRangedDotChart> => {

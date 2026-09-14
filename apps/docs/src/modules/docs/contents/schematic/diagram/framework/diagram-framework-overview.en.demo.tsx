@@ -1,9 +1,8 @@
-import type { FC } from 'react';
-
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node, Text } from '@retikz/react';
 import { LegendContentKind } from '@retikz/standard';
 import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 /** 展示 Diagram Framework 对 Presentation、绘图核心、图例与外框的统一装配 */
 const Demo: FC = () => (

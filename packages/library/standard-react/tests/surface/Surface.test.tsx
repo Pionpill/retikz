@@ -5,7 +5,6 @@ import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import type { SurfaceProps } from '../../src';
-
 import { Frame, Surface } from '../../src';
 
 /** 以 React 真实 authoring 路径归一化一个 Surface */

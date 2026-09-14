@@ -1,9 +1,7 @@
 import type { MouseEvent as ReactMouseEvent, RefObject, TouchEvent as ReactTouchEvent } from 'react';
-
 import { useRef, useState } from 'react';
 
 import type { PreviewControlRuntime, PreviewControlState, RendererMode, SizeKey, Transform } from '../types';
-
 import { usePanZoom } from './usePanZoom';
 import { usePreviewControlRuntime } from './usePreviewControlRuntime';
 

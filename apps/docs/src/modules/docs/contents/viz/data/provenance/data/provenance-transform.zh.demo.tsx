@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 保行变换与改行变换传播来源的差异 */
 const Demo: FC = () => (

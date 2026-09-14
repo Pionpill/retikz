@@ -1,15 +1,13 @@
 import type { ExternalRow } from '@retikz/data';
 import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
-
 import { ZodLiteral, ZodObject } from 'zod';
 
+import { RetikzPlotError } from '../error';
 import type { IRPlotPositionAdjustmentOperation } from '../schemas';
 import type { MarkChannels } from './channel';
 import type { CoordinateFrame, DimensionRole } from './coordinate';
 import type { PositionScale } from './scale';
-
-import { RetikzPlotError } from '../error';
 
 /** Position Adjustment 的执行空间 */
 export const PositionAdjustmentSpace = {

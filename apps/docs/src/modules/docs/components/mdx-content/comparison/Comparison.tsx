@@ -1,10 +1,7 @@
-import type { FC, ReactNode } from 'react';
-
 import { X } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import type { ComparisonTargetValue } from '@/modules/docs/data';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib';
+import type { ComparisonTargetValue } from '@/modules/docs/data';
 import { ComparisonTargetLabelKeys, isComparisonTarget } from '@/modules/docs/data';
 import { useComparisonStore } from '@/modules/docs/store';
 

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 分层页“包结构”插图

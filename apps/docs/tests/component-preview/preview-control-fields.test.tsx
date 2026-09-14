@@ -1,17 +1,15 @@
 // @vitest-environment jsdom
 import type { Root } from 'react-dom/client';
-
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import i18n from '../../src/i18n';
+import { PreviewControlFieldInput } from '../../src/modules/docs/components/component-preview/controls';
 import type {
   PreviewControlField,
   PreviewControlValue,
 } from '../../src/modules/docs/components/component-preview/types';
-
-import i18n from '../../src/i18n';
-import { PreviewControlFieldInput } from '../../src/modules/docs/components/component-preview/controls';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 

@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Coordinate 汇聚点 demo 使用的稳定字段 id */

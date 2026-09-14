@@ -1,10 +1,8 @@
 import type { IRPaint, PaintResource, ResolvedPatternTile } from '@retikz/core';
-
 import { DEFAULT_EPSILON } from '@retikz/math';
 
-import type { SvgNode } from '../types';
-
 import { gradientLineFromAngle, parseHexColor } from '../../shared';
+import type { SvgNode } from '../types';
 import { compact } from './attrs';
 import { buildMarkerPrim } from './marker-prim';
 

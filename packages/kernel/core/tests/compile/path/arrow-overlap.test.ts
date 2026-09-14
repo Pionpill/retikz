@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IRPathBase, IRScene, PathCommand, PathPrim } from '../../../src';
-
 import { compileToScene } from '../../../src';
 import { flattenPrims } from '../../helpers/flatten';
 

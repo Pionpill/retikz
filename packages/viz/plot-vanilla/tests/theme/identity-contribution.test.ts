@@ -1,10 +1,9 @@
 import type * as RetikzCore from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { IRPlot } from '@retikz/plot';
+import { definePlotThemeStyle } from '@retikz/plot';
 import type * as RetikzVanilla from '@retikz/vanilla';
 import type { InputEmbedContext } from '@retikz/vanilla';
-
-import { definePlotThemeStyle } from '@retikz/plot';
 import { describe, expect, it, vi } from 'vitest';
 
 const compileCalls = vi.hoisted(() => [] as Array<ReadonlyArray<unknown>>);

@@ -1,5 +1,4 @@
 import type { IRPlot } from '@retikz/plot';
-
 import { renderPlot } from '@retikz/plot-vanilla';
 
 import { grid } from './coordinate-custom-bridge.data';

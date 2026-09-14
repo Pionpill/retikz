@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Grid IR 下沉为 Core Path 的英文逻辑图 */
 const Demo: FC = () => (

@@ -1,6 +1,4 @@
 import type { ClipDefinition, ClipResource, ClipShape, PathCommand, SceneClipPath } from '../../contract';
-import type { ClipResolution } from '../../resolve/resource';
-
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
@@ -8,6 +6,7 @@ import {
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import type { ClipResolution } from '../../resolve/resource';
 import { resolveClipShape } from '../../resolve/resource';
 import {
   assertProviderOutputKeys,

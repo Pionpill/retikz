@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeProgramArtifactDefinitionInput } from '../../src/program';
-
 import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
+import type { RuntimeProgramArtifactDefinitionInput } from '../../src/program';
 import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';

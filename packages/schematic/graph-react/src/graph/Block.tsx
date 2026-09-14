@@ -4,21 +4,19 @@ import type {
   BlockRowInputEmbedProps,
   BlockSectionInputEmbedProps,
 } from '@retikz/graph-vanilla';
-import type { ReactInputEmbedContext } from '@retikz/react';
-import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
-import type { FC, ReactNode } from 'react';
-
 import {
   BlockHeaderInputEmbedAdapter,
   BlockInputEmbedAdapter,
   BlockRowInputEmbedAdapter,
   BlockSectionInputEmbedAdapter,
 } from '@retikz/graph-vanilla';
+import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
-
-import type { GraphEmbeddableComponent } from '../shared';
+import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
+import type { FC, ReactNode } from 'react';
 
 import { RetikzGraphReactError, RetikzGraphReactErrorCode } from '../errors';
+import type { GraphEmbeddableComponent } from '../shared';
 import { collectGraphChildren } from './authoring';
 
 /** Block Source 的 React 编写参数 */

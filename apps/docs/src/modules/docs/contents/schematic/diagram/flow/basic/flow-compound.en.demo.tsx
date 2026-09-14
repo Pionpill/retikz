@@ -1,11 +1,9 @@
+import { FlowEntity, FlowGroup, FlowLayout, FlowRelation } from '@retikz/diagram-react/flow';
 import type { FlowDirectionValue, FlowLayoutAlignmentValue } from '@retikz/diagram/flow';
 import type { ReactElement } from 'react';
 
-import { FlowEntity, FlowGroup, FlowLayout, FlowRelation } from '@retikz/diagram-react/flow';
-
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { flowCompoundControls, previewControlContract } from './flow-compound.en.controls';
@@ -70,4 +68,6 @@ export const renderFlowCompoundPreview = (
 const controlledPreview = defineControlledPreview(previewControlContract, renderFlowCompoundPreview);
 
 export const previewSource = controlledPreview.source;
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

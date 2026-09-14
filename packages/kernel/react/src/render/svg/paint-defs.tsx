@@ -1,7 +1,6 @@
 import type { SceneResource } from '@retikz/core';
-import type { FC } from 'react';
-
 import { buildPaintDef } from '@retikz/render/svg';
+import type { FC } from 'react';
 
 import { svgToReact } from './svg-to-react';
 

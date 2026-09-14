@@ -2,7 +2,6 @@ import { createReadonlyMap } from '@retikz/foundation';
 import { isFiniteNumber } from '@retikz/math';
 
 import type { FieldFormatDefinition } from '../../contract';
-
 import { defineFieldFormat } from '../../contract';
 import { RetikzDataError } from '../../error';
 import { DataFieldFormat, DataFieldType } from '../../schemas';

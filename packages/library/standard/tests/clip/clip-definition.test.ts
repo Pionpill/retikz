@@ -1,5 +1,4 @@
 import type { ClipDefinition, CoreDependencyProvider, IRClip, IRScene, PathCommand } from '@retikz/core';
-
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 

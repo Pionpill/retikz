@@ -1,5 +1,4 @@
 import type { ResolvedTheme } from '@retikz/core';
-
 import { ThemeMode } from '@retikz/core';
 
 import type { IRDiagramDefaults } from '../../schemas';

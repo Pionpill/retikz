@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
+
 import { z } from 'zod';
 
 import type { CorpusPrompt } from './types';
-
 import { CorpusPromptSchema } from './types';
 
 /** 从 JSON 文件加载并校验一组语料；接受路径字符串或 file URL */

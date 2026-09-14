@@ -1,5 +1,4 @@
 import type { CoreProgramOutput, IRScene, Scene } from '@retikz/core';
-
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import {
   createRuntimeOwnerInput,
@@ -17,7 +16,6 @@ import type {
   RetainedRendererFactory,
   StaticRenderFrame,
 } from '../../src/runtime';
-
 import {
   createRetainedRenderParticipant,
   defineRetainedRenderer,

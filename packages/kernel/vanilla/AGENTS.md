@@ -32,7 +32,7 @@ dom/       DOM mount、hydrate、view lifecycle
 结构化改动后至少运行：
 
 ```bash
-pnpm --filter @retikz/vanilla exec eslint . --fix
+pnpm --filter @retikz/vanilla exec oxlint . --fix
 pnpm --filter @retikz/vanilla exec tsc --noEmit
 pnpm --filter @retikz/vanilla test:changed
 ```

@@ -1,11 +1,9 @@
 import type { ExternalRow, TransformContext } from '@retikz/data';
-
 import { groupRowsByFields, linearSamplesOf, resolveFieldPath } from '@retikz/data';
 import { isFiniteNumber } from '@retikz/math';
 
-import type { IRPlotSmoothMethod, IRPlotSmoothTransform } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
+import type { IRPlotSmoothMethod, IRPlotSmoothTransform } from '../../schemas';
 import { SmoothMethodKind } from '../../schemas';
 import { assertRegressionExtent, fitRegressionModel } from './regression';
 

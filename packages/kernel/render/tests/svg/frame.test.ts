@@ -1,9 +1,7 @@
 import type { Scene } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import type { RenderReadonlyLayer } from '../../src/runtime';
-
 import { buildSvgDocument, buildSvgFrameDocument, renderFrameToSvgString } from '../../src/svg';
 
 const primary: Scene = {

@@ -1,14 +1,13 @@
 import type { FlowDiagramProps } from '@retikz/diagram-react/flow';
+import { FlowDiagram as RuntimeFlowDiagram } from '@retikz/diagram-react/flow';
 import type { EntityProps, GraphProps, RelationProps } from '@retikz/graph-react';
+import { Entity as RuntimeEntity, Graph as RuntimeGraph, Relation as RuntimeRelation } from '@retikz/graph-react';
 import type { PlotProps } from '@retikz/plot-react';
+import { Plot as RuntimePlot } from '@retikz/plot-react';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { DetailTableProps, InputEmbeddableTableComponent, ManualTableProps } from '@retikz/table-react';
-import type { FC } from 'react';
-
-import { FlowDiagram as RuntimeFlowDiagram } from '@retikz/diagram-react/flow';
-import { Entity as RuntimeEntity, Graph as RuntimeGraph, Relation as RuntimeRelation } from '@retikz/graph-react';
-import { Plot as RuntimePlot } from '@retikz/plot-react';
 import { DetailTable as RuntimeDetailTable, ManualTable as RuntimeManualTable } from '@retikz/table-react';
+import type { FC } from 'react';
 
 import { PreviewThemeDefinitionBundle } from './presets/context';
 import { PreviewPlotThemeStyles } from './presets/plot';

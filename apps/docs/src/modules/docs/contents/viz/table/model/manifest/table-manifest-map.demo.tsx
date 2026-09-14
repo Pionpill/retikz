@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 同一次 Table transaction 同源生成 Scene 与 typed manifest */
 const Demo: FC = () => (

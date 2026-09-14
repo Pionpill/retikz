@@ -1,6 +1,5 @@
 import type { ChartThemeDefinition } from '@retikz/chart';
 import type { FC, ReactNode } from 'react';
-
 import { useMemo } from 'react';
 
 import { ChartThemeDefinitionsContext, useChartThemeDefinitions } from '../shared';

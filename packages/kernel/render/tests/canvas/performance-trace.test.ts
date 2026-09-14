@@ -1,6 +1,5 @@
 import type { Scene } from '@retikz/core';
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-
 import {
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,

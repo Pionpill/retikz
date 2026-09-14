@@ -1,12 +1,11 @@
-import type { CoreProviderContribution } from '@retikz/core';
-import type { InputEmbedAdapter } from '@retikz/vanilla';
-import type { FC } from 'react';
-
 import { ChartData, ChartLayout } from '@retikz/chart-react';
 import { BubbleChart, BubbleEncodings, ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
+import type { CoreProviderContribution } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
+import type { FC } from 'react';
 import { useMemo } from 'react';
 import { isValidElement } from 'react';
 import { describe, expect, it } from 'vitest';

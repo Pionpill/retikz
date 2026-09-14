@@ -1,6 +1,5 @@
-import type { Position, Vector2 } from '../primitives';
-
 import { DEFAULT_EPSILON } from '../constants';
+import type { Position, Vector2 } from '../primitives';
 import { lerp, point, vector2 } from '../primitives';
 
 const DEFAULT_CURVE_SAMPLE_COUNT = 32;

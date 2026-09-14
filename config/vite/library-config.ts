@@ -1,6 +1,6 @@
-import type { LibraryOptions, PluginOption, UserConfig } from 'vite';
-
 import path from 'node:path';
+
+import type { LibraryOptions, PluginOption, UserConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import { defineConfig } from 'vitest/config';
 

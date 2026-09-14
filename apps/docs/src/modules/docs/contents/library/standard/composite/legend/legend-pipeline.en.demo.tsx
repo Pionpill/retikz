@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 const stage = {
   cornerRadius: 4,

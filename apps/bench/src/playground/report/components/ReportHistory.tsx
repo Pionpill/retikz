@@ -1,14 +1,12 @@
-import type { FC } from 'react';
-
 import { FileBarChart } from 'lucide-react';
+import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 
 import type { BenchLabReport, BenchReportSummary } from '../../../shared';
-import type { LabRunSession } from '../../modules/kernel';
-
 import { BenchReportStatus } from '../../../shared';
+import type { LabRunSession } from '../../modules/kernel';
 import { LabPolicyId } from '../../modules/kernel';
 import { getLabReportFailureMessage, getLabRunSessionPayload } from '../view-model';
 import { Inspector } from './Inspector';

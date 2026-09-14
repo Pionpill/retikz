@@ -32,4 +32,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在类别 domain 不变时切换 ordinal range 与图例 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

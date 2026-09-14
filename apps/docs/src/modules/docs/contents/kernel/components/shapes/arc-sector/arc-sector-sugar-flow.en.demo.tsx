@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Local flow from Arc / Sector sugar to Path + Step */
 const Demo: FC = () => (

@@ -1,5 +1,3 @@
-import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
-
 import { BendDirection, BoxSpacingSchema, FoldStepVia, PaintSchema } from '@retikz/core';
 import {
   AnchorRefSchema,
@@ -32,6 +30,7 @@ import {
   PositiveNumberSchema,
 } from '@retikz/foundation';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
+import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 import {
   array,
   boolean,

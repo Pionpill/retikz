@@ -1,8 +1,7 @@
-import type { FC } from 'react';
-
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { InspectFlexLayout, LayoutInspectLayout } from '@retikz/layout-react/inspect';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

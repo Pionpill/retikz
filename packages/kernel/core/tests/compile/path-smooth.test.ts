@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRScene } from '../../src';
-import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
-
 import { CompileWarningCode } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
+import type { CubicPathCommand, PathPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import { PathSchema, SmoothStepSchema } from '../../src/schemas';
 import { move } from '../helpers/path-command-factory';
 

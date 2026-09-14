@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
-
 import {
   getPreviewControlFields,
   getPreviewControlItems,
 } from '../../src/modules/docs/components/component-preview/controls';
+import type { PreviewControlsDefinition } from '../../src/modules/docs/components/component-preview/types';
 import {
   createPreviewControlContract,
   previewControlContract as zhContract,

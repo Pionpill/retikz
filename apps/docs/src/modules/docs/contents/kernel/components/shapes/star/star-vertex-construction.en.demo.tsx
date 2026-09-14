@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Draw, Layout, Node, Star } from '@retikz/react';
+import type { FC } from 'react';
 
 const CENTER: [number, number] = [-75, 0];
 const OUTER_RADIUS = 75;

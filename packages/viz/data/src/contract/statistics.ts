@@ -1,13 +1,11 @@
 import type { ZodType } from 'zod';
-
 import { ZodLiteral, ZodObject } from 'zod';
 
+import { RetikzDataError } from '../error';
 import type { IRDataReducerOperation, IRDataSelectorOperation } from '../schemas';
 import type { ExternalRow } from '../shared';
 import type { TransformContext } from './transform';
 import type { DataTransformOutputDescriptor } from './transform';
-
-import { RetikzDataError } from '../error';
 
 /**
  * 统计 reducer 运行时定义。

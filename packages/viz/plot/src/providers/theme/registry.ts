@@ -1,5 +1,4 @@
 import type { PlotThemeStyleDefinition } from '../../contract';
-
 import { RetikzPlotError } from '../../error';
 
 /** 合并内置与自定义 Plot Theme styles，并拒绝同名 definition */

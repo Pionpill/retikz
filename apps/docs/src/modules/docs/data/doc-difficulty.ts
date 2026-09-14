@@ -1,5 +1,4 @@
 import type { DocDifficultyValue } from './types';
-
 import { DocDifficulty } from './types';
 
 /** 文档难度对应的阅读耗时系数。 */

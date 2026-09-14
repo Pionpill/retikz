@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeOwnerUpdate } from '../../src/transaction';
-
 import { RetikzRuntimeErrorCode } from '../../src';
 import { defineRuntimeOwner } from '../../src/owner';
 import { defineRuntimeProgram, RuntimeProgramKind } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';
+import type { RuntimeOwnerUpdate } from '../../src/transaction';
 import { createRuntimeChangeSet, createRuntimeOwnerInput, createRuntimeOwnerUpdate } from '../../src/transaction';
 
 const defineOwner = (key: string, capture = (value: number) => value) =>

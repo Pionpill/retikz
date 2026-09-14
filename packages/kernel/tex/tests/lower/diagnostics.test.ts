@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TexLoweringDiagnostic } from '../../src';
-
 import { createLowerTex } from '../../src';
 
 const validSvg = '<svg viewBox="0 0 10 10"><path d="M0 0 L10 10"/></svg>';

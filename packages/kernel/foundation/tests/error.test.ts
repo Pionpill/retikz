@@ -1,5 +1,4 @@
 import type { ValueOf } from '@retikz/foundation';
-
 import { isRetikzError, RetikzError, RetikzFoundationError, RetikzFoundationErrorCode } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 

@@ -7,7 +7,6 @@ import type { IRAnimationTrack } from '@retikz/core';
 
 import type { EasingRegistry } from '../../animation';
 import type { ExpandedTrack } from './shared';
-
 import { easingToCss } from './shared';
 
 /** WAAPI keyframe：offset + 该 CSS 属性值（camelCase 键，直接喂 element.animate）+ 可选段 easing */

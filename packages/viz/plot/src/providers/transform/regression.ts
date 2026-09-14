@@ -1,8 +1,7 @@
 import { isFiniteNumber } from '@retikz/math';
 
-import type { IRPlotSmoothMethod } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
+import type { IRPlotSmoothMethod } from '../../schemas';
 import { SmoothMethodKind } from '../../schemas';
 
 /** 回归拟合读取的一对有限观测 */

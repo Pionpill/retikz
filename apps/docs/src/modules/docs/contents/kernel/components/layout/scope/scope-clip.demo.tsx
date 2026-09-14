@@ -1,6 +1,4 @@
 import type { IRClip } from '@retikz/core';
-import type { FC } from 'react';
-
 import { Layout, Node, Scope } from '@retikz/react';
 import {
   CircleClipDefinition,
@@ -9,9 +7,9 @@ import {
   PathClipDefinition,
   PolygonClipDefinition,
 } from '@retikz/standard/clip';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, scopeClipControls } from './scope-clip.controls';

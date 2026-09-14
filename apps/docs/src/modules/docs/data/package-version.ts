@@ -7,28 +7,28 @@ import renderPackage from '../../../../../../packages/kernel/render/package.json
 import runtimePackage from '../../../../../../packages/kernel/runtime/package.json';
 import texPackage from '../../../../../../packages/kernel/tex/package.json';
 import vanillaPackage from '../../../../../../packages/kernel/vanilla/package.json';
-import layoutPackage from '../../../../../../packages/library/layout/package.json';
 import layoutReactPackage from '../../../../../../packages/library/layout-react/package.json';
 import layoutVanillaPackage from '../../../../../../packages/library/layout-vanilla/package.json';
-import standardPackage from '../../../../../../packages/library/standard/package.json';
+import layoutPackage from '../../../../../../packages/library/layout/package.json';
 import standardReactPackage from '../../../../../../packages/library/standard-react/package.json';
 import standardVanillaPackage from '../../../../../../packages/library/standard-vanilla/package.json';
-import diagramPackage from '../../../../../../packages/schematic/diagram/package.json';
+import standardPackage from '../../../../../../packages/library/standard/package.json';
 import diagramReactPackage from '../../../../../../packages/schematic/diagram-react/package.json';
 import diagramVanillaPackage from '../../../../../../packages/schematic/diagram-vanilla/package.json';
-import graphPackage from '../../../../../../packages/schematic/graph/package.json';
+import diagramPackage from '../../../../../../packages/schematic/diagram/package.json';
 import graphReactPackage from '../../../../../../packages/schematic/graph-react/package.json';
 import graphVanillaPackage from '../../../../../../packages/schematic/graph-vanilla/package.json';
-import chartPackage from '../../../../../../packages/viz/chart/package.json';
+import graphPackage from '../../../../../../packages/schematic/graph/package.json';
 import chartReactPackage from '../../../../../../packages/viz/chart-react/package.json';
 import chartVanillaPackage from '../../../../../../packages/viz/chart-vanilla/package.json';
+import chartPackage from '../../../../../../packages/viz/chart/package.json';
 import dataPackage from '../../../../../../packages/viz/data/package.json';
-import plotPackage from '../../../../../../packages/viz/plot/package.json';
 import plotReactPackage from '../../../../../../packages/viz/plot-react/package.json';
 import plotVanillaPackage from '../../../../../../packages/viz/plot-vanilla/package.json';
-import tablePackage from '../../../../../../packages/viz/table/package.json';
+import plotPackage from '../../../../../../packages/viz/plot/package.json';
 import tableReactPackage from '../../../../../../packages/viz/table-react/package.json';
 import tableVanillaPackage from '../../../../../../packages/viz/table-vanilla/package.json';
+import tablePackage from '../../../../../../packages/viz/table/package.json';
 
 type PackageManifest = {
   name: string;

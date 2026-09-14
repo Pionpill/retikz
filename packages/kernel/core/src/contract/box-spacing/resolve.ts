@@ -1,8 +1,7 @@
 import type { BoundsInsets } from '@retikz/math';
 
-import type { IRBoxSpacing } from '../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { IRBoxSpacing } from '../../schemas';
 
 /** 构造四边同值的 spacing 结果 */
 const boxInsets = (value: number): BoundsInsets => ({

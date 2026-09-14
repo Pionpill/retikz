@@ -1,18 +1,15 @@
-import type { FC } from 'react';
-
 import { Check } from 'lucide-react';
+import type { FC } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Lang } from '@/i18n';
-
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
 
 import type { Match, SearchEntry } from './search-engine';
-import type { SearchIndex } from './search-index';
-
 import { findMatch, renderHighlighted, renderSnippet, useSearchEntries } from './search-engine';
+import type { SearchIndex } from './search-index';
 import { loadSearchIndex } from './search-index';
 
 /** Dialog（DocsSearch）和 popover（AI Add Context）共用的 cmdk 内部尺寸 / 颜色 token */

@@ -1,5 +1,4 @@
 import type { IRPaint } from '@retikz/core';
-
 import { DEFAULT_EPSILON } from '@retikz/math';
 
 import { gradientLineFromAngle } from '../shared';

@@ -1,15 +1,13 @@
 import type { IRScope, LayoutCompositeCompileContext, LayoutCompositeCompileResult } from '@retikz/core';
-import type { Position } from '@retikz/math';
-
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
-
-import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
-import type { CanonicalFlowDiagram } from '../../resolve';
-import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
+import type { Position } from '@retikz/math';
 
 import { composeDiagramFoundation, resolveDiagramFoundation } from '../../../_diagram';
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { ResolvedFlowDiagramDefinitionOptions } from '../../providers';
+import type { CanonicalFlowDiagram } from '../../resolve';
 import { assertFlowLayoutCapabilities, resolveFlowDiagram } from '../../resolve';
+import type { FlowDiagramArtifact, IRFlowDiagram } from '../../schemas';
 import { createFlowDiagramArtifact, createFlowSpatialHandles } from './artifact';
 import { executeFlowLayout } from './layout-output';
 import { createFlowLayoutExecutionContext } from './layout-placement';

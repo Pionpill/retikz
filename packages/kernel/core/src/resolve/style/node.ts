@@ -1,9 +1,8 @@
 import { mergeProperties } from '@retikz/foundation';
 
 import type { IRNode, IRNodeDefault, IRNodeLayout, IRNodeStyle } from '../../schemas';
-import type { StyleResolveFrame } from './types';
-
 import { cutsStyleChannel } from './frame';
+import type { StyleResolveFrame } from './types';
 
 /** 按各字段的原有覆盖粒度解析节点分组，复合叶子保持整体覆盖 */
 export const resolveEffectiveNodeStyle = (node: IRNode, stack: ReadonlyArray<StyleResolveFrame>): IRNode => {

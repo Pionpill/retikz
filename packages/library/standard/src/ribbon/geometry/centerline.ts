@@ -1,13 +1,11 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
-import type { CurveSegmentSample, Vector2 } from '@retikz/math';
-
 import { isPositionTuple, polar } from '@retikz/core';
+import type { CurveSegmentSample, Vector2 } from '@retikz/math';
 import { curve, point, vector2 } from '@retikz/math';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 import type { IRRibbonDirection } from '../types';
 import type { RibbonSegment, RibbonSegmentInput } from './types';
-
-import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
 
 const LENGTH_SUBDIVISIONS = 16;
 

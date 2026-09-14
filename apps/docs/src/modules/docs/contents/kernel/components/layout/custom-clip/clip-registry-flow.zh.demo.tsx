@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 完整 Clip Definition 通过单一 registry 收敛为 Scene 路径 */
 const Demo: FC = () => (

@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Draw 正交连接的中文属性面板 */

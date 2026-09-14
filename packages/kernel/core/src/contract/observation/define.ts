@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { CompileObserverDefinition } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { CompileObserverDefinition } from './types';
 
 /** 定义一次显式 observed compile observer */
 export const defineCompileObserver = <TOutput>(

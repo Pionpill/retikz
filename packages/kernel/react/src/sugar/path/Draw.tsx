@@ -3,7 +3,6 @@ import type { InputPath } from '@retikz/vanilla';
 import type { FC } from 'react';
 
 import type { PathProps } from '../../kernel/components';
-
 import { Path } from '../../kernel/components';
 
 /** Draw 的作者侧属性 */

@@ -1,5 +1,4 @@
 import type { IRChild, LayoutCompositeCompileContext, ScenePrimitive } from '@retikz/core';
-
 import { compileToScene, CompositeBaseSchema, defineComposite } from '@retikz/core';
 import { NonBlankStringSchema } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +6,6 @@ import { literal } from 'zod';
 
 import type { PresentedTableModel } from '../../src';
 import type { ResolvedTableTransaction } from '../../src/pipeline/layout';
-
 import { resolvePresentedTableTransaction } from '../../src/pipeline/layout';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';

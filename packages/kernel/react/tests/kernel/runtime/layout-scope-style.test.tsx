@@ -10,18 +10,16 @@
  */
 import type { IRScene } from '@retikz/core';
 import type { EllipsePrim, PathPrim, RectPrim, ScenePrimitive, TextPrim } from '@retikz/core';
-import type { ReactNode } from 'react';
-
 import { compileToScene } from '@retikz/core';
 import { SceneSchema } from '@retikz/core';
+import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
-import type { ScopeStyleProps } from '../../../src/kernel/protocol';
 
 import { Draw, EdgeLabel, Layout, Node, Scope, Step } from '../../../src';
 import { Path } from '../../../src/kernel';
 import { wrapRootScope } from '../../../src/kernel/adapter';
+import type { ScopeStyleProps } from '../../../src/kernel/protocol';
 import { normalizeReactInput } from '../../helpers/normalize-input';
 
 // --- helpers ---------------------------------------------------------------

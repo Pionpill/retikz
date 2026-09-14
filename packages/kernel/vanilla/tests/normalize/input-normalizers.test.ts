@@ -1,9 +1,7 @@
 import type { IRPathBase } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import type { InputNode, InputPath, InputScene } from '../../src';
-
 import { InputPathArrowDirection, normalizeNode, normalizePath, normalizeScene } from '../../src';
 
 describe('Vanilla Input normalizers', () => {

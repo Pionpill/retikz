@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene, ThemeMode } from '../../src';
 import type { PathPrim, RectPrim, ScenePrimitive, TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
 import type { ThemeModeValue } from '../../src/shared';
-
-import { compileToScene, ThemeMode } from '../../src';
 import { flattenPrims } from '../helpers/flatten';
 
 const sceneOf = (children: IRScene['children'], mode: ThemeModeValue = ThemeMode.Light): IRScene => ({

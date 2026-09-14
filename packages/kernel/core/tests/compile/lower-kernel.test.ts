@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { array, literal, string } from 'zod';
 
 import type { IRScene, LoweredIRScene, LowerIRToKernelOptions } from '../../src';
-
 import { CompositeBaseSchema, defineComposite, lowerIRToKernel } from '../../src';
 
 const PanelSchema = CompositeBaseSchema.extend({

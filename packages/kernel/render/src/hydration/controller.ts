@@ -1,10 +1,9 @@
 import { runtimeIdentityEquals } from '@retikz/runtime';
 
 import type { BuildContext, HydrationContext } from './context';
+import { noopAnimationControls } from './context';
 import type { ElementHandlers, HydrationHandlers, Locate, RetikzEventValue } from './events';
 import type { HydrationTarget } from './events';
-
-import { noopAnimationControls } from './context';
 import { EVENT_DOM_TYPE, RetikzEvent } from './events';
 import { createHydrationSetupError } from './setup-failure';
 

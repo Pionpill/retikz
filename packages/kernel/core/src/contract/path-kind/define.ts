@@ -1,11 +1,9 @@
 import type { JsonValue } from '@retikz/foundation';
-
 import { assertNonEmptyString } from '@retikz/foundation';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRPathBase } from '../../schemas';
 import type { AnyPathKindDefinition, PathKindDefinition } from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 
 /** 保留普通与带 owner output Path kind 两个互斥分支的定义入口 */
 type DefinePathKind = {

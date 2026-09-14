@@ -7,9 +7,8 @@ import {
   scaleSymlog as d3ScaleSymlog,
 } from 'd3-scale';
 
-import type { IRPlotDomainPadding, PlotDomainPaddingKindValue } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
+import type { IRPlotDomainPadding, PlotDomainPaddingKindValue } from '../../schemas';
 import { PlotDomainPaddingKind } from '../../schemas';
 
 /** 可按连续值域规则扩展的 position scale 族 */

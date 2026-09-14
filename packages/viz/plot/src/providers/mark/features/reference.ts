@@ -1,6 +1,5 @@
+import type { IRChild, IRNode, IRNodeLabel, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
-import { type IRChild, type IRNode, type IRNodeLabel, type IRPath, type IRScope, type IRStep } from '@retikz/core';
 import { resolveFieldPath } from '@retikz/data';
 
 import type {
@@ -16,17 +15,16 @@ import type {
   PositionScale,
 } from '../../../contract';
 import type { PolarCoordinateFrame } from '../../../contract';
-import type { IRPlotMark, IRPlotMarkGeometryLabel, IRPlotMarkNodeLabel, IRPlotReferenceMark } from '../../../schemas';
-import type { CartesianCoordinateFrame } from '../../coordinate';
-import type { MarkPaint } from '../shared';
-
 import { hasProjectCell, isRenderableCellGeometry } from '../../../contract';
 import { ChannelDefinitionKind } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotMark, IRPlotMarkGeometryLabel, IRPlotMarkNodeLabel, IRPlotReferenceMark } from '../../../schemas';
 import { PlotMark, ReferenceMarkKind, ReferenceMarkSchema } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
+import type { CartesianCoordinateFrame } from '../../coordinate';
 import { isCartesianCoordinateFrame, isPolarCoordinateFrame, polarFixedRadiusSteps } from '../../coordinate';
 import { cellGeometryNode, cellLayer, styleForGeometry } from '../private';
+import type { MarkPaint } from '../shared';
 import {
   applyNodeChannelDeliveries,
   applyPathChannelDeliveries,

@@ -19,14 +19,7 @@ Core 已拥有各 provider 的 Definition、registry 与最终 compile 语义，
 
 ```ts
 type CoreProviderCapability =
-  | 'shape'
-  | 'boundary'
-  | 'clip'
-  | 'arrow'
-  | 'pattern'
-  | 'pathGenerator'
-  | 'pathKind'
-  | 'composite';
+  'shape' | 'boundary' | 'clip' | 'arrow' | 'pattern' | 'pathGenerator' | 'pathKind' | 'composite';
 
 type CoreProviderKey =
   | Readonly<{

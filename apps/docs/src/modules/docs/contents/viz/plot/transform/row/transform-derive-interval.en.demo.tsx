@@ -23,4 +23,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在显式起止字段与基线模式之间切换的英文派生区间试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,5 +1,4 @@
 import type { LayoutAlignmentGuide, Transform } from '../../contract';
-
 import { LayoutAlignmentGuideDimension } from '../../contract';
 import { createCompositeContractError } from '../../resolve/diagnostics';
 

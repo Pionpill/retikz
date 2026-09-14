@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { discretizationValues } from '../../src/modules/docs/contents/viz/plot/scale/color/scale-discretization.data';
@@ -88,8 +89,8 @@ describe('颜色比例尺文档结构', () => {
   it('自动 color scale 的 SourceLink 指向真实派生分支', () => {
     for (const page of [chinesePage, englishPage]) {
       expect(page).toContain("path: 'packages/viz/plot-vanilla/src/normalize/plot/scale-coordinate.ts'");
-      expect(page).toContain('startLine: 22');
-      expect(page).toContain('endLine: 33');
+      expect(page).toContain('startLine: 20');
+      expect(page).toContain('endLine: 31');
       expect(page).not.toContain('startLine: 1657');
     }
   });

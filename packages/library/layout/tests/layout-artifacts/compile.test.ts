@@ -1,5 +1,4 @@
 import type { IRChild, IRScene, LayoutChildResult } from '@retikz/core';
-
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -11,7 +10,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
 
 import type { FlexLayoutCompileArtifact, GridLayoutCompileArtifact, OverlayLayoutCompileArtifact } from '../../src';
-
 import {
   createFlexLayout,
   createGridLayout,

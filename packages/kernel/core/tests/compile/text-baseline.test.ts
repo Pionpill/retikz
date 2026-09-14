@@ -10,8 +10,6 @@ import type {
   TextMeasurer,
   TextPrim,
 } from '../../src';
-import type { LowerTex } from '../../src/compile/text';
-
 import {
   compileToScene,
   CompositeBaseSchema,
@@ -19,6 +17,7 @@ import {
   LayoutChildProbeKind,
   NaturalLayoutProposal,
 } from '../../src';
+import type { LowerTex } from '../../src/compile/text';
 import { ASCENT_FACTOR, DESCENT_FACTOR, toAlphabeticBaselineY } from '../../src/compile/text';
 
 const fixedMeasurer: TextMeasurer = text => ({

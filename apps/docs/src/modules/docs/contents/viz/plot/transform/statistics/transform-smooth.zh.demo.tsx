@@ -44,4 +44,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 调整预测点数和外推范围的线性趋势试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PositionScale } from '../../../src/contract';
-
 import { resolveGuideTicks, resolveVisibleGuideTicks } from '../../../src/resolve/guide';
 
 const scaleOf = (

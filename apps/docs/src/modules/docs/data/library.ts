@@ -1,5 +1,4 @@
 import type { Section } from './types';
-
 import { DocDifficulty } from './types';
 
 /** Library 能力包的 Standard 与 Layout 文档导航 */

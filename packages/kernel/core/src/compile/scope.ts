@@ -1,15 +1,14 @@
 import { boundsOf, centerOfBounds } from '@retikz/math';
 
 import type { Transform } from '../contract';
-import type { PositionTargetResolveContext } from '../resolve/position';
-import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../schemas';
-import type { Rect } from '../shared/geometry';
-import type { NodeLayout } from './node';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../error';
+import type { PositionTargetResolveContext } from '../resolve/position';
 import { resolveTransformTranslation } from '../resolve/position';
+import type { IRPosition, IRScopeSelfPoint, IRTransform } from '../schemas';
 import { Anchor } from '../shared';
+import type { Rect } from '../shared/geometry';
 import { rect as rectOps } from '../shared/geometry';
+import type { NodeLayout } from './node';
 import { outerRectOf } from './node';
 import { createCompileInvariantError } from './probe-failure';
 import { resolveAnchorRefUncached } from './reference';

@@ -1,11 +1,9 @@
 import type { JsonObject, JsonValue } from '@retikz/foundation';
-
 import { assertNonEmptyString } from '@retikz/foundation';
 import { strictObject } from 'zod';
 
-import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorDefinitionInput } from './types';
-
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
+import type { AnyInspectorDefinition, AnyInspectorDefinitionInput, InspectorDefinitionInput } from './types';
 
 /** 仅记录本模块校验并冻结的结果，避免重复处理且不阻止对象回收 */
 const sealedInspectorDefinitions = new WeakSet<AnyInspectorDefinitionInput>();

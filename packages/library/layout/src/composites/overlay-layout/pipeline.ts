@@ -6,7 +6,6 @@ import type {
   LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
-
 import {
   LayoutAlignmentGuideDimension,
   LayoutAlignmentGuideName,
@@ -16,11 +15,8 @@ import {
 } from '@retikz/core';
 
 import type { CanonicalOverlayLayout, CanonicalOverlayLayoutItem } from '../../resolve/overlay-layout';
-import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
-import type { OverlayLayoutArtifact } from './types';
-import type { IROverlayLayout } from './types';
-
 import { resolveOverlayLayout } from '../../resolve/overlay-layout';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import {
   alignResolvedLayoutSlot,
   compensatedLayoutSum,
@@ -35,6 +31,8 @@ import {
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow } from '../shared';
 import { LayoutSizeParticipation, OverlayPlacementKind } from './constants';
 import { overlayStructuralGuideOffset, placeOverlayItem, resolveOverlayProfile, sortOverlayPaintOrder } from './solve';
+import type { OverlayLayoutArtifact } from './types';
+import type { IROverlayLayout } from './types';
 
 type IntrinsicMode = 'minimum' | 'natural';
 

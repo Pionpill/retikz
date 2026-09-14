@@ -1,5 +1,4 @@
 import type { AnyCellFormatterDefinition, SemanticTableModel } from '../../src';
-
 import { formatTable } from '../../src/pipeline/formatter';
 import { resolveTableCellPlans } from '../../src/pipeline/rule';
 

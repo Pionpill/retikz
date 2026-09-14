@@ -1,8 +1,7 @@
 import type { CoreProgramDefinition, IRScene, ScenePatch, SceneRuntimeSnapshot } from '@retikz/core';
-import type { PerformanceTraceRecord, RuntimePreparedCommit } from '@retikz/runtime';
-
 import { CoreOwnerDefinition, createCoreProgram } from '@retikz/core';
 import { isRetikzError } from '@retikz/foundation';
+import type { PerformanceTraceRecord, RuntimePreparedCommit } from '@retikz/runtime';
 import {
   createRuntimeOwnerInput,
   createRuntimeOwnerRegistry,
@@ -26,7 +25,6 @@ import type {
   RetainedRendererFactory,
   RetainedRendererRead,
 } from '../../src/runtime';
-
 import {
   createRetainedRenderParticipant,
   defineRetainedRenderer,

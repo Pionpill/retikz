@@ -1,9 +1,8 @@
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
 
-import type { TableTrackLayout } from './types';
-
 import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
+import type { TableTrackLayout } from './types';
 
 /** Cell 几何计算支持的轴向对齐值 */
 export type TableCellAlignment = 'start' | 'center' | 'end';

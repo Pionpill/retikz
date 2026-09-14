@@ -101,24 +101,27 @@ pnpm dev:docs
 
 ## 验证策略
 
+- import 排序和格式化统一由 Oxfmt 执行；Oxlint 负责原生 lint 与类型感知规则，正式类型检查仍使用 `tsc --noEmit`。
+- 泛型命名、export 顺序、错误类契约及 React Compiler config/gating 由 LLM 按 `standard-name`、本文件错误规范和 `develop-review` 自审；lint 通过不代表这些约束已自动验证。
+
 默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。日常校验中，范围明确且改动较小时优先运行受影响包的 `test:changed`；仅在大范围重构或功能大改时运行受影响模块的全量测试。
 
 ```bash
-pnpm exec prettier --write <changed-files-or-scope>
-pnpm --filter <pkg> exec eslint . --fix
+pnpm exec oxfmt <changed-files-or-scope>
+pnpm --filter <pkg> exec oxlint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
 pnpm --filter <pkg> test:changed
 pnpm --filter <pkg> exec vitest run <test-file>
 pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 ```
 
-- 改完内容先用 Prettier 格式化相关文件或目录，再按改动类型继续验证。
-- 改 `*.ts` / `*.tsx` / `*.json` / 配置等结构化文件：先跑受影响包 `eslint --fix`，再跑对应 `tsc --noEmit` 和必要测试。
-- 只改纯 MDX 正文、表格、站内链接：先跑 Prettier，再至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
+- 改完内容先用 Oxfmt 格式化相关文件或目录，再按改动类型继续验证。
+- 改 `*.ts` / `*.tsx` / `*.json` / 配置等结构化文件：先跑受影响包 `oxlint --fix`，再跑对应 `tsc --noEmit` 和必要测试。
+- 只改纯 MDX 正文、表格、站内链接：先跑 Oxfmt，再至少跑 `git diff --check`，并验证关键链接 / 页面可访问。
 - 改 docs demo / data / i18n / sidebar / schema registry / MDX import：按 `apps/docs/AGENTS.md` 和 docs skills 的分级规则验证，通常需要 docs 包类型检查。
 - 提交 `apps/docs` 改动前必须运行 `pnpm --filter @retikz/docs run check:static`；完成后询问用户是否运行 `check:build` 和 `check:runtime`，仅在用户明确要求时执行。用户明确要求运行时巡检时，包含其所需的生产构建。
 - 类型检查只用 `tsc --noEmit`。不要在 packages 下运行会 emit 的 `tsc` / `tsc -b`；若已污染源码树，先清理生成物。
-- ESLint / TS 报错要修干净。不要用 `eslint-disable`、`@ts-ignore`、`as any` 绕过；确实不可避时写最小作用域和原因。
+- Oxlint / TS 报错要修干净。不要用 `oxlint-disable`、`@ts-ignore`、`as any` 绕过；确实不可避时写最小作用域和原因。
 
 ## 文档同步
 

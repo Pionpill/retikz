@@ -2,7 +2,6 @@
 import { strictObject } from 'zod';
 
 import type { CellPresentationInput } from '../../src';
-
 import { defineCellPresentation } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 import { presentTable } from '../../src/pipeline/presentation';

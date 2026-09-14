@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { IntervalMark, PlotScale, RelationMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
 import { defineControlledPreview } from '@/modules/docs/preview';

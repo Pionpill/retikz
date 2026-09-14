@@ -18,20 +18,7 @@ keywords: 'Font、Size、Presets、And、Relative、Units、FontSchema.size、Co
 
 ```ts
 type FontSizePreset =
-  | '2xs'
-  | 'xs'
-  | 'sm'
-  | 'base'
-  | 'lg'
-  | 'xl'
-  | '2xl'
-  | '3xl'
-  | '4xl'
-  | '5xl'
-  | '6xl'
-  | '7xl'
-  | '8xl'
-  | '9xl';
+  '2xs' | 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | '8xl' | '9xl';
 
 type RelativeFontSize = `${number}em` | `${number}rem`;
 type IRFontSize = number | FontSizePreset | RelativeFontSize;

@@ -1,7 +1,6 @@
 import type { IRFont, IRLine, IRTextBlock } from '@retikz/core';
-import type { FC, ReactNode } from 'react';
-
 import { Text } from '@retikz/react';
+import type { FC, ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
 import { RetikzChartReactError } from '../error';

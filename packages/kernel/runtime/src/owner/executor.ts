@@ -1,18 +1,17 @@
+import { RuntimeDiagnosticCode } from '../diagnostic';
 import type {
   RetikzRuntimeErrorCodeValue,
   RuntimeOwnerExecutionResult,
   RuntimeOwnerLifecycleDiagnostic,
   RuntimeOwnerPhaseValue,
 } from '../error';
+import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeOwnerPhase } from '../error';
 import type { RuntimeIdentityLookup } from '../identity';
+import { createRuntimeIdentityLookup } from '../identity';
 import type { RuntimeOwnerRegistry } from '../registry';
+import { getRuntimeOwnerRegistryExecutor } from '../registry';
 import type { RuntimeOwnerErasedExecutor } from './define';
 import type { RuntimeChangeSet, RuntimeOwnerDefinition, RuntimeOwnerToken } from './types';
-
-import { RuntimeDiagnosticCode } from '../diagnostic';
-import { RetikzRuntimeError, RetikzRuntimeErrorCode, RuntimeOwnerPhase } from '../error';
-import { createRuntimeIdentityLookup } from '../identity';
-import { getRuntimeOwnerRegistryExecutor } from '../registry';
 
 /** executor 准备完成但尚未发布的 owner value */
 export type RuntimePreparedOwnerValue<TValue, TRead> = Readonly<{

@@ -1,6 +1,5 @@
-import type { Position } from '../primitives';
-
 import { DEFAULT_EPSILON } from '../constants';
+import type { Position } from '../primitives';
 import { vector2 } from '../primitives';
 
 /** 两条无限直线求交参数 */

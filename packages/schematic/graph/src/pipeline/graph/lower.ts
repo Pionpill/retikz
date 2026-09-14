@@ -1,9 +1,8 @@
 import type { IRScope } from '@retikz/core';
 
 import type { ResolvedGraphDefinitionOptions } from '../../providers';
-import type { IRGraph } from '../../schemas';
-
 import { resolveGraph } from '../../resolve';
+import type { IRGraph } from '../../schemas';
 
 /** 从 Graph Source 提取完整 Core Scope props，移除 Graph-only context 与 composite discriminator */
 export const graphScopeProps = (source: IRGraph): Omit<IRScope, 'type' | 'children'> => {

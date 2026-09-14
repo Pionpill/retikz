@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
@@ -11,7 +10,6 @@ import type {
   SourceLang,
   SourceView,
 } from '../types';
-
 import { availableSourceViews, filterDiffByMode } from './utils';
 
 const EMPTY_SOURCE_FILES: Array<ComponentSourceFile> = [];

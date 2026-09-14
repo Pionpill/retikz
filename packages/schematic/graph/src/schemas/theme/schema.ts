@@ -1,7 +1,6 @@
-import type { RefinementCtx, ZodType } from 'zod';
-
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { SurfaceSchema } from '@retikz/standard';
+import type { RefinementCtx, ZodType } from 'zod';
 import { array, discriminatedUnion, literal, strictObject, union } from 'zod';
 
 import { GraphType } from '../../shared';

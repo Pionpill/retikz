@@ -1,8 +1,7 @@
 import type { IRChild, IRNode, IRPath, IRScene } from '@retikz/core';
 
-import type { KernelLabScenarioIdValue } from './kernel-scenarios';
-
 import { createSimpleNodeScene } from '../../../shared';
+import type { KernelLabScenarioIdValue } from './kernel-scenarios';
 import { KernelLabScenarioId } from './kernel-scenarios';
 
 /** 可供 benchmark 交替更新的两个确定性 Scene */

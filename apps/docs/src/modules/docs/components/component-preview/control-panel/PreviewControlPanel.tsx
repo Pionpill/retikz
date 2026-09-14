@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Minus, PanelLeftClose, Plus, RotateCcw } from 'lucide-react';
+import type { FC } from 'react';
 import { Fragment, memo, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib';
 
+import {
+  buildPreviewControlVisibilityKey,
+  PreviewControlFieldInput,
+  resolveVisiblePreviewControlSections,
+} from '../controls';
 import type {
   PreviewControlContract,
   PreviewControlPreset,
@@ -18,12 +22,6 @@ import type {
   PreviewPanelControlsDefinition,
   PreviewSelectControlField,
 } from '../types';
-
-import {
-  buildPreviewControlVisibilityKey,
-  PreviewControlFieldInput,
-  resolveVisiblePreviewControlSections,
-} from '../controls';
 import { usePreviewControlLayout } from './hooks';
 import { PreviewTableControl } from './PreviewTableControl';
 import { getDefaultCollapsedSectionIndexes } from './utils';

@@ -1,10 +1,9 @@
 import type { InspectorRegistry } from '@retikz/inspect';
-import type { InspectLayoutProps } from '@retikz/inspect/react';
-import type { FC } from 'react';
-
 import { createInspectorRegistry, mergeInspectorRegistries } from '@retikz/inspect';
+import type { InspectLayoutProps } from '@retikz/inspect/react';
 import { InspectLayout as BaseInspectLayout } from '@retikz/inspect/react';
 import { FLEX_LAYOUT_INSPECTOR, GRID_LAYOUT_INSPECTOR, OVERLAY_LAYOUT_INSPECTOR } from '@retikz/layout/inspect';
+import type { FC } from 'react';
 
 /** Layout 检查宿主的属性 */
 export type LayoutInspectLayoutProps = Omit<InspectLayoutProps, 'registry'> &

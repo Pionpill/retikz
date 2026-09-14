@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components -- 形状定义、注册表与元件组件成组放在一处便于各 step 复用；本文件不是 HMR 热点 */
+/* oxlint-disable react/only-export-components -- 形状定义、注册表与元件组件成组放在一处便于各 step 复用；本文件不是 HMR 热点 */
 import type {
   IRAnchorRef,
   IRNodeLabel,
@@ -8,10 +8,9 @@ import type {
   ScenePrimitive,
   ShapeDefinition,
 } from '@retikz/core';
-import type { FC } from 'react';
-
 import { defineShape, localToWorld, worldToLocal } from '@retikz/core';
 import { Node } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 type Position = IRPosition;

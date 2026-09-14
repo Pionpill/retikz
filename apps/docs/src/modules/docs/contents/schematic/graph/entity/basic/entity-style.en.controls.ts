@@ -1,6 +1,5 @@
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { LogicFigureEntityKind } from '@/modules/docs/components/logic-figure';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { EntityStyleControlId } from './entity-style.controls';

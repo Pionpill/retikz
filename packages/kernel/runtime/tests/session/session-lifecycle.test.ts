@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RuntimeCommitEvent } from '../../src/program';
-
 import { defineRuntimeOwner } from '../../src/owner';
+import type { RuntimeCommitEvent } from '../../src/program';
 import { defineRuntimeProgram, RuntimeProgramKind, RuntimeProgramPhase } from '../../src/program';
 import { createRuntimeOwnerRegistry, createRuntimeProgramRegistry } from '../../src/registry';
 import { createRuntimeSession } from '../../src/session';

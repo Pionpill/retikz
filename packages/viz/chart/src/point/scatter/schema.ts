@@ -1,5 +1,4 @@
 import type { infer as ZodInfer } from 'zod';
-
 import { array, literal, strictObject } from 'zod';
 
 import { createChartSourceSchema } from '../../_chart/schemas';

@@ -1,10 +1,8 @@
 import type { IRScene } from '@retikz/core';
-
 import { compileToScene, CURRENT_IR_VERSION, resolveCoreProviderDependencies } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import type { RibbonWidthProfileDefinition } from '../../src/ribbon';
-
 import {
   BUILTIN_RIBBON_WIDTH_PROFILES,
   createRibbonProviderContribution,

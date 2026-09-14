@@ -1,13 +1,12 @@
-import type { FC } from 'react';
-
 import { RendererModeProvider } from '@retikz/react';
+import type { FC } from 'react';
 import { memo } from 'react';
 
-import type { PreviewTheme } from '../theme';
-import type { ComponentPreviewDemoComponent, RendererMode } from '../types';
 import type { Lang } from '@/i18n';
 
+import type { PreviewTheme } from '../theme';
 import { PreviewThemeProvider } from '../theme';
+import type { ComponentPreviewDemoComponent, RendererMode } from '../types';
 
 export type DemoRendererProps = {
   /** demo 组件。 */

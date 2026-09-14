@@ -1,7 +1,7 @@
+import { spawn } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
 import { rm, rmdir } from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const scriptPath = fileURLToPath(import.meta.url);

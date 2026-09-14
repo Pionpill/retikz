@@ -1,5 +1,4 @@
 import type { AxisAlignedBounds } from '@retikz/math';
-
 import { describe, expect, it } from 'vitest';
 
 import { computeLayout, computeLayoutFromBounds, createRound } from '../../src/compile/scene';

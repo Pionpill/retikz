@@ -39,7 +39,7 @@
 结构化改动后至少运行：
 
 ```bash
-pnpm --filter @retikz/foundation exec eslint . --fix
+pnpm --filter @retikz/foundation exec oxlint . --fix
 pnpm --filter @retikz/foundation exec tsc --noEmit
 pnpm --filter @retikz/foundation test:run
 ```

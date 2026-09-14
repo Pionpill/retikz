@@ -6,7 +6,6 @@ import type {
   LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
-
 import {
   LayoutAlignmentGuideDimension,
   LayoutAlignmentGuideName,
@@ -15,14 +14,10 @@ import {
   LayoutIntrinsicMode,
 } from '@retikz/core';
 
-import type { CanonicalFlexLayout, CanonicalFlexLayoutItem } from '../../resolve/flex-layout';
-import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
-import type { LayoutSpacingArtifact } from '../shared';
-import type { FlexLayoutArtifact } from './types';
-import type { IRFlexLayout } from './types';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import type { CanonicalFlexLayout, CanonicalFlexLayoutItem } from '../../resolve/flex-layout';
 import { resolveFlexLayout } from '../../resolve/flex-layout';
+import type { EffectiveLayoutItem, LayoutInsets, LayoutRect } from '../internal';
 import {
   alignAllocationInSlot,
   appendLayoutSpacing,
@@ -44,8 +39,11 @@ import {
   resolveLayoutAxisSize,
   sortLayoutSpacing,
 } from '../internal';
+import type { LayoutSpacingArtifact } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind, LayoutOverflow, LayoutSpacingKind } from '../shared';
 import { FlexLayoutDirection, FlexLayoutWrap } from './constants';
+import type { FlexLayoutArtifact } from './types';
+import type { IRFlexLayout } from './types';
 
 type PhysicalAxis = 'x' | 'y';
 

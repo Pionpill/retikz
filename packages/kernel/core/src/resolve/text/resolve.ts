@@ -1,4 +1,6 @@
 import type { IRFont } from '../../schemas';
+import { resolveFont, resolveFontSize } from './font';
+import { isMathRun, parseInlineRuns } from './inline';
 import type {
   CanonicalInlineRun,
   ResolvedTextLineStyle,
@@ -8,9 +10,6 @@ import type {
   TextLineResolveContext,
   TextLineSource,
 } from './types';
-
-import { resolveFont, resolveFontSize } from './font';
-import { isMathRun, parseInlineRuns } from './inline';
 
 const TEXT_TEX_PARSE_ERROR = 'TEXT_TEX_PARSE_ERROR';
 

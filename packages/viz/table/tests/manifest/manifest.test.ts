@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';
-
 import {
   compileTable,
   TABLE_NAMESPACE,

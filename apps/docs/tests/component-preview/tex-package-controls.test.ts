@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import type {
   PreviewControlContract,
   PreviewControlsDefinition,
 } from '../../src/modules/docs/components/component-preview/types';
-
-import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import {
   createPreviewControlContract,
   previewControlContract as texPlaygroundContract,

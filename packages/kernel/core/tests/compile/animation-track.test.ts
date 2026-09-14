@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompileWarning, IRAnimationTrack, IRScene, ScenePrimitive } from '../../src';
-
 import { AnimationTrackSchema, CompileWarningCode, NodeDefaultSchema, PathDefaultSchema, SceneSchema } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';

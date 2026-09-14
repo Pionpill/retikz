@@ -1,9 +1,8 @@
 import { boundsOf, centerOfBounds, isFinitePoint } from '@retikz/math';
 
 import type { Transform } from '../../../contract';
-import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { IRPathScale, IRPosition, IRTransform } from '../../../schemas';
 import { applyTransformChain } from '../../transform';
 
 /** 一组点的 axis-aligned 包围盒中心 */

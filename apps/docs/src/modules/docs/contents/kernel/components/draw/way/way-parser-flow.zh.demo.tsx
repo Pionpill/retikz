@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** way item 按序展开为 Path + Step 的局部流程图 */
 const Demo: FC = () => (

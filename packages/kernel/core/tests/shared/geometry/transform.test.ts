@@ -1,5 +1,4 @@
 import type { CenteredShape } from '@retikz/math';
-
 import { describe, expect, it } from 'vitest';
 
 import { localToWorld, worldToLocal } from '../../../src/shared/geometry/transform';

@@ -1,5 +1,4 @@
 import type { EntityRoleDefinition } from '../../contract';
-
 import { defineEntityRole } from '../../contract';
 import { EntityRole } from '../../shared';
 

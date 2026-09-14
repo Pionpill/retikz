@@ -1,8 +1,7 @@
-import type { RuntimeOwnerDefinition, RuntimeOwnerErasedExecutor, RuntimeOwnerToken } from '../owner';
-import type { RuntimeOwnerRegistry, RuntimeOwnerRegistryInput } from './types';
-
 import { RetikzRuntimeError, RetikzRuntimeErrorCode } from '../error';
+import type { RuntimeOwnerDefinition, RuntimeOwnerErasedExecutor, RuntimeOwnerToken } from '../owner';
 import { getRuntimeOwnerDefinitionExecutor, hasRuntimeOwnerToken } from '../owner';
+import type { RuntimeOwnerRegistry, RuntimeOwnerRegistryInput } from './types';
 
 const runtimeOwnerRegistryExecutors = new WeakMap<
   RuntimeOwnerRegistry,

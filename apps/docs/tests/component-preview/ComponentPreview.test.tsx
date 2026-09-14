@@ -1,5 +1,4 @@
 ﻿import type { ReactNode } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeAll, describe, expect, it } from 'vitest';

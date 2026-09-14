@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Flow 全局配置 demo 的稳定 control id */

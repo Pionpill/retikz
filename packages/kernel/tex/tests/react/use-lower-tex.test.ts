@@ -1,9 +1,8 @@
 /// <reference lib="dom" />
 
+import { createElement, Fragment } from 'react';
 // @vitest-environment jsdom
 import type { Root } from 'react-dom/client';
-
-import { createElement, Fragment } from 'react';
 import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,7 +17,6 @@ vi.mock('../../src/mathjax', async importOriginal => ({
 }));
 
 import type { MathJaxLowerTexState } from '../../src/react';
-
 import { useLowerTex } from '../../src/react';
 
 const roots = new Set<Root>();

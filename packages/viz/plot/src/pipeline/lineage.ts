@@ -1,7 +1,6 @@
 import type { DataSourceIdentity, ExternalDatasets, ExternalRow } from '@retikz/data';
-import type { JsonValue } from '@retikz/foundation';
-
 import { resolveFieldPath } from '@retikz/data';
+import type { JsonValue } from '@retikz/foundation';
 
 import type {
   PlotDatumLineage,
@@ -16,13 +15,12 @@ import type {
   PlotScaleLineage,
   PlotSeriesLineage,
 } from '../contract';
-import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotTransform } from '../schemas';
-import type { LowerPlotsOptions } from './expand';
-import type { PlotDataArtifact } from './expand/lower';
-
 import { RetikzPlotError } from '../error';
 import { resolvePlotLineageOptions } from '../resolve/lineage';
+import type { IRPlot, IRPlotMarkOperation, IRPlotScaleOperation, IRPlotTransform } from '../schemas';
 import { CoordinateArrangementKind } from '../schemas';
+import type { LowerPlotsOptions } from './expand';
+import type { PlotDataArtifact } from './expand/lower';
 import { lowerPlotWithDataArtifact } from './expand/lower';
 import { buildPlotLocatorFromDataArtifact } from './locator';
 

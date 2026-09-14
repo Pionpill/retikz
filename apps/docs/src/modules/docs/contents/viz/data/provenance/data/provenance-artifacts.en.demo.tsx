@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Row metadata and runtime events produced by Data provenance */
 const Demo: FC = () => (

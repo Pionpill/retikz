@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string } from 'zod';
 
 import type { TableStructureOutput } from '../../src';
-
 import { defineTableStructure, TableCellLocation, TableCellRole, TableRowKind } from '../../src';
 import { normalizeTableStructure } from '../../src/pipeline/normalize';
 

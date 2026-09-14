@@ -1,5 +1,4 @@
 import type { CoreDependencyProvider, ScenePrimitive } from '@retikz/core';
-
 import {
   boundsConnectionEnvelope,
   CenterAnchor,
@@ -10,9 +9,8 @@ import {
   rect,
 } from '@retikz/core';
 
-import type { EllipticCapShapeParams } from './_elliptic-cap';
-
 import { StandardShapeName } from '../constants';
+import type { EllipticCapShapeParams } from './_elliptic-cap';
 import {
   circumscribeEllipticCaps,
   ellipticCapCommands,

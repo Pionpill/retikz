@@ -1,8 +1,7 @@
 import type { ClipDefinition, PathCommand } from '@retikz/core';
-import type { FC } from 'react';
-
 import { defineClip } from '@retikz/core';
 import { Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
 import { z } from 'zod';
 
 const roundedRectClipSchema = z.strictObject({

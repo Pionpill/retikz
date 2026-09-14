@@ -1,7 +1,6 @@
-import type { ComponentProps, FC } from 'react';
-
 import { ChevronDownIcon } from 'lucide-react';
 import { NavigationMenu as NavigationMenuPrimitive } from 'radix-ui';
+import type { ComponentProps, FC } from 'react';
 
 import { cn } from '@/lib';
 

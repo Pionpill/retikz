@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { array, enum as zodEnum, literal, strictObject } from 'zod';
 
 import type { ClipDefinition, ClipResource, ClipShape, IRClip, IRClipFillRule, IRScene, PathCommand } from '../../src';
-
 import { compileToScene, defineClip, PathCommandSchema } from '../../src';
 
 type TestPathClipShape = ClipShape & {

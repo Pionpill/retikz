@@ -1,5 +1,4 @@
 import type { Lang } from '@/i18n';
-
 import { buildPreviewControlDefaults, definePreviewControls } from '@/modules/docs/preview';
 
 import { inspectCoordinateI18n } from './inspect-coordinate.i18n';

@@ -1,12 +1,10 @@
 import type { TableDetailColumnInput } from '@retikz/table';
 import type { ReactElement, ReactNode } from 'react';
-
 import { isValidElement } from 'react';
-
-import type { DetailColumnProps } from './detail-column';
 
 import { RetikzTableReactError } from '../error';
 import { visitTableChildren } from './child-traversal';
+import type { DetailColumnProps } from './detail-column';
 import { DetailColumn } from './detail-column';
 
 /** 判断节点是否为 DetailColumn marker */

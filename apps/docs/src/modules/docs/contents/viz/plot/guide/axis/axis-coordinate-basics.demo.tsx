@@ -1,9 +1,8 @@
 import { PathMark, PlotAxis } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';
 
-import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { PreviewPlot as Plot } from '@/modules/docs/components/component-preview/theme';
+import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { axisCoordinateBasicsControls, previewControlContract } from './axis-coordinate-basics.controls';
@@ -35,4 +34,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** 在同一数据与 mark 上比较笛卡尔和极坐标轴职责 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

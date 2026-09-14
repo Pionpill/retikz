@@ -1,11 +1,9 @@
 import type { RuntimeOwnerDefinition } from '@retikz/runtime';
-
 import { defineRuntimeOwner } from '@retikz/runtime';
 
 import type { IRScene } from '../../schemas';
-import type { CoreChange } from './types';
-
 import { cloneAndFreezeJson, jsonStructuralEquals } from '../../shared/json';
+import type { CoreChange } from './types';
 import { CORE_OWNER_KEY } from './types';
 
 /** Core document 的 Runtime owner Definition */

@@ -1,3 +1,5 @@
+import type { TransformContext } from '../../contract';
+import { RetikzDataError } from '../../error';
 import type {
   IRDataAnnotateSelector,
   IRDataAnnotateTransform,
@@ -6,9 +8,6 @@ import type {
   IRDataSummarizeTransform,
 } from '../../schemas';
 import type { ExternalRow } from '../../shared';
-
-import { type TransformContext } from '../../contract';
-import { RetikzDataError } from '../../error';
 import { resolveFieldPath } from '../data';
 import { applyReducerOperation, applySelectorOperation, reducerOutputFields } from '../statistics';
 import { groupRowsByFields } from './shared';

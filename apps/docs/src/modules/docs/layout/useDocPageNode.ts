@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import type { Page, Section, SubPage } from '@/modules/docs/data';
-
 import { getSectionsByArea } from '@/modules/docs/data';
 
 import type { DocLocation } from './types';

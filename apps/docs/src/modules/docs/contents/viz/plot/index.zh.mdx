@@ -26,32 +26,32 @@ Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与�
     {
       label: 'React Plot 将 props 收集为 Plot Vanilla 嵌入输入',
       path: 'packages/viz/plot-react/src/Plot.tsx',
-      startLine: 137,
-      endLine: 153,
+      startLine: 136,
+      endLine: 152,
     },
     {
       label: 'React 子组件收集后交给 Plot Vanilla 归一化',
       path: 'packages/viz/plot-react/src/adapter/build-plot-spec.ts',
-      startLine: 14,
-      endLine: 20,
+      startLine: 13,
+      endLine: 19,
     },
     {
       label: 'Plot Vanilla 将 InputPlot 规范化为 Plot Source IR',
       path: 'packages/viz/plot-vanilla/src/normalize/plot/normalize.ts',
-      startLine: 23,
-      endLine: 45,
+      startLine: 21,
+      endLine: 43,
     },
     {
       label: 'Plot composite 的统一下沉入口',
       path: 'packages/viz/plot/src/pipeline/expand/lower.ts',
-      startLine: 712,
-      endLine: 734,
+      startLine: 710,
+      endLine: 732,
     },
     {
       label: 'Vanilla 从 Plot IR 到 Scene 与 SVG 的入口',
       path: 'packages/viz/plot-vanilla/src/runtime/render-plot.ts',
-      startLine: 47,
-      endLine: 68,
+      startLine: 46,
+      endLine: 67,
     },
   ]}
 />
@@ -76,13 +76,13 @@ Plot 的 `width` / `height` 只决定绘图区几何尺寸，standalone 显示�
 
 ## Plot 负责与不负责什么
 
-| Plot 负责                               | 交给其它模块                                                            |
-| --------------------------------------- | ----------------------------------------------------------------------- |
-| Plot IR、领域主题 token 与图形语法契约  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data)                |
+| Plot 负责                               | 交给其它模块                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| Plot IR、领域主题 token 与图形语法契约  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data)                           |
 | channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/components/introduction) |
-| composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                          |
-| Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                          |
-| 面向图表的语义映射与主题 lowering       | 行列结构、Cell 语义与表格布局交给独立的 [Table](/viz/table)             |
+| composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                                     |
+| Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                                     |
+| 面向图表的语义映射与主题 lowering       | 行列结构、Cell 语义与表格布局交给独立的 [Table](/viz/table)                        |
 
 如果一种能力不依赖图表字段映射，例如通用数据变换、底层几何或表格 Cell，它就不应进入 Plot。反过来，新的 scale、coordinate、mark 或 guide 应先成为可注册的 Definition，再以内置能力使用同一条路径。
 

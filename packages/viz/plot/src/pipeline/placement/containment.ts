@@ -8,10 +8,9 @@ import type {
   MappedMarkPlacementTarget,
   MarkChannels,
 } from '../../contract';
-import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
-
 import { RetikzPlotError } from '../../error';
 import { resolvePositionAdjustmentOperation } from '../../resolve/position-adjustment';
+import type { IRPlotMarkOperation, IRPlotMarkPlacement } from '../../schemas';
 
 /** 单个 Mark 对各 role 提出的最终 range inset */
 export type MarkPlacementRangeOverrides = Partial<Record<DimensionRole, readonly [number, number]>>;

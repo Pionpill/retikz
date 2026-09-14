@@ -1,6 +1,5 @@
 import type { MarkerPrimitive, PathCommand, ResolvedArrowEnd } from '@retikz/core';
-
-import { type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { ArrowMarker } from '../../../src/render/svg';
@@ -133,8 +132,7 @@ describe('ArrowMarker: marker 几何物化（spec.marker → SVG 元素）', () 
  *   参数等价旧 switch。几何已在 compile，react 只翻成 SVG
  */
 describe('ArrowMarker: 内置 8 resolved 几何物化回归（golden master）', () => {
-  const pathMarker = (commands: Array<PathCommand>): ResolvedArrowEnd =>
-    spec({ marker: [{ type: 'path', commands }] });
+  const pathMarker = (commands: Array<PathCommand>): ResolvedArrowEnd => spec({ marker: [{ type: 'path', commands }] });
 
   it('normal: 实心三角 d="M 0 0 L 10 5 L 0 10 Z"', () => {
     const inner = innerEls(

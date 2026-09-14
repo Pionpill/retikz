@@ -1,11 +1,9 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
 import { LegendContentKind } from '@retikz/standard';
 import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { legendPlaygroundControls, previewControlContract } from './legend-playground.controls';

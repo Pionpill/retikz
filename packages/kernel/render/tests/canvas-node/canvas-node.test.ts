@@ -1,6 +1,6 @@
-import type { Scene } from '@retikz/core';
-
 import { Buffer } from 'node:buffer';
+
+import type { Scene } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 
 type CanvasCall = {

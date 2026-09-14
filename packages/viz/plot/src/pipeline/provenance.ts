@@ -1,9 +1,7 @@
 import type { ExternalRow } from '@retikz/data';
-
 import { resolveFieldPath } from '@retikz/data';
 
 import type { DatumIdRegistrar } from '../contract';
-
 import { slug } from '../contract';
 import { RetikzPlotError } from '../error';
 

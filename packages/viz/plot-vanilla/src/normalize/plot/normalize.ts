@@ -1,7 +1,9 @@
 import type { IRPlot } from '@retikz/plot';
-
 import { PLOT_NAMESPACE, PlotComposite } from '@retikz/plot';
 
+import { RetikzPlotVanillaError } from '../../error';
+import { normalizePlotBindings } from './bindings';
+import { assertChartExtensionCollection, normalizeChartExtension } from './chart-extension';
 import type {
   NormalizationState,
   PlotAuthoringContext,
@@ -10,10 +12,6 @@ import type {
   PlotMemberFragment,
 } from './contracts';
 import type { InputPlot } from './input';
-
-import { RetikzPlotVanillaError } from '../../error';
-import { normalizePlotBindings } from './bindings';
-import { assertChartExtensionCollection, normalizeChartExtension } from './chart-extension';
 import { applyDeclaration } from './member-normalizer';
 import { normalizePlotRoot } from './plot-root';
 import { styleSugarContext } from './style-sugar';

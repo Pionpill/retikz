@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { BotMessageSquare } from 'lucide-react';
+import type { FC } from 'react';
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 

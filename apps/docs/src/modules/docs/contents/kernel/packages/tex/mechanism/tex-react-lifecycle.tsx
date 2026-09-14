@@ -1,9 +1,7 @@
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-
 import type { Lang } from '@/i18n';
-
 import { PreviewFlowDiagram as FlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 

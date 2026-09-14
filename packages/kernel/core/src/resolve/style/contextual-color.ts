@@ -1,9 +1,8 @@
 import { compositeOpaqueColor } from '@retikz/foundation';
 
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type { IRContextualColor } from '../../schemas';
 import type { ThemeModeValue } from '../../shared';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { ThemeMode } from '../../shared';
 
 /** 上下文颜色确定化所需的最终主色、Theme mode 与诊断路径 */

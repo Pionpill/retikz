@@ -1,7 +1,7 @@
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { previewControlContract, valueParsingControls } from './value-parsing.en.controls';
 import { renderValueParsingPreview } from './value-parsing-preview';
+import { previewControlContract, valueParsingControls } from './value-parsing.en.controls';
 
 /** Controls fallback for value parsing */
 export const previewControls = valueParsingControls;
@@ -12,4 +12,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, render
 export const previewSource = controlledPreview.source;
 
 /** Dynamic playground for built-in coercion and declarative formats */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

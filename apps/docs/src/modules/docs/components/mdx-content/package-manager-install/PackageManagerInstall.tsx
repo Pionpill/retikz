@@ -1,12 +1,10 @@
-import type { FC } from 'react';
-
 import { Check, Copy, Terminal } from 'lucide-react';
+import type { FC } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-import type { PkgManager } from '@/modules/docs/store';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { PkgManager } from '@/modules/docs/store';
 import { usePkgManagerStore } from '@/modules/docs/store';
 
 type InstallCommands = Record<PkgManager, string>;

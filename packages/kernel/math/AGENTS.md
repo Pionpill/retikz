@@ -27,7 +27,7 @@
 结构化改动后至少运行：
 
 ```bash
-pnpm --filter @retikz/math exec eslint . --fix
+pnpm --filter @retikz/math exec oxlint . --fix
 pnpm --filter @retikz/math exec tsc --noEmit
 pnpm --filter @retikz/math test:changed
 ```

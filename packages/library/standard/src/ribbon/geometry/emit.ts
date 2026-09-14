@@ -1,11 +1,9 @@
 import type { IRGeometryLabel, PathCommand, PathKindCompileResult, PathKindLabel, ScenePrimitive } from '@retikz/core';
 
-import type { RibbonWidthProfileDefinition } from '../profile-types';
-import type { IRRibbonPath } from '../types';
-import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';
+import type { RibbonWidthProfileDefinition } from '../profile-types';
 import { resolveRibbonOptions, resolveRibbonWidth } from '../resolve';
+import type { IRRibbonPath } from '../types';
 import {
   commandsToSegmentInputs,
   directionToTangent,
@@ -21,6 +19,7 @@ import {
   ribbonCrossSection,
   styledPrimitiveFromOutline,
 } from './outline';
+import type { RibbonEmitOptions, RibbonLike, RibbonSegment } from './types';
 import { DEFAULT_RIBBON_SAMPLES } from './types';
 import {
   assertSampleCount,

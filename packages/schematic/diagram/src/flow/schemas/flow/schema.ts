@@ -1,5 +1,4 @@
 import type { IRTextBlock } from '@retikz/core';
-
 import { ScopePropsSchema, TextBlockSchema } from '@retikz/core';
 import {
   NonBlankStringSchema,

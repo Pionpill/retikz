@@ -1,11 +1,9 @@
 import type { ExternalRow, IRDataModel } from '@retikz/data';
-
 import { PathMark, Plot, PlotAxis, PointMark } from '@retikz/plot-react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 
 import type { valueParsingControls } from './value-parsing.controls';
-
 import { canonicalRows, mixedRows, reportRows } from './value-parsing.data';
 
 type ValueParsingValues = PreviewControlValuesFor<typeof valueParsingControls>;

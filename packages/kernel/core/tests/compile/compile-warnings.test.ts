@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CompileWarning, IRScene } from '../../src';
-
 import { BUILTIN_SHAPES, CompileWarningCode, defineShape, formatCompileWarning } from '../../src';
 import { compileToScene } from '../../src/compile/compile';
 

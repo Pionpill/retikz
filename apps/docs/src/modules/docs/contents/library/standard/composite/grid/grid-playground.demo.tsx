@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Layout } from '@retikz/react';
 import { Grid } from '@retikz/standard-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

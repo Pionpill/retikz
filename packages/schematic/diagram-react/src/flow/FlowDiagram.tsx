@@ -1,14 +1,12 @@
 import type { FlowDiagramInputEmbedProps } from '@retikz/diagram-vanilla/flow';
+import { FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { Layout } from '@retikz/react';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
-
-import { FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
-import { Layout } from '@retikz/react';
 import { useId, useMemo } from 'react';
 
 import type { FlowDiagramProps } from './authoring';
-
 import { collectFlowDiagramInput, createFlowDiagramInput, flowDiagramLayoutHostPropsOf } from './authoring';
 
 export type { FlowDiagramLayoutHostProps, FlowDiagramProps } from './authoring';

@@ -1,5 +1,4 @@
 import type { PathCommand } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 
 import {

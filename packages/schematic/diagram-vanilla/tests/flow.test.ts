@@ -1,6 +1,5 @@
-import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
-
 import * as DiagramFlow from '@retikz/diagram/flow';
+import type { InputEmbed, InputEmbedAdapter, InputEmbedContext } from '@retikz/vanilla';
 import { processToStaticInputResult } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 

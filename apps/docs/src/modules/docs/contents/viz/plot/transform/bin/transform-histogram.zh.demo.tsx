@@ -25,4 +25,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 比较 count、step 与 thresholds 的分箱试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

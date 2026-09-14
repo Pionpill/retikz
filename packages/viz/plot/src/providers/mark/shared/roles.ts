@@ -1,7 +1,7 @@
-import { type ExternalRow } from '@retikz/data';
+import type { ExternalRow } from '@retikz/data';
 
-import { type CoordinateFrame, type DimensionRole } from '../../../contract';
-import { type IRPlotChannel, type IRPlotMark } from '../../../schemas';
+import type { CoordinateFrame, DimensionRole } from '../../../contract';
+import type { IRPlotChannel, IRPlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
 
 /**

@@ -1,11 +1,9 @@
 import { useMemo } from 'react';
 
 import type { Section } from '@/modules/docs/data';
-
 import { getSectionsByArea } from '@/modules/docs/data';
 
 import type { DocLocation, LeafNode } from './types';
-
 import { useDocLocation } from './useDocLocation';
 import { flattenLeaves } from './utils';
 

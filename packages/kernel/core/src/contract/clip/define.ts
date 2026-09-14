@@ -1,8 +1,7 @@
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { ClipDefinition, ClipDefinitionInput, ClipLike, ClipShape } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
+import type { ClipDefinition, ClipDefinitionInput, ClipLike, ClipShape } from './types';
 
 /**
  * 定义 clip 注册项，并做最小 key 校验

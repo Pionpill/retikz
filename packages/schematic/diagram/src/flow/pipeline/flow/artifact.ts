@@ -1,11 +1,10 @@
 import type { SpatialHandleDeclaration } from '@retikz/core';
 import type { BoundsRect, Position } from '@retikz/math';
 
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutOutput, FlowLayoutRouting } from '../../contract';
 import type { CanonicalFlowElement, CanonicalFlowRelation } from '../../resolve';
 import type { FlowArtifactBounds, FlowDiagramArtifact, FlowElementArtifact } from '../../schemas';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 
 const translateBounds = (bounds: Readonly<BoundsRect>, offset: Readonly<Position>): Readonly<BoundsRect> => ({
   x: bounds.x + offset[0],

@@ -1,21 +1,19 @@
 import type { ComponentType } from 'react';
-
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
+import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
-import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
-
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
+import CurveSegmentsDemo from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments';
 import {
   createPreviewControlContract as createCurveSegmentsControlContract,
   curveSegmentsControls,
   previewControlContract as curveSegmentsContract,
 } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.controls';
-import CurveSegmentsDemo from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments';
 import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.controls';
 import {
   circleCircleCenters,

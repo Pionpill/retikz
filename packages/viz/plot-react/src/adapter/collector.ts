@@ -1,5 +1,6 @@
 import type { ExternalRow } from '@retikz/data';
 import type { JsonObject } from '@retikz/foundation';
+import { JsonObjectSchema } from '@retikz/foundation';
 import type {
   CollectionContext,
   PlotAuthoringDeclarations,
@@ -10,8 +11,6 @@ import type {
   ScaffoldTrack,
 } from '@retikz/plot-vanilla';
 import type { ReactElement, ReactNode } from 'react';
-
-import { JsonObjectSchema } from '@retikz/foundation';
 import { Fragment, isValidElement } from 'react';
 
 import {

@@ -1,15 +1,13 @@
 import type { AnyTransformDefinition, ExternalRow, TransformContext } from '@retikz/data';
-
 import { applyTransforms as applyDataTransforms, collectTransformFields, defineTransform } from '@retikz/data';
 import { readSourceIndices, tagSourceIndex } from '@retikz/data';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
-import type { IRPlotTransform } from '../../../src/schemas';
-
 import { collectSourceFields } from '../../../src/pipeline/source-fields';
 import { resolvePlotTransformRegistry } from '../../../src/providers';
 import { createFieldCollector } from '../../../src/providers/channel/shared';
+import type { IRPlotTransform } from '../../../src/schemas';
 import { TransformSchema } from '../../../src/schemas';
 import { PlotSchema } from '../../../src/schemas/plot';
 

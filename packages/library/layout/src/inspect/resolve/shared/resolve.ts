@@ -1,13 +1,12 @@
 import { mergeProperties } from '@retikz/foundation';
 
-import type { BaseLayoutInspectOptions } from '../../shared/types';
-import type { CanonicalBaseLayoutInspectOptions } from './types';
-
 import {
   BaseLayoutInspectOptionsSchema,
   LayoutInspectBoundsOptionsSchema,
   LayoutInspectSpacingOptionsSchema,
 } from '../../shared';
+import type { BaseLayoutInspectOptions } from '../../shared/types';
+import type { CanonicalBaseLayoutInspectOptions } from './types';
 
 const defaultOptions = BaseLayoutInspectOptionsSchema.parse({});
 const defaultBounds = LayoutInspectBoundsOptionsSchema.parse({});

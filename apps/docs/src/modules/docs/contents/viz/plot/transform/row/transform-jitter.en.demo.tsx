@@ -24,4 +24,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 调整最大偏移与随机种子的英文确定性抖动试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

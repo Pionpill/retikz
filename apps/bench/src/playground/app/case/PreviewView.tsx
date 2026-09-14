@@ -1,10 +1,8 @@
-import type { FC, RefObject } from 'react';
-
 import { CircleAlert } from 'lucide-react';
+import type { FC, RefObject } from 'react';
 
 import type { LabState } from '../lab-state';
 import type { BenchTestCase } from '../test-catalog';
-
 import { RenderStage } from './RenderStage';
 
 /** 测试预览页面属性 */

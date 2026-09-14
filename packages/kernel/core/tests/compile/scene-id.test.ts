@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IRScene, ScenePrimitive } from '../../src';
-
 import { compileToScene } from '../../src/compile/compile';
 import { flattenPrims } from '../helpers/flatten';
 

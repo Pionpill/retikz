@@ -1,7 +1,6 @@
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { FlowLayoutDefinition } from '../../contract';
 import type { CanonicalFlowDiagram, CanonicalFlowElement } from '../flow';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 
 type CapabilityEvidence = Readonly<{
   name: string;

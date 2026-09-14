@@ -1,13 +1,18 @@
 import type { FC, ReactNode } from 'react';
-
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import type { Lang } from '@/i18n';
-
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
 import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
 
+import { ComponentPreviewDialog } from './ComponentPreviewDialog';
+import { alignClass, sizeClass } from './constants';
+import { PreviewWorkspace } from './control-panel';
+import { mergePreviewControlSlots } from './controls';
+import { usePreviewControlState } from './hooks';
+import { buildPreviewToolSlots, usePreviewPanelState } from './preview-panel';
+import { InlineSourcePanel, useSourcePanelState } from './source-panel';
 import type {
   AlignKey,
   ComponentPreviewDemoComponent,
@@ -21,14 +26,6 @@ import type {
   PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
-
-import { ComponentPreviewDialog } from './ComponentPreviewDialog';
-import { alignClass, sizeClass } from './constants';
-import { PreviewWorkspace } from './control-panel';
-import { mergePreviewControlSlots } from './controls';
-import { usePreviewControlState } from './hooks';
-import { buildPreviewToolSlots, usePreviewPanelState } from './preview-panel';
-import { InlineSourcePanel, useSourcePanelState } from './source-panel';
 import { buildAskAiPrompt, findPrecedingHeading, resolvePreviewCodeVisible } from './utils';
 
 export type { ComponentRenderSource } from './types';

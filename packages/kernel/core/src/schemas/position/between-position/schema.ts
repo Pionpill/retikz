@@ -1,14 +1,12 @@
-import type { ZodType } from 'zod';
-
 import { NormalizedFractionSchema } from '@retikz/foundation';
+import type { ZodType } from 'zod';
 import { lazy, object, tuple, union } from 'zod';
-
-import type { IRAbsoluteTarget, IRBetweenPosition } from './types';
 
 import { NodeTargetSchema } from '../node-target';
 import { OffsetPositionSchema } from '../offset-position';
 import { PolarPositionSchema } from '../polar-position';
 import { PositionSchema } from '../position';
+import type { IRAbsoluteTarget, IRBetweenPosition } from './types';
 
 export const AbsoluteTargetSchema: ZodType<IRAbsoluteTarget> = lazy(() =>
   union([PositionSchema, PolarPositionSchema, NodeTargetSchema, OffsetPositionSchema, BetweenPositionSchema]),

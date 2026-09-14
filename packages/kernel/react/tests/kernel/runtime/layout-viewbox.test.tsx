@@ -4,7 +4,6 @@
  *   直接传 ir prop 且 IR 自带 viewBox 时尊重 IR 内置值（prop 缺省不覆盖）；prop 与 IR 内置冲突时 prop 优先
  */
 import type { IRScene } from '@retikz/core';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 

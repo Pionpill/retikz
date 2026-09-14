@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 在同一固定场景中展示全部三种内置图案 */
 const Demo: FC = () => (

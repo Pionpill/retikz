@@ -1,14 +1,12 @@
 import type { IRChild, IRScope, LayoutChildResult, LayoutCompositeCompileContext, LayoutProposal } from '@retikz/core';
-import type { IRFlexLayout, LayoutArtifactItemBase } from '@retikz/layout/compose';
-import type { BoundsRect, Position } from '@retikz/math';
-
 import { LayoutChildProbeKind } from '@retikz/core';
+import type { IRFlexLayout, LayoutArtifactItemBase } from '@retikz/layout/compose';
 import { compileFlexLayout, exactLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
+import type { BoundsRect, Position } from '@retikz/math';
 import { compileSurface, resolveSurface } from '@retikz/standard';
 
-import type { DiagramFoundationResolution } from '../../resolve';
-
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
+import type { DiagramFoundationResolution } from '../../resolve';
 import { lowerDiagramFoundation } from './lower';
 
 /** Diagram Foundation 中一个实际 authored region 的几何 */

@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '../../src/modules/docs/components/component-preview';
-
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import LayoutViewboxDemo from '../../src/modules/docs/contents/kernel/components/layout/overview/layout-viewbox.demo';
 

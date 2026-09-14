@@ -1,8 +1,7 @@
 import type { IRScatterChart } from '@retikz/chart/point/scatter';
 
-import type { InputScatterChart } from './types';
-
 import { chartSourceOf, normalizePointPartitionEncodings } from '../shared';
+import type { InputScatterChart } from './types';
 
 /** 将 Scatter Chart Vanilla Input 组装为精确 Source IR */
 export const normalizeScatterChart = (input: InputScatterChart): IRScatterChart => {

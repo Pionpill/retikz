@@ -1,11 +1,10 @@
+import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputCoordinate } from './coordinate';
 import type { InputEmbed } from './embed';
 import type { InputNode } from './node';
 import type { InputPath } from './path';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
 import type { InputScope } from './scope';
-
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 
 /** 创建作者侧节点输入，支持 id 简写与完整配置 */
 export const node = (

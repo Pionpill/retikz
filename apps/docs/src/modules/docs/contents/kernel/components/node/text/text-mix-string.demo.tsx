@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * <Text> 与字符串 children 平等参与

@@ -1,5 +1,4 @@
 import type { IRScene } from '@retikz/core';
-
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';

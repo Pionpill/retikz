@@ -1,10 +1,9 @@
 import type { PatternDefinition } from '../../contract';
-import type { IRPaint } from '../../schemas';
-import type { PaintResolution, PatternResolution } from './types';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { providerDefinitionOf } from '../../providers/registry';
+import type { IRPaint } from '../../schemas';
 import { resolvePatternStyle } from './pattern';
+import type { PaintResolution, PatternResolution } from './types';
 
 const DEFAULT_PATTERN_SIZE = 8;
 const DEFAULT_MOTIF_COLOR = 'currentColor';

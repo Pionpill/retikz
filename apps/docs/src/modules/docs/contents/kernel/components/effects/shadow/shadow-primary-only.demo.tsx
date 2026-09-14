@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 阴影只跟随主几何

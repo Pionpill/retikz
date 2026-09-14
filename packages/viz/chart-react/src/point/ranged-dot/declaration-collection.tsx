@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 
 import type { CollectedPointChartDeclarations } from '../shared';
-import type { RangedDotEncodingsProps } from './RangedDotEncodings';
-import type { RangedDotChartMark, RangedDotMarkProps } from './RangedDotMark';
-import type { RangedDotPropertiesProps } from './RangedDotProperties';
-
 import { collectPointChartDeclarations } from '../shared';
+import type { RangedDotEncodingsProps } from './RangedDotEncodings';
 import { RangedDotEncodings } from './RangedDotEncodings';
+import type { RangedDotChartMark, RangedDotMarkProps } from './RangedDotMark';
 import { RangedDotMark } from './RangedDotMark';
+import type { RangedDotPropertiesProps } from './RangedDotProperties';
 import { RangedDotProperties } from './RangedDotProperties';
 
 /** RangedDotChart 直接子声明的收集结果 */

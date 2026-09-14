@@ -1,6 +1,5 @@
-import type { AxisCardinalSideValue, IRPlotAxisGuide } from '../../../schemas';
-
 import { RetikzPlotError } from '../../../error';
+import type { AxisCardinalSideValue, IRPlotAxisGuide } from '../../../schemas';
 import { AxisCardinalSide, AxisPlacementKind } from '../../../schemas';
 
 /**

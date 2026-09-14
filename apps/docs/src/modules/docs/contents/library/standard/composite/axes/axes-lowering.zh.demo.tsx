@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Axes IR 下沉为 Core Path 与 Node 的中文逻辑图 */
 const Demo: FC = () => (

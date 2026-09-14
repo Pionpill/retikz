@@ -1,7 +1,4 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive, ShapeAnchorName } from '@retikz/core';
-import type { Position } from '@retikz/math';
-import type { infer as ZodInfer } from 'zod';
-
 import {
   boundaryFromContour,
   contourCommands,
@@ -14,6 +11,8 @@ import {
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema, PositiveNumberSchema } from '@retikz/foundation';
+import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 import { number, strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';

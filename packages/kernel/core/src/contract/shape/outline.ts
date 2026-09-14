@@ -1,10 +1,9 @@
 import type { Position } from '@retikz/math';
 
 import type { ContourCommand, LineSegment } from '../../shared';
+import { DEG_TO_RAD, localToWorld, rectOutline } from '../../shared';
 import type { PathCommand, PathPrim } from '../scene';
 import type { ResolvedShapeStyle } from './types';
-
-import { DEG_TO_RAD, localToWorld, rectOutline } from '../../shared';
 
 /** 将顶点环变换为闭合线段，供形状定义复用 */
 export const verticesToSegments = (vertices: Array<Position>): Array<LineSegment> =>

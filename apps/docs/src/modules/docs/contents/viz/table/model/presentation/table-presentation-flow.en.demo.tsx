@@ -1,7 +1,6 @@
 import type { FC } from 'react';
 
 import type { TablePresentationFlowLabels } from './table-presentation-flow';
-
 import { TablePresentationFlow } from './table-presentation-flow';
 
 /** 英文 Presentation 流程图文本 */

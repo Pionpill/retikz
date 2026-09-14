@@ -1,5 +1,4 @@
 import type { RelationKindDefinition, RelationRoleDefinition } from '../../contract';
-
 import { defineRelationKind, defineRelationRole } from '../../contract';
 import { RelationDirection } from '../../schemas';
 import { RelationKind, RelationRole } from '../../shared';

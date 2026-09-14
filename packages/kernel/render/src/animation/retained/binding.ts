@@ -1,7 +1,6 @@
+import { RetikzRenderError, RetikzRenderErrorCode } from '../../error';
 import type { WaapiDescriptor } from '../../svg/animation';
 import type { AnimationControls } from '../runtime';
-
-import { RetikzRenderError, RetikzRenderErrorCode } from '../../error';
 
 /** WAAPI 接管前的 inline transform style 快照 */
 type WaapiStyleBase = Readonly<{

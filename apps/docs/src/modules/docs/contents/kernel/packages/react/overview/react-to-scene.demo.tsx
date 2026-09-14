@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** @retikz/react 把 JSX 收集为 Vanilla Input，再由 processing 产出 Scene 的职责链 */
 const Demo: FC = () => (

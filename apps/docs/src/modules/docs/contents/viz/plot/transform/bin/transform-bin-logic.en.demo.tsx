@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** bin edge resolution, bucketing, reducer metrics, and per-bin output */
 const Demo: FC = () => (

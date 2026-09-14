@@ -1,5 +1,4 @@
 import type { WayItem } from '@retikz/core';
-
 import { DrawWay } from '@retikz/core';
 
 type WayCyclePresentation = {

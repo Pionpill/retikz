@@ -73,4 +73,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 行列各使用多层字段的分面布局 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

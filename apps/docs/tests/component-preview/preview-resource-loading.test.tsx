@@ -2,7 +2,6 @@
 
 import type { ReactNode } from 'react';
 import type { Root } from 'react-dom/client';
-
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';

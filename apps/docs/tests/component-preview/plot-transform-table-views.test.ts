@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { previewControlContract as pointTransformContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.controls';
 import { previewControlContract as pointTransformEnglishContract } from '../../src/modules/docs/contents/viz/plot/mark/point/point-transform.en.controls';
+import { createPlotTransformTableViews } from '../../src/modules/docs/contents/viz/plot/transform-table-views';
 import {
   CUSTOM_TRANSFORM_CONTROL_IDS,
   waterfallOperationOf,
 } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.controls';
 import { waterfallRows } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.data';
 import { waterfallTransform } from '../../src/modules/docs/contents/viz/plot/transform/custom-transform/waterfall.definition';
-import { createPlotTransformTableViews } from '../../src/modules/docs/contents/viz/plot/transform-table-views';
 
 describe('Plot transform table views', () => {
   it('使用完整 Plot registry 执行内置 transform', () => {

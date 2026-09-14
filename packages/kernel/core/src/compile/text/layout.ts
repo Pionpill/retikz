@@ -1,13 +1,12 @@
 import type { GroupPrim, PathPrim, ScenePrimitive, TextPrim } from '../../contract';
 import type { CanonicalInlineRun } from '../../resolve';
-import type { CompileWarningCodeValue } from '../warning';
-import type { TextFont, TextMeasurer } from './metrics';
-import type { LoweredTexPaint, LoweredTexPath, LowerTex } from './tex';
-
 import { isMathRun } from '../../resolve';
 import { CompileWarningCode } from '../constants';
+import type { CompileWarningCodeValue } from '../warning';
 import { ASCENT_FACTOR, DESCENT_FACTOR } from './baseline';
+import type { TextFont, TextMeasurer } from './metrics';
 import { normalizeTextMetrics } from './metrics';
+import type { LoweredTexPaint, LoweredTexPath, LowerTex } from './tex';
 import { snapshotLoweredTex } from './tex';
 
 /** 行高近似系数 */

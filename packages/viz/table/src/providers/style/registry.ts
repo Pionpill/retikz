@@ -1,5 +1,4 @@
 import type { TableThemeStyleDefinition } from '../../contract';
-
 import { RetikzTableError } from '../../error';
 
 /** 合并内置与自定义 Table Theme styles，并拒绝同名 definition */

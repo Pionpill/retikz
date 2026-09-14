@@ -1,9 +1,8 @@
-import type { Section } from './types';
-
 import { aboutSection } from './about';
 import { kernelSection } from './kernel';
 import { librarySection } from './library';
 import { schematicSection } from './schematic';
+import type { Section } from './types';
 import { vizSection } from './viz';
 
 /** 按 navigation area 查对应的 sections；未知 area 返回空数组。 */

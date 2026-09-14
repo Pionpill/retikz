@@ -1,11 +1,9 @@
 import type { IRScopePlacement, IRScopeSelfPoint } from '@retikz/core';
+import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
 import type { InputTransform } from '@retikz/vanilla';
 import type { FC } from 'react';
 
-import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
-
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { previewControlContract, scopeTranslateBasicControls } from './scope-translate-basic.controls';

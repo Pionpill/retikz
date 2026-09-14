@@ -2,7 +2,6 @@
  * PathCommand 几何（renderer 无关纯函数）
  */
 import type { ArcPathCommand, EllipseArcPathCommand, PathCommand } from '@retikz/core';
-
 import { alignAngleSweep } from '@retikz/core';
 
 const DEG_TO_RAD = Math.PI / 180;

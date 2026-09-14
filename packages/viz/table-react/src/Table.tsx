@@ -3,10 +3,9 @@ import type { ExternalDatasets } from '@retikz/data';
 import type { LayoutProps } from '@retikz/react';
 import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
+import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
-
-import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
 
 import { createReactTableInput, ReactTableRuntimeKind, resolveReactTableRuntime } from './table-runtime';
 import { TableRuntimeView } from './table-view';

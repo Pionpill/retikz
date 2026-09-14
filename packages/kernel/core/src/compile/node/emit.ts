@@ -1,21 +1,20 @@
 import type { JsonObject } from '@retikz/foundation';
 
 import type { GroupPrim, ResolvedShapeStyle, ScenePrimitive } from '../../contract';
-import type { Rect } from '../../shared/geometry';
-import type { PaintResolver } from '../resource';
-import type { NodeLabelLayout, NodeLayout } from './types';
-
 import {
   createLayoutProbeRecoverableError,
   isFatalProbeError,
   isLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../resolve/diagnostics';
+import type { Rect } from '../../shared/geometry';
+import type { PaintResolver } from '../resource';
 import { validateMarkerPrimitives } from '../resource';
 import { validateScenePrimitives } from '../scene-primitive';
 import { toAlphabeticBaselineY } from '../text';
 import { DEFAULT_LINE_HEIGHT_FACTOR } from './content/text';
 import { labelBorderPoint, labelBoxEdgeToward, labelCenter } from './label/geometry';
+import type { NodeLabelLayout, NodeLayout } from './types';
 
 /** 空 shape params */
 const EMPTY_SHAPE_PARAMS: JsonObject = {};

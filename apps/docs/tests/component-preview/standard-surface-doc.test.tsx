@@ -1,6 +1,7 @@
-import { SurfaceSchema } from '@retikz/standard';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
+import { SurfaceSchema } from '@retikz/standard';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';

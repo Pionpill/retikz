@@ -1,5 +1,4 @@
 import type { IRChild, IRScope, ResolvedTheme } from '@retikz/core';
-
 import { categoricalColorAt, DEFAULT_RESOLVED_THEME } from '@retikz/core';
 
 import type {
@@ -12,13 +11,12 @@ import type {
   IRGraphRelation,
   IRGroup,
 } from '../../schemas';
-import type { GraphAuthorLayer } from '../theme';
-import type { GraphResolveContext } from './types';
-
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { projectEntityGraphLayers, resolveEntity } from '../entity';
 import { projectRelationGraphLayers, resolveRelation } from '../relation';
+import type { GraphAuthorLayer } from '../theme';
 import { resolveGraphAuthorSurfaceDefaults } from '../theme';
+import type { GraphResolveContext } from './types';
 
 type GraphProjectionContext = Readonly<{
   layers: ReadonlyArray<GraphAuthorLayer>;

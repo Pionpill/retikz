@@ -1,9 +1,6 @@
 import type { IRChild } from '@retikz/core';
-
 import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
-
-import type { LegendInput } from '../../src/composites/presentation/legend/types';
 
 import {
   LegendContentKind,
@@ -13,6 +10,7 @@ import {
 } from '../../src/composites/presentation/legend/constants';
 import { createLegend } from '../../src/composites/presentation/legend/factory';
 import { LegendSchema } from '../../src/composites/presentation/legend/schema';
+import type { LegendInput } from '../../src/composites/presentation/legend/types';
 import { resolveLegend } from '../../src/resolve/legend';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 

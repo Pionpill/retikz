@@ -14,6 +14,7 @@ import type {
   RelationRouteStepKind,
   RelationRoutingKind,
 } from './constants';
+import { BUILTIN_MARK_TYPES } from './constants';
 import type {
   AnchorIdSchema,
   BlendModeStyleSchema,
@@ -64,8 +65,6 @@ import type {
   RelationTransformSchema,
   ShadowStyleSchema,
 } from './schema';
-
-import { BUILTIN_MARK_TYPES } from './constants';
 
 export type { IRBoxSpacing };
 

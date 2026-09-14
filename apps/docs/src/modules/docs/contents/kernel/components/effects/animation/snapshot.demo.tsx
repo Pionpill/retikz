@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { grow } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** snapshotAt={150}：把 grow（0→1，300ms）定格在 150ms ≈ 半大；静态一帧、不播放 */
 const Demo: FC = () => (

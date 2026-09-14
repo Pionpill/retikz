@@ -1,14 +1,12 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
+import { withInputEmbedAdapters } from '@retikz/react';
 import type { LegendInput } from '@retikz/standard';
+import { LegendContentKind } from '@retikz/standard';
 import type { InputLegend } from '@retikz/standard-vanilla';
+import { LegendInputEmbedAdapter } from '@retikz/standard-vanilla';
 import type { FC, ReactNode } from 'react';
 
-import { withInputEmbedAdapters } from '@retikz/react';
-import { LegendContentKind } from '@retikz/standard';
-import { LegendInputEmbedAdapter } from '@retikz/standard-vanilla';
-
 import type { StandardEmbeddableComponent } from '../shared';
-
 import { convertLegendItemsChildren, convertLegendRampChildren } from './convert-children';
 
 type LegendItemsContentInput = Extract<LegendInput['content'], { kind: 'items' }>;

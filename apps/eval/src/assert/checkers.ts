@@ -1,7 +1,7 @@
 import type { Scene } from '@retikz/core';
 
 import { allText, flattenPrimitives } from './primitives';
-import { type Assertion, type AssertionResult } from './types';
+import type { Assertion, AssertionResult } from './types';
 
 type Result = Pick<AssertionResult, 'pass' | 'actual'>;
 type Checker<TKind extends Assertion['kind']> = (

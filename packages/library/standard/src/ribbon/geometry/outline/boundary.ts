@@ -1,11 +1,9 @@
 import type { IRPosition, PathCommand } from '@retikz/core';
-
 import { isFinitePoint } from '@retikz/math';
-
-import type { RibbonSegment } from '../types';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import { sampleAtDistance } from '../centerline';
+import type { RibbonSegment } from '../types';
 
 export type BoundaryOutlineCommandsInput = {
   upper: ReadonlyArray<RibbonSegment>;

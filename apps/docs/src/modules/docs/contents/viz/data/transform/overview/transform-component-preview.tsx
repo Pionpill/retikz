@@ -1,5 +1,4 @@
 import type { IRDataSortTransform, IRDataSummarizeTransform } from '@retikz/data';
-
 import { IntervalMark, Plot, PlotAxis, PlotScale, PlotTransform } from '@retikz/plot-react';
 
 import { regionalOrders } from './transform-component.data';

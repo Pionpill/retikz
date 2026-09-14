@@ -1,5 +1,4 @@
 import type { IRDataModel } from '@retikz/data';
-
 import { DataFieldType, defineRowSelector, defineStatisticsReducer } from '@retikz/data';
 import { Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 import { Layout } from '@retikz/react';

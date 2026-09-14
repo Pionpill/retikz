@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Plot, PlotAxis, PlotScale, PointMark, ReferenceMark } from '@retikz/plot-react';
+import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

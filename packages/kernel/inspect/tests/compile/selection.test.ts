@@ -1,5 +1,4 @@
 import type { CompileObservation, IRScene } from '@retikz/core';
-
 import { describe, expect, it } from 'vitest';
 import { null as zodNull, number, strictObject, string } from 'zod';
 

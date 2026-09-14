@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node, Text } from '@retikz/react';
+import type { FC } from 'react';
 
 /** 位置比例尺解析流程图的本地化文字 */
 export type ScalePositionFlowLabels = {

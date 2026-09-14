@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import { compileToScene } from '../../src/compile/compile';
 import type { CubicPathCommand, PathPrim, ScenePrimitive } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene } from '../../src/compile/compile';
 
 const findPathPrim = (prims: ReadonlyArray<ScenePrimitive>): PathPrim => {
   for (const p of prims) {

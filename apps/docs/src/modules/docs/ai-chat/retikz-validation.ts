@@ -1,6 +1,5 @@
-import type { ZodError } from 'zod';
-
 import { SceneSchema } from '@retikz/core';
+import type { ZodError } from 'zod';
 
 import { parseRetikzJsx } from '@/lib';
 

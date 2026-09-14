@@ -1,9 +1,8 @@
 import type { BoundsRect } from '@retikz/math';
 
-import type { TableCellTranslation } from './cell';
-
 import { RetikzTableError } from '../../error';
 import { deepFreeze } from '../../shared';
+import type { TableCellTranslation } from './cell';
 
 /** Cell 内容 fit 计算支持的策略 */
 export type TableCellFit = 'none' | 'contain' | 'cover' | 'stretch';

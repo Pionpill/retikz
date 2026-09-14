@@ -1,7 +1,6 @@
 import { GraphStatus, RelationRole } from '@retikz/graph';
 
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { RelationStyleControlId } from './relation-style.controls';

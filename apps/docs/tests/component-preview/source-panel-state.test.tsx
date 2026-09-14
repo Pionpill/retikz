@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import type { FC } from 'react';
-import type { Root } from 'react-dom/client';
-
 import { useState } from 'react';
+import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
@@ -10,7 +9,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import type { ComponentRenderSource } from '../../src/modules/docs/components/component-preview';
 import type { SourcePanelState } from '../../src/modules/docs/components/component-preview/source-panel';
-
 import { useSourcePanelState } from '../../src/modules/docs/components/component-preview/source-panel';
 
 type ProbeProps = {

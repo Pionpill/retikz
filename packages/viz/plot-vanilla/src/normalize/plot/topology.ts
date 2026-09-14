@@ -1,9 +1,7 @@
 import type { IRPlotStackTransform, IRPlotTransform } from '@retikz/plot';
-
 import { PlotTransform } from '@retikz/plot';
 
 import type { NormalizationState, PlotAuthoringContext } from './contracts';
-
 import { buildShortcutTransforms } from './scale-coordinate';
 
 type Collected = NormalizationState;

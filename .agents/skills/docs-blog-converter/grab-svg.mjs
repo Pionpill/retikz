@@ -17,10 +17,10 @@
  */
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import http from 'node:http';
 import { tmpdir, platform } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import http from 'node:http';
 
 const { values } = parseArgs({
   options: {

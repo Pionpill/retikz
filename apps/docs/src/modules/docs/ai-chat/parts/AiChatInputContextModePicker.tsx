@@ -1,7 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
-import type { FC } from 'react';
-
 import { Feather, Layers, Scale } from 'lucide-react';
+import type { FC } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib';
 
 import type { ContextMode } from '../composeSystemPrompt';
-
 import { useAiChatStore } from '../useAiChatStore';
 
 const MODES: ReadonlyArray<ContextMode> = ['lean', 'balanced', 'heavy'];

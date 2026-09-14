@@ -5,7 +5,6 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } fr
 import type { LabState, LabStateAction } from '../lab-state';
 import type { BenchModule } from '../module-registry';
 import type { BenchCaseStatusValue } from '../test-catalog';
-
 import { ModuleSwitcher } from './ModuleSwitcher';
 import { SidebarSettings } from './SidebarSettings';
 import { TestCatalogNav } from './TestCatalogNav';

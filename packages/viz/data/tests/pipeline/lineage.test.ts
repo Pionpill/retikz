@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 
 import type { DataLineageEvent, ExternalRow } from '../../src';
-
 import {
   applyTransforms,
   applyTransformsWithLineage,

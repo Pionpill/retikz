@@ -1,7 +1,6 @@
 import type { IRScene } from '@retikz/core';
-import type { ReactNode } from 'react';
-
 import { normalizeScene } from '@retikz/vanilla';
+import type { ReactNode } from 'react';
 
 import { createInputScene } from '../../src/kernel/adapter/input-scene';
 

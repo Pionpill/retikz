@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { RuntimeRevision } from '../../src/owner';
-
 import { RetikzRuntimeErrorCode } from '../../src';
+import type { RuntimeRevision } from '../../src/owner';
 import { defineRuntimeOwner } from '../../src/owner';
 import {
   createRuntimeChangeSet,

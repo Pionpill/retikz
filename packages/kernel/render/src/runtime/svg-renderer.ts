@@ -11,15 +11,6 @@ import type { RuntimeIdentity } from '@retikz/runtime';
 import type { RuntimePreparedCommit } from '@retikz/runtime';
 
 import type { AnimationControls } from '../animation';
-import type { HydrationController, HydrationTarget } from '../hydration';
-import type { SvgNode } from '../svg';
-import type { RenderRuntimeConfig } from './config';
-import type { RenderFrameSnapshot } from './frame';
-import type { RenderReadonlyLayer } from './readonly-layer';
-import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
-import type { SceneAnimationDescriptorDiff } from './runtime-options';
-import type { RuntimeIdentityMap } from './shared';
-
 import { classifyProperty, evaluateTrack, isAutoplayTrigger, sceneHasAnimations } from '../animation';
 import {
   bindWaapiDescriptorElements,
@@ -27,21 +18,29 @@ import {
   recoverWaapiBindingSetupFailure,
 } from '../animation/retained';
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { HydrationController, HydrationTarget } from '../hydration';
 import {
   createContextBuilder,
   createHydrationController,
   createSvgAnimationControls,
   resolvePointViaLayout,
 } from '../hydration';
+import type { SvgNode } from '../svg';
 import { buildSvgDocument, buildSvgFragment, buildSvgReadonlyLayer } from '../svg';
+import type { RenderRuntimeConfig } from './config';
+import type { RenderFrameSnapshot } from './frame';
 import { mergeRenderHandlers } from './handlers';
+import type { RenderReadonlyLayer } from './readonly-layer';
 import { validateReadonlyLayers } from './readonly-layer';
+import type { RetainedSvgRenderer, RetainedSvgRendererImmutableOptions } from './renderer';
 import { defineRetainedRenderer } from './renderer';
+import type { SceneAnimationDescriptorDiff } from './runtime-options';
 import {
   diffSceneAnimationDescriptors,
   materializeEasingRegistry,
   SceneAnimationOccurrenceChangeKind,
 } from './runtime-options';
+import type { RuntimeIdentityMap } from './shared';
 import {
   createHydrationCleanupQueue,
   createPublicIdPrimitivePathMap,

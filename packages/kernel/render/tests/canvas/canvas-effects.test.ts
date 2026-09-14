@@ -1,6 +1,5 @@
-import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
-
 import { createCanvas } from '@napi-rs/canvas';
+import type { PathPrim, RectPrim, ResolvedArrowEnd, Scene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
 import { drawScene } from '../../src/canvas/draw-scene';

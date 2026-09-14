@@ -1,6 +1,5 @@
-import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from './types';
-
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
+import type { InspectionDiagnosticOrigin, InspectionSelectionTarget } from './types';
 
 /** 创建 selection admission 的结构化 origin */
 export const createInspectionSelectionDiagnosticOrigin = (

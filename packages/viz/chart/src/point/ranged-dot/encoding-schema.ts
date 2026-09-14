@@ -1,6 +1,5 @@
-import type { infer as ZodInfer } from 'zod';
-
 import { PlotFacetOptionsSchema } from '@retikz/plot';
+import type { infer as ZodInfer } from 'zod';
 import { strictObject } from 'zod';
 
 import {

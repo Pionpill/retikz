@@ -1,8 +1,7 @@
-import type { FC, ReactNode } from 'react';
-
 import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
 import { InspectLayout, InspectPath, InspectScope } from '@retikz/inspect/react';
 import { Node, Path, Scope, Step } from '@retikz/react';
+import type { FC, ReactNode } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 

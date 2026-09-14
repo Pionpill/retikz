@@ -1,6 +1,5 @@
-import type { ComponentProps, FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { ComponentProps, FC } from 'react';
 
 const REQUIRED_FILL = '#1f6286';
 const OPTIONAL_FILL = '#878787';

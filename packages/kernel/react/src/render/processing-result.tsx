@@ -1,9 +1,6 @@
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
-import type { HydrationHandlers } from '@retikz/render/hydration';
-import type { ProcessingResult } from '@retikz/vanilla';
-import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
-
 import { bindWaapiDescriptors, sceneHasAnimations } from '@retikz/render/animation';
+import type { HydrationHandlers } from '@retikz/render/hydration';
 import {
   createContextBuilder,
   createHydrationController,
@@ -13,6 +10,8 @@ import {
   resolveSvgElement,
 } from '@retikz/render/hydration';
 import { buildSvgFrameDocument } from '@retikz/render/svg';
+import type { ProcessingResult } from '@retikz/vanilla';
+import type { CSSProperties, FC, MutableRefObject, ReactElement, Ref } from 'react';
 import { cloneElement, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { CanvasHost } from './canvas';

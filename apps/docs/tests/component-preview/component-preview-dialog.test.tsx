@@ -1,22 +1,20 @@
 // @vitest-environment jsdom
 
 import type { FC, ReactNode } from 'react';
-
 import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
+import { ComponentPreviewDialog } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
+import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 import type {
   ComponentRenderSource,
   PreviewActionSlot,
   PreviewControlSlot,
   PreviewControlState,
 } from '../../src/modules/docs/components/component-preview/types';
-
-import { ComponentPreviewCard } from '../../src/modules/docs/components/component-preview/ComponentPreviewCard';
-import { ComponentPreviewDialog } from '../../src/modules/docs/components/component-preview/ComponentPreviewDialog';
-import { PreviewThemeStyle } from '../../src/modules/docs/components/component-preview/theme';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 

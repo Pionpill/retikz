@@ -1,5 +1,4 @@
 import type { AnyCellPresentationDefinition } from '../../contract';
-
 import { TEXT_CELL_PRESENTATION } from './text';
 
 /** 内置 Cell presentation definitions */

@@ -2,13 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { ContextMode, CurrentPage, DiagramFormatPreference } from './composeSystemPrompt';
-import type { Conversation } from './conversations-storage';
-import type { CustomProvider } from './providers';
-import type { ChatErrorKind, ChatMessage, ProviderId } from './providers';
-import type { AutoRepairMode } from './types';
-
 import { composeSystem } from './composeSystemPrompt';
 import { DEFAULT_MODELS, RETIKZ_REPAIR_MAX_BY_MODE } from './constants';
+import type { Conversation } from './conversations-storage';
 import {
   CONVERSATION_SCHEMA_VERSION,
   deleteConversationFromStorage,
@@ -16,8 +12,11 @@ import {
   loadAllConversations,
   saveConversation,
 } from './conversations-storage';
+import type { CustomProvider } from './providers';
+import type { ChatErrorKind, ChatMessage, ProviderId } from './providers';
 import { isBuiltInProviderId, resolveProvider } from './providers';
 import { buildRepairPrompt, findInvalidRetikzBlocks } from './retikz-validation';
+import type { AutoRepairMode } from './types';
 
 export type { AutoRepairMode } from './types';
 
@@ -158,7 +157,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
         const id = state.activeConversationId;
         if (!id) return;
         const existing = state.conversations[id];
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Record<string,V> index 在 TS 默认 typings 下永远返回 V，但运行时 id 不存在时确实是 undefined；保留防御
+        // oxlint-disable-next-line typescript/no-unnecessary-condition -- Record<string,V> index 在 TS 默认 typings 下永远返回 V，但运行时 id 不存在时确实是 undefined；保留防御
         if (!existing) return;
         const now = Date.now();
         const updated: Conversation = {
@@ -414,7 +413,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
             return;
           }
           const target = state.conversations[id];
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
+          // oxlint-disable-next-line typescript/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
           if (!target) return;
           set({
             activeConversationId: id,
@@ -443,7 +442,7 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
           if (!trimmed) return;
           const state = get();
           const existing = state.conversations[id];
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
+          // oxlint-disable-next-line typescript/no-unnecessary-condition -- 同上，运行时 id 不存在时索引返回 undefined
           if (!existing) return;
           const updated: Conversation = { ...existing, title: trimmed, updatedAt: Date.now() };
           set(s => ({ conversations: { ...s.conversations, [id]: updated } }));

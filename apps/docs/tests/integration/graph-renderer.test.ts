@@ -1,16 +1,15 @@
 import type { IRScene, Scene, ScenePrimitive } from '@retikz/core';
-import type { IRGraph } from '@retikz/graph';
-import type { InputGraph } from '@retikz/graph-vanilla';
-import type { FC } from 'react';
-
 import { compileToScene, ThemeMode } from '@retikz/core';
+import type { IRGraph } from '@retikz/graph';
 import { createGraphDefinitions } from '@retikz/graph';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
+import type { InputGraph } from '@retikz/graph-vanilla';
 import { createGraphVanillaAdapters, graph, GraphInputEmbedAdapter, normalizeGraph } from '@retikz/graph-vanilla';
 import { Node } from '@retikz/react';
 import { drawScene } from '@retikz/render/canvas';
 import { renderToSvgString } from '@retikz/render/svg';
 import { normalizeScene, renderToSvgString as renderVanillaToSvgString, scene } from '@retikz/vanilla';
+import type { FC } from 'react';
 import { createElement, Fragment } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 

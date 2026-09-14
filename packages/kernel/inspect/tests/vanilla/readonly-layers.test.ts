@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { InspectionPlane } from '../../src';
-
 import { inspectionPlaneToReadonlyLayers } from '../../src/vanilla/readonly-layers';
 
 describe('Inspection plane Vanilla adapter', () => {

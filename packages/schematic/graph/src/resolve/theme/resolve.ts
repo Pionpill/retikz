@@ -1,10 +1,11 @@
 import type { ResolvedTheme } from '@retikz/core';
 import type { JsonObject, JsonValue } from '@retikz/foundation';
-
 import { mergeProperties } from '@retikz/foundation';
 import { array, strictObject } from 'zod';
 
 import type { GraphThemeStyleDefinition, GraphThemeStyleSource } from '../../contract';
+import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
+import { getDefaultGraphThemePreset } from '../../providers';
 import type {
   IRGraphDefaults,
   IRGraphEntityDefaults,
@@ -17,11 +18,8 @@ import type {
   IRGraphRule,
   IRGraphSurfaceDefaults,
 } from '../../schemas';
-import type { GraphAuthorLayer, GraphThemeResolution } from './types';
-
-import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
-import { getDefaultGraphThemePreset } from '../../providers';
 import { GraphDefaultsSchema, GraphRuleSchema } from '../../schemas';
+import type { GraphAuthorLayer, GraphThemeResolution } from './types';
 
 /** 按字段覆盖一个已选定的命名组，空组不物化 */
 const mergeFields = <T extends object>(current: T | undefined, override: T | undefined): T | undefined => {

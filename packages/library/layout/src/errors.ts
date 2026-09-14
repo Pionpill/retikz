@@ -1,5 +1,4 @@
 import type { ValueOf } from '@retikz/foundation';
-
 import { RetikzError } from '@retikz/foundation';
 
 /** Layout 包结构化错误码 */

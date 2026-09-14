@@ -1,7 +1,6 @@
 import { ZodLiteral, ZodObject } from 'zod';
 
 import type { AnyTableStructureDefinition } from '../../contract';
-
 import { RetikzTableError } from '../../error';
 import { RESERVED_TABLE_STRUCTURE_KINDS } from '../../schemas';
 import { BUILTIN_TABLE_STRUCTURES } from './definitions';

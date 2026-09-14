@@ -1,5 +1,4 @@
 import type { InputEmbedAdapter } from '@retikz/vanilla';
-
 import { describe, expect, it } from 'vitest';
 
 import { isEmbeddableMarked, resolveInputEmbedAdapter } from '../../../src';

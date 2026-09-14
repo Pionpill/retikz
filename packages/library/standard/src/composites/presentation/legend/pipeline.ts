@@ -4,6 +4,7 @@ import type {
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
 } from '@retikz/core';
+import { LayoutAxisProposalKind } from '@retikz/core';
 import type {
   LayoutArtifactItemBase,
   LayoutChildHandle,
@@ -12,8 +13,6 @@ import type {
   PairedFlowPlan,
   PlacedLayoutChild,
 } from '@retikz/layout/compose';
-
-import { LayoutAxisProposalKind } from '@retikz/core';
 import {
   compensatedLayoutSum,
   contentRectOf,
@@ -35,8 +34,13 @@ import {
   unionLayoutArtifactRects,
 } from '@retikz/layout/compose';
 
+import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import type { CanonicalLegend, CanonicalLegendItemsContent } from '../../../resolve/legend';
+import { resolveLegend } from '../../../resolve/legend';
+import { LegendContentKind, LegendDirection } from './constants';
 import type { MeasuredLegendChild, MeasuredLegendItem } from './providers';
+import { pairedFlowItemsOf } from './providers';
+import { createLegendRampStructure, translateLegendRampStructure } from './providers';
 import type {
   IRLegend,
   IRLegendItem,
@@ -45,12 +49,6 @@ import type {
   LegendPlacedChildArtifact,
   LegendRampArtifact,
 } from './types';
-
-import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
-import { resolveLegend } from '../../../resolve/legend';
-import { LegendContentKind, LegendDirection } from './constants';
-import { pairedFlowItemsOf } from './providers';
-import { createLegendRampStructure, translateLegendRampStructure } from './providers';
 
 /** 把已度量 item 与最终 probe 所需 handle 组合 */
 type CompileMeasuredItem = MeasuredLegendItem &

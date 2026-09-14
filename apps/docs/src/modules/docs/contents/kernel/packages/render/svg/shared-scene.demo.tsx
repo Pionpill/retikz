@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout } from '@retikz/react';
+import type { FC } from 'react';
 
 import { sharedRendererScene } from '../overview/shared-renderer-scene.data';
 

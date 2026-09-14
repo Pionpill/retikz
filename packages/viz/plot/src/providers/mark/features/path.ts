@@ -1,32 +1,22 @@
+import type { IRChild, IRCoordinate, IRNodeLabel, IRPath, IRScope, IRStep } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-
-import {
-  type IRChild,
-  type IRCoordinate,
-  type IRNodeLabel,
-  type IRPath,
-  type IRScope,
-  type IRStep,
-} from '@retikz/core';
 import { compareRowsByFieldPath, inferCategoryDomain, resolveFieldPath } from '@retikz/data';
 
-import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark, PathCurveValue } from '../../../schemas';
-import type { PolarVertex } from '../../coordinate';
-import type { MarkPaint } from '../shared';
-
-import {
-  type ChannelValueResolver,
-  type CoordinateFrame,
-  type FieldCollector,
-  type MarkChannels,
-  type MarkDefinition,
-  type MarkLoweringContext,
-  type MarkProvenance,
+import type {
+  ChannelValueResolver,
+  CoordinateFrame,
+  FieldCollector,
+  MarkChannels,
+  MarkDefinition,
+  MarkLoweringContext,
+  MarkProvenance,
 } from '../../../contract';
 import { seriesPathMeta, slug } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
+import type { IRPlotMark, IRPlotPathClosure, IRPlotPathMark, PathCurveValue } from '../../../schemas';
 import { PathClosureKind, PathCurve, PathMarkSchema, PlotMark } from '../../../schemas';
 import { channelValue } from '../../channel/shared';
+import type { PolarVertex } from '../../coordinate';
 import {
   densifyPolarSegments,
   isCartesianCoordinateFrame,
@@ -34,6 +24,7 @@ import {
   isPolarCoordinateFrame,
   toPolarVertex,
 } from '../../coordinate';
+import type { MarkPaint } from '../shared';
 import {
   applyPathChannelDeliveries,
   attachMarkLayer,

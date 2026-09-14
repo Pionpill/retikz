@@ -1,6 +1,5 @@
 import type { ShapeDefinition } from '../../contract';
 import type { BuiltinShape } from '../../schemas';
-
 import { defineBuiltinProviderArray } from '../registry/index';
 import { ellipseShape } from './ellipse';
 import { polygon } from './polygon';

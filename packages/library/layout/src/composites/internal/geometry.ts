@@ -1,11 +1,9 @@
 import type { IRBoxSpacing, IRClip, LayoutAxisProposal } from '@retikz/core';
+import { resolveBoxSpacing } from '@retikz/core';
 import type { BoundsRect } from '@retikz/math';
 
-import { resolveBoxSpacing } from '@retikz/core';
-
-import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
-
 import { RetikzLayoutError, RetikzLayoutErrorCode } from '../../errors';
+import type { IRLayoutAxisSize, LayoutAlignmentValue } from '../shared';
 import { LayoutAlignment, LayoutAxisSizeKind } from '../shared';
 
 /** Layout solver 使用的有限非负矩形 */

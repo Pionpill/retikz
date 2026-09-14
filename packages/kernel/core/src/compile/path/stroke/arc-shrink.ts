@@ -2,7 +2,6 @@ import { DEFAULT_EPSILON } from '@retikz/math';
 
 import type { ArcPathCommand, EllipseArcPathCommand } from '../../../contract';
 import type { IRPosition } from '../../../schemas';
-
 import { alignAngleSweep, DEG_TO_RAD, RAD_TO_DEG } from '../../../shared/geometry';
 
 type ArcCommand = ArcPathCommand | EllipseArcPathCommand;

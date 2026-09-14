@@ -1,6 +1,5 @@
-﻿import type { FC, ReactNode } from 'react';
-
-import { ChevronDown, ChevronUp, Copy, Link2, Quote, Send, Sparkles } from 'lucide-react';
+﻿import { ChevronDown, ChevronUp, Copy, Link2, Quote, Send, Sparkles } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';

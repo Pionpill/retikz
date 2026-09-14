@@ -1,6 +1,5 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlotGuide, IRPlotScaleOperation } from '@retikz/plot';
-
 import { PlotGuide } from '@retikz/plot';
 
 import type { ChartGuideDefaultsResolveContext } from '../../_chart/contract';
@@ -9,9 +8,8 @@ import type {
   ChartRecipeResolveContext,
   ChartSemanticMarkResolution,
 } from '../../_chart/contract/recipe';
-import type { IRPointRecipeGuides } from './schema';
-
 import { pointAxisGuidesOf, pointCartesian2DOf } from './plot';
+import type { IRPointRecipeGuides } from './schema';
 
 /** 生成 Point recipe 的共享 scaffold 与 guide */
 export const pointResolutionOf = (

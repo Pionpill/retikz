@@ -1,7 +1,5 @@
 import type { IRScene } from '@retikz/core';
-
 import { CompositeBaseSchema, defineComposite, defineThemeStyle, NodeOwnerOutputSchema } from '@retikz/core';
-import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, ZodError } from 'zod';
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import type {
   EffectiveFlowLayout,
   FlowLayoutElementInput,
@@ -7,8 +8,6 @@ import type {
   FlowLayoutPlacementOutput,
   FlowLayoutRelationInput,
 } from '../../src/flow';
-
-import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../src/errors';
 import { LayeredFlowLayoutDefinition } from '../../src/flow';
 import { executeFlowLayout } from '../../src/flow/pipeline';
 

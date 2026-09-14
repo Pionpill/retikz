@@ -1,10 +1,8 @@
 import type { RuntimeIdentity } from '@retikz/runtime';
-
 import { createRuntimeIdentityLookup, runtimeIdentityEquals } from '@retikz/runtime';
 
-import type { HydrationController } from '../hydration';
-
 import { RetikzRenderError, RetikzRenderErrorCode } from '../error';
+import type { HydrationController } from '../hydration';
 import { recoverHydrationSetupFailure } from '../hydration/setup-failure';
 
 /** 判断动态值是否为普通对象 */

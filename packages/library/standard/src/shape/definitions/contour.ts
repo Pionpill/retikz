@@ -1,7 +1,4 @@
 import type { CoreDependencyProvider, Rect, ScenePrimitive } from '@retikz/core';
-import type { Position } from '@retikz/math';
-import type { infer as ZodInfer } from 'zod';
-
 import {
   boundaryFromContour,
   contourCommands,
@@ -14,7 +11,9 @@ import {
   verticesToSegments,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
+import type { Position } from '@retikz/math';
 import { boundsOf, centerOfBounds, halfAxesOfBounds } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 import { array, number, strictObject, tuple } from 'zod';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../errors';

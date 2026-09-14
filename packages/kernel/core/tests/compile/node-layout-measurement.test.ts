@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CompiledNodeLayout, LowerTex, TextMeasurer } from '../../src/compile';
+import { compileToScene, CompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import type { CompileWarning } from '../../src/compile/warning';
 import type { TextPrim } from '../../src/contract';
 import type { IRScene } from '../../src/schemas';
-
-import { compileToScene, CompileWarningCode, isNodeLayoutCompileArtifact } from '../../src/compile';
 import { flattenPrims } from '../helpers/flatten';
 
 const measureText: TextMeasurer = (text, font) => ({

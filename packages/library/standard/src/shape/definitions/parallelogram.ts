@@ -1,9 +1,8 @@
 import type { CoreDependencyProvider } from '@retikz/core';
-import type { Position } from '@retikz/math';
-import type { infer as ZodInfer } from 'zod';
-
 import { defineShape, DEG_TO_RAD } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
+import type { Position } from '@retikz/math';
+import type { infer as ZodInfer } from 'zod';
 import { enum as zodEnum, number, strictObject } from 'zod';
 
 import { StandardShapeName } from '../constants';

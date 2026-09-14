@@ -1,12 +1,10 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { InputEntity } from '@retikz/graph-vanilla';
+import { EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 
-import { EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
-
 import type { GraphEmbeddableComponent } from '../shared';
-
 import { collectEntityInput } from './authoring';
 
 /** Entity Source 的 React 编写参数 */

@@ -1,6 +1,7 @@
 import { pointAtArcAngle } from '@retikz/math';
 
 import type { Transform } from '../../contract';
+import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import type {
   IRArrowMark,
   IRGeometryLabel,
@@ -13,22 +14,6 @@ import type {
   IRTarget,
   IRTextRun,
 } from '../../schemas';
-import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
-import type {
-  CanonicalGeometryLabel,
-  CanonicalPath,
-  CanonicalStep,
-  PathResolution,
-  PathResolveContext,
-  PathTargetResolver,
-  ResolvedArrowMark,
-  ResolvedGeometryLabel,
-  ResolvedPathSource,
-  ResolvedStepSource,
-  TargetResolution,
-} from './types';
-
-import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { PathKind } from '../../schemas';
 import {
   isAtPositionLike,
@@ -43,7 +28,21 @@ import {
 import { resolvePaint } from '../resource';
 import { resolveContextualColor, resolveEffectiveLabelDefault, resolveEffectivePath } from '../style';
 import { resolveDropShadow } from '../style';
+import type { ResolvedInlineSourceRun, ResolvedLabelTextBlock, ResolvedTextLine } from '../text';
 import { resolvePathKind } from './provider';
+import type {
+  CanonicalGeometryLabel,
+  CanonicalPath,
+  CanonicalStep,
+  PathResolution,
+  PathResolveContext,
+  PathTargetResolver,
+  ResolvedArrowMark,
+  ResolvedGeometryLabel,
+  ResolvedPathSource,
+  ResolvedStepSource,
+  TargetResolution,
+} from './types';
 
 const LABEL_POSITION: Record<string, number> = {
   'at-start': 0,

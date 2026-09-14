@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /** IRStep 序列到路径命令与边标注的局部编译流程图 */
 const Demo: FC = () => (

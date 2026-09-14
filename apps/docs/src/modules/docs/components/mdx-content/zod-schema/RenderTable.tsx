@@ -1,12 +1,10 @@
 import type { FC } from 'react';
-
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib';
 
-import type { TableRow } from './types';
-
 import { RenderType } from './RenderType';
+import type { TableRow } from './types';
 
 type Props = {
   rows: Array<TableRow>;

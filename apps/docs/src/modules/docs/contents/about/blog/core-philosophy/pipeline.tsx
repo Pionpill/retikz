@@ -1,10 +1,8 @@
-import type { FC } from 'react';
-
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import { LegendSchema } from '@retikz/standard';
+import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
-
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 
 import { pipelineI18n } from './pipeline.i18n';

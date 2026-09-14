@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
 
 /**
  * 通过 Coordinate 定位再连接

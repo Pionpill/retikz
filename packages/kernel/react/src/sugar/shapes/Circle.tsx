@@ -1,11 +1,10 @@
 import type { IRTarget } from '@retikz/core';
 import type { FC } from 'react';
 
-import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './shape-helpers';
-
 import { RetikzReactError, RetikzReactErrorCode } from '../../error';
 import { Path } from '../../kernel/components';
 import { Step } from '../../kernel/components';
+import type { AngleInput, BoxAdjustmentProps, PathVisualProps, ShapeBox } from './shape-helpers';
 import {
   adjustShapeBox,
   boxCenter,

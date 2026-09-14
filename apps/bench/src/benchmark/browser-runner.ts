@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
 import { chromium } from 'playwright';
 import { createServer, loadEnv } from 'vite';
 
-import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
-
 import { resolveBenchPort } from '../../../dev-port';
+import type { BrowserBenchmarkOptions, BrowserBenchmarkResult, RetikzBenchWindow } from './browser-contract';
 
 /** environment.json 中与 Chromium runner 相关的冻结字段 */
 export type BrowserRunnerEnvironment = Readonly<{

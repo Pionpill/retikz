@@ -1,11 +1,9 @@
 import type { AnyCompositeDefinition, IRPath } from '@retikz/core';
-
 import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite, SceneSchema, ThemeMode } from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
 import type { InputChild, InputEmbedAdapter, InputScene } from '../../src';
-
 import { coordinate, embed, InputLayerCache, layer, node, normalizeScene, path, scene, scope } from '../../src';
 
 it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入嵌套 Core IR', () => {

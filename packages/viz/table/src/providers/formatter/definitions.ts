@@ -1,5 +1,4 @@
 import type { AnyCellFormatterDefinition } from '../../contract';
-
 import { BOOLEAN_CELL_FORMATTER } from './boolean';
 import { IDENTITY_CELL_FORMATTER } from './identity';
 import { NUMBER_CELL_FORMATTER } from './number';

@@ -1,17 +1,15 @@
 import type { JsonObject } from '@retikz/foundation';
 import type { Position } from '@retikz/math';
-import type { ZodType } from 'zod';
-
 import { describe, expect, it } from 'vitest';
+import type { ZodType } from 'zod';
 import { number, object, strictObject } from 'zod';
 
-import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
-import type { IRScene } from '../../../src/schemas';
-import type { Rect } from '../../../src/shared/geometry';
-
 import { compileToScene } from '../../../src/compile/compile';
+import type { ScenePrimitive, ShapeDefinition } from '../../../src/contract';
 import { defineShape } from '../../../src/contract';
+import type { IRScene } from '../../../src/schemas';
 import { NodeSchema, ShapeRefSchema, ShapeValueSchema } from '../../../src/schemas';
+import type { Rect } from '../../../src/shared/geometry';
 import { flattenPrims } from '../../helpers/flatten';
 
 const findByType = <T extends ScenePrimitive['type']>(

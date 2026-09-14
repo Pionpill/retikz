@@ -1,5 +1,4 @@
 import type { IRDataSelectorOperation, IRDataSelectTransform } from '@retikz/data';
-
 import { Plot, PlotAxis, PlotTransform, PointMark } from '@retikz/plot-react';
 
 import { cityRevenue } from './transform-select.data';

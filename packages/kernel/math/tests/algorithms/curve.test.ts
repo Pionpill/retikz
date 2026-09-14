@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CubicSegment, CurveSegment, Position } from '../../src';
-
 import { curve } from '../../src';
 
 /** 一段所有坐标皆有限 */

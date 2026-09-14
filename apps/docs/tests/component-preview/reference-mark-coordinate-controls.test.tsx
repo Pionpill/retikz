@@ -1,11 +1,8 @@
 import type { ComponentType } from 'react';
-
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '@/modules/docs/components/component-preview';
-import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { previewControlContract as bandContract } from '@/modules/docs/contents/viz/plot/mark/reference/rule-band.controls';
@@ -18,6 +15,7 @@ import { previewControlContract as regionContract } from '@/modules/docs/content
 import RegionDemo from '@/modules/docs/contents/viz/plot/mark/reference/rule-region.demo';
 import { previewControlContract as thresholdContract } from '@/modules/docs/contents/viz/plot/mark/reference/rule-threshold.controls';
 import ThresholdDemo from '@/modules/docs/contents/viz/plot/mark/reference/rule-threshold.demo';
+import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type CoordinateScenario = {
   name: string;

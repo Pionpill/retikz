@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { GroupPrim, IRScene, PathPrim, RotateTransform, ScaleTransform, ScenePrimitive } from '../../src';
-
 import { compileToScene } from '../../src/compile/compile';
 import { arrowMarks } from '../helpers/arrow-marks';
 

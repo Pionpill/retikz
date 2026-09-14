@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { strictObject } from 'zod';
 
 import type { CoreDependencyProvider, CoreProviderContribution, CoreProviderKey } from '../../../src';
-
 import { defineShape, resolveCoreProviderDependencies } from '../../../src';
 
 const key: CoreProviderKey = { capability: 'shape', name: 'cross' };

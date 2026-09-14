@@ -1,5 +1,4 @@
 import type { FC, ReactNode } from 'react';
-
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useSearchParams } from 'react-router';
@@ -7,12 +6,11 @@ import { Link, useLocation, useSearchParams } from 'react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSectionsByArea } from '@/modules/docs/data';
 
-import type { ShowcasePageEntry } from './types';
-
 import { ComponentPreviewThumbnail, DemoLocationContext } from '../component-preview';
 import { MarkdownInline } from '../inline-markdown';
 import { collectShowcasePages } from './collect-showcase-pages';
 import { useShowcasePageDescription } from './hooks';
+import type { ShowcasePageEntry } from './types';
 
 export type ShowcaseTabsProps = {
   /** 当前 Type 人工策展的同类示例 */

@@ -1,6 +1,5 @@
-import type { FC } from 'react';
-
 import { Layout, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
 
 /** Compare centered defaults with explicit continuous and forced-gap labels */
 const Demo: FC = () => (

@@ -1,10 +1,8 @@
 import type { JsonObject } from '@retikz/foundation';
-
 import { assertNonEmptyString } from '@retikz/foundation';
 
-import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } from './profile-types';
-
 import { RetikzStandardError, RetikzStandardErrorCode } from '../errors';
+import type { RibbonWidthProfileDefinition, RibbonWidthProfileDefinitionInput } from './profile-types';
 
 /**
  * 定义 ribbon width profile 注册项并校验名称

@@ -32,4 +32,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 比较 KDE 带宽与采样数的动态试验场 */
-export default controlledPreview.Component;
+const Preview = controlledPreview.Component;
+
+export default Preview;

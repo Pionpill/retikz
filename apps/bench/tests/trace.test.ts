@@ -1,5 +1,4 @@
 import type { PerformanceTraceRecord } from '@retikz/runtime';
-
 import {
   createRuntimeTraceReporter,
   PerformanceTraceOutcome,

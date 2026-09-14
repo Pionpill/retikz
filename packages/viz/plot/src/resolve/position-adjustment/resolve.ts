@@ -1,8 +1,7 @@
 import type { AnyPositionAdjustmentDefinition } from '../../contract';
+import { RetikzPlotError } from '../../error';
 import type { IRPlotPositionAdjustmentOperation } from '../../schemas';
 import type { PositionAdjustmentOperationResolution } from './types';
-
-import { RetikzPlotError } from '../../error';
 
 /** 查找并校验 Position Adjustment operation */
 export const resolvePositionAdjustmentOperation = (

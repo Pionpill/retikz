@@ -1,5 +1,4 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
-
 import { definePreviewControls } from '@/modules/docs/preview';
 
 import { POINT_COORDINATE_1D_CONTROL_IDS } from './point-coordinate-1d.controls';

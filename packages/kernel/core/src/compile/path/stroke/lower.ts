@@ -1,15 +1,14 @@
 import { isFiniteNumber, isFinitePoint } from '@retikz/math';
 
 import type { PathCommand } from '../../../contract';
-import type { PathGeneratorResolution } from '../../../resolve';
-import type { IRPosition } from '../../../schemas';
-
 import { RetikzCoreError, RetikzCoreErrorCode } from '../../../error';
+import type { PathGeneratorResolution } from '../../../resolve';
 import {
   createCompositeContractError,
   createLayoutProbeRecoverableError,
   safeThrownDetail,
 } from '../../../resolve/diagnostics';
+import type { IRPosition } from '../../../schemas';
 import { withProviderOutputValidationBoundary } from '../../scene-primitive';
 
 /** 校验 generator 命令的不变量并返回只含 canonical 字段的 detached command */

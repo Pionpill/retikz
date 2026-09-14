@@ -3,10 +3,9 @@ import type {
   RolePositionAdjustmentContext,
   RolePositionAdjustmentDefinition,
 } from '../../contract';
-import type { IRPlotJitterPositionAdjustment } from '../../schemas';
-
 import { definePositionAdjustment } from '../../contract';
 import { RetikzPlotError } from '../../error';
+import type { IRPlotJitterPositionAdjustment } from '../../schemas';
 import { JitterPositionAdjustmentSchema } from '../../schemas';
 
 /** 稳定的 32 位伪随机序列；只由显式 seed 与 target 顺序决定 */

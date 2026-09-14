@@ -1,12 +1,10 @@
 import type { AxisAlignedBounds, Position } from '@retikz/math';
-import type { FC } from 'react';
-
 import { boundsOf, boundsToRect, collectArcBoundingCandidates } from '@retikz/math';
 import { Arc, Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import type { FC } from 'react';
 import { Fragment } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
-
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { boundsPlaygroundControls, previewControlContract } from './bounds-playground.controls';

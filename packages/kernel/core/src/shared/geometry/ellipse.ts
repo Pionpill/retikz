@@ -1,9 +1,7 @@
 import type { Ellipse, Position } from '@retikz/math';
-
 import { ellipse as mathEllipse } from '@retikz/math';
 
 import type { AnchorValue, SideValue } from '../anchor';
-
 import { Anchor } from '../anchor';
 import { DEG_TO_RAD } from './angle';
 import { edgeAngleDeg } from './edge';

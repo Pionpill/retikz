@@ -1,6 +1,5 @@
 import type { ValueOf } from '@retikz/foundation';
 import type { LucideIcon } from 'lucide-react';
-
 import { ChartNoAxesCombined, Cpu, TableProperties } from 'lucide-react';
 
 /** Bench 可承载的产品模块 */

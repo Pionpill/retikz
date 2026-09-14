@@ -1,5 +1,4 @@
 import type { TFunction } from 'i18next';
-
 import { describe, expect, it } from 'vitest';
 
 import { kernelSection } from '@/modules/docs/data';

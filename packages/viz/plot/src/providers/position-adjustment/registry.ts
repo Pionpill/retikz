@@ -1,5 +1,4 @@
 import type { AnyPositionAdjustmentDefinition } from '../../contract';
-
 import { extractPositionAdjustmentKind } from '../../contract';
 import { RetikzPlotError } from '../../error';
 import { jitterPositionAdjustment } from './jitter';

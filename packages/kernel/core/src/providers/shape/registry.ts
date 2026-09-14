@@ -1,5 +1,4 @@
 import type { ShapeDefinition } from '../../contract';
-
 import { resolveProviderRegistry } from '../registry/index';
 import { BUILTIN_SHAPES } from './definitions';
 

@@ -6,7 +6,6 @@ import type {
   ExternalRow,
   TransformContext,
 } from '@retikz/data';
-
 import {
   applyFieldResolver,
   applyTransformsToDataView,
@@ -21,9 +20,6 @@ import {
 } from '@retikz/data';
 
 import type { AnyMarkDefinition, AnyPositionAdjustmentDefinition, AnyScaleDefinition } from '../../contract';
-import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
-import type { LowerPlotsOptions } from './types';
-
 import { RetikzPlotError } from '../../error';
 import {
   resolveMarkRegistry,
@@ -31,7 +27,9 @@ import {
   resolvePositionAdjustmentRegistry,
   resolveScaleRegistry,
 } from '../../providers';
+import type { IRPlot, IRPlotMarkOperation, IRPlotTransform } from '../../schemas';
 import { collectSourceFields } from '../source-fields';
+import type { LowerPlotsOptions } from './types';
 
 /** 对单个mark应用局部transform，返回该mark实际消费的完整DataView */
 export const applyMarkTransforms = (

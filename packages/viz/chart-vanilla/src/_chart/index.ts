@@ -1,12 +1,10 @@
+import { CHART_NAMESPACE } from '@retikz/chart';
 import type { CompileResult } from '@retikz/core';
 import type { RenderToStringOptions } from '@retikz/vanilla';
-
-import { CHART_NAMESPACE } from '@retikz/chart';
 import { embed, renderToSvgString, scene, toSceneResult } from '@retikz/vanilla';
 
-import type { ChartAuthoringResult } from '../shared/types';
-
 import { RetikzChartVanillaError } from '../error';
+import type { ChartAuthoringResult } from '../shared/types';
 import { ChartInputEmbedAdapter } from './adapter';
 
 export type { InputChartCoordinate } from '../normalize/chart';
