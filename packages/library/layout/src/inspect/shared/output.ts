@@ -7,7 +7,7 @@ import type {
   LayoutArtifactRect,
   LayoutSpacingArtifact,
 } from '../../composites/shared';
-import type { ResolvedBaseLayoutInspectOptions } from './types';
+import type { CanonicalBaseLayoutInspectOptions } from '../resolve/shared';
 
 import { LayoutSpacingKind } from '../../composites/shared';
 
@@ -338,7 +338,7 @@ export const inspectLayoutSpacing = (
 export const inspectLayoutArtifactBase = (
   container: LayoutArtifactContainer,
   items: ReadonlyArray<LayoutArtifactItemBase>,
-  options: ResolvedBaseLayoutInspectOptions,
+  options: CanonicalBaseLayoutInspectOptions,
   appearance: InspectionAppearanceContext,
   alignmentGuideDimension: 'x' | 'y' = 'y',
 ): LayoutInspectionLayers => {

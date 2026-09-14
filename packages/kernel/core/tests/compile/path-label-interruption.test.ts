@@ -93,6 +93,28 @@ describe('Stroke Path label interruption', () => {
     expect(flattenPrims(scene.primitives).some(primitive => 'id' in primitive && primitive.id === 'edge')).toBe(true);
   });
 
+  it('adds the default four-unit clearance to both sides of an interrupted label gap', () => {
+    const defaultGap = compile(horizontalHostLabelPath({ text: 'default', sloped: true }));
+    const noGap = compile(horizontalHostLabelPath({ text: 'none', sloped: true, gap: 0 }));
+    const explicitGap = compile(horizontalHostLabelPath({ text: 'wide', sloped: true, gap: 8 }));
+    const defaultFragments = strokeFragments(defaultGap.primitives).sort(
+      (left, right) => firstMove(left)[0] - firstMove(right)[0],
+    );
+    const noGapFragments = strokeFragments(noGap.primitives).sort(
+      (left, right) => firstMove(left)[0] - firstMove(right)[0],
+    );
+    const explicitGapFragments = strokeFragments(explicitGap.primitives).sort(
+      (left, right) => firstMove(left)[0] - firstMove(right)[0],
+    );
+
+    expect(lastLine(defaultFragments[0])[0]).toBe(35.5);
+    expect(firstMove(defaultFragments[1])[0]).toBe(64.5);
+    expect(lastLine(noGapFragments[0])[0]).toBe(39.5);
+    expect(firstMove(noGapFragments[1])[0]).toBe(60.5);
+    expect(lastLine(explicitGapFragments[0])[0]).toBe(31.5);
+    expect(firstMove(explicitGapFragments[1])[0]).toBe(68.5);
+  });
+
   it('keeps fragments under one logical path owner with id, meta, and animations', () => {
     const animation = {
       property: 'opacity' as const,
@@ -173,6 +195,45 @@ describe('Stroke Path label interruption', () => {
     );
 
     expect(strokeFragments(scene.primitives)).toHaveLength(2);
+  });
+
+  it('uses the whole multi-line label block for a sloped interruption', () => {
+    const vertical = (text: string | Array<string>) => {
+      const ir: IRScene = {
+        version: 1,
+        type: 'scene',
+        children: [
+          {
+            type: 'path',
+            label: { text, sloped: true },
+            children: [
+              { type: 'step', kind: 'move', to: [0, 0] },
+              { type: 'step', kind: 'line', to: [0, 100] },
+            ],
+            style: { stroke: STROKE },
+          },
+        ],
+      };
+      return compileToScene(ir, {
+        measureText: value => ({ width: value.length * 4, height: 10, ascent: 8, descent: 2 }),
+      }).scene;
+    };
+    const single = strokeFragments(vertical('single').primitives).sort(
+      (left, right) => firstMove(left)[1] - firstMove(right)[1],
+    );
+    const multiScene = vertical(['first', 'second label']);
+    const multi = strokeFragments(multiScene.primitives).sort(
+      (left, right) => firstMove(left)[1] - firstMove(right)[1],
+    );
+    const hardBreakScene = vertical('first\nsecond label');
+
+    expect(multi).toHaveLength(2);
+    expect(lastLine(multi[0])[1]).toBeLessThan(lastLine(single[0])[1]);
+    expect(firstMove(multi[1])[1]).toBeGreaterThan(firstMove(single[1])[1]);
+    expect(textPrim(multiScene.primitives, 'first')).toBeDefined();
+    expect(textPrim(multiScene.primitives, 'second label')).toBeDefined();
+    expect(textPrim(hardBreakScene.primitives, 'first')).toBeDefined();
+    expect(textPrim(hardBreakScene.primitives, 'second label')).toBeDefined();
   });
 
   it('clamps an endpoint label gap without retaining visible stroke through its text box', () => {

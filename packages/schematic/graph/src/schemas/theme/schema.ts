@@ -1,7 +1,7 @@
 import type { RefinementCtx, ZodType } from 'zod';
 
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { SurfaceInputSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard';
 import { array, discriminatedUnion, literal, strictObject, union } from 'zod';
 
 import { GraphType } from '../../shared';
@@ -138,10 +138,17 @@ export const GraphRelationDefaultsSchema = strictObject({
   ...GraphRelationDefaultsRootSchema.shape,
 }).describe('Sparse Relation Source defaults.');
 
+export const GraphRelationRuleStructureSchema = strictObject({
+  dashPattern: RelationSchema.shape.style
+    .unwrap()
+    .shape.dashPattern.unwrap()
+    .describe('Complete Relation dash pattern.'),
+}).describe('Relation rule structural override limited to the dash recipe.');
+
 export const GraphSurfaceDefaultsSchema = strictObject({
-  background: SurfaceInputSchema.shape.background,
-  border: SurfaceInputSchema.shape.border,
-  cornerRadius: SurfaceInputSchema.shape.cornerRadius,
+  background: SurfaceSchema.shape.background,
+  border: SurfaceSchema.shape.border,
+  cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
 }).describe('Sparse Group or Block Surface root defaults.');
 
 export const GraphEntityDefaultsSchema = strictObject({
@@ -165,6 +172,7 @@ export const GraphEntityRuleSchema = strictObject({
 export const GraphRelationRuleSchema = strictObject({
   type: literal(GraphType.Relation).describe('Relation Graph rule discriminator.'),
   selector: GraphRelationThemeSelectorSchema.optional().describe('Optional Relation selector; omission matches all.'),
+  structure: GraphRelationRuleStructureSchema.optional().describe('Optional Relation structural dash recipe.'),
   ...GraphRelationDefaultsSchema.shape,
 }).describe('One ordered Relation Source rule.');
 

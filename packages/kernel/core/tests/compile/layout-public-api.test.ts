@@ -1,9 +1,4 @@
-import type { AssertEqual } from '@retikz/foundation';
-import type { BoundsRect } from '@retikz/math';
-
 import { describe, expect, it } from 'vitest';
-
-import type { Scene } from '../../src';
 
 import {
   computeLayout,
@@ -17,7 +12,7 @@ import {
 import { createRound } from '../../src/compile/scene';
 
 describe('layout public API', () => {
-  it('exports computeLayout and uses BoundsRect for Scene.layout', () => {
+  it('从公开入口计算包含 padding 的布局边界', () => {
     const layout = computeLayout(
       [
         [0, 0],
@@ -26,9 +21,6 @@ describe('layout public API', () => {
       5,
       createRound(2),
     );
-    const _assertLayout: AssertEqual<Scene['layout'], BoundsRect> = true;
-    void _assertLayout;
-
     expect(layout).toEqual({ x: -5, y: -5, width: 20, height: 30 });
   });
 

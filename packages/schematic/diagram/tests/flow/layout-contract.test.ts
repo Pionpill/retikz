@@ -10,6 +10,7 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
   name: 'custom',
   description: 'A deterministic custom Flow layout.',
   capabilities: {
+    placementKinds: ['linear', 'grid'],
     compoundScopes: false,
     groupEndpoints: false,
     crossScopeRelations: false,
@@ -24,6 +25,7 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
     direction: 'right',
     nodeGap: 20,
     rankGap: 40,
+    placementGap: { horizontal: 20, vertical: 16 },
     routing: { kind: 'straight' },
   },
   layout: input => ({
@@ -48,6 +50,20 @@ const validDefinition = (overrides: Partial<FlowLayoutDefinition> = {}): FlowLay
 });
 
 describe('Flow Layout Definition contract', () => {
+  it.each([-1, NaN, Infinity])('rejects invalid physical-axis spacing: %s', vertical => {
+    const definition = validDefinition();
+    expect(() =>
+      resolveFlowLayoutRegistry({
+        flowLayouts: [
+          {
+            ...definition,
+            defaults: { ...definition.defaults, placementGap: { horizontal: 48, vertical } },
+          },
+        ],
+      }),
+    ).toThrow('defaults.placementGap.vertical');
+  });
+
   it('keeps the exact Definition object as a typed identity', () => {
     const definition = validDefinition();
 

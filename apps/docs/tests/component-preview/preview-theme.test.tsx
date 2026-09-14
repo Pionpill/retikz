@@ -17,8 +17,8 @@ import {
   PreviewEntity,
   PreviewFlowDiagram,
   PreviewGraph,
-  PreviewGraphThemeStyles,
   PreviewRelation,
+  PreviewThemeDefinitionBundle,
   PreviewThemeProvider,
   PreviewThemeStyle,
   resolvePreviewTheme,
@@ -181,10 +181,10 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('makes the selected Graph ThemeStyle available to standalone Graph previews', () => {
+  it('renders standalone Graph previews with the default theme', () => {
     expect(() =>
       renderToStaticMarkup(
-        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Vibrant, mode: ThemeMode.Light }}>
+        <PreviewThemeProvider theme={{ mode: ThemeMode.Light }}>
           <Graph width={240} height={120}>
             <Entity id="source" role="activity" position={[60, 60]}>
               Source
@@ -199,10 +199,10 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('makes the selected Flow ThemeStyle available to standalone Flow previews', () => {
+  it('renders standalone Flow previews with the default theme', () => {
     expect(() =>
       renderToStaticMarkup(
-        <PreviewThemeProvider theme={{ style: PreviewThemeStyle.Clean, mode: ThemeMode.Light }}>
+        <PreviewThemeProvider theme={{ mode: ThemeMode.Light }}>
           <PreviewFlowDiagram width={320} height={180}>
             <FlowEntity id="source" text="Source" />
             <FlowEntity id="target" text="Target" />
@@ -218,7 +218,7 @@ describe('ComponentPreview global theme', () => {
       const embedded = component.createInputEmbedProps?.({}, { id: 'preview', kind: component.inputEmbedAdapter.kind });
       const record = embedded as Readonly<Record<string, unknown>>;
       const options = (record.input as Readonly<Record<string, unknown>> | undefined) ?? record;
-      expect(options).toMatchObject({ graphThemeStyles: PreviewGraphThemeStyles });
+      expect(options).toMatchObject({ graphThemeStyles: PreviewThemeDefinitionBundle.graph });
     }
   });
 });

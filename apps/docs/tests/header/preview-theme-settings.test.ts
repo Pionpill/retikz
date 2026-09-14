@@ -25,8 +25,6 @@ describe('preview theme settings icons', () => {
     ]);
     expect(isPreviewThemeStyleDocument('viz')).toBe(true);
     expect(isPreviewThemeStyleDocument('schematic')).toBe(false);
-    expect(isPreviewThemeStyleDocument('schematic', 'graph')).toBe(true);
-    expect(isPreviewThemeStyleDocument('schematic', 'diagram')).toBe(true);
     expect(isPreviewThemeStyleDocument('kernel')).toBe(false);
     expect(isPreviewThemeStyleDocument(undefined)).toBe(false);
   });

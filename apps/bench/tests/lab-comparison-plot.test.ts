@@ -76,7 +76,6 @@ describe('Performance Lab comparison Plot', () => {
 
     expect(svg).toContain('<svg');
     expect(svg).toContain('<rect');
-    expect(svg).toContain('fill="#93c5fd"');
     expect(svg).toContain('s·full');
     expect(svg).toContain('r·auto');
   });

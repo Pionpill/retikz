@@ -14,7 +14,9 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 用户单独说“审一下这篇文档 / 这个 docs 改动 / 这些 demo”
 - 新增页面或大规模文档重构后，确认没有把页面写成作者自嗨的内部说明
 
-普通文档和未授权 subagent 的大改由主 agent 直接审查。新增页面或命中 `docs-doc-principle`“大改”条件时，按任务开始时确认的中型执行计划决定是否使用一个只读 subagent；有修订时复用同一 reviewer，不新增并行 reviewer。默认**只评审、不改文件**；用户明确要求“顺手修掉”时，才按评审结果改稿。
+局部修改由主 agent 自审。新增页面、重写或命中 `docs-doc-principle`“大改”条件时，完成改稿与机械检查后必须派遣 1 个 fresh、只读 Luna（`gpt-5.6-luna`）做读者评审，复审上限沿用获批计划，有修订时复用同一 reviewer，不新增并行 reviewer。用户明确取消或工具不可用时如实说明。评审者只报告问题，不改文件；主 agent 在已授权改稿范围内修正
+
+本 skill 由主 agent 阅读并执行规范、源码一致性等检查，不交给读者 reviewer 阅读。reviewer 仅接收待评文档正文与页面内图示，不读取 AGENTS、skills、项目规范、源码、测试、diff 或作者说明，不继承主 agent 的项目上下文。要求它直接质疑具体段落中的未定义概念、含糊解释与逻辑断点，不替作者补齐推理；下文输入与技术检查项属于主 agent 的职责
 
 ## 输入
 
@@ -31,12 +33,14 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 ### 1. 页型结构
 
-- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 5 类 section 顺序：Usage / Examples / How it works / API Reference / Related
+- 实现原理页按 `docs-doc-mechanism` 检查：前提与边界、整体简图、顺序阶段、必要旁路、最终源码导览图；每个机制小节有就近源码入口
+
+- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 5 类 section 顺序：Usage / Examples / How it works / API overview / Related
 - 是否照搬了独立的 Composition 顶级章节；必要组合关系是否就近放在 Usage 骨架、Examples 用法或 How it works 机制中
 - 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
 - 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
-- Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程
+- Schema Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程；API Reference 是否由实际 `exports`、签名和 JSDoc 生成，而不是手写完整副本
 - 中文 Reference 的 object `<ZodSchema>` 是否用 `descriptions` 覆盖全部字段与匿名对象点路径；只有顶层 `description`、字段仍回退英文 `.describe()` 均不算完成
 - 英文 Reference 是否直接复用源码 `.describe()`，不重复维护 `descriptions`
 - zh / en 是否结构对齐：标题层级、表格列、示例数量、关键 bullet 数一致
@@ -45,9 +49,12 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 默认读者是**初级前端工程师**：会 React / TypeScript 基础，但不熟 TikZ、IR、Scene、编译器、几何算法和项目历史。
 
+实现原理页例外：默认已读其明确链接的前置文档，评审重点是阶段衔接、数据变化、触发时机和源码可追溯性，不要求重复入门示例或隐藏关键内部成员。内部标识符仅作为实现锚点，不视为公共 API
+
 检查：
 
 - 按首次阅读顺序逐段走读，不用作者已知背景替读者补齐省略的前提
+- 原理页是否先用通俗语言建立基础逻辑，再命名内部概念、解释相关函数与分支；逐项指出首次使用时仍未解释、解释不清或必须跳到后文才能理解的概念，不能因读者已读前置文档而豁免
 - 页面开头是否先回答“这个能力解决什么问题 / 什么时候用”，而不是先抛内部名词
 - 专业词是否过多；逐项列出未解释或解释过晚的术语，必要术语是否先用普通话解释，再给 API / schema 名
 - 相邻段落或小节之间是否存在概念跳跃；读者是否需要提前知道尚未介绍的类型、机制或项目约定
@@ -96,7 +103,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 - `contents/`、`data/`、`i18n/` 是否同步
 - 页面路由、目录段、data id 是否一致
-- API 表是否与当前 props / schema 一致
+- 文中 API 介绍是否仅覆盖本页阅读需要，且与当前 props / schema 一致；完整公开 API 与 schema 字段是否分别指向 API Reference / Schema Reference
 - API 表中的函数、类型和常量是否从所属包根入口真实可导入；是否把概念简称或内部类型误写成公共 API
 - 组件 Props、schema、owner barrel 与 package root 是否形成可追溯导出链
 - 宿主/容器页是否漏掉 owner barrel 中完成任务所需的 Provider、Context、hook 或 helper；共享继承 props 是否只做一行摘要并指向权威页

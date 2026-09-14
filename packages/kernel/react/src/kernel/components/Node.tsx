@@ -19,6 +19,8 @@ import type { HydrationEventProps } from '../protocol';
 import { TIKZ_NODE } from '../protocol';
 
 export type NodeProps = HydrationEventProps & {
+  /** 可选编译驱动解释的运行时载荷，不进入 Core IR */
+  authoring?: InputNode['authoring'];
   /** 实例视觉覆盖，逐字段覆盖继承默认值 */
   style?: InputNode['style'];
   /** 节点尺寸、间距与文本布局 */

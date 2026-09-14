@@ -22,7 +22,7 @@ export type EntityRoleDefinition = Readonly<{
 
 /** Entity kind 的稳定语义子类型定义 */
 export type EntityKindDefinition = Readonly<{
-  /** 全局唯一的开放 Entity kind key */
+  /** role 内唯一的开放 Entity kind key */
   kind: string;
   /** kind 所属的 Entity role */
   role: string;

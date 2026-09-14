@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib';
 import { MarkdownInline } from '@/modules/docs/components';
+import { useRightPanelStore } from '@/modules/docs/store';
 
 import { AiChatConversation, AiChatEmpty, AiChatHelpDialog, AiChatHistory, AiChatSettings } from './parts';
 import { useAiChatStore } from './useAiChatStore';
@@ -14,8 +15,8 @@ import { useAiChatStore } from './useAiChatStore';
 /** AI 聊天面板内容。 */
 export const AiChatPanel: FC = () => {
   const { t } = useTranslation();
-  const open = useAiChatStore(s => s.open);
-  const setOpen = useAiChatStore(s => s.setOpen);
+  const open = useRightPanelStore(s => s.panel.kind === 'ai');
+  const close = useRightPanelStore(s => s.close);
   const view = useAiChatStore(s => s.view);
   const setView = useAiChatStore(s => s.setView);
   const hasKey = useAiChatStore(s => {
@@ -48,12 +49,12 @@ export const AiChatPanel: FC = () => {
         abort();
       } else {
         e.preventDefault();
-        setOpen(false);
+        close();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [open, isGenerating, abort, setOpen]);
+  }, [open, isGenerating, abort, close]);
 
   const showSettings = view === 'settings';
   const showHistory = view === 'history';
@@ -183,7 +184,7 @@ export const AiChatPanel: FC = () => {
               variant="ghost"
               size="icon"
               className="size-7 cursor-pointer rounded-sm"
-              onClick={() => setOpen(false)}
+              onClick={close}
               aria-label={t('ai.closeLabel')}
             >
               <X className="size-4" />

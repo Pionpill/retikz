@@ -20,11 +20,11 @@ import { Surface } from '@retikz/standard-react';
 </Layout>
 ```
 
-| 场景        | 公开入口                                                                                       |
-| ----------- | ---------------------------------------------------------------------------------------------- |
-| React       | `Surface`（`@retikz/standard-react`）                                                          |
-| Vanilla     | `surface`、`surfaceChild`、`SurfaceInputEmbedAdapter`（`@retikz/standard-vanilla`）            |
-| IR / 持久化 | `SurfaceSchema`、`IRSurfaceSchema`、`createSurface`、`SurfaceDefinition`（`@retikz/standard`） |
+| 场景        | 公开入口                                                                            |
+| ----------- | ----------------------------------------------------------------------------------- |
+| React       | `Surface`（`@retikz/standard-react`）                                               |
+| Vanilla     | `surface`、`surfaceChild`、`SurfaceInputEmbedAdapter`（`@retikz/standard-vanilla`） |
+| IR / 持久化 | `SurfaceSchema`、`createSurface`、`SurfaceDefinition`（`@retikz/standard`）         |
 
 ## 示例
 
@@ -55,7 +55,7 @@ Surface 还在 authored 外层 Scope 发布 key 为 `surface` 的 qualified spat
 <SourceLinks
   sources={[
     {
-      label: 'Surface schema 与默认值',
+      label: 'Surface Source schema',
       path: 'packages/library/standard/src/composites/presentation/surface/schema.ts',
     },
     { label: 'Surface 布局与下沉', path: 'packages/library/standard/src/composites/presentation/surface/pipeline.ts' },
@@ -77,7 +77,7 @@ Surface 还在 authored 外层 Scope 发布 key 为 `surface` 的 qualified spat
 | `cornerRadius?` | `number`                          | `0`       | 非负圆角半径，最大有效值为短边一半                    |
 | Scope props     | `Omit<IRScope, 'type\|children'>` | —         | 作用于包含背景、内容和边框的 authored 外层 Core Scope |
 
-`IRSurfaceSchema` 校验已经规范化的持久化结果：四侧 padding、`overflow` 与 `cornerRadius` 都是必填 canonical 字段。有限 range 或 exact proposal 小于对应轴 padding 时，Surface 在探测 child 前同步失败，不会回退到 intrinsic。
+`createSurface` 保留省略字段与 padding 简写；`SurfaceSchema.parse()` 会补齐静态默认值 `padding: 0`、`overflow: 'visible'` 与 `cornerRadius: 0`。布局解析复用同一默认值并展开四侧 padding，不改写原始配置。有限 range 或 exact proposal 小于对应轴 padding 时，Surface 在探测 child 前同步失败，不会回退到 intrinsic。
 
 ### React 与 Vanilla
 

@@ -31,18 +31,18 @@ description: Use when retikz alpha-stage work needs to execute an ADR-backed fea
 
 Alpha ADR 执行属于大型任务。进入流程前先按根 `AGENTS.md` 给出完整执行计划，一次确认 scope、阶段、subagent、常规单 reviewer、最终 `cross-review`、Git 身份和操作权限。含“批量 / 一次跑完 / 离线”或至少两个 ADR 编号时，还要确认候选 ADR、依赖与 base 分支。不存在自动 subagent 授权。
 
-新 ADR 的设计和既有 ADR 的执行分成两次授权边界：设计任务的计划只覆盖 Stage 1，交付 ADR 与同步简略 plan 后结束；人工确认 ADR 后，Stage 2–6 以新的大型执行计划一次确认并连续执行。已有人工确认 ADR 的任务可直接规划 Stage 2–6。这样不在同一执行计划中途追加例行确认，也不把 ADR 草案自动视为实现授权。
+新 ADR 的设计和既有 ADR 的执行分成两次授权边界：设计任务的计划只覆盖 Stage 1，交付 ADR 与同步简略 plan 后结束；人工明确批准执行 ADR 时，该批准默认同时接受 ADR：先将状态改为 `Accepted`，再以新的大型执行计划连续执行 Stage 2–6。单独确认设计结论不等于实现授权，也不改变 ADR 状态。
 
 ## 六阶段
 
-| #   | 阶段     | 执行                                          | 通过条件                                                               |
-| --- | -------- | --------------------------------------------- | ---------------------------------------------------------------------- |
-| 1   | ADR 设计 | `develop-design` + `develop-completeness`     | 短 ADR + 同步简略 plan；Architecture Gate PASS；人工确认 ADR           |
-| 2   | 实施计划 | `superpowers:writing-plans` + `test-contract` | plan 已细化且测试契约完成；Plan Gate PASS；已获得实现授权              |
-| 3   | 实现     | `develop-implement`                           | 按 plan 完成 Spec-First / 常规实现；lint / tsc / 必要测试通过          |
-| 4   | 自测     | `develop-test`                                | Adversarial Bug Hunter 的 BLOCKING 清空                                |
-| 5   | 文档     | `develop-document`                            | 用户可见能力有 zh / en 文档、demo 与 API 表                            |
-| 6   | 收尾     | `develop-wrapup`                              | 长期 ADR 与最终行为一致；changelog、Accepted、roadmap、commit 授权完成 |
+| #   | 阶段     | 执行                                          | 通过条件                                                      |
+| --- | -------- | --------------------------------------------- | ------------------------------------------------------------- |
+| 1   | ADR 设计 | `develop-design` + `develop-completeness`     | 短 ADR + 同步简略 plan；Architecture Gate PASS；等待执行批准  |
+| 2   | 实施计划 | `superpowers:writing-plans` + `test-contract` | plan 已细化且测试契约完成；Plan Gate PASS；已获得实现授权     |
+| 3   | 实现     | `develop-implement`                           | 按 plan 完成 Spec-First / 常规实现；lint / tsc / 必要测试通过 |
+| 4   | 自测     | `develop-test`                                | Adversarial Bug Hunter 的 BLOCKING 清空                       |
+| 5   | 文档     | `develop-document`                            | 用户可见能力有 zh / en 文档、demo 与 API 表                   |
+| 6   | 收尾     | `develop-wrapup`                              | 长期 ADR 与最终行为一致；changelog、roadmap、commit 授权完成  |
 
 文档不是可选项。用户可见功能必须补 docs；完工汇报先给文档页和访问路由，再讲代码。
 
@@ -57,11 +57,11 @@ ADR 内容和位置以 `develop-design` 为准。它只保留背景与目标、�
 3. reviewer 输出 `BLOCKING / WARNING / INFO`；主 agent 核实后修订 ADR，并在计划上限内复用同一 reviewer 检查新快照。
 4. 无 BLOCKING、WARNING 已处置时 PASS；达到计划循环上限、快照漂移或分歧无法裁决时停止交人工。
 
-Gate finding 按真源修订：公开契约、默认 / 失败语义和 breaking 行为进入 ADR，设计检查结论进入 plan。Gate 不得要求 ADR 增加边界检查、同类研究、否决方案、测试策略、非目标、文件 scope、私有逻辑、测试 case、命令或 commit 切分。Architecture Gate PASS 后仍须人工确认 ADR；确认 ADR 不等于授权实现。
+Gate finding 按真源修订：公开契约、默认 / 失败语义和 breaking 行为进入 ADR，设计检查结论进入 plan。Gate 不得要求 ADR 增加边界检查、同类研究、否决方案、测试策略、非目标、文件 scope、私有逻辑、测试 case、命令或 commit 切分。Architecture Gate PASS 后等待人工明确批准执行；该批准自动将 ADR 置为 `Accepted`，并构成实现授权。
 
 ## Stage 2：镜像 implementation plan
 
-镜像目录和简略 `PLAN.md` 已在 Stage 1 创建。人工确认 ADR 并授权进入实现准备后，执行者必须重新阅读全文 ADR 与简略 plan，在同一目录细化计划并创建其余产物：
+镜像目录和简略 `PLAN.md` 已在 Stage 1 创建。人工明确批准执行后，执行者先将 ADR 置为 `Accepted`，再重新阅读全文 ADR 与简略 plan，在同一目录细化计划并创建其余产物：
 
 ```text
 packages/<group>/_notes/decisions/<relative>/<NN>-<slug>.md
@@ -162,7 +162,7 @@ Stage 3–5 完成并通过验证后，按 `flow-long-task` 执行计划中声�
 
 ## 完成检查
 
-- ADR 始终保持长期形态；Proposed → Accepted 只更新状态、最终摘要和真实遗留风险。
+- ADR 在执行批准时已转为 `Accepted`，始终保持长期形态；Stage 6 只补最终摘要与真实遗留风险，不再次变更状态。
 - 简略 plan 与 ADR 同步生成，Architecture Gate 已覆盖两者；人工确认后才细化 plan 并创建测试契约。
 - Architecture Gate 与 Plan Gate 都在实现前 PASS；已按执行计划完成主 agent 自审或常规单 reviewer 循环。
 - 实现按 reviewed plan 执行；偏差进入正确真源，没有把施工细节回写 ADR。

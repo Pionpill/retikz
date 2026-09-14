@@ -29,10 +29,15 @@ import type {
 } from './types';
 
 import { RetikzInspectError, RetikzInspectErrorCode } from '../error';
+import { getResolvedInspectorRegistry } from '../providers';
 import { INSPECTION_OBSERVER_KEY } from './constants';
 import { wrapInspectionError } from './diagnostics';
 import { cloneAndFreezeInspectionJson, sealInspectionScene, snapshotInspectorOutput } from './output';
-import { admitInspectionSelection, canInspectionSelectionRequestSite, resolveInspectionSelection } from './selection';
+import {
+  admitInspectionSelection,
+  canInspectionSelectionRequestSite,
+  resolveAdmittedInspectionSelection,
+} from './selection';
 
 type CapturedObservation = Readonly<{ observation: CompileObservation; context: CompileObservationContext }>;
 type InspectionObserverOutput = Readonly<{
@@ -87,19 +92,17 @@ const createInspectionOutputDiagnosticOrigin = (
 
 /** 将捕获的 observation 编译为 Inspect plane 与诊断结果 */
 const compileInspectionObserverOutput = (
-  ir: IRScene,
   registry: InspectorRegistry,
-  selection: InspectionSelection,
+  admittedRules: ReturnType<typeof admitInspectionSelection>,
   captured: ReadonlyArray<CapturedObservation>,
 ): InspectionObserverOutput => {
-  const resolvedRequests = resolveInspectionSelection({
-    ir,
+  const resolvedRequests = resolveAdmittedInspectionSelection({
     registry,
-    selection,
+    admittedRules,
     observations: captured.map(entry => entry.observation),
   });
   const preparedRequests = resolvedRequests.map(request => {
-    const definition = registry.require(request.inspector);
+    const definition = getResolvedInspectorRegistry(registry).require(request.inspector);
     const capturedObservation = captured.find(
       entry =>
         isCompileObservationOwnerEqual(entry.observation.owner, request.owner) &&
@@ -124,12 +127,23 @@ const compileInspectionObserverOutput = (
   const diagnostics: Array<InspectionDiagnostic> = [];
   for (const preparedRequest of preparedRequests) {
     const context: InspectorContext = Object.freeze({
+      round: preparedRequest.capturedObservation.context.round,
       inspectorKey: preparedRequest.request.inspector,
       owner: preparedRequest.request.owner,
       occurrence: preparedRequest.request.occurrence,
       provenance: preparedRequest.request.provenance,
       options: preparedRequest.request.options,
       appearance: preparedRequest.appearance,
+      transform: preparedRequest.capturedObservation.observation.transform,
+      ancestors: preparedRequest.capturedObservation.observation.ancestors,
+      warn: (code: string, message: string): void => {
+        diagnostics.push(
+          Object.freeze({
+            origin: createInspectionDiagnosticOrigin('inspect', preparedRequest.request),
+            cause: Object.freeze({ code, message, path: preparedRequest.request.occurrence.sourcePath }),
+          }),
+        );
+      },
     });
     let outputChildren: ReturnType<typeof snapshotInspectorOutput>;
     try {
@@ -141,23 +155,15 @@ const compileInspectionObserverOutput = (
       try {
         outputChildren = snapshotInspectorOutput(callbackOutput);
       } catch (cause) {
-        const outputIndex = Array.isArray(callbackOutput)
-          ? (Array.from({ length: callbackOutput.length }, (_, index) => index).find(
-              index => !(index in callbackOutput),
-            ) ?? 0)
-          : 0;
-        throw wrapInspectionError(
-          createInspectionOutputDiagnosticOrigin('output', preparedRequest.request, outputIndex),
-          cause,
-        );
+        throw wrapInspectionError(createInspectionOutputDiagnosticOrigin('output', preparedRequest.request, 0), cause);
       }
     } catch (cause) {
       throw wrapInspectionError(createInspectionDiagnosticOrigin('inspect', preparedRequest.request), cause);
     }
-    for (const [outputIndex, child] of outputChildren.entries()) {
+    for (const [outputIndex, outputFragment] of outputChildren.entries()) {
       let fragment: ReturnType<CompileObservationContext['compileFragment']>;
       try {
-        fragment = preparedRequest.capturedObservation.context.compileFragment(child);
+        fragment = preparedRequest.capturedObservation.context.compileFragment(outputFragment.child);
       } catch (cause) {
         throw wrapInspectionError(
           createInspectionOutputDiagnosticOrigin('fragment', preparedRequest.request, outputIndex),
@@ -172,7 +178,10 @@ const compileInspectionObserverOutput = (
           occurrence: preparedRequest.request.occurrence,
           colorScope: preparedRequest.request.colorScope,
           scene,
-          transform: preparedRequest.capturedObservation.observation.transform,
+          transform:
+            outputFragment.coordinateSpace === 'scene'
+              ? Object.freeze([1, 0, 0, 1, 0, 0] as const)
+              : preparedRequest.capturedObservation.observation.transform,
         }),
       );
       for (const diagnostic of fragment.diagnostics) {
@@ -196,7 +205,7 @@ export const createInspectionObserver = (
   registry: InspectorRegistry,
   selection: InspectionSelection,
 ): CompileObserverDefinition<InspectionObserverOutput> => {
-  const capturedSelection = cloneAndFreezeInspectionJson(selection, 'Inspection selection');
+  const capturedSelection = structuredClone(selection);
   const admittedRules = admitInspectionSelection(ir, registry, capturedSelection);
   return Object.freeze({
     key: INSPECTION_OBSERVER_KEY,
@@ -208,7 +217,7 @@ export const createInspectionObserver = (
         observe: (observation: CompileObservation, context: CompileObservationContext) => {
           captured.push({ observation, context });
         },
-        complete: () => compileInspectionObserverOutput(ir, registry, capturedSelection, captured),
+        complete: () => compileInspectionObserverOutput(registry, admittedRules, captured),
       });
     },
   });

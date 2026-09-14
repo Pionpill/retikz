@@ -4,7 +4,6 @@ import {
   CompositeBaseSchema,
   GraphicOpacitySchema,
   PaintValueSchema,
-  resolveBoxSpacing,
   ScopePropsSchema,
 } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
@@ -24,45 +23,20 @@ export const SurfaceBorderSchema = StandardPathStrokeStyleSchema.omit({ zIndex: 
   'Optional stroke appearance drawn on the Surface allocation boundary.',
 );
 
-const SurfacePaddingInputSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(
+const SurfacePaddingSchema = union([NonNegativeNumberSchema, BoxSpacingSchema]).describe(
   'Uniform or side-specific non-negative Surface padding.',
 );
 
-const SurfacePaddingSchema = strictObject({
-  top: NonNegativeNumberSchema.describe('Canonical top padding in user units.'),
-  right: NonNegativeNumberSchema.describe('Canonical right padding in user units.'),
-  bottom: NonNegativeNumberSchema.describe('Canonical bottom padding in user units.'),
-  left: NonNegativeNumberSchema.describe('Canonical left padding in user units.'),
-}).describe('Canonical four-sided Surface padding.');
-
-export const SurfaceInputSchema = CompositeBaseSchema.extend({
+export const SurfaceSchema = CompositeBaseSchema.extend({
   namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
   type: literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
   ...ScopePropsSchema.shape,
   child: ChildSchema.describe('The one JSON-safe Core or Tier 2 child wrapped by this Surface.'),
-  padding: SurfacePaddingInputSchema.optional(),
-  overflow: LayoutOverflowSchema.optional().describe('Whether child visual overflow remains visible or is clipped.'),
+  padding: SurfacePaddingSchema.default(0),
+  overflow: LayoutOverflowSchema.default(LayoutOverflow.Visible).describe(
+    'Whether child visual overflow remains visible or is clipped.',
+  ),
   background: SurfaceBackgroundSchema.optional(),
   border: SurfaceBorderSchema.optional(),
-  cornerRadius: NonNegativeNumberSchema.optional().describe('Shared non-negative boundary radius in user units.'),
-});
-
-export const IRSurfaceSchema = CompositeBaseSchema.extend({
-  namespace: literal(STANDARD_NAMESPACE).describe('Composite namespace for Standard drawing capabilities.'),
-  type: literal(SURFACE_TYPE).describe('Composite type for a single arbitrary-child presentation surface.'),
-  ...ScopePropsSchema.shape,
-  child: ChildSchema.describe('The one JSON-safe Core or Tier 2 child wrapped by this Surface.'),
-  padding: SurfacePaddingSchema,
-  overflow: LayoutOverflowSchema.describe('Canonical child overflow policy.'),
-  background: SurfaceBackgroundSchema.optional(),
-  border: SurfaceBorderSchema.optional(),
-  cornerRadius: NonNegativeNumberSchema.describe('Canonical shared boundary radius in user units.'),
-});
-
-export const SurfaceSchema = SurfaceInputSchema.extend({
-  padding: SurfacePaddingInputSchema.optional()
-    .transform(value => resolveBoxSpacing(value, 0))
-    .pipe(SurfacePaddingSchema),
-  overflow: LayoutOverflowSchema.default(LayoutOverflow.Visible),
-  cornerRadius: NonNegativeNumberSchema.default(0),
+  cornerRadius: NonNegativeNumberSchema.default(0).describe('Shared non-negative boundary radius in user units.'),
 });

@@ -1,5 +1,6 @@
 import type { ResolvedTheme } from '@retikz/core';
 
+import { mergeProperties } from '@retikz/foundation';
 import { mergeGraphDefaults } from '@retikz/graph';
 
 import type { FlowThemeStyleDefinition } from '../../contract';
@@ -13,13 +14,8 @@ import type {
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import { FlowDefaultsSchema } from '../../schemas';
 
-const definedFields = <T extends object>(value: T | undefined): Partial<T> =>
-  value === undefined
-    ? {}
-    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
-
 const mergeFields = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {
-  const merged = { ...definedFields(base), ...definedFields(override) };
+  const merged = mergeProperties<Partial<T>>([base, override], { shouldOverride: value => value !== undefined });
   return Object.keys(merged).length === 0 ? undefined : (merged as T);
 };
 
@@ -53,8 +49,11 @@ const mergeGroupCaptionTitle = (
   if (merged === undefined) return undefined;
   const { font: _font, ...fields } = merged;
   void _font;
-  const definedOverride = definedFields(override?.font);
-  const candidateFont = Object.keys(definedOverride).length === 0 ? definedFields(base?.font) : definedOverride;
+  const definedOverride = mergeProperties([override?.font], { shouldOverride: value => value !== undefined });
+  const candidateFont =
+    Object.keys(definedOverride).length === 0
+      ? mergeProperties([base?.font], { shouldOverride: value => value !== undefined })
+      : definedOverride;
   const font = Object.keys(candidateFont).length === 0 ? undefined : candidateFont;
   const result = { ...fields, ...(font === undefined ? {} : { font }) };
   return Object.keys(result).length === 0 ? undefined : result;

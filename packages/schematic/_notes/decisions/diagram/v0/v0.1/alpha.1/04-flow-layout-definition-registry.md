@@ -8,7 +8,7 @@
 
 ## 背景与目标
 
-ADR-03/07 已冻结唯一、LLM-first 的 Flow Source：Entity / Group / Layout 在平级 catalog 中声明，根与各 scope 的 `children` 引用是包含真源；根 relations 可以连接任意层级 Entity 或 Group，rank、自动布局与 routing 只表达 provider-neutral 意图，Layout 的 direction / gap / align 则表达必须保留的固定 placement。它们尚未决定谁执行这些意图、如何开放替换算法、缺省值从哪里产生，以及不同算法能力不等价时怎样在调用前诊断
+ADR-03/07 已冻结唯一、LLM-first 的 Flow Source：Entity / Group / Layout 在平级 catalog 中声明，根与各 scope 的 `children` 引用是包含真源；根 relations 可以连接任意层级 Entity 或 Group，rank、自动布局与 routing 只表达 provider-neutral 意图，Layout 的 linear / grid 配置 则表达必须保留的固定 placement。它们尚未决定谁执行这些意图、如何开放替换算法、缺省值从哪里产生，以及不同算法能力不等价时怎样在调用前诊断
 
 ELK、Graphviz、Mermaid、PlantUML 与 D2 都把关系结构和布局引擎选择分开，但也共同证明布局引擎并非可无条件互换：compound graph、跨层级 relation、cycle、self-loop、parallel relation、label 与 routing 的支持范围不同。直接把某个引擎的 graph/options 形态暴露为 Flow Source 会重新引入 ports、engine-specific key、异步调用和多套等价写法；只提供一个不可描述能力的 callback，又会让 LLM 无法判断当前运行时能生成什么
 
@@ -50,7 +50,7 @@ v0.1 不支持同一 `diagram.flow` Definition 内按 occurrence 选择不同 pr
 
 ### Provider 输入只包含布局所需的独立事实
 
-provider 输入保持递归 scope。Flow resolve 先按 ADR-07 校验平级 catalog 与 owner-side `children`，再严格按每个 owner 的 `children` 顺序重建递归输入；catalog 声明顺序不参与 provider 顺序。根和每个 Group 都携带已经补全的有效自动布局配置；Layout 携带固定 direction、有效 node gap、align 与有序 children。有序 elements 数组本身就是确定性 tie-breaker，不额外保存 source index、parent id、path、membership 或拓扑缓存
+provider 输入保持递归 scope。Flow resolve 先按 ADR-07 校验平级 catalog 与 owner-side `children`，再严格按每个 owner 的 `children` 顺序重建递归输入；catalog 声明顺序不参与 provider 顺序。根和每个 Group 都携带已经补全的有效自动布局配置；Layout 分别携带继承的自动布局配置、补全的 linear / grid placement 与有序 children。有序 elements 数组本身就是确定性 tie-breaker，不额外保存 source index、parent id、path、membership 或拓扑缓存
 
 Entity 在 provider 输入中投影为固定测量尺寸的 leaf，Definition 不能依赖 Graph role、kind 或 style 选择算法。leaf 的 resolved margin 作为独立 insets 参与 sibling spacing，不混入可连接的 element size。Group 投影为携带真实 Graph shell minimum、content insets、有效局部 layout 与有序 children 的递归 scope。Layout 投影为独立 `kind: 'layout'` scope，不携带 shell 数值，其 direct children 必须通过执行 context 的 `placeLayout` 固定排列。Graph Block 当前不属于 Flow Source；通用 leaf 输入保持不绑定具体 Graph element，未来不得在 Block 契约稳定前加入 Block 专用字段
 
@@ -66,13 +66,13 @@ corner radius 是有效 routing intent，不烘焙成 provider-specific curve co
 
 ### Capability 是权威预检契约和 LLM catalog 数据
 
-每个 Definition 必须声明 compound scope、Group endpoint、跨 scope relation、cycle、self-loop、parallel relation、relation label、Relation direction 取值与 routing kind 的支持范围。rank、递归 scope 的有效 layout、element 稳定 id、relation positional order、Layout 固定 placement 和有限二维几何是所有合法 Definition 的基础契约，不做可选 capability
+每个 Definition 必须声明 compound scope、Group endpoint、跨 scope relation、cycle、self-loop、parallel relation、relation label、Relation direction 取值、routing kind 与 placement kind 的支持范围。rank、递归 scope 的有效 layout、element 稳定 id、relation positional order、Layout 固定 placement 和有限二维几何是所有合法 Definition 的基础契约，不做可选 capability
 
 resolve 从 Canonical Flow 推导当前请求实际需要的 capability，在 callback 前一次性比较。缺失 capability 必须 fail-loud，并指出 definition name、缺失项、相关 relation / element id 与可用 provider；不得调用 callback 后再猜测 fallback、删除关系、展平 Group、反转 direction 或切换 routing
 
-capability 是 Definition 对调用方的真实保证，不是提示性 metadata。callback 对已声明支持的结构失败时属于 provider contract failure；Retikz 保留 cause，但不会把该 Definition 自动降级为另一项。Definition registration 同时验证 capability 组合：`groupEndpoints` 或 `crossScopeRelations` 为 true 时 `compoundScopes` 也必须为 true，direction 与 routing 列表必须非空、唯一且只含公共词汇，默认 routing kind 必须位于 `routingKinds`，orthogonal 默认 radius 必须与 orthogonal capability 同时存在或同时省略
+capability 是 Definition 对调用方的真实保证，不是提示性 metadata。callback 对已声明支持的结构失败时属于 provider contract failure；Retikz 保留 cause，但不会把该 Definition 自动降级为另一项。Definition registration 同时验证 capability 组合：`groupEndpoints` 或 `crossScopeRelations` 为 true 时 `compoundScopes` 也必须为 true，direction、routing 与 placement 列表必须非空、唯一且只含公共词汇，默认 routing kind 必须位于 `routingKinds`，orthogonal 默认 radius 必须与 orthogonal capability 同时存在或同时省略
 
-存在任意 Group 或 Layout 时要求 `compoundScopes`；relation 直接引用 Group id 时要求 `groupEndpoints`。Layout endpoint 已由 Source resolve 拒绝，不进入 capability preflight；两个合法 endpoint 不是同一 Flow scope 的直接 sibling 时要求 `crossScopeRelations`。source 与 target 相同要求 `selfLoops`；相同无序 endpoint pair 出现多条 relation 时要求 `parallelRelations`；出现 label 时要求 `relationLabels`。cycle 只检查由 forward 的 source → target 与 reverse 的 target → source 形成的有向先后环；both 与 none 的可用性由 `relationDirections` 独立声明，不把每条 both relation 自动视为二节点 cycle。每条 relation 的有效 routing kind 与 direction 分别必须出现在对应 capability 列表。这些推导规则固定，provider 不自行重解释 capability
+每个 Layout 的 kind 必须位于 `placementKinds`，内置 `layered` 支持 `linear` 与 `grid`。存在任意 Group 或 Layout 时要求 `compoundScopes`；relation 直接引用 Group id 时要求 `groupEndpoints`。Layout endpoint 已由 Source resolve 拒绝，不进入 capability preflight；两个合法 endpoint 不是同一 Flow scope 的直接 sibling 时要求 `crossScopeRelations`。source 与 target 相同要求 `selfLoops`；相同无序 endpoint pair 出现多条 relation 时要求 `parallelRelations`；出现 label 时要求 `relationLabels`。cycle 只检查由 forward 的 source → target 与 reverse 的 target → source 形成的有向先后环；both 与 none 的可用性由 `relationDirections` 独立声明，不把每条 both relation 自动视为二节点 cycle。每条 relation 的有效 routing kind 与 direction 分别必须出现在对应 capability 列表。这些推导规则固定，provider 不自行重解释 capability
 
 同一次 registry assembly 必须提供 JSON-safe `FlowLayoutCatalogEntry` 投影，只包含 name、description、capabilities、defaults 与是否为当前默认，不暴露 callback。catalog 的顺序稳定为内置项后接自定义注入顺序，并与真正用于 lookup / preflight / dispatch 的 registry 同源；Docs、工具或 LLM 不维护静态 provider 白名单
 
@@ -86,7 +86,7 @@ ELK 等异步引擎若要直接参与 compile，必须先有统一的异步 comp
 
 provider 收到脱离 Source 的深只读快照。输出必须是有限数值、plain-data、JSON-safe 的新值；Retikz 在 ADR-05 边界验证并脱离 provider 所持引用。同一 Flow Source、definitions、有效 Theme、测量结果与 Definition 必须产生逐字段相同的 input 和 output；Definition 不得读取时间、随机数、DOM、renderer、可变全局状态或 callback 次序。v0.1 不增加 seed，因为确定性是所有 Definition 的必需契约而非可选算法模式
 
-callback 同时接收只读 `FlowLayoutExecutionContext`。每个 authored Layout 必须恰好调用一次 `placeLayout`；该入口以 direct child 的真实 size / margin 调用 `@retikz/layout` Flex compiler，并返回 Layout 与 children 的固定 bounds。provider 可以把完整 Layout 当作 compound box 参与外层自动布局和 routing，但不得忽略、重排或改写其相对 placement。Layout 内 Relation 不参与 placement，只在全部 bounds 确定后 routing
+callback 同时接收只读 `FlowLayoutExecutionContext`。每个 authored Layout 必须恰好调用一次 `placeLayout`；该入口以 direct child 的真实 size / margin 按 placement kind 调用 `@retikz/layout` Flex 或 Grid compiler，并返回 Layout 与 children 的固定 bounds。provider 可以把完整 Layout 当作 compound box 参与外层自动布局和 routing，但不得忽略、重排或改写其相对 placement。Layout 内 Relation 不参与 placement，只在全部 bounds 确定后 routing
 
 ## 基础数据结构与公开契约
 
@@ -132,24 +132,35 @@ type FlowLayoutGroupInput = Readonly<{
   elements: ReadonlyArray<FlowLayoutElementInput>;
 }>;
 
+type EffectiveFlowPlacement =
+  | Readonly<{
+      kind: 'linear';
+      direction: EffectiveFlowLayout['direction'];
+      gap: number;
+      align: 'start' | 'center' | 'end';
+    }>
+  | Readonly<{
+      kind: 'grid';
+      rowGap: number;
+      columnGap: number;
+      placements:
+        | ReadonlyArray<ReadonlyArray<string | null>>
+        | Readonly<Record<string, Readonly<{ row: number; column: number }>>>;
+    }>;
+
 type FlowLayoutContainerInput = Readonly<{
   kind: 'layout';
   id: string;
   rank?: number;
   layout: EffectiveFlowLayout;
-  align: 'start' | 'center' | 'end';
+  placement: EffectiveFlowPlacement;
   elements: ReadonlyArray<FlowLayoutElementInput>;
 }>;
 
 type FlowLayoutElementInput = FlowLayoutLeafInput | FlowLayoutGroupInput | FlowLayoutContainerInput;
 
 type FlowLayoutPlacementInput = Readonly<{
-  layout: Readonly<{
-    id: string;
-    direction: EffectiveFlowLayout['direction'];
-    gap: number;
-    align: 'start' | 'center' | 'end';
-  }>;
+  layout: EffectiveFlowPlacement & Readonly<{ id: string }>;
   elements: ReadonlyArray<Readonly<{ id: string; size: FlowLayoutSize; margin: Readonly<BoundsInsets> }>>;
 }>;
 
@@ -201,6 +212,7 @@ type FlowLayoutCapabilities = Readonly<{
   relationLabels: boolean;
   relationDirections: ReadonlyArray<RelationDirectionValue>;
   routingKinds: ReadonlyArray<'straight' | 'orthogonal'>;
+  placementKinds: ReadonlyArray<'linear' | 'grid'>;
 }>;
 
 type FlowLayoutDefinition = Readonly<{

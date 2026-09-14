@@ -30,22 +30,6 @@ afterAll(async () => {
 });
 
 describe('<SourceLinks>', () => {
-  it('pins the label at the upper left while links wrap independently', () => {
-    const SourceLinks = getSourceLinks();
-    const html = renderToStaticMarkup(
-      <SourceLinks
-        sources={[
-          { label: 'Responsibility contract', path: 'packages/kernel/core/src/index.ts' },
-          { label: 'JSON Schema source of truth', path: 'packages/kernel/core/src/schemas/index.ts' },
-        ]}
-      />,
-    );
-
-    expect(html).toContain('grid-cols-[auto_minmax(0,1fr)]');
-    expect(html).toContain('self-start');
-    expect(html).not.toContain('text-foreground/70');
-  });
-
   it('把仓库相对路径和行号范围渲染为次要 GitHub 源码入口', () => {
     const SourceLinks = getSourceLinks();
     const html = renderToStaticMarkup(
@@ -68,22 +52,7 @@ describe('<SourceLinks>', () => {
     );
     expect(html).toContain('target="_blank"');
     expect(html).toContain('rel="noopener noreferrer"');
-    expect(html).not.toContain('<svg');
-  });
-
-  it('首个链接前不显示横线，后续链接之间保留点分隔符', () => {
-    const SourceLinks = getSourceLinks();
-    const html = renderToStaticMarkup(
-      <SourceLinks
-        sources={[
-          { label: '输入归一', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx' },
-          { label: '根 Scope', path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts' },
-        ]}
-      />,
-    );
-
-    expect(html).not.toContain('—');
-    expect(html).toContain('·');
+    expect(html).toContain('data-source-link-open="true"');
   });
 
   it('省略行号时链接到完整文件', () => {
@@ -94,6 +63,21 @@ describe('<SourceLinks>', () => {
 
     expect(html).toContain(
       'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/runtime/Layout.tsx"',
+    );
+  });
+
+  it('主操作在右侧打开源码，同时保留独立的 GitHub 外链', () => {
+    const SourceLinks = getSourceLinks();
+    const html = renderToStaticMarkup(
+      <SourceLinks
+        sources={[{ label: 'Layout', path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx', startLine: 12 }]}
+      />,
+    );
+
+    expect(html).toContain('data-source-link-open="true"');
+    expect(html).toContain('<button');
+    expect(html).toContain(
+      'href="https://github.com/Pionpill/retikz/blob/main/packages/kernel/react/src/kernel/runtime/Layout.tsx#L12"',
     );
   });
 

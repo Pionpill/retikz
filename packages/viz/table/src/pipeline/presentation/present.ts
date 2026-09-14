@@ -30,7 +30,9 @@ export const applyTableCellContentStyle = (
   ) {
     return child;
   }
-  return parsePresentedChild({ type: 'scope', ...style, children: [child] });
+  // 已类型化样式不重复 parse；复制后解除 DeepReadonly 投影，避免冻结作者对象
+  const contentStyle = structuredClone(style) as IRTableCellContentStyle;
+  return deepFreeze({ type: 'scope', ...contentStyle, children: [child] });
 };
 
 /** 通过 presentation registry 把 formatted value 转成 Core 内容 */

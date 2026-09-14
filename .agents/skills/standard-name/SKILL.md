@@ -142,7 +142,7 @@ package-public / owner-visible 名称必须独立表达领域与角色；文件�
 
 | 概念                            | 必须使用的名称                                                         | Owner                                                                                                      |
 | ------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 持久化 IR schema 与类型         | `XxxSchema`、`IRXxx`                                                   | `schemas/`；`IRXxx = z.infer<typeof XxxSchema>`                                                            |
+| 持久化 IR schema 与类型         | `XxxSchema`、`IRXxx`                                                   | `schemas/`；允许省略默认字段的 Source 用 `z.input`，解析结果用 `z.output` / `z.infer`                      |
 | 可复用 IR shape                 | `XxxBaseSchema`                                                        | `schemas/`；仅在实际复用或分阶段 refinement 时使用                                                         |
 | Vanilla authoring input         | `InputXxx`                                                             | 仅 Vanilla / Plot Vanilla；只写 TypeScript                                                                 |
 | 完整的内部确定形态              | 通常使用 `CanonicalXxx`                                                | 纵向领域 `resolve/<domain>/types.ts`；没有 Zod schema，不持久化                                            |

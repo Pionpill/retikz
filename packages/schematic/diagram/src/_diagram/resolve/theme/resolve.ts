@@ -1,6 +1,7 @@
 import type { ResolvedTheme } from '@retikz/core';
 
 import { resolveBoxSpacing } from '@retikz/core';
+import { mergeProperties } from '@retikz/foundation';
 
 import type { DiagramThemeStyleDefinition } from '../../contract';
 import type { IRDiagramDefaults, IRDiagramDefaultsPresentationText, IRDiagramPresentationText } from '../../schemas';
@@ -14,19 +15,14 @@ type DiagramDefaultsFrame = NonNullable<IRDiagramDefaults['frame']>;
 type DiagramDefaultsTextStyle = NonNullable<IRDiagramDefaultsPresentationText['style']>;
 type DiagramDefaultsTextLayout = NonNullable<IRDiagramDefaultsPresentationText['layout']>;
 
-const definedFields = <T extends object>(value: T | undefined): Partial<T> =>
-  value === undefined
-    ? {}
-    : (Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Partial<T>);
-
 const mergeFields = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {
-  const merged = { ...definedFields(base), ...definedFields(override) };
+  const merged = mergeProperties<Partial<T>>([base, override], { shouldOverride: value => value !== undefined });
   return Object.keys(merged).length === 0 ? undefined : (merged as T);
 };
 
 /** 合并一个字体覆盖；字体字段在每一层整体替换，空字体不形成覆盖 */
 const mergeFont = <T extends object>(base: T | undefined, override: T | undefined): T | undefined => {
-  const definedOverride = definedFields(override);
+  const definedOverride = mergeProperties<Partial<T>>([override], { shouldOverride: value => value !== undefined });
   return Object.keys(definedOverride).length === 0 ? base : (definedOverride as T);
 };
 

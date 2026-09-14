@@ -1,6 +1,7 @@
 import type { CoreProviderContribution } from '@retikz/core';
 
 import { createGraphProviders } from '@retikz/graph';
+import { GridLayoutProvider } from '@retikz/layout';
 import { LegendProvider } from '@retikz/standard';
 
 import type { FlowDiagramDefinitionOptions } from '../contract';
@@ -13,5 +14,10 @@ export const createFlowDiagramProviderContribution = (
 ): CoreProviderContribution =>
   Object.freeze({
     roots: Object.freeze([FlowDiagramProviderKey]),
-    providers: Object.freeze([...createGraphProviders(options), LegendProvider, createFlowDiagramProvider(options)]),
+    providers: Object.freeze([
+      ...createGraphProviders(options),
+      GridLayoutProvider,
+      LegendProvider,
+      createFlowDiagramProvider(options),
+    ]),
   });

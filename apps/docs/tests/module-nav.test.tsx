@@ -333,7 +333,7 @@ describe('<Header>', () => {
     expect(home.querySelectorAll('[data-slot="navigation-menu-list"]')).toHaveLength(1);
     expect(navigationList?.classList.contains('gap-x-2')).toBe(true);
     expect(navigationList?.classList.contains('gap-y-2')).toBe(true);
-    const aboutLink = home.querySelector<HTMLAnchorElement>('a[href="/about/overview"]');
+    const aboutLink = home.querySelector<HTMLAnchorElement>('a[href="/about/introduction"]');
     expect(aboutLink?.textContent).toBe('about.label');
     expect(aboutLink?.classList.contains('text-muted-foreground')).toBe(true);
     expect(aboutLink?.classList.contains('hover:bg-accent')).toBe(true);
@@ -356,7 +356,7 @@ describe('<Header>', () => {
     expect(page.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz.viz');
     expect(getLinkLabel(page.querySelector('a[href="/viz/chart"][data-active]'))).toBe('viz.chart');
 
-    const about = renderInRouter(<Header />, '/about/overview');
+    const about = renderInRouter(<Header />, '/about/introduction');
     expect(about.querySelector('button[aria-label="docs.modulePickerHome"]')?.textContent).toContain('retikz');
     expect(
       Array.from(about.querySelectorAll<HTMLButtonElement>('button[data-slot="header-navigation-trigger"]')).map(
@@ -369,7 +369,7 @@ describe('<Header>', () => {
       'schematic.navigationLabel',
       'viz.navigationLabel',
     ]);
-    expect(about.querySelector('a[href="/about/overview"]')?.textContent).toBe('about.label');
+    expect(about.querySelector('a[href="/about/introduction"]')?.textContent).toBe('about.label');
     expect(about.querySelector('a[href="/about/blog"]')).toBeNull();
   });
 });

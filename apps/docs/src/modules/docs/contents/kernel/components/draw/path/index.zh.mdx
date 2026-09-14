@@ -55,6 +55,8 @@ import { Path, Step } from '@retikz/react';
 
 `<Path label>` 在整条 Path 上采样，`<Step label>` 只在所属 Step 上采样。无 `fill` 的内置 `stroke` Path 出现 canonical `side: 'center'` 时，Core 会从文字下移除真实描边，而不是绘制一层背景。`sloped: true` 且没有 `side` 时也会 canonicalize 为 `center`。
 
+`label.text` 与 Node 复用同一个 TextBlock：可写单个字符串（其中 `\n` 是硬换行），也可写行数组并给每行单独设置 `fill` / `font`。所有行仍是同一个标签块，共享锚点、`position`、`side`、`sloped` 与 `interrupt`；断口按整个文字块的视觉边界计算，不会把每一行拆成独立标签。
+
 <ComponentPreview files="path-label-interruption" size="md" />
 
 固定左上、右下两个节点后，切换连接路线、`side` 与 0–1 的标签位置，观察同一条宿主 Path 上的采样与断口。选择“自动居中”时不传 `side`、只启用 `sloped`，因此仍走居中标签的默认断线规则。
@@ -65,7 +67,7 @@ import { Path, Step } from '@retikz/react';
   caption="切换路线与标签位置；自动居中会断线，其它 side 默认保持连续。"
 />
 
-省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。
+省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。断口默认从标签视觉边界向两侧各额外留出 `4` user units；用 `gap` 覆盖该值，`gap: 0` 表示不加额外留白。
 
 任意有效 `fill`（包括 `fill="transparent"` 或 `fillOpacity={0}`）都会关闭自动断线，且 `interrupt: true` 会 fail-loud。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样 fail-loud。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
 
@@ -126,7 +128,7 @@ import { Path, Step } from '@retikz/react';
 
 #### 控制点检查
 
-安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect/overview)。
+安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 为当前 Path occurrence 声明运行时选择。内置 stroke Path Inspector 从最终 settled commands 读取二次 / 三次贝塞尔控制点，输出普通 Path 控制柄与 Node 标记；`labels` 可额外显示控制点编号。选择不进入 Core IR，也不改变主路径边界、资源、命中测试或动画。注册表与宿主接线见 [`@retikz/inspect`](/kernel/packages/inspect)。
 
 <ComponentPreview files="path-inspector" size="sm" />
 
@@ -225,7 +227,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 描边如何物化几何
 
-默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令。标签仍从未切断的逻辑路径取样；兼容的 `interrupt` 会按文字视觉盒只移除描边几何，并输出保留命令形态与原逻辑 owner 的路径片段。marks、端点箭头和 dash 仍按逻辑路径处理，`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。
+默认描边会先把 relative、节点引用和 generator 解析成路径命令（`PathCommand`，即物化后的 move / line / arc 等几何）。`roundedCorners` 随后改写命令。标签仍从未切断的逻辑路径取样；兼容的 `interrupt` 会按文字视觉盒与 `gap` 留白只移除描边几何，并输出保留命令形态与原逻辑 owner 的路径片段。marks、端点箭头和 dash 仍按逻辑路径处理，`rotate` / `scale` 最后把主路径、标签和标记包装成同一个 group。
 
 <SourceLinks
   sources={[
@@ -248,8 +250,8 @@ import { Path, Step } from '@retikz/react';
 
 | 属性                  | 类型                                                | 默认值         | 描述                                                                                                                                                                                                              |
 | --------------------- | --------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                  | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                            |
-| `on<Event>`           | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                            |
+| `id`                  | `string`                                            | —              | 可选稳定 id：供其它元素 anchor 引用，也是[水合](/kernel/packages/render/hydration)事件绑定的挂点（带 `id` 才能给 path 绑 `onClick` 等 handler）                                                                   |
+| `on<Event>`           | `PathProps['onClick']`                              | —              | 与 `onClick` 同签名的 pointer、wheel 等水合事件；需要 `id`，完整列表见[水合](/kernel/packages/render/hydration)                                                                                                   |
 | `meta`                | `IRPathBase['meta']`                                | —              | provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 plot 等高层 lowering 注入（标记来自哪个 datum / series / layer），供交互层命中后反查来源。须为 JSON 可序列化对象 |
 | `kind`                | <ApiValues name="PathKind" /> \| `string`           | `'stroke'`     | 开放的 Path kind provider 名称；Core 内置 `'stroke'`，其它 kind 通过 Path kind contract 显式注册；可选 Standard Ribbon 见 [Ribbon Path kind](/library/standard/extension/ribbon)                                  |
 | `kindOptions`         | `IRPathBase['kindOptions']`                         | —              | 选定 Path kind 的 JSON-safe 参数；Core host 先接受该对象，注册 definition 的完整 subject schema 在后续解析阶段校验                                                                                                |

@@ -33,25 +33,30 @@ The example uses the root entry's point and vector operations. Read the correspo
 
 ## Responsibilities
 
-| Document   | Responsibility                            | Reach for it when                 |
-| ---------- | ----------------------------------------- | --------------------------------- |
-| Primitives | Points, vectors, bounds, and curves       | Constructing or reading geometry  |
-| Transforms | Moving geometry between coordinate spaces | Working with layout or transforms |
-| Algorithms | Intersection, clipping, and construction  | Deriving geometric results        |
+| Document   | Responsibility                                         | Reach for it when                 |
+| ---------- | ------------------------------------------------------ | --------------------------------- |
+| Primitives | Points, vectors, bounds, ellipses, and arcs            | Constructing or reading geometry  |
+| Transforms | Moving geometry between coordinate spaces              | Working with layout or transforms |
+| Algorithms | Intersections, curve slicing, and point-fitting curves | Deriving geometric results        |
 
-## Documentation
+## Contents
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/math/primitives">
-    <span className="font-semibold">Primitives</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Points, vectors, bounds, and curves</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/math/transforms">
-    <span className="font-semibold">Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Conversion between coordinate spaces</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/math/algorithms">
-    <span className="font-semibold">Algorithms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Intersection, clipping, and construction</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Primitives',
+      description: 'Points, vectors, bounds, ellipses, and arcs',
+      url: '/kernel/packages/math/primitives',
+    },
+    {
+      title: 'Transforms',
+      description: 'Conversion between coordinate spaces',
+      url: '/kernel/packages/math/transforms',
+    },
+    {
+      title: 'Algorithms',
+      description: 'Intersections, curve slicing, and point-fitting curves',
+      url: '/kernel/packages/math/algorithms',
+    },
+  ]}
+/>

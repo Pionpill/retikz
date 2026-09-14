@@ -55,7 +55,6 @@ type PersistedState = {
 };
 
 type EphemeralState = {
-  open: boolean;
   view: View;
   messages: Array<ChatMessage>;
   isGenerating: boolean;
@@ -83,8 +82,6 @@ type EphemeralState = {
 };
 
 type Actions = {
-  setOpen: (open: boolean) => void;
-  toggleOpen: () => void;
   setView: (view: View) => void;
   setProvider: (id: string) => void;
   setApiKey: (id: ProviderId, key: string) => void;
@@ -133,7 +130,6 @@ type Actions = {
 const INITIAL_USAGE = { input: 0, output: 0, cacheRead: 0 };
 
 const INITIAL_EPHEMERAL: EphemeralState = {
-  open: false,
   view: 'main',
   messages: [],
   isGenerating: false,
@@ -211,8 +207,6 @@ export const useAiChatStore = create<PersistedState & EphemeralState & Actions>(
 
         ...INITIAL_EPHEMERAL,
 
-        setOpen: open => set({ open }),
-        toggleOpen: () => set(s => ({ open: !s.open })),
         setView: view => set({ view }),
 
         setProvider: id => set({ providerId: id }),

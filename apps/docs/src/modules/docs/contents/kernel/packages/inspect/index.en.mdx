@@ -1,19 +1,154 @@
 ---
 title: Compilation Inspection · inspect
-description: Browse @retikz/inspect selection, inspection, and auxiliary compilation
+description: Add on-demand observation and readonly auxiliary layers to completed compilation without changing the primary figure
 ---
 
-`@retikz/inspect` provides optional selection, inspection, and auxiliary output for compiled diagrams.
+`@retikz/inspect` adds optional observation to a completed Core compile. An Inspector reads final occurrences and owner output, then produces independent readonly auxiliary content. Control points, layout bounds, and alignment guides are concrete uses of that observation.
+
+It explains final results only: it does not repair input, participate in layout solving, or mutate the primary figure. Ordinary drawing, compilation, and rendering do not require this package, and no auxiliary fragment exists when no Inspector matches.
+
+<ComponentAlert
+  title="Optional drawing aid"
+  description="@retikz/inspect is not required for drawing or rendering. It only helps interpret completed figures and compilation results, making it useful for development, debugging, or teaching rather than as a routine production capability."
+/>
+
+## Install and use
+
+<PackageManagerInstall packages="@retikz/inspect" />
+
+Both hosts use a registry, but React attaches requests at JSX authoring sites while Vanilla creates authoring markers and a compile driver separately. The built-ins currently cover five result types: Path, Node, Clip, Scope, and Coordinate:
+
+| Host    | Entry                                                                              | Integration point                                                        |
+| ------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| React   | `InspectLayout`, `InspectPath`, `InspectNode`, `InspectScope`, `InspectCoordinate` | Inject a registry at Layout and attach requests to the matching JSX site |
+| Vanilla | `createInspectionVanillaAuthoring()`, `createInspectionVanillaDriver()`            | Create path markers and add the inspection driver when rendering         |
+
+### React
+
+React imports optional wrappers from `@retikz/inspect/react`. `InspectLayout` receives the registry; `InspectPath`, `InspectNode`, `InspectScope`, and `InspectCoordinate` attach requests to the current Path, Node, Scope, or Coordinate:
+
+```tsx
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { Step } from '@retikz/react';
+
+const registry = createDefaultInspectorRegistry();
+
+export const InspectExample = () => (
+  <InspectLayout registry={registry}>
+    <InspectPath request={{ inspector: PATH_INSPECTOR_KEY, options: { controlPoints: true, labels: true } }}>
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+    </InspectPath>
+  </InspectLayout>
+);
+```
+
+`InspectLayout` adds the optional inspection compile driver to the ordinary Layout runtime. `InspectPath` keeps ordinary Path authoring and turns its request into a runtime-only authoring marker.
+
+You can also keep ordinary `Layout` / `Path` components without using any `InspectXxx` wrappers. Inject the same inspection capability explicitly through `compileDriver` and `authoring`:
+
+```tsx
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { Layout, Path, Step } from '@retikz/react';
+
+const registry = createDefaultInspectorRegistry();
+const compileDriver = createInspectionVanillaDriver({ registry });
+const pathInspection = createInspectionVanillaAuthoring({
+  inspector: PATH_INSPECTOR_KEY,
+  options: { controlPoints: true, labels: true },
+});
+
+export const ConfiguredInspectExample = () => (
+  <Layout compileDriver={compileDriver}>
+    <Path authoring={pathInspection}>
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+    </Path>
+  </Layout>
+);
+```
+
+Both forms produce the same inspection requests and results for the same configuration; the wrappers simply handle the wiring. This configuration is fixed, so the driver lives outside the component. If it depends on React props or state, create it with `useMemo` inside the component and list those dependencies. Base components have no `inspect` prop, and `authoring` never enters Core IR.
+
+### Vanilla
+
+Vanilla creates an authoring marker and a compile driver separately: the marker declares that a path needs observation, and the driver adds the registry and auxiliary layers at the ordinary render entry:
+
+`authoring` is not a drawing field of Path; it is a runtime-only attachment slot in the Vanilla adapter. `createInspectionVanillaAuthoring()` wraps the request in a private-token marker, letting the same `compileDriver` turn the current authored Path into an Inspector selection rule. It never enters Core IR, so it cannot change `way`, path geometry, or layout.
+
+```ts
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+
+const registry = createDefaultInspectorRegistry();
+const input = scene({
+  children: [
+    path('curve', {
+      // Mark this authored Path for inspection; it never enters Core IR.
+      authoring: createInspectionVanillaAuthoring({
+        inspector: PATH_INSPECTOR_KEY,
+        options: { controlPoints: true, labels: true },
+      }),
+      way: [
+        [0, 0],
+        {
+          cubic: [
+            [20, -30],
+            [80, 30],
+          ],
+        },
+        [100, 0],
+      ],
+    }),
+  ],
+});
+
+const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
+```
+
+The root entry owns Definitions, registries, selection, and auxiliary compilation. React and Vanilla adapters come from `/react` and `/vanilla`; rendering remains the responsibility of `@retikz/render`. Start with Built-in inspection, then continue to extension or inspection details as needed. Configuration fields are listed in the [Schema reference](/kernel/packages/inspect/schema-reference).
 
 ## Responsibilities
 
-| Document | Responsibility                                     | Reach for it when                           |
-| -------- | -------------------------------------------------- | ------------------------------------------- |
-| Overview | Inspector registration, selection, and host wiring | Diagnosing or extending runtime observation |
+| Document             | Responsibility                                                             | Reach for it when                                       |
+| -------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Built-in inspection  | See the five Inspectors Core currently provides and their auxiliary output | Quickly interpreting final compilation results          |
+| Extending inspection | Define, register, and request a third-party Inspector                      | Explaining final output from your own Core owner        |
+| Inspection mechanism | Understand one compile's Core observation, fragments, and readonly layers  | Diagnosing behavior or deeper implementation boundaries |
+| API reference        | Query public APIs from the root, React, and Vanilla entries                | Looking up complete signatures and types                |
+| Schema reference     | Query label visibility and built-in Path inspection options                | Looking up fields, defaults, and validation structure   |
 
-## Documentation
+## Contents
 
-<LinkedCard href="/kernel/packages/inspect/overview">
-  <span className="font-semibold">Overview</span>
-  <span className="mt-1 text-center text-sm text-muted-foreground">Integrating and extending inspection</span>
-</LinkedCard>
+<LinkedSections
+  items={[
+    {
+      title: 'Built-in inspection',
+      description: 'The five built-in Inspectors Core currently supports and their auxiliary content',
+      url: '/kernel/packages/inspect/builtins',
+    },
+    {
+      title: 'Extending inspection',
+      description: 'Observation interfaces, custom Inspectors, and registration',
+      url: '/kernel/packages/inspect/extensions',
+    },
+    {
+      title: 'Inspection mechanism',
+      description: 'How Core observation, isolated compilation, and readonly layers cooperate',
+      url: '/kernel/packages/inspect/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Public types, functions, and components from the root, React, and Vanilla entries',
+      url: '/kernel/packages/inspect/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Complete field contracts for label visibility and built-in Path inspection options',
+      url: '/kernel/packages/inspect/schema-reference',
+    },
+  ]}
+/>

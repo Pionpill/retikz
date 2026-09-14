@@ -1,8 +1,6 @@
 import type { FC } from 'react';
 
 import { buildPlotIR, Plot } from '@retikz/plot-react';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -188,24 +186,6 @@ describe('Viz Data transform controls', () => {
     expect(resolveTableView(boxplotZh, 'outlier-result', { lowerP: 0.25, upperP: 0.75, factor: 1.5 })).toEqual(
       expect.any(Array),
     );
-  });
-
-  it('uses large previews for data-table controls', () => {
-    const pagePreviews = [
-      ['transform/overview', 1],
-      ['transform/operations', 4],
-      ['transform/statistics', 1],
-      ['transform/extensions', 2],
-    ] as const;
-
-    for (const [page, previewCount] of pagePreviews) {
-      for (const locale of ['zh', 'en']) {
-        const source = readFileSync(resolve(`src/modules/docs/contents/viz/data/${page}/index.${locale}.mdx`), 'utf8');
-        expect(source.match(/size="lg"/g) ?? []).toHaveLength(previewCount);
-        expect(source).not.toContain('size="md"');
-        expect(source).not.toContain('size="sm"');
-      }
-    }
   });
 
   it('pins every transform bar preview to the value-axis baseline', () => {

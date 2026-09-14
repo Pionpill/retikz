@@ -386,7 +386,7 @@ const emitCanonicalPathPrimitive = (
   const interruptionIntervals = createStrokeInterruptionIntervals(
     [...stepLabels, ...hostLabels]
       .filter(label => label.label.interrupt)
-      .map(label => ({ sample: label.sample, visualBoundsPoints: label.boundsPoints })),
+      .map(label => ({ sample: label.sample, visualBoundsPoints: label.boundsPoints, gap: label.label.gap })),
     strokeWidth,
     endpointProtections,
   );

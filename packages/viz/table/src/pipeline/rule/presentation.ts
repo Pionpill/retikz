@@ -1,7 +1,7 @@
 import type { ResolvedTableCellPresentationInput } from '../presentation';
 import type { ResolvedTableCellPlan } from './types';
 
-import { TableCellPayloadKind, TablePresentationRefSchema } from '../../schemas';
+import { TableCellPayloadKind } from '../../schemas';
 import { deepFreeze } from '../../shared';
 
 /** 把 resolved Cell plans 按 canonical 顺序投影为 Presentation 阶段 carrier */
@@ -14,7 +14,7 @@ export const presentationInputsOfTableCellPlans = (
         ? {
             kind: plan.kind,
             ...(plan.cellId === undefined ? {} : { cellId: plan.cellId }),
-            presentation: TablePresentationRefSchema.parse(plan.presentation),
+            presentation: structuredClone(plan.presentation),
             appearance: plan.appearance,
           }
         : {

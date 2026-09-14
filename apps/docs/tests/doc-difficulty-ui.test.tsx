@@ -10,10 +10,12 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HeaderActions } from '@/app/header/HeaderActions';
+import { useDocShortcuts } from '@/app/useDocShortcuts';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { DocDifficultyDot, DocDifficultyIndicator } from '@/modules/docs/components/doc-difficulty';
 import { DocDifficulty } from '@/modules/docs/data';
 import { DocPageActions } from '@/modules/docs/layout/DocPageActions';
+import { useLayoutStore } from '@/store';
 
 vi.mock('react-i18next', async importOriginal => ({
   ...(await importOriginal<typeof ReactI18nextModule>()),
@@ -32,6 +34,11 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
 
+const ShortcutHarness = () => {
+  useDocShortcuts();
+  return null;
+};
+
 const render = (node: ReactNode): HTMLElement => {
   const container = document.createElement('div');
   document.body.appendChild(container);
@@ -48,6 +55,7 @@ const render = (node: ReactNode): HTMLElement => {
 afterEach(() => {
   roots.splice(0).forEach(root => act(() => root.unmount()));
   document.body.replaceChildren();
+  useLayoutStore.setState(useLayoutStore.getInitialState(), true);
 });
 
 describe('<DocDifficultyIndicator>', () => {
@@ -103,6 +111,41 @@ describe('<HeaderActions>', () => {
     expect(language).not.toBeNull();
     expect(more).not.toBeNull();
     expect(difficulty).toBeNull();
+  });
+
+  it('在视图菜单首项提供左侧文档目录开关', () => {
+    const container = render(
+      <MemoryRouter>
+        <HeaderActions />
+      </MemoryRouter>,
+    );
+    const more = container.querySelector<HTMLButtonElement>('button:has(svg.lucide-ellipsis)');
+
+    expect(more).not.toBeNull();
+    act(() => {
+      more?.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }));
+    });
+
+    const viewItems = Array.from(document.body.querySelectorAll('[role="menuitemcheckbox"]'));
+
+    expect(viewItems).not.toHaveLength(0);
+    expect(viewItems[0]?.textContent).toContain('common.sidebar');
+    expect(viewItems[0]?.textContent).toContain('Ctrl');
+    expect(viewItems[0]?.textContent).toContain('B');
+  });
+});
+
+describe('useDocShortcuts', () => {
+  it('用 Ctrl+B 切换左侧文档目录', () => {
+    render(<ShortcutHarness />);
+
+    expect(Reflect.get(useLayoutStore.getState(), 'sidebarOpen')).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'b', ctrlKey: true, bubbles: true }));
+    });
+
+    expect(Reflect.get(useLayoutStore.getState(), 'sidebarOpen')).toBe(false);
   });
 });
 

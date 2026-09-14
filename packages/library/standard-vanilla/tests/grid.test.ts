@@ -1,3 +1,5 @@
+import type { GridInput } from '@retikz/standard';
+
 import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
@@ -55,10 +57,10 @@ describe('grid()', () => {
   });
 
   it('accepts a center-form Cartesian position through the shared Grid input', () => {
-    const input = {
+    const input: GridInput = {
       bounds: { position: [20, 10], width: 40, height: 20 },
       line: { spacing: 10 },
-    } as const;
+    };
     const embed = grid('center', input);
     const contribution = GridInputEmbedAdapter.lower(embed.props, {
       id: embed.id,
@@ -71,14 +73,14 @@ describe('grid()', () => {
   });
 
   it('accepts a PolarPosition center through the shared Grid input', () => {
-    const input = {
+    const input: GridInput = {
       bounds: {
         position: { origin: [10, 5], angle: 90, radius: 20 },
         width: 20,
         height: 10,
       },
       line: { spacing: 10 },
-    } as const;
+    };
     const embed = grid('polar', input);
     const contribution = GridInputEmbedAdapter.lower(embed.props, {
       id: embed.id,

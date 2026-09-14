@@ -1,3 +1,4 @@
+import type { IRScopeProps } from '@retikz/core';
 import type { ValueOf } from '@retikz/foundation';
 import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
@@ -31,19 +32,24 @@ export type LegendSampleAlignmentValue = ValueOf<typeof LegendSampleAlignment>;
 export type IRLegendItem = ZodInfer<typeof LegendItemSchema>;
 
 /** 持久化的 Legend 离散内容 */
-export type IRLegendItemsContent = ZodInfer<typeof LegendItemsContentSchema>;
+export type IRLegendItemsContent = Omit<ZodInput<typeof LegendItemsContentSchema>, 'items'> & {
+  items: Array<IRLegendItem>;
+};
 
 /** 持久化的 Legend 连续刻度 */
 export type IRLegendTick = ZodInfer<typeof LegendTickSchema>;
 
 /** 持久化的 Legend 连续样本内容 */
-export type IRLegendRampContent = ZodInfer<typeof LegendRampContentSchema>;
+export type IRLegendRampContent = Omit<ZodInput<typeof LegendRampContentSchema>, 'sample' | 'ticks'> &
+  Pick<ZodInfer<typeof LegendRampContentSchema>, 'sample' | 'ticks'>;
 
 /** 持久化的 Standard Legend composite */
-export type IRLegend = ZodInfer<typeof LegendSchema>;
+export type IRLegend = Omit<ZodInput<typeof LegendSchema>, keyof IRScopeProps | 'title' | 'content'> &
+  IRScopeProps &
+  Pick<ZodInfer<typeof LegendSchema>, 'title'> & { content: IRLegendItemsContent | IRLegendRampContent };
 
 /** 创建 Legend 时允许省略固定 discriminator 与 schema 默认字段的输入 */
-export type LegendInput = Omit<ZodInput<typeof LegendSchema>, 'namespace' | 'type'>;
+export type LegendInput = Omit<IRLegend, 'namespace' | 'type'>;
 
 /** Legend 呈现区域的可观察几何 */
 export type LegendArtifactGeometry = ZodInfer<typeof LegendArtifactGeometrySchema>;

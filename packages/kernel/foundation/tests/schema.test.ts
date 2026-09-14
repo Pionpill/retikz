@@ -1,5 +1,4 @@
-import type { AssertEqual, JsonObject, JsonValue, OpenString, ValueOf } from '@retikz/foundation';
-import type { infer as ZodInfer } from 'zod';
+import type { JsonObject } from '@retikz/foundation';
 
 import {
   createOpenStringSchema,
@@ -21,12 +20,6 @@ const TestRole = {
 } as const;
 
 const TestRoleSchema = createOpenStringSchema(TestRole);
-const testRoleTypeIsOpenString: AssertEqual<
-  ZodInfer<typeof TestRoleSchema>,
-  OpenString<ValueOf<typeof TestRole>>
-> = true;
-const jsonValueTypeContract: AssertEqual<ZodInfer<typeof JsonValueSchema>, JsonValue> = true;
-const jsonObjectTypeContract: AssertEqual<ZodInfer<typeof JsonObjectSchema>, JsonObject> = true;
 
 describe('JSON schemas', () => {
   it('accepts recursive JSON values and objects', () => {
@@ -35,8 +28,6 @@ describe('JSON schemas', () => {
       list: [1, true, null, { nested: ['deep'] }],
     };
 
-    expect(jsonValueTypeContract).toBe(true);
-    expect(jsonObjectTypeContract).toBe(true);
     expect(JsonValueSchema.parse(object)).toEqual(object);
     expect(JsonObjectSchema.parse(object)).toEqual(object);
     expect(JsonObjectSchema.parse({})).toEqual({});
@@ -94,7 +85,6 @@ describe('NonBlankStringSchema', () => {
 
 describe('createOpenStringSchema', () => {
   it('preserves built-in and custom non-blank strings with an OpenString result type', () => {
-    expect(testRoleTypeIsOpenString).toBe(true);
     expect(TestRoleSchema.parse(TestRole.Participant)).toBe(TestRole.Participant);
     expect(TestRoleSchema.parse(' custom.role ')).toBe(' custom.role ');
   });

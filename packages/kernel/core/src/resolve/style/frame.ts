@@ -1,16 +1,6 @@
 import type { IRScope, StyleChannel } from '../../schemas';
 import type { CascadeState, StyleResolveFrame } from './types';
 
-/** 拷贝源对象中 !== undefined 的字段 */
-export const pickDefinedKeys = <T extends object>(src: T): Partial<T> => {
-  const out: Partial<T> = {};
-  for (const key of Object.keys(src) as Array<keyof T>) {
-    const value = src[key];
-    if (value !== undefined) out[key] = value;
-  }
-  return out;
-};
-
 /** 从 IRScope 抽取样式解析 frame */
 export const createStyleResolveFrame = (scope: IRScope): StyleResolveFrame => {
   const cascade: CascadeState = {};

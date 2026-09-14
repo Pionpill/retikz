@@ -35,7 +35,7 @@ export const AboutNav: FC<AboutNavProps> = props => {
           mobile && 'w-full justify-start px-2 py-1.5',
         )}
       >
-        <Link to="/about/overview" onClick={onNavigate}>
+        <Link to="/about/introduction" onClick={onNavigate}>
           {t('about.label')}
         </Link>
       </NavigationMenuLink>

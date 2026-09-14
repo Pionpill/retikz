@@ -5,7 +5,22 @@ import type { LowerTexOptions, TexLoweringResult } from './types';
 
 import { lowerMathJaxSvg } from '../svg';
 
-/** 把同步 SVG engine 适配为 Core LowerTex，并缓存确定结果 */
+/**
+ * 把同步 SVG engine 适配为 Core `LowerTex`，并缓存确定的解析结果
+ *
+ * @description 接收能输出受支持 SVG 子集的引擎与可选诊断回调，返回可直接注入 Core 文本编译流程的同步 lowerer。该函数负责 TeX → SVG → 路径的降解和结果缓存，不负责初始化引擎或渲染公式
+ * @param engine 提供同步 TeX → SVG 转换能力的引擎
+ * @param options 控制 lowering 失败诊断的可选配置
+ * @returns 可注入 Core 文本编译流程的同步 `LowerTex`
+ *
+ * @example
+ * import { createLowerTex, createMathJaxEngine, MathJaxProfile } from '@retikz/tex';
+ *
+ * const engine = await createMathJaxEngine({ profile: MathJaxProfile.Math });
+ * const lowerTex = createLowerTex(engine, {
+ *   onDiagnostic: diagnostic => console.warn(diagnostic.message),
+ * });
+ */
 export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions): LowerTex => {
   const cache = new Map<string, TexLoweringResult<NonNullable<ReturnType<LowerTex>>>>();
   return (content, style) => {

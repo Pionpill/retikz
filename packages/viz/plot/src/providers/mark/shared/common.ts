@@ -226,7 +226,7 @@ export const resolveGeometryMarkLabels = (
   const resolved = normalizeGeometryLabels(labels).flatMap((label, index): Array<IRGeometryLabel> => {
     const text = textForLabel(label, row, labelResolver, index);
     if (text === undefined) return [];
-    return [normalizeGeometryLabel({ ...omitContent(label), text })];
+    return [normalizeGeometryLabel({ ...omitContent(label), text: typeof text === 'string' ? text : [text] })];
   });
   return collapseResolvedLabels(resolved);
 };

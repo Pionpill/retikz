@@ -1,7 +1,9 @@
+import type { infer as ZodInfer } from 'zod';
+
 import { enum as zodEnum, number, strictObject } from 'zod';
 
-import type { BoundaryDefinition } from '../../contract';
-import type { BoundaryFitValue, BuiltinShapeValue } from '../../schemas';
+import type { BoundaryDefinition, PathCommand, ShapeDefinition } from '../../contract';
+import type { BuiltinShapeValue } from '../../schemas';
 import type { Rect } from '../../shared';
 
 import { defineBoundary } from '../../contract';
@@ -12,13 +14,12 @@ import { ellipseShape, rectangle } from '../shape';
 
 const builtinBoundaryParamsSchema = strictObject({
   fit: zodEnum(BoundaryFit)
-    .optional()
     .default(BoundaryFit.Tight)
     .describe('How the regular boundary fits the visual shape: shape-aware tight envelope or AABB bounds.'),
-  gap: number().optional().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
+  gap: number().default(0).describe('Signed user-unit gap added to the fitted radius or both half-axes.'),
 });
 
-type BuiltinBoundaryParams = { fit: BoundaryFitValue; gap: number };
+type BuiltinBoundaryParams = ZodInfer<typeof builtinBoundaryParamsSchema>;
 
 /** 用指定半轴替换 rect 尺寸，并在 fit 后应用有符号 gap */
 const withGap = (rect: Rect, halfWidth: number, halfHeight: number, gap: number, provider: string): Rect => {
@@ -45,6 +46,17 @@ const boundsEllipseHalfAxes = (rect: Rect): { halfWidth: number; halfHeight: num
   halfHeight: (rect.height / 2) * Math.SQRT2,
 });
 
+/** 复用已解析 Shape provider 的精确轮廓能力，避免 Boundary 维护第二套几何公式 */
+const outlineFromShape = (shape: ShapeDefinition, rect: Rect): ReadonlyArray<PathCommand> => {
+  if (shape.outline === undefined) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.CompositeContractViolation,
+      `Builtin shape '${shape.name}' must provide an outline for its builtin boundary.`,
+    );
+  }
+  return shape.outline(rect, {});
+};
+
 export type BuiltinBoundaryProviderName = Extract<
   BuiltinShapeValue,
   typeof BuiltinShape.Circle | typeof BuiltinShape.Rectangle | typeof BuiltinShape.Ellipse
@@ -64,22 +76,25 @@ const circleBoundary = defineBoundary({
   },
   boundaryPoint: ellipseShape.boundaryPoint,
   anchor: ellipseShape.anchor,
+  outline: rect => outlineFromShape(ellipseShape, rect),
 });
 
 /** 矩形连接面：直接复用 rectangle shape 的连接面实现 */
 const rectangleBoundary = defineBoundary({
   name: BuiltinShape.Rectangle,
   paramsSchema: builtinBoundaryParamsSchema,
-  resolveRect: (context, params: BuiltinBoundaryParams) =>
-    withGap(
+  resolveRect: (context, params: BuiltinBoundaryParams) => {
+    return withGap(
       context.visualRect,
       context.visualRect.width / 2,
       context.visualRect.height / 2,
       params.gap,
       BuiltinShape.Rectangle,
-    ),
+    );
+  },
   boundaryPoint: rectangle.boundaryPoint,
   anchor: rectangle.anchor,
+  outline: rect => outlineFromShape(rectangle, rect),
 });
 
 /** 椭圆连接面：通过视觉外接矩形的外接椭圆复用 ellipse shape 几何 */
@@ -96,6 +111,7 @@ const ellipseBoundary = defineBoundary({
   },
   boundaryPoint: ellipseShape.boundaryPoint,
   anchor: ellipseShape.anchor,
+  outline: rect => outlineFromShape(ellipseShape, rect),
 });
 
 /** 内置 boundary provider 注册项 */

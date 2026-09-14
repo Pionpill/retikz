@@ -67,7 +67,7 @@ Layout 不建立专用 solver registry 或 `defineLayout()` 扩展轴。三个�
 - LayoutItem key 可省略；Layout 在 solver 前按容器内 source index 生成确定、唯一的有效 key，且不把自动 key 写回 Source IR。显式 key 继续保持容器局部稳定身份，重复显式 key 仍 fail-loud
 - 空间不足但存在确定结果时保留真实 allocation、bounds、overflow 与 clip，不缩放 primitive 或删除 item
 - Standard 三包的 Layout 导出、`@retikz/standard/layout`、旧 Inspector API 与 `standard.*Layout` identity 直接删除，不提供 alias、双注册或双 namespace
-- Direct IR、React 与 Vanilla 进入同一 canonical IR、Definition、compile 和 artifact 主链；adapter 不复制 schema、solver、默认或诊断
+- Direct IR、React 与 Vanilla 进入同一稀疏 Source IR、Definition、领域 resolve、compile 和 artifact 主链；adapter 不复制 schema、solver、默认或诊断
 - renderer 只消费 Core Scene，不增加 Layout 分支或布局回读
 
 ## 结果与长期边界

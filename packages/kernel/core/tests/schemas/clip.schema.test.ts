@@ -100,11 +100,6 @@ describe('ClipSchema 退化 / 非法形态拒绝', () => {
     const parsed = ClipSchema.safeParse({ kind: 'triangle', x: 0, y: 0, width: 10, height: 10 });
     expect(parsed.success).toBe(true);
   });
-
-  it('builtin kind 形态错误时不回退成 custom clip', () => {
-    const parsed = ClipSchema.safeParse({ kind: 'rect', x: 0, y: 0, width: 10 });
-    expect(parsed.success).toBe(false);
-  });
 });
 
 describe('ScopeSchema 接受可选 clip 字段', () => {

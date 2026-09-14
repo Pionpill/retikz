@@ -3,6 +3,7 @@ import type { Position } from '@retikz/math';
 import type { ZodType } from 'zod';
 
 import type { AnchorValue, Rect } from '../../shared';
+import type { PathCommand } from '../scene';
 import type { ConnectionEnvelopeKind } from '../shape';
 
 /**
@@ -30,6 +31,8 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
    * @default 直接使用视觉 rect
    */
   resolveRect?: (context: BoundaryFitContext, params: TParams) => Rect;
+  /** 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何 */
+  outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
   /** 从中心指向 toward 的射线与连接面的交点 */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**

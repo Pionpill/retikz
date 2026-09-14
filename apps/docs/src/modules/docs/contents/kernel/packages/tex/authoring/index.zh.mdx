@@ -1,0 +1,57 @@
+---
+title: 公式写法
+description: 在 Node 文本中用行内公式、display 公式或显式 math run 编写并排版 LaTeX
+---
+
+当 Node 文本需要使用 LaTeX 时，仍然通过 `$...$`、`$$...$$` 或显式 math run 编写公式。完成 [安装与接入](/kernel/packages/tex) 后，`@retikz/tex` 会把它们转换为 Core 能消费的字形路径，让 SVG 与 Canvas 复用同一份公式结果。
+
+<ComponentAlert
+  type="tip"
+  title="第一次接触 LaTeX？"
+  description="LaTeX 是独立的排版语言，@retikz/tex 只负责接入公式。先从本页的行内公式和基础示例开始；需要更多语法时再进入 MathJax 配置。"
+/>
+
+## 基础用法
+
+先看最常见的三种写法：字符串中的行内公式、字符串中的 display 公式，以及可以逐段设置样式的显式 math run。下面的静态 demo 把它们放在同一个 Layout 中，先观察公式在文本中的实际效果：
+
+<ComponentPreview
+  files="tex-formula-basics"
+  size="sm"
+  caption="同一个 Layout 中同时展示 inline、显式 math run 和 display 公式。"
+/>
+
+字符串中的公式 sugar 会由 Core 解析为 text run 和 math run：
+
+| 写法                    | 含义                                       |
+| ----------------------- | ------------------------------------------ |
+| `$...$`                 | 行内公式，使用 inline 度量并和文字基线对齐 |
+| `$$...$$`               | display 公式，使用更舒展的上下度量         |
+| `\\$`                   | 字面美元符号，不作为公式分隔符             |
+| `{ tex, displayMode? }` | 显式 math run；可逐段控制颜色或透明度      |
+
+显式 run 可以和普通 text run 混排：
+
+```tsx
+<Node
+  text={[
+    {
+      runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }],
+    },
+  ]}
+/>
+```
+
+`displayMode` 只控制公式度量，不会把一个 Node 拆成多个 Node；多行 LaTeX 环境仍然作为一个公式片段参与同一行布局。中文注释建议使用 text run，由普通文本测量负责，不要依赖 MathJax 的 `\\text{}` 提供 CJK 字体覆盖。
+
+## 编辑与预览
+
+下面的 demo 允许你直接编辑 TeX 源码，并比较 inline / display 度量与字号。可以先选择一个完整示例，再继续修改源码或排版参数：
+
+<ComponentPreview
+  files="tex-playground"
+  size="md"
+  caption="编辑 TeX 源码，切换 inline / display 与字号，比较同一公式在不同排版参数下的结果。"
+/>
+
+需要 AMS、命令定义、括号、消去、分情况或颜色等额外语法时，继续阅读 [MathJax 配置](/kernel/packages/tex/configuration)。

@@ -54,15 +54,18 @@ catalog:
   react-resizable-panels: ^3.0.6
   react-router: ^7.14.2
   rehype-mdx-code-props: ^3.0.1
+  rehype-mathjax: ^7.1.0
   rehype-slug: ^6.0.0
   remark-frontmatter: ^5.0.0
   remark-gfm: ^4.0.1
+  remark-math: ^6.0.0
   remark-mdx-frontmatter: ^5.0.0
   shiki: ^4.4.3
   sonner: ^2.0.7
   tailwind-merge: ^3.5.0
   tailwindcss: ^4.2.4
   tailwindcss-animate: ^1.0.7
+  typedoc: ^0.28.20
   tsx: ^4.22.4
   typescript: ^6.0.3
   typescript-eslint: ^8.63.0

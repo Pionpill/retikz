@@ -10,6 +10,20 @@ const diagramMilestones: Array<SubVersion> = [
     },
     items: [
       {
+        label: { zh: '布局边界贡献控制', en: 'Layout bounds contribution' },
+        content: {
+          zh: 'FlowLayout 的 excludeFromBounds 可局部排除直接子项对上层占位的贡献，同时保留子树排列、独立连线与完整绘制范围。Linear/Grid 和三入口使用统一契约；可见 Group 仍包含全部后代，不提供 absolute 定位或自动避障。',
+          en: 'FlowLayout excludeFromBounds locally excludes direct children from the footprint reported to its parent while preserving subtree placement, independent relations, and complete drawing bounds. Linear/Grid and all three entries share one contract. Visible Groups still enclose all descendants; absolute positioning and obstacle avoidance are not provided.',
+        },
+      },
+      {
+        label: { zh: '单折角路由', en: 'Single-elbow routing' },
+        content: {
+          zh: 'Flow routing 新增 `-|`（先水平后垂直）与 `|-`（先垂直后水平），支持继承圆角半径与显式零半径。复用 Layout Definition 能力声明、Graph/Core 边界裁剪与三入口；默认路由和间距不变，不提供自动避障。',
+          en: 'Flow routing adds `-|` (horizontal then vertical) and `|-` (vertical then horizontal), with inherited corner radii and explicit zero-radius corners. Both reuse Layout Definition capabilities, Graph/Core boundary clipping, and all three entries. Default routing and spacing remain unchanged; automatic obstacle avoidance is not provided.',
+        },
+      },
+      {
         label: { zh: '平级 JSON Source', en: 'Flat JSON Source' },
         content: {
           zh: '`IRFlowDiagram` 使用平级 `entities` / `groups` / `layouts` catalog，根、Group 与 Layout 的 `children` id 列表是唯一包含事实。数组已表达声明类别，因此记录不重复保存元素 `type`，Group 也不再携带变体 `kind`。这是 breaking 变更：旧递归 `elements`、Group `kind` 与 element `type` 不提供兼容入口。',

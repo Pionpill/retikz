@@ -20,16 +20,59 @@ Change the angle and length to see that the vector and its left-hand normal stay
 
 <ComponentPreview files="vector-normal" size="sm" caption="A vector and its left-hand normal" />
 
+### Algorithm notes
+
+To move from one point toward another, first take their difference as a direction, normalize it, then scale it by the requested distance and add it back to the origin:
+
+$$
+\mathbf d = \mathbf b - \mathbf a,\qquad \hat{\mathbf d} = \frac{\mathbf d}{\lVert\mathbf d\rVert},\qquad \mathbf p' = \mathbf p + s\hat{\mathbf d}
+$$
+
+`point.shiftToward` follows this chain and leaves the source point unchanged when the two points coincide. `vector2.normalize` returns its fallback when the length is below the tolerance; use `vector2.normalizeOrNull` when zero-length or non-finite input must be handled explicitly. `point.along` and `point.against` do not normalize their direction, so `length` is a geometric distance only when that direction is a unit vector.
+
+`vector2.normal` maps a 2D vector to a normal vector, preserving its length and making it perpendicular to the original:
+
+$$
+\operatorname{normal}(\mathbf v)=(-y,x),\qquad \mathbf v\cdot\operatorname{normal}(\mathbf v)=0,\qquad \lVert\operatorname{normal}(\mathbf v)\rVert=\lVert\mathbf v\rVert
+$$
+
+The page and renderer use SVG coordinates, where y grows downward, so this rotation appears clockwise on screen.
+
+The dot product and 2D cross product reduce the relationship between two vectors to a scalar:
+
+$$
+\mathbf a\cdot\mathbf b=a_xb_x+a_yb_y,\qquad \mathbf a\times\mathbf b=a_xb_y-a_yb_x
+$$
+
+A zero dot product means perpendicular vectors; a zero cross product means collinear vectors, while its sign identifies the turn direction. These tests also underpin later algorithms such as convex hulls and segment intersections.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Vector operations and normalization',
+      path: 'packages/kernel/math/src/primitives/point.ts',
+      startLine: 18,
+      endLine: 58,
+    },
+    {
+      label: 'Point movement and interpolation',
+      path: 'packages/kernel/math/src/primitives/point.ts',
+      startLine: 61,
+      endLine: 79,
+    },
+  ]}
+/>
+
 ### API reference
 
-| API                                                                                    | Category | Purpose                                    |
-| -------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
-| `Position`, `Vector2`                                                                  | Type     | 2D coordinate-point and vector types       |
-| `point.distance`, `point.along`, `point.against`, `point.shiftToward`, `point.isEqual` | Method   | Point distance, movement, and equality     |
-| `vector2.add`, `vector2.sub`, `vector2.scale`, `vector2.dot`, `vector2.cross`          | Method   | Vector arithmetic and dot/cross products   |
-| `vector2.length`, `vector2.normalize`, `vector2.normalizeOrNull`                       | Method   | Vector length and normalization            |
-| `vector2.fromAngleDegrees`, `vector2.normal`                                           | Method   | Construct vectors and compute left normals |
-| `lerp`                                                                                 | Method   | Linearly interpolate between two points    |
+| Category | API                                                                                    | Purpose                                    |
+| -------- | -------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Type     | `Position`, `Vector2`                                                                  | 2D coordinate-point and vector types       |
+| Method   | `point.distance`, `point.along`, `point.against`, `point.shiftToward`, `point.isEqual` | Point distance, movement, and equality     |
+|          | `vector2.add`, `vector2.sub`, `vector2.scale`, `vector2.dot`, `vector2.cross`          | Vector arithmetic and dot/cross products   |
+|          | `vector2.length`, `vector2.normalize`, `vector2.normalizeOrNull`                       | Vector length and normalization            |
+|          | `vector2.fromAngleDegrees`, `vector2.normal`                                           | Construct vectors and compute left normals |
+|          | `lerp`                                                                                 | Linearly interpolate between two points    |
 
 ## Bounds calculations
 
@@ -43,16 +86,81 @@ The demo adds the arc's boundary candidates to the point set, so the dashed rect
   caption="Change a point coordinate or arc angle to see how the points and arc jointly affect the axis-aligned bounds"
 />
 
+### Algorithm notes
+
+When the input mixes points, curves, and basic shapes, the goal is one axis-aligned boundary—not a `boundsOf` that needs to understand every primitive. Each primitive helper first identifies the positions that can affect the outer box, then hands them to `boundsOf` for a uniform reduction.
+
+Bounds calculation first generates candidate points from each geometry input type, then reduces those points only once; `boundsOf` does not identify geometry types itself.
+
+<ComponentPreview files="bounds-candidate-flow" size="sm" hideCode />
+
+#### Points
+
+A point is already a coordinate, so it enters the candidate set directly. For an empty point set, `boundsOf` returns `undefined`; the caller chooses whether to ignore it, provide a fallback, or report an error.
+
+#### Curves
+
+In addition to their endpoints, circular arcs and axis-aligned elliptical arcs include any axis extrema that they sweep across. A circular candidate is computed as:
+
+$$
+p(\theta)=(c_x+r\cos\theta,c_y+r\sin\theta)
+$$
+
+An axial angle inside the angular span is:
+
+$$
+\theta\in\{0^\circ,90^\circ,180^\circ,270^\circ\}
+$$
+
+It can determine a bound even when neither endpoint does.
+
+#### Basic shapes
+
+Basic shapes such as circles and ellipses first derive their own boundary candidates, then join the point and curve candidates. Rotated ellipses are not handled directly by the elliptical-arc helper: compute them in local coordinates before mapping them to world coordinates.
+
+#### Collect and reduce
+
+`boundsOf` traverses every candidate point and takes the four coordinate extrema:
+
+$$
+\operatorname{AABB}(P)=(\min_{p\in P}p_x,\ \min_{p\in P}p_y,\ \max_{p\in P}p_x,\ \max_{p\in P}p_y)
+$$
+
+`mergeBounds` repeats the same min / max operation for two results, while `expandBounds` applies directional insets afterward.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Point-extrema reduction',
+      path: 'packages/kernel/math/src/primitives/bounds.ts',
+      startLine: 48,
+      endLine: 63,
+    },
+    {
+      label: 'Circular arc boundary candidates',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 75,
+      endLine: 106,
+    },
+    {
+      label: 'Elliptical arc boundary candidates',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 127,
+      endLine: 160,
+    },
+  ]}
+/>
+
 ### API reference
 
-| API                                                                 | Category | Purpose                                       |
-| ------------------------------------------------------------------- | -------- | --------------------------------------------- |
-| `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets` | Type     | Bounds, rectangle, half-axis, and inset types |
-| `boundsOf`, `mergeBounds`                                           | Method   | Construct or merge bounds                     |
-| `boundsToRect`, `rectToBounds`                                      | Method   | Convert between bounds and rectangles         |
-| `isFiniteBoundsRect`, `isPositiveBoundsRect`                        | Method   | Validate rectangle bounds                     |
-| `centerOfBounds`, `halfAxesOfBounds`                                | Method   | Derive a bounds center and half-axes          |
-| `expandBounds`, `cornersOfBounds`                                   | Method   | Expand bounds and derive four corners         |
+| Category | API                                                                 | Purpose                                       |
+| -------- | ------------------------------------------------------------------- | --------------------------------------------- |
+| Type     | `AxisAlignedBounds`, `BoundsRect`, `BoundsHalfAxes`, `BoundsInsets` | Bounds, rectangle, half-axis, and inset types |
+| Method   | `boundsOf`, `mergeBounds`                                           | Construct or merge bounds                     |
+|          | `boundsToRect`, `rectToBounds`                                      | Convert between bounds and rectangles         |
+|          | `isFiniteBoundsRect`, `isPositiveBoundsRect`                        | Validate rectangle bounds                     |
+|          | `centerOfBounds`, `halfAxesOfBounds`                                | Derive a bounds center and half-axes          |
+|          | `expandBounds`, `cornersOfBounds`                                   | Expand bounds and derive four corners         |
 
 ## Ellipses and arcs
 
@@ -66,18 +174,61 @@ The demo adds the arc's boundary candidates to the point set, so the dashed rect
   caption="Adjust the radii and angles to compare the shapes and their bounds"
 />
 
-`pointAtArcAngle` / `pointAtEllipseArcAngle` select a curve point. An ellipse's `angleDeg` is a parameter angle and does not necessarily equal the polar angle observed from its center. `isAngleWithinArcSweep` uses the sign of `startAngleDeg → endAngleDeg`: positive spans run clockwise on screen and negative spans run counter-clockwise.
+### Algorithm notes
+
+This section answers two curve-specific questions: where a ray from an ellipse center meets its boundary, and which extrema an arc or elliptical arc traverses that can affect its outer box. The first turns “toward a point” into a precise intersection; the second lets curves enter the same bounds calculation described above.
+
+#### Ellipse boundary point
+
+`ellipse.boundaryPoint` first converts the target direction to ellipse-local coordinates, producing $d=(d_x,d_y)$, then normalizes it by the semi-axes to reach the boundary:
+
+$$
+t=\frac{1}{\sqrt{(d_x/r_x)^2+(d_y/r_y)^2}},\qquad p_{\mathrm{local}}=t\,d
+$$
+
+Each quantity has a distinct role:
+
+- $d$ is the local direction from the ellipse center to the target. Without rotation, it is simply the target's displacement from the center
+- $t$ is the scale to travel along $d$. A shorter semi-axis allows less travel in that direction; the scale puts the result exactly on the ellipse boundary
+- $p_{\mathrm{local}}$ is the final boundary point in local coordinates. Mapping it back to world coordinates restores the ellipse position and rotation
+
+A zero semi-axis or a target at the center returns the ellipse center.
+
+`pointAtArcAngle` / `pointAtEllipseArcAngle` select a curve point. An ellipse's `angleDeg` is a parameter angle and does not necessarily equal the polar angle observed from its center.
 
 `collectArcBoundingCandidates` / `collectEllipseArcBoundingCandidates` derive endpoints and axis-extrema candidates for bounds. Elliptical-arc helpers only handle axis-aligned ellipses; compute a rotated ellipse in local space, then map it to world space with the [coordinate transforms](/kernel/packages/math/transforms).
 
+<SourceLinks
+  sources={[
+    {
+      label: 'Ellipse boundary intersection',
+      path: 'packages/kernel/math/src/primitives/ellipse.ts',
+      startLine: 60,
+      endLine: 73,
+    },
+    {
+      label: 'Circular arc points and candidates',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 75,
+      endLine: 106,
+    },
+    {
+      label: 'Elliptical arc points and candidates',
+      path: 'packages/kernel/math/src/primitives/arc.ts',
+      startLine: 127,
+      endLine: 160,
+    },
+  ]}
+/>
+
 ### API reference
 
-| API                                                                                                                  | Category | Purpose                                                                  |
-| -------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------ |
-| `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`                                                                  | Type     | Ellipse, centered-box, and circumscription types                         |
-| `ellipse.center`, `ellipse.inscribedInBox`, `ellipse.circumscribedHalfAxes`                                          | Method   | Derive an ellipse center, inscribed ellipse, and circumscribed half-axes |
-| `ellipse.contains`, `ellipse.boundaryPoint`                                                                          | Method   | Test containment and find a boundary point                               |
-| `ArcBoundingCandidatesInput`, `ArcSweepAngleInput`, `EllipseArcAnglePointInput`, `EllipseArcBoundingCandidatesInput` | Type     | Circular- and elliptical-arc input types                                 |
-| `pointAtArcAngle`, `pointAtEllipseArcAngle`                                                                          | Method   | Select a point on a circular or elliptical arc                           |
-| `collectArcBoundingCandidates`, `collectEllipseArcBoundingCandidates`                                                | Method   | Derive arc boundary candidates                                           |
-| `isAngleWithinArcSweep`                                                                                              | Method   | Test whether an angle lies in a directed interval                        |
+| Category | API                                                                                                                  | Purpose                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Type     | `Ellipse`, `CenteredBox`, `EllipseCircumscribeMode`                                                                  | Ellipse, centered-box, and circumscription types                         |
+|          | `ArcBoundingCandidatesInput`, `ArcSweepAngleInput`, `EllipseArcAnglePointInput`, `EllipseArcBoundingCandidatesInput` | Circular- and elliptical-arc input types                                 |
+| Method   | `ellipse.center`, `ellipse.inscribedInBox`, `ellipse.circumscribedHalfAxes`                                          | Derive an ellipse center, inscribed ellipse, and circumscribed half-axes |
+|          | `ellipse.contains`, `ellipse.boundaryPoint`                                                                          | Test containment and find a boundary point                               |
+|          | `pointAtArcAngle`, `pointAtEllipseArcAngle`                                                                          | Select a point on a circular or elliptical arc                           |
+|          | `collectArcBoundingCandidates`, `collectEllipseArcBoundingCandidates`                                                | Derive arc boundary candidates                                           |
+|          | `isAngleWithinArcSweep`                                                                                              | Test whether an angle lies in a directed interval                        |

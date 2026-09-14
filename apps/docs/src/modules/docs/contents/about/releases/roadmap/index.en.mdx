@@ -1,58 +1,99 @@
 ---
 title: Roadmap
-description: "retikz's current and near-future roadmap: kernel v0.4 stable maintenance, v0.5 mechanism candidates, and v1+ domain packages."
+description: Responsibilities and dependencies across Retikz's four groups, odd/even minor cadence, near-term priorities, long-term plans, and historical milestones.
 ---
 
-The roadmap is a **goal list, not a promise** — it adjusts with community feedback and maintainer bandwidth. Concrete releases land by version in the [Changelog](/kernel/reference/changelog).
+Retikz's roadmap covers the whole drawing framework: strengthen shared foundations first, then advance higher-level expressions such as relationship diagrams, flowcharts, charts, and tables. Each group has its own responsibilities and version lines; Kernel's progress does not represent the entire project.
 
-## Now
+This roadmap describes current directions, not fixed release dates. Undecided plans remain blank. Consult each package family's release records for version-specific changes.
 
-**kernel v0.4.0** — the current stable release; after shape-aware boundary `fit` / `gap` convergence, the Canvas shadow-opacity fix, and release acceptance, it enters SemVer maintenance.
+## Groups and dependency boundaries
 
-| Item                     | Status                                              |
-| ------------------------ | --------------------------------------------------- |
-| Six kernel packages      | ✅ `0.4.0` lockstep                                 |
-| boundary fit / gap       | ✅ Shape-aware fitting and signed spacing converged |
-| Canvas shadow opacity    | ✅ Named-color / HSL combinations fixed             |
-| installation / packaging | ✅ Stable-release acceptance                        |
+| Group     | Responsibility                                                                                                | Dependencies and boundaries                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Kernel    | Foundational contracts, geometry, incremental execution, drawing compilation, rendering, and host integration | Provides shared foundations without depending on Library, Schematic, or Viz         |
+| Library   | Cross-domain graphics and container layout capabilities                                                       | Builds on Kernel; does not own flowchart or data-mapping semantics                  |
+| Schematic | Entities, relationships, logical diagrams, and flowcharts                                                     | Reuses Kernel / Library as needed; owns its domain models and algorithms            |
+| Viz       | Data processing, graphics grammar, common charts, and two-dimensional tables                                  | Drawing packages reuse Kernel / Library as needed; Data handles data, not rendering |
 
-## Short Term: Stable Maintenance and the Next Release
+Dependencies within each group are also explicit. Depending on a lower layer means consuming its capabilities, not copying its implementation:
 
-v0.4 has completed its public-surface freeze and release acceptance. Only compatible fixes land in `0.4.x`; new mechanisms stay on the next minor line and enter implementation only after their design and test contracts are explicit.
+- **Library**: Layout provides domain-neutral container arrangement. Standard may consume Layout to provide general-purpose graphics; Layout does not depend on Standard.
+- **Schematic**: Diagram depends on Graph. Graph provides entities, relationships, and composable diagram semantics; Diagram builds complete figures and automatic layout on top. Flow is a Diagram capability exposed through `@retikz/diagram/flow`, not a separate `@retikz/flow` package.
+- **Viz**: Chart depends on Plot to translate common chart intentions into graphics grammar. Plot consumes Data's processing capabilities. Table also reuses Data but does not depend on Plot; graphical cell content enters through general drawing composition.
 
-| Track       | Candidate                                | Content                                                                                                                 |
-| ----------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| v0.5 alpha  | headless interaction                     | Core provides target / intent / manifest contracts; tooltip / select UI and state machines stay in adapters or userland |
-| v0.5 alpha  | Progressive / JSON Patch                 | Incremental rendering, AI step updates, local SVG / Canvas update strategies                                            |
-| v0.4 stable | compatible fixes                         | Accept SemVer patch fixes only, without expanding the frozen public contracts                                           |
-| Longer term | P3D / scope enrichment / blur-mask-layer | Pseudo-3D, `boundingShape` polygon / ellipse / padding, and visual-layer capabilities wait for stronger design pull     |
+When higher layers encounter gaps, general drawing mechanisms belong in Kernel, cross-domain graphics and arrangement belong in Library, and flowchart- or visualization-specific semantics remain in their domains. React / Vanilla adapters follow their package families without creating parallel algorithms or drawing semantics.
 
-## Current v0.4 Shape
+## Development cadence
 
-Kernel v0.4 has landed several base mechanisms that other layers can reuse.
+The overall cadence alternates between odd and even minor versions. The minor is the middle segment of `MAJOR.MINOR.PATCH`.
 
-| Goal               | Content                                                                                                     |
-| ------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `@retikz/math`     | Zero-dependency geometry: vectors, affine transforms, arcs, intersections, hulls, minimal enclosing circles |
-| `@retikz/tex`      | MathJax SVG lowering through `lowerTex`, with `$...$` / `{ runs }` inside text                              |
-| Scene visuals      | `shadow` / `blendMode` plus existing `zIndex` as renderer-agnostic visual foundations                       |
-| Path kind / ribbon | `Path.kind` provider and `kind="ribbon"` relation paths                                                     |
-| Provider contract  | Unified registry model for shape / boundary / clip / path kind / composite extension surfaces               |
+| Minor version                 | Focus                            | Approach                                                                                                      |
+| ----------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Odd, such as `0.5` and `0.7`  | Add foundational capabilities    | Establish ownership, contracts, and a minimum usable implementation, then verify consumption by higher layers |
+| Even, such as `0.6` and `0.8` | Refine foundational capabilities | Prioritize performance, correctness, edge cases, tests, documentation, and usability                          |
 
-## Long term
+This expansion-then-refinement cadence does not replace the compatibility rules in [Versioning](/about/releases/versioning), or require every package to adopt the same version simultaneously. Kernel packages share a version; Standard, Layout, Graph, Diagram, Data, Plot, Chart, and Table evolve separately.
 
-| Topic       | Where                                                                       |
-| ----------- | --------------------------------------------------------------------------- |
-| v0.4 stable | Released and under SemVer patch maintenance                                 |
-| v1+         | Domain packages such as `plot` / `viz` / `flow`, plus the broader ecosystem |
+Foundational packages mature first, followed by their consumers. For example, improve Data processing before Plot adopts it; once Plot's graphics grammar is stable, Chart can complete common chart abstractions. Graph and Diagram follow the same order. Independent work can proceed separately.
 
-## Not on the roadmap
+## Short-term plans
 
-To keep scope honest, things we are **not** doing:
+Status follows the minor version: odd means Add, even means Refine. The table lists primary capability packages; React / Vanilla adapters follow.
 
-- Core directly depending on MathJax or putting a formula engine into IR
-- Visual editor
-- Full TikZ library-loading semantics
-- Complete calc expression language
-- Complex decorations such as `snake` / `coil`
-- Canvas implemented by piping through SVG
+Versions show only the major, minor, and patch segments of the current development version, omitting prerelease suffixes; they do not imply stable releases.
+
+| Group     | Package              | Version | Status | Description                                            |
+| --------- | -------------------- | ------- | ------ | ------------------------------------------------------ |
+| Kernel    | `@retikz/core`, etc. | `0.5.0` | Add    | Performance optimization and foundational capabilities |
+| Library   | `@retikz/standard`   | `0.1.0` | Add    | General drawing capabilities driven by other groups    |
+|           | `@retikz/layout`     | `0.1.0` | Add    | Layout capabilities driven by other groups             |
+| Schematic | `@retikz/graph`      | `0.1.0` | Add    | Refine basic logical diagrams                          |
+|           | `@retikz/diagram`    | `0.1.0` | Add    | Add flowchart capabilities                             |
+| Viz       | `@retikz/data`       | `0.2.0` | Refine | Refine data processing                                 |
+|           | `@retikz/plot`       | `0.2.0` | Refine | Refine the grammar of graphics                         |
+|           | `@retikz/chart`      | `0.1.0` | Add    | Complete basic chart abstractions                      |
+|           | `@retikz/table`      | `0.1.0` | Add    | Build foundational table expression                    |
+
+These foundations and their direct consumers take priority. Unspecified chart types, algorithms, or product capabilities do not yet receive target versions or deadlines.
+
+## Long-term plans
+
+The following long-term goals cover the current development version and its subsequent refinement version.
+
+| Group     | Package              | Version       | Content                                                                                      |
+| --------- | -------------------- | ------------- | -------------------------------------------------------------------------------------------- |
+| Kernel    | `@retikz/core`, etc. | `0.5 - 0.6`   | Performance optimization: runtime development, diff algorithms, and incremental rendering    |
+|           |                      | `0.7 - 0.8`   | Build interaction capabilities and refine animation                                          |
+|           |                      | `0.9 - 0.10`  | Build cross-package composition capabilities                                                 |
+|           |                      | `0.11 - 0.12` | LLM incremental rendering, LLM-friendly refinements, and API stabilization                   |
+| Schematic | `@retikz/graph`      | `0.1 - 0.2`   | Refine basic logical diagrams and encapsulate common Blocks                                  |
+|           | `@retikz/diagram`    | `0.1 - 0.2`   | Flowcharts                                                                                   |
+| Viz       | `@retikz/data`       | `0.2`         | Optimize data processing and refine transforms                                               |
+|           | `@retikz/plot`       | `0.2`         | Optimize the grammar of graphics, develop layout algorithms, and refactor coordinate systems |
+|           |                      | `0.3 - 0.4`   | Performance optimization and interaction capabilities                                        |
+|           |                      | `0.5 - 0.6`   | Multi-chart composition                                                                      |
+|           | `@retikz/chart`      | `0.1 - 0.2`   | Common chart abstractions                                                                    |
+|           | `@retikz/table`      | `0.1 - 0.2`   | Build foundational table capabilities                                                        |
+
+Library generally responds to requirements from other packages and has no major standalone plans.
+
+## Historical roadmap
+
+The following summarizes completed capabilities from changelogs and their corresponding roadmaps. Versions show major and minor segments only. For versions still in development, entries cover delivered capabilities, not completion or stable release of the entire version.
+
+| Group     | Package              | Version | Content                                                                                                       |
+| --------- | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| Kernel    | `@retikz/core`, etc. | `0.1`   | JSON IR and Scene compilation, nodes and paths, relative positioning                                          |
+|           |                      | `0.2`   | Shape, arrow, and path-generator extensions; gradient, pattern, and image fills; style inheritance            |
+|           |                      | `0.3`   | Independent SVG/Canvas rendering, Vanilla integration, hydration, and composite extensions                    |
+|           |                      | `0.4`   | Math geometry foundation, TeX formulas, path enhancements, shadows, and blend modes                           |
+|           |                      | `0.5`   | Anchor alignment, layout-aware composites, runtime transactions, and a local incremental compilation baseline |
+| Library   | `@retikz/standard`   | `0.1`   | Grids, axes, legends, Surfaces, parameterized shapes, and endpoint markers                                    |
+|           | `@retikz/layout`     | `0.1`   | Flex/Grid/Overlay arrangement, constraint solving, and public composition APIs                                |
+| Schematic | `@retikz/graph`      | `0.1`   | Graph/Group/Entity/Relation semantics and React/Vanilla integration                                           |
+|           | `@retikz/diagram`    | `0.1`   | Flow MVP, automatic layered layout, connection routing, and diagram assembly                                  |
+| Viz       | `@retikz/data`       | `0.1`   | Independent data models, field resolution, transforms/statistics, and data lineage                            |
+|           | `@retikz/plot`       | `0.1`   | Static grammar of graphics: field mappings, scales, coordinates, marks, and composition                       |
+|           | `@retikz/chart`      | `0.1`   | Basic scatter, bubble, regression, and strip chart abstractions                                               |
+|           | `@retikz/table`      | `0.1`   | Semantic table models, two-dimensional constraint layout, cell spans, and content fitting                     |

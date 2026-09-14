@@ -1,4 +1,5 @@
 import type { EntityPredicateDefinition } from '../../contract';
+import type { EntityKindRegistry } from '../../providers';
 import type { IRGraphEntity, IRGraphEntityDefaults, IRGraphEntityRule } from '../../schemas';
 import type {
   CanonicalEntity,
@@ -10,6 +11,7 @@ import type {
 } from './types';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
+import { entityKindDefinitionOf, entityKindKeys } from '../../providers';
 import { mergeGraphDefaults } from '../theme';
 import { matchesGraphThemeSelector, resolveGraphTheme, validateGraphThemeSelector } from '../theme';
 
@@ -20,6 +22,21 @@ const requiredDefinition = <T>(registry: ReadonlyMap<string, T>, key: string, ca
     code: RetikzGraphErrorCode.DefinitionNotRegistered,
     message: `${capability} '${key}' is not registered.`,
     details: { capability, key, availableKeys: [...registry.keys()] },
+  });
+};
+
+const requiredEntityKindDefinition = (registry: EntityKindRegistry, role: string, kind: string, capability: string) => {
+  const definition = entityKindDefinitionOf(registry, role, kind);
+  if (definition !== undefined) return definition;
+  throw new RetikzGraphError({
+    code: RetikzGraphErrorCode.DefinitionNotRegistered,
+    message: `${capability} '${kind}' is not registered for role '${role}'.`,
+    details: {
+      capability: 'entity-kind',
+      key: kind,
+      reason: `role '${role}'`,
+      availableKeys: [...(registry.get(role)?.keys() ?? [])],
+    },
   });
 };
 
@@ -45,14 +62,7 @@ export const resolveEntity = (source: IRGraphEntity, context: EntityResolveConte
   const kindDefinition =
     source.kind === undefined
       ? undefined
-      : requiredDefinition(context.entityKinds, source.kind, `Entity '${source.id}' kind`);
-  if (kindDefinition !== undefined && kindDefinition.role !== source.role) {
-    throw new RetikzGraphError({
-      code: RetikzGraphErrorCode.ResolveInvalid,
-      message: `Entity '${source.id}' kind '${source.kind}' belongs to role '${kindDefinition.role}', not '${source.role}'.`,
-      details: { capability: 'entity-kind', key: source.kind, nodeId: source.id },
-    });
-  }
+      : requiredEntityKindDefinition(context.entityKinds, source.role, source.kind, `Entity '${source.id}' kind`);
   const predicateDefinition =
     source.predicate === undefined
       ? undefined
@@ -95,7 +105,7 @@ const sourceAppearanceOf = (source: IRGraphEntity): IRGraphEntityDefaults => ({
 const selectorContextOf = (context: EntityResolveContext) => ({
   member: 'Entity' as const,
   roles: context.entityRoles,
-  kinds: context.entityKinds,
+  kinds: entityKindKeys(context.entityKinds),
   predicates: context.entityPredicates,
 });
 

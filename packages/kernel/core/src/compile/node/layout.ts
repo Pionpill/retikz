@@ -166,6 +166,7 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
 
   // 折行阈值受 x 缩放。
   const explicitMaxTextWidth = node.maxTextWidth !== undefined ? node.maxTextWidth * sx : undefined;
+  const fixedVisualWidth = node.width === undefined ? undefined : node.width * sx;
   const proposedAllocationWidth =
     allocationWidthProposal?.kind === LayoutAxisProposalKind.Exact
       ? allocationWidthProposal.value
@@ -251,20 +252,24 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
       contentLayout,
       circumscribed,
       allocationWidth: allocationWidthOf(circumscribed.halfWidth, circumscribed.halfHeight),
+      visualWidth: 2 * circumscribed.halfWidth,
     };
   };
 
   let selectedCandidate = evaluateContentCandidate(explicitMaxTextWidth);
+  const widthConstraint = fixedVisualWidth ?? proposedAllocationWidth;
+  const candidateWidth = (candidate: ReturnType<typeof evaluateContentCandidate>): number =>
+    fixedVisualWidth === undefined ? candidate.allocationWidth : candidate.visualWidth;
   if (
-    proposedAllocationWidth !== undefined &&
-    selectedCandidate.allocationWidth > proposedAllocationWidth &&
+    widthConstraint !== undefined &&
+    candidateWidth(selectedCandidate) > widthConstraint &&
     selectedCandidate.contentLayout.lines !== undefined
   ) {
     let currentCandidate = selectedCandidate;
     let textWidthBudget = explicitMaxTextWidth ?? currentCandidate.contentLayout.textWidth;
     for (let attempt = 0; attempt < MAX_ALLOCATION_REFLOW_ATTEMPTS; attempt += 1) {
       if (textWidthBudget === 0) break;
-      const ratio = proposedAllocationWidth / currentCandidate.allocationWidth;
+      const ratio = widthConstraint / candidateWidth(currentCandidate);
       const decrement = Math.max(Number.EPSILON, Math.abs(textWidthBudget) * Number.EPSILON);
       const nextBudget = Math.max(
         0,
@@ -273,19 +278,26 @@ export const layoutNode = (resolution: NodeResolution, context: LayoutNodeContex
       if (!(nextBudget < textWidthBudget)) break;
       textWidthBudget = nextBudget;
       currentCandidate = evaluateContentCandidate(textWidthBudget);
-      if (currentCandidate.allocationWidth < selectedCandidate.allocationWidth) selectedCandidate = currentCandidate;
-      if (currentCandidate.allocationWidth <= proposedAllocationWidth) {
+      if (candidateWidth(currentCandidate) < candidateWidth(selectedCandidate)) selectedCandidate = currentCandidate;
+      if (candidateWidth(currentCandidate) <= widthConstraint) {
         selectedCandidate = currentCandidate;
         break;
       }
     }
+  }
+  if (fixedVisualWidth !== undefined && selectedCandidate.visualWidth > fixedVisualWidth) {
+    throw new RetikzCoreError(
+      RetikzCoreErrorCode.Compile,
+      `${resolution.irPath}.layout.width cannot contain the Node content, padding, and shape geometry`,
+    );
   }
   const { contentLayout, circumscribed } = selectedCandidate;
   const { textWidth, textHeight, textBaselineOffsets, lines, inlineBlock } = contentLayout;
 
   const paddingOffsetX = (paddingRight - paddingLeft) / 2;
   const paddingOffsetY = (paddingBottom - paddingTop) / 2;
-  const boundsHalfW = Math.max(circumscribed.halfWidth, minHalfW);
+  const boundsHalfW =
+    fixedVisualWidth === undefined ? Math.max(circumscribed.halfWidth, minHalfW) : fixedVisualWidth / 2;
   const boundsHalfH = Math.max(circumscribed.halfHeight, minHalfH);
 
   let anchorPosition: IRAnchorPosition | undefined;

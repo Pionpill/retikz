@@ -53,6 +53,14 @@ describe('未给 maxTextWidth 行为不变', () => {
   });
 });
 
+describe('layout.width 固定可见外框时正文自动折行', () => {
+  it('"aaa bbb ccc" + width=7 + padding=0 → ["aaa bbb", "ccc"]', () => {
+    const t = compileNode({ text: 'aaa bbb ccc', layout: { width: 7, padding: 0 } });
+
+    expect(t.lines.map(line => line.text)).toEqual(['aaa bbb', 'ccc']);
+  });
+});
+
 describe('折出物理行继承 IRLine 样式', () => {
   it('[{text:"aaa bbb", fill:"red"}] + maxTextWidth=3 → ["aaa","bbb"] 均 fill red', () => {
     const t = compileNode({ text: [{ text: 'aaa bbb', fill: 'red' }], maxTextWidth: 3 });

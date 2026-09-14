@@ -1,7 +1,9 @@
+import { mergeProperties } from '@retikz/foundation';
+
 import type { IRArrowDetail, IRArrowEndDetail, IRArrowMark, IRPathBase } from '../../schemas';
 import type { StyleResolveFrame } from './types';
 
-import { cutsStyleChannel, pickDefinedKeys } from './frame';
+import { cutsStyleChannel } from './frame';
 
 /** 合并单侧箭头样式：下层只覆盖已声明字段，其余继承上层默认值 */
 const mergeArrowEnd = (
@@ -10,14 +12,14 @@ const mergeArrowEnd = (
 ): IRArrowEndDetail | undefined => {
   if (a === undefined) return b === undefined ? undefined : { ...b };
   if (b === undefined) return { ...a };
-  return { ...a, ...pickDefinedKeys(b) };
+  return { ...a, ...mergeProperties([b], { shouldOverride: value => value !== undefined }) };
 };
 
 /** 合并 path 箭头样式：顶层字段与 start / end 端点字段都按继承语义覆盖 */
 const mergeArrowDetail = (a: IRArrowDetail, b: IRArrowDetail): IRArrowDetail => {
   const { start: aStart, end: aEnd, ...aTop } = a;
   const { start: bStart, end: bEnd, ...bTop } = b;
-  const out: IRArrowDetail = { ...aTop, ...pickDefinedKeys(bTop) };
+  const out: IRArrowDetail = { ...aTop, ...mergeProperties([bTop], { shouldOverride: value => value !== undefined }) };
   const start = mergeArrowEnd(aStart, bStart);
   if (start !== undefined) out.start = start;
   const end = mergeArrowEnd(aEnd, bEnd);
@@ -65,7 +67,7 @@ const resolveArrowDetail = (
 
 const arrowMarkFromDetail = (detail: IRArrowEndDetail | undefined): Omit<IRArrowMark, 'kind'> => {
   if (detail === undefined) return {};
-  return pickDefinedKeys(detail);
+  return mergeProperties([detail], { shouldOverride: value => value !== undefined });
 };
 
 type ResolveArrowMarkContext = {
@@ -83,7 +85,7 @@ const resolveArrowMark = (mark: IRArrowMark, { pos, stack, masterColor }: Resolv
     kind: 'arrow',
     ...arrowMarkFromDetail(top),
     ...arrowMarkFromDetail(side),
-    ...pickDefinedKeys(mark),
+    ...mergeProperties([mark], { shouldOverride: value => value !== undefined }),
   };
 };
 

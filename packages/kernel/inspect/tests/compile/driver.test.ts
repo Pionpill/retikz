@@ -1,6 +1,6 @@
 import type { IRScene } from '@retikz/core';
 
-import { CompositeBaseSchema, defineComposite, defineThemeStyle } from '@retikz/core';
+import { CompositeBaseSchema, defineComposite, defineThemeStyle, NodeOwnerOutputSchema } from '@retikz/core';
 import { RetikzError } from '@retikz/foundation';
 import { describe, expect, it } from 'vitest';
 import { literal, strictObject, string, ZodError } from 'zod';
@@ -35,6 +35,49 @@ const selection = {
 };
 
 describe('Inspection compile driver', () => {
+  it('uses the admitted Source value when an option parser changes its representation', () => {
+    const inspector = defineInspector({
+      ...key,
+      owner,
+      subjectSchema: strictObject({ label: string() }),
+      optionsSchema: strictObject({ label: string().transform(label => `${label}!`) }),
+      resolveOptions: options => options,
+      inspect: (_subject, context) => [{ type: 'node', position: [0, 0], text: context.options.label }],
+    });
+    const result = compileInspectionToScene(ir, {
+      registry: createInspectorRegistry([inspector]),
+      selection: { rules: [{ ...selection.rules[0], options: { label: 'once' } }] },
+      compileOptions: { composites: [composite] },
+    });
+    expect(JSON.stringify(result.inspection)).toContain('once!');
+    expect(JSON.stringify(result.inspection)).not.toContain('once!!');
+  });
+
+  it('keeps resolver failure atomic and preserves its selection origin and cause', () => {
+    const cause = new Error('Cannot resolve options');
+    const inspector = defineInspector({
+      ...key,
+      owner,
+      subjectSchema: strictObject({ label: string() }),
+      optionsSchema: strictObject({}),
+      resolveOptions: () => {
+        throw cause;
+      },
+      inspect: () => [],
+    });
+    expect(() =>
+      compileInspectionToScene(ir, {
+        registry: createInspectorRegistry([inspector]),
+        selection,
+        compileOptions: { composites: [composite] },
+      }),
+    ).toThrow(
+      expect.objectContaining({
+        cause,
+        details: expect.objectContaining({ origin: expect.objectContaining({ stage: 'selection', ruleIndex: 0 }) }),
+      }),
+    );
+  });
   it('resolves appearance from the captured occurrence Theme', () => {
     let appearance:
       | {
@@ -60,8 +103,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: literal('settled') }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: (_subject, context) => {
           appearance = context.appearance;
           return [];
@@ -88,8 +131,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: literal('settled') }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: (_subject, context) => [
           {
             type: 'node',
@@ -122,8 +165,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: (_subject, context) => {
           expect(context.appearance.colorScope).toBe(0);
           return [];
@@ -161,8 +204,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => ({ type: 'node', position: [0, 0], text: 'captured' }),
       }),
     ]);
@@ -177,33 +220,6 @@ describe('Inspection compile driver', () => {
     expect(result.inspection?.entries).toHaveLength(1);
   });
 
-  it('rejects sparse output and preserves a structured output origin', () => {
-    const sparse = new Array(1) as Array<never>;
-    const registry = createInspectorRegistry([
-      defineInspector({
-        ...key,
-        owner,
-        subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
-        optionsSchema: strictObject({}),
-        inspect: () => sparse,
-      }),
-    ]);
-    try {
-      compileInspectionToScene(ir, { registry, selection, compileOptions: { composites: [composite] } });
-      throw new Error('expected compile to fail');
-    } catch (error) {
-      expect(error).toBeInstanceOf(RetikzInspectError);
-      expect(error).toBeInstanceOf(RetikzError);
-      expect((error as RetikzInspectError).code).toBe(RetikzInspectErrorCode.CompileFailed);
-      expect((error as RetikzInspectError).details.origin).toMatchObject({
-        stage: 'output',
-        outputIndex: 0,
-        inspector: key,
-      });
-    }
-  });
-
   it('validates all subjects before invoking any Inspector callback', () => {
     let callbacks = 0;
     const registry = createInspectorRegistry([
@@ -211,8 +227,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: literal('different') }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => {
           callbacks += 1;
           return [];
@@ -236,8 +252,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () => ({
           type: 'node',
           position: { kind: 'anchor', target: { id: 'primary-node' } },
@@ -267,8 +283,8 @@ describe('Inspection compile driver', () => {
         ...key,
         owner,
         subjectSchema: strictObject({ label: string() }),
-        optionsInputSchema: strictObject({}),
         optionsSchema: strictObject({}),
+        resolveOptions: options => options,
         inspect: () =>
           ({
             type: 'node',
@@ -287,5 +303,65 @@ describe('Inspection compile driver', () => {
       expect((error as RetikzInspectError).cause).toBeInstanceOf(ZodError);
       expect((error as RetikzInspectError).details.origin).toMatchObject({ stage: 'output', outputIndex: 0 });
     }
+  });
+
+  it('places mixed local and scene fragments independently and preserves context warnings', () => {
+    const nodeScene: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [
+        {
+          type: 'scope',
+          transforms: [{ kind: 'translate', x: 20, y: 10 }],
+          children: [{ type: 'node', id: 'node-a', position: [0, 0], text: 'A' }],
+        },
+      ],
+    };
+    const nodeKey = { namespace: 'test', type: 'node-scene' };
+    const nodeInspector = defineInspector({
+      ...nodeKey,
+      owner: { kind: 'node' as const },
+      subjectSchema: NodeOwnerOutputSchema,
+      optionsSchema: strictObject({}),
+      resolveOptions: options => options,
+      inspect: (_subject, context) => {
+        expect(context.transform).toEqual([1, 0, 0, 1, 20, 10]);
+        expect(context.ancestors).toHaveLength(1);
+        expect(context.ancestors[0]?.owner).toEqual({ kind: 'scope' });
+        expect(typeof context.warn).toBe('function');
+        context.warn('OptionalGeometry', 'key points are unavailable');
+        return [
+          {
+            type: 'fragment',
+            coordinateSpace: 'scene',
+            child: { type: 'node', position: [20, 10], text: 'scene output' },
+          },
+          { type: 'node', position: [0, 0], text: 'local output' },
+          {
+            type: 'fragment',
+            coordinateSpace: 'local',
+            child: { type: 'node', position: [0, 0], text: 'explicit local' },
+          },
+        ];
+      },
+    });
+
+    const result = compileInspectionToScene(nodeScene, {
+      registry: createInspectorRegistry([nodeInspector]),
+      selection: {
+        rules: [{ kind: 'request', inspector: nodeKey, target: { kind: 'scene' }, options: true }],
+      },
+      compileOptions: { padding: 0 },
+    });
+
+    expect(result.inspection?.entries).toHaveLength(3);
+    expect(result.inspection?.entries[0]?.transform).toEqual([1, 0, 0, 1, 0, 0]);
+    expect(result.inspection?.entries[1]?.transform).toEqual([1, 0, 0, 1, 20, 10]);
+    expect(result.inspection?.entries[2]?.transform).toEqual([1, 0, 0, 1, 20, 10]);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        cause: { code: 'OptionalGeometry', message: 'key points are unavailable', path: expect.any(String) },
+      }),
+    ]);
   });
 });

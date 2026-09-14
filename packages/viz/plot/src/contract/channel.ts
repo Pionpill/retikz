@@ -6,7 +6,7 @@ import type {
   IRDataFieldDefinition,
   IRDataScalarValue,
 } from '@retikz/data';
-import type { JsonValue, ValueOf } from '@retikz/foundation';
+import type { JsonValue, ValueOf, WithOptionalProperties } from '@retikz/foundation';
 
 import type { IRPlot, IRPlotChannel, IRPlotMarkOperation, IRPlotScaleOperation, LegendChannelValue } from '../schemas';
 import type { DimensionRole } from './coordinate';
@@ -345,17 +345,17 @@ export const defineChannel = <T extends ChannelDefinition>(def: T): T => def;
 
 /** 定义一个 Scope 通道（保留 resolve / deliver 的输出强类型） */
 export const defineScopeChannel = <T extends ChannelValue>(
-  def: Omit<ScopeChannelDefinition<T>, 'kind'> & { kind?: typeof ChannelDefinitionKind.Scope },
+  def: WithOptionalProperties<ScopeChannelDefinition<T>, 'kind'>,
 ): ScopeChannelDefinition<T> => ({ ...def, kind: ChannelDefinitionKind.Scope });
 
 /** 定义一个 Node 通道（对齐 defineScale / defineCoordinate / defineTransform；保留 resolve / deliver 的输出强类型） */
 export const defineNodeChannel = <T extends ChannelValue>(
-  def: Omit<NodeChannelDefinition<T>, 'kind'> & { kind?: typeof ChannelDefinitionKind.Node },
+  def: WithOptionalProperties<NodeChannelDefinition<T>, 'kind'>,
 ): NodeChannelDefinition<T> => ({ ...def, kind: ChannelDefinitionKind.Node });
 
 /** 定义一个 Path 通道（对齐 defineNodeChannel；保留 resolve / deliver 的输出强类型） */
 export const definePathChannel = <T extends ChannelValue>(
-  def: Omit<PathChannelDefinition<T>, 'kind'> & { kind?: typeof ChannelDefinitionKind.Path },
+  def: WithOptionalProperties<PathChannelDefinition<T>, 'kind'>,
 ): PathChannelDefinition<T> => ({ ...def, kind: ChannelDefinitionKind.Path });
 
 /** registry / options 注入用的通用宽类型 */

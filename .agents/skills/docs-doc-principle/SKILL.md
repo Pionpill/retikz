@@ -14,8 +14,10 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)；Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
    - 扩展指南：[`docs-doc-extension`](../docs-doc-extension/SKILL.md)
    - 示例页：[`docs-doc-example`](../docs-doc-example/SKILL.md)
+   - 包总纲页：[`docs-doc-overview`](../docs-doc-overview/SKILL.md)
    - 分组落地页：[`docs-doc-group`](../docs-doc-group/SKILL.md)
    - 概念页：[`docs-doc-concept`](../docs-doc-concept/SKILL.md)
+   - 实现原理页：[`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)，面向已读前置文档的源码读者
    - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
 3. 仅在命中条件时继续加载：
    - Showcase / 成品型功能展示：[`docs-doc-showcase`](../docs-doc-showcase/SKILL.md)
@@ -61,12 +63,24 @@ URL 段、`data` 节点 `id` 与 `contents` 目录段必须一致。新增或移
 
 正文按能力语义组织，不按 prop 或视觉变体数量组织。边框色、背景色、线宽、透明度、字号等通用视觉属性只简要说明，并收进 API 表或一个 controls playground；只有改变语义、结构、组合、所有权、错误或编译机制的差异才值得独立章节或静态 demo。
 
+## 阅读难度
+
+页面 `difficulty` 按读者完成的主要任务判定，不按篇幅、术语数量、代码行数或页型判定。一页可以链接更深内容，但不因此升级；按主要阅读路径标注。
+
+| 等级                | 关键词 | 读者完成的任务                                                                                   |
+| ------------------- | ------ | ------------------------------------------------------------------------------------------------ |
+| `beginner`（入门）  | 使用   | 围绕关键词或 API 完成既有能力。读者可直接参照示例调用，只需理解必要输入和可观察结果              |
+| `advanced`（进阶）  | 定制   | 理解配置、约束与组合关系，编写代码调整既有能力以适应具体场景；不是简单替换一个 API 调用          |
+| `internals`（底层） | 原理   | 为二次开发、能力扩展、复杂问题排查或性能与运行时调试而理解机制、管线和内部边界；普通使用可以跳过 |
+
 ## 写作规则
 
 - 段落尽量不超过 3 行；步骤用列表，映射和选择用表格，用法用 demo 或代码块
+- 算法与数学关系优先用 MDX 的 MathJax 公式，不用 text / TypeScript 代码块模拟公式。简单符号或短等式使用行内公式；复杂、多项或多行公式独立 display，并在前后各用一行说明它的输入、结果或阅读重点
 - H1 由 frontmatter 渲染，正文不再写 `# 标题`
 - `frontmatter.description` 要能脱离页面独立说明根问题、核心职责或使用入口，不写“本页介绍”
 - 中文标题不机械附括号英文；必须识别的 API、schema、类型名保留原名
+- 小节标题精简干练，优先用准确的名词或动词短语，避免整句提问、冗余修饰及重复页面主题；解释放在正文，保留区分小节所需的信息，页型规定的固定标题仍按对应 skill 执行
 - 生僻术语在每页首次出现时就近解释
 - 正文保持中性，不写“竞品做不到 / 我们更强”；生态对照放 `<Comparison>`，隐藏后正文仍自洽
 - mdx 正文默认不加第三方外链；项目仓库内延伸阅读使用可点击的 GitHub 完整 URL。blog 的例外由 `docs-doc-blog` 定义
@@ -76,31 +90,45 @@ URL 段、`data` 节点 `id` 与 `contents` 目录段必须一致。新增或移
 
 用户正文优先展示 DSL（如 `<Layout>`、`<Node>`、`<Path>`、`<Draw>`）。普通用法页不为了“完整”重复 IR JSON 或编译器内部；IR 只在架构、持久化、AI 接入或必须用它解释公开行为时出现。
 
+- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页的纯代码示例必须并列保留两套最小接入说明：分别点明入口、注入或调用位置与产物。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
+
 ComponentPreview 的 IR 与 Vanilla 配置必须保持最上层、精简的 Source IR / authoring 语义；不得把 lower、resolve 或 runtime canonical 结果直接暴露给读者。运行时为统一消费而产生的 `base`、完整 Plot 或其它下沉形态只用于校验与渲染。
 
 所有功能 demo 和叙述图都用 retikz 自绘：同级 demo + `<ComponentPreview>`。不使用截图、PNG/JPG/GIF、Mermaid、Excalidraw 或 draw.io 代替功能展示。叙述图默认 `hideCode`；可复制用法保留源码。
 
 关系、流程或架构图的具体画法由 `docs-figure-contract` 拥有，本 skill 只决定是否需要图。
 
-## API 与源码真源
+## 三类 API 文档与源码真源
 
-API 参考按需使用“公开导出概览 → 核心契约 → 重要闭合集合”：
+API 内容按读者任务分为三类，名称和职责不得混用：
 
-1. 只列本页完成任务直接需要的公开导出
-2. props、Definition、options 等核心契约再展开字段表
-3. 影响选择的 enum、const object、内置 Definition 或 registry 才单列闭合集合
+| 类型             | 目标与范围                                                                                           | 真源与写法                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 文中 API 介绍    | 帮读者顺着当前主题理解和完成当前任务；只选本页直接需要的 API、核心字段或闭合集合，不承担完整查询职责 | 人工正文，可用简短表格、代码或链接；优先说明何时使用和可见结果                                        |
+| API Reference    | 提供包根入口及公开子路径的完整 TypeScript 查询入口                                                   | 由 `package.json` 的 `exports`、对应 owner barrel、签名和 JSDoc 自动生成；不手写另一份完整签名表      |
+| Schema Reference | 提供持久化 IR / 配置 schema 的完整字段词典                                                           | Zod schema 与 `.describe()` 是字段真源；用 `<ZodSchema>` 渲染，规则见 `references/reference-pages.md` |
 
-文档里的函数、类型和常量名必须是从所属包公开入口可导入的真实标识符。不要把概念简称、内部类型或 owner 深层 export 冒充公共 API。写 API 表前沿着“组件 Props / schema → owner barrel → package root”核对；宿主组件页还要检查同 owner barrel 的 Provider、Context、hook 与 helper，避免漏掉用户完成任务所需的伴随导出。
+概念、组件、算法和示例页只写“文中 API 介绍”，并在适当位置链接到 API Reference 或 Schema Reference。不要因“完整”在正文复制整个包的导出、完整 overload 或 schema 字段；API Reference 中的 schema 类型只展示摘要并链接到 Schema Reference，避免两份字段说明漂移。
+
+API Reference 只收录从 package `exports` 可达的真实公共标识符；入口、子路径、re-export 和 JSDoc 必须由 TypeScript 分析产物确定，不扫描任意内部源码文件。中文说明以中文 JSDoc 为源；英文说明由受审查的翻译产物生成，代码标识符、签名、枚举值、示例和 JSDoc 机器语义不翻译。不得在浏览器运行时调用 LLM 翻译，也不得把未经审查的机翻作为契约真源。
+
+每次 API Reference 变更先运行生成脚本，再由 LLM 翻译新增的中文读者说明并写回生成器的英文翻译产物；随后审阅术语、代码标识符和 Markdown / MDX 结构，重新生成英文 include。缺少翻译必须让生成失败；英文 include 除 fenced code 示例外不得遗留中文说明。LLM 只参与生成时的翻译与审阅，不参与浏览器运行时。
+
+API Reference 生成器对常用 JSDoc 的投影规则固定如下：首段 summary 生成名称下的职责摘要；`@description` 生成主体说明；`@remarks` 生成备注；字段 `@default` / `@defaultValue` 生成默认值列；`@param` 与 `@typeParam` 生成参数表；`@returns` / `@return`、`@throws` / `@exception`、`@example` 分别生成返回值、异常和用法；`@since`、`@deprecated`、`@see` 生成版本、弃用和延伸阅读元数据。`@public` / `@private` / `@internal` 决定可见性，`@inheritDoc` 交给 TypeDoc 解析继承注释，不单独渲染。未使用的标签不制造空章节；不从源码签名或实现猜测缺失说明。
+
+文中 API 介绍里的函数、类型和常量名仍必须是从所属包公开入口可导入的真实标识符。不要把概念简称、内部类型或 owner 深层 export 冒充公共 API。写表前沿着“组件 Props / schema → owner barrel → package root”核对；宿主组件页还要检查同 owner barrel 的 Provider、Context、hook 与 helper，避免漏掉用户完成任务所需的伴随导出。
 
 共享或继承 props 不在每页复制完整字段表：用一行说明公开共享契约及其职责，并链接到唯一权威页；本页只展开新增或重定义的字段。
 
-手写 API 表遇到对象类型时：
+文中 API 表遇到对象类型时：
 
 - 类型列第一行写公开对象类型，从第二行起按声明顺序将每个属性写成独立的 `- field?: Type`；描述列第一行写整体语义，后续逐行与属性同序、同数、一一对应
 - 属性名和类型值保留行内代码样式；联合类型拆成多个代码片段，让页面在 `|` 边界换行，不把整条类型包成跨行灰块
 - 类型分支来自公开 const object 或 preset 时，用 `<ApiValues name="PublicConstant" />` 显示常量名并在悬浮、聚焦时列出具体值；注册表直接引用公开常量，MDX 不手写重复值，描述列仍说明该集合的语义
 
 机制说明先写用户可观察行为，再用 `<SourceLinks>` 给直接实现入口。每项 `path` 使用仓库相对路径，行号范围最小且必须仍支撑正文结论；源码链接不能替代解释。
+
+实现原理页按 `docs-doc-mechanism` 展开内部成员与执行过程；明确标注的内部实现锚点不受公共 API 标识符要求限制，但不得冒充公开调用入口或进入 API Reference。
 
 ## 文档宽度
 
@@ -115,7 +143,7 @@ API 参考按需使用“公开导出概览 → 核心契约 → 重要闭合集
 3. `apps/docs/src/modules/docs/data/<moduleId>.ts`
 4. 相关 sidebar、Related、LinkedCard 与正文链接
 
-分组落地页、扩展页和 blog 的额外元数据由对应页型 skill 定义。
+包总纲页、分组落地页、扩展页和 blog 的额外元数据由对应页型 skill 定义。包根页使用 `docs-doc-overview`，不要套用组件或参考家族的 `docs-doc-group` 结构。
 
 `introduction` / `get-start` 等入口页按读者任务组织，不强套组件或示例页结构，但仍服从本 skill 的三处协同、双语、写作权重与验证规则。
 
@@ -141,17 +169,17 @@ node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope <
 | docs data、i18n、schema registry        | 上述检查 + docs `tsc --noEmit` + 对应路由/Schema               |
 | 用户明确要求 CI 或产物等价验证          | `check:build`；如明确要求，再执行 `check:runtime`              |
 
-新建 `*.demo.tsx` 时按 [`ComponentPreview 按需契约`](references/component-preview.md) 的新文件规则验证，不依赖旧 dev session 的热更新状态。
+新建 ComponentPreview 图时按 [`ComponentPreview 按需契约`](references/component-preview.md) 的新文件规则验证，不依赖旧 dev session 的热更新状态。
 
 ### 大改与新增页面的独立评审
 
 命中任一条件即视为文档大改：新增页面；重写页面主线或章节顺序；新增或替换 demo、controls、API 表；同时对多个小节或页面做语义调整。纯错字、链接、格式和局部措辞修改不触发。
 
-- 文档大改按中型任务处理，开始时在一次执行计划中确认 scope、验证以及是否使用一个只读 subagent review
-- 未授权 subagent 时由主 agent 使用 `docs-doc-review` 自审；已授权时在改稿和机械验证后派一个只读 reviewer
-- 已授权 reviewer 时不能因时间紧或机械检查通过而跳过，也不在完稿后追加第二个 reviewer
-- 给 subagent 原始页面、diff、demo 与必要实现依据，不预告预期结论；由它从入门读者视角独立找出术语、理解跳跃和顺序问题
-- 修正 BLOCKING 后复用同一 reviewer，直到阻塞关闭或达到计划循环上限；未授权时明确报告“未执行独立读者评审”
+- 文档大改按中型任务处理，执行计划包含 scope、验证和完稿后的 1 个只读 Luna（`gpt-5.6-luna`）读者评审；复审上限沿用获批计划
+- 新建、重写或大范围重构完成且机械检查通过后，必须派遣该 subagent，不能以主 agent 自审或检查通过代替；用户明确取消或工具不可用时如实说明未执行
+- reviewer 使用 fresh 上下文，仅查看待评文档正文与页面内图示，不读取项目规范、AGENTS、skills、源码、测试、diff 或作者说明。主 agent 不传递项目历史、预期结论或补充概念解释
+- 要求 reviewer 直接提出读者疑问，指出具体段落中未解释或解释过晚的概念、含糊说明、逻辑跳跃和章节衔接问题；不能靠猜测或源码替文档补齐解释。源码一致性与规范检查由主 agent 负责
+- 修正 BLOCKING 后在计划上限内复用同一 reviewer，不追加第二个 reviewer；局部措辞、格式等小改由主 agent 自审
 
 完成前还要人工确认：
 

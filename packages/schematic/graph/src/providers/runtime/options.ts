@@ -8,6 +8,7 @@ import type {
   RelationPredicateDefinition,
   RelationRoleDefinition,
 } from '../../contract';
+import type { EntityKindRegistry } from '../entity';
 
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { resolveEntityKindRegistry, resolveEntityPredicateRegistry, resolveEntityRoleRegistry } from '../entity';
@@ -22,7 +23,7 @@ type GraphDefinitionCollectionKey = keyof GraphDefinitionOptions;
 
 const definitionKeyOf = {
   entityRoles: (definition: EntityRoleDefinition) => definition.role,
-  entityKinds: (definition: EntityKindDefinition) => definition.kind,
+  entityKinds: (definition: EntityKindDefinition) => JSON.stringify([definition.role, definition.kind]),
   entityPredicates: (definition: EntityPredicateDefinition) => definition.name,
   relationRoles: (definition: RelationRoleDefinition) => definition.role,
   relationKinds: (definition: RelationKindDefinition) => definition.kind,
@@ -71,7 +72,7 @@ const mergeDefinitionCollection = <TKey extends GraphDefinitionCollectionKey>(
 /** 一次 Graph definition 装配共享的已解析 registries */
 export type ResolvedGraphDefinitionOptions = Readonly<{
   entityRoles: ReadonlyMap<string, EntityRoleDefinition>;
-  entityKinds: ReadonlyMap<string, EntityKindDefinition>;
+  entityKinds: EntityKindRegistry;
   entityPredicates: ReadonlyMap<string, EntityPredicateDefinition>;
   relationRoles: ReadonlyMap<string, RelationRoleDefinition>;
   relationKinds: ReadonlyMap<string, RelationKindDefinition>;

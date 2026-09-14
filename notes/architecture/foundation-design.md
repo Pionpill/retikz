@@ -34,6 +34,8 @@ Foundation 不拥有独立的 Drawing、Data 或 Visualization 完备目标。�
 
 ## 3. Foundation 拥有的最小能力面
 
+Foundation 同时拥有无领域的 `mergeProperties(sources, options)` 属性浅合并原子：按源数组顺序复制自身可枚举字符串与 symbol 属性，返回新对象；可选 `shouldOverride(value, key)` 决定每次写入是否参与，拒绝写入不删除已有值。跳过 undefined 源，默认保留所有属性值，过滤后的类型保守返回 `Partial<T>`。嵌套合并、默认值、显式清空和领域重置仍由消费方拥有，不进入此原子。
+
 ### 3.1 类型工具
 
 Foundation 是下列无运行时语义类型工具的唯一真源：

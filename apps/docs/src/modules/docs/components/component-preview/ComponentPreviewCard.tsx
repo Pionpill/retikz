@@ -1,18 +1,22 @@
 import type { FC, ReactNode } from 'react';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+
+import type { Lang } from '@/i18n';
 
 import { cn } from '@/lib';
 import { useAiChatStore } from '@/modules/docs/ai-chat';
-import { useComponentPreviewStore } from '@/modules/docs/store';
+import { useComponentPreviewStore, useRightPanelStore } from '@/modules/docs/store';
 
 import type {
   AlignKey,
+  ComponentPreviewDemoComponent,
   ComponentRenderSource,
   PreviewActionSlot,
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlSlot,
+  PreviewControlValues,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   SizeKey,
@@ -32,9 +36,13 @@ export type { ComponentRenderSource } from './types';
 export type ComponentPreviewCardProps = {
   /** demo 标识，仅用于 Dialog header 显示。 */
   name: string;
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 代码区视图集合；缺省时整段代码面板与 Dialog 右栏都不渲染。 */
   source?: ComponentRenderSource;
+  /** 根据当前控件状态派生显式源码视图 */
+  buildSourceViews?: (values: Readonly<PreviewControlValues>) => Omit<ComponentRenderSource, 'react'>;
   /** React 源码视图默认选中的文件名。 */
   defaultSourceFile?: string;
   /** 渲染区垂直对齐，默认 center。 */
@@ -51,6 +59,8 @@ export type ComponentPreviewCardProps = {
   controlDefinition?: PreviewControlsDefinition;
   /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
   controlPanelDefaultOpen?: boolean;
+  /** 属性面板的默认尺寸百分比。桌面端为宽度，窄屏时等比作为高度 */
+  controlPanelDefaultSize?: number;
   /** 当前 demo 的完整 controls contract */
   controlContract?: PreviewControlContract;
   /** 是否显示预览上下文栏；缺省时随源码面板可用性决定 */
@@ -75,7 +85,9 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const {
     name,
     Component,
-    source,
+    lang = 'zh',
+    source: initialSource,
+    buildSourceViews,
     defaultSourceFile,
     align = 'center',
     size = 'md',
@@ -84,8 +96,9 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     showTools = true,
     controlDefinition,
     controlPanelDefaultOpen,
+    controlPanelDefaultSize,
     controlContract,
-    showContextBar = source !== undefined,
+    showContextBar = initialSource !== undefined,
     controlSlots,
     dialogActions,
     enableThemeSwitch = false,
@@ -97,11 +110,9 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
   const [localIsExpanded, setLocalIsExpanded] = useState<boolean | undefined>(undefined);
   const [localControlPanelOpen, setLocalControlPanelOpen] = useState<boolean>();
   const [themeMode, setThemeMode] = useState<PreviewThemeMode>(() => useComponentPreviewStore.getState().themeMode);
-  const sourceState = useSourcePanelState(source, defaultSourceFile);
-  const hasCode = sourceState.views.length > 0;
   const [isMaximized, setIsMaximized] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const setAiOpen = useAiChatStore(s => s.setOpen);
+  const openAi = useRightPanelStore(s => s.openAi);
   const fillAiDraft = useAiChatStore(s => s.fillDraftAndFocus);
   const aiCurrentPage = useAiChatStore(s => s.currentPage);
 
@@ -117,6 +128,15 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     controlContract?.canonicalValues,
     globalRangePlaybackDuration,
   );
+  const source = useMemo(
+    () =>
+      initialSource && buildSourceViews
+        ? { ...initialSource, ...buildSourceViews(controlState.values) }
+        : initialSource,
+    [initialSource, buildSourceViews, controlState.values],
+  );
+  const sourceState = useSourcePanelState(source, defaultSourceFile);
+  const hasCode = sourceState.views.length > 0;
   const previewState = usePreviewPanelState({
     controlState,
     rendererMode: globalRendererMode,
@@ -137,13 +157,13 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
 
   const handleAskAi = useCallback(() => {
     const heading = findPrecedingHeading(containerRef.current);
-    const lang = aiCurrentPage?.lang ?? 'zh';
+    const promptLang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
     const headingText = (heading?.textContent ?? '').trim();
-    const prompt = buildAskAiPrompt(lang, pageTitle, headingText, name);
-    setAiOpen(true);
+    const prompt = buildAskAiPrompt(promptLang, pageTitle, headingText, name);
+    openAi();
     fillAiDraft(prompt);
-  }, [aiCurrentPage, fillAiDraft, name, setAiOpen]);
+  }, [aiCurrentPage, fillAiDraft, name, openAi]);
   const handleShowCode = useCallback(() => setLocalIsCodeVisible(true), []);
 
   const previewToolSlots = showTools
@@ -176,6 +196,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
           controlPanelOpen={controlPanelOpen}
+          controlPanelDefaultSize={controlPanelDefaultSize}
           controlDensity="compact"
           onControlPanelOpenChange={setLocalControlPanelOpen}
           workspaceClassName={sizeClass[previewState.size]}
@@ -184,6 +205,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           onThemeStyleChange={onThemeStyleChange}
           previewState={previewState}
           Component={Component}
+          lang={lang}
           activeRender={sourceState.activeRender}
           controlSlots={resolvedCardControlSlots}
           previewClassName={cn(
@@ -208,6 +230,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           <ComponentPreviewDialog
             name={name}
             Component={Component}
+            lang={lang}
             source={source}
             defaultSourceFile={defaultSourceFile}
             align={align}
@@ -219,6 +242,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             themeMode={themeMode}
             onThemeModeChange={setThemeMode}
             controlPanelOpen={controlPanelOpen}
+            controlPanelDefaultSize={controlPanelDefaultSize}
             onControlPanelOpenChange={setLocalControlPanelOpen}
             controlSlots={controlSlots}
             dialogActions={dialogActions}

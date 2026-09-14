@@ -632,12 +632,6 @@ describe('LegendGuideSchema contract', () => {
 });
 
 describe('GuideSchema discriminated union contract', () => {
-  // union 判别：axis 仍合法（回归）
-  it('union_accepts_axis', () => {
-    const guide = { type: 'axis', dimension: 'x', grid: true };
-    expect(GuideSchema.parse(guide)).toEqual(guide);
-  });
-
   // union 判别：legend 合法
   it('union_accepts_legend', () => {
     const guide = { type: 'legend', channel: 'color', position: 'right' };

@@ -16,21 +16,14 @@ export type InspectionSelectionTarget =
   | Readonly<{ kind: 'subtree'; sourcePath: string }>
   | Readonly<{
       kind: 'self';
-      locator:
-        | Readonly<{
-            /** 按 authored source path 选择其产生的最终 occurrence */
-            kind: 'authored';
-            /** authored IR 中的稳定来源路径 */
-            sourcePath: string;
-            /** 同一来源路径与所属者下按最终实例顺序选择的序号；省略表示全部 */
-            occurrenceIndex?: number;
-          }>
-        | Readonly<{
-            /** 精确选择一个最终编译 occurrence */
-            kind: 'occurrence';
-            /** Core 提供的最终 occurrence 定位器 */
-            occurrence: CompileOccurrenceLocator;
-          }>;
+      locator: Readonly<{
+        /** 按 authored source path 选择其产生的最终 occurrence */
+        kind: 'authored';
+        /** authored IR 中的稳定来源路径 */
+        sourcePath: string;
+        /** 同一来源路径与所属者下按最终实例顺序选择的序号；省略表示全部 */
+        occurrenceIndex?: number;
+      }>;
     }>;
 
 /** Inspector selection 的单条规则：request 控制单个 Inspector，barrier 封锁一个范围内的全部 Inspector */
@@ -84,9 +77,9 @@ export type InspectionPlaneEntry = Readonly<{
   occurrence: CompileOccurrenceLocator;
   /** request 级连续颜色序号 */
   colorScope: number;
-  /** occurrence-local sealed Scene */
+  /** 按辅助片段 coordinateSpace 生成的只读 Scene */
   scene: Scene;
-  /** occurrence local 到 primary Scene 的矩阵 */
+  /** 辅助 Scene 到 primary Scene 的矩阵；scene 模式为单位矩阵 */
   transform: AffineMatrix;
 }>;
 
@@ -96,7 +89,7 @@ export type InspectionPlane = Readonly<{
   entries: ReadonlyArray<InspectionPlaneEntry>;
 }>;
 
-/** Inspect fail-loud 错误及非致命 fragment diagnostic 的结构化来源 */
+/** Inspect 失败、回调警告及 fragment diagnostic 的结构化来源 */
 export type InspectionDiagnosticOrigin =
   | Readonly<{ stage: 'selection'; ruleIndex: number; target: InspectionSelectionTarget | null }>
   | Readonly<{
@@ -114,11 +107,11 @@ export type InspectionDiagnosticOrigin =
     }>
   | Readonly<{ stage: 'complete' }>;
 
-/** 一个 fragment warning 的 Inspect-owned diagnostic */
+/** 一条回调或 fragment warning 的 Inspect-owned diagnostic */
 export type InspectionDiagnostic = Readonly<{
   /** warning 对应的 request 与 output */
   origin: InspectionDiagnosticOrigin;
-  /** Core code/message/path 原样投影 */
+  /** 回调 code/message 与来源路径，或 Core warning 的原样投影 */
   cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>;
 }>;
 
@@ -128,6 +121,6 @@ export type InspectionCompileResult = Readonly<{
   primary: CompileResult;
   /** 全部 callback 无输出时为 null */
   inspection: InspectionPlane | null;
-  /** 仅包含 fragment warnings */
+  /** 按请求顺序排列的回调警告与 fragment warnings */
   diagnostics: ReadonlyArray<InspectionDiagnostic>;
 }>;

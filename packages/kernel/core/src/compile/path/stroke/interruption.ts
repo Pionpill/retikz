@@ -334,18 +334,20 @@ export const createStrokeInterruptionIntervals = (
   labels: ReadonlyArray<{
     sample: StrokeLabelSample;
     visualBoundsPoints: ReadonlyArray<IRPosition>;
+    gap: number;
   }>,
   strokeWidth: number,
   protectedRanges: ReadonlyArray<StrokeInterruptionProtectedRange> = [],
 ): Array<StrokeInterruptionInterval> => {
   const intervals: Array<StrokeInterruptionInterval> = [];
   for (const label of labels) {
-    const { sample, visualBoundsPoints } = label;
+    const { sample, visualBoundsPoints, gap } = label;
     if (
       !Number.isFinite(sample.logicalDistance) ||
       !isFinitePoint(sample.sample.point) ||
       !isFinitePoint(sample.sample.tangent) ||
       !Number.isFinite(strokeWidth) ||
+      !Number.isFinite(gap) ||
       visualBoundsPoints.length === 0
     ) {
       throw new RetikzCoreError(
@@ -367,7 +369,7 @@ export const createStrokeInterruptionIntervals = (
       );
       halfProjection = Math.max(halfProjection, projection);
     }
-    const clearance = Math.max(0, strokeWidth) / 2;
+    const clearance = Math.max(0, strokeWidth) / 2 + gap;
     const start = Math.max(sample.occurrence.subPathLogicalStart, sample.logicalDistance - halfProjection - clearance);
     const end = Math.min(sample.occurrence.subPathLogicalEnd, sample.logicalDistance + halfProjection + clearance);
     let intervalParts: Array<{ start: number; end: number }> = [{ start, end }];

@@ -6,6 +6,25 @@ import { describe, expect, it } from 'vitest';
 
 import * as FlowVanilla from '../src/flow';
 
+it('preserves local Layout exclusion through Vanilla authoring', () => {
+  const input: FlowVanilla.InputFlowDiagram = {
+    entities: [
+      { id: 'canvas', text: 'Canvas' },
+      { id: 'png', text: 'PNG' },
+    ],
+    groups: [],
+    layouts: [
+      { id: 'row', kind: 'linear', direction: 'right', children: ['canvas', 'png'], excludeFromBounds: ['png'] },
+    ],
+    children: ['row'],
+  };
+  const source = FlowVanilla.normalizeFlowDiagram(input);
+  expect(source.layouts[0].excludeFromBounds).toEqual(['png']);
+  expect(DiagramFlow.FlowDiagramSchema.parse(JSON.parse(JSON.stringify(source)))).toEqual(
+    DiagramFlow.FlowDiagramSchema.parse(source),
+  );
+});
+
 type NormalizeFlowDiagram = (input: Readonly<Record<string, unknown>>) => DiagramFlow.IRFlowDiagram;
 type CreateFlowDiagramEmbed = (
   id: string,
@@ -45,7 +64,7 @@ const sourceInput = {
     { id: 'kernel', text: ['Kernel', 'IR compiler'] },
   ],
   groups: [{ id: 'client', caption: { title: { text: 'Client' } }, children: ['frontend'] }],
-  layouts: [{ id: 'frontend', direction: 'down' as const, children: ['jsx'] }],
+  layouts: [{ kind: 'linear' as const, id: 'frontend', direction: 'down' as const, children: ['jsx'] }],
   children: ['client', 'kernel'],
   relations: [
     {
@@ -57,6 +76,7 @@ const sourceInput = {
     },
   ],
   flowDefaults: { layout: { nodeGap: 0, rankGap: 48 } },
+  graphRules: [{ type: 'entity' as const, selector: { role: 'activity' }, style: { color: 'dodgerblue' } }],
 };
 
 const expectedSource = {
@@ -72,6 +92,26 @@ const artifactValueOf = (
 ) => result.artifacts.find(artifact => artifact.namespace === 'diagram' && artifact.type === 'flow')?.value;
 
 describe('@retikz/diagram-vanilla/flow', () => {
+  it.each(['-|', '|-'] as const)('compiles %s routing through the public Vanilla adapter', kind => {
+    const result = processToStaticInputResult(
+      {
+        children: [
+          FlowVanilla.flowDiagram('elbow', {
+            entities: [
+              { id: 'a', text: 'A' },
+              { id: 'b', text: 'B' },
+            ],
+            groups: [],
+            layouts: [],
+            children: ['a', 'b'],
+            relations: [{ source: 'a', target: 'b', routing: { kind, cornerRadius: 0 } }],
+          }),
+        ],
+      },
+      { adapters: FlowVanilla.createFlowDiagramVanillaAdapters(), compile: { measureText } },
+    );
+    expect(artifactValueOf(result)).toMatchObject({ relations: [{ route: { kind, cornerRadius: 0 } }] });
+  });
   it('exports the complete Flow authoring surface from the explicit subpath', () => {
     expect(functionExport('normalizeFlowDiagram')).toBeDefined();
     expect(functionExport('flowDiagram')).toBeDefined();
@@ -106,6 +146,34 @@ describe('@retikz/diagram-vanilla/flow', () => {
       groups: [],
       layouts: [],
       children: ['form'],
+    };
+
+    expect(normalizeFlowDiagram(input)).toEqual({ namespace: 'diagram', type: 'flow', ...input });
+  });
+
+  it('preserves id-keyed Grid placements in typed Vanilla authoring', () => {
+    const normalizeFlowDiagram = functionExport<NormalizeFlowDiagram>('normalizeFlowDiagram');
+    expect(normalizeFlowDiagram).toBeDefined();
+    if (normalizeFlowDiagram === undefined) return;
+
+    const input = {
+      entities: [
+        { id: 'request', text: 'Request' },
+        { id: 'result', text: 'Result' },
+      ],
+      groups: [],
+      layouts: [
+        {
+          kind: 'grid' as const,
+          id: 'stages',
+          children: ['request', 'result'],
+          placements: {
+            request: { row: 0, column: 0 },
+            result: { row: 1, column: 1 },
+          },
+        },
+      ],
+      children: ['stages'],
     };
 
     expect(normalizeFlowDiagram(input)).toEqual({ namespace: 'diagram', type: 'flow', ...input });

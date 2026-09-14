@@ -1,22 +1,16 @@
-import type {
-  CSSProperties,
-  FC,
-  KeyboardEvent as ReactKeyboardEvent,
-  MouseEvent as ReactMouseEvent,
-  ReactNode,
-  RefObject,
-  TouchEvent as ReactTouchEvent,
-} from 'react';
+import type { CSSProperties, FC, ReactNode, RefObject } from 'react';
 
 import { PanelLeftOpen } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { cn } from '@/lib';
+import type { Lang } from '@/i18n';
 
 import type { PreviewPanelState } from '../preview-panel';
 import type {
   PreviewControlContract,
+  ComponentPreviewDemoComponent,
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
@@ -58,6 +52,8 @@ export type PreviewWorkspaceProps = {
   onThemeModeChange: (themeMode: PreviewThemeMode) => void;
   /** 属性面板当前是否打开 */
   controlPanelOpen: boolean;
+  /** 属性面板的默认尺寸百分比。桌面端为宽度，窄屏时等比作为高度 */
+  controlPanelDefaultSize?: number;
   /** 属性面板字段控件密度
    * @default default
    */
@@ -67,7 +63,9 @@ export type PreviewWorkspaceProps = {
   /** 当前宿主独享的视图 controller */
   previewState: PreviewPanelState;
   /** 默认 React demo */
-  Component: FC;
+  Component: ComponentPreviewDemoComponent;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 当前源码视图提供的渲染函数 */
   activeRender?: (rendererMode: RendererMode) => ReactNode;
   /** 当前预览区的浮层控制 slots */
@@ -84,21 +82,8 @@ export type PreviewWorkspaceProps = {
 
 const DEFAULT_CONTROL_PANEL_SIZE = 25;
 const MOBILE_WORKSPACE_BREAKPOINT = 480;
-const DEFAULT_MOBILE_CONTROL_PANEL_HEIGHT = 200;
-const MIN_MOBILE_CONTROL_PANEL_HEIGHT = 100;
-const MAX_MOBILE_CONTROL_PANEL_HEIGHT = 300;
-const MOBILE_CONTROL_PANEL_KEYBOARD_STEP = 10;
 
 type PreviewWorkspaceDirection = 'horizontal' | 'vertical';
-
-type MobileControlPanelResizeStart = {
-  clientY: number;
-  height: number;
-};
-
-/** 把窄屏属性面板高度限制在可拖拽范围内 */
-const clampMobileControlPanelHeight = (height: number): number =>
-  Math.min(MAX_MOBILE_CONTROL_PANEL_HEIGHT, Math.max(MIN_MOBILE_CONTROL_PANEL_HEIGHT, height));
 
 /** 按工作区自身宽度决定属性面板排列方向 */
 const usePreviewWorkspaceDirection = (): {
@@ -143,10 +128,12 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     onThemeStyleChange,
     onThemeModeChange,
     controlPanelOpen,
+    controlPanelDefaultSize,
     controlDensity = 'default',
     onControlPanelOpenChange,
     previewState,
     Component,
+    lang = 'zh',
     activeRender,
     controlSlots,
     previewClassName,
@@ -157,13 +144,12 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const previewTheme = usePreviewTheme(themeStyleSelection, themeMode);
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
   const defaultControlPanelSize =
-    definition?.presentation === 'panel'
+    controlPanelDefaultSize ??
+    (definition?.presentation === 'panel'
       ? (definition.defaultSize ?? DEFAULT_CONTROL_PANEL_SIZE)
-      : DEFAULT_CONTROL_PANEL_SIZE;
+      : DEFAULT_CONTROL_PANEL_SIZE);
   const panelSizeRef = useRef(defaultControlPanelSize);
   const [panelSize, setPanelSize] = useState(defaultControlPanelSize);
-  const mobileResizeStartRef = useRef<MobileControlPanelResizeStart | null>(null);
-  const [mobileControlPanelHeight, setMobileControlPanelHeight] = useState(DEFAULT_MOBILE_CONTROL_PANEL_HEIGHT);
   const handleControlPanelOpenChange = useCallback(
     (open: boolean) => {
       if (!open) setPanelSize(panelSizeRef.current);
@@ -172,25 +158,6 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     [onControlPanelOpenChange],
   );
   const closeControlPanel = useCallback(() => handleControlPanelOpenChange(false), [handleControlPanelOpenChange]);
-
-  useEffect(() => {
-    const handleMouseMove = (event: MouseEvent) => {
-      const start = mobileResizeStartRef.current;
-      if (!start) return;
-
-      setMobileControlPanelHeight(clampMobileControlPanelHeight(start.height + event.clientY - start.clientY));
-    };
-    const handleMouseUp = () => {
-      mobileResizeStartRef.current = null;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, []);
 
   const renderPreviewPane = (resolvedControlSlots: Array<PreviewControlSlot> | undefined) => (
     <div
@@ -210,6 +177,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
       <PreviewPanel
         state={previewState}
         Component={Component}
+        lang={lang}
         activeRender={activeRender}
         theme={previewTheme}
         controlSlots={resolvedControlSlots}
@@ -248,98 +216,18 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
   const resolvedControlSlots = controlPanelOpen
     ? controlSlots
     : mergePreviewControlSlots(controlSlots, [openControlPanelSlot]);
-  const startMobileResize = (clientY: number) => {
-    mobileResizeStartRef.current = {
-      clientY,
-      height: mobileControlPanelHeight,
-    };
-  };
-  const handleMobileResizeMouseDown = (event: ReactMouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    startMobileResize(event.clientY);
-  };
-  const handleMobileResizeTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
-    const touch = event.touches[0];
-    startMobileResize(touch.clientY);
-  };
-  const handleMobileResizeTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
-    const start = mobileResizeStartRef.current;
-    const touch = event.touches[0];
-    if (!start) return;
-
-    event.preventDefault();
-    setMobileControlPanelHeight(clampMobileControlPanelHeight(start.height + touch.clientY - start.clientY));
-  };
-  const handleMobileResizeTouchEnd = () => {
-    mobileResizeStartRef.current = null;
-  };
-  const handleMobileResizeKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    let nextHeight: number | undefined;
-
-    if (event.key === 'ArrowUp') nextHeight = mobileControlPanelHeight - MOBILE_CONTROL_PANEL_KEYBOARD_STEP;
-    if (event.key === 'ArrowDown') nextHeight = mobileControlPanelHeight + MOBILE_CONTROL_PANEL_KEYBOARD_STEP;
-    if (event.key === 'Home') nextHeight = MIN_MOBILE_CONTROL_PANEL_HEIGHT;
-    if (event.key === 'End') nextHeight = MAX_MOBILE_CONTROL_PANEL_HEIGHT;
-    if (nextHeight === undefined) return;
-
-    event.preventDefault();
-    setMobileControlPanelHeight(clampMobileControlPanelHeight(nextHeight));
-  };
-
-  if (direction === 'vertical' && controlPanelOpen) {
-    return (
-      <div ref={workspaceRef} data-slot="preview-workspace" className="min-h-0">
-        <PreviewThemeBoundary themeMode={themeMode} className="overflow-hidden">
-          <div data-slot="preview-mobile-stack" className="flex min-h-0 flex-col">
-            <div
-              data-slot="preview-mobile-control-panel"
-              className="shrink-0"
-              style={{ height: mobileControlPanelHeight }}
-            >
-              <PreviewControlPanel
-                definition={definition}
-                controlContract={controlContract}
-                controlState={controlState}
-                density={controlDensity}
-                onClose={closeControlPanel}
-              />
-            </div>
-            <div
-              data-slot="preview-mobile-resize-handle"
-              role="separator"
-              aria-orientation="horizontal"
-              aria-valuemin={MIN_MOBILE_CONTROL_PANEL_HEIGHT}
-              aria-valuemax={MAX_MOBILE_CONTROL_PANEL_HEIGHT}
-              aria-valuenow={mobileControlPanelHeight}
-              tabIndex={0}
-              className="relative flex h-2 shrink-0 touch-none cursor-row-resize items-center justify-center border-y bg-border/40 outline-none select-none before:h-1 before:w-8 before:rounded-full before:bg-border focus-visible:ring-1 focus-visible:ring-ring"
-              onMouseDown={handleMobileResizeMouseDown}
-              onTouchStart={handleMobileResizeTouchStart}
-              onTouchMove={handleMobileResizeTouchMove}
-              onTouchEnd={handleMobileResizeTouchEnd}
-              onTouchCancel={handleMobileResizeTouchEnd}
-              onKeyDown={handleMobileResizeKeyDown}
-            />
-            <div data-slot="preview-mobile-pane" className={cn('min-h-0', workspaceClassName ?? 'h-80')}>
-              {renderPreviewPane(resolvedControlSlots)}
-            </div>
-          </div>
-        </PreviewThemeBoundary>
-      </div>
-    );
-  }
 
   return (
     <div ref={workspaceRef} data-slot="preview-workspace" className={cn('h-full min-h-0', workspaceClassName)}>
       <PreviewThemeBoundary themeMode={themeMode} className="h-full overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" dir="ltr" className="min-h-0">
+        <ResizablePanelGroup direction={direction} dir="ltr" className="h-full min-h-0">
           {controlPanelOpen ? (
             <>
               <ResizablePanel
                 order={1}
                 defaultSize={panelSize}
                 minSize={18}
-                maxSize={45}
+                maxSize={50}
                 collapsible
                 collapsedSize={0}
                 onCollapse={() => handleControlPanelOpenChange(false)}

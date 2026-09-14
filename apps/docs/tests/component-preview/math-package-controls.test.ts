@@ -11,14 +11,11 @@ import { PreviewControlStateContext } from '@/modules/docs/components/component-
 
 import { getPreviewControlFields } from '../../src/modules/docs/components/component-preview/controls';
 import {
+  createPreviewControlContract as createCurveSegmentsControlContract,
   curveSegmentsControls,
   previewControlContract as curveSegmentsContract,
 } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.controls';
-import CurveSegmentsDemo from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.demo';
-import {
-  curveSegmentsControls as englishCurveSegmentsControls,
-  previewControlContract as englishCurveSegmentsContract,
-} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.en.controls';
+import CurveSegmentsDemo from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments';
 import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.controls';
 import {
   circleCircleCenters,
@@ -85,7 +82,8 @@ describe('CurveSegment playground', () => {
 
   it('exposes the same bilingual controls for every supported CurveSegment kind', () => {
     const chineseFields = getPreviewControlFields(curveSegmentsControls);
-    const englishFields = getPreviewControlFields(englishCurveSegmentsControls);
+    const englishContract = createCurveSegmentsControlContract('en');
+    const englishFields = getPreviewControlFields(englishContract.controls);
 
     expect(
       englishFields.map(field => ({
@@ -108,8 +106,8 @@ describe('CurveSegment playground', () => {
         options: field.kind === 'select' ? field.options.map(option => option.value) : undefined,
       })),
     );
-    expect(englishCurveSegmentsContract.canonicalValues).toEqual(curveSegmentsContract.canonicalValues);
-    expect(englishCurveSegmentsContract.relatedApis).toEqual(curveSegmentsContract.relatedApis);
+    expect(englishContract.canonicalValues).toEqual(curveSegmentsContract.canonicalValues);
+    expect(englishContract.relatedApis).toEqual(curveSegmentsContract.relatedApis);
     expect(chineseFields.find(field => field.id === 'kind')).toMatchObject({
       kind: 'select',
       options: [

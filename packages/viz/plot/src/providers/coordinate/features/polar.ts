@@ -586,7 +586,13 @@ const polar2DCoordinateDefinition: CoordinateDefinition<Polar2DCoordinate> = {
       ...(scaleNames.y === undefined ? {} : { radius: scaleNames.y }),
     }),
   },
-  resolve: (coordinate, ctx) => {
+  resolve: (source, ctx) => {
+    const coordinate = {
+      ...source,
+      startAngle: source.startAngle ?? Polar2DSchema.shape.startAngle.parse(undefined),
+      endAngle: source.endAngle ?? Polar2DSchema.shape.endAngle.parse(undefined),
+      innerRadius: source.innerRadius ?? Polar2DSchema.shape.innerRadius.parse(undefined),
+    };
     const angleValues = ctx.collectPositionValues('x', { axis: 'primary' });
     const radiusValues = ctx.collectPositionValues('y', { axis: 'secondary', includeBaseline: true });
     const angleScaleDef = ctx.resolveScaleForRole('x', coordinate.angle, angleValues);

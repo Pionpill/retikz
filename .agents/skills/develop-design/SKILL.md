@@ -103,7 +103,7 @@ ADR 与简略 plan 完成后、人工 ack 前，使用 `develop-completeness` �
 
 ## Implementation plan 细化
 
-人工确认 ADR 并授权进入实现准备后，执行者必须重新阅读全文 ADR 与简略 plan，再在同一镜像目录细化 `PLAN.md` 并创建其它执行产物：
+人工明确批准执行 ADR 时，该批准默认同时接受 ADR。执行者先将 ADR 标为 `Accepted`，再重新阅读全文 ADR 与简略 plan，并在同一镜像目录细化 `PLAN.md`、创建其它执行产物：
 
 ```text
 packages/viz/_notes/decisions/chart/v0/v0.1/alpha.1/01-example.md
@@ -126,6 +126,6 @@ Plan 写完后必须完成 Plan Gate；默认由主 agent 自审，执行计划�
 - ADR、roadmap 与镜像 plan 的 milestone 均与主责 package 当前版本一致，且没有指向错误版本目录的残留引用。
 - 镜像简略 `PLAN.md` 已同步创建并承载完整设计检查结论。
 - 能力性迭代已完成 Architecture Gate PASS；或达到计划循环上限后已停止等待人工。
-- 人工明确确认 ADR；是否进入实现另行授权。
-- 需要实现时，人工确认后再细化 plan 并创建 `TEST_CONTRACT.md`，且未用 plan 反向改写 ADR。
+- ADR 保持 `Proposed`，直到人工明确批准执行；单独确认设计不改变状态，也不授权实现。
+- 需要实现时，人工执行批准会自动将 ADR 置为 `Accepted`；随后细化 plan 并创建 `TEST_CONTRACT.md`，且未用 plan 反向改写 ADR。
 - 未经当前对话授权不 commit / push。

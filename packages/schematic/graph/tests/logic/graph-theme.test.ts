@@ -21,8 +21,8 @@ const styleRegistry = (
 
 describe('Graph Scope and Theme compile semantics', () => {
   it.each([
-    { mode: ThemeMode.Light, color: '#000000' },
-    { mode: ThemeMode.Dark, color: '#ffffff' },
+    { mode: ThemeMode.Light, color: '#666666' },
+    { mode: ThemeMode.Dark, color: '#999999' },
   ])('provides the complete mode-aware Neutral Entity baseline in $mode mode', ({ mode, color }) => {
     const theme: ResolvedTheme = {
       ...DEFAULT_RESOLVED_THEME,

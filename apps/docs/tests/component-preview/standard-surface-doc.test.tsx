@@ -29,11 +29,10 @@ describe('Standard Surface documentation', () => {
     );
   });
 
-  it('documents the public paths, canonical defaults, provider, and spatial handle in both languages', () => {
+  it('documents the single Source schema, execution defaults, provider, and spatial handle in both languages', () => {
     for (const source of [readPage('zh'), readPage('en')]) {
       for (const value of [
         'SurfaceSchema',
-        'IRSurfaceSchema',
         'SurfaceDefinition',
         'SurfaceProvider',
         'SurfaceInputEmbedAdapter',
@@ -43,6 +42,7 @@ describe('Standard Surface documentation', () => {
       ]) {
         expect(source).toContain(value);
       }
+      expect(source).not.toContain('IRSurfaceSchema');
       expect(source).toContain('visible');
       expect(source).toContain('cornerRadius');
       expect(source).toContain('surface');
@@ -50,7 +50,7 @@ describe('Standard Surface documentation', () => {
   });
 
   it.each([SurfaceBasicDemo, SurfaceOverflowZhDemo, SurfaceOverflowEnDemo])(
-    'derives canonical IR and a real Vanilla SVG for each demo',
+    'derives sparse Source IR and a real Vanilla SVG for each demo',
     Demo => {
       const preview = buildPreviewIR(Demo);
       const surfaces = preview.ir.children.filter(
@@ -58,7 +58,9 @@ describe('Standard Surface documentation', () => {
       );
 
       expect(surfaces.length).toBeGreaterThan(0);
-      surfaces.forEach(surface => expect(SurfaceSchema.parse(surface)).toEqual(surface));
+      surfaces.forEach(surface =>
+        expect(SurfaceSchema.parse(surface)).toEqual({ padding: 0, overflow: 'visible', cornerRadius: 0, ...surface }),
+      );
       const vanilla = buildVanillaPreview(preview);
       expect(vanilla.code).toContain('surface(');
       expect(vanilla.code).toContain('surfaceChild(');

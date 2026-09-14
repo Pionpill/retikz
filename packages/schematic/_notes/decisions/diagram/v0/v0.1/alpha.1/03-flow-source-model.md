@@ -135,7 +135,7 @@ type IRFlowLayout = Readonly<{
 type IRFlowRelation = Readonly<{
   source: string;
   target: string;
-  label?: string;
+  label?: IRTextBlock;
   role?: RelationRoleValue;
   kind?: string;
   status?: GraphStatusValue;
@@ -184,7 +184,7 @@ type FlowThemeStyleDefinition = Readonly<{
 declare const defineFlowThemeStyle: (definition: FlowThemeStyleDefinition) => FlowThemeStyleDefinition;
 ```
 
-代码片段冻结字段关系与所有权，不指定 Zod 拼装方式。`IRFlowThemeTokenOverrides` 由 Flow token schema 派生，每个 token key 使用对应 owner 字段的精确 value schema，不是所有 key 共享的宽联合。所有 string content、Entity / Group / Layout id、child id 与 relation endpoint 必须非空；`entities` 与根 / Group / Layout `children` 必须非空，`groups` / `layouts` 必填且可以为空，出现的 relations 必须非空；rank 必须是非负整数；gap、尺寸与 corner radius 必须符合对应 owner 的非负约束。style、layout、flowTheme 与 token override 对象出现时必须至少包含一个有效覆盖
+代码片段冻结字段关系与所有权，不指定 Zod 拼装方式。`IRFlowRelation.label` 的 `IRTextBlock` 形态依赖 Core ADR-01；在该 ADR 接受并实施前，当前单字符串输入继续是既有实现状态。`IRFlowThemeTokenOverrides` 由 Flow token schema 派生，每个 token key 使用对应 owner 字段的精确 value schema，不是所有 key 共享的宽联合。所有 string content、Entity / Group / Layout id、child id 与 relation endpoint 必须非空；`entities` 与根 / Group / Layout `children` 必须非空，`groups` / `layouts` 必填且可以为空，出现的 relations 必须非空；rank 必须是非负整数；gap、尺寸与 corner radius 必须符合对应 owner 的非负约束。style、layout、flowTheme 与 token override 对象出现时必须至少包含一个有效覆盖
 
 `IRFlowDiagram`、各 element、relation、layout、style、flowTheme 与 token 类型都由 Flow schema 派生或由 schema-derived 类型组合，不手写平行 public interface。Graph role、status、direction、可操作实例字段与 Standard Surface 字段直接组合对应 owner 的公开 schema，不复制 primitive refinement 或默认值。若 Graph owner 后续收窄某字段，Flow 同源投影同步收窄，不能保留绕过入口
 

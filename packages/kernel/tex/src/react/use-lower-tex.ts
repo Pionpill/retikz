@@ -13,7 +13,11 @@ type EngineEntry = {
   diagnosticReported: boolean;
 };
 
-/** MathJax lowerer 的异步初始化状态 */
+/**
+ * MathJax lowerer 的异步初始化状态
+ *
+ * @description 表示当前 React 组件对应配置的引擎与 lowerer 是否可用：loading 时尚未完成初始化，ready 提供可传给 `@retikz/react` 的 `lowerTex`，error 提供可展示的诊断。它是 Hook 的输出快照，不保存跨组件的 UI 状态
+ */
 export type MathJaxLowerTexState =
   | { status: 'loading' }
   | { status: 'ready'; lowerTex: LowerTex }
@@ -47,7 +51,27 @@ const getOrCreateEngineEntry = (extensions: Array<MathJaxExtensionValue>, engine
   return engineEntry;
 };
 
-/** 按有效配置共享 MathJax engine，并异步创建当前 hook 的 lowerer */
+/**
+ * 按有效配置共享 MathJax engine，并异步创建当前组件的 lowerer
+ *
+ * @description 接收与根入口工厂一致的 MathJax 配置，复用同一有效扩展集合的引擎，并返回可判别的初始化状态。ready 状态中的 lowerer 应传入 `Layout` 等 React authoring 入口；本 Hook 不渲染公式，也不处理应用级错误界面
+ * @param options 控制 MathJax 扩展和 lowering 诊断的可选配置
+ * @returns 当前组件对应配置的 MathJax lowerer 初始化状态
+ *
+ * @example
+ * import type { FC } from 'react';
+ *
+ * import { Layout } from '@retikz/react';
+ * import { MathJaxProfile } from '@retikz/tex';
+ * import { useLowerTex } from '@retikz/tex/react';
+ *
+ * const Formula: FC = () => {
+ *   const lowerTexState = useLowerTex({ profile: MathJaxProfile.Math });
+ *   if (lowerTexState.status !== 'ready') return <Layout />;
+ *
+ *   return <Layout lowerTex={lowerTexState.lowerTex}>{'公式：$x^2$'}</Layout>;
+ * };
+ */
 export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexState => {
   const extensions = resolveMathJaxExtensions(options);
   const engineKey = formatEngineCacheKey(extensions);
