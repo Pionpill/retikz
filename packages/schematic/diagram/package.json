@@ -55,8 +55,8 @@
       },
       "./flow": {
         "types": "./dist/types/flow/index.d.ts",
-        "import": "./dist/flow.js",
-        "default": "./dist/flow.js"
+        "import": "./dist/flow/index.js",
+        "default": "./dist/flow/index.js"
       }
     }
   },
