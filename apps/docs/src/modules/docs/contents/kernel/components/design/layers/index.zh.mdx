@@ -5,12 +5,6 @@ description: retikz 的三层表达模型：DSL 给人写，IR 用于声明与�
 
 retikz 把用户写下的 DSL（React 组件或 Vanilla JS 写法）先转成 IR，再编译成 Scene。DSL 负责书写体验，IR 保留“你想画什么”，Scene 只保留“渲染器应该画什么”。
 
-<ComponentAlert
-  type="tip"
-  title="首次阅读可以先跳过"
-  description="本章主要解释 retikz 的底层构建链路；如果你只是想先画出一张图，可以先读快速开始和组件文档，需要理解 IR / Scene 边界时再回来。"
-/>
-
 <ComponentPreview files="layers-pipeline" size="sm" hideCode />
 
 ## 三层模型
@@ -29,79 +23,29 @@ IR 是公开契约；Scene 是 renderer 输入。正常写图时不需要手写 
 
 Kernel 保留基础绘图语义，Sugar 在构建 IR 时展开为这些基础表达。等价示例、展开约束与选择建议见[语法糖](/kernel/components/design/sugar)。
 
-## 编译链路
-
-```tsx
-<Layout>
-  <Node id="a" position={[0, 0]}>
-    A
-  </Node>
-  <Draw way={['a', [80, 0]]} />
-</Layout>
-```
-
-这段 JSX 会被 adapter 收集成 IR，`@retikz/core` 再负责解析 position、计算 anchor、展开路径与边界，最后输出 Scene。上例中的 `<Draw>` 会在 IR 中成为普通 `path` 节点。
-
-`@retikz/core` 在一次递归遍历中分阶段编排布局与路径，再收尾输出 Scene。下图按依赖顺序展开这三个阶段，不表示对整棵 IR 做三次独立遍历：
-
-<ComponentPreview files="layers-compile" size="xs" hideCode />
-
-- **layout nodes**：遍历遇到 node / coordinate 时立即解析坐标、度量文字、计算包围盒，并登记进当前命名空间。
-- **resolve paths**：path 先留下占位；当前 scope 子树或 root 遍历完成后，再从已登记的布局查端点并 flush 成路径图元。这正是箭头上 `anchors` 代表的依赖。
-- **fit bounds**：合并所有图元的包围盒，加 padding 并按精度 round，得到 viewBox。
-
-如果 IR 里有 Tier 2 的 composite 节点（如 plot 的高层组件），编译会先把它们下沉成 Kernel，再进入上面的分阶段遍历；细节见[复合](/kernel/components/design/composite)。
-
-## 选择建议
-
-绘图写法与基础表达的选择见[语法糖](/kernel/components/design/sugar)。持久化和结构查询仍从[结构参考](/kernel/reference/schema)进入。
-
 ## 包结构
 
-Kernel 组由 `packages/kernel` 下六个同步发版的 npm 包组成。图中箭头从能力提供方指向使用方：实线串起主要构建链，灰色虚线补充跨层的直接依赖。`@retikz/math` 是零依赖计算底座，`@retikz/core` 在其上定义 IR 与编译语义，其余包按职责接入 core。
+Kernel 当前包含九个同步发版的包。按使用任务选择入口；依赖由包管理器安装，不需要手动安装整组。
 
-<ComponentPreview files="layers-packages" size="sm" hideCode />
+| 包                   | 职责                      |
+| -------------------- | ------------------------- |
+| `@retikz/foundation` | 跨包原子契约与基础 schema |
+| `@retikz/math`       | 零依赖几何与数值计算      |
+| `@retikz/runtime`    | 增量执行与事务            |
+| `@retikz/core`       | 共享 IR、Scene 与编译     |
+| `@retikz/inspect`    | 诊断观察与辅助图形        |
+| `@retikz/render`     | SVG / Canvas 后端输出     |
+| `@retikz/vanilla`    | 框架无关输入与宿主接入    |
+| `@retikz/react`      | React 组件与生命周期接线  |
+| `@retikz/tex`        | 可选 LaTeX 公式接入       |
 
-| 包                | 职责                                           | Kernel 组依赖 |
-| ----------------- | ---------------------------------------------- | ------------- |
-| `@retikz/math`    | 零依赖的几何、矩阵与数值计算                   | —             |
-| `@retikz/core`    | IR / Scene / schema / geometry / parser        | math          |
-| `@retikz/render`  | Scene 渲染：SVG / Canvas、hydration、animation | math + core   |
-| `@retikz/react`   | Kernel / Sugar JSX 组件，内置 SVG / Canvas     | core + render |
-| `@retikz/vanilla` | 框架无关运行时：mount / hydrate / 动画 / SSR   | core + render |
-| `@retikz/tex`     | 可选的 LaTeX 公式解析与图元下沉                | core          |
-
-react / vanilla 只做 adapter：把 DSL 收集成 IR、把渲染交给 render；tex 把 LaTeX 公式下沉为 core 可编译的图元。上层包不另造平行 IR、渲染语义或几何底座。
-
-普通用户装 `@retikz/react`（或 `@retikz/vanilla`）即可，它会自动带上 core 与 render；只有写自定义渲染器或直接读写 IR 时，才单独依赖 `@retikz/core`。
-
-<SourceLinks
-  sources={[
-    {
-      label: '编排 IR 到 Scene 的共享入口',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 14,
-      endLine: 40,
-    },
-    {
-      label: '集中解析 lowering 与 provider 注册表',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 77,
-      endLine: 114,
-    },
-    {
-      label: '登记实体后刷新延迟 path',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 124,
-      endLine: 171,
-    },
-  ]}
-/>
+浏览器应用通常从 React 或 Vanilla 开始；查看各包的独立文档再决定是否直接依赖其他包。
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
+    { title: '编译流程', description: '追踪 IR 到 Scene 的一次执行', url: '/kernel/components/internals/compilation' },
     {
       title: '结构',
       description: '查 IR 各实体的字段：Node / Path / Step / Coordinate / Scope',

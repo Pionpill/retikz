@@ -3,16 +3,44 @@ title: Core Concepts
 description: Understand retikz through primitives themselves and the relationships between them: start with the primitive model, then move to primitive relations.
 ---
 
-Core concepts answer two questions: what a primitive is made of, and how primitives establish stable geometric references between each other. The primitive model focuses on visible objects such as `Node`; primitive relations focus on anchors, boundaries, and how paths connect objects.
+Nodes and connections are more than rectangles and lines on a screen. Nodes provide geometry that can be measured, positioned, and referenced; connections use that geometry to choose endpoints. Core Concepts moves from how one object is formed to how several objects connect, so relationships remain meaningful when text, shapes, or positions change.
 
-## Responsibilities
+## Responsibilities at a glance
 
-| Chapter             | Topic                                                            | Read it when                                                                                              |
-| ------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Primitive Model     | Content box, padding, shape, bounding box, boundary, and anchors | You want to know why a node is this large, why a line attaches there, or how shapes participate in layout |
-| Primitive Relations | Dynamic attach, locked positions, group boundaries, and margin   | You want to control which side a connection leaves from, where it lands, or how much space it keeps       |
+| Chapter             | Responsibility                           | When to read                         |
+| ------------------- | ---------------------------------------- | ------------------------------------ |
+| Primitive Model     | Content, shapes, boundaries, and anchors | Understand one primitive’s geometry  |
+| Primitive Relations | References and endpoint attachment       | Choose automatic or fixed attachment |
 
-## Chapters
+## How objects and connections cooperate
+
+For a text Node, text occupies the content region, padding adds space, and shape determines the visible form. A connection also needs attachment geometry: a boundary is the surface used for connections, while an anchor names a position such as the top midpoint.
+
+A visible outline, bounding rectangle, and connection boundary serve different purposes and need not coincide. Distinguishing them helps you decide whether to change text spacing, shape size, or attachment rules instead of repeatedly compensating with offsets.
+
+## Two ways to connect the same node
+
+Both halves of the figure contain a T node and connections from a and b. On the left, referencing T alone lets each endpoint attach according to its incoming direction. On the right, `T.top` fixes both endpoints at the top midpoint.
+
+<ComponentPreview files="/kernel/components/core/primitive-relations/relation-dynamic-vs-locked" size="sm" hideCode />
+
+The node arrangements are identical; the connection rule differs. Automatic attachment suits relationships that follow layout changes, while an explicit anchor fixes the attachment position. The primitive model defines available geometry; primitive relations decide how a particular connection uses it.
+
+## Diagnose a visible problem
+
+| What you see                                | What to check first                            |
+| ------------------------------------------- | ---------------------------------------------- |
+| Text too close to its border                | Content region and padding                     |
+| A line attaches on the wrong side           | Automatic attachment versus an explicit anchor |
+| A shape change gives unexpected attachments | Visible shape versus connection boundary       |
+
+Use these questions to find the relevant concept, then consult component documentation for syntax. This overview does not require a complete field dictionary or explain every compiler measurement step.
+
+## Reading order and boundaries
+
+Read Primitive Model for a node's structure, then Primitive Relations for how paths reference it. Revisit [Basic Concepts](/kernel/components/basic) if coordinate directions or relative positions are unfamiliar. For actual configuration, continue with the relevant Node, Draw, or Layout documentation.
+
+## Contents
 
 <LinkedSections
   items={[

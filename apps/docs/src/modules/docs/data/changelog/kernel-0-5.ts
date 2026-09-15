@@ -8,8 +8,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/foundation',
       version: 'v0.5',
       description: {
-        zh: '新增 Foundation 基础契约包，为 Kernel、Standard、Viz 与 adapter 提供统一的类型工具、Zod 标量与通用 JSON schema、typed non-empty string 断言和结构化错误骨架。',
-        en: 'Provides shared type utilities, Zod scalar and generic JSON schemas, a typed non-empty string assertion, and structured errors for Kernel, Standard, Viz, and adapters.',
+        zh: '通用 JSON 类型、校验工具和结构化错误统一从 Foundation 导入；使用旧 Core / Runtime 出口的代码需要更新导入。',
+        en: 'Import shared JSON types, validation utilities, and structured errors from Foundation; code using the old Core / Runtime exports needs updated imports.',
       },
       highlights: [
         {
@@ -119,8 +119,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/math',
       version: 'v0.5',
       description: {
-        zh: '随 Kernel release group lockstep 进入 v0.5，并提供跨包共享的二维仿射矩阵与无领域曲线数值原子。',
-        en: 'Moves to v0.5 with the Kernel release group and provides shared 2D affine-matrix and domain-free curve-numerics primitives.',
+        zh: '新增共享二维变换与曲线计算工具，可用于点映射、曲线采样和按距离定位。',
+        en: 'Adds shared 2D transformations and curve tools for mapping points, sampling curves, and locating points by distance.',
       },
       highlights: [
         {
@@ -197,8 +197,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/runtime',
       version: 'v0.5',
       description: {
-        zh: 'v0.5 alpha.2 建立零领域依赖的增量执行底座：结构化 trace、typed Owner / Program registry、revision-bound transaction 与同步 Session。',
-        en: 'v0.5 alpha.2 establishes the domain-neutral incremental execution foundation: structured traces, typed Owner/Program registries, revision-bound transactions, and synchronous Sessions.',
+        zh: '新增支持安全更新的执行底座：成功后一起发布新结果，失败时保留原结果，并提供可查询的执行诊断。',
+        en: 'Adds an execution foundation for safe updates: publish new results together after success, retain previous results on failure, and inspect execution diagnostics.',
       },
       highlights: [
         {
@@ -279,8 +279,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/core',
       version: 'v0.5',
       description: {
-        zh: 'v0.5 补齐跨图元布局与文本语义，并在 alpha.2 以完整 Snapshot、Core Runtime Program、Scene Patch 与保守 fallback 建立首个安全局部增量编译闭环。',
-        en: 'v0.5 adds cross-primitive layout and text semantics. Alpha.2 adds complete Snapshots, a Core Runtime Program, Scene Patches, conservative fallback, and the first safe local incremental path.',
+        zh: '节点与分组更容易对齐，连线和标签获得更精细的控制；新增安全的局部增量编译，暂不支持局部处理的变化仍完整编译。',
+        en: 'Makes nodes and groups easier to align and adds finer path and label control. Safe local incremental compilation is available; changes outside its supported cases still compile fully.',
       },
       highlights: [
         {
@@ -522,8 +522,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/inspect',
       version: 'v0.5',
       description: {
-        zh: '可选安装的开发期检查扩展：观察 Core 最终编译产物，以普通 Core IR 生成不影响主图的辅助内容。',
-        en: 'An optional development-time inspection extension that observes final Core compile outputs and generates auxiliary content as ordinary Core IR without affecting the primary figure.',
+        zh: '通过可选检查工具查看几何边界与布局辅助信息；检查内容与主图隔离，不接入时不执行检查逻辑。',
+        en: 'Use optional inspection tools to view geometry boundaries and layout guides. Inspection stays separate from the main figure and does not run when unused.',
       },
       highlights: [
         {
@@ -619,8 +619,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/render',
       version: 'v0.5',
       description: {
-        zh: '静态 SVG / Canvas API 继续只消费 Scene；alpha.2 新增可回滚 retained runtime，以 canonical Scene Patch 原位更新宿主。',
-        en: 'Static SVG and Canvas APIs continue to consume Scene only. Alpha.2 adds a rollback-safe retained runtime that applies canonical Scene Patches in place.',
+        zh: '图形更新时可保留未变化的 SVG 元素，并减少 Canvas 重绘；渲染更新与事件、动画状态一起提交。',
+        en: 'Drawing updates can preserve unchanged SVG elements and reduce Canvas repainting, with rendering, events, and animation state committed together.',
       },
       highlights: [
         {
@@ -697,8 +697,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/react',
       version: 'v0.5',
       description: {
-        zh: 'React 等价暴露 Core v0.5 authoring；`<Layout>` 默认以 retained Session 原子提交 Scene、handler、animation 与 compile artifacts，也可选择无 Session 的 static full 执行。',
-        en: 'React exposes Core v0.5 authoring. `<Layout>` defaults to atomic Scene, handler, animation, and compile-artifact commits through a retained Session, with an optional Session-free static full path.',
+        zh: 'React 支持新的定位、连线与标签能力；Layout 默认管理持续更新，也可选择一次完整渲染，并能通知应用获取编译产物。',
+        en: 'React exposes new placement, path, and label capabilities. Layout manages ongoing updates by default, offers full static rendering, and can notify applications of compile artifacts.',
       },
       highlights: [
         {
@@ -789,8 +789,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/vanilla',
       version: 'v0.5',
       description: {
-        zh: 'Vanilla plain spec 直接透传 Core v0.5 IR；IR/plain mount 默认使用 retained Session，也可显式选择 raw static full，Scene mount 保持纯 static full render。',
-        en: 'Vanilla plain specs pass Core v0.5 IR through directly. IR/plain mounts default to retained Sessions with an explicit raw static full option, while Scene mounts remain static full rendering.',
+        zh: '纯 TypeScript 接入支持持续更新或完整静态渲染；更新成功后，视图中的图形与编译产物一起替换。',
+        en: 'TypeScript integration supports ongoing updates or full static rendering; successful updates replace the drawing and compile artifacts together.',
       },
       highlights: [
         {
@@ -874,8 +874,8 @@ export const kernelV05: Release = {
       pkg: '@retikz/tex',
       version: 'v0.5',
       description: {
-        zh: 'MathJax 接入升级为可选 profile、扩展集合、多路径 paint lowering、结构化诊断与可复用 factory / React hook，同时保持 optional peer 延迟加载。',
-        en: 'MathJax gains selectable profiles, extensions, multi-path paint lowering, structured diagnostics, and reusable factory/React-hook APIs while keeping the optional peer lazy.',
+        zh: '公式支持更多 MathJax 扩展和多路径样式，并提供复用配置与 React 接入方式；无法保真转换的内容会明确报告诊断。',
+        en: 'Formulas gain more MathJax extensions, multi-path styles, reusable configuration, and React integration. Content that cannot be converted faithfully reports explicit diagnostics.',
       },
       highlights: [
         {

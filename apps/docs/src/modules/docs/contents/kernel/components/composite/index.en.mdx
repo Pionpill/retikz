@@ -1,0 +1,54 @@
+---
+title: Composite components
+description: Package basic primitives as a reusable high-level capability.
+---
+
+A composite is useful when a group of drawing elements needs to retain its own data and parameters. A bar chart, for example, takes an array of values and generates rectangles. Users change data while the component organizes the drawing. These pages explain how to connect that capability to Kernel, beyond wrapping JSX in a function.
+
+## Responsibilities at a glance
+
+| Chapter        | Responsibility                         | When to read                             |
+| -------------- | -------------------------------------- | ---------------------------------------- |
+| Custom usage   | Define, inject, reference, and render  | Integrate your first composite           |
+| Implementation | Layout feedback, selection, and commit | Handle measurement-dependent composition |
+
+## From data to a drawing
+
+The figure starts with a high-level declaration. Composite IR retains domain data; lowering converts it to Kernel primitives, which compile into Scene for SVG or Canvas output. IR is the savable declaration; Scene contains drawing results with positions and styles already resolved.
+
+<ComponentPreview files="/kernel/components/design/composite/composite-pipeline" size="xs" hideCode />
+
+For six values generating six bars, saving the array makes later edits easier than saving every rectangle's coordinates. The generating function stays in the program while data can be saved and transferred. Names registered with the host connect the two: the host looks up the corresponding Definition without putting functions into JSON.
+
+## How definitions and host integration cooperate
+
+A Definition describes the capability: its name, accepted data, and how it generates primitives. A schema validates the input, and the processing function produces drawing elements from that validated data.
+
+Injection means passing the Definition through the host's composites option so the compiler can find it by name. React and Vanilla use the same definition and savable declaration, with their respective host integration. Bar-height calculation does not need separate implementations for each host.
+
+## Start with the simplest processing strategy
+
+Direct expansion works when input data is enough to determine the primitives. Values can determine bar heights while fixed spacing determines horizontal positions. Layout feedback is needed only when children must be measured before space can be assigned, such as arranging cards around actual text widths.
+
+The tutorial starts with direct expansion to complete a minimal integration. Implementation then explains layout trials, selection, and commit for readers already comfortable defining a capability. The full layout machinery is not required configuration for every composite.
+
+## Scope
+
+Ordinary component composition is usually enough to repeat a fixed drawing structure. Consider a composite model when high-level data and validated parameters should be retained. Read [Tier 2 Composites](/kernel/components/design/composite) to choose the model; the two chapters below address integration and internal execution respectively.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom usage',
+      description: 'Define, inject, and render a minimal composite',
+      url: '/kernel/components/composite/custom',
+    },
+    {
+      title: 'Implementation',
+      description: 'Trace layout feedback and result commits',
+      url: '/kernel/components/composite/mechanism',
+    },
+  ]}
+/>

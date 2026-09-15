@@ -35,7 +35,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 先按 [页型词典](../docs-doc-principle/references/page-contract.md) 选择当前主 skill；核对名称、URL、固定难度与阅读体验，不从旧目录猜页型。
 
-- 总纲固定入门：开篇边界、适用的安装与使用、末尾 LinkedSections 子页索引；职责表不是必选
+- 总纲固定入门：按 docs-doc-group 检查整体认识、成员协作、贯穿示例或关系图、选择边界与阅读体量；不能只有导语和末尾 LinkedSections 子页索引
 - 三快捷入口按 docs-doc-entry；基础用法与使用专题按 docs-doc-usage，固定入门，不残留旧五段模板或完整技术原理 / API 字典
 - 自定义页按 docs-doc-extension，固定进阶，证明定义、注入、引用与结果；调用内置扩展不误标自定义
 - API / Schema 参考按 docs-doc-reference，固定进阶，完整查询有唯一真源，生成产物与翻译覆盖准确
