@@ -20,8 +20,8 @@ const styleRegistry = (
 
 describe('Graph Scope and Theme compile semantics', () => {
   it.each([
-    { mode: ThemeMode.Light, color: '#666666' },
-    { mode: ThemeMode.Dark, color: '#999999' },
+    { mode: ThemeMode.Light, color: '#777777' },
+    { mode: ThemeMode.Dark, color: '#888888' },
   ])('provides the complete mode-aware Neutral Entity baseline in $mode mode', ({ mode, color }) => {
     const theme: ResolvedTheme = {
       ...DEFAULT_RESOLVED_THEME,
@@ -32,7 +32,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     expect(Graph.getDefaultGraphThemePreset(theme).defaults.entity?.style).toEqual({
       color,
       textColor: 'contrast',
-      fill: 0.08,
+      fill: 0.12,
       stroke: 1,
       strokeWidth: 1,
       fillOpacity: 1,
@@ -77,7 +77,7 @@ describe('Graph Scope and Theme compile semantics', () => {
     const scene = JSON.stringify(output.scene);
 
     expect(scene).toContain('#336699');
-    expect(scene).toContain('#eff3f7');
+    expect(scene).toContain('#e7edf3');
     expect(scene).toContain('#000000');
     expect(warnings).toEqual([]);
   });

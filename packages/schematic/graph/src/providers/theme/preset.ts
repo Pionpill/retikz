@@ -6,14 +6,14 @@ import { GraphStatus, GraphType } from '../../shared';
 
 /** 从当前 Core Theme 建立 Graph Entity、Relation 与 Surface 的中立 defaults/rules */
 export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyleResolution => {
-  const foreground = theme.mode === ThemeMode.Light ? '#666666' : '#999999';
+  const foreground = theme.mode === ThemeMode.Light ? '#777777' : '#888888';
   return {
     defaults: {
       entity: {
         style: {
           color: foreground,
           textColor: 'contrast',
-          fill: 0.08,
+          fill: 0.12,
           stroke: 1,
           strokeWidth: 1,
           fillOpacity: 1,
