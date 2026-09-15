@@ -1,5 +1,6 @@
 {
   "common": {
+    "docHost": "Integration",
     "search": "Search docs...",
     "searchPlaceholder": "Type to search...",
     "searchEmpty": "No matching pages.",

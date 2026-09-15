@@ -1,5 +1,6 @@
 {
   "common": {
+    "docHost": "接入方式",
     "search": "搜索文档...",
     "searchPlaceholder": "输入关键字搜索...",
     "searchEmpty": "未找到匹配的页面",

@@ -18,9 +18,21 @@ description: 浏览 @retikz/tex 的公式解析、lowering 与运行时接入
 | React   | `useLowerTex()`    | 在 `<Layout lowerTex={lowerTex}>` 注入 ready 状态的 lowerer        |
 | Vanilla | `createLowerTex()` | 将 `{ compile: { lowerTex } }` 传给 `renderToSvgString` 等编译入口 |
 
-### React
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+<DocSteps>
+<DocStep title="导入内容">
 
-React 应用从 `@retikz/tex/react` 使用 `useLowerTex`。hook 会异步准备共享的 MathJax engine，并返回 `loading`、`ready` 或 `error` 状态。只有 `ready` 状态才把同步 lowerer 注入 `<Layout>`：
+`@retikz/tex/react` 导出 `useLowerTex`，用于管理公式引擎生命周期并提供 ready 状态的 lowerer。
+
+```tsx
+import { useLowerTex } from '@retikz/tex/react';
+```
+
+</DocStep>
+<DocStep title="接入渲染">
+
+只有 `ready` 时才把同步 lowerer 注入最外层 `Layout`，子级文本会复用这项编译能力。
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -40,11 +52,25 @@ const Diagram = () => {
 };
 ```
 
-只要把 lowerer 注入最外层 `<Layout lowerTex>`，其子级文本就会复用这项编译能力。`@retikz/tex/react` 只负责 React 生命周期和共享 engine，不改变 Core 的文本写法。
+`@retikz/tex/react` 只负责 React 生命周期和共享 engine，不改变 Core 的文本写法。
 
-### Vanilla
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+<DocSteps>
+<DocStep title="导入内容">
 
-Vanilla 应用先创建 MathJax engine，再用 `createLowerTex` 适配为 Core `LowerTex`，最后通过 `compile.lowerTex` 交给 `renderToSvgString` 或其它 Vanilla compile 入口：
+`@retikz/tex` 导出 `createMathJaxEngine` 和 `createLowerTex`：前者创建公式引擎，后者将引擎适配为可注入编译流程的 lowerer。
+
+```ts
+import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+```
+
+</DocStep>
+<DocStep title="接入渲染">
+
+通过 `compile.lowerTex` 将公式能力传给 `renderToSvgString`，得到 SVG 字符串。
 
 ```ts
 import { node, renderToSvgString, scene } from '@retikz/vanilla';
@@ -58,7 +84,12 @@ const input = scene({
 const svg = renderToSvgString(input, { compile: { lowerTex } });
 ```
 
-如果不需要拆开 engine 和 lowerer，也可以直接等待 `createMathJaxLowerTex(options)`。Vanilla 不需要安装 React，也不需要使用 `@retikz/tex/react`。
+如果不需要拆开 engine 和 lowerer，也可以直接等待 `createMathJaxLowerTex(options)`。Vanilla 不需要安装 React，也不使用 `@retikz/tex/react`。
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
 
 ## 职责一览
 

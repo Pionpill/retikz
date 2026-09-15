@@ -23,7 +23,20 @@ description: 为已完成的编译按需添加观测与只读辅助图层，不�
 | React   | `InspectLayout`、`InspectPath`、`InspectNode`、`InspectScope`、`InspectCoordinate` | 在 Layout 注入 registry，并在对应 JSX site 附加 request |
 | Vanilla | `createInspectionVanillaAuthoring()`、`createInspectionVanillaDriver()`            | 创建路径标记，并在渲染入口接入 inspection driver        |
 
-### React
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+<DocSteps>
+<DocStep title="导入内容">
+
+`@retikz/inspect` 导出默认注册表工厂 `createDefaultInspectorRegistry` 和路径观测标识 `PATH_INSPECTOR_KEY`；`@retikz/inspect/react` 导出 `InspectLayout` 和 `InspectPath`，分别接入注册表和附加路径观测请求。
+
+```tsx
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+```
+
+</DocStep>
+<DocStep title="接入渲染">
 
 React 从 `@retikz/inspect/react` 导入包装组件。`InspectLayout` 接收 registry；`InspectPath`、`InspectNode`、`InspectScope` 和 `InspectCoordinate` 分别把 request 附加到当前 Path、Node、Scope 或 Coordinate：
 
@@ -45,6 +58,9 @@ export const InspectExample = () => (
 ```
 
 `InspectLayout` 在普通 Layout 运行时接入可选 inspection compile driver；`InspectPath` 保持普通 Path 的内容写法，只把 request 转成 runtime-only authoring 标记。
+
+</DocStep>
+<DocStep title="显式接线（可选）">
 
 也可以不使用 `InspectXxx` 包装组件，保留普通 `Layout` / `Path`，通过 `compileDriver` 和 `authoring` 属性显式接入同一套观测能力：
 
@@ -72,7 +88,22 @@ export const ConfiguredInspectExample = () => (
 
 两种写法在相同配置下生成相同的观测请求与结果；包装组件只是代为完成接线。这里的配置固定，因此驱动放在组件外；若依赖 React props 或状态，在组件内用 `useMemo` 创建驱动并声明对应依赖。基础组件没有 `inspect` 属性，`authoring` 也不会写入 Core IR。
 
-### Vanilla
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+<DocSteps>
+<DocStep title="导入内容">
+
+`@retikz/inspect` 导出默认注册表工厂和路径观测标识；`@retikz/inspect/vanilla` 导出 `createInspectionVanillaAuthoring` 和 `createInspectionVanillaDriver`，分别创建观测标记和接入观测能力的编译驱动。
+
+```ts
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+```
+
+</DocStep>
+<DocStep title="接入渲染">
 
 Vanilla 分别创建 authoring 标记和编译驱动：前者说明当前路径需要观测，后者在普通渲染入口接入 registry 与辅助图层：
 
@@ -108,6 +139,11 @@ const input = scene({
 
 const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
 ```
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
 
 根入口只提供 Definition、注册表、选择与辅助编译；React 与 Vanilla 适配分别从 `/react` 与 `/vanilla` 子入口导入，渲染仍由 `@retikz/render` 负责。先从“内置观测”看到第一个结果，再按需阅读拓展或实现原理。配置字段见 [Schema 参考](/kernel/packages/inspect/schema-reference)。
 

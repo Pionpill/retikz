@@ -18,9 +18,21 @@ Choose the injection entry for your host. Formulas enter MathJax lowering only a
 | React   | `useLowerTex()`    | Inject the ready lowerer with `<Layout lowerTex={lowerTex}>`                     |
 | Vanilla | `createLowerTex()` | Pass `{ compile: { lowerTex } }` to `renderToSvgString` or another compile entry |
 
-### React
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+<DocSteps>
+<DocStep title="Imports">
 
-React applications use `useLowerTex` from `@retikz/tex/react`. The hook asynchronously prepares a shared MathJax engine and returns `loading`, `ready`, or `error`. Inject the synchronous lowerer into `<Layout>` only when its state is `ready`:
+`@retikz/tex/react` exports `useLowerTex` to manage the formula engine lifecycle and provide a ready lowerer.
+
+```tsx
+import { useLowerTex } from '@retikz/tex/react';
+```
+
+</DocStep>
+<DocStep title="Integrate and render">
+
+Inject the synchronous lowerer into the outer `Layout` only when ready. Descendant text reuses the capability.
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
@@ -40,11 +52,25 @@ const Diagram = () => {
 };
 ```
 
-Once the lowerer is injected into the outer `<Layout lowerTex>`, descendant text reuses the capability. `@retikz/tex/react` owns the React lifecycle and shared engine; it does not change Core's text syntax.
+`@retikz/tex/react` owns the React lifecycle and shared engine; it does not change Core’s text syntax.
 
-### Vanilla
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+<DocSteps>
+<DocStep title="Imports">
 
-Vanilla applications create a MathJax engine, adapt it to Core `LowerTex` with `createLowerTex`, then pass it as `compile.lowerTex` to `renderToSvgString` or another Vanilla compile entry:
+`@retikz/tex` exports `createMathJaxEngine` and `createLowerTex`: the former creates the formula engine, and the latter adapts it into a lowerer for injection into compilation.
+
+```ts
+import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
+```
+
+</DocStep>
+<DocStep title="Integrate and render">
+
+Pass the lowerer as `compile.lowerTex` to `renderToSvgString` to produce an SVG string.
 
 ```ts
 import { node, renderToSvgString, scene } from '@retikz/vanilla';
@@ -58,7 +84,12 @@ const input = scene({
 const svg = renderToSvgString(input, { compile: { lowerTex } });
 ```
 
-If the engine and lowerer do not need to be configured separately, await `createMathJaxLowerTex(options)` instead. Vanilla does not install React or use `@retikz/tex/react`.
+If the engine and lowerer do not need separate configuration, await `createMathJaxLowerTex(options)` instead. Vanilla does not require React or `@retikz/tex/react`.
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
 
 ## Responsibilities
 

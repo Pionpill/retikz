@@ -11,6 +11,7 @@ import { DemoLocationContext } from '@/modules/docs/components/component-preview
 
 import { compileMdx } from './compile';
 import { mdxComponents } from './components';
+import { DocHostProvider } from './doc-tabs';
 
 export type MdxFrontmatter = Record<string, unknown>;
 
@@ -115,7 +116,9 @@ export const MdxContent: FC<MdxContentProps> = props => {
   return (
     <div data-doc-content-state="ready">
       <DemoLocationContext.Provider value={state.segments}>
-        <Content components={mdxComponents} />
+        <DocHostProvider key={state.segments?.join('/') ?? ''}>
+          <Content components={mdxComponents} />
+        </DocHostProvider>
       </DemoLocationContext.Provider>
     </div>
   );

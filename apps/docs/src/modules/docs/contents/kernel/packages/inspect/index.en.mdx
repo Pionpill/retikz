@@ -23,7 +23,20 @@ Both hosts use a registry, but React attaches requests at JSX authoring sites wh
 | React   | `InspectLayout`, `InspectPath`, `InspectNode`, `InspectScope`, `InspectCoordinate` | Inject a registry at Layout and attach requests to the matching JSX site |
 | Vanilla | `createInspectionVanillaAuthoring()`, `createInspectionVanillaDriver()`            | Create path markers and add the inspection driver when rendering         |
 
-### React
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+<DocSteps>
+<DocStep title="Imports">
+
+`@retikz/inspect` exports the default registry factory `createDefaultInspectorRegistry` and path inspector key `PATH_INSPECTOR_KEY`. `@retikz/inspect/react` exports `InspectLayout` and `InspectPath` to connect the registry and attach path inspection requests.
+
+```tsx
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+```
+
+</DocStep>
+<DocStep title="Integrate and render">
 
 React imports optional wrappers from `@retikz/inspect/react`. `InspectLayout` receives the registry; `InspectPath`, `InspectNode`, `InspectScope`, and `InspectCoordinate` attach requests to the current Path, Node, Scope, or Coordinate:
 
@@ -45,6 +58,9 @@ export const InspectExample = () => (
 ```
 
 `InspectLayout` adds the optional inspection compile driver to the ordinary Layout runtime. `InspectPath` keeps ordinary Path authoring and turns its request into a runtime-only authoring marker.
+
+</DocStep>
+<DocStep title="Explicit wiring (optional)">
 
 You can also keep ordinary `Layout` / `Path` components without using any `InspectXxx` wrappers. Inject the same inspection capability explicitly through `compileDriver` and `authoring`:
 
@@ -72,7 +88,22 @@ export const ConfiguredInspectExample = () => (
 
 Both forms produce the same inspection requests and results for the same configuration; the wrappers simply handle the wiring. This configuration is fixed, so the driver lives outside the component. If it depends on React props or state, create it with `useMemo` inside the component and list those dependencies. Base components have no `inspect` prop, and `authoring` never enters Core IR.
 
-### Vanilla
+</DocStep>
+</DocSteps>
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+<DocSteps>
+<DocStep title="Imports">
+
+`@retikz/inspect` exports the default registry factory and path inspector key. `@retikz/inspect/vanilla` exports `createInspectionVanillaAuthoring` and `createInspectionVanillaDriver` to create inspection markers and the compile driver that integrates inspection.
+
+```ts
+import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+```
+
+</DocStep>
+<DocStep title="Integrate and render">
 
 Vanilla creates an authoring marker and a compile driver separately: the marker declares that a path needs observation, and the driver adds the registry and auxiliary layers at the ordinary render entry:
 
@@ -108,6 +139,11 @@ const input = scene({
 
 const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
 ```
+
+</DocStep>
+</DocSteps>
+</DocTab>
+</DocTabs>
 
 The root entry owns Definitions, registries, selection, and auxiliary compilation. React and Vanilla adapters come from `/react` and `/vanilla`; rendering remains the responsibility of `@retikz/render`. Start with Built-in inspection, then continue to extension or inspection details as needed. Configuration fields are listed in the [Schema reference](/kernel/packages/inspect/schema-reference).
 
