@@ -158,21 +158,22 @@ Node 的 anchor 定位先完成当前 Node 的文本测量、shape、padding、m
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/basic/coordinate-system">
-    <span className="font-semibold">坐标系</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      位置表达背后的坐标模型：user units、x 右 y 下、viewBox 映射
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/core/primitive-relations">
-    <span className="font-semibold">图元关系</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      path 如何引用图元、端点在动态贴边与锁定间解析
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/placement">
-    <span className="font-semibold">定位 schema</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">position 各形态的字段速查与类型定义</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '坐标系',
+      description: '位置表达背后的坐标模型：user units、x 右 y 下、viewBox 映射',
+      url: '/kernel/components/basic/coordinate-system',
+    },
+    {
+      title: '图元关系',
+      description: 'path 如何引用图元、端点在动态贴边与锁定间解析',
+      url: '/kernel/components/core/primitive-relations',
+    },
+    {
+      title: '定位 schema',
+      description: 'position 各形态的字段速查与类型定义',
+      url: '/kernel/reference/schema/placement',
+    },
+  ]}
+/>

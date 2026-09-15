@@ -36,29 +36,28 @@ Plot-registered `stack`, `bin`, `normalize`, `derive-interval`, `relate`, `jitte
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/transform/overview">
-    <span className="font-semibold">Transform</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Declare transforms in Plot React and understand component, array, and automatic transform ordering.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/operations">
-    <span className="font-semibold">Transform Operations</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Look up the semantics, parameters, and examples for the four Data built-ins.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/statistics">
-    <span className="font-semibold">Statistical Sub-operators</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Compose reducers and selectors to produce metrics or preserve representative rows.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/extensions">
-    <span className="font-semibold">Extension Mechanisms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register custom transform, reducer, and selector Definitions.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Transform',
+      description:
+        'Declare transforms in Plot React and understand component, array, and automatic transform ordering.',
+      url: '/viz/data/transform/overview',
+    },
+    {
+      title: 'Transform Operations',
+      description: 'Look up the semantics, parameters, and examples for the four Data built-ins.',
+      url: '/viz/data/transform/operations',
+    },
+    {
+      title: 'Statistical Sub-operators',
+      description: 'Compose reducers and selectors to produce metrics or preserve representative rows.',
+      url: '/viz/data/transform/statistics',
+    },
+    {
+      title: 'Extension Mechanisms',
+      description: 'Register custom transform, reducer, and selector Definitions.',
+      url: '/viz/data/transform/extensions',
+    },
+  ]}
+/>

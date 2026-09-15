@@ -12,8 +12,7 @@ export type LinkedCardProps = {
   children?: ReactNode;
 };
 
-const linkedCardClass =
-  'flex w-full flex-col items-center rounded-xl bg-muted p-6 text-foreground no-underline sm:p-10';
+const linkedCardClass = 'flex w-full flex-col items-center rounded-xl bg-muted p-4 text-foreground no-underline sm:p-6';
 
 /** 文档内可选链接的展示卡片 */
 export const LinkedCard: FC<LinkedCardProps> = props => {

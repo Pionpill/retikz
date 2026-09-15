@@ -37,21 +37,27 @@ In a Plot application, marks, transforms, and scales can read those rows by logi
 
 ## Pages
 
-<div className="grid gap-3 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/model">
-    <strong>Data Model</strong>
-    <span>Declare field types, formats, category order, and handle field mapping, parsing, and validation.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform">
-    <strong>Data Transforms</strong>
-    <span>Use sort, summarize, select, and annotate.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance">
-    <strong>Data Traceability</strong>
-    <span>Connect Data row sources to Plot audits and interaction trace-back.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/reference">
-    <strong>API Reference</strong>
-    <span>Look up JSON contracts, Definitions, registries, runtime pipelines, and lineage entry points.</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Data Model',
+      description: 'Declare field types, formats, category order, and handle field mapping, parsing, and validation.',
+      url: '/viz/data/model',
+    },
+    {
+      title: 'Data Transforms',
+      description: 'Use sort, summarize, select, and annotate.',
+      url: '/viz/data/transform',
+    },
+    {
+      title: 'Data Traceability',
+      description: 'Connect Data row sources to Plot audits and interaction trace-back.',
+      url: '/viz/data/provenance',
+    },
+    {
+      title: 'API Reference',
+      description: 'Look up JSON contracts, Definitions, registries, runtime pipelines, and lineage entry points.',
+      url: '/viz/data/reference',
+    },
+  ]}
+/>

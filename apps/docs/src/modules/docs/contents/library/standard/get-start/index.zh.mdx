@@ -1,0 +1,68 @@
+---
+title: 快速开始
+description: 安装 Standard，用 React 或 Vanilla 绘制第一个参考网格。
+---
+
+选择与你的项目一致的宿主入口，完成下面的最小例子。所有发布包使用 ES modules；Node.js 环境要求 24 或更高版本。
+
+## React
+
+<PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
+
+在已有 React 应用中渲染下面的 `Example` 组件。`react` / `react-dom` 是宿主对等依赖，版本至少为 18。
+
+```tsx
+import type { FC } from 'react';
+import { Layout } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
+
+export const Example: FC = () => (
+  <Layout>
+    <Grid bounds={{ start: [0, 0], end: [240, 120] }} line={{ spacing: 20 }} />
+  </Layout>
+);
+```
+
+结果是一块宽 240、高 120、线间距为 20 的参考网格。`Grid` 在当前 `Layout` 中自动贡献所需能力；不需要手工注册。
+
+将上面的组件保存为 `Example.tsx`，在已有 React 应用入口挂载（HTML 中准备 `<div id="root"></div>`）：
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import { Example } from './Example';
+
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<Example />);
+```
+
+根 `Layout` 默认输出 SVG，本例无需配置 renderer。尺寸和间距使用相同的图形用户单位；默认原尺寸显示时，1 单位对应 1 CSS 像素。
+
+## Vanilla
+
+<PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+```ts
+import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    grid('reference-grid', {
+      bounds: { start: [0, 0], end: [240, 120] },
+      line: { spacing: 20 },
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [GridInputEmbedAdapter] });
+console.log(svg);
+```
+
+`svg` 是可保存为 `.svg` 文件或交给页面宿主展示的完整 SVG 字符串。helper 创建普通输入，`adapters` 让 Vanilla 识别对应的嵌入项并收集其能力依赖；省略 adapter 会使输入无法解析。
+
+这里的“能力”指把 Grid 输入转换成基础图元所需的定义。React Grid 为当前图自动提供它，不需要手工注册；Vanilla 用 GridInputEmbedAdapter 完成相同的转换和依赖收集。adapter 是必需接线。
+
+## 接下来
+
+修改 `bounds` 调整网格范围，修改 `line.spacing` 调整疏密。继续阅读[网格](/library/standard/grid)，或用[表面](/library/standard/surface)为内容增加背景与边框。可选绘图定义的接入见[能力装载](/library/standard/capability-loading)。
+
+版本变化见[更新日志](/library/standard/changelog)。

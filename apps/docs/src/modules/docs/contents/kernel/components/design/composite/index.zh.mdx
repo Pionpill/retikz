@@ -352,17 +352,22 @@ Provider graph 负责从可复用模块装配“需要哪些 Definition”。`re
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/design/layers">
-    <span className="font-semibold">分层</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">DSL、IR、Scene 三层模型与 lowering 所在位置</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/extensions">
-    <span className="font-semibold">扩展运行时</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查看 registry、注入入口与扩展诊断约定</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot">
-    <span className="font-semibold">@retikz/plot</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查看 composite 在图表 domain 中的实际使用</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '分层',
+      description: 'DSL、IR、Scene 三层模型与 lowering 所在位置',
+      url: '/kernel/components/design/layers',
+    },
+    {
+      title: '扩展运行时',
+      description: '查看 registry、注入入口与扩展诊断约定',
+      url: '/kernel/reference/runtime/extensions',
+    },
+    {
+      title: '@retikz/plot',
+      description: '查看 composite 在图表 domain 中的实际使用',
+      url: '/viz/plot',
+    },
+  ]}
+/>

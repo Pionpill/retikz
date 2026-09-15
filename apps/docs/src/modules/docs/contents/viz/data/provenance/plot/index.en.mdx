@@ -153,17 +153,17 @@ This entry is suitable for tooltips, AI explanation panels, or audit navigation.
 
 ## Further Reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/provenance/data">
-    <span className="font-semibold">Data Provenance</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand row provenance and runtime events in Data.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot">
-    <span className="font-semibold">Plot Grammar</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand the overall Plot flow and module boundaries.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Data Provenance',
+      description: 'Understand row provenance and runtime events in Data.',
+      url: '/viz/data/provenance/data',
+    },
+    {
+      title: 'Plot Grammar',
+      description: 'Understand the overall Plot flow and module boundaries.',
+      url: '/viz/plot',
+    },
+  ]}
+/>

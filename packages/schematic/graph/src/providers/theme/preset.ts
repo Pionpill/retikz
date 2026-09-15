@@ -8,6 +8,12 @@ import { GraphStatus, GraphType } from '../../shared';
 export const getDefaultGraphThemePreset = (theme: ResolvedTheme): GraphThemeStyleResolution => {
   const foreground = theme.mode === ThemeMode.Light ? '#777777' : '#888888';
   return {
+    codeBlockTokens: {
+      textColor: 'currentColor',
+      mutedTextColor: theme.colors.semantic.guide,
+      accentColor: theme.colors.categorical[0],
+      codeFontFamily: 'monospace',
+    },
     defaults: {
       entity: {
         style: {

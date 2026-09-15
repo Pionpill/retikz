@@ -25,55 +25,52 @@ The drawing family owns path structure, geometry, style, and endpoints. It does 
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/draw/overview">
-    <span className="font-semibold">Draw</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Everyday links: way syntax, curves, labels, and path styling
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/way">
-    <span className="font-semibold">Way</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Way targets, operators, and DrawWay constants
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/path">
-    <span className="font-semibold">Path</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Kernel path container and whole-path features
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/standard/extension/ribbon">
-    <span className="font-semibold">Ribbon</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Variable-width relations and precomputed boundaries
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/step">
-    <span className="font-semibold">Step</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      The Kernel action semantics each segment maps to
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/arrow">
-    <span className="font-semibold">Arrow</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Arrow direction and detailed visual specs</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/path-generator">
-    <span className="font-semibold">Path Generators</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register new curve generators for generator steps
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/custom-path">
-    <span className="font-semibold">Custom Paths</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register a kind provider that owns the whole Path
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/custom-arrow">
-    <span className="font-semibold">Custom Arrows</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Register and inject new endpoint styles</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Draw',
+      description: 'Everyday links: way syntax, curves, labels, and path styling',
+      url: '/kernel/components/draw/overview',
+    },
+    {
+      title: 'Way',
+      description: 'Way targets, operators, and DrawWay constants',
+      url: '/kernel/components/draw/way',
+    },
+    {
+      title: 'Path',
+      description: 'Kernel path container and whole-path features',
+      url: '/kernel/components/draw/path',
+    },
+    {
+      title: 'Ribbon',
+      description: 'Variable-width relations and precomputed boundaries',
+      url: '/library/standard/ribbon',
+    },
+    {
+      title: 'Step',
+      description: 'The Kernel action semantics each segment maps to',
+      url: '/kernel/components/draw/step',
+    },
+    {
+      title: 'Arrow',
+      description: 'Arrow direction and detailed visual specs',
+      url: '/kernel/components/draw/arrow',
+    },
+    {
+      title: 'Path Generators',
+      description: 'Register new curve generators for generator steps',
+      url: '/kernel/components/draw/path-generator',
+    },
+    {
+      title: 'Custom Paths',
+      description: 'Register a kind provider that owns the whole Path',
+      url: '/kernel/components/draw/custom-path',
+    },
+    {
+      title: 'Custom Arrows',
+      description: 'Register and inject new endpoint styles',
+      url: '/kernel/components/draw/custom-arrow',
+    },
+  ]}
+/>

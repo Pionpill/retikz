@@ -64,25 +64,27 @@ A Definition must stop at the semantic-model boundary. It may choose optional Ce
 
 ## Further reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/table/model/presentation">
-    <span className="font-semibold">Content Presentation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Continue from Cell payloads to Core content.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/model/layout">
-    <span className="font-semibold">Layout & Borders</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      See how spans, tracks, and Cell boxes are solved.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/detail">
-    <span className="font-semibold">Detail Table</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">The common record-to-row authoring entry.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/reference/contract-table">
-    <span className="font-semibold">Contract - Table</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Look up Structure, Cell, and IRTable schemas.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Content Presentation',
+      description: 'Continue from Cell payloads to Core content.',
+      url: '/viz/table/model/presentation',
+    },
+    {
+      title: 'Layout & Borders',
+      description: 'See how spans, tracks, and Cell boxes are solved.',
+      url: '/viz/table/model/layout',
+    },
+    {
+      title: 'Detail Table',
+      description: 'The common record-to-row authoring entry.',
+      url: '/viz/table/detail',
+    },
+    {
+      title: 'Contract - Table',
+      description: 'Look up Structure, Cell, and IRTable schemas.',
+      url: '/viz/table/reference/contract-table',
+    },
+  ]}
+/>

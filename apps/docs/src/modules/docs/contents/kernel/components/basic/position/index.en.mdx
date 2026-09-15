@@ -158,23 +158,22 @@ A path reference may appear first:
 
 ## Further reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/basic/coordinate-system">
-    <span className="font-semibold">Coordinate System</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      the coordinate model behind every position form: user units, x-right / y-down, viewBox mapping
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/core/primitive-relations">
-    <span className="font-semibold">Primitive Relations</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      how a path references a primitive — endpoints resolved between dynamic attach and locked
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/placement">
-    <span className="font-semibold">Placement</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      schema field reference and type definitions for each position form
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Coordinate System',
+      description: 'the coordinate model behind every position form: user units, x-right / y-down, viewBox mapping',
+      url: '/kernel/components/basic/coordinate-system',
+    },
+    {
+      title: 'Primitive Relations',
+      description: 'how a path references a primitive — endpoints resolved between dynamic attach and locked',
+      url: '/kernel/components/core/primitive-relations',
+    },
+    {
+      title: 'Placement',
+      description: 'schema field reference and type definitions for each position form',
+      url: '/kernel/reference/schema/placement',
+    },
+  ]}
+/>

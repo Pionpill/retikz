@@ -25,63 +25,62 @@ API Reference is for stable contracts, not introductory teaching. Ten contract p
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/reference/plot">
-    <span className="font-semibold">Contract - Plot Spec</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Root spec, coordinate views, and composition schemas
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/encoding">
-    <span className="font-semibold">Contract - Encoding</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Field, constant, and channel binding schemas</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/transform">
-    <span className="font-semibold">Contract - Transform</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Stack, bin, derive, density, and trend schemas
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/mark">
-    <span className="font-semibold">Contract - Mark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Point, path, interval, reference, and relation schemas
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/scale">
-    <span className="font-semibold">Contract - Scale</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Position, ordinal, radial, and color scale schemas
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/coordinate">
-    <span className="font-semibold">Contract - Coordinate</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Cartesian, polar, 1D, and custom schemas</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/guide">
-    <span className="font-semibold">Contract - Guide</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Axis, grid, tick, title, and legend schemas</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/layout">
-    <span className="font-semibold">Contract - Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Composition padding and the Chart presentation boundary
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/layer">
-    <span className="font-semibold">Contract - Layer</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Semantic-layer stacking schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/theme">
-    <span className="font-semibold">Contract - Theme</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Plot-wide visual defaults and palette schemas
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/runtime">
-    <span className="font-semibold">Runtime Overview</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Host entry points, lowering, Core compilation, and sidecars
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Contract - Plot Spec',
+      description: 'Root spec, coordinate views, and composition schemas',
+      url: '/viz/plot/reference/plot',
+    },
+    {
+      title: 'Contract - Encoding',
+      description: 'Field, constant, and channel binding schemas',
+      url: '/viz/plot/reference/encoding',
+    },
+    {
+      title: 'Contract - Transform',
+      description: 'Stack, bin, derive, density, and trend schemas',
+      url: '/viz/plot/reference/transform',
+    },
+    {
+      title: 'Contract - Mark',
+      description: 'Point, path, interval, reference, and relation schemas',
+      url: '/viz/plot/reference/mark',
+    },
+    {
+      title: 'Contract - Scale',
+      description: 'Position, ordinal, radial, and color scale schemas',
+      url: '/viz/plot/reference/scale',
+    },
+    {
+      title: 'Contract - Coordinate',
+      description: 'Cartesian, polar, 1D, and custom schemas',
+      url: '/viz/plot/reference/coordinate',
+    },
+    {
+      title: 'Contract - Guide',
+      description: 'Axis, grid, tick, title, and legend schemas',
+      url: '/viz/plot/reference/guide',
+    },
+    {
+      title: 'Contract - Layout',
+      description: 'Composition padding and the Chart presentation boundary',
+      url: '/viz/plot/reference/layout',
+    },
+    {
+      title: 'Contract - Layer',
+      description: 'Semantic-layer stacking schema',
+      url: '/viz/plot/reference/layer',
+    },
+    {
+      title: 'Contract - Theme',
+      description: 'Plot-wide visual defaults and palette schemas',
+      url: '/viz/plot/reference/theme',
+    },
+    {
+      title: 'Runtime Overview',
+      description: 'Host entry points, lowering, Core compilation, and sidecars',
+      url: '/viz/plot/reference/runtime',
+    },
+  ]}
+/>

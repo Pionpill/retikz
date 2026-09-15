@@ -17,19 +17,22 @@ API 参考用于查询稳定契约，不承担入门教学。输入契约集中�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/layout/reference/contract-input">
-    <span className="font-semibold">契约 - 输入</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">三种容器、LayoutItem 与可 JSON 序列化子图形</span>
-  </LinkedCard>
-  <LinkedCard href="/library/layout/reference/contract-artifact">
-    <span className="font-semibold">契约 - 产物</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">分配区域、真实占用、视觉边界与专属结果</span>
-  </LinkedCard>
-  <LinkedCard href="/library/layout/reference/runtime">
-    <span className="font-semibold">运行时</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Definition 接入、Core 编译、测量/回放与适配器
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '契约 - 输入',
+      description: '三种容器、LayoutItem 与可 JSON 序列化子图形',
+      url: '/library/layout/reference/contract-input',
+    },
+    {
+      title: '契约 - 产物',
+      description: '分配区域、真实占用、视觉边界与专属结果',
+      url: '/library/layout/reference/contract-artifact',
+    },
+    {
+      title: '运行时',
+      description: 'Definition 接入、Core 编译、测量/回放与适配器',
+      url: '/library/layout/reference/runtime',
+    },
+  ]}
+/>

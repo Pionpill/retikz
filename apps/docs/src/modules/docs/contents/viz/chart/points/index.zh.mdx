@@ -28,35 +28,37 @@ Properties 的 `domainPadding` 接受非负数字，或 `{ kind?, default?, x?, 
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/points/scatter">
-    <span className="font-semibold">散点图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      比较两个连续变量，并用颜色或尺寸补充分类与量级
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/bubble">
-    <span className="font-semibold">气泡图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      用必需的第三个字段控制气泡面积，并保留 Point 的位置语义
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/regression">
-    <span className="font-semibold">回归图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">叠加原始观测与一条或多条内置回归趋势</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/connected-scatter">
-    <span className="font-semibold">连接散点图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">保留观测点，并按显式顺序连接一条或多条轨迹</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/ranged-dot">
-    <span className="font-semibold">范围点图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">用连接线和双端点比较每个类别的前后值</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/strip">
-    <span className="font-semibold">条带图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      在离散刻度附近确定性散布每条观测，并保留连续数值位置
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '散点图',
+      description: '比较两个连续变量，并用颜色或尺寸补充分类与量级',
+      url: '/viz/chart/points/scatter',
+    },
+    {
+      title: '气泡图',
+      description: '用必需的第三个字段控制气泡面积，并保留 Point 的位置语义',
+      url: '/viz/chart/points/bubble',
+    },
+    {
+      title: '回归图',
+      description: '叠加原始观测与一条或多条内置回归趋势',
+      url: '/viz/chart/points/regression',
+    },
+    {
+      title: '连接散点图',
+      description: '保留观测点，并按显式顺序连接一条或多条轨迹',
+      url: '/viz/chart/points/connected-scatter',
+    },
+    {
+      title: '范围点图',
+      description: '用连接线和双端点比较每个类别的前后值',
+      url: '/viz/chart/points/ranged-dot',
+    },
+    {
+      title: '条带图',
+      description: '在离散刻度附近确定性散布每条观测，并保留连续数值位置',
+      url: '/viz/chart/points/strip',
+    },
+  ]}
+/>

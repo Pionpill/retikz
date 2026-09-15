@@ -144,29 +144,27 @@ An explicit `range` overrides `scheme`. When `quantize` / `quantile` provide bot
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/scale/position">
-    <span className="font-semibold">Positional Scales</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Choose positional mappings for numeric, temporal, and categorical fields
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/guide/legend">
-    <span className="font-semibold">Legend</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Explain a color mapping with swatches or a ramp
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/contract">
-    <span className="font-semibold">Field Contract</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Declare categorical, continuous, and temporal field types
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/scale/custom-scale">
-    <span className="font-semibold">Custom scales</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register a scale definition for domain-specific mappings
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Positional Scales',
+      description: 'Choose positional mappings for numeric, temporal, and categorical fields',
+      url: '/viz/plot/scale/position',
+    },
+    {
+      title: 'Legend',
+      description: 'Explain a color mapping with swatches or a ramp',
+      url: '/viz/plot/guide/legend',
+    },
+    {
+      title: 'Field Contract',
+      description: 'Declare categorical, continuous, and temporal field types',
+      url: '/viz/data/model/contract',
+    },
+    {
+      title: 'Custom scales',
+      description: 'Register a scale definition for domain-specific mappings',
+      url: '/viz/plot/scale/custom-scale',
+    },
+  ]}
+/>

@@ -6,19 +6,19 @@ import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
 import { buildVanillaPreview } from '@/modules/docs/components/component-preview/vanilla-preview';
-import SurfaceBasicDemo from '@/modules/docs/contents/library/standard/composite/surface/surface-basic.demo';
-import SurfaceOverflowEnDemo from '@/modules/docs/contents/library/standard/composite/surface/surface-overflow.en.demo';
-import SurfaceOverflowZhDemo from '@/modules/docs/contents/library/standard/composite/surface/surface-overflow.zh.demo';
+import SurfaceBasicDemo from '@/modules/docs/contents/library/standard/surface/surface-basic.demo';
+import SurfaceOverflowEnDemo from '@/modules/docs/contents/library/standard/surface/surface-overflow.en.demo';
+import SurfaceOverflowZhDemo from '@/modules/docs/contents/library/standard/surface/surface-overflow.zh.demo';
 import { librarySection } from '@/modules/docs/data/library';
 
-const surfaceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/composite/surface');
+const surfaceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/standard/surface');
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(surfaceRoot, `index.${language}.mdx`), 'utf8');
 
 describe('Standard Surface documentation', () => {
   it('registers the route after Frame and keeps both locale labels available', () => {
     const composites = librarySection
       .find(section => section.id === 'standard')
-      ?.pages.find(page => page.id === 'composite')?.children;
+      ?.pages.filter(page => page.sidebarGroup === 'library.standardComposite');
     const ids = composites?.map(node => node.id) ?? [];
 
     expect(ids.indexOf('surface')).toBe(ids.indexOf('frame') + 1);

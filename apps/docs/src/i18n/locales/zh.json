@@ -1,5 +1,6 @@
 {
   "common": {
+    "docHost": "接入方式",
     "search": "搜索文档...",
     "searchPlaceholder": "输入关键字搜索...",
     "searchEmpty": "未找到匹配的页面",
@@ -169,6 +170,9 @@
     "refVisualizationPlot": "可视化-绘图"
   },
   "library": {
+    "components": "组件",
+    "introduction": "介绍",
+    "getStart": "快速开始",
     "label": "能力库",
     "navigationLabel": "能力库",
     "navigationDescription": "提供可复用的标准组件和布局能力，用于组合更完整的图形",

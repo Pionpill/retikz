@@ -1,0 +1,68 @@
+---
+title: Quick start
+description: Install Standard and draw a reference grid with React or Vanilla.
+---
+
+Choose the host used by your project and run its example below. Packages use ES modules and require Node.js 24 or later in Node environments.
+
+## React
+
+<PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
+
+Render the following `Example` component in an existing React app. The host peers `react` and `react-dom` require version 18 or later.
+
+```tsx
+import type { FC } from 'react';
+import { Layout } from '@retikz/react';
+import { Grid } from '@retikz/standard-react';
+
+export const Example: FC = () => (
+  <Layout>
+    <Grid bounds={{ start: [0, 0], end: [240, 120] }} line={{ spacing: 20 }} />
+  </Layout>
+);
+```
+
+The result is a 240-by-120 reference grid with lines spaced 20 units apart. `Grid` contributes the required capability to its current `Layout` automatically.
+
+Save the component above as `Example.tsx` and mount it from an existing React app entry (provide `<div id="root"></div>` in HTML):
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import { Example } from './Example';
+
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<Example />);
+```
+
+The root `Layout` outputs SVG by default; this example needs no renderer configuration. Sizes and gaps use the same graphic units. At the default natural display size, one unit equals one CSS pixel.
+
+## Vanilla
+
+<PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+```ts
+import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    grid('reference-grid', {
+      bounds: { start: [0, 0], end: [240, 120] },
+      line: { spacing: 20 },
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [GridInputEmbedAdapter] });
+console.log(svg);
+```
+
+`svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The helper creates ordinary input; `adapters` lets Vanilla recognize the embed and collect its capability dependencies. Omitting the adapter leaves the embed unresolved.
+
+Here, a capability is the definition needed to convert Grid input into basic primitives. React Grid supplies it automatically to the current diagram, with no manual registration. Vanilla uses GridInputEmbedAdapter for the same conversion and dependency collection. The adapter is required wiring.
+
+## Next steps
+
+Change `bounds` to resize the grid and `line.spacing` to change its density. Continue with [Grid](/library/standard/grid), or add a background and border to content with [Surface](/library/standard/surface). See [capability loading](/library/standard/capability-loading) to add optional drawing definitions.
+
+See version changes in the [changelog](/library/standard/changelog).

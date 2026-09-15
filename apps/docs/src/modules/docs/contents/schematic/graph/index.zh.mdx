@@ -48,27 +48,32 @@ Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/schematic/graph/block">
-    <span className="font-semibold">Block</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">代码与工程对象的结构内容和局部连接点</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/group">
-    <span className="font-semibold">Group</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">可嵌套外框、caption 与 Core boundary labels</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/entity">
-    <span className="font-semibold">Entity</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">独立节点语义、文本、位置与扩展</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/relation">
-    <span className="font-semibold">Relation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">通用引用端点、方向、route 与扩展</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/api-reference">
-    <span className="font-semibold">Graph API 参考</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Source schema、Scope 公共面与 Graph family adapter
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Block',
+      description: '代码与工程对象的结构内容和局部连接点',
+      url: '/schematic/graph/block',
+    },
+    {
+      title: 'Group',
+      description: '可嵌套外框、caption 与 Core boundary labels',
+      url: '/schematic/graph/group',
+    },
+    {
+      title: 'Entity',
+      description: '独立节点语义、文本、位置与扩展',
+      url: '/schematic/graph/entity',
+    },
+    {
+      title: 'Relation',
+      description: '通用引用端点、方向、route 与扩展',
+      url: '/schematic/graph/relation',
+    },
+    {
+      title: 'Graph API 参考',
+      description: 'Source schema、Scope 公共面与 Graph family adapter',
+      url: '/schematic/graph/api-reference',
+    },
+  ]}
+/>

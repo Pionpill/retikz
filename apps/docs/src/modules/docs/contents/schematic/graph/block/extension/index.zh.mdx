@@ -1,0 +1,92 @@
+---
+title: Block 扩展用法
+description: 用独立代码实体 Source 与 Definition 封装 Block 内容，复用主题、布局和三种宿主入口。
+---
+
+当多个节点共享固定的数据结构时，可以把它们定义为代码实体，再由 `compose` 生成 Header、Section 与 Row。下面的自定义 `ServiceBlock` 在局部明暗主题下呈现相同内容；源码包含实体定义、注入和使用的完整路径。
+
+<ComponentPreview
+  files={['code-block-extension', 'code-block-extension.i18n.ts']}
+  size="md"
+  caption="左右实体的数据与分区相同；局部主题只改变内部视觉。"
+/>
+
+## 适用边界
+
+实体封装适合名称、属性、签名或逻辑需要独立保存和校验的代码说明节点。临时混排任意内容时，直接使用 [Block 基础用法](/schematic/graph/block/basic)。这些数据不解析 TypeScript，也不执行函数。
+
+代码实体属于 Graph；Tier 3 表示实体内容组合层，下沉为既有 Tier 2 Block。每个实体只有一个可寻址的 Block 根，保留 Block 的尺寸、变换、局部命名空间与连接能力。
+
+## 定义能力
+
+使用 `CodeBlockPropsSchema.safeExtend(...)` 添加自己的 `namespace`、`type` 与领域字段，并保留公共尺寸校验。根不接收任意 `children`；共享 `CodeLogicSchema` 可表达非空文本或有序步骤。
+
+`defineCodeBlock` 将严格 schema 与 `compose(source, context)` 关联。`compose` 返回 Block 内容，不创建 Block 根；`context.theme` 和 `context.codeBlockTokens` 已经考虑实体的局部主题。
+
+`name`、`description` 提供 Header 文本。`icon` / `trail` 的省略、`null`、显式 child 分别表示实体默认、隐藏与替换；这些内容分支由实体实现。主题不创建或删除分区。
+
+## 注入宿主
+
+`createCodeBlockContribution(definition, options)` 提供实体及完整下层依赖。三种入口复用同一个 contribution：
+
+| 入口      | 注入方式                                                                                              |
+| --------- | ----------------------------------------------------------------------------------------------------- |
+| Direct IR | `resolveCoreProviderDependencies({ contributions: [contribution] })` 的结果传给 Core `compileToScene` |
+| Vanilla   | `InputEmbedAdapter.lower` 返回 `{ node: { ...source }, providerDependencies: contribution }`          |
+| React     | 带 `isTier2Embeddable` 与 `inputEmbedAdapter` 的组件标记复用 Vanilla adapter，见上方源码              |
+
+adapter 构造普通 Source 对象，React 的 `key` 等宿主属性不进入持久化数据。自定义实体无需加入另一个实体白名单，也无需手工注册内部 provider。
+
+## 执行机制
+
+宿主先装配 provider 并校验实体 Source，再在有效局部主题下调用 `compose`。生成的内容进入唯一 Block，后续布局、连接与 SVG / Canvas 渲染继续使用原有链路。
+
+同一个 Definition 对象可以重复贡献；同 key 的不同 Definition 由 Core 报告冲突。显式成员 `id` 才提供成员级寻址，名称和步骤序号不会生成公共 id。
+
+### 主题配置
+
+`GraphThemeStyleSource.codeBlockTokens` 是运行时配置，不进入 IR。具名主题同时在 Core `themeStyles` 和 contribution 的 `graphThemeStyles` 注册；Graph definition 根据有效 Core theme 生成内部视觉。
+
+| Token               | 默认值                       | 用途                       |
+| ------------------- | ---------------------------- | -------------------------- |
+| `textColor`         | `currentColor`               | 标题与正文                 |
+| `mutedTextColor`    | Core `colors.semantic.guide` | 描述、类型说明与默认 trail |
+| `accentColor`       | Core `colors.categorical[0]` | 默认 icon                  |
+| `codeFontFamily`    | `monospace`                  | 签名等代码文字             |
+| `sectionBackground` | 基础 Section 背景            | 内容分区背景               |
+
+省略字段保留 Neutral token，显式字段替换对应值，背景整体替换。实体不提供 `presentation`、实例 tokens 或逐成员样式；外壳仍使用 Block 原有字段，显式 icon/trail child 不递归染色。
+
+## 错误与限制
+
+| 情况                         | 结果                                 |
+| ---------------------------- | ------------------------------------ |
+| 未注册实体或缺少主题定义     | 沿宿主 provider / theme 路径失败     |
+| 相同 key 对应不同 Definition | 报告冲突，不静默覆盖                 |
+| 非法字段、空逻辑或非法尺寸   | 对应严格 schema 拒绝                 |
+| 主题或 compose 回调抛出异常  | 保留原始 `cause`，可继续追查调用原因 |
+| 缺少显式成员 id              | 不提供该成员的连接目标               |
+
+共享基础不预置所有代码实体。InterfaceBlock、FunctionBlock 等具体组件需要各自的实体定义；本例 `ServiceBlock` 是应用自定义扩展。
+
+## API 介绍
+
+以下能力均从 `@retikz/graph` 公开入口导入，完整示例以上方源码为准。
+
+| 能力                                          | 本页用途                                     |
+| --------------------------------------------- | -------------------------------------------- |
+| `CodeBlockPropsSchema` / `IRCodeBlockProps`   | 复用 Block 公共根，增加名称、说明与可空 slot |
+| `CodeParameterSchema` / `CodeSignatureSchema` | 有序参数与返回类型说明                       |
+| `CodePropertySchema` / `CodeMethodSchema`     | 属性与可调用成员的共享事实                   |
+| `CodeLogicSchema`                             | 文本或步骤逻辑段                             |
+| `CodeBlockDefinition` / `defineCodeBlock`     | 关联实体 schema 与内容组合                   |
+| `CodeBlockComposeContext`                     | 有效 Core theme 与 codeBlockTokens           |
+| `createCodeBlockContribution`                 | 注入完整 provider 依赖                       |
+
+参数列表省略表示未说明，空数组表示无参数。`optional` / `readonly` 省略时语义为 false。共享内容只保存事实，不保存生成的 Row / Section 或运行时回调。
+
+## 相关
+
+- [Block 基础用法](/schematic/graph/block/basic)：开放内容与局部连接
+- [Core runtime 扩展](/kernel/reference/runtime/extensions)：provider 装配与扩展入口
+- [Graph API 参考](/schematic/graph/api-reference)：Graph 现有公开能力查询
