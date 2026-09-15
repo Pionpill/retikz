@@ -58,10 +58,10 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.design',
         sidebarGroup: 'kernel.concepts',
         children: [
-          { id: 'layers', label: 'kernel.layers', difficulty: DocDifficulty.Internals },
-          { id: 'sugar', label: 'kernel.sugar', difficulty: DocDifficulty.Internals },
-          { id: 'composite', label: 'kernel.refComposite', difficulty: DocDifficulty.Internals },
-          { id: 'theme', label: 'kernel.theme', difficulty: DocDifficulty.Internals },
+          { id: 'layers', label: 'kernel.layers', difficulty: DocDifficulty.Advanced },
+          { id: 'sugar', label: 'kernel.sugar', difficulty: DocDifficulty.Advanced },
+          { id: 'composite', label: 'kernel.refComposite', difficulty: DocDifficulty.Advanced },
+          { id: 'theme', label: 'kernel.theme', difficulty: DocDifficulty.Advanced },
           {
             id: 'principles',
             label: 'kernel.principles',
