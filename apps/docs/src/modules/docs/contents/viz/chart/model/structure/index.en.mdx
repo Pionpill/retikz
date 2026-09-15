@@ -145,29 +145,27 @@ The Chart-shell cascade is mode fallback → registered Chart definitions → lo
 
 ## Related pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model">
-    <span className="font-semibold">Chart Model</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Trace Source through recipe, resolution, and Surface.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/plot">
-    <span className="font-semibold">Plot Integration</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Separate Chart marks from independent Plot marks.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/presentation">
-    <span className="font-semibold">Presentation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Reference fixed presentation slots and layout.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points">
-    <span className="font-semibold">Point family</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Review exact schemas and authored marks for all six active Point chartTypes.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Chart Model',
+      description: 'Trace Source through recipe, resolution, and Surface.',
+      url: '/viz/chart/model',
+    },
+    {
+      title: 'Plot Integration',
+      description: 'Separate Chart marks from independent Plot marks.',
+      url: '/viz/chart/model/plot',
+    },
+    {
+      title: 'Presentation',
+      description: 'Reference fixed presentation slots and layout.',
+      url: '/viz/chart/model/presentation',
+    },
+    {
+      title: 'Point family',
+      description: 'Review exact schemas and authored marks for all six active Point chartTypes.',
+      url: '/viz/chart/points',
+    },
+  ]}
+/>

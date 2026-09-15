@@ -230,7 +230,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RibbonPathOptionsSchema: {
     schema: RibbonPathOptionsSchema,
     label: 'RibbonPathOptions',
-    url: '/library/standard/extension/ribbon',
+    url: '/library/standard/ribbon',
   },
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,
@@ -533,19 +533,19 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LegendSchema: {
     schema: StandardIR.LegendSchema,
     label: 'Legend',
-    url: '/library/standard/composite/legend#legendschema',
+    url: '/library/standard/legend#legendschema',
     localizations: { zh: LegendSchemaZhLocalization },
   },
   LegendArtifactSchema: {
     schema: StandardIR.LegendArtifactSchema,
     label: 'LegendArtifact',
-    url: '/library/standard/composite/legend#legendartifactschema',
+    url: '/library/standard/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
   SurfaceSchema: {
     schema: StandardIR.SurfaceSchema,
     label: 'Surface',
-    url: '/library/standard/composite/surface#surfaceschema',
+    url: '/library/standard/surface#surfaceschema',
   },
 
   FlowDiagramSchema: {

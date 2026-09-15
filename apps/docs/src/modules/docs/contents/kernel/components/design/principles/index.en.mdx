@@ -128,6 +128,8 @@ This order defines the boundaries: parsers do not read provider registries, rend
 
 ## Capability ownership
 
+Capabilities that only change authoring notation without adding drawing semantics belong to [Sugar](/kernel/components/design/sugar). Equivalent expressions and expansion constraints are explained there.
+
 Once the overall framework is clear, decide whether a request changes authoring ergonomics, shared drawing semantics, a high-level domain model, a replaceable compile strategy, or backend runtime behavior. Design from that first owner.
 
 <ComponentPreview files="principles-placement" size="md" hideCode />
@@ -160,27 +162,27 @@ When a subpackage lacks a capability, first decide whether the need is compositi
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/design/layers">
-    <span className="font-semibold">Layers</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand DSL, IR, Scene, and renderers as a user
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/design/composite">
-    <span className="font-semibold">Tier 2 Composites</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Preserve domain intent and lower high-level nodes
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/extensions">
-    <span className="font-semibold">Extension Mechanisms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Look up Definitions, registries, host lowerers, and guides
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema">
-    <span className="font-semibold">Schema</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Look up the current IR fields and contracts</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layers',
+      description: 'Understand DSL, IR, Scene, and renderers as a user',
+      url: '/kernel/components/design/layers',
+    },
+    {
+      title: 'Tier 2 Composites',
+      description: 'Preserve domain intent and lower high-level nodes',
+      url: '/kernel/components/design/composite',
+    },
+    {
+      title: 'Extension Mechanisms',
+      description: 'Look up Definitions, registries, host lowerers, and guides',
+      url: '/kernel/reference/runtime/extensions',
+    },
+    {
+      title: 'Schema',
+      description: 'Look up the current IR fields and contracts',
+      url: '/kernel/reference/schema',
+    },
+  ]}
+/>

@@ -203,23 +203,22 @@ A custom selector can be used by `select` or by a host transform that explicitly
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-  <LinkedCard href="/viz/data/transform/operations">
-    <span className="font-semibold">Transform Operations</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Check whether a built-in transform already covers the requirement.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/statistics">
-    <span className="font-semibold">Statistical Sub-operators</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Learn the built-in reducer and selector semantics.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/extensions">
-    <span className="font-semibold">Data Model Extensions</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Extend field formats and runtime field resolution.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Transform Operations',
+      description: 'Check whether a built-in transform already covers the requirement.',
+      url: '/viz/data/transform/operations',
+    },
+    {
+      title: 'Statistical Sub-operators',
+      description: 'Learn the built-in reducer and selector semantics.',
+      url: '/viz/data/transform/statistics',
+    },
+    {
+      title: 'Data Model Extensions',
+      description: 'Extend field formats and runtime field resolution.',
+      url: '/viz/data/model/extensions',
+    },
+  ]}
+/>

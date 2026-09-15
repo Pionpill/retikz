@@ -59,15 +59,15 @@ describe('SCHEMA_REGISTRY', () => {
       PlotThemeResolutionSchema: { schema: PlotThemeResolutionSchema },
       LegendSchema: {
         schema: LegendSchema,
-        url: '/library/standard/composite/legend#legendschema',
+        url: '/library/standard/legend#legendschema',
       },
       LegendArtifactSchema: {
         schema: LegendArtifactSchema,
-        url: '/library/standard/composite/legend#legendartifactschema',
+        url: '/library/standard/legend#legendartifactschema',
       },
       SurfaceSchema: {
         schema: SurfaceSchema,
-        url: '/library/standard/composite/surface#surfaceschema',
+        url: '/library/standard/surface#surfaceschema',
       },
       BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/basic' },
       BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/basic' },
@@ -83,7 +83,7 @@ describe('SCHEMA_REGISTRY', () => {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
       expect(entry.url, name).toMatch(
-        /^\/.+\/(?:(?:reference|contract|composite|extension|graph|packages)\/.+|flow\/basic(?:#.+)?)$/,
+        /^\/.+\/(?:(?:reference|contract|standard|graph|packages)\/.+|flow\/basic(?:#.+)?)$/,
       );
     }
   });
@@ -98,9 +98,9 @@ describe('SCHEMA_REGISTRY', () => {
       '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
     );
     expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
-    expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/composite/legend#legendschema');
-    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/composite/legend#legendartifactschema');
-    expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/composite/surface#surfaceschema');
+    expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/legend#legendschema');
+    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/legend#legendartifactschema');
+    expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/surface#surfaceschema');
   });
 
   it('documents the Layout Inspector spacing schema on the Layout runtime reference page', () => {
@@ -141,7 +141,7 @@ describe('SCHEMA_REGISTRY', () => {
 
   it('keeps every Standard composite registry URL on a documented English heading', () => {
     const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
-      entry.url.startsWith('/library/standard/composite/'),
+      /^\/library\/standard\/(grid|axes|frame|surface|legend)(#|\/|$)/.test(entry.url),
     );
 
     for (const [name, entry] of entries) {

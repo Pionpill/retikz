@@ -10,28 +10,39 @@ Design Philosophy explains the product-level tradeoff behind retikz: authors wri
 | Page                    | Topic                                                                                       | Reach for it when                                                                           |
 | ----------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Layers                  | The relationship between DSL, IR, Scene, and renderers                                      | You want to know how JSX becomes SVG / Canvas, or where Kernel and Sugar split              |
+| Sugar                   | Equivalent convenient and basic expressions                                                 | Choose notation and understand expansion constraints                                        |
 | Tier 2 Composites       | How domain packages register high-level nodes on top of core and lower them at compile time | You want to understand why composite and plot capabilities do not live directly inside core |
+| Theme                   | Inheritance, shared colors, and composite consumption                                       | Distinguish theme environments from primitive styles                                        |
 | Architecture Principles | Capability ownership, package boundaries, completeness, and execution                       | You maintain the library, design extension points, or assign a capability to an owner       |
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/design/layers">
-    <span className="font-semibold">Layers</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand the boundary between DSL, IR, Scene, and renderers
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/design/composite">
-    <span className="font-semibold">Tier 2 Composites</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand composite registration, discrimination, and lowering
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/design/principles">
-    <span className="font-semibold">Architecture Principles</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Assign ownership and verify package boundaries and completeness
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layers',
+      description: 'Understand the boundary between DSL, IR, Scene, and renderers',
+      url: '/kernel/components/design/layers',
+    },
+    {
+      title: 'Sugar',
+      description: '',
+      url: '/kernel/components/design/sugar',
+    },
+    {
+      title: 'Tier 2 Composites',
+      description: 'Understand composite registration, discrimination, and lowering',
+      url: '/kernel/components/design/composite',
+    },
+    {
+      title: 'Theme',
+      description: '',
+      url: '/kernel/components/design/theme',
+    },
+    {
+      title: 'Architecture Principles',
+      description: 'Assign ownership and verify package boundaries and completeness',
+      url: '/kernel/components/design/principles',
+    },
+  ]}
+/>

@@ -19,17 +19,18 @@ The first concrete type is `FlowDiagram`. It closes the loop from an LLM-friendl
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/schematic/diagram/framework">
-    <span className="font-semibold">Diagram Framework</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Supporting regions, framing, spacing, themes, and the unified output boundary established in alpha.1
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/diagram/flow">
-    <span className="font-semibold">Flow Diagram</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Recursive Groups, automatic layout, routing, Theme, and result model for site logic diagrams
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Diagram Framework',
+      description:
+        'Supporting regions, framing, spacing, themes, and the unified output boundary established in alpha.1',
+      url: '/schematic/diagram/framework',
+    },
+    {
+      title: 'Flow Diagram',
+      description: 'Recursive Groups, automatic layout, routing, Theme, and result model for site logic diagrams',
+      url: '/schematic/diagram/flow',
+    },
+  ]}
+/>

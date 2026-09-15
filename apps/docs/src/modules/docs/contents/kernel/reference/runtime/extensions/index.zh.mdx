@@ -53,62 +53,65 @@ Core 的通用 path kind 槽位是 `CompileOptions.pathKinds`，Core 只提供 `
 
 ## 指南入口
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/shapes/custom-shape">
-    <span className="font-semibold">自定义形状</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">ShapeDefinition：节点轮廓、边界与锚点</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node/custom-boundary">
-    <span className="font-semibold">自定义连接面</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      BoundaryDefinition：独立于视觉 shape 的连线表面
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/custom-clip">
-    <span className="font-semibold">自定义裁剪区</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      ClipDefinition：在同一 kind 下绑定 spec、shape 与几何 lowering
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/custom-arrow">
-    <span className="font-semibold">自定义箭头</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">ArrowDefinition：路径端点 marker 几何</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/custom-pattern">
-    <span className="font-semibold">自定义图案</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">PatternDefinition：可复用填充 motif</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/custom-path">
-    <span className="font-semibold">自定义路径</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">PathKindDefinition：整条 Path 的处理策略</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/path-generator">
-    <span className="font-semibold">路径生成器</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">PathGeneratorDefinition：参数化曲线命令</span>
-  </LinkedCard>
-  <LinkedCard href="/library/standard/extension/ribbon">
-    <span className="font-semibold">Standard Ribbon</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      RibbonPathKindDefinition 与 provider contribution：可选的带状路径
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/design/composite">
-    <span className="font-semibold">复合</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      CompositeDefinition：轻量 Theme 上下文展开或 layout-aware compile
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/custom-animation">
-    <span className="font-semibold">自定义动画</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">缓动曲线与动画属性 runtime registry</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/tex">
-    <span className="font-semibold">TeX lowerer</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      @retikz/tex：把公式降为 Kernel 可渲染的 glyph 几何
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '自定义形状',
+      description: 'ShapeDefinition：节点轮廓、边界与锚点',
+      url: '/kernel/components/shapes/custom-shape',
+    },
+    {
+      title: '自定义连接面',
+      description: 'BoundaryDefinition：独立于视觉 shape 的连线表面',
+      url: '/kernel/components/node/custom-boundary',
+    },
+    {
+      title: '自定义裁剪区',
+      description: 'ClipDefinition：在同一 kind 下绑定 spec、shape 与几何 lowering',
+      url: '/kernel/components/layout/custom-clip',
+    },
+    {
+      title: '自定义箭头',
+      description: 'ArrowDefinition：路径端点 marker 几何',
+      url: '/kernel/components/draw/custom-arrow',
+    },
+    {
+      title: '自定义图案',
+      description: 'PatternDefinition：可复用填充 motif',
+      url: '/kernel/components/effects/custom-pattern',
+    },
+    {
+      title: '自定义路径',
+      description: 'PathKindDefinition：整条 Path 的处理策略',
+      url: '/kernel/components/draw/custom-path',
+    },
+    {
+      title: '路径生成器',
+      description: 'PathGeneratorDefinition：参数化曲线命令',
+      url: '/kernel/components/draw/path-generator',
+    },
+    {
+      title: 'Standard Ribbon',
+      description: 'RibbonPathKindDefinition 与 provider contribution：可选的带状路径',
+      url: '/library/standard/ribbon',
+    },
+    {
+      title: '复合',
+      description: 'CompositeDefinition：轻量 Theme 上下文展开或 layout-aware compile',
+      url: '/kernel/components/design/composite',
+    },
+    {
+      title: '自定义动画',
+      description: '缓动曲线与动画属性 runtime registry',
+      url: '/kernel/components/effects/custom-animation',
+    },
+    {
+      title: 'TeX lowerer',
+      description: '@retikz/tex：把公式降为 Kernel 可渲染的 glyph 几何',
+      url: '/kernel/packages/tex',
+    },
+  ]}
+/>
 
 <SourceLinks
   sources={[

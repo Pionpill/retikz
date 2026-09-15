@@ -14,11 +14,11 @@ description: Use when writing or editing a leaf apps/docs concept page to explai
 
 不归本 skill：
 
-| 页                                                                         | 去哪                                                                                                       |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| 分组落地页（带 children，如 `concepts/design`、`concepts/basic-concepts`） | [`docs-doc-group`](../docs-doc-group/SKILL.md)——它们是「职责一览表 + LinkedCard 子项」骨架，不是概念叶子页 |
-| 入口页（`introduction` / `get-start`）                                     | `docs-doc-principle` 的「入口页例外」节                                                                    |
-| 配图的 `stroke="none"` / 配色 / y 轴 / 双语拆分等画法                      | [`docs-figure-contract`](../docs-figure-contract/SKILL.md)                                                 |
+| 页                                                                         | 去哪                                                                                                           |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| 分组落地页（带 children，如 `concepts/design`、`concepts/basic-concepts`） | [`docs-doc-group`](../docs-doc-group/SKILL.md)——它们是「职责一览表 + LinkedSections 子项」骨架，不是概念叶子页 |
+| 入口页（`introduction` / `get-start`）                                     | `docs-doc-principle` 的「入口页例外」节                                                                        |
+| 配图的 `stroke="none"` / 配色 / y 轴 / 双语拆分等画法                      | [`docs-figure-contract`](../docs-figure-contract/SKILL.md)                                                     |
 
 ## 定位
 
@@ -65,7 +65,7 @@ description: Use when writing or editing a leaf apps/docs concept page to explai
 | 选择 / 决策       | 帮读者在变体间选             | 「怎么选择」「选择建议」「什么时候手写 viewBox」                      |
 | 边界 / 区别       | 和相邻概念划清界限           | `composite`「与 Sugar 的区别」、`primitive-model`「和扩展形状的关系」 |
 | 约束 / 陷阱       | 易错点、硬性要求             | `position`「前向引用要求」、`animation`「触发与降级」                 |
-| 延伸阅读          | LinkedCard 网格收尾          | `layers`「延伸阅读」                                                  |
+| 延伸阅读          | LinkedSections 网格收尾      | `layers`「延伸阅读」                                                  |
 
 开头约定：
 
@@ -75,7 +75,7 @@ description: Use when writing or editing a leaf apps/docs concept page to explai
 
 结尾约定：
 
-- 收一个 `## 延伸阅读` + `<LinkedCard>` 网格（见下文「跨链接」）
+- 收一个 `## 延伸阅读` + `<LinkedSections>` 网格（见下文「跨链接」）
 
 H2 进右侧 TOC；同一概念下的细分点用 H3。
 
@@ -153,22 +153,7 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 ## 跨链接与延伸阅读
 
 - **正文 inline 链接按需深潜**：查字段 → `reference/`，看用法 → `components/`，看综合图 → `examples/`，相邻概念 → sibling concept。plot 等模块可能跳到 `examples/` 或模块自己的 reference——按该模块实际页型走，不照搬 core 的去向
-- **页末固定 `## 延伸阅读` + LinkedCard 网格**：
-
-```mdx
-## 延伸阅读
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/schema">
-    <span className="font-semibold">结构</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查 IR 各实体的字段</span>
-  </LinkedCard>
-  {/* 2-4 张，2 列网格 */}
-</div>
-```
-
-- 卡片标题取**目标页 frontmatter `title`**；`href` 必须命中 `data/<module>.ts` 注册的 `id`
-- `<LinkedCard>` 是全局 MDX 组件，**不用 import**
+- **页末使用「延伸阅读」标题 + LinkedSections**：按读者下一步目标选择文档，标题对应目标页，url 命中真实路由；具体写法与验证读取 [关联文档导航](../docs-doc-principle/references/linked-sections.md)
 - 不引第三方外链（principle 通则）；项目仓库内文件用 GitHub 完整 URL 可链
 
 ## 阅读时间与读者
@@ -201,7 +186,7 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 - **先术语后场景** —— 开篇就甩 IR / anchor / lowering，没先讲「你为什么需要它」
 - **缺等价证明** —— 声称「高层写法不引入新能力 / X 等价 Y」（core 的 Sugar/Kernel 是一例）却不给两段同构代码
 - **强行套 core 术语** —— 给 plot / renderer 概念页硬塞 IR / Scene / Sugar；换模块要用该模块的模型词（scale / encoding / backend / lowering……）
-- **延伸阅读 / LinkedCard 断链** —— `href` 没命中注册 `id`，或 zh / en 目标 slug 不同没分别核
+- **延伸阅读 / LinkedSections 断链** —— `url` 没命中注册 `id`，或 zh / en 目标 slug 不同没分别核
 - **把分组落地页当概念叶子页写** —— 带 children 的（`concepts/design`）走 `docs-doc-group`
 - **概念页之间不承接** —— 同组概念页要「接着上一篇讲」，开篇点明接着谁、讲什么；孤立堆叠读者串不起来
 - **标题名实不符** —— 标题必须匹配内容，内容漂移就改标题（如「连线方式」扩进相对偏移 / Coordinate 后改成「连线与路由」）
@@ -222,4 +207,4 @@ principle 规定普通用法页**隐藏内部表示**；**概念 / 设计页是�
 - [ ] 无版本钉号、无陈旧能力面表述
 - [ ] demo / 行为描述与 `packages/kernel` 当前实现一致，冲突处的「例外」已写清
 - [ ] 标题名实相符；同组概念页有承接、不孤立
-- [ ] **链接自检**（TS / build 挡不住）：inline 站内路径命中注册 `id`；LinkedCard `href` 可达；zh / en 两份**分别**点；CJK / 带符号锚链接用 github-slugger 核 slug
+- [ ] **链接自检**（TS / build 挡不住）：inline 站内路径命中注册 `id`；LinkedSections `url` 可达；zh / en 两份**分别**点；CJK / 带符号锚链接用 github-slugger 核 slug

@@ -16,17 +16,17 @@ Enable these capabilities only for trace-back, diagnostics, or audits. Runtime l
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/provenance/data">
-    <span className="font-semibold">Data Provenance</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand row metadata, runtime events, and their propagation boundaries.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance/plot">
-    <span className="font-semibold">Plot Lineage</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Extend Data lineage into mark audits and interaction trace-back.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Data Provenance',
+      description: 'Understand row metadata, runtime events, and their propagation boundaries.',
+      url: '/viz/data/provenance/data',
+    },
+    {
+      title: 'Plot Lineage',
+      description: 'Extend Data lineage into mark audits and interaction trace-back.',
+      url: '/viz/data/provenance/plot',
+    },
+  ]}
+/>

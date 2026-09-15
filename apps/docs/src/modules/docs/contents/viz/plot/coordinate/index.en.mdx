@@ -18,29 +18,27 @@ If you only need to adjust ticks, labels, or grid lines, see [Axis](/viz/plot/gu
 
 ## In This Section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/coordinate/2d">
-    <span className="font-semibold">2D Coordinates</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Draw cartesian or polar charts from x / y fields
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/coordinate/1d">
-    <span className="font-semibold">1D Coordinates</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Place one positional field on a line or circle
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/coordinate/composition">
-    <span className="font-semibold">Coordinate Composition</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Organize dual axes, facets, and shared tracks
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/coordinate/custom-coordinate">
-    <span className="font-semibold">Custom Coordinates</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Extend positional roles and projection behavior
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '2D Coordinates',
+      description: 'Draw cartesian or polar charts from x / y fields',
+      url: '/viz/plot/coordinate/2d',
+    },
+    {
+      title: '1D Coordinates',
+      description: 'Place one positional field on a line or circle',
+      url: '/viz/plot/coordinate/1d',
+    },
+    {
+      title: 'Coordinate Composition',
+      description: 'Organize dual axes, facets, and shared tracks',
+      url: '/viz/plot/coordinate/composition',
+    },
+    {
+      title: 'Custom Coordinates',
+      description: 'Extend positional roles and projection behavior',
+      url: '/viz/plot/coordinate/custom-coordinate',
+    },
+  ]}
+/>

@@ -126,13 +126,17 @@ Vanilla 的 `createScatterChart` 从 `@retikz/chart-vanilla/point/scatter` 导�
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/structure">
-    <span className="font-semibold">结构与类型</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">回看 exact schema 和字段 owner。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/presentation">
-    <span className="font-semibold">整图展示</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">继续看固定 presentation 槽位。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '结构与类型',
+      description: '回看 exact schema 和字段 owner。',
+      url: '/viz/chart/model/structure',
+    },
+    {
+      title: '整图展示',
+      description: '继续看固定 presentation 槽位。',
+      url: '/viz/chart/model/presentation',
+    },
+  ]}
+/>

@@ -24,37 +24,37 @@ In the figure, solid arrows follow primitives through compile, the Scene, and th
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/effects/shadow">
-    <span className="font-semibold">Shadow</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Offsets, blur, color, and render bounds</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/blend">
-    <span className="font-semibold">Blend</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">How primitives compose with their background</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/animation">
-    <span className="font-semibold">Animation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Tracks, triggers, controls, and static fallback
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/pattern">
-    <span className="font-semibold">Patterns</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Built-in lines, dots, grids, and instance options
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/custom-pattern">
-    <span className="font-semibold">Custom Patterns</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register repeating fills beyond the built-ins
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/custom-animation">
-    <span className="font-semibold">Custom Animation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register easing curves and animation property channels
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Shadow',
+      description: 'Offsets, blur, color, and render bounds',
+      url: '/kernel/components/effects/shadow',
+    },
+    {
+      title: 'Blend',
+      description: 'How primitives compose with their background',
+      url: '/kernel/components/effects/blend',
+    },
+    {
+      title: 'Animation',
+      description: 'Tracks, triggers, controls, and static fallback',
+      url: '/kernel/components/effects/animation',
+    },
+    {
+      title: 'Patterns',
+      description: 'Built-in lines, dots, grids, and instance options',
+      url: '/kernel/components/effects/pattern',
+    },
+    {
+      title: 'Custom Patterns',
+      description: 'Register repeating fills beyond the built-ins',
+      url: '/kernel/components/effects/custom-pattern',
+    },
+    {
+      title: 'Custom Animation',
+      description: 'Register easing curves and animation property channels',
+      url: '/kernel/components/effects/custom-animation',
+    },
+  ]}
+/>

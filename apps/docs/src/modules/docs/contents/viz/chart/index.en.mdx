@@ -120,15 +120,17 @@ When JSON Source already matches an exact schema, the application selects the co
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/points">
-    <span className="font-semibold">Scatter &amp; Points</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Choose the available concrete Scatter type.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model">
-    <span className="font-semibold">Chart Model</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand family, chartType, marks, presentation, and Plot ownership.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Scatter & Points',
+      description: 'Choose the available concrete Scatter type.',
+      url: '/viz/chart/points',
+    },
+    {
+      title: 'Chart Model',
+      description: 'Understand family, chartType, marks, presentation, and Plot ownership.',
+      url: '/viz/chart/model',
+    },
+  ]}
+/>

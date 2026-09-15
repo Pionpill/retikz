@@ -43,15 +43,17 @@ TikZ typically distinguishes Cartesian and polar coordinates with the PGFPlots `
 
 ## Further Reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel">
-    <span className="font-semibold">Channels</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Understand how x and y bind data fields</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark">
-    <span className="font-semibold">Marks</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Continue with PointMark, PathMark, and IntervalMark
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Channels',
+      description: 'Understand how x and y bind data fields',
+      url: '/viz/plot/channel',
+    },
+    {
+      title: 'Marks',
+      description: 'Continue with PointMark, PathMark, and IntervalMark',
+      url: '/viz/plot/mark',
+    },
+  ]}
+/>

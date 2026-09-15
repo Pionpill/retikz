@@ -17,29 +17,32 @@ Components are the main entry point for authoring figures. Establish the canvas 
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/layout">
-    <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Layout canvas and Scope coordinate contexts</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node">
-    <span className="font-semibold">Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Responsibilities of Node, Text, and Coordinate
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw">
-    <span className="font-semibold">Drawing</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Draw Sugar and Path / Step Kernel</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes">
-    <span className="font-semibold">Shapes</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Circles, arcs, rectangles, polygons, and contours
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects">
-    <span className="font-semibold">Effects</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Shadows, blend modes, and animation</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layout',
+      description: 'Layout canvas and Scope coordinate contexts',
+      url: '/kernel/components/layout',
+    },
+    {
+      title: 'Node',
+      description: 'Responsibilities of Node, Text, and Coordinate',
+      url: '/kernel/components/node',
+    },
+    {
+      title: 'Drawing',
+      description: 'Draw Sugar and Path / Step Kernel',
+      url: '/kernel/components/draw',
+    },
+    {
+      title: 'Shapes',
+      description: 'Circles, arcs, rectangles, polygons, and contours',
+      url: '/kernel/components/shapes',
+    },
+    {
+      title: 'Effects',
+      description: 'Shadows, blend modes, and animation',
+      url: '/kernel/components/effects',
+    },
+  ]}
+/>

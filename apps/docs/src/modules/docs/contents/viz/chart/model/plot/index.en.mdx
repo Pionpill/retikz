@@ -57,17 +57,17 @@ In React, Source `theme` carries persisted owner slices. `ChartThemeProvider` in
 
 ## Related pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/presentation">
-    <span className="font-semibold">Presentation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand narrative content and Surface owned by Chart.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot">
-    <span className="font-semibold">Plot</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Continue with marks, scales, coordinates, and guides.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Presentation',
+      description: 'Understand narrative content and Surface owned by Chart.',
+      url: '/viz/chart/model/presentation',
+    },
+    {
+      title: 'Plot',
+      description: 'Continue with marks, scales, coordinates, and guides.',
+      url: '/viz/plot',
+    },
+  ]}
+/>

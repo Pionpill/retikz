@@ -28,41 +28,37 @@ Precedence is the automatic maximum radius, then Properties, then an encoding sc
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/points/scatter">
-    <span className="font-semibold">Scatter</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Compare two continuous variables, then add category or magnitude with color and size
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/bubble">
-    <span className="font-semibold">Bubble Chart</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Drive bubble area with a required third field while retaining Point position semantics
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/regression">
-    <span className="font-semibold">Regression Chart</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Overlay raw observations with one or more built-in regression trends
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/connected-scatter">
-    <span className="font-semibold">Connected Scatter</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Retain observations while connecting one or more explicitly ordered trajectories
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/ranged-dot">
-    <span className="font-semibold">Ranged Dot</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Compare before and after values with one connector and two endpoints
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/points/strip">
-    <span className="font-semibold">Strip Chart</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Deterministically spread observations around discrete ticks while preserving continuous values
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Scatter',
+      description: 'Compare two continuous variables, then add category or magnitude with color and size',
+      url: '/viz/chart/points/scatter',
+    },
+    {
+      title: 'Bubble Chart',
+      description: 'Drive bubble area with a required third field while retaining Point position semantics',
+      url: '/viz/chart/points/bubble',
+    },
+    {
+      title: 'Regression Chart',
+      description: 'Overlay raw observations with one or more built-in regression trends',
+      url: '/viz/chart/points/regression',
+    },
+    {
+      title: 'Connected Scatter',
+      description: 'Retain observations while connecting one or more explicitly ordered trajectories',
+      url: '/viz/chart/points/connected-scatter',
+    },
+    {
+      title: 'Ranged Dot',
+      description: 'Compare before and after values with one connector and two endpoints',
+      url: '/viz/chart/points/ranged-dot',
+    },
+    {
+      title: 'Strip Chart',
+      description: 'Deterministically spread observations around discrete ticks while preserving continuous values',
+      url: '/viz/chart/points/strip',
+    },
+  ]}
+/>

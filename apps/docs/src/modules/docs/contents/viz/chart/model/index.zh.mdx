@@ -49,29 +49,27 @@ Chart 建立在 Plot 之上，解决的是“我想先使用一种图形类型�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/structure">
-    <span className="font-semibold">结构与类型</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      理解 family、chartType、精确 schema 与 mark。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/authoring">
-    <span className="font-semibold">编写与解析</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      理解 React、Vanilla 与 JSON 如何进入同一主链。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/presentation">
-    <span className="font-semibold">整图展示</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      理解固定 presentation slots 与 Surface 布局。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/plot">
-    <span className="font-semibold">与 Plot 协作</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      理解 Chart marks、Plot fragment 与 Theme owner。
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '结构与类型',
+      description: '理解 family、chartType、精确 schema 与 mark。',
+      url: '/viz/chart/model/structure',
+    },
+    {
+      title: '编写与解析',
+      description: '理解 React、Vanilla 与 JSON 如何进入同一主链。',
+      url: '/viz/chart/model/authoring',
+    },
+    {
+      title: '整图展示',
+      description: '理解固定 presentation slots 与 Surface 布局。',
+      url: '/viz/chart/model/presentation',
+    },
+    {
+      title: '与 Plot 协作',
+      description: '理解 Chart marks、Plot fragment 与 Theme owner。',
+      url: '/viz/chart/model/plot',
+    },
+  ]}
+/>

@@ -20,6 +20,8 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 实现原理页：[`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)，面向已读前置文档的源码读者
    - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
 3. 仅在命中条件时继续加载：
+   - 关联文档、延伸阅读或章节卡片导航（`LinkedSections`）：[`references/linked-sections.md`](references/linked-sections.md)
+   - 方案切换或分步接入（`DocTabs` / `DocSteps`）：[`references/doc-tabs-steps.md`](references/doc-tabs-steps.md)
    - Showcase / 成品型功能展示：[`docs-doc-showcase`](../docs-doc-showcase/SKILL.md)
    - 带 controls：[`docs-doc-control`](../docs-doc-control/SKILL.md)
    - 使用 `<ComponentPreview>` 的源码视图、多文件或数据文件：[`references/component-preview.md`](references/component-preview.md)
@@ -90,7 +92,7 @@ URL 段、`data` 节点 `id` 与 `contents` 目录段必须一致。新增或移
 
 用户正文优先展示 DSL（如 `<Layout>`、`<Node>`、`<Path>`、`<Draw>`）。普通用法页不为了“完整”重复 IR JSON 或编译器内部；IR 只在架构、持久化、AI 接入或必须用它解释公开行为时出现。
 
-- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页的纯代码示例必须并列保留两套最小接入说明：分别点明入口、注入或调用位置与产物。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
+- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页必须保留两套最小接入说明：分别点明入口、注入或调用位置与产物。互为替代方案时优先用 `DocTabs`，有顺序的操作可组合 `DocSteps`；切换展示不等于省略另一端。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
 
 ComponentPreview 的 IR 与 Vanilla 配置必须保持最上层、精简的 Source IR / authoring 语义；不得把 lower、resolve 或 runtime canonical 结果直接暴露给读者。运行时为统一消费而产生的 `base`、完整 Plot 或其它下沉形态只用于校验与渲染。
 
