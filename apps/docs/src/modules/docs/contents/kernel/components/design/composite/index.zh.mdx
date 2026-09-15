@@ -46,12 +46,6 @@ Core 只按顶层 `namespace + type` 路由 composite，不读取领域 schema �
 
 编译器按 `${namespace}.${type}` 查注册表，校验节点后调用对应分支。嵌套 composite 会继续处理，直到最终输出只含 Tier 1 与已提交 replay。未注册节点产生 warning 并跳过，循环或超过深度限制则报错。完整字段、诊断与独立 lowering 入口见[编译](/kernel/reference/runtime/compile)。
 
-## Theme 上下文
-
-`expand(node, context)` 与布局感知 `compile(node, context)` 都能读取冻结的 `context.theme`。它始终是完整的 `{ style?, mode, colors }`：Core 从默认 light 基线开始，按 Scene → 外层 Scope → 内层 Scope 逐字段继承 selector，再由默认 palette 或当前 style resolver 生成 `colors`。`colors` 是 detached/frozen 的 Core shared view，固定提供 `semantic.error/success/warning` 与非空 `categorical` palette，不是 Core 图元的隐式样式。
-
-Composite 负责把 shared `colors` 与自己 style resolver 生成的领域 token、palette 或其它默认映射为已经物化的正式 IR。Core 不解释 Tier 2 token，也不拥有 Plot、Chart、Table 的具体 token；Core primitive 与 renderer 也不解释 Theme。普通输出 Scope 与 `context.scope({ theme }, children)` 可以建立更内层环境；replay child 则保留 probe 时已经解析的 Theme，不会在提交位置被重新解释。自定义 style 必须同时注入 Core 与实际消费它的 Tier 2 resolver；任一 registry 缺失该名称都会 fail-loud。
-
 ## 空间透明与 qualified handle
 
 有些 composite 不只生成可见图元，还要让外层工具在嵌套 Scope、布局 replay 与变换之后找到一个有领域含义的区域。`expand` 因而统一返回结构化结果；布局感知 `compile` 也可在同一结果中声明局部矩形：

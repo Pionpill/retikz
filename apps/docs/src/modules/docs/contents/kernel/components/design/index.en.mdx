@@ -10,7 +10,9 @@ Design Philosophy explains the product-level tradeoff behind retikz: authors wri
 | Page                    | Topic                                                                                       | Reach for it when                                                                           |
 | ----------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Layers                  | The relationship between DSL, IR, Scene, and renderers                                      | You want to know how JSX becomes SVG / Canvas, or where Kernel and Sugar split              |
+| Sugar                   | Equivalent convenient and basic expressions                                                 | Choose notation and understand expansion constraints                                        |
 | Tier 2 Composites       | How domain packages register high-level nodes on top of core and lower them at compile time | You want to understand why composite and plot capabilities do not live directly inside core |
+| Theme                   | Inheritance, shared colors, and composite consumption                                       | Distinguish theme environments from primitive styles                                        |
 | Architecture Principles | Capability ownership, package boundaries, completeness, and execution                       | You maintain the library, design extension points, or assign a capability to an owner       |
 
 ## In this section
@@ -22,11 +24,17 @@ Design Philosophy explains the product-level tradeoff behind retikz: authors wri
       Understand the boundary between DSL, IR, Scene, and renderers
     </span>
   </LinkedCard>
+  <LinkedCard href="/kernel/components/design/sugar">
+    <span className="font-semibold">Sugar</span>
+  </LinkedCard>
   <LinkedCard href="/kernel/components/design/composite">
     <span className="font-semibold">Tier 2 Composites</span>
     <span className="mt-1 text-center text-sm text-muted-foreground">
       Understand composite registration, discrimination, and lowering
     </span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/design/theme">
+    <span className="font-semibold">Theme</span>
   </LinkedCard>
   <LinkedCard href="/kernel/components/design/principles">
     <span className="font-semibold">Architecture Principles</span>

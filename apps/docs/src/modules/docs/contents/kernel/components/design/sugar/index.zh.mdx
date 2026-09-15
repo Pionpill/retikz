@@ -1,0 +1,99 @@
+---
+title: 语法糖
+description: 语法糖简化绘图写法，在构建 IR 时展开为基础表达，不增加独立的几何或渲染语义。
+---
+
+接着[分层](/kernel/components/design/layers)，这里区分“写得更方便”和“增加新的绘图能力”。语法糖（Sugar）改变书写方式，展开后仍使用同一套基础模型。
+
+语法糖是一种通用设计，不是 Kernel 独有的层级；上层包也有简化自身模型写法的语法糖。它可以展开为所属包的领域 IR，不必直接展开为 Kernel 图元。本文以 Kernel 为例，讨论这种设计的等价性与边界。
+
+广义上，语法糖也包括更方便的值表达：字号档位 `sm`、`base`、`lg` 最终求值为数值字号，极坐标最终转换为笛卡尔坐标。相对于最终绘制所需的基础值，它们同样简化了作者的表达。
+
+但“最终会转换”不等于“不是 IR 的一等公民”：字号档位和极坐标都是 Core IR 正式支持、可持久化的表示，在编译时求值。下文的 Kernel / Sugar 对照与展开图特指构建 IR 时消除的组件糖和作者侧简写，不涵盖所有广义语法糖。
+
+## Kernel 与 Sugar
+
+| 层     | 例子                                                                                                        | 是否直接进 IR | 说明                      |
+| ------ | ----------------------------------------------------------------------------------------------------------- | ------------- | ------------------------- |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                    | 是            | 与 IR 节点一一对应        |
+| Sugar  | `<Draw way={...}>`、`DrawWay.Cycle`、相对坐标字符串、<br />`<Circle>` / `<Rectangle>` / `<Star>` 等形状组件 | 否            | adapter 同步展开为 Kernel |
+
+Sugar 不引入新能力。能用 `<Draw>` 画出来的图，也能用 `<Path>` + `<Step>` 手写出来。下面两段编译结果完全一致：
+
+```tsx
+// Sugar：一行 way 数组
+<Draw way={['a', 'b']} arrow="->" />
+```
+
+```tsx
+// Kernel：先移动，再连线
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step to="b" />
+</Path>
+```
+
+## 展开
+
+等价指相应写法得到相同的基础语义与绘制结果，不是简单的文本替换。上面的两点连线只证明该例；形状和其它简写各自通过对应的解析规则展开。
+
+图中的便捷写法先展开为基础 IR（可保存的图形声明），再交给共享编译链生成 Scene（渲染器执行的绘制结果）。SVG 与 Canvas 不需要识别 Draw 这样的作者写法。
+
+<ComponentPreview files="sugar-flow" size="xs" hideCode />
+
+图中的“解析 / 展开”发生在构建 IR 时：例如 `Draw` 的 `way` 由 Vanilla 的 `normalizePath` 调用 Core 的 `parseWay`，解析为基础 Step；形状组件也可以直接组合基础组件展开，不必都经过同一个 parser。基础 IR 随后才进入编译阶段。
+
+## 选择建议
+
+| 场景                                     | 推荐                |
+| ---------------------------------------- | ------------------- |
+| 普通连线、流程图边、带箭头路径           | `<Draw>`            |
+| 需要逐段控制 move / line / cycle / curve | `<Path>` + `<Step>` |
+| 需要最接近 IR 的测试或转换器输出         | Kernel              |
+| 需要持久化、AI 生成或局部修改图          | IR                  |
+
+Sugar 的展开逻辑由 builder 同步调用，不能依赖 React hooks 或异步状态。完整 IR schema 从 [结构参考](/kernel/reference/schema) 进入；根声明的字段见 [IRScene](/kernel/reference/schema/scene)；它不是编译后的 Scene。
+
+## 与复合的区别
+
+Composite 的高层节点保留在编译前的 IR 中，可以随 IR 一起持久化；编译时才展开为基础实体。保存高层意图指保存这份输入 IR，而不是把编译后的 Scene 当作原始模型。
+
+React 组件不一定是语法糖；Scope 也不是语法糖，因为它在 IR 中保留分组。判断依据不是写成了什么组件，而是构建后是否仍有独立的高层节点。
+
+| 区别     | 语法糖       | Composite    |
+| -------- | ------------ | ------------ |
+| 保存结果 | 基础表达     | 高层意图     |
+| 展开时机 | 构建 IR 时   | 编译 IR 时   |
+| 适用任务 | 简化已有写法 | 生成领域结构 |
+
+需要把“这是一张图表”作为数据保存时，使用[复合](/kernel/components/design/composite)；只是把路径写短时，使用语法糖。二者最终都复用基础几何与渲染能力，不另造后端语义。
+
+## Kernel 语法糖列表
+
+Kernel 通过 `@retikz/react` 提供以下语法糖组件；这里只列用途，具体写法见对应组件页。
+
+| 组件                                                        | 用途                               |
+| ----------------------------------------------------------- | ---------------------------------- |
+| [Draw](/kernel/components/draw/overview)                    | 将简写路径展开为 Path 与 Step      |
+| [EdgeLabel](/kernel/components/draw/step)                   | 将子元素写法转换为 Step 的标签配置 |
+| [Circle、Ellipse](/kernel/components/shapes/circle-ellipse) | 圆与椭圆路径                       |
+| [Arc、Sector](/kernel/components/shapes/arc-sector)         | 圆弧、椭圆弧与扇形路径             |
+| [Rectangle](/kernel/components/shapes/rectangle)            | 矩形路径                           |
+| [RegularPolygon](/kernel/components/shapes/polygon)         | 正多边形路径                       |
+| [Star](/kernel/components/shapes/star)                      | 星形路径                           |
+
+形状组件简化的是路径写法，与 `Node` 的 `shape` 配置不是同一入口。`DrawWay.Cycle`、相对坐标字符串等也属于语法简写，但不是组件，因此不列入上表。
+
+## 延伸阅读
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/components/design/layers">
+    <span className="font-semibold">分层</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/design/composite">
+    <span className="font-semibold">复合</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/draw/overview">
+    <span className="font-semibold">Draw</span>
+  </LinkedCard>
+</div>

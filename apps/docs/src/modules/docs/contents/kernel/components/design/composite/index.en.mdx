@@ -46,12 +46,6 @@ Core routes composites only by the top-level `namespace + type`; it does not int
 
 The compiler looks up `${namespace}.${type}`, validates the node, and calls the selected branch. Nested composites continue until final output contains only Tier 1 and committed replay results. An unregistered node warns and is skipped; cycles or excess depth throw. See [Compile](/kernel/reference/runtime/compile) for complete fields, diagnostics, and standalone lowering behavior.
 
-## Theme context
-
-Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It is always a complete `{ style?, mode, colors }` value. Core starts at its default light baseline, then inherits selectors through Scene → outer Scope → inner Scope and generates `colors` from the default palette or the current style resolver. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
-
-The composite maps shared `colors` and the domain tokens, palettes, or defaults produced by its style resolver into already-materialized IR. Core does not interpret Tier 2 tokens or own Plot, Chart, or Table tokens; neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed. A custom style must be injected into both Core and every Tier 2 resolver that consumes it; a missing registry entry fails loudly.
-
 ## Spatial transparency and qualified handles
 
 Some composites must expose a domain-meaningful region after nested Scopes, layout replay, and transforms, in addition to generating visible primitives. `expand` therefore always returns a structured result, and a layout-aware `compile` can declare local rectangles in the same result:

@@ -42,7 +42,9 @@ export const kernelSection: Array<Section> = [
         sidebarGroup: 'kernel.concepts',
         children: [
           { id: 'layers', label: 'kernel.layers', difficulty: DocDifficulty.Internals },
+          { id: 'sugar', label: 'kernel.sugar', difficulty: DocDifficulty.Internals },
           { id: 'composite', label: 'kernel.refComposite', difficulty: DocDifficulty.Internals },
+          { id: 'theme', label: 'kernel.theme', difficulty: DocDifficulty.Internals },
           {
             id: 'principles',
             label: 'kernel.principles',

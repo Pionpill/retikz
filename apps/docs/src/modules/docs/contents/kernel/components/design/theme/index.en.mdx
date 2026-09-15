@@ -1,0 +1,93 @@
+---
+title: Theme
+description: Theme carries style, light or dark mode, and shared colors that higher-level composites translate into explicit primitive styles.
+---
+
+When figures share a visual style, pass a theme environment instead of repeating colors on every object. Theme describes the environment; primitive styles describe the final drawing. They are separate channels.
+
+## Theme and styles
+
+In the figure, a composite reads the theme and converts it into explicit styles for basic nodes and paths. The renderer executes the result without interpreting the theme again.
+
+<ComponentPreview files="theme-flow" size="xs" hideCode />
+
+| Content          | Responsibility                         | Consumer       |
+| ---------------- | -------------------------------------- | -------------- |
+| style            | Select visual style                    | Theme resolver |
+| mode             | Select light or dark mode              | Theme resolver |
+| colors           | Shared semantic and categorical colors | Composite      |
+| Primitive styles | Explicit fill, stroke, etc.            | Renderer       |
+
+Changing a theme therefore does not guarantee that handwritten Node or Path elements change color. Their explicit styles remain in effect; composites that consume the theme turn it into visible differences.
+
+## Shared Theme
+
+Kernel provides a default neutral color baseline through Core, supporting `light` and `dark` modes. It applies when no style is inherited or explicitly selected. The root defaults to `light`; there is no need to specify `style: 'neutral'`.
+
+| Shared content     | Purpose                                     |
+| ------------------ | ------------------------------------------- |
+| `semantic.error`   | Errors                                      |
+| `semantic.success` | Success                                     |
+| `semantic.warning` | Warnings                                    |
+| `semantic.guide`   | Low-emphasis supporting content             |
+| `categorical`      | A non-empty palette for distinct categories |
+
+The default categorical palette contains 16 colors. Light and dark modes preserve category indices and hue order while adjusting lightness and saturation. It provides reusable colors without deciding how charts, tables, or flow diagrams assign them.
+
+## Data Structure
+
+Theme has two data representations with different purposes: `IRTheme` stores author selections, while `ResolvedTheme` is the effective environment available to composites at the current compilation location.
+
+| Data                  | Fields                     | Meaning                                               |
+| --------------------- | -------------------------- | ----------------------------------------------------- |
+| `IRTheme`             | `style?`, `mode?`          | Sparse selections; omitted fields inherit             |
+| `ResolvedTheme`       | `style?`, `mode`, `colors` | Read-only result of inheritance and style resolution  |
+| `ResolvedThemeColors` | `semantic`, `categorical`  | Shared semantic colors and active categorical palette |
+
+This outline shows only the data shape. `Color` means a CSS color string, not an additional public type:
+
+```text
+IRTheme
+  style?: string
+  mode?: 'light' | 'dark'
+
+ResolvedTheme
+  style?: string
+  mode: 'light' | 'dark'
+  colors
+    semantic: { error: Color, success: Color, warning: Color, guide: Color }
+    categorical: non-empty array of Color
+```
+
+`colors` is not stored in `IRTheme`; it is generated from the current mode and style resolver. Custom styles can override individual semantic colors. An explicit categorical palette replaces the default palette as a whole and need not contain 16 colors. A style definition's `resolve` function belongs to the runtime environment, not persistable IR.
+
+## Inheritance
+
+IRScene is the persistable root drawing declaration, and Scope is a local group within it; the compiled Scene is the result consumed by renderers. Theme inherits field by field: an inner mode override keeps the outer style, and an inner style override keeps the outer mode.
+
+For example, if the root uses Academic/light and a child group only selects dark mode, that child gets Academic/dark rather than another style. Theme inheritance is distinct from inheritance of node style defaults.
+
+## Composite context
+
+The following context rules are for extension authors. expand generates basic entities from a high-level object; compile handles measurement and layout feedback. See [Composite](/kernel/components/design/composite) for those interfaces.
+
+Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It always provides `mode` and `colors`, while `style` may be absent. Core starts at its default light baseline, then inherits selectors through IRScene → outer Scope → inner Scope and generates `colors` from the default palette or the current style resolver. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning/guide` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
+
+## Consumption and boundaries
+
+A style resolver produces colors or domain defaults for a named style. A probe is a trial compilation that measures child content; replay reuses the selected result with its original theme so measurement and final output remain consistent. Detached/frozen means the color data is isolated from the input and read-only: a composite cannot mutate it to affect other objects.
+
+The composite maps shared `colors` and the domain tokens, palettes, or defaults produced by its style resolver into already-materialized IR. Core does not interpret Tier 2 tokens or own Plot, Chart, or Table tokens; neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed. A custom style must be injected into both Core and every Tier 2 resolver that consumes it; a missing registry entry fails loudly.
+
+Theme selectors can thus be saved with a drawing, but custom style implementations must still be supplied by the runtime environment. Missing implementations expose a configuration error instead of silently choosing another style.
+
+## Further Reading
+
+<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <LinkedCard href="/kernel/components/design/composite">
+    <span className="font-semibold">Tier 2 Composites</span>
+  </LinkedCard>
+  <LinkedCard href="/kernel/components/layout/scope">
+    <span className="font-semibold">Scope</span>
+  </LinkedCard>
+</div>
