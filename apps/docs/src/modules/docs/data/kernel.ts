@@ -19,6 +19,23 @@ export const kernelSection: Array<Section> = [
       { id: 'introduction', label: 'kernel.introduction', difficulty: DocDifficulty.Beginner },
       { id: 'get-start', label: 'kernel.getStart', difficulty: DocDifficulty.Beginner },
       {
+        id: 'changelog',
+        label: 'kernel.changelog',
+        children: [
+          { id: 'v0-5', label: 'kernel.changelogV05' },
+          { id: 'v0-4', label: 'kernel.changelogV04' },
+          { id: 'v0-3', label: 'kernel.changelogV03' },
+          { id: 'v0-2', label: 'kernel.changelogV02' },
+          { id: 'v0-1', label: 'kernel.changelogV01' },
+        ],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'kernel.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
+      {
         id: 'basic',
         label: 'kernel.basicConcepts',
         sidebarGroup: 'kernel.concepts',
@@ -206,23 +223,6 @@ export const kernelSection: Array<Section> = [
             },
           },
         ],
-      },
-      {
-        id: 'changelog',
-        label: 'kernel.changelog',
-        children: [
-          { id: 'v0-5', label: 'kernel.changelogV05' },
-          { id: 'v0-4', label: 'kernel.changelogV04' },
-          { id: 'v0-3', label: 'kernel.changelogV03' },
-          { id: 'v0-2', label: 'kernel.changelogV02' },
-          { id: 'v0-1', label: 'kernel.changelogV01' },
-        ],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'kernel.release',
-          sourceOfTruth: 'changelog',
-        },
       },
     ],
   },
