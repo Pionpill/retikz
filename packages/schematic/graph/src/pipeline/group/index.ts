@@ -1,3 +1,4 @@
+export { GroupBodyAllocationDefinition, GroupBodyAllocationProvider } from './allocation';
 export * from './definition';
 export * from './lower';
 export * from './provider';

@@ -6,6 +6,7 @@ import { array, enum as zodEnum, literal, strictObject, string, union } from 'zo
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { GraphDefaultsSchema, GraphRuleSchema } from '../theme';
+import { refineBlockSize } from './refine';
 
 const BlockTextObjectSchema = strictObject({
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text content for this Block text item.'),
@@ -100,13 +101,5 @@ export const BlockSchema = strictObject({
   ),
   gap: NonNegativeNumberSchema.optional().describe('Optional vertical gap between Block children in user units.'),
 })
-  .superRefine((block, context) => {
-    if (block.width !== undefined && block.minWidth !== undefined && block.minWidth > block.width) {
-      context.addIssue({
-        code: 'custom',
-        path: ['minWidth'],
-        message: 'minWidth must be less than or equal to width.',
-      });
-    }
-  })
+  .superRefine(refineBlockSize)
   .describe('JSON-safe Graph Block combining a complete Scope, Surface and ordered arbitrary children.');

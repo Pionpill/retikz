@@ -32,6 +32,12 @@ Graph 三包使用独立 release group `graph` 并保持 lockstep。v0.1 已按 
 - Graph、Group、Block、Entity 与 Relation 的 id 均为显式 authoring identity；省略时不得由 resolve、lowering 或 adapter 自动生成。Block、Section 与 Row 的显式 id 发布到当前 Core namespace，不自动添加 Block 前缀
 - Diagram 复用 Graph 数据，拥有布局意图、约束确定化、provider 编排、自动 routing 与布局结果；不得复制 Graph schema、appearance 或 Theme 契约
 
+## 代码实体组合
+
+- `src/code/` 拥有代码实体共享 Source、CodeBlockDefinition 与完整 provider contribution；组合层级为 Tier 3，发布归属仍是 Graph
+- 输入为严格、JSON-safe 的实体事实，输出为唯一基础 Block 与生成内容；Core Scope 负责局部主题，Graph Theme 的有限 codeBlockTokens 负责内部视觉
+- 不拥有源码解析、执行器、编辑器或自动布局；具体实体组合在 code owner 内扩展，不修改基础 Block 的开放 children 契约
+
 ## 当前状态
 
 Graph v0.1 alpha.1 ADR-01～10 与 alpha.2 ADR-03～04 已形成 Accepted 的现行契约，alpha.2 ADR-01 已 Superseded，ADR-02 保持 Proposed。Graph、Group、Block family、Entity 与 Relation 都是独立 Source composite：Entity / Relation 复用 Core Node / Path lower-facing surface，Graph / Group / Block / Section / Row 复用完整 Core Scope surface，Block 以 Layout 与 Surface 组织任意有序 children；named Graph Theme 统一提供 Entity / Relation 默认与 Group / Block 根 Surface appearance，`graphDefaults` 为可见后代 Entity / Relation / Group / Block 提供默认，`graphRules` 只匹配 Entity / Relation，React 与 Vanilla 只提供同一 Source IR 的 authoring sugar。
