@@ -28,29 +28,27 @@ All four layers share one canonical model. Structure does not draw, Presentation
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/table/model/structure">
-    <span className="font-semibold">Structure & Cells</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      See how different table forms converge on stable rows, columns, and Cell semantics.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/model/presentation">
-    <span className="font-semibold">Content Presentation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand the boundary between value, content, and Presentation Definitions.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/model/layout">
-    <span className="font-semibold">Layout & Borders</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Follow measurement, track solving, Cell placement, and the Border Graph.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/model/manifest">
-    <span className="font-semibold">Artifacts & Provenance</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Use geometry, semantics, and provenance beyond the rendered Scene.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Structure & Cells',
+      description: 'See how different table forms converge on stable rows, columns, and Cell semantics.',
+      url: '/viz/table/model/structure',
+    },
+    {
+      title: 'Content Presentation',
+      description: 'Understand the boundary between value, content, and Presentation Definitions.',
+      url: '/viz/table/model/presentation',
+    },
+    {
+      title: 'Layout & Borders',
+      description: 'Follow measurement, track solving, Cell placement, and the Border Graph.',
+      url: '/viz/table/model/layout',
+    },
+    {
+      title: 'Artifacts & Provenance',
+      description: 'Use geometry, semantics, and provenance beyond the rendered Scene.',
+      url: '/viz/table/model/manifest',
+    },
+  ]}
+/>

@@ -17,67 +17,80 @@ Kernel packages are organized into five responsibility groups. Choose the proble
 
 ## Base packages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/foundation">
-    <span className="font-semibold">Foundation · foundation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Cross-package contracts and shared utilities</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/math">
-    <span className="font-semibold">Math · math</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Dependency-free geometry primitives, transforms, and algorithms
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Foundation · foundation',
+      description: 'Cross-package contracts and shared utilities',
+      url: '/kernel/packages/foundation',
+    },
+    {
+      title: 'Math · math',
+      description: 'Dependency-free geometry primitives, transforms, and algorithms',
+      url: '/kernel/packages/math',
+    },
+  ]}
+/>
 
 ## Core packages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/core">
-    <span className="font-semibold">Compilation Core · core</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">IR, Definitions, and Scene compilation</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/runtime">
-    <span className="font-semibold">Incremental Execution · runtime</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      State ownership, Programs, and synchronous Sessions
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation Core · core',
+      description: 'IR, Definitions, and Scene compilation',
+      url: '/kernel/packages/core',
+    },
+    {
+      title: 'Incremental Execution · runtime',
+      description: 'State ownership, Programs, and synchronous Sessions',
+      url: '/kernel/packages/runtime',
+    },
+  ]}
+/>
 
 ## Extension packages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/tex">
-    <span className="font-semibold">LaTeX Math · tex</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Formula lowering and runtime integration</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/inspect">
-    <span className="font-semibold">Compilation Inspection · inspect</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Selection, inspection, and auxiliary compilation
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'LaTeX Math · tex',
+      description: 'Formula lowering and runtime integration',
+      url: '/kernel/packages/tex',
+    },
+    {
+      title: 'Compilation Inspection · inspect',
+      description: 'Selection, inspection, and auxiliary compilation',
+      url: '/kernel/packages/inspect',
+    },
+  ]}
+/>
 
 ## Framework packages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/vanilla">
-    <span className="font-semibold">Vanilla Adapter · vanilla</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Plain JavaScript authoring APIs</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/packages/react">
-    <span className="font-semibold">React Adapter · react</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">React JSX authoring APIs</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Vanilla Adapter · vanilla',
+      description: 'Plain JavaScript authoring APIs',
+      url: '/kernel/packages/vanilla',
+    },
+    {
+      title: 'React Adapter · react',
+      description: 'React JSX authoring APIs',
+      url: '/kernel/packages/react',
+    },
+  ]}
+/>
 
 ## Rendering packages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/render">
-    <span className="font-semibold">Rendering Backends · render</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">SVG, Canvas, and hydration</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Rendering Backends · render',
+      description: 'SVG, Canvas, and hydration',
+      url: '/kernel/packages/render',
+    },
+  ]}
+/>

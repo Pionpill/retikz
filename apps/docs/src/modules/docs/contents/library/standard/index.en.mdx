@@ -28,21 +28,22 @@ React and Vanilla only connect authoring inputs to the same capabilities. For op
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/standard/introduction">
-    <span className="font-semibold">Introduction</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Purpose, capability groups, and package responsibilities
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/standard/get-start">
-    <span className="font-semibold">Quick start</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Draw your first grid with React or Vanilla</span>
-  </LinkedCard>
-  <LinkedCard href="/library/standard/changelog">
-    <span className="font-semibold">Changelog</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Version history for the Standard package family
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Introduction',
+      description: 'Purpose, capability groups, and package responsibilities',
+      url: '/library/standard/introduction',
+    },
+    {
+      title: 'Quick start',
+      description: 'Draw your first grid with React or Vanilla',
+      url: '/library/standard/get-start',
+    },
+    {
+      title: 'Changelog',
+      description: 'Version history for the Standard package family',
+      url: '/library/standard/changelog',
+    },
+  ]}
+/>

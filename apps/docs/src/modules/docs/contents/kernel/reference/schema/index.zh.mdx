@@ -21,33 +21,42 @@ description: retikz IR 的 JSON 形状契约，覆盖场景、图元、作用域
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/schema/scene">
-    <span className="font-semibold">场景</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">IR 根，一份图的 JSON 化描述</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/scope">
-    <span className="font-semibold">作用域</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">分组、默认值、变换与裁剪</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/entity">
-    <span className="font-semibold">实体</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">被命名的成员：Node 与 Coordinate</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/path">
-    <span className="font-semibold">路径</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">笔画外壳、step 序列与目标点</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/placement">
-    <span className="font-semibold">定位</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">五种共享 position 形态与 Node anchor 对齐</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/style">
-    <span className="font-semibold">绘制</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">共享视觉字段与结构化绘制定义</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/animation">
-    <span className="font-semibold">动画</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">关键帧、时间参数与触发器</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '场景',
+      description: 'IR 根，一份图的 JSON 化描述',
+      url: '/kernel/reference/schema/scene',
+    },
+    {
+      title: '作用域',
+      description: '分组、默认值、变换与裁剪',
+      url: '/kernel/reference/schema/scope',
+    },
+    {
+      title: '实体',
+      description: '被命名的成员：Node 与 Coordinate',
+      url: '/kernel/reference/schema/entity',
+    },
+    {
+      title: '路径',
+      description: '笔画外壳、step 序列与目标点',
+      url: '/kernel/reference/schema/path',
+    },
+    {
+      title: '定位',
+      description: '五种共享 position 形态与 Node anchor 对齐',
+      url: '/kernel/reference/schema/placement',
+    },
+    {
+      title: '绘制',
+      description: '共享视觉字段与结构化绘制定义',
+      url: '/kernel/reference/schema/style',
+    },
+    {
+      title: '动画',
+      description: '关键帧、时间参数与触发器',
+      url: '/kernel/reference/schema/animation',
+    },
+  ]}
+/>

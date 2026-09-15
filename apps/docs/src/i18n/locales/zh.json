@@ -1,5 +1,6 @@
 {
   "common": {
+    "docHost": "接入方式",
     "search": "搜索文档...",
     "searchPlaceholder": "输入关键字搜索...",
     "searchEmpty": "未找到匹配的页面",
@@ -143,6 +144,8 @@
     "coordinateSystem": "坐标系",
     "positioning": "定位",
     "layers": "分层",
+    "sugar": "语法糖",
+    "theme": "主题",
     "gallery": "画廊",
     "galleryNavigationDescription": "通过完成作品探索组合式绘图方法",
     "galleryKarlCircle": "Karl 单位圆",

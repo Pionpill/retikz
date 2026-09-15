@@ -16,17 +16,17 @@ Guides are the explanatory layer of the graphic grammar. Marks draw the data; Ax
 
 Choose the page by the visual channel you need to explain: axes for position, legends for other visual channels.
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/guide/axis">
-    <span className="font-semibold">Axis</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Explain positional channels with ticks, labels, and grids
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/guide/legend">
-    <span className="font-semibold">Legend</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Explain non-positional channels such as color, size, opacity, and shape
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Axis',
+      description: 'Explain positional channels with ticks, labels, and grids',
+      url: '/viz/plot/guide/axis',
+    },
+    {
+      title: 'Legend',
+      description: 'Explain non-positional channels such as color, size, opacity, and shape',
+      url: '/viz/plot/guide/legend',
+    },
+  ]}
+/>

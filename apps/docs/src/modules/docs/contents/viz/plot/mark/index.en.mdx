@@ -33,41 +33,37 @@ Built-in marks eventually lower into [@retikz/core](/kernel/components/introduct
 
 ## In This Section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/mark/point">
-    <span className="font-semibold">PointMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Generate one positioned node per row; learn scatter, bubbles, text, and coordinate roles.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/path">
-    <span className="font-semibold">PathMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Connect rows in order; learn grouping, curves, closed areas, and missing-value breaks.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/interval">
-    <span className="font-semibold">IntervalMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Generate geometry from position intervals; learn bars, heatmaps, radial intervals, and pies.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/reference">
-    <span className="font-semibold">ReferenceMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Add thresholds, ranges, and reference regions from constants or row-level values.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/relation">
-    <span className="font-semibold">RelationMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Connect point, path, or interval targets with ordinary paths or ribbons.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/custom-mark">
-    <span className="font-semibold">Custom Marks</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Define, register, and lower custom marks through the same compilation path as built-ins.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'PointMark',
+      description: 'Generate one positioned node per row; learn scatter, bubbles, text, and coordinate roles.',
+      url: '/viz/plot/mark/point',
+    },
+    {
+      title: 'PathMark',
+      description: 'Connect rows in order; learn grouping, curves, closed areas, and missing-value breaks.',
+      url: '/viz/plot/mark/path',
+    },
+    {
+      title: 'IntervalMark',
+      description: 'Generate geometry from position intervals; learn bars, heatmaps, radial intervals, and pies.',
+      url: '/viz/plot/mark/interval',
+    },
+    {
+      title: 'ReferenceMark',
+      description: 'Add thresholds, ranges, and reference regions from constants or row-level values.',
+      url: '/viz/plot/mark/reference',
+    },
+    {
+      title: 'RelationMark',
+      description: 'Connect point, path, or interval targets with ordinary paths or ribbons.',
+      url: '/viz/plot/mark/relation',
+    },
+    {
+      title: 'Custom Marks',
+      description: 'Define, register, and lower custom marks through the same compilation path as built-ins.',
+      url: '/viz/plot/mark/custom-mark',
+    },
+  ]}
+/>

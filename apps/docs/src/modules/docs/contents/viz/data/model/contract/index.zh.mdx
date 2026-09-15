@@ -120,13 +120,17 @@ description: 用字段模型声明逻辑字段、测量类型与分类顺序，�
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/model/intake">
-    <span className="font-semibold">数据接入</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把真实字段与存储格式接到这份契约上。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/scale">
-    <span className="font-semibold">比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查看字段类型如何进入位置与视觉映射。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '数据接入',
+      description: '把真实字段与存储格式接到这份契约上。',
+      url: '/viz/data/model/intake',
+    },
+    {
+      title: '比例尺',
+      description: '查看字段类型如何进入位置与视觉映射。',
+      url: '/viz/plot/scale',
+    },
+  ]}
+/>

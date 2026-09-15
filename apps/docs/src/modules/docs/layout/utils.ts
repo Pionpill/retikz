@@ -25,7 +25,7 @@ const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, LucideIcon> = {
 export const isChangelogLocation = (loc: DocLocation | null): boolean =>
   loc?.pageId === 'changelog' &&
   (loc.moduleId === 'kernel'
-    ? loc.sectionId === 'reference'
+    ? loc.sectionId === 'components'
     : loc.moduleId === 'schematic'
       ? loc.sectionId !== null && SCHEMATIC_CHANGELOG_SECTIONS.has(loc.sectionId)
       : loc.moduleId === 'viz'

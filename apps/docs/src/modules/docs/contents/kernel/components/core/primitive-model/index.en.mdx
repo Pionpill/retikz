@@ -197,23 +197,22 @@ Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `
 
 ## Further Reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/core/primitive-relations">
-    <span className="font-semibold">Primitive Relations</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      How two primitives connect: dynamic attach, locked positions, and group boundaries
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node/overview">
-    <span className="font-semibold">Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      The Node component's full props, shapes, styling, and positioning
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/custom-shape">
-    <span className="font-semibold">Custom Shapes</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Supply the bounding / ray / anchor / emit geometry answers to register a new shape
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Primitive Relations',
+      description: 'How two primitives connect: dynamic attach, locked positions, and group boundaries',
+      url: '/kernel/components/core/primitive-relations',
+    },
+    {
+      title: 'Node',
+      description: "The Node component's full props, shapes, styling, and positioning",
+      url: '/kernel/components/node/overview',
+    },
+    {
+      title: 'Custom Shapes',
+      description: 'Supply the bounding / ray / anchor / emit geometry answers to register a new shape',
+      url: '/kernel/components/shapes/custom-shape',
+    },
+  ]}
+/>

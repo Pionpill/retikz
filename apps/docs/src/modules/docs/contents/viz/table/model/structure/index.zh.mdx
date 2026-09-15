@@ -64,21 +64,27 @@ Definition 必须停在语义模型边界：它可以决定 Cell 的可选身份
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/table/model/presentation">
-    <span className="font-semibold">内容呈现</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">继续看 Cell payload 如何成为 Core 内容。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/model/layout">
-    <span className="font-semibold">布局与边框</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解 span、轨道和 Cell box 如何求解。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/detail">
-    <span className="font-semibold">明细表</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">从记录生成逐行 Cell 的常用入口。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/reference/contract-table">
-    <span className="font-semibold">契约 - 表格</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询 Structure、Cell 与 IRTable schema。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '内容呈现',
+      description: '继续看 Cell payload 如何成为 Core 内容。',
+      url: '/viz/table/model/presentation',
+    },
+    {
+      title: '布局与边框',
+      description: '理解 span、轨道和 Cell box 如何求解。',
+      url: '/viz/table/model/layout',
+    },
+    {
+      title: '明细表',
+      description: '从记录生成逐行 Cell 的常用入口。',
+      url: '/viz/table/detail',
+    },
+    {
+      title: '契约 - 表格',
+      description: '查询 Structure、Cell 与 IRTable schema。',
+      url: '/viz/table/reference/contract-table',
+    },
+  ]}
+/>

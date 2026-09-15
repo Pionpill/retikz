@@ -16,13 +16,17 @@ Relation 负责表达“谁与谁存在什么关系”。它通过 Core NodeTarg
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/schematic/graph/relation/basic">
-    <span className="font-semibold">基础用法</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">稳定端点、方向和直接 route</span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/relation/extension">
-    <span className="font-semibold">扩展用法</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">关系 Definition 与 registry 消费链</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '基础用法',
+      description: '稳定端点、方向和直接 route',
+      url: '/schematic/graph/relation/basic',
+    },
+    {
+      title: '扩展用法',
+      description: '关系 Definition 与 registry 消费链',
+      url: '/schematic/graph/relation/extension',
+    },
+  ]}
+/>

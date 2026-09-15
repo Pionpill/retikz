@@ -11,7 +11,7 @@ If you do not use React, `@retikz/vanilla` can build and render figures with pla
 
 <PackageManagerInstall packages="@retikz/react react react-dom" />
 
-All published retikz packages are ESM-only and require Node.js 24 or newer.
+All published retikz packages are ESM-only and require Node.js 22.12 or newer.
 
 ## How to Learn
 
@@ -69,35 +69,32 @@ Keep four rules in mind before moving on:
 
 ## Next Steps
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/layout">
-    <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Learn the top-level container, canvas sizing, and direct IR rendering
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node/overview">
-    <span className="font-semibold">Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Learn shapes, text, styling, positioning, and node labels
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/overview">
-    <span className="font-semibold">Draw</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Continue with folds, curves, arrows, fills, and edge labels
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/design/principles">
-    <span className="font-semibold">Technical Principles</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Explore the internal flow when extending retikz, working with IR, or debugging compilation
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/galleries/karl-circle">
-    <span className="font-semibold">Karl's Unit Circle</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      See a richer geometry diagram built step by step
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layout',
+      description: 'Learn the top-level container, canvas sizing, and direct IR rendering',
+      url: '/kernel/components/layout',
+    },
+    {
+      title: 'Node',
+      description: 'Learn shapes, text, styling, positioning, and node labels',
+      url: '/kernel/components/node/overview',
+    },
+    {
+      title: 'Draw',
+      description: 'Continue with folds, curves, arrows, fills, and edge labels',
+      url: '/kernel/components/draw/overview',
+    },
+    {
+      title: 'Technical Principles',
+      description: 'Explore the internal flow when extending retikz, working with IR, or debugging compilation',
+      url: '/kernel/components/design/principles',
+    },
+    {
+      title: "Karl's Unit Circle",
+      description: 'See a richer geometry diagram built step by step',
+      url: '/kernel/galleries/karl-circle',
+    },
+  ]}
+/>

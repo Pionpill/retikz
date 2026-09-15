@@ -1,0 +1,107 @@
+---
+title: Sugar
+description: Sugar simplifies authoring by expanding to basic expressions during IR construction without adding separate geometry or rendering semantics.
+---
+
+Following [Layers](/kernel/components/design/layers), distinguish easier authoring from new drawing capabilities. Sugar changes the notation while preserving the same basic model after expansion.
+
+Sugar is a general design technique, not a layer exclusive to Kernel; upper-level packages also use Sugar to simplify authoring for their own models. It can expand into the owning package's domain IR rather than directly into Kernel primitives. This page uses Kernel to explain the equivalence and boundaries of that design.
+
+In the broader sense, Sugar also includes convenient value expressions: font-size presets such as `sm`, `base`, and `lg` resolve to numeric font sizes, while polar coordinates resolve to Cartesian coordinates. Relative to the basic values needed for drawing, these forms also simplify authoring.
+
+However, eventual conversion does not mean a form is not a first-class IR representation. Font-size presets and polar coordinates are officially supported, persistable Core IR forms evaluated during compilation. The Kernel / Sugar comparison and expansion diagram below specifically describe component Sugar and authoring shorthand eliminated during IR construction, not every broader form of Sugar.
+
+## Kernel and Sugar
+
+| Layer  | Examples                                                                                                                         | Enters IR directly | Notes                                          |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------- |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                         | Yes                | One-to-one with IR nodes                       |
+| Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
+
+Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets below compile to the same result:
+
+```tsx
+// Sugar: a one-line way array
+<Draw way={['a', 'b']} arrow="->" />
+```
+
+```tsx
+// Kernel: move, then line
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step to="b" />
+</Path>
+```
+
+## Expansion
+
+Equivalence means the corresponding expressions produce the same basic semantics and drawing result, not that Sugar is a textual substitution. The two-point connection proves this example; shape helpers and other shorthands expand through their own parsing rules.
+
+The convenient notation expands into basic IR (the persistable drawing declaration), then shared compilation produces Scene (the drawing result consumed by renderers). SVG and Canvas do not need to recognize authoring helpers such as Draw.
+
+<ComponentPreview files="sugar-flow" size="xs" hideCode />
+
+“Parse / expand” happens during IR construction: for example, Vanilla's `normalizePath` calls Core's `parseWay` to parse a Draw's `way` into basic steps. Shape helpers can also expand by composing basic components directly; not every Sugar component uses the same parser. The resulting basic IR then enters compilation.
+
+## Choosing a Layer
+
+| Scenario                                             | Prefer              |
+| ---------------------------------------------------- | ------------------- |
+| Regular connections, flowchart edges, arrowed paths  | `<Draw>`            |
+| Per-segment control over move / line / cycle / curve | `<Path>` + `<Step>` |
+| Tests or converter output closest to IR              | Kernel              |
+| Persistence, AI generation, or local patching        | IR                  |
+
+Sugar expansion is called synchronously by the builder, so it must not depend on React hooks or async state. Start from [Schema Reference](/kernel/reference/schema); the root declaration fields are documented under [IRScene](/kernel/reference/schema/scene), which is distinct from the compiled Scene.
+
+## Compared with composites
+
+A Composite remains a high-level node in the input IR and can be persisted with that IR. It expands into basic entities during compilation. Preserving high-level intent means saving the input IR, not treating the compiled Scene as the original model.
+
+A React component is not necessarily Sugar, and Scope is not Sugar because it preserves grouping in IR. The distinction is whether an independent high-level node remains after construction, not whether the input looks like a component.
+
+| Difference   | Sugar             | Composite         |
+| ------------ | ----------------- | ----------------- |
+| Saved result | Basic expressions | High-level intent |
+| Expansion    | IR construction   | IR compilation    |
+| Use case     | Shorter notation  | Domain structures |
+
+Use [composites](/kernel/components/design/composite) to persist intent such as “this is a chart”; use Sugar merely to shorten a path expression. Both ultimately reuse basic geometry and rendering capabilities.
+
+## Kernel Sugar List
+
+Kernel provides the following Sugar components through `@retikz/react`. This list covers their purpose; follow the component links for usage.
+
+| Component                                                   | Purpose                                              |
+| ----------------------------------------------------------- | ---------------------------------------------------- |
+| [Draw](/kernel/components/draw/overview)                    | Expand path shorthand into Path and Step             |
+| [EdgeLabel](/kernel/components/draw/step)                   | Convert child notation into Step label configuration |
+| [Circle, Ellipse](/kernel/components/shapes/circle-ellipse) | Circle and ellipse paths                             |
+| [Arc, Sector](/kernel/components/shapes/arc-sector)         | Circular arcs, elliptical arcs, and sector paths     |
+| [Rectangle](/kernel/components/shapes/rectangle)            | Rectangle paths                                      |
+| [RegularPolygon](/kernel/components/shapes/polygon)         | Regular polygon paths                                |
+| [Star](/kernel/components/shapes/star)                      | Star paths                                           |
+
+Shape components simplify path authoring; they are a different entry point from a Node's `shape` configuration. `DrawWay.Cycle` and relative-coordinate strings are also shorthand, but are not components and are therefore omitted from this table.
+
+## Further Reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Layers',
+      description: '',
+      url: '/kernel/components/design/layers',
+    },
+    {
+      title: 'Tier 2 Composites',
+      description: '',
+      url: '/kernel/components/design/composite',
+    },
+    {
+      title: 'Draw',
+      description: '',
+      url: '/kernel/components/draw/overview',
+    },
+  ]}
+/>

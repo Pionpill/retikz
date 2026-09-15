@@ -19,19 +19,22 @@ description: 布局家族负责建立整图与局部坐标语境：Layout 接入
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/layout/overview">
-    <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      顶层容器：children / IR 入口、编译管线与完整 props
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/scope">
-    <span className="font-semibold">Scope</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">局部坐标、整组引用、命名空间与裁剪</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/custom-clip">
-    <span className="font-semibold">自定义裁剪区</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">为 Scope 注册可复用的裁剪 kind</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layout',
+      description: '顶层容器：children / IR 入口、编译管线与完整 props',
+      url: '/kernel/components/layout/overview',
+    },
+    {
+      title: 'Scope',
+      description: '局部坐标、整组引用、命名空间与裁剪',
+      url: '/kernel/components/layout/scope',
+    },
+    {
+      title: '自定义裁剪区',
+      description: '为 Scope 注册可复用的裁剪 kind',
+      url: '/kernel/components/layout/custom-clip',
+    },
+  ]}
+/>

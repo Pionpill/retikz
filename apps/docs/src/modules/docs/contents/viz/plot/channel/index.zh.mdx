@@ -47,16 +47,20 @@ React 图元属性会被整理成 `IRPlot`（一份可以序列化和保存的�
 
 第一次阅读时，建议先理解字段与常量如何绑定，再按视觉目标查询内置通道。
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel/binding">
-    <span className="font-semibold">通道绑定</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把字段或固定值绑定到位置、颜色、大小等通道</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/channel/builtin">
-    <span className="font-semibold">内置通道</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询位置、颜色、大小、文本和路径通道</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '通道绑定',
+      description: '把字段或固定值绑定到位置、颜色、大小等通道',
+      url: '/viz/plot/channel/binding',
+    },
+    {
+      title: '内置通道',
+      description: '查询位置、颜色、大小、文本和路径通道',
+      url: '/viz/plot/channel/builtin',
+    },
+  ]}
+/>
 
 需要新增项目特有的视觉通道时，继续阅读[自定义通道](/viz/plot/channel/custom-channel)。
 

@@ -34,7 +34,7 @@ import {
 } from '@/modules/docs/components/component-preview/theme';
 import { ComparisonTargetLabelKeys, ComparisonTargetList } from '@/modules/docs/data';
 import { useDocLocation } from '@/modules/docs/layout';
-import { useComparisonStore, useComponentPreviewStore, useTocStore } from '@/modules/docs/store';
+import { useComparisonStore, useComponentPreviewStore, useDocHostStore, useTocStore } from '@/modules/docs/store';
 import { useLayoutStore } from '@/store';
 
 import { AUTHOR_GITHUB_URL, GITHUB_URL, TIKZ_DOCS_URL, useDocActions } from './useDocActions';
@@ -80,6 +80,8 @@ const PreviewThemeSettingsItems: FC<PreviewThemeSettingsItemsProps> = props => {
 export const HeaderActions: FC = () => {
   const { t, i18n } = useTranslation();
   const docLocation = useDocLocation();
+  const docHost = useDocHostStore(state => state.host);
+  const setDocHost = useDocHostStore(state => state.setHost);
   const { theme, handleToggleTheme, handleCycleLang } = useDocActions();
   const tocOpen = useTocStore(state => state.tocOpen);
   const setTocOpen = useTocStore(state => state.setTocOpen);
@@ -175,7 +177,7 @@ export const HeaderActions: FC = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="inline-flex">
-                  <DropdownMenuTrigger className={triggerClass}>
+                  <DropdownMenuTrigger className={triggerClass} aria-label={t('common.more')}>
                     <MoreHorizontal className="size-4" />
                   </DropdownMenuTrigger>
                 </span>
@@ -226,6 +228,26 @@ export const HeaderActions: FC = () => {
                   </DropdownMenuShortcut>
                 </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger inset>
+                  {t('common.docHost')}
+                  <span className="ml-auto pl-4 text-xs text-muted-foreground">
+                    {docHost === 'react' ? 'React' : 'Vanilla'}
+                  </span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuRadioGroup
+                    value={docHost}
+                    onValueChange={value => {
+                      if (value === 'react' || value === 'vanilla') setDocHost(value);
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="react">React</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="vanilla">Vanilla</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuLabel inset className="text-xs font-normal text-muted-foreground">
                 {t('preview.groupLabel')}

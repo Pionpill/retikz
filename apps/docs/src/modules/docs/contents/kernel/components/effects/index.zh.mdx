@@ -24,29 +24,37 @@ description: 为 Node、Path 等已有图元添加阴影、混合、图案与动
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/effects/shadow">
-    <span className="font-semibold">阴影</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">偏移、模糊、颜色与渲染边界</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/blend">
-    <span className="font-semibold">混合</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">图元与背景的颜色合成方式</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/animation">
-    <span className="font-semibold">动画</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">轨道、触发、播放控制与静态降级</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/pattern">
-    <span className="font-semibold">图案</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">内置线条、圆点、网格与实例参数</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/custom-pattern">
-    <span className="font-semibold">自定义图案</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册内置之外的重复填充图案</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/effects/custom-animation">
-    <span className="font-semibold">自定义动画</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册缓动曲线与动画属性通道</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '阴影',
+      description: '偏移、模糊、颜色与渲染边界',
+      url: '/kernel/components/effects/shadow',
+    },
+    {
+      title: '混合',
+      description: '图元与背景的颜色合成方式',
+      url: '/kernel/components/effects/blend',
+    },
+    {
+      title: '动画',
+      description: '轨道、触发、播放控制与静态降级',
+      url: '/kernel/components/effects/animation',
+    },
+    {
+      title: '图案',
+      description: '内置线条、圆点、网格与实例参数',
+      url: '/kernel/components/effects/pattern',
+    },
+    {
+      title: '自定义图案',
+      description: '注册内置之外的重复填充图案',
+      url: '/kernel/components/effects/custom-pattern',
+    },
+    {
+      title: '自定义动画',
+      description: '注册缓动曲线与动画属性通道',
+      url: '/kernel/components/effects/custom-animation',
+    },
+  ]}
+/>

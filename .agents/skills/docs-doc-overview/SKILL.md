@@ -41,17 +41,7 @@ description: Use when writing or restructuring a Retikz package overview page th
 
 `<PackageManagerInstall>` 紧跟标题，安装包名来自真实 package / peer dependency 关系。需要安装 peer dependency 时，在组件前后解释它为何必需或何时可选；不要手写一组会漂移的 npm、pnpm、yarn 命令。
 
-若同一能力同时支持 React 和 Vanilla，安装说明后先用一张简短表格概括两端的真实入口与接入位置，再固定分为两个三级小节：
-
-```mdx
-### React
-
-{/* 最小完整 React 代码：公开入口、注入位置、可见结果 */}
-
-### Vanilla
-
-{/* 最小完整 Vanilla 代码：公开入口、调用位置、可见结果 */}
-```
+若同一能力同时支持 React 和 Vanilla，安装说明后先用一张简短表格概括两端的真实入口与接入位置，再用组合式 `DocTabs` / `DocTab` 展示两套完整接入，默认 React。每个分支组合 `DocSteps`，以“导入内容”（关键 import 及说明）和“接入渲染”（初始化、注入或调用及渲染代码）为基本结构，不固定步骤数量；按独立操作目标决定是否拆出其他步骤。共享安装、限制与比较放在 Tab 外。拆步标准和具体写法读 [`DocTabs / DocSteps`](../docs-doc-principle/references/doc-tabs-steps.md)。
 
 - React 示例必须包含能力真正挂接到 JSX / Provider / Layout 或 renderer 的位置，以及最终可渲染的图或结果
 - Vanilla 示例必须包含 authoring 输入、compile / render 调用位置与最终产物；不能止于创建 request、options 或 registry 对象

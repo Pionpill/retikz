@@ -144,21 +144,27 @@ resolver 按 scale 类型解析 domain、分档边界与 scheme / range，得到
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/scale/position">
-    <span className="font-semibold">位置比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">为数值、时间与分类字段选择位置映射</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/guide/legend">
-    <span className="font-semibold">图例</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">用色块或色带解释颜色映射</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/contract">
-    <span className="font-semibold">字段契约</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">声明分类、连续与时间字段类型</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/scale/custom-scale">
-    <span className="font-semibold">自定义比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册领域专用的 scale definition</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '位置比例尺',
+      description: '为数值、时间与分类字段选择位置映射',
+      url: '/viz/plot/scale/position',
+    },
+    {
+      title: '图例',
+      description: '用色块或色带解释颜色映射',
+      url: '/viz/plot/guide/legend',
+    },
+    {
+      title: '字段契约',
+      description: '声明分类、连续与时间字段类型',
+      url: '/viz/data/model/contract',
+    },
+    {
+      title: '自定义比例尺',
+      description: '注册领域专用的 scale definition',
+      url: '/viz/plot/scale/custom-scale',
+    },
+  ]}
+/>

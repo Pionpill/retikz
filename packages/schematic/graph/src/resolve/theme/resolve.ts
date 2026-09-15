@@ -3,7 +3,7 @@ import type { JsonObject, JsonValue } from '@retikz/foundation';
 import { mergeProperties } from '@retikz/foundation';
 import { array, strictObject } from 'zod';
 
-import type { GraphThemeStyleDefinition, GraphThemeStyleSource } from '../../contract';
+import type { CodeBlockTokens, GraphThemeStyleDefinition, GraphThemeStyleSource } from '../../contract';
 import { RetikzGraphError, RetikzGraphErrorCode } from '../../errors';
 import { getDefaultGraphThemePreset } from '../../providers';
 import type {
@@ -26,6 +26,10 @@ const mergeFields = <T extends object>(current: T | undefined, override: T | und
   const merged = mergeProperties<Partial<T>>([current, override], { shouldOverride: value => value !== undefined });
   return Object.keys(merged).length === 0 ? undefined : (merged as T);
 };
+
+/** 移除稀疏覆盖中的 undefined 字段，避免清空已有主题 token */
+const definedFields = <T extends object>(value: Partial<T> | undefined): Partial<T> =>
+  mergeProperties<Partial<T>>([value], { shouldOverride: field => field !== undefined });
 
 /** 空 font 不提供默认值；非空 font 保持 Node Source 的整体覆盖粒度 */
 const definedEntityStyle = (style: IRGraphEntityDefaultsStyle | undefined): IRGraphEntityDefaultsStyle | undefined => {
@@ -246,10 +250,12 @@ export const resolveGraphTheme = (
     });
   }
   try {
-    const source = parseGraphThemeStyleSource(definition.resolve(theme));
+    const { codeBlockTokens, ...fragments } = definition.resolve(theme);
+    const source = parseGraphThemeStyleSource(fragments);
     return {
       defaults: mergeGraphDefaults(baseline.defaults, source.defaults) ?? baseline.defaults,
       rules: mergeRules(baseline.rules, source.rules),
+      codeBlockTokens: { ...baseline.codeBlockTokens, ...definedFields(codeBlockTokens) },
     };
   } catch (cause) {
     throw new RetikzGraphError({
@@ -260,3 +266,9 @@ export const resolveGraphTheme = (
     });
   }
 };
+
+/** 按有效 Core Theme 与 Graph Definition 解析代码实体的有限视觉 token */
+export const resolveCodeBlockTokens = (
+  theme: ResolvedTheme,
+  styles: ReadonlyMap<string, GraphThemeStyleDefinition>,
+): CodeBlockTokens => resolveGraphTheme(theme, styles).codeBlockTokens;

@@ -25,49 +25,62 @@ API 参考用于查询稳定契约，不承担入门教学。十个契约页分�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/reference/plot">
-    <span className="font-semibold">契约 - 规格</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">根规格、坐标视图与组合 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/encoding">
-    <span className="font-semibold">契约 - 编码</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">字段、常量与通道绑定 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/transform">
-    <span className="font-semibold">契约 - 变换</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">堆叠、分箱、派生、密度与趋势 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/mark">
-    <span className="font-semibold">契约 - 图元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">点、路径、区间、参考与关系 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/scale">
-    <span className="font-semibold">契约 - 比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">位置、序数、径向与颜色映射 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/coordinate">
-    <span className="font-semibold">契约 - 坐标系</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">直角、极坐标、一维与自定义 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/guide">
-    <span className="font-semibold">契约 - 辅助</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">坐标轴、网格、刻度、标题与图例 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/layout">
-    <span className="font-semibold">契约 - 布局</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">composition 外边距与 Chart presentation 边界</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/layer">
-    <span className="font-semibold">契约 - 图层</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">语义图层叠放顺序 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/theme">
-    <span className="font-semibold">契约 - 主题</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">整图视觉默认值与色板 schema</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/reference/runtime">
-    <span className="font-semibold">运行时总览</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">宿主入口、lowering、Core 编译与旁路产物</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '契约 - 规格',
+      description: '根规格、坐标视图与组合 schema',
+      url: '/viz/plot/reference/plot',
+    },
+    {
+      title: '契约 - 编码',
+      description: '字段、常量与通道绑定 schema',
+      url: '/viz/plot/reference/encoding',
+    },
+    {
+      title: '契约 - 变换',
+      description: '堆叠、分箱、派生、密度与趋势 schema',
+      url: '/viz/plot/reference/transform',
+    },
+    {
+      title: '契约 - 图元',
+      description: '点、路径、区间、参考与关系 schema',
+      url: '/viz/plot/reference/mark',
+    },
+    {
+      title: '契约 - 比例尺',
+      description: '位置、序数、径向与颜色映射 schema',
+      url: '/viz/plot/reference/scale',
+    },
+    {
+      title: '契约 - 坐标系',
+      description: '直角、极坐标、一维与自定义 schema',
+      url: '/viz/plot/reference/coordinate',
+    },
+    {
+      title: '契约 - 辅助',
+      description: '坐标轴、网格、刻度、标题与图例 schema',
+      url: '/viz/plot/reference/guide',
+    },
+    {
+      title: '契约 - 布局',
+      description: 'composition 外边距与 Chart presentation 边界',
+      url: '/viz/plot/reference/layout',
+    },
+    {
+      title: '契约 - 图层',
+      description: '语义图层叠放顺序 schema',
+      url: '/viz/plot/reference/layer',
+    },
+    {
+      title: '契约 - 主题',
+      description: '整图视觉默认值与色板 schema',
+      url: '/viz/plot/reference/theme',
+    },
+    {
+      title: '运行时总览',
+      description: '宿主入口、lowering、Core 编译与旁路产物',
+      url: '/viz/plot/reference/runtime',
+    },
+  ]}
+/>

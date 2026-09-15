@@ -90,39 +90,42 @@ Plot 还拥有绘图区、guide、palette 与已有 Axis 的稀疏 defaults。�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel">
-    <span className="font-semibold">通道</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      把字段或常量绑定到位置、颜色、尺寸、文字等视觉角色。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform">
-    <span className="font-semibold">变换</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      在绘图管线中派生、堆叠、汇总、统计或关联数据行。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark">
-    <span className="font-semibold">图元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      把投影后的数据实例化为点、路径、区间、参考或关系图形。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/scale">
-    <span className="font-semibold">比例尺</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把数据 domain 映射到位置或视觉属性的 range。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/coordinate">
-    <span className="font-semibold">坐标系</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把比例尺结果投影到笛卡尔、极坐标或组合视图。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/guide">
-    <span className="font-semibold">辅助</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">用坐标轴与图例解释比例尺和通道映射。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance/plot">
-    <span className="font-semibold">Plot 溯源</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把数据来源补充为图元、比例尺与布局语义。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '通道',
+      description: '把字段或常量绑定到位置、颜色、尺寸、文字等视觉角色。',
+      url: '/viz/plot/channel',
+    },
+    {
+      title: '变换',
+      description: '在绘图管线中派生、堆叠、汇总、统计或关联数据行。',
+      url: '/viz/plot/transform',
+    },
+    {
+      title: '图元',
+      description: '把投影后的数据实例化为点、路径、区间、参考或关系图形。',
+      url: '/viz/plot/mark',
+    },
+    {
+      title: '比例尺',
+      description: '把数据 domain 映射到位置或视觉属性的 range。',
+      url: '/viz/plot/scale',
+    },
+    {
+      title: '坐标系',
+      description: '把比例尺结果投影到笛卡尔、极坐标或组合视图。',
+      url: '/viz/plot/coordinate',
+    },
+    {
+      title: '辅助',
+      description: '用坐标轴与图例解释比例尺和通道映射。',
+      url: '/viz/plot/guide',
+    },
+    {
+      title: 'Plot 溯源',
+      description: '把数据来源补充为图元、比例尺与布局语义。',
+      url: '/viz/data/provenance/plot',
+    },
+  ]}
+/>

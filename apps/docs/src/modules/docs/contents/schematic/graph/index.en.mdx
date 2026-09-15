@@ -48,35 +48,32 @@ Fields such as `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `def
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/schematic/graph/block">
-    <span className="font-semibold">Block</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Structured code and engineering objects with local connection targets
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/group">
-    <span className="font-semibold">Group</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Nestable shells, captions, and Core boundary labels
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/entity">
-    <span className="font-semibold">Entity</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Independent node semantics, text, placement, and extensions
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/relation">
-    <span className="font-semibold">Relation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      General references, direction, routes, and extensions
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/api-reference">
-    <span className="font-semibold">Graph API Reference</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Source schemas, Scope surface, and Graph-family adapters
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Block',
+      description: 'Structured code and engineering objects with local connection targets',
+      url: '/schematic/graph/block',
+    },
+    {
+      title: 'Group',
+      description: 'Nestable shells, captions, and Core boundary labels',
+      url: '/schematic/graph/group',
+    },
+    {
+      title: 'Entity',
+      description: 'Independent node semantics, text, placement, and extensions',
+      url: '/schematic/graph/entity',
+    },
+    {
+      title: 'Relation',
+      description: 'General references, direction, routes, and extensions',
+      url: '/schematic/graph/relation',
+    },
+    {
+      title: 'Graph API Reference',
+      description: 'Source schemas, Scope surface, and Graph-family adapters',
+      url: '/schematic/graph/api-reference',
+    },
+  ]}
+/>
