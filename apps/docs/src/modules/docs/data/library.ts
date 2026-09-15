@@ -161,21 +161,25 @@ export const librarySection: Array<Section> = [
       {
         id: 'flex-layout',
         label: 'library.flexLayout',
+        sidebarGroup: 'library.components',
         difficulty: 'advanced',
       },
       {
         id: 'grid-layout',
         label: 'library.gridLayout',
+        sidebarGroup: 'library.components',
         difficulty: 'advanced',
       },
       {
         id: 'overlay-layout',
         label: 'library.overlayLayout',
+        sidebarGroup: 'library.components',
         difficulty: 'advanced',
       },
       {
         id: 'reference',
         label: 'library.layoutReference',
+        sidebarGroup: 'library.components',
         children: [
           {
             id: 'contract-input',

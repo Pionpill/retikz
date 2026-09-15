@@ -167,6 +167,7 @@
     "refVisualizationPlot": "Visualization - Plot"
   },
   "library": {
+    "components": "Components",
     "introduction": "Introduction",
     "getStart": "Quick start",
     "label": "Library",

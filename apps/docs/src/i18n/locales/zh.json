@@ -167,6 +167,7 @@
     "refVisualizationPlot": "可视化-绘图"
   },
   "library": {
+    "components": "组件",
     "introduction": "介绍",
     "getStart": "快速开始",
     "label": "能力库",
