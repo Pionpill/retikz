@@ -1,0 +1,91 @@
+---
+title: Quick start
+description: Install Layout and arrange two graphics in a row with React or Vanilla.
+---
+
+Choose the host used by your project and run its example below. Packages use ES modules and require Node.js 24 or later in Node environments.
+
+## React
+
+<PackageManagerInstall packages="@retikz/layout-react @retikz/react react react-dom" />
+
+Render the following `Example` component in an existing React app. The host peers `react` and `react-dom` require version 18 or later.
+
+```tsx
+import type { FC } from 'react';
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+
+export const Example: FC = () => (
+  <Layout>
+    <FlexLayout gap={{ column: 12, row: 0 }}>
+      <LayoutItem kind="flex">
+        <Node shape="circle" position={[0, 0]} layout={{ minimumSize: 32 }} />
+      </LayoutItem>
+      <LayoutItem kind="flex">
+        <Node position={[0, 0]} layout={{ minimumSize: 32 }} />
+      </LayoutItem>
+    </FlexLayout>
+  </Layout>
+);
+```
+
+The result is a circle and a rectangle arranged horizontally with a 12-unit gap. Each `LayoutItem` contains one graphic. Both start at local `[0, 0]`; the Flex container assigns their final positions.
+
+Save the component above as `Example.tsx` and mount it from an existing React app entry (provide `<div id="root"></div>` in HTML):
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import { Example } from './Example';
+
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<Example />);
+```
+
+The root `Layout` outputs SVG by default; this example needs no renderer configuration. Sizes and gaps use the same graphic units. At the default natural display size, one unit equals one CSS pixel.
+
+## Vanilla
+
+<PackageManagerInstall packages="@retikz/layout-vanilla @retikz/vanilla" />
+
+```ts
+import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    flexLayout('row', {
+      gap: { column: 12, row: 0 },
+      children: [
+        {
+          kind: 'flex',
+          child: node('circle', {
+            shape: 'circle',
+            position: [0, 0],
+            layout: { minimumSize: 32 },
+          }),
+        },
+        {
+          kind: 'flex',
+          child: node('box', {
+            position: [0, 0],
+            layout: { minimumSize: 32 },
+          }),
+        },
+      ],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] });
+console.log(svg);
+```
+
+`svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The helper creates ordinary input; `adapters` lets Vanilla recognize the embed and collect its capability dependencies. Omitting the adapter leaves the embed unresolved.
+
+The first argument `'row'` to `flexLayout` is a container identifier, not a direction option. Both hosts default to horizontal rows (`direction: 'row'`). `LayoutItem kind="flex"` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
+
+## Next steps
+
+Change `gap.column` to adjust spacing. To distribute remaining space, assign a size to the container and set `grow` on an item. Continue with [Flex layout](/library/layout/flex-layout). Use [Grid layout](/library/layout/grid-layout) for two-dimensional regions or [Overlay layout](/library/layout/overlay-layout) for stacking.
+
+See version changes in the [changelog](/library/layout/changelog).

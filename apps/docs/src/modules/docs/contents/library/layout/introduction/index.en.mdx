@@ -1,0 +1,34 @@
+---
+title: Introduction
+description: Layout arranges child graphics using flex, grid, and overlay containers instead of manually maintained coordinates.
+---
+
+Manually maintained coordinates become fragile when label counts, content sizes, or available space change. With Layout, you declare container sizes, gaps, alignment, and item constraints. The container measures child graphics and computes their positions and sizes.
+
+## Three containers
+
+| Container     | Arrangement                                                                  | Typical use                                      |
+| ------------- | ---------------------------------------------------------------------------- | ------------------------------------------------ |
+| FlexLayout    | Distributes space along one direction, with growing, shrinking, and wrapping | Label strips, legend entries, linear annotations |
+| GridLayout    | Allocates two-dimensional row and column tracks, including spans             | Multiple panels, matrices, structured regions    |
+| OverlayLayout | Aligns and stacks children in one region                                     | Badges, overlays, local annotations              |
+
+Containers compose recursively: arrange panels with Flex, then divide each panel with Grid. Layout owns arrangement, not chart data semantics or automatic graph-layout algorithms.
+
+## Two meanings of Layout
+
+`Layout` from `@retikz/react` hosts and renders the whole diagram. Components such as `FlexLayout` from `@retikz/layout-react` arrange content inside that root. They are normally used together.
+
+`LayoutItem` declares constraints for one child graphic. For example, `grow` lets a Flex item receive remaining space. Containers solve from measured sizes and constraints; text measurement still depends on fonts and their loading state.
+
+## Choose an entry
+
+- `@retikz/layout-react`: compose containers and items in JSX
+- `@retikz/layout-vanilla`: describe layout as ordinary TypeScript input and connect it to Vanilla through adapters
+- `@retikz/layout`: validate layout data and use host-independent definitions and solving
+
+Optional inspection capabilities help visualize layout boundaries. They are not required for ordinary layout.
+
+## Next steps
+
+Arrange two graphics with the [quick start](/library/layout/get-start), then explore [Flex](/library/layout/flex-layout), [Grid](/library/layout/grid-layout), or [Overlay](/library/layout/overlay-layout). See the [changelog](/library/layout/changelog) for version changes.

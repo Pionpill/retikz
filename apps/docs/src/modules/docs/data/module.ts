@@ -65,7 +65,7 @@ export const modules: ReadonlyArray<ModuleEntry> = [
     navigationLabel: 'library.navigationLabel',
     navigationDescription: 'library.navigationDescription',
     quickLinks: [
-      { label: 'library.standard', path: '/library/standard/composite/grid' },
+      { label: 'library.standard', path: '/library/standard/grid' },
       { label: 'library.layout', path: '/library/layout/flex-layout' },
     ],
   },

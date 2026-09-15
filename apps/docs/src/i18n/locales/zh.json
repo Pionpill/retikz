@@ -167,6 +167,8 @@
     "refVisualizationPlot": "可视化-绘图"
   },
   "library": {
+    "introduction": "介绍",
+    "getStart": "快速开始",
     "label": "能力库",
     "navigationLabel": "能力库",
     "navigationDescription": "提供可复用的标准组件和布局能力，用于组合更完整的图形",

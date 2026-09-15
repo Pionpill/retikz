@@ -1,5 +1,4 @@
 import type { Section } from './types';
-import { DocDifficulty } from './types';
 
 /** Library 能力包的 Standard 与 Layout 文档导航 */
 export const librarySection: Array<Section> = [
@@ -10,87 +9,120 @@ export const librarySection: Array<Section> = [
     document: true,
     pages: [
       {
-        id: 'composite',
-        label: 'library.standardComposite',
-        children: [
-          { id: 'grid', label: 'library.standardGrid', difficulty: DocDifficulty.Beginner },
-          { id: 'axes', label: 'library.standardAxes', difficulty: DocDifficulty.Advanced },
-          { id: 'frame', label: 'library.standardFrame', difficulty: DocDifficulty.Advanced },
-          { id: 'surface', label: 'library.standardSurface', difficulty: DocDifficulty.Advanced },
-          { id: 'legend', label: 'library.standardLegend', difficulty: DocDifficulty.Advanced },
-        ],
+        id: 'introduction',
+        label: 'library.introduction',
+        difficulty: 'beginner',
       },
       {
-        id: 'extension',
-        label: 'library.standardExtension',
-        children: [
-          {
-            id: 'shape',
-            label: 'library.standardExtensionShape',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'standard.shape',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'arrow',
-            label: 'library.standardExtensionArrow',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'standard.arrow',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'clip',
-            label: 'library.standardExtensionClip',
-            difficulty: DocDifficulty.Beginner,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'standard.clip',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'ribbon',
-            label: 'library.standardExtensionRibbon',
-            difficulty: DocDifficulty.Advanced,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'standard.ribbon',
-              sourceOfTruth: 'runtime',
-            },
-          },
-          {
-            id: 'capability-loading',
-            label: 'library.standardCapabilityLoading',
-            difficulty: DocDifficulty.Internals,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'standard.capability-loading',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
+        id: 'get-start',
+        label: 'library.getStart',
+        difficulty: 'beginner',
       },
       {
         id: 'changelog',
         label: 'library.changelog',
-        children: [{ id: 'v0-1', label: 'library.changelogV01' }],
+        children: [
+          {
+            id: 'v0-1',
+            label: 'library.changelogV01',
+          },
+        ],
         meta: {
           pageType: 'release',
           audience: 'user',
           capability: 'standard.release',
           sourceOfTruth: 'changelog',
         },
+      },
+      {
+        id: 'grid',
+        label: 'library.standardGrid',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardComposite',
+      },
+      {
+        id: 'axes',
+        label: 'library.standardAxes',
+        difficulty: 'advanced',
+        sidebarGroup: 'library.standardComposite',
+      },
+      {
+        id: 'frame',
+        label: 'library.standardFrame',
+        difficulty: 'advanced',
+        sidebarGroup: 'library.standardComposite',
+      },
+      {
+        id: 'surface',
+        label: 'library.standardSurface',
+        difficulty: 'advanced',
+        sidebarGroup: 'library.standardComposite',
+      },
+      {
+        id: 'legend',
+        label: 'library.standardLegend',
+        difficulty: 'advanced',
+        sidebarGroup: 'library.standardComposite',
+      },
+      {
+        id: 'shape',
+        label: 'library.standardExtensionShape',
+        difficulty: 'beginner',
+        meta: {
+          pageType: 'extension',
+          audience: 'extension-author',
+          capability: 'standard.shape',
+          sourceOfTruth: 'runtime',
+        },
+        sidebarGroup: 'library.standardExtension',
+      },
+      {
+        id: 'arrow',
+        label: 'library.standardExtensionArrow',
+        difficulty: 'beginner',
+        meta: {
+          pageType: 'extension',
+          audience: 'extension-author',
+          capability: 'standard.arrow',
+          sourceOfTruth: 'runtime',
+        },
+        sidebarGroup: 'library.standardExtension',
+      },
+      {
+        id: 'clip',
+        label: 'library.standardExtensionClip',
+        difficulty: 'beginner',
+        meta: {
+          pageType: 'extension',
+          audience: 'extension-author',
+          capability: 'standard.clip',
+          sourceOfTruth: 'runtime',
+        },
+        sidebarGroup: 'library.standardExtension',
+      },
+      {
+        id: 'ribbon',
+        label: 'library.standardExtensionRibbon',
+        difficulty: 'advanced',
+        meta: {
+          pageType: 'extension',
+          audience: 'extension-author',
+          capability: 'standard.ribbon',
+          sourceOfTruth: 'runtime',
+        },
+        sidebarGroup: 'library.standardExtension',
+      },
+      {
+        id: 'capability-loading',
+        label: 'library.standardCapabilityLoading',
+        difficulty: 'internals',
+        meta: {
+          pageType: 'extension',
+          audience: 'extension-author',
+          capability: 'standard.capability-loading',
+          sourceOfTruth: 'runtime',
+        },
+        sidebarGroup: 'library.standardExtension',
       },
     ],
   },
@@ -100,9 +132,47 @@ export const librarySection: Array<Section> = [
     navigationDescription: 'library.layoutNavigationDescription',
     document: true,
     pages: [
-      { id: 'flex-layout', label: 'library.flexLayout', difficulty: DocDifficulty.Advanced },
-      { id: 'grid-layout', label: 'library.gridLayout', difficulty: DocDifficulty.Advanced },
-      { id: 'overlay-layout', label: 'library.overlayLayout', difficulty: DocDifficulty.Advanced },
+      {
+        id: 'introduction',
+        label: 'library.introduction',
+        difficulty: 'beginner',
+      },
+      {
+        id: 'get-start',
+        label: 'library.getStart',
+        difficulty: 'beginner',
+      },
+      {
+        id: 'changelog',
+        label: 'library.changelog',
+        children: [
+          {
+            id: 'v0-1',
+            label: 'library.changelogV01',
+          },
+        ],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'layout.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
+      {
+        id: 'flex-layout',
+        label: 'library.flexLayout',
+        difficulty: 'advanced',
+      },
+      {
+        id: 'grid-layout',
+        label: 'library.gridLayout',
+        difficulty: 'advanced',
+      },
+      {
+        id: 'overlay-layout',
+        label: 'library.overlayLayout',
+        difficulty: 'advanced',
+      },
       {
         id: 'reference',
         label: 'library.layoutReference',
@@ -138,17 +208,6 @@ export const librarySection: Array<Section> = [
             },
           },
         ],
-      },
-      {
-        id: 'changelog',
-        label: 'library.changelog',
-        children: [{ id: 'v0-1', label: 'library.changelogV01' }],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'layout.release',
-          sourceOfTruth: 'changelog',
-        },
       },
     ],
   },
