@@ -27,27 +27,7 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 
 ## Kernel and Sugar
 
-| Layer  | Examples                                                                                                                         | Enters IR directly | Notes                                          |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------- |
-| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                         | Yes                | One-to-one with IR nodes                       |
-| Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
-
-Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets below compile to the same result:
-
-```tsx
-// Sugar: a one-line way array
-<Draw way={['a', 'b']} arrow="->" />
-```
-
-```tsx
-// Kernel: the first target in way becomes a move, the rest become line steps
-<Path arrow="->">
-  <Step kind="move" to="a" />
-  <Step to="b" />
-</Path>
-```
-
-`<Scope>` is Kernel too: it preserves grouping semantics in IR, lowers to a Scene `group`, and carries group-level behavior such as local transforms, clipping, style defaults, animation, and `zIndex`.
+Kernel preserves basic drawing semantics; Sugar expands into those expressions during IR construction. See [Sugar](/kernel/components/design/sugar) for equivalent examples, expansion constraints, and selection guidance.
 
 ## Compile Chain
 
@@ -74,14 +54,7 @@ If the IR contains Tier 2 composite nodes (such as plot's higher-level component
 
 ## Choosing a Layer
 
-| Scenario                                             | Prefer              |
-| ---------------------------------------------------- | ------------------- |
-| Regular connections, flowchart edges, arrowed paths  | `<Draw>`            |
-| Per-segment control over move / line / cycle / curve | `<Path>` + `<Step>` |
-| Tests or converter output closest to IR              | Kernel              |
-| Persistence, AI generation, or local patching        | IR                  |
-
-Sugar expansion is called synchronously by the builder, so it must not depend on React hooks or async state. Start from [Schema Reference](/kernel/reference/schema); the IR root lives in [Scene](/kernel/reference/schema/scene), with fields split across Entity / Path / Placement.
+See [Sugar](/kernel/components/design/sugar) for choosing authoring expressions. For persistence and structure lookup, use [Schema Reference](/kernel/reference/schema).
 
 ## Packages
 
