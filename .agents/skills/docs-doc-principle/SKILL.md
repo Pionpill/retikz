@@ -1,79 +1,52 @@
 ---
 name: docs-doc-principle
-description: Use when changing any retikz apps/docs content, route data, i18n, demo, SourceLinks, or schema reference before loading the matching page-type skill.
+description: Use before writing or reviewing Retikz solution documentation, demos, navigation or references; selects a task-based page skill and the shared naming, difficulty and chapter contract.
 ---
 
-# retikz 文档总原则
+# 文档总原则与 skill 入口
 
-本 skill 只保留所有文档任务都需要的共享契约。页型结构、controls、Reference 和预览源码规则按任务动态加载，不在这里重复。
+## 必须先确定
 
-## 必读顺序
+1. 阅读 `apps/docs/AGENTS.md` 与 [页型、难度和名称词典](references/page-contract.md)
+2. 确认解决方案、语义 owner、读者任务与本次授权范围；旧页只供事实与迁移范围参考，不以旧结构覆盖新规范
+3. 按下表选择一个主写作 skill，按需加载补充规则；页型与难度按词典固定，不按目录、篇幅或当前标签推断
 
-1. 先读 `apps/docs/AGENTS.md` 与本 skill
-2. 再按页型只读一个主 skill：
-   - 组件页：[`docs-doc-component`](../docs-doc-component/SKILL.md)；Standard Tier 2 composite 组件页继续读 `docs-doc-standard-composite`
-   - 扩展指南：[`docs-doc-extension`](../docs-doc-extension/SKILL.md)
-   - 示例页：[`docs-doc-example`](../docs-doc-example/SKILL.md)
-   - 包总纲页：[`docs-doc-overview`](../docs-doc-overview/SKILL.md)
-   - 分组落地页：[`docs-doc-group`](../docs-doc-group/SKILL.md)
-   - 概念页：[`docs-doc-concept`](../docs-doc-concept/SKILL.md)
-   - 实现原理页：[`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)，面向已读前置文档的源码读者
-   - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
-3. 仅在命中条件时继续加载：
-   - 关联文档、延伸阅读或章节卡片导航（`LinkedSections`）：[`references/linked-sections.md`](references/linked-sections.md)
-   - 方案切换或分步接入（`DocTabs` / `DocSteps`）：[`references/doc-tabs-steps.md`](references/doc-tabs-steps.md)
-   - Showcase / 成品型功能展示：[`docs-doc-showcase`](../docs-doc-showcase/SKILL.md)
-   - 带 controls：[`docs-doc-control`](../docs-doc-control/SKILL.md)
-   - 使用 `<ComponentPreview>` 的源码视图、多文件或数据文件：[`references/component-preview.md`](references/component-preview.md)
-   - 位置、引用、边界或教学辅助线 demo：[`references/demo-visual-language.md`](references/demo-visual-language.md)
-   - Reference / `<ZodSchema>`：[`references/reference-pages.md`](references/reference-pages.md)
-   - 叙述图：[`docs-figure-contract`](../docs-figure-contract/SKILL.md)；解释实现流程再读 `docs-figure-logic`
-   - 大改或新增页面的完稿评审：使用 [`docs-doc-review`](../docs-doc-review/SKILL.md)
+| 任务                         | 主 skill                                                             |
+| ---------------------------- | -------------------------------------------------------------------- |
+| 侧栏组织、路由归属或迁移     | [docs-doc-navigation](../docs-doc-navigation/SKILL.md)，再选正文页型 |
+| 解决方案、包、组件家族总纲   | [docs-doc-group](../docs-doc-group/SKILL.md)                         |
+| 简介、快速开始、更新日志     | [docs-doc-entry](../docs-doc-entry/SKILL.md)                         |
+| 基础与专题用法               | [docs-doc-usage](../docs-doc-usage/SKILL.md)                         |
+| 定义并注册自定义能力         | [docs-doc-extension](../docs-doc-extension/SKILL.md)                 |
+| 基础概念、核心概念、设计理念 | [docs-doc-concept](../docs-doc-concept/SKILL.md)                     |
+| 进阶专题、实现原理           | [docs-doc-mechanism](../docs-doc-mechanism/SKILL.md)                 |
+| API / Schema 参考            | [docs-doc-reference](../docs-doc-reference/SKILL.md)                 |
+| 综合任务教程                 | [docs-doc-example](../docs-doc-example/SKILL.md)                     |
+| 博客文章                     | [docs-doc-blog](../docs-doc-blog/SKILL.md)                           |
 
-不要为“可能用到”预读所有资源；按页面真实内容加载。
+## 按需补充
 
-## 三处协同
+- 安装、宿主切换或分步接入：[DocTabs / DocSteps](references/doc-tabs-steps.md)
+- 章节索引或延伸阅读：[LinkedSections](references/linked-sections.md)
+- ComponentPreview 源码、数据、双语 demo：[预览契约](references/component-preview.md)
+- 少量文中 API 或 SourceLinks：[文中 API](references/inline-api.md)
+- 教学辅助线、引用和位置 demo：[视觉语言](references/demo-visual-language.md)
+- Controls：[docs-doc-control](../docs-doc-control/SKILL.md)
+- 成品展示：[docs-doc-showcase](../docs-doc-showcase/SKILL.md)，作为主写作 skill 的补充
+- Standard composite：[Standard 补充](../docs-doc-usage/references/standard-composite.md)
+- 叙述图：[docs-figure-contract](../docs-figure-contract/SKILL.md)，实现逻辑图再读 [docs-figure-logic](../docs-figure-logic/SKILL.md)
+- 文档评审：[docs-doc-review](../docs-doc-review/SKILL.md)
 
-一个普通页面通常同时涉及：
+只加载当前任务需要的资源，不预读整套 skills。
 
-```text
-apps/docs/src/modules/docs/
-  contents/<moduleId>/<sectionId>/<pageId>/index.{zh,en}.mdx
-  data/<moduleId>.ts
+## 真源与协同
 
-apps/docs/src/i18n/locales/{zh,en}.json
-```
-
-URL 段、`data` 节点 `id` 与 `contents` 目录段必须一致。新增或移动页面时同步正文、data、i18n 和全仓站内链接；不要只移动文件。
-
-- 普通文档 zh/en 必须成对；zh 是 source of truth，en 跟随
-- blog 允许只有 zh，具体规则由 `docs-doc-blog` 拥有
-- 新 i18n key 先加 zh，再加 en；data 的 `label` 使用完整 i18n path
-- 分组节点有自己的 `index.{zh,en}.mdx`，不默认重定向首个 child
-- 带 children 的路由 id 优先单个英文词；多词叶子页才使用连字符
-
-## 读者与内容权重
-
-默认读者会 React / TypeScript，但不熟 TikZ、IR、几何术语和项目历史。先讲场景和行为，再命名概念；先给用户路径，再放可跳过的内部机制。
-
-写作前从当前实现、测试和能力域 completeness 文档确认：
-
-1. 根问题与核心抽象
-2. 本页对象的职责和不负责的边界
-3. 输入、处理、产物与下游消费是否闭环
-4. 内置与自定义是否共用 Definition、registry、resolver 和消费路径
-
-正文按能力语义组织，不按 prop 或视觉变体数量组织。边框色、背景色、线宽、透明度、字号等通用视觉属性只简要说明，并收进 API 表或一个 controls playground；只有改变语义、结构、组合、所有权、错误或编译机制的差异才值得独立章节或静态 demo。
-
-## 阅读难度
-
-页面 `difficulty` 按读者完成的主要任务判定，不按篇幅、术语数量、代码行数或页型判定。一页可以链接更深内容，但不因此升级；按主要阅读路径标注。
-
-| 等级                | 关键词 | 读者完成的任务                                                                                   |
-| ------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `beginner`（入门）  | 使用   | 围绕关键词或 API 完成既有能力。读者可直接参照示例调用，只需理解必要输入和可观察结果              |
-| `advanced`（进阶）  | 定制   | 理解配置、约束与组合关系，编写代码调整既有能力以适应具体场景；不是简单替换一个 API 调用          |
-| `internals`（底层） | 原理   | 为二次开发、能力扩展、复杂问题排查或性能与运行时调试而理解机制、管线和内部边界；普通使用可以跳过 |
+- 普通文档正文在 contents，导航在 data，标签在 i18n；URL 段、目录段和 data id 一致。生成日志与参考按实际数据入口处理，不为了目录形式创建空正文
+- 普通页面 zh/en 成对，zh 是写作真源；生成 API 的签名/JSDoc 与 Schema 的字段/describe 仍以源码为契约真源。博客的语言规则由 blog skill 拥有
+- 新建或重构时按词典同步名称、页型、难度、导航和受影响链接；不批量修改范围外的旧页
+- 先从当前实现、测试及所属能力域文档核对根问题、职责、输入输出、默认值和扩展路径。内置与自定义是否同路必须以源码为据，不以旧文案推断
+- 分组直接承担总纲；教程、概念、内部原理、完整 API 和 Schema 参考各有唯一职责，不在用法页复制所有内容
+- 通用颜色、线宽、字号等视觉属性合并到少量说明或 controls；章节围绕语义、结构、组合与边界，不按 prop 数量展开
 
 ## 写作规则
 
@@ -100,56 +73,13 @@ ComponentPreview 的 IR 与 Vanilla 配置必须保持最上层、精简的 Sour
 
 关系、流程或架构图的具体画法由 `docs-figure-contract` 拥有，本 skill 只决定是否需要图。
 
-## 三类 API 文档与源码真源
-
-API 内容按读者任务分为三类，名称和职责不得混用：
-
-| 类型             | 目标与范围                                                                                           | 真源与写法                                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 文中 API 介绍    | 帮读者顺着当前主题理解和完成当前任务；只选本页直接需要的 API、核心字段或闭合集合，不承担完整查询职责 | 人工正文，可用简短表格、代码或链接；优先说明何时使用和可见结果                                        |
-| API Reference    | 提供包根入口及公开子路径的完整 TypeScript 查询入口                                                   | 由 `package.json` 的 `exports`、对应 owner barrel、签名和 JSDoc 自动生成；不手写另一份完整签名表      |
-| Schema Reference | 提供持久化 IR / 配置 schema 的完整字段词典                                                           | Zod schema 与 `.describe()` 是字段真源；用 `<ZodSchema>` 渲染，规则见 `references/reference-pages.md` |
-
-概念、组件、算法和示例页只写“文中 API 介绍”，并在适当位置链接到 API Reference 或 Schema Reference。不要因“完整”在正文复制整个包的导出、完整 overload 或 schema 字段；API Reference 中的 schema 类型只展示摘要并链接到 Schema Reference，避免两份字段说明漂移。
-
-API Reference 只收录从 package `exports` 可达的真实公共标识符；入口、子路径、re-export 和 JSDoc 必须由 TypeScript 分析产物确定，不扫描任意内部源码文件。中文说明以中文 JSDoc 为源；英文说明由受审查的翻译产物生成，代码标识符、签名、枚举值、示例和 JSDoc 机器语义不翻译。不得在浏览器运行时调用 LLM 翻译，也不得把未经审查的机翻作为契约真源。
-
-每次 API Reference 变更先运行生成脚本，再由 LLM 翻译新增的中文读者说明并写回生成器的英文翻译产物；随后审阅术语、代码标识符和 Markdown / MDX 结构，重新生成英文 include。缺少翻译必须让生成失败；英文 include 除 fenced code 示例外不得遗留中文说明。LLM 只参与生成时的翻译与审阅，不参与浏览器运行时。
-
-API Reference 生成器对常用 JSDoc 的投影规则固定如下：首段 summary 生成名称下的职责摘要；`@description` 生成主体说明；`@remarks` 生成备注；字段 `@default` / `@defaultValue` 生成默认值列；`@param` 与 `@typeParam` 生成参数表；`@returns` / `@return`、`@throws` / `@exception`、`@example` 分别生成返回值、异常和用法；`@since`、`@deprecated`、`@see` 生成版本、弃用和延伸阅读元数据。`@public` / `@private` / `@internal` 决定可见性，`@inheritDoc` 交给 TypeDoc 解析继承注释，不单独渲染。未使用的标签不制造空章节；不从源码签名或实现猜测缺失说明。
-
-文中 API 介绍里的函数、类型和常量名仍必须是从所属包公开入口可导入的真实标识符。不要把概念简称、内部类型或 owner 深层 export 冒充公共 API。写表前沿着“组件 Props / schema → owner barrel → package root”核对；宿主组件页还要检查同 owner barrel 的 Provider、Context、hook 与 helper，避免漏掉用户完成任务所需的伴随导出。
-
-共享或继承 props 不在每页复制完整字段表：用一行说明公开共享契约及其职责，并链接到唯一权威页；本页只展开新增或重定义的字段。
-
-文中 API 表遇到对象类型时：
-
-- 类型列第一行写公开对象类型，从第二行起按声明顺序将每个属性写成独立的 `- field?: Type`；描述列第一行写整体语义，后续逐行与属性同序、同数、一一对应
-- 属性名和类型值保留行内代码样式；联合类型拆成多个代码片段，让页面在 `|` 边界换行，不把整条类型包成跨行灰块
-- 类型分支来自公开 const object 或 preset 时，用 `<ApiValues name="PublicConstant" />` 显示常量名并在悬浮、聚焦时列出具体值；注册表直接引用公开常量，MDX 不手写重复值，描述列仍说明该集合的语义
-
-机制说明先写用户可观察行为，再用 `<SourceLinks>` 给直接实现入口。每项 `path` 使用仓库相对路径，行号范围最小且必须仍支撑正文结论；源码链接不能替代解释。
-
-实现原理页按 `docs-doc-mechanism` 展开内部成员与执行过程；明确标注的内部实现锚点不受公共 API 标识符要求限制，但不得冒充公开调用入口或进入 API Reference。
-
 ## 文档宽度
 
 正文最大宽度 800px，表格单元格默认不换行。表格优先 3 列以内；过长内容用 `<br />` 或拆出正文。MDX 表格中的 union `|` 写成 `\|`，同一字段的多个类型放在同一行内用 `<br />` 分隔。
 
-## 页面新增速查
-
-新增叶子页时同步：
-
-1. `apps/docs/src/i18n/locales/{zh,en}.json`
-2. `apps/docs/src/modules/docs/contents/.../index.{zh,en}.mdx`
-3. `apps/docs/src/modules/docs/data/<moduleId>.ts`
-4. 相关 sidebar、Related、LinkedCard 与正文链接
-
-包总纲页、分组落地页、扩展页和 blog 的额外元数据由对应页型 skill 定义。包根页使用 `docs-doc-overview`，不要套用组件或参考家族的 `docs-doc-group` 结构。
-
-`introduction` / `get-start` 等入口页按读者任务组织，不强套组件或示例页结构，但仍服从本 skill 的三处协同、双语、写作权重与验证规则。
-
 ## 验证
+
+只改 skills 或其发现入口时，校验 skill frontmatter、相对引用、旧规则残留与典型任务分流；不因此迁移现有页面或要求全仓旧文档满足新词典。下列页面验证与读者评审用于实际文档改动。
 
 先运行机械一致性检查，再做页面语义和视觉判断：
 
@@ -163,13 +93,13 @@ node .agents/skills/docs-doc-principle/scripts/check-doc-integrity.mjs --scope <
 
 按改动范围选择最小有效验证：
 
-| 改动                                    | 最小验证                                                       |
-| --------------------------------------- | -------------------------------------------------------------- |
-| 纯 MDX 正文、表格、站内链接             | `check:static` + Prettier + `git diff --check` + 关键页面/链接 |
-| frontmatter、标题、MDX 组件、LinkedCard | 上述检查 + 浏览器确认 zh/en、TOC、菜单                         |
-| demo、data、helper、MDX import          | 上述检查 + docs `tsc --noEmit` + 浏览器确认 demo               |
-| docs data、i18n、schema registry        | 上述检查 + docs `tsc --noEmit` + 对应路由/Schema               |
-| 用户明确要求 CI 或产物等价验证          | `check:build`；如明确要求，再执行 `check:runtime`              |
+| 改动                                    | 最小验证                                                    |
+| --------------------------------------- | ----------------------------------------------------------- |
+| 纯 MDX 正文、表格、站内链接             | `check:static` + Oxfmt + `git diff --check` + 关键页面/链接 |
+| frontmatter、标题、MDX 组件、LinkedCard | 上述检查 + 浏览器确认 zh/en、TOC、菜单                      |
+| demo、data、helper、MDX import          | 上述检查 + docs `tsc --noEmit` + 浏览器确认 demo            |
+| docs data、i18n、schema registry        | 上述检查 + docs `tsc --noEmit` + 对应路由/Schema            |
+| 用户明确要求 CI 或产物等价验证          | `check:build`；如明确要求，再执行 `check:runtime`           |
 
 新建 ComponentPreview 图时按 [`ComponentPreview 按需契约`](references/component-preview.md) 的新文件规则验证，不依赖旧 dev session 的热更新状态。
 

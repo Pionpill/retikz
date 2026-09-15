@@ -99,7 +99,7 @@ caption 只补充读图线索，不重复上一段正文，也不塞 API 参考�
 3. 验证默认、最小、最大、组合极值与语义 presets，再 Reset 回 canonical 状态
 4. 比较固定 viewBox、主体 bounds 与完整效果 bounds，确认不漂移、不裁切
 5. 打开真实页面检查面板滚动、源码栏、caption、显式 size、右侧输出宽度与 800px 宽度下的留白；拖拽面板分隔线时主体不得缩放
-6. 运行 docs `tsc --noEmit`、相关 Vitest、Prettier 与 `git diff --check`
+6. 运行 docs `tsc --noEmit`、相关 Vitest、Oxfmt 与 `git diff --check`
 
 ## 常见错误
 
