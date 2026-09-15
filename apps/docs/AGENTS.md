@@ -65,7 +65,7 @@ docs 内容规则不复制在 AGENTS 中，按需动态加载：
 
 - `MdxContent` 在浏览器端 compile + run，`useMdxSource()` 按路由和语言读取 raw MDX。
 - `<ComponentPreview>` 负责 demo、源码、IR JSON 等展示；已有 demo 时正文不要重复粘完整代码。
-- demo 有可见文本时写双语文件：`<name>.zh.demo.tsx` 与 `<name>.en.demo.tsx`；纯几何无文本可用单文件 `<name>.demo.tsx`。
+- 新 demo 使用单份 `<name>.tsx`；可见文案集中在同名 `.i18n.ts`，通过 `lang` 选择。源码展示和旧文件识别遵循 `docs-doc-principle/references/component-preview.md`。
 - MDX 正文不主动加第三方外链。引用项目内文件时，给用户可点击的 GitHub URL；仅操作说明可保留 inline path。
 
 ## UI 与主题

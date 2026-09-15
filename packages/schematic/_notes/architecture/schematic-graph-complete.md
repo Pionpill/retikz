@@ -12,6 +12,8 @@ Graph 解决的是：
 
 Graph 是 Schematic foundation，长期拥有 Group / Block family / Entity / Relation 语义、领域 resolve、可选 `graphDefaults` / `graphRules` context 与可独立绘制的 semantic composite。Graph、Group、Block、Section 与 Row Source 组合完整 Core Scope surface。位置、路径、尺寸、内容和 NodeTarget endpoint 直接复用 Core 契约；Group 表达任意内容的可见包含，Block 表达具有 Graph identity 的开放内容纵向布局容器，Header / Section / Row 是可选的独立组合，Row 直接接受任意 children。Graph 不建立独立 Port、geometry、reference、成员集合、Variant 视觉轴或按 identity 分离的 appearance 模型。`IRGraph` 不是必需模型根，只是可选上下文；Graph family composite 可以出现在任意 Core 内容树位置
 
+代码实体可以在 Graph 内拥有独立 Source 与 Definition，作为 Tier 3 内容组合下沉为基础 Block。共享属性、签名与逻辑只保存代码说明事实；公开 contribution 复用 Core provider registry、主题环境与现有布局。内部视觉采用 Graph Theme 的有限 codeBlockTokens，不开放逐成员 presentation，也不把实体数据塞入基础 Block。源码 AST 提取、真实函数执行与对象状态仍不属于 Graph
+
 Graph 不拥有 Diagram 自动布局、自动 routing、Editor 或 renderer。Graph 支持自由布局仅表示作者可以显式提供位置与连接方式；拖拽、selection、viewport、history 和交互 session 仍归 Editor
 
 ## 2. 包角色与完整链路
