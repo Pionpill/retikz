@@ -5,6 +5,8 @@ description: 用独立的 Layout 包族提供 FlexLayout、GridLayout 与 Overla
 
 Layout 把“如何排布子图形”从手写坐标中提取出来。Flex、Grid 与 Overlay 分别处理线性分配、二维轨道和同一区域叠放，并能递归组合；Standard、Graph、Plot 等上层包可以复用这些能力，同时继续拥有自己的领域语义。
 
+首次使用请从[介绍](/library/layout/introduction)和[快速开始](/library/layout/get-start)进入；版本变化见[更新日志](/library/layout/changelog)。
+
 给定相同的可用空间与子图形测量结果，布局求解是确定的，并且不依赖具体渲染后端。文字尺寸仍取决于宿主提供的测量器、字体和字体加载状态。
 
 下面先用弹性布局分行、网格布局分列，再在右侧单元内用叠加布局放置徽标，展示三种容器如何作为普通子图形递归组合。

@@ -31,7 +31,7 @@ import { Draw } from '@retikz/react';
 
 <ComponentPreview files="arrow-appearance" size="md" />
 
-Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 与圆点箭头。其余实心 / 空心菱形箭头由 [`@retikz/standard/arrow`](/library/standard/extension/arrow) 提供；使用 Standard 名称时，需要把对应 Definition 注入当前 `<Layout arrows>` 或 `CompileOptions.arrows`：
+Core 默认提供六种基础箭头，其中包括空心三角、空心 Stealth 与圆点箭头。其余实心 / 空心菱形箭头由 [`@retikz/standard/arrow`](/library/standard/arrow) 提供；使用 Standard 名称时，需要把对应 Definition 注入当前 `<Layout arrows>` 或 `CompileOptions.arrows`：
 
 | 实心                          | 空心                              | 典型用途             |
 | ----------------------------- | --------------------------------- | -------------------- |
@@ -208,5 +208,5 @@ Core 用 definition 的 `backX`、`lineContactX` 与 `tipX` 分别解析视觉�
 
 - [Draw](/kernel/components/draw/overview)：日常连线的 Sugar 写法
 - [Path](/kernel/components/draw/path)：底层路径容器，三个箭头 prop 的行为一致
-- [箭头扩展](/library/standard/extension/arrow)：按需装配官方可选箭头
+- [箭头扩展](/library/standard/arrow)：按需装配官方可选箭头
 - [自定义箭头](/kernel/components/draw/custom-arrow)：注册项目自己的箭头 shape

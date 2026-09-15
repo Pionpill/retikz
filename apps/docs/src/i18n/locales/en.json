@@ -170,6 +170,9 @@
     "refVisualizationPlot": "Visualization - Plot"
   },
   "library": {
+    "components": "Components",
+    "introduction": "Introduction",
+    "getStart": "Quick start",
     "label": "Library",
     "navigationLabel": "Library",
     "navigationDescription": "Compose richer figures with reusable standard components and layout primitives",
