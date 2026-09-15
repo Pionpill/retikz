@@ -69,17 +69,17 @@ During resolution, Chart uses a Standard `Surface` as the chart-wide container a
 
 ## Related pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/authoring">
-    <span className="font-semibold">Authoring &amp; Resolution</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Place presentation input in the full pipeline.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/plot">
-    <span className="font-semibold">Plot Integration</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Separate chart-wide presentation from Plot guides.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Authoring & Resolution',
+      description: 'Place presentation input in the full pipeline.',
+      url: '/viz/chart/model/authoring',
+    },
+    {
+      title: 'Plot Integration',
+      description: 'Separate chart-wide presentation from Plot guides.',
+      url: '/viz/chart/model/plot',
+    },
+  ]}
+/>

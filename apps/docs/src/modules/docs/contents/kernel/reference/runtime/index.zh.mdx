@@ -20,21 +20,27 @@ description: 查询从宿主规格到 Core IR、Scene 与渲染后端的运行�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/runtime/compile">
-    <span className="font-semibold">编译</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">IR → Scene 入口、布局、文字度量与 warning</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/scene-primitive">
-    <span className="font-semibold">场景原语</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">渲染目标无关的绘制模型</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/parser">
-    <span className="font-semibold">解析工具</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Adapter 可复用的 Sugar → IR 辅助函数</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/extensions">
-    <span className="font-semibold">扩展机制</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">跨领域扩展点与宿主注入模型</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '编译',
+      description: 'IR → Scene 入口、布局、文字度量与 warning',
+      url: '/kernel/reference/runtime/compile',
+    },
+    {
+      title: '场景原语',
+      description: '渲染目标无关的绘制模型',
+      url: '/kernel/reference/runtime/scene-primitive',
+    },
+    {
+      title: '解析工具',
+      description: 'Adapter 可复用的 Sugar → IR 辅助函数',
+      url: '/kernel/reference/runtime/parser',
+    },
+    {
+      title: '扩展机制',
+      description: '跨领域扩展点与宿主注入模型',
+      url: '/kernel/reference/runtime/extensions',
+    },
+  ]}
+/>

@@ -70,15 +70,17 @@ description: 用 bin 把连续字段切成区间，并为直方图生成箱边�
 
 ## 相关
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/transform">
-    <span className="font-semibold">作用域与管线</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">选择根级或图元局部变换入口。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/statistics">
-    <span className="font-semibold">统计子算子</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      查看 metrics 复用的 reducer，以及箱线图所需的统计能力。
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '作用域与管线',
+      description: '选择根级或图元局部变换入口。',
+      url: '/viz/plot/transform',
+    },
+    {
+      title: '统计子算子',
+      description: '查看 metrics 复用的 reducer，以及箱线图所需的统计能力。',
+      url: '/viz/data/transform/statistics',
+    },
+  ]}
+/>

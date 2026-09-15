@@ -30,33 +30,42 @@ Node 形状注册表也对扩展开放。官方 `cross` / `sector` / `star` / `c
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/shapes/circle-ellipse">
-    <span className="font-semibold">Circle / Ellipse</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">圆、椭圆、半圆和弓形</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/arc-sector">
-    <span className="font-semibold">Arc / Sector</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">弧线、扇形和空心扇形</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/rectangle">
-    <span className="font-semibold">Rectangle</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">矩形、圆角矩形（节点默认形状）</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/polygon">
-    <span className="font-semibold">Polygon</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">正多边形与菱形</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/star">
-    <span className="font-semibold">Star</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">内外半径交替的星形</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/contour">
-    <span className="font-semibold">Contour</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">任意闭合顶点环的可连接节点</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/shapes/custom-shape">
-    <span className="font-semibold">自定义形状</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">注册内置之外的 Node 形状</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Circle / Ellipse',
+      description: '圆、椭圆、半圆和弓形',
+      url: '/kernel/components/shapes/circle-ellipse',
+    },
+    {
+      title: 'Arc / Sector',
+      description: '弧线、扇形和空心扇形',
+      url: '/kernel/components/shapes/arc-sector',
+    },
+    {
+      title: 'Rectangle',
+      description: '矩形、圆角矩形（节点默认形状）',
+      url: '/kernel/components/shapes/rectangle',
+    },
+    {
+      title: 'Polygon',
+      description: '正多边形与菱形',
+      url: '/kernel/components/shapes/polygon',
+    },
+    {
+      title: 'Star',
+      description: '内外半径交替的星形',
+      url: '/kernel/components/shapes/star',
+    },
+    {
+      title: 'Contour',
+      description: '任意闭合顶点环的可连接节点',
+      url: '/kernel/components/shapes/contour',
+    },
+    {
+      title: '自定义形状',
+      description: '注册内置之外的 Node 形状',
+      url: '/kernel/components/shapes/custom-shape',
+    },
+  ]}
+/>

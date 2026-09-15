@@ -19,21 +19,22 @@ It does not define Node / Path geometry or provide domain layout algorithms such
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/layout/overview">
-    <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Top-level container: children / IR entry, compile pipeline, and full props
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/scope">
-    <span className="font-semibold">Scope</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Local coordinates, group references, namespaces, and clipping
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/custom-clip">
-    <span className="font-semibold">Custom Clips</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Register reusable clipping kinds for Scope</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layout',
+      description: 'Top-level container: children / IR entry, compile pipeline, and full props',
+      url: '/kernel/components/layout/overview',
+    },
+    {
+      title: 'Scope',
+      description: 'Local coordinates, group references, namespaces, and clipping',
+      url: '/kernel/components/layout/scope',
+    },
+    {
+      title: 'Custom Clips',
+      description: 'Register reusable clipping kinds for Scope',
+      url: '/kernel/components/layout/custom-clip',
+    },
+  ]}
+/>

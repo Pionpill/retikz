@@ -37,21 +37,27 @@ description: '@retikz/data 提供宿主无关的数据模型、字段处理、�
 
 ## 章节内容
 
-<div className="grid gap-3 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/model">
-    <strong>数据模型</strong>
-    <span>声明字段类型、格式、分类顺序，并处理字段映射、解析与校验。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform">
-    <strong>数据变换</strong>
-    <span>说明 sort、summarize、select 与 annotate。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance">
-    <strong>数据溯源</strong>
-    <span>从 Data 行级来源进入 Plot 图元审计与交互回查。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/reference">
-    <strong>API 参考</strong>
-    <span>查询 JSON 契约、定义、注册表、运行管线与计算链路入口。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '数据模型',
+      description: '声明字段类型、格式、分类顺序，并处理字段映射、解析与校验。',
+      url: '/viz/data/model',
+    },
+    {
+      title: '数据变换',
+      description: '说明 sort、summarize、select 与 annotate。',
+      url: '/viz/data/transform',
+    },
+    {
+      title: '数据溯源',
+      description: '从 Data 行级来源进入 Plot 图元审计与交互回查。',
+      url: '/viz/data/provenance',
+    },
+    {
+      title: 'API 参考',
+      description: '查询 JSON 契约、定义、注册表、运行管线与计算链路入口。',
+      url: '/viz/data/reference',
+    },
+  ]}
+/>

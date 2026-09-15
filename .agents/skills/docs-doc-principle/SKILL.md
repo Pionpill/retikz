@@ -20,6 +20,7 @@ description: Use when changing any retikz apps/docs content, route data, i18n, d
    - 实现原理页：[`docs-doc-mechanism`](../docs-doc-mechanism/SKILL.md)，面向已读前置文档的源码读者
    - blog：[`docs-doc-blog`](../docs-doc-blog/SKILL.md)
 3. 仅在命中条件时继续加载：
+   - 关联文档、延伸阅读或章节卡片导航（`LinkedSections`）：[`references/linked-sections.md`](references/linked-sections.md)
    - 方案切换或分步接入（`DocTabs` / `DocSteps`）：[`references/doc-tabs-steps.md`](references/doc-tabs-steps.md)
    - Showcase / 成品型功能展示：[`docs-doc-showcase`](../docs-doc-showcase/SKILL.md)
    - 带 controls：[`docs-doc-control`](../docs-doc-control/SKILL.md)

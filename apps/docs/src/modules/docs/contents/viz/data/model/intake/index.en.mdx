@@ -118,23 +118,22 @@ Data transforms and consumer modules read those canonical rows instead of repeat
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/model/contract">
-    <span className="font-semibold">Field Contract</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Define logical fields, types, and category order first.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/validation">
-    <span className="font-semibold">Validation & Diagnostics</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Choose how parsing failures and missing values are handled.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/extensions">
-    <span className="font-semibold">Extension Mechanisms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Learn custom field parsing and runtime injection in one place.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Field Contract',
+      description: 'Define logical fields, types, and category order first.',
+      url: '/viz/data/model/contract',
+    },
+    {
+      title: 'Validation & Diagnostics',
+      description: 'Choose how parsing failures and missing values are handled.',
+      url: '/viz/data/model/validation',
+    },
+    {
+      title: 'Extension Mechanisms',
+      description: 'Learn custom field parsing and runtime injection in one place.',
+      url: '/viz/data/model/extensions',
+    },
+  ]}
+/>

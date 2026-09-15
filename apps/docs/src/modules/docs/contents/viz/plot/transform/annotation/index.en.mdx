@@ -109,17 +109,17 @@ When `groupBy` is omitted, every row shares one total. Multiple group fields for
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/transform">
-    <span className="font-semibold">Scopes & Pipeline</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand the order of explicit transforms and mark shortcuts.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/row">
-    <span className="font-semibold">Derive & Jitter</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Derive each interval independently when no cross-row accumulation is needed.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Scopes & Pipeline',
+      description: 'Understand the order of explicit transforms and mark shortcuts.',
+      url: '/viz/plot/transform',
+    },
+    {
+      title: 'Derive & Jitter',
+      description: 'Derive each interval independently when no cross-row accumulation is needed.',
+      url: '/viz/plot/transform/row',
+    },
+  ]}
+/>

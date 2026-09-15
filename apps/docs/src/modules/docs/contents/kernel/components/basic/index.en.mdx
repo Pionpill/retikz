@@ -14,17 +14,17 @@ Basic Concepts is the first group under Concepts. It answers "where is a point, 
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/basic/coordinate-system">
-    <span className="font-semibold">Coordinate System</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand user units, screen-coordinate direction, polar coordinates, and viewBox
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/basic/position">
-    <span className="font-semibold">Positioning</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Use one position vocabulary for nodes, helper points, and path targets
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Coordinate System',
+      description: 'Understand user units, screen-coordinate direction, polar coordinates, and viewBox',
+      url: '/kernel/components/basic/coordinate-system',
+    },
+    {
+      title: 'Positioning',
+      description: 'Use one position vocabulary for nodes, helper points, and path targets',
+      url: '/kernel/components/basic/position',
+    },
+  ]}
+/>

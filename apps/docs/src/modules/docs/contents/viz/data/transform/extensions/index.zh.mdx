@@ -203,17 +203,22 @@ description: 用运行时定义扩展数据变换与统计子算子，同时保�
 
 ## 相关
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-  <LinkedCard href="/viz/data/transform/operations">
-    <span className="font-semibold">变换操作</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">先确认内置变换是否已经覆盖需求。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/statistics">
-    <span className="font-semibold">统计子算子</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解规约器与行选择器的内置语义。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/extensions">
-    <span className="font-semibold">数据模型扩展</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">扩展字段格式与运行时字段解析。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '变换操作',
+      description: '先确认内置变换是否已经覆盖需求。',
+      url: '/viz/data/transform/operations',
+    },
+    {
+      title: '统计子算子',
+      description: '理解规约器与行选择器的内置语义。',
+      url: '/viz/data/transform/statistics',
+    },
+    {
+      title: '数据模型扩展',
+      description: '扩展字段格式与运行时字段解析。',
+      url: '/viz/data/model/extensions',
+    },
+  ]}
+/>

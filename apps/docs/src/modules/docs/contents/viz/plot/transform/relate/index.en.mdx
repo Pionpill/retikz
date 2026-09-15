@@ -73,17 +73,17 @@ Each endpoint `fields` map must be non-empty. `labelPrefix` is only added to non
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/transform">
-    <span className="font-semibold">Scopes & Pipeline</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Isolate the relation layer's data view with a mark-local transform.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/statistics">
-    <span className="font-semibold">Statistical Sub-operators</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      See selector rules shared by source and target.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Scopes & Pipeline',
+      description: "Isolate the relation layer's data view with a mark-local transform.",
+      url: '/viz/plot/transform',
+    },
+    {
+      title: 'Statistical Sub-operators',
+      description: 'See selector rules shared by source and target.',
+      url: '/viz/data/transform/statistics',
+    },
+  ]}
+/>

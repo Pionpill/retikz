@@ -131,21 +131,22 @@ Ordinary field binding, sorting, and summarization usually do not require readin
 
 ## Further Reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-  <LinkedCard href="/viz/data/transform">
-    <span className="font-semibold">Data Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand how each transform changes rows and fields.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/extensions">
-    <span className="font-semibold">Extension Mechanisms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Preserve provenance in custom transforms.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance/plot">
-    <span className="font-semibold">Plot Lineage</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Enrich Data provenance with Plot runtime semantics.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Data Transforms',
+      description: 'Understand how each transform changes rows and fields.',
+      url: '/viz/data/transform',
+    },
+    {
+      title: 'Extension Mechanisms',
+      description: 'Preserve provenance in custom transforms.',
+      url: '/viz/data/transform/extensions',
+    },
+    {
+      title: 'Plot Lineage',
+      description: 'Enrich Data provenance with Plot runtime semantics.',
+      url: '/viz/data/provenance/plot',
+    },
+  ]}
+/>

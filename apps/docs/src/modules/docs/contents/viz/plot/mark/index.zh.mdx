@@ -33,41 +33,37 @@ Mark 是图形语法里的几何层。它回答“每行或每组数据要生成
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/mark/point">
-    <span className="font-semibold">PointMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      从单行数据生成一个位置节点，学习散点、气泡、文本点和坐标角色。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/path">
-    <span className="font-semibold">PathMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      按顺序连接数据点，学习分组、曲线、闭合区域和缺失值中断。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/interval">
-    <span className="font-semibold">IntervalMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      从位置区间生成几何，学习柱、热图、径向区间与饼图。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/reference">
-    <span className="font-semibold">ReferenceMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      添加阈值、范围与参考区域，并理解常量和逐行参考值。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/relation">
-    <span className="font-semibold">RelationMark</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      连接点、路径或区间目标，学习普通路径与 ribbon 关系。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark/custom-mark">
-    <span className="font-semibold">自定义图元</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      定义、注册并下沉自定义 mark，让内置和扩展图元复用同一条编译路径。
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'PointMark',
+      description: '从单行数据生成一个位置节点，学习散点、气泡、文本点和坐标角色。',
+      url: '/viz/plot/mark/point',
+    },
+    {
+      title: 'PathMark',
+      description: '按顺序连接数据点，学习分组、曲线、闭合区域和缺失值中断。',
+      url: '/viz/plot/mark/path',
+    },
+    {
+      title: 'IntervalMark',
+      description: '从位置区间生成几何，学习柱、热图、径向区间与饼图。',
+      url: '/viz/plot/mark/interval',
+    },
+    {
+      title: 'ReferenceMark',
+      description: '添加阈值、范围与参考区域，并理解常量和逐行参考值。',
+      url: '/viz/plot/mark/reference',
+    },
+    {
+      title: 'RelationMark',
+      description: '连接点、路径或区间目标，学习普通路径与 ribbon 关系。',
+      url: '/viz/plot/mark/relation',
+    },
+    {
+      title: '自定义图元',
+      description: '定义、注册并下沉自定义 mark，让内置和扩展图元复用同一条编译路径。',
+      url: '/viz/plot/mark/custom-mark',
+    },
+  ]}
+/>

@@ -42,35 +42,32 @@ For React authoring, compose `FlexLayout`, `GridLayout`, or `OverlayLayout` insi
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/library/layout/flex-layout">
-    <span className="font-semibold">FlexLayout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      One-dimensional distribution, wrapping, and baselines
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/layout/grid-layout">
-    <span className="font-semibold">GridLayout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Two-dimensional tracks, spans, and auto placement
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/layout/overlay-layout">
-    <span className="font-semibold">OverlayLayout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Alignment, positioning, and stable paint order
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/layout/reference">
-    <span className="font-semibold">API Reference</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Input contracts, artifact contracts, and runtime wiring
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/library/layout/changelog">
-    <span className="font-semibold">Changelog</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Version history for the Layout package family
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'FlexLayout',
+      description: 'One-dimensional distribution, wrapping, and baselines',
+      url: '/library/layout/flex-layout',
+    },
+    {
+      title: 'GridLayout',
+      description: 'Two-dimensional tracks, spans, and auto placement',
+      url: '/library/layout/grid-layout',
+    },
+    {
+      title: 'OverlayLayout',
+      description: 'Alignment, positioning, and stable paint order',
+      url: '/library/layout/overlay-layout',
+    },
+    {
+      title: 'API Reference',
+      description: 'Input contracts, artifact contracts, and runtime wiring',
+      url: '/library/layout/reference',
+    },
+    {
+      title: 'Changelog',
+      description: 'Version history for the Layout package family',
+      url: '/library/layout/changelog',
+    },
+  ]}
+/>

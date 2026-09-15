@@ -352,21 +352,22 @@ The provider graph assembles which Definitions reusable modules require. `resolv
 
 ## Further reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/design/layers">
-    <span className="font-semibold">Layers</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      The DSL, IR, and Scene model and where lowering occurs
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/extensions">
-    <span className="font-semibold">Runtime Extensions</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Registry injection and extension diagnostic conventions
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot">
-    <span className="font-semibold">@retikz/plot</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">A composite used in a charting domain</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layers',
+      description: 'The DSL, IR, and Scene model and where lowering occurs',
+      url: '/kernel/components/design/layers',
+    },
+    {
+      title: 'Runtime Extensions',
+      description: 'Registry injection and extension diagnostic conventions',
+      url: '/kernel/reference/runtime/extensions',
+    },
+    {
+      title: '@retikz/plot',
+      description: 'A composite used in a charting domain',
+      url: '/viz/plot',
+    },
+  ]}
+/>

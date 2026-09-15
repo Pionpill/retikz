@@ -49,29 +49,27 @@ All four topics share one boundary: Chart decides what graphic is being authored
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/chart/model/structure">
-    <span className="font-semibold">Structure &amp; Types</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand families, chartTypes, exact schemas, and marks.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/authoring">
-    <span className="font-semibold">Authoring &amp; Resolution</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      See how React, Vanilla, and JSON enter one pipeline.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/presentation">
-    <span className="font-semibold">Presentation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Understand fixed presentation slots and Surface layout.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/chart/model/plot">
-    <span className="font-semibold">Plot Integration</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Separate Chart marks, Plot fragments, and Theme owners.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Structure & Types',
+      description: 'Understand families, chartTypes, exact schemas, and marks.',
+      url: '/viz/chart/model/structure',
+    },
+    {
+      title: 'Authoring & Resolution',
+      description: 'See how React, Vanilla, and JSON enter one pipeline.',
+      url: '/viz/chart/model/authoring',
+    },
+    {
+      title: 'Presentation',
+      description: 'Understand fixed presentation slots and Surface layout.',
+      url: '/viz/chart/model/presentation',
+    },
+    {
+      title: 'Plot Integration',
+      description: 'Separate Chart marks, Plot fragments, and Theme owners.',
+      url: '/viz/chart/model/plot',
+    },
+  ]}
+/>

@@ -170,29 +170,27 @@ The complete `IRPlotScale` surface can also name a scale, set an output `range`,
 
 ## Related
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/scale/color">
-    <span className="font-semibold">Color Scales</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Map categorical, continuous, and temporal fields to color
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/guide/axis">
-    <span className="font-semibold">Axis</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Explain a positional scale with ticks, labels, and grids
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/contract">
-    <span className="font-semibold">Field Contract</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Declare continuous, temporal, and categorical field types
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/scale/custom-scale">
-    <span className="font-semibold">Custom scales</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Register a scale definition for domain-specific mappings
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Color Scales',
+      description: 'Map categorical, continuous, and temporal fields to color',
+      url: '/viz/plot/scale/color',
+    },
+    {
+      title: 'Axis',
+      description: 'Explain a positional scale with ticks, labels, and grids',
+      url: '/viz/plot/guide/axis',
+    },
+    {
+      title: 'Field Contract',
+      description: 'Declare continuous, temporal, and categorical field types',
+      url: '/viz/data/model/contract',
+    },
+    {
+      title: 'Custom scales',
+      description: 'Register a scale definition for domain-specific mappings',
+      url: '/viz/plot/scale/custom-scale',
+    },
+  ]}
+/>

@@ -106,24 +106,23 @@ Most figures do not need a manual `viewBox`. Set it when you need a fixed coordi
 
 ## Further Reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/basic/position">
-    <span className="font-semibold">Positioning</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Coordinates are just one position form; the full vocabulary of id refs, relative, offset, and proportional
-      placement
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/core/primitive-relations">
-    <span className="font-semibold">Primitive Relations</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Anchors, boundaries, and edge-proportional points — how primitives connect once coordinates settle
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/overview">
-    <span className="font-semibold">Layout</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      The top-level container and compile entry that carries viewBox / width / height
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Positioning',
+      description:
+        'Coordinates are just one position form; the full vocabulary of id refs, relative, offset, and proportional placement',
+      url: '/kernel/components/basic/position',
+    },
+    {
+      title: 'Primitive Relations',
+      description: 'Anchors, boundaries, and edge-proportional points — how primitives connect once coordinates settle',
+      url: '/kernel/components/core/primitive-relations',
+    },
+    {
+      title: 'Layout',
+      description: 'The top-level container and compile entry that carries viewBox / width / height',
+      url: '/kernel/components/layout/overview',
+    },
+  ]}
+/>

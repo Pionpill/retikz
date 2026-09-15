@@ -68,27 +68,27 @@ The manifest provides facts rather than host interaction policy. Table does not 
 
 ## Further reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/table/model/layout">
-    <span className="font-semibold">Layout & Borders</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Review how tracks, Cell placement, and the Border Graph are produced.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/reference/manifest">
-    <span className="font-semibold">Contract - Artifact</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Look up every manifest DTO field and schema.</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/reference/runtime">
-    <span className="font-semibold">Runtime</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      See how React, Vanilla, and compile expose artifacts.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/table/detail">
-    <span className="font-semibold">Detail Table</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Observe onManifest and SSR sidecars from the common entry.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Layout & Borders',
+      description: 'Review how tracks, Cell placement, and the Border Graph are produced.',
+      url: '/viz/table/model/layout',
+    },
+    {
+      title: 'Contract - Artifact',
+      description: 'Look up every manifest DTO field and schema.',
+      url: '/viz/table/reference/manifest',
+    },
+    {
+      title: 'Runtime',
+      description: 'See how React, Vanilla, and compile expose artifacts.',
+      url: '/viz/table/reference/runtime',
+    },
+    {
+      title: 'Detail Table',
+      description: 'Observe onManifest and SSR sidecars from the common entry.',
+      url: '/viz/table/detail',
+    },
+  ]}
+/>
