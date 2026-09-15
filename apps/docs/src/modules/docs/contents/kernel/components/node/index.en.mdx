@@ -18,25 +18,27 @@ The node family answers how objects in a figure are named, positioned, and conne
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/node/overview">
-    <span className="font-semibold">Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Build a visible, positioned, connectable primitive
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node/text">
-    <span className="font-semibold">Text</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Override one whole text line inside a Node</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node/coordinate">
-    <span className="font-semibold">Coordinate</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Name a point without visible output</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/node/custom-boundary">
-    <span className="font-semibold">Custom Boundaries</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Separate graphConnector geometry from the visual outline
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Node',
+      description: 'Build a visible, positioned, connectable primitive',
+      url: '/kernel/components/node/overview',
+    },
+    {
+      title: 'Text',
+      description: 'Override one whole text line inside a Node',
+      url: '/kernel/components/node/text',
+    },
+    {
+      title: 'Coordinate',
+      description: 'Name a point without visible output',
+      url: '/kernel/components/node/coordinate',
+    },
+    {
+      title: 'Custom Boundaries',
+      description: 'Separate graphConnector geometry from the visual outline',
+      url: '/kernel/components/node/custom-boundary',
+    },
+  ]}
+/>

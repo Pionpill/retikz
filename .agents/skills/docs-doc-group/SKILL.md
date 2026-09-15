@@ -52,7 +52,7 @@ contents/kernel/components/node/
 | 导言          | ✅                     | frontmatter `description`（一句话定位，渲染在 H1 下）+ 一段正文：这一组在整体里负责什么 |
 | 配图          | 可选（组件家族建议有） | 一张 `<ComponentPreview ... hideCode />` 叙述性插图，展示家族成员 / 关系 / 管线         |
 | `## 职责一览` | ✅                     | 一张表，逐个子项说职责（见「两类表」）                                                  |
-| `## 章节内容` | ✅                     | `<LinkedCard>` 网格，每个子页一张卡                                                     |
+| `## 章节内容` | ✅                     | `<LinkedSections>` 网格，每个子页一张卡                                                 |
 
 frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走 DocPage）。
 
@@ -77,25 +77,11 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 > 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
 ```
 
-## LinkedCard 子页索引
+## LinkedSections 子页索引
 
-每个 child 一张卡，`LinkedCard` 是注册过的 MDX 元素：
+每个 child 对应一个 item，标题与 sidebar i18n label 对齐，描述说明该页职责，url 指向真实子页路径。使用 LinkedSections 统一生成卡片和响应式网格，保留分类顺序。
 
-```mdx
-## 章节内容
-
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/node/overview">
-    <span className="font-semibold">Node</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">形状、文字、样式、定位与标签的完整用法</span>
-  </LinkedCard>
-  {/* ……每个子页一张 */}
-</div>
-```
-
-- `href` 指向子页真实路径（`/` 开头走 react-router）；改子页 id 时一起改
-- 卡内：第一行 `font-semibold` 子页名（与 sidebar i18n label 对齐），第二行 `text-sm text-muted-foreground` 一句话定位
-- 一行两列（`sm:grid-cols-2`）
+具体写法与验证读取 [关联文档导航](../docs-doc-principle/references/linked-sections.md)。
 
 ## 配图思路
 
@@ -114,7 +100,7 @@ frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走
 - **用通用样式描述家族差异** —— 颜色、线宽、透明度等不构成家族职责，留给子页 controls / API 表
 - **参考家族硬套 Sugar/Kernel 列** —— schema/runtime 不是组件，用 `主题 | 职责 | 何时查阅`
 - **配图放 demo 源码** —— 分组页的图是叙述性插图，必须 `hideCode`
-- **LinkedCard href 不跟子页 id 同步** —— 改子页路径时一起改，否则断链
+- **LinkedSections url 不跟子页 id 同步** —— 改子页路径时一起改，否则断链
 - **正文又写 `# 标题`** —— H1 走 DocPage
 
 ## 验证

@@ -14,27 +14,25 @@ description: 查询领域模块、IR 模型契约和运行时管线的稳定合�
 | 领域模块 | Tier 2 包的领域语义、依赖与 Core 接入边界 | 查询 Plot 等独立能力包     |
 | 模型契约 | IR schema 与字段约束                      | 生成、持久化或校验 JSON IR |
 | 运行时   | IR → Scene 编译、Primitive 与 parser      | 自己驱动编译或集成底层工具 |
-| 更新日志 | Kernel 发布版本与包级改动                 | 查询版本间的功能与修复     |
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/domains">
-    <span className="font-semibold">领域模块</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Plot 等 Tier 2 包的职责、依赖与 Core 接入边界
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema">
-    <span className="font-semibold">模型契约</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Scene、Entity、Path 与 Placement schema</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime">
-    <span className="font-semibold">运行时</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">编译、Scene Primitive 与解析器</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/changelog">
-    <span className="font-semibold">更新日志</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Kernel 各版本的发布记录与包级改动</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '领域模块',
+      description: 'Plot 等 Tier 2 包的职责、依赖与 Core 接入边界',
+      url: '/kernel/reference/domains',
+    },
+    {
+      title: '模型契约',
+      description: 'Scene、Entity、Path 与 Placement schema',
+      url: '/kernel/reference/schema',
+    },
+    {
+      title: '运行时',
+      description: '编译、Scene Primitive 与解析器',
+      url: '/kernel/reference/runtime',
+    },
+  ]}
+/>

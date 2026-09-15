@@ -9,34 +9,30 @@ Reference pages are contract dictionaries rather than tutorials. Use them when c
 
 ## Responsibilities
 
-| Group          | Responsibility                                       | Reach for it when                            |
-| -------------- | ---------------------------------------------------- | -------------------------------------------- |
-| Domain Modules | Domain semantics, dependencies, and Core integration | Looking up standalone packages such as Plot  |
-| Schema         | Define IR structures and field contracts             | Generating, persisting, or validating IR     |
-| Runtime        | Compile IR to Scene and expose parsers               | Driving compilation or low-level tooling     |
-| Changelog      | Kernel releases and package-level changes            | Checking features and fixes between versions |
+| Group          | Responsibility                                       | Reach for it when                           |
+| -------------- | ---------------------------------------------------- | ------------------------------------------- |
+| Domain Modules | Domain semantics, dependencies, and Core integration | Looking up standalone packages such as Plot |
+| Schema         | Define IR structures and field contracts             | Generating, persisting, or validating IR    |
+| Runtime        | Compile IR to Scene and expose parsers               | Driving compilation or low-level tooling    |
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/domains">
-    <span className="font-semibold">Domain Modules</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Responsibilities, dependencies, and Core integration for Tier 2 packages such as Plot
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema">
-    <span className="font-semibold">Schema</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Scene, Entity, Path, and Placement schemas</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime">
-    <span className="font-semibold">Runtime</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Compilation, Scene primitives, and parsers</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/changelog">
-    <span className="font-semibold">Changelog</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Kernel release notes and package-level changes
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Domain Modules',
+      description: 'Responsibilities, dependencies, and Core integration for Tier 2 packages such as Plot',
+      url: '/kernel/reference/domains',
+    },
+    {
+      title: 'Schema',
+      description: 'Scene, Entity, Path, and Placement schemas',
+      url: '/kernel/reference/schema',
+    },
+    {
+      title: 'Runtime',
+      description: 'Compilation, Scene primitives, and parsers',
+      url: '/kernel/reference/runtime',
+    },
+  ]}
+/>

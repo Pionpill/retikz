@@ -124,13 +124,17 @@ description: 用具名字段格式与运行时解析器扩展数据接入，同�
 
 ## 相关
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/model/intake">
-    <span className="font-semibold">数据接入</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">了解字段路径、内置格式与规范化顺序。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/transform/extensions">
-    <span className="font-semibold">数据变换扩展</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">定义自定义变换、规约器与行选择器。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '数据接入',
+      description: '了解字段路径、内置格式与规范化顺序。',
+      url: '/viz/data/model/intake',
+    },
+    {
+      title: '数据变换扩展',
+      description: '定义自定义变换、规约器与行选择器。',
+      url: '/viz/data/transform/extensions',
+    },
+  ]}
+/>

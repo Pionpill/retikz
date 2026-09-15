@@ -128,6 +128,8 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 ## 能力归属原则
 
+只改变作者写法、不增加绘图语义的能力属于[语法糖](/kernel/components/design/sugar)；具体等价表达与展开约束在该页集中说明。
+
 建立整体框架后，再判断一项需求改变的是书写体验、共享绘图语义、高层领域模型、可替换编译策略，还是后端运行行为，并从第一责任 owner 开始设计。
 
 <ComponentPreview files="principles-placement" size="md" hideCode />
@@ -160,23 +162,27 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/design/layers">
-    <span className="font-semibold">分层</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">从用户视角理解 DSL、IR、Scene 与 renderer</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/design/composite">
-    <span className="font-semibold">复合</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">理解 domain 高层节点如何保留意图并下沉</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/runtime/extensions">
-    <span className="font-semibold">扩展机制</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      查询 Definition、registry、host lowerer 与具体指南
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema">
-    <span className="font-semibold">结构</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查询当前 IR schema 与字段契约</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '分层',
+      description: '从用户视角理解 DSL、IR、Scene 与 renderer',
+      url: '/kernel/components/design/layers',
+    },
+    {
+      title: '复合',
+      description: '理解 domain 高层节点如何保留意图并下沉',
+      url: '/kernel/components/design/composite',
+    },
+    {
+      title: '扩展机制',
+      description: '查询 Definition、registry、host lowerer 与具体指南',
+      url: '/kernel/reference/runtime/extensions',
+    },
+    {
+      title: '结构',
+      description: '查询当前 IR schema 与字段契约',
+      url: '/kernel/reference/schema',
+    },
+  ]}
+/>

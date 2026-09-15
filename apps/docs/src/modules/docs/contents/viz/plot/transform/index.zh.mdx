@@ -55,33 +55,37 @@ Plot 变换把规范化后的数据行改造成适合绘图的行。它们生成
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/transform/row">
-    <span className="font-semibold">派生与抖动</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      按单行字段补出区间，或在数据空间做确定性抖点。
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/annotation">
-    <span className="font-semibold">堆叠与占比</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">保留明细行，同时补出堆叠区间或占比字段。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/bin">
-    <span className="font-semibold">分箱</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">把连续数值明细行归入区间并生成计数。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/statistics">
-    <span className="font-semibold">密度与趋势</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">生成 KDE 密度采样行或线性趋势采样行。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/relate">
-    <span className="font-semibold">行配对</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">选择 source / target 行并投影出关系字段。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform/custom-transform">
-    <span className="font-semibold">自定义变换</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      用 Data Definition 派生 Plot 区间、位置或关系编码需要的字段。
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '派生与抖动',
+      description: '按单行字段补出区间，或在数据空间做确定性抖点。',
+      url: '/viz/plot/transform/row',
+    },
+    {
+      title: '堆叠与占比',
+      description: '保留明细行，同时补出堆叠区间或占比字段。',
+      url: '/viz/plot/transform/annotation',
+    },
+    {
+      title: '分箱',
+      description: '把连续数值明细行归入区间并生成计数。',
+      url: '/viz/plot/transform/bin',
+    },
+    {
+      title: '密度与趋势',
+      description: '生成 KDE 密度采样行或线性趋势采样行。',
+      url: '/viz/plot/transform/statistics',
+    },
+    {
+      title: '行配对',
+      description: '选择 source / target 行并投影出关系字段。',
+      url: '/viz/plot/transform/relate',
+    },
+    {
+      title: '自定义变换',
+      description: '用 Data Definition 派生 Plot 区间、位置或关系编码需要的字段。',
+      url: '/viz/plot/transform/custom-transform',
+    },
+  ]}
+/>

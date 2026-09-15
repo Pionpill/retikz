@@ -9,12 +9,12 @@ description: 用一个完整 ClipDefinition 定义裁剪 spec、JSON-safe shape 
 
 ## 适用边界
 
-| 需求                             | 选择                                                            |
-| -------------------------------- | --------------------------------------------------------------- |
-| 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                               |
-| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/extension/clip) 注入 Definition |
-| 新的静态二维裁剪                 | 定义一个完整 `ClipDefinition` 并降低为 `SceneClipPath`          |
-| renderer 专属 mask / filter 行为 | 不属于 Clip；另建明确的后端能力                                 |
+| 需求                             | 选择                                                   |
+| -------------------------------- | ------------------------------------------------------ |
+| 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                      |
+| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/clip) 注入 Definition  |
+| 新的静态二维裁剪                 | 定义一个完整 `ClipDefinition` 并降低为 `SceneClipPath` |
+| renderer 专属 mask / filter 行为 | 不属于 Clip；另建明确的后端能力                        |
 
 IR 只保存带 `kind` 的 JSON-safe clip spec。`resolve` 产出的 `ClipShape` 也是 JSON-safe snapshot；Zod schema、callback、ReactNode、Canvas 对象和 SVG 字符串都不能进入 IR 或 Scene。
 
@@ -146,7 +146,7 @@ renderer、visual bounds 和 hit-test 不解释自定义 kind，也不接收 Def
 
 - [Scope](/kernel/components/layout/scope)：使用 `<Scope clip>` 与局部坐标
 - [Layout](/kernel/components/layout/overview)：React `clips` 注入入口
-- [裁剪扩展](/library/standard/extension/clip)：官方 circle / ellipse / polygon / path / compound definitions
+- [裁剪扩展](/library/standard/clip)：官方 circle / ellipse / polygon / path / compound definitions
 - [编译选项](/kernel/reference/runtime/compile)：Core `clips` 与递归上限
 - [场景原语](/kernel/reference/runtime/scene-primitive)：renderer 消费的 canonical clip resource
 - [运行时扩展](/kernel/reference/runtime/extensions)：Definition / registry 能力总索引

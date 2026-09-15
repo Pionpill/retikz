@@ -103,27 +103,27 @@ The target Node uses an ellipse as its visual shape and a rectangle as its defau
 
 ## Further reading
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/components/core/primitive-model">
-    <span className="font-semibold">Primitive Model</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Geometry ownership for content, shape, boundary, anchors, and margin
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/basic/position">
-    <span className="font-semibold">Positioning</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Entity placement, target forms, and reference order
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/draw/overview">
-    <span className="font-semibold">Draw</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Step, path kind, arrow, and routing APIs</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/components/layout/scope">
-    <span className="font-semibold">Scope</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Grouping, namespaces, and referenceable group boundaries
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Primitive Model',
+      description: 'Geometry ownership for content, shape, boundary, anchors, and margin',
+      url: '/kernel/components/core/primitive-model',
+    },
+    {
+      title: 'Positioning',
+      description: 'Entity placement, target forms, and reference order',
+      url: '/kernel/components/basic/position',
+    },
+    {
+      title: 'Draw',
+      description: 'Step, path kind, arrow, and routing APIs',
+      url: '/kernel/components/draw/overview',
+    },
+    {
+      title: 'Scope',
+      description: 'Grouping, namespaces, and referenceable group boundaries',
+      url: '/kernel/components/layout/scope',
+    },
+  ]}
+/>

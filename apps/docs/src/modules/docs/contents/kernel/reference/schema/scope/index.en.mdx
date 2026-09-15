@@ -97,7 +97,7 @@ Scope separates defaults into four independent channels. Each fills only fields 
 
 <ZodSchema name="EllipseClipSchema" />
 
-Circle, ellipse, polygon, path, and compound clip schemas all come from `@retikz/standard/clip`. Complete Definitions injected through `CompileOptions.clips` validate and lower those specs instead of Core owning their schemas. See [Clip extensions](/library/standard/extension/clip).
+Circle, ellipse, polygon, path, and compound clip schemas all come from `@retikz/standard/clip`. Complete Definitions injected through `CompileOptions.clips` validate and lower those specs instead of Core owning their schemas. See [Clip extensions](/library/standard/clip).
 
 Each `compound.children` entry returns to the active Core Clip registry. Inject `CompoundClipDefinition` from `@retikz/standard/clip`, plus the complete Definition for every actual child; Standard does not install all children implicitly.
 

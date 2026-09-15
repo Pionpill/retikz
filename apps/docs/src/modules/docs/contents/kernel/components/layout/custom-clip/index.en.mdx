@@ -9,12 +9,12 @@ description: Define clip specs, JSON-safe shapes, and path lowering in one compl
 
 ## Applicability Boundary
 
-| Need                                                | Choose                                                                       |
-| --------------------------------------------------- | ---------------------------------------------------------------------------- |
-| One-off rectangle                                   | Write the Core built-in `rect` clip spec                                     |
-| Circle, ellipse, polygon, path, or combined regions | Inject a Definition from [Clip Extensions](/library/standard/extension/clip) |
-| New static 2D clipping geometry                     | Define one complete `ClipDefinition` that lowers to `SceneClipPath`          |
-| Renderer-specific mask / filter behavior            | Outside Clip; use an explicit backend capability                             |
+| Need                                                | Choose                                                              |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| One-off rectangle                                   | Write the Core built-in `rect` clip spec                            |
+| Circle, ellipse, polygon, path, or combined regions | Inject a Definition from [Clip Extensions](/library/standard/clip)  |
+| New static 2D clipping geometry                     | Define one complete `ClipDefinition` that lowers to `SceneClipPath` |
+| Renderer-specific mask / filter behavior            | Outside Clip; use an explicit backend capability                    |
 
 IR stores only a JSON-safe clip spec with a `kind`. The `ClipShape` returned by `resolve` is also a JSON-safe snapshot. Zod schemas, callbacks, ReactNode values, Canvas objects, and SVG strings never enter IR or Scene.
 
@@ -146,7 +146,7 @@ Except for `<Layout>` props from `@retikz/react`, import every public type, func
 
 - [Scope](/kernel/components/layout/scope): use `<Scope clip>` in local coordinates
 - [Layout](/kernel/components/layout/overview): React `clips` injection
-- [Clip Extensions](/library/standard/extension/clip): official circle / ellipse / polygon / path / compound definitions
+- [Clip Extensions](/library/standard/clip): official circle / ellipse / polygon / path / compound definitions
 - [Compile Options](/kernel/reference/runtime/compile): Core `clips` and recursion limits
 - [Scene Primitives](/kernel/reference/runtime/scene-primitive): canonical clip resources consumed by renderers
 - [Runtime Extensions](/kernel/reference/runtime/extensions): Definition and registry index

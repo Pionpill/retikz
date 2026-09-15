@@ -39,7 +39,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 是否照搬了独立的 Composition 顶级章节；必要组合关系是否就近放在 Usage 骨架、Examples 用法或 How it works 机制中
 - 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
 - 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
-- 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedCard 子页索引
+- 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedSections 子页索引
 - Schema Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程；API Reference 是否由实际 `exports`、签名和 JSDoc 生成，而不是手写完整副本
 - 中文 Reference 的 object `<ZodSchema>` 是否用 `descriptions` 覆盖全部字段与匿名对象点路径；只有顶层 `description`、字段仍回退英文 `.describe()` 均不算完成
 - 英文 Reference 是否直接复用源码 `.describe()`，不重复维护 `descriptions`
@@ -107,7 +107,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - API 表中的函数、类型和常量是否从所属包根入口真实可导入；是否把概念简称或内部类型误写成公共 API
 - 组件 Props、schema、owner barrel 与 package root 是否形成可追溯导出链
 - 宿主/容器页是否漏掉 owner barrel 中完成任务所需的 Provider、Context、hook 或 helper；共享继承 props 是否只做一行摘要并指向权威页
-- Related 链接是否存在，是否链到最有帮助的下一页
+- Related 链接是否存在，是否链到最有帮助的下一页；卡片导航按 [关联文档导航](../docs-doc-principle/references/linked-sections.md) 使用 LinkedSections，区分正文链接与非导航展示卡片
 - 新文档是否避免引用本地路径给普通用户看；需要引用项目设计文档时用 GitHub URL
 
 ### 8. 链接有效性
@@ -121,7 +121,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 检查：
 
 - 首屏是否突出标题、定位和核心功能，通用说明、API 与 deepdive 没有抢占主视觉
-- 标题层级、段落密度、留白和内容节奏是否便于扫描，表格、代码块、LinkedCard 是否溢出或拥挤
+- 标题层级、段落密度、留白和内容节奏是否便于扫描，表格、代码块、LinkedSections 是否溢出或拥挤
 - demo 的主体比例、取景、caption 与代码区是否协调；controls 面板打开后是否可操作，并能通过代表性字段直接感知变化
 - zh / en 的文本长度是否造成不同的换行、遮挡或布局跳动；本次涉及主题或响应式行为时一并切换验证
 

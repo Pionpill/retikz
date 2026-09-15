@@ -118,17 +118,22 @@ description: 把外部字段路径和存储格式接到逻辑字段上，在变�
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/data/model/contract">
-    <span className="font-semibold">字段契约</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">先确定逻辑字段、类型与分类顺序。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/validation">
-    <span className="font-semibold">校验与诊断</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">决定解析失败与缺失值怎样被处理。</span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/model/extensions">
-    <span className="font-semibold">扩展机制</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">集中了解自定义字段解析与运行时注入。</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '字段契约',
+      description: '先确定逻辑字段、类型与分类顺序。',
+      url: '/viz/data/model/contract',
+    },
+    {
+      title: '校验与诊断',
+      description: '决定解析失败与缺失值怎样被处理。',
+      url: '/viz/data/model/validation',
+    },
+    {
+      title: '扩展机制',
+      description: '集中了解自定义字段解析与运行时注入。',
+      url: '/viz/data/model/extensions',
+    },
+  ]}
+/>

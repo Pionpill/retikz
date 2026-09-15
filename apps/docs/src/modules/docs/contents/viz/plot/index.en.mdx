@@ -90,47 +90,42 @@ Plot also owns sparse defaults for its Plot area, guides, palettes, and existing
 
 ## Pages
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/viz/plot/channel">
-    <span className="font-semibold">Channels</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Bind fields or constants to position, color, size, text, and other visual roles.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/transform">
-    <span className="font-semibold">Transforms</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Derive, stack, summarize, analyze, or relate rows inside the plotting pipeline.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/mark">
-    <span className="font-semibold">Marks</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Instantiate projected data as points, paths, intervals, references, or relations.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/scale">
-    <span className="font-semibold">Scales</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Map data domains into positional or visual ranges.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/coordinate">
-    <span className="font-semibold">Coordinates</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Project scale results into Cartesian, polar, or composed views.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/plot/guide">
-    <span className="font-semibold">Guides</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Explain scale and channel mappings through axes and legends.
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/viz/data/provenance/plot">
-    <span className="font-semibold">Plot Lineage</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Enrich data provenance with mark, scale, and layout semantics.
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Channels',
+      description: 'Bind fields or constants to position, color, size, text, and other visual roles.',
+      url: '/viz/plot/channel',
+    },
+    {
+      title: 'Transforms',
+      description: 'Derive, stack, summarize, analyze, or relate rows inside the plotting pipeline.',
+      url: '/viz/plot/transform',
+    },
+    {
+      title: 'Marks',
+      description: 'Instantiate projected data as points, paths, intervals, references, or relations.',
+      url: '/viz/plot/mark',
+    },
+    {
+      title: 'Scales',
+      description: 'Map data domains into positional or visual ranges.',
+      url: '/viz/plot/scale',
+    },
+    {
+      title: 'Coordinates',
+      description: 'Project scale results into Cartesian, polar, or composed views.',
+      url: '/viz/plot/coordinate',
+    },
+    {
+      title: 'Guides',
+      description: 'Explain scale and channel mappings through axes and legends.',
+      url: '/viz/plot/guide',
+    },
+    {
+      title: 'Plot Lineage',
+      description: 'Enrich data provenance with mark, scale, and layout semantics.',
+      url: '/viz/data/provenance/plot',
+    },
+  ]}
+/>

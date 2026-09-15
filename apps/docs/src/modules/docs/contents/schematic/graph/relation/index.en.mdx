@@ -16,17 +16,17 @@ Relation expresses who is related to whom. It uses Core NodeTarget to reference 
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/schematic/graph/relation/basic">
-    <span className="font-semibold">Basic usage</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Stable endpoints, direction, and a direct route
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/schematic/graph/relation/extension">
-    <span className="font-semibold">Extensions</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Relation Definitions and registry consumption
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Stable endpoints, direction, and a direct route',
+      url: '/schematic/graph/relation/basic',
+    },
+    {
+      title: 'Extensions',
+      description: 'Relation Definitions and registry consumption',
+      url: '/schematic/graph/relation/extension',
+    },
+  ]}
+/>

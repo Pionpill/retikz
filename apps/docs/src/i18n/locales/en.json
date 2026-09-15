@@ -1,5 +1,6 @@
 {
   "common": {
+    "docHost": "Integration",
     "search": "Search docs...",
     "searchPlaceholder": "Type to search...",
     "searchEmpty": "No matching pages.",
@@ -143,6 +144,8 @@
     "coordinateSystem": "Coordinate System",
     "positioning": "Positioning",
     "layers": "Layers",
+    "sugar": "Sugar",
+    "theme": "Theme",
     "gallery": "Gallery",
     "galleryNavigationDescription": "Learn compositional drawing through finished works",
     "galleryKarlCircle": "Karl's Unit Circle",
@@ -167,6 +170,9 @@
     "refVisualizationPlot": "Visualization - Plot"
   },
   "library": {
+    "components": "Components",
+    "introduction": "Introduction",
+    "getStart": "Quick start",
     "label": "Library",
     "navigationLabel": "Library",
     "navigationDescription": "Compose richer figures with reusable standard components and layout primitives",

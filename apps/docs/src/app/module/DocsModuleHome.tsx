@@ -69,7 +69,7 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
       {
         id: 'standard-grid',
         layout: 'compact',
-        location: ['library', 'standard', 'composite', 'grid'],
+        location: ['library', 'standard', 'grid'],
         preview: { files: 'grid-basic', size: 'md', ...MODULE_LANDING_PREVIEW },
       },
       {
@@ -87,7 +87,7 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
       {
         id: 'surface',
         layout: 'compact',
-        location: ['library', 'standard', 'composite', 'surface'],
+        location: ['library', 'standard', 'surface'],
         preview: { files: 'surface-overflow', size: 'md', ...MODULE_LANDING_PREVIEW },
       },
     ],

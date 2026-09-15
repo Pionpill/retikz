@@ -21,37 +21,42 @@ This group is the data contract of the IR (intermediate representation): the JSO
 
 ## In this section
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/schema/scene">
-    <span className="font-semibold">Scene</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      The IR root, a JSON description of one figure
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/scope">
-    <span className="font-semibold">Scope</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Grouping, defaults, transforms, and clipping</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/entity">
-    <span className="font-semibold">Entity</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Named members: Node and Coordinate</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/path">
-    <span className="font-semibold">Path</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Stroke shell, step sequence, and targets</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/placement">
-    <span className="font-semibold">Placement</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Five shared position forms and Node anchor alignment
-    </span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/style">
-    <span className="font-semibold">Paint</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Shared visual fields and structured paints</span>
-  </LinkedCard>
-  <LinkedCard href="/kernel/reference/schema/animation">
-    <span className="font-semibold">Animation</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">Keyframes, timing, and triggers</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Scene',
+      description: 'The IR root, a JSON description of one figure',
+      url: '/kernel/reference/schema/scene',
+    },
+    {
+      title: 'Scope',
+      description: 'Grouping, defaults, transforms, and clipping',
+      url: '/kernel/reference/schema/scope',
+    },
+    {
+      title: 'Entity',
+      description: 'Named members: Node and Coordinate',
+      url: '/kernel/reference/schema/entity',
+    },
+    {
+      title: 'Path',
+      description: 'Stroke shell, step sequence, and targets',
+      url: '/kernel/reference/schema/path',
+    },
+    {
+      title: 'Placement',
+      description: 'Five shared position forms and Node anchor alignment',
+      url: '/kernel/reference/schema/placement',
+    },
+    {
+      title: 'Paint',
+      description: 'Shared visual fields and structured paints',
+      url: '/kernel/reference/schema/style',
+    },
+    {
+      title: 'Animation',
+      description: 'Keyframes, timing, and triggers',
+      url: '/kernel/reference/schema/animation',
+    },
+  ]}
+/>

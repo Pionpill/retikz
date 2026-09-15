@@ -5,7 +5,7 @@ keywords: 'CodeBlock、Block、代码实体、共享内容'
 
 # ADR-019：代码实体 Tier 3 与共享内容契约
 
-- 状态：Proposed
+- 状态：Accepted
 - 决策日期：2026-09-08
 - 关联：[roadmap](./roadmap.md) · [InterfaceBlock](./020-interface-block.md) · [FunctionBlock](./021-function-block.md) · [Block 开放内容](./013-block-open-content.md) · [通用视觉主题](../../../../../../../notes/architecture/visual-theme-design.md)
 
@@ -19,7 +19,7 @@ keywords: 'CodeBlock、Block、代码实体、共享内容'
 
 ### Graph 内的实体 Block
 
-代码实体由 `@retikz/graph` 拥有，官方 Source namespace 为 `graph`；`@retikz/graph-vanilla` 提供无框架 Input 与 normalize，`@retikz/graph-react` 通过 Vanilla 适配 JSX。不新增包、namespace 或 release group，随 Graph 三包的 alpha.3 交付并保持 lockstep。
+代码实体由 `@retikz/graph` 拥有，官方 Source namespace 为 `graph`；`@retikz/graph-vanilla` 提供无框架 Input 与 normalize，`@retikz/graph-react` 通过 Vanilla 适配 JSX。不新增包、namespace 或 release group，Graph 三包保持 lockstep，具体实体按能力依赖交付。
 
 Tier 3 表示 Graph 包内的组合层次：InterfaceBlock、FunctionBlock 等拥有独立实体数据结构，内部下沉为基础 Tier 2 Block。包内实体 owner 负责代码内容及其 resolve，基础 Block owner 负责开放内容容器；不把实体字段塞入基础 Block，也不以 Block.role/kind 承载实体模型。
 
@@ -33,9 +33,9 @@ Graph 的职责扩展为提供这些代码说明 Block，不解析源码、不�
 
 公开 `CodeBlockDefinition<TSource>` 包含 namespace、type、对应严格 Source schema，以及 `compose(source, context) -> ReadonlyArray<IRChild>`；通过 `defineCodeBlock` 定义。TSource 组合本 ADR 的实体公共 surface，新增自身领域字段；compose 只产生 Block 内容，不创建实体根。context 包含已经生效的 Core theme 与有效 codeBlockTokens，不暴露 Core 私有 registry。根 Surface/defaults/Scope 的解析与生成由 Graph 内的公共实体 Block 组合层负责，官方实体也不绕过该层。
 
-`createCodeBlockContribution(definition, options)` 返回 CoreProviderContribution：roots 只有该 namespace/type 对应的实体 key，providers 显式包含公开实体、Graph-owned 延迟内容以及所需 Graph Block family 的完整提供者目录。`createGraphProviders(options)` 是官方实体的集合入口，自定义 contribution 与官方贡献一起传入 resolveCoreProviderDependencies 装配，不新增实体注册表。自定义 type 不进入官方枚举，Core 负责 composite key 冲突与未注册诊断。用户传入 compose 回调失败由 RetikzGraphError 包装，保留 cause。
+`createCodeBlockContribution(definition, options)` 返回 CoreProviderContribution：roots 只有该 namespace/type 对应的实体 key，providers 包含实体及其所需下层能力的完整提供者目录，使用者无需手工补齐内部依赖。`createGraphProviders(options)` 是官方实体的集合入口，自定义 contribution 与官方贡献一起传入 resolveCoreProviderDependencies 装配，不新增实体注册表。自定义 type 不进入官方枚举，Core 负责 composite key 冲突与未注册诊断。用户传入 compose 回调失败由 RetikzGraphError 包装，保留 cause。
 
-实体 Block provider 统一先建立仅含 theme 的匿名 Core Scope，再在该 Scope 内调用延迟内容 composite。延迟阶段接收 Core 已解析的 context.theme，解析 Graph 实体 Block 主题 token，调用 compose，最后生成唯一可寻址 Block；原 theme 转移到匿名 Scope，Block 不再携带该字段。无本地 theme 时可直接进入同一内容阶段。用户只注册公开 CodeBlockDefinition，不自行注册或调用内部 continuation；官方与自定义均由同一个 provider 工厂组装依赖。
+实体本地 theme 必须在 compose 消费前生效；无本地 theme 时使用当前有效环境。主题边界不获得公开 identity，也不重复施加根几何属性。官方与自定义实体通过同一个公开 contribution 契约获得这一行为。
 
 Direct IR 经 Core compile contributions/roots 注入这些 providers；Vanilla embed adapter 与 React Input embed adapter 通过既有 provider 贡献协议携带同一 contribution 中的 provider 对象。自定义 authoring 可以直接提供自己的 Source 与 provider，不要求额外注册到 React/Vanilla 的实体白名单。共享内容 schema、defineCodeBlock、createCodeBlockContribution 与主题解析 API 均由 Graph 根公开入口提供。
 
@@ -101,7 +101,7 @@ Graph Neutral 的默认值取自当前 Core 环境或下层契约，不复制 pa
 
 实体 Source schema 拒绝 presentation 及其它未声明的内部样式字段。根部已有 Block/Scope 字段仍按原 owner 契约消费，不通过封装 token 改写其覆盖语义。
 
-实体本地 theme 必须先在无 identity 的 Core Scope 中建立环境，再在该 Scope 内解析实体 Block 默认和生成 Block；该边界只承载 theme，Block 保留全部其它根属性，theme 不重复施加。没有本地 theme 时直接使用当前有效环境。此语义通过 Core 既有 Scope traversal 与后续 composite 消费 context.theme 实现，不在最外层 expand 提前解析内容默认，也不以默认 registry 私自解析用户 style。
+本地主题解析使用宿主注册的 Core theme 定义。compose 只消费已生效的主题；Block 保留原根身份、布局与连接语义，主题环境只施加一次。
 
 外部 JSON 只在 parse/schema 边界校验；Source/Canonical/adapter 不复制校验。实体 Block 主动创建的错误统一为 RetikzGraphError，至少区分主题缺失、definition 冲突、用户主题 callback 失败与 compose callback 失败，携带 style/name 与 Source 路径（可用时）；callback 原异常保留为 cause。下层错误沿公开 Core composite 诊断路径保留 cause 与 occurrence，不重新解释 namespace 或尺寸错误。
 

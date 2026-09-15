@@ -98,17 +98,22 @@ owner 的 deep import、反向依赖和临时平行路径虽然能很快接通�
 
 ## 延伸阅读
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/about/developer/source-code-guide">
-    <span className="font-semibold">源码指南</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">了解包边界、扩展方式与 API 适配层</span>
-  </LinkedCard>
-  <LinkedCard href="/about/developer/ai-assisted-development">
-    <span className="font-semibold">AI 辅助开发</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">了解人机协作、授权边界与 skill 分类</span>
-  </LinkedCard>
-  <LinkedCard href="/about/releases/roadmap">
-    <span className="font-semibold">路线图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">查看发布阶段与分组的当前方向</span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '源码指南',
+      description: '了解包边界、扩展方式与 API 适配层',
+      url: '/about/developer/source-code-guide',
+    },
+    {
+      title: 'AI 辅助开发',
+      description: '了解人机协作、授权边界与 skill 分类',
+      url: '/about/developer/ai-assisted-development',
+    },
+    {
+      title: '路线图',
+      description: '查看发布阶段与分组的当前方向',
+      url: '/about/releases/roadmap',
+    },
+  ]}
+/>

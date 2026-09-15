@@ -12,6 +12,8 @@ import { ShowcaseGallery, ShowcaseTabs } from '../showcase';
 import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
+import { DocStep, DocSteps } from './doc-steps';
+import { DocTab, DocTabs } from './doc-tabs';
 import { ExamplePrompt } from './example-prompt';
 import { LinkedCard } from './linked-card';
 import { LinkedSections } from './linked-sections';
@@ -150,6 +152,11 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   Comparison,
+  CodeBlock,
+  DocSteps,
+  DocStep,
+  DocTabs,
+  DocTab,
   ComponentAlert,
   ComponentPreview,
   ExamplePrompt,

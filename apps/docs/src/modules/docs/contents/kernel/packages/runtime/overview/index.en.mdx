@@ -217,11 +217,12 @@ Definition authors primarily use the following three object contracts. Their gen
 
 ## Chapters
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/packages/runtime/session">
-    <span className="font-semibold">Programs & Synchronous Sessions</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      Define Program graphs, revision-bound transactions, fallback, diagnostics, and resource lifecycles
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: 'Programs & Synchronous Sessions',
+      description: 'Define Program graphs, revision-bound transactions, fallback, diagnostics, and resource lifecycles',
+      url: '/kernel/packages/runtime/session',
+    },
+  ]}
+/>

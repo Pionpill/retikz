@@ -15,11 +15,12 @@ description: 查询 Plot 等独立 Tier 2 领域包的职责、依赖边界，�
 
 ## 章节内容
 
-<div className="my-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-  <LinkedCard href="/kernel/reference/domains/plot">
-    <span className="font-semibold">可视化-绘图</span>
-    <span className="mt-1 text-center text-sm text-muted-foreground">
-      @retikz/plot 的 Viz 定位、依赖边界与 lowering 主链
-    </span>
-  </LinkedCard>
-</div>
+<LinkedSections
+  items={[
+    {
+      title: '可视化-绘图',
+      description: '@retikz/plot 的 Viz 定位、依赖边界与 lowering 主链',
+      url: '/kernel/reference/domains/plot',
+    },
+  ]}
+/>

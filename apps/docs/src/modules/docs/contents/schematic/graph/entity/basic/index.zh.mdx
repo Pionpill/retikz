@@ -28,7 +28,7 @@ import { Layout } from '@retikz/react';
 
 Entity 的示例统一使用默认风格，并支持明暗模式。下面每个 demo 都允许精确调整实例颜色和文本；需要统一定制外观时，可使用 Graph 默认值与条件规则
 
-默认主色在亮色模式为 `#666666`，暗色模式为 `#999999`，均为不透明中性色。默认风格使用完整主色描边和 `fill: 0.08` 的同色轻填充。实例显式提供的 `style.fill`、`style.stroke` 与 `style.textColor` 优先；例如 `style.stroke: 'none'` 可移除描边
+默认主色在亮色模式为 `#777777`，暗色模式为 `#888888`，均为不透明中性色。默认风格使用完整主色描边和 `fill: 0.12` 的同色轻填充。实例显式提供的 `style.fill`、`style.stroke` 与 `style.textColor` 优先；例如 `style.stroke: 'none'` 可移除描边
 
 站点 `docs.logic.secondary` 表示次要、辅助或派生内容：保留 role 的形状，移除描边，亮色使用 `#e4e4e4` 填充、暗色使用 `#1b1b1b` 填充。中性底色不随 `group` 或类别配色开关改变；文字适度弱化（亮色 `#555555`、暗色 `#bbbbbb`），`status` 通过文字颜色表达，实例样式仍可覆盖。
 
