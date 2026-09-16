@@ -2,9 +2,10 @@
 
 ## 适用场景
 
-- `DocTabs` 用于同一任务的替代方案；共同安装、限制和比较放在外部，包管理器仍用 `PackageManagerInstall`
+- `DocTabs` 用于同一任务的替代方案；共同安装、限制和比较放在外部；宿主专属依赖放对应 Tab 内，包管理器仍用 `PackageManagerInstall`
 - `DocSteps` 用于有顺序且每步含说明或代码的接入操作；简单短步骤用普通有序列表
 - 两者可独立使用或组合；不要多层嵌套方案 Tab
+- 先检查 ComponentPreview 已展示的 React / Vanilla 源码；不为满足双端形式重复使用 DocTabs。仅需强调关键代码时直接给片段；确有未覆盖的双端接入差异时再用 DocTabs，详见 [预览契约](component-preview.md)
 
 ## 组合契约
 

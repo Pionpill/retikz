@@ -3,11 +3,7 @@ title: Coordinate System
 description: 'retikz uses screen-oriented 2D coordinates: Cartesian x grows right and y grows down, while polar coordinates derive a position from origin / angle / radius. Geometry is expressed in user units, then mapped through viewBox to the rendered size.'
 ---
 
-retikz first describes the geometric world inside the figure, then lets `<Layout>` display it. The two common coordinate forms are Cartesian `[x, y]` and polar `{ origin?, angle, radius }`.
-
-Cartesian coordinates are the first-class coordinate form. During compilation, polar coordinates, relative placement, offsets, and proportional points are all resolved into Cartesian points before bounds, anchors, and rendering are computed.
-
-Coordinates, line widths, spacing, and arrow sizes use user units. By default, 1 user unit corresponds to 1 CSS pixel; device pixel ratio only affects Canvas bitmap resolution.
+Write a position as `[x, y]`: x increases to the right and y increases downward. For example, `[120, 70]` is 120 units right and 70 units down from the origin. Polar coordinates describe a position using an angle and a distance instead.
 
 ## Cartesian Coordinates
 
@@ -59,6 +55,8 @@ This page explains the coordinate context; the full position vocabulary lives in
 
 ## viewBox and Render Size
 
+Coordinates and lengths use user units, the internal units of the drawing. At the default display size, one user unit equals one CSS pixel; setting a display size can scale the figure. Canvas pixel density affects sharpness, not drawing coordinates.
+
 `viewBox` selects the visible part of the user-unit world. Usually omit it to use content bounds plus padding. Display dimensions default to the final frame dimensions, without scaling the primitives.
 
 <ComponentPreview files="viewbox" size="md" hideCode />
@@ -98,22 +96,14 @@ Most figures do not need a manual `viewBox`. Set it when you need a fixed coordi
     {
       label: 'Choose explicit viewBox or automatic layout bounds',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 20,
-      endLine: 35,
     },
   ]}
 />
 
-## Further Reading
+## Further reading
 
 <LinkedSections
   items={[
-    {
-      title: 'Positioning',
-      description:
-        'Coordinates are just one position form; the full vocabulary of id refs, relative, offset, and proportional placement',
-      url: '/kernel/components/basic/position',
-    },
     {
       title: 'Primitive Relations',
       description: 'Anchors, boundaries, and edge-proportional points — how primitives connect once coordinates settle',

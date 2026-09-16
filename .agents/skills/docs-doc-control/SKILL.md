@@ -22,6 +22,7 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 
 ## 面板组织
 
+- demo 为展示效果覆盖 API 默认值时，在正文或 caption 明示；主体参数与辅助显示参数按职责分组
 - 默认使用 `presentation: 'panel'`；面板便于后续继续扩展字段
 - 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
 - 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”
@@ -99,7 +100,7 @@ caption 只补充读图线索，不重复上一段正文，也不塞 API 参考�
 3. 验证默认、最小、最大、组合极值与语义 presets，再 Reset 回 canonical 状态
 4. 比较固定 viewBox、主体 bounds 与完整效果 bounds，确认不漂移、不裁切
 5. 打开真实页面检查面板滚动、源码栏、caption、显式 size、右侧输出宽度与 800px 宽度下的留白；拖拽面板分隔线时主体不得缩放
-6. 运行 docs `tsc --noEmit`、相关 Vitest、Prettier 与 `git diff --check`
+6. 运行 docs `tsc --noEmit`、相关 Vitest、Oxfmt 与 `git diff --check`
 
 ## 常见错误
 

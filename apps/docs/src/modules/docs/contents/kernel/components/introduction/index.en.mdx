@@ -3,7 +3,7 @@ title: Introduction
 description: An AI-native general-purpose drawing library — describe figures with React components or Vanilla InputScene data, with JSON IR connecting generation, persistence, and rendering.
 ---
 
-retikz is a general-purpose drawing library for browsers and Node.js. You describe the objects in a figure, then compose them through names, positions, and path relationships. Higher-level modules such as `@retikz/plot` reuse the same drawing semantics.
+Kernel is the general drawing foundation of retikz: use nodes, named coordinates, and paths for flowcharts, geometry illustrations, and relationship diagrams. Author with React or Vanilla and render to SVG or Canvas. Start with Plot for statistical data mappings and grammar of graphics, or Standard for reusable composite components.
 
 ## Core Concepts
 
@@ -25,7 +25,9 @@ The benefits of one shared format are straightforward:
 - You do not maintain separate figure formats for JSX, AI output, and each renderer.
 - The same figure data can be reused across authoring surfaces and runtimes.
 
-Continue with [Layers](/kernel/components/design/layers) to see how IR becomes Scene and how the packages work together. Use [Design Principles](/kernel/components/design/principles) when deciding which layer should own a capability.
+Continue with [Layers](/kernel/components/design/layers) to see how IR becomes Scene and how the packages work together. Use [Architecture](/kernel/components/design/principles) when deciding which layer should own a capability.
+
+React / Vanilla notation or AI-generated declarations form IR, which compiles into Scene: drawing results with positions and styles already resolved. A renderer then displays those results.
 
 ## General Primitives, Arbitrary Composition
 
@@ -44,15 +46,13 @@ retikz uses a small set of components with explicit responsibilities. They can b
 
 retikz's naming, path actions, and anchor model are direct tributes to LaTeX's TikZ package.
 
-| Aspect        | LaTeX TikZ      | retikz                             |
-| ------------- | --------------- | ---------------------------------- |
-| Runtime       | LaTeX compiler  | Browser / Node                     |
-| Syntax        | `\node` `\draw` | `<Node>` `<Draw>`                  |
-| Output        | PDF / SVG       | SVG / Canvas; PDF / Native planned |
-| Interactivity | None            | React / runtime events             |
-| Persistence   | `.tex` source   | JSON IR                            |
-
-IR ↔ TikZ source conversion belongs to a future codec direction: the goal is to edit in the browser and still fit into a LaTeX workflow, or migrate existing TikZ figures from `.tex` files into retikz IR / React.
+| Aspect        | LaTeX TikZ      | retikz                 |
+| ------------- | --------------- | ---------------------- |
+| Runtime       | LaTeX compiler  | Browser / Node         |
+| Syntax        | `\node` `\draw` | `<Node>` `<Draw>`      |
+| Output        | PDF / SVG       | SVG / Canvas           |
+| Interactivity | None            | React / runtime events |
+| Persistence   | `.tex` source   | JSON IR                |
 
 You do not need to know TikZ to use retikz. retikz borrows naming vocabulary (node / path / anchor / step), while figures can be described with React components or a Vanilla `InputScene`.
 

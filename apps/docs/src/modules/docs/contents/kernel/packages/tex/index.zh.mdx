@@ -5,6 +5,14 @@ description: 浏览 @retikz/tex 的公式解析、lowering 与运行时接入
 
 `@retikz/tex` 是可选公式能力包，负责把 TeX 公式接入既有文本与渲染流程。
 
+## 公式怎样进入图形
+
+公式写法决定内容，MathJax 配置决定可识别的语法，接入函数将排版结果交回 Core 的文本布局。最终输出是普通字形路径，因此 SVG 与 Canvas 共用公式几何，不需要各自再解析 LaTeX。
+
+下面同时展示行内、显式片段与展示公式。先确认目标排版效果，再按下方步骤启用公式能力；缓存和 SVG 转换细节留在实现原理中。
+
+<ComponentPreview files="/kernel/packages/tex/authoring/tex-formula-basics" size="sm" hideCode />
+
 ## 安装与使用
 
 `mathjax-full` 是可选 peer dependency。使用内置 MathJax engine 时，应用需要和 `@retikz/tex` 一起安装它：
@@ -98,6 +106,7 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
 | 公式写法     | 文本中的公式语法与排版方式  | 在图中编写或调整公式时         |
 | MathJax 配置 | profile 与 extension 的选择 | 需要额外数学语法或命令时       |
 | 实现原理     | 转换边界、缓存和失败语义    | 自定义 engine 或排查公式渲染时 |
+| API 参考     | 公开签名、类型与返回契约    | 精确查询接口时                 |
 
 ## 章节内容
 
@@ -118,5 +127,8 @@ const svg = renderToSvgString(input, { compile: { lowerTex } });
       description: '了解转换流程、缓存和失败的可观察结果',
       url: '/kernel/packages/tex/mechanism',
     },
-  ]}
+
+    { title: 'API 参考', description: '查询完整公开契约', url: '/kernel/packages/tex/api-reference' },
+
+]}
 />

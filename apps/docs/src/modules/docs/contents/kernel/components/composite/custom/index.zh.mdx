@@ -1,0 +1,61 @@
+---
+title: 自定义用法
+description: 用 defineComposite 定义数据驱动的图元展开，再通过 React 或 Vanilla 注入并渲染。
+---
+
+## 适用边界
+
+先完成[快速开始](/kernel/components/get-start)，再读[复合概念](/kernel/components/design/composite)。只想摆放固定节点时，组合现有组件即可；当一个对象需要保留自己的数据、并据此生成多个图元时，再定义 composite。下面的六根柱由同一个数据数组生成。
+
+<ComponentPreview files={['custom-composite', 'bar-chart']} size="sm" />
+
+## 定义能力
+
+示例的 `bar-chart.ts` 从 Core 导入 `defineComposite` 和 `CompositeBaseSchema`，用 Zod 定义非空、非负的数据数组。`namespace` 与 `type` 共同标识这个能力，schema 中的字面量必须与 Definition 一致。展开函数按数据计算柱高，并返回普通 Node；这份函数保留在程序中，不写入 IR。
+
+本例 Definition 使用 `namespace: 'demo'` 和 `type: 'bar-chart'`；schema 对应 `z.literal('demo')` 与 `z.literal('bar-chart')`，IR 节点也使用这两个值。
+
+## 注入与使用
+
+先将预览源码中的 `bar-chart.ts` 保存到应用，再选择宿主。React 沿用应用现有挂载入口；Vanilla 需要已经存在的 `<div id="diagram"></div>`。两端共用同一 Definition 与 IR。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { barChart, ir } from './bar-chart';
+
+export const Diagram = () => <Layout ir={ir} composites={[barChart]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { mount } from '@retikz/vanilla/dom';
+import { barChart, ir } from './bar-chart';
+
+const view = mount(document.getElementById('diagram')!, ir, {
+  compile: { composites: [barChart] },
+});
+```
+
+容器移除前调用 `view.dispose()`。
+
+</DocTab>
+</DocTabs>
+
+## 错误与限制
+
+重复的注册 key 会被拒绝；没有注册的 composite 会产生警告并跳过。数据不满足 schema 会使编译失败。本例只接收非负数，所有数值为零时柱高也为零。
+
+本例的 `expand` 只做数据到图元的结构转换，不能测量文字或查询子布局。需要这些反馈时改用互斥的 `compile` 分支，先阅读实现原理。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '实现原理', description: '理解布局试算、提交与依赖装配', url: '/kernel/components/composite/mechanism' },
+  ]}
+/>

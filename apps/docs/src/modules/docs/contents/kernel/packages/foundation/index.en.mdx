@@ -5,7 +5,17 @@ description: Browse the foundational contracts and shared utilities provided by 
 
 `@retikz/foundation` provides domain-neutral contracts that every package can reuse.
 
-## Install and use
+## From configuration to a shared snapshot
+
+A Retikz extension needs contracts for its configuration, stable snapshots for registered data, and errors that identify the responsible package. These correspond to types and schemas, snapshot utilities, and structured errors. They are independent tools, not mandatory consecutive stages for every call.
+
+The example below freezes a detached copy. Editing the original configuration leaves the registered snapshot unchanged. A readonly Map protects only collection structure: its values retain their original identity, so shallow readonly access is not deep freezing.
+
+## Scope
+
+Foundation supplies shared atomic capabilities within the ecosystem. Core owns drawing schemas, Math owns geometry, and theme consumers own inheritance behavior. Use an existing domain schema directly without adding another JSON validation pass. Choose snapshot utilities when data must be copied and frozen independently.
+
+## Installation and usage
 
 <PackageManagerInstall packages="@retikz/foundation" />
 
@@ -45,13 +55,14 @@ The example above illustrates one utility. Foundation provides reusable, busines
   description="Foundation serves Retikz internal packages and community extension authors. It is not a general-purpose business utility library and makes no compatibility or maintenance commitment for use outside the Retikz ecosystem."
 />
 
-## Responsibilities
+## Responsibilities at a glance
 
 | Document            | Responsibility                                          | Reach for it when                   |
 | ------------------- | ------------------------------------------------------- | ----------------------------------- |
 | Utilities           | Readonly collections, JSON snapshots, and static colors | Reusing general utilities           |
 | Types & Schemas     | Compile-time types and runtime schemas                  | Reusing foundational data contracts |
 | Validation & Errors | Structured errors and scalar assertions                 | Defining a failure boundary         |
+| API reference       | Public signatures, types, and results                   | Look up an exact contract           |
 
 ## Contents
 
@@ -72,5 +83,8 @@ The example above illustrates one utility. Foundation provides reusable, busines
       description: 'Structured errors and scalar assertions',
       url: '/kernel/packages/foundation/validation-errors',
     },
-  ]}
+
+    { title: 'API reference', description: 'Look up the complete public contract', url: '/kernel/packages/foundation/api-reference' },
+
+]}
 />

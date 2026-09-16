@@ -10,7 +10,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 ## 何时用
 
 - `develop-document` 阶段完成后，进入 wrapup 前
-- `docs-doc-principle` / `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` 产出初稿后
+- `docs-doc-principle` / `docs-doc-usage` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` 产出初稿后
 - 用户单独说“审一下这篇文档 / 这个 docs 改动 / 这些 demo”
 - 新增页面或大规模文档重构后，确认没有把页面写成作者自嗨的内部说明
 
@@ -24,30 +24,31 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 - 目标页面路径：`apps/docs/src/modules/docs/contents/**/index.{zh,en}.mdx`
 - 本次文档 diff：`git diff -- apps/docs/src/modules/docs/contents apps/docs/src/modules/docs/data apps/docs/src/i18n`
-- 相关 demo：同目录 `*.demo.tsx`
+- 相关 demo：同目录主 demo、i18n 字典与附属源码
 - 相关功能改动：packages 下 diff / ADR / plan TODO
 
 若评审的是功能性改动，先读相关现有文档，不只看新文件。读不到实际功能改动时，要把判断标成“基于文档本身”，不要假装验证了实现。
 
 ## 评审标准
 
-### 1. 页型结构
+### 1. 页型、固定难度与名称
 
-- 实现原理页按 `docs-doc-mechanism` 检查：前提与边界、整体简图、顺序阶段、必要旁路、最终源码导览图；每个机制小节有就近源码入口
+先按 [页型词典](../docs-doc-principle/references/page-contract.md) 选择当前主 skill；核对名称、URL、固定难度与阅读体验，不从旧目录猜页型。
 
-- 组件页是否符合 [`docs-doc-component`](../docs-doc-component/SKILL.md) 的 5 类 section 顺序：Usage / Examples / How it works / API overview / Related
-- 是否照搬了独立的 Composition 顶级章节；必要组合关系是否就近放在 Usage 骨架、Examples 用法或 How it works 机制中
-- 扩展指南是否符合 [`docs-doc-extension`](../docs-doc-extension/SKILL.md)：适用边界 / 定义 / 注入 / 执行机制 / 错误与限制 / API / 相关，并证明内置与自定义同路
-- 示例页是否符合 [`docs-doc-example`](../docs-doc-example/SKILL.md) 的 6 段结构：引言 hero / Prompt / 过程 / 能力 / Limitations / Related
-- 分组页是否符合 [`docs-doc-group`](../docs-doc-group/SKILL.md)：分组介绍 + 职责表 + LinkedSections 子页索引
-- Schema Reference 页是否保持词典职责：字段完整、可扫描、可链接，不写成教程；API Reference 是否由实际 `exports`、签名和 JSDoc 生成，而不是手写完整副本
-- 中文 Reference 的 object `<ZodSchema>` 是否用 `descriptions` 覆盖全部字段与匿名对象点路径；只有顶层 `description`、字段仍回退英文 `.describe()` 均不算完成
-- 英文 Reference 是否直接复用源码 `.describe()`，不重复维护 `descriptions`
-- zh / en 是否结构对齐：标题层级、表格列、示例数量、关键 bullet 数一致
+- 总纲固定入门：按 docs-doc-group 检查整体认识、成员协作、贯穿示例或关系图、选择边界与阅读体量；不能只有导语和末尾 LinkedSections 子页索引
+- 三快捷入口按 docs-doc-entry；基础用法与使用专题按 docs-doc-usage，固定入门，不残留旧五段模板或完整技术原理 / API 字典
+- 自定义页按 docs-doc-extension，固定进阶，证明定义、注入、引用与结果；调用内置扩展不误标自定义
+- API / Schema 参考按 docs-doc-reference，固定进阶，完整查询有唯一真源，生成产物与翻译覆盖准确
+- 基础概念固定入门，核心概念与设计理念固定进阶；源码执行过程不混入概念教学
+- 进阶专题与实现原理固定底层，按 docs-doc-mechanism 检查前提、阶段、图、源码与延伸阅读
+- 综合教程按 docs-doc-example，固定入门，逐步产出结果；Prompt 仅 AI 创作案例需要
+- 收尾导航使用延伸阅读，分组直接子页使用章节内容；正文少量参数解释不冒充 API 参考
+- zh/en 标题、层级、demo、关键说明与导航一致；Schema 中文覆盖字段与匿名对象点路径，英文复用源码 describe
+- 旧文档迁移只检查获准范围；不以旧页继续存在否定 skill-only 任务完成
 
 ### 2. 读者视角
 
-默认读者是**初级前端工程师**：会 React / TypeScript 基础，但不熟 TikZ、IR、Scene、编译器、几何算法和项目历史。
+按固定难度检查阅读体验：入门读者会 React / TypeScript 基础但不熟项目术语；进阶读者已会基础调用、需要契约或扩展指导；底层读者已读明确链接的前提，需要执行、数据变化与源码定位。不得按篇幅或术语数量调整难度标签。
 
 实现原理页例外：默认已读其明确链接的前置文档，评审重点是阶段衔接、数据变化、触发时机和源码可追溯性，不要求重复入门示例或隐藏关键内部成员。内部标识符仅作为实现锚点，不视为公共 API
 
@@ -60,7 +61,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 相邻段落或小节之间是否存在概念跳跃；读者是否需要提前知道尚未介绍的类型、机制或项目约定
 - 顺序是否从场景与可观察结果进入用法和概念，再深入机制、落点与 API；内部实现是否过早打断主线
 - 句子是否被内部词堆满，如“renderer-agnostic resource table / emit-in-compile / synthetic bbox”这类内容是否放进可选 deepdive
-- 进阶内容是否用 `ComponentAlert` / tip / `How it works` 标出，并提示初次阅读可跳过
+- 基础页是否只保留必要调用约束，将进阶内容与内部实现链接到独立底层页；底层页是否明确阅读前提
 - API 表描述是否能独立读懂，还是只有作者才懂的关键词
 - 读者沿主线是否能完成第一个可运行结果；示例、图和表是否在抽象概念出现时及时提供支撑
 - `frontmatter.description` 是否能脱离页面独立说明根问题与核心职责或使用入口，供 manifest / `llms.txt` 直接作为机器摘要使用
@@ -86,7 +87,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 用户需要看到效果才能理解的功能，是否有 `<ComponentPreview files="..." />`
 - 新 prop / 新字段 / 新组件是否至少有一个最小 demo；复杂能力是否拆成 2-3 个单主题 demo
 - demo 是否真展示了该能力，而不是只把 prop 写上但视觉上看不出差异
-- 含展示文本的 demo 是否 zh / en 双语文件并行；无展示文本时单文件即可
+- 新 demo 是否使用单份 tsx 与同名 i18n 字典，controls 共用该字典，未复制两份语言组件
 - demo 是否可复制：不过度抽 helper、不依赖读者看不到的上下文
 - 大量仅参数变化的静态 demo 是否已收敛为 controls；评审者要实际操作代表性字段，确认变化肉眼可辨，无效或难以感知时重做场景而不是追加文字解释
 - 带 controls 时完整套用 [`docs-doc-control`](../docs-doc-control/SKILL.md) 的契约、取景、极值、Reset、caption、视觉层级和真实页面验证；本 skill 不复制其检查项
@@ -101,13 +102,15 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 
 ### 7. 三处协同与可维护性
 
+- 重构页面时核对包数量、依赖关系、宿主支持、运行环境要求和预览功能名称等易过时事实，以当前配置、公开入口及实际界面为据，不只检查章节与链接
+
 - `contents/`、`data/`、`i18n/` 是否同步
 - 页面路由、目录段、data id 是否一致
 - 文中 API 介绍是否仅覆盖本页阅读需要，且与当前 props / schema 一致；完整公开 API 与 schema 字段是否分别指向 API Reference / Schema Reference
 - API 表中的函数、类型和常量是否从所属包根入口真实可导入；是否把概念简称或内部类型误写成公共 API
 - 组件 Props、schema、owner barrel 与 package root 是否形成可追溯导出链
 - 宿主/容器页是否漏掉 owner barrel 中完成任务所需的 Provider、Context、hook 或 helper；共享继承 props 是否只做一行摘要并指向权威页
-- Related 链接是否存在，是否链到最有帮助的下一页；卡片导航按 [关联文档导航](../docs-doc-principle/references/linked-sections.md) 使用 LinkedSections，区分正文链接与非导航展示卡片
+- 延伸阅读 链接是否存在，是否链到最有帮助的下一页；卡片导航按 [关联文档导航](../docs-doc-principle/references/linked-sections.md) 使用 LinkedSections，区分正文链接与非导航展示卡片
 - 新文档是否避免引用本地路径给普通用户看；需要引用项目设计文档时用 GitHub URL
 
 ### 8. 链接有效性
@@ -166,14 +169,14 @@ INFO（做得好的地方 / 可保留）：
 严重度判定：
 
 - **BLOCKING**：结构不符合页型、zh/en 明显不一致、中文 `<ZodSchema>` 字段缺少翻译而回退英文、API / demo 与实际行为冲突、必要 demo 缺失、核心职责或边界缺失导致读者无法理解主线、链接 404 / 锚点失效 / 源码路径或行号错误
-- **WARNING**：术语偏多但还能读、进阶内容位置不佳、Related 不够好、通用样式挤占正文、controls 与静态 demo 分工不清
+- **WARNING**：术语偏多但还能读、进阶内容位置不佳、延伸阅读 不够好、通用样式挤占正文、controls 与静态 demo 分工不清
 - **INFO**：可保留的写法、已经满足规范的地方、适合进入 changelog / review summary 的亮点
 
 每个读者视角问题都要定位到首次造成困难的位置，并给出可执行的替代表达、补充解释或章节移动建议；不要只写“术语太多”“顺序不好”。
 
 ## 常见问题
 
-- **把实现说明当用户文档主线**：先讲用户怎么用，再把内部机制放进 How it works 或 tip
+- **把实现说明当用户文档主线**：用法页讲用户怎么用，内部机制放进 独立实现原理页
 - **demo 太大**：一个 demo 只演示一个能力；多能力拆多个 demo
 - **样式 demo 太多**：通用视觉属性合并进 controls / API 表，把篇幅还给核心抽象、职责边界和语义分支
 - **controls 代替设计说明**：controls 只能探索稳定任务与可比较场景下的参数空间，不能隐藏不同结构、组合、职责边界或错误行为

@@ -48,6 +48,13 @@
     "moduleNavigationLabel": "文档模块"
   },
   "kernel": {
+    "internalMechanisms": "内部机制",
+    "compositeComponents": "复合组件",
+    "compositeCustom": "自定义用法",
+    "compositeMechanism": "实现原理",
+    "internals": "进阶",
+    "compilation": "编译流程",
+    "themeResolution": "主题解析",
     "label": "内核",
     "navigationLabel": "内核",
     "navigationDescription": "提供节点、路径、布局与渲染所需的基础绘图能力",
@@ -110,7 +117,7 @@
     "pkgCore": "编译核心 · core",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",
-    "pkgInspectExtensions": "拓展观测",
+    "pkgInspectCustom": "自定义用法",
     "pkgInspectMechanism": "实现原理",
     "pkgInspectApiReference": "API 参考",
     "pkgInspectSchemaReference": "Schema 参考",

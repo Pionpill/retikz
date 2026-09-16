@@ -7,6 +7,25 @@ description: 用 @retikz/math 在图形的局部坐标、画布的世界坐标�
 
 本页先介绍最常见的局部坐标与世界坐标，再介绍可以连续组合平移、缩放和旋转的二维仿射矩阵。第一次阅读时，可以先看懂前一节，再按需要使用仿射矩阵。
 
+## 基础用法
+
+从根入口导入，返回普通数值或几何数据，不负责绘图。
+
+```ts
+import {
+  localToWorld,
+  worldToLocal,
+  applyAffine,
+  multiplyAffine,
+  type CenteredShape,
+  type AffineMatrix,
+} from '@retikz/math';
+
+const shape: CenteredShape = { x: 100, y: 60, rotate: 0 };
+const world = localToWorld(shape, [20, 0]); // [120, 60]
+const local = worldToLocal(shape, world); // [20, 0]
+```
+
 ## 局部坐标与世界坐标
 
 先想象一个带方向的图形：整个画布有一套固定的坐标，图形自己也有一套坐标。图形的中心是局部坐标的原点，局部的 `x` 轴和 `y` 轴会跟着图形一起旋转；画布坐标则不会跟着图形移动。
@@ -19,6 +38,8 @@ description: 用 @retikz/math 在图形的局部坐标、画布的世界坐标�
 下面的图中，虚线是固定的世界坐标轴，橙色图形和橙色坐标轴属于同一个局部坐标系。调整控制面板中的图形中心、旋转角和局部点，可以观察同一个局部点如何变成不同的世界坐标。
 
 <ComponentPreview files="coordinate-spaces" size="md" caption="调整图形中心、旋转角和局部点，观察世界点随之变化" />
+
+演示控件用角度（°）输入，调用前按 `角度 × Math.PI / 180` 转成弧度；API 的 `rotate` 始终接收弧度。
 
 `CenteredShape` 用图形中心和旋转角描述这套局部坐标系：`x`、`y` 是图形中心在世界坐标中的位置，`rotate` 是图形绕中心旋转的弧度。`Math.PI / 4` 就是 45°；在屏幕坐标中，正角度沿顺时针方向增加。
 
@@ -41,7 +62,7 @@ const local = worldToLocal(shape, world); // 约为 [20, 0]
 
 ### 算法解析
 
-上方从局部点到世界点：`localToWorld` 先按 `rotate` 绕局部原点旋转，再加上图形中心。下方则反向执行：`worldToLocal` 先减去图形中心，再按负旋转角旋转。中心图形（`CenteredShape`）位于中间，同时为两条链提供中心位置与旋转角；当 `rotate` 为 `0` 或省略时，旋转保持点不变。两条实线链及其独立计算步骤通过同一 Entity / Relation group 自动使用不同颜色，颜色不表示新的 kind。
+上方从局部点到世界点：`localToWorld` 先按 `rotate` 绕局部原点旋转，再加上图形中心。下方则反向执行：`worldToLocal` 先减去图形中心，再按负旋转角旋转。中心图形（`CenteredShape`）位于中间，同时为两条链提供中心位置与旋转角；当 `rotate` 为 `0` 或省略时，旋转保持点不变。图中两条链用不同颜色区分转换方向。
 
 <ComponentPreview
   files="coordinate-conversion-flow"
@@ -50,7 +71,9 @@ const local = worldToLocal(shape, world); // 约为 [20, 0]
   caption="上下两条链互为逆变换，中心图形提供共同参数"
 />
 
-### API 参考
+<SourceLinks sources={[{ label: '坐标正反转换', path: 'packages/kernel/math/src/transforms/coordinate.ts' }]} />
+
+### 调用速查
 
 | 类别 | API             | 作用                                             |
 | ---- | --------------- | ------------------------------------------------ |
@@ -114,11 +137,9 @@ applyAffine(matrix, [4, 5]); // [18, 35]：先缩放，再平移
 
 二维仿射计算分成“组合配方”和“应用配方”两步。内层矩阵 `inner` 先处理原始点，外层矩阵 `outer` 再处理内层的结果；它们不是按书写顺序从左到右作用。因此，合成矩阵 `combined` 满足：
 
-```ts
-applyAffine(combined, point) === applyAffine(outer, applyAffine(inner, point));
-
-const combined = multiplyAffine(outer, inner);
-```
+$$
+\operatorname{apply}(OI,p)=\operatorname{apply}(O,\operatorname{apply}(I,p))
+$$
 
 若 `outer = [A, B, C, D, E, F]`、`inner = [a, b, c, d, e, f]`，并记合成结果为 `combined = [a', b', c', d', e', f']`，则：
 
@@ -143,7 +164,9 @@ $$
 
 如果需要在消费仿射矩阵前检查它是否由有限数值组成且可逆，可以使用 `isFiniteNonSingularAffine`。对于描边等要求保持统一缩放的场景，可以使用 `getAffineSimilarityScale` 获取缩放因子；矩阵不是相似变换时会返回 `undefined`。
 
-### API 参考
+<SourceLinks sources={[{ label: '仿射矩阵组合与应用', path: 'packages/kernel/math/src/transforms/affine.ts' }]} />
+
+### 调用速查
 
 | 类别 | API                         | 作用                                                 |
 | ---- | --------------------------- | ---------------------------------------------------- |
@@ -153,3 +176,9 @@ $$
 |      | `applyAffine`               | 按仿射矩阵公式把一个点映射到新的坐标                 |
 |      | `isFiniteNonSingularAffine` | 判断矩阵是否由有限数值组成且可逆                     |
 |      | `getAffineSimilarityScale`  | 获取相似变换的统一缩放因子，不符合时返回 `undefined` |
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: 'API 参考', description: '查询完整公开 API', url: '/kernel/packages/math/api-reference' }]}
+/>

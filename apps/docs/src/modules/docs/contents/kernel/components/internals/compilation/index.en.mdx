@@ -1,0 +1,77 @@
+---
+title: Compilation flow
+description: Trace one Core compilation through context creation, layout, path resolution, and Scene output.
+---
+
+Read [Layers](/kernel/components/design/layers) first. This page follows one synchronous call to `compileToScene(IRScene, options)`: validated drawing input becomes Scene, domain artifacts, and a spatial index. DOM mounting and subsequent incremental updates are outside this execution.
+
+| Input / output          | Purpose                                         |
+| ----------------------- | ----------------------------------------------- |
+| `IRScene` input         | Validated, savable drawing declaration          |
+| `result.scene`          | Laid-out drawing for renderers                  |
+| `result.artifacts`      | Domain data from the same call for applications |
+| `result.spatialHandles` | Named-region index from the same call for tools |
+
+The last two are additional results outside Scene.
+
+## Overall flow
+
+For two named nodes and a connecting path, node positions and boundaries must be known before the endpoints can be resolved. Visible content then determines the drawing bounds. The diagram shows dependencies, not three independent tree traversals.
+
+<ComponentPreview files="/kernel/components/design/layers/layers-compile" size="xs" hideCode />
+
+## Create the call context
+
+The context holds measurement functions, a warning collector, and capability registries for this call. A registry selects an implementation by name; built-in and caller-provided Definitions share the same consumers. `createCompileContext` prepares these inputs and handles expandable high-level nodes.
+
+<SourceLinks
+  sources={[{ label: 'Create the call context', path: 'packages/kernel/core/src/compile/orchestration/context.ts' }]}
+/>
+
+## Lay out entities and resolve paths
+
+A namespace maps ids to objects in the current group. Traversal positions and registers Nodes and Coordinates. A Path can reserve its output position until dependencies in its group are ready. This supports paths to later nodes in the same group; it does not permit arbitrary forward references in entity positioning.
+
+Composites that need child measurements run isolated trials here and commit the chosen result. See [Composite implementation](/kernel/components/composite/mechanism) for proposals, probes, and replay.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Lay out entities and resolve paths',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+    },
+  ]}
+/>
+
+## Assemble the result
+
+`compileCoreSnapshot` collects primitives, paint resources, and root animations. An explicit viewBox sets the visible range; otherwise layout bounds and padding determine it. Spatial indexes and domain artifacts accompany Scene, but are not drawing declarations for renderers to reinterpret. The synchronous entry dispatches collected warnings after success; a fatal error ends the call without returning a partially successful Scene.
+
+<SourceLinks sources={[{ label: 'Assemble the result', path: 'packages/kernel/core/src/compile/compile.ts' }]} />
+
+## Complete implementation flow
+
+<ComponentPreview files="/kernel/components/design/principles/principles-compile" size="xs" hideCode />
+
+Read the diagram from input to output, then follow the source entries below: `compileToScene` calls `compileCoreSnapshot`, which creates the context, calls `compileChildrenToPrimitives`, and assembles the result. React / Vanilla input normalization precedes this; renderer execution follows it.
+
+<SourceLinks
+  sources={[{ label: 'compileToScene / compileCoreSnapshot', path: 'packages/kernel/core/src/compile/compile.ts' }]}
+/>
+<SourceLinks
+  sources={[
+    { label: 'compileChildrenToPrimitives', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compile reference',
+      description: 'Look up options and output contracts',
+      url: '/kernel/reference/runtime/compile',
+    },
+  ]}
+/>

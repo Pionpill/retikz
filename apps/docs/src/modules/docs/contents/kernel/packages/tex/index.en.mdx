@@ -5,7 +5,15 @@ description: Browse @retikz/tex formula parsing, lowering, and runtime integrati
 
 `@retikz/tex` is the optional formula package that integrates TeX into the existing text and rendering flow.
 
-## Install and use
+## How formulas enter a drawing
+
+Authoring determines formula content, configuration selects available syntax, and integration returns typeset paths to Core text layout. SVG and Canvas share the resulting geometry without parsing LaTeX again.
+
+Compare inline, explicit-run, and display formulas below. Choose the intended result before enabling formula support. Caching and SVG conversion details belong in Implementation.
+
+<ComponentPreview files="/kernel/packages/tex/authoring/tex-formula-basics" size="sm" hideCode />
+
+## Installation and usage
 
 `mathjax-full` is an optional peer dependency. Applications using the built-in MathJax engine install it together with `@retikz/tex`:
 
@@ -91,15 +99,16 @@ If the engine and lowerer do not need separate configuration, await `createMathJ
 </DocTab>
 </DocTabs>
 
-## Responsibilities
+## Responsibilities at a glance
 
-| Document                 | Responsibility                               | Reach for it when                         |
-| ------------------------ | -------------------------------------------- | ----------------------------------------- |
-| Formula Authoring        | Formula syntax and text layout               | Writing or adjusting formulas in a figure |
-| MathJax Configuration    | Choosing profiles and extensions             | Additional formula syntax is required     |
-| Implementation mechanism | Conversion boundaries, caching, and failures | Customizing an engine or debugging output |
+| Document              | Responsibility                               | Reach for it when                         |
+| --------------------- | -------------------------------------------- | ----------------------------------------- |
+| Formula Authoring     | Formula syntax and text layout               | Writing or adjusting formulas in a figure |
+| MathJax Configuration | Choosing profiles and extensions             | Additional formula syntax is required     |
+| Implementation        | Conversion boundaries, caching, and failures | Customizing an engine or debugging output |
+| API reference         | Public signatures, types, and results        | Look up an exact contract                 |
 
-## Chapter contents
+## Contents
 
 <LinkedSections
   items={[
@@ -114,9 +123,14 @@ If the engine and lowerer do not need separate configuration, await `createMathJ
       url: '/kernel/packages/tex/configuration',
     },
     {
-      title: 'Implementation mechanism',
+      title: 'Implementation',
       description: 'Understand conversion, caching, and observable failures',
       url: '/kernel/packages/tex/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up the complete public contract',
+      url: '/kernel/packages/tex/api-reference',
     },
   ]}
 />

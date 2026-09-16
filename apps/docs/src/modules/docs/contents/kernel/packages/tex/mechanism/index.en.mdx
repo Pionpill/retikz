@@ -1,5 +1,5 @@
 ---
-title: Implementation mechanism
+title: Implementation
 description: Follow one formula through engine typesetting, SVG lowering, and Core baseline layout into ordinary Scene primitives
 ---
 
@@ -162,5 +162,17 @@ Start with `createLowerTex()` for orchestration and caching, follow `lowerMathJa
     { label: '1. Request orchestration', path: 'packages/kernel/tex/src/lower/lower-tex.ts' },
     { label: '2. SVG lowering', path: 'packages/kernel/tex/src/svg/lower-mathjax-svg.ts' },
     { label: '3. Core output', path: 'packages/kernel/core/src/compile/text/layout.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation flow',
+      description: 'Understand input contracts and final results',
+      url: '/kernel/components/internals/compilation',
+    },
   ]}
 />
