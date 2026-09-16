@@ -71,7 +71,7 @@ describe('Kernel API Reference MDX', () => {
   it('不展示继承自 JavaScript Error 的内部成员', async () => {
     const source = await createFoundationApiReferenceMdx('en');
 
-    expect(source).toContain('| `code` |');
+    expect(source).toContain('| `readonly code` |');
     expect(source).not.toContain('| `captureStackTrace` |');
     expect(source).not.toContain('| `stackTraceLimit` |');
   });

@@ -1,5 +1,25 @@
 /** 经核对的 Scope API 英文说明，标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',
+  '双击该图元（DOM `dblclick`）': 'Double-click on this element (DOM `dblclick`)',
+  '指针在该图元上按下（DOM `pointerdown`）': 'Pointer pressed on this element (DOM `pointerdown`)',
+  '指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）':
+    'Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again',
+  '指针离开该图元（由 `pointermove` + 命中 id 状态机合成）':
+    'Pointer leaves this element, synthesized from `pointermove` and hit-ID state',
+  '指针在该图元上移动（DOM `pointermove`）': 'Pointer moves over this element (DOM `pointermove`)',
+  '指针在该图元上抬起（DOM `pointerup`）': 'Pointer released on this element (DOM `pointerup`)',
+  '右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`':
+    'Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so the handler must call `event.preventDefault()` if needed',
+  '在该图元上滚轮（DOM `wheel`）': 'Wheel input over this element (DOM `wheel`)',
+  '外部 path / position 可用 `scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 引用该包络；\n这个外部句柄不受 `localNamespace` 影响':
+    'External paths and positions can reference these bounds using `scope.id`, `scope.id.<anchor>`, or `scope.id.<deg>`; this external handle is unaffected by `localNamespace`',
+  '子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用':
+    'Child IDs can only be referenced inside this Scope; they are inaccessible outside it, while `scope.id` itself remains accessible from the outer scope',
+  'target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center':
+    'The target is an explicit point in parent coordinates or a previously completed named entity; selfAnchor defaults to the center of the intrinsic bounds',
+  '支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale':
+    'Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale',
   'Scope 容器组件——TikZ `\\begin{scope}[...]...\\end{scope}` 同义':
     'Scope container, equivalent to TikZ `\\begin{scope}[...]...\\end{scope}`',
   '给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络':

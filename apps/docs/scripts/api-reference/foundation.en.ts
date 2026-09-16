@@ -1,5 +1,9 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  导致当前错误的原始异常或值: 'Original exception or value that caused this error',
+  结构化错误的分类代码: 'Classification code of the structured error',
+  与错误代码关联的结构化错误详情: 'Structured error details associated with the error code',
+  面向调用方的错误消息: 'Error message for the caller',
   属性浅合并的写入策略: 'Write policy for shallow property merging',
   '决定源属性是否参与写入；首次写入也调用，返回 false 时保留已有值':
     'Decides whether a source property is written; also runs for initial writes, and false preserves any existing value',

@@ -1,4 +1,211 @@
 const translations: Record<string, string> = {
+  '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':
+    'Rendering backend; an explicit value takes priority, otherwise inherits the Renderer context and uses SVG when no context is provided',
+  '供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
+    'JSX input metadata consumed by a custom compileDriver; ignored when ir is provided and excluded from persistent Scene IR',
+  '默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号':
+    'Default font size in drawing units; used when font.size is omitted and as the root size for font presets and rem, without overriding explicit numeric font sizes',
+  '节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效':
+    'Default distance for relative node positioning in drawing units; applies when position uses direction/of and omits distance',
+  '具体 subject/context 类型由调用前的 schema 恢复':
+    'Concrete subject and context types are restored by the schema before invocation',
+  '合并已准入的原始 options，不消费 schema 变换后的结果':
+    'Merges admitted raw options, without consuming schema-transformed results',
+  '擦除后仍产出已应用默认值与变换的 JSON object options':
+    'Produces JSON object options with defaults and transforms applied, even after type erasure',
+  '被观察的 Core owner': 'Core owner being observed',
+  '具体 options 类型由准入 schema 恢复': 'Concrete options type restored by the admission schema',
+  '擦除后仍恢复 JSON-safe subject': 'Restores a JSON-safe subject even after type erasure',
+  'resolved request 连续序号': 'Consecutive index of the resolved request',
+  '由当前 Theme categorical palette 派生的常规颜色':
+    'Regular colors derived from the current Theme categorical palette',
+  '当前 Core Theme 的共享语义颜色': 'Shared semantic colors of the current Core Theme',
+  '按请求顺序排列的回调警告与 fragment warnings': 'Callback and fragment warnings in request order',
+  '全部 callback 无输出时为 null': 'Null when every callback produces no output',
+  '普通 Core compile 的 primary': 'Primary result of regular Core compilation',
+  '回调 code/message 与来源路径，或 Core warning 的原样投影':
+    'Callback code, message, and source path, or an unchanged projection of a Core warning',
+  'warning 对应的 request 与 output': 'Request and output associated with the warning',
+  '与 callback 非空 outputs 一一对应的 entries': 'Entries corresponding one-to-one to nonempty callback outputs',
+  'request 级连续颜色序号': 'Consecutive color index at request level',
+  '生成该 entry 的 Inspector': 'Inspector that produced this entry',
+  '最终 occurrence': 'Final occurrence',
+  '被观察 owner': 'Owner being observed',
+  '辅助 Scene 到 primary Scene 的矩阵；scene 模式为单位矩阵':
+    'Matrix from the auxiliary Scene to the primary Scene; the identity matrix in scene mode',
+  '完整 admission 后参与级联的规则': 'Rules participating in cascading after complete admission',
+  从外到内排列的最终逻辑容器链条: 'Final logical container chain, ordered from outermost to innermost',
+  'callback 前分配的外观上下文': 'Appearance context allocated before the callback',
+  '当前 Inspector key': 'Current Inspector key',
+  '当前最终 occurrence': 'Current final occurrence',
+  '当前被观察的 Core owner': 'Core owner currently being observed',
+  'probe/replay 来源': 'Probe or replay origin',
+  'observation-local 到主 Scene 的最终仿射变换':
+    'Final affine transform from observation-local coordinates to the primary Scene',
+  '声明当前 callback 可以省略的部分结果': 'Declares which partial results the current callback may omit',
+  'Inspector 所属命名空间': 'Namespace containing the Inspector',
+  命名空间内类型: 'Type within the namespace',
+  导致当前失败的原始异常或值: 'Original exception or value that caused this failure',
+  稳定错误码: 'Stable error code',
+  失败上下文的结构化详情: 'Structured details of the failure context',
+  面向调用方的原始错误消息: 'Original error message for the caller',
+  '占位节点的 id；其它 path / node `at.of` 通过这个 id 引用':
+    'Placeholder node ID, referenced by other paths or node `at.of` values',
+  '占位点位置；与 `<Node position>` 形态完全一致':
+    'Placeholder position, accepting the same forms as `<Node position>`',
+  '当前 Coordinate 的单项或多项检查请求': 'One or more inspection requests for the current Coordinate',
+  '笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }`':
+    'Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or partway `{ between: [A, B], fraction }` positioning',
+  是否播放动画: 'Whether to play animations',
+  动画控制器出口: 'Animation controller ref',
+  'Scene 根动画': 'Scene-root animations',
+  'artifact 请求': 'Requested compilation artifacts',
+  'Kernel 或 Sugar JSX children': 'Kernel or Sugar JSX children',
+  '宿主 className': 'Host className',
+  '按能力分类的运行时扩展注册，复用 Core 编译契约':
+    'Runtime extensions grouped by capability, using the Core compilation contract',
+  默认字号: 'Default font size',
+  'IR 模式下的水合 handler 注册表': 'Hydration handler registry for IR input',
+  'SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版':
+    'CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout',
+  'SVG 资源 id 前缀': 'SVG resource id prefix',
+  '直接传入持久化 Source IR，与 children 二选一': 'Persisted Source IR, used instead of children',
+  公式下沉能力: 'Formula lowering capability',
+  '默认 node 距离': 'Default node distance',
+  'artifacts 成功提交通知': 'Notification after artifacts are committed successfully',
+  '同 revision Inspect compile result 通知': 'Notification of the Inspect compilation result for the same revision',
+  'Core 完整编译结果通知': 'Notification of the complete Core compilation result',
+  'committed diagnostics 逐条通知': 'Notification for each committed diagnostic',
+  '当前 Layout 使用的 Inspector registry': 'Inspector registry used by the current Layout',
+  渲染目标: 'Rendering target',
+  '可选 scene requests，false 表示全图 barrier': 'Optional scene requests; false sets a barrier for the entire drawing',
+  'JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效':
+    'Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently',
+  'retained 或 static processing 模式': 'Retained or static processing mode',
+  '与 authored wrapper rules 合并的显式 selection': 'Explicit selection merged with authored wrapper rules',
+  静态动画采样时刻: 'Time at which to sample a static animation frame',
+  宿主内联样式: 'Host inline styles',
+  '写入 Scene 根并由后代 Composite 继承的 Theme':
+    'Theme written to the Scene root and inherited by descendant Composites',
+  显式视框: 'Explicit viewport',
+  'SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴':
+    'CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio',
+  '元素级时间轴动画；每条 track 描述一个可动画属性，渲染端播放或降级为静态，不参与布局':
+    'Element timeline animations; each track describes one animatable property, played by the renderer or rendered statically, without participating in layout',
+  "连接面：边与本节点相交时使用的边界形状（TikZ `connect as`）；默认 'shape'（沿用视觉形状）；'circle' = 真圆；其它已注册 shape 名或 `{ type, params }` = 借用该 shape 边界":
+    "Boundary shape used where edges intersect this node (TikZ `connect as`); defaults to 'shape', using the visual shape; 'circle' uses a true circle, while another registered shape name or `{ type, params }` uses that shape's boundary",
+  'children 内容：文本': 'Text content supplied as children',
+  "圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`":
+    "Corner radius in user units, effective only for the `rectangle` shape. Prefer shape parameters: `shape={{ type: 'rectangle', params: { cornerRadius } }}`",
+  '节点 id；其他 Path/Draw 通过这个 id 引用本节点':
+    'Node ID used by other Path or Draw elements to reference this node',
+  '节点附属标签——TikZ `[label=top:foo]` 同义': 'Labels attached to the node, equivalent to TikZ `[label=top:foo]`',
+  '节点尺寸、间距与文本布局': 'Node dimensions, spacing, and text layout',
+  '用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象':
+    'User metadata available in event and hydration contexts; excluded from layout and required to be a JSON-serializable object',
+  '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',
+  '双击该图元（DOM `dblclick`）': 'Double-click on this element (DOM `dblclick`)',
+  '指针在该图元上按下（DOM `pointerdown`）': 'Pointer pressed on this element (DOM `pointerdown`)',
+  '指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）':
+    'Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again',
+  '指针离开该图元（由 `pointermove` + 命中 id 状态机合成）':
+    'Pointer leaves this element, synthesized from `pointermove` and hit-ID state',
+  '指针在该图元上移动（DOM `pointermove`）': 'Pointer moves over this element (DOM `pointermove`)',
+  '指针在该图元上抬起（DOM `pointerup`）': 'Pointer released on this element (DOM `pointerup`)',
+  '右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`':
+    'Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so the handler must call `event.preventDefault()` if needed',
+  '在该图元上滚轮（DOM `wheel`）': 'Wheel input over this element (DOM `wheel`)',
+  节点中心位置: 'Position of the node center',
+  '当前 Node 的单项或多项检查请求': 'One or more inspection requests for the current Node',
+  '旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针':
+    'Rotation in degrees around the node center, as in TikZ; positive values rotate clockwise',
+  '均匀缩放因子；同时影响 bbox / 字号 / padding / margin / 路径附着点（与 TikZ scale 一致）':
+    'Uniform scale factor affecting bounds, font size, padding, margin, and path attachment points, as with TikZ scale',
+  '节点形状：rectangle（默认）/ circle / ellipse / diamond':
+    'Node shape: rectangle (default), circle, ellipse, or diamond',
+  '实例视觉覆盖，逐字段覆盖继承默认值':
+    'Visual overrides for this instance, replacing inherited defaults field by field',
+  '显式 text，优先级高于 children': 'Explicit text, taking precedence over children',
+  '显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层（同 scope / 顶层）子节点间生效':
+    'Explicit stacking order: larger values appear above smaller ones; defaults to 0 and declaration order; equal values preserve order, applying only among siblings in the same scope or at the root',
+  '与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。\n字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染':
+    'Alternative to `text`, which takes precedence; supports strings with embedded `\\n`, template literals, string arrays, and styled lines containing `<Text>`. Strings may include `$...$` inline or `$$...$$` display formulas, parsed during compilation when `<Layout lowerTex>` is provided; otherwise rendered literally',
+  "单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'top'，distance 缺省 12":
+    "One object or an array; each label accepts `text`, optional `position` and `distance`, and inherited styles. Position accepts an eight-direction enum or angle in degrees (`label=30:foo` equals `position: 30`), defaulting to 'top'; distance defaults to 12",
+  "六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center":
+    "Six forms: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, partway `{ between: [A, B], fraction }`, or anchor alignment `{ kind: 'anchor', target, selfAnchor? }`. Anchor alignment lays out the node's text, shape, padding, margin, scale, and rotation before translating the whole node; both anchors default to center",
+  '`string` 单行（可含 `$...$` 公式）/ `Array<string | IRLine>` 多行可对单行覆盖 fill / opacity / font，\n或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）':
+    'A single-line `string` (optionally containing `$...$` formulas), multiline `Array<string | IRLine>` with per-line fill, opacity, and font overrides, or inline mixed content `{ runs: [{ text }, { tex }] }` with per-run colors',
+  '路径级时间轴动画；渲染端播放或降级为静态，不参与布局':
+    'Path timeline animations, played by the renderer or rendered statically, without participating in layout',
+  路径级箭头方向: 'Arrow direction for the path',
+  箭头详细配置: 'Detailed arrow configuration',
+  箭头端点放置配置: 'Arrow endpoint placement configuration',
+  '应当全部是 `<Step />`': 'All children should be `<Step />` elements',
+  '路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定':
+    'Path ID used by other paths or positions to reference this path, and as the hydration attachment point for event handlers',
+  '沿路径在归一化位置放标记（首批仅箭头）':
+    'Markers at normalized positions along the path, currently limited to arrows',
+  '当前 authored Path 的 Inspector request': 'Inspector request for the current authored Path',
+  '整条 path 旋转（度，绕包围盒中心，正向 = 屏幕 y-down 视觉顺时针）':
+    'Rotation of the entire path in degrees around its bounds center; positive values appear clockwise in screen coordinates with y pointing down',
+  '折线拐角几何圆角半径（TikZ `rounded corners=`）': 'Geometric corner radius for polylines (TikZ `rounded corners=`)',
+  '整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比':
+    'Scale of the entire path around its bounds center: a number for uniform scaling, or `{ x, y }` for nonuniform scaling',
+  '语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先':
+    'Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), resolved to `strokeWidth` when constructing IR; an explicit `strokeWidth` always takes precedence',
+  'TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤': 'TikZ-style path routing shorthand, parsed into steps by Vanilla',
+  '显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效':
+    'Explicit stacking order: larger values appear above smaller ones; defaults to 0 and declaration order; equal values preserve order, applying only among siblings',
+  "`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头":
+    "`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows",
+  '顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape\n（open / openStealth / openDiamond / openCircle）上 `fill` silent no-op':
+    'Top-level defaults are merged field by field with optional `start` and `end` overrides. For open shapes (open, openStealth, openDiamond, openCircle), `fill` silently has no effect',
+  '`overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置':
+    '`overlap` is shared by the active endpoints, with per-end `start` and `end` overrides; the ratio interpolates from the default position to the position where the final visual rear edge aligns with the logical endpoint',
+  "每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）":
+    "Each `{ pos, mark }` has `pos` in [0, 1] and `mark.kind: 'arrow'` with a subset of visual options; shape is a registered arrow name, and direction follows the path tangent",
+  '等价把 path 包一层绕其包围盒中心旋转的 Scope；端点先在当前 scope resolve 再整体旋转':
+    'Equivalent to wrapping the path in a Scope rotated around its bounds center; endpoints are resolved in the current scope before the whole path rotates',
+  '对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角':
+    'Inserts a tangent arc at each line-to-line join, changing path geometry rather than only the stroke as lineJoin does; curve, arc, bezier, and fold joins stay sharp; clamped to adjacent segment lengths; omitted means sharp corners',
+  'scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素':
+    'Timeline animations for the whole Scope; rendered as animation or a static fallback, without participating in layout or propagating to children',
+  "scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB）":
+    "Synthetic reference-envelope shape for the Scope id: the closed enum 'rectangle' | 'circle', rather than an open Node shape reference; defaults to 'rectangle' (axis-aligned bounding box)",
+  'scope 子节点：嵌套 Node / Path / Coordinate / Scope': 'Scope children: nested Node, Path, Coordinate, or Scope',
+  '裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素':
+    'Clip region in Scope-local coordinates (rect, circle, ellipse, polygon, path, compound, or custom); clips all children when supplied',
+  '可选 scope 引用 id；设值后可把整个 scope 的包络当作引用目标':
+    'Optional Scope reference id; makes the group envelope available as a reference target',
+  '是否创建本地命名空间；true 时子节点 id 不向父 frame 传播（外部不可见）':
+    'Whether to create a local namespace; when true, child ids do not propagate to the parent frame and are not externally visible',
+  '用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局，也不下传给子元素。须为 JSON 可序列化对象':
+    'JSON-serializable user metadata available in event and hydration contexts; does not participate in layout or propagate to children',
+  'Scope 最终锚点对齐定位': 'Final anchor-aligned Scope placement',
+  '当前 subtree 的 requests，false 表示不可重开的 barrier':
+    'Requests for the current subtree; false establishes a barrier that descendants cannot reopen',
+  '仅覆盖已声明字段并由后代 Composite 继承的局部 Theme':
+    'Local Theme overriding only declared fields, inherited by descendant Composites',
+  '局部 transform 列表；数组顺序应用，与 SVG transform list 一致':
+    'Local transform list using SVG transform-list order',
+  '显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序':
+    'Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order',
+  '外部 path / position 可用 `scope.id` / `scope.id.<anchor>` / `scope.id.<deg>` 引用该包络；\n这个外部句柄不受 `localNamespace` 影响':
+    'External paths and positions can reference these bounds using `scope.id`, `scope.id.<anchor>`, or `scope.id.<deg>`; this external handle is unaffected by `localNamespace`',
+  '子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用':
+    'Child IDs can only be referenced inside this Scope; they are inaccessible outside it, while `scope.id` itself remains accessible from the outer scope',
+  'target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center':
+    'The target is an explicit point in parent coordinates or a previously completed named entity; selfAnchor defaults to the center of the intrinsic bounds',
+  '支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale':
+    'Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale',
+  '含 revision primary、plane 与 diagnostics 成功提交后的通知':
+    'Notification after successful commit of the revision primary, plane, and diagnostics',
+  '每条 committed Inspect diagnostic 的通知': 'Notification for each committed Inspect diagnostic',
+  '本次宿主使用的 Inspector registry': 'Inspector registry used by this host',
+  '与 plain authoring rules 合并的显式 selection': 'Explicit selection merged with plain authoring rules',
+  '要请求的 Inspector key': 'Inspector key to request',
+  'sparse options、true 或继承关闭 false': 'Sparse options, true, or false to disable inherited inspection',
   按本次主图编译精度舍入数值: 'Rounds a value using the precision of the current primary compile',
   '作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段':
     'Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output types',

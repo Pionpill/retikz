@@ -16,7 +16,6 @@ const scopeConfig: ApiReferencePackageConfig = {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
       symbols: ['Scope', 'ScopeProps', 'ScopeStyleProps'],
-      expandIntersectionMembers: true,
     },
   ],
   translate: translateScopeApiReference,
