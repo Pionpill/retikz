@@ -181,7 +181,7 @@ This section focuses on the local path from a `<Path>` step sequence to Scene pr
 
 ### Why endpoints can refer forward
 
-The compiler does not emit primitives as soon as it reaches a `<Path>`. It queues the path and leaves an ordering placeholder when output stays at the current level. It continues registering `<Node>` and `<Coordinate>` ids, then resolves `Step.to`, control points, and connection boundaries after the current scope has been scanned. Ordinary scopes backfill the placeholder; see the [`<Scope>` deep dive](/kernel/components/layout/scope#how-it-works) for transformed-scope projection.
+The compiler does not emit primitives as soon as it reaches a `<Path>`. It queues the path and leaves an ordering placeholder when output stays at the current level. It continues registering `<Node>` and `<Coordinate>` ids, then resolves `Step.to`, control points, and connection boundaries after the current scope has been scanned. Ordinary scopes backfill the placeholder; see the [`<Scope>` deep dive](/kernel/components/scope/mechanism) for transformed-scope projection.
 
 As a result, path endpoints can refer to an id declared later in the same scope without changing paint order. This is a contract of deferred path emission only: `Node.position` and scope transforms are still resolved when the compiler reaches them, so not every id reference supports forward declarations.
 

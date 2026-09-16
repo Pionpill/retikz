@@ -114,7 +114,7 @@ import { Draw } from '@retikz/react';
 
 `parseWay` 只把 `'+10,0'` / `'++10,0'` 和对应对象写法归一为 `relative` / `relativeAccumulate` target，不会提前算成绝对坐标。Path 编译逐段处理时，两者都以上一个有效终点 `prevEnd` 为基准；首项没有基准时回退到 `[0, 0]`。
 
-`Relative` 只借用 `prevEnd` 算出本次终点，不替换这个基准；`Accumulate` 会把结果写回 `prevEnd`，所以下一个相对项从新位置继续。若当前处在变换后的 [Scope](/kernel/components/layout/scope) 中，偏移会先在该 Scope 的局部坐标中相加，再投影回全局。
+`Relative` 只借用 `prevEnd` 算出本次终点，不替换这个基准；`Accumulate` 会把结果写回 `prevEnd`，所以下一个相对项从新位置继续。若当前处在变换后的 [Scope](/kernel/components/scope/usage) 中，偏移会先在该 Scope 的局部坐标中相加，再投影回全局。
 
 <SourceLinks
   sources={[

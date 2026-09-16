@@ -1,0 +1,149 @@
+---
+title: 实现原理
+description: 追踪 Scope 的局部坐标、命名空间、包络与 Scene 输出
+---
+
+先了解[基础用法](/kernel/components/scope/usage)。本页跟踪一个 Scope 从局部子树到 Scene 分组的编译过程，解释坐标、引用和裁剪如何保持一致；渲染器如何绘制不在本页范围内。
+
+## 整体流程
+
+一个包含两个节点的 Scope，先确定子节点的位置与整体边界，再应用变换和最终定位，最后把引用句柄与裁剪资源交给 Scene。
+
+- 固有包络：整组内容在自身坐标系里的边界，用于求自身锚点和旋转中心。
+- 命名空间：按 id 查找图元的位置表，嵌套 Scope 可拥有独立的表。
+- 变换链：从当前局部坐标逐层映射到全图坐标的变换序列。
+
+<ComponentPreview files="scope-compile-flow" size="md" hideCode />
+
+## 变换与相对定位
+
+变换分两步确定：不依赖包络的变换可在编译 children 前解析；需要包络锚点的旋转或缩放中心，要等 children 的布局完成后才能确定。随后把变换转换为 Scene 接受的平移、旋转和缩放，最后计算 `placement` 的最外层平移。
+
+数组第 0 项最外层、最后一项先作用；placement 会插到第 0 项，成为最后作用的变换。例如先把两个节点组成的子图旋转，再把整组右边缘对齐目标，就需要先得到子图包络，再求旋转后的右边缘。
+
+<ComponentPreview files="scope-coordinate-flow" size="sm" hideCode />
+
+图中的 referent 是被引用目标，relative 是相对偏移。引用外部目标时，先把其全局位置反算到当前局部坐标，再叠加偏移，最后映射回全局。最终同一条变换链同时驱动 Scene 分组、命名空间中的位置、布局观察结果和自动视框，避免子节点被重复变换。
+
+零缩放作为纯视觉变换合法；需要跨该变换链反算目标坐标时会同步抛出 `non-invertible scope transform`。Scope placement 的 NodeTarget 只能引用遍历到当前位置以前已完成的 Node、Coordinate 或 Scope；前向引用、自身、后代和尚未完成布局的 Scope 占位目标都会立即报错。
+
+<SourceLinks
+  sources={[
+    {
+      label: '包络完成后的变换与最终定位',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 964,
+      endLine: 1009,
+    },
+    {
+      label: 'transform 输入收敛',
+      path: 'packages/kernel/core/src/compile/scope.ts',
+      startLine: 51,
+      endLine: 104,
+    },
+    {
+      label: '相对定位解析',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      startLine: 42,
+      endLine: 81,
+    },
+    {
+      label: 'scope chain 投影上下文',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 67,
+      endLine: 100,
+    },
+    {
+      label: 'path 延迟解析与原位回填',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1234,
+      endLine: 1246,
+    },
+  ]}
+/>
+
+## 命名空间与 id 冲突
+
+命名空间中的一层位置表称为 frame。默认 Scope 复用当前 namespace frame。`localNamespace` 才会新增 frame；lookup 从内向外返回第一个命中，register 只写当前 frame。
+
+<ComponentPreview files="scope-namespace-resolution" size="md" hideCode />
+
+跨 frame 同名时，内层名字遮蔽外层名字（shadowing）；同一 frame 重复 id 会发出 `DUPLICATE_NODE_ID` 警告，并采用后定义。`scope.id` 在子 frame 入栈前注册到父 frame，所以外部始终能引用 Scope 整体。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'namespace frame 生命周期',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 155,
+      endLine: 182,
+    },
+    {
+      label: 'namespace 注册',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 184,
+      endLine: 214,
+    },
+    {
+      label: 'namespace inside-out 查找',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 240,
+      endLine: 252,
+    },
+    {
+      label: 'Scope 父子 frame 编排',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1101,
+      endLine: 1150,
+    },
+  ]}
+/>
+
+## 整体句柄与 Scene 输出
+
+<ComponentPreview files="scope-boundary-clip" size="md" hideCode />
+
+`scope.id` 与 `clip` 是两条独立链路：前者把子树 layout 汇总成可引用句柄，后者把 JSON clip spec 解析成 Scene 资源。两者都在 Core 编译边界结束。
+
+Scope 包络只收集 node、coordinate 与嵌套 Scope layout，不包含 path 走线。AABB 是与坐标轴对齐的矩形包围盒。默认引用结果使用这种矩形包络；圆形模式使用最小外接圆。子树有输出，或 Scope 带 `transforms` / `id` / `clip` 时才生成 `GroupPrim`；空且无这些语义的 Scope 会被剪枝。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Scope 固有包络',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 884,
+      endLine: 916,
+    },
+    {
+      label: 'Scope Group 输出与子树编排',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1065,
+      endLine: 1100,
+    },
+    {
+      label: '矩形与圆形 synthetic layout',
+      path: 'packages/kernel/core/src/compile/node/synthetic.ts',
+      startLine: 121,
+      endLine: 165,
+    },
+    {
+      label: 'clip 解析与资源注册',
+      path: 'packages/kernel/core/src/compile/resource/clip.ts',
+      startLine: 237,
+      endLine: 327,
+    },
+  ]}
+/>
+
+## 完整实现流程
+
+阅读源码时，从 traversal 的 Scope 分支开始：建立命名空间，编译 children 并收集包络，再解析自身点与变换；最终登记整体引用、解析裁剪并产生 Group。下面的图补充主线中的源码成员；未设置 id 时跳过整体引用的发布。
+
+<ComponentPreview files="scope-compile-detail" size="xxl" hideCode />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: '编译管线', description: '查看整张图的编译职责', url: '/kernel/components/design/principles' }]}
+/>

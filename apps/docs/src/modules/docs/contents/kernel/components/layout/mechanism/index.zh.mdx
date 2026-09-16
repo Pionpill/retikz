@@ -1,0 +1,158 @@
+---
+title: 实现原理
+description: 追踪 Layout 输入、执行模式、编译结果和宿主呈现的协作过程
+---
+
+先读[基础用法](/kernel/components/layout/usage)。这里解释 React Layout 如何连接输入、Vanilla processing 和 SVG / Canvas；Core 的几何编译与 Runtime 事务细节由各自包负责。
+
+## 整体流程
+
+一次更新可以概括为：接收组件树或 IR → 准备处理选项 → 生成场景结果 → 呈现 SVG / Canvas。以移动一个 Node 为例，输入中的位置发生变化，处理层计算新的几何，React 使用结果更新画面。
+
+- InputScene：由组件树收集出的绘图输入，尚需补齐默认值并转换。
+- IR：可保存为 JSON 的图形描述，进入 Core 编译。
+- Scene：编译后的渲染图元集合，交给 SVG / Canvas。
+- processing controller：Vanilla 管理持续更新的对象；retained 模式保留它，static 模式不创建它。
+- revision：一次成功发布的结果版本；同次 Scene 与 artifacts 属于同一版本。
+
+## 输入与结果发布
+
+`<Layout>` 把 JSX children 转成 `InputScene`，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。React render 阶段准备 static fallback；React commit 后再由 `runtime.mode` 选择 Vanilla retained processing controller 或无 controller 的 static processing。
+
+retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR 与 processing 配置，成功后才发布同 revision 的 Scene、artifacts、只读图层与 runtime meta。React 只订阅这个只读结果并接入 SVG / Canvas、事件与动画。static 路径只准备并物化当前 Scene，不创建 retained controller、Snapshot、diff、transaction 或 rollback。
+
+这条链路的语义所有权不会随入口漂移：React 只声明稳定的 SVG / Canvas 结果宿主；Vanilla processing 拥有 Input 归一、Core Program 与 retained transaction；core 不拥有 DOM 或 Canvas 实例，renderer 不反向定义新的图形语义。失败的 transaction 不发布新 revision，React 因此继续呈现上一次成功结果；调用方应让 Error Boundary 处理同步 render 错误。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React 输入与 processing options 接线',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 408,
+      endLine: 484,
+    },
+    {
+      label: 'React static fallback 与 retained processing 订阅',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 231,
+      endLine: 296,
+    },
+    {
+      label: 'Vanilla retained controller 的 Core Program 与 Runtime',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 94,
+      endLine: 174,
+    },
+    {
+      label: 'React 将 processing result 映射为 SVG 或 Canvas',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 99,
+      endLine: 176,
+    },
+    {
+      label: 'Core IR 编译 Scene',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 23,
+      endLine: 51,
+    },
+    {
+      label: 'Layout Runtime 判别配置',
+      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      startLine: 5,
+      endLine: 48,
+    },
+    {
+      label: 'Static 与 retained processing 分派',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 231,
+      endLine: 296,
+    },
+  ]}
+/>
+
+## 执行模式如何分流
+
+| 配置              | 更新行为                                         | 常驻状态与失败语义                                             |
+| ----------------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| `retained + auto` | 安全变化走局部 Patch，其余完整 fallback          | 保留 diagnostics、原子 commit 与 rollback；默认配置            |
+| `retained + full` | 有实际依赖变化时跳过 Program `update()` 完整运行 | 与 auto 持有相同 Session 状态；不是低内存模式                  |
+| `static`          | 每次完整 compile 并直接物化 SVG / Canvas         | 不创建 Session、Snapshot、diff 或 rollback；物化失败不承诺回滚 |
+
+`static` 不能同时传 `updateStrategy` 或 `onDiagnostic`。在 retained processing 上改变 `updateStrategy` 会重建 controller；改变 `mode` 会切换到另一条 processing 路径。
+
+## 视框如何确定
+
+上半部分决定内部坐标范围：显式 `viewBox` prop 优先，其次是 IR 自带的 `viewBox`，两者都没有时才使用内容边界加 padding。下半部分的显示尺寸默认跟随内容范围。显式数值 `width` / `height` 用于有意缩放：只给一个轴时另一轴按内容比例推导，两个轴都给时等比适配；CSS 字符串尺寸由浏览器排版，额外 CSS 约束也可能改变显示比例。
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-viewbox-resolution" size="sm" hideCode />
+
+图形被裁或留白过多时，先看 **View Code → IR**：显式 viewBox 可能小于可见图元，自动模式则可能被远离主体的可见边界拉大。只有 coordinate 而没有可见边界时，它不会单独扩展自动范围。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'viewBox 注入 IR',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 385,
+      endLine: 395,
+    },
+    {
+      label: '显式与自动 layout 决策',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 27,
+      endLine: 44,
+    },
+    {
+      label: '内容边界与 padding',
+      path: 'packages/kernel/core/src/compile/scene/layout.ts',
+      startLine: 23,
+      endLine: 31,
+    },
+  ]}
+/>
+
+## 高级宿主策略
+
+普通页面直接使用 `renderer`、`animate` 与 `snapshotAt` 即可。编辑器、测试工具等宿主需要统一控制整棵子树时，才使用 Provider；图把 renderer 的“缺省时回退”与动画的“宿主策略覆盖”分开。
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-runtime-priority" size="lg" hideCode />
+
+渲染 Provider 只补充缺省的 renderer，后代显式 prop 仍可覆盖；动画 Provider 则用于宿主统一控制整棵树，会覆盖后代 `animate`，其中 `system` 直接跟随系统偏好。`snapshotAt` 不参与这条回退链：一旦传入，SVG 与 Canvas 都直接输出指定时刻的静态帧。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'renderer 与动画模式解析',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 355,
+      endLine: 362,
+    },
+    {
+      label: 'processing result 的 SVG / Canvas 与静态截帧配置',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 99,
+      endLine: 176,
+    },
+    {
+      label: '系统动画偏好回退',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 132,
+      endLine: 133,
+    },
+  ]}
+/>
+
+## 完整实现流程
+
+沿图中的 Layout → Vanilla processing → Core 编译 → 结果宿主阅读源码。React 负责输入与显示，Vanilla 管理处理状态，Core 产出场景；返回的结果再交给 React 呈现。上文的源码入口对应这些阶段。
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-input-flow" size="sm" hideCode />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '编译管线', description: '了解 Core 如何生成场景', url: '/kernel/components/internals/compilation' },
+    { title: 'Runtime', description: '了解事务与增量执行的职责', url: '/kernel/packages/runtime' },
+  ]}
+/>

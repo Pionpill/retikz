@@ -1,0 +1,36 @@
+---
+title: Schema 参考
+description: 查询 Layout 使用的场景根结构与视框 Schema
+---
+
+本页只展示 Layout 接入直接相关的 Core 数据契约，不是 React `LayoutProps` 的校验规则。均从 `@retikz/core` 公开入口获取；Node、Path、Scope 等子节点通过字段类型链接查阅。
+
+## SceneSchema
+
+<ZodSchema
+  name="SceneSchema"
+  description="retikz IR 顶层 scene：一份图的规范 JSON 表示。"
+  descriptions={{
+    version: 'IR 主版本号；schema 出现破坏性变更时才递增',
+    type: '判别字段，标记该对象为 scene 根节点',
+    theme: '全图稀疏 Theme；包含 style 与 mode，从默认 light 基线开始继承，并由后代 Scope 继续覆盖',
+    children: 'scene 的顶层子节点列表；node 注册的 id 可被 path 引用',
+    viewBox:
+      '显式视框 `{ x, y, width, height }`，覆盖自动算的布局范围（固定尺寸 / 裁剪 / 多图对齐）；设值后 Scene.layout 直接用它、忽略 padding；省略则自动取 AABB + padding',
+    animations:
+      'scene 级（镜头）时间轴动画 track 数组；`viewBox` 属性可动画化做缩放 / 平移。静态 `layout` 始终是末态（settled）取景，镜头动画不影响它',
+  }}
+/>
+
+## ViewBoxSchema
+
+<ZodSchema
+  name="ViewBoxSchema"
+  description="显式视框，覆盖自动计算的布局范围。"
+  descriptions={{
+    x: '视框左上角 x',
+    y: '视框左上角 y',
+    width: '视框宽度，必须为正数',
+    height: '视框高度，必须为正数',
+  }}
+/>

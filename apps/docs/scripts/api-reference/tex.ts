@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { JSONOutput } from 'typedoc';
-import { Application, normalizePath, OptionDefaults } from 'typedoc';
+import { Application, normalizePath, OptionDefaults, ReflectionKind } from 'typedoc';
 
 import { translateTexApiReference } from './tex.en';
 
@@ -12,6 +12,10 @@ export type ApiReferenceLanguage = 'zh' | 'en';
 
 export type ApiReferenceEntry = {
   source: string;
+  /** 组件参考按公开标识符筛选；省略时收录入口全部导出 */
+  symbols?: ReadonlyArray<string>;
+  /** 展开所选交叉类型中直接声明的字段，引用契约仍保留在签名中 */
+  expandIntersectionMembers?: boolean;
   title: Record<ApiReferenceLanguage, string>;
 };
 
@@ -146,6 +150,8 @@ const renderType = (type: JSONOutput.SomeType | undefined): string => {
       return type.types.map(renderType).join(' & ');
     case 'tuple':
       return `[${type.elements?.map(renderType).join(', ') ?? ''}]`;
+    case 'indexedAccess':
+      return `${renderType(type.objectType)}[${renderType(type.indexType)}]`;
     case 'query':
       return `typeof ${renderType(type.queryType)}`;
     case 'typeOperator':
@@ -196,9 +202,22 @@ const toTypeParameters = (
     description: renderComment(parameter.comment),
   }));
 
+/** 提取交叉类型中直接声明的对象字段，引用类型保留在签名中 */
+const inlineMembers = (type: JSONOutput.SomeType | undefined): Array<JSONOutput.DeclarationReflection> => {
+  if (type?.type === 'reflection') return type.declaration.children ?? [];
+  if (type?.type === 'intersection') return type.types.flatMap(inlineMembers);
+  return [];
+};
+
 /** 从 declaration 提取可查询的对象成员 */
-const toMembers = (reflection: JSONOutput.DeclarationReflection): Array<ApiReferenceMember> =>
-  (reflection.children ?? [])
+const toMembers = (
+  reflection: JSONOutput.DeclarationReflection,
+  expandIntersectionMembers: boolean,
+): Array<ApiReferenceMember> =>
+  (
+    reflection.children ??
+    (expandIntersectionMembers && reflection.type?.type === 'intersection' ? inlineMembers(reflection.type) : [])
+  )
     .filter(member => member.flags.isInherited !== true)
     .map(member => ({
       name: member.name,
@@ -212,7 +231,11 @@ const toMembers = (reflection: JSONOutput.DeclarationReflection): Array<ApiRefer
     }));
 
 /** 将 TypeDoc declaration 转为页面需要的公开 API 投影 */
-const toSymbol = (reflection: JSONOutput.DeclarationReflection, packageDirectory: string): ApiReferenceSymbol => {
+const toSymbol = (
+  reflection: JSONOutput.DeclarationReflection,
+  packageDirectory: string,
+  expandIntersectionMembers: boolean,
+): ApiReferenceSymbol => {
   const signature = reflection.signatures?.[0];
   const comments = [signature?.comment, reflection.comment];
   const primaryComment = signature?.comment ?? reflection.comment;
@@ -236,7 +259,7 @@ const toSymbol = (reflection: JSONOutput.DeclarationReflection, packageDirectory
       : reflection.type
         ? renderType(reflection.type)
         : renderReflectionType(reflection),
-    members: toMembers(reflection),
+    members: toMembers(reflection, expandIntersectionMembers),
     source:
       sourceFileName && reflection.sources?.[0]
         ? {
@@ -378,7 +401,7 @@ const renderSymbol = (
     `### ${symbol.name}`,
     renderSummary(symbol, lang, translate),
     localizeText(symbol.details, lang, translate),
-    symbol.members.length === 0 ? `\`\`\`ts\n${symbol.signature}\n\`\`\`` : '',
+    symbol.members.length === 0 || symbol.signature.includes(' & ') ? `\`\`\`ts\n${symbol.signature}\n\`\`\`` : '',
     renderMembers(symbol.members, lang, translate),
     renderTypeParameters(symbol.typeParameters, lang, translate),
     renderParameters(symbol.parameters, lang, translate),
@@ -404,6 +427,7 @@ export const createApiReferenceMdx = async (
   const app = await Application.bootstrapWithPlugins({
     entryPoints: config.entries.map(entry => toPosixPath(entry.source)),
     entryPointStrategy: 'expand',
+    basePath: repositoryRoot,
     name: config.packageName,
     skipErrorChecking: true,
     tsconfig: config.tsconfigPath,
@@ -428,8 +452,22 @@ export const createApiReferenceMdx = async (
 
   return config.entries
     .map((entry, index) => {
-      const symbols = (entrySymbols[index] ?? [])
-        .map(symbol => toSymbol(symbol, config.packageDirectory))
+      const exported = entrySymbols[index] ?? [];
+      for (const name of entry.symbols ?? []) {
+        if (!exported.some(symbol => symbol.name === name)) {
+          throw new Error(`Missing public API ${name} in ${entry.source}`);
+        }
+      }
+      const symbols = exported
+        .filter(symbol => entry.symbols === undefined || entry.symbols.includes(symbol.name))
+        .filter(
+          symbol =>
+            !(
+              symbol.kind === ReflectionKind.Namespace &&
+              exported.some(other => other.name === symbol.name && other.kind === ReflectionKind.Variable)
+            ),
+        )
+        .map(symbol => toSymbol(symbol, config.packageDirectory, entry.expandIntersectionMembers === true))
         .map(symbol => {
           const schemaUrl = config.schemaReferences?.[symbol.name];
           if (!schemaUrl) return renderSymbol(symbol, lang, config.translate);

@@ -1,0 +1,155 @@
+---
+title: Implementation
+description: Trace Scope coordinates, namespaces, envelopes, and Scene output
+---
+
+Read [Basic usage](/kernel/components/scope/usage) first. This page traces one Scope from its local subtree to a Scene group, covering coordinates, references, and clipping. Renderer drawing is outside this boundary.
+
+## Overall flow
+
+A Scope containing two nodes first establishes child positions and group bounds, applies transforms and final placement, then contributes a reference handle and clip resources to Scene.
+
+- Intrinsic envelope: the group boundary in its own coordinates, used for self anchors and pivots.
+- Namespace: a table of named layouts; nested Scopes may own separate tables.
+- Transform chain: the sequence mapping local coordinates into figure coordinates.
+
+<ComponentPreview files="scope-compile-flow" size="md" hideCode />
+
+## Transforms and relative positions
+
+Transforms are determined in two stages. Transforms that do not depend on bounds can resolve before children compile; rotation or scale pivots based on envelope anchors must wait until child layout completes. Transforms then become Scene translation, rotation, and scale operations, followed by the outermost `placement` translation.
+
+Index 0 is the outer transform and the last item acts first; placement is prepended at index 0 and acts last. For example, rotating a two-node subfigure before aligning its right edge requires computing the envelope and then finding the transformed edge.
+
+<ComponentPreview files="scope-coordinate-flow" size="sm" hideCode />
+
+In the diagram, referent means the referenced target and relative means the offset. An external target's global position is inverse-projected into local coordinates, offset, then projected back. One final transform chain drives Scene groups, namespace layouts, layout observations, and automatic viewBox geometry without transforming children twice.
+
+A zero scale remains legal as a purely visual transform. Any operation that must inverse-project across that chain throws `non-invertible scope transform`. A Scope-placement NodeTarget sees only completed Nodes, Coordinates, or Scopes before the current traversal point; forward, self, descendant, and unresolved Scope-placeholder references fail loudly.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Final transforms and placement after envelope collection',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 964,
+      endLine: 1009,
+    },
+    {
+      label: 'Converge transform inputs',
+      path: 'packages/kernel/core/src/compile/scope.ts',
+      startLine: 51,
+      endLine: 104,
+    },
+    {
+      label: 'Resolve relative positions',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      startLine: 42,
+      endLine: 81,
+    },
+    {
+      label: 'Scope-chain projection context',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 67,
+      endLine: 100,
+    },
+    {
+      label: 'Deferred Path resolution and in-place backfill',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1234,
+      endLine: 1246,
+    },
+  ]}
+/>
+
+## Namespaces and id conflicts
+
+A frame is one level of the namespace lookup tables. A default Scope reuses the current namespace frame. Only `localNamespace` creates a frame; lookup returns the first inside-out match, while registration writes only to the current frame.
+
+<ComponentPreview files="scope-namespace-resolution" size="md" hideCode />
+
+Equal ids in different frames are valid: the inner name hides the outer one (shadowing). A duplicate in one frame emits `DUPLICATE_NODE_ID` and keeps the later definition. `scope.id` registers in the parent before the child frame is entered, so the group handle remains externally visible.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Namespace frame lifecycle',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 155,
+      endLine: 182,
+    },
+    {
+      label: 'Namespace registration',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 184,
+      endLine: 214,
+    },
+    {
+      label: 'Namespace inside-out lookup',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 240,
+      endLine: 252,
+    },
+    {
+      label: 'Parent and child frame orchestration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1101,
+      endLine: 1150,
+    },
+  ]}
+/>
+
+## Group handles and Scene output
+
+<ComponentPreview files="scope-boundary-clip" size="md" hideCode />
+
+`scope.id` and `clip` follow separate paths: one summarizes child layouts as a reference handle, while the other resolves a JSON clip spec into a Scene resource. Both stop at the Core compile boundary.
+
+The Scope envelope collects node, coordinate, and nested-Scope layouts, not path routes. AABB means an axis-aligned bounding box. The default reference envelope uses this rectangular bound; circle mode computes a minimum enclosing circle. A `GroupPrim` is emitted when the subtree has output or Scope carries `transforms` / `id` / `clip`; an empty Scope without those semantics is pruned.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Scope intrinsic envelope',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 884,
+      endLine: 916,
+    },
+    {
+      label: 'Scope Group output and child orchestration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1065,
+      endLine: 1100,
+    },
+    {
+      label: 'Rectangle and circle synthetic layouts',
+      path: 'packages/kernel/core/src/compile/node/synthetic.ts',
+      startLine: 121,
+      endLine: 165,
+    },
+    {
+      label: 'Clip resolution and resource registration',
+      path: 'packages/kernel/core/src/compile/resource/clip.ts',
+      startLine: 237,
+      endLine: 327,
+    },
+  ]}
+/>
+
+## Complete implementation flow
+
+Start with the Scope branch in traversal: establish the namespace, compile children and collect bounds, then resolve self points and transforms. Finally register the group handle, resolve clipping, and emit the Group. The diagram adds source members to the main line; without an id, publishing the group reference is skipped.
+
+<ComponentPreview files="scope-compile-detail" size="xxl" hideCode />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation',
+      description: 'Place Scope within the complete compile pipeline',
+      url: '/kernel/components/design/principles',
+    },
+  ]}
+/>

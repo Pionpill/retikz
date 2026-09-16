@@ -177,7 +177,7 @@ import { Path, Step } from '@retikz/react';
 
 ### 端点引用为什么支持后定义
 
-编译器遍历到 `<Path>` 时不会立刻生成图元，而是加入待处理队列；需要保持当前输出层级时，还会留下绘制顺序占位。它继续注册当前 scope 内的 `<Node>` 与 `<Coordinate>`，待该 scope 扫描完成后再统一解析 `Step.to`、控制点和连接面。普通 scope 会把图元回填到占位处；带变换 scope 的全局投影规则见 [`<Scope>` 技术原理](/kernel/components/layout/scope#技术原理)。
+编译器遍历到 `<Path>` 时不会立刻生成图元，而是加入待处理队列；需要保持当前输出层级时，还会留下绘制顺序占位。它继续注册当前 scope 内的 `<Node>` 与 `<Coordinate>`，待该 scope 扫描完成后再统一解析 `Step.to`、控制点和连接面。普通 scope 会把图元回填到占位处；带变换 scope 的全局投影规则见 [`<Scope>` 技术原理](/kernel/components/scope/mechanism)。
 
 因此 path 端点可以引用同一 scope 内稍后声明的 id，同时仍保持原来的绘制顺序。这个能力只属于延迟生成的 path；`Node.position` 与 scope transform 仍在遍历到自身时解析，不能据此假设所有 id 引用都支持后定义。
 

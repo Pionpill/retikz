@@ -86,7 +86,7 @@ Coordinate 用 `{ of, offset }` 派生下一个 coordinate——靠一个根 coo
 
 Coordinate 的 `position` 会立即解析。若它依赖另一个 id，该 id 必须已经在当前可见命名空间中登记；引用同一层里后定义的 Node / Coordinate 会直接报错。位置解析成功后，编译器把结果投影到全局坐标，保存成一条只有中心坐标的零尺寸几何记录，再按 `id` 登记。
 
-Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到已登记的 id。Path 则先排队，等当前 Scope 的 children 完成登记后再解析端点，所以同一作用域里的 path 可以引用写在它后面的 Coordinate。`localNamespace` 带来的可见范围仍遵循 [Scope 的命名空间规则](/kernel/components/layout/scope#命名空间与-id-冲突)。
+Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到已登记的 id。Path 则先排队，等当前 Scope 的 children 完成登记后再解析端点，所以同一作用域里的 path 可以引用写在它后面的 Coordinate。`localNamespace` 带来的可见范围仍遵循 [Scope 的命名空间规则](/kernel/components/scope/mechanism#命名空间与-id-冲突)。
 
 <SourceLinks
   sources={[

@@ -1,40 +1,54 @@
 ---
-title: 布局
-description: 布局家族负责建立整图与局部坐标语境：Layout 接入编译宿主，Scope 管理子图上下文，自定义裁剪区扩展 Scope 的可见边界。
+title: Layout · 布局
+description: 整张图的 React 接入入口，组织图形输入、注入扩展能力并呈现 SVG 或 Canvas
 ---
 
-这一分组只解决「图形内容放在哪个坐标语境中、怎样作为整体进入下游」的问题。`<Layout>` 是每张图唯一必需的顶层入口；`<Scope>` 在图内建立局部上下文，让一组 children 共享变换、默认值、引用边界与裁剪。
+`<Layout>` 是 React 中整张图的入口。把 Node、Path 等图元放入其中，Layout 接入编译并呈现结果；默认根据可见内容自动取景，无需先确定画布尺寸。
 
-它不负责定义 Node / Path 的几何语义，也不提供 plot / table 等领域布局算法。需要扩展 Scope 的裁剪词汇时，再通过 Clip Definition 接入同一条 registry 与编译路径。
+## 整体认识
 
-<ComponentPreview files="layout-family" size="sm" hideCode />
+下面从一张最小的节点连线图开始：Node 描述节点，Draw 描述连接，Layout 负责把这些内容作为一张图显示出来。调整节点位置时，图元决定几何变化，Layout 更新显示结果。
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-basic" size="sm" />
+
+Layout 可以接收组件树，也可以显示已经保存的 IR（可序列化的图形描述）。形状、箭头、公式等扩展从这里注入；组件属性与可保存的场景数据分别在 API 和 Schema 参考中查询。
 
 ## 职责一览
 
-| 组件         | 类型   | 职责                                    | 适合场景             |
-| ------------ | ------ | --------------------------------------- | -------------------- |
-| Layout       | Kernel | 汇合 JSX / IR、能力注入、编译与宿主输出 | 每张图的最外层入口   |
-| Scope        | Kernel | 建立子图的局部上下文与整体引用句柄      | 整组变换、隔离、裁剪 |
-| 自定义裁剪区 | 扩展   | 注册业务 clip kind，并解析为 Scene 资源 | 内置裁剪原语不足时   |
+| 文档        | 职责                         | 何时阅读           |
+| ----------- | ---------------------------- | ------------------ |
+| 基础用法    | 输入、取景、默认值与结果回调 | 开始绘图或调整输出 |
+| 实现原理    | 输入处理、执行模式与结果呈现 | 排查执行过程       |
+| API 参考    | Layout 属性与执行配置        | 查询精确调用契约   |
+| Schema 参考 | Scene 与 ViewBox 数据结构    | 保存或构造图形数据 |
+
+## 选择与边界
+
+Layout 是绘图入口，不是自动排版算法：节点位置仍由图元与定位规则描述。需要 Flex、Grid 等排列能力时，使用 [Layout 布局包](/library/layout)。
+
+一张图中的局部分组使用 [Scope](/kernel/components/scope) 管理变换、默认样式和裁剪；扩展裁剪形状阅读[自定义裁剪区](/kernel/components/scope/custom)。观察控制点和边界等辅助信息使用 [Inspect](/kernel/packages/inspect)。
+
+初次使用先阅读基础用法。只有排查更新、视框或渲染行为时才需要进入实现原理；完整属性和场景字段按需查表，无需先通读。
 
 ## 章节内容
 
 <LinkedSections
   items={[
     {
-      title: 'Layout',
-      description: '顶层容器：children / IR 入口、编译管线与完整 props',
-      url: '/kernel/components/layout/overview',
+      title: '基础用法',
+      description: '完成首次绘图，调整输入、取景和全图配置',
+      url: '/kernel/components/layout/usage',
+    },
+    { title: '实现原理', description: '理解输入处理、执行模式与宿主输出', url: '/kernel/components/layout/mechanism' },
+    {
+      title: 'API 参考',
+      description: '查询组件属性与执行配置的公开契约',
+      url: '/kernel/components/layout/api-reference',
     },
     {
-      title: 'Scope',
-      description: '局部坐标、整组引用、命名空间与裁剪',
-      url: '/kernel/components/layout/scope',
-    },
-    {
-      title: '自定义裁剪区',
-      description: '为 Scope 注册可复用的裁剪 kind',
-      url: '/kernel/components/layout/custom-clip',
+      title: 'Schema 参考',
+      description: '查询场景根结构与视框数据字段',
+      url: '/kernel/components/layout/schema-reference',
     },
   ]}
 />

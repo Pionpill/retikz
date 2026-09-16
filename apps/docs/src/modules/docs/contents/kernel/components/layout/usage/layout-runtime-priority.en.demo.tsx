@@ -46,7 +46,7 @@ const Demo: FC = () => (
       </Node>
     </LogicFigureFrame>
 
-    <LogicFigureFrame id="animation-policy-group">
+    <LogicFigureFrame id="animation-policy-group" transforms={[{ kind: 'translate', x: 0, y: 110 }]}>
       <LogicFigureFrameTitle>Animation (host policy override)</LogicFigureFrameTitle>
       <Node
         id="snapshot-at"

@@ -57,8 +57,8 @@ export const kernelV02: Release = {
         {
           label: { zh: 'Scene / Position 能力完善', en: 'Scene / Position completion' },
           content: {
-            zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, fraction }`（自包含 AbsoluteTarget）[Scope](/kernel/components/layout/scope)',
-            en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, fraction }` (self-contained AbsoluteTarget) [Scope](/kernel/components/layout/scope)',
+            zh: 'clip 裁切（Scope 级 ClipResource + clipRef）+ 自定义 viewBox override + 比例 partway 定位 `{ between, fraction }`（自包含 AbsoluteTarget）[Scope](/kernel/components/scope/usage)',
+            en: 'Clipping (Scope-level ClipResource + clipRef) + custom viewBox override + proportional partway positioning `{ between, fraction }` (self-contained AbsoluteTarget) [Scope](/kernel/components/scope/usage)',
           },
         },
       ],

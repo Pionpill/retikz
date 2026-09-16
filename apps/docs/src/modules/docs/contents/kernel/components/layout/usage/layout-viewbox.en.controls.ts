@@ -9,11 +9,18 @@ export const layoutViewboxControls = definePreviewControls({
   title: 'Layout Output Boundary',
   sections: [
     {
-      label: 'Internal viewBox',
+      label: 'Framing',
       controls: [
+        {
+          kind: 'switch',
+          id: LayoutViewBoxControlId.ViewBoxEnabled,
+          label: 'Set explicit viewBox',
+          defaultValue: false,
+        },
         {
           kind: 'number',
           id: LayoutViewBoxControlId.ViewBoxX,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: 'Origin x',
           defaultValue: -120,
           min: -240,
@@ -23,6 +30,7 @@ export const layoutViewboxControls = definePreviewControls({
         {
           kind: 'number',
           id: LayoutViewBoxControlId.ViewBoxY,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: 'Origin y',
           defaultValue: -120,
           min: -240,
@@ -32,6 +40,7 @@ export const layoutViewboxControls = definePreviewControls({
         {
           kind: 'range',
           id: LayoutViewBoxControlId.ViewBoxWidth,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: 'ViewBox width',
           defaultValue: 240,
           min: 80,
@@ -41,6 +50,7 @@ export const layoutViewboxControls = definePreviewControls({
         {
           kind: 'range',
           id: LayoutViewBoxControlId.ViewBoxHeight,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: 'ViewBox height',
           defaultValue: 240,
           min: 80,
@@ -56,6 +66,7 @@ export const layoutViewboxControls = definePreviewControls({
 export const previewControlContract = {
   controls: layoutViewboxControls,
   canonicalValues: {
+    viewBoxEnabled: false,
     viewBoxX: -120,
     viewBoxY: -120,
     viewBoxWidth: 240,

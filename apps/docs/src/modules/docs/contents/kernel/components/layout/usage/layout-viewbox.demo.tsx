@@ -16,12 +16,16 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       style={{ outline: '1px dashed gray', outlineOffset: '-1px' }}
-      viewBox={{
-        x: values.viewBoxX,
-        y: values.viewBoxY,
-        width: values.viewBoxWidth,
-        height: values.viewBoxHeight,
-      }}
+      viewBox={
+        values.viewBoxEnabled
+          ? {
+              x: values.viewBoxX,
+              y: values.viewBoxY,
+              width: values.viewBoxWidth,
+              height: values.viewBoxHeight,
+            }
+          : undefined
+      }
     >
       <Node
         id="o"
@@ -33,23 +37,21 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         0,0
       </Node>
       <Node id="c" position={[70, 70]} shape="circle" style={{ fill: 'darkorange' }} layout={{ minimumSize: 24 }} />
-      <Rectangle
-        center={[values.viewBoxX + values.viewBoxWidth / 2, values.viewBoxY + values.viewBoxHeight / 2]}
-        width={viewBoxGuideWidth}
-        height={viewBoxGuideHeight}
-        style={{ fill: 'none', stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
-      />
+      {values.viewBoxEnabled && (
+        <Rectangle
+          center={[values.viewBoxX + values.viewBoxWidth / 2, values.viewBoxY + values.viewBoxHeight / 2]}
+          width={viewBoxGuideWidth}
+          height={viewBoxGuideHeight}
+          style={{ fill: 'none', stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+        />
+      )}
     </Layout>
   );
 });
 
 export const previewSource = controlledPreview.source;
 
-/**
- * 自定义 viewBox 固定视框
- * @description 内容只有两个小圆，但显式 viewBox 定死 240×240 的视框（中心在原点）——内容不再撑满、四周留白由视框决定。
- *   有 viewBox 则覆盖自动算的 layout、忽略 padding。
- */
+/** Toggle explicit framing and automatic bounds around the two circles */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

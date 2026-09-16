@@ -86,7 +86,7 @@ The main chain shows what happens when the compiler reaches a Coordinate. The tw
 
 A Coordinate's `position` resolves immediately. If it depends on another id, that id must already be registered in the currently visible namespace; referencing a Node / Coordinate declared later at the same level throws. Once resolved, the compiler projects the result into global coordinates, stores it as a zero-size geometry record containing only the center coordinate, and registers it by `id`.
 
-Node / Coordinate position references also resolve during traversal, so they see only ids registered so far. Paths are queued and resolve their endpoints after the current Scope's children have registered, so a path can target a Coordinate declared later in the same scope. Visibility introduced by `localNamespace` still follows [Scope namespace rules](/kernel/components/layout/scope#namespaces-and-id-conflicts).
+Node / Coordinate position references also resolve during traversal, so they see only ids registered so far. Paths are queued and resolve their endpoints after the current Scope's children have registered, so a path can target a Coordinate declared later in the same scope. Visibility introduced by `localNamespace` still follows [Scope namespace rules](/kernel/components/scope/mechanism#namespaces-and-id-conflicts).
 
 <SourceLinks
   sources={[

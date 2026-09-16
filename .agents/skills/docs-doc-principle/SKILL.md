@@ -55,7 +55,7 @@ description: Use before writing or reviewing Retikz solution documentation, demo
 - H1 由 frontmatter 渲染，正文不再写 `# 标题`
 - `frontmatter.description` 要能脱离页面独立说明根问题、核心职责或使用入口，不写“本页介绍”
 - 中文标题不机械附括号英文；必须识别的 API、schema、类型名保留原名
-- 小节标题精简干练，优先用准确的名词或动词短语，避免整句提问、冗余修饰及重复页面主题；解释放在正文，保留区分小节所需的信息，页型规定的固定标题仍按对应 skill 执行
+- 小节标题精简干练，不与文档标题同名；例如“基础用法”页以“接入方式”开篇。优先用准确的名词或动词短语，解释放在正文；固定章节名与文档名重复时，改用具体任务名
 - 生僻术语在每页首次出现时就近解释
 - 正文保持中性，不写“竞品做不到 / 我们更强”；生态对照放 `<Comparison>`，隐藏后正文仍自洽
 - mdx 正文默认不加第三方外链；项目仓库内延伸阅读使用可点击的 GitHub 完整 URL。blog 的例外由 `docs-doc-blog` 定义

@@ -18,7 +18,9 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 3. **不变量**：位置、参考物、连接关系、取景或 JSX 结构中哪些必须固定
 4. **变量**：哪些公开 API 由 controls 改变，变化是否肉眼可辨
 
-同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
+基础用法先按 [docs-doc-usage](../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。
+
+后续同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
 
 ## 面板组织
 

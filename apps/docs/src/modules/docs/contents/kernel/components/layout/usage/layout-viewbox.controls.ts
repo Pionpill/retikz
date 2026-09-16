@@ -3,6 +3,7 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 /** Layout 输出边界面板使用的稳定字段 id */
 export const LayoutViewBoxControlId = {
+  ViewBoxEnabled: 'viewBoxEnabled',
   ViewBoxX: 'viewBoxX',
   ViewBoxY: 'viewBoxY',
   ViewBoxWidth: 'viewBoxWidth',
@@ -15,11 +16,18 @@ export const layoutViewboxControls = definePreviewControls({
   title: 'Layout 输出边界',
   sections: [
     {
-      label: '内部视框',
+      label: '取景方式',
       controls: [
+        {
+          kind: 'switch',
+          id: LayoutViewBoxControlId.ViewBoxEnabled,
+          label: '显式指定视框',
+          defaultValue: false,
+        },
         {
           kind: 'number',
           id: LayoutViewBoxControlId.ViewBoxX,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: '起点 x',
           defaultValue: -120,
           min: -240,
@@ -29,6 +37,7 @@ export const layoutViewboxControls = definePreviewControls({
         {
           kind: 'number',
           id: LayoutViewBoxControlId.ViewBoxY,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: '起点 y',
           defaultValue: -120,
           min: -240,
@@ -38,6 +47,7 @@ export const layoutViewboxControls = definePreviewControls({
         {
           kind: 'range',
           id: LayoutViewBoxControlId.ViewBoxWidth,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: '视框宽度',
           defaultValue: 240,
           min: 80,
@@ -47,6 +57,7 @@ export const layoutViewboxControls = definePreviewControls({
         {
           kind: 'range',
           id: LayoutViewBoxControlId.ViewBoxHeight,
+          visibleWhen: { controlId: LayoutViewBoxControlId.ViewBoxEnabled, oneOf: [true] },
           label: '视框高度',
           defaultValue: 240,
           min: 80,
@@ -62,6 +73,7 @@ export const layoutViewboxControls = definePreviewControls({
 export const previewControlContract = {
   controls: layoutViewboxControls,
   canonicalValues: {
+    viewBoxEnabled: false,
     viewBoxX: -120,
     viewBoxY: -120,
     viewBoxWidth: 240,

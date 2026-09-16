@@ -1,0 +1,113 @@
+---
+title: 基础用法
+description: 使用 Scope 组织局部坐标、整体引用、样式默认值与裁剪
+---
+
+用 Scope 让一组图元一起移动、共享默认值或接受裁剪。它放在 Layout 内，也可以嵌套；每个 Scope 只改变自己包含的子树。
+
+## 基础用法
+
+下面两个节点保留相对位置，整体向右平移 80。React 从 `@retikz/react` 导入 Scope；预览源码中的 Vanilla 写法通过 `@retikz/vanilla` 构造相同子树并生成 SVG。
+
+<ComponentPreview files="scope-basic" size="sm" />
+
+## 何时使用
+
+| 任务               | 使用入口               | Scope 的边界             |
+| ------------------ | ---------------------- | ------------------------ |
+| 整体变换一个子图   | `transforms`           | 不计算子元素原始位置     |
+| 按自身锚点对齐子图 | `placement`            | 只引用此前完成的目标     |
+| 从外部引用整组     | `id` + `boundingShape` | 不把 path 走线计入包络   |
+| 隔离可复用子图 id  | `localNamespace`       | `scope.id` 仍注册到外层  |
+| 切换局部领域主题   | `theme`                | Core 图元不会自动着色    |
+| 统一默认值         | `style` / `defaults`   | 元素显式值仍然优先       |
+| 限制可见区域       | `clip`                 | 不定义 renderer 专属语义 |
+| 调整整组栈序       | `zIndex`               | 不重排组内 children      |
+
+<ComponentAlert
+  type="warn"
+  title="不要为代码层级组织而包 Scope"
+  description="没有局部 Theme、共享变换、引用、命名空间、默认值或裁剪时，Scope 只会增加不必要的上下文边界。"
+/>
+
+## 变换输入
+
+五种平移写法与 Node 的相对定位模型一致；`rotate` 与 `scale` 负责局部坐标系的方向和尺度。数组顺序沿用 SVG transform list：最后一项先作用到局部点。
+
+| kind                | 核心字段                       | 作用                          |
+| ------------------- | ------------------------------ | ----------------------------- |
+| `translate`         | `x`, `y`                       | 固定笛卡尔平移                |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | 从原点或 referent 极坐标落点  |
+| `at-translate`      | `direction`, `of`, `distance?` | 落到 referent 的某个方向      |
+| `offset-translate`  | `of`, `offset?`                | 在 referent 上叠加局部偏移    |
+| `between-translate` | `between`, `fraction`          | 落到两个端点的比例位置        |
+| `rotate`            | `degrees`, `pivot?`            | 绕 Scope 自身点旋转           |
+| `scale`             | `x`, `y?`, `pivot?`            | 绕 Scope 自身点等比或分轴缩放 |
+
+## 局部坐标
+
+`O` / `T` 是 Scope 外的固定参照点，`q` 提供 Scope 的固有包络。面板选择七种 transform 之一，并可在任意模式下独立开关 `placement`；`placement` 不是 transform kind，而是 transforms 完成后的最外层定位。
+
+<ComponentPreview
+  files="scope-translate-basic"
+  size="sm"
+  caption="正方形 q 是唯一包络主体，小圆点只标记局部原点。“自身定位”默认关闭；开启后可在 O / T 间切换定位目标，selfAnchor 会把方形的对应锚点锁定到该目标。此时五种纯平移 transform 的位移会被最终定位抵消，因此面板隐藏无效的 transform 引用点。"
+/>
+
+`placement.target` 只接受父坐标系 `[x, y]` 或此前完成的 `{ id, anchor?, offset? }`；`selfAnchor` 缺省为 `center`，也可写标准 anchor、数字角度、`{ side, fraction }`、`origin` 或显式局部坐标。
+
+`rotate.pivot` 与 `scale.pivot` 使用同一套自身点并缺省为 `origin`。pivot 只读取 placement 之前的固有包络，因此移动 Scope 不会反过来改变旋转或缩放中心。其它相对方向仍在当前局部坐标系中解释，Scope 旋转后，`right` 的视觉方向会随坐标轴旋转。
+
+## 整体引用与命名空间
+
+设置 `id` 后，Scope 会根据 children 的包围盒生成一个可引用的整体目标。用面板切换 `boundingShape` 与连接 anchor，观察边界形状和连接落点如何独立变化；children 本身不会改变。
+
+<ComponentPreview files="scope-id-reference" size="sm" />
+
+`localNamespace` 只在确实要复用带固定 id 的子图时使用。面板默认让内外 Node 同为 `A`；关闭隔离时外部箭头会改连内部 Node，把内部 id 改成 `B` 可消除冲突。
+
+<ComponentPreview files="scope-local-namespace-basic" size="sm" />
+
+## 裁剪与层级
+
+`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及由 Standard 提供并注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/scope/custom)。
+
+<ComponentPreview files="scope-clip" size="md" />
+
+`zIndex` 调整整个 Scope 在父层的栈序，不会重排 Scope 内部 children。用面板分别修改四个 Node 与两个 Scope，比较组内排序和整组排序。
+
+<ComponentPreview files="scope-z-index" size="sm" />
+
+## 局部 Theme
+
+`<Scope theme>` 把稀疏的 `style` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。编译时 Core 根据当前 style registry 重新生成 shared colors；未注册的 style 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/usage#可继承-theme)。
+
+Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
+
+## 样式默认值
+
+Scope 同时提供 `style.color`、共享视觉属性 与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
+
+样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时查看 [API 参考](/kernel/components/scope/api-reference)，不必为颜色、线宽或透明度建立额外 Scope。
+
+<ComponentAlert
+  type="tip"
+  title="共享默认值也能缩小配置"
+  description="把真正共享的局部样式写在 Scope 上，可以避免为每个 child 重复同一组字段，通常能显著减小配置对象和持久化 JSON。Plot 等 Tier 2 包也常在 lowering 时把系列或图层样式集中为 Scope 默认值，以压缩生成 IR 的体积。"
+/>
+
+## 错误与限制
+
+- `placement` 只能引用此前已完成的目标，不能引用自身、后代或尚未完成的 Scope。
+- 零缩放可以用于视觉效果，但跨越它反算局部坐标会失败。
+- 同一命名空间的重复 id 会警告并采用后定义；可复用子图用 `localNamespace` 隔离内部 id。
+- 基础 Scope 不提供布局检查属性；需要检查子树时使用 Layout 包的 `LayoutInspectScope`。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Schema 参考', description: '查询可保存的数据结构', url: '/kernel/components/scope/schema-reference' },
+    { title: '水合', description: '给整体分组绑定事件', url: '/kernel/packages/render/hydration' },
+  ]}
+/>

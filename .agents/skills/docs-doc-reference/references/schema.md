@@ -18,6 +18,12 @@ registry 位于：
 apps/docs/src/modules/docs/components/mdx-content/zod-schema/schema-registry.ts
 ```
 
+## 组件收录范围
+
+- 按组件职责列出所需 schema 名称，再从包公开入口与现有 registry 获取；包级导入范围不决定页面展示范围
+- 只展示当前组件直接相关的契约，不全量生成同包 schema；跨组件的命名嵌套 schema 链接其权威参考，避免递归展开整包
+- 复用真实 schema，不为文档新造组件专属 schema、复制字段定义或深层导入内部文件；所选 schema 的自身字段仍须完整展示与翻译
+
 ## ZodSchema 规则
 
 - `name` 必须在 registry 注册；schema instance 必须来自包公开入口

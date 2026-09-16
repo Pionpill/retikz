@@ -1,0 +1,162 @@
+---
+title: Implementation
+description: Trace Layout input, execution modes, compilation results, and host presentation
+---
+
+Read [Basic usage](/kernel/components/layout/usage) first. This page traces how React Layout connects input, Vanilla processing, and SVG / Canvas. Core geometry compilation and Runtime transactions remain owned by their respective packages.
+
+## Overall flow
+
+An update follows four steps: accept a component tree or IR → prepare processing options → produce a scene → present SVG / Canvas. When a Node moves, its input position changes, processing computes new geometry, and React updates the display from that result.
+
+- InputScene: drawing input collected from components, before defaults and conversion.
+- IR: a JSON-serializable drawing description consumed by Core compilation.
+- Scene: compiled rendering primitives passed to SVG / Canvas.
+- Processing controller: the Vanilla object managing continued updates; retained mode keeps it, while static mode creates none.
+- Revision: a published result version shared by its Scene and artifacts.
+
+## Input and result publication
+
+`<Layout>` converts JSX children to an `InputScene` or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. The React render phase prepares a static fallback; after React commits, `runtime.mode` selects a Vanilla retained processing controller or controller-free static processing.
+
+The retained path uses a Vanilla controller to commit Input / IR and processing configuration in one transaction, then publishes same-revision Scene, artifacts, readonly layers, and runtime metadata. React only subscribes to that readonly result and wires SVG / Canvas, events, and animation. The static path only prepares and materializes the current Scene, without a retained controller, Snapshot, diff, transaction, or rollback.
+
+Semantic ownership does not drift with the entry point: React declares only a stable SVG / Canvas result host; Vanilla processing owns Input normalization, the Core Program, and retained transactions. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision, so React continues to present the prior successful result; callers should let an Error Boundary handle synchronous render failures.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'React input and processing-options wiring',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 408,
+      endLine: 484,
+    },
+    {
+      label: 'React static fallback and retained-processing subscription',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 231,
+      endLine: 296,
+    },
+    {
+      label: 'Vanilla retained controller Core Program and Runtime',
+      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
+      startLine: 94,
+      endLine: 174,
+    },
+    {
+      label: 'React mapping a processing result to SVG or Canvas',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 99,
+      endLine: 176,
+    },
+    {
+      label: 'Core IR to Scene compilation',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 23,
+      endLine: 51,
+    },
+    {
+      label: 'Discriminated Layout Runtime options',
+      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
+      startLine: 5,
+      endLine: 48,
+    },
+    {
+      label: 'Static and retained-processing dispatch',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 231,
+      endLine: 296,
+    },
+  ]}
+/>
+
+## How Execution Modes Dispatch
+
+| Configuration     | Update behavior                                           | Resident state and failure semantics                                                       |
+| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps diagnostics, atomic commits, and rollback; this is default                           |
+| `retained + full` | Skips Program `update()` for affected work and runs fully | Holds the same Session state as auto; not a low-memory mode                                |
+| `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, or rollback; materialization may fail without rollback |
+
+`static` cannot be combined with `updateStrategy` or `onDiagnostic`. Changing `updateStrategy` in retained processing rebuilds the controller, while changing `mode` switches to the other processing path.
+
+## How the viewport is chosen
+
+The upper track resolves the internal coordinate range: an explicit `viewBox` prop wins, then an IR-owned `viewBox`, then content bounds plus padding. The lower display-size track follows the content bounds by default. Explicit numeric `width` / `height` request scaling: one axis derives the other proportionally, while two axes use an aspect-ratio fit. CSS string dimensions are laid out by the browser; additional CSS constraints can also change the displayed scale.
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-viewbox-resolution" size="sm" hideCode />
+
+If a figure is clipped or has too much empty space, inspect **View Code → IR** first. An explicit viewBox may be smaller than visible primitives, while automatic layout may be expanded by visible bounds far from the subject. A coordinate without a visible boundary does not extend the automatic range by itself.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'viewBox injection into IR',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 385,
+      endLine: 395,
+    },
+    {
+      label: 'explicit versus automatic layout',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 27,
+      endLine: 44,
+    },
+    {
+      label: 'content bounds and padding',
+      path: 'packages/kernel/core/src/compile/scene/layout.ts',
+      startLine: 23,
+      endLine: 31,
+    },
+  ]}
+/>
+
+## Advanced Host Policies
+
+Ordinary pages can use `renderer`, `animate`, and `snapshotAt` directly. Editors and test harnesses only need Providers when they must control an entire subtree; the figure separates renderer fallback from animation host-policy overrides.
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-runtime-priority" size="lg" hideCode />
+
+The renderer Provider fills only an omitted renderer, so an explicit descendant prop still wins. The animation Provider intentionally controls the entire subtree and overrides descendant `animate` props; its `system` mode follows the system preference directly. `snapshotAt` is not part of that fallback chain: once present, both SVG and Canvas emit only the static frame at that time.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'renderer and animation mode resolution',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 355,
+      endLine: 362,
+    },
+    {
+      label: 'processing-result SVG / Canvas and snapshot configuration',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 99,
+      endLine: 176,
+    },
+    {
+      label: 'system motion fallback',
+      path: 'packages/kernel/render/src/animation/runtime.ts',
+      startLine: 132,
+      endLine: 133,
+    },
+  ]}
+/>
+
+## Complete implementation flow
+
+Follow Layout → Vanilla processing → Core compilation → result hosting. React owns input and presentation, Vanilla owns processing state, and Core produces the Scene. The result returns to React for display; the source links above locate these stages.
+
+<ComponentPreview files="/kernel/components/layout/usage/layout-input-flow" size="sm" hideCode />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Compilation', description: 'How Core produces a Scene', url: '/kernel/components/internals/compilation' },
+    {
+      title: 'Runtime',
+      description: 'Transaction and incremental execution responsibilities',
+      url: '/kernel/packages/runtime',
+    },
+  ]}
+/>

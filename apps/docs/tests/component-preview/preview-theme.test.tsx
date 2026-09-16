@@ -22,8 +22,8 @@ import {
   PreviewThemeStyle,
   resolvePreviewTheme,
 } from '../../src/modules/docs/components/component-preview/theme';
-import ThemeInheritanceEn from '../../src/modules/docs/contents/kernel/components/layout/overview/theme-inheritance.en.demo';
-import ThemeInheritanceZh from '../../src/modules/docs/contents/kernel/components/layout/overview/theme-inheritance.zh.demo';
+import ThemeInheritanceEn from '../../src/modules/docs/contents/kernel/components/layout/usage/theme-inheritance.en.demo';
+import ThemeInheritanceZh from '../../src/modules/docs/contents/kernel/components/layout/usage/theme-inheritance.zh.demo';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
