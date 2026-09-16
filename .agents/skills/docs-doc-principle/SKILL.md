@@ -26,6 +26,7 @@ description: Use before writing or reviewing Retikz solution documentation, demo
 
 ## 按需补充
 
+- 公开 JSDoc 与 API 参考质量：[docs-api-jsdoc](../docs-api-jsdoc/SKILL.md)
 - 安装、宿主切换或分步接入：[DocTabs / DocSteps](references/doc-tabs-steps.md)
 - 章节索引或延伸阅读：[LinkedSections](references/linked-sections.md)
 - ComponentPreview 源码、数据、双语 demo：[预览契约](references/component-preview.md)

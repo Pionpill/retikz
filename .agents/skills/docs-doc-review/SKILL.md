@@ -38,7 +38,7 @@ description: Use when independently reviewing retikz docs pages or docs diffs fo
 - 总纲固定入门：按 docs-doc-group 检查整体认识、成员协作、贯穿示例或关系图、选择边界与阅读体量；不能只有导语和末尾 LinkedSections 子页索引
 - 三快捷入口按 docs-doc-entry；基础用法与使用专题按 docs-doc-usage，固定入门，不残留旧五段模板或完整技术原理 / API 字典
 - 自定义页按 docs-doc-extension，固定进阶，证明定义、注入、引用与结果；调用内置扩展不误标自定义
-- API / Schema 参考按 docs-doc-reference，固定进阶，完整查询有唯一真源，生成产物与翻译覆盖准确
+- API / Schema 参考按 docs-doc-reference，不设难度，完整查询有唯一真源；公开 JSDoc、生成投影与双语完整性按 [docs-api-jsdoc](../docs-api-jsdoc/SKILL.md) 检查
 - 基础概念固定入门，核心概念与设计理念固定进阶；源码执行过程不混入概念教学
 - 进阶专题与实现原理固定底层，按 docs-doc-mechanism 检查前提、阶段、图、源码与延伸阅读
 - 综合教程按 docs-doc-example，固定入门，逐步产出结果；Prompt 仅 AI 创作案例需要

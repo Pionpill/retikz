@@ -24,6 +24,7 @@ description: Use when writing or updating generated API reference or source-driv
 
 ## 按需读取
 
+- 公开 JSDoc 写作、开发者可读性、示例/默认值与双语展示审查：[docs-api-jsdoc](../docs-api-jsdoc/SKILL.md)
 - API 生成、JSDoc 投影与英文翻译：[API 参考](references/api.md)
 - ZodSchema、字段中文翻译与 registry：[Schema 参考](references/schema.md)
 
