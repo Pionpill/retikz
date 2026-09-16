@@ -43,7 +43,7 @@ The definition is runtime capability and never enters IR. IR keeps only `name`, 
 React injects definitions through `<Layout pathGenerators>`; direct core calls use `CompileOptions.pathGenerators`. A generator Step then references the registered name.
 
 ```tsx
-<Layout pathGenerators={[wave]}>
+<Layout extensions={{ pathGenerators: [wave] }}>
   <Path>
     <Step kind="move" to="A" />
     <Step kind="generator" name="wave" to="B" params={{ amplitude: 12 }} />

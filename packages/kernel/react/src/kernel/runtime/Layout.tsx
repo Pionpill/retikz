@@ -1,9 +1,4 @@
 import type {
-  AnyCompositeDefinition,
-  AnyPathKindDefinition,
-  ArrowDefinition,
-  BoundaryDefinition,
-  ClipDefinition,
   CompileArtifact,
   CompileArtifactOptions,
   CompileOptions,
@@ -12,11 +7,7 @@ import type {
   IRScene,
   IRViewBox,
   LowerTex,
-  PathGeneratorDefinition,
-  PatternDefinition,
-  ShapeDefinition,
   TextMeasurer,
-  ThemeStyleDefinition,
 } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
@@ -136,6 +127,20 @@ const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: str
     });
 };
 
+/** Layout 的运行时扩展注册，不进入持久化 IR */
+export type LayoutExtensions = Pick<
+  CompileOptions,
+  | 'shapes'
+  | 'boundaries'
+  | 'clips'
+  | 'arrows'
+  | 'patterns'
+  | 'pathGenerators'
+  | 'pathKinds'
+  | 'composites'
+  | 'themeStyles'
+>;
+
 /** React Layout 的公开属性 */
 export type LayoutProps = {
   /** JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 */
@@ -184,24 +189,8 @@ export type LayoutProps = {
   nodeDistance?: number;
   /** 默认字号 */
   fontSize?: number;
-  /** 自定义形状定义 */
-  shapes?: ReadonlyArray<ShapeDefinition>;
-  /** 自定义边界定义 */
-  boundaries?: ReadonlyArray<BoundaryDefinition>;
-  /** 自定义裁剪定义 */
-  clips?: ReadonlyArray<ClipDefinition>;
-  /** 自定义箭头定义 */
-  arrows?: ReadonlyArray<ArrowDefinition>;
-  /** 自定义 pattern 定义 */
-  patterns?: ReadonlyArray<PatternDefinition>;
-  /** 自定义 path generator 定义 */
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  /** 自定义 path kind 定义 */
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
-  /** Tier 2 composite definitions */
-  composites?: ReadonlyArray<AnyCompositeDefinition>;
-  /** Core Theme style definitions */
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+  /** 按能力分类的运行时扩展注册，复用 Core 编译契约 */
+  extensions?: LayoutExtensions;
   /** 公式下沉能力 */
   lowerTex?: LowerTex;
   /** artifact 请求 */
@@ -323,21 +312,14 @@ export const Layout: FC<LayoutProps> = props => {
     idPrefix,
     nodeDistance,
     fontSize,
-    shapes,
-    boundaries,
-    clips,
-    arrows,
-    patterns,
-    pathGenerators,
-    pathKinds,
-    composites,
-    themeStyles,
+    extensions,
     lowerTex,
     artifacts,
     onArtifacts,
     onCompileResult,
     rootScope,
   } = props;
+  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles } = extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);

@@ -1,0 +1,62 @@
+---
+title: 扩展用法
+description: 配置主题、注入能力、读取编译结果并控制更新
+---
+
+先完成[基础用法](/kernel/components/layout/usage)中的绘图接入。需要为复合组件选择主题、接入自定义形状、在图外读取几何结果或调整更新方式时，再使用下面的配置。示例聚焦 React `<Layout>` 的属性与回调。
+
+## 主题配置
+
+`theme` 为后代 Composite（复合组件）选择主题；它不会自动设置普通 Node / Path 的颜色。普通图元使用自身的 `style`，全图图元默认值使用 `rootScope`。在面板中切换主题风格与明暗模式，观察同一卡片的颜色变化；卡片的位置和尺寸保持不变。
+
+<ComponentPreview files="theme-inheritance" size="sm" />
+
+`theme` 的显式字段覆盖已有 IR 的根主题；未声明字段保留原值。完整继承规则见[主题](/kernel/components/design/theme)。
+
+## 能力注入
+
+通过 `Layout.extensions` 按能力类别传入扩展定义。`shapes` 只是其中的形状扩展：下面的 `ShapeDefinition` 定义折角文件的占位、连接边界与输出图元，再通过 `extensions={{ shapes: [fileShape] }}` 注册。两个 Node 引用注册名 `drawio-file`，连线端点停在自定义轮廓上。
+
+<ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
+
+`extensions` 还支持连接边界（`boundaries`）、裁剪区（`clips`）、箭头（`arrows`）、图案（`patterns`）、路径生成器（`pathGenerators`）、路径类型（`pathKinds`）、复合组件（`composites`）和主题风格（`themeStyles`）。这些定义统一通过 `extensions` 进入对应注册表，由编译过程消费。
+
+本节只展示形状扩展的接入方式；其他能力的定义与使用将在后续对应主题的自定义指南中分别说明。完整字段见 [API 参考](/kernel/components/layout/api-reference)。
+
+## 读取编译产物
+
+需要在图外显示节点的排版尺寸时，用 `artifacts={{ nodeLayouts: true }}` 请求节点布局快照，再通过 `onArtifacts` 读取结果。回调在 React commit 后通知同次编译结果；快照不会随之后的更新而原地变化。
+
+<ComponentPreview files="layout-artifacts" size="sm" />
+
+示例把节点数量和正文宽度显示在图外。快照描述编译后的几何信息，不是实时 DOM 测量，也不能用于修改图形输入。
+
+## 执行模式与更新策略
+
+retained 会保留上一次处理状态用于后续更新；static 每次重新处理当前图形。`auto` 允许增量更新，`full` 在发生变化时完整计算。
+
+```tsx
+<Layout /> {/* retained + auto */}
+<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout runtime={{ mode: 'static' }} />
+```
+
+默认 `retained + auto` 兼顾局部更新和事务回滚；要禁用增量计算但保留处理状态与事务回滚时选 `retained + full`，要减少常驻处理状态时选 `static`。
+
+## 错误与限制
+
+`runtime.mode: 'static'` 不能与 `updateStrategy` 或 `onDiagnostic` 同时使用。
+
+### 全图配置边界
+
+`rootScope` 省略、为空或仅包含值为 `undefined` 的可选字段，以及单独的 `defaults.reset: false` / `[]` 不会创建根 Scope。已有的 `font: {}` 仍按字体字段契约产生覆盖。显式 Scope 保留原结构；`Layout.style` 始终是宿主 CSS。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '接入图形并设置取景与默认值', url: '/kernel/components/layout/usage' },
+    { title: '实现原理', description: '理解处理过程与结果发布', url: '/kernel/components/layout/mechanism' },
+    { title: 'API 参考', description: '查询完整属性契约', url: '/kernel/components/layout/api-reference' },
+  ]}
+/>

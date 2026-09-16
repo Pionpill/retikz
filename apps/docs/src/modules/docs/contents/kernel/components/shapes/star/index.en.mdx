@@ -59,7 +59,7 @@ import { StarShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Layout shapes={[StarShapeDefinition]}>
+<Layout extensions={{ shapes: [StarShapeDefinition] }}>
   <Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
 </Layout>
 ```

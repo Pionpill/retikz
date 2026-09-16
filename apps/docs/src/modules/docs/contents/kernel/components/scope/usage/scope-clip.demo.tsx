@@ -63,13 +63,13 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -110, y: -60, width: 220, height: 120 }}
-      clips={[
+      extensions={{ clips: [
         CircleClipDefinition,
         EllipseClipDefinition,
         PolygonClipDefinition,
         PathClipDefinition,
         CompoundClipDefinition,
-      ]}
+      ] }}
     >
       <Scope clip={CLIP_BY_KIND[values.clipKind]}>
         <Node

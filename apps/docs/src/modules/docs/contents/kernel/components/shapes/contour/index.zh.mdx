@@ -19,7 +19,7 @@ import { ContourShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Layout shapes={[ContourShapeDefinition]}>
+<Layout extensions={{ shapes: [ContourShapeDefinition] }}>
   <Node
     shape={{
       type: 'contour',

@@ -15,9 +15,19 @@ const layoutConfig: ApiReferencePackageConfig = {
     {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+      memberGroups: {
+        LayoutProps: [
+          { title: { zh: '图形输入与默认值', en: 'Drawing input and defaults' }, members: ['children', 'ir', 'theme', 'rootScope', 'nodeDistance', 'fontSize'] },
+          { title: { zh: '宿主与渲染', en: 'Host and rendering' }, members: ['width', 'height', 'viewBox', 'className', 'style', 'renderer', 'idPrefix', 'handlers'] },
+          { title: { zh: '扩展注册', en: 'Extension registration' }, members: ['extensions', 'lowerTex'] },
+          { title: { zh: '动画', en: 'Animation' }, members: ['animations', 'animate', 'snapshotAt', 'animationRef', 'easings', 'animationProperties'] },
+          { title: { zh: '执行与结果', en: 'Execution and results' }, members: ['runtime', 'authoring', 'compileDriver', 'artifacts', 'onArtifacts', 'onCompileResult'] },
+        ],
+      },
       symbols: [
         'Layout',
         'LayoutProps',
+        'LayoutExtensions',
         'LayoutRuntimeMode',
         'LayoutRuntimeModeValue',
         'LayoutRuntimeOptions',

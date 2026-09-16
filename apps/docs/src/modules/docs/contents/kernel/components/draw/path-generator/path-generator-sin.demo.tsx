@@ -33,7 +33,7 @@ const sin = definePathGenerator({
 });
 
 const Demo: FC = () => (
-  <Layout pathGenerators={[sin]}>
+  <Layout extensions={{ pathGenerators: [sin] }}>
     <Path arrow="->" style={{ stroke: '#2563eb', strokeWidth: 2.2 }}>
       <Step kind="move" to={[-170, 0]} />
       <Step kind="generator" name="sin" to={[170, 0]} params={{ amplitude: 34, waves: 3 }} />

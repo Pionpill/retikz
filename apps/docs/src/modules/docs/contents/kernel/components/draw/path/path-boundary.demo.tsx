@@ -28,7 +28,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -180, y: -110, width: 360, height: 220 }}
-      shapes={[StarShapeDefinition]}
+      extensions={{ shapes: [StarShapeDefinition] }}
       rootScope={{
         defaults: {
           node: {

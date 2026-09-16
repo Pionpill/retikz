@@ -56,7 +56,7 @@ const cross = definePattern({
 把定义传给 `<Layout patterns>`，再在 Node 或 Path 的 `fill` 中引用它的 `name`：
 
 ```tsx
-<Layout patterns={[cross]}>
+<Layout extensions={{ patterns: [cross] }}>
   <Node style={{ fill: { kind: 'pattern', shape: 'cross', color: 'darkorange' } }} />
 </Layout>
 ```

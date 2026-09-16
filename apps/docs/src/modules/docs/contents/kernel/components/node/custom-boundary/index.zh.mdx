@@ -73,7 +73,7 @@ const biasedPorts = defineBoundary({
 React 宿主通过 `<Layout boundaries>` 注入定义，节点只保存 registry key：
 
 ```tsx
-<Layout boundaries={[horizontalPorts]}>
+<Layout extensions={{ boundaries: [horizontalPorts] }}>
   <Node id="io" position={[0, 0]} boundary="horizontal-ports">
     IO
   </Node>

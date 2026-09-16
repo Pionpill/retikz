@@ -30,7 +30,7 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      arrows={[
+      extensions={{ arrows: [
         DiamondArrowDefinition,
         OpenDiamondArrowDefinition,
         KiteArrowDefinition,
@@ -40,7 +40,7 @@ const Demo: FC = () => {
         BarArrowDefinition,
         CrowFootArrowDefinition,
         StraightBarbArrowDefinition,
-      ]}
+      ] }}
     >
       {entries.map(({ shape, column, row }) => {
         const x = column * 340;

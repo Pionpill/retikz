@@ -60,7 +60,7 @@ const subroutine: ShapeDefinition = defineShape({
 });
 
 const Demo: FC = () => (
-  <Layout shapes={[subroutine]}>
+  <Layout extensions={{ shapes: [subroutine] }}>
     <Node
       id="p"
       shape="subroutine"

@@ -56,7 +56,7 @@ When `emit` returns an `Iterable<MarkerPrimitive>` directly, the final tile peri
 Pass the definition to `<Layout patterns>`, then reference its `name` from a Node or Path `fill`:
 
 ```tsx
-<Layout patterns={[cross]}>
+<Layout extensions={{ patterns: [cross] }}>
   <Node style={{ fill: { kind: 'pattern', shape: 'cross', color: 'darkorange' } }} />
 </Layout>
 ```

@@ -27,7 +27,7 @@ Import the Standard Definitions a figure actually uses from `@retikz/standard/ar
 import { Draw, Layout } from '@retikz/react';
 import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/standard/arrow';
 
-<Layout arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}>
+<Layout extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}>
   <Draw
     way={[
       [0, 0],

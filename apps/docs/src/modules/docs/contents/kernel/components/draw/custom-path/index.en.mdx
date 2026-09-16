@@ -96,7 +96,7 @@ const registry = createInspectorRegistry([highlightInspector]);
 React injects definitions through `<Layout pathKinds>`; direct core calls use `CompileOptions.pathKinds`. A Path references only the registered name and instance options.
 
 ```tsx
-<Layout pathKinds={[highlight]}>
+<Layout extensions={{ pathKinds: [highlight] }}>
   <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
     <Step kind="move" to="A" />
     <Step kind="line" to="B" />

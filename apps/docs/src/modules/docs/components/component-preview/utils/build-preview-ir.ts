@@ -14,6 +14,7 @@ import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
 const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
+  extensions?: LayoutProps['extensions'];
   rootScope?: LayoutProps['rootScope'];
   children?: ReactNode;
   ir?: IRScene;
@@ -92,7 +93,7 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
   }
   const hostDimensions =
     rootElement !== null && (isLayout || isEmbeddableRoot) ? previewHostDimensionsOf(rootElement.type, props) : {};
-  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
+  const pathKinds = isLayout ? props.extensions?.pathKinds : undefined;
   return {
     ir,
     sourceIr,

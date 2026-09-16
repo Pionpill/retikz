@@ -161,6 +161,12 @@ export const kernelSection: Array<Section> = [
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user' },
           },
+          {
+            id: 'extended-usage',
+            label: 'kernel.layoutExtendedUsage',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
           { id: 'mechanism', label: 'kernel.layoutMechanism', difficulty: DocDifficulty.Internals },
           {
             id: 'api-reference',

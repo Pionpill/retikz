@@ -15,7 +15,7 @@ When a relation needs variable thickness, endpoint caps, or an inside label, an 
 import { Layout, Path, Step } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
-<Layout pathKinds={[RibbonPathKindDefinition]}>
+<Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
   <Path kind="ribbon" kindOptions={{ start: { width: 32 }, end: { width: 12 } }} style={{ fill: '#60a5fa' }}>
     <Step kind="move" to={[-120, 0]} />
     <Step to={[120, 0]} />
@@ -90,7 +90,7 @@ const pulseProfile = defineRibbonWidthProfile({
 
 const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
 
-<Layout pathKinds={[pulseRibbonDefinition]}>
+<Layout extensions={{ pathKinds: [pulseRibbonDefinition] }}>
   <Path
     kind="ribbon"
     kindOptions={{
@@ -118,7 +118,7 @@ React `<Layout>` is the direct path when the figure already knows which Definiti
 import { Layout } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
-<Layout pathKinds={[RibbonPathKindDefinition]}>{/* Path kind="ribbon" */}</Layout>;
+<Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>{/* Path kind="ribbon" */}</Layout>;
 ```
 
 A Ribbon that is not in `pathKinds` does not become active merely because its module was imported.

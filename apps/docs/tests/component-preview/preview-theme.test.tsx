@@ -22,8 +22,7 @@ import {
   PreviewThemeStyle,
   resolvePreviewTheme,
 } from '../../src/modules/docs/components/component-preview/theme';
-import ThemeInheritanceEn from '../../src/modules/docs/contents/kernel/components/layout/usage/theme-inheritance.en.demo';
-import ThemeInheritanceZh from '../../src/modules/docs/contents/kernel/components/layout/usage/theme-inheritance.zh.demo';
+import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/layout/extended-usage/theme-inheritance';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;
@@ -37,17 +36,14 @@ afterEach(() => {
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 describe('ComponentPreview global theme', () => {
-  it('renders both theme inheritance demos with the ambient preview definitions', () => {
-    for (const Demo of [ThemeInheritanceZh, ThemeInheritanceEn]) {
-      const markup = renderToStaticMarkup(
-        <PreviewThemeProvider>
-          <Demo />
-        </PreviewThemeProvider>,
-      );
-      expect(markup).toContain('<svg');
-      expect(markup).toContain('#fae8ff');
-      expect(markup).toContain('#1e3a8a');
-    }
+  it('renders the theme playground baseline with the ambient preview definitions', () => {
+    const markup = renderToStaticMarkup(
+      <PreviewThemeProvider>
+        <ThemeInheritance />
+      </PreviewThemeProvider>,
+    );
+    expect(markup).toContain('<svg');
+    expect(markup).toContain('#dbeafe');
   });
 
   it('writes the selected ThemeStyle and ThemeMode as a Core selector', () => {

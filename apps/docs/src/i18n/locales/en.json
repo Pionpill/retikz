@@ -76,6 +76,7 @@
     "concepts": "Concepts",
     "layout": "Layout",
     "layoutUsage": "Basic usage",
+    "layoutExtendedUsage": "Extended usage",
     "layoutMechanism": "Implementation",
     "layoutApiReference": "API reference",
     "layoutSchemaReference": "Schema reference",

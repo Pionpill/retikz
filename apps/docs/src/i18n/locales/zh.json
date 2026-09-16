@@ -76,6 +76,7 @@
     "concepts": "概念",
     "layout": "Layout · 布局",
     "layoutUsage": "基础用法",
+    "layoutExtendedUsage": "扩展用法",
     "layoutMechanism": "实现原理",
     "layoutApiReference": "API 参考",
     "layoutSchemaReference": "Schema 参考",

@@ -1,6 +1,6 @@
 ---
 title: 基础用法
-description: 组织图形输入，设置视框与全图默认值，并读取 Layout 输出
+description: 组织图形输入，设置视框、全图默认值与渲染输出
 ---
 
 `<Layout>` 是 React 图形的顶层入口。把 Node、Path 等组件放入其中即可显示图形；默认自动取景，通常不必设置宽高或 viewBox。安装步骤见[快速开始](/kernel/components/get-start)。
@@ -159,43 +159,9 @@ React 的 `ir` 与 `children` 同时传入时采用 `ir`。生成、持久化或
 
 <ComponentPreview files="layout-defaults" size="md" />
 
-省略、空组、只有 optional undefined 的覆盖，以及单独的 `defaults.reset: false` / `[]` 不会创建根 Scope 或改变 identity。已有的 `font: {}` 仍按字体字段契约产生覆盖。显式 Scope 保留原结构；`Layout.style` 始终是宿主 CSS。
+`Layout.style` 是宿主 CSS；图元样式使用 `rootScope.style`。
 
-## 可继承 Theme
-
-`theme` 为后代 Composite 选择主题；它不会自动设置普通 Node / Path 的颜色。普通图元使用 `style`，全图图元默认值使用 `rootScope`。
-
-<ComponentPreview files="theme-inheritance" size="sm" />
-
-`theme` 的显式字段覆盖已有 IR 的根主题；未声明字段保留原值。完整继承规则见[主题](/kernel/components/design/theme)。
-
-## 能力注入
-
-`ShapeDefinition` 先定义折角文件的占位、连接边界与输出图元，再通过 `<Layout shapes>` 注入。两个 Node 只引用注册名 `drawio-file`；连线端点停在自定义轮廓上，说明 definition、registry 与 compile 共用同一条路径。
-
-<ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
-
-boundary、clip、arrow、pattern、path kind 等 definition 也从 `<Layout>` 进入各自的 core registry。`<Layout>` 只提供 React 注入入口，不在 adapter 内维护另一套内置白名单；完整契约见对应自定义指南与 [API 参考](/kernel/components/layout/api-reference)。
-
-## 读取编译产物
-
-需要在图外显示节点的排版尺寸时，用 `artifacts={{ nodeLayouts: true }}` 请求节点布局快照，再通过 `onArtifacts` 读取结果。回调在 React commit 后通知同次编译结果；快照不会随之后的更新而原地变化。
-
-<ComponentPreview files="layout-artifacts" size="sm" />
-
-示例把节点数量和正文宽度显示在图外。快照描述编译后的几何信息，不是实时 DOM 测量，也不能用于修改图形输入。
-
-## 执行模式与更新策略
-
-retained 会保留上一次处理状态用于后续更新；static 每次重新处理当前图形。`auto` 允许增量更新，`full` 在发生变化时完整计算。
-
-```tsx
-<Layout /> {/* retained + auto */}
-<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
-<Layout runtime={{ mode: 'static' }} />
-```
-
-默认 `retained + auto` 兼顾局部更新和事务回滚；要排除增量 Program 但保留 Session 能力时选 `retained + full`，要减少常驻 Runtime 状态时选 `static`。
+## 渲染输出
 
 默认输出 SVG，改用 Canvas 时设置 `renderer="canvas"`。动画播放与静态截帧见[动画](/kernel/components/effects/animation)。
 
@@ -209,6 +175,11 @@ retained 会保留上一次处理状态用于后续更新；static 每次重新�
 
 <LinkedSections
   items={[
+    {
+      title: '扩展用法',
+      description: '配置主题、注入能力、读取编译结果并控制更新',
+      url: '/kernel/components/layout/extended-usage',
+    },
     { title: 'API 参考', description: '查询 Layout 完整属性', url: '/kernel/components/layout/api-reference' },
     { title: 'Schema 参考', description: '查询可持久化的场景数据', url: '/kernel/components/layout/schema-reference' },
   ]}

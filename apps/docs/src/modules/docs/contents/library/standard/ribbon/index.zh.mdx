@@ -15,7 +15,7 @@ Standard 是可选 owner：导入子入口不会全局注册 Ribbon，当前图�
 import { Layout, Path, Step } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
-<Layout pathKinds={[RibbonPathKindDefinition]}>
+<Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
   <Path kind="ribbon" kindOptions={{ start: { width: 32 }, end: { width: 12 } }} style={{ fill: '#60a5fa' }}>
     <Step kind="move" to={[-120, 0]} />
     <Step to={[120, 0]} />
@@ -90,7 +90,7 @@ const pulseProfile = defineRibbonWidthProfile({
 
 const pulseRibbonDefinition = createRibbonPathKindDefinition({ profiles: [pulseProfile] });
 
-<Layout pathKinds={[pulseRibbonDefinition]}>
+<Layout extensions={{ pathKinds: [pulseRibbonDefinition] }}>
   <Path
     kind="ribbon"
     kindOptions={{
@@ -118,7 +118,7 @@ React `<Layout>` 适合已经知道当前图所需 Definition 的场景。官方
 import { Layout } from '@retikz/react';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 
-<Layout pathKinds={[RibbonPathKindDefinition]}>{/* Path kind="ribbon" */}</Layout>;
+<Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }}>{/* Path kind="ribbon" */}</Layout>;
 ```
 
 没有被 `pathKinds` 装配的 Ribbon 不会因为 import 自动生效。

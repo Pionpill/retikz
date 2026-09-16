@@ -73,7 +73,7 @@ The node selects that definition with JSON-safe `{ type, params }`:
 The React host accepts definitions through `<Layout boundaries>`, while each node stores only the registry key:
 
 ```tsx
-<Layout boundaries={[horizontalPorts]}>
+<Layout extensions={{ boundaries: [horizontalPorts] }}>
   <Node id="io" position={[0, 0]} boundary="horizontal-ports">
     IO
   </Node>

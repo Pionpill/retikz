@@ -31,7 +31,7 @@ const bracket = defineArrow({
 });
 
 const Demo: FC = () => (
-  <Layout arrows={[bracket]}>
+  <Layout extensions={{ arrows: [bracket] }}>
     <Node id="a" position={[0, 0]}>
       A
     </Node>

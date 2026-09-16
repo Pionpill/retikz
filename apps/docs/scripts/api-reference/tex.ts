@@ -16,7 +16,15 @@ export type ApiReferenceEntry = {
   symbols?: ReadonlyArray<string>;
   /** 展开所选交叉类型中直接声明的字段，引用契约仍保留在签名中 */
   expandIntersectionMembers?: boolean;
+  /** 为指定公开类型按职责分组，字段说明仍从 TypeDoc 读取 */
+  memberGroups?: Readonly<Record<string, ReadonlyArray<ApiReferenceMemberGroup>>>;
   title: Record<ApiReferenceLanguage, string>;
+};
+
+/** API 字段的阅读分组，不复制字段类型或描述 */
+export type ApiReferenceMemberGroup = {
+  title: Record<ApiReferenceLanguage, string>;
+  members: ReadonlyArray<string>;
 };
 
 export type ApiReferencePackageConfig = {
@@ -396,13 +404,14 @@ const renderSymbol = (
   symbol: ApiReferenceSymbol,
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
+  memberGroups?: ReadonlyArray<ApiReferenceMemberGroup>,
 ): string =>
   [
     `### ${symbol.name}`,
     renderSummary(symbol, lang, translate),
     localizeText(symbol.details, lang, translate),
     symbol.members.length === 0 || symbol.signature.includes(' & ') ? `\`\`\`ts\n${symbol.signature}\n\`\`\`` : '',
-    renderMembers(symbol.members, lang, translate),
+    renderGroupedMembers(symbol, memberGroups, lang, translate),
     renderTypeParameters(symbol.typeParameters, lang, translate),
     renderParameters(symbol.parameters, lang, translate),
     renderTagSection(lang === 'zh' ? '返回值' : 'Returns', symbol.returns, lang, translate),
@@ -418,6 +427,28 @@ const renderSymbol = (
   ]
     .filter(Boolean)
     .join('\n\n');
+
+/** 按职责展示字段，并拒绝遗漏、重复或失效的分组配置 */
+const renderGroupedMembers = (
+  symbol: ApiReferenceSymbol,
+  groups: ReadonlyArray<ApiReferenceMemberGroup> | undefined,
+  lang: ApiReferenceLanguage,
+  translate: (source: string) => string,
+): string => {
+  if (groups === undefined) return renderMembers(symbol.members, lang, translate);
+  const remaining = new Map(symbol.members.map(member => [member.name, member]));
+  const sections = groups.map(group => {
+    const members = group.members.map(name => {
+      const member = remaining.get(name);
+      if (member === undefined) throw new Error(`Unknown or repeated API member ${symbol.name}.${name}`);
+      remaining.delete(name);
+      return member;
+    });
+    return [`#### ${group.title[lang]}`, renderMembers(members, lang, translate)].join('\n\n');
+  });
+  if (remaining.size > 0) throw new Error(`Ungrouped API members of ${symbol.name}: ${[...remaining.keys()].join(', ')}`);
+  return sections.join('\n\n');
+};
 
 /** 从公开入口、签名与 JSDoc 生成可由 MDX include 直接展开的 API 内容 */
 export const createApiReferenceMdx = async (
@@ -470,7 +501,7 @@ export const createApiReferenceMdx = async (
         .map(symbol => toSymbol(symbol, config.packageDirectory, entry.expandIntersectionMembers === true))
         .map(symbol => {
           const schemaUrl = config.schemaReferences?.[symbol.name];
-          if (!schemaUrl) return renderSymbol(symbol, lang, config.translate);
+          if (!schemaUrl) return renderSymbol(symbol, lang, config.translate, entry.memberGroups?.[symbol.name]);
           return [
             `### ${symbol.name}`,
             renderSummary(symbol, lang, config.translate),

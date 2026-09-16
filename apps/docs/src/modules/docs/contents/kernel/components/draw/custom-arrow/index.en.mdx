@@ -50,7 +50,7 @@ const bracket = defineArrow({
 React injects definitions through `<Layout arrows>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.
 
 ```tsx
-<Layout arrows={[bracket]}>
+<Layout extensions={{ arrows: [bracket] }}>
   <Draw way={['A', 'B']} arrow="->" arrowDetail={{ shape: 'bracket' }} />
 </Layout>
 ```

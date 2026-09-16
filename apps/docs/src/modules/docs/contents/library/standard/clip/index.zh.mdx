@@ -27,7 +27,7 @@ description: 从 @retikz/standard/clip 按需引入可选裁剪，并分别在 R
 import { Layout, Node, Scope } from '@retikz/react';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 
-<Layout clips={[CircleClipDefinition]}>
+<Layout extensions={{ clips: [CircleClipDefinition] }}>
   <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 56 }}>
     <Node position={[0, 0]} layout={{ minimumSize: { width: 160, height: 120 } }} />
   </Scope>

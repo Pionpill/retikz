@@ -2,52 +2,93 @@
 
 ## `@retikz/react`
 
+### LayoutExtensions
+
+<p>
+  <ApiSourceLink
+    label={'LayoutExtensions'}
+    path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
+    startLine={131}
+  >
+    Layout 的运行时扩展注册，不进入持久化 IR
+  </ApiSourceLink>
+</p>
+
+```ts
+Pick<
+  CompileOptions,
+  | 'shapes'
+  | 'boundaries'
+  | 'clips'
+  | 'arrows'
+  | 'patterns'
+  | 'pathGenerators'
+  | 'pathKinds'
+  | 'composites'
+  | 'themeStyles'
+>;
+```
+
 ### LayoutProps
 
 <p>
-  <ApiSourceLink label={'LayoutProps'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={140}>
+  <ApiSourceLink label={'LayoutProps'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={145}>
     React Layout 的公开属性
   </ApiSourceLink>
 </p>
 
-| 成员                   | 类型                                                  | 默认值 | 说明                                                                     |
-| ---------------------- | ----------------------------------------------------- | ------ | ------------------------------------------------------------------------ |
-| `animate?`             | `boolean`                                             | —      | 是否播放动画                                                             |
-| `animationProperties?` | `AnimationPropertyRegistry`                           | —      | animation property registry                                              |
-| `animationRef?`        | `Ref<AnimationControls \| null>`                      | —      | 动画控制器出口                                                           |
-| `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —      | Scene 根动画                                                             |
-| `arrows?`              | `ReadonlyArray<ArrowDefinition>`                      | —      | 自定义箭头定义                                                           |
-| `artifacts?`           | `CompileArtifactOptions`                              | —      | artifact 请求                                                            |
-| `authoring?`           | `unknown`                                             | —      | 只供 Vanilla compile driver 消费的 runtime metadata                      |
-| `boundaries?`          | `ReadonlyArray<BoundaryDefinition>`                   | —      | 自定义边界定义                                                           |
-| `children?`            | `ReactNode`                                           | —      | Kernel 或 Sugar JSX children                                             |
-| `className?`           | `string`                                              | —      | 宿主 className                                                           |
-| `clips?`               | `ReadonlyArray<ClipDefinition>`                       | —      | 自定义裁剪定义                                                           |
-| `compileDriver?`       | `VanillaCompileDriver`                                | —      | Vanilla 领域中立 compile driver                                          |
-| `composites?`          | `ReadonlyArray<AnyCompositeDefinition>`               | —      | Tier 2 composite definitions                                             |
-| `easings?`             | `EasingRegistry`                                      | —      | easing registry                                                          |
-| `fontSize?`            | `number`                                              | —      | 默认字号                                                                 |
-| `handlers?`            | `HydrationHandlers`                                   | —      | IR 模式下的水合 handler 注册表                                           |
-| `height?`              | `number \| string`                                    | —      | SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版       |
-| `idPrefix?`            | `string`                                              | —      | SVG 资源 id 前缀                                                         |
-| `ir?`                  | `IRScene`                                             | —      | 直接传入持久化 Source IR，与 children 二选一                             |
-| `lowerTex?`            | `LowerTex`                                            | —      | 公式下沉能力                                                             |
-| `nodeDistance?`        | `number`                                              | —      | 默认 node 距离                                                           |
-| `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —      | artifacts 成功提交通知                                                   |
-| `onCompileResult?`     | `(result: CompileResult) => void`                     | —      | Core 完整编译结果通知                                                    |
-| `pathGenerators?`      | `ReadonlyArray<PathGeneratorDefinition>`              | —      | 自定义 path generator 定义                                               |
-| `pathKinds?`           | `ReadonlyArray<AnyPathKindDefinition>`                | —      | 自定义 path kind 定义                                                    |
-| `patterns?`            | `ReadonlyArray<PatternDefinition>`                    | —      | 自定义 pattern 定义                                                      |
-| `renderer?`            | `'svg' \| 'canvas'`                                   | —      | 渲染目标                                                                 |
-| `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —      | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效       |
-| `runtime?`             | `LayoutRuntimeOptions`                                | —      | retained 或 static processing 模式                                       |
-| `shapes?`              | `ReadonlyArray<ShapeDefinition>`                      | —      | 自定义形状定义                                                           |
-| `snapshotAt?`          | `number`                                              | —      | 静态动画采样时刻                                                         |
-| `style?`               | `CSSProperties`                                       | —      | 宿主内联样式                                                             |
-| `theme?`               | `IRScene['theme']`                                    | —      | 写入 Scene 根并由后代 Composite 继承的 Theme                             |
-| `themeStyles?`         | `ReadonlyArray<ThemeStyleDefinition>`                 | —      | Core Theme style definitions                                             |
-| `viewBox?`             | `IRViewBox`                                           | —      | 显式视框                                                                 |
-| `width?`               | `number \| string`                                    | —      | SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 |
+#### 图形输入与默认值
+
+| 成员            | 类型                                      | 默认值 | 说明                                                               |
+| --------------- | ----------------------------------------- | ------ | ------------------------------------------------------------------ |
+| `children?`     | `ReactNode`                               | —      | Kernel 或 Sugar JSX children                                       |
+| `ir?`           | `IRScene`                                 | —      | 直接传入持久化 Source IR，与 children 二选一                       |
+| `theme?`        | `IRScene['theme']`                        | —      | 写入 Scene 根并由后代 Composite 继承的 Theme                       |
+| `rootScope?`    | `Pick<InputScope, 'style' \| 'defaults'>` | —      | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效 |
+| `nodeDistance?` | `number`                                  | —      | 默认 node 距离                                                     |
+| `fontSize?`     | `number`                                  | —      | 默认字号                                                           |
+
+#### 宿主与渲染
+
+| 成员         | 类型                | 默认值 | 说明                                                                     |
+| ------------ | ------------------- | ------ | ------------------------------------------------------------------------ |
+| `width?`     | `number \| string`  | —      | SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 |
+| `height?`    | `number \| string`  | —      | SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版       |
+| `viewBox?`   | `IRViewBox`         | —      | 显式视框                                                                 |
+| `className?` | `string`            | —      | 宿主 className                                                           |
+| `style?`     | `CSSProperties`     | —      | 宿主内联样式                                                             |
+| `renderer?`  | `'svg' \| 'canvas'` | —      | 渲染目标                                                                 |
+| `idPrefix?`  | `string`            | —      | SVG 资源 id 前缀                                                         |
+| `handlers?`  | `HydrationHandlers` | —      | IR 模式下的水合 handler 注册表                                           |
+
+#### 扩展注册
+
+| 成员          | 类型               | 默认值 | 说明                                           |
+| ------------- | ------------------ | ------ | ---------------------------------------------- |
+| `extensions?` | `LayoutExtensions` | —      | 按能力分类的运行时扩展注册，复用 Core 编译契约 |
+| `lowerTex?`   | `LowerTex`         | —      | 公式下沉能力                                   |
+
+#### 动画
+
+| 成员                   | 类型                              | 默认值 | 说明                        |
+| ---------------------- | --------------------------------- | ------ | --------------------------- |
+| `animations?`          | `ReadonlyArray<IRAnimationTrack>` | —      | Scene 根动画                |
+| `animate?`             | `boolean`                         | —      | 是否播放动画                |
+| `snapshotAt?`          | `number`                          | —      | 静态动画采样时刻            |
+| `animationRef?`        | `Ref<AnimationControls \| null>`  | —      | 动画控制器出口              |
+| `easings?`             | `EasingRegistry`                  | —      | easing registry             |
+| `animationProperties?` | `AnimationPropertyRegistry`       | —      | animation property registry |
+
+#### 执行与结果
+
+| 成员               | 类型                                                  | 默认值 | 说明                                                |
+| ------------------ | ----------------------------------------------------- | ------ | --------------------------------------------------- |
+| `runtime?`         | `LayoutRuntimeOptions`                                | —      | retained 或 static processing 模式                  |
+| `authoring?`       | `unknown`                                             | —      | 只供 Vanilla compile driver 消费的 runtime metadata |
+| `compileDriver?`   | `VanillaCompileDriver`                                | —      | Vanilla 领域中立 compile driver                     |
+| `artifacts?`       | `CompileArtifactOptions`                              | —      | artifact 请求                                       |
+| `onArtifacts?`     | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —      | artifacts 成功提交通知                              |
+| `onCompileResult?` | `(result: CompileResult) => void`                     | —      | Core 完整编译结果通知                               |
 
 ### LayoutRetainedRuntimeOptions
 
@@ -120,7 +161,7 @@ Readonly<{ mode: typeof LayoutRuntimeMode.Static; onDiagnostic?: never; updateSt
 ### Layout
 
 <p>
-  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={302}>
+  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={291}>
     React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result
   </ApiSourceLink>
 </p>

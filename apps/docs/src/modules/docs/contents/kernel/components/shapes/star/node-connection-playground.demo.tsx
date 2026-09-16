@@ -32,7 +32,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const sourcePosition = sourcePositionOf(values.sourceAngle, values.sourceDistance);
 
   return (
-    <Layout viewBox={{ x: -215, y: -215, width: 430, height: 430 }} shapes={[StarShapeDefinition]}>
+    <Layout viewBox={{ x: -215, y: -215, width: 430, height: 430 }} extensions={{ shapes: [StarShapeDefinition] }}>
       <Draw
         way={[[0, 0], sourcePosition]}
         zIndex={-2}

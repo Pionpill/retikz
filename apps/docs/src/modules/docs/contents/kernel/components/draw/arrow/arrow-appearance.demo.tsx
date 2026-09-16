@@ -12,7 +12,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -40, y: -100, width: 440, height: 200 }}
-      arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
+      extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}
     >
       <Node id="A" position={[0, 0]} style={{ stroke: 'gray', dashed: true }}>
         a

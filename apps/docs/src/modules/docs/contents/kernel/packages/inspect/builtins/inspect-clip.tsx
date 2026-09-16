@@ -20,7 +20,7 @@ const preview = defineControlledBuiltinInspectPreview(
         width={380}
         height={360}
         viewBox={{ x: -190, y: -180, width: 380, height: 360 }}
-        clips={[PathClipDefinition]}
+        extensions={{ clips: [PathClipDefinition] }}
         request={{ inspector: CLIP_INSPECTOR_KEY, options: { outline: values.outline, labels: values.labels } }}
       >
         <Scope

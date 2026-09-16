@@ -1,5 +1,7 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'Layout 的运行时扩展注册，不进入持久化 IR': 'Runtime extension registrations for Layout, excluded from persisted IR',
+  '按能力分类的运行时扩展注册，复用 Core 编译契约': 'Runtime extensions grouped by capability, using the Core compilation contract',
   'React Layout 的公开属性': 'Public props for React Layout',
   '': '',
   是否播放动画: 'Whether to play animations',

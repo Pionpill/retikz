@@ -15,12 +15,13 @@ Layout accepts a component tree or saved IR, the serializable description of a d
 
 ## Responsibilities at a glance
 
-| Document         | Responsibility                                | When to read             |
-| ---------------- | --------------------------------------------- | ------------------------ |
-| Basic usage      | Input, framing, defaults, and callbacks       | Draw or adjust output    |
-| Implementation   | Processing, execution modes, and presentation | Diagnose execution       |
-| API reference    | Props and runtime configuration               | Check a precise contract |
-| Schema reference | Scene and ViewBox data                        | Save or construct input  |
+| Document         | Responsibility                                 | When to read                                 |
+| ---------------- | ---------------------------------------------- | -------------------------------------------- |
+| Basic usage      | Input, framing, defaults, and rendering        | Draw or adjust output                        |
+| Extended usage   | Themes, injection, results, and update control | Integrate capabilities or control processing |
+| Implementation   | Processing, execution modes, and presentation  | Diagnose execution                           |
+| API reference    | Props and runtime configuration                | Check a precise contract                     |
+| Schema reference | Scene and ViewBox data                         | Save or construct input                      |
 
 ## Choosing the right capability
 
@@ -38,6 +39,11 @@ Read Basic usage first. Implementation is for investigating updates, framing, an
       title: 'Basic usage',
       description: 'Draw a figure and configure input, framing, and defaults',
       url: '/kernel/components/layout/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Configure themes, inject capabilities, read compiled results, and control updates',
+      url: '/kernel/components/layout/extended-usage',
     },
     {
       title: 'Implementation',

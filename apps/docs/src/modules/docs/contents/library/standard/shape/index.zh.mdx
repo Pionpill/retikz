@@ -27,7 +27,7 @@ description: 从 @retikz/standard/shape 按需引入可选节点形状，并分�
 import { Layout, Node } from '@retikz/react';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-<Layout shapes={[CrossShapeDefinition]}>
+<Layout extensions={{ shapes: [CrossShapeDefinition] }}>
   <Node position={[0, 0]} shape="cross" layout={{ minimumSize: { width: 80, height: 80 } }}>
     十字形
   </Node>

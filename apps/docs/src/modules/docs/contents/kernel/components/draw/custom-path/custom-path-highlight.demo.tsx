@@ -41,7 +41,7 @@ const highlight = definePathKind<HighlightPath>({
 });
 
 const Demo: FC = () => (
-  <Layout pathKinds={[highlight]}>
+  <Layout extensions={{ pathKinds: [highlight] }}>
     <Path kind="highlight" kindOptions={{ stroke: '#facc15', strokeWidth: 14 }} zIndex={-1}>
       <Step kind="move" to="api" />
       <Step kind="line" to="core" />

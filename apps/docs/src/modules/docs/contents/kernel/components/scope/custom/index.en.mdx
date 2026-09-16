@@ -54,7 +54,7 @@ const { scene } = compileToScene(ir, {
 React `<Layout>` forwards the same Core option without an adapter-private registry:
 
 ```tsx
-<Layout clips={[roundedRectClip]}>
+<Layout extensions={{ clips: [roundedRectClip] }}>
   <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
     {/* clipped children */}
   </Scope>

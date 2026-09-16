@@ -123,7 +123,7 @@ import { SectorShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Layout shapes={[SectorShapeDefinition]}>
+<Layout extensions={{ shapes: [SectorShapeDefinition] }}>
   <Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
   <Node shape={{ type: 'sector', params: { innerRadius: 40, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
 </Layout>

@@ -62,7 +62,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -175, y: -145, width: 350, height: 290 }}
-      shapes={[primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}
+      extensions={{ shapes: [primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition] }}
     >
       <Draw
         way={[[0, 0], sourcePosition]}

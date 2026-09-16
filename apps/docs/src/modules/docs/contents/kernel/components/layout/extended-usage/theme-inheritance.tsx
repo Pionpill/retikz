@@ -1,11 +1,14 @@
 import type { CoreDependencyProvider, IRNode, ThemeModeValue } from '@retikz/core';
 import { CompositeBaseSchema, defineComposite, ThemeMode } from '@retikz/core';
-import { Layout, Scope } from '@retikz/react';
+import { Layout } from '@retikz/react';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { z } from 'zod';
 
-import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
+import { PreviewThemeStyle, resolvePreviewTheme } from '@/modules/docs/components/component-preview/theme';
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { previewControlContract } from './theme-inheritance.controls';
 
 type ThemeCardProps = { label: string };
 
@@ -97,21 +100,21 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
   inputEmbedAdapter: themeCardAdapter,
 });
 
-const Demo: FC = () => (
-  <Layout theme={{ style: PreviewThemeStyle.Academic }}>
-    <ThemeCard label="Root: academic / light" />
-    <Scope transforms={[{ kind: 'translate', x: 200, y: 0 }]} theme={{ style: PreviewThemeStyle.Vibrant }}>
-      <ThemeCard label="Local: vibrant / light" />
-    </Scope>
-    <Scope
-      transforms={[{ kind: 'translate', x: 400, y: 0 }]}
-      theme={{
-        mode: ThemeMode.Dark,
-      }}
-    >
-      <ThemeCard label="Local: academic / dark" />
-    </Scope>
+export const previewControls = previewControlContract.controls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
+  <Layout
+    width={240}
+    height={140}
+    viewBox={{ x: -120, y: -70, width: 240, height: 140 }}
+    theme={resolvePreviewTheme(values.style, values.mode)}
+  >
+    <ThemeCard label="Composite" />
   </Layout>
-);
+));
+
+export const previewSource = controlledPreview.source;
+
+const Demo: FC = controlledPreview.Component;
 
 export default Demo;

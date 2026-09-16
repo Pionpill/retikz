@@ -96,7 +96,7 @@ const registry = createInspectorRegistry([highlightInspector]);
 React 通过 `<Layout pathKinds>` 注入；直接调用 core 时使用 `CompileOptions.pathKinds`。Path 只引用注册名与实例配置。
 
 ```tsx
-<Layout pathKinds={[highlight]}>
+<Layout extensions={{ pathKinds: [highlight] }}>
   <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
     <Step kind="move" to="A" />
     <Step kind="line" to="B" />

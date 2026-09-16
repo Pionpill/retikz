@@ -9,7 +9,7 @@ import type { FC } from 'react';
  *   on the bottom row hints that Node shapes are connectable. Captions / row labels use gray stroke/fill-none text.
  */
 const Demo: FC = () => (
-  <Layout shapes={[StarShapeDefinition, ContourShapeDefinition]}>
+  <Layout extensions={{ shapes: [StarShapeDefinition, ContourShapeDefinition] }}>
     {/* Row labels */}
     <Node
       id="rowPath"

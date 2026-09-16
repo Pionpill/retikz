@@ -40,7 +40,7 @@ describe('Standard React definition loading', () => {
     ).not.toThrow();
     expect(() =>
       renderToStaticMarkup(
-        <Layout composites={[GridDefinition]} width={120} height={80}>
+        <Layout extensions={{ composites: [GridDefinition] }} width={120} height={80}>
           {legend}
         </Layout>,
       ),
@@ -60,7 +60,7 @@ describe('Standard React definition loading', () => {
       children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
     };
 
-    const svg = renderToStaticMarkup(<Layout ir={ir} composites={[GridDefinition]} width={120} height={80} />);
+    const svg = renderToStaticMarkup(<Layout ir={ir} extensions={{ composites: [GridDefinition] }} width={120} height={80} />);
 
     expect(svg).toContain('<path');
   });
@@ -68,14 +68,14 @@ describe('Standard React definition loading', () => {
   it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout composites={[GridDefinition]} width={120} height={80}>
+        <Layout extensions={{ composites: [GridDefinition] }} width={120} height={80}>
           <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         </Layout>,
       ),
     ).not.toThrow();
     expect(() =>
       renderToStaticMarkup(
-        <Layout composites={[{ ...GridDefinition }]} width={120} height={80}>
+        <Layout extensions={{ composites: [{ ...GridDefinition }] }} width={120} height={80}>
           <Grid bounds={{ start: [0, 0], end: [20, 20] }} line={{ spacing: 10 }} />
         </Layout>,
       ),

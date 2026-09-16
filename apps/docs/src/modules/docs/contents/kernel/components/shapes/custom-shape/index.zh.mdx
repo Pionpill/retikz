@@ -81,7 +81,7 @@ const { scene } = compileToScene(ir, { shapes: [badge] });
 ```tsx
 import { Layout, Node } from '@retikz/react';
 
-<Layout shapes={[badge]}>
+<Layout extensions={{ shapes: [badge] }}>
   <Node id="status" shape="badge" position={[0, 0]} text="Ready" />
 </Layout>;
 ```

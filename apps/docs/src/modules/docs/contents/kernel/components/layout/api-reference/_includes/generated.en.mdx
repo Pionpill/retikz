@@ -2,52 +2,93 @@
 
 ## `@retikz/react`
 
+### LayoutExtensions
+
+<p>
+  <ApiSourceLink
+    label={'LayoutExtensions'}
+    path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
+    startLine={131}
+  >
+    Runtime extension registrations for Layout, excluded from persisted IR
+  </ApiSourceLink>
+</p>
+
+```ts
+Pick<
+  CompileOptions,
+  | 'shapes'
+  | 'boundaries'
+  | 'clips'
+  | 'arrows'
+  | 'patterns'
+  | 'pathGenerators'
+  | 'pathKinds'
+  | 'composites'
+  | 'themeStyles'
+>;
+```
+
 ### LayoutProps
 
 <p>
-  <ApiSourceLink label={'LayoutProps'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={140}>
+  <ApiSourceLink label={'LayoutProps'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={145}>
     Public props for React Layout
   </ApiSourceLink>
 </p>
 
-| Member                 | Type                                                  | Default | Description                                                                                                                        |
-| ---------------------- | ----------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `animate?`             | `boolean`                                             | —       | Whether to play animations                                                                                                         |
-| `animationProperties?` | `AnimationPropertyRegistry`                           | —       | Animation property registry                                                                                                        |
-| `animationRef?`        | `Ref<AnimationControls \| null>`                      | —       | Animation controller ref                                                                                                           |
-| `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —       | Scene-root animations                                                                                                              |
-| `arrows?`              | `ReadonlyArray<ArrowDefinition>`                      | —       | Custom arrow definitions                                                                                                           |
-| `artifacts?`           | `CompileArtifactOptions`                              | —       | Requested compilation artifacts                                                                                                    |
-| `authoring?`           | `unknown`                                             | —       | Runtime metadata consumed only by the Vanilla compile driver                                                                       |
-| `boundaries?`          | `ReadonlyArray<BoundaryDefinition>`                   | —       | Custom boundary definitions                                                                                                        |
-| `children?`            | `ReactNode`                                           | —       | Kernel or Sugar JSX children                                                                                                       |
-| `className?`           | `string`                                              | —       | Host className                                                                                                                     |
-| `clips?`               | `ReadonlyArray<ClipDefinition>`                       | —       | Custom clip definitions                                                                                                            |
-| `compileDriver?`       | `VanillaCompileDriver`                                | —       | Domain-neutral Vanilla compile driver                                                                                              |
-| `composites?`          | `ReadonlyArray<AnyCompositeDefinition>`               | —       | Tier 2 composite definitions                                                                                                       |
-| `easings?`             | `EasingRegistry`                                      | —       | Easing registry                                                                                                                    |
-| `fontSize?`            | `number`                                              | —       | Default font size                                                                                                                  |
-| `handlers?`            | `HydrationHandlers`                                   | —       | Hydration handler registry for IR input                                                                                            |
-| `height?`              | `number \| string`                                    | —       | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                      |
-| `idPrefix?`            | `string`                                              | —       | SVG resource id prefix                                                                                                             |
-| `ir?`                  | `IRScene`                                             | —       | Persisted Source IR, used instead of children                                                                                      |
-| `lowerTex?`            | `LowerTex`                                            | —       | Formula lowering capability                                                                                                        |
-| `nodeDistance?`        | `number`                                              | —       | Default node distance                                                                                                              |
-| `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —       | Notification after artifacts are committed successfully                                                                            |
-| `onCompileResult?`     | `(result: CompileResult) => void`                     | —       | Notification of the complete Core compilation result                                                                               |
-| `pathGenerators?`      | `ReadonlyArray<PathGeneratorDefinition>`              | —       | Custom path generator definitions                                                                                                  |
-| `pathKinds?`           | `ReadonlyArray<AnyPathKindDefinition>`                | —       | Custom path kind definitions                                                                                                       |
-| `patterns?`            | `ReadonlyArray<PatternDefinition>`                    | —       | Custom pattern definitions                                                                                                         |
-| `renderer?`            | `'svg' \| 'canvas'`                                   | —       | Rendering target                                                                                                                   |
-| `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —       | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently           |
-| `runtime?`             | `LayoutRuntimeOptions`                                | —       | Retained or static processing mode                                                                                                 |
-| `shapes?`              | `ReadonlyArray<ShapeDefinition>`                      | —       | Custom shape definitions                                                                                                           |
-| `snapshotAt?`          | `number`                                              | —       | Time at which to sample a static animation frame                                                                                   |
-| `style?`               | `CSSProperties`                                       | —       | Host inline styles                                                                                                                 |
-| `theme?`               | `IRScene['theme']`                                    | —       | Theme written to the Scene root and inherited by descendant Composites                                                             |
-| `themeStyles?`         | `ReadonlyArray<ThemeStyleDefinition>`                 | —       | Core Theme style definitions                                                                                                       |
-| `viewBox?`             | `IRViewBox`                                           | —       | Explicit viewport                                                                                                                  |
-| `width?`               | `number \| string`                                    | —       | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio |
+#### Drawing input and defaults
+
+| Member          | Type                                      | Default | Description                                                                                                              |
+| --------------- | ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `children?`     | `ReactNode`                               | —       | Kernel or Sugar JSX children                                                                                             |
+| `ir?`           | `IRScene`                                 | —       | Persisted Source IR, used instead of children                                                                            |
+| `theme?`        | `IRScene['theme']`                        | —       | Theme written to the Scene root and inherited by descendant Composites                                                   |
+| `rootScope?`    | `Pick<InputScope, 'style' \| 'defaults'>` | —       | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently |
+| `nodeDistance?` | `number`                                  | —       | Default node distance                                                                                                    |
+| `fontSize?`     | `number`                                  | —       | Default font size                                                                                                        |
+
+#### Host and rendering
+
+| Member       | Type                | Default | Description                                                                                                                        |
+| ------------ | ------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `width?`     | `number \| string`  | —       | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio |
+| `height?`    | `number \| string`  | —       | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                      |
+| `viewBox?`   | `IRViewBox`         | —       | Explicit viewport                                                                                                                  |
+| `className?` | `string`            | —       | Host className                                                                                                                     |
+| `style?`     | `CSSProperties`     | —       | Host inline styles                                                                                                                 |
+| `renderer?`  | `'svg' \| 'canvas'` | —       | Rendering target                                                                                                                   |
+| `idPrefix?`  | `string`            | —       | SVG resource id prefix                                                                                                             |
+| `handlers?`  | `HydrationHandlers` | —       | Hydration handler registry for IR input                                                                                            |
+
+#### Extension registration
+
+| Member        | Type               | Default | Description                                                                   |
+| ------------- | ------------------ | ------- | ----------------------------------------------------------------------------- |
+| `extensions?` | `LayoutExtensions` | —       | Runtime extensions grouped by capability, using the Core compilation contract |
+| `lowerTex?`   | `LowerTex`         | —       | Formula lowering capability                                                   |
+
+#### Animation
+
+| Member                 | Type                              | Default | Description                                      |
+| ---------------------- | --------------------------------- | ------- | ------------------------------------------------ |
+| `animations?`          | `ReadonlyArray<IRAnimationTrack>` | —       | Scene-root animations                            |
+| `animate?`             | `boolean`                         | —       | Whether to play animations                       |
+| `snapshotAt?`          | `number`                          | —       | Time at which to sample a static animation frame |
+| `animationRef?`        | `Ref<AnimationControls \| null>`  | —       | Animation controller ref                         |
+| `easings?`             | `EasingRegistry`                  | —       | Easing registry                                  |
+| `animationProperties?` | `AnimationPropertyRegistry`       | —       | Animation property registry                      |
+
+#### Execution and results
+
+| Member             | Type                                                  | Default | Description                                                  |
+| ------------------ | ----------------------------------------------------- | ------- | ------------------------------------------------------------ |
+| `runtime?`         | `LayoutRuntimeOptions`                                | —       | Retained or static processing mode                           |
+| `authoring?`       | `unknown`                                             | —       | Runtime metadata consumed only by the Vanilla compile driver |
+| `compileDriver?`   | `VanillaCompileDriver`                                | —       | Domain-neutral Vanilla compile driver                        |
+| `artifacts?`       | `CompileArtifactOptions`                              | —       | Requested compilation artifacts                              |
+| `onArtifacts?`     | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —       | Notification after artifacts are committed successfully      |
+| `onCompileResult?` | `(result: CompileResult) => void`                     | —       | Notification of the complete Core compilation result         |
 
 ### LayoutRetainedRuntimeOptions
 
@@ -120,7 +161,7 @@ Readonly<{ mode: typeof LayoutRuntimeMode.Static; onDiagnostic?: never; updateSt
 ### Layout
 
 <p>
-  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={302}>
+  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={291}>
     React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result
   </ApiSourceLink>
 </p>

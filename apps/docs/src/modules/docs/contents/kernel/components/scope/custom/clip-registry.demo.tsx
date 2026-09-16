@@ -42,7 +42,7 @@ const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip, RoundedRectC
 });
 
 const Demo: FC = () => (
-  <Layout clips={[roundedRectClip]}>
+  <Layout extensions={{ clips: [roundedRectClip] }}>
     <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
       <Node
         position={[-88, -8]}

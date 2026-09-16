@@ -1,0 +1,74 @@
+---
+title: Extended usage
+description: Configure themes, inject capabilities, read compiled results, and control updates
+---
+
+Start with [Basic usage](/kernel/components/layout/usage). Use the options below when you need themes for composites, custom shapes, geometry results outside the figure, or control over updates. These examples focus on React `<Layout>` props and callbacks.
+
+## Theme configuration
+
+`theme` selects the theme for descendant Composites (compound components); it does not automatically style ordinary Node / Path primitives. Use each primitive's `style` and `rootScope` for figure-wide defaults. Switch the theme style and color mode in the panel to observe color changes on the same card; its position and dimensions stay fixed.
+
+<ComponentPreview files="theme-inheritance" size="sm" />
+
+Explicit `theme` fields override the root theme in existing IR; omitted fields keep their values. See [Theme](/kernel/components/design/theme) for inheritance rules.
+
+## Capability injection
+
+Pass extension definitions by capability through `Layout.extensions`. `shapes` is one category: the `ShapeDefinition` below supplies the folded file's footprint, connection boundary, and emitted primitives, then registers through `extensions={{ shapes: [fileShape] }}`. Both Nodes reference the registered `drawio-file` name, and the connector ends on the custom outline.
+
+<ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
+
+`extensions` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path generators (`pathGenerators`), path kinds (`pathKinds`), composites (`composites`), and theme styles (`themeStyles`). These definitions enter their respective registries through `extensions` and are consumed during compilation.
+
+This section demonstrates shape injection only; later custom-usage guides for each topic explain how to define and use the other capabilities. See the [API reference](/kernel/components/layout/api-reference) for the complete fields.
+
+## Reading compile artifacts
+
+To display node layout measurements outside a figure, request node-layout snapshots with `artifacts={{ nodeLayouts: true }}` and read them through `onArtifacts`. The callback reports the corresponding compilation result after React commits; later updates do not mutate a prior snapshot.
+
+<ComponentPreview files="layout-artifacts" size="sm" />
+
+The example displays the node count and text width outside the drawing. These snapshots describe compiled geometry, not live DOM measurements, and cannot modify drawing input.
+
+## Execution modes and update strategies
+
+Retained mode keeps processing state for later updates; static mode processes the current figure afresh. `auto` allows incremental updates, while `full` recomputes the figure when inputs change.
+
+```tsx
+<Layout /> {/* retained + auto */}
+<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout runtime={{ mode: 'static' }} />
+```
+
+The default `retained + auto` combines local updates with transactional rollback. Choose `retained + full` to disable incremental computation while retaining processing state and transactional rollback, or choose `static` to reduce resident processing state.
+
+## Errors and limitations
+
+`runtime.mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`.
+
+### Whole-figure configuration boundaries
+
+An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined` and isolated `defaults.reset: false` / `[]` create no root Scope wrapper. Existing `font: {}` follows its font-field override contract. Explicit Scopes retain their structure; `Layout.style` always means host CSS.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Provide input and configure framing and defaults',
+      url: '/kernel/components/layout/usage',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand processing and result publication',
+      url: '/kernel/components/layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up complete prop contracts',
+      url: '/kernel/components/layout/api-reference',
+    },
+  ]}
+/>

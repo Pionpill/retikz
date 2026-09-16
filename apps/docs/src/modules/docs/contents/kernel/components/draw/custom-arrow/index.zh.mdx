@@ -50,7 +50,7 @@ const bracket = defineArrow({
 React 通过 `<Layout arrows>` 注入；直接调用 core 时使用 `CompileOptions.arrows`。随后在端点或沿线 mark 中引用注册名。
 
 ```tsx
-<Layout arrows={[bracket]}>
+<Layout extensions={{ arrows: [bracket] }}>
   <Draw way={['A', 'B']} arrow="->" arrowDetail={{ shape: 'bracket' }} />
 </Layout>
 ```
