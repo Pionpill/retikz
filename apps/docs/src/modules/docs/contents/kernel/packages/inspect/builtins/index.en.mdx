@@ -3,7 +3,7 @@ title: Built-in inspection
 description: See the five built-in Inspectors Core currently provides and use readonly auxiliary content to explain final compilation results
 ---
 
-Built-in inspection gives a quick view of final output that Core already publishes. Complete React or Vanilla host setup in [Install and use](/kernel/packages/inspect#install-and-use), then request one of the Inspectors below; none changes the primary figure.
+Built-in inspection gives a quick view of final output that Core already publishes. Complete React or Vanilla host setup in [Install and use](/kernel/packages/inspect#installation-and-usage), then request one of the Inspectors below; none changes the primary figure.
 
 ## Built-in checks
 
@@ -117,8 +117,15 @@ Local axes have a fixed length of 40 local units, with dashed lines, arrowheads,
   caption="Move the coordinate and toggle inspection or its identifier; without inspection, Coordinate has no visible geometry."
 />
 
-## Related
+## Further reading
 
-- [Extending inspection](/kernel/packages/inspect/extensions): define an Inspector for another Core owner
-- [Inspection mechanism](/kernel/packages/inspect/mechanism): learn how requests select final occurrences, how coordinate spaces apply, and when auxiliary content is compiled in isolation
-- [Schema reference](/kernel/packages/inspect/schema-reference): look up defaults and fields for all five built-in option sets
+<LinkedSections
+  items={[
+    { title: 'Implementation', description: 'Trace inspection execution', url: '/kernel/packages/inspect/mechanism' },
+    {
+      title: 'Schema reference',
+      description: 'Look up built-in defaults',
+      url: '/kernel/packages/inspect/schema-reference',
+    },
+  ]}
+/>

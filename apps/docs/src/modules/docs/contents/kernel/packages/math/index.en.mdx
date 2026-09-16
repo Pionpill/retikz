@@ -5,7 +5,19 @@ description: Browse @retikz/math geometry primitives, coordinate transforms, and
 
 `@retikz/math` owns dependency-free math and geometry computation, without drawing-domain or rendering semantics.
 
-## Install and use
+## From geometry to a computed result
+
+Suppose a connection must meet the boundary of a rotated shape. Primitives describe points, directions, and bounds; transforms put them into a shared space; intersection algorithms find candidate attachment points. These capabilities cooperate through numbers and geometry, without constructing drawing elements or SVG.
+
+The figure shows coordinate conversion: the local point stays fixed while moving or rotating its shape changes world coordinates. Callers can use the result for layout, hit testing, or drawing; Math does not choose that purpose.
+
+<ComponentPreview files="/kernel/packages/math/transforms/coordinate-spaces" size="sm" hideCode />
+
+## Choosing capabilities
+
+Start with points and vectors for displacement and length. Convert different coordinate spaces before testing intersections or containment. Check angle units per function: affine and centered-shape rotations use radians, while methods named Degrees take degrees. Empty, collinear, or zero-length inputs may return a sentinel rather than throw; follow each method’s contract.
+
+## Installation and usage
 
 <PackageManagerInstall packages="@retikz/math" />
 
@@ -31,13 +43,14 @@ The example uses the root entry's point and vector operations. Read the correspo
   ]}
 />
 
-## Responsibilities
+## Responsibilities at a glance
 
-| Document   | Responsibility                                         | Reach for it when                 |
-| ---------- | ------------------------------------------------------ | --------------------------------- |
-| Primitives | Points, vectors, bounds, ellipses, and arcs            | Constructing or reading geometry  |
-| Transforms | Moving geometry between coordinate spaces              | Working with layout or transforms |
-| Algorithms | Intersections, curve slicing, and point-fitting curves | Deriving geometric results        |
+| Document      | Responsibility                                         | Reach for it when                 |
+| ------------- | ------------------------------------------------------ | --------------------------------- |
+| Primitives    | Points, vectors, bounds, ellipses, and arcs            | Constructing or reading geometry  |
+| Transforms    | Moving geometry between coordinate spaces              | Working with layout or transforms |
+| Algorithms    | Intersections, curve slicing, and point-fitting curves | Deriving geometric results        |
+| API reference | Public signatures, types, and results                  | Look up an exact contract         |
 
 ## Contents
 
@@ -58,5 +71,8 @@ The example uses the root entry's point and vector operations. Read the correspo
       description: 'Intersections, curve slicing, and point-fitting curves',
       url: '/kernel/packages/math/algorithms',
     },
-  ]}
+
+    { title: 'API reference', description: 'Look up the complete public contract', url: '/kernel/packages/math/api-reference' },
+
+]}
 />

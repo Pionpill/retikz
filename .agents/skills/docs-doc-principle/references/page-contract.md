@@ -53,9 +53,9 @@
 | 延伸阅读   | Further reading        | 相关页：LinkedSections，说明阅读目的                   |
 | 错误与限制 | Errors and limitations | 当前任务的真实限制与可观察失败，适用时出现             |
 
-安装与使用、基础用法的双宿主切换使用 DocTabs / DocTab，value 固定 react、vanilla，label 固定 React、Vanilla；复用现有全局接入偏好，不手写独立切换器。公共安装放 Tab 外，不同宿主的专属依赖放对应 Tab 内。真正无宿主差异的 TypeScript API 共用一份示例；只支持单端时说明实际入口，不虚构另一端。
+安装与使用、基础用法的双宿主切换使用 DocTabs / DocTab，value 固定 react、vanilla，label 固定 React、Vanilla；复用现有全局接入偏好，不手写独立切换器。公共安装放 Tab 外，不同宿主的专属依赖放对应 Tab 内。真正无宿主差异的 TypeScript API 共用一份示例；只支持单端时说明实际入口，不虚构另一端。仅存在 React / Vanilla 等宿主子入口时说明其区别；只有包根入口时直接展示导入与调用，不额外强调“不需要 React / Vanilla 宿主”。
 
-分步操作按需使用 DocSteps / DocStep；效果展示用 ComponentPreview，其源码 Tab 不替代正文的必要接入说明。具体组合读 [DocTabs / DocSteps](doc-tabs-steps.md)，demo 读 [ComponentPreview](component-preview.md)。
+分步操作按需使用 DocSteps / DocStep；效果展示用 ComponentPreview，其 React / Vanilla 源码 Tab 已覆盖的用法不再用 DocTabs 重复展示；正文仅补必要接入说明和关键代码。具体组合读 [DocTabs / DocSteps](doc-tabs-steps.md)，demo 读 [ComponentPreview](component-preview.md)。
 
 “章节内容”是直接子页导航；“延伸阅读”是相关主题导航，不复制同一组链接。收尾统一延伸阅读，不再新写相关、扩展阅读、接下来或 Related。无相关链接时不造空章节。正文中的单个链接仍用 Markdown；卡片写法读 [LinkedSections](linked-sections.md)。
 

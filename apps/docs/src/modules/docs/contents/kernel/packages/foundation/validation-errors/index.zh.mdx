@@ -5,12 +5,12 @@ description: 使用 Foundation 的标量断言和结构化错误骨架，明确�
 
 Foundation 将通用标量校验和错误形态放在一起：断言复用最小规则，错误类型则让每个包保留自己的错误语义。
 
-## 结构化错误
+## 基础用法
 
 `RetikzErrorOptions`、`RetikzError` 与 `isRetikzError` 提供所有包共享的最小错误骨架。领域包（即拥有这次失败语义的 owner）应继承 `RetikzError` 并定义自己的错误码、详情和恢复语义；`RetikzFoundationError` 只承载 Foundation 自己拥有的原子失败。
 
 ```ts
-import { RetikzError, type ValueOf } from '@retikz/foundation';
+import { assertPositiveNumber, RetikzError, type ValueOf } from '@retikz/foundation';
 
 type Details = Readonly<{ source: string }>;
 
@@ -27,13 +27,13 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
 }
 ```
 
-| 成员              | 类型                                       | 语义                                                                                                                       |
-| ----------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `code`            | `TCode`                                    | 结构化错误分类，由 owner 定义                                                                                              |
-| `message`         | `string`                                   | 面向调用方的错误消息                                                                                                       |
-| `details`         | `TDetails`                                 | owner 提供的结构化详情；保留对象身份，不自动深拷贝或冻结                                                                   |
-| `cause`           | `unknown`，可选                            | 原始异常或值；省略时仍创建值为 `undefined` 的 own property                                                                 |
-| `isRetikzError()` | `(value: unknown) => value is RetikzError` | 判断值是否属于正常 `RetikzError` class hierarchy；不作为 hostile object、跨 realm 或 Runtime/Core 私有 identity 的安全边界 |
+| 成员              | 类型                                       | 语义                                                       |
+| ----------------- | ------------------------------------------ | ---------------------------------------------------------- |
+| `code`            | `TCode`                                    | 结构化错误分类，由 owner 定义                              |
+| `message`         | `string`                                   | 面向调用方的错误消息                                       |
+| `details`         | `TDetails`                                 | owner 提供的结构化详情；保留对象身份，不自动深拷贝或冻结   |
+| `cause`           | `unknown`，可选                            | 原始异常或值；省略时仍创建值为 `undefined` 的 own property |
+| `isRetikzError()` | `(value: unknown) => value is RetikzError` | 判断值是否属于正常 `RetikzError` class hierarchy           |
 
 ## 标量断言
 

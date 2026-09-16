@@ -65,13 +65,15 @@ description: Use before writing or reviewing Retikz solution documentation, demo
 
 用户正文优先展示 DSL（如 `<Layout>`、`<Node>`、`<Path>`、`<Draw>`）。普通用法页不为了“完整”重复 IR JSON 或编译器内部；IR 只在架构、持久化、AI 接入或必须用它解释公开行为时出现。
 
-- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页必须保留两套最小接入说明：分别点明入口、注入或调用位置与产物。互为替代方案时优先用 `DocTabs`，有顺序的操作可组合 `DocSteps`；切换展示不等于省略另一端。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
+- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页必须保留两套最小接入说明：分别点明入口、注入或调用位置与产物。ComponentPreview 的实际源码视图已覆盖相应写法时不再重复 DocTabs，只补必要接入说明或关键片段；未覆盖的替代方案优先用 `DocTabs`，有顺序的操作可组合 `DocSteps`；切换展示不等于省略另一端。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
 
 ComponentPreview 的 IR 与 Vanilla 配置必须保持最上层、精简的 Source IR / authoring 语义；不得把 lower、resolve 或 runtime canonical 结果直接暴露给读者。运行时为统一消费而产生的 `base`、完整 Plot 或其它下沉形态只用于校验与渲染。
 
 所有功能 demo 和叙述图都用 retikz 自绘：同级 demo + `<ComponentPreview>`。不使用截图、PNG/JPG/GIF、Mermaid、Excalidraw 或 draw.io 代替功能展示。叙述图默认 `hideCode`；可复制用法保留源码。
 
 关系、流程或架构图的具体画法由 `docs-figure-contract` 拥有，本 skill 只决定是否需要图。
+
+颜色、内置能力等可枚举目录优先消费现有公开真源；已有权威清单时不手工维护第二份，不为文档展示新增公共导出。
 
 ## 文档宽度
 

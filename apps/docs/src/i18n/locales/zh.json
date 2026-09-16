@@ -117,7 +117,7 @@
     "pkgCore": "编译核心 · core",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",
-    "pkgInspectExtensions": "拓展观测",
+    "pkgInspectCustom": "自定义用法",
     "pkgInspectMechanism": "实现原理",
     "pkgInspectApiReference": "API 参考",
     "pkgInspectSchemaReference": "Schema 参考",

@@ -22,6 +22,7 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 
 ## 面板组织
 
+- demo 为展示效果覆盖 API 默认值时，在正文或 caption 明示；主体参数与辅助显示参数按职责分组
 - 默认使用 `presentation: 'panel'`；面板便于后续继续扩展字段
 - 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
 - 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”

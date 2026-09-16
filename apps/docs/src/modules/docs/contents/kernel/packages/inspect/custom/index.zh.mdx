@@ -1,0 +1,116 @@
+---
+title: 自定义用法
+description: 定义并注册端点 Inspector，在 React 与 Vanilla 中生成只读辅助标记
+---
+
+## 适用边界
+
+先完成[内置观测](/kernel/packages/inspect/builtins)。只需切换控制点、边界或标签时使用内置选项；要生成不同辅助内容时，再定义 Inspector。本例读取 stroke Path 的最终命令，为显式端点添加圆形标记，不修改主图。
+
+<ComponentPreview files={['inspect-custom', 'endpoint-inspector.ts']} size="sm" />
+
+## 定义能力
+
+预览源码中的 `endpoint-inspector.ts` 是两种宿主共用的定义，复制该文件后再选择下面一种接入方式。`namespace` 与 `type` 组成注册键；`owner: { kind: 'path', name: 'stroke' }` 选择已有的描边路径产物，`subjectSchema` 校验其结构。回调读取命令并返回普通 Core 图元，驱动再编译辅助层。
+
+本例没有自定义配置，因此省略 `optionsSchema` 与 `resolveOptions`。需要选项时，先声明 schema；只有消费态不同于解析结果时才提供 resolver，不必写恒等函数。
+
+下面两路数据在回调汇合：产物决定画在哪里，选项决定显示什么；箭头表示依赖，不表示并行执行。
+
+<ComponentPreview files="inspector-definition-flow" size="md" hideCode />
+
+## 注入与使用
+
+两种写法都把同一 Definition 放入注册表，再用同一个 key 发出请求。React 显示组件；Vanilla 返回包含标记的 SVG 字符串。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { createInspectorRegistry } from '@retikz/inspect';
+import { InspectLayout, InspectPath } from '@retikz/inspect/react';
+import { Step } from '@retikz/react';
+import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
+
+const registry = createInspectorRegistry([endpointInspector]);
+
+export const Diagram = () => (
+  <InspectLayout registry={registry}>
+    <InspectPath request={{ inspector: endpointInspectorKey, options: true }}>
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="cubic" control1={[20, -30]} control2={[80, 30]} to={[100, 0]} />
+    </InspectPath>
+  </InspectLayout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { createInspectorRegistry } from '@retikz/inspect';
+import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
+import { path, renderToSvgString, scene } from '@retikz/vanilla';
+import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
+
+const registry = createInspectorRegistry([endpointInspector]);
+const input = scene({
+  children: [
+    path('curve', {
+      authoring: createInspectionVanillaAuthoring({ inspector: endpointInspectorKey, options: true }),
+      way: [
+        [0, 0],
+        {
+          cubic: [
+            [20, -30],
+            [80, 30],
+          ],
+        },
+        [100, 0],
+      ],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDriver({ registry }) });
+```
+
+</DocTab>
+</DocTabs>
+
+## 错误与限制
+
+注册键重复、请求未注册 key、选项或产物校验失败都会终止检查编译。对应 Core owner 必须已经发布最终产物，注册 Inspector 不会新增观测源。回调只读实际可用的几何；可选信息缺失时可用 `context.warn()` 报告并保留其余结果。
+
+普通返回图元默认使用局部坐标；确需场景坐标时返回 `InspectorFragment` 并设置 `coordinateSpace: 'scene'`，避免重复变换。完整上下文、返回类型与阶段规则见参考和原理页。
+
+## 推荐写法
+
+自定义 Inspector 建议沿用官方实现的辅助视觉语言，让多个观测同时开启时仍能辨认来源，而不抢占主图的视觉重点。以下是写法建议，不是编译器自动添加的样式。
+
+1. **同一次观测共用色板颜色。** 线条、点标记和标签统一使用 `context.appearance.scopeColor`，不要为每个 Inspector 写死同一种颜色或自行维护色板。驱动按观测请求分配当前主题的分类色，减少嵌套层级与多个观测之间的混淆；色板会循环，仍需结合线型和标签区分。警告等明确语义使用 `context.appearance.semanticColors` 中的对应颜色。
+
+2. **辅助线优先使用虚线或点线。** 控制柄、参考轴、包围框等使用 dashed / dotted 的视觉形式，通过 `style.dashPattern` 表达；同色的不同观测内容可以使用不同线型。实线留给需要连续表达的真实轮廓，例如当前内置 Clip 的裁剪轮廓，不必把所有线条机械地改成虚线。
+
+3. **尽量不遮挡主图。** 轮廓默认无填充、使用细线，关键点用小标记；只有表达占用区域、间距或警告范围时才增加填充，并用低透明度或纹理保留底图可读性。标签保持透明背景、简短且略微偏离标记，安排在辅助输出的后部，避免被辅助线覆盖。
+
+4. **按观测内容拆分开关。** 像 Node 的轮廓、关键点、正文盒，Path 的控制点、顶点等，按可独立理解的内容提供选项；标签单独由 `labels` 控制。不要把每个颜色、线宽都变成配置项；没有选项时直接省略 `optionsSchema`，无需转换时省略 `resolveOptions`。
+
+5. **明确辅助样式的继承边界。** 观测片段可以继承被观察位置的环境。需要稳定的辅助外观时，像内置 Inspector 一样，用普通 Scope 的 `defaults: { reset: true }` 隔离主图默认值，再显式设置必要样式，避免主图的填充、字体或路径默认配置改变标记含义；不要借此重建另一套主题或渲染机制。
+
+<SourceLinks
+  sources={[
+    { label: 'Inspector Definition 与回调类型源码', path: 'packages/kernel/inspect/src/contract/types.ts' },
+    { label: '内置标记、标签与样式隔离', path: 'packages/kernel/inspect/src/providers/geometry.ts' },
+    { label: 'Node 观测内容与线型', path: 'packages/kernel/inspect/src/providers/node.ts' },
+    { label: 'Layout 观测的区域填充与语义颜色', path: 'packages/library/layout/src/inspect/shared/output.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'API 参考', description: '查询 Definition 与回调契约', url: '/kernel/packages/inspect/api-reference' },
+    { title: 'Schema 参考', description: '比较内置选项的默认值', url: '/kernel/packages/inspect/schema-reference' },
+  ]}
+/>

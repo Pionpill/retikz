@@ -356,12 +356,23 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgFoundation',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
-          { id: 'utilities', label: 'kernel.pkgFoundationUtilities', difficulty: DocDifficulty.Advanced },
-          { id: 'types-schemas', label: 'kernel.pkgFoundationTypesSchemas', difficulty: DocDifficulty.Advanced },
+          {
+            id: 'utilities',
+            meta: { pageType: 'guide', audience: 'user' },
+            label: 'kernel.pkgFoundationUtilities',
+            difficulty: DocDifficulty.Beginner,
+          },
+          {
+            id: 'types-schemas',
+            meta: { pageType: 'guide', audience: 'user' },
+            label: 'kernel.pkgFoundationTypesSchemas',
+            difficulty: DocDifficulty.Beginner,
+          },
           {
             id: 'validation-errors',
+            meta: { pageType: 'guide', audience: 'user' },
             label: 'kernel.pkgFoundationValidationErrors',
-            difficulty: DocDifficulty.Advanced,
+            difficulty: DocDifficulty.Beginner,
           },
           {
             id: 'api-reference',
@@ -381,9 +392,24 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgMath',
         sidebarGroup: 'kernel.pkgGroupBase',
         children: [
-          { id: 'primitives', label: 'kernel.pkgMathPrimitives', difficulty: DocDifficulty.Internals },
-          { id: 'transforms', label: 'kernel.pkgMathTransforms', difficulty: DocDifficulty.Internals },
-          { id: 'algorithms', label: 'kernel.pkgMathAlgorithms', difficulty: DocDifficulty.Internals },
+          {
+            id: 'primitives',
+            meta: { pageType: 'guide', audience: 'user' },
+            label: 'kernel.pkgMathPrimitives',
+            difficulty: DocDifficulty.Internals,
+          },
+          {
+            id: 'transforms',
+            meta: { pageType: 'guide', audience: 'user' },
+            label: 'kernel.pkgMathTransforms',
+            difficulty: DocDifficulty.Internals,
+          },
+          {
+            id: 'algorithms',
+            meta: { pageType: 'guide', audience: 'user' },
+            label: 'kernel.pkgMathAlgorithms',
+            difficulty: DocDifficulty.Internals,
+          },
           {
             id: 'api-reference',
             label: 'kernel.pkgMathApiReference',
@@ -419,19 +445,21 @@ export const kernelSection: Array<Section> = [
         children: [
           {
             id: 'authoring',
+            meta: { pageType: 'guide', audience: 'user' },
             label: 'kernel.pkgTexAuthoring',
             difficulty: DocDifficulty.Beginner,
           },
           {
             id: 'configuration',
+            meta: { pageType: 'guide', audience: 'user' },
             label: 'kernel.pkgTexConfiguration',
-            difficulty: DocDifficulty.Advanced,
+            difficulty: DocDifficulty.Beginner,
           },
           {
             id: 'mechanism',
             label: 'kernel.pkgTexMechanism',
             difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('kernel.tex'),
+            meta: { pageType: 'guide', audience: 'maintainer', capability: 'kernel.tex' },
           },
           {
             id: 'api-reference',
@@ -451,10 +479,15 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.pkgInspect',
         sidebarGroup: 'kernel.pkgGroupExtension',
         children: [
-          { id: 'builtins', label: 'kernel.pkgInspectBuiltins', difficulty: DocDifficulty.Beginner },
           {
-            id: 'extensions',
-            label: 'kernel.pkgInspectExtensions',
+            id: 'builtins',
+            meta: { pageType: 'guide', audience: 'user' },
+            label: 'kernel.pkgInspectBuiltins',
+            difficulty: DocDifficulty.Beginner,
+          },
+          {
+            id: 'custom',
+            label: 'kernel.pkgInspectCustom',
             difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.inspect'),
           },
