@@ -9,7 +9,7 @@ Start with [Basic usage](/kernel/components/layout/usage). Use the options below
 
 `theme` selects the theme for descendant Composites (compound components); it does not automatically style ordinary Node / Path primitives. Use each primitive's `style` and `rootScope` for figure-wide defaults. Switch the theme style and color mode in the panel to observe color changes on the same card; its position and dimensions stay fixed.
 
-<ComponentPreview files="theme-inheritance" size="sm" />
+<ComponentPreview files={['theme-inheritance', 'theme-card.ts']} size="sm" />
 
 Explicit `theme` fields override the root theme in existing IR; omitted fields keep their values. See [Theme](/kernel/components/design/theme) for inheritance rules.
 
@@ -33,13 +33,19 @@ The example displays the node count and text width outside the drawing. These sn
 
 ## Execution modes and update strategies
 
+<ComponentAlert
+  type="warn"
+  title="@retikz/runtime is still under development"
+  description="Its API and processing behavior are not yet stable. These settings apply to the current version only; review them again when upgrading."
+/>
+
 Choose whether to retain processing state and allow incremental computation:
 
-| Configuration               | Update behavior                             | Use case                                                          |
-| --------------------------- | ------------------------------------------- | ----------------------------------------------------------------- |
-| `retained + auto` (default) | Retain state; allow incremental computation | Local updates and transactional rollback                          |
-| `retained + full`           | Retain state; recompute on changes          | Disable incremental computation;<br />keep transactional rollback |
-| `static`                    | Process the current figure afresh           | Reduce resident processing state                                  |
+| Configuration               | Update behavior                             | Use case                                                            |
+| --------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| `retained + auto` (default) | Retain state; allow incremental computation | Local updates; keep the last successful result on failure           |
+| `retained + full`           | Retain state; recompute on changes          | Full recomputation;<br />keep the last successful result on failure |
+| `static`                    | Process the current figure afresh           | Reduce resident processing state                                    |
 
 ```tsx
 <Layout /> {/* retained + auto */}
@@ -47,13 +53,13 @@ Choose whether to retain processing state and allow incremental computation:
 <Layout runtime={{ mode: 'static' }} />
 ```
 
+If processing a subsequent input fails in retained mode, the last successful result stays visible. This does not provide undo or history navigation. Receive structured diagnostics through `runtime.onDiagnostic`, for example `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`.
+
 `runtime.mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`.
 
 ## Additional notes
 
 - **Empty configuration**: An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined`, and isolated `defaults.reset: false` / `[]` create no root Scope wrapper.
-- **Font overrides**: Existing `font: {}` follows its font-field override contract.
-- **Explicit scopes**: Explicit Scopes retain their structure.
 - **Host styles**: `Layout.style` always means host CSS. See [Basic usage](/kernel/components/layout/usage#whole-figure-defaults) for whole-figure primitive defaults.
 
 ## Further reading

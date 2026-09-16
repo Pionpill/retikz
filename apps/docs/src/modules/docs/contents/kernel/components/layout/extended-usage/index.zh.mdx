@@ -9,7 +9,7 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 `theme` 为后代 Composite（复合组件）选择主题；它不会自动设置普通 Node / Path 的颜色。普通图元使用自身的 `style`，全图图元默认值使用 `rootScope`。在面板中切换主题风格与明暗模式，观察同一卡片的颜色变化；卡片的位置和尺寸保持不变。
 
-<ComponentPreview files="theme-inheritance" size="sm" />
+<ComponentPreview files={['theme-inheritance', 'theme-card.ts']} size="sm" />
 
 `theme` 的显式字段覆盖已有 IR 的根主题；未声明字段保留原值。完整继承规则见[主题](/kernel/components/design/theme)。
 
@@ -33,13 +33,19 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 ## 执行模式与更新策略
 
+<ComponentAlert
+  type="warn"
+  title="@retikz/runtime 仍在开发中"
+  description="它的 API 与处理行为尚未稳定；本节配置仅适用于当前版本，升级时请重新核对。"
+/>
+
 根据是否保留处理状态、是否允许增量计算选择配置：
 
-| 配置                      | 更新方式                 | 适用目的                   |
-| ------------------------- | ------------------------ | -------------------------- |
-| `retained + auto`（默认） | 保留状态，允许增量计算   | 局部更新与事务回滚         |
-| `retained + full`         | 保留状态，变化时完整计算 | 禁用增量计算，保留事务回滚 |
-| `static`                  | 每次重新处理当前图形     | 减少常驻处理状态           |
+| 配置                      | 更新方式                 | 适用目的                       |
+| ------------------------- | ------------------------ | ------------------------------ |
+| `retained + auto`（默认） | 保留状态，允许增量计算   | 局部更新；失败时保留已成功结果 |
+| `retained + full`         | 保留状态，变化时完整计算 | 完整计算；失败时保留已成功结果 |
+| `static`                  | 每次重新处理当前图形     | 减少常驻处理状态               |
 
 ```tsx
 <Layout /> {/* retained + auto */}
@@ -47,13 +53,13 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 <Layout runtime={{ mode: 'static' }} />
 ```
 
+retained 模式处理后续输入失败时，继续显示上一次成功结果；这不表示提供撤销或历史回退。通过 `runtime.onDiagnostic` 接收结构化诊断，例如 `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`。
+
 `runtime.mode: 'static'` 不能与 `updateStrategy` 或 `onDiagnostic` 同时使用。
 
 ## 补充说明
 
 - **空配置**：`rootScope` 省略、为空或仅包含值为 `undefined` 的可选字段，以及单独的 `defaults.reset: false` / `[]`，不会创建根 Scope。
-- **字体覆盖**：已有的 `font: {}` 仍按字体字段契约产生覆盖。
-- **显式作用域**：显式 Scope 保留原结构。
 - **宿主样式**：`Layout.style` 始终是宿主 CSS；全图图元默认值的设置见[基础用法](/kernel/components/layout/usage#全图默认值)。
 
 ## 延伸阅读
