@@ -1,158 +1,217 @@
 ---
 title: 实现原理
-description: 追踪 Layout 输入、执行模式、编译结果和宿主呈现的协作过程
+description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸、主题覆盖机制
 ---
 
-先读[基础用法](/kernel/components/layout/usage)。这里解释 React Layout 如何连接输入、Vanilla processing 和 SVG / Canvas；Core 的几何编译与 Runtime 事务细节由各自包负责。
+先读[基础用法](/kernel/components/layout/usage)。这里按属性背后的问题分别解释机制：为什么有时多出一层 Scope、不指定视窗时怎样取景，以及绘图配置如何与页面显示配合。各节可以独立阅读。
 
-## 整体流程
+## 隐式根作用域
 
-一次更新可以概括为：接收组件树或 IR → 准备处理选项 → 生成场景结果 → 呈现 SVG / Canvas。以移动一个 Node 为例，输入中的位置发生变化，处理层计算新的几何，React 使用结果更新画面。
+给一组子图元统一设置样式时，`rootScope` 并不是另一套样式系统。Layout 会按需把 JSX children 包进一层普通 Scope，让它们沿用 Scope 的继承与覆盖规则。
 
-- InputScene：由组件树收集出的绘图输入，尚需补齐默认值并转换。
-- IR：可保存为 JSON 的图形描述，进入 Core 编译。
-- Scene：编译后的渲染图元集合，交给 SVG / Canvas。
-- processing controller：Vanilla 管理持续更新的对象；retained 模式保留它，static 模式不创建它。
-- revision：一次成功发布的结果版本；同次 Scene 与 artifacts 属于同一版本。
+例如，下面的根配置等价于在 Layout 内手写一层 `<Scope defaults={{ node: { style: { fill: 'lightblue' } } }}>` 包住这些节点：
 
-## 输入与结果发布
+```tsx
+<Layout rootScope={{ defaults: { node: { style: { fill: 'lightblue' } } } }}>
+  <Node id="a" position={[0, 0]}>
+    A
+  </Node>
+  <Node id="b" position={[80, 0]} style={{ fill: 'orange' }}>
+    B
+  </Node>
+</Layout>
+```
 
-`<Layout>` 把 JSX children 转成 `InputScene`，或直接采用 `ir` prop；definitions 与 runtime options 也由这里接入。React render 阶段准备 static fallback；React commit 后再由 `runtime.mode` 选择 Vanilla retained processing controller 或无 controller 的 static processing。
+A 继承浅蓝填充，B 的显式填充覆盖默认值。这里的 **defaults** 是给未显式配置的后代图元提供默认值，不是强制重写每个节点的属性；`rootScope.style` 则向后代提供 `fill / stroke / opacity` 等通用绘图样式。
 
-retained 路径由 Vanilla controller 在一次 transaction 中提交 Input / IR 与 processing 配置，成功后才发布同 revision 的 Scene、artifacts、只读图层与 runtime meta。React 只订阅这个只读结果并接入 SVG / Canvas、事件与动画。static 路径只准备并物化当前 Scene，不创建 retained controller、Snapshot、diff、transaction 或 rollback。
+包装与否取决于是否存在有效覆盖，而不是有没有传入 `rootScope` 这个对象：
 
-这条链路的语义所有权不会随入口漂移：React 只声明稳定的 SVG / Canvas 结果宿主；Vanilla processing 拥有 Input 归一、Core Program 与 retained transaction；core 不拥有 DOM 或 Canvas 实例，renderer 不反向定义新的图形语义。失败的 transaction 不发布新 revision，React 因此继续呈现上一次成功结果；调用方应让 Error Boundary 处理同步 render 错误。
+- **无有效覆盖**：不传、传 `{}`，或只传 `style: {}`、`defaults: {}` 等空覆盖时，直接使用原 children，不增加合成 Scope。
+- **有有效覆盖**：有实际样式、默认值或有效的 `defaults.reset` 时，包装一层普通 Scope，沿用既有继承规则。`reset` 为 `true` 或非空通道列表时表示切断相应的外层样式继承；`false` 或空列表本身不触发包装。
+- **直接传入 ir**：使用 IR 已描述的完整子图，忽略同时传入的 children 和 `rootScope`。要改变其中的作用域，应修改 IR 本身；宿主 CSS `style` 仍然生效。
+
+**这层合成 Scope 不是局部命名空间。** `rootScope` 只接收 `style / defaults`；需要 `localNamespace` 时，应在子图中显式使用 Scope，命名与引用机制见 [Scope 用法](/kernel/components/scope/usage)。
 
 <SourceLinks
   sources={[
     {
-      label: 'React 输入与 processing options 接线',
+      label: '按有效覆盖决定是否包装根 Scope',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 528,
+      endLine: 556,
+    },
+    {
+      label: 'Layout 的 ir 分支与 rootScope 边界',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 408,
-      endLine: 484,
-    },
-    {
-      label: 'React static fallback 与 retained processing 订阅',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 231,
-      endLine: 296,
-    },
-    {
-      label: 'Vanilla retained controller 的 Core Program 与 Runtime',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-      startLine: 94,
-      endLine: 174,
-    },
-    {
-      label: 'React 将 processing result 映射为 SVG 或 Canvas',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 99,
-      endLine: 176,
-    },
-    {
-      label: 'Core IR 编译 Scene',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 23,
-      endLine: 51,
-    },
-    {
-      label: 'Layout Runtime 判别配置',
-      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
-      startLine: 5,
-      endLine: 48,
-    },
-    {
-      label: 'Static 与 retained processing 分派',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 231,
-      endLine: 296,
+      startLine: 402,
+      endLine: 418,
     },
   ]}
 />
 
-## 执行模式如何分流
+## 自动视窗
 
-| 配置              | 更新行为                                         | 常驻状态与失败语义                                             |
-| ----------------- | ------------------------------------------------ | -------------------------------------------------------------- |
-| `retained + auto` | 安全变化走局部 Patch，其余完整 fallback          | 保留 diagnostics、原子 commit 与 rollback；默认配置            |
-| `retained + full` | 有实际依赖变化时跳过 Program `update()` 完整运行 | 与 auto 持有相同 Session 状态；不是低内存模式                  |
-| `static`          | 每次完整 compile 并直接物化 SVG / Canvas         | 不创建 Session、Snapshot、diff 或 rollback；物化失败不承诺回滚 |
+没有指定 `viewBox` 时，Layout 的视窗不是由页面容器尺寸决定的，而是由绘图内容的布局边界决定的。这里的“布局边界”是各图元贡献的最左、最上、最右、最下范围合并得到的包围框，不只是节点中心点的范围；它在编译时得到，不是渲染后再读取 DOM 像素。
 
-`static` 不能同时传 `updateStrategy` 或 `onDiagnostic`。在 retained processing 上改变 `updateStrategy` 会重建 controller；改变 `mode` 会切换到另一条 processing 路径。
+先选择视窗来源：Layout 的 `viewBox` prop 优先，其次是输入 IR 中的 `viewBox`；两者都没有，才根据内容自动计算。显式视窗直接决定坐标窗口，不再按内容追加自动留白。
 
-## 视框如何确定
+自动计算只需要理解两步：合并内容边界，再向四边扩展 padding。当前默认 padding 为 10 个绘图单位，不是宿主 CSS 的 `padding`。Core 编译选项支持配置它，但 Layout 当前没有暴露这个 prop；需要自行控制取景留白时，用显式 `viewBox`。
 
-上半部分决定内部坐标范围：显式 `viewBox` prop 优先，其次是 IR 自带的 `viewBox`，两者都没有时才使用内容边界加 padding。下半部分的显示尺寸默认跟随内容范围。显式数值 `width` / `height` 用于有意缩放：只给一个轴时另一轴按内容比例推导，两个轴都给时等比适配；CSS 字符串尺寸由浏览器排版，额外 CSS 约束也可能改变显示比例。
+<ComponentPreview files="layout-auto-viewport" size="xs" hideCode />
 
-<ComponentPreview files="/kernel/components/layout/usage/layout-viewbox-resolution" size="sm" hideCode />
+假设内容边界为 `x: 20, y: 30, width: 80, height: 40`，默认留白后得到 `x: 10, y: 20, width: 100, height: 60`。一般地，边界为 `(x, y, w, h)`、留白为 `p` 时：
 
-图形被裁或留白过多时，先看 **View Code → IR**：显式 viewBox 可能小于可见图元，自动模式则可能被远离主体的可见边界拉大。只有 coordinate 而没有可见边界时，它不会单独扩展自动范围。
+$$
+(x', y', w', h') = (x-p,\ y-p,\ w+2p,\ h+2p)
+$$
+
+若没有任何内容边界，则直接使用 `{ x: 0, y: 0, width: 100, height: 100 }`，不再在这个兜底范围外加 padding。
+
+因此，移动或增删图元可能连带改变自动视窗。若要在多次更新之间比较相同坐标位置，应显式固定 `viewBox`；仅固定 `width / height` 不能固定取景范围。
 
 <SourceLinks
   sources={[
     {
-      label: 'viewBox 注入 IR',
+      label: 'Layout：显式 viewBox 覆盖输入值',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 385,
-      endLine: 395,
+      startLine: 420,
+      endLine: 434,
     },
     {
-      label: '显式与自动 layout 决策',
+      label: 'Core：选择显式视窗或自动边界',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 27,
-      endLine: 44,
+      startLine: 87,
+      endLine: 104,
     },
     {
-      label: '内容边界与 padding',
+      label: '自动留白与无内容时的范围',
       path: 'packages/kernel/core/src/compile/scene/layout.ts',
-      startLine: 23,
-      endLine: 31,
+      startLine: 26,
+      endLine: 35,
     },
+    { label: '默认布局留白', path: 'packages/kernel/core/src/compile/constants.ts', startLine: 1, endLine: 5 },
   ]}
 />
 
-## 高级宿主策略
+详细的边界算法可参考 [Math 包的边界计算](/kernel/packages/math/primitives#边界计算)。
 
-普通页面直接使用 `renderer`、`animate` 与 `snapshotAt` 即可。编辑器、测试工具等宿主需要统一控制整棵子树时，才使用 Provider；图把 renderer 的“缺省时回退”与动画的“宿主策略覆盖”分开。
+## 视窗与显示尺寸
 
-<ComponentPreview files="/kernel/components/layout/usage/layout-runtime-priority" size="lg" hideCode />
+`viewBox` 决定“看哪一段绘图坐标”，`width / height` 决定“这个窗口在页面上占多大”。先确定视窗，再以它的宽高作为显示尺寸的推导依据；反过来，修改显示尺寸不会改写节点坐标，也不会重新定义视窗。
 
-渲染 Provider 只补充缺省的 renderer，后代显式 prop 仍可覆盖；动画 Provider 则用于宿主统一控制整棵树，会覆盖后代 `animate`，其中 `system` 直接跟随系统偏好。`snapshotAt` 不参与这条回退链：一旦传入，SVG 与 Canvas 都直接输出指定时刻的静态帧。
+<ComponentPreview files="layout-viewbox-resolution" size="md" hideCode />
+
+以 `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}` 为例，内部宽高比是 2:1：
+
+| 尺寸配置                      | 宿主尺寸    | 推导方式         |
+| ----------------------------- | ----------- | ---------------- |
+| 不传宽高                      | 200 × 100   | 使用视窗宽高     |
+| 只传 `width={400}`            | 400 × 200   | 按比例补齐另一轴 |
+| 传 `width={400} height={300}` | 400 × 300   | 保留两轴显式值   |
+| 只传 `width="100%"`           | 100% × auto | 留给浏览器排版   |
+
+两轴都给时，Layout 不会把 `400 × 300` 改成 `400 × 200`。宿主尺寸与内部内容怎样适配属于 SVG / Canvas 的呈现行为，不能把宿主尺寸推导理解成重新布局图元。
+
+SVG 和 Canvas 共用这套显示尺寸计算。CSS 字符串不会被当作绘图坐标解析。
 
 <SourceLinks
   sources={[
     {
-      label: 'renderer 与动画模式解析',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 355,
-      endLine: 362,
+      label: '数值比例补齐与 CSS 尺寸分支',
+      path: 'packages/kernel/react/src/render/display-size.ts',
+      startLine: 1,
+      endLine: 23,
     },
     {
-      label: 'processing result 的 SVG / Canvas 与静态截帧配置',
+      label: 'SVG：将尺寸应用到根元素',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 99,
-      endLine: 176,
+      startLine: 178,
+      endLine: 181,
     },
     {
-      label: '系统动画偏好回退',
-      path: 'packages/kernel/render/src/animation/runtime.ts',
-      startLine: 132,
-      endLine: 133,
+      label: 'Canvas：复用显示尺寸计算',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 146,
+      endLine: 155,
     },
   ]}
 />
 
-## 完整实现流程
+## 主题与局部覆盖
 
-沿图中的 Layout → Vanilla processing → Core 编译 → 结果宿主阅读源码。React 负责输入与显示，Vanilla 管理处理状态，Core 产出场景；返回的结果再交给 React 呈现。上文的源码入口对应这些阶段。
+`theme`、`rootScope` 和宿主 `style` 都可能影响外观，但不是同一个配置对象的三层优先级：
 
-<ComponentPreview files="/kernel/components/layout/usage/layout-input-flow" size="sm" hideCode />
+| 配置                         | 作用位置                     | 用来决定什么               |
+| ---------------------------- | ---------------------------- | -------------------------- |
+| `theme`                      | Scene 及消费主题的 Composite | 主题风格与明暗模式         |
+| `rootScope.style / defaults` | JSX 子图的根作用域           | 绘图样式与图元默认值       |
+| `style`                      | SVG / Canvas 宿主            | 页面 CSS，如背景与最大宽度 |
+
+**Composite** 是接收高层描述、再展开为基础图元的组合能力。Layout 把主题写入 Scene，供这些能力读取；它不会把主题选择器直接转换成每个普通 Node 的填充色。具体主题如何生成图元样式由消费它的能力决定。
+
+主题也不只影响 Composite：当图元使用数值颜色（按主色比例派生颜色）时，`mode` 会参与颜色计算；显式的 `'orange'` 等字符串颜色则保持原值。因此不能将“切换主题”理解为统一替换所有图元样式。
+
+同一份主题内部才存在明确的覆盖顺序：继承自 ThemeProvider 的主题、输入场景的主题、Layout 的 `theme`，按此顺序逐字段合并。后面只覆盖显式提供的 `style / mode`，省略字段继续继承，不把前面的整个主题清空。
+
+<ComponentPreview files="layout-theme-overlays" size="xs" hideCode />
+
+例如 Provider 提供 `{ style: 'clean', mode: 'dark' }`，Layout 只传 `{ mode: 'light' }`，最终仍保留 `style: 'clean'`，仅将明暗模式改为 `light`。嵌套 ThemeProvider 也使用相同的字段合并规则。
+
+当 Composite 与 `rootScope` 一起使用时，要看它展开后实际写了什么。例如，根 Scope 默认填充是浅蓝色，而某个 Composite 根据主题生成了显式 `style.fill: 'orange'` 的 Node，那么这个 Node 显示橙色；若它在同一作用域下生成的 Node 没写 fill，则继承浅蓝色。主题不是绕开 Scope 的覆盖开关，最终仍由生成图元的显式属性与作用域继承共同决定。
+
+若要确定普通 Node 的填充色，用节点属性或 `rootScope`；若要限制整幅图在页面上的最大宽度，用宿主 `style={{ maxWidth: '100%' }}`。这些选择对应不同作用位置，不应靠反复切换主题来试探。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout：合并 Provider、输入与显式主题',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 434,
+    },
+    {
+      label: 'Theme 的逐字段合并',
+      path: 'packages/kernel/react/src/kernel/runtime/theme-context.ts',
+      startLine: 5,
+      endLine: 19,
+    },
+    {
+      label: 'Theme mode 与数值颜色的确定化',
+      path: 'packages/kernel/core/src/resolve/style/contextual-color.ts',
+      startLine: 18,
+      endLine: 41,
+    },
+    {
+      label: 'Composite 输出继续使用当前作用域',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 2203,
+      endLine: 2227,
+    },
+    {
+      label: 'Node 显式样式覆盖继承样式',
+      path: 'packages/kernel/core/src/resolve/style/node.ts',
+      startLine: 8,
+      endLine: 26,
+    },
+    {
+      label: '嵌套 ThemeProvider 的继承',
+      path: 'packages/kernel/react/src/kernel/runtime/ThemeProvider.tsx',
+      startLine: 17,
+      endLine: 24,
+    },
+  ]}
+/>
 
 ## 延伸阅读
 
 <LinkedSections
   items={[
-    { title: '编译管线', description: '了解 Core 如何生成场景', url: '/kernel/components/internals/compilation' },
-    { title: 'Runtime', description: '了解事务与增量执行的职责', url: '/kernel/packages/runtime' },
+    { title: 'Scope 基础用法', description: '配置作用域继承与局部命名空间', url: '/kernel/components/scope/usage' },
+    {
+      title: '编译管线',
+      description: '查看 IR 到 Scene 的完整处理过程',
+      url: '/kernel/components/internals/compilation',
+    },
+    { title: 'Runtime', description: '深入持续更新、事务与增量执行', url: '/kernel/packages/runtime' },
   ]}
 />

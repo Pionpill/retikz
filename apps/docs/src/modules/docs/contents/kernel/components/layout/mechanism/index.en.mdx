@@ -1,161 +1,229 @@
 ---
 title: Implementation
-description: Trace Layout input, execution modes, compilation results, and host presentation
+description: Explain Layout's implicit root scope, automatic viewport, display sizing, and theme overlays
 ---
 
-Read [Basic usage](/kernel/components/layout/usage) first. This page traces how React Layout connects input, Vanilla processing, and SVG / Canvas. Core geometry compilation and Runtime transactions remain owned by their respective packages.
+Read [Basic usage](/kernel/components/layout/usage) first. This page answers separate questions behind Layout's properties: when an extra Scope appears, how the viewport is chosen, and how drawing configuration relates to presentation. Each section stands on its own.
 
-## Overall flow
+## Implicit root scope
 
-An update follows four steps: accept a component tree or IR → prepare processing options → produce a scene → present SVG / Canvas. When a Node moves, its input position changes, processing computes new geometry, and React updates the display from that result.
+When applying shared styling to a set of children, `rootScope` does not introduce another styling system. Layout conditionally wraps JSX children in an ordinary Scope, reusing its inheritance and override rules.
 
-- InputScene: drawing input collected from components, before defaults and conversion.
-- IR: a JSON-serializable drawing description consumed by Core compilation.
-- Scene: compiled rendering primitives passed to SVG / Canvas.
-- Processing controller: the Vanilla object managing continued updates; retained mode keeps it, while static mode creates none.
-- Revision: a published result version shared by its Scene and artifacts.
+For example, the following root configuration is equivalent to placing a `<Scope defaults={{ node: { style: { fill: 'lightblue' } } }}>` around these nodes inside Layout:
 
-## Input and result publication
+```tsx
+<Layout rootScope={{ defaults: { node: { style: { fill: 'lightblue' } } } }}>
+  <Node id="a" position={[0, 0]}>
+    A
+  </Node>
+  <Node id="b" position={[80, 0]} style={{ fill: 'orange' }}>
+    B
+  </Node>
+</Layout>
+```
 
-`<Layout>` converts JSX children to an `InputScene` or adopts the `ir` prop, while definitions and runtime options enter through the same boundary. The React render phase prepares a static fallback; after React commits, `runtime.mode` selects a Vanilla retained processing controller or controller-free static processing.
+A inherits the light-blue fill; B's explicit fill overrides the default. **defaults** supplies values that descendants have not set explicitly, rather than forcibly rewriting each node. `rootScope.style` supplies general drawing styles such as `fill / stroke / opacity` to descendants.
 
-The retained path uses a Vanilla controller to commit Input / IR and processing configuration in one transaction, then publishes same-revision Scene, artifacts, readonly layers, and runtime metadata. React only subscribes to that readonly result and wires SVG / Canvas, events, and animation. The static path only prepares and materializes the current Scene, without a retained controller, Snapshot, diff, transaction, or rollback.
+Wrapping depends on whether the configuration contributes an override, not merely whether the `rootScope` object exists:
 
-Semantic ownership does not drift with the entry point: React declares only a stable SVG / Canvas result host; Vanilla processing owns Input normalization, the Core Program, and retained transactions. Core does not own DOM or Canvas instances, and render does not define graphics semantics in reverse. A failed transaction publishes no new revision, so React continues to present the prior successful result; callers should let an Error Boundary handle synchronous render failures.
+- **No effective override**: when omitted, `{}`, or limited to empty overrides such as `style: {}` and `defaults: {}`, use the original children without adding a synthetic Scope.
+- **Effective override**: actual styles, defaults, or an effective `defaults.reset` wrap the children in an ordinary Scope and reuse its inheritance rules. A `reset` of `true` or a nonempty channel list cuts the corresponding outer style inheritance; `false` or an empty list alone does not trigger wrapping.
+- **ir supplied**: use the complete child structure described by IR, ignoring any children and `rootScope` supplied alongside it. Change the IR itself to change its scopes; host CSS `style` remains applicable.
+
+**The synthetic Scope is not a local namespace.** `rootScope` only accepts `style / defaults`. Use an explicit Scope inside the drawing for `localNamespace`; see [Scope usage](/kernel/components/scope/usage) for naming and references.
 
 <SourceLinks
   sources={[
     {
-      label: 'React input and processing-options wiring',
+      label: 'Choose whether effective overrides require a root Scope',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 528,
+      endLine: 556,
+    },
+    {
+      label: 'Layout: ir and rootScope boundaries',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 408,
-      endLine: 484,
-    },
-    {
-      label: 'React static fallback and retained-processing subscription',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 231,
-      endLine: 296,
-    },
-    {
-      label: 'Vanilla retained controller Core Program and Runtime',
-      path: 'packages/kernel/vanilla/src/processing/internal/controller.ts',
-      startLine: 94,
-      endLine: 174,
-    },
-    {
-      label: 'React mapping a processing result to SVG or Canvas',
-      path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 99,
-      endLine: 176,
-    },
-    {
-      label: 'Core IR to Scene compilation',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 23,
-      endLine: 51,
-    },
-    {
-      label: 'Discriminated Layout Runtime options',
-      path: 'packages/kernel/react/src/kernel/runtime/runtime-options.ts',
-      startLine: 5,
-      endLine: 48,
-    },
-    {
-      label: 'Static and retained-processing dispatch',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 231,
-      endLine: 296,
+      startLine: 402,
+      endLine: 418,
     },
   ]}
 />
 
-## How Execution Modes Dispatch
+## Automatic viewport
 
-| Configuration     | Update behavior                                           | Resident state and failure semantics                                                       |
-| ----------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `retained + auto` | Safe changes use local Patches; others fully fall back    | Keeps diagnostics, atomic commits, and rollback; this is default                           |
-| `retained + full` | Skips Program `update()` for affected work and runs fully | Holds the same Session state as auto; not a low-memory mode                                |
-| `static`          | Fully compiles and directly materializes SVG / Canvas     | Creates no Session, Snapshot, diff, or rollback; materialization may fail without rollback |
+Without `viewBox`, the viewport comes from the drawing's layout bounds, not the size of its page container. Layout bounds combine the leftmost, topmost, rightmost, and bottommost extents contributed by drawing elements, not just node centers. They are computed during compilation, not measured from rendered DOM pixels.
 
-`static` cannot be combined with `updateStrategy` or `onDiagnostic`. Changing `updateStrategy` in retained processing rebuilds the controller, while changing `mode` switches to the other processing path.
+Layout first chooses a viewport source: its `viewBox` prop takes precedence over the input IR's `viewBox`. Only when both are absent does it compute a range from the content. An explicit viewport directly sets the coordinate window without automatic content padding.
 
-## How the viewport is chosen
+Automatic sizing has two steps: combine content bounds, then expand all four sides by padding. The current default is 10 drawing units. This is not host CSS `padding`. Core compile options can configure it, but Layout currently exposes no such prop; use an explicit `viewBox` to control the viewed margin yourself.
 
-The upper track resolves the internal coordinate range: an explicit `viewBox` prop wins, then an IR-owned `viewBox`, then content bounds plus padding. The lower display-size track follows the content bounds by default. Explicit numeric `width` / `height` request scaling: one axis derives the other proportionally, while two axes use an aspect-ratio fit. CSS string dimensions are laid out by the browser; additional CSS constraints can also change the displayed scale.
+<ComponentPreview files="layout-auto-viewport" size="xs" hideCode />
 
-<ComponentPreview files="/kernel/components/layout/usage/layout-viewbox-resolution" size="sm" hideCode />
+For content bounds `x: 20, y: 30, width: 80, height: 40`, default padding gives `x: 10, y: 20, width: 100, height: 60`. In general, bounds `(x, y, w, h)` and padding `p` produce:
 
-If a figure is clipped or has too much empty space, inspect **View Code → IR** first. An explicit viewBox may be smaller than visible primitives, while automatic layout may be expanded by visible bounds far from the subject. A coordinate without a visible boundary does not extend the automatic range by itself.
+$$
+(x', y', w', h') = (x-p,\ y-p,\ w+2p,\ h+2p)
+$$
+
+If no content bounds exist, the result is directly `{ x: 0, y: 0, width: 100, height: 100 }`, without padding that fallback range again.
+
+Moving, adding, or removing elements can therefore change the automatic viewport. Set an explicit `viewBox` to compare positions within the same coordinate window across updates; fixing `width / height` alone does not fix the viewed range.
 
 <SourceLinks
   sources={[
     {
-      label: 'viewBox injection into IR',
+      label: 'Layout: explicit viewBox overrides the input',
       path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 385,
-      endLine: 395,
+      startLine: 420,
+      endLine: 434,
     },
     {
-      label: 'explicit versus automatic layout',
+      label: 'Core: select an explicit viewport or automatic bounds',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 27,
-      endLine: 44,
+      startLine: 87,
+      endLine: 104,
     },
     {
-      label: 'content bounds and padding',
+      label: 'Automatic padding and the no-content fallback',
       path: 'packages/kernel/core/src/compile/scene/layout.ts',
-      startLine: 23,
-      endLine: 31,
+      startLine: 26,
+      endLine: 35,
+    },
+    {
+      label: 'Default layout padding',
+      path: 'packages/kernel/core/src/compile/constants.ts',
+      startLine: 1,
+      endLine: 5,
     },
   ]}
 />
 
-## Advanced Host Policies
+For detailed bounds algorithms, see [Bounds calculations in the Math package](/kernel/packages/math/primitives#bounds-calculations).
 
-Ordinary pages can use `renderer`, `animate`, and `snapshotAt` directly. Editors and test harnesses only need Providers when they must control an entire subtree; the figure separates renderer fallback from animation host-policy overrides.
+## Viewport and display size
 
-<ComponentPreview files="/kernel/components/layout/usage/layout-runtime-priority" size="lg" hideCode />
+`viewBox` selects which drawing coordinates are visible; `width / height` determines how much page space that window occupies. The viewport is determined first; its dimensions then provide the basis for deriving display size. Changing display size in the other direction neither rewrites node coordinates nor redefines the viewport.
 
-The renderer Provider fills only an omitted renderer, so an explicit descendant prop still wins. The animation Provider intentionally controls the entire subtree and overrides descendant `animate` props; its `system` mode follows the system preference directly. `snapshotAt` is not part of that fallback chain: once present, both SVG and Canvas emit only the static frame at that time.
+<ComponentPreview files="layout-viewbox-resolution" size="md" hideCode />
+
+For `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`, the internal aspect ratio is 2:1:
+
+| Size configuration         | Host size   | Derivation                           |
+| -------------------------- | ----------- | ------------------------------------ |
+| Neither dimension          | 200 × 100   | Use viewport dimensions              |
+| Only `width={400}`         | 400 × 200   | Derive the other axis proportionally |
+| `width={400} height={300}` | 400 × 300   | Keep both explicit values            |
+| Only `width="100%"`        | 100% × auto | Let the browser lay it out           |
+
+With both dimensions supplied, Layout does not change `400 × 300` to `400 × 200`. Fitting internal content into that host belongs to SVG / Canvas presentation; host sizing is not a new layout of drawing elements.
+
+SVG and Canvas share this display-size calculation. CSS strings are not parsed as drawing coordinates.
 
 <SourceLinks
   sources={[
     {
-      label: 'renderer and animation mode resolution',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 355,
-      endLine: 362,
+      label: 'Numeric aspect-ratio completion and CSS dimensions',
+      path: 'packages/kernel/react/src/render/display-size.ts',
+      startLine: 1,
+      endLine: 23,
     },
     {
-      label: 'processing-result SVG / Canvas and snapshot configuration',
+      label: 'SVG: apply size to the root element',
       path: 'packages/kernel/react/src/render/processing-result.tsx',
-      startLine: 99,
-      endLine: 176,
+      startLine: 178,
+      endLine: 181,
     },
     {
-      label: 'system motion fallback',
-      path: 'packages/kernel/render/src/animation/runtime.ts',
-      startLine: 132,
-      endLine: 133,
+      label: 'Canvas: reuse the display-size calculation',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 146,
+      endLine: 155,
     },
   ]}
 />
 
-## Complete implementation flow
+## Themes and local overrides
 
-Follow Layout → Vanilla processing → Core compilation → result hosting. React owns input and presentation, Vanilla owns processing state, and Core produces the Scene. The result returns to React for display; the source links above locate these stages.
+`theme`, `rootScope`, and host `style` can all affect appearance, but they are not three priority levels of one configuration object:
 
-<ComponentPreview files="/kernel/components/layout/usage/layout-input-flow" size="sm" hideCode />
+| Configuration                | Applied to                       | Controls                                       |
+| ---------------------------- | -------------------------------- | ---------------------------------------------- |
+| `theme`                      | Scene and theme-aware Composites | Theme style and light/dark mode                |
+| `rootScope.style / defaults` | Root scope of JSX children       | Drawing styles and element defaults            |
+| `style`                      | SVG / Canvas host                | Page CSS, such as background and maximum width |
+
+A **Composite** accepts a high-level description and expands it into basic drawing elements. Layout writes the theme into Scene for these capabilities to consume; it does not directly turn a theme selector into every ordinary Node's fill color. Each consuming capability determines how the theme produces element styles.
+
+Themes also affect more than Composites: for numeric colors (colors derived as a proportion of the master color), `mode` participates in color resolution. Explicit string colors such as `'orange'` retain their values. Changing the theme is therefore not a blanket replacement of all element styles.
+
+Within the theme itself, the order is explicit: the theme inherited from ThemeProvider, the input scene's theme, then Layout's `theme`. Merge them field by field: later layers override only the `style / mode` they supply, while omitted fields remain inherited rather than clearing the entire earlier theme.
+
+<ComponentPreview files="layout-theme-overlays" size="xs" hideCode />
+
+For example, if the Provider supplies `{ style: 'clean', mode: 'dark' }` and Layout supplies only `{ mode: 'light' }`, the result keeps `style: 'clean'` and changes only the mode to `light`. Nested ThemeProviders use the same field-wise merge.
+
+When a Composite is used with `rootScope`, the result depends on what it actually emits. Suppose the root Scope supplies a light-blue default fill. If a Composite uses the theme to emit a Node with explicit `style.fill: 'orange'`, that Node is orange. If it emits a Node in the same scope without a fill, the Node inherits light blue. Theme selection does not bypass scope rules: emitted properties and inherited styles still determine the result together.
+
+To set an ordinary Node's fill, use its own property or `rootScope`. To constrain the drawing's maximum page width, use host `style={{ maxWidth: '100%' }}`. These target different layers; repeatedly changing the theme is not a substitute for choosing the appropriate configuration.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout: merge Provider, input, and explicit themes',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 434,
+    },
+    {
+      label: 'Field-wise Theme merge',
+      path: 'packages/kernel/react/src/kernel/runtime/theme-context.ts',
+      startLine: 5,
+      endLine: 19,
+    },
+    {
+      label: 'Theme mode and numeric color resolution',
+      path: 'packages/kernel/core/src/resolve/style/contextual-color.ts',
+      startLine: 18,
+      endLine: 41,
+    },
+    {
+      label: 'Composite outputs keep the current scope',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 2203,
+      endLine: 2227,
+    },
+    {
+      label: 'Explicit Node styles override inherited styles',
+      path: 'packages/kernel/core/src/resolve/style/node.ts',
+      startLine: 8,
+      endLine: 26,
+    },
+    {
+      label: 'Nested ThemeProvider inheritance',
+      path: 'packages/kernel/react/src/kernel/runtime/ThemeProvider.tsx',
+      startLine: 17,
+      endLine: 24,
+    },
+  ]}
+/>
 
 ## Further reading
 
 <LinkedSections
   items={[
-    { title: 'Compilation', description: 'How Core produces a Scene', url: '/kernel/components/internals/compilation' },
+    {
+      title: 'Scope basic usage',
+      description: 'Configure scope inheritance and local namespaces',
+      url: '/kernel/components/scope/usage',
+    },
+    {
+      title: 'Compilation pipeline',
+      description: 'Follow the complete IR-to-Scene process',
+      url: '/kernel/components/internals/compilation',
+    },
     {
       title: 'Runtime',
-      description: 'Transaction and incremental execution responsibilities',
+      description: 'Explore retained updates, transactions, and incremental execution',
       url: '/kernel/packages/runtime',
     },
   ]}

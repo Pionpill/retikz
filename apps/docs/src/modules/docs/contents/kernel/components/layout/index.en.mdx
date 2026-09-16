@@ -19,7 +19,7 @@ Layout accepts a component tree or saved IR, the serializable description of a d
 | ---------------- | ---------------------------------------------- | -------------------------------------------- |
 | Basic usage      | Input, framing, defaults, and rendering        | Draw or adjust output                        |
 | Extended usage   | Themes, injection, results, and update control | Integrate capabilities or control processing |
-| Implementation   | Processing, execution modes, and presentation  | Diagnose execution                           |
+| Implementation   | Root scope, framing, sizing, and themes        | Understand key prop behavior                 |
 | API reference    | Props and runtime configuration                | Check a precise contract                     |
 | Schema reference | Scene and ViewBox data                         | Save or construct input                      |
 
@@ -29,7 +29,7 @@ Layout is a drawing entry, not an automatic arrangement algorithm. Primitives an
 
 Use [Scope](/kernel/components/scope) for local transforms, defaults, and clipping within a figure; see [Custom clipping](/kernel/components/scope/custom) to extend clip shapes. Use [Inspect](/kernel/packages/inspect) to display control points and boundary overlays.
 
-Read Basic usage first. Implementation is for investigating updates, framing, and rendering behavior; the reference pages are available for precise lookups without reading them end to end.
+Read Basic usage first. Implementation explains root scopes, framing, display sizing, and theme overlays; the reference pages are available for precise lookups without reading them end to end.
 
 ## Contents
 
@@ -47,7 +47,7 @@ Read Basic usage first. Implementation is for investigating updates, framing, an
     },
     {
       title: 'Implementation',
-      description: 'Trace input processing, execution modes, and host output',
+      description: 'Understand root scopes, automatic framing, display sizing, and theme overlays',
       url: '/kernel/components/layout/mechanism',
     },
     {
