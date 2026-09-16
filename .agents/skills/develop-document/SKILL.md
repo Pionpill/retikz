@@ -1,63 +1,30 @@
 ---
 name: develop-document
-description: Use when a retikz feature or user-visible behavior needs apps/docs updates, demos, API tables, sidebar or i18n changes after implementation, or when the change itself is documentation-first.
+description: Use when synchronizing Retikz user-visible behavior with documentation after implementation, or coordinating a documentation-first change across pages, demos, navigation and generated references.
 ---
 
-# Stage 4: 文档
+# 文档同步流程
 
-把稳定实现转成用户能读、能跑、能对照的 docs 页面和 demo。用户 review 通常先看站点 demo，再看代码细节；文档不是可选项。
+## 入口
 
-## 必读
+先读 apps/docs/AGENTS.md 与 docs-doc-principle；由其页型词典选择主写作 skill，不在本流程维护第二套模板。导航或路由重构额外读 docs-doc-navigation；完稿规范与读者检查读 docs-doc-review。
 
-- `apps/docs/AGENTS.md`
-- `docs-doc-principle`
-- 按页型继续读 `docs-doc-component` / `docs-doc-extension` / `docs-doc-example` / `docs-doc-group` / `docs-doc-concept` / `docs-doc-blog`
-- 页面使用 controls、复杂 ComponentPreview 或 ZodSchema 时，只加载 principle 指向的对应 skill/reference
-- 需要独立审稿时读 `docs-doc-review`
+## 确定范围
 
-## 输入
+从实际实现、测试契约与已批准任务确认受影响文档。旧正文用于查事实和链接，不作为新结构标准；读取对应 zh/en、demo 和权威参考，决定更新、拆页或新增。仅修改 skill 的任务不要求同步迁移已有正文或实现检查器。
 
-- ADR / TODO 与最终行为。
-- `test-contract` 矩阵中标为 docs、Preview 或 page 证据的行为。
-- `develop-test` 的 BLOCKING 修复结果、WARNING / INFO。
-- 受影响的现有 docs 页面、demo、API 表、sidebar、i18n key。
+- API / props：同步示例中必要说明与生成参考，避免手写完整副本
+- Schema / IR：更新权威 schema registry、字段翻译和对应使用说明
+- 默认、错误与 DSL 行为：搜索旧说法和引用，修改受影响的教程、示例与参考
+- 新能力：建立总纲、基础用法与确有内容的后续页；不按模板凑齐所有页型
+- 删除或改名：同步正文、data、双语、站内链接、生成配置与注册器；路由按统一词典调整
 
-## 先读现有 docs
+新 demo 使用单份 tsx 与同名 i18n 字典，controls 可见文案共用该字典；具体文件与预览规则由 principle 的 ComponentPreview reference 拥有。
 
-用户可见改动必须先读相关现有页面，再决定更新还是新增：
+## 验证与交付
 
-- 改组件 / prop：读对应组件页 zh + en、demo、Related 指向页。
-- 改 schema / IR：读 reference schema 页、使用该字段的组件页、概念页。
-- 改 DSL / sugar：读所在组件页、示例页、入门路径中复用 demo。
-- 改默认值 / 错误信息：全局搜索旧字段名、旧默认值、旧说法。
+按实际改动执行 apps/docs/AGENTS.md 的分级门禁；Oxfmt 格式化，检查 diff、双语、路由和引用，再做所需类型检查、测试与真实页面验证。完整 API 先生成再翻译审阅与重新生成；Schema 按当前源码驱动流程核对全部字段翻译，不假定已有页面生成器。
 
-若判断无需改文档，在汇报中说明读了哪些页面以及为什么无需更新。
+提交 Docs 改动前运行 check:static；check:build 与 check:runtime 仅在用户要求时执行。只改 skills 时验证 skill 元数据、引用与规则一致性，不为验证新规范要求全仓旧文档立刻合规。
 
-## 必落清单
-
-按实际改动选择：
-
-- 新 prop / IR 字段：说明、API 表行、至少一个 `<ComponentPreview>`、zh/en mdx 对齐。
-- 新 kernel / sugar / plot 组件：页面、基础 + 进阶 demo、data 注册、i18n key。
-- 行为 / 默认值变化：说明、API 表、demo 和“行为变化”提示。
-- 删除 / 改名：删或改 API 表、说明、demo、站内链接。
-
-demo 有可见文本时必须双语：`<name>.zh.demo.tsx` + `<name>.en.demo.tsx`；无文本可用 `<name>.demo.tsx`。
-
-## 验证
-
-按 `apps/docs/AGENTS.md` 的分级执行：
-
-- 先运行 `docs-doc-principle/scripts/check-doc-integrity.mjs --scope <scope>`，承担双语、路由/锚点、SourceLinks 行号与 demo 文件的机械检查。
-- 纯正文：Prettier + `git diff --check` + 页面语义 / 视觉验证。
-- demo / data / i18n / import：docs 包 `tsc --noEmit` + 浏览器确认 demo。
-- 矩阵要求 docs 用户路径：运行对应 component / page test 或浏览器验证，确认示例、控件和错误展示真实兑现契约。
-- CI 等价路径：docs build。
-
-## 完成标志
-
-- 必落清单全部覆盖。
-- zh / en mdx 结构对齐，展示文本 demo 已双语。
-- sidebar / i18n / data 注册完整。
-- demo 能在 docs 页面渲染出真实功能，不是占位。
-- 向用户汇报时先给文档页路径和访问方式，再讲代码细节。
+交付说明改了哪些规范或页面、如何验证、剩余实际工作。暂存、提交、发布与 subagent 仍按已批准范围，不由本流程自动授权。

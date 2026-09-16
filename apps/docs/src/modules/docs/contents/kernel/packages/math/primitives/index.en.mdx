@@ -5,6 +5,17 @@ description: Construct points, vectors, bounds, ellipses, and arcs with @retikz/
 
 Primitives describe points, vectors, and basic geometric shapes. `@retikz/math` focuses only on mathematical and geometric relationships.
 
+## Basic usage
+
+Import from the root entry. Results are numbers or geometry, not rendered drawings.
+
+```ts
+import { point, vector2 } from '@retikz/math';
+
+const end = vector2.add([20, 10], [40, -15]);
+const distance = point.distance([20, 10], end); // 42.720018726587654
+```
+
 ## Vector operations
 
 2D geometric data can represent either a coordinate point or a vector: a point describes a position, while a vector describes direction and displacement. `Position` and `Vector2` both use the `[x, y]` form, but the method group should match the meaning of the data.
@@ -63,7 +74,7 @@ A zero dot product means perpendicular vectors; a zero cross product means colli
   ]}
 />
 
-### API reference
+### Call summary
 
 | Category | API                                                                                    | Purpose                                    |
 | -------- | -------------------------------------------------------------------------------------- | ------------------------------------------ |
@@ -151,7 +162,7 @@ $$
   ]}
 />
 
-### API reference
+### Call summary
 
 | Category | API                                                                 | Purpose                                       |
 | -------- | ------------------------------------------------------------------- | --------------------------------------------- |
@@ -221,7 +232,7 @@ A zero semi-axis or a target at the center returns the ellipse center.
   ]}
 />
 
-### API reference
+### Call summary
 
 | Category | API                                                                                                                  | Purpose                                                                  |
 | -------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -232,3 +243,22 @@ A zero semi-axis or a target at the center returns the ellipse center.
 |          | `pointAtArcAngle`, `pointAtEllipseArcAngle`                                                                          | Select a point on a circular or elliptical arc                           |
 |          | `collectArcBoundingCandidates`, `collectEllipseArcBoundingCandidates`                                                | Derive arc boundary candidates                                           |
 |          | `isAngleWithinArcSweep`                                                                                              | Test whether an angle lies in a directed interval                        |
+
+## Errors and limitations
+
+- `normalize` returns a fallback for near-zero length; `normalizeOrNull` returns `null` for zero or non-finite length.
+- `point.along` / `against` do not normalize directions; length means distance only for unit vectors.
+- `boundsOf([])` returns `undefined`; `boundaryPoint` returns the center for a zero ellipse axis or a centered target.
+- Arc angles use degrees, clockwise on screen. An ellipse parameter angle is not its polar angle. Ellipse-arc bounds helpers accept axis-aligned input.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up the complete public API',
+      url: '/kernel/packages/math/api-reference',
+    },
+  ]}
+/>

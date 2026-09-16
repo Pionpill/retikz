@@ -5,6 +5,31 @@ description: Choose the MathJax formula syntax set used by @retikz/tex through p
 
 `@retikz/tex` provides base TeX syntax by default. When you need AMS, command definitions, brackets, cancellation, cases, or color, set `profile` and `extensions` while creating a lowerer or calling `useLowerTex`. For injecting the result into React or Vanilla, see [Installation & integration](/kernel/packages/tex).
 
+## Basic usage
+
+Pass the same options to the React hook or Vanilla lowerer factory, then integrate the result as shown in the package entry.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { useLowerTex } from '@retikz/tex/react';
+
+export const useFormulaEngine = () => useLowerTex({ profile: 'base', extensions: ['ams'] });
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { createMathJaxLowerTex } from '@retikz/tex';
+
+const lowerTex = await createMathJaxLowerTex({ profile: 'base', extensions: ['ams'] });
+```
+
+</DocTab>
+</DocTabs>
+
 ## Profiles and Extensions
 
 `MathJaxEngineOptions.profile` chooses the base configuration, while `extensions` appends public extensions after it. This demo always enables the complete public extension set, so formula examples only change the formula content instead of toggling extensions. `math` enables the built-in math extension set at once:
@@ -56,3 +81,15 @@ The internal `empheq` dependency required by `cases` is added automatically and 
 | `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`. Used by `createMathJaxLowerTex` and `useLowerTex`                   |
 
 In React, `useLowerTex(options)` shares an asynchronous engine by effective extension set. It returns `loading` during startup or a configuration change, injectable `lowerTex` when ready, and `error` when initialization fails. See [Installation & integration](/kernel/packages/tex) for the integration code and state rendering.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up option types and defaults',
+      url: '/kernel/packages/tex/api-reference',
+    },
+  ]}
+/>

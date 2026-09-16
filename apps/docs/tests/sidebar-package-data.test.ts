@@ -63,7 +63,7 @@ describe('Kernel 包侧栏数据', () => {
         'kernel.pkgInspect',
         [
           ['builtins', 'kernel.pkgInspectBuiltins'],
-          ['extensions', 'kernel.pkgInspectExtensions'],
+          ['custom', 'kernel.pkgInspectCustom'],
           ['mechanism', 'kernel.pkgInspectMechanism'],
           ['api-reference', 'kernel.pkgInspectApiReference'],
           ['schema-reference', 'kernel.pkgInspectSchemaReference'],

@@ -3,16 +3,40 @@ title: Basic Concepts
 description: Start with retikz's foundational design: coordinates define the drawing context, and positioning normalizes different forms into points.
 ---
 
-Basic Concepts is the first group under Concepts. It answers "where is a point, and how does retikz interpret that statement?" Read this before moving into the primitive model and primitive relations; for the DSL, IR, Scene, and renderer split, see Design Philosophy.
+Drawing starts with two questions: where is a point, and how should several objects stay positioned relative to one another? A coordinate system supplies shared directions and scale; positioning uses those rules to place individual objects. Start with visible changes in position, without compiler knowledge.
 
-## What each page covers
+## Responsibilities at a glance
 
-| Page              | Topic                                                                                         | Reach for it when                                                                                       |
-| ----------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Coordinate System | Cartesian as the first-class form, polar coordinates, user units, viewBox, and render size    | You want to know where `[x, y]` lands, or how other coordinate forms eventually become Cartesian points |
-| Positioning       | Cartesian, polar, relative placement, offsets, proportional points, and path-relative targets | You want to place nodes / helper points or send a path to a target                                      |
+| Chapter           | Responsibility                           | When to read                            |
+| ----------------- | ---------------------------------------- | --------------------------------------- |
+| Coordinate System | Directions, units, and visible region    | Interpret coordinates or adjust framing |
+| Positioning       | Positions relative to points and objects | Align, offset, or follow objects        |
 
-## In this section
+## From positions to relationships
+
+The most direct approach assigns `[x, y]` to each object. x increases rightward and y downward, so you can transfer positions from a sketch into the drawing. Positions around a circle may instead use an angle and a distance, but still belong to the same two-dimensional space.
+
+Many drawings care more about relationships: a title above a figure, a label following a node, or a marker staying between two endpoints. Describe what the position depends on instead of repeatedly adjusting several related numbers.
+
+## Markers between two points
+
+The figure first places A and B, then adds markers at 25%, 50%, and 75% between them. Notice the middle marker: 50% means the midpoint of A and B, rather than a fixed coordinate.
+
+<ComponentPreview files="/kernel/components/basic/position/positioning-between" size="sm" hideCode />
+
+If B moves farther away, the markers retain their respective fractions. Coordinates establish the endpoints; proportional positioning maintains the relationships. That is how the two chapters work together. A point halfway along a curved path is a different problem: a fraction between two points is not a fraction of curved-path length.
+
+## Drawing positions and the visible region
+
+Object positions belong to the drawing. The visible region determines which part the user sees. Think of `viewBox` as a window onto that drawing: changing the window does not move a node to new coordinates.
+
+Ordinary drawings can use automatic framing while you focus on correct position relationships. Study user units, display dimensions, and `viewBox` when you need a fixed visible region or matching views across several figures.
+
+## Reading guidance
+
+Read Coordinate System for direction and scale, then Positioning for alignment, offsets, and relationships that follow other objects. Why a line stops at a node boundary, and how to fix its attachment point, belong to [Core Concepts](/kernel/components/core); those details are not prerequisites here. Continue with the Core Concepts overview to understand objects and connections, then choose Node, Draw, or Layout usage pages for your task.
+
+## Contents
 
 <LinkedSections
   items={[

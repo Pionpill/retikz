@@ -1,0 +1,52 @@
+---
+title: 主题解析
+description: 追踪稀疏主题选择如何继承、解析为共享颜色，并被复合组件消费。
+---
+
+先读[主题](/kernel/components/design/theme)。本页只追踪一次编译中的主题环境：输入是根或 Scope 上的 `style` / `mode` 选择，产物是供 composite 读取的只读主题，最终由组件转换为明确的图元样式。
+
+## 整体流程
+
+以根环境“学术／浅色”、子组只指定“深色”为例：先继承学术风格，再用深色模式求出共享颜色；组件把颜色应用到自己生成的图元。渲染器只接收这些明确样式。
+
+<ComponentPreview files="/kernel/components/design/theme/theme-flow" size="xs" hideCode />
+
+## 继承选择
+
+`IRTheme` 是作者保存的稀疏选择：省略字段表示沿用外层。`ResolvedTheme` 是当前位置的有效环境。`resolveTheme` 从父环境逐字段补齐；没有变化时直接复用父环境。默认根环境是浅色且未指定风格。
+
+<SourceLinks sources={[{ label: 'resolveTheme', path: 'packages/kernel/core/src/resolve/theme/resolve.ts' }]} />
+
+例如父环境选择 `{ style: 'academic', mode: 'light' }`，子输入只有 `{ mode: 'dark' }`，有效结果保留 `style: 'academic'`、改为 `mode: 'dark'`，再补上解析器生成的 `colors`。未指定风格时，`style` 仍省略并使用默认颜色。
+
+## 解析颜色
+
+当风格未指定时，Core 使用对应明暗模式的默认颜色。指定风格时，从注册表按名称找到 Definition，调用它的 `resolve`，再合并共享语义色与分类色板。颜色结果与输入隔离并冻结；组件不能通过修改这份数据影响兄弟节点。未注册风格或解析器抛错会终止当前解析。
+
+<SourceLinks sources={[{ label: '共享颜色解析', path: 'packages/kernel/core/src/providers/theme/colors.ts' }]} />
+
+## 消费与复用
+
+composite 的 `expand` 与 `compile` 回调都通过 `context.theme` 读取环境。组件自己负责把颜色变成 Node / Path 的显式样式；Core 不解释图表或表格的领域 token。Core 注册表只负责共享颜色，领域解析器负责把同名风格转换成该领域的样式。自定义风格必须向两者提供实现；具体入口随领域包而定，请从对应包的自定义主题文档接入。
+
+布局试算（probe）是在隔离环境中计算子内容，提交（replay）则复用选中的结果。普通 Scope 可建立更内层主题，replay 保留试算时已经解析的主题，不会按提交位置重新染色。这保证测量与最终图形使用同一环境。
+
+<ComponentPreview files="/kernel/components/design/composite/layout-aware-compile" size="xl" hideCode />
+
+<SourceLinks
+  sources={[{ label: '布局试算与结果提交', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' }]}
+/>
+
+例如，在深色子 Scope 中试算文字后，把该结果提交到浅色环境，文字仍保留试算时的深色主题结果；提交不会再次解析主题。
+
+## 完整实现流程
+
+<ComponentPreview files="theme-resolution" size="lg" hideCode />
+
+按图阅读内部成员：resolveTheme 先处理选择，resolveCoreThemeStyleColors 形成共享颜色，composite 回调消费结果，Scene 留下具体样式。布局反馈与 replay 的详细时序见复合实现原理。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: '实现原理', description: '了解复合布局反馈', url: '/kernel/components/composite/mechanism' }]}
+/>

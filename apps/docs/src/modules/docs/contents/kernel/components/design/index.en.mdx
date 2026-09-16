@@ -3,19 +3,43 @@ title: Design Philosophy
 description: Understand why retikz splits authoring, declaration, compilation, and rendering into stable boundaries.
 ---
 
-Design Philosophy explains the product-level tradeoff behind retikz: authors write DSL, the system preserves portable IR, and compilation produces Scene for renderers. Read this after you can already draw basic figures, especially when deciding whether a capability belongs in Kernel, Sugar, IR, Scene, or a renderer.
+One drawing can be authored with React components, saved as JSON, and displayed by different backends. Design Philosophy explains why these entry points can cooperate and how new capabilities remain consistent. Familiarity with Basic Concepts and Core Concepts is enough for this overview; source folders and compiler functions are not prerequisites.
 
-## What each page covers
+## Responsibilities at a glance
 
-| Page                    | Topic                                                                                       | Reach for it when                                                                           |
-| ----------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Layers                  | The relationship between DSL, IR, Scene, and renderers                                      | You want to know how JSX becomes SVG / Canvas, or where Kernel and Sugar split              |
-| Sugar                   | Equivalent convenient and basic expressions                                                 | Choose notation and understand expansion constraints                                        |
-| Tier 2 Composites       | How domain packages register high-level nodes on top of core and lower them at compile time | You want to understand why composite and plot capabilities do not live directly inside core |
-| Theme                   | Inheritance, shared colors, and composite consumption                                       | Distinguish theme environments from primitive styles                                        |
-| Architecture Principles | Capability ownership, package boundaries, completeness, and execution                       | You maintain the library, design extension points, or assign a capability to an owner       |
+| Chapter           | Responsibility                              | When to read                            |
+| ----------------- | ------------------------------------------- | --------------------------------------- |
+| Layers            | Authoring, declarations, results, rendering | Understand data boundaries              |
+| Sugar             | Shorter equivalent expressions              | Assess convenient notation              |
+| Tier 2 Composites | High-level data expanded into primitives    | Choose a high-level model               |
+| Theme             | Shared style and color environments         | Distinguish themes from explicit styles |
+| Architecture      | Package and capability ownership            | Assign a new capability                 |
 
-## In this section
+## Notation, declarations, and results
+
+Node and Path are primitives. A composite retains high-level data and expands into primitives. Here, “object” is a general term for an entity in a drawing declaration, not another primitive type.
+
+DSL means the notation used to author a drawing, such as JSX components or Vanilla function calls. IR is the savable declaration of objects, positions, and relationships. Scene is the compiled drawing result. A renderer executes that result to produce SVG or Canvas output.
+
+Focus on IR and Scene in the figure: IR supports saving and editing, while Scene connects to rendering backends. Different authoring forms share these boundaries and therefore do not need separate geometry rules.
+
+<ComponentPreview files="/kernel/components/design/layers/layers-pipeline" size="sm" hideCode />
+
+## Design choices in a bar chart
+
+Suppose you want to save a bar chart. You could save the primitive for every bar, or retain a data array and chart settings that generate bars during compilation. The latter preserves the high-level intent that this object is a chart. It is a composite model that still reuses primitive layout and rendering.
+
+If you only shorten a common path expression without retaining a new high-level object, that is Sugar. Both approaches can simplify authoring, but they retain different declarations; shorter code alone does not tell you which model applies.
+
+Theme answers another question: how components share a style and color environment. Components that consume the theme translate it into primitive styles. Explicit Node / Path styles are not automatically replaced merely because a theme exists.
+
+## Choose an entry for your design question
+
+Start with Layers to understand shared data boundaries, then decide whether your question concerns authoring convenience, a high-level model, or shared styling. Architecture connects those choices to package responsibilities and helps identify which layer should implement them.
+
+These pages explain why responsibilities are divided this way. Continue to [Internal mechanisms](/kernel/components/internals) when tracing a call, investigating measurements, or studying theme inheritance execution. Internal execution order is not a prerequisite for ordinary drawing.
+
+## Contents
 
 <LinkedSections
   items={[
@@ -26,7 +50,7 @@ Design Philosophy explains the product-level tradeoff behind retikz: authors wri
     },
     {
       title: 'Sugar',
-      description: '',
+      description: 'How convenient notation relates to basic expressions',
       url: '/kernel/components/design/sugar',
     },
     {
@@ -36,11 +60,11 @@ Design Philosophy explains the product-level tradeoff behind retikz: authors wri
     },
     {
       title: 'Theme',
-      description: '',
+      description: 'Distinguish shared themes, local inheritance, and primitive styles',
       url: '/kernel/components/design/theme',
     },
     {
-      title: 'Architecture Principles',
+      title: 'Architecture',
       description: 'Assign ownership and verify package boundaries and completeness',
       url: '/kernel/components/design/principles',
     },

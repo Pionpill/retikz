@@ -1,11 +1,11 @@
 ---
-title: Inspect Schema reference
+title: Schema reference
 description: Look up configuration fields, defaults, and validation for the five built-in Inspectors
 ---
 
 This page displays the configuration schemas exported by `@retikz/inspect`. They constrain inspection options, not complete inspection requests or Scenes; see the [API reference](/kernel/packages/inspect/api-reference) for runtime selection rules, registries, and callback types.
 
-These defaults apply only after explicitly selecting the Inspector. Every input field is optional: authored options merge per field before schema defaults apply. Registering an Inspector does not activate it.
+These defaults apply only after explicitly selecting the Inspector. Every input field is optional: authored options merge per field before schema defaults apply. Registering an Inspector does not activate it. The tables show the parsed shape: “Required” marks fields present after defaults are filled, not fields you must supply.
 
 ## PathInspectOptionsSchema
 
@@ -27,6 +27,8 @@ Inspects control handles, vertices, and arc construction from final Path command
 ## NodeInspectOptionsSchema
 
 Inspects Node-local geometry, settled text layout, and the Scene-space AABB. Content boxes and baselines exclude external labels.
+
+All eight Node options default to `true` after the Inspector is selected.
 
 <ZodSchema name="NodeInspectOptionsSchema" />
 
@@ -68,4 +70,4 @@ Inspects the resolved coordinate point.
   descriptions={{ labels: 'Whether authored id labels are visible; defaults to false' }}
 />
 
-See [Built-in inspection](/kernel/packages/inspect/builtins) for usage and [Extending inspection](/kernel/packages/inspect/extensions) for custom Inspector option contracts.
+See [Built-in inspection](/kernel/packages/inspect/builtins) for usage and [Custom usage](/kernel/packages/inspect/custom) for custom Inspector option contracts.

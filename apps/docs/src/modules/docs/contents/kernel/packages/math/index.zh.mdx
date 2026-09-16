@@ -5,6 +5,18 @@ description: 浏览 @retikz/math 的几何原语、坐标变换与计算算法
 
 `@retikz/math` 负责零依赖的数学和几何计算，不包含绘图领域语义或渲染逻辑。
 
+## 从几何数据到计算结果
+
+设想一条连接线要找到旋转后图形的边缘。几何原语描述点、方向和边界；坐标变换把数据放到共同空间；求交算法再计算候选连接点。三类能力围绕普通数值协作，不需要先创建图元，也不会自行生成 SVG。
+
+下面的图展示其中的坐标转换：局部点保持不变，移动或旋转图形时，世界坐标随之变化。计算完成后，调用方可以把结果用于布局、命中判断或绘制，输出用途不由 Math 决定。
+
+<ComponentPreview files="/kernel/packages/math/transforms/coordinate-spaces" size="sm" hideCode />
+
+## 选择与边界
+
+只处理位移或长度时，从点与向量开始；数据来自不同空间时先变换，再计算相交或包含关系。角度单位以具体函数为准：矩阵与中心图形旋转使用弧度，名称带 Degrees 的方法使用角度。空集、共线或零长度等情况不一定抛错，应检查各方法的返回约定。
+
 ## 安装与使用
 
 <PackageManagerInstall packages="@retikz/math" />
@@ -38,6 +50,7 @@ const distance = point.distance(start, end); // 约为 42.7
 | 几何原语 | 点、向量、边界、椭圆与圆弧的基本表示 | 构造或读取几何数据时 |
 | 坐标变换 | 在坐标空间之间变换几何数据           | 处理布局或变换时     |
 | 几何算法 | 相交、曲线切片与过点曲线构造         | 需要派生几何结果时   |
+| API 参考 | 公开签名、类型与返回契约             | 精确查询接口时       |
 
 ## 章节内容
 
@@ -46,5 +59,8 @@ const distance = point.distance(start, end); // 约为 42.7
     { title: '几何原语', description: '点、向量、边界、椭圆与圆弧', url: '/kernel/packages/math/primitives' },
     { title: '坐标变换', description: '不同坐标空间之间的换算', url: '/kernel/packages/math/transforms' },
     { title: '几何算法', description: '相交、曲线切片与过点曲线构造', url: '/kernel/packages/math/algorithms' },
-  ]}
+
+    { title: 'API 参考', description: '查询完整公开契约', url: '/kernel/packages/math/api-reference' },
+
+]}
 />

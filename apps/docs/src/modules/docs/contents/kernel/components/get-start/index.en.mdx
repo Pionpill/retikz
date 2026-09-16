@@ -3,40 +3,83 @@ title: Get Started
 description: Install retikz and build a minimal static diagram in 3 steps to learn the top-level container, Node, and Draw.
 ---
 
-## Installation
+Use Kernel in an existing Vite or similar TypeScript project. Published packages use ES modules and require Node.js 22.12 or later; the React adapter requires React / React DOM 18 or later.
 
-The React adapter is `@retikz/react`, with peer dependencies on `react` / `react-dom` (>= 18).
+## Installation and usage
 
-If you do not use React, `@retikz/vanilla` can build and render figures with plain JavaScript. The prose uses the React API; open **View Code** on a demo to switch to the equivalent Vanilla API.
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
 
 <PackageManagerInstall packages="@retikz/react react react-dom" />
 
-All published retikz packages are ESM-only and require Node.js 22.12 or newer.
+Put this in your TSX entry. In an existing React application, use the Layout subtree inside a component without calling createRoot again.
 
-## How to Learn
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+import { createRoot } from 'react-dom/client';
 
-Complete the three-step example first, then choose the next page for your current task:
+createRoot(document.getElementById('diagram')!).render(
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[100, 0]}>
+      B
+    </Node>
+    <Node id="c" position={[200, 0]}>
+      C
+    </Node>
+    <Draw way={['a', 'b']} arrow="->" />
+    <Draw way={['b', 'c']} arrow="->" />
+  </Layout>,
+);
+```
 
-| Page                                                                            | When to read                                                                                               |
-| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **Introduction**                                                                | Understand what retikz solves and the mental model of nodes, paths, and shared IR                          |
-| **Concepts**                                                                    | Learn reusable rules for coordinates, positioning, primitive relations, and layers                         |
-| **Components / Examples**                                                       | Look up specific APIs, or see a complete figure decomposed into primitives                                 |
-| **[Architecture Principles](/kernel/components/design/principles) / Reference** | Optional; read it when extending retikz, working with IR directly, debugging compilation, or using schemas |
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
 
-You can also open the AI panel from the top AI button and ask about the current page, selected code, or an API name. The docs site is fully static and does not provide an LLM service; enter your own API key in the panel, and the site only forwards requests from your browser to the model provider you choose.
+<PackageManagerInstall packages="@retikz/vanilla" />
 
-## A Minimal Example
+Put this in your TypeScript entry. The package root provides drawing constructors; the /dom entry mounts SVG in the browser.
+
+```ts
+import { layer, node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  id: 'first-diagram',
+  layers: [
+    layer('main', [
+      node('a', { position: [0, 0], text: 'A' }),
+      node('b', { position: [100, 0], text: 'B' }),
+      node('c', { position: [200, 0], text: 'C' }),
+      path('ab', { way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+      path('bc', { way: ['b', 'c'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+    ]),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+`scene` describes the drawing, and `layer` groups its `node` / `path` objects. Each node position places that node. `marks` adds markers to a path: `pos: 1` means the endpoint, and `kind: 'arrow'` selects an arrow.
+
+Call `view.dispose()` before removing the container to release the mounted view.
+
+</DocTab>
+</DocTabs>
+
+## First result
+
+Both versions produce three nodes and two arrows. The following steps explain the same diagram as container, nodes, and connections; preview source shows equivalent expressions.
 
 <ComponentPreview files="get-start-final" size="xs" />
-
-The following 3 steps build this static diagram. Open **View Code** under any preview to inspect the source and the corresponding IR JSON.
 
 ## Step by Step
 
 ### 1. The container `<Layout />` + one `<Node />`
 
-A minimal diagram starts with a container and a primitive. `<Layout>` holds the whole diagram, sets the SVG's rendered size, and renders the primitives inside it. `<Node>` draws a positioned, named element with visible text. This first step places one node to confirm both the canvas and the basic primitive are working.
+A minimal diagram starts with a container and a primitive. `<Layout>` holds the whole diagram, provides an SVG viewport and displays its primitives; the viewport is calculated from the content by default. `<Node>` draws a positioned, named element with visible text. This first step places one node to confirm both the canvas and the basic primitive are working.
 
 <ComponentPreview files="get-start-step-1" size="xs" />
 
@@ -54,7 +97,7 @@ Add more `<Node>`s to place the entities in the diagram before drawing relations
 
 ### 3. Connect them with `<Draw />`
 
-`<Draw>` draws graphConnector lines. The `way` array lists the node ids to pass through in order, and retikz attaches the line to node borders instead of text centers. `arrow="->"` adds an arrowhead at the end.
+`<Draw>` draws connecting lines. The `way` array lists the node ids to pass through in order, and retikz attaches the line to node borders instead of text centers. `arrow="->"` adds an arrowhead at the end.
 
 <ComponentPreview files="get-start-final" size="xs" />
 
@@ -64,10 +107,10 @@ Keep four rules in mind before moving on:
 
 - Canvas coordinates grow right on x and down on y; `[0, 0]` is the origin in retikz user units
 - `<Layout>` defaults to the natural content size at 1 user unit per CSS pixel; normally omit display dimensions and `viewBox`
-- A node `id` is the name used by graphConnectors, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
-- Use **View Code → IR** to inspect the compiled diagram data; it is the quickest way to debug connections
+- A node `id` is the name used by connections, and `<Draw way={['a', 'b']}>` targets node borders rather than text centers
+- The preview source shows equivalent notation. IR is the savable drawing declaration; Scene is the compiled result
 
-## Next Steps
+## Further reading
 
 <LinkedSections
   items={[
@@ -87,8 +130,8 @@ Keep four rules in mind before moving on:
       url: '/kernel/components/draw/overview',
     },
     {
-      title: 'Technical Principles',
-      description: 'Explore the internal flow when extending retikz, working with IR, or debugging compilation',
+      title: 'Architecture',
+      description: 'Understand package responsibilities and extension boundaries',
       url: '/kernel/components/design/principles',
     },
     {

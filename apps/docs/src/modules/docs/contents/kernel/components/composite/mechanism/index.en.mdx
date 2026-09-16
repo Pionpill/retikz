@@ -1,0 +1,156 @@
+---
+title: Implementation
+description: Space proposals, isolated trials, result commits, and dependency assembly in composite compilation.
+---
+
+Read [Tier 2 Composites](/kernel/components/design/composite) and [Custom usage](/kernel/components/composite/custom) first. This page follows a registered composite through one Core compilation. It still produces shared primitives plus additional results from the same compilation.
+
+## Overall flow
+
+- proposal: space conditions supplied by the parent
+- probe: a trial child layout in an isolated environment
+- replay: commit a selected trial without computing it again
+- artifact: structured data returned by a domain algorithm
+- spatial handle: a named region that external tools can query
+
+The Definition selects an expansion branch. Layout-aware processing tries a child layout before committing it, then publishes domain artifacts and spatial regions transformed into drawing coordinates.
+
+<ComponentPreview files="/kernel/components/design/composite/composite-pipeline" size="xs" hideCode />
+
+## Layout-aware compile
+
+For example, a card first asks how wide its text must be, then assigns a rectangular slot. Allocation bounds describe the area the child actually occupies; visual bounds describe its visible marks. An occurrence identifies this call within nested output so results remain associated with the correct object.
+
+`CompositeDefinition.expand()` has no text measurement, providers, reference environment, or parent availability, so it cannot express “query child contribution → solve parent layout → allocate the child slot.” `compile(node, context)` closes that loop inside one Core compile. A root composite receives the frozen `NaturalLayoutProposal`; a nested composite receives the complete two-axis `context.proposal` sent to that occurrence by its parent.
+
+A proposal is a **parent-provided availability condition**, not the child's real size or the slot itself. `LayoutProposal` always contains both `x` and `y`:
+
+| Axis proposal         | Meaning                                                                   |
+| --------------------- | ------------------------------------------------------------------------- |
+| `intrinsic.minimum`   | Query the minimum contribution while the other-axis proposal stays active |
+| `intrinsic.natural`   | Query the natural contribution while the other-axis proposal stays active |
+| `range { min, max? }` | Resolve a slot in the interval; an omitted `max` is unbounded             |
+| `exact { value }`     | Require a fixed parent slot without forcing child geometry to scale       |
+
+<ComponentPreview files="/kernel/components/design/composite/layout-aware-compile" size="xl" hideCode />
+
+Every probe in the figure first returns a `resolved` or `failed` outcome. A resolved result then keeps five independent fields that cannot be inferred from one another:
+
+| Field              | Meaning                                                                          |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `slotSize`         | Origin-free allocation slot resolved from the proposal                           |
+| `allocationBounds` | Real child-local layout occupancy, which may be larger or smaller than the slot  |
+| `visualBounds`     | Final static ink envelope; it describes visual contribution, not slot evaluation |
+| `alignmentGuides?` | One-dimensional child-local guides; Core defines first / last baseline           |
+| `replay`           | Opaque, one-use token for this isolated transaction                              |
+
+An `exact` slot axis equals `value`; a `range` axis lies in `[min, max]`, or is at least `min` when unbounded; an intrinsic slot is the size resolved by that contribution probe. `slotSize` has width and height but no origin. The parent solver creates a slot rect in its own coordinate system, then uses real bounds and guides for alignment, overflow, and clipping.
+
+Plain text has an explicit wrapping measurement contract: a finite width can wrap text, and height follows the resulting layout. Other content has no general reflow guarantee: its actual occupancy may remain natural while the allocated slot responds to constraints. A smaller slot does not automatically shrink its content.
+
+<SourceLinks sources={[{ label: 'Source', path: 'packages/kernel/core/src/contract/composite/types.ts' }]} />
+
+### Selection, failure, and commit
+
+Each `layoutChild()` runs in an isolated transaction. A parent solver may compare several minimum / natural / range / exact candidates. Discarded resolved results and failed outcomes leak no primitives, resources, warnings, artifacts, namespaces, identities, or observations. Select success with `context.replay(result)`; select failure with `context.raise(failure)`, which preserves the original provider, source path, cause, and complete nested probe occurrence.
+
+Failures, results, replays, and output children are governed by callback-local, compile-local identity. They cannot be forged, reused after copying, passed across callbacks / compiles, or committed twice. An occurrence's `probe[index]` records candidate child dispatch, while `replay[index]` records final output commit; these are different stages.
+
+This is the compile callback fragment inside a Definition whose schema declares child. It queries natural size and commits in place, illustrating success and failure without an additional layout algorithm. The root default proposal is intrinsic.natural on both axes; nested callbacks receive complete two-axis conditions from their parent.
+
+```ts
+compile: (node, context) => {
+  const outcome = context.layoutChild(node.child, {
+    x: { kind: 'intrinsic', mode: 'natural' },
+    y: { kind: 'intrinsic', mode: 'natural' },
+  });
+  if (outcome.kind === 'failed') return context.raise(outcome.failure);
+  return {
+    allocationBounds: outcome.result.allocationBounds,
+    children: [context.replay(outcome.result)],
+  };
+},
+```
+
+A replay wrapper first places the child with `transforms`, then applies `clip` in the parent allocation coordinate system. It does not rewrite the original `LayoutChildResult`; clipping only tightens the final committed Scene visual contribution. Use `context.scope()` when identity, a local namespace, metadata, zIndex, or recursive structure is needed. Scope may compose ordinary `IRChild`, replay children, and nested scope children without introducing a new IR or Scene-primitive kind, renderer contract, or second compile pipeline.
+
+<SourceLinks sources={[{ label: 'Source', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' }]} />
+
+### Typed artifacts from the same compile
+
+For example, an artifact may contain domain output such as `{ width: 120 }`, validated by artifactSchema. It is produced with the final Scene for applications to read, not for renderers to lay out again.
+
+A layout-aware definition can declare `artifactSchema` and return a JSON-safe `artifact` from `compile`. Core wraps it in `CompileResult.artifacts` with `namespace`, `type`, and an occurrence locator. The locator combines the original `sourcePath` with structured expansion / output / replay segments, without a global Map, callback capture, or second traversal. Hosts therefore receive the Scene and domain artifacts from one canonical compile.
+
+An artifact can also serve as input to an independent observer in `@retikz/inspect`.
+
+Use the independent [`@retikz/inspect`](/kernel/packages/inspect) package to visualize artifacts as overlays. The composite definition only returns data; it does not select or register observers.
+
+`lowerIRToKernel()` only supports independently executable `expand` branches. It fails explicitly on a layout-aware composite because the correct result depends on the full compile environment.
+
+<SourceLinks sources={[{ label: 'Source', path: 'packages/kernel/core/src/compile/types.ts' }]} />
+
+## Spatial transparency and qualified handles
+
+Some composites must expose a domain-meaningful region after nested Scopes, layout replay, and transforms, in addition to generating visible primitives. `expand` therefore always returns a structured result, and a layout-aware `compile` can declare local rectangles in the same result using `spatialHandles`.
+
+The declared `bounds` use the current composite allocation coordinate. After final traversal, Scope transforms, and replay settlement, Core projects them to axis-aligned bounding rectangles (AABBs) in drawing coordinates and publishes them in `CompileResult.spatialHandles`. `ownerPath` preserves every outer-to-inner composite `namespace`, `type`, explicit `id`, and occurrence.
+
+| Layer                   | What it stores                                          | What it never enters                  |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------- |
+| callback declaration    | owner-local `key` / `role` / local rectangle            | IR schema or Scene                    |
+| qualified compile index | `ownerPath` / world AABB / origin and final occurrences | SVG attributes or Canvas draw state   |
+| query                   | exact owner, ancestor path, key, role, and all tags     | renderer DOM lookup or geometry tests |
+
+`selectSpatialHandles()` returns zero or more entries, while `resolveSpatialHandle()` requires exactly one. An underspecified cross-owner query reports a miss or ambiguity instead of guessing the “nearest” node. The index is still present and empty when no declaration exists.
+
+`lowerIRToKernel()` cannot settle world geometry. It still lowers absent or empty declarations, but a non-empty `spatialHandles` array fails synchronously and directs the caller to `compileToScene()`. This prevents local rectangles from being silently discarded or presented as settled spatial results.
+
+<SourceLinks sources={[{ label: 'Source', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' }]} />
+
+## Provider roots and transitive dependencies
+
+The custom tutorial passes Definitions directly. An embedded adapter instead declares roots/providers through a provider contribution. These are assembly entry points at different levels, not two configurations every extension author must write.
+
+A provider is a module that creates a capability Definition; roots are the modules directly required by the drawing. Dependency resolution walks from those roots and creates dependencies before their consumers. This preparation happens before composite callbacks run.
+
+An embedded adapter does not assemble a Definition array itself. It returns the high-level `node` and uses `CoreProviderContribution` to declare the `roots` required by that node plus the `providers` already imported into the current program. A regular provider key uses `capability + name`; a composite key uses `capability: 'composite' + namespace + type`. Each provider also declares ordered direct dependencies, runtime-only datasets, and one stable `makeDefinition` function.
+
+<ComponentPreview files="/kernel/components/design/composite/embeddable-flow" size="xl" hideCode />
+
+Core computes the reachable closure from the roots, then materializes every Definition once in dependency-first, first-reachable order. Third-party providers can depend on other components through the same graph.
+
+`datasets` merge by provider key and reference before maker execution; they never enter IR, Scene, or manifests. A repeated reference deduplicates only when its value is the same by `Object.is`. Conflicting maker references, ordered dependencies, or dataset identities fail before any maker runs. Missing dependencies and cycles also report the complete key chain during preflight.
+
+The provider graph assembles which Definitions reusable modules require. `resolveCoreProviderDependencies()` returns options grouped by Core capability: direct-IR authors may pass complete Definition collections explicitly, while React, Vanilla, and other toolchains resolve contributions first. Provider results come first and explicit Definitions append afterward; a repeated key deduplicates only the same Definition object, while a different object fails loudly.
+
+<SourceLinks
+  sources={[{ label: 'Source', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' }]}
+/>
+
+## Complete implementation flow
+
+<ComponentPreview files="/kernel/components/design/composite/layout-aware-compile" size="xl" hideCode />
+
+The diagram traces the proposal, probe, selection, and replay feedback loop. Read the public callback contract first, then traversal isolation and commit logic. Provider dependencies are resolved before these callbacks execute.
+
+<SourceLinks
+  sources={[
+    { label: 'Composite callbacks', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Probe and replay', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Provider dependencies', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Custom usage', description: 'Define and inject a composite', url: '/kernel/components/composite/custom' },
+    {
+      title: 'Compile reference',
+      description: 'Look up output and diagnostic contracts',
+      url: '/kernel/reference/runtime/compile',
+    },
+  ]}
+/>

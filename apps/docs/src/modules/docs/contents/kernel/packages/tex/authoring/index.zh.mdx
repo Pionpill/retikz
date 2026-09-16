@@ -32,15 +32,50 @@ description: 在 Node 文本中用行内公式、display 公式或显式 math ru
 
 显式 run 可以和普通 text run 混排：
 
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+等待公式引擎就绪后，将 lowerTex 注入 Layout：
+
 ```tsx
-<Node
-  text={[
-    {
-      runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（红线长度）' }],
-    },
-  ]}
-/>
+import { Layout, Node } from '@retikz/react';
+import { useLowerTex } from '@retikz/tex/react';
+
+export const Formula = () => {
+  const state = useLowerTex({ profile: 'math' });
+  if (state.status === 'loading') return <div>Loading MathJax…</div>;
+  if (state.status === 'error') return <div>{state.diagnostic.message}</div>;
+
+  return (
+    <Layout lowerTex={state.lowerTex}>
+      <Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（长度）' }] }]} />
+    </Layout>
+  );
+};
 ```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+创建公式引擎，将 Node 放入 scene，得到 SVG 字符串：
+
+```ts
+import { createMathJaxLowerTex } from '@retikz/tex';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+
+const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
+const input = scene({
+  children: [
+    node('formula', {
+      text: [{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: '（长度）' }] }],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { compile: { lowerTex } });
+```
+
+</DocTab>
+</DocTabs>
 
 `displayMode` 只控制公式度量，不会把一个 Node 拆成多个 Node；多行 LaTeX 环境仍然作为一个公式片段参与同一行布局。中文注释建议使用 text run，由普通文本测量负责，不要依赖 MathJax 的 `\\text{}` 提供 CJK 字体覆盖。
 
@@ -55,3 +90,9 @@ description: 在 Node 文本中用行内公式、display 公式或显式 math ru
 />
 
 需要 AMS、命令定义、括号、消去、分情况或颜色等额外语法时，继续阅读 [MathJax 配置](/kernel/packages/tex/configuration)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: 'API 参考', description: '查询引擎与接入契约', url: '/kernel/packages/tex/api-reference' }]}
+/>

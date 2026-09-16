@@ -3,11 +3,7 @@ title: 坐标系
 description: retikz 使用面向屏幕的二维坐标：笛卡尔坐标 x 向右、y 向下，极坐标从 origin 按 angle / radius 推导位置；所有几何长度先用 user units 表达，再由 viewBox 映射到最终渲染尺寸。
 ---
 
-retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显示出来。常用坐标有两类：直接给 `[x, y]` 的笛卡尔坐标，以及从某个 origin 出发按 `angle` / `radius` 推出来的极坐标。
-
-笛卡尔坐标系是一等公民：编译阶段会把极坐标、相对定位、偏移和比例点等其它位置表达先解析成笛卡尔点，再继续计算边界、锚点和渲染结果。
-
-坐标、线宽、间距和箭头尺寸都使用 user units（图内部的长度单位）。默认显示时，1 个用户单位对应 1 个 CSS 像素；屏幕 DPR 只影响 Canvas 位图精度。
+一个位置写成 `[x, y]`：x 向右增大，y 向下增大。例如 `[120, 70]` 表示从原点向右 120、向下 70。也可以用角度和距离描述圆周上的位置，称为极坐标。
 
 ## 笛卡尔坐标
 
@@ -59,6 +55,8 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 ## viewBox 和显示尺寸
 
+坐标和长度使用用户单位（user units），即图形内部的长度单位。默认显示时，1 个用户单位对应 1 个 CSS 像素；手动设置显示尺寸后可能缩放。Canvas 的屏幕像素密度只影响清晰度，不改变图内坐标。
+
 `viewBox` 决定 `<Layout>` 看到哪一块 user-unit 世界。通常省略它，使用内容边界加 padding 自动取景；显示宽高默认等于最终视框宽高，不缩放图元。
 
 <ComponentPreview files="viewbox" size="md" hideCode />
@@ -98,8 +96,6 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
     {
       label: '选择显式 viewBox 或自动布局范围',
       path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 20,
-      endLine: 35,
     },
   ]}
 />
@@ -108,11 +104,6 @@ retikz 的坐标先描述“图里的几何世界”，再交给 `<Layout>` 显�
 
 <LinkedSections
   items={[
-    {
-      title: '定位',
-      description: '坐标只是位置的一种；节点引用、相对、偏移、比例点等完整位置表达',
-      url: '/kernel/components/basic/position',
-    },
     {
       title: '图元关系',
       description: 'anchor、边界与边上比例点——坐标落定后图元之间如何稳定连接',

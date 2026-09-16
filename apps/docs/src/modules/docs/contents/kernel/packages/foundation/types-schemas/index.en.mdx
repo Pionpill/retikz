@@ -5,6 +5,22 @@ description: Reuse Foundation compile-time type utilities and domain-neutral run
 
 Foundation keeps type utilities and runtime schemas that multiple packages can reuse together. They describe only general data contracts; domain objects belong to schemas defined and validated by their own owners.
 
+## Basic usage
+
+Import these capabilities from the package root:
+
+```ts
+import {
+  type WithRequiredProperties,
+  type WithOptionalProperties,
+  PositiveNumberSchema,
+  NormalizedFractionSchema,
+  createOpenStringSchema,
+} from '@retikz/foundation';
+
+const fraction = NormalizedFractionSchema.parse(0.5); // 0.5
+```
+
 ## Type utilities
 
 These types exist only at compile time and describe or narrow cross-package contracts.
@@ -89,24 +105,6 @@ RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
 
-## Shallow property merging
-
-Use `mergeProperties(sources, options)` to combine priority layers: sources are applied from left to right, with later properties taking precedence. It returns a new object without mutating inputs or recursively merging nested objects.
-
-```ts
-import { mergeProperties } from '@retikz/foundation';
-
-const options = mergeProperties<{ color?: string | null; width?: number }>(
-  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
-  { shouldOverride: value => value !== undefined },
-);
-// { color: 'red', width: 0 }
-```
-
-`shouldOverride(value, key)` applies to both initial writes and subsequent overrides. Returning `false` skips the current property without deleting an earlier value. To also ignore `null`, use `value => value !== undefined && value !== null`; a truthiness check would also discard `false`, `0`, and empty strings.
-
-Without a policy, property values of `undefined` and `null` overwrite earlier values; an `undefined` source is always skipped. Only own enumerable string and symbol properties are copied, while nested objects and arrays retain their references. Since the policy can filter any field, the return type is `Partial<T>`; consumers supply required fields. Property-read or policy-callback failures throw `RetikzFoundationError` with the original exception preserved as `cause`.
-
 <SourceLinks
   sources={[
     {
@@ -138,6 +136,18 @@ Without a policy, property values of `undefined` and `null` overwrite earlier va
       path: 'packages/kernel/foundation/tests/schema.test.ts',
       startLine: 105,
       endLine: 154,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up public types and full contracts',
+      url: '/kernel/packages/foundation/api-reference',
     },
   ]}
 />

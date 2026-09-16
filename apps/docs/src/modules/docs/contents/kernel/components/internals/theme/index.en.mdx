@@ -1,0 +1,58 @@
+---
+title: Theme resolution
+description: Trace sparse theme choices through inheritance and shared color resolution into composite consumption.
+---
+
+Read [Theme](/kernel/components/design/theme) first. This page follows a theme environment within one compilation: root or Scope style/mode choices become a read-only theme for composites, which translate it into explicit primitive styles.
+
+## Overall flow
+
+Suppose the root selects Academic/light and a child group selects only dark. The group inherits Academic, resolves its dark-mode colors, and applies them through its components. Renderers receive the resulting explicit styles.
+
+<ComponentPreview files="/kernel/components/design/theme/theme-flow" size="xs" hideCode />
+
+## Inherit choices
+
+IRTheme stores sparse author choices: omitted fields inherit from the parent. ResolvedTheme is the effective environment at the current location. resolveTheme fills each field from the parent and reuses the parent environment if nothing changes. The root default is light with no selected style.
+
+<SourceLinks sources={[{ label: 'resolveTheme', path: 'packages/kernel/core/src/resolve/theme/resolve.ts' }]} />
+
+For a parent selection `{ style: 'academic', mode: 'light' }` and child input `{ mode: 'dark' }`, the result keeps `style: 'academic'`, changes to `mode: 'dark'`, and adds resolved `colors`. Without a selected style, style remains omitted and default colors are used.
+
+## Resolve colors
+
+Without a selected style, Core uses its default colors for the current mode. With a style, it looks up the Definition by name, calls resolve, and merges shared semantic colors and the categorical palette. The result is detached from input and frozen, so one component cannot mutate its siblings through it. An unregistered style or a resolver exception stops resolution.
+
+<SourceLinks sources={[{ label: 'Shared colors', path: 'packages/kernel/core/src/providers/theme/colors.ts' }]} />
+
+## Consume and reuse
+
+Both expand and compile callbacks read context.theme. The composite maps colors to explicit Node/Path styles; Core does not interpret chart or table tokens. The Core registry owns shared colors; a domain resolver maps the same style name to domain-specific styling. A custom style must provide both implementations. Domain entry points vary: use that package’s custom-theme documentation.
+
+A probe computes child layout in isolation; replay commits a selected result. An ordinary Scope can introduce an inner theme, while replay keeps the theme already resolved during the probe instead of recoloring at the commit position. Measurement and final output therefore share the same environment.
+
+<ComponentPreview files="/kernel/components/design/composite/layout-aware-compile" size="xl" hideCode />
+
+<SourceLinks
+  sources={[{ label: 'Probe and replay', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' }]}
+/>
+
+For example, if text is probed inside a dark child Scope and replayed into a light environment, it retains the dark-theme result from the probe. Commit does not resolve the theme again.
+
+## Complete implementation flow
+
+<ComponentPreview files="theme-resolution" size="lg" hideCode />
+
+Follow the internal members in the diagram: resolveTheme processes choices, resolveCoreThemeStyleColors produces shared colors, the composite callback consumes them, and Scene retains explicit styles. See Composite implementation for detailed probe and replay timing.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Implementation',
+      description: 'Understand composite layout feedback',
+      url: '/kernel/components/composite/mechanism',
+    },
+  ]}
+/>

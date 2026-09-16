@@ -4,15 +4,8 @@ import { Layout } from '@retikz/react';
 import type { FC } from 'react';
 import { z } from 'zod';
 
-/** Horizontal step gap (user units): distance between adjacent stage-box centers */
 const STAGE_GAP = 165;
 
-/**
- * Example Tier 2 type: pipeline — expands { stages, arrows } into N stage boxes + N−1 labelled arrows (node + path mix).
- * Shows "small IR, expanded at runtime": the IR stores only two short arrays (self-describing, easy for an LLM to author / read);
- *   all geometry (boxes / graphConnectors / arrows / labels / boundary clipping) is generated at compile time inside `expand`, never in the IR.
- * The diagram depicts the very path a composite itself travels: Tier 2 DSL → composite IR → (lower) → core IR → (render) → diagram.
- */
 const pipeline = defineComposite({
   namespace: 'demo',
   type: 'pipeline',
@@ -32,7 +25,6 @@ const pipeline = defineComposite({
       text: label,
       style: { stroke: 'none' },
     }));
-    // One labelled arrow between adjacent stages; endpoints reference node ids and auto-clip to the (border-less) text box
     const edges = node.stages.slice(1).map((_label, i) => ({
       type: 'path' as const,
       marks: [{ pos: 1, mark: { kind: 'arrow' as const } }],
@@ -57,8 +49,8 @@ const ir: IRScene = {
     {
       namespace: 'demo',
       type: 'pipeline',
-      stages: ['Tier 2 DSL', 'composite IR', 'core IR', 'diagram'],
-      arrows: ['build', 'lower', 'render'],
+      stages: ['composite IR', 'Kernel IR', 'Scene', 'SVG / Canvas'],
+      arrows: ['lower', 'compile', 'render'],
     },
   ],
 };

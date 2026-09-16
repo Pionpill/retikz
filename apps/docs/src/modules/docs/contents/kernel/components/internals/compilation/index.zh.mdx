@@ -1,0 +1,64 @@
+---
+title: 编译流程
+description: 追踪一次 Core 编译：建立上下文、布局与路径解析，最后产出 Scene。
+---
+
+先读[分层](/kernel/components/design/layers)。本页追踪 `compileToScene(IRScene, options)` 的一次同步调用：输入是已经校验的图形声明，输出是 Scene、领域产物与空间索引；DOM 挂载和后续增量更新不在本次执行中。
+
+| 输入 / 输出             | 用途                               |
+| ----------------------- | ---------------------------------- |
+| `IRScene` 输入          | 已校验的可保存图形声明             |
+| `result.scene`          | 已布局图形，交给渲染器             |
+| `result.artifacts`      | 同次产生的领域数据，供应用读取     |
+| `result.spatialHandles` | 同次产生的具名区域索引，供工具查询 |
+
+后两项是 Scene 之外的附属结果。
+
+## 整体流程
+
+以两个命名节点和一条连接线为例：先确定节点位置和边界，才能得到连线端点；最后把可见内容合并为画面范围。图中的阶段表示依赖顺序，不是对整棵树进行三次独立遍历。
+
+<ComponentPreview files="/kernel/components/design/layers/layers-compile" size="xs" hideCode />
+
+## 建立本次上下文
+
+上下文保存这次编译的测量函数、警告收集器和可用能力注册表。注册表按名称查找具体实现；内置和调用方提供的 Definition 进入同一消费路径。`createCompileContext` 准备这些输入，并处理可展开的高层节点。
+
+<SourceLinks
+  sources={[{ label: '建立本次上下文', path: 'packages/kernel/core/src/compile/orchestration/context.ts' }]}
+/>
+
+## 布局与路径
+
+命名空间是当前分组中按 id 查找对象的表。遍历遇到 Node 或 Coordinate 时先确定位置并登记结果；Path 可以先保留输出位置，等所在分组的依赖就绪后再解析端点。这让声明在后面的节点也能用于同组连线，但不代表实体自身的相对定位可以任意前向引用。
+
+需要测量子内容的 composite 在这里进入隔离试算，再提交选中的结果；具体的 proposal、probe 与 replay 见[复合实现原理](/kernel/components/composite/mechanism)。
+
+<SourceLinks sources={[{ label: '布局与路径', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' }]} />
+
+## 组装结果
+
+`compileCoreSnapshot` 汇总图元、绘制资源与根动画。显式 viewBox 决定可视范围；否则从布局边界与 padding 计算。空间索引和领域产物与 Scene 一起返回，但不是渲染器需要重新解释的图形声明。同步入口在成功后派发收集的警告；致命错误终止本次调用，不返回部分成功的 Scene。
+
+<SourceLinks sources={[{ label: '组装结果', path: 'packages/kernel/core/src/compile/compile.ts' }]} />
+
+## 完整实现流程
+
+<ComponentPreview files="/kernel/components/design/principles/principles-compile" size="xs" hideCode />
+
+沿图从输入到输出阅读，再从下面两个源码入口追踪内部成员：`compileToScene` 调用 `compileCoreSnapshot`，后者建立上下文、调用 `compileChildrenToPrimitives`，最后组装结果。React / Vanilla 的输入归一化发生在此前，renderer 执行发生在此后。
+
+<SourceLinks
+  sources={[{ label: 'compileToScene / compileCoreSnapshot', path: 'packages/kernel/core/src/compile/compile.ts' }]}
+/>
+<SourceLinks
+  sources={[
+    { label: 'compileChildrenToPrimitives', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: '编译参考', description: '查询输入选项与结果契约', url: '/kernel/reference/runtime/compile' }]}
+/>
