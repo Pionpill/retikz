@@ -5,7 +5,7 @@ description: Use when writing or updating generated API reference or source-driv
 
 # API 与 Schema 参考
 
-先读 docs-doc-principle 与 [页型词典](../docs-doc-principle/references/page-contract.md)。两类参考固定进阶难度：面向已会基础调用、需要精确查询的读者。页名和尾段固定，不因包复杂度升级底层。
+先读 docs-doc-principle 与 [页型词典](../docs-doc-principle/references/page-contract.md)。两类参考是按需查询的契约资料，不声明阅读难度。页名和尾段固定，不因包复杂度升级底层。
 
 ## 分工与唯一真源
 

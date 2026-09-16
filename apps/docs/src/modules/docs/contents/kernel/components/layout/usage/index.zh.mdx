@@ -131,7 +131,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
-React 的 `ir` 与 `children` 同时传入时采用 `ir`。生成、持久化或转换 IR 的完整模型见[架构](/kernel/components/design/principles)与[复合](/kernel/components/design/composite)。
+生成、持久化或转换 IR 的完整模型见[架构](/kernel/components/design/principles)与[复合](/kernel/components/design/composite)。
 
 ## 输出边界
 
@@ -159,17 +159,12 @@ React 的 `ir` 与 `children` 同时传入时采用 `ir`。生成、持久化或
 
 <ComponentPreview files="layout-defaults" size="md" />
 
-`Layout.style` 是宿主 CSS；图元样式使用 `rootScope.style`。
+## 补充说明
 
-## 渲染输出
-
-默认输出 SVG，改用 Canvas 时设置 `renderer="canvas"`。动画播放与静态截帧见[动画](/kernel/components/effects/animation)。
-
-## 错误与限制
-
-`ir` 与 children 同时传入时采用 `ir`。传入完整 `ir` 时，请在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。`runtime.mode: 'static'` 不能与 `updateStrategy` 或 `onDiagnostic` 同时使用。
-
-观测辅助内容使用 [Inspect](/kernel/packages/inspect)，自动排列使用 [Layout 布局包](/library/layout)。
+- **渲染后端**：默认输出 SVG，设置 `renderer="canvas"` 切换到 Canvas。动画播放与静态截帧见[动画](/kernel/components/effects/animation)。
+- **输入优先级**：React 同时传入 `ir` 和 `children` 时采用 `ir`。
+- **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。
+- **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.style`。
 
 ## 延伸阅读
 
@@ -180,6 +175,8 @@ React 的 `ir` 与 `children` 同时传入时采用 `ir`。生成、持久化或
       description: '配置主题、注入能力、读取编译结果并控制更新',
       url: '/kernel/components/layout/extended-usage',
     },
+    { title: 'Inspect', description: '为图形添加观测辅助内容', url: '/kernel/packages/inspect' },
+    { title: 'Layout 布局包', description: '自动排列图形内容', url: '/library/layout' },
     { title: 'API 参考', description: '查询 Layout 完整属性', url: '/kernel/components/layout/api-reference' },
     { title: 'Schema 参考', description: '查询可持久化的场景数据', url: '/kernel/components/layout/schema-reference' },
   ]}

@@ -33,7 +33,13 @@ The example displays the node count and text width outside the drawing. These sn
 
 ## Execution modes and update strategies
 
-Retained mode keeps processing state for later updates; static mode processes the current figure afresh. `auto` allows incremental updates, while `full` recomputes the figure when inputs change.
+Choose whether to retain processing state and allow incremental computation:
+
+| Configuration               | Update behavior                             | Use case                                                          |
+| --------------------------- | ------------------------------------------- | ----------------------------------------------------------------- |
+| `retained + auto` (default) | Retain state; allow incremental computation | Local updates and transactional rollback                          |
+| `retained + full`           | Retain state; recompute on changes          | Disable incremental computation;<br />keep transactional rollback |
+| `static`                    | Process the current figure afresh           | Reduce resident processing state                                  |
 
 ```tsx
 <Layout /> {/* retained + auto */}
@@ -41,15 +47,14 @@ Retained mode keeps processing state for later updates; static mode processes th
 <Layout runtime={{ mode: 'static' }} />
 ```
 
-The default `retained + auto` combines local updates with transactional rollback. Choose `retained + full` to disable incremental computation while retaining processing state and transactional rollback, or choose `static` to reduce resident processing state.
-
-## Errors and limitations
-
 `runtime.mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`.
 
-### Whole-figure configuration boundaries
+## Additional notes
 
-An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined` and isolated `defaults.reset: false` / `[]` create no root Scope wrapper. Existing `font: {}` follows its font-field override contract. Explicit Scopes retain their structure; `Layout.style` always means host CSS.
+- **Empty configuration**: An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined`, and isolated `defaults.reset: false` / `[]` create no root Scope wrapper.
+- **Font overrides**: Existing `font: {}` follows its font-field override contract.
+- **Explicit scopes**: Explicit Scopes retain their structure.
+- **Host styles**: `Layout.style` always means host CSS. See [Basic usage](/kernel/components/layout/usage#whole-figure-defaults) for whole-figure primitive defaults.
 
 ## Further reading
 

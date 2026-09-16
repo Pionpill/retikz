@@ -131,7 +131,7 @@ Call `view.dispose()` before removing the container to release mounted resources
 </DocTab>
 </DocTabs>
 
-When React receives both `ir` and `children`, `ir` takes precedence. See [Architecture](/kernel/components/design/principles) and [Composite](/kernel/components/design/composite) for IR generation, persistence, and conversion.
+See [Architecture](/kernel/components/design/principles) and [Composite](/kernel/components/design/composite) for IR generation, persistence, and conversion.
 
 ## Output Boundary
 
@@ -159,17 +159,12 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
 
 <ComponentPreview files="layout-defaults" size="md" />
 
-`Layout.style` is host CSS; use `rootScope.style` for primitive styles.
+## Additional notes
 
-## Rendering output
-
-SVG is the default output. Set `renderer="canvas"` for Canvas. See [Animation](/kernel/components/effects/animation) for playback and static snapshots.
-
-## Errors and limitations
-
-When both `ir` and children are supplied, `ir` takes precedence. With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when it contains effective settings.
-
-Use [Inspect](/kernel/packages/inspect) for inspection overlays and the [Layout package](/library/layout) for automatic arrangement.
+- **Rendering backend**: SVG is the default output. Set `renderer="canvas"` to switch to Canvas. See [Animation](/kernel/components/effects/animation) for playback and static snapshots.
+- **Input precedence**: When React receives both `ir` and `children`, `ir` takes precedence.
+- **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when it contains effective settings.
+- **Style scope**: `Layout.style` sets host CSS; use `rootScope.style` for primitive styles.
 
 ## Further reading
 
@@ -180,6 +175,8 @@ Use [Inspect](/kernel/packages/inspect) for inspection overlays and the [Layout 
       description: 'Configure themes, inject capabilities, read compiled results, and control updates',
       url: '/kernel/components/layout/extended-usage',
     },
+    { title: 'Inspect', description: 'Add inspection overlays to a drawing', url: '/kernel/packages/inspect' },
+    { title: 'Layout package', description: 'Arrange drawing content automatically', url: '/library/layout' },
     { title: 'API reference', description: 'Look up all Layout props', url: '/kernel/components/layout/api-reference' },
     {
       title: 'Schema reference',

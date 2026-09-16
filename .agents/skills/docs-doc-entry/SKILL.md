@@ -1,11 +1,11 @@
 ---
 name: docs-doc-entry
-description: Use when writing a Retikz solution introduction, quick start or changelog page; these fixed beginner entry pages are distinct from group overviews and individual capability tutorials.
+description: Use when writing a Retikz solution introduction, quick start or changelog page; introduction and quick start are beginner entries, while changelogs are release records.
 ---
 
 # 快捷入口文档
 
-先读 docs-doc-principle 和 [页型词典](../docs-doc-principle/references/page-contract.md)。三个入口固定入门难度，不以包实现复杂或发布内容深奥升级难度。
+先读 docs-doc-principle 和 [页型词典](../docs-doc-principle/references/page-contract.md)。简介与快速开始固定入门难度；更新日志是按版本检索的记录，不声明难度。
 
 ## 简介
 
@@ -19,13 +19,13 @@ description: Use when writing a Retikz solution introduction, quick start or cha
 
 ## 更新日志
 
-沿用实际发布数据、版本分组和已有 changelog 渲染组件，不手写另一套历史。先写变化及用户影响，再补必要技术细节和相关文档入口；代码标识符与版本号保持准确。版本详情同样固定入门难度，不能因内容来自技术发布记录而沿用维护者叙事；深入机制链接底层页。
+沿用实际发布数据、版本分组和已有 changelog 渲染组件，不手写另一套历史。先写变化及用户影响，再补必要技术细节和相关文档入口；代码标识符与版本号保持准确。版本详情与日志总页同为按需检索的记录，不声明难度；深入机制链接底层页。
 
 日志可能由 data 与渲染器提供，不为满足文件数量新增空 MDX。没有发布记录时如实说明，不虚构版本或变更。
 
 ## 检查
 
-- 三入口名称、顺序、路径和难度符合词典
+- 三入口名称、顺序、路径和难度声明符合词典；更新日志及版本详情不声明难度
 - 简介帮助选择，快速开始能跑通，更新日志来自真实记录
 - 两种接入支持情况准确；共享限制不藏在一个 Tab 内
 - 不因入口新增顺带重写所有下游页面

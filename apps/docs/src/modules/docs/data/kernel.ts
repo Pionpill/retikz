@@ -35,31 +35,26 @@ export const kernelSection: Array<Section> = [
           {
             id: 'v0-5',
             label: 'kernel.changelogV05',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-4',
             label: 'kernel.changelogV04',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-3',
             label: 'kernel.changelogV03',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-2',
             label: 'kernel.changelogV02',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-1',
             label: 'kernel.changelogV01',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
         ],
@@ -171,13 +166,11 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.layoutApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
           {
             id: 'schema-reference',
             label: 'kernel.layoutSchemaReference',
-            difficulty: DocDifficulty.Advanced,
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
@@ -203,13 +196,11 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.scopeApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
           {
             id: 'schema-reference',
             label: 'kernel.scopeSchemaReference',
-            difficulty: DocDifficulty.Advanced,
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
@@ -426,7 +417,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgFoundationApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -462,7 +452,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgMathApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -513,7 +502,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgTexApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -544,7 +532,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgInspectApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -552,7 +539,7 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference', difficulty: DocDifficulty.Advanced },
+          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference' },
         ],
       },
       {
