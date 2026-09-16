@@ -28,7 +28,7 @@ const Demo: FC = () => (
       SVG renderer
     </Node>
     <Node id="canvas" position={[250, 24]} style={{ stroke: 'none' }}>
-      Canvas (Node/SSR)
+      Canvas renderer
     </Node>
 
     <Draw way={['react_dsl', 'ir']} arrow="->" />

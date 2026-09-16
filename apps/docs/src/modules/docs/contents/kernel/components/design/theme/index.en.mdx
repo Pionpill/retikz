@@ -67,32 +67,20 @@ IRScene is the persistable root drawing declaration, and Scope is a local group 
 
 For example, if the root uses Academic/light and a child group only selects dark mode, that child gets Academic/dark rather than another style. Theme inheritance is distinct from inheritance of node style defaults.
 
-## Composite context
+Theme choices can be saved with drawing declarations, while custom style implementations must be supplied by the runtime environment. Only components that consume that style change appearance; missing required style implementations report an error.
 
-The following context rules are for extension authors. expand generates basic entities from a high-level object; compile handles measurement and layout feedback. See [Composite](/kernel/components/design/composite) for those interfaces.
-
-Both `expand(node, context)` and layout-aware `compile(node, context)` receive a frozen `context.theme`. It always provides `mode` and `colors`, while `style` may be absent. Core starts at its default light baseline, then inherits selectors through IRScene → outer Scope → inner Scope and generates `colors` from the default palette or the current style resolver. `colors` is a detached, frozen Core shared view with `semantic.error/success/warning/guide` and a non-empty `categorical` palette; it is not implicit styling for Core primitives.
-
-## Consumption and boundaries
-
-A style resolver produces colors or domain defaults for a named style. A probe is a trial compilation that measures child content; replay reuses the selected result with its original theme so measurement and final output remain consistent. Detached/frozen means the color data is isolated from the input and read-only: a composite cannot mutate it to affect other objects.
-
-The composite maps shared `colors` and the domain tokens, palettes, or defaults produced by its style resolver into already-materialized IR. Core does not interpret Tier 2 tokens or own Plot, Chart, or Table tokens; neither Core primitives nor renderers interpret Theme. Ordinary output Scopes and `context.scope({ theme }, children)` may establish a deeper environment. A replay child keeps the Theme resolved during its probe and is not reinterpreted where it is committed. A custom style must be injected into both Core and every Tier 2 resolver that consumes it; a missing registry entry fails loudly.
-
-Theme selectors can thus be saved with a drawing, but custom style implementations must still be supplied by the runtime environment. Missing implementations expose a configuration error instead of silently choosing another style.
-
-## Further Reading
+## Further reading
 
 <LinkedSections
   items={[
     {
-      title: 'Tier 2 Composites',
-      description: '',
-      url: '/kernel/components/design/composite',
+      title: 'Theme resolution',
+      description: 'Follow inheritance, color resolution, and layout-result reuse',
+      url: '/kernel/components/internals/theme',
     },
     {
       title: 'Scope',
-      description: '',
+      description: 'Understand how the shared environment affects components',
       url: '/kernel/components/layout/scope',
     },
   ]}

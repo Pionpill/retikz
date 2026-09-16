@@ -5,6 +5,31 @@ description: 通过 profile 与 extensions 选择 @retikz/tex 的 MathJax 公式
 
 `@retikz/tex` 默认提供基础 TeX 语法。需要 AMS、命令定义、括号、消去、分情况或颜色等额外能力时，在创建 lowerer 或调用 `useLowerTex` 时设置 `profile` 与 `extensions`。如何把结果注入 React 或 Vanilla，见 [安装与接入](/kernel/packages/tex)。
 
+## 基础用法
+
+相同配置既可传给 React hook，也可传给 Vanilla lowerer 工厂；得到结果后的注入方式沿用包入口。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { useLowerTex } from '@retikz/tex/react';
+
+export const useFormulaEngine = () => useLowerTex({ profile: 'base', extensions: ['ams'] });
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { createMathJaxLowerTex } from '@retikz/tex';
+
+const lowerTex = await createMathJaxLowerTex({ profile: 'base', extensions: ['ams'] });
+```
+
+</DocTab>
+</DocTabs>
+
 ## Profile 与 Extensions
 
 `MathJaxEngineOptions` 的 `profile` 决定基础配置，`extensions` 则在其后追加公开扩展。此示例固定启用完整的公开扩展集合，因此公式示例只切换公式内容，不再根据示例开关扩展；选择 `math` 会一次启用内置数学扩展集合：
@@ -56,3 +81,9 @@ description: 通过 profile 与 extensions 选择 @retikz/tex 的 MathJax 公式
 | `MathJaxLowerTexOptions`                   | `MathJaxEngineOptions & LowerTexOptions`。供 `createMathJaxLowerTex` 与 `useLowerTex` 使用           |
 
 React 中，`useLowerTex(options)` 会按最终生效的 extension 集合共享异步 engine。它在首次初始化或切换配置时返回 `loading`，就绪时返回可注入的 `lowerTex`，初始化失败时返回 `error`。接入代码和状态渲染见 [安装与接入](/kernel/packages/tex)。
+
+## 延伸阅读
+
+<LinkedSections
+  items={[{ title: 'API 参考', description: '查询配置签名与默认值', url: '/kernel/packages/tex/api-reference' }]}
+/>

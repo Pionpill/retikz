@@ -1,15 +1,15 @@
 # Schema Reference 与 ZodSchema 按需契约
 
-仅在编写或修改 Schema Reference 词典页、schema registry 或 `<ZodSchema>` 时读取。它不定义由公开导出和 JSDoc 自动生成的 API Reference；概念页中的少量手写说明属于“文中 API 介绍”，三类边界见上级 `docs-doc-principle`。
+仅在编写或修改 Schema Reference 词典页、schema registry 或 `<ZodSchema>` 时读取。它不定义由公开导出和 JSDoc 自动生成的 API Reference；概念页中的少量手写说明属于“文中 API 介绍”，分工见 `docs-doc-reference`。
 
 ## 职责
 
 Schema Reference 只提供字段完整、可扫描、可链接的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 只应链接到本页，不复制 schema 字段表。
 
-页面位于：
+页面位于对应 owner 的 schema-reference，不要求 reference 目录前缀；路径示意：
 
 ```text
-apps/docs/src/modules/docs/contents/<moduleId>/reference/**/index.{zh,en}.mdx
+apps/docs/src/modules/docs/contents/<owner-path>/schema-reference/index.{zh,en}.mdx
 ```
 
 registry 位于：
@@ -37,3 +37,5 @@ apps/docs/src/modules/docs/components/mdx-content/zod-schema/schema-registry.ts
 5. 运行 docs `tsc --noEmit`、完整性脚本，并在浏览器确认没有 `Unknown schema` 或中文描述缺失 warning
 
 字段是否完整和中文说明是否准确仍需结合 schema 源码人工核对，不能只依赖渲染成功。评审中文页时还要检查实际表格，任一字段仍显示英文 `.describe()` 都视为翻译缺失。
+
+字段结构来自 ZodSchema 对公开 schema 的读取；中文 descriptions 由 LLM 按源码英文 describe 翻译并核对术语、默认与点路径。现有流程不等同于已有完整 Schema 页面生成脚本；新增自动化须另有工程授权。

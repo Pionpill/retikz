@@ -32,15 +32,50 @@ Core parses formula sugar in a string into text runs and math runs:
 
 An explicit run can mix with ordinary text runs:
 
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+Wait for the formula engine, then inject lowerTex into Layout:
+
 ```tsx
-<Node
-  text={[
-    {
-      runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (red-line length)' }],
-    },
-  ]}
-/>
+import { Layout, Node } from '@retikz/react';
+import { useLowerTex } from '@retikz/tex/react';
+
+export const Formula = () => {
+  const state = useLowerTex({ profile: 'math' });
+  if (state.status === 'loading') return <div>Loading MathJax…</div>;
+  if (state.status === 'error') return <div>{state.diagnostic.message}</div>;
+
+  return (
+    <Layout lowerTex={state.lowerTex}>
+      <Node text={[{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }]} />
+    </Layout>
+  );
+};
 ```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Create the formula engine, place the Node in a scene, and produce an SVG string:
+
+```ts
+import { createMathJaxLowerTex } from '@retikz/tex';
+import { node, renderToSvgString, scene } from '@retikz/vanilla';
+
+const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
+const input = scene({
+  children: [
+    node('formula', {
+      text: [{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { compile: { lowerTex } });
+```
+
+</DocTab>
+</DocTabs>
 
 `displayMode` changes formula metrics; it does not split one Node into several Nodes. A multiline LaTeX environment remains one formula fragment in the same line layout. Use a text run for CJK annotations instead of relying on MathJax `\\text{}` for CJK font coverage.
 
@@ -55,3 +90,15 @@ Use the demo below to edit TeX source and compare inline / display metrics and f
 />
 
 For additional syntax such as AMS, command definitions, brackets, cancellation, cases, or color, continue to [MathJax Configuration](/kernel/packages/tex/configuration).
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up engine and integration contracts',
+      url: '/kernel/packages/tex/api-reference',
+    },
+  ]}
+/>

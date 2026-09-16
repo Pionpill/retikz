@@ -5,12 +5,6 @@ description: 'The three retikz expression layers: DSL for authors, IR for declar
 
 retikz turns the DSL (React components or Vanilla JS) into IR first, then compiles IR into Scene. The DSL optimizes authoring, IR preserves what you intend to draw, and Scene preserves what a renderer needs to draw.
 
-<ComponentAlert
-  type="tip"
-  title="You can skip this on a first read"
-  description="This chapter explains retikz's lower-level build chain. If you only want to draw your first figure, start with Get Started and the component docs, then come back when you need the IR / Scene boundary."
-/>
-
 <ComponentPreview files="layers-pipeline" size="sm" hideCode />
 
 ## Three Layers
@@ -29,79 +23,33 @@ Why this matters in practice: use the DSL when authoring diagrams, use IR when s
 
 Kernel preserves basic drawing semantics; Sugar expands into those expressions during IR construction. See [Sugar](/kernel/components/design/sugar) for equivalent examples, expansion constraints, and selection guidance.
 
-## Compile Chain
-
-```tsx
-<Layout>
-  <Node id="a" position={[0, 0]}>
-    A
-  </Node>
-  <Draw way={['a', [80, 0]]} />
-</Layout>
-```
-
-The adapter collects this JSX into IR. `@retikz/core` resolves positions, computes anchors, expands paths and bounds, then outputs Scene. In this example, `<Draw>` becomes a plain `path` node in IR.
-
-`@retikz/core` coordinates layout and paths in stages during one recursive traversal, then finalizes the Scene. The diagram presents those stages in dependency order; it does not imply three independent walks over the whole IR:
-
-<ComponentPreview files="layers-compile" size="xs" hideCode />
-
-- **layout nodes**: when traversal reaches a node / coordinate, resolve its position, measure text, compute its bounding box, and register it in the current namespace.
-- **resolve paths**: leave a placeholder for each path, then resolve and flush pending paths after the current scope subtree or root finishes. The paths can now look up registered endpoint layouts — exactly the dependency the `anchors` arrow stands for.
-- **fit bounds**: union every primitive's bounding box, add padding, round to precision, and produce the viewBox.
-
-If the IR contains Tier 2 composite nodes (such as plot's higher-level components), the compiler lowers them to Kernel first, then enters the staged traversal above; see [Tier 2 composites](/kernel/components/design/composite) for details.
-
-## Choosing a Layer
-
-See [Sugar](/kernel/components/design/sugar) for choosing authoring expressions. For persistence and structure lookup, use [Schema Reference](/kernel/reference/schema).
-
 ## Packages
 
-The Kernel group consists of six lockstep npm packages under `packages/kernel`. Arrows point from capability providers to consumers: solid lines form the primary build chain, while gray dashed lines show direct cross-layer dependencies. `@retikz/math` is the zero-dependency computational foundation, `@retikz/core` defines IR and compilation semantics on top of it, and the remaining packages connect to core by responsibility.
+Kernel currently contains nine packages released together. Choose an entry for your task; the package manager installs its dependencies.
 
-<ComponentPreview files="layers-packages" size="sm" hideCode />
+| Package              | Responsibility                                    |
+| -------------------- | ------------------------------------------------- |
+| `@retikz/foundation` | Shared atomic contracts and base schemas          |
+| `@retikz/math`       | Dependency-free geometry and numerical algorithms |
+| `@retikz/runtime`    | Incremental execution and transactions            |
+| `@retikz/core`       | Shared IR, Scene, and compilation                 |
+| `@retikz/inspect`    | Diagnostic observation and overlays               |
+| `@retikz/render`     | SVG / Canvas output                               |
+| `@retikz/vanilla`    | Framework-free input and host integration         |
+| `@retikz/react`      | React components and lifecycle integration        |
+| `@retikz/tex`        | Optional LaTeX formula integration                |
 
-| Package           | Responsibility                                          | Kernel dependencies |
-| ----------------- | ------------------------------------------------------- | ------------------- |
-| `@retikz/math`    | Zero-dependency geometry, matrix, and numeric utilities | —                   |
-| `@retikz/core`    | IR / Scene / schema / geometry / parser                 | math                |
-| `@retikz/render`  | Scene rendering: SVG / Canvas, hydration, animation     | math + core         |
-| `@retikz/react`   | Kernel / Sugar JSX components, SVG / Canvas built in    | core + render       |
-| `@retikz/vanilla` | Framework-free runtime: mount / hydrate / animate / SSR | core + render       |
-| `@retikz/tex`     | Optional LaTeX parsing and lowering to primitives       | core                |
+Browser applications usually start with React or Vanilla. Consult the package documentation before adding other direct dependencies.
 
-react / vanilla are adapters: they collect the DSL into IR and hand rendering to render. tex lowers LaTeX formulas into primitives that core can compile. Upper packages do not create a parallel IR, rendering model, or geometry foundation.
-
-Most users install `@retikz/react` (or `@retikz/vanilla`), which pulls in core and render automatically. You only depend on `@retikz/core` directly when writing a custom renderer or reading/writing IR by hand.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Shared IR-to-Scene orchestration entry',
-      path: 'packages/kernel/core/src/compile/compile.ts',
-      startLine: 14,
-      endLine: 40,
-    },
-    {
-      label: 'Resolve lowering and provider registries centrally',
-      path: 'packages/kernel/core/src/compile/orchestration/context.ts',
-      startLine: 77,
-      endLine: 114,
-    },
-    {
-      label: 'Flush deferred paths after entity registration',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 124,
-      endLine: 171,
-    },
-  ]}
-/>
-
-## Further Reading
+## Further reading
 
 <LinkedSections
   items={[
+    {
+      title: 'Compilation flow',
+      description: 'Trace one IR-to-Scene execution',
+      url: '/kernel/components/internals/compilation',
+    },
     {
       title: 'Schema',
       description: 'Look up IR fields per entity: Node / Path / Step / Coordinate / Scope',

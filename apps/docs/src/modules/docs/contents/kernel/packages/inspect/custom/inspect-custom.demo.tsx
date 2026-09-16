@@ -1,39 +1,11 @@
-import { StrokePathOwnerOutputSchema } from '@retikz/core';
-import { createInspectorRegistry, defineInspector } from '@retikz/inspect';
+import { createInspectorRegistry } from '@retikz/inspect';
 import { InspectLayout, InspectPath } from '@retikz/inspect/react';
 import { Layout, Path, Step } from '@retikz/react';
 import type { FC } from 'react';
 
 import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
-const endpointInspectorKey = { namespace: 'docs', type: 'path-endpoints' };
-
-const endpointInspector = defineInspector({
-  ...endpointInspectorKey,
-  owner: { kind: 'path', name: 'stroke' },
-  subjectSchema: StrokePathOwnerOutputSchema,
-  inspect: (subject, context) => {
-    const markers = subject.commands.flatMap(command =>
-      'to' in command
-        ? [
-            {
-              type: 'node' as const,
-              position: command.to,
-              shape: 'circle',
-              layout: { minimumSize: 10, padding: 0 },
-              style: {
-                fill: context.appearance.scopeColor,
-                stroke: context.appearance.scopeColor,
-                strokeWidth: 1,
-              },
-            },
-          ]
-        : [],
-    );
-    if (subject.transforms.length === 0) return markers;
-    return { type: 'scope' as const, transforms: subject.transforms, children: markers };
-  },
-});
+import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
 
 const registry = createInspectorRegistry([endpointInspector]);
 

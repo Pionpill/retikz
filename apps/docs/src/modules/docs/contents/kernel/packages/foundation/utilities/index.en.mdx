@@ -5,6 +5,22 @@ description: Reuse @retikz/foundation readonly collections, JSON snapshots, and 
 
 These utilities carry no drawing-domain semantics and can be reused by Retikz internal packages and extensions.
 
+## Basic usage
+
+Import these capabilities from the package root:
+
+```ts
+import {
+  createReadonlyMap,
+  cloneAndFreezeJson,
+  assertPlainDataContainers,
+  parseStaticCssColor,
+  compositeOpaqueColor,
+} from '@retikz/foundation';
+
+const color = compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
+```
+
 ## Readonly collection snapshots
 
 `createReadonlyMap(entries)` copies input entries into an independent shallow snapshot. The result preserves native Map lookup, iteration, and insertion order without exposing `set`, `delete`, or `clear`; entry values retain their original identity and are not deep-copied or frozen.
@@ -54,6 +70,24 @@ The normal path validates the weight, parses foreground and backdrop, requires a
 
 Dynamic `currentColor`, CSS variables, system colors, and host colors such as P3 are outside this boundary. Foundation neither reads Theme modes nor interprets drawing fields.
 
+## Shallow property merging
+
+Use `mergeProperties(sources, options)` to combine priority layers: sources are applied from left to right, with later properties taking precedence. It returns a new object without mutating inputs or recursively merging nested objects.
+
+```ts
+import { mergeProperties } from '@retikz/foundation';
+
+const options = mergeProperties<{ color?: string | null; width?: number }>(
+  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
+  { shouldOverride: value => value !== undefined },
+);
+// { color: 'red', width: 0 }
+```
+
+`shouldOverride(value, key)` applies to both initial writes and subsequent overrides. Returning `false` skips the current property without deleting an earlier value. To also ignore `null`, use `value => value !== undefined && value !== null`; a truthiness check would also discard `false`, `0`, and empty strings.
+
+Without a policy, property values of `undefined` and `null` overwrite earlier values; an `undefined` source is always skipped. Only own enumerable string and symbol properties are copied, while nested objects and arrays retain their references. Since the policy can filter any field, the return type is `Partial<T>`; consumers supply required fields. Property-read or policy-callback failures throw `RetikzFoundationError` with the original exception preserved as `cause`.
+
 <SourceLinks
   sources={[
     {
@@ -79,6 +113,18 @@ Dynamic `currentColor`, CSS variables, system colors, and host colors such as P3
       path: 'packages/kernel/foundation/src/color.ts',
       startLine: 312,
       endLine: 380,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up public types and full contracts',
+      url: '/kernel/packages/foundation/api-reference',
     },
   ]}
 />

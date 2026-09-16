@@ -12,16 +12,17 @@ description: 为已完成的编译按需添加观测与只读辅助图层，不�
   description="@retikz/inspect 不是绘图或渲染的必需依赖。它只帮助理解已经完成的图和编译结果，适合开发、调试或教学场景；通常不建议作为生产环境的常规能力。"
 />
 
+## 观察什么
+
+普通曲线是主图，点和虚线是独立的辅助层。改变主图控制点会改变曲线几何；关闭检查只隐藏辅助内容，不改变曲线。这一区别也适用于节点边界、裁切和层级观测。
+
+<ComponentPreview files="/kernel/packages/inspect/builtins/inspect-basic" size="sm" hideCode />
+
 ## 安装与使用
 
 <PackageManagerInstall packages="@retikz/inspect" />
 
-两种宿主都需要 registry，但 React 在 JSX 编排位置附加 request，Vanilla 则分别创建 authoring 标记和编译驱动。当前内置检查覆盖 Path、Node、Clip、Scope 和 Coordinate 五类结果：
-
-| 宿主    | 入口                                                                               | 接入位置                                                |
-| ------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| React   | `InspectLayout`、`InspectPath`、`InspectNode`、`InspectScope`、`InspectCoordinate` | 在 Layout 注入 registry，并在对应 JSX site 附加 request |
-| Vanilla | `createInspectionVanillaAuthoring()`、`createInspectionVanillaDriver()`            | 创建路径标记，并在渲染入口接入 inspection driver        |
+注册表保存可用的观测器，请求选择目标和显示选项。先用默认注册表为一条曲线开启控制点。
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
@@ -60,9 +61,12 @@ export const InspectExample = () => (
 `InspectLayout` 在普通 Layout 运行时接入可选 inspection compile driver；`InspectPath` 保持普通 Path 的内容写法，只把 request 转成 runtime-only authoring 标记。
 
 </DocStep>
-<DocStep title="显式接线（可选）">
 
-也可以不使用 `InspectXxx` 包装组件，保留普通 `Layout` / `Path`，通过 `compileDriver` 和 `authoring` 属性显式接入同一套观测能力：
+<DocStep title="保留普通 React 组件（可选）">
+
+需要保留现有 `Layout` / `Path` 时，使用下面的等价接法；与上面的包装组件写法二选一。
+
+这里的 `/vanilla` 子入口提供驱动与 authoring 标记 helper，普通 React 组件也能消费；仍然用 React 编写图形。Inspect 包装组件会代为接入这些 helper。
 
 ```tsx
 import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
@@ -107,7 +111,7 @@ import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from 
 
 Vanilla 分别创建 authoring 标记和编译驱动：前者说明当前路径需要观测，后者在普通渲染入口接入 registry 与辅助图层：
 
-`authoring` 不是 Path 的绘图字段，而是 Vanilla adapter 的运行时附加槽。`createInspectionVanillaAuthoring()` 用带私有 token 的标记包住 request，让同一次 `compileDriver` 把当前 authored Path 转成 Inspector 的选择规则；它不进入 Core IR，因此不会改变 `way`、路径几何或布局。
+`authoring` 只附加观测请求，不改变路径几何，也不会保存进 IR。
 
 ```ts
 import { createDefaultInspectorRegistry, PATH_INSPECTOR_KEY } from '@retikz/inspect';
@@ -152,7 +156,7 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
 | 文档        | 职责                                                   | 适合何时查阅                         |
 | ----------- | ------------------------------------------------------ | ------------------------------------ |
 | 内置观测    | 查看 Core 当前支持的五类内置 Inspector 与其辅助内容    | 想快速理解最终编译结果时             |
-| 拓展观测    | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
+| 自定义用法  | 定义、注册并请求第三方 Inspector                       | 需要解释自己的 Core owner 最终产物时 |
 | 实现原理    | 理解 Core 观测、隔离片段和只读图层如何在同次编译中协作 | 诊断行为或深入实现边界时             |
 | API 参考    | 查询根入口、React 与 Vanilla 子路径的公开 API          | 需要完整签名与类型时                 |
 | Schema 参考 | 查询标签开关与内置 Path 观测配置                       | 需要字段、默认值与校验结构时         |
@@ -167,9 +171,9 @@ const svg = renderToSvgString(input, { compileDriver: createInspectionVanillaDri
       url: '/kernel/packages/inspect/builtins',
     },
     {
-      title: '拓展观测',
+      title: '自定义用法',
       description: '观测接口、自定义 Inspector 与注册路径',
-      url: '/kernel/packages/inspect/extensions',
+      url: '/kernel/packages/inspect/custom',
     },
     {
       title: '实现原理',

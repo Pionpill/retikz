@@ -1,0 +1,65 @@
+---
+title: Custom usage
+description: Define data-driven primitive expansion with defineComposite, then inject and render it with React or Vanilla.
+---
+
+## Scope
+
+Complete [Quick start](/kernel/components/get-start), then read [Tier 2 Composites](/kernel/components/design/composite). Compose existing components for fixed arrangements. Define a composite when one object must retain its own data and generate multiple primitives from it. The six bars below come from one data array.
+
+<ComponentPreview files={['custom-composite', 'bar-chart']} size="sm" />
+
+## Define the capability
+
+The example bar-chart.ts imports defineComposite and CompositeBaseSchema from Core and uses Zod for a non-empty array of nonnegative numbers. The namespace and type identify the capability together; their schema literals must match the Definition. The expansion computes bar heights and returns ordinary Nodes. The function stays in the program rather than entering IR.
+
+The Definition uses `namespace: 'demo'` and `type: 'bar-chart'`. Its schema uses `z.literal('demo')` and `z.literal('bar-chart')`, and the IR node carries those same values.
+
+## Inject and use
+
+Save bar-chart.ts from the preview source into your application, then choose a host. React uses the existing application mount; Vanilla needs an existing `<div id="diagram"></div>`. Both hosts share the same Definition and IR.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { barChart, ir } from './bar-chart';
+
+export const Diagram = () => <Layout ir={ir} composites={[barChart]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { mount } from '@retikz/vanilla/dom';
+import { barChart, ir } from './bar-chart';
+
+const view = mount(document.getElementById('diagram')!, ir, {
+  compile: { composites: [barChart] },
+});
+```
+
+Call `view.dispose()` before removing the container.
+
+</DocTab>
+</DocTabs>
+
+## Errors and limitations
+
+Duplicate registration keys are rejected. An unregistered composite emits a warning and is skipped. Data that violates its schema fails compilation. This example only accepts nonnegative numbers; all-zero data produces zero-height bars.
+
+The expand branch only transforms data into primitives. It cannot measure text or query child layout. Use the mutually exclusive compile branch when that feedback is required, after reading Implementation.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Implementation',
+      description: 'Understand layout trials, commits, and dependencies',
+      url: '/kernel/components/composite/mechanism',
+    },
+  ]}
+/>

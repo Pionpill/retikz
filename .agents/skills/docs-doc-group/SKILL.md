@@ -1,110 +1,40 @@
 ---
 name: docs-doc-group
-description: Use when writing a landing page for a docs data node with children, such as a component family or reference family navigation hub.
+description: Use when writing a Retikz solution, package or component-family group landing page that explains scope and guides readers to child documents, with installation only for installable package entries.
 ---
 
-# 分组落地页写法
+# 分组总纲
 
-## 何时用本 skill
+先读 docs-doc-principle 与 [页型词典](../docs-doc-principle/references/page-contract.md)。解决方案、包和组件家族共用本页型，固定入门难度。分组根路径即总纲，不再另建 overview 子页。
 
-- 给一个**带 children 的分组节点**（`data/<module>.ts` 里有 `children` 的 Page / SubPage）写它自己的落地页：`contents/<module>/<...>/<group>/index.{zh,en}.mdx`
-- 现有分组：`components/node`、`components/draw`、`reference/schema`、`reference/runtime`
-- 动手前**先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则；配图细节走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)
+## 结构
 
-分组页是新手的导航入口，不是维护者的目录索引。导言先解释“这一组帮你解决哪类问题、核心抽象是什么、负责与不负责什么、应该从哪页开始读”，再列成员职责；不要默认读者已经知道 Kernel / Sugar / Reference / runtime 这些分层术语。
+1. 开篇定位：description 与短正文说明解决什么问题、适合谁、成员怎样协作及职责边界
+2. `## 职责一览`：用表格对照直接成员或章节的职责与阅读时机，默认三列“成员 / 职责 / 何时阅读”，首列按对象改为章节、组件或包；英文标题为 `Responsibilities at a glance`。表格负责横向比较，底部卡片负责导航，不互相替代
+3. 整体认识：说明成员如何协作，至少提供一个贯穿场景的整体示例或关系图，并在图前后解释观察重点与结论；叙述图用 ComponentPreview hideCode，不展开完整调用链
+4. 可安装包入口的 `## 安装与使用`：PackageManagerInstall + React / Vanilla DocTabs，完成最小接入；普通组件家族不放安装
+5. 选择与边界：结合真实任务说明从哪部分开始、哪些问题由其他组负责；按需用短表或列表，不与下方卡片逐条重复
+6. `## 章节内容`：LinkedSections 按导航顺序覆盖直接子页，作为最后区块
 
-## 机制：分组现在有自己的页面
+标题为分组对象名，标签与 frontmatter 对齐。包入口、方案简介与基础用法不互相复制：总纲说明归属和阅读路径，简介帮助选择方案，基础用法完成具体调用任务。
 
-分组节点（`data/<module>.ts` 里带 `children`）**有自己的 `index.{zh,en}.mdx`**，放在分组目录根：
+## 内容体量与侧重点
 
-```
-contents/kernel/components/node/
-  index.{zh,en}.mdx            # 分组落地页（本 skill）
-  overview/index.{zh,en}.mdx   # 子页（叶子，走 docs-doc-component）
-  text/ ...
-  coordinate/ ...
-```
+- 总纲不能只有导语和子页导航；读者不打开子页，也应能说清本组解决什么、成员怎样协作、从哪里开始
+- 默认达到约一页的有效阅读体量；中文正文通常 400–700 字，配一张图或一个示例。字数与页长是检查信号，不是硬配额；不靠重复子页、参数字典、内部原理或放大留白撑页
+- 概念组讲概念关系，组件组讲组合任务，包总纲讲职责与接入；即使子页面向底层读者，总纲仍先用通俗场景建立认识
+- 贯穿示例只解释跨成员的共同问题；完整步骤、特殊分支与实现细节留给子页。既有合适图示可以复用，不另造同义示例
 
-- 侧栏**点分组主体** → 进落地页；**点右侧 chevron** → 展开 / 收起子项（不导航）
-- H1 由 DocPage 用 i18n label 渲染；frontmatter `description` 渲染在 H1 下当导言
-- URL `/<module>/<section>/<group>`（3 段），路由已支持
+## 包的安装与接入
 
-分组节点是**会被继续嵌套的路由前缀**，`id` 优先用单个英文单词，不要连字符（`basics` 而非 `basic-concepts`、`model` 而非 `core-concepts`）；连字符只留给一个词说不清的叶子页。详见 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 的「路由 id 命名」。
+安装名、公开子路径和 peer dependencies 先从实际 package exports 与依赖关系核对。PackageManagerInstall 管理包管理器命令；共享安装放 Tab 外，宿主专属依赖放对应 Tab 内。两端步骤按 [DocTabs / DocSteps](../docs-doc-principle/references/doc-tabs-steps.md)，只支持单端或无框架差异时使用真实入口。
 
-> 新行为：分组不再「重定向到首个子项」。principle 里若还写着「分组没有 mdx / 重定向」以本 skill 为准。
+总纲接入示例到最小结果即停止，复杂配置、自定义 Definition、实现原理与完整参考留在独立子页。已有快速开始能承载完整安装时链接该入口，避免多个方案根页重复维护同一安装教程；实际可独立安装的包仍保留本包所需依赖与接入说明。
 
-## 定位：家族视角，不复述子页
+## 子页索引
 
-分组页回答**「这一组是什么、几块怎么协作、从哪开始读」**；子页（overview / 各组件 / 各 schema）回答**「完整 props、全部用法、字段表」**。
+子页按基础用法、专题、自定义、实现原理、API 参考、Schema 参考排序；不存在的任务不造空页。每张卡的 title 与目标页名一致，description 说明阅读目的，URL 指向真实路由。
 
-- 分组页 = 家族视角 / 概念总览 / 导航 hub
-- 以能力完备性组织家族叙事：说明根问题、成员分工、能力如何闭环，以及与相邻家族的边界；开放能力再点明统一扩展入口
-- **不要把子页 overview 的完整 API 搬上来**——会重复。两者撞概念时，分组页讲「家族怎么配合」，overview 讲「单组件全部」
-- 不列跨家族通用的样式属性或视觉变体；这些内容留给子页 controls / API 表
-- 组件家族分组页不放可复制学习的用法 demo（那是子页的事）；分组页的图是**叙述性插图**（`hideCode`）。包根页的安装、入门和高频使用说明由 `docs-doc-overview` 负责，不在本页型中处理
+组件家族可按成员职责比较；不要强制所有领域都套 Kernel / Sugar 列。Plot 的语法阶段、包的工具函数等按自身模型解释。分组不重复完整 props、字段词典或底层实现，必要的通用术语在首次出现时解释。
 
-## 结构（导言 + 可选配图 + 职责表 + 卡片）
-
-按顺序：
-
-| 段            | 必需                   | 内容                                                                                    |
-| ------------- | ---------------------- | --------------------------------------------------------------------------------------- |
-| 导言          | ✅                     | frontmatter `description`（一句话定位，渲染在 H1 下）+ 一段正文：这一组在整体里负责什么 |
-| 配图          | 可选（组件家族建议有） | 一张 `<ComponentPreview ... hideCode />` 叙述性插图，展示家族成员 / 关系 / 管线         |
-| `## 职责一览` | ✅                     | 一张表，逐个子项说职责（见「两类表」）                                                  |
-| `## 章节内容` | ✅                     | `<LinkedSections>` 网格，每个子页一张卡                                                 |
-
-frontmatter `title` + `description` 始终在；正文不写 `# 标题`（H1 走 DocPage）。
-
-## 两类分组：表格列不同
-
-**Sugar/Kernel 只对组件成立**，参考类没有这个轴，表要换。
-
-### 组件家族（`components/*` 下的分组，如 node / draw）
-
-列：`组件 | 类型 | 职责 | 适合场景`（en：`Component | Type | Responsibility | Use it when`）
-
-- `类型` 填 **Sugar / Kernel**，权威来源是 `concepts/layers`：
-  - Kernel：`Layout` / `Node` / `Coordinate` / `Path` / `Step`
-  - Sugar：`Draw` / `Text` / `Way`(DrawWay) / 相对坐标字符串
-- 不是严格组件的子项照实标：`Way` 归 Sugar（Draw 的 way 写法），`Arrow` 标「通用 / Shared」（Path、Draw 共用的箭头配置）
-
-### 参考家族（`reference/*` 下的分组，如 schema / runtime）
-
-不是组件，Sugar/Kernel 不适用。列换成：`主题 | 职责 | 何时查阅`（en：`Topic | Responsibility | Reach for it when`），并在导言后加一句参考层提示：
-
-```mdx
-> 这里是参考层，不是组件文档；写图请从 [组件](/kernel/components/layout) 开始。
-```
-
-## LinkedSections 子页索引
-
-每个 child 对应一个 item，标题与 sidebar i18n label 对齐，描述说明该页职责，url 指向真实子页路径。使用 LinkedSections 统一生成卡片和响应式网格，保留分类顺序。
-
-具体写法与验证读取 [关联文档导航](../docs-doc-principle/references/linked-sections.md)。
-
-## 配图思路
-
-| 分组                    | 图                                                                          |
-| ----------------------- | --------------------------------------------------------------------------- |
-| 组件家族（node / draw） | 家族 / 解剖图：成员（及 Sugar→Kernel 关系）画在一张图上，灰色备注在下方点注 |
-| 参考家族（runtime）     | 管线示意：`JSX → IR → Scene → 渲染目标`，灰注各 API 在哪起作用              |
-| 参考家族（schema）      | 可省；schema 是数据形状，表 + 卡足够                                        |
-
-图一律走 [`docs-figure-contract`](../docs-figure-contract/SKILL.md)：`hideCode`、备注灰色（关键字 `gray`）且置于被标注元素**下方**、强调色用 `darkorange`、纯技术 label 用单文件。
-
-## Common Mistakes
-
-- **把子页 overview 的完整 API 抄进分组页** —— 分组页只讲家族视角，API 留在子页
-- **只列成员、不说明闭环与边界** —— 导言和职责表必须让读者知道家族共同解决什么、各成员在哪里停止负责
-- **用通用样式描述家族差异** —— 颜色、线宽、透明度等不构成家族职责，留给子页 controls / API 表
-- **参考家族硬套 Sugar/Kernel 列** —— schema/runtime 不是组件，用 `主题 | 职责 | 何时查阅`
-- **配图放 demo 源码** —— 分组页的图是叙述性插图，必须 `hideCode`
-- **LinkedSections url 不跟子页 id 同步** —— 改子页路径时一起改，否则断链
-- **正文又写 `# 标题`** —— H1 走 DocPage
-
-## 验证
-
-```bash
-pnpm --filter @retikz/docs dev   # 点分组主体进落地页、点 chevron 展开、卡片链接都通
-```
+导航改动读 docs-doc-navigation；文档页与卡片验证按 docs-doc-principle。总纲固定入门是阅读规则，当前 children 节点不支持 difficulty 字段时不越过类型契约硬写。

@@ -1,9 +1,9 @@
 ---
 title: 简介
-description: AI 原生的通用绘图库——用 React 组件或 Vanilla InputScene 描述图形，以 JSON IR 连接生成、持久化与渲染。
+description: Kernel 提供节点、路径与坐标等通用绘图能力，通过 React 或 Vanilla 描述图形并输出 SVG / Canvas。
 ---
 
-retikz 是一套面向浏览器与 Node.js 的通用绘图库。你可以先描述图里有哪些对象，再用命名、定位和路径关系把它们组合起来；`@retikz/plot` 等上层模块也复用同一套绘图语义。
+Kernel 是 retikz 的通用绘图基础：用节点、命名坐标和路径表达流程图、几何示意与关系图，通过 React 或 Vanilla 接入，再输出 SVG 或 Canvas。需要统计图的数据映射与图形语法时，从 Plot 的独立文档开始；需要通用组合组件时查看 Standard。
 
 ## 核心概念
 
@@ -25,7 +25,9 @@ React、Vanilla 和 AI 生成结果最终都归一为同一份 IR。IR 是普通
 - 不必为 JSX、AI 输出和不同 renderer 分别维护图形格式。
 - 同一份图形数据可以跨入口、跨运行时复用。
 
-需要了解 IR 如何形成 Scene、各包如何协作时，继续阅读[分层](/kernel/components/design/layers)；需要判断能力应落在哪一层时，再读[设计原则](/kernel/components/design/principles)。
+需要了解 IR 如何形成 Scene、各包如何协作时，继续阅读[分层](/kernel/components/design/layers)；需要判断能力应落在哪一层时，再读[架构](/kernel/components/design/principles)。
+
+React / Vanilla 的写法或 AI 生成的声明先形成 IR，再编译为 Scene（已经确定位置与样式的绘制结果），最后交给渲染器显示。
 
 ## 通用图元，任意组合
 
@@ -44,15 +46,13 @@ retikz 用一组职责明确的组件描述图形。它们既可以直接使用�
 
 retikz 的命名 / 路径动作 / anchor 体系直接致敬 LaTeX 的 TikZ 包。
 
-| 维度     | LaTeX TikZ      | retikz                            |
-| -------- | --------------- | --------------------------------- |
-| 运行环境 | LaTeX 编译器    | 浏览器 / Node                     |
-| 语法     | `\node` `\draw` | `<Node>` `<Draw>`                 |
-| 输出     | PDF / SVG       | SVG / Canvas；PDF / Native 计划中 |
-| 交互     | 无              | React / runtime 事件              |
-| 持久化   | `.tex` 源码     | JSON IR                           |
-
-IR ↔ TikZ 源码转换属于后续 codec 方向：目标是在浏览器里编辑后能进入 LaTeX 工作流，或把已有 `.tex` 中的 TikZ 图迁移到 retikz 的 IR / React 表达里。
+| 维度     | LaTeX TikZ      | retikz               |
+| -------- | --------------- | -------------------- |
+| 运行环境 | LaTeX 编译器    | 浏览器 / Node        |
+| 语法     | `\node` `\draw` | `<Node>` `<Draw>`    |
+| 输出     | PDF / SVG       | SVG / Canvas         |
+| 交互     | 无              | React / runtime 事件 |
+| 持久化   | `.tex` 源码     | JSON IR              |
 
 不需要先懂 TikZ 才能使用 retikz。retikz 借用的是命名词汇（node / path / anchor / step），可以使用 React 组件或 Vanilla `InputScene` 描述图形。
 

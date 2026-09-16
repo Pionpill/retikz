@@ -1,13 +1,13 @@
 ---
 name: docs-doc-mechanism
-description: Write or restructure implementation-mechanism pages for packages or components, tracing an input through execution stages to output with source-linked explanations and overview/detail diagrams.
+description: Use when writing Retikz implementation mechanisms or named internals topics for any solution, package or component, tracing execution and data changes for readers of internals-level documentation.
 ---
 
 # 实现原理页
 
 ## 定位与分工
 
-面向已读用法与前置概念、准备理解内部逻辑或结合源码阅读的读者。包与组件均适用；默认路由为 `mechanism`，标题用“实现原理”，以解析为核心时可用“解析原理”。不以目录位置决定页型。
+面向已读用法与前置概念、准备理解内部逻辑或结合源码阅读的读者。固定底层难度，适用于包、组件和独立进阶专题。名称、难度与 URL 按 [页型词典](../docs-doc-principle/references/page-contract.md)：完整原理页使用 `mechanism` 与“实现原理 / Implementation”，具体进阶专题使用准确的任务名，如文字测量，不另写“运行原理”“技术原理”等同义页型。
 
 先读 `docs-doc-principle`；配图复用 `docs-figure-contract` 与 `docs-figure-logic`；局部修改按 `docs-doc-review` 自审，新建、重写或大范围重构后按通则派遣 1 个 fresh、只读 Luna 做读者视角评审，仅看文档与页面内图示，不读项目规范或源码，并直接提出理解上的质疑。不重复安装教程、完整 API 签名或 schema 字典。概念心智模型归 `docs-doc-concept`，设计取舍真源归 ADR。
 
@@ -17,9 +17,10 @@ description: Write or restructure implementation-mechanism pages for packages or
 2. `## 整体流程`：简图建立输入到输出的完整主线，用稳定语义命名阶段，不展开函数清单
 3. 按主线顺序展开阶段 H2：每节解释一次有意义的数据变化，不按源码目录或 helper 数量分章
 4. 必要的跨阶段机制：仅在不能就近解释时独立成节，说明它与主线的接入点
-5. `## 完整实现流程`：详细图沿用总览阶段，补关键代码成员、数据产物和必要分支；图后给简短源码阅读顺序，可链接相邻文档
+5. `## 完整实现流程`：详细图沿用总览阶段，补关键代码成员、数据产物和必要分支；图后给简短源码阅读顺序
+6. `## 延伸阅读`：用 LinkedSections 链接相关主题，不在流程图后散列另一种收尾导航
 
-首尾固定，中间阶段数量与标题服从真实机制。简单主链保持紧凑；复杂支路在所属阶段局部展开，末图仍是可读的源码导览，不是完整调用图。
+原理主线的整体流程与完整实现流程固定，中间阶段数量与标题服从真实机制。进阶专题聚焦自身执行范围，不重复整个包的调用链。简单主链保持紧凑；复杂支路在所属阶段局部展开，末图仍是可读的源码导览，不是完整调用图。
 
 ## 阶段讲解
 
