@@ -179,7 +179,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
         activeRender={activeRender}
         theme={previewTheme}
         controlSlots={resolvedControlSlots}
-        className={cn(previewClassName, showContextBar && 'pt-10')}
+        className={previewClassName}
         renderPaneClassName={previewRenderPaneClassName}
         style={previewStyle}
         pinControlsOnClick={pinControlsOnClick}
