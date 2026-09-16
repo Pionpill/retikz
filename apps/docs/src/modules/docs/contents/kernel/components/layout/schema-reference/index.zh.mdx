@@ -3,22 +3,21 @@ title: Schema 参考
 description: 查询 Layout 使用的场景根结构与视框 Schema
 ---
 
-本页只展示 Layout 接入直接相关的 Core 数据契约，不是 React `LayoutProps` 的校验规则。均从 `@retikz/core` 公开入口获取；Node、Path、Scope 等子节点通过字段类型链接查阅。
+`SceneSchema` 用于校验传给 `Layout.ir` 的场景数据，`ViewBoxSchema` 用于校验视框，均从 `@retikz/core` 导出。
+首次接入见[基础用法](/kernel/components/layout/usage)；React 属性见 [API 参考](/kernel/components/layout/api-reference)，本页的 Schema 不用于校验 `LayoutProps`。
 
 ## SceneSchema
 
 <ZodSchema
   name="SceneSchema"
-  description="retikz IR 顶层 scene：一份图的规范 JSON 表示。"
+  description="描述一张图、可序列化为 JSON 的场景数据。"
   descriptions={{
-    version: 'IR 主版本号；schema 出现破坏性变更时才递增',
+    version: '场景数据格式版本，当前必须为 1，与包版本号无关',
     type: '判别字段，标记该对象为 scene 根节点',
-    theme: '全图稀疏 Theme；包含 style 与 mode，从默认 light 基线开始继承，并由后代 Scope 继续覆盖',
-    children: 'scene 的顶层子节点列表；node 注册的 id 可被 path 引用',
-    viewBox:
-      '显式视框 `{ x, y, width, height }`，覆盖自动算的布局范围（固定尺寸 / 裁剪 / 多图对齐）；设值后 Scene.layout 直接用它、忽略 padding；省略则自动取 AABB + padding',
-    animations:
-      'scene 级（镜头）时间轴动画 track 数组；`viewBox` 属性可动画化做缩放 / 平移。静态 `layout` 始终是末态（settled）取景，镜头动画不影响它',
+    theme: '场景根主题选择；只填写需要覆盖的 style 与 mode 字段',
+    children: '有顺序的顶层子节点列表，允许空数组',
+    viewBox: '显式指定取景范围；省略时根据内容范围与留白自动计算',
+    animations: '场景根动画轨道，可包含 viewBox 取景动画；省略时不添加根动画轨道',
   }}
 />
 
@@ -26,11 +25,19 @@ description: 查询 Layout 使用的场景根结构与视框 Schema
 
 <ZodSchema
   name="ViewBoxSchema"
-  description="显式视框，覆盖自动计算的布局范围。"
+  description="由左上角位置、宽度和高度确定的场景可见矩形。"
   descriptions={{
-    x: '视框左上角 x',
-    y: '视框左上角 y',
-    width: '视框宽度，必须为正数',
-    height: '视框高度，必须为正数',
+    x: '左边界的场景坐标，必须为有限数，可以为负数',
+    y: '上边界的场景坐标，必须为有限数，可以为负数',
+    width: '宽度，使用场景坐标单位，必须为有限正数',
+    height: '高度，使用场景坐标单位，必须为有限正数',
   }}
 />
+
+## 补充说明
+
+- **必填与缺省**：`type`、`version`、`children` 必填；`theme`、`viewBox`、`animations` 可省略。校验不会为后三项补值；自动取景和主题继承在编译时处理。
+- **主题继承**：场景根未指定主题时，从默认浅色环境开始；子级 Scope 只覆盖显式提供的主题字段，其余继续继承。字段定义见 [Theme](/kernel/reference/schema/scene#theme)。
+- **取景与尺寸**：坐标向右、向下递增，使用场景坐标单位，与宿主 CSS 宽高不同。显式视框不再叠加自动留白；省略时由内容范围与编译配置的留白决定。
+- **镜头动画**：动画可以改变播放时的取景范围；静态布局保留动画结束后的取景范围。轨道字段见[动画参考](/kernel/reference/schema/animation#animationtrack)。
+- **子节点**：支持 Node、Path、Coordinate、Scope 与复合节点，具体字段通过 [Child](/kernel/reference/schema/scene#child) 查询。
