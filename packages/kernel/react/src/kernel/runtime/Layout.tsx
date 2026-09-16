@@ -1,4 +1,9 @@
 import type {
+  AnyCompositeDefinition,
+  AnyPathKindDefinition,
+  ArrowDefinition,
+  BoundaryDefinition,
+  ClipDefinition,
   CompileArtifact,
   CompileArtifactOptions,
   CompileOptions,
@@ -7,7 +12,11 @@ import type {
   IRScene,
   IRViewBox,
   LowerTex,
+  PathGeneratorDefinition,
+  PatternDefinition,
+  ShapeDefinition,
   TextMeasurer,
+  ThemeStyleDefinition,
 } from '@retikz/core';
 import type { AnimationControls, AnimationPropertyRegistry, EasingRegistry } from '@retikz/render/animation';
 import { resolveAnimationEnabled } from '@retikz/render/animation';
@@ -127,19 +136,57 @@ const withDefaultFontFamily = (measureText: TextMeasurer, defaultFontFamily: str
     });
 };
 
-/** Layout 的运行时扩展注册，不进入持久化 IR */
-export type LayoutExtensions = Pick<
-  CompileOptions,
-  | 'shapes'
-  | 'boundaries'
-  | 'clips'
-  | 'arrows'
-  | 'patterns'
-  | 'pathGenerators'
-  | 'pathKinds'
-  | 'composites'
-  | 'themeStyles'
->;
+/**
+ * 为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展
+ * @description 通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据
+ */
+export type LayoutExtensions = Readonly<{
+  /**
+   * 形状定义
+   * @default BUILTIN_SHAPES
+   */
+  shapes?: ReadonlyArray<ShapeDefinition>;
+  /**
+   * 连接表面定义
+   * @default BUILTIN_BOUNDARIES
+   */
+  boundaries?: ReadonlyArray<BoundaryDefinition>;
+  /**
+   * 裁剪定义
+   * @default BUILTIN_CLIPS
+   */
+  clips?: ReadonlyArray<ClipDefinition>;
+  /**
+   * 箭头定义
+   * @default BUILTIN_ARROWS
+   */
+  arrows?: ReadonlyArray<ArrowDefinition>;
+  /**
+   * 图案定义
+   * @default BUILTIN_PATTERNS
+   */
+  patterns?: ReadonlyArray<PatternDefinition>;
+  /**
+   * 路径生成器定义
+   * @default BUILTIN_PATH_GENERATORS
+   */
+  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
+  /**
+   * 路径种类定义
+   * @default BUILTIN_PATH_KINDS
+   */
+  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  /**
+   * Tier 2 composite 展开逻辑
+   * @default BUILTIN_COMPOSITES
+   */
+  composites?: ReadonlyArray<AnyCompositeDefinition>;
+  /**
+   * Core Theme style definitions
+   * @default ThemeStylesContext
+   */
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+}>;
 
 /** React Layout 的公开属性 */
 export type LayoutProps = {
@@ -151,7 +198,7 @@ export type LayoutProps = {
   theme?: IRScene['theme'];
   /** Kernel 或 Sugar JSX children */
   children?: ReactNode;
-  /** 只供 Vanilla compile driver 消费的 runtime metadata */
+  /** 供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR */
   authoring?: unknown;
   /** Vanilla 领域中立 compile driver */
   compileDriver?: VanillaCompileDriver;
@@ -169,7 +216,10 @@ export type LayoutProps = {
   className?: string;
   /** 宿主内联样式 */
   style?: CSSProperties;
-  /** 渲染目标 */
+  /**
+   * 渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG
+   * @default 'svg'
+   */
   renderer?: 'svg' | 'canvas';
   /** 是否播放动画 */
   animate?: boolean;
@@ -185,9 +235,15 @@ export type LayoutProps = {
   animationProperties?: AnimationPropertyRegistry;
   /** SVG 资源 id 前缀 */
   idPrefix?: string;
-  /** 默认 node 距离 */
+  /**
+   * 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效
+   * @default 24
+   */
   nodeDistance?: number;
-  /** 默认字号 */
+  /**
+   * 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号
+   * @default 16
+   */
   fontSize?: number;
   /** 按能力分类的运行时扩展注册，复用 Core 编译契约 */
   extensions?: LayoutExtensions;
@@ -319,7 +375,8 @@ export const Layout: FC<LayoutProps> = props => {
     onCompileResult,
     rootScope,
   } = props;
-  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles } = extensions ?? {};
+  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles } =
+    extensions ?? {};
   const resolvedRuntime = captureLayoutRuntimeOptions(runtime);
   const stableShapes = canonicalizeDefinitionArray(shapes);
   const stableBoundaries = canonicalizeDefinitionArray(boundaries);

@@ -15,6 +15,40 @@ describe('Layout API 公开范围', () => {
     expect(headings).not.toContain('Scope');
     expect(source).toContain("IRScene['theme']");
     expect(source).toContain('`compileDriver?`');
+    const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
+    const fields = [...extensions.matchAll(/^\| `(?:readonly )?([^`?]+)\?` \|/gm)].map(match => match[1]);
+    expect(fields).toEqual([
+      'arrows',
+      'boundaries',
+      'clips',
+      'composites',
+      'pathGenerators',
+      'pathKinds',
+      'patterns',
+      'shapes',
+      'themeStyles',
+    ]);
+    expect(extensions).toContain('ReadonlyArray<ClipDefinition>');
+    expect(extensions).toContain('ReadonlyArray<AnyCompositeDefinition>');
+    expect(extensions).toContain('`BUILTIN_ARROWS`');
+    expect(extensions).toContain('`BUILTIN_COMPOSITES`');
+    expect(extensions).toContain('`ThemeStylesContext`');
+    expect(extensions).not.toContain('import("');
+    expect(extensions).not.toContain('$ZodTypeInternals');
+    expect(extensions).toContain('<DocTabs defaultValue="members">');
+    expect(extensions).toMatch(
+      /\| Member \|[\s\S]*<DocTab value="definition" label="Type definition">[\s\S]*export type LayoutExtensions = Readonly<\{/,
+    );
+    const layoutProps = source.split('### LayoutProps\n')[1]?.split('\n### ')[0] ?? '';
+    expect(layoutProps).toContain('<DocSteps>');
+    expect(layoutProps).toContain('<DocStep title="Drawing input and defaults">');
+    const runtimeModeValue = source.split('### LayoutRuntimeModeValue\n')[1]?.split('\n### ')[0] ?? '';
+    expect(runtimeModeValue).toContain('#### Expanded type');
+    expect(runtimeModeValue).toContain('export type LayoutRuntimeModeValue =\n  | "retained"\n  | "static";');
+    const runtimeOptions = source.split('### LayoutRuntimeOptions\n')[1]?.split('\n### ')[0] ?? '';
+    expect(runtimeOptions).toContain('#### Expanded type');
+    expect(runtimeOptions).toContain('readonly mode: typeof LayoutRuntimeMode.Static;');
+    expect(extensions).not.toContain('<details>');
     expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
     const paths = [...source.matchAll(/path=\{"([^"}]+)"\}/g)].map(match => match[1]);
     expect(paths.length).toBeGreaterThan(0);

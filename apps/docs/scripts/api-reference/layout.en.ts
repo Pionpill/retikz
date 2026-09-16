@@ -1,7 +1,41 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
-  'Layout 的运行时扩展注册，不进入持久化 IR': 'Runtime extension registrations for Layout, excluded from persisted IR',
-  '按能力分类的运行时扩展注册，复用 Core 编译契约': 'Runtime extensions grouped by capability, using the Core compilation contract',
+  '供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':
+    'JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR',
+  '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':
+    'Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided',
+  '节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效':
+    'Default relative node distance in drawing units; applies when position uses direction/of without distance',
+  '默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号':
+    'Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes',
+  '创建保留式 Runtime Session': 'Creates a retained Runtime Session',
+  '按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断':
+    'Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller',
+  'Program 更新策略': 'Program update strategy',
+  '不创建 Runtime Session，直接完整编译与物化':
+    'Compiles and materializes the complete result directly, without creating a Runtime Session',
+  'static 不创建 Runtime session，因此不产生 Runtime 结构化诊断':
+    'Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics',
+  'static 不支持 Program 更新策略': 'Static mode does not support a Program update strategy',
+  '为 Layout 注册自定义形状、箭头、裁剪及其他绘图扩展':
+    'Register custom shapes, arrows, clips, and other drawing extensions for Layout',
+  '通过 Layout 的 extensions 属性传入，各字段接收对应的定义数组；这些运行时定义不写入可持久化的场景数据':
+    'Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.',
+  形状定义: 'Shape definitions',
+  连接表面定义: 'Connection boundary definitions',
+  裁剪定义: 'Clip definitions',
+  箭头定义: 'Arrow definitions',
+  图案定义: 'Pattern definitions',
+  路径生成器定义: 'Path generator definitions',
+  路径种类定义: 'Path kind definitions',
+  '运行时注入的 Core Theme style definitions': 'Core theme style definitions registered at runtime',
+  '运行时注入的 Tier 2 composite 展开逻辑': 'Tier 2 composite definitions registered at runtime',
+  'Tier 2 composite 展开逻辑': 'Tier 2 composite expansion logic',
+  'Core 不预留官方 namespace 名称；未注册的 namespace/type 会触发 warning，并跳过该 composite 节点，重复的完整 namespace/type 键在注册期报错':
+    'Core reserves no official namespaces. Unregistered namespace/type pairs produce a warning and skip that composite node; duplicate namespace/type keys fail during registration.',
+  空注册表: 'Empty registry',
+  '按能力分类的运行时扩展注册，复用 Core 编译契约':
+    'Runtime extensions grouped by capability, using the Core compilation contract',
   'React Layout 的公开属性': 'Public props for React Layout',
   '': '',
   是否播放动画: 'Whether to play animations',
