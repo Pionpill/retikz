@@ -1,0 +1,58 @@
+---
+title: Internal mechanisms
+description: Understand compilation and theme execution internals.
+---
+
+Sometimes a drawing declaration looks correct, yet you want to know how positions are calculated, where a theme takes effect, or why the output differs from expectations. Internal mechanisms follows input through to results. Everyday drawing does not require these topics; this overview helps you decide when to investigate further.
+
+## Responsibilities at a glance
+
+| Chapter          | Responsibility                         | When to read                               |
+| ---------------- | -------------------------------------- | ------------------------------------------ |
+| Compilation flow | Declarations, layout, and Scene output | Investigate positions or compiled results  |
+| Theme resolution | Inheritance, colors, and result reuse  | Investigate the theme a component consumes |
+
+## From declarations to visible results
+
+IR is the savable declaration of objects and relationships. Scene contains resolved positions and styles for a renderer to execute. Compilation connects the two. During that process, themes supply shared style and color environments, which consuming components translate into explicit styles.
+
+The figure shows one path in which a composite consumes a theme: the theme supplies an environment, the composite interprets it, and primitives retain concrete drawing styles. Other theme-consuming capabilities can also interpret the environment without going through a composite. When colors differ from expectations, identify the relevant role before starting with the final SVG.
+
+<ComponentPreview files="/kernel/components/design/theme/theme-flow" size="xs" hideCode />
+
+## One question across two topics
+
+Suppose a text-bearing composite sits inside a dark group. You want to understand how text participates in layout and why it uses its current colors. These are two questions within the same compilation: compilation flow determines layout and output, while theme resolution determines the style and color environment the component reads.
+
+Trace measurement and compilation for layout questions, and theme resolution for color questions. Color alone does not change layout; styles that affect text metrics can also affect measurement. The topics cooperate but do not replace one another. Changing a theme is not a change to position notation. Producing a Scene does not mean the renderer will interpret the theme again. Identify the responsibility first, then follow its execution, instead of searching every function at once.
+
+## Read with an observable result
+
+| Question                                             | Information to prepare                                |
+| ---------------------------------------------------- | ----------------------------------------------------- |
+| Unexpected node positions or path endpoints          | Minimal declaration, object names, expected positions |
+| A component ignores the expected light or dark style | Outer and local theme choices, consuming component    |
+| What does one call produce?                          | Input declaration, compile options, final result      |
+
+Each topic uses these inputs to explain stages, results, and source locations. You do not need to memorize internal function names first. Bring a small reproducible example rather than every variable from a complete application diagram.
+
+## Prerequisites and boundaries
+
+Read [Layers](/kernel/components/design/layers) and [Theme](/kernel/components/design/theme) first if IR, Scene, or themes are unfamiliar. Start with the [Composite components](/kernel/components/composite) tutorial when defining a new capability. This group does not provide a complete API dictionary or repeat installation instructions.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Compilation flow',
+      description: 'Trace one call from IR to Scene',
+      url: '/kernel/components/internals/compilation',
+    },
+    {
+      title: 'Theme resolution',
+      description: 'Understand inheritance, color resolution, and reuse',
+      url: '/kernel/components/internals/theme',
+    },
+  ]}
+/>

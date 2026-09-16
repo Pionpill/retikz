@@ -5,12 +5,12 @@ description: Use Foundation scalar assertions and structured error primitives wh
 
 Foundation keeps generic scalar validation and error shape together: assertions reuse small rules, while each package retains its own error semantics.
 
-## Structured errors
+## Basic usage
 
 `RetikzErrorOptions`, `RetikzError`, and `isRetikzError` provide the smallest shared error shape. The domain package that owns a failure should extend `RetikzError` and define its own error codes, details, and recovery semantics. `RetikzFoundationError` carries only Foundation-owned atomic failures.
 
 ```ts
-import { RetikzError, type ValueOf } from '@retikz/foundation';
+import { assertPositiveNumber, RetikzError, type ValueOf } from '@retikz/foundation';
 
 type Details = Readonly<{ source: string }>;
 
@@ -27,13 +27,13 @@ class RetikzDomainError extends RetikzError<RetikzDomainErrorCodeValue, Details>
 }
 ```
 
-| Member            | Type                                       | Semantics                                                                                                                                     |
-| ----------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `code`            | `TCode`                                    | Structured error category defined by the owner                                                                                                |
-| `message`         | `string`                                   | Error message presented to the caller                                                                                                         |
-| `details`         | `TDetails`                                 | Structured details supplied by the owner; object identity is preserved and the value is not deep-copied or frozen automatically               |
-| `cause`           | `unknown`, optional                        | Original exception or value; omitting it still creates an own property with value `undefined`                                                 |
-| `isRetikzError()` | `(value: unknown) => value is RetikzError` | Tests the ordinary `RetikzError` class hierarchy; it is not a hostile-object, cross-realm, or Runtime/Core private-identity security boundary |
+| Member            | Type                                       | Semantics                                                                                                                       |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `code`            | `TCode`                                    | Structured error category defined by the owner                                                                                  |
+| `message`         | `string`                                   | Error message presented to the caller                                                                                           |
+| `details`         | `TDetails`                                 | Structured details supplied by the owner; object identity is preserved and the value is not deep-copied or frozen automatically |
+| `cause`           | `unknown`, optional                        | Original exception or value; omitting it still creates an own property with value `undefined`                                   |
+| `isRetikzError()` | `(value: unknown) => value is RetikzError` | Tests whether a value belongs to the `RetikzError` class hierarchy                                                              |
 
 ## Scalar assertions
 

@@ -7,6 +7,25 @@ When a shape moves or rotates, the points that describe the shape can stay the s
 
 This page starts with the common case of local and world coordinates, then introduces two-dimensional affine matrices for composing translation, scaling, and rotation. On a first read, start with the first section and come back to affine matrices when you need them.
 
+## Basic usage
+
+Import from the root entry. Results are numbers or geometry, not rendered drawings.
+
+```ts
+import {
+  localToWorld,
+  worldToLocal,
+  applyAffine,
+  multiplyAffine,
+  type CenteredShape,
+  type AffineMatrix,
+} from '@retikz/math';
+
+const shape: CenteredShape = { x: 100, y: 60, rotate: 0 };
+const world = localToWorld(shape, [20, 0]); // [120, 60]
+const local = worldToLocal(shape, world); // [20, 0]
+```
+
 ## Local and world coordinates
 
 Imagine a shape with its own orientation inside a larger canvas. The canvas has a fixed coordinate system, while the shape has another one: its center is the local origin, and its local `x` and `y` axes rotate with the shape.
@@ -23,6 +42,8 @@ In the diagram, the dashed lines are the fixed world axes, while the orange shap
   size="md"
   caption="Adjust the shape center, rotation, and local point to see the world point move"
 />
+
+The demo control accepts degrees (°) and converts them with `degrees * Math.PI / 180` before calling the API. The API `rotate` value always uses radians.
 
 `CenteredShape` describes this local coordinate system using a center and a rotation: `x` and `y` are the shape center in world coordinates, and `rotate` is the rotation in radians. `Math.PI / 4` is 45°; in screen coordinates, positive angles increase clockwise.
 
@@ -43,9 +64,9 @@ Choose the function from the data you already have:
 
 The two functions are inverses. Both return a new point and leave the input tuple unchanged.
 
-### Algorithm walkthrough
+### Algorithm notes
 
-The upper lane maps a local point to a world point: `localToWorld` rotates around the local origin by `rotate`, then adds the shape center. The lower lane performs the reverse: `worldToLocal` first subtracts the shape center, then rotates by the negative angle. `CenteredShape` sits between the lanes and supplies the shared center and rotation; when `rotate` is `0` or omitted, rotation leaves the point unchanged. The two solid lanes and their independent calculation steps use shared Entity / Relation groups to receive different automatic colors; color does not introduce another kind.
+The upper lane maps a local point to a world point: `localToWorld` rotates around the local origin by `rotate`, then adds the shape center. The lower lane performs the reverse: `worldToLocal` first subtracts the shape center, then rotates by the negative angle. `CenteredShape` sits between the lanes and supplies the shared center and rotation; when `rotate` is `0` or omitted, rotation leaves the point unchanged. The two lanes use different colors to distinguish conversion directions.
 
 <ComponentPreview
   files="coordinate-conversion-flow"
@@ -53,8 +74,11 @@ The upper lane maps a local point to a world point: `localToWorld` rotates aroun
   hideCode
   caption="The upper and lower lanes are inverse transforms that share CenteredShape parameters"
 />
+<SourceLinks
+  sources={[{ label: 'Coordinate conversions', path: 'packages/kernel/math/src/transforms/coordinate.ts' }]}
+/>
 
-### API reference
+### Call summary
 
 | Category | API             | Purpose                                                    |
 | -------- | --------------- | ---------------------------------------------------------- |
@@ -114,15 +138,13 @@ The point therefore goes through `[4, 5] → [8, 15] → [18, 35]`; `[8, 15]` is
 
 In `multiplyAffine(outer, inner)`, `inner` is the inner transform applied first, and `outer` is the outer transform applied afterward. The example therefore scales first and translates second; swapping the arguments changes the result.
 
-### Algorithm walkthrough
+### Algorithm notes
 
 A two-dimensional affine calculation has two stages: compose the recipe, then apply it. The inner matrix, `inner`, transforms the original point first; the outer matrix, `outer`, then transforms that result. They do not act from left to right in their written order. The composed matrix, `combined`, therefore satisfies:
 
-```ts
-applyAffine(combined, point) === applyAffine(outer, applyAffine(inner, point));
-
-const combined = multiplyAffine(outer, inner);
-```
+$$
+\operatorname{apply}(OI,p)=\operatorname{apply}(O,\operatorname{apply}(I,p))
+$$
 
 For `outer = [A, B, C, D, E, F]` and `inner = [a, b, c, d, e, f]`, write the composed result as `combined = [a', b', c', d', e', f']`:
 
@@ -147,7 +169,11 @@ Choose between the two capabilities this way: use `localToWorld` / `worldToLocal
 
 When a consumer needs to check a matrix before using it, `isFiniteNonSingularAffine` verifies that it contains finite values and is invertible. For cases such as stroke scaling that require one uniform scale, `getAffineSimilarityScale` returns the scale factor and returns `undefined` for other matrices.
 
-### API reference
+<SourceLinks
+  sources={[{ label: 'Affine composition and application', path: 'packages/kernel/math/src/transforms/affine.ts' }]}
+/>
+
+### Call summary
 
 | Category | API                         | Purpose                                                                   |
 | -------- | --------------------------- | ------------------------------------------------------------------------- |
@@ -157,3 +183,15 @@ When a consumer needs to check a matrix before using it, `isFiniteNonSingularAff
 |          | `applyAffine`               | Map a point using the affine-matrix formula                               |
 |          | `isFiniteNonSingularAffine` | Check that a matrix has finite values and is invertible                   |
 |          | `getAffineSimilarityScale`  | Get the uniform scale of a similarity transform, or `undefined` otherwise |
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'API reference',
+      description: 'Look up the complete public API',
+      url: '/kernel/packages/math/api-reference',
+    },
+  ]}
+/>

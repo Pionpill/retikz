@@ -5,6 +5,16 @@ description: 浏览 @retikz/foundation 为全仓提供的基础契约与通用�
 
 `@retikz/foundation` 提供不属于特定绘图领域、但可被所有包复用的基础契约。
 
+## 从配置到共享快照
+
+假设你正在编写一个 Retikz 扩展：配置需要用类型或 schema 表达边界，注册后又要避免外部修改影响运行结果，失败时还要让调用方知道由哪个包负责。这三件事分别对应基础契约、快照工具和结构化错误。它们可以独立使用，不要求每次调用都经过全部步骤。
+
+下面的例子把配置复制为冻结快照。随后修改原始配置，快照仍保持注册时的值；这适合将一份配置交给多个消费者读取。若只需保护集合结构，可以使用只读 Map；集合中的对象仍保留原身份，不能把浅只读当作深冻结。
+
+## 使用边界
+
+Foundation 只提供生态内共享的原子能力。图元字段由 Core 校验，几何计算由 Math 负责，主题继承由消费主题的能力处理。已有领域 schema 时直接使用其解析结果，不要额外套一轮 JSON 校验。需要复制并冻结独立数据时，再选择快照工具。
+
 ## 安装与使用
 
 <PackageManagerInstall packages="@retikz/foundation" />
@@ -52,6 +62,7 @@ Object.isFrozen(snapshot.settings); // true
 | 通用工具   | 只读集合、JSON 快照与静态颜色 | 需要复用通用工具时     |
 | 类型与契约 | 编译期类型与运行时 schema     | 需要复用基础数据契约时 |
 | 校验与错误 | 结构化错误与标量断言          | 需要确定失败边界时     |
+| API 参考   | 公开签名、类型与返回契约      | 精确查询接口时         |
 
 ## 章节内容
 
@@ -60,5 +71,8 @@ Object.isFrozen(snapshot.settings); // true
     { title: '通用工具', description: '集合、JSON 与静态颜色工具', url: '/kernel/packages/foundation/utilities' },
     { title: '类型与契约', description: '类型工具与运行时 schema', url: '/kernel/packages/foundation/types-schemas' },
     { title: '校验与错误', description: '结构化错误与标量断言', url: '/kernel/packages/foundation/validation-errors' },
-  ]}
+
+    { title: 'API 参考', description: '查询完整公开契约', url: '/kernel/packages/foundation/api-reference' },
+
+]}
 />

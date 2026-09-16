@@ -15,6 +15,8 @@
 
 ## React、IR 与 Vanilla
 
+ComponentPreview 已展示当前任务可用的 React / Vanilla 写法时，正文不再用 DocTabs 重复完整示例或补充无关代码。仅补预览未覆盖的必要安装、初始化、注入差异或当前讲解的关键片段；先核对实际源码 Tab，不能假定每个 demo 都支持双端。
+
 静态 demo 默认由源码管线执行并派生 IR，再从 IR 生成 Vanilla 代码。展示的 IR 与 Vanilla 配置必须是最上层、精简的 Source IR / authoring 语义，不得暴露 lower 后的 `base` 或完整解析结果；canonical runtime IR 仅供校验、渲染与生成结果验证。不要额外手写等价 IR / Vanilla 文件，除非自动结果不适合教学。
 
 controls demo 使用 `defineControlledPreview(previewControlContract, render)` 复用同一渲染函数：可见组件读取实时 controls，源码视图以 definition 默认值与 `canonicalValues` 合并后的稳定状态派生 IR / Vanilla：

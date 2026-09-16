@@ -1,73 +1,29 @@
 ---
 name: docs-doc-example
-description: Use when writing or editing step-by-step showcase pages under a module's apps/docs examples contents.
+description: Use when writing a step-by-step Retikz tutorial that combines capabilities into a complete result, regardless of solution directory; AI prompt demonstrations are optional and task-specific.
 ---
 
-# 示例类文档写法
+# 综合示例教程
 
-## 何时用本 skill
+先读 docs-doc-principle 与 [页型词典](../docs-doc-principle/references/page-contract.md)。固定入门难度，以完整作品为载体教调用已有能力；不要求 examples 路径。成品展示额外读 docs-doc-showcase；完整内部过程使用 docs-doc-mechanism，不混进跟做步骤。
 
-- 在 `apps/docs/src/modules/docs/contents/<module>/examples/**` 下加 / 改示例页
-- 即将动手前**必须先读** [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 拿通用规则
-- 使用多文件、data、IR/Vanilla 覆盖时再读 [`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md)
+## 阅读结构
 
-本 skill 只覆盖**示例页特有**的页面结构、step 写法、demo 命名、Prompt 节、限制 节。其它一切（三处协同、双语、写作风格、Comparison、自绘图示、宽度、阅读时间等）以 principle 为准。
+1. 开篇：说明目标，hero 复用最后一步的 ComponentPreview
+2. 仅当案例教授 AI 创作时增加 `## Prompt`，普通教程省略
+3. `## 过程`：每步用 `### 步骤 N：<目标>`（英文 Step N），说明新增结果、原因和真实代码；demo 累加前一步内容
+4. `## 能力`：需要复盘组合关系时用能力链接、角色与步骤锚点表，不复制 API 字典
+5. `## 错误与限制`：只写本例真实边界，存在时展示，不虚构 roadmap 或缺口
+6. `## 延伸阅读`：LinkedSections 链接相关能力与后续任务，无链接则省略
 
-示例页必须站在第一次跟做的读者视角写：每一步先说“这一步让图多了什么、为什么现在加”，再链接到组件或提术语。不要用作者全知视角跳到最终架构、内部机制或完整 API；读者应能按 step 顺序复制、观察、理解。
+步骤 H3 进入 TOC，DocStep 仅用于步内接入操作。复杂度增加时保留可跟随的最小主线；独立的进阶专题拆成底层页，不通过修改教程难度掩盖阅读负担。
 
-## 定位
+## Demo
 
-示例页是 **retikz 能力综合 showcase**——以经典 / 实用图表为载体，**循序渐进教读者用 retikz 能力**。与现有三种 section 的边界：
-
-| Section                 | 服务什么                                    |
-| ----------------------- | ------------------------------------------- |
-| `concepts/`             | 抽象概念（坐标系 / anchor / 分层）          |
-| `components/`           | 单组件 API 字典 + 该组件自身的多个 demo     |
-| `examples/`（本 skill） | 多组件 + 多能力**组合成完整图**，按 step 教 |
-
-**不是**什么：
-
-- 不是 TikZ 迁移指南（正文不主动比 TikZ；TikZ 关系只在写法差异极大、TikZ 老用户可能困惑时才用 `<Comparison>` 提一下）
-- 不是组件 API 字典（具体 API 用法请用 markdown link 跳到 components/）
-- 不是 final-result 摆图秀（重点是教过程，不是炫成品）
-
-## 单页骨架（6 段固定）
-
-| 顺序 | section       | 要点                                                              |
-| ---- | ------------- | ----------------------------------------------------------------- |
-| 1    | `## 引言`     | frontmatter 后 2-3 句说明目的；hero 复用最后一个 step demo        |
-| 2    | `## Prompt`   | 用 `<ExamplePrompt short="..." detailed={...} />`                 |
-| 3    | `## 过程`     | 每步 `### Step N：<主题>`，累加式 `<ComponentPreview>`，H3 进 TOC |
-| 4    | `## 能力`     | 组件 link + 在图中角色 + step 锚链接                              |
-| 5    | `## 限制`     | 只列本例触到的 gap；为空可省略                                    |
-| 6    | `## 扩展阅读` | 进阶、优化、相关组件/概念；无合适内容可省略                       |
-
-`title` / `description` 仍写在 frontmatter；正文不要再写 H1。
-
-## Step 内部 4 行骨架
-
-每个 step 严格 4 行：
-
-1. **`### Step N：<主题>`** —— H3，**进右侧 TOC**，让读者能从目录跳到任意 step
-2. **2-3 句讲解** —— 解释本 step 引入了什么、为什么这么写。本 step 用到的**关键能力**主动用 markdown link 跳到 components/ 对应页（如 `[circlePath](/kernel/components/draw/step#circlepath)`），让用户能 deepdive
-3. **`<ComponentPreview files="<id>-NN-<theme>" />`** —— 累加式
-4. **（可选）`<Comparison target="tikz">`** —— **仅**当 retikz 写法与 TikZ 差异极大、TikZ 老用户可能困惑时才用。默认不要
-
-正文不主动写"这里 TikZ 是 `\draw ...`"——TikZ 关系一律走 `<Comparison>`（principle 已规定）。
-
-## Demo 文件约定
-
-| 项         | 规则                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 形态       | **累加式**——第 N 个 demo = 前 N-1 step 的全部内容 + 本 step 新增                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 命名       | `<example-id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（如 `karl-circle-01-circle.demo.tsx`）                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 双语       | **按文本是否实际不同**判断：通用数学 / 公式 / 符号 label（`sin α` / `f(x)` / `α`）单 `.demo.tsx`；含本地化散文 / 解释性文本的 step 才分 `.zh.demo.tsx` / `.en.demo.tsx`                                                                                                                                                                                                                                                                                                                                                                                           |
-| Helpers    | **默认内联**在每个 demo，保证独立可读；demo 体量过大、或多步共用同一套基础设施时，按下文「多文件 demo」拆成子文件（作为 `files` 的附加项一并展示，不再被隐藏）                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Hero 复用  | 引言里 hero `<ComponentPreview>` 复用最后一个 step 的 demo（不另起 `-final` 文件）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| 颜色字面值 | demo 里的 `stroke` / `fill` / `bg` 等 **必须用字面量颜色**——优先命名色，默认用 `darkorange` 做强调；只有一张图里需要两个以上并列示例，或明确要做对比时才用 `dodgerblue`；若同图已经用了 `darkorange` + `dodgerblue` 仍需要第三个强调色，再用 `darkviolet`。`red` / `green` 只保留给错误 / 成功语义，灰阶只保留 `gray` / `lightgray` / `dimgray`，并尽量不用 `black` / `white`；只有需要精确对齐时才用 hex / oklch。不能用 `var(--border)` / `var(--background)` 等 CSS 自定义属性。预览工具条可下载 SVG，CSS var 在新上下文里无定义 → fallback 成黑，下载后图变样 |
-| DSL 选择   | **默认用 Sugar `<Draw way={[...]}>`，不用 Kernel `<Path><Step /></Path>`**。`way` 数组 1 行就能表达 line / curve / cubic / bend / step (fold) / cycle / label，比 Kernel 的多行 children 更短、与 components/draw/\* 例子风格一致。例外：示例**本身**就是教 `<Path>` / `<Step>` Kernel 用法、或需要 fill + 闭合（`DrawWay.Cycle`）的填充形状                                                                                                                                                                                                                      |
-
-累加式意味着代码会复制，但读者在任意 step 打开源码都能拿到可运行完整版本；复杂例子再用多文件 demo 分担体量。
+- 新主 demo 使用 `<example-id>-NN-<topic>.tsx`，NN 两位数字；可见文案用同名 i18n 字典，具体约定见 [ComponentPreview](../docs-doc-principle/references/component-preview.md)
+- 每步是自包含、可复制的阶段快照；简单 helper 内联，大型共享设施用附属文件并展示源码，不隐藏依赖
+- 单能力教程链接 usage；自定义 Definition 链接 extension；不强制所有领域都使用 Kernel 的某一种绘图组件
+- 颜色与叙述图遵循现有预览和图示契约；每步 demo 展示清晰的新增效果，不靠图数证明教学完整
 
 ## 多文件 demo（子文件 + 自动 diff）
 
@@ -106,13 +62,9 @@ description: Use when writing or editing step-by-step showcase pages under a mod
 
 跨步 / 跨名的特殊配对，用显式对象形式覆盖：`{ file: 'a.tsx', diffFrom: 'b.tsx' }`。
 
-## Prompt 节
+## AI 创作案例的 Prompt
 
-每个示例页都有一个 `## Prompt` 节，让读者：
-
-1. 看到「这张图用一段自然语言怎么说」
-2. 一键发送站内 AI 对话面板预填 prompt 跑 LLM
-3. 或一键复制带 retikz 上下文的可移植 prompt，粘到任意外部 AI 工具
+仅 AI 创作案例使用，普通教程不添加。
 
 ### 形态：`<ExamplePrompt>`
 
@@ -127,80 +79,6 @@ description: Use when writing or editing step-by-step showcase pages under a mod
 - 双语：index.zh.mdx 与 index.en.mdx 各自写一份 `short` / `detailed`——两边语义对齐，不强求逐字翻译
 - Prompt 内容**不要列 retikz 组件清单**（如「用 Path / Step / Draw / Node」）——这种限定 LLM 用什么 API 反而压表达空间；复制按钮的上下文头已经提示 AI 可用任意 `@retikz/*` API + 让它查 llms.txt，文档化任何具体能力都是反模式
 
-## 能力节
+## 验证
 
-`## 能力` 用 3 列表格：`组件`（markdown link 到 components 页）/ `在本例中扮演的角色` / `主要 step`（`[N](#slug)` 跳 H3）。
-
-中文或含符号 H3 的 slug 用 github-slugger 算，不手写猜：
-
-```bash
-cd apps/docs && node -e "import('github-slugger').then(({default: S}) => { const s = new S(); console.log(s.slug('步骤 4：画 30° 扇形 + α 标签')); })"
-```
-
-## 限制 节
-
-`## 限制` 只列本例触到的“做不了 / 做得绕”的 gap；为空省略。表格列固定：`能力 / 限制`、`计划`、`现状 / 兜底`。
-
-`计划` 只用三类：🚧 未来支持 / ❌ 不支持 / 🔧 优化方案。表格 cell 内 `|` 转义为 `\|`。
-
-## 扩展阅读 节
-
-页面最后一节（原 Related，已更名）。**不只放链接**——可以基于本例写一些**扩展 / 优化 / 进阶**内容，给读者指出下一步往哪走：
-
-- **更多扩展点**：本例往往只演示了某一面（如自定义形状），可顺手指向其它扩展面——[自定义箭头](/kernel/components/draw/custom-arrow) / [自定义图案](/kernel/components/effects/custom-pattern) / [路径生成器](/kernel/components/draw/path-generator) 等。
-- **进阶 / 优化**：基于本例的下一步深入方向，例如把反复出现的结构封装成专门的（更高 tier 的）组件，以减少重复代码、精简 IR 持久化体积。
-- **相关组件 / 概念 / sister example**：跳到本例用到的组件页、相关概念、或同系列的另一个示例。
-
-没有可写的扩展 / 进阶、也没有相关链接时，整节可省略。
-
-## 阅读时间
-
-教程类推荐目标约 10 分钟，但时间只作为可读性诊断，不构成 BLOCKING，也不能单独触发拆页。超出推荐时先检查步骤是否重复、阶段目标是否清晰、是否能跳读；只有读者任务或教程主线能独立成立时才拆子页（如「基础版 / 完整版」或按主题拆篇）。
-
-7-9 step + 引言 + Prompt + 能力 + 限制 + 扩展阅读 一般在 8-10 分钟以内。
-
-## 与组件页的边界
-
-容易混淆的几个点：
-
-| 写在哪                                     | 内容                                                                                          |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `components/draw/overview` 的 `## 例子` 节 | 围绕 `<Draw>` 单组件的多种能力（直线 / 曲线 / 箭头 / 折角…）的小 demo，每个 demo 几行         |
-| `examples/karl-circle` 整页                | 用 `<Draw>` + `<Node>` + `<Coordinate>` + `<Path>` 等多个组件组合出一张完整图，循序渐进教过程 |
-
-简单判断：单组件能讲完 → 组件页 Examples 子节；多个组件协同 → 示例页。
-
-## Draw way 速查
-
-示例 demo 写 edge 默认用 `<Draw way={[...]}>`，不要嵌 `<Path><Step /></Path>`。速查：
-
-| 需求            | way 形态                                                                   |
-| --------------- | -------------------------------------------------------------------------- |
-| 直线            | `['A', 'B']`                                                               |
-| 折角            | `['A', '\|-', 'B']` / `['A', '-\|', 'B']`                                  |
-| 二次 / 三次曲线 | `['A', { curve: [cx, cy] }, 'B']` / `{ cubic: [[c1x, c1y], [c2x, c2y]] }`  |
-| bend            | `['A', { bend: 'right', angle: 45 }, 'B']`                                 |
-| label           | `['A', { label: 'midway' }, 'B']` 或 `{ label: { text, position, side } }` |
-| 闭合填充        | `['A', 'B', 'C', DrawWay.Cycle]`                                           |
-
-端点优先写 node id 字符串，编译期自动按 toward 方向裁到节点边框；裸坐标不会 auto-clip。
-
-## 常见错误（示例页特有）
-
-- **6 段顺序错乱** —— 严格按"引言 / Prompt / 过程 / 能力 / 限制 / 扩展阅读"；缺哪段除非整节为空否则不许
-- **section 标题写成 `## AI Prompt`** —— 用 `## Prompt`，AI 是工具不是主语
-- **demo 非累加** —— 每个 step 的 demo 必须包含之前所有内容，不能只画"本 step 新增"的孤立小图
-- **demo 文件名缺序号** —— 必须 `<id>-NN-<theme>.demo.tsx`，NN 两位 0 补齐（`-01-` 而非 `-1-`）
-- **简单 demo 过度拆子文件** —— 能内联读懂的小 demo 不要拆；只有体量过大 / 跨步复用基础设施时才按「多文件 demo」拆，且拆出的子文件必须作为 `files` 的附加项显式列出（否则读者看不到）。反过来，**渐进式例子的步内子文件不要 `import` 上一步**——那样 diff 失效，必须写成自包含快照
-- **子文件带了 `.demo.tsx` 后缀** —— 子文件是纯源码、不渲染，用普通 `.tsx` / `.ts`；带 `.demo.tsx` 会被当成可渲染 demo
-- **过程节用 `####` 而非 `###`** —— H4 不入 TOC，读者无法跳到具体 step；统一用 `###`
-- **过度拆 zh/en demo** —— 只在文本**实际不同**时才拆；`sin α` / `α` / `f(x)` 这种通用符号留单文件
-- **demo 颜色用 CSS var**（`var(--border)` / `var(--muted)` 等） —— 工具条 SVG 下载在新上下文里 var 解析失败 fallback 成黑；颜色统一用字面量（hex / oklch / 命名色）。需要 light/dark 适配的"装饰性"色（grid help line / 背景遮罩）取浅色字面值（如 `#e5e7eb` / `#ffffff`），下载后在白底文档里仍然好看
-- **demo 用 `<Path><Step />` 而非 `<Draw way={[...]}>`** —— 示例 edge 一律走 Draw sugar（way 数组 1 行就能表达），Kernel Path 仅在示例**本身**教 Path/Step 内部或需要 fill+cycle 时用；理由见 demo 文件约定的「DSL 选择」行
-- **正文里散落 TikZ 对照** —— TikZ 关系一律走 `<Comparison>`（principle 已规定）；正文专心讲 retikz
-- **限制 当成「未来 roadmap」写** —— 只列**本例触到的** gap；与本例无关的 roadmap 别塞进来
-- **限制 还写成 bullet 列表** —— 现在统一用表格（能力 / 限制 · 计划 · 现状 / 兜底 三列），计划列取 🚧 未来支持 / ❌ 不支持 / 🔧 优化方案；cell 内 `|` 记得转义
-- **能力节列表里组件名不带 link** —— 第一列必须 markdown link 跳到对应 components/ 页
-- **能力节第三列 step 数字裸写** —— 必须改写成 `[N](#<H3-slug>)` 锚链接，读者能从能力反向跳到对应 step；中文 H3 的 slug 别手写、用 github-slugger 跑一下确认
-- **Prompt 给精确坐标 / 列 retikz 组件清单** —— prompt 只描述意图与视觉约束，不写"用 Path / Node / ..."这种 API 提示；让 LLM 自由发挥
-- **`<ExamplePrompt>` 写了 textarea / 编辑** —— 它现在是**只读** + 复制 / 发送双按钮，没有就地编辑路径；要改 prompt 在 AI 面板里改
+沿步骤实际检查每步能运行、相邻快照 diff 有意义、能力链接和 H3 锚点有效。中文或含符号标题的锚点从真实 slug 核对，不手猜。检查双语、两种接入入口与最终结果，按 docs-doc-principle 的受影响范围门禁执行。

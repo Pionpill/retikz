@@ -9,6 +9,8 @@ description: Use when writing, editing, or reviewing a retikz Showcase, finished
 
 Showcase 的目标是展示和解释功能，让读者理解“这个能力解决什么、如何阅读结果、应观察什么”。真实数据或真实使用场景是达成目标的手段，不是文档主角；数据背景只讲到足以理解功能。入口和基础示例还必须优先服务最广泛的读者，不以特定行业兴趣作为理解前提。
 
+Showcase 是展示补充规则，不单独决定页型或难度；先按页型词典选择主要写作 skill。
+
 先读 [`docs-doc-principle`](../docs-doc-principle/SKILL.md) 和当前页型 skill。使用 controls 或多文件数据时，再按 principle 加载 `docs-doc-control` 与 ComponentPreview 契约，不在本 skill 重复页面结构和预览规则。
 
 ## 展示尺寸
@@ -19,7 +21,7 @@ Showcase 的完整 demo 默认设置 `preview.size: 'xxl'`，让读者能直接�
 
 成品或复合组件页的首个 example 默认是“基础用法”。只传可运行的必要配置，不使用 controls 或 presets；根组件已经提供完整配置入口时，统一在根组件传入数据与配置，不额外展开等价 declarations。
 
-基础用法的 description 必须说明这是最简配置、可以切换到 IR 查看配置项，以及配置简单时只需在根组件传递。最简 authoring 仍须保留成品原生支持的 `title`、`subtitle`、`source` 或等价叙事元信息；出现可见文案时按语言拆分 demo，共享语言无关的数据文件。数据型基础示例应使用独立于后续进阶示例的静态数据；Chart Point 一类图表默认使用约 100 行记录，只映射该图型的必要数据角色，不引入 series、facet、颜色分组等进阶逻辑。类别逐项占用独立行或列时，以真实预览中图元和标签不重叠的最小充分样本为准。
+基础用法的 description 必须说明这是最简配置、可以切换到 IR 查看配置项，以及配置简单时只需在根组件传递。最简 authoring 仍须保留成品原生支持的 `title`、`subtitle`、`source` 或等价叙事元信息；出现可见文案时使用单份 demo 与同名 i18n 字典，共享语言无关的数据文件。数据型基础示例应使用独立于后续进阶示例的静态数据；Chart Point 一类图表默认使用约 100 行记录，只映射该图型的必要数据角色，不引入 series、facet、颜色分组等进阶逻辑。类别逐项占用独立行或列时，以真实预览中图元和标签不重叠的最小充分样本为准。
 
 ## 先定功能，再选载体
 

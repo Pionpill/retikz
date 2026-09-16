@@ -1,0 +1,152 @@
+---
+title: 实现原理
+description: 复合编译中的空间条件、隔离试算、结果提交与依赖装配。
+---
+
+先读[复合](/kernel/components/design/composite)与[自定义用法](/kernel/components/composite/custom)。本页追踪已注册 composite 在一次 Core 编译中的处理，输出仍是共享图元以及同次编译的附属结果。
+
+## 整体流程
+
+- proposal：父级交给子内容的可用空间条件
+- probe：在隔离环境中试算一次子内容布局
+- replay：提交选中的试算结果，避免再次计算
+- artifact：领域算法附带输出的结构化数据
+- spatial handle：供外层工具查询的具名区域
+
+先按 Definition 选择展开分支；需要布局反馈时先试算，再提交。最后发布领域产物和已转换到整图坐标的空间区域。
+
+<ComponentPreview files="/kernel/components/design/composite/composite-pipeline" size="xs" hideCode />
+
+## 布局感知编译
+
+例如，一个卡片先询问文字至少需要多宽，再决定给文字分配的矩形空间（slot）。文字实际占据的区域称为 allocation bounds；可见笔画的范围称为 visual bounds。一次试算的 occurrence 表示这次调用在嵌套输出中的位置，用于把结果和正确的对象对应起来。
+
+`CompositeDefinition.expand()` 拿不到文字测量、provider、引用环境或父级可用空间，因此不能表达“查询子贡献 → 求解父布局 → 再分配 child slot”的反馈过程。`compile(node, context)` 把这条闭环放在同一次 Core compile 中；根 composite 收到冻结的 `NaturalLayoutProposal`，nested composite 收到父级为该 occurrence 发出的完整双轴 `context.proposal`。
+
+Proposal 是父级提供的**可用空间条件**，不是 child 的真实尺寸，也不是 slot 本身。`LayoutProposal` 必须同时给出 `x` 与 `y`：
+
+| 单轴 proposal         | 含义                                                     |
+| --------------------- | -------------------------------------------------------- |
+| `intrinsic.minimum`   | 在另一轴 proposal 仍生效时查询最小 contribution          |
+| `intrinsic.natural`   | 在另一轴 proposal 仍生效时查询自然 contribution          |
+| `range { min, max? }` | 在区间内解析 slot；省略 `max` 表示无上限                 |
+| `exact { value }`     | 父 solver 要求固定 slot；不强迫 child 缩放或改变真实几何 |
+
+<ComponentPreview files="/kernel/components/design/composite/layout-aware-compile" size="xl" hideCode />
+
+图中的每次 probe 都先得到 `resolved` 或 `failed` outcome。Resolved result 再分开保存下面五项；它们不能互相反推或替代：
+
+| 字段               | 含义                                                    |
+| ------------------ | ------------------------------------------------------- |
+| `slotSize`         | proposal 求值后的无原点 allocation slot                 |
+| `allocationBounds` | child 在自身局部坐标中的真实布局占用，可大于或小于 slot |
+| `visualBounds`     | 最终静态墨迹包络，只描述视觉贡献，不参与 slot 求值      |
+| `alignmentGuides?` | child-local 一维 guide；Core 内置 first / last baseline |
+| `replay`           | 对应本次隔离 transaction 的 opaque、one-use token       |
+
+`exact` 轴的 slot 严格等于 `value`；`range` 轴落在 `[min, max]`，无上限时不小于 `min`；intrinsic 的 slot 是该次 contribution probe 解析出的尺寸。`slotSize` 只有 width / height，没有 origin。父 solver 在自己的坐标系里据此建立 slot rect，再用真实 bounds 与 guides 决定 alignment、overflow 和 clip。
+
+普通纯文本有明确的换行测量契约：有限宽度可触发换行，高度随实际排版变化。其他内容没有通用重排承诺，实际占用可保持自然尺寸，而分配空间响应约束；所以分配空间变小不等于内容自动缩小。
+
+<SourceLinks sources={[{ label: '相关实现', path: 'packages/kernel/core/src/contract/composite/types.ts' }]} />
+
+### 选择、失败与提交
+
+每次 `layoutChild()` 都在隔离 transaction 中执行。父 solver 可以比较多组 minimum / natural / range / exact 结果；未选中的 resolved result 与 failed outcome 都不会泄漏 primitive、resource、warning、artifact、namespace、identity 或 observation。选中成功结果时调用 `context.replay(result)`；选中失败时调用 `context.raise(failure)`，Core 会保留原始 provider、source path、cause 与完整 nested probe occurrence。
+
+Failure、result、replay 与 output child 都由 callback-local、compile-local identity 管理，不能伪造、复制后重用、跨 callback / compile 传递或重复提交。Occurrence 中的 `probe[index]` 表示候选 child dispatch，成功提交后的 `replay[index]` 表示最终 output；两者不是同一个阶段。
+
+下面是 Definition 中的 `compile` 回调片段；假定该定义的 schema 已声明 `child`。它只查询自然尺寸并原位提交，示范成功与失败分支，不实现额外的布局算法。根默认 proposal 也是两个轴的 `intrinsic.natural`；嵌套回调接收父级传入的完整双轴条件。
+
+```ts
+compile: (node, context) => {
+  const outcome = context.layoutChild(node.child, {
+    x: { kind: 'intrinsic', mode: 'natural' },
+    y: { kind: 'intrinsic', mode: 'natural' },
+  });
+  if (outcome.kind === 'failed') return context.raise(outcome.failure);
+  return {
+    allocationBounds: outcome.result.allocationBounds,
+    children: [context.replay(outcome.result)],
+  };
+},
+```
+
+Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate，再在该父坐标系应用 `clip`。Wrapper 不回写原始 `LayoutChildResult`；clip 只收紧最终提交后的 Scene visual contribution。需要 identity、local namespace、metadata、zIndex 或递归结构时，再用 `context.scope()` 组合普通 `IRChild`、replay child 与 nested scope child。它们都不引入新的 IR / Scene primitive kind、renderer contract 或第二条 compile pipeline。
+
+<SourceLinks sources={[{ label: '相关实现', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' }]} />
+
+### 同次类型化产物
+
+例如，artifact 可保存 `{ width: 120 }` 这样的领域结果，且必须满足 `artifactSchema`。它与最终 Scene 同次产生，供应用读取，而不是交给 renderer 再布局。
+
+布局感知定义可以声明 `artifactSchema` 并从 `compile` 返回 JSON-safe `artifact`。Core 在 `CompileResult.artifacts` 中用 `namespace`、`type` 和 occurrence locator 封装它；locator 由原始 `sourcePath` 与结构化 expansion / output / replay 路径组成，不依赖全局 Map、回调捕获或第二次遍历。宿主因而能从同一次 compile 同时得到 Scene 与领域产物。
+
+同一个 artifact 也可作为外部观察者的输入；观察者由 `@retikz/inspect` 独立定义。
+
+如需将 artifact 可视化为辅助图形，使用独立的 [`@retikz/inspect`](/kernel/packages/inspect)；复合定义本身只返回数据，不负责选择或注册观察者。
+
+`lowerIRToKernel()` 只支持可独立执行的 `expand` 分支。它遇到布局感知 composite 会明确报错，因为正确结果依赖完整 compile 环境。
+
+<SourceLinks sources={[{ label: '相关实现', path: 'packages/kernel/core/src/compile/types.ts' }]} />
+
+## 空间透明与 qualified handle
+
+有些 composite 不只生成可见图元，还要让外层工具在嵌套 Scope、布局 replay 与变换之后找到一个有领域含义的区域。`expand` 因而统一返回结构化结果；布局感知 `compile` 也可通过结果中的 `spatialHandles` 声明局部矩形。
+
+声明中的 `bounds` 位于当前 composite allocation coordinate。Core 在最终 traversal、Scope transform 与 replay settle 后，把它投影成 整图坐标中的轴对齐包围矩形（AABB），并在 `CompileResult.spatialHandles` 发布；`ownerPath` 按外到内保留每层 composite 的 `namespace`、`type`、显式 `id` 与 occurrence。
+
+| 层次                    | 保存什么                                            | 不进入什么                       |
+| ----------------------- | --------------------------------------------------- | -------------------------------- |
+| callback declaration    | 所有者局部（owner-local） `key` / `role` / 局部矩形 | IR schema、Scene                 |
+| qualified compile index | `ownerPath` / world AABB / origin 与 final          | SVG 属性、Canvas draw state      |
+| query                   | 精确 owner、祖先路径、key、role、全部 tags          | renderer DOM 查询、几何 contains |
+
+`selectSpatialHandles()` 返回零到多项，`resolveSpatialHandle()` 要求恰好一项；跨 owner 查询不充分时会明确报告 miss 或 ambiguity，不猜“最近”的节点。没有声明时 index 仍存在且为空。
+
+`lowerIRToKernel()` 无法结算 world geometry：无声明或空声明仍可下沉，遇到非空 `spatialHandles` 会同步失败并要求改用 `compileToScene()`。这避免把局部矩形静默丢弃，或冒充已经结算的空间结果。
+
+<SourceLinks sources={[{ label: '相关实现', path: 'packages/kernel/core/src/contract/spatial-handle/types.ts' }]} />
+
+## Provider roots 与传递依赖
+
+自定义教程直接传入 Definition；实现嵌入式 adapter 时才需要用 provider contribution 声明 roots / providers。它们是不同层次的装配入口，不要求普通扩展作者同时手写两套配置。
+
+Provider 是创建能力 Definition 的模块；roots 是当前图形直接需要的模块入口。依赖解析从这些入口向下查找所需模块，确保依赖先于使用者创建。这个准备阶段发生在复合回调执行之前。
+
+嵌入式 adapter 不直接拼 Definition 数组。它返回高层 `node`，并用 `CoreProviderContribution` 声明当前节点实际需要的 `roots` 与本次程序已经导入的 `providers`。普通 provider key 使用 `capability + name`；composite key 使用 `capability: 'composite' + namespace + type`。每个 provider 还声明直接依赖、runtime-only datasets 和稳定的 `makeDefinition` 函数。
+
+<ComponentPreview files="/kernel/components/design/composite/embeddable-flow" size="xl" hideCode />
+
+Core 从 roots 计算可达闭包，按依赖优先、首次可达顺序物化每个 Definition 一次。第三方组件可以声明对其他组件的依赖；可达依赖统一进入当前图形，不需要内置白名单。
+
+`datasets` 只在 maker 调用前按 provider key 与 reference 合并，不进入 IR、Scene 或 manifest。同 reference 只有 `Object.is` 同源才能去重；provider maker、依赖顺序或 dataset identity 冲突都会在任何 maker 执行前失败。缺失依赖与环也在预检阶段报出完整 key 链。
+
+Provider graph 负责从可复用模块装配“需要哪些 Definition”。`resolveCoreProviderDependencies()` 产出按 Core capability 分组的 options；直接 IR 作者可以显式传完整 Definition 集合，React、Vanilla 或其它工具链则先解析 contribution。Provider 结果先写入，显式 Definitions 后追加；同 key 只允许同一个 Definition 对象去重，不同对象 fail-loud。
+
+<SourceLinks
+  sources={[{ label: '相关实现', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' }]}
+/>
+
+## 完整实现流程
+
+<ComponentPreview files="/kernel/components/design/composite/layout-aware-compile" size="xl" hideCode />
+
+图中追踪 proposal → probe → 选择 → replay 的布局反馈过程。读源码时先看公共回调契约，再看 traversal 如何隔离与提交结果；provider 依赖解析发生在这些回调执行之前。
+
+<SourceLinks
+  sources={[
+    { label: 'Composite callbacks', path: 'packages/kernel/core/src/contract/composite/types.ts' },
+    { label: 'Probe and replay', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+    { label: 'Provider dependencies', path: 'packages/kernel/core/src/contract/provider/resolve-dependencies.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义用法', description: '实现并注入一个复合定义', url: '/kernel/components/composite/custom' },
+    { title: '编译参考', description: '查询结果与诊断契约', url: '/kernel/reference/runtime/compile' },
+  ]}
+/>

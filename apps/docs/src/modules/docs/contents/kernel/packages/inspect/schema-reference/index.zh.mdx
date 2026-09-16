@@ -1,11 +1,11 @@
 ---
-title: Inspect Schema 参考
+title: Schema 参考
 description: 查询五类内置 Inspector 的配置字段、默认值与校验结构
 ---
 
 这里展示 `@retikz/inspect` 公开的配置 schema。它们约束观测选项，不是完整的观测请求或 Scene schema；运行时的选择规则、注册表与回调类型见 [API 参考](/kernel/packages/inspect/api-reference)。
 
-以下默认值只在明确选择相应 Inspector 后生效。输入字段均可省略：先逐字段合并原始选项，再由 schema 补齐默认值；注册检查器不会自动开启检查。
+以下默认值只在明确选择相应 Inspector 后生效。输入字段均可省略：先逐字段合并原始选项，再由 schema 补齐默认值；注册检查器不会自动开启检查。下表展示解析后的结构：“必填”标记补齐默认值后必定存在的字段，不表示调用时必须填写。
 
 ## PathInspectOptionsSchema
 
@@ -80,4 +80,4 @@ description: 查询五类内置 Inspector 的配置字段、默认值与校验�
   descriptions={{ labels: '是否显示 authored id 标签，默认 false' }}
 />
 
-内置用法见 [内置观测](/kernel/packages/inspect/builtins)，自定义 Inspector 的选项契约见 [拓展观测](/kernel/packages/inspect/extensions)。
+内置用法见 [内置观测](/kernel/packages/inspect/builtins)，自定义 Inspector 的选项契约见 [自定义用法](/kernel/packages/inspect/custom)。

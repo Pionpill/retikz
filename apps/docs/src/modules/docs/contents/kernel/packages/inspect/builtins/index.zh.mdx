@@ -117,8 +117,11 @@ AABB 由外框四角经过最终变换后计算，不包含 stroke、shadow 或�
   caption="移动坐标点，切换观测或标识；关闭观测时，Coordinate 本身不产生可见图形。"
 />
 
-## 相关
+## 延伸阅读
 
-- [拓展观测](/kernel/packages/inspect/extensions)：为其它 Core owner 定义自己的 Inspector
-- [实现原理](/kernel/packages/inspect/mechanism)：了解 request 如何选择最终实例、坐标空间如何生效，以及辅助内容何时隔离编译
-- [Schema 参考](/kernel/packages/inspect/schema-reference)：查询五类内置选项的默认值与字段契约
+<LinkedSections
+  items={[
+    { title: '实现原理', description: '追踪观测执行过程', url: '/kernel/packages/inspect/mechanism' },
+    { title: 'Schema 参考', description: '查询内置选项的默认值', url: '/kernel/packages/inspect/schema-reference' },
+  ]}
+/>

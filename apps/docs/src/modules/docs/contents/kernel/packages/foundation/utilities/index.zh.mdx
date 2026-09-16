@@ -5,6 +5,22 @@ description: 复用 @retikz/foundation 的只读集合、JSON 快照与静态 CS
 
 这些工具不携带绘图领域语义，可被 Retikz 内部包和扩展按需复用。
 
+## 基础用法
+
+以下能力统一从包根入口导入：
+
+```ts
+import {
+  createReadonlyMap,
+  cloneAndFreezeJson,
+  assertPlainDataContainers,
+  parseStaticCssColor,
+  compositeOpaqueColor,
+} from '@retikz/foundation';
+
+const color = compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
+```
+
 ## 只读集合快照
 
 `createReadonlyMap(entries)` 将输入条目复制为独立的浅快照。结果保持原生 Map 的查询、迭代和插入顺序，但不暴露 `set`、`delete` 或 `clear`；entry value 保持原对象身份，不会被深拷贝或冻结。
@@ -54,6 +70,24 @@ compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 
 动态的 `currentColor`、CSS variable、系统色和 P3 等宿主颜色不在范围内；Foundation 不读取 Theme mode，也不判断任何图形字段。
 
+## 属性浅合并
+
+用 `mergeProperties(sources, options)` 合并多个优先级层：数组从左到右，后面的属性覆盖前面的属性。返回新对象，不修改输入，也不递归合并嵌套对象。
+
+```ts
+import { mergeProperties } from '@retikz/foundation';
+
+const options = mergeProperties<{ color?: string | null; width?: number }>(
+  [{ color: 'red', width: 1 }, { width: 2 }, { color: undefined, width: 0 }],
+  { shouldOverride: value => value !== undefined },
+);
+// { color: 'red', width: 0 }
+```
+
+`shouldOverride(value, key)` 对首次写入和后续覆盖都生效；返回 `false` 只跳过当前属性，不删除已合并的值。若还要忽略 `null`，可写 `value => value !== undefined && value !== null`；不要用真假值判断，否则会丢失 `false`、`0` 和空字符串。
+
+默认不设策略时，属性值 `undefined` 和 `null` 都会覆盖前值；源数组中的 `undefined` 则始终跳过。仅复制自身可枚举字符串和 symbol 属性，嵌套对象与数组保留引用。因为策略可以过滤任意字段，返回类型为 `Partial<T>`，必填字段由消费方补齐。属性读取或策略回调失败会抛出 `RetikzFoundationError`，原异常保留为 `cause`。
+
 <SourceLinks
   sources={[
     {
@@ -80,5 +114,13 @@ compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
       startLine: 312,
       endLine: 380,
     },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'API 参考', description: '查询公开类型与完整契约', url: '/kernel/packages/foundation/api-reference' },
   ]}
 />
