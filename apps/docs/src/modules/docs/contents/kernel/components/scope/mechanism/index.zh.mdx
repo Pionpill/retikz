@@ -11,7 +11,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 图中橙点是原点，灰色点线是固定坐标轴。观察虚线框和两个节点：它们始终一起变化。
 
-<ComponentPreview files="scope-transform-steps" size="md" hideCode />
+<ComponentPreview files="scope-transform-steps" size="md" type="illustration" hideCode />
 
 前两步里，原点不动，整组内容围绕它缩放、旋转；最后一步才把整组移走。B 点的坐标也随之变化：`[14, 0]` → `[19.6, 0]` → 约 `[17, 9.8]` → 约 `[33, 23.8]`。
 
@@ -23,7 +23,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 下图对比同一组内容变换前后的边框，暂不做最后的平移。右图的灰色虚线保留原来的位置，方便比较。
 
-<ComponentPreview files="scope-envelope-comparison" size="md" hideCode />
+<ComponentPreview files="scope-envelope-comparison" size="md" type="illustration" hideCode />
 
 橙框随着内容放大、旋转，橙色 `right` 点也跟着移动：它始终是边框右边的中点，转过来以后不一定是画布上最靠右的点。这些边框是帮助理解的辅助线，Scope 不会自动画出它们。
 
@@ -34,7 +34,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 所以实现时，需要先知道绕哪里变换，再算整组最后要移动多少。流程如下：
 
-<ComponentPreview files="scope-transform-resolution" size="md" hideCode />
+<ComponentPreview files="scope-transform-resolution" size="md" type="flow" hideCode />
 
 如果中心是原点或直接给出的坐标，一开始就知道它在哪；如果中心选在边框上，就要等里面的节点摆好、边框大小确定后再取点。图中上下两个入口对应这两种情况。
 
@@ -73,7 +73,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 答案是 `[120, 0]`，不是 `[110, 0]`。因为 Scope 里的长度也放大了两倍，里面的 `10` 对应画布上的 `20`。可以把它想成两把刻度不同的尺子：同一个位置，上下两把尺子的读数不同。下图只看横坐标，纵坐标都为 `0`。
 
-<ComponentPreview files="scope-offset-rulers" size="lg" hideCode />
+<ComponentPreview files="scope-offset-rulers" size="lg" type="illustration" hideCode />
 
 从橙色的 A 点开始，按下面三步读图：
 
@@ -85,7 +85,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 实现中，`toLocal` 负责换成 Scope 的读数，`toWorld` 负责换回画布的读数。下图就是上面三步的计算过程：
 
-<ComponentPreview files="scope-coordinate-projection" size="lg" hideCode />
+<ComponentPreview files="scope-coordinate-projection" size="lg" type="flow" hideCode />
 
 `offset` 给出要在 Scope 内移动多少，`at` 用方向和距离表达这段移动。旋转时也一样：如果 Scope 转了一个角度，它里面的“横向”也会跟着转，偏移就沿这个方向移动。换算会一起考虑当前 Scope 和外层 Scope 的变换。
 
@@ -128,7 +128,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 查找从当前 frame 向外进行，**首次命中就返回**；只有未命中才继续。图中查找可以沿父 frame 一直访问到根，注册却只写当前 frame；同层重名时另行发出警告并覆盖条目。
 
-<ComponentPreview files="scope-namespace-lookup" size="lg" hideCode />
+<ComponentPreview files="scope-namespace-lookup" size="lg" type="flow" hideCode />
 
 注册只写当前 frame，因此两种同名情况有不同结果：
 
@@ -174,7 +174,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 图中汇总的包络用于更新父 frame 的占位条目，不是第二次注册同名 id。更新前还会检查条目身份：若它已被同名子节点替换，就保留后定义的子节点。
 
-<ComponentPreview files="scope-reference-envelope" size="md" hideCode />
+<ComponentPreview files="scope-reference-envelope" size="md" type="flow" hideCode />
 
 包络汇总 Node、Coordinate 和嵌套 Scope 的布局，不包含 Path 走线。`boundingShape` 默认使用矩形包络（AABB，即与坐标轴对齐的包围盒）；`circle` 则从布局角点计算最小外接圆。它决定整体引用的边界，不会自动创建裁剪区。
 
@@ -221,7 +221,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 图中内置与自定义能力从同一入口参与解析，生成的路径进入资源表；资源引用再与子图元、变换一起挂到 Scene 分组。整条链路不依赖 `scope.id`，没有 id 的 Scope 同样可以裁剪。
 
-<ComponentPreview files="scope-clip-resource" size="md" hideCode />
+<ComponentPreview files="scope-clip-resource" size="md" type="flow" hideCode />
 
 内置和自定义裁剪都通过 Clip Definition 的 `resolve` 与 `lower` 处理；资源表根据最终路径去重，随后把返回的 id 写入 `GroupPrim.clipRef`。
 

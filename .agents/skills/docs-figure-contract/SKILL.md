@@ -36,6 +36,7 @@ MDX 中使用：
 规则：
 
 - 图默认 `export default FC<{ lang?: Lang }>`，不要用 hooks 或渲染外副作用；`ComponentPreview` 会直接调用组件生成 IR，并按当前语言传入 `lang`。
+- 叙述图必须设置 `ComponentPreview` 的 `type`：使用 `FlowDiagram`、`FlowLayout`、`FlowEntities` 或 `FlowRelations` 的流程图用 `type="flow"`，其它叙述性插图用 `type="illustration"`。预览顶部问号按钮据此说明图形形态与颜色的阅读约定。
 - 图的结构与翻译分离：所有含展示文本的新图使用单个 `<name>.tsx`，同级 `<name>.i18n.ts` 导出 `<name>I18n`。图内通过 `const i18n = <name>I18n[lang ?? 'zh']` 取文案，不写 zh / en 两份图组件；`I18n` 不追加 `Labels` 等后缀。
 - 既有 `<name>.demo.tsx` 与 `<name>.<lang>.demo.tsx` 仅作为兼容路径，不在新图中继续创建。
 - 图不能替代正文。图前后必须用段落或小节标题解释读者应看什么。

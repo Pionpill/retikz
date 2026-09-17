@@ -18,6 +18,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
+  PreviewFigureType,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   RendererMode,
@@ -37,6 +38,8 @@ export type PreviewWorkspaceProps = {
   controlState: PreviewControlState;
   /** 是否显示预览上下文栏 */
   showContextBar: boolean;
+  /** 叙述性图示的说明类型。 */
+  figureType?: PreviewFigureType;
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
   /** 当前预览实际生效的 ThemeStyle */
@@ -120,6 +123,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     workspaceClassName,
     controlState,
     showContextBar,
+    figureType,
     themeMode,
     enableThemeSwitch = false,
     themeStyleSelection = 'inherit',
@@ -166,6 +170,8 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
         <PreviewContextBar
           themeMode={themeMode}
           onThemeModeChange={onThemeModeChange}
+          figureType={figureType}
+          lang={lang}
           enableThemeSwitch={enableThemeSwitch}
           themeStyle={previewTheme.style}
           themeStyleSelection={themeStyleSelection}

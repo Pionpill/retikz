@@ -11,7 +11,7 @@ When applying shared styling to a set of children, `rootScope` does not introduc
 
 Compare the two identical sets of nodes below: A has no fill of its own; B explicitly selects orange. The left side supplies blue through `rootScope.defaults.node.style.fill`; the right side puts the same `defaults` on an explicit Scope. The dashed frames identify the wrappers; they are not borders automatically drawn by Scope.
 
-<ComponentPreview files="layout-root-scope" size="md" hideCode />
+<ComponentPreview files="layout-root-scope" size="md" type="illustration" hideCode />
 
 On both sides, A inherits blue and B stays orange. **defaults** supplies values that descendants have not set explicitly; it does not forcibly rewrite node properties. `rootScope.style` supplies general drawing styles such as `fill / stroke / opacity`. The figure uses `dodgerblue` and `darkorange` with translucent fills to keep the node text legible.
 
@@ -50,13 +50,13 @@ Layout first chooses a viewport source: its `viewBox` prop takes precedence over
 
 Automatic sizing has two steps: combine content bounds, then expand all four sides by padding. In the figure, only blue A and B count as measured content: A is a circle centered at `(30, 40)` with radius `10`; B is a `20 × 20` rectangle whose top-left corner is `(80, 50)`. The dashed gray bounds enclose both; the orange viewport adds 10 drawing units on each side. Measurement lines and text are teaching annotations, excluded from this content's bounds.
 
-<ComponentPreview files="layout-viewport-bounds" size="xl" hideCode />
+<ComponentPreview files="layout-viewport-bounds" size="xl" type="illustration" hideCode />
 
 From A and B's stated positions and sizes, the gray bounds have left `20`, top `30`, right `100`, and bottom `70`, giving content bounds `(20, 30, 80, 40)`. Then read the orange frame: moving left and top outward by `10` and adding `20` to each dimension gives viewport `(10, 20, 100, 60)`. These tuples mean `(x, y, width, height)`, not two corners. The figure enlarges everything at one scale; labels still refer to the original drawing units.
 
 The local process is: compile content bounds, expand all four sides, then produce the automatic viewport. It does not first move the drawing to make its top-left corner zero.
 
-<ComponentPreview files="layout-auto-viewport" size="xs" hideCode />
+<ComponentPreview files="layout-auto-viewport" size="xs" type="flow" hideCode />
 
 In general, bounds `(x, y, w, h)` and padding `p` produce:
 
@@ -107,13 +107,13 @@ For detailed bounds algorithms, see [Bounds calculations in the Math package](/k
 
 Both drawings fix `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`, with A at `(50, 50)` and B at `(150, 50)`. The upper drawing omits both dimensions; the lower one supplies only `width={400}`. Compare the gray host frames first, then A's position relative to the left and top edges.
 
-<ComponentPreview files="layout-display-comparison" size="xxl" hideCode />
+<ComponentPreview files="layout-display-comparison" size="xxl" type="illustration" hideCode />
 
 The lower host, shapes, and gaps appear twice as large, but A's drawing coordinates remain `(50, 50)`: one quarter of the window width and halfway down its height. Both illustrations use the same scale. Dotted lines mark A's distances to the host's top and left edges; the two drawings have not been individually fitted to equal sizes.
 
 With only a numeric width, `computeDisplaySize` derives height from the viewport ratio. Here it computes `200 / 100 = 2`, then display height `400 / 2 = 200`:
 
-<ComponentPreview files="layout-viewbox-resolution" size="md" hideCode />
+<ComponentPreview files="layout-viewbox-resolution" size="md" type="flow" hideCode />
 
 Other size settings for that same `200 × 100` viewport follow these branches:
 
@@ -160,7 +160,7 @@ Layout retains the outer `clean` style when it supplies only `{ mode: 'light' }`
 
 Read the following figure from top to bottom in override order. ThemeProvider supplies `{ style: 'clean', mode: 'dark' }`, the input scene omits its theme, and Layout's `theme` prop supplies only `{ mode: 'light' }`. Follow the `theme.style` and `theme.mode` columns separately: `—` means omitted, not cleared.
 
-<ComponentPreview files="layout-theme-overlays" size="lg" hideCode />
+<ComponentPreview files="layout-theme-overlays" size="lg" type="illustration" hideCode />
 
 In the final theme, `style: 'clean'` comes from Provider, while `mode: 'light'` comes from Layout. If the input scene supplies a theme, it overrides Provider first, before Layout applies its own overrides. `mergeThemeOverlays` writes only the fields supplied at each layer. Nested ThemeProviders reuse this rule.
 

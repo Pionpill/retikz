@@ -22,6 +22,7 @@ import type {
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlsOptions,
+  PreviewFigureType,
   PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
@@ -50,6 +51,8 @@ export type ComponentPreviewProps = {
   previewClassName?: string;
   /** 默认隐藏底部源码区，并在预览左下角提供展开源码的入口。 */
   hideCode?: boolean;
+  /** 叙述性图示的说明类型；指定后显示图示说明入口。 */
+  type?: PreviewFigureType;
   /** 是否显示缩放、下载、渲染器等预览宿主工具栏，默认显示。 */
   showTools?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
@@ -69,6 +72,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     size = 'md',
     previewClassName,
     hideCode = false,
+    type,
     showTools = true,
     caption,
   } = props;
@@ -239,6 +243,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       size={size}
       previewClassName={previewClassName}
       codeInitiallyHidden={hideCode}
+      figureType={type}
       showTools={showTools}
       controlContract={controlContract}
       controlDefinition={controlDefinition}

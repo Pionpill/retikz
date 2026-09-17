@@ -44,6 +44,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
+  PreviewFigureType,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   SizeKey,
@@ -73,6 +74,8 @@ export type ComponentPreviewDialogProps = {
   controlContract?: PreviewControlContract;
   /** 是否显示预览上下文栏 */
   showContextBar: boolean;
+  /** 叙述性图示的说明类型。 */
+  figureType?: PreviewFigureType;
   /** 与所属 Card 共享的局部主题 */
   themeMode: PreviewThemeMode;
   /** 更新 Card/Dialog 共享的局部主题 */
@@ -158,6 +161,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     controlDefinition,
     controlContract,
     showContextBar,
+    figureType,
     themeMode,
     onThemeModeChange,
     enableThemeSwitch = false,
@@ -206,6 +210,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       controlContract={controlContract}
       controlState={controlState}
       showContextBar={showContextBar}
+      figureType={figureType}
       themeMode={themeMode}
       onThemeModeChange={onThemeModeChange}
       enableThemeSwitch={enableThemeSwitch}

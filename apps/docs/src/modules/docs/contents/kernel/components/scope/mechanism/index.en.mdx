@@ -11,7 +11,7 @@ Scope treats its contents as a group: scale them together, rotate them together,
 
 The orange point marks the origin, and the gray dotted axes stay fixed. Watch the dashed box and the two nodes: they change together throughout.
 
-<ComponentPreview files="scope-transform-steps" size="md" hideCode />
+<ComponentPreview files="scope-transform-steps" size="md" type="illustration" hideCode />
 
 During the first two steps, the origin stays put while the group scales and rotates around it. Only the final step moves the whole group away. B follows the same sequence: `[14, 0]` → `[19.6, 0]` → approximately `[17, 9.8]` → approximately `[33, 23.8]`.
 
@@ -23,7 +23,7 @@ What if you want to rotate around the middle of the group's right edge instead o
 
 The next figure compares the same group's box before and after transformation, without final placement. The gray dashed box on the right keeps the original position visible for comparison.
 
-<ComponentPreview files="scope-envelope-comparison" size="md" hideCode />
+<ComponentPreview files="scope-envelope-comparison" size="md" type="illustration" hideCode />
 
 The orange box scales and rotates with the contents, carrying its orange `right` point along. That point remains the middle of the box's own right edge; after rotation, it need not be the rightmost point on the canvas. These boxes are visual guides—Scope does not draw them automatically.
 
@@ -34,7 +34,7 @@ Each box serves a different purpose:
 
 The implementation therefore needs to find the transform center before calculating how far to move the group:
 
-<ComponentPreview files="scope-transform-resolution" size="md" hideCode />
+<ComponentPreview files="scope-transform-resolution" size="md" type="flow" hideCode />
 
 An origin or explicit-coordinate center is known immediately. A center selected from the box must wait until the child nodes are laid out and the box size is known. The two inputs in the diagram represent these cases.
 
@@ -73,7 +73,7 @@ Suppose point A already exists at `[100, 0]` on the canvas. Inside a Scope that 
 
 At `[120, 0]`, not `[110, 0]`. Lengths inside this Scope are doubled, so moving `10` inside it covers `20` on the canvas. Think of two rulers with different scales: the same position has different readings. The figure shows only x coordinates; all y coordinates are `0`.
 
-<ComponentPreview files="scope-offset-rulers" size="lg" hideCode />
+<ComponentPreview files="scope-offset-rulers" size="lg" type="illustration" hideCode />
 
 Starting at the orange point A, read the figure in three steps:
 
@@ -85,7 +85,7 @@ Canvas coordinates are called world coordinates; coordinates inside the Scope ar
 
 In the implementation, `toLocal` converts to the Scope's reading, and `toWorld` converts back to the canvas reading. The flow below follows the same three steps:
 
-<ComponentPreview files="scope-coordinate-projection" size="lg" hideCode />
+<ComponentPreview files="scope-coordinate-projection" size="lg" type="flow" hideCode />
 
 `offset` specifies how far to move inside the Scope; `at` expresses that movement as a direction and distance. Rotation works similarly: when a Scope turns, its horizontal direction turns with it, and the offset follows that direction. The conversion includes both the current Scope's transforms and those of its enclosing Scopes.
 
@@ -128,7 +128,7 @@ A frame is one layer of the namespace's id lookup tables. A regular Scope reuses
 
 Lookup proceeds outward from the current frame and **returns on the first match**. It continues only after a miss. In the figure, lookup can follow parent frames to the root, while registration writes only to the current frame. A same-frame duplicate also triggers a warning and replaces the existing entry.
 
-<ComponentPreview files="scope-namespace-lookup" size="lg" hideCode />
+<ComponentPreview files="scope-namespace-lookup" size="lg" type="flow" hideCode />
 
 Registration writes only to the current frame, so duplicate names have two distinct outcomes:
 
@@ -179,7 +179,7 @@ With an `id`, a Scope lets later elements reference the group's center or bounda
 
 The computed envelope updates the parent-frame placeholder; it does not register the id a second time. Before updating, the compiler checks entry identity: if a same-name child has already replaced the placeholder, that later child entry is preserved.
 
-<ComponentPreview files="scope-reference-envelope" size="md" hideCode />
+<ComponentPreview files="scope-reference-envelope" size="md" type="flow" hideCode />
 
 The envelope collects Node, Coordinate, and nested Scope layouts, excluding Path routing. By default, `boundingShape` uses a rectangular envelope—an AABB, or axis-aligned bounding box. With `circle`, it computes a minimum enclosing circle from layout corner points. This selects the reference boundary, not a clipping region.
 
@@ -226,7 +226,7 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
 
 Built-in and custom definitions enter the same resolution path. The resulting path enters the resource table, and its reference joins the child primitives and transforms on the Scene group. This chain does not depend on `scope.id`: an anonymous Scope can clip its children too.
 
-<ComponentPreview files="scope-clip-resource" size="md" hideCode />
+<ComponentPreview files="scope-clip-resource" size="md" type="flow" hideCode />
 
 Built-in and custom clips both use Clip Definition's `resolve` and `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrim.clipRef`.
 

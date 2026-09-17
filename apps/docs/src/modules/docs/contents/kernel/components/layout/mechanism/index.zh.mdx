@@ -11,7 +11,7 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 看下面两组相同的节点：A 没有设置填充，B 显式设置橙色。左边通过 `rootScope.defaults.node.style.fill` 提供蓝色默认值，右边把同样的 `defaults` 写在显式 Scope 上。虚线框只标识包装关系，不是 Scope 自动绘制的边框。
 
-<ComponentPreview files="layout-root-scope" size="md" hideCode />
+<ComponentPreview files="layout-root-scope" size="md" type="illustration" hideCode />
 
 两边的 A 都继承蓝色，B 都保留橙色。**defaults** 为未显式配置的后代图元提供默认值，不会强制改写节点属性；`rootScope.style` 则提供 `fill / stroke / opacity` 等通用绘图样式。图中的蓝色使用 `dodgerblue`，橙色使用 `darkorange`，均以低透明度填充，便于同时看清节点文字。
 
@@ -50,13 +50,13 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 自动计算只需要理解两步：合并内容边界，再向四边扩展 padding。下图只把蓝色 A、B 作为被测内容：A 是中心 `(30, 40)`、半径 `10` 的圆，B 是左上角 `(80, 50)`、宽高 `20 × 20` 的矩形。灰色虚线包住两者，橙色框在四边各多留 10 个绘图单位；测量线和文字只是教学标注，不计入这组内容的边界。
 
-<ComponentPreview files="layout-viewport-bounds" size="xl" hideCode />
+<ComponentPreview files="layout-viewport-bounds" size="xl" type="illustration" hideCode />
 
 根据 A、B 的坐标和尺寸，灰框最左为 `20`、最上为 `30`，最右为 `100`、最下为 `70`，所以内容边界是 `(20, 30, 80, 40)`。再看橙框：左、上各向外移 `10`，宽、高各增加 `20`，得到视窗 `(10, 20, 100, 60)`。这些四元组的顺序都是 `(x, y, width, height)`，不是两个角点。图中按同一比例放大绘制，数值仍表示原始绘图单位。
 
 这对应下面的局部处理：编译得到内容边界，再扩展四边，生成自动视窗。不会先移动图元来让左上角归零。
 
-<ComponentPreview files="layout-auto-viewport" size="xs" hideCode />
+<ComponentPreview files="layout-auto-viewport" size="xs" type="flow" hideCode />
 
 一般地，边界为 `(x, y, w, h)`、留白为 `p` 时：
 
@@ -102,13 +102,13 @@ $$
 
 两幅图都固定 `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`，A 位于 `(50, 50)`，B 位于 `(150, 50)`。上图不传宽高，下图只传 `width={400}`。先比较灰色宿主边框，再比较 A 相对左边、上边的位置。
 
-<ComponentPreview files="layout-display-comparison" size="xxl" hideCode />
+<ComponentPreview files="layout-display-comparison" size="xxl" type="illustration" hideCode />
 
 下图的宿主宽高、图形和间距都显示为上图的两倍，但 A 的绘图坐标仍是 `(50, 50)`：它始终位于窗口宽度的四分之一、高度的一半。图中两幅示意按同一比例绘制，点线标出 A 到宿主上边和左边的距离；它们没有各自缩放到同样大小。
 
 只传数值宽度时，`computeDisplaySize` 用视窗比例补齐高度。本例先得到宽高比 `200 / 100 = 2`，再算出显示高度 `400 / 2 = 200`：
 
-<ComponentPreview files="layout-viewbox-resolution" size="md" hideCode />
+<ComponentPreview files="layout-viewbox-resolution" size="md" type="flow" hideCode />
 
 对于同一个 `200 × 100` 视窗，其他尺寸配置分别走以下分支：
 
@@ -155,7 +155,7 @@ Layout 只设置 `{ mode: 'light' }` 时，仍能保留外层选择的 `clean` �
 
 下图从上到下是覆盖顺序。ThemeProvider 提供 `{ style: 'clean', mode: 'dark' }`，输入场景不设置主题，Layout 的 `theme` prop 只提供 `{ mode: 'light' }`。沿 `theme.style`、`theme.mode` 两列分别往下读，注意 `—` 表示“未提供”，不是清空。
 
-<ComponentPreview files="layout-theme-overlays" size="lg" hideCode />
+<ComponentPreview files="layout-theme-overlays" size="lg" type="illustration" hideCode />
 
 最终主题中的 `style: 'clean'` 来自 Provider，`mode: 'light'` 来自 Layout。若输入场景也提供主题，它会先覆盖 Provider，再接受 Layout 的覆盖。`mergeThemeOverlays` 逐层只写入已提供的字段，嵌套 ThemeProvider 也复用这套规则。
 

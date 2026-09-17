@@ -23,6 +23,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlValues,
+  PreviewFigureType,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   SizeKey,
@@ -55,6 +56,8 @@ export type ComponentPreviewCardProps = {
   showTools?: boolean;
   /** 是否默认不展示源码区，而由预览区左下角入口展开。 */
   codeInitiallyHidden?: boolean;
+  /** 叙述性图示的说明类型。 */
+  figureType?: PreviewFigureType;
   /** 当前 demo 的声明式 controls definition */
   controlDefinition?: PreviewControlsDefinition;
   /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
@@ -95,6 +98,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     showAskAi = true,
     showTools = true,
     codeInitiallyHidden = false,
+    figureType,
     controlDefinition,
     controlPanelDefaultOpen,
     controlPanelDefaultSize,
@@ -211,6 +215,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           controlContract={controlContract}
           controlState={controlState}
           showContextBar={showContextBar}
+          figureType={figureType}
           themeMode={themeMode}
           onThemeModeChange={setThemeMode}
           controlPanelOpen={controlPanelOpen}
@@ -257,6 +262,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             controlDefinition={resolvedControlDefinition}
             controlContract={controlContract}
             showContextBar={showContextBar}
+            figureType={figureType}
             themeMode={themeMode}
             onThemeModeChange={setThemeMode}
             controlPanelOpen={controlPanelOpen}
