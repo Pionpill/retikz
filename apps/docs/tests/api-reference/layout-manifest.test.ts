@@ -47,7 +47,10 @@ describe('Layout API 公开范围', () => {
     expect(runtimeModeValue).toContain('export type LayoutRuntimeModeValue =\n  | "retained"\n  | "static";');
     const runtimeOptions = source.split('### LayoutRuntimeOptions\n')[1]?.split('\n### ')[0] ?? '';
     expect(runtimeOptions).toContain('#### Expanded type');
-    expect(runtimeOptions).toContain('readonly mode: typeof LayoutRuntimeMode.Static;');
+    expect(runtimeOptions).toContain('readonly mode?: typeof LayoutRuntimeMode.Retained | undefined;');
+    expect(runtimeOptions).toContain(
+      'export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;',
+    );
     expect(extensions).not.toContain('<details>');
     expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
     const paths = [...source.matchAll(/path=\{"([^"}]+)"\}/g)].map(match => match[1]);

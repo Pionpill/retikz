@@ -315,7 +315,7 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 React does not create Core Programs, Runtime sessions, or retained renderers; Vanilla owns all processing state
 
 ```ts
-FC<LayoutProps>;
+export const Layout = FC<LayoutProps>;
 ```
 
 ### LayoutRuntimeMode
@@ -331,5 +331,8 @@ FC<LayoutProps>;
 </p>
 
 ```ts
-Readonly<{ Retained: 'retained'; Static: 'static' }>;
+export const LayoutRuntimeMode = Object.freeze({
+  Retained: 'retained',
+  Static: 'static',
+} as const);
 ```
