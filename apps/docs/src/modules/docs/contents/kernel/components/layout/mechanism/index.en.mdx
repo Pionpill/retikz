@@ -9,20 +9,13 @@ Read [Basic usage](/kernel/components/layout/usage) first. This page answers sep
 
 When applying shared styling to a set of children, `rootScope` does not introduce another styling system. Layout conditionally wraps JSX children in an ordinary Scope, reusing its inheritance and override rules.
 
-For example, the following root configuration is equivalent to placing a `<Scope defaults={{ node: { style: { fill: 'lightblue' } } }}>` around these nodes inside Layout:
+Compare the two identical sets of nodes below: A has no fill of its own; B explicitly selects orange. The left side supplies blue through `rootScope.defaults.node.style.fill`; the right side puts the same `defaults` on an explicit Scope. The dashed frames identify the wrappers; they are not borders automatically drawn by Scope.
 
-```tsx
-<Layout rootScope={{ defaults: { node: { style: { fill: 'lightblue' } } } }}>
-  <Node id="a" position={[0, 0]}>
-    A
-  </Node>
-  <Node id="b" position={[80, 0]} style={{ fill: 'orange' }}>
-    B
-  </Node>
-</Layout>
-```
+<ComponentPreview files="layout-root-scope" size="md" hideCode />
 
-A inherits the light-blue fill; B's explicit fill overrides the default. **defaults** supplies values that descendants have not set explicitly, rather than forcibly rewriting each node. `rootScope.style` supplies general drawing styles such as `fill / stroke / opacity` to descendants.
+On both sides, A inherits blue and B stays orange. **defaults** supplies values that descendants have not set explicitly; it does not forcibly rewrite node properties. `rootScope.style` supplies general drawing styles such as `fill / stroke / opacity`. The figure uses `dodgerblue` and `darkorange` with translucent fills to keep the node text legible.
+
+Internally, `wrapRootScope` selects effective `style / defaults` overrides, creates an ordinary Scope only when needed, and places the original children inside it. The left side reuses that wrapper function; the right side declares Scope directly. Both therefore use the same inheritance rules.
 
 Wrapping depends on whether the configuration contributes an override, not merely whether the `rootScope` object exists:
 
@@ -55,15 +48,23 @@ Without `viewBox`, the viewport comes from the drawing's layout bounds, not the 
 
 Layout first chooses a viewport source: its `viewBox` prop takes precedence over the input IR's `viewBox`. Only when both are absent does it compute a range from the content. An explicit viewport directly sets the coordinate window without automatic content padding.
 
-Automatic sizing has two steps: combine content bounds, then expand all four sides by padding. The current default is 10 drawing units. This is not host CSS `padding`. Core compile options can configure it, but Layout currently exposes no such prop; use an explicit `viewBox` to control the viewed margin yourself.
+Automatic sizing has two steps: combine content bounds, then expand all four sides by padding. In the figure, only blue A and B count as measured content: A is a circle centered at `(30, 40)` with radius `10`; B is a `20 × 20` rectangle whose top-left corner is `(80, 50)`. The dashed gray bounds enclose both; the orange viewport adds 10 drawing units on each side. Measurement lines and text are teaching annotations, excluded from this content's bounds.
+
+<ComponentPreview files="layout-viewport-bounds" size="xl" hideCode />
+
+From A and B's stated positions and sizes, the gray bounds have left `20`, top `30`, right `100`, and bottom `70`, giving content bounds `(20, 30, 80, 40)`. Then read the orange frame: moving left and top outward by `10` and adding `20` to each dimension gives viewport `(10, 20, 100, 60)`. These tuples mean `(x, y, width, height)`, not two corners. The figure enlarges everything at one scale; labels still refer to the original drawing units.
+
+The local process is: compile content bounds, expand all four sides, then produce the automatic viewport. It does not first move the drawing to make its top-left corner zero.
 
 <ComponentPreview files="layout-auto-viewport" size="xs" hideCode />
 
-For content bounds `x: 20, y: 30, width: 80, height: 40`, default padding gives `x: 10, y: 20, width: 100, height: 60`. In general, bounds `(x, y, w, h)` and padding `p` produce:
+In general, bounds `(x, y, w, h)` and padding `p` produce:
 
 $$
 (x', y', w', h') = (x-p,\ y-p,\ w+2p,\ h+2p)
 $$
+
+The current default is `p = 10`, not host CSS `padding`. Core compile options can configure it, but Layout currently exposes no such prop; use an explicit `viewBox` to control the viewed margin yourself.
 
 If no content bounds exist, the result is directly `{ x: 0, y: 0, width: 100, height: 100 }`, without padding that fallback range again.
 
@@ -104,9 +105,17 @@ For detailed bounds algorithms, see [Bounds calculations in the Math package](/k
 
 `viewBox` selects which drawing coordinates are visible; `width / height` determines how much page space that window occupies. The viewport is determined first; its dimensions then provide the basis for deriving display size. Changing display size in the other direction neither rewrites node coordinates nor redefines the viewport.
 
+Both drawings fix `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`, with A at `(50, 50)` and B at `(150, 50)`. The upper drawing omits both dimensions; the lower one supplies only `width={400}`. Compare the gray host frames first, then A's position relative to the left and top edges.
+
+<ComponentPreview files="layout-display-comparison" size="xxl" hideCode />
+
+The lower host, shapes, and gaps appear twice as large, but A's drawing coordinates remain `(50, 50)`: one quarter of the window width and halfway down its height. Both illustrations use the same scale. Dotted lines mark A's distances to the host's top and left edges; the two drawings have not been individually fitted to equal sizes.
+
+With only a numeric width, `computeDisplaySize` derives height from the viewport ratio. Here it computes `200 / 100 = 2`, then display height `400 / 2 = 200`:
+
 <ComponentPreview files="layout-viewbox-resolution" size="md" hideCode />
 
-For `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`, the internal aspect ratio is 2:1:
+Other size settings for that same `200 × 100` viewport follow these branches:
 
 | Size configuration         | Host size   | Derivation                           |
 | -------------------------- | ----------- | ------------------------------------ |
@@ -144,27 +153,31 @@ SVG and Canvas share this display-size calculation. CSS strings are not parsed a
 
 ## Themes and local overrides
 
-`theme`, `rootScope`, and host `style` can all affect appearance, but they are not three priority levels of one configuration object:
+Layout retains the outer `clean` style when it supplies only `{ mode: 'light' }`: themes merge field by field, so omitted fields remain inherited. Both selectors here belong to `theme`:
 
-| Configuration                | Applied to                       | Controls                                       |
-| ---------------------------- | -------------------------------- | ---------------------------------------------- |
-| `theme`                      | Scene and theme-aware Composites | Theme style and light/dark mode                |
-| `rootScope.style / defaults` | Root scope of JSX children       | Drawing styles and element defaults            |
-| `style`                      | SVG / Canvas host                | Page CSS, such as background and maximum width |
+- **theme.style**: selects a theme style, such as `clean`; it is distinct from the host's CSS `style` prop.
+- **theme.mode**: selects light or dark mode, such as `dark` or `light`.
 
-A **Composite** accepts a high-level description and expands it into basic drawing elements. Layout writes the theme into Scene for these capabilities to consume; it does not directly turn a theme selector into every ordinary Node's fill color. Each consuming capability determines how the theme produces element styles.
+Read the following figure from top to bottom in override order. ThemeProvider supplies `{ style: 'clean', mode: 'dark' }`, the input scene omits its theme, and Layout's `theme` prop supplies only `{ mode: 'light' }`. Follow the `theme.style` and `theme.mode` columns separately: `—` means omitted, not cleared.
 
-Themes also affect more than Composites: for numeric colors (colors derived as a proportion of the master color), `mode` participates in color resolution. Explicit string colors such as `'orange'` retain their values. Changing the theme is therefore not a blanket replacement of all element styles.
+<ComponentPreview files="layout-theme-overlays" size="lg" hideCode />
 
-Within the theme itself, the order is explicit: the theme inherited from ThemeProvider, the input scene's theme, then Layout's `theme`. Merge them field by field: later layers override only the `style / mode` they supply, while omitted fields remain inherited rather than clearing the entire earlier theme.
+In the final theme, `style: 'clean'` comes from Provider, while `mode: 'light'` comes from Layout. If the input scene supplies a theme, it overrides Provider first, before Layout applies its own overrides. `mergeThemeOverlays` writes only the fields supplied at each layer. Nested ThemeProviders reuse this rule.
 
-<ComponentPreview files="layout-theme-overlays" size="xs" hideCode />
+Merging a theme and setting drawing styles are separate operations. A **Composite** accepts a high-level description and expands it into basic drawing elements; it can consume a theme to generate element styles. `theme`, `rootScope`, and host `style` target the following places, rather than forming three priority levels of one object:
 
-For example, if the Provider supplies `{ style: 'clean', mode: 'dark' }` and Layout supplies only `{ mode: 'light' }`, the result keeps `style: 'clean'` and changes only the mode to `light`. Nested ThemeProviders use the same field-wise merge.
+| Configuration                | Applied to                             | Controls                                       |
+| ---------------------------- | -------------------------------------- | ---------------------------------------------- |
+| `theme`                      | Input scene and theme-aware Composites | Theme style and light/dark mode                |
+| `rootScope.style / defaults` | Root scope of JSX children             | Drawing styles and element defaults            |
+| `style`                      | SVG / Canvas host                      | Page CSS, such as background and maximum width |
 
-When a Composite is used with `rootScope`, the result depends on what it actually emits. Suppose the root Scope supplies a light-blue default fill. If a Composite uses the theme to emit a Node with explicit `style.fill: 'orange'`, that Node is orange. If it emits a Node in the same scope without a fill, the Node inherits light blue. Theme selection does not bypass scope rules: emitted properties and inherited styles still determine the result together.
+Layout writes the theme into the input scene for later processing. It does not directly turn the selected theme style into every ordinary Node's fill. Use a node property or `rootScope` to set its fill; use host `style={{ maxWidth: '100%' }}` to constrain the drawing's maximum page width.
 
-To set an ordinary Node's fill, use its own property or `rootScope`. To constrain the drawing's maximum page width, use host `style={{ maxWidth: '100%' }}`. These target different layers; repeatedly changing the theme is not a substitute for choosing the appropriate configuration.
+Two further boundaries affect final colors:
+
+- **Composites still obey scope overrides**: an emitted Node with an explicit orange fill overrides the root Scope's blue default. Without a fill of its own, the emitted Node inherits blue, just like A and B in the first section.
+- **Light/dark mode can participate in color calculation**: with numeric colors (derived as a proportion of the master color), `mode` affects resolution. Explicit string colors such as `'darkorange'` retain their values. Changing the theme is not a blanket replacement of all element styles.
 
 <SourceLinks
   sources={[

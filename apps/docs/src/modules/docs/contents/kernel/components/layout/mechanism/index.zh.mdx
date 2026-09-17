@@ -9,20 +9,13 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 给一组子图元统一设置样式时，`rootScope` 并不是另一套样式系统。Layout 会按需把 JSX children 包进一层普通 Scope，让它们沿用 Scope 的继承与覆盖规则。
 
-例如，下面的根配置等价于在 Layout 内手写一层 `<Scope defaults={{ node: { style: { fill: 'lightblue' } } }}>` 包住这些节点：
+看下面两组相同的节点：A 没有设置填充，B 显式设置橙色。左边通过 `rootScope.defaults.node.style.fill` 提供蓝色默认值，右边把同样的 `defaults` 写在显式 Scope 上。虚线框只标识包装关系，不是 Scope 自动绘制的边框。
 
-```tsx
-<Layout rootScope={{ defaults: { node: { style: { fill: 'lightblue' } } } }}>
-  <Node id="a" position={[0, 0]}>
-    A
-  </Node>
-  <Node id="b" position={[80, 0]} style={{ fill: 'orange' }}>
-    B
-  </Node>
-</Layout>
-```
+<ComponentPreview files="layout-root-scope" size="md" hideCode />
 
-A 继承浅蓝填充，B 的显式填充覆盖默认值。这里的 **defaults** 是给未显式配置的后代图元提供默认值，不是强制重写每个节点的属性；`rootScope.style` 则向后代提供 `fill / stroke / opacity` 等通用绘图样式。
+两边的 A 都继承蓝色，B 都保留橙色。**defaults** 为未显式配置的后代图元提供默认值，不会强制改写节点属性；`rootScope.style` 则提供 `fill / stroke / opacity` 等通用绘图样式。图中的蓝色使用 `dodgerblue`，橙色使用 `darkorange`，均以低透明度填充，便于同时看清节点文字。
+
+实现上，`wrapRootScope` 先挑出有效的 `style / defaults`，有覆盖时才创建普通 Scope，再把原 children 放进去。图的左侧复用了这个包装函数，右侧直接声明 Scope，因此两种写法最终沿用同一套继承规则。
 
 包装与否取决于是否存在有效覆盖，而不是有没有传入 `rootScope` 这个对象：
 
@@ -55,15 +48,23 @@ A 继承浅蓝填充，B 的显式填充覆盖默认值。这里的 **defaults**
 
 先选择视窗来源：Layout 的 `viewBox` prop 优先，其次是输入 IR 中的 `viewBox`；两者都没有，才根据内容自动计算。显式视窗直接决定坐标窗口，不再按内容追加自动留白。
 
-自动计算只需要理解两步：合并内容边界，再向四边扩展 padding。当前默认 padding 为 10 个绘图单位，不是宿主 CSS 的 `padding`。Core 编译选项支持配置它，但 Layout 当前没有暴露这个 prop；需要自行控制取景留白时，用显式 `viewBox`。
+自动计算只需要理解两步：合并内容边界，再向四边扩展 padding。下图只把蓝色 A、B 作为被测内容：A 是中心 `(30, 40)`、半径 `10` 的圆，B 是左上角 `(80, 50)`、宽高 `20 × 20` 的矩形。灰色虚线包住两者，橙色框在四边各多留 10 个绘图单位；测量线和文字只是教学标注，不计入这组内容的边界。
+
+<ComponentPreview files="layout-viewport-bounds" size="xl" hideCode />
+
+根据 A、B 的坐标和尺寸，灰框最左为 `20`、最上为 `30`，最右为 `100`、最下为 `70`，所以内容边界是 `(20, 30, 80, 40)`。再看橙框：左、上各向外移 `10`，宽、高各增加 `20`，得到视窗 `(10, 20, 100, 60)`。这些四元组的顺序都是 `(x, y, width, height)`，不是两个角点。图中按同一比例放大绘制，数值仍表示原始绘图单位。
+
+这对应下面的局部处理：编译得到内容边界，再扩展四边，生成自动视窗。不会先移动图元来让左上角归零。
 
 <ComponentPreview files="layout-auto-viewport" size="xs" hideCode />
 
-假设内容边界为 `x: 20, y: 30, width: 80, height: 40`，默认留白后得到 `x: 10, y: 20, width: 100, height: 60`。一般地，边界为 `(x, y, w, h)`、留白为 `p` 时：
+一般地，边界为 `(x, y, w, h)`、留白为 `p` 时：
 
 $$
 (x', y', w', h') = (x-p,\ y-p,\ w+2p,\ h+2p)
 $$
+
+当前默认 `p = 10`，不是宿主 CSS 的 `padding`。Core 编译选项支持配置它，但 Layout 当前没有暴露这个 prop；需要自行控制取景留白时，用显式 `viewBox`。
 
 若没有任何内容边界，则直接使用 `{ x: 0, y: 0, width: 100, height: 100 }`，不再在这个兜底范围外加 padding。
 
@@ -99,9 +100,17 @@ $$
 
 `viewBox` 决定“看哪一段绘图坐标”，`width / height` 决定“这个窗口在页面上占多大”。先确定视窗，再以它的宽高作为显示尺寸的推导依据；反过来，修改显示尺寸不会改写节点坐标，也不会重新定义视窗。
 
+两幅图都固定 `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`，A 位于 `(50, 50)`，B 位于 `(150, 50)`。上图不传宽高，下图只传 `width={400}`。先比较灰色宿主边框，再比较 A 相对左边、上边的位置。
+
+<ComponentPreview files="layout-display-comparison" size="xxl" hideCode />
+
+下图的宿主宽高、图形和间距都显示为上图的两倍，但 A 的绘图坐标仍是 `(50, 50)`：它始终位于窗口宽度的四分之一、高度的一半。图中两幅示意按同一比例绘制，点线标出 A 到宿主上边和左边的距离；它们没有各自缩放到同样大小。
+
+只传数值宽度时，`computeDisplaySize` 用视窗比例补齐高度。本例先得到宽高比 `200 / 100 = 2`，再算出显示高度 `400 / 2 = 200`：
+
 <ComponentPreview files="layout-viewbox-resolution" size="md" hideCode />
 
-以 `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}` 为例，内部宽高比是 2:1：
+对于同一个 `200 × 100` 视窗，其他尺寸配置分别走以下分支：
 
 | 尺寸配置                      | 宿主尺寸    | 推导方式         |
 | ----------------------------- | ----------- | ---------------- |
@@ -139,27 +148,31 @@ SVG 和 Canvas 共用这套显示尺寸计算。CSS 字符串不会被当作绘�
 
 ## 主题与局部覆盖
 
-`theme`、`rootScope` 和宿主 `style` 都可能影响外观，但不是同一个配置对象的三层优先级：
+Layout 只设置 `{ mode: 'light' }` 时，仍能保留外层选择的 `clean` 风格：主题按字段合并，后面未提供的字段会继续继承。这里的两个字段都属于 `theme`：
 
-| 配置                         | 作用位置                     | 用来决定什么               |
-| ---------------------------- | ---------------------------- | -------------------------- |
-| `theme`                      | Scene 及消费主题的 Composite | 主题风格与明暗模式         |
-| `rootScope.style / defaults` | JSX 子图的根作用域           | 绘图样式与图元默认值       |
-| `style`                      | SVG / Canvas 宿主            | 页面 CSS，如背景与最大宽度 |
+- **theme.style**：选择主题风格，如 `clean`；与宿主 CSS 的 `style` prop 不同。
+- **theme.mode**：选择明暗模式，如 `dark` 或 `light`。
 
-**Composite** 是接收高层描述、再展开为基础图元的组合能力。Layout 把主题写入 Scene，供这些能力读取；它不会把主题选择器直接转换成每个普通 Node 的填充色。具体主题如何生成图元样式由消费它的能力决定。
+下图从上到下是覆盖顺序。ThemeProvider 提供 `{ style: 'clean', mode: 'dark' }`，输入场景不设置主题，Layout 的 `theme` prop 只提供 `{ mode: 'light' }`。沿 `theme.style`、`theme.mode` 两列分别往下读，注意 `—` 表示“未提供”，不是清空。
 
-主题也不只影响 Composite：当图元使用数值颜色（按主色比例派生颜色）时，`mode` 会参与颜色计算；显式的 `'orange'` 等字符串颜色则保持原值。因此不能将“切换主题”理解为统一替换所有图元样式。
+<ComponentPreview files="layout-theme-overlays" size="lg" hideCode />
 
-同一份主题内部才存在明确的覆盖顺序：继承自 ThemeProvider 的主题、输入场景的主题、Layout 的 `theme`，按此顺序逐字段合并。后面只覆盖显式提供的 `style / mode`，省略字段继续继承，不把前面的整个主题清空。
+最终主题中的 `style: 'clean'` 来自 Provider，`mode: 'light'` 来自 Layout。若输入场景也提供主题，它会先覆盖 Provider，再接受 Layout 的覆盖。`mergeThemeOverlays` 逐层只写入已提供的字段，嵌套 ThemeProvider 也复用这套规则。
 
-<ComponentPreview files="layout-theme-overlays" size="xs" hideCode />
+合并主题和设置绘图样式是两个问题。**Composite** 是接收高层描述、再展开为基础图元的组合能力，可以消费主题生成自己的图元样式。`theme`、`rootScope` 和宿主 `style` 分别作用于以下位置，不构成同一个配置对象的三层优先级：
 
-例如 Provider 提供 `{ style: 'clean', mode: 'dark' }`，Layout 只传 `{ mode: 'light' }`，最终仍保留 `style: 'clean'`，仅将明暗模式改为 `light`。嵌套 ThemeProvider 也使用相同的字段合并规则。
+| 配置                         | 作用位置                       | 用来决定什么               |
+| ---------------------------- | ------------------------------ | -------------------------- |
+| `theme`                      | 输入场景及消费主题的 Composite | 主题风格与明暗模式         |
+| `rootScope.style / defaults` | JSX 子图的根作用域             | 绘图样式与图元默认值       |
+| `style`                      | SVG / Canvas 宿主              | 页面 CSS，如背景与最大宽度 |
 
-当 Composite 与 `rootScope` 一起使用时，要看它展开后实际写了什么。例如，根 Scope 默认填充是浅蓝色，而某个 Composite 根据主题生成了显式 `style.fill: 'orange'` 的 Node，那么这个 Node 显示橙色；若它在同一作用域下生成的 Node 没写 fill，则继承浅蓝色。主题不是绕开 Scope 的覆盖开关，最终仍由生成图元的显式属性与作用域继承共同决定。
+Layout 把主题写入输入场景，供后续处理读取；它不会把主题风格直接转换成每个普通 Node 的填充色。确定普通 Node 的填充色用节点属性或 `rootScope`；限制整幅图在页面上的最大宽度用宿主 `style={{ maxWidth: '100%' }}`。
 
-若要确定普通 Node 的填充色，用节点属性或 `rootScope`；若要限制整幅图在页面上的最大宽度，用宿主 `style={{ maxWidth: '100%' }}`。这些选择对应不同作用位置，不应靠反复切换主题来试探。
+还有两个与最终颜色有关的边界：
+
+- **Composite 仍遵守作用域覆盖规则**：若它展开出显式橙色的 Node，该颜色覆盖根 Scope 的蓝色默认值；若生成的 Node 没写 fill，则继承蓝色。这与第一节 A、B 的结果相同。
+- **明暗模式可能参与颜色计算**：图元使用数值颜色（按主色比例派生颜色）时，`mode` 会影响计算；显式的 `'darkorange'` 等字符串颜色则保持原值。切换主题不等于统一替换所有图元样式。
 
 <SourceLinks
   sources={[

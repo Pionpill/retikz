@@ -26,23 +26,24 @@ const LayoutViewboxResolution: FC<LayoutViewboxResolutionProps> = props => {
           items={[
             {
               id: 'selection',
-              role: 'activity',
+              role: 'state',
+              kind: LogicFigureEntityKind.ImportantData,
               text: [{ text: i18n.select }, { text: i18n.priority, fill: 'gray', font: { size: 12 } }],
             },
             {
               id: 'range',
-              role: 'state',
-              kind: LogicFigureEntityKind.ImportantData,
+              role: 'activity',
+              kind: LogicFigureEntityKind.Important,
               text: [{ text: i18n.range }, { text: i18n.automatic, fill: 'gray', font: { size: 12 } }],
             },
             {
               id: 'sizing',
-              role: 'activity',
+              role: 'state',
               text: [{ text: i18n.size }, { text: i18n.sizing, fill: 'gray', font: { size: 12 } }],
             },
             {
               id: 'display',
-              role: 'state',
+              role: 'activity',
               text: [{ text: i18n.display }, { text: i18n.independent, fill: 'gray', font: { size: 12 } }],
             },
           ]}
