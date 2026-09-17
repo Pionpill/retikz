@@ -35,6 +35,8 @@ describe('TeX API Reference MDX', () => {
     expect(source).toContain('| `onDiagnostic?` |');
     expect(source).toContain('### LowerTexOptions');
     expect(source).not.toContain('```ts\n{ onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void }\n```');
+    const lowerTexState = source.split('### MathJaxLowerTexState\n')[1]?.split('\n### ')[0] ?? '';
+    expect(lowerTexState).not.toContain('#### 展开类型');
     expect(source).toContain(
       '<p><ApiSourceLink label={"createLowerTex"} path={"packages/kernel/tex/src/lower/lower-tex.ts"}',
     );

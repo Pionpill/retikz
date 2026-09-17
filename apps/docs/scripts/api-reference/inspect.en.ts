@@ -1,4 +1,9 @@
 const translations: Record<string, string> = {
+  'callback 消费的已解析 options 类型': 'Resolved options type consumed by the callback',
+  '通过 subject schema 解析后的被观察对象类型': 'Observed subject type parsed by the subject schema',
+  'options schema 解析后的 options 类型': 'Options type parsed by the options schema',
+  '传入 options schema 前的原始 options 输入类型': 'Raw options input type before it reaches the options schema',
+  '当前 Scene 可用的 Composite Definition 集合': 'Composite Definition collection available to the current Scene',
   '渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG':
     'Rendering backend; an explicit value takes priority, otherwise inherits the Renderer context and uses SVG when no context is provided',
   '供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR':

@@ -68,11 +68,46 @@ describe('Kernel API Reference MDX', () => {
     }
   });
 
+  it('将对象常量内的函数投影为声明，不展示实现体', async () => {
+    const source = await createMathApiReferenceMdx('en');
+    const section = source.split('### circle\n')[1]?.split('\n### ')[0] ?? '';
+
+    expect(section).toContain('export declare const circle: {');
+    expect(section).toContain('minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null');
+    expect(section).not.toContain('const n = points.length');
+  });
+
   it('不展示继承自 JavaScript Error 的内部成员', async () => {
     const source = await createFoundationApiReferenceMdx('en');
 
     expect(source).toContain('| `readonly code` |');
     expect(source).not.toContain('| `captureStackTrace` |');
     expect(source).not.toContain('| `stackTraceLimit` |');
+  });
+
+  it('将标准 JSDoc @template 投影为类型参数说明', async () => {
+    const source = await createFoundationApiReferenceMdx('en');
+    const section = source.split('### RetikzError\n')[1]?.split('\n### ')[0] ?? '';
+
+    expect(section).toContain('| `TCode` | String type of the error classification code |');
+    expect(section).toContain('| `TDetails` | Structured detail type associated with the error code |');
+  });
+
+  it('不在 Foundation API 参考中重复展示独立 Schema 参考内容', async () => {
+    const source = await createFoundationApiReferenceMdx('en');
+    const schemaSymbols = [
+      'JsonObjectSchema',
+      'JsonValueSchema',
+      'NonBlankStringSchema',
+      'NonNegativeIntegerSchema',
+      'NonNegativeNumberSchema',
+      'NormalizedFractionSchema',
+      'PositiveIntegerSchema',
+      'PositiveNumberSchema',
+    ];
+
+    for (const symbol of schemaSymbols) {
+      expect(source).not.toContain(`### ${symbol}`);
+    }
   });
 });

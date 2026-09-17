@@ -122,6 +122,7 @@
     "pkgGroupRender": "Rendering packages",
     "pkgFoundation": "foundation",
     "pkgFoundationApiReference": "API reference",
+    "pkgFoundationSchemaReference": "Schema reference",
     "pkgCore": "core",
     "pkgInspect": "inspect",
     "pkgInspectBuiltins": "Built-in inspection",

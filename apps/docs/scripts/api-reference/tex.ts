@@ -81,6 +81,11 @@ type ApiReferenceSymbol = {
   source?: ApiReferenceSource;
 };
 
+type ApiReferenceComposition = {
+  baseTypes: Array<string>;
+  omittedMembers: Array<string>;
+};
+
 /** TypeDoc 的 glob 入口在 Windows 上也必须使用 POSIX 分隔符 */
 const toPosixPath = (value: string): string => value.replaceAll(path.sep, '/');
 
@@ -107,7 +112,33 @@ const texApiReferenceConfig: ApiReferencePackageConfig = {
 
 const MAX_EXPANDED_UNION_BRANCHES = 8;
 const MAX_EXPANDED_UNION_LINES = 40;
-const MAX_EXPANDED_UNION_CHARACTERS = 1_500;
+const MAX_EXPANDED_UNION_CHARACTERS = 500;
+const MAX_WRAPPED_OBJECT_MEMBERS = 12;
+const MAX_WRAPPED_OBJECT_CHARACTERS = 500;
+
+/** TypeScript 没有公开的 isKeywordTypeNode 时，识别可独立阅读的基础关键字类型 */
+const isKeywordTypeNode = (node: ts.TypeNode): boolean =>
+  [
+    ts.SyntaxKind.AnyKeyword,
+    ts.SyntaxKind.BigIntKeyword,
+    ts.SyntaxKind.BooleanKeyword,
+    ts.SyntaxKind.NeverKeyword,
+    ts.SyntaxKind.NumberKeyword,
+    ts.SyntaxKind.ObjectKeyword,
+    ts.SyntaxKind.StringKeyword,
+    ts.SyntaxKind.SymbolKeyword,
+    ts.SyntaxKind.UndefinedKeyword,
+    ts.SyntaxKind.UnknownKeyword,
+    ts.SyntaxKind.VoidKeyword,
+  ].includes(node.kind);
+
+/** 原声明已经完整表达包装语义的联合分支不再生成结构化重复视图 */
+const isDirectlyReadableUnionBranch = (node: ts.TypeNode): boolean => {
+  if (ts.isArrayTypeNode(node) || ts.isTupleTypeNode(node) || ts.isTypeOperatorNode(node)) return true;
+  if (!ts.isTypeReferenceNode(node)) return false;
+  const referenceName = node.typeName.getText();
+  return ['Array', 'Readonly', 'ReadonlyArray'].includes(referenceName);
+};
 
 /** 把 TypeDoc 的注释片段还原为简洁可读的 Markdown */
 const renderComment = (comment: JSONOutput.Comment | undefined): string =>
@@ -206,6 +237,13 @@ const toParameters = (signature: JSONOutput.SignatureReflection | undefined): Ar
     description: renderComment(parameter.comment),
   }));
 
+/** 从标准 JSDoc `@template` 或兼容的 `@typeParam` 中取得指定泛型的说明 */
+const typeParameterDescriptionFromTags = (comments: Array<JSONOutput.Comment | undefined>, name: string): string => {
+  const tagContents = ['@template', '@typeParam'].flatMap(tag => renderBlockTags(comments, tag));
+  const match = tagContents.find(content => new RegExp(`^${name}(?:\\s*-?\\s*|$)`).test(content));
+  return match?.replace(new RegExp(`^${name}(?:\\s*-?\\s*)?`), '').trim() ?? '';
+};
+
 /** 从函数或类型声明提取泛型参数及其 JSDoc 说明 */
 const toTypeParameters = (
   reflection: JSONOutput.DeclarationReflection,
@@ -213,7 +251,9 @@ const toTypeParameters = (
 ): Array<ApiReferenceTypeParameter> =>
   (signature?.typeParameters ?? reflection.typeParameters ?? []).map(parameter => ({
     name: parameter.name,
-    description: renderComment(parameter.comment),
+    description:
+      renderComment(parameter.comment) ||
+      typeParameterDescriptionFromTags([signature?.comment, reflection.comment], parameter.name),
   }));
 
 /** 从 declaration 提取可查询的对象成员 */
@@ -240,6 +280,8 @@ const resolveObjectMembers = (
 ):
   | {
       members?: Array<ApiReferenceMember>;
+      directMembers?: Array<ApiReferenceMember>;
+      composition?: ApiReferenceComposition;
       signature: string;
       expandedSignature?: string;
       indexSignatures?: Array<string>;
@@ -267,8 +309,53 @@ const resolveObjectMembers = (
   const print = (node: ts.Node): string =>
     printer.printNode(ts.EmitHint.Unspecified, node, declaration.getSourceFile());
   const signature = print(declaration);
+  const composition = (() => {
+    if (!ts.isTypeAliasDeclaration(declaration)) return undefined;
+    const directMemberNames = new Set<string>();
+    const baseTypes = new Set<string>();
+    const omittedMembers = new Set<string>();
+    const collectOmittedMembers = (node: ts.TypeNode): void => {
+      if (ts.isLiteralTypeNode(node)) {
+        omittedMembers.add(node.getText());
+        return;
+      }
+      if (ts.isUnionTypeNode(node)) node.types.forEach(collectOmittedMembers);
+    };
+    const visit = (node: ts.TypeNode): void => {
+      if (ts.isParenthesizedTypeNode(node)) return visit(node.type);
+      if (ts.isIntersectionTypeNode(node)) return node.types.forEach(visit);
+      if (ts.isTypeLiteralNode(node)) {
+        node.members.forEach(member => {
+          if (
+            ts.isPropertySignature(member) &&
+            (ts.isIdentifier(member.name) || ts.isStringLiteral(member.name) || ts.isNumericLiteral(member.name))
+          )
+            directMemberNames.add(member.name.text);
+        });
+        return;
+      }
+      if (!ts.isTypeReferenceNode(node)) return;
+      const referenceName = node.typeName.getText();
+      const typeArguments = node.typeArguments;
+      if (typeArguments === undefined) return;
+      const [baseType] = typeArguments;
+      if (referenceName === 'Readonly') return visit(baseType);
+      if (!['Omit', 'Pick'].includes(referenceName)) return;
+      baseTypes.add(print(baseType));
+      if (referenceName === 'Omit') typeArguments.slice(1).forEach(collectOmittedMembers);
+    };
+    visit(declaration.type);
+    return { directMemberNames, baseTypes, omittedMembers };
+  })();
   const expandedSignature = (() => {
     if (!ts.isTypeAliasDeclaration(declaration) || !type.isUnion()) return undefined;
+    if (ts.isUnionTypeNode(declaration.type)) {
+      if (declaration.type.types.some(isDirectlyReadableUnionBranch)) return undefined;
+      const hasHiddenBranch = declaration.type.types.some(
+        node => !ts.isTypeLiteralNode(node) && !ts.isLiteralTypeNode(node) && !isKeywordTypeNode(node),
+      );
+      if (!hasHiddenBranch) return undefined;
+    }
     if (type.types.length > MAX_EXPANDED_UNION_BRANCHES) return undefined;
     const expandedParts = type.types.map(part => {
       const node = checker.typeToTypeNode(
@@ -277,15 +364,7 @@ const resolveObjectMembers = (
         ts.NodeBuilderFlags.NoTruncation | ts.NodeBuilderFlags.UseStructuralFallback | ts.NodeBuilderFlags.InTypeAlias,
       );
       if (node === undefined) return undefined;
-      if (
-        !ts.isTypeLiteralNode(node) &&
-        !ts.isLiteralTypeNode(node) &&
-        !ts.isKeywordTypeNode(node) &&
-        !ts.isTypeReferenceNode(node) &&
-        !ts.isArrayTypeNode(node) &&
-        !ts.isTypeOperatorNode(node)
-      )
-        return undefined;
+      if (!ts.isTypeLiteralNode(node) && !ts.isLiteralTypeNode(node) && !isKeywordTypeNode(node)) return undefined;
       if (!ts.isTypeLiteralNode(node)) return print(node);
       return ['{', ...node.members.map(member => `  ${print(member)}`), '}'].join('\n');
     });
@@ -400,6 +479,26 @@ const resolveObjectMembers = (
       defaultValue: tagText('default') || tagText('defaultValue') || '—',
     };
   });
+  const membersTextLength = resolvedMembers.reduce(
+    (length, member) =>
+      length + member.name.length + member.type.length + member.description.length + member.details.length,
+    0,
+  );
+  const directMembers = (() => {
+    const candidateComposition = composition;
+    if (
+      candidateComposition === undefined ||
+      candidateComposition.baseTypes.size === 0 ||
+      candidateComposition.directMemberNames.size > 3 ||
+      (resolvedMembers.length <= MAX_WRAPPED_OBJECT_MEMBERS && membersTextLength <= MAX_WRAPPED_OBJECT_CHARACTERS)
+    )
+      return undefined;
+    return resolvedMembers.filter(member => candidateComposition.directMemberNames.has(member.name));
+  })();
+  const renderedComposition =
+    directMembers === undefined || composition === undefined
+      ? undefined
+      : { baseTypes: [...composition.baseTypes], omittedMembers: [...composition.omittedMembers] };
   const indexSignatures = checker
     .getIndexInfosOfType(type)
     .map(
@@ -408,10 +507,82 @@ const resolveObjectMembers = (
     );
   return {
     members: resolvedMembers,
+    directMembers,
+    composition: renderedComposition,
     signature,
     expandedSignature,
     indexSignatures,
   };
+};
+
+/** 判断对象初始化表达式是否包含需要从 API 参考中移除的函数实现 */
+const containsFunctionImplementation = (node: ts.Node): boolean => {
+  if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return true;
+  return node.getChildren().some(containsFunctionImplementation);
+};
+
+/** 公开声明保留 `export`、名称与赋值结构；实现体仍由源码链接承载 */
+const resolveSourceSignature = (
+  program: ts.Program,
+  sourceFile: ts.SourceFile,
+  name: string,
+  fallbackSignature: string,
+): string | undefined => {
+  const checker = program.getTypeChecker();
+  const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
+  let symbol = moduleSymbol && checker.getExportsOfModule(moduleSymbol).find(item => item.name === name);
+  if (!symbol) throw new Error(`Missing public declaration ${name} in ${sourceFile.fileName}`);
+  if (symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol);
+  const declaration = symbol.declarations?.[0];
+  if (!declaration) return undefined;
+  const printer = ts.createPrinter({ removeComments: true });
+  const print = (node: ts.Node): string =>
+    printer.printNode(ts.EmitHint.Unspecified, node, declaration.getSourceFile());
+  if (ts.isVariableDeclaration(declaration)) {
+    const statement = declaration.parent.parent;
+    if (!ts.isVariableStatement(statement)) return undefined;
+    if (!declaration.initializer) return print(statement);
+    const declarationKind = (declaration.parent.flags & ts.NodeFlags.Const) !== 0 ? 'const' : 'let';
+    if (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
+      return `export ${declarationKind} ${declaration.name.getText()} = ${fallbackSignature};`;
+    if (
+      ts.isObjectLiteralExpression(declaration.initializer) &&
+      containsFunctionImplementation(declaration.initializer)
+    )
+      return `export declare ${declarationKind} ${declaration.name.getText()}: ${fallbackSignature};`;
+    return print(statement);
+  }
+  if (ts.isFunctionDeclaration(declaration))
+    return print(
+      ts.factory.updateFunctionDeclaration(
+        declaration,
+        declaration.modifiers,
+        declaration.asteriskToken,
+        declaration.name,
+        declaration.typeParameters,
+        declaration.parameters,
+        declaration.type,
+        undefined,
+      ),
+    );
+  if (ts.isClassDeclaration(declaration))
+    return print(
+      ts.factory.updateClassDeclaration(
+        declaration,
+        declaration.modifiers,
+        declaration.name,
+        declaration.typeParameters,
+        declaration.heritageClauses,
+        [],
+      ),
+    );
+  if (
+    ts.isTypeAliasDeclaration(declaration) ||
+    ts.isInterfaceDeclaration(declaration) ||
+    ts.isEnumDeclaration(declaration)
+  )
+    return print(declaration);
+  return undefined;
 };
 
 /** 将 TypeDoc declaration 转为页面需要的公开 API 投影 */
@@ -579,6 +750,7 @@ const renderSymbol = (
   memberGroups?: ReadonlyArray<ApiReferenceMemberGroup>,
   expandedObject = false,
   indexSignatures: Array<string> = [],
+  composition?: ApiReferenceComposition,
 ): string => {
   const hasMemberViews = expandedObject && symbol.members.length > 0;
   return [
@@ -586,8 +758,11 @@ const renderSymbol = (
     renderSummary(symbol, lang, translate),
     localizeText(symbol.details, lang, translate),
     hasMemberViews
-      ? renderObjectMemberViews(symbol, memberGroups, lang, translate)
-      : expandedObject || symbol.members.length === 0 || symbol.signature.includes(' & ')
+      ? renderObjectMemberViews(symbol, memberGroups, lang, translate, composition)
+      : expandedObject ||
+          symbol.members.length === 0 ||
+          symbol.signature.includes(' & ') ||
+          symbol.signature.startsWith('export ')
         ? `\`\`\`ts\n${symbol.signature}\n\`\`\``
         : '',
     renderExpandedSignature(symbol, lang),
@@ -648,13 +823,22 @@ const renderObjectMemberViews = (
   groups: ReadonlyArray<ApiReferenceMemberGroup> | undefined,
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
+  composition?: ApiReferenceComposition,
 ): string => {
   const labels =
-    lang === 'zh' ? { members: '属性', definition: '类型定义' } : { members: 'Members', definition: 'Type definition' };
+    lang === 'zh'
+      ? { members: composition ? '直接属性' : '属性', definition: '类型定义' }
+      : { members: composition ? 'Direct members' : 'Members', definition: 'Type definition' };
+  const compositionNote = composition
+    ? lang === 'zh'
+      ? `其余属性继承自 ${composition.baseTypes.map(value => `\`${value}\``).join('、')}，${composition.omittedMembers.length > 0 ? `并移除 ${composition.omittedMembers.map(value => `\`${value}\``).join('、')}。` : ''}完整组合关系见“类型定义”`
+      : `The remaining members are inherited from ${composition.baseTypes.map(value => `\`${value}\``).join(', ')}${composition.omittedMembers.length > 0 ? `, with ${composition.omittedMembers.map(value => `\`${value}\``).join(', ')} removed` : ''}. See “Type definition” for the complete composition.`
+    : '';
   return [
     '<DocTabs defaultValue="members">',
     `<DocTab value="members" label=${JSON.stringify(labels.members)}>`,
-    renderGroupedMembers(symbol, groups, lang, translate, true),
+    compositionNote,
+    renderGroupedMembers(symbol, composition ? undefined : groups, lang, translate, true),
     '</DocTab>',
     `<DocTab value="definition" label=${JSON.stringify(labels.definition)}>`,
     `\`\`\`ts\n${symbol.signature}\n\`\`\``,
@@ -687,6 +871,7 @@ export const createApiReferenceMdx = async (
       '@default',
       '@defaultValue',
       '@exception',
+      '@template',
       '@typeParam',
       '@deprecated',
       '@since',
@@ -731,14 +916,22 @@ export const createApiReferenceMdx = async (
               reflection.kind === ReflectionKind.TypeAlias || reflection.kind === ReflectionKind.Interface
                 ? resolveObjectMembers(program, sourceFile, symbol.name)
                 : undefined;
+            const sourceSignature = resolveSourceSignature(program, sourceFile, symbol.name, symbol.signature);
             if (resolved) {
               symbol.members = (resolved.members ?? []).map(member => ({
                 ...member,
                 defaultValue: localizeText(member.defaultValue, lang, config.translate),
               }));
+              if (resolved.directMembers) {
+                symbol.members = resolved.directMembers.map(member => ({
+                  ...member,
+                  defaultValue: localizeText(member.defaultValue, lang, config.translate),
+                }));
+              }
               symbol.signature = resolved.signature;
               symbol.expandedSignature = resolved.expandedSignature;
             }
+            if (sourceSignature) symbol.signature = sourceSignature;
             return renderSymbol(
               symbol,
               lang,
@@ -746,6 +939,7 @@ export const createApiReferenceMdx = async (
               entry.memberGroups?.[symbol.name],
               resolved?.members !== undefined,
               resolved?.indexSignatures,
+              resolved?.composition,
             );
           }
           return [

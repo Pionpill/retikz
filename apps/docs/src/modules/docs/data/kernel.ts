@@ -424,6 +424,7 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          { id: 'schema-reference', label: 'kernel.pkgFoundationSchemaReference' },
         ],
       },
       {

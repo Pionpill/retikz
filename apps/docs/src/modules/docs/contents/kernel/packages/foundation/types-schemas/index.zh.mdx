@@ -1,24 +1,16 @@
 ---
 title: 类型与契约
-description: 复用 Foundation 的编译期类型工具与无领域运行时 schema，统一 JSON 数据和基础标量的边界
+description: 复用 Foundation 的编译期类型工具与开放字符串构造器，表达跨包通用契约
 ---
 
-Foundation 将可在多个包之间复用的类型工具与运行时 schema 放在一起。它们只表达通用数据契约；领域对象应由各自 owner 的 schema 定义和校验。
+Foundation 将可在多个包之间复用的类型工具与开放字符串构造器放在一起。它们只表达通用数据契约；JSON 和数值的运行时字段、默认值与校验结构见 [Schema 参考](/kernel/packages/foundation/schema-reference)。
 
 ## 基础用法
 
 以下能力统一从包根入口导入：
 
 ```ts
-import {
-  type WithRequiredProperties,
-  type WithOptionalProperties,
-  PositiveNumberSchema,
-  NormalizedFractionSchema,
-  createOpenStringSchema,
-} from '@retikz/foundation';
-
-const fraction = NormalizedFractionSchema.parse(0.5); // 0.5
+import { type WithRequiredProperties, createOpenStringSchema } from '@retikz/foundation';
 ```
 
 ## 类型工具
@@ -49,46 +41,6 @@ const useNode = (node: IdentifiedNode) => node.id.toUpperCase();
 type NodePatch = WithOptionalProperties<NodeInput, 'label'>;
 ```
 
-## JSON 数据契约
-
-`JsonValue` 和 `JsonObject` 是递归 JSON 数据的 TypeScript 类型；`JsonValueSchema` 与 `JsonObjectSchema` 则用于接收 `unknown` 的 parse 边界。readonly 数组让 `as const` Source 能直接通过 parse，但 parse 不负责 clone、freeze 或再次遍历已类型化的数据。
-
-已有领域 Source schema 时，应直接使用该 owner 的 `parse()` 结果；不要先用 Foundation JSON schema 再叠加一轮通用校验。
-
-<span id="jsonobject"></span>
-
-### JsonObject
-
-对象级输入需要排除函数、`undefined` 等非 JSON 值时，用它作为 parse 边界。
-
-<ZodSchema name="JsonObjectSchema" description="字符串键与递归 JSON 值组成的对象。" />
-
-<span id="jsonvalue"></span>
-
-### JsonValue
-
-字段可保存任意 JSON 值、而不是限定为对象时，使用它。
-
-<ZodSchema name="JsonValueSchema" description="由标量、数组或对象递归组成的 JSON 值。" />
-
-## 标量 schema
-
-以下 schema 用于 owner 需要运行时 parse 的通用标量边界。它们不替代领域范围、几何或对象 schema。
-
-| Schema                     | 接受的值                        |
-| -------------------------- | ------------------------------- |
-| `NonBlankStringSchema`     | 至少包含一个非空白字符的 string |
-| `PositiveNumberSchema`     | 大于 `0` 的有限 number          |
-| `NonNegativeNumberSchema`  | 大于或等于 `0` 的有限 number    |
-| `PositiveIntegerSchema`    | 大于 `0` 的安全整数             |
-| `NonNegativeIntegerSchema` | 大于或等于 `0` 的安全整数       |
-| `NormalizedFractionSchema` | 闭区间 `0..1` 内的 number       |
-
-```ts
-PositiveNumberSchema.parse(1.5);
-NormalizedFractionSchema.parse(0.5);
-```
-
 ## 开放字符串
 
 `createOpenStringSchema(values)` 将 const object enum 的内置值与非空白自定义字符串合并。它适合协议允许扩展值、但仍希望编辑器提示内置值的字段。
@@ -105,45 +57,15 @@ RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
 
-<SourceLinks
-  sources={[
-    {
-      label: '类型工具与 JSON 类型',
-      path: 'packages/kernel/foundation/src/types.ts',
-      startLine: 1,
-      endLine: 21,
-    },
-    {
-      label: 'JSON 与标量 schema',
-      path: 'packages/kernel/foundation/src/schema.ts',
-      startLine: 1,
-      endLine: 40,
-    },
-    {
-      label: 'JSON schema 测试',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 23,
-      endLine: 73,
-    },
-    {
-      label: '开放字符串测试',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 85,
-      endLine: 103,
-    },
-    {
-      label: '标量 schema 测试',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 105,
-      endLine: 154,
-    },
-  ]}
-/>
-
 ## 延伸阅读
 
 <LinkedSections
   items={[
+    {
+      title: 'Schema 参考',
+      description: '查询 JSON 与标量 schema 的字段和校验结构',
+      url: '/kernel/packages/foundation/schema-reference',
+    },
     { title: 'API 参考', description: '查询公开类型与完整契约', url: '/kernel/packages/foundation/api-reference' },
   ]}
 />

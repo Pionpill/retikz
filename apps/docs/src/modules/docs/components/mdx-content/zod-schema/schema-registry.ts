@@ -1,7 +1,16 @@
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
-import { JsonObjectSchema, JsonValueSchema } from '@retikz/foundation';
+import {
+  JsonObjectSchema,
+  JsonValueSchema,
+  NonBlankStringSchema,
+  NonNegativeIntegerSchema,
+  NonNegativeNumberSchema,
+  NormalizedFractionSchema,
+  PositiveIntegerSchema,
+  PositiveNumberSchema,
+} from '@retikz/foundation';
 import * as GraphIR from '@retikz/graph';
 import {
   ClipInspectOptionsSchema,
@@ -90,12 +99,42 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   JsonObjectSchema: {
     schema: JsonObjectSchema,
     label: 'JsonObject',
-    url: '/kernel/packages/foundation/types-schemas#jsonobject',
+    url: '/kernel/packages/foundation/schema-reference#jsonobjectschema',
   },
   JsonValueSchema: {
     schema: JsonValueSchema,
     label: 'JsonValue',
-    url: '/kernel/packages/foundation/types-schemas#jsonvalue',
+    url: '/kernel/packages/foundation/schema-reference#jsonvalueschema',
+  },
+  NonBlankStringSchema: {
+    schema: NonBlankStringSchema,
+    label: 'NonBlankString',
+    url: '/kernel/packages/foundation/schema-reference#nonblankstringschema',
+  },
+  PositiveNumberSchema: {
+    schema: PositiveNumberSchema,
+    label: 'PositiveNumber',
+    url: '/kernel/packages/foundation/schema-reference#positivenumberschema',
+  },
+  NonNegativeNumberSchema: {
+    schema: NonNegativeNumberSchema,
+    label: 'NonNegativeNumber',
+    url: '/kernel/packages/foundation/schema-reference#nonnegativenumberschema',
+  },
+  PositiveIntegerSchema: {
+    schema: PositiveIntegerSchema,
+    label: 'PositiveInteger',
+    url: '/kernel/packages/foundation/schema-reference#positiveintegerschema',
+  },
+  NonNegativeIntegerSchema: {
+    schema: NonNegativeIntegerSchema,
+    label: 'NonNegativeInteger',
+    url: '/kernel/packages/foundation/schema-reference#nonnegativeintegerschema',
+  },
+  NormalizedFractionSchema: {
+    schema: NormalizedFractionSchema,
+    label: 'NormalizedFraction',
+    url: '/kernel/packages/foundation/schema-reference#normalizedfractionschema',
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },

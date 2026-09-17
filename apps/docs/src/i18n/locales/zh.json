@@ -122,6 +122,7 @@
     "pkgGroupRender": "渲染包",
     "pkgFoundation": "基座 · foundation",
     "pkgFoundationApiReference": "API 参考",
+    "pkgFoundationSchemaReference": "Schema 参考",
     "pkgCore": "编译核心 · core",
     "pkgInspect": "编译观测 · inspect",
     "pkgInspectBuiltins": "内置观测",

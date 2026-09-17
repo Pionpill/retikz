@@ -36,6 +36,28 @@ describe('Inspect API Reference', () => {
       const definitionInput = source.split('### InspectorDefinitionInput\n')[1]?.split('\n### ')[0] ?? '';
       expect(definitionInput).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
       expect(definitionInput).toContain('export type InspectorDefinitionInput');
+      const diagnosticOrigin = source.split('### InspectionDiagnosticOrigin\n')[1]?.split('\n### ')[0] ?? '';
+      expect(diagnosticOrigin).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
+      expect(diagnosticOrigin).toContain('Readonly<');
+      const selectionRule = source.split('### InspectionSelectionRule\n')[1]?.split('\n### ')[0] ?? '';
+      expect(selectionRule).not.toContain(lang === 'zh' ? '#### 展开类型' : '#### Expanded type');
+      expect(selectionRule).toContain('Readonly<');
+      const errorCode = source.split('### RetikzInspectErrorCode\n')[1]?.split('\n### ')[0] ?? '';
+      expect(errorCode).toContain('export const RetikzInspectErrorCode = {');
+      expect(errorCode).toContain('} as const;');
+      const registryFactory = source.split('### createInspectorRegistry\n')[1]?.split('\n### ')[0] ?? '';
+      expect(registryFactory).toContain('export const createInspectorRegistry =');
+      const inspectError = source.split('### RetikzInspectError\n')[1]?.split('\n### ')[0] ?? '';
+      expect(inspectError).toContain('export class RetikzInspectError extends RetikzError');
+      const inspectorContext = source.split('### InspectorContext\n')[1]?.split('\n### ')[0] ?? '';
+      expect(inspectorContext).toContain(
+        lang === 'zh' ? 'callback 消费的已解析 options 类型' : 'Resolved options type consumed by the callback',
+      );
+      const scopeProps = source.split('### InspectScopeProps\n')[1]?.split('\n### ')[0] ?? '';
+      expect(scopeProps).toContain(lang === 'zh' ? 'label="直接属性"' : 'label="Direct members"');
+      expect(scopeProps).toContain('`InspectionVanillaAuthoringInput`');
+      expect(scopeProps).toContain('`ScopeProps`');
+      expect(scopeProps).not.toContain('`animations?`');
       if (lang === 'en') expect(source.replaceAll(/```[\s\S]*?```/g, '')).not.toMatch(/[\u3400-\u9fff]/u);
       const compiled = await compile(source, { remarkPlugins: [remarkGfm], outputFormat: 'function-body' });
       const module = await run(compiled, jsxRuntime);
@@ -50,7 +72,7 @@ describe('Inspect API Reference', () => {
           },
         }),
       );
-      expect(html).toContain('&lt;Step /&gt;');
+      expect(html).toContain('InspectorDefinitionInput');
     }
   }, 20000);
 });
