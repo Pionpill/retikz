@@ -1,3 +1,4 @@
+import { FileCode2 } from 'lucide-react';
 import type { FC, ReactNode } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -11,7 +12,7 @@ import { alignClass, sizeClass } from './constants';
 import { PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import { usePreviewControlState } from './hooks';
-import { buildPreviewToolSlots, usePreviewPanelState } from './preview-panel';
+import { buildPreviewToolSlots, PreviewToolbar, PreviewToolbarButton, usePreviewPanelState } from './preview-panel';
 import { InlineSourcePanel, useSourcePanelState } from './source-panel';
 import type {
   AlignKey,
@@ -52,6 +53,8 @@ export type ComponentPreviewCardProps = {
   showAskAi?: boolean;
   /** 是否显示缩放、下载、渲染器等预览宿主工具栏。 */
   showTools?: boolean;
+  /** 是否默认不展示源码区，而由预览区左下角入口展开。 */
+  codeInitiallyHidden?: boolean;
   /** 当前 demo 的声明式 controls definition */
   controlDefinition?: PreviewControlsDefinition;
   /** 属性面板是否默认打开；缺省时跟随 docs 全局设置 */
@@ -91,6 +94,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     previewClassName,
     showAskAi = true,
     showTools = true,
+    codeInitiallyHidden = false,
     controlDefinition,
     controlPanelDefaultOpen,
     controlPanelDefaultSize,
@@ -180,7 +184,24 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
         toggleRendererMode: previewState.toggleRendererMode,
       })
     : [];
-  const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
+  const sourceControlSlots =
+    hasCode && codeInitiallyHidden && !isCodeVisible
+      ? [
+          {
+            id: 'show-source',
+            placement: 'bottom-start' as const,
+            visibility: 'hover' as const,
+            render: () => (
+              <PreviewToolbar>
+                <PreviewToolbarButton label="Show code" onClick={handleShowCode}>
+                  <FileCode2 className="size-3.5" />
+                </PreviewToolbarButton>
+              </PreviewToolbar>
+            ),
+          },
+        ]
+      : [];
+  const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, sourceControlSlots, previewToolSlots);
 
   return (
     <div ref={containerRef} className="my-6">
@@ -211,7 +232,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
             previewClassName,
           )}
         />
-        {hasCode ? (
+        {hasCode && (!codeInitiallyHidden || isCodeVisible) ? (
           <InlineSourcePanel
             state={sourceState}
             isCodeVisible={isCodeVisible}

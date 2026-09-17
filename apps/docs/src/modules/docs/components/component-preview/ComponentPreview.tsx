@@ -48,7 +48,7 @@ export type ComponentPreviewProps = {
   size?: SizeKey;
   /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-5 / 居中等。 */
   previewClassName?: string;
-  /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
+  /** 默认隐藏底部源码区，并在预览左下角提供展开源码的入口。 */
   hideCode?: boolean;
   /** 是否显示缩放、下载、渲染器等预览宿主工具栏，默认显示。 */
   showTools?: boolean;
@@ -135,7 +135,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             diffFrom,
             baselineRawSource,
             sourceContents: resourcesState.resources.sourceContents,
-            hideCode,
+            hideCode: false,
             irJsonOverride,
             exportedPreviewIR,
             vanillaOverride,
@@ -154,7 +154,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       sourceFiles,
       diffFrom,
       baselineRawSource,
-      hideCode,
       irJsonOverride,
       exportedPreviewIR,
       vanillaOverride,
@@ -239,6 +238,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       previewClassName={previewClassName}
+      codeInitiallyHidden={hideCode}
       showTools={showTools}
       controlContract={controlContract}
       controlDefinition={controlDefinition}
