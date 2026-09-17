@@ -1,13 +1,13 @@
 ---
 title: 自定义裁剪区
-description: 用一个完整 ClipDefinition 定义裁剪 spec、JSON-safe shape 与路径 lowering，并通过 Core 或 Layout 的 clips 入口注入
+description: 为 Scope 定义新的 JSON-safe 裁剪形状，并在 React 或 Vanilla 宿主中注册后使用
 ---
 
-`ClipDefinition` 同时拥有裁剪输入与几何 lowering。下面的圆角矩形只注册一个 definition，SVG、Canvas、visual bounds 与 hit-test 最终都消费同一份 `SceneClipPath`。
-
-<ComponentPreview files="clip-registry" size="md" />
+当内置 `rect` 和 Standard 的 circle / ellipse / polygon / path / compound 都不满足需求时，用一个 `ClipDefinition` 定义新的裁剪形状。Definition 不进入 IR；IR 只保存 `kind` 和可序列化参数，渲染、可视边界与命中测试共享同一份 lowering 结果。
 
 ## 适用边界
+
+前提是已会 [Scope 的基础裁剪用法](/kernel/components/scope/usage#裁剪与层级)。先判断现有能力能否表达需求：
 
 | 需求                             | 选择                                                   |
 | -------------------------------- | ------------------------------------------------------ |
@@ -16,137 +16,208 @@ description: 用一个完整 ClipDefinition 定义裁剪 spec、JSON-safe shape 
 | 新的静态二维裁剪                 | 定义一个完整 `ClipDefinition` 并降低为 `SceneClipPath` |
 | renderer 专属 mask / filter 行为 | 不属于 Clip；另建明确的后端能力                        |
 
-IR 只保存带 `kind` 的 JSON-safe clip spec。`resolve` 产出的 `ClipShape` 也是 JSON-safe snapshot；Zod schema、callback、ReactNode、Canvas 对象和 SVG 字符串都不能进入 IR 或 Scene。
+## 最小闭环
+
+下方的圆角矩形同时裁剪两个圆形节点。代码面板默认显示共用的 `roundedRectClip` Definition；可切换 React、Vanilla 查看宿主入口，或查看同一结果的可序列化 IR。
+
+<ComponentPreview
+  files={['clip-registry', 'clip-registry.definition.ts']}
+  defaultSourceFile="clip-registry.definition.ts"
+  size="md"
+/>
 
 ## 定义能力
 
-一个 definition 使用同一个 `kind` 绑定 spec schema、shape schema、解析与 lowering：
+将 Definition 放在可复用模块中，例如 `rounded-rect-clip.ts`。当 spec 本身已是完整 shape 时，只写 `schema` 与 `lower`：`defineClip` 会派生 `resolve: spec => spec`，并复用该 schema 作为 `shapeSchema`。需要将简写、引用或配置解析为另一种 shape 时，才显式提供 `resolve` 与 `shapeSchema`。`lower` 返回结构化路径，而不是 SVG 字符串或 Canvas callback。
 
 ```ts
-const roundedRectClip = defineClip<RoundedRectClip, RoundedRectClip>({
+import type { PathCommand } from '@retikz/core';
+import { defineClip } from '@retikz/core';
+import { z } from 'zod';
+
+const roundedRectClipSchema = z.strictObject({
+  kind: z.literal('rounded-rect'),
+  x: z.number(),
+  y: z.number(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+  radius: z.number().nonnegative(),
+});
+export const roundedRectClip = defineClip({
   kind: 'rounded-rect',
   schema: roundedRectClipSchema,
-  resolve: spec => spec,
-  shapeSchema: roundedRectClipSchema,
-  lower: shape => ({
-    commands: buildRoundedRectCommands(shape),
-    fillRule: 'nonzero',
-  }),
+  lower: shape => {
+    const right = shape.x + shape.width;
+    const bottom = shape.y + shape.height;
+    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
+    const commands: Array<PathCommand> = [
+      { kind: 'move', to: [shape.x + radius, shape.y] },
+      { kind: 'line', to: [right - radius, shape.y] },
+      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
+      { kind: 'line', to: [right, bottom - radius] },
+      { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
+      { kind: 'line', to: [shape.x + radius, bottom] },
+      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
+      { kind: 'line', to: [shape.x, shape.y + radius] },
+      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
+      { kind: 'close' },
+    ];
+    return { commands, fillRule: 'nonzero' };
+  },
 });
 ```
 
-`resolve(spec, context)` 可以用 `context.round(value)` 采用当前编译精度，也可以用 `context.resolve(otherSpec)` 递归解析另一段 clip。`lower(shape, context)` 可以使用相同的 `round`，或通过 `context.lower(otherShape)` 组合当前 registry 中已注册的 shape。
+数据依次流经 `spec → resolve → shape → lower → SceneClipPath`：spec 是 `Scope.clip` 中可保存的输入，shape 是解析后的同 kind 几何快照，最终路径由所有 renderer 复用。`resolve` 可将 authored spec 转成 JSON-safe shape；组合已有裁剪时使用 `context.resolve(otherSpec)`。`lower` 可用 `context.lower(otherShape)` 组合已注册 shape，并必须返回至少一段绘制命令。
 
-definition、spec schema 结果与 shape schema 结果的 `kind` 必须一致。若多个 kind 需要复用几何，可以共享普通 helper，但每个可独立装配的裁剪仍拥有自己的完整 definition。
+## 注入与使用
 
-`lower` 必须返回至少含一个绘制段的结构化路径。Core 不自动闭合开放路径，也不接受 raw SVG `d`、Canvas callback 或非有限数值。
+Definition 是 React 与 Vanilla 共用的运行时对象，不会写进保存的场景数据。选择宿主后，把它注册到 `clips`，再由 `Scope.clip.kind` 引用。
 
-## 注入宿主
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
 
-直接调用 Core 时只注入 `clips`：
-
-```ts
-const { scene } = compileToScene(ir, {
-  clips: [roundedRectClip],
-});
-```
-
-React `<Layout>` 转交同一个 Core option，不建立 adapter 私有 registry：
+通过 `Layout.extensions.clips` 注册 Definition；`Scope` 只写可保存的 `kind` 和参数。
 
 ```tsx
-<Layout extensions={{ clips: [roundedRectClip] }}>
-  <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
-    {/* clipped children */}
-  </Scope>
-</Layout>
+import { Layout, Node, Scope } from '@retikz/react';
+import { roundedRectClip } from './rounded-rect-clip';
+
+const Demo = () => (
+  <Layout extensions={{ clips: [roundedRectClip] }}>
+    <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+      <Node
+        position={[-88, -8]}
+        shape="circle"
+        style={{ fill: 'skyblue', stroke: 'none' }}
+        layout={{ minimumSize: { width: 160, height: 160 } }}
+      />
+      <Node
+        position={[84, 8]}
+        shape="circle"
+        style={{ fill: 'darkorange', stroke: 'none' }}
+        layout={{ minimumSize: { width: 170, height: 170 } }}
+      />
+      <Node
+        position={[0, 0]}
+        text="custom clip"
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, textColor: 'contrast' }}
+        layout={{ minimumSize: { width: 132, height: 42 } }}
+      />
+    </Scope>
+    <Node
+      position={[0, 80]}
+      text="rounded-rect provider"
+      style={{ fill: 'none', stroke: 'none', textColor: 'dodgerblue' }}
+    />
+  </Layout>
+);
 ```
 
-通过 provider graph 装配时，一个 `{ capability: 'clip', name: kind }` provider 直接创建完整 definition。显式 `clips` 仍作为最终 Definition 通道参与同 key 冲突检查。
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
 
-## 执行机制
+通过 `renderToSvgString` 的 `compile.clips` 注册相同 Definition；输入仍只包含 JSON-safe spec。
 
-内置、Standard 与第三方裁剪经过同一个 registry：
+```ts
+import type { InputScene } from '@retikz/vanilla';
+import { renderToSvgString } from '@retikz/vanilla';
+import { roundedRectClip } from './rounded-rect-clip';
 
-<ComponentPreview files="clip-registry-flow" size="sm" hideCode />
-
-1. `clip.kind` 在 Clip registry 中找到完整 definition，`schema` 校验 spec 后调用 `resolve`
-2. `resolve` 输出复制为 JSON snapshot，再由同一 definition 的 `shapeSchema` 校验
-3. `lower` 产出结构化路径，Core 规范字段顺序、精度、`-0`、path grammar 与显式 `fillRule`
-4. canonical path 去重后写入 `{ kind: 'clip', id, path }`，`GroupPrim.clipRef` 只保存 id
-
-renderer、visual bounds 和 hit-test 不解释自定义 kind，也不接收 Definition。Core 默认只保留完整 `rect` definition；Standard 从 `@retikz/standard/clip` 提供其余五种官方实现。
-
-<SourceLinks
-  sources={[
+const input: InputScene = {
+  type: 'scene',
+  children: [
     {
-      label: '完整 ClipDefinition 作者契约',
-      path: 'packages/kernel/core/src/contract/clip/types.ts',
-      startLine: 31,
-      endLine: 76,
+      type: 'scope',
+      clip: {
+        kind: 'rounded-rect',
+        x: -150,
+        y: -72,
+        width: 300,
+        height: 144,
+        radius: 36,
+      },
+      children: [
+        {
+          type: 'node',
+          position: [-88, -8],
+          shape: 'circle',
+          style: { fill: 'skyblue', stroke: 'none' },
+          layout: { minimumSize: { width: 160, height: 160 } },
+        },
+        {
+          type: 'node',
+          position: [84, 8],
+          shape: 'circle',
+          style: { fill: 'darkorange', stroke: 'none' },
+          layout: { minimumSize: { width: 170, height: 170 } },
+        },
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'custom clip',
+          style: { fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, textColor: 'contrast' },
+          layout: { minimumSize: { width: 132, height: 42 } },
+        },
+      ],
     },
     {
-      label: '单一 registry 的解析、lowering 与 canonical path',
-      path: 'packages/kernel/core/src/compile/resource/clip.ts',
-      startLine: 239,
-      endLine: 338,
+      type: 'node',
+      position: [0, 80],
+      text: 'rounded-rect provider',
+      style: { fill: 'none', stroke: 'none', textColor: 'dodgerblue' },
     },
-    {
-      label: 'React clips 注入',
-      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
-      startLine: 185,
-      endLine: 191,
-    },
-  ]}
-/>
+  ],
+};
+const svg = renderToSvgString(input, { compile: { clips: [roundedRectClip] } });
+```
+
+</DocTab>
+</DocTabs>
+
+IR 面板中的 JSON 可直接作为 `ir` 传给 Core；仍要在编译时传入 Definition：
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { roundedRectClip } from './rounded-rect-clip';
+
+const { scene } = compileToScene(ir, { clips: [roundedRectClip] });
+```
+
+provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出完整 Definition，并与显式 `clips` 参与相同的冲突检查。
 
 ## 错误与限制
 
-| 情况                                           | 结果                                                                  |
-| ---------------------------------------------- | --------------------------------------------------------------------- |
-| 空字符串 key                                   | `defineClip` 立即拒绝                                                 |
-| 重复 kind                                      | registry 报 definition conflict，不覆盖已有项                         |
-| 未注册的 `clip.kind`                           | 报 kind，并提示通过 `options.clips` 注入                              |
-| definition / spec / shape kind 不一致          | 在 `lower` 前作为 provider contract violation 失败                    |
-| spec 或 shape 不符合 schema                    | 报 provider key、对应 schema 阶段与校验 cause                         |
-| callback 输出函数、cycle、非法 path 或非有限值 | fail-loud，不被 layout probe 静默吞掉                                 |
-| 递归超过 `maxClipDepth`                        | 失败；默认共享 32 条 resolve/lower 边预算，active object cycle 也失败 |
+| 情况                                  | 结果                                                                                               |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 重复 kind                             | registry 报 definition conflict，不覆盖已有项                                                      |
+| 未注册的 `clip.kind`                  | 报 kind，并提示通过 Core `options.clips`、React `extensions.clips` 或 Vanilla `compile.clips` 注入 |
+| definition / spec / shape kind 不一致 | 在 `lower` 前作为 provider contract violation 失败                                                 |
+| spec 或 shape 不符合 schema           | 报 provider key、对应 schema 阶段与校验 cause                                                      |
+| 递归超过 `maxClipDepth`               | 失败；resolve / lower 默认共享 32 条边预算                                                         |
 
-复合 shape 将 child commands 按 authored order 累积成一个 path，并使用外层 `fillRule`；它不是逐 child 的几何交集。需要交集时使用嵌套 `<Scope clip>`。
+复合 shape 会按 authored order 累积 child commands，并应用外层 `fillRule`；它不是几何交集。需要交集时使用嵌套 `<Scope clip>`。
 
-## API 参考
+完整的 registry 解析、shape snapshot、路径 canonicalization 与资源去重见 [Scope 实现原理](/kernel/components/scope/mechanism)。
 
-除 `<Layout>` props 来自 `@retikz/react` 外，以下公开类型、函数和常量均从 `@retikz/core` 导入。
+## 延伸阅读
 
-### 导出概览
-
-- definition：`defineClip`、`ClipDefinitionInput`、`ClipDefinition`
-- context：`ClipResolveContext`、`ClipLowerContext`
-- 数据与输出：`ClipShape`、`SceneClipPath`、`ClipResource`
-- registry：`BUILTIN_CLIPS`、`resolveClipRegistry`
-- 注入：`CompileOptions.clips`、`<Layout clips>`
-
-### ClipDefinition
-
-| 字段          | 类型                                                          | 必填 | 描述                                          |
-| ------------- | ------------------------------------------------------------- | ---- | --------------------------------------------- |
-| `kind`        | `TClip['kind'] & TShape['kind']`                              | 是   | 唯一 registry key，与 spec 和 shape kind 一致 |
-| `schema`      | `ZodType<TClip>`                                              | 是   | 校验完整 JSON-safe spec                       |
-| `resolve`     | `(clip: TClip, context: ClipResolveContext) => TShape`        | 是   | 解析为同 kind 的 JSON-safe `ClipShape`        |
-| `shapeSchema` | `ZodType<TShape>`                                             | 是   | 校验完整 shape snapshot                       |
-| `lower`       | `(shape: TShape, context: ClipLowerContext) => SceneClipPath` | 是   | 降低为后端无关结构化路径                      |
-
-### SceneClipPath
-
-| 字段       | 类型                       | 必填 | 描述                                             |
-| ---------- | -------------------------- | ---- | ------------------------------------------------ |
-| `commands` | `Array<PathCommand>`       | 是   | 非空、有绘制段的结构化命令；合法开放路径保持开放 |
-| `fillRule` | `'nonzero'` \| `'evenodd'` | 是   | canonical 输出始终显式存在                       |
-
-## 相关
-
-- [Scope](/kernel/components/scope/usage)：使用 `<Scope clip>` 与局部坐标
-- [Layout](/kernel/components/layout/usage)：React `clips` 注入入口
-- [裁剪扩展](/library/standard/clip)：官方 circle / ellipse / polygon / path / compound definitions
-- [编译选项](/kernel/reference/runtime/compile)：Core `clips` 与递归上限
-- [场景原语](/kernel/reference/runtime/scene-primitive)：renderer 消费的 canonical clip resource
-- [运行时扩展](/kernel/reference/runtime/extensions)：Definition / registry 能力总索引
+<LinkedSections
+  items={[
+    { title: 'Scope 基础用法', description: '使用内置裁剪与局部坐标', url: '/kernel/components/scope/usage' },
+    {
+      title: '裁剪扩展',
+      description: '装配官方 circle、ellipse、polygon、path 与 compound',
+      url: '/library/standard/clip',
+    },
+    {
+      title: '运行时扩展',
+      description: '查看 ClipDefinition 与其他 Definition 的统一契约',
+      url: '/kernel/reference/runtime/extensions',
+    },
+    {
+      title: '编译选项',
+      description: '查询 CompileOptions.clips 与递归上限',
+      url: '/kernel/reference/runtime/compile',
+    },
+  ]}
+/>

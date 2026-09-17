@@ -1,48 +1,16 @@
-import type { ClipDefinition, PathCommand } from '@retikz/core';
-import { defineClip } from '@retikz/core';
-import { Layout, Node, Scope } from '@retikz/react';
+import { createInputScene, Layout, Node, Scope } from '@retikz/react';
+import { normalizeScene, renderToSvgString } from '@retikz/vanilla';
 import type { FC } from 'react';
-import { z } from 'zod';
 
-const roundedRectClipSchema = z.strictObject({
-  kind: z.literal('rounded-rect'),
-  x: z.number(),
-  y: z.number(),
-  width: z.number().positive(),
-  height: z.number().positive(),
-  radius: z.number().nonnegative(),
-});
+import { RawSvgFrame } from '@/modules/docs/components/component-preview/source-panel/RawSvgFrame';
+import { browserMeasurer } from '@/modules/docs/components/component-preview/vanilla-preview';
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
 
-type RoundedRectClip = z.infer<typeof roundedRectClipSchema>;
+import { roundedRectClip } from './clip-registry.definition';
+import vanillaCode from './clip-registry.vanilla.ts?raw';
 
-const roundedRectClip: ClipDefinition = defineClip<RoundedRectClip, RoundedRectClip>({
-  kind: 'rounded-rect',
-  schema: roundedRectClipSchema,
-  resolve: spec => spec,
-  shapeSchema: roundedRectClipSchema,
-  lower: shape => {
-    const right = shape.x + shape.width;
-    const bottom = shape.y + shape.height;
-    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
-    const commands: Array<PathCommand> = [
-      { kind: 'move', to: [shape.x + radius, shape.y] },
-      { kind: 'line', to: [right - radius, shape.y] },
-      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
-      { kind: 'line', to: [right, bottom - radius] },
-      { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
-      { kind: 'line', to: [shape.x + radius, bottom] },
-      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
-      { kind: 'line', to: [shape.x, shape.y + radius] },
-      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
-      { kind: 'close' },
-    ];
-
-    return { commands, fillRule: 'nonzero' };
-  },
-});
-
-const Demo: FC = () => (
-  <Layout extensions={{ clips: [roundedRectClip] }}>
+const Content: FC = () => (
+  <>
     <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
       <Node
         position={[-88, -8]}
@@ -59,15 +27,46 @@ const Demo: FC = () => (
       <Node
         position={[0, 0]}
         text="custom clip"
-        style={{ fill: 'white', stroke: 'dodgerblue', strokeWidth: 2 }}
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, textColor: 'contrast' }}
         layout={{ minimumSize: { width: 132, height: 42 } }}
       />
     </Scope>
     <Node
       position={[0, 80]}
       text="rounded-rect provider"
-      style={{ fill: 'none', stroke: 'none', textColor: 'dimgray' }}
+      style={{ fill: 'none', stroke: 'none', textColor: 'dodgerblue' }}
     />
+  </>
+);
+
+export const previewSource = {
+  deriveIR: false,
+  buildViews: ({ theme }) => {
+    const authoring = createInputScene(<Content />);
+    const input = { ...authoring.scene, ...(theme === undefined ? {} : { theme }) };
+    const ir = normalizeScene(input, { adapters: authoring.adapters }).ir;
+    const svg = renderToSvgString(input, {
+      adapters: authoring.adapters,
+      compile: { clips: [roundedRectClip], measureText: browserMeasurer },
+    });
+
+    return {
+      ir: {
+        files: [{ filename: 'clip-registry.ir.json', code: JSON.stringify(ir, null, 2), lang: 'json' as const }],
+        render: mode => <Layout ir={ir} renderer={mode} extensions={{ clips: [roundedRectClip] }} />,
+      },
+      vanilla: {
+        files: [{ filename: 'clip-registry.vanilla.ts', code: vanillaCode.trimEnd(), lang: 'ts' as const }],
+        rendererMode: 'svg' as const,
+        render: () => <RawSvgFrame svg={svg} />,
+      },
+    };
+  },
+} satisfies PreviewSourceConfig;
+
+const Demo: FC = () => (
+  <Layout extensions={{ clips: [roundedRectClip] }}>
+    <Content />
   </Layout>
 );
 
