@@ -40,7 +40,7 @@ export type SchemaRegistryLocalization = {
 
 export type SchemaRegistryEntry = {
   schema: z.ZodType;
-  /** 渲染类型签名时使用的名字（去掉 "Schema" 后缀） */
+  /** 渲染类型签名时使用的名称 */
   label: string;
   /** Reference / contract 页面 URL（含可选 #anchor） */
   url: string;
@@ -138,6 +138,56 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
 
   ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },
+  AnchorRefSchema: {
+    schema: IR.AnchorRefSchema,
+    label: 'AnchorRefSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  BoundaryAnchorRefSchema: {
+    schema: IR.BoundaryAnchorRefSchema,
+    label: 'BoundaryAnchorRefSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  ScopePlacementTargetSchema: {
+    schema: IR.ScopePlacementSchema.shape.target,
+    label: 'ScopePlacementTargetSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  TranslateSchema: {
+    schema: IR.TransformSchema.options[0],
+    label: 'TranslateSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  PolarTranslateSchema: {
+    schema: IR.TransformSchema.options[1],
+    label: 'PolarTranslateSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  AtTranslateSchema: {
+    schema: IR.TransformSchema.options[2],
+    label: 'AtTranslateSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  OffsetTranslateSchema: {
+    schema: IR.TransformSchema.options[3],
+    label: 'OffsetTranslateSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  BetweenTranslateSchema: {
+    schema: IR.TransformSchema.options[4],
+    label: 'BetweenTranslateSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  RotateSchema: {
+    schema: IR.TransformSchema.options[5],
+    label: 'RotateSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
+  'core.ScaleSchema': {
+    schema: IR.TransformSchema.options[6],
+    label: 'ScaleSchema',
+    url: '/kernel/components/scope/schema-reference#scopeschema',
+  },
   ScopePlacementSchema: {
     schema: IR.ScopePlacementSchema,
     label: 'ScopePlacement',
@@ -152,6 +202,12 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: IR.NodeDefaultSchema,
     label: 'NodeDefault',
     url: '/kernel/reference/schema/scope#default-channels',
+  },
+  ScopeDefaultsSchema: {
+    // 独立定义视图不改变其他页面按原实例展开 defaults 的行为
+    schema: IR.ScopeDefaultsSchema.clone(),
+    label: 'ScopeDefaultsSchema',
+    url: '/kernel/components/scope/schema-reference#scopedefaultsschema',
   },
   PathDefaultSchema: {
     schema: IR.PathDefaultSchema,
@@ -1613,5 +1669,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
 };
 
 export function lookupSchema(schema: core.$ZodType): SchemaRegistryEntry | undefined {
-  return Object.values(SCHEMA_REGISTRY).find(e => e.schema === schema);
+  const match = Object.entries(SCHEMA_REGISTRY).find(([, entry]) => entry.schema === schema);
+  if (match) return { ...match[1], label: match[1].label.endsWith('Schema') ? match[1].label : match[0] };
+  return undefined;
 }

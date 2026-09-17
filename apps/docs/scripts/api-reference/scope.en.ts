@@ -46,12 +46,16 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Scope 最终锚点对齐定位': 'Final anchor-aligned Scope placement',
   '仅覆盖已声明字段并由后代 Composite 继承的局部 Theme':
     'Local Theme overriding only declared fields, inherited by descendant Composites',
-  '局部 transform 列表；数组顺序应用，与 SVG transform list 一致':
-    'Local transform list using SVG transform-list order',
+  '局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点':
+    'Local transform list following SVG transform-list order; the last item acts on a local point first',
   '显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序':
     'Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order',
   'Scope 的级联视觉覆盖与后代默认通道，Layout 通过 rootScope 承载':
     'Cascading visual overrides and child-default channels for Scope; Layout carries them through rootScope',
+  '作用域级视觉覆盖；已声明字段按层级向后代 Composite 逐字段继承':
+    'Scope-level visual overrides cascade declared fields to descendant Composites',
+  '为后代 Node、Path、Label 与 Arrow 提供默认样式；元素显式值优先，reset 可阻断指定外层通道':
+    'Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels',
 };
 
 /** 缺少新增中文说明的翻译时阻止生成 */

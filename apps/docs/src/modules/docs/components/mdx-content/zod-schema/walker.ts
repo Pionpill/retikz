@@ -95,8 +95,15 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
         : undefined;
     return {
       kind: 'union',
-      members: schema.options.map(member => walkTypeImpl(member, false, next)),
+      members: schema.options.map(member => walkTypeImpl(member, skipRegistry, next)),
       ...(branches === undefined ? {} : { branches }),
+    };
+  }
+
+  if (schema instanceof z.ZodIntersection) {
+    return {
+      kind: 'intersection',
+      members: [walkTypeImpl(schema.def.left, false, next), walkTypeImpl(schema.def.right, false, next)],
     };
   }
 

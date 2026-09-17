@@ -8,16 +8,16 @@ For initial setup, see [Basic usage](/kernel/components/layout/usage). React pro
 
 ## SceneSchema
 
-<ZodSchema name="SceneSchema" />
+<ZodSchema shallow name="SceneSchema" />
 
 ## ViewBoxSchema
 
-<ZodSchema name="ViewBoxSchema" />
+<ZodSchema shallow name="ViewBoxSchema" />
 
 ## Additional notes
 
 - **Required and omitted fields**: `type`, `version`, and `children` are required; `theme`, `viewBox`, and `animations` may be omitted. Validation does not fill in the latter three fields; automatic framing and theme inheritance are handled during compilation.
-- **Theme inheritance**: When the scene root specifies no theme, it starts from the default light environment. A child Scope overrides only explicitly supplied theme fields and inherits the rest. See [Theme](/kernel/reference/schema/scene#theme) for field definitions.
+- **Theme inheritance**: When the scene root specifies no theme, it starts from the default light environment. A child Scope overrides only explicitly supplied theme fields and inherits the rest.
 - **Framing and size**: Coordinates increase rightward and downward, using scene coordinate units rather than host CSS dimensions. An explicit viewport receives no additional automatic padding; when omitted, framing is derived from content bounds and the padding in the compile options.
-- **Camera animation**: Animation may change framing during playback; static layout retains the framing at the end of the animation. See the [animation reference](/kernel/reference/schema/animation#animationtrack) for track fields.
-- **Child nodes**: Node, Path, Coordinate, Scope, and composite nodes are supported. Follow [Child](/kernel/reference/schema/scene#child) for their fields.
+- **Camera animation**: Animation may change framing during playback; static layout retains the framing at the end of the animation.
+- **Child nodes**: Node, Path, Coordinate, Scope, and composite nodes are supported.

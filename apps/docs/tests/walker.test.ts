@@ -89,6 +89,33 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
+  it('keeps top-level union object branches inspectable instead of resolving them to registry references', async () => {
+    const { TransformSchema } = await import('@retikz/core');
+    const r = walk(TransformSchema);
+
+    expect(r.kind).toBe('alias');
+    if (r.kind !== 'alias' || r.type.kind !== 'union') throw new Error('expected union alias');
+    expect(r.type.members[0]).toMatchObject({
+      kind: 'object',
+      fields: [{ name: 'kind' }, { name: 'x' }, { name: 'y' }],
+    });
+  });
+
+  it('walks intersections so custom clip branches retain both contracts', async () => {
+    const { ClipSchema } = await import('@retikz/core');
+    const r = walk(ClipSchema);
+
+    expect(r.kind).toBe('alias');
+    if (r.kind !== 'alias' || r.type.kind !== 'union') throw new Error('expected union alias');
+    expect(r.type.members[1]).toMatchObject({
+      kind: 'intersection',
+      members: [
+        { kind: 'object', fields: [{ name: 'kind' }] },
+        { kind: 'ref', name: 'JsonObjectSchema' },
+      ],
+    });
+  });
+
   it('walks z.discriminatedUnion same as union', () => {
     const A = z.object({ type: z.literal('a'), x: z.number() });
     const B = z.object({ type: z.literal('b'), y: z.string() });

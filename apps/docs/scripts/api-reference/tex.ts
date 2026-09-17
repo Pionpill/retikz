@@ -113,6 +113,7 @@ const texApiReferenceConfig: ApiReferencePackageConfig = {
 const MAX_EXPANDED_UNION_BRANCHES = 8;
 const MAX_EXPANDED_UNION_LINES = 40;
 const MAX_EXPANDED_UNION_CHARACTERS = 500;
+const MAX_MEMBER_TYPE_CHARACTERS = 300;
 const MAX_WRAPPED_OBJECT_MEMBERS = 12;
 const MAX_WRAPPED_OBJECT_CHARACTERS = 500;
 
@@ -347,6 +348,31 @@ const resolveObjectMembers = (
     visit(declaration.type);
     return { directMemberNames, baseTypes, omittedMembers };
   })();
+  /** 为超长继承字段寻找最近的命名类型入口，避免把实现细节铺进字段表 */
+  const memberTypeReference = (memberName: string): string | undefined => {
+    if (!ts.isTypeAliasDeclaration(declaration)) return undefined;
+    const hasMember = (node: ts.TypeNode): boolean =>
+      checker.getPropertyOfType(checker.getTypeFromTypeNode(node), memberName) !== undefined;
+    const visit = (node: ts.TypeNode): string | undefined => {
+      if (ts.isParenthesizedTypeNode(node)) return visit(node.type);
+      if (ts.isIntersectionTypeNode(node) || ts.isUnionTypeNode(node)) {
+        for (const part of node.types) {
+          const result = visit(part);
+          if (result !== undefined) return result;
+        }
+        return undefined;
+      }
+      if (!ts.isTypeReferenceNode(node)) return undefined;
+      const referenceName = node.typeName.getText();
+      const baseType = node.typeArguments?.[0];
+      if (baseType && ['Readonly', 'Partial', 'Required', 'Pick', 'Omit'].includes(referenceName)) {
+        if (hasMember(baseType)) return `${print(baseType)}['${memberName}']`;
+        return visit(baseType);
+      }
+      return hasMember(node) ? `${print(node)}['${memberName}']` : undefined;
+    };
+    return visit(declaration.type);
+  };
   const expandedSignature = (() => {
     if (!ts.isTypeAliasDeclaration(declaration) || !type.isUnion()) return undefined;
     if (ts.isUnionTypeNode(declaration.type)) {
@@ -456,24 +482,27 @@ const resolveObjectMembers = (
       declaredType && comparableParts.length === types.length && comparableParts.every(item => types.includes(item))
         ? declaredType.getText()
         : undefined;
+    const referencedType = memberTypeReference(member.name);
+    const fullType =
+      (referencedType ??
+        preservedType ??
+        displayTypes
+          .map(item =>
+            checker.typeToString(
+              item,
+              memberDeclaration,
+              ts.TypeFormatFlags.NoTruncation |
+                ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
+                ts.TypeFormatFlags.WriteArrayAsGenericType,
+            ),
+          )
+          .join(' | ')) ||
+      'never';
     return {
       name: member.name,
       optional,
       readonly: isReadonly(type, member),
-      type:
-        (preservedType ??
-          displayTypes
-            .map(item =>
-              checker.typeToString(
-                item,
-                memberDeclaration,
-                ts.TypeFormatFlags.NoTruncation |
-                  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
-                  ts.TypeFormatFlags.WriteArrayAsGenericType,
-              ),
-            )
-            .join(' | ')) ||
-        'never',
+      type: fullType.length > MAX_MEMBER_TYPE_CHARACTERS ? memberTypeReference(member.name) || '…' : fullType,
       description,
       details: tagText('description'),
       defaultValue: tagText('default') || tagText('defaultValue') || '—',
@@ -642,16 +671,14 @@ const renderMembers = (
   if (members.length === 0) return '';
   const labels = lang === 'zh' ? ['成员', '类型', '默认值', '说明'] : ['Member', 'Type', 'Default', 'Description'];
   const rows = members.map(member => {
-    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | \`${escapeTableCell(member.type)}\` | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(localizeText(member.description || '—', lang, translate))} |`;
+    const description = [member.description, member.details]
+      .filter((value): value is string => Boolean(value))
+      .map(value => localizeText(value, lang, translate))
+      .join('\n');
+    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | \`${escapeTableCell(member.type)}\` | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
   });
   const table = [`| ${labels.join(' | ')} |`, '| --- | --- | --- | --- |', ...rows].join('\n');
-  const details = members
-    .filter(member => member.details)
-    .map(
-      member =>
-        `**${member.name}**${lang === 'zh' ? '：' : ': '}${localizeText(member.details ?? '', lang, translate)}`,
-    );
-  return [table, ...details].join('\n\n');
+  return table;
 };
 
 /** 渲染由公共 JSDoc 提供的实际调用片段 */
