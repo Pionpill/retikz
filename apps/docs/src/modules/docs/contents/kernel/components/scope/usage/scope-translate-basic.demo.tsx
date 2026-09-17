@@ -81,7 +81,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
       <Node id="O" position={[-100, 0]} shape="circle" style={{ stroke: 'none', fill: 'none' }} layout={{ padding: 4 }}>
         o
       </Node>
-      <Node id="T" position={[100, 0]} shape="circle" style={{ stroke: 'none', fill: 'none' }} layout={{ padding: 4 }}>
+      <Node
+        id="T"
+        position={[100, 0]}
+        shape="circle"
+        style={{ stroke: 'none', fill: 'none' }}
+        layout={{ padding: 4 }}
+      />
+      <Node position={[100, -32]} style={{ stroke: 'none', fill: 'none' }} layout={{ padding: 0 }}>
         t
       </Node>
       <Circle

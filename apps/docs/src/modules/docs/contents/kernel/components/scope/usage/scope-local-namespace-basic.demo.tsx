@@ -1,4 +1,4 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { Draw, Layout, Node, Rectangle, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -12,17 +12,24 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const innerNodeId = values.nodeId;
 
   return (
-    <Layout viewBox={{ x: -100, y: -70, width: 480, height: 140 }}>
+    <Layout viewBox={{ x: -100, y: -100, width: 480, height: 200 }}>
+      <Node id="source" position={[140, -65]} style={{ stroke: 'gray', dashed: true }}>
+        source
+      </Node>
       <Node id="A" position={[0, 0]}>
         outer A
       </Node>
+      <Rectangle
+        corner1={[210, -42]}
+        corner2={[350, 42]}
+        style={{ fill: 'none', stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+      />
       <Scope localNamespace={values.localNamespace} transforms={[{ kind: 'translate', x: 280, y: 0 }]}>
         <Node id={innerNodeId} position={[0, 0]}>
           inner {innerNodeId}
         </Node>
-        <Draw way={[[0, 50], innerNodeId]} arrow="->" />
       </Scope>
-      <Draw way={[[0, -50], 'A']} arrow="->" />
+      <Draw way={['source', 'A']} arrow="->" style={{ stroke: '#2563eb', strokeWidth: 2 }} />
     </Layout>
   );
 });

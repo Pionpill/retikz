@@ -67,8 +67,6 @@ export const roundedRectClip = defineClip({
 });
 ```
 
-数据依次流经 `spec → resolve → shape → lower → SceneClipPath`：spec 是 `Scope.clip` 中可保存的输入，shape 是解析后的同 kind 几何快照，最终路径由所有 renderer 复用。`resolve` 可将 authored spec 转成 JSON-safe shape；组合已有裁剪时使用 `context.resolve(otherSpec)`。`lower` 可用 `context.lower(otherShape)` 组合已注册 shape，并必须返回至少一段绘制命令。
-
 ## 注入与使用
 
 Definition 是 React 与 Vanilla 共用的运行时对象，不会写进保存的场景数据。选择宿主后，把它注册到 `clips`，再由 `Scope.clip.kind` 引用。
@@ -198,6 +196,23 @@ provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出
 复合 shape 会按 authored order 累积 child commands，并应用外层 `fillRule`；它不是几何交集。需要交集时使用嵌套 `<Scope clip>`。
 
 完整的 registry 解析、shape snapshot、路径 canonicalization 与资源去重见 [Scope 实现原理](/kernel/components/scope/mechanism)。
+
+## API 列表
+
+<div className="[&_table]:table-fixed [&_th:first-child]:w-16 [&_th:nth-child(2)]:w-3/5 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_td_code]:max-w-full [&_td_code]:whitespace-pre-wrap [&_td_code]:[overflow-wrap:anywhere]">
+
+| 类型 | 声明                                                                                                                                                                                                                                                                                                                         | 作用                                                              |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 函数 | `defineClip<TShape extends ClipShape>(`<br />`  definition: ClipDefinitionIdentityInput<TShape>`<br />`): ClipDefinition<TShape, TShape>`<br /><br />`defineClip<TClip extends ClipLike, TShape extends ClipShape>(`<br />`  definition: ClipDefinitionResolvedInput<TClip, TShape>`<br />`): ClipDefinition<TClip, TShape>` | 定义裁剪能力；输入已是完整形状时可省略 `resolve` 与 `shapeSchema` |
+|      | `compileToScene<`<br />`  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []`<br />`>(`<br />`  ir: IRScene,`<br />`  options?: CompileOptions<TComposites>`<br />`): CompileResult<CompositeArtifactOf<TComposites[number]>>`                                                                    | 编译 IR 时注入裁剪定义                                            |
+|      | `renderToSvgString(`<br />`  input: RenderInput,`<br />`  options?: RenderToStringOptions`<br />`): string`                                                                                                                                                                                                                  | Vanilla 渲染时注入裁剪定义                                        |
+| 类型 | `ClipDefinition`                                                                                                                                                                                                                                                                                                             | 可注册的裁剪定义，由 `defineClip` 推导                            |
+|      | `ClipResolveContext`                                                                                                                                                                                                                                                                                                         | 提供精度取整与子裁剪解析方法                                      |
+|      | `ClipLowerContext`                                                                                                                                                                                                                                                                                                           | 提供精度取整与子形状路径生成方法                                  |
+| 属性 | `Layout.extensions.clips`                                                                                                                                                                                                                                                                                                    | React 宿主的裁剪注册入口                                          |
+|      | `Scope.clip`                                                                                                                                                                                                                                                                                                                 | 通过 `kind` 和参数引用裁剪能力                                    |
+
+</div>
 
 ## 延伸阅读
 

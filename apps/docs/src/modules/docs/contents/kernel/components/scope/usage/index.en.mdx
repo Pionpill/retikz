@@ -5,24 +5,158 @@ description: Use Scope for local coordinates, group references, defaults, and cl
 
 Use Scope to move a group, share defaults, or clip children. Place it inside Layout or another Scope; each Scope affects only its own subtree.
 
-## Basic usage
+## Integration options
 
-The two nodes below keep their relative positions while moving 80 units to the right. React imports Scope from `@retikz/react`; the Vanilla source in the preview constructs the same subtree through `@retikz/vanilla` and produces SVG.
+Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants keep the left `x = 0` reference and move A and B inside Scope 80 units to the right.
 
-<ComponentPreview files="scope-basic" size="sm" />
+<ComponentPreview files="scope-basic" size="sm" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Import components from `@retikz/react` and declare Scope with its child subtree directly.
+
+```tsx
+import { Draw, Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="origin" position={[0, 0]}>
+      x = 0
+    </Node>
+    <Scope transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
+      <Node id="B" position={[100, 0]}>
+        B
+      </Node>
+      <Draw way={['A', 'B']} arrow="->" />
+    </Scope>
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+Import the IR type from `@retikz/core` and pass the Scope subtree to `<Layout ir>`, without JSX children.
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
+    {
+      type: 'scope',
+      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+Build Scope with `@retikz/vanilla`, then mount it into an existing `diagram` container using the `/dom` entry.
+
+```ts
+import { node, path, scene, scope } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('origin', { position: [0, 0], text: 'x = 0' }),
+    scope({ transforms: [{ kind: 'translate', x: 80, y: 0 }] }, [
+      node('A', { position: [0, 0], text: 'A' }),
+      node('B', { position: [100, 0], text: 'B' }),
+      path({ way: ['A', 'B'], arrow: '->' }),
+    ]),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+Call `view.dispose()` before removing the container to release mounted resources.
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+Pass existing IR directly to `mount`, without React or rebuilding the Scope subtree through Vanilla builders.
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
+    {
+      type: 'scope',
+      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+Call `view.dispose()` before removing the container to release mounted resources.
+
+</DocTab>
+</DocTabs>
 
 ## When to use Scope
 
-| Task                        | Entry point            | Scope stops at                    |
-| --------------------------- | ---------------------- | --------------------------------- |
-| Transform a subfigure       | `transforms`           | It does not place raw children    |
-| Align a subfigure           | `placement`            | Only completed targets are seen   |
-| Reference a group           | `id` + `boundingShape` | Path routes do not enter bounds   |
-| Isolate reusable ids        | `localNamespace`       | `scope.id` stays in the parent    |
-| Switch a local domain theme | `theme`                | Core primitives are not recolored |
-| Share defaults              | `style` / `defaults`   | Explicit element values win       |
-| Limit visibility            | `clip`                 | No renderer-specific semantics    |
-| Move a whole stack          | `zIndex`               | Child order stays unchanged       |
+| Category        | Property               | Effect                                                                  |
+| --------------- | ---------------------- | ----------------------------------------------------------------------- |
+| Group target    | `placement`            | Align the whole group by its own anchor; sees completed targets only    |
+|                 | `id` + `boundingShape` | Make the group referenceable externally; path routes stay out of bounds |
+| Subtree context | `transforms`           | Transform the whole subfigure; does not place raw children              |
+|                 | `localNamespace`       | Isolate reusable child ids; `scope.id` stays in the parent              |
+|                 | `theme`                | Switch a local domain theme; Core primitives are not recolored          |
+|                 | `style` / `defaults`   | Share defaults; explicit element values win                             |
+|                 | `clip`                 | Limit the subtree's visible area; no renderer-specific semantics        |
+|                 | `zIndex`               | Move the group among parent-level content; child order stays unchanged  |
 
 <ComponentAlert
   type="warn"
@@ -34,15 +168,15 @@ The two nodes below keep their relative positions while moving 80 units to the r
 
 Five translation forms mirror Node's relative-position model; `rotate` and `scale` set the local axes and scale. Array order follows an SVG transform list, so the last item acts on a local point first.
 
-| kind                | Key fields                     | Effect                            |
-| ------------------- | ------------------------------ | --------------------------------- |
-| `translate`         | `x`, `y`                       | Fixed Cartesian translation       |
-| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin    |
-| `at-translate`      | `direction`, `of`, `distance?` | Place in a referent direction     |
-| `offset-translate`  | `of`, `offset?`                | Add a local offset to a referent  |
-| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints |
-| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point  |
-| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point   |
+| kind                | Key fields                     | Effect                                             |
+| ------------------- | ------------------------------ | -------------------------------------------------- |
+| `translate`         | `x`, `y`                       | Fixed Cartesian translation                        |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin or reference target |
+| `at-translate`      | `direction`, `of`, `distance?` | Place in a reference target's direction            |
+| `offset-translate`  | `of`, `offset?`                | Add a local offset to a reference target           |
+| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints                  |
+| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point                   |
+| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point                    |
 
 ## Local coordinates
 
@@ -51,6 +185,7 @@ Five translation forms mirror Node's relative-position model; `rotate` and `scal
 <ComponentPreview
   files="scope-translate-basic"
   size="sm"
+  controlPanelDefaultSize={50}
   caption="Square q is the only envelope subject; the small dot only marks the local origin. Self placement is off by default. When enabled, choose O or T as the placement target; selfAnchor locks the square's selected anchor to it. Final placement then cancels the five translate-only transforms, so the panel hides their ineffective transform referent."
 />
 
@@ -62,9 +197,9 @@ Five translation forms mirror Node's relative-position model; `rotate` and `scal
 
 With an `id`, Scope derives a referenceable group target from the children bounds. Use the panel to switch `boundingShape` and the connection anchor: the boundary shape and attachment point change independently, while the children stay fixed.
 
-<ComponentPreview files="scope-id-reference" size="sm" />
+<ComponentPreview files="scope-id-reference" size="md" />
 
-Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The panel starts with both Nodes named `A`; disable isolation to redirect the outer arrow to the inner Node, or rename the inner id to `B` to remove the conflict.
+Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The panel starts with both Nodes named `A`: the blue outer arrow reaches the outer A with isolation enabled, then the same-named A inside the dotted boundary when it is disabled. Duplicate ids keep rendering and emit a warning; the later id replaces the earlier resolution target. Rename the inner id to `B` to remove the conflict.
 
 <ComponentPreview files="scope-local-namespace-basic" size="sm" />
 
@@ -78,15 +213,13 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 <ComponentPreview files="scope-z-index" size="sm" />
 
-## Local Theme
+## Additional notes
 
-`<Scope theme>` writes sparse `style` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. During compilation, Core regenerates shared colors through the current style registry; an unregistered style fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/extended-usage#theme-configuration) for the complete example.
+**Local Theme.** `<Scope theme>` writes sparse `style` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. During compilation, Core regenerates shared colors through the current style registry; an unregistered style fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/extended-usage#theme-configuration) for the complete example.
 
 Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
 
-## Style defaults
-
-Scope also exposes `style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+**Style defaults.** Scope also exposes `style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
 
 Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the [API reference](/kernel/components/scope/api-reference) for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
 

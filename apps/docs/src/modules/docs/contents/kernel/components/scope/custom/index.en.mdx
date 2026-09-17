@@ -67,8 +67,6 @@ export const roundedRectClip = defineClip({
 });
 ```
 
-The data flows as `spec → resolve → shape → lower → SceneClipPath`: the spec is the persistent input in `Scope.clip`, the shape is a resolved same-kind geometry snapshot, and every renderer reuses the resulting path. `resolve` turns authored specs into JSON-safe shapes; use `context.resolve(otherSpec)` to compose an existing clip. `lower` can combine registered shapes through `context.lower(otherShape)` and must return at least one drawing command.
-
 ## Register and use
 
 The Definition is a shared React / Vanilla runtime object and never becomes persistent scene data. In the chosen host, register it in `clips`, then reference it through `Scope.clip.kind`.
@@ -198,6 +196,23 @@ A `{ capability: 'clip', name: kind }` provider in a provider graph likewise cre
 A compound shape appends child commands in authored order and applies its outer `fillRule`; it is not a geometric intersection. Use nested `<Scope clip>` elements for intersection.
 
 For registry resolution, shape snapshots, path canonicalization, and resource deduplication, see the [Scope mechanism](/kernel/components/scope/mechanism).
+
+## API list
+
+<div className="[&_table]:table-fixed [&_th:first-child]:w-16 [&_th:nth-child(2)]:w-3/5 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_td_code]:max-w-full [&_td_code]:whitespace-pre-wrap [&_td_code]:[overflow-wrap:anywhere]">
+
+| Type     | Declaration                                                                                                                                                                                                                                                                                                                  | Purpose                                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Function | `defineClip<TShape extends ClipShape>(`<br />`  definition: ClipDefinitionIdentityInput<TShape>`<br />`): ClipDefinition<TShape, TShape>`<br /><br />`defineClip<TClip extends ClipLike, TShape extends ClipShape>(`<br />`  definition: ClipDefinitionResolvedInput<TClip, TShape>`<br />`): ClipDefinition<TClip, TShape>` | Defines a clipping capability; omit `resolve` and `shapeSchema` when the input already is the full shape |
+|          | `compileToScene<`<br />`  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []`<br />`>(`<br />`  ir: IRScene,`<br />`  options?: CompileOptions<TComposites>`<br />`): CompileResult<CompositeArtifactOf<TComposites[number]>>`                                                                    | Injects clip definitions when compiling IR                                                               |
+|          | `renderToSvgString(`<br />`  input: RenderInput,`<br />`  options?: RenderToStringOptions`<br />`): string`                                                                                                                                                                                                                  | Injects clip definitions when rendering with Vanilla                                                     |
+| Type     | `ClipDefinition`                                                                                                                                                                                                                                                                                                             | A registrable clip definition inferred by `defineClip`                                                   |
+|          | `ClipResolveContext`                                                                                                                                                                                                                                                                                                         | Provides rounding and child clip resolution                                                              |
+|          | `ClipLowerContext`                                                                                                                                                                                                                                                                                                           | Provides rounding and child shape lowering                                                               |
+| Property | `Layout.extensions.clips`                                                                                                                                                                                                                                                                                                    | Registers clips in the React host                                                                        |
+|          | `Scope.clip`                                                                                                                                                                                                                                                                                                                 | References a clipping capability by its `kind` and parameters                                            |
+
+</div>
 
 ## Further reading
 

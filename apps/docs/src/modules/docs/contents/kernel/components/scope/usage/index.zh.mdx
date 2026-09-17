@@ -5,24 +5,158 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 
 用 Scope 让一组图元一起移动、共享默认值或接受裁剪。它放在 Layout 内，也可以嵌套；每个 Scope 只改变自己包含的子树。
 
-## 基础用法
+## 接入方式
 
-下面两个节点保留相对位置，整体向右平移 80。React 从 `@retikz/react` 导入 Scope；预览源码中的 Vanilla 写法通过 `@retikz/vanilla` 构造相同子树并生成 SVG。
+选择宿主与输入形式：React 使用 JSX 或 `ir` 属性；Vanilla 使用构造函数或直接传入 IR。四种写法都保留左侧 `x = 0` 参照，并让 Scope 内的 A、B 整体向右平移 80。
 
-<ComponentPreview files="scope-basic" size="sm" />
+<ComponentPreview files="scope-basic" size="sm" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+从 `@retikz/react` 导入组件，直接声明 Scope 及其子树。
+
+```tsx
+import { Draw, Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="origin" position={[0, 0]}>
+      x = 0
+    </Node>
+    <Scope transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
+      <Node id="B" position={[100, 0]}>
+        B
+      </Node>
+      <Draw way={['A', 'B']} arrow="->" />
+    </Scope>
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+从 `@retikz/core` 导入 IR 类型，把 Scope 子树交给 `<Layout ir>`，无需 JSX children。
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
+    {
+      type: 'scope',
+      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+从 `@retikz/vanilla` 构造 Scope，通过 `/dom` 的 `mount` 挂载到已有的 `diagram` 容器。
+
+```ts
+import { node, path, scene, scope } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('origin', { position: [0, 0], text: 'x = 0' }),
+    scope({ transforms: [{ kind: 'translate', x: 80, y: 0 }] }, [
+      node('A', { position: [0, 0], text: 'A' }),
+      node('B', { position: [100, 0], text: 'B' }),
+      path({ way: ['A', 'B'], arrow: '->' }),
+    ]),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+容器移除前调用 `view.dispose()` 释放挂载资源。
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+将已有 IR 直接传给 `mount`，不经过 React，也不需要用 Vanilla 构造函数重建 Scope 子树。
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
+    {
+      type: 'scope',
+      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+容器移除前调用 `view.dispose()` 释放挂载资源。
+
+</DocTab>
+</DocTabs>
 
 ## 何时使用
 
-| 任务               | 使用入口               | Scope 的边界             |
-| ------------------ | ---------------------- | ------------------------ |
-| 整体变换一个子图   | `transforms`           | 不计算子元素原始位置     |
-| 按自身锚点对齐子图 | `placement`            | 只引用此前完成的目标     |
-| 从外部引用整组     | `id` + `boundingShape` | 不把 path 走线计入包络   |
-| 隔离可复用子图 id  | `localNamespace`       | `scope.id` 仍注册到外层  |
-| 切换局部领域主题   | `theme`                | Core 图元不会自动着色    |
-| 统一默认值         | `style` / `defaults`   | 元素显式值仍然优先       |
-| 限制可见区域       | `clip`                 | 不定义 renderer 专属语义 |
-| 调整整组栈序       | `zIndex`               | 不重排组内 children      |
+| 分类       | 属性                   | 作用                                            |
+| ---------- | ---------------------- | ----------------------------------------------- |
+| 整体对象   | `placement`            | 按自身锚点对齐整组；只引用此前完成的目标        |
+|            | `id` + `boundingShape` | 让整组可从外部引用；包络不计入 path 走线        |
+| 子树上下文 | `transforms`           | 整体变换子图；不计算子元素原始位置              |
+|            | `localNamespace`       | 隔离可复用子图 id；`scope.id` 仍注册到外层      |
+|            | `theme`                | 切换局部领域主题；Core 图元不会自动着色         |
+|            | `style` / `defaults`   | 统一默认值；元素显式值仍然优先                  |
+|            | `clip`                 | 限制子树可见区域；不定义 renderer 专属语义      |
+|            | `zIndex`               | 调整整组相对父级内容的栈序；不重排组内 children |
 
 <ComponentAlert
   type="warn"
@@ -37,9 +171,9 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 | kind                | 核心字段                       | 作用                          |
 | ------------------- | ------------------------------ | ----------------------------- |
 | `translate`         | `x`, `y`                       | 固定笛卡尔平移                |
-| `polar-translate`   | `origin?`, `angle`, `radius`   | 从原点或 referent 极坐标落点  |
-| `at-translate`      | `direction`, `of`, `distance?` | 落到 referent 的某个方向      |
-| `offset-translate`  | `of`, `offset?`                | 在 referent 上叠加局部偏移    |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | 从原点或参照对象的极坐标落点  |
+| `at-translate`      | `direction`, `of`, `distance?` | 落到参照对象的某个方向        |
+| `offset-translate`  | `of`, `offset?`                | 在参照对象上叠加局部偏移      |
 | `between-translate` | `between`, `fraction`          | 落到两个端点的比例位置        |
 | `rotate`            | `degrees`, `pivot?`            | 绕 Scope 自身点旋转           |
 | `scale`             | `x`, `y?`, `pivot?`            | 绕 Scope 自身点等比或分轴缩放 |
@@ -51,6 +185,7 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 <ComponentPreview
   files="scope-translate-basic"
   size="sm"
+  controlPanelDefaultSize={50}
   caption="正方形 q 是唯一包络主体，小圆点只标记局部原点。“自身定位”默认关闭；开启后可在 O / T 间切换定位目标，selfAnchor 会把方形的对应锚点锁定到该目标。此时五种纯平移 transform 的位移会被最终定位抵消，因此面板隐藏无效的 transform 引用点。"
 />
 
@@ -62,9 +197,9 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 
 设置 `id` 后，Scope 会根据 children 的包围盒生成一个可引用的整体目标。用面板切换 `boundingShape` 与连接 anchor，观察边界形状和连接落点如何独立变化；children 本身不会改变。
 
-<ComponentPreview files="scope-id-reference" size="sm" />
+<ComponentPreview files="scope-id-reference" size="md" />
 
-`localNamespace` 只在确实要复用带固定 id 的子图时使用。面板默认让内外 Node 同为 `A`；关闭隔离时外部箭头会改连内部 Node，把内部 id 改成 `B` 可消除冲突。
+`localNamespace` 只在确实要复用带固定 id 的子图时使用。面板默认让内外 Node 同为 `A`；蓝色外部箭头在开启隔离时连向外层 A，关闭后改连虚线边界内的同名 A。重复 id 会保留图形并发出警告，后定义的 id 覆盖此前解析目标；把内部 id 改成 `B` 可消除冲突。
 
 <ComponentPreview files="scope-local-namespace-basic" size="sm" />
 
@@ -78,15 +213,13 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 
 <ComponentPreview files="scope-z-index" size="sm" />
 
-## 局部 Theme
+## 补充说明
 
-`<Scope theme>` 把稀疏的 `style` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。编译时 Core 根据当前 style registry 重新生成 shared colors；未注册的 style 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/extended-usage#主题配置)。
+**局部 Theme。** `<Scope theme>` 把稀疏的 `style` / `mode` selector 写入 `IRScope.theme`，只影响其后代 Composite。字段逐项继承：例如 `{ mode: ThemeMode.Dark }` 只切换明暗环境，仍保留外层的 `style`。编译时 Core 根据当前 style registry 重新生成 shared colors；未注册的 style 会立即报错。完整示例见 [Layout 的可继承 Theme](/kernel/components/layout/extended-usage#主题配置)。
 
 Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme，Theme 也不直接填充 Node / Path 的颜色。省略 `style` 时使用所属包的默认基线；在嵌套 `Scope` 中省略 `style` 会继承外层风格，不能重置为基线。
 
-## 样式默认值
-
-Scope 同时提供 `style.color`、共享视觉属性 与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
+**样式默认值。** Scope 同时提供 `style.color`、共享视觉属性 与 `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`。这些值逐字段向内继承，元素显式值优先；`defaults.reset` 只切断指定通道的外层继承。
 
 样式是 Scope 的辅助职责，不改变局部坐标、引用或裁剪语义。需要查字段时查看 [API 参考](/kernel/components/scope/api-reference)，不必为颜色、线宽或透明度建立额外 Scope。
 
