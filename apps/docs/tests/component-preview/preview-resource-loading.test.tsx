@@ -18,6 +18,8 @@ import {
   buildSourceFileKey,
   buildVanillaKey,
   loadPreviewResources,
+  vanillaModuleLoaders,
+  vanillaOverrideLoaders,
 } from '@/modules/docs/components/component-preview/registry';
 import { PreviewThemeStyle } from '@/modules/docs/components/component-preview/theme';
 import { useComponentPreviewStore } from '@/modules/docs/store';
@@ -167,6 +169,26 @@ describe('ComponentPreview 资源加载', () => {
     });
 
     expect(result.status).toBe('ready');
+  });
+
+  it.each([
+    ['theme-inheritance', 'Composite'],
+    ['layout-shape-injection', 'IR'],
+  ])('为 Layout 扩展示例加载可执行的 Vanilla 模块（%s）', async (name, text) => {
+    const segments = ['kernel', 'components', 'layout', 'extended-usage'];
+    const key = buildVanillaKey(segments, name);
+    const rawLoader = vanillaOverrideLoaders[key];
+    const moduleLoader = vanillaModuleLoaders[key];
+
+    expect(rawLoader).toBeDefined();
+    expect(moduleLoader).toBeDefined();
+    if (rawLoader === undefined || moduleLoader === undefined) return;
+
+    const [source, module] = await Promise.all([rawLoader(), moduleLoader()]);
+    expect(source).toContain('browserMeasurer');
+    expect(source).toContain('renderToSvgString');
+    expect(module.svg).toContain('<svg');
+    expect(module.svg).toContain(text);
   });
 
   it('首次渲染已存在的 demo 时显示 loading 占位', () => {

@@ -206,7 +206,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
           activeRender={sourceState.activeRender}
           controlSlots={resolvedCardControlSlots}
           previewClassName={cn(
-            'flex h-full w-full justify-center overflow-hidden p-6 select-none sm:p-10',
+            'flex h-full w-full justify-center overflow-hidden p-5 select-none',
             alignClass[align],
             previewClassName,
           )}

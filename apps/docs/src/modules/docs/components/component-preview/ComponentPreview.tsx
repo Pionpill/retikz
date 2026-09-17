@@ -46,7 +46,7 @@ export type ComponentPreviewProps = {
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
   size?: SizeKey;
-  /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等。 */
+  /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-5 / 居中等。 */
   previewClassName?: string;
   /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
   hideCode?: boolean;

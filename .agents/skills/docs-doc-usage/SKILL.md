@@ -10,7 +10,7 @@ description: Use when writing basic usage or named usage topics for Retikz compo
 ## 页面骨架
 
 1. 开篇：说明解决什么、最小输入与可观察结果
-2. 最小接入：小节名避免重复文档名，如基础用法页使用 `## 接入方式`。首个 demo 无 controls，通常保留源码入口，后续再用 controls 比较行为；总入口的 React / Vanilla × API / IR 使用四个 DocTab 展示代码，上方用 `hideCode` 的 ComponentPreview 展示共同结果。组件不重复安装命令，链接方案快速开始
+2. 最小接入：小节名避免重复文档名，如基础用法页使用 `## 接入方式`。新组件的首个 demo 无 controls，且固定使用 React + JSX、React + IR、Vanilla API、Vanilla + IR 四个 `DocTab` 展示同一结果；上方用 `hideCode` 的 ComponentPreview 展示共同结果。组件不重复安装命令，链接方案快速开始
 3. 按实际语义命名的使用章节：从常见任务到组合和边界；专题页开篇明确前置用法与本页新增任务，不重复整套教程
 4. 收尾说明按内容选择：零散短说明合并为 `## 补充说明`（`## Additional notes`）；需要独立讲解的跨示例限制保留 `## 错误与限制`，不重复收录同一内容
 5. `## 延伸阅读`：LinkedSections 指向前提、自定义、实现原理与权威参考

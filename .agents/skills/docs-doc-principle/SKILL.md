@@ -66,7 +66,7 @@ description: Use before writing or reviewing Retikz solution documentation, demo
 
 用户正文优先展示 DSL（如 `<Layout>`、`<Node>`、`<Path>`、`<Draw>`）。普通用法页不为了“完整”重复 IR JSON 或编译器内部；IR 只在架构、持久化、AI 接入或必须用它解释公开行为时出现。
 
-- 同一公开能力同时提供 React 与 Vanilla 入口时，安装、入门和高频使用页必须保留两套最小接入说明：分别点明入口、注入或调用位置与产物。ComponentPreview 的实际源码视图已覆盖相应写法时不再重复 DocTabs，只补必要接入说明或关键片段；未覆盖的替代方案优先用 `DocTabs`，有顺序的操作可组合 `DocSteps`；切换展示不等于省略另一端。只有能力确实只支持其中一端，或页面明确限定单一宿主时，才可省略另一端
+- 新组件的基础用法固定用四个 `DocTab` 展示同一结果：React + JSX、React + IR、Vanilla API、Vanilla + IR。上方使用 `hideCode` 的 `ComponentPreview` 展示共同结果，不以预览源码替代任一 Tab；每个 Tab 都给出可直接使用的完整入口
 
 ComponentPreview 的 IR 与 Vanilla 配置必须保持最上层、精简的 Source IR / authoring 语义；不得把 lower、resolve 或 runtime canonical 结果直接暴露给读者。运行时为统一消费而产生的 `base`、完整 Plot 或其它下沉形态只用于校验与渲染。
 

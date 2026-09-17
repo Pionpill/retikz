@@ -1171,7 +1171,7 @@ describe('PreviewWorkspace', () => {
     expect(previewPane?.classList.contains('relative')).toBe(true);
     expect(previewPane?.classList.contains('group/preview-context')).toBe(true);
     expect(previewPane?.classList.contains('pt-10')).toBe(false);
-    expect(previewPanel?.classList.contains('pt-10')).toBe(true);
+    expect(previewPanel?.classList.contains('pt-10')).toBe(false);
     expect(contextBar?.classList.contains('absolute')).toBe(true);
     expect(contextBar?.classList.contains('top-2')).toBe(true);
     expect(contextBar?.classList.contains('opacity-0')).toBe(true);

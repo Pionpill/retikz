@@ -195,10 +195,10 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const downloadLabel = previewState.rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
 
   const handleAskAi = () => {
-    const lang = aiCurrentPage?.lang ?? 'zh';
+    const promptLang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
     openAi();
-    fillAiDraft(buildAskAiPrompt(lang, pageTitle, '', name));
+    fillAiDraft(buildAskAiPrompt(promptLang, pageTitle, '', name));
   };
   const previewPanel = (
     <PreviewWorkspace
@@ -220,7 +220,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       lang={lang}
       activeRender={sourceState.activeRender}
       controlSlots={resolvedDialogControlSlots}
-      previewClassName={cn('flex h-full w-full justify-center overflow-hidden p-10 select-none', alignClass[align])}
+      previewClassName={cn('flex h-full w-full justify-center overflow-hidden p-5 select-none', alignClass[align])}
       previewStyle={DOT_PATTERN_STYLE}
       pinControlsOnClick={false}
     />
