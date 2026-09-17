@@ -184,7 +184,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
 
   return (
     <div ref={containerRef} className="my-6">
-      <div data-slot="component-preview-frame" className="overflow-hidden rounded-xl border">
+      <div data-slot="component-preview-frame" data-preview-name={name} className="overflow-hidden rounded-xl border">
         <PreviewWorkspace
           definition={resolvedControlDefinition}
           controlContract={controlContract}

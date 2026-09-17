@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "check:figure-size": "node scripts/check-figure-size.mjs",
     "check:build": "pnpm run build",
     "check:runtime": "node scripts/check-doc-runtime.mjs",
     "check:site": "pnpm run check:static && pnpm run check:build && pnpm run check:runtime",
