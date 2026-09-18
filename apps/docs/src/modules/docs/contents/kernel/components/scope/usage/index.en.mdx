@@ -184,7 +184,7 @@ Five translation forms mirror Node's relative-position model; `rotate` and `scal
 
 <ComponentPreview
   files="scope-translate-basic"
-  size="xs"
+  size="sm"
   controlPanelDefaultSize={50}
   caption="Square q is the only envelope subject; the small dot only marks the local origin. Self placement is off by default. When enabled, choose O or T as the placement target; selfAnchor locks the square's selected anchor to it. Final placement then cancels the five translate-only transforms, so the panel hides their ineffective transform referent."
 />
@@ -197,7 +197,7 @@ Five translation forms mirror Node's relative-position model; `rotate` and `scal
 
 With an `id`, Scope derives a referenceable group target from the children bounds. Use the panel to switch `boundingShape` and the connection anchor: the boundary shape and attachment point change independently, while the children stay fixed.
 
-<ComponentPreview files="scope-id-reference" size="sm" />
+<ComponentPreview files="scope-id-reference" size="md" />
 
 Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The panel starts with both Nodes named `A`: the blue outer arrow reaches the outer A with isolation enabled, then the same-named A inside the dotted boundary when it is disabled. Duplicate ids keep rendering and emit a warning; the later id replaces the earlier resolution target. Rename the inner id to `B` to remove the conflict.
 
@@ -207,11 +207,11 @@ Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The
 
 `clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. The panel shows Core's `rect` plus `circle` / `ellipse` / `polygon` / `path` / `compound` provided by Standard and injected into the drawing. Register a [Custom Clip](/kernel/components/scope/custom) when a domain needs another operation or geometry kind.
 
-<ComponentPreview files="scope-clip" size="xs" />
+<ComponentPreview files="scope-clip" size="sm" />
 
 `zIndex` moves the whole Scope among siblings without reordering children inside it. Adjust all four Nodes and both Scopes in the panel to compare within-group and whole-group stacking.
 
-<ComponentPreview files="scope-z-index" size="sm" />
+<ComponentPreview files="scope-z-index" size="md" />
 
 ## Additional notes
 

@@ -6,6 +6,7 @@ import { ScopeZIndexControlId } from './scope-z-index.controls';
 /** Scope stacking controls in English */
 export const scopeZIndexEnControls = definePreviewControls({
   presentation: 'panel',
+  defaultSize: 50,
   title: 'Scope zIndex',
   sections: [
     {

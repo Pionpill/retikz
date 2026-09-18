@@ -10,6 +10,7 @@ export const createPreviewControlContract = (lang: Lang) => {
   return {
     controls: definePreviewControls({
       presentation: 'panel',
+      defaultSize: 50,
       title: text.title,
       sections: [
         {

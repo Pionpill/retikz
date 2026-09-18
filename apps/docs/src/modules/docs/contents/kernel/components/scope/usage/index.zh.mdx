@@ -184,7 +184,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 <ComponentPreview
   files="scope-translate-basic"
-  size="xs"
+  size="sm"
   controlPanelDefaultSize={50}
   caption="正方形 q 是唯一包络主体，小圆点只标记局部原点。“自身定位”默认关闭；开启后可在 O / T 间切换定位目标，selfAnchor 会把方形的对应锚点锁定到该目标。此时五种纯平移 transform 的位移会被最终定位抵消，因此面板隐藏无效的 transform 引用点。"
 />
@@ -197,7 +197,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 设置 `id` 后，Scope 会根据 children 的包围盒生成一个可引用的整体目标。用面板切换 `boundingShape` 与连接 anchor，观察边界形状和连接落点如何独立变化；children 本身不会改变。
 
-<ComponentPreview files="scope-id-reference" size="sm" />
+<ComponentPreview files="scope-id-reference" size="md" />
 
 `localNamespace` 只在确实要复用带固定 id 的子图时使用。面板默认让内外 Node 同为 `A`；蓝色外部箭头在开启隔离时连向外层 A，关闭后改连虚线边界内的同名 A。重复 id 会保留图形并发出警告，后定义的 id 覆盖此前解析目标；把内部 id 改成 `B` 可消除冲突。
 
@@ -207,11 +207,11 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 `clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及由 Standard 提供并注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/scope/custom)。
 
-<ComponentPreview files="scope-clip" size="xs" />
+<ComponentPreview files="scope-clip" size="sm" />
 
 `zIndex` 调整整个 Scope 在父层的栈序，不会重排 Scope 内部 children。用面板分别修改四个 Node 与两个 Scope，比较组内排序和整组排序。
 
-<ComponentPreview files="scope-z-index" size="sm" />
+<ComponentPreview files="scope-z-index" size="md" />
 
 ## 补充说明
 

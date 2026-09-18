@@ -14,6 +14,7 @@ export const ScopeZIndexControlId = {
 /** Scope 栈序的中文属性面板 */
 export const scopeZIndexControls = definePreviewControls({
   presentation: 'panel',
+  defaultSize: 50,
   title: 'Scope zIndex',
   sections: [
     {
