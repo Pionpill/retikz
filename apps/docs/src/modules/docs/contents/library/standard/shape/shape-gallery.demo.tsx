@@ -32,7 +32,7 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      shapes={[
+      extensions={{ shapes: [
         ContourShapeDefinition,
         CrossShapeDefinition,
         SectorShapeDefinition,
@@ -42,7 +42,7 @@ const Demo: FC = () => {
         HexagonShapeDefinition,
         CylinderShapeDefinition,
         EllipticCapsuleShapeDefinition,
-      ]}
+      ] }}
     >
       <Node
         position={[-150, -90]}

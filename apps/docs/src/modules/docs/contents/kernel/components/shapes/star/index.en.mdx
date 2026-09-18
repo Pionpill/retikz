@@ -45,7 +45,7 @@ The two dashed circles in the playground are the inner and outer radii. Adjust t
 | `points`      | `number`           | —       | Number of star points                                                  |
 | `rotate`      | `number`           | `-90`   | Starting angle                                                         |
 
-This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/draw/path) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
+This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/path/step) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
 
 ## As a node shape
 
@@ -59,7 +59,7 @@ import { StarShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Layout shapes={[StarShapeDefinition]}>
+<Layout extensions={{ shapes: [StarShapeDefinition] }}>
   <Node shape={{ type: 'star', params: { points: 5, innerRadius: 16, outerRadius: 40 } }} />
 </Layout>
 ```
@@ -76,7 +76,7 @@ The playground fixes the target star at the origin. Adjusting `cornerRadius` rou
 
 <ComponentPreview files="node-connection-playground" size="md" />
 
-The complete named-anchor forms are `tip-N` (the Nth tip) and `notch-N` (the Nth notch). See [Node geometry](/kernel/components/node/overview) for shared sizing, boundary, and anchor behavior.
+The complete named-anchor forms are `tip-N` (the Nth tip) and `notch-N` (the Nth notch). See [Node geometry](/kernel/components/node/usage) for shared sizing, boundary, and anchor behavior.
 
 ### API Reference
 
@@ -156,6 +156,6 @@ The left side of the figure also shows the two rotation baselines: Sugar `rotate
 
 ## Related
 
-- [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors when a shape is used as a node boundary
+- [Node geometry](/kernel/components/node/usage): sizes, boundaries, and anchors when a shape is used as a node boundary
 - [Polygon](/kernel/components/shapes/polygon): equal-sided regular polygons
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

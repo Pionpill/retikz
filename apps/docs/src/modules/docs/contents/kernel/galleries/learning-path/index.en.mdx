@@ -5,7 +5,7 @@ description: Roadmap illustration example — using AMAI-GmbH/AI-Expert-Roadmap'
 
 ## Introduction
 
-This page uses [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s cover as the subject, walking through five core [Draw](/kernel/components/draw/overview) capabilities in 5 steps: straight `line`, quadratic Bezier `curve`, `dashPattern`, `arrow`, and edge `label`.
+This page uses [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)'s cover as the subject, walking through five core [Draw](/kernel/components/path/usage) capabilities in 5 steps: straight `line`, quadratic Bezier `curve`, `dashPattern`, `arrow`, and edge `label`.
 
 <ComponentPreview files="learning-path-05-dashed" size="xxl" />
 
@@ -56,7 +56,7 @@ Send the prompt bottom to the AI chat panel — the LLM will produce retikz IR /
 
 ### Step 1: title — RoadmapNode 4 variants
 
-Factor a `RoadmapNode` helper first — 4 variants sharing [Node](/kernel/components/node/overview)'s shape / corner radius / font, varying only in fill and font size:
+Factor a `RoadmapNode` helper first — 4 variants sharing [Node](/kernel/components/node/usage)'s shape / corner radius / font, varying only in fill and font size:
 
 | variant    | use             | look                                                     |
 | ---------- | --------------- | -------------------------------------------------------- |
@@ -71,7 +71,7 @@ Step 1 places one `title` — "AI Expert in 2022" — showing the `title` varian
 
 ### Step 2: center spine — 2 Draw lines
 
-Add the `Fundamentals` gray mini button and the `Choose your path` sub-header below the title, then wire them up with 2 vertical [Draw](/kernel/components/draw/overview) lines:
+Add the `Fundamentals` gray mini button and the `Choose your path` sub-header below the title, then wire them up with 2 vertical [Draw](/kernel/components/path/usage) lines:
 
 ```tsx
 <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
@@ -104,7 +104,7 @@ This step only adds nodes — no new graphConnectors. A first-time reader can tr
 
 ### Step 4: 5 path buttons + curve merge
 
-Add 5 center path buttons (two sub-columns of 3 + 2 tightly stacked), then use [Draw](/kernel/components/draw/overview)'s `{ curve }` infix operator to connect the `Choose` header down to each sub-column head. This is where the example starts doing structured connections: place the nodes first, then draw the branch curves.
+Add 5 center path buttons (two sub-columns of 3 + 2 tightly stacked), then use [Draw](/kernel/components/path/usage)'s `{ curve }` infix operator to connect the `Choose` header down to each sub-column head. This is where the example starts doing structured connections: place the nodes first, then draw the branch curves.
 
 The merge curve is a 2-segment quadratic Bezier — that maps directly to **2 consecutive `{ curve: [cx, cy] }` infix operators** in the way array, each modifying the next segment:
 
@@ -167,9 +167,9 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 
 | Component                                       | Role in this example                                                                                                                                                                  | Main steps                                                                                                                                          |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Draw](/kernel/components/draw/overview)        | All 12 graphConnectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
-| [Way operators](/kernel/components/draw/way)    | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                         | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
-| [Node](/kernel/components/node/overview)        | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                                  | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
+| [Draw](/kernel/components/path/usage)           | All 12 graphConnectors (2 spine lines / 3 short sub-column lines / 2 quadratic merges / 1 recommended dashed / 2 short dashed / 2 red X) + stroke / strokeWidth / dashPattern / arrow | [2](#step-2-center-spine--2-draw-lines), [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x) |
+| [Way operators](/kernel/components/path/draw)   | `{ curve }` infix → quadratic / `{ label }` infix → edge label / node id → auto border anchor                                                                                         | [4](#step-4-5-path-buttons--curve-merge), [5](#step-5-decoration--dashed-recommended--short-dashed--red-x)                                          |
+| [Node](/kernel/components/node/usage)           | All 16 roadmap nodes (title / header / required / optional) — 4 variants factored into `RoadmapNode`                                                                                  | [1](#step-1-title--roadmapnode-4-variants), [3](#step-3-side-stacks--atposition-tight-stacking)                                                     |
 | [AtPosition](/kernel/components/basic/position) | Tight intra-stack stacking (`{ direction: 'bottom', of: prevId }` + global `nodeDistance`)                                                                                            | [3](#step-3-side-stacks--atposition-tight-stacking), [4](#step-4-5-path-buttons--curve-merge)                                                       |
 
 ## Limitations
@@ -177,12 +177,12 @@ The final decoration layer demonstrates `dashPattern` / `arrow` at start / edge 
 | Capability                     | Plan       | Status / fallback                                                                                                                                                                                                 |
 | ------------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Math y-up axis                 | 🚧 Planned | scaling itself works via a Scope `scale` transform, but [`<Layout>`](/kernel/components/layout) has no y-up switch yet (a negative `y` scale flips text too); this example uses intro.svg's raw pixel coordinates |
-| Node hyperlinks                | 🚧 Planned | [`<Node>`](/kernel/components/node/overview) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list  |
-| Node drop shadow               | 🚧 Planned | [`<Node>`](/kernel/components/node/overview) has no shadow support yet, so the duplicated-rect drop shadow is omitted                                                                                             |
+| Node hyperlinks                | 🚧 Planned | [`<Node>`](/kernel/components/node/usage) doesn't accept `href` today, so intro.svg's `<a xlink:href>` wrappers are lost (visible but not clickable); wrap externally in `<a>` or render a separate link list     |
+| Node drop shadow               | 🚧 Planned | [`<Node>`](/kernel/components/node/usage) has no shadow support yet, so the duplicated-rect drop shadow is omitted                                                                                                |
 | Curve arrow shrink along chord | 🚧 Planned | arrow shrink currently shortens along the chord, so arrows on `curve` / `cubic` drift a few pixels off the border (`line` / `fold` unaffected); tangent-direction shrink is on the roadmap                        |
 
 ## Further reading
 
-- [Draw](/kernel/components/draw/overview) · [Way operators](/kernel/components/draw/way) · [Node](/kernel/components/node/overview) · [Positioning](/kernel/components/basic/position)
+- [Draw](/kernel/components/path/usage) · [Way operators](/kernel/components/path/draw) · [Node](/kernel/components/node/usage) · [Positioning](/kernel/components/basic/position)
 - [Karl's Unit Circle](/kernel/galleries/karl-circle) — another comprehensive example, this one on trigonometry geometry
 - Source: [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) (MIT License)

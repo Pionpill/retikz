@@ -22,7 +22,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const background = values.background === 'transparent' ? undefined : values.background;
 
   return (
-    <Layout patterns={[dotsGrid]}>
+    <Layout extensions={{ patterns: [dotsGrid] }}>
       <Node
         id="a"
         position={[0, 0]}

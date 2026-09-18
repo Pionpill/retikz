@@ -20,7 +20,11 @@ export const NonBlankStringSchema = string()
   })
   .describe('String containing at least one non-whitespace character.');
 
-/** 从已知 const object enum 建立保留提示的开放非空字符串 schema */
+/**
+ * 从已知 const object enum 建立保留提示的开放非空字符串 schema
+ *
+ * @template TValues 已知字符串值的 const object enum 类型
+ */
 export const createOpenStringSchema = <const TValues extends Readonly<Record<string, string>>>(
   values: TValues,
 ): ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>> =>

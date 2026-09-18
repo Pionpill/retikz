@@ -7,7 +7,7 @@ description: Use when synchronizing Retikz user-visible behavior with documentat
 
 ## 入口
 
-先读 apps/docs/AGENTS.md 与 docs-doc-principle；由其页型词典选择主写作 skill，不在本流程维护第二套模板。导航或路由重构额外读 docs-doc-navigation；完稿规范与读者检查读 docs-doc-review。
+先读 apps/docs/AGENTS.md 与 docs-doc-principle；由其页型词典选择主写作 skill，不在本流程维护第二套模板。导航或路由重构额外读 [navigation](../docs-doc-principle/references/navigation.md)；完稿规范与读者检查读 docs-doc-review。
 
 ## 确定范围
 

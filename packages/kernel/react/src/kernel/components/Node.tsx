@@ -17,6 +17,7 @@ import type { FC, ReactNode } from 'react';
 import type { HydrationEventProps } from '../protocol';
 import { TIKZ_NODE } from '../protocol';
 
+/** 可定位、可连接的节点输入，组合文字、视觉形状和连接面 */
 export type NodeProps = HydrationEventProps & {
   /** 可选编译驱动解释的运行时载荷，不进入 Core IR */
   authoring?: InputNode['authoring'];
@@ -26,9 +27,15 @@ export type NodeProps = HydrationEventProps & {
   layout?: InputNode['layout'];
   /** 节点 id；其他 Path/Draw 通过这个 id 引用本节点 */
   id?: string;
-  /** 节点形状：rectangle（默认）/ circle / ellipse / diamond */
+  /**
+   * 视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.extensions.shapes 注册
+   * @default 'rectangle'
+   */
   shape?: IRNode['shape'];
-  /** 连接面：边与本节点相交时使用的边界形状（TikZ `connect as`）；默认 'shape'（沿用视觉形状）；'circle' = 真圆；其它已注册 shape 名或 `{ type, params }` = 借用该 shape 边界 */
+  /**
+   * 连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观
+   * @default 'shape'
+   */
   boundary?: IRBoundary;
   /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象 */
   meta?: IRNode['meta'];
@@ -36,7 +43,7 @@ export type NodeProps = HydrationEventProps & {
   animations?: IRNode['animations'];
   /**
    * 节点中心位置
-   * @description 六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center
+   * @description 六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center
    */
   position:
     | IRPosition
@@ -46,7 +53,10 @@ export type NodeProps = HydrationEventProps & {
     | IROffsetPosition
     | IRBetweenPosition
     | IRAnchorPosition;
-  /** 旋转角度（度数，与 TikZ 一致），绕节点中心；正值顺时针 */
+  /**
+   * 绕节点中心旋转的角度，单位为度；正值顺时针
+   * @default 0
+   */
   rotate?: number;
   /**
    * children 内容：文本
@@ -60,16 +70,22 @@ export type NodeProps = HydrationEventProps & {
    *   或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）
    */
   text?: string | Array<IRLine>;
-  /** 圆角半径（user units）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
+  /** 圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}` */
   cornerRadius?: number;
-  /** 均匀缩放因子；同时影响 bbox / 字号 / padding / margin / 路径附着点（与 TikZ scale 一致） */
+  /**
+   * 均匀或分轴缩放；影响节点尺寸、字号、间距和路径附着点
+   * @default 1
+   */
   scale?: number | IRAxisScale;
   /**
-   * 节点附属标签——TikZ `[label=top:foo]` 同义
-   * @description 单对象或数组；每条 label 接 `text` / `position?` / `distance?` / 样式继承；`position` 接 8 方向枚举或数字角度（`label=30:foo` 等价 `position: 30`），缺省 'top'，distance 缺省 12
+   * 节点附加标签，支持单对象或数组
+   * @description 标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance
    */
   label?: InputNodeLabel | Array<InputNodeLabel>;
-  /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层（同 scope / 顶层）子节点间生效 */
+  /**
+   * 同层元素的栈序；大者在上，同值保持声明顺序
+   * @default 0
+   */
   zIndex?: IRNode['zIndex'];
 };
 

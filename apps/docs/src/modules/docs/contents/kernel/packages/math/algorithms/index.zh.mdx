@@ -26,7 +26,7 @@ const crossing = intersect.segmentSegment({
 
 用面板切换直线、线段、直线与圆、两个圆，并尝试相交、平行、相切和相离情况。选择“显示段外的直线交点”时，画面中的实线只是为了适配画布而截取的有限显示段，但 `lineLine` 仍按无限延长线计算，因此两段实线没有碰到时也会显示紫色交点；选择“不相交线段”可以对比 `segmentSegment` 的有限范围。
 
-<ComponentPreview files="intersection-playground" size="md" caption="切换几何关系，观察交点和退化结果" />
+<ComponentPreview files="intersection-playground" size="lg" caption="切换几何关系，观察交点和退化结果" />
 
 ### 算法解析
 
@@ -66,7 +66,7 @@ $$
 
 射线与圆弧的输入包含圆弧的圆心、半径、起始角度和终止角度。`intersectRayWithArc` 返回射线参数 `s`，实际交点可按 `origin + s * direction` 得到；它只保留射线正方向上的交点。
 
-<ComponentPreview files="ray-arc" size="md" caption="圆弧与射线的交点以紫色点显示" />
+<ComponentPreview files="ray-arc" size="sm" caption="圆弧与射线的交点以紫色点显示" />
 
 ### 算法解析
 
@@ -140,7 +140,7 @@ $$
 
 下方示意中，浅灰线是原多边形，橙色线是凸包。面板提供多个可移动测试点：点在多边形内部时显示为绿色，点在外部时显示为红色；默认点集同时展示普通内部点、外部点和凹陷区域外的点。
 
-<ComponentPreview files="polygon-containment" size="md" caption="同时观察多边形包含判断与凸包边界" />
+<ComponentPreview files="polygon-containment" size="lg" caption="同时观察多边形包含判断与凸包边界" />
 
 `polygon.containsPoint` 的边界点结果未定义；如果边界归属会影响业务结果，应在调用方补充点在线段上的判断。`convexHull` 会去重并剔除共线的中间点，少于三个点或全部共线时返回排序后的端点集合。
 
@@ -180,7 +180,7 @@ $$
 
 用面板切换曲线类型，再拖动采样位置和切片起止。浅灰是完整曲线，高亮黄部分来自 `curve.slice`；蓝色实点和短线分别表示当前位置与前进方向。无论选择哪一种曲线，切片都会保留原来的曲线类型，而不会降级成折线。
 
-<ComponentPreview files="curve-segments" size="md" caption="切换五种曲线段，观察参数采样、前进方向与保形切片" />
+<ComponentPreview files="curve-segments" size="lg" caption="切换五种曲线段，观察参数采样、前进方向与保形切片" />
 
 `sampleAt` 的参数范围是 `0–1`：`0` 是起点，`1` 是终点；它同时给出该位置的点和前进方向。`approximateLength` 用于回答“这条路线有多长”：直线和圆弧直接计算，贝塞尔和椭圆弧用固定数量的采样点近似。默认 `sampleCount` 为 32；提高它会更精确，也会更耗时。
 
@@ -198,7 +198,7 @@ $$
 
 下图展示一次查找：先从当前区间取中点 $t$，估算走到该处的长度，再与目标距离比较。菱形没有通向“参数 $t$”的回路表示未命中：根据长度偏大或偏小收窄 $[lo,hi]$，再从新区间取中点；命中容差后才输出参数。
 
-<ComponentPreview files="curve-distance-search-flow" size="sm" hideCode />
+<ComponentPreview files="curve-distance-search-flow" size="sm" type="flow" hideCode />
 
 从数学上看，每一小段参数变化带来的路程由曲线当时的速度决定。把所有小段路程累加，就是从起点走到 $t$ 的真实弧长：
 
@@ -250,7 +250,7 @@ $$
 | `curve.parameterAtDistance` | 时间 O(b·n)，空间 O(1) | 按同一离散模型反解距离；`b` 为最大二分次数，命中默认容差可提前返回                         |
 | `curve.slice`               | 时间 O(1)，空间 O(1)   | 取得参数区间内、保持原种类的子曲线                                                         |
 
-绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/draw/path#label-interruption) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
+绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/path/label) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
 
 ## 过点曲线
 

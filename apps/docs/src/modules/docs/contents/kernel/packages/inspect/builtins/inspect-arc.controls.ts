@@ -8,6 +8,7 @@ export const createPreviewControlContract = (lang: Lang) => {
   const i18n = inspectArcI18n[lang];
   const controls = definePreviewControls({
     presentation: 'panel',
+    defaultSize: 50,
     title: i18n.title,
     sections: [
       {

@@ -46,7 +46,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const hullPoints = new Set(hull);
 
   return (
-    <Layout viewBox={{ x: -180, y: -120, width: 360, height: 250 }}>
+    <Layout>
       <Draw way={[...hull, hull[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
       {points.map((point, index) => (
         <Node

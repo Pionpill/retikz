@@ -1,0 +1,69 @@
+import type { ScenePrimitive } from '@retikz/core';
+import { definePathKind, PathSchema } from '@retikz/core';
+import { Layout, Node, Path, Step } from '@retikz/react';
+import type { FC } from 'react';
+import { z } from 'zod';
+
+const HighlightOptionsSchema = z.strictObject({
+  stroke: z.string().min(1),
+  strokeWidth: z.number().positive().optional(),
+});
+const HighlightPathSchema = PathSchema.extend({
+  kind: z.literal('highlight'),
+  kindOptions: HighlightOptionsSchema,
+});
+type HighlightPath = z.infer<typeof HighlightPathSchema>;
+
+const highlight = definePathKind<HighlightPath>({
+  name: 'highlight',
+  schema: HighlightPathSchema,
+  compile: context => {
+    const { kindOptions, ...strokePath } = context.path;
+    const base = context.emitStroke({
+      ...strokePath,
+      kind: 'stroke',
+      style: {
+        ...strokePath.style,
+        lineCap: 'round',
+        lineJoin: 'round',
+        strokeWidth: kindOptions.strokeWidth ?? context.path.style?.strokeWidth ?? 10,
+      },
+    });
+    if (base === null) return null;
+    return {
+      ...base,
+      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+        primitive.type === 'path'
+          ? [
+              {
+                ...primitive,
+                stroke: kindOptions.stroke,
+              },
+              { ...primitive, stroke: '#0f766e', strokeWidth: 1.5 },
+            ]
+          : [primitive],
+      ),
+    };
+  },
+});
+
+const Demo: FC = () => (
+  <Layout extensions={{ pathKinds: [highlight] }}>
+    <Path kind="highlight" kindOptions={{ stroke: '#facc15', strokeWidth: 14 }} zIndex={-1}>
+      <Step kind="move" to="api" />
+      <Step kind="line" to="core" />
+      <Step kind="line" to="render" />
+    </Path>
+    <Node id="api" position={[0, 0]} shape="rectangle" style={{ fill: 'white' }}>
+      API
+    </Node>
+    <Node id="core" position={[120, 0]} shape="rectangle" style={{ fill: 'white' }}>
+      Core
+    </Node>
+    <Node id="render" position={[240, 0]} shape="rectangle" style={{ fill: 'white' }}>
+      Render
+    </Node>
+  </Layout>
+);
+
+export default Demo;

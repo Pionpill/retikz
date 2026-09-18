@@ -93,7 +93,7 @@ const createHexagon = (): ShapeDefinition =>
 const hexagon = createHexagon();
 
 const Demo: FC = () => (
-  <Layout shapes={[hexagon]}>
+  <Layout extensions={{ shapes: [hexagon] }}>
     <Node
       id="a"
       shape="hexagon"

@@ -15,7 +15,7 @@ import type {
   MarkTransformShortcutDefinition,
 } from '@retikz/plot-vanilla';
 import { PlotInputEmbedAdapter } from '@retikz/plot-vanilla';
-import type { LayoutProps } from '@retikz/react';
+import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { Layout } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
 import { useEffect, useMemo, useRef } from 'react';
@@ -27,7 +27,7 @@ import { usePlotThemeStyles } from './theme-context';
 /** <Plot> 作为 Layout 子面板时可直接承接的 Scope 输入 */
 export type PlotPanelProps = InputPlotPanel;
 
-type PlotLayoutHostProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'>;
+type PlotLayoutHostProps = Pick<LayoutProps & LayoutExtensions, 'className' | 'style' | 'renderer' | 'themeStyles'>;
 
 /** React adapter 暴露的运行时图元链路 props */
 export type PlotLineageProps = {
@@ -199,7 +199,7 @@ const PlotComponent: FC<PlotProps> = props => {
   }, [lineage, lineageKey, onLineage]);
 
   return (
-    <Layout className={className} style={style} renderer={renderer} themeStyles={themeStyles}>
+    <Layout className={className} style={style} renderer={renderer} extensions={{ themeStyles: themeStyles }}>
       <PlotComponent {...contentProps} />
     </Layout>
   );

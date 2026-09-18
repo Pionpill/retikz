@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
+import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import { ToolbarIconButton } from '../components';
 import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
@@ -18,6 +19,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
+  PreviewFigureType,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   RendererMode,
@@ -37,6 +39,8 @@ export type PreviewWorkspaceProps = {
   controlState: PreviewControlState;
   /** 是否显示预览上下文栏 */
   showContextBar: boolean;
+  /** 叙述性图示的说明类型。 */
+  figureType?: PreviewFigureType;
   /** 当前预览使用的局部主题 */
   themeMode: PreviewThemeMode;
   /** 当前预览实际生效的 ThemeStyle */
@@ -120,6 +124,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     workspaceClassName,
     controlState,
     showContextBar,
+    figureType,
     themeMode,
     enableThemeSwitch = false,
     themeStyleSelection = 'inherit',
@@ -140,6 +145,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     pinControlsOnClick,
   } = props;
   const previewTheme = usePreviewTheme(themeStyleSelection, themeMode);
+  const controlsLocked = useComponentPreviewStore(state => state.controlsLocked);
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
   const defaultControlPanelSize =
     controlPanelDefaultSize ??
@@ -162,10 +168,12 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
       data-slot="preview-context-pane"
       className="group/preview-context relative flex h-full min-h-0 flex-col overflow-hidden"
     >
-      {showContextBar ? (
+      {showContextBar && !controlsLocked ? (
         <PreviewContextBar
           themeMode={themeMode}
           onThemeModeChange={onThemeModeChange}
+          figureType={figureType}
+          lang={lang}
           enableThemeSwitch={enableThemeSwitch}
           themeStyle={previewTheme.style}
           themeStyleSelection={themeStyleSelection}
@@ -179,7 +187,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
         activeRender={activeRender}
         theme={previewTheme}
         controlSlots={resolvedControlSlots}
-        className={cn(previewClassName, showContextBar && 'pt-10')}
+        className={previewClassName}
         renderPaneClassName={previewRenderPaneClassName}
         style={previewStyle}
         pinControlsOnClick={pinControlsOnClick}

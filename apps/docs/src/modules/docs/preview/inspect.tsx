@@ -56,11 +56,11 @@ export const createBuiltinInspectPreviewSource = (
     );
     const svg = renderToSvgString(restoredInput, {
       adapters: authoring.adapters,
-      compile: { clips: props.clips, themeStyles: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
+      compile: { clips: props.extensions?.clips, themeStyles: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
       compileDriver: createInspectionVanillaDriver({ registry: props.registry, selection: config.selection }),
     });
     const configFile = { filename: `${name}.config.json`, code: configCode, lang: 'json' as const };
-    const hasClip = (props.clips?.length ?? 0) > 0;
+    const hasClip = (props.extensions?.clips?.length ?? 0) > 0;
     const vanillaCode = `import type { InputScene } from '@retikz/vanilla';
 import type { InspectionSelection } from '@retikz/inspect';
 import { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';

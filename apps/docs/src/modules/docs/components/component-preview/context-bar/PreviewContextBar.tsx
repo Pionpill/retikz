@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
 
 import type { PreviewThemeStyleValue } from '../theme';
 import { PreviewThemeStyle } from '../theme';
-import type { PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
+import type { PreviewFigureType, PreviewThemeMode, PreviewThemeStyleSelection } from '../types';
+import { FigureGuideButton } from './FigureGuideButton';
 import { ThemeStyleSwitchButton } from './ThemeStyleSwitchButton';
 
 export type PreviewContextBarProps = {
@@ -16,6 +18,10 @@ export type PreviewContextBarProps = {
   themeMode: PreviewThemeMode;
   /** 更新局部主题 */
   onThemeModeChange: (themeMode: PreviewThemeMode) => void;
+  /** 叙述性图示的说明类型。 */
+  figureType?: PreviewFigureType;
+  /** 当前文档语言。 */
+  lang?: Lang;
   /** 是否显示单预览 ThemeStyle 切换器。 */
   enableThemeSwitch?: boolean;
   /** 当前预览实际生效的 ThemeStyle。 */
@@ -31,6 +37,8 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
   const {
     themeMode,
     onThemeModeChange,
+    figureType,
+    lang = 'zh',
     enableThemeSwitch = false,
     themeStyle,
     themeStyleSelection = 'inherit',
@@ -38,6 +46,7 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
   } = props;
   const { t } = useTranslation();
   const [themeStyleMenuOpen, setThemeStyleMenuOpen] = useState(false);
+  const [figureGuideOpen, setFigureGuideOpen] = useState(false);
   const effectiveThemeStyle = themeStyle ?? PreviewThemeStyle.Default;
 
   return (
@@ -45,10 +54,18 @@ export const PreviewContextBar: FC<PreviewContextBarProps> = props => {
       data-slot="preview-context-bar"
       className={cn(
         'pointer-events-none absolute top-2 left-1/2 z-20 -translate-x-1/2 opacity-0 transition-opacity group-hover/preview-context:pointer-events-auto group-hover/preview-context:opacity-100 group-focus-within/preview-context:pointer-events-auto group-focus-within/preview-context:opacity-100',
-        themeStyleMenuOpen && 'pointer-events-auto opacity-100',
+        (themeStyleMenuOpen || figureGuideOpen) && 'pointer-events-auto opacity-100',
       )}
     >
       <div className="flex items-center gap-2">
+        {figureType ? (
+          <FigureGuideButton
+            type={figureType}
+            lang={lang}
+            onOpenChange={setFigureGuideOpen}
+            className="size-8 border border-input bg-background shadow-xs"
+          />
+        ) : null}
         <ToggleGroup
           type="single"
           variant="outline"

@@ -123,7 +123,7 @@ import { SectorShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Layout shapes={[SectorShapeDefinition]}>
+<Layout extensions={{ shapes: [SectorShapeDefinition] }}>
   <Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
   <Node shape={{ type: 'sector', params: { innerRadius: 40, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
 </Layout>
@@ -139,7 +139,7 @@ import { SectorShapeDefinition } from '@retikz/standard/shape';
 
 - **sector**：`outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
 
-Node 的形状、尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/overview)。
+Node 的形状、尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/usage)。
 
 ### API 参考
 
@@ -238,6 +238,6 @@ Sector 的正厚度状态是闭合轮廓；连线从填充区域内部朝目标�
 
 ## 相关
 
-- [Node 几何](/kernel/components/node/overview)：把形状用作节点边界时的尺寸、边界与 anchor
+- [Node 几何](/kernel/components/node/usage)：把形状用作节点边界时的尺寸、边界与 anchor
 - [Circle / Ellipse](/kernel/components/shapes/circle-ellipse)：半圆、弓形和部分椭圆
 - [Shapes](/kernel/components/shapes)：形状分组入口与完整定义

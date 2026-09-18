@@ -13,12 +13,12 @@ The complete example below defines and injects `hexagon`. The nodes connect by i
 
 A custom shape owns a node's layout footprint, visible contour, and default connection geometry together. Use `ShapeDefinition` only when those responsibilities belong to the same graphic.
 
-| Need                                                        | Choose                                                           |
-| ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| A built-in shape already expresses it                       | Use [Node](/kernel/components/node/overview) directly            |
-| A reusable path only, without a node id or anchors          | Use a [Path Generator](/kernel/components/draw/path-generator)   |
-| Keep the visual shape but change where connections land     | Use a [Custom Boundary](/kernel/components/node/custom-boundary) |
-| Add a complete layoutable, drawable, connectable node shape | Use `ShapeDefinition` from this page                             |
+| Need                                                        | Choose                                                                |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| A built-in shape already expresses it                       | Use [Node](/kernel/components/node/usage) directly                    |
+| A reusable path only, without a node id or anchors          | Use a [Path Generator](/kernel/components/path/custom-path-generator) |
+| Keep the visual shape but change where connections land     | Use a [Custom Boundary](/kernel/components/node/custom)               |
+| Add a complete layoutable, drawable, connectable node shape | Use `ShapeDefinition` from this page                                  |
 
 `node.shape` may be a string or `{ type, params }`. Both forms must remain 100% JSON-serializable. A `ShapeDefinition` contains functions, so it cannot enter the IR or be reconstructed from JSON.
 
@@ -81,7 +81,7 @@ const { scene } = compileToScene(ir, { shapes: [badge] });
 ```tsx
 import { Layout, Node } from '@retikz/react';
 
-<Layout shapes={[badge]}>
+<Layout extensions={{ shapes: [badge] }}>
   <Node id="status" shape="badge" position={[0, 0]} text="Ready" />
 </Layout>;
 ```
@@ -176,9 +176,9 @@ By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`
 
 ## Related
 
-- [Node](/kernel/components/node/overview): use a built-in or custom shape on a node
-- [Layout](/kernel/components/layout/overview): React host and `shapes` injection
+- [Node](/kernel/components/node/usage): use a built-in or custom shape on a node
+- [Layout](/kernel/components/layout/usage): React host and `shapes` injection
 - [Compile](/kernel/reference/runtime/compile): `CompileOptions.shapes` and the core compile entry point
 - [Extension Runtime](/kernel/reference/runtime/extensions): runtime index for every Definition / registry capability
-- [Custom Boundary](/kernel/components/node/custom-boundary): replace connection geometry without changing the visual shape
-- [Path Generator](/kernel/components/draw/path-generator): extend a Path step rather than a Node shape
+- [Custom Boundary](/kernel/components/node/custom): replace connection geometry without changing the visual shape
+- [Path Generator](/kernel/components/path/custom-path-generator): extend a Path step rather than a Node shape

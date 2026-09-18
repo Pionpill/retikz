@@ -98,7 +98,7 @@ const Demo: FC<CodeBlockExtensionProps> = props => {
   const { lang } = props;
   const i18n = codeBlockExtensionI18n[lang ?? 'zh'];
   return (
-    <Layout viewBox={{ x: -12, y: -12, width: 584, height: 190 }} themeStyles={[coreStyle]}>
+    <Layout viewBox={{ x: -12, y: -12, width: 584, height: 190 }} extensions={{ themeStyles: [coreStyle] }}>
       {(['light', 'dark'] as const).map((mode, index) => (
         <ServiceBlock
           key={mode}

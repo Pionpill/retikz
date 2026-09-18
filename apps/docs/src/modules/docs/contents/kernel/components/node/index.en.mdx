@@ -1,44 +1,77 @@
 ---
 title: Node
-description: Build named, positioned, and connectable primitives with Node, Text, Coordinate, and boundary extensions.
+description: Use Node, Text, and Coordinate to build positionable, connectable figures
 ---
 
-The node family answers how objects in a figure are named, positioned, and connected. `Node` provides the visible subject, `Text` refines individual text lines, and `Coordinate` keeps only a referenceable position. Add a custom boundary only when the visual outline and graphConnector geometry must differ. Start with [Node](/kernel/components/node/overview) on your first visit.
+The node family controls where objects sit, what they show, and how connections reference them. Node represents a shape with text; Text is the React syntax for one styled line inside Node; Coordinate names a position without drawing anything.
 
-<ComponentPreview files="node-family" size="xs" hideCode />
+## Responsibilities at a glance
 
-## What each part does
+| Member             | Responsibility                | When to use                                      |
+| ------------------ | ----------------------------- | ------------------------------------------------ |
+| Node               | Position, text, and shape     | Visible objects and connection endpoints         |
+| Text               | Style a complete text line    | Style individual lines in JSX                    |
+| Coordinate         | Name an invisible position    | Position references and path junctions           |
+| Boundary extension | Choose where connections stop | Connection rules differ from the visible outline |
 
-| Component         | Type      | Responsibility                               | Use it when                                 |
-| ----------------- | --------- | -------------------------------------------- | ------------------------------------------- |
-| Node              | Kernel    | Declares a visible primitive with a boundary | You need a visible subject or endpoint      |
-| Text              | Sugar     | Overrides one whole text line inside Node    | JSX needs per-line text styling             |
-| Coordinate        | Kernel    | Names a position without visible output      | You need a junction or invisible anchor     |
-| Custom Boundaries | Extension | Defines attachment and directional anchors   | Visual shape and connection rules must vary |
+## Overall picture
 
-## In this section
+The figure combines visible nodes, their text, and an invisible reference point. Look first at the objects, then at the named positions used to organize connections. The two converging lines locate Coordinate; Coordinate itself draws no marker.
+
+<ComponentPreview files="node-family" size="sm" type="illustration" hideCode />
+
+Position places the object, shape defines its visible outline, and text supplies content. Paths look up node IDs and normally stop at their borders. Coordinate supplies an endpoint with no area. Moving a referenced position can move dependent objects without editing every coordinate.
+
+## Choices and boundaries
+
+Begin with Basic usage and continue to positioning, text, or labels as needed. Body text contributes to node size; labels attach to the completed border or center. Choose Coordinate for a pure positioning reference, and Node for visible marks, text, or directional borders.
+
+[Shapes](/kernel/components/shapes) owns the shape catalog and custom visual outlines. [Scope](/kernel/components/scope) owns local coordinates and shared defaults for groups. Define a custom boundary only when connection placement must differ from appearance. Implementation and references support later diagnosis, extension, and field lookup; they are not prerequisites for drawing.
+
+## Contents
 
 <LinkedSections
   items={[
     {
-      title: 'Node',
-      description: 'Build a visible, positioned, connectable primitive',
-      url: '/kernel/components/node/overview',
+      title: 'Basic usage',
+      description: 'Create nodes and connect named objects',
+      url: '/kernel/components/node/usage',
     },
     {
-      title: 'Text',
-      description: 'Override one whole text line inside a Node',
-      url: '/kernel/components/node/text',
+      title: 'Extended usage',
+      description: 'Choose positions, anchors, and connection surfaces',
+      url: '/kernel/components/node/extend',
     },
     {
-      title: 'Coordinate',
-      description: 'Name a point without visible output',
+      title: 'label · Label',
+      description: 'Place annotations and leader lines',
+      url: '/kernel/components/node/labels',
+    },
+    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'Coordinates',
+      description: 'Organize invisible reference points',
       url: '/kernel/components/node/coordinate',
     },
     {
-      title: 'Custom Boundaries',
-      description: 'Separate graphConnector geometry from the visual outline',
-      url: '/kernel/components/node/custom-boundary',
+      title: 'Custom boundaries',
+      description: 'Define and register connection rules',
+      url: '/kernel/components/node/custom',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand sizing, text, and reference timing',
+      url: '/kernel/components/node/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public entries, types, and extension contracts',
+      url: '/kernel/components/node/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent node-family fields',
+      url: '/kernel/components/node/schema-reference',
     },
   ]}
 />

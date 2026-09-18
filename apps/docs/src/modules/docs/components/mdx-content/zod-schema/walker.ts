@@ -100,6 +100,13 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
     };
   }
 
+  if (schema instanceof z.ZodIntersection) {
+    return {
+      kind: 'intersection',
+      members: [walkTypeImpl(schema.def.left, false, next), walkTypeImpl(schema.def.right, false, next)],
+    };
+  }
+
   if (schema instanceof z.ZodRecord) {
     return {
       kind: 'record',

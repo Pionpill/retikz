@@ -1,40 +1,64 @@
 ---
 title: Layout
-description: 'The layout family establishes figure-level and local coordinate contexts: Layout connects the compile host, Scope owns sub-figure context, and custom clips extend Scope visibility.'
+description: The React entry for a complete drawing, connecting input and extensions to SVG or Canvas output
 ---
 
-This group only answers where graphic content lives and how a group enters downstream stages as one unit. `<Layout>` is the single required top-level entry; `<Scope>` establishes a local context so its children share transforms, defaults, reference bounds, and clipping.
+`<Layout>` is the entry for a complete React drawing. Place Node, Path, and other primitives inside it to compile and present a result. Automatic framing follows visible content, so a fixed canvas size is not required.
 
-It does not define Node / Path geometry or provide domain layout algorithms such as plot or table. When Scope needs new clipping vocabulary, a Clip Definition joins the same registry and compile path.
+## How the pieces work together
 
-<ComponentPreview files="layout-family" size="sm" hideCode />
+Start with the small node-and-connection figure below. Node describes each node, Draw describes the connection, and Layout presents them as one figure. Moving a node changes its geometry; Layout updates the displayed result.
 
-## What each part does
+<ComponentPreview files="/kernel/components/layout/usage/layout-basic" size="sm" />
 
-| Component    | Type      | Responsibility                                      | Use it when                         |
-| ------------ | --------- | --------------------------------------------------- | ----------------------------------- |
-| Layout       | Kernel    | Converge JSX / IR, capability injection, and output | Every figure needs its entry        |
-| Scope        | Kernel    | Establish local context and a group reference       | Transform, isolate, or clip a group |
-| Custom Clips | Extension | Register domain clip kinds resolved into Scene      | Built-in clips are not enough       |
+Layout accepts a component tree or saved IR, the serializable description of a drawing. Shapes, arrows, and formulas can be injected here. Component props and persisted scene data have separate API and Schema references.
 
-## In this section
+## Responsibilities at a glance
+
+| Document         | Responsibility                                 | When to read                                 |
+| ---------------- | ---------------------------------------------- | -------------------------------------------- |
+| Basic usage      | Input, framing, defaults, and rendering        | Draw or adjust output                        |
+| Extended usage   | Themes, injection, results, and update control | Integrate capabilities or control processing |
+| Implementation   | Root scope, framing, sizing, and themes        | Understand key prop behavior                 |
+| API reference    | Props and runtime configuration                | Check a precise contract                     |
+| Schema reference | Scene and ViewBox data                         | Save or construct input                      |
+
+## Choosing the right capability
+
+Layout is a drawing entry, not an automatic arrangement algorithm. Primitives and positioning rules determine node positions. Use the [Layout package](/library/layout) for Flex, Grid, and other arrangement capabilities.
+
+Use [Scope](/kernel/components/scope) for local transforms, defaults, and clipping within a figure; see [Custom clipping](/kernel/components/scope/custom) to extend clip shapes. Use [Inspect](/kernel/packages/inspect) to display control points and boundary overlays.
+
+Read Basic usage first. Implementation explains root scopes, framing, display sizing, and theme overlays; the reference pages are available for precise lookups without reading them end to end.
+
+## Contents
 
 <LinkedSections
   items={[
     {
-      title: 'Layout',
-      description: 'Top-level container: children / IR entry, compile pipeline, and full props',
-      url: '/kernel/components/layout/overview',
+      title: 'Basic usage',
+      description: 'Draw a figure and configure input, framing, and defaults',
+      url: '/kernel/components/layout/usage',
     },
     {
-      title: 'Scope',
-      description: 'Local coordinates, group references, namespaces, and clipping',
-      url: '/kernel/components/layout/scope',
+      title: 'Extended usage',
+      description: 'Configure themes, inject capabilities, read compiled results, and control updates',
+      url: '/kernel/components/layout/extend',
     },
     {
-      title: 'Custom Clips',
-      description: 'Register reusable clipping kinds for Scope',
-      url: '/kernel/components/layout/custom-clip',
+      title: 'Implementation',
+      description: 'Understand root scopes, automatic framing, display sizing, and theme overlays',
+      url: '/kernel/components/layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public props and execution configuration',
+      url: '/kernel/components/layout/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up scene-root and viewport data fields',
+      url: '/kernel/components/layout/schema-reference',
     },
   ]}
 />

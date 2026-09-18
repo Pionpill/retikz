@@ -8,7 +8,7 @@ import type { FC } from 'react';
  *   左侧灰标点出两副面相，下排一条灰箭头示意 Node 形状可被连接。caption / 行标用 stroke/fill none 的灰字。
  */
 const Demo: FC = () => (
-  <Layout shapes={[StarShapeDefinition, ContourShapeDefinition]}>
+  <Layout extensions={{ shapes: [StarShapeDefinition, ContourShapeDefinition] }}>
     {/* 行标 */}
     <Node
       id="rowPath"

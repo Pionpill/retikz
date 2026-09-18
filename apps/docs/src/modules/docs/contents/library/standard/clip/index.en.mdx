@@ -27,7 +27,7 @@ Import the Definition used by the current figure from `@retikz/standard/clip` an
 import { Layout, Node, Scope } from '@retikz/react';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 
-<Layout clips={[CircleClipDefinition]}>
+<Layout extensions={{ clips: [CircleClipDefinition] }}>
   <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 56 }}>
     <Node position={[0, 0]} layout={{ minimumSize: { width: 160, height: 120 } }} />
   </Scope>
@@ -105,7 +105,7 @@ Inject `PolygonClipDefinition` when using it.
 | `commands`  | `Array<PathCommand>`       | At least one structured path command |
 | `fillRule?` | `'nonzero'` \| `'evenodd'` | Fill rule; defaults to `nonzero`     |
 
-Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/draw/custom-path) for structured command authoring.
+Inject `PathClipDefinition`. See [Custom Paths](/kernel/components/path/custom-path) for structured command authoring.
 
 ### Compound clips
 
@@ -127,5 +127,5 @@ Inject `CompoundClipDefinition` together with the Definitions used by its childr
 ## Related
 
 - [Capability Loading](/library/standard/capability-loading): direct injection and provider-graph boundaries
-- [Custom Clips](/kernel/components/layout/custom-clip): define a new clip kind with the complete `ClipDefinition` contract
+- [Custom Clips](/kernel/components/scope/custom): define a new clip kind with the complete `ClipDefinition` contract
 - [Extensions](/library/standard/introduction): browse other optional capabilities

@@ -147,7 +147,7 @@ describe('Layout arrow marker：marker 元素属性按 spec 写到 SVG', () => {
 
   it("空心 open + fill='red' silent ignore → 最终 SVG 中不含 marker 内的 red 填充", () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} arrows={[TestOpenArrowDefinition]}>
+      <Layout width={100} height={100} extensions={{ arrows: [TestOpenArrowDefinition] }}>
         <Path arrow="->" arrowDetail={{ shape: 'testOpen', fill: 'red' }}>
           <Step kind="move" to={[0, 0]} />
           <Step kind="line" to={[80, 0]} />

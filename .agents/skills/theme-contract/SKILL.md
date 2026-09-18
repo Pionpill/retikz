@@ -1,62 +1,33 @@
 ---
 name: theme-contract
-description: Use when designing, implementing, reviewing, or documenting shared Retikz theme contracts across ThemeStyle, especially categorical palette structure, hue order, ThemeMode consistency, or explicit palette overrides.
+description: Use when designing, implementing, reviewing, or documenting Retikz themes, categorical palettes, Light/Dark modes, or Neutral, Academic, Clean, and Vibrant styles.
 ---
 
-# Theme Contract
+# 主题规范
 
-为 Retikz 内置 Neutral 与宿主维护的参考 style 提供公共且与具体包无关的主题设计契约。具体主题 skill 在此契约之上定义自己的视觉语言，具体包的 `_notes/theme` 负责记录 Source 片段消费与实现细节。
+主题改变视觉默认，不改变数据、几何、交互或编码语义。先确认视觉语义的 owner，再读取该包当前 definition、preset、测试与主题文档。
 
-## Categorical Hue Contract
+## 所有权与覆盖
 
-受维护的 categorical palette 固定为 16 项，按 `8 × 2` 组织：
+- Core 拥有 Theme 继承、registry、开放 style selector 和内置 Neutral；docs 通过公开 definition 维护 Academic、Clean、Vibrant 参考风格。
+- 领域包只实现本包角色与默认值，不复制其他 owner 的 palette/preset，不增加主题特判或跨 owner registry。
+- adapter 只传递 selector 和 definitions；显式输入保持原值、顺序、数量与优先级，不按主题重新调色。
+- semantic colors 表达成功、警告、错误，不与 categorical 混用。
+- Light/Dark 保持相同信息层级和数据语义，不机械反色。
+- 改公开 Theme、IR、schema、registry 或跨包边界时，停止局部调色，转根 AGENTS 的架构流程。
 
-- 前 8 项使用不同色相，承担主要类别区分
-- 后 8 项继续使用不同色相，补充前 8 项尚未覆盖的色相空间，承担次要类别区分
-- 16 项共享固定索引语义；不同 `ThemeStyle` 不得重排 Hue
+## 按需加载
 
-| 索引 | Hue | 分组 |
-| ---: | --: | ---- |
-|    1 | 210 | 主要 |
-|    2 |  30 | 主要 |
-|    3 | 150 | 主要 |
-|    4 | 330 | 主要 |
-|    5 | 190 | 主要 |
-|    6 |  10 | 主要 |
-|    7 |  50 | 主要 |
-|    8 | 270 | 主要 |
-|    9 | 100 | 次要 |
-|   10 | 240 | 次要 |
-|   11 | 300 | 次要 |
-|   12 | 350 | 次要 |
-|   13 |  75 | 次要 |
-|   14 | 125 | 次要 |
-|   15 | 170 | 次要 |
-|   16 | 225 | 次要 |
+| 当前任务                       | 必读 reference                     |
+| ------------------------------ | ---------------------------------- |
+| 分类 palette、Hue 顺序、覆盖   | [色板契约](references/palette.md)  |
+| 默认、均衡、低意见化视觉       | [Neutral](references/neutral.md)   |
+| 论文、技术报告、灰度与精确阅读 | [Academic](references/academic.md) |
+| 扁平、克制、编辑式视觉         | [Clean](references/clean.md)       |
+| 屏幕展示、鲜明层级             | [Vibrant](references/vibrant.md)   |
 
-发布包内置 Neutral 与 docs 参考 style 在 Light/Dark `ThemeMode` 下必须保持相同的 palette 长度、索引语义和 Hue 顺序。Core 只维护 Neutral 的默认 categorical palette；docs 通过公开 `ThemeStyleDefinition` 为 Academic、Vibrant、Clean 提供各自的 16 项 S/L vector。
+只加载涉及的风格；跨风格对比才读取多份。reference 的外部设计来源只用于提炼原则，不复制源码、精确配置、资源或色值。
 
-- 不用单一固定 S/L 覆盖全部 Hue。不同 Hue 对同一 S/L 的感知亮度与色度不等，黄色、青色和紫色需要独立补偿。
-- 主次分组只表达索引使用顺序，不额外改变 S/L；每一项最终色调由对应 style / mode 的 vector 决定。
-- Light / Dark 保持 Hue 与索引不变，只调整 S/L 以适配表面和前景对比，不把 Dark 简化为机械反色。
-- 风格差异不能牺牲分类辨识：前八项必须在真实图元尺寸、常用透明度及 Light / Dark 表面上保持区分，不能只凭 swatch 判断。
-- 相邻分类不明显时先扩大逐 Hue 明度节奏，再最小幅调整饱和度；不要退回全局固定 S/L。
-- 具体 S/L 数值由 Core provider 维护；主题 skill 规定风格意图与参考边界，领域 package 不复制 shared palette 数值。
+## 验证
 
-| Style    | Categorical tone 参考方向                     |
-| -------- | --------------------------------------------- |
-| Neutral  | D3 Tableau10 的均衡、通用分布                 |
-| Academic | Vega Category10 / Seaborn deep 的稳健出版配色 |
-| Vibrant  | D3 Observable10 的高区分度、屏幕优先配色      |
-| Clean    | D3 Set2 的柔和、低色度但不灰的编辑式彩色倾向  |
-
-黑、白、灰属于中性色，不占用 categorical palette 的色相槽位。
-
-## Boundaries
-
-- 本契约只约束 categorical palette，不约束 semantic、sequential 或 diverging colors
-- 用户显式传入的 palette 保持原始顺序和值，不重排、不调色、不补全
-- Core 是内置 Neutral shared categorical palette 的单一真源；宿主只通过公开 definition 维护额外 style
-- 领域包默认只把 Core effective categorical palette 映射到本包视觉角色，不复制内建 categorical 色值
-- 领域 style definition 可以提供本包 palette；它高于 Core baseline，之后仍可被作者 `xxxDefaults` 和实例配置覆盖
-- Theme 是默认值来源；领域 `xxxDefaults` 与 definition 生成值复用正式 Source 片段，条件规则独立；palette 角色与覆盖顺序记录在对应包的 `_notes/theme` 中
+以相同内容对比修改前后，在真实宿主尺寸检查 Light/Dark、默认与显式覆盖、继承与局部覆盖、常用透明度。风格差异不能牺牲内容辨识；palette 不能只测大色块。运行受影响 owner 的类型与定向测试，报告未做的视觉检查。

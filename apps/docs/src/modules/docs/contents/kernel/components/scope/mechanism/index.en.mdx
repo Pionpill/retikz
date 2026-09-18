@@ -1,0 +1,301 @@
+---
+title: Implementation
+description: How Scope resolves transforms, cross-coordinate references, local namespaces, reference envelopes, and clipping resources
+---
+
+Start with [Basic usage](/kernel/components/scope/usage). Each section explains one local mechanism behind Scope transforms, references, or clipping.
+
+## Transforms and final placement
+
+Scope treats its contents as a group: scale them together, rotate them together, then move them to a target. Below, nodes A and B first scale by `1.4` around the origin, then rotate by `30°`, and finally move their origin to `[16, 14]`.
+
+The orange point marks the origin, and the gray dotted axes stay fixed. Watch the dashed box and the two nodes: they change together throughout.
+
+<ComponentPreview files="scope-transform-steps" size="md" type="illustration" hideCode />
+
+During the first two steps, the origin stays put while the group scales and rotates around it. Only the final step moves the whole group away. B follows the same sequence: `[14, 0]` → `[19.6, 0]` → approximately `[17, 9.8]` → approximately `[33, 23.8]`.
+
+The `pivot` property selects the center of scaling or rotation; `placement` specifies the final alignment. Both transforms here use `pivot: 'origin'`. The final `placement={{ target: [16, 14], selfAnchor: 'origin' }}` means “move the group's origin to `[16, 14]`.”
+
+Mind the array order: `transforms` **acts from last to first**. To scale before rotating, declare `[rotation, scaling]`. `placement` acts after those transforms.
+
+What if you want to rotate around the middle of the group's right edge instead of the origin? First lay out the nodes, then fit a box around them. Its right-edge midpoint gives you that point. The implementation calls this box before transformation the “intrinsic envelope.”
+
+The next figure compares the same group's box before and after transformation, without final placement. The gray dashed box on the right keeps the original position visible for comparison.
+
+<ComponentPreview files="scope-envelope-comparison" size="md" type="illustration" hideCode />
+
+The orange box scales and rotates with the contents, carrying its orange `right` point along. That point remains the middle of the box's own right edge; after rotation, it need not be the rightmost point on the canvas. These boxes are visual guides—Scope does not draw them automatically.
+
+Each box serves a different purpose:
+
+- **Choose the rotation or scaling center**: `pivot: 'right'` takes a point from the box before transformation.
+- **Choose the final alignment point**: `selfAnchor: 'right'` takes a point from the box after transformation, then moves that point to `target`.
+
+The implementation therefore needs to find the transform center before calculating how far to move the group:
+
+<ComponentPreview files="scope-transform-resolution" size="sm" type="flow" hideCode />
+
+An origin or explicit-coordinate center is known immediately. A center selected from the box must wait until the child nodes are laid out and the box size is known. The two inputs in the diagram represent these cases.
+
+The target position, `placement.target`, is calculated and saved in advance. Once the group's own transforms are determined, the final translation is “target position minus the selected point after transformation.” The compiler puts this translation first in the array so it acts last. The selected point then reaches the target regardless of scaling or rotation, with no manual compensation.
+
+A target written as `{ id: 'target' }` must refer to an earlier object whose layout is complete. Later objects, the Scope itself, its children, and Scopes whose layout is unfinished cannot be targets and cause an error.
+
+For the coordinate calculations, see Math's [Coordinate transforms](/kernel/packages/math/transforms). Scaling or rotating around a point can be understood as moving that point to the origin, applying the transform, and moving it back.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Freeze the placement target before children',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 847,
+      endLine: 881,
+    },
+    {
+      label: 'Envelope anchors, final translation, and early resolution',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 939,
+      endLine: 1041,
+    },
+    {
+      label: 'Lower to translation, rotation, and scaling',
+      path: 'packages/kernel/core/src/compile/scope.ts',
+      startLine: 51,
+      endLine: 103,
+    },
+  ]}
+/>
+
+## Cross-coordinate references
+
+Suppose point A already exists at `[100, 0]` on the canvas. Inside a Scope that **scales horizontally by two**, you want to place B by starting at A and moving another `10` along the Scope's horizontal direction. Where will B appear on the canvas?
+
+At `[120, 0]`, not `[110, 0]`. Lengths inside this Scope are doubled, so moving `10` inside it covers `20` on the canvas. Think of two rulers with different scales: the same position has different readings. The figure shows only x coordinates; all y coordinates are `0`.
+
+<ComponentPreview files="scope-offset-rulers" size="lg" type="illustration" hideCode />
+
+Starting at the orange point A, read the figure in three steps:
+
+1. **Read the position in Scope units**: `100` on the canvas ruler is `50` on the Scope ruler.
+2. **Move 10 inside the Scope**: go from `50` to `60`.
+3. **Read the result in canvas units**: `60` on the Scope ruler is `120` on the canvas ruler. That is B's position.
+
+Canvas coordinates are called world coordinates; coordinates inside the Scope are called local coordinates. The reference `{ id: 'A' }` finds A's position, while the offset `[10, 0]` uses the current Scope's ruler. Adding readings from the two rulers directly would mix their units.
+
+In the implementation, `toLocal` converts to the Scope's reading, and `toWorld` converts back to the canvas reading. The flow below follows the same three steps:
+
+<ComponentPreview files="scope-coordinate-projection" size="md" type="flow" hideCode />
+
+`offset` specifies how far to move inside the Scope; `at` expresses that movement as a direction and distance. Rotation works similarly: when a Scope turns, its horizontal direction turns with it, and the offset follows that direction. The conversion includes both the current Scope's transforms and those of its enclosing Scopes.
+
+Some transforms must wait until the children are positioned, such as rotation around a point on the group boundary or final alignment. The compiler applies those final transforms to both reference positions and drawing output, keeping the referenced position consistent with what is drawn.
+
+A scale of `0` can flatten a drawing, but then a canvas position cannot be converted back to a unique Scope reading. A reference requiring that conversion throws `non-invertible scope transform`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve local offsets and world results',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      startLine: 33,
+      endLine: 81,
+    },
+    {
+      label: 'Bind forward and inverse projection',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 67,
+      endLine: 84,
+    },
+    {
+      label: 'Inverse transforms and zero-scale failure',
+      path: 'packages/kernel/core/src/compile/transform.ts',
+      startLine: 34,
+      endLine: 64,
+    },
+    {
+      label: 'Apply final transforms to deferred results',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1207,
+      endLine: 1231,
+    },
+  ]}
+/>
+
+## Namespaces and id conflicts
+
+A frame is one layer of the namespace's id lookup tables. A regular Scope reuses the current frame. Only `localNamespace: true` pushes a new frame for its children and pops it when leaving them.
+
+Lookup proceeds outward from the current frame and **returns on the first match**. It continues only after a miss. In the figure, lookup can follow parent frames to the root, while registration writes only to the current frame. A same-frame duplicate also triggers a warning and replaces the existing entry.
+
+<ComponentPreview files="scope-namespace-lookup" size="lg" type="flow" hideCode />
+
+Registration writes only to the current frame, so duplicate names have two distinct outcomes:
+
+| Situation                          | Result                                                                                       |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| Inner and outer frames share an id | The inner entry shadows the outer one; the outer entry remains after leaving the inner frame |
+| An id repeats within one frame     | A `DUPLICATE_NODE_ID` warning is emitted and the later entry wins lookup                     |
+
+Replacing a lookup entry does not delete the earlier element's drawing output. A regular Scope's child ids already belong to the shared outer frame and remain available after leaving the Scope. With `localNamespace`, child ids belong to the new frame and are no longer visible from outside after it is popped.
+
+`scope.id` is registered in the parent frame before pushing the child frame, allowing outer references to address the group. This does not export child ids from the local frame.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Push and pop namespace frames',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 155,
+      endLine: 172,
+    },
+    {
+      label: 'Register and diagnose same-frame replacements',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 185,
+      endLine: 214,
+    },
+    {
+      label: 'Return immediately on a match',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 240,
+      endLine: 252,
+    },
+    {
+      label: 'Register the group id before entering its local frame',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1125,
+      endLine: 1137,
+    },
+  ]}
+/>
+
+## Group references and envelopes
+
+With an `id`, a Scope lets later elements reference the group's center or boundary. The compiler creates a group layout entry for this purpose. It provides position and anchor geometry without drawing an extra node.
+
+- Placeholder entry: the id registered in the parent frame before compiling the children; identity is known but layout is incomplete.
+- Completed envelope: the intrinsic envelope described earlier, after applying this Scope's and its ancestors' transforms. It replaces the placeholder and provides the geometry for outer references.
+
+The computed envelope updates the parent-frame placeholder; it does not register the id a second time. Before updating, the compiler checks entry identity: if a same-name child has already replaced the placeholder, that later child entry is preserved.
+
+<ComponentPreview files="scope-reference-envelope" size="md" type="flow" hideCode />
+
+The envelope collects Node, Coordinate, and nested Scope layouts, excluding Path routing. By default, `boundingShape` uses a rectangular envelope—an AABB, or axis-aligned bounding box. With `circle`, it computes a minimum enclosing circle from layout corner points. This selects the reference boundary, not a clipping region.
+
+For example, a path between two child nodes may take a large detour without expanding the Scope's reference boundary. The reference envelope is therefore not the same as the final drawing bounds of the whole diagram.
+
+Once the children finish, `replaceLayout` updates the placeholder to a resolved entry. If a child shares the Scope's id without a local namespace, that child replaces the placeholder under the later-entry-wins rule; finalization does not overwrite it with the Scope envelope. Without a Scope `id`, no group reference is published, and child layouts pass upward for further aggregation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Build rectangular or circular bounds from layouts',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 884,
+      endLine: 896,
+    },
+    {
+      label: 'Reserve a placeholder in the parent frame',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1043,
+      endLine: 1062,
+    },
+    {
+      label: 'Publish the final envelope or pass child layouts upward',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1233,
+      endLine: 1253,
+    },
+    {
+      label: 'Update in place and check placeholder identity',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 217,
+      endLine: 237,
+    },
+  ]}
+/>
+
+## Clipping and group output
+
+`clip` controls which parts of the subtree remain visible, independently of the reference envelope. A registered Clip Definition resolves the JSON clipping spec into a shape and then lowers it to a Scene clipping path.
+
+- Clipping resource: a path stored separately in the Scene; identical paths share one resource within a compilation.
+- `clipRef`: the resource id held by a group, associating the clipping region with its children.
+- `GroupPrim`: the Scene group containing child primitives, final transforms, and an optional clipping reference.
+
+Built-in and custom definitions enter the same resolution path. The resulting path enters the resource table, and its reference joins the child primitives and transforms on the Scene group. This chain does not depend on `scope.id`: an anonymous Scope can clip its children too.
+
+<ComponentPreview files="scope-clip-resource" size="sm" type="flow" hideCode />
+
+Built-in and custom clips both use Clip Definition's `resolve` and `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrim.clipRef`.
+
+**Core describes where to clip; Render performs the clipping.** Core stores the clipping path in `Scene.resources` and links it to the group through `clipRef`. It does not cut up or delete geometry outside the boundary in advance.
+
+- **SVG Render**: generates a `<clipPath>` and applies it through the group's `clip-path` attribute. SVG uses that region to determine which content is visible.
+- **Canvas Render**: saves the drawing state, applies the group transforms, calls `ctx.clip()`, draws the children, and restores the state so later drawing is unaffected.
+
+The same Scene can therefore be passed to different backends. Core determines the clipping path, its group, and the transforms; each backend uses its own clipping API to produce the same visible region.
+
+The clipping spec uses Scope-local coordinates, and the clipping region follows the group's transforms. For example, rotating the Scope by 30° rotates a local rectangular clip together with its children; the clip does not stay fixed at its original position in the drawing.
+
+A group is emitted when there are child primitives, effective transforms, an id, or a clip. An empty subtree with none of these semantics produces no empty Group. Clipping does not rewrite the reference envelope described above.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve Clip Definitions and lower paths',
+      path: 'packages/kernel/core/src/compile/resource/clip.ts',
+      startLine: 248,
+      endLine: 310,
+    },
+    {
+      label: 'Deduplicate resources within a compilation',
+      path: 'packages/kernel/core/src/compile/resource/clip.ts',
+      startLine: 312,
+      endLine: 338,
+    },
+    {
+      label: 'Group pruning, transforms, and clipRef',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1064,
+      endLine: 1098,
+    },
+    {
+      label: 'Build the SVG clipPath',
+      path: 'packages/kernel/render/src/svg/builders/clip-defs.ts',
+      startLine: 8,
+      endLine: 18,
+    },
+    {
+      label: 'Apply clipping to the SVG group',
+      path: 'packages/kernel/render/src/svg/builders/prim.ts',
+      startLine: 243,
+      endLine: 257,
+    },
+    {
+      label: 'Apply clipping under the group transform',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 825,
+      endLine: 842,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Combine transforms, local references, and clipping',
+      url: '/kernel/components/scope/usage',
+    },
+    { title: 'Custom usage', description: 'Register a custom Clip Definition', url: '/kernel/components/scope/custom' },
+    {
+      title: 'Architecture',
+      description: 'Explore the responsibilities of IR, Core, and Scene',
+      url: '/kernel/components/design/principles',
+    },
+  ]}
+/>

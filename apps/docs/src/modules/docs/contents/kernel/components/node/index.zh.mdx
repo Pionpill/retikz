@@ -1,44 +1,45 @@
 ---
-title: 节点
-description: 用 Node、Text、Coordinate 与连接面扩展建立可命名、可定位、可连接的图元系统。
+title: Node · 节点
+description: 用 Node、Text 与 Coordinate 组织可定位、可连接的图元
 ---
 
-节点家族解决的是“图里的对象怎样被命名、摆放和连接”。`Node` 提供可见主体，`Text` 细化节点内的行级文字，`Coordinate` 只保留可引用的位置；当视觉轮廓不等于连线应接触的几何时，再用自定义连接面扩展。第一次使用请从 [Node](/kernel/components/node/overview) 开始。
-
-<ComponentPreview files="node-family" size="xs" hideCode />
+节点家族解决图中对象怎样摆放、显示内容和被连线引用。Node 表示带形状与文字的对象；Text 是 Node 内一整行文字的 React 写法；Coordinate 只命名一个位置。三者协作，让可见对象和辅助位置各有明确用途。
 
 ## 职责一览
 
-| 组件         | 类型   | 职责                               | 适合场景                        |
-| ------------ | ------ | ---------------------------------- | ------------------------------- |
-| Node         | Kernel | 声明带位置、内容和边界的可引用图元 | 需要可见主体或连线端点          |
-| Text         | Sugar  | 覆盖 Node 中某一整行的文字样式     | JSX 中按行混排文字样式          |
-| Coordinate   | Kernel | 命名位置，不输出可见图元           | 汇合点、辅助定位或不可见锚点    |
-| 自定义连接面 | 扩展   | 独立定义连线贴边与方位锚点         | 视觉 shape 与连接规则需要分离时 |
+| 成员       | 职责                 | 何时使用                    |
+| ---------- | -------------------- | --------------------------- |
+| Node       | 提供位置、文字与形状 | 绘制可见对象或连接端点      |
+| Text       | 覆盖一整行的文字样式 | 在 JSX 中为某一整行设置样式 |
+| Coordinate | 命名不可见位置       | 组织定位参照与路径汇聚      |
+| 连接面扩展 | 定义连线停在哪里     | 连接规则不同于可见轮廓      |
+
+## 整体认识
+
+下图把可见节点、节点中的文字和不可见引用点放在同一个场景中。先看节点本身，再看连线如何借助命名位置组织关系。两条线的汇合点表示 Coordinate 的位置，Coordinate 自身不绘制标记。
+
+<ComponentPreview files="node-family" size="sm" type="illustration" hideCode />
+
+位置决定对象放在哪里，形状决定可见轮廓，文字提供内容。路径通过 id 找到节点，通常停在其边界；Coordinate 则提供一个没有面积的端点。改变一个被引用的位置，可以带动依赖它的对象，而无需逐一修改坐标。
+
+## 选择与边界
+
+第一次使用从基础用法开始，再按任务阅读定位、文字和标签。正文与附加标签分开配置：正文参与节点尺寸，标签附着在已经确定的节点边界或中心。只需要定位参照时使用 Coordinate；需要文字、可见标记或有方向的边界时使用 Node。
+
+形状目录与自定义视觉轮廓由[形状](/kernel/components/shapes)负责；一组对象的局部坐标和共享默认值由 [Scope](/kernel/components/scope) 负责。只有连线接触位置需要与外观分离时，才考虑自定义连接面。原理和参考页供后续排查、扩展与字段查询，不是开始绘图的前置知识。
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    {
-      title: 'Node',
-      description: '建立可见、可定位、可连接的命名图元',
-      url: '/kernel/components/node/overview',
-    },
-    {
-      title: 'Text',
-      description: '在 Node 内按整行覆盖文字样式',
-      url: '/kernel/components/node/text',
-    },
-    {
-      title: 'Coordinate',
-      description: '只命名引用点，不输出可见图元',
-      url: '/kernel/components/node/coordinate',
-    },
-    {
-      title: '自定义连接面',
-      description: '分离视觉轮廓与连线贴边规则',
-      url: '/kernel/components/node/custom-boundary',
-    },
+    { title: '基础用法', description: '创建节点并连接两个命名对象', url: '/kernel/components/node/usage' },
+    { title: '扩展用法', description: '选择定位方式、锚点与连接面', url: '/kernel/components/node/extend' },
+    { title: 'label · 标签', description: '摆放附加标签并设置引线', url: '/kernel/components/node/labels' },
+    { title: 'Text · 文本', description: '编写多行正文与行内混排', url: '/kernel/components/node/text' },
+    { title: 'Coordinate · 坐标点', description: '组织不可见的辅助位置', url: '/kernel/components/node/coordinate' },
+    { title: '自定义连接面', description: '定义并注册新的连接规则', url: '/kernel/components/node/custom' },
+    { title: '实现原理', description: '理解尺寸、文字和引用的处理过程', url: '/kernel/components/node/mechanism' },
+    { title: 'API 参考', description: '查询公开入口、类型与扩展契约', url: '/kernel/components/node/api-reference' },
+    { title: 'Schema 参考', description: '查询节点家族的持久化字段', url: '/kernel/components/node/schema-reference' },
   ]}
 />
