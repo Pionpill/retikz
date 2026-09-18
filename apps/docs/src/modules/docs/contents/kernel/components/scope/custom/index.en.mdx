@@ -197,22 +197,51 @@ A compound shape appends child commands in authored order and applies its outer 
 
 For registry resolution, shape snapshots, path canonicalization, and resource deduplication, see the [Scope mechanism](/kernel/components/scope/mechanism).
 
-## API list
+## Related props
 
-<div className="[&_table]:table-fixed [&_th:first-child]:w-16 [&_th:nth-child(2)]:w-3/5 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_td_code]:max-w-full [&_td_code]:whitespace-pre-wrap [&_td_code]:[overflow-wrap:anywhere]">
+These are the members most often used to define, inject, and reference a custom clip. See the [API reference](/kernel/components/scope/api-reference) for the full contract.
 
-| Type     | Declaration                                                                                                                                                                                                                                                                                                                  | Purpose                                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Function | `defineClip<TShape extends ClipShape>(`<br />`  definition: ClipDefinitionIdentityInput<TShape>`<br />`): ClipDefinition<TShape, TShape>`<br /><br />`defineClip<TClip extends ClipLike, TShape extends ClipShape>(`<br />`  definition: ClipDefinitionResolvedInput<TClip, TShape>`<br />`): ClipDefinition<TClip, TShape>` | Defines a clipping capability; omit `resolve` and `shapeSchema` when the input already is the full shape |
-|          | `compileToScene<`<br />`  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []`<br />`>(`<br />`  ir: IRScene,`<br />`  options?: CompileOptions<TComposites>`<br />`): CompileResult<CompositeArtifactOf<TComposites[number]>>`                                                                    | Injects clip definitions when compiling IR                                                               |
-|          | `renderToSvgString(`<br />`  input: RenderInput,`<br />`  options?: RenderToStringOptions`<br />`): string`                                                                                                                                                                                                                  | Injects clip definitions when rendering with Vanilla                                                     |
-| Type     | `ClipDefinition`                                                                                                                                                                                                                                                                                                             | A registrable clip definition inferred by `defineClip`                                                   |
-|          | `ClipResolveContext`                                                                                                                                                                                                                                                                                                         | Provides rounding and child clip resolution                                                              |
-|          | `ClipLowerContext`                                                                                                                                                                                                                                                                                                           | Provides rounding and child shape lowering                                                               |
-| Property | `Layout.extensions.clips`                                                                                                                                                                                                                                                                                                    | Registers clips in the React host                                                                        |
-|          | `Scope.clip`                                                                                                                                                                                                                                                                                                                 | References a clipping capability by its `kind` and parameters                                            |
-
-</div>
+<ComponentProps
+  items={[
+    {
+      name: 'defineClip',
+      kind: 'function',
+      type: 'DefineClip',
+      description:
+        'Creates a registrable clipping capability. Omit `resolve` and `shapeSchema` when the input already is the full shape',
+    },
+    {
+      name: 'ClipDefinition',
+      kind: 'type',
+      type: 'ClipDefinition<TClip, TShape>',
+      description: 'The registrable clip definition returned by `defineClip`',
+    },
+    {
+      name: 'ClipResolveContext',
+      kind: 'type',
+      type: 'ClipResolveContext',
+      description: 'Provides precision rounding and child-clip resolution',
+    },
+    {
+      name: 'ClipLowerContext',
+      kind: 'type',
+      type: 'ClipLowerContext',
+      description: 'Provides precision rounding and child-shape path lowering',
+    },
+    {
+      name: 'Layout.extensions.clips',
+      kind: 'property',
+      type: 'ReadonlyArray<ClipDefinition>',
+      description: 'The React-host entry point for registering clips',
+    },
+    {
+      name: 'Scope.clip',
+      kind: 'property',
+      type: "IRScope['clip']",
+      description: 'References a registered clip by its `kind` and parameters',
+    },
+  ]}
+/>
 
 ## Further reading
 

@@ -229,6 +229,59 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
   description="把真正共享的局部样式写在 Scope 上，可以避免为每个 child 重复同一组字段，通常能显著减小配置对象和持久化 JSON。Plot 等 Tier 2 包也常在 lowering 时把系列或图层样式集中为 Scope 默认值，以压缩生成 IR 的体积。"
 />
 
+## 相关属性
+
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/scope/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'transforms',
+      kind: 'property',
+      type: 'Array<InputTransform>',
+      description: '按 SVG transform list 的顺序变换整个子图；数组最后一项先作用于局部点。',
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: "IRScope['placement']",
+      description: '在局部布局和变换完成后，把 Scope 自身包络的指定锚点对齐到父坐标系目标。',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description: '在父级命名空间注册整个 Scope 的包络，供外部引用；当前 Scope 自身的 id 不受 `localNamespace` 影响。',
+    },
+    {
+      name: 'localNamespace',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description: '开启后，只隔离 children（包括嵌套 Scope）的 id，使它们只能在当前 Scope 内引用。',
+    },
+    {
+      name: 'clip',
+      kind: 'property',
+      type: "IRScope['clip']",
+      description: '用 Scope 局部坐标定义裁剪区，限制其中所有子元素的可见区域。',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description: '调整 Scope 整体与同层兄弟的栈序，不改变其内部 children 的相对顺序。',
+    },
+    {
+      name: 'theme',
+      kind: 'property',
+      type: "IRScope['theme']",
+      description: '提供由后代组合图元（Composite）继承的局部 Theme 覆盖；未声明字段继续沿用外层 Theme。',
+    },
+  ]}
+/>
+
 ## 错误与限制
 
 - `placement` 只能引用此前已完成的目标，不能引用自身、后代或尚未完成的 Scope。

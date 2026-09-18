@@ -197,22 +197,50 @@ provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出
 
 完整的 registry 解析、shape snapshot、路径 canonicalization 与资源去重见 [Scope 实现原理](/kernel/components/scope/mechanism)。
 
-## API 列表
+## 相关属性
 
-<div className="[&_table]:table-fixed [&_th:first-child]:w-16 [&_th:nth-child(2)]:w-3/5 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_td_code]:max-w-full [&_td_code]:whitespace-pre-wrap [&_td_code]:[overflow-wrap:anywhere]">
+以下列出定义、注入与引用自定义裁剪区时最常用的成员；完整字段见 [API 参考](/kernel/components/scope/api-reference)。
 
-| 类型 | 声明                                                                                                                                                                                                                                                                                                                         | 作用                                                              |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 函数 | `defineClip<TShape extends ClipShape>(`<br />`  definition: ClipDefinitionIdentityInput<TShape>`<br />`): ClipDefinition<TShape, TShape>`<br /><br />`defineClip<TClip extends ClipLike, TShape extends ClipShape>(`<br />`  definition: ClipDefinitionResolvedInput<TClip, TShape>`<br />`): ClipDefinition<TClip, TShape>` | 定义裁剪能力；输入已是完整形状时可省略 `resolve` 与 `shapeSchema` |
-|      | `compileToScene<`<br />`  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []`<br />`>(`<br />`  ir: IRScene,`<br />`  options?: CompileOptions<TComposites>`<br />`): CompileResult<CompositeArtifactOf<TComposites[number]>>`                                                                    | 编译 IR 时注入裁剪定义                                            |
-|      | `renderToSvgString(`<br />`  input: RenderInput,`<br />`  options?: RenderToStringOptions`<br />`): string`                                                                                                                                                                                                                  | Vanilla 渲染时注入裁剪定义                                        |
-| 类型 | `ClipDefinition`                                                                                                                                                                                                                                                                                                             | 可注册的裁剪定义，由 `defineClip` 推导                            |
-|      | `ClipResolveContext`                                                                                                                                                                                                                                                                                                         | 提供精度取整与子裁剪解析方法                                      |
-|      | `ClipLowerContext`                                                                                                                                                                                                                                                                                                           | 提供精度取整与子形状路径生成方法                                  |
-| 属性 | `Layout.extensions.clips`                                                                                                                                                                                                                                                                                                    | React 宿主的裁剪注册入口                                          |
-|      | `Scope.clip`                                                                                                                                                                                                                                                                                                                 | 通过 `kind` 和参数引用裁剪能力                                    |
-
-</div>
+<ComponentProps
+  items={[
+    {
+      name: 'defineClip',
+      kind: 'function',
+      type: 'DefineClip',
+      description: '创建可注册的裁剪能力；输入已是完整形状时可省略 `resolve` 与 `shapeSchema`',
+    },
+    {
+      name: 'ClipDefinition',
+      kind: 'type',
+      type: 'ClipDefinition<TClip, TShape>',
+      description: '由 `defineClip` 返回并可注册的裁剪定义',
+    },
+    {
+      name: 'ClipResolveContext',
+      kind: 'type',
+      type: 'ClipResolveContext',
+      description: '提供精度取整与子裁剪解析方法',
+    },
+    {
+      name: 'ClipLowerContext',
+      kind: 'type',
+      type: 'ClipLowerContext',
+      description: '提供精度取整与子形状路径生成方法',
+    },
+    {
+      name: 'Layout.extensions.clips',
+      kind: 'property',
+      type: 'ReadonlyArray<ClipDefinition>',
+      description: 'React 宿主的裁剪注册入口',
+    },
+    {
+      name: 'Scope.clip',
+      kind: 'property',
+      type: "IRScope['clip']",
+      description: '通过 `kind` 和参数引用已注册的裁剪能力',
+    },
+  ]}
+/>
 
 ## 延伸阅读
 

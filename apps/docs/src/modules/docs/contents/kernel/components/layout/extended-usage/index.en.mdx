@@ -62,6 +62,39 @@ If processing a subsequent input fails in retained mode, the last successful res
 - **Empty configuration**: An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined`, and isolated `defaults.reset: false` / `[]` create no root Scope wrapper.
 - **Host styles**: `Layout.style` always means host CSS. See [Basic usage](/kernel/components/layout/usage#whole-figure-defaults) for whole-figure primitive defaults.
 
+## Related props
+
+These are the props most relevant to this page. See the [API reference](/kernel/components/layout/api-reference) for complete fields and types.
+
+<ComponentProps
+  items={[
+    {
+      name: 'extensions',
+      kind: 'property',
+      type: 'LayoutExtensions',
+      description: 'Injects custom definitions into React Layout, including clips, boundaries, and path capabilities',
+    },
+    {
+      name: 'artifacts',
+      kind: 'property',
+      type: 'CompileArtifactOptions',
+      description: 'Declares which artifact types to collect from compilation',
+    },
+    {
+      name: 'onArtifacts',
+      kind: 'property',
+      type: '(artifacts: ReadonlyArray<CompileArtifact>) => void',
+      description: 'Receives the result after artifact collection completes',
+    },
+    {
+      name: 'runtime',
+      kind: 'property',
+      type: 'LayoutRuntimeOptions',
+      description: 'Configures reactive update strategy, static mode, and diagnostic callbacks',
+    },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections

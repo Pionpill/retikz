@@ -62,6 +62,39 @@ retained 模式处理后续输入失败时，继续显示上一次成功结果�
 - **空配置**：`rootScope` 省略、为空或仅包含值为 `undefined` 的可选字段，以及单独的 `defaults.reset: false` / `[]`，不会创建根 Scope。
 - **宿主样式**：`Layout.style` 始终是宿主 CSS；全图图元默认值的设置见[基础用法](/kernel/components/layout/usage#全图默认值)。
 
+## 相关属性
+
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/layout/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'extensions',
+      kind: 'property',
+      type: 'LayoutExtensions',
+      description: '向 React Layout 注入自定义定义，包括裁剪区、连接面和路径能力',
+    },
+    {
+      name: 'artifacts',
+      kind: 'property',
+      type: 'CompileArtifactOptions',
+      description: '声明需要从编译结果中收集的 artifact 类型',
+    },
+    {
+      name: 'onArtifacts',
+      kind: 'property',
+      type: '(artifacts: ReadonlyArray<CompileArtifact>) => void',
+      description: '在 artifact 收集完成后接收结果',
+    },
+    {
+      name: 'runtime',
+      kind: 'property',
+      type: 'LayoutRuntimeOptions',
+      description: '配置响应式更新策略、静态模式与诊断回调',
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections

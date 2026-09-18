@@ -160,6 +160,39 @@ const view = mount(document.getElementById('diagram')!, ir);
 - **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。
 - **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.style`。
 
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'ir',
+      kind: 'property',
+      type: 'IRScene',
+      description: '直接传入可持久化的 Source IR；与 `children` 同时提供时优先采用它。',
+    },
+    {
+      name: 'viewBox',
+      kind: 'property',
+      type: 'IRViewBox',
+      defaultValue: '按内容计算',
+      description: '需要固定取景或裁剪时设置；省略时 Layout 根据图元范围自动确定输出边界。',
+    },
+    {
+      name: 'rootScope',
+      kind: 'property',
+      type: "Pick<InputScope, 'style' | 'defaults'>",
+      description: 'JSX 子图的隐式根 Scope；为全图设置级联样式和各类图元的默认值。',
+    },
+    {
+      name: 'renderer',
+      kind: 'property',
+      type: "'svg' | 'canvas'",
+      defaultValue: "'svg'",
+      description: '选择 SVG 或 Canvas 后端；未显式设置时优先继承 Renderer 上下文。',
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections

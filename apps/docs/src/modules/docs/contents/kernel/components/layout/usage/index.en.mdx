@@ -164,6 +164,41 @@ The three Nodes and three Paths (declared with Draw) have no local styles. Chang
 - **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when it contains effective settings.
 - **Style scope**: `Layout.style` sets host CSS; use `rootScope.style` for primitive styles.
 
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'ir',
+      kind: 'property',
+      type: 'IRScene',
+      description: 'Pass persisted Source IR directly. When it is provided with `children`, it takes precedence.',
+    },
+    {
+      name: 'viewBox',
+      kind: 'property',
+      type: 'IRViewBox',
+      defaultValue: 'Derived from content',
+      description:
+        'Set it for fixed framing or clipping. When omitted, Layout derives the output boundary from the primitives.',
+    },
+    {
+      name: 'rootScope',
+      kind: 'property',
+      type: "Pick<InputScope, 'style' | 'defaults'>",
+      description:
+        'The implicit root Scope for JSX children. Use it to set figure-wide cascading styles and primitive defaults.',
+    },
+    {
+      name: 'renderer',
+      kind: 'property',
+      type: "'svg' | 'canvas'",
+      defaultValue: "'svg'",
+      description: 'Choose the SVG or Canvas backend. When omitted, the Renderer context takes precedence.',
+    },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections

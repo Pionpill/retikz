@@ -5,7 +5,7 @@ description: Use Scope for local coordinates, group references, defaults, and cl
 
 Use Scope to move a group, share defaults, or clip children. Place it inside Layout or another Scope; each Scope affects only its own subtree.
 
-## Integration options
+## Using this topic
 
 Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants keep the left `x = 0` reference and move A and B inside Scope 80 units to the right.
 
@@ -227,6 +227,65 @@ Style is a supporting responsibility and does not alter local coordinates, refer
   type="tip"
   title="Shared defaults also reduce configuration size"
   description="Putting genuinely shared local styles on Scope avoids repeating the same fields on every child, often reducing both configuration objects and persisted JSON substantially. Tier 2 packages such as Plot also centralize series or layer styles as Scope defaults during lowering to keep generated IR compact."
+/>
+
+## Related props
+
+The following are the props most relevant to this page. See the [API reference](/kernel/components/scope/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'transforms',
+      kind: 'property',
+      type: 'Array<InputTransform>',
+      description:
+        'Transform the whole subtree in SVG transform-list order; the last array item acts on local points first.',
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: "IRScope['placement']",
+      description:
+        'After local layout and transforms, align a chosen anchor on the Scope envelope to a parent-frame target.',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description:
+        "Register the Scope envelope in the parent namespace for external references; the current Scope's own id is unaffected by `localNamespace`.",
+    },
+    {
+      name: 'localNamespace',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description:
+        'When enabled, it isolates only children ids, including nested Scopes, so they are referenceable only inside this Scope.',
+    },
+    {
+      name: 'clip',
+      kind: 'property',
+      type: "IRScope['clip']",
+      description: 'Define a clip region in Scope-local coordinates to limit the visible area of all children.',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description:
+        'Adjust the Scope as a whole among sibling stacking order without changing the relative order of its children.',
+    },
+    {
+      name: 'theme',
+      kind: 'property',
+      type: "IRScope['theme']",
+      description:
+        'Provide a local Theme override inherited by descendant composite elements; omitted fields continue using the outer Theme.',
+    },
+  ]}
 />
 
 ## Errors and limitations

@@ -19,6 +19,14 @@ description: Use when writing basic usage or named usage topics for Retikz compo
 
 短节按语义关系收束，不按字数机械合并：简短配置与约束用带粗体标签的列表，有统一比较维度的选项用表格；需要独立示例的任务保留小节。影响当前示例正确性的约束就近说明，避免在补充说明中重复；完整属性契约仍归 API 参考。
 
+## 相关属性
+
+组件用法页在一个或多个章节涉及少量公开成员、读者需要集中回看它们的类型、必填性、默认值与说明时，在 `## 补充说明` 后、`## 延伸阅读` 前增加 `## 相关属性`（`## Related props`）。没有这类局部查询需求时不创建空章节；函数、包或语法页不因拥有 API 就机械添加。
+
+- 使用 `<ComponentProps items={[...]} />`，每项声明 `name`、`kind`、`type` 和作为 MDX 渲染的字符串 `description`；`kind` 区分 `property`、`function`、`constant`、`type`
+- 属性按源码公开签名与 JSDoc 填写 `required`、`defaultValue`；常量用 `value`。有默认值时组件在右侧显示 Default 与常规文本；无值但必填时显示 `REQUIRED`
+- 只列当前页面实际使用或解释的成员，按本页叙述顺序排列。完整 API 列表仍由脚本生成并归 API 参考；相关属性由页面作者基于当前章节组织
+
 ## 接入与示例
 
 - 复用 [DocTabs / DocSteps](../docs-doc-principle/references/doc-tabs-steps.md)；双端都到真实产物，不能把 import 加空 JSX 当完整用法。无宿主差异的 TypeScript 能力共用示例
