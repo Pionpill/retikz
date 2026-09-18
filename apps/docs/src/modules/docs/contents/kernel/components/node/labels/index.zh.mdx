@@ -1,0 +1,207 @@
+---
+title: label · 标签
+description: 添加节点标签，设置附着位置、间距、旋转和引线
+---
+
+`text` 是节点正文，`label` 是附在节点边界或中心的独立文字。先看[基础用法](/kernel/components/node/usage)，本页只讲附加标签；标签不会撑大节点形状。
+
+## 接入方式
+
+在 Node 上写一个 `label` 对象，就能把独立文字附到节点边界。下面四种写法都把 `status` 附到同一个节点上；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="node-label-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Node position={[0, 0]} label={{ text: 'status', position: 'top' }}>
+      Q
+    </Node>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } }],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [node({ position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } }],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 添加标签
+
+`label` 接受一个对象或对象数组。先选择附着位置，再按需调整样式：
+
+- `position` 默认 `'top'`，支持 `'top'`、`'top-right'`、`'right'`、`'bottom-right'`、`'bottom'`、`'bottom-left'`、`'left'`、`'top-left'` 八个方向
+- 还可写中心 `'center'`、角度 `30`，或边界比例 `{ boundary: 'right', fraction: 0.25 }`；中心标签不做重叠避让
+- `placement` 默认 `'outside'`，写 `'inside'` 可放在边框内侧
+- `font` / `textColor` 优先使用标签显式值，再使用 `Scope.defaults.label`，仍未提供的值从节点继承
+- `opacity` 为 0..1，与节点透明度相乘
+
+<ComponentPreview files="node-label-list" size="sm" />
+
+## 标签位置
+
+在同一个标签上选择命名方位、数字角度、边界比例或中心；中心标签会隐藏无效的位置字段。
+
+<ComponentPreview files="node-label-position" size="md" />
+
+需要同时附加多个标签时，把同一份对象写法放进数组：
+
+```tsx
+import type { IRScene } from '@retikz/core';
+<Node
+  position={[0, 0]}
+  label={[
+    { text: 'status', position: 'top' },
+    { text: 'owner', position: 'bottom' },
+  ]}
+/>;
+```
+
+## 间距与内外侧
+
+`distance` 是节点边界与**旋转后标签视觉框**之间沿摆放方向的净距，省略时使用 `<Layout labelDistance>`（默认 `12`）；写 `0` 时视觉框恰好贴住边界。`placement: 'inside'` 会把方向转向节点内部，并在边界内侧保留同样的净距；矩形节点还可以写 `position: { boundary, fraction }`，把标签附着到某条边界的比例位置上。`position: 'center'` 始终使用最终节点矩形中心，会忽略 `placement` 与 `distance`。
+
+- `boundary` 接 `'top'` / `'right'` / `'bottom'` / `'left'`
+- `fraction` 是边界上的 0..1 比例位置，缺省 `0.5`
+- `placement: 'inside'` 不能和 `pin` 同时使用；需要引线时请保持外侧标签
+
+<ComponentPreview files="node-label-spacing" size="md" />
+
+## 旋转与引线
+
+`label.rotate` 让标签文字绕**自身中心**自旋：`'radial'` 沿 `position` 定义的方向，边界比例位置使用所选边的外法向；`'tangent'` 取其切向（radial + 90°），数字为显式角度（度）。`placement: 'inside'` 只反转标签偏移，不反转该朝向；`keepUpright` 在文字会倒置时翻 180° 保持可读。旋转会改变视觉框沿摆放方向的投影，所以编译器会相应移动标签中心，保证 `distance` 仍是同一个净距。
+
+`label.pin` 给标签加一条**引线**连回节点边界：`pin: true` 是默认细实线（继承标签色）；`pin: { stroke, strokeWidth, dashPattern, dashOffset }` 自定义引线样式；不写 / `false` 则无引线。引线终点是摆放射线与旋转后视觉框的精确交点，没有额外隐藏留白；标签摆放仍只由前述盒几何决定。
+
+<ComponentPreview files="node-label-rotate-pin" size="lg" />
+
+<Comparison target="tikz" title="节点标签写法">
+
+| retikz                                                      | TikZ 对照                            |
+| ----------------------------------------------------------- | ------------------------------------ |
+| `label={{ text: 'foo', position: 'top' }}` / `position: 30` | `[label=above:foo]` / `label=30:foo` |
+| `label={{ text: 'foo', position: 'right', pin: true }}`     | `[pin=right:foo]`                    |
+
+</Comparison>
+
+## 标签样式
+
+位置固定为右侧外置标签，用面板单独调整文字颜色、字号和透明度。
+
+<ComponentPreview files="node-label-style" size="lg" />
+
+## 相关属性
+
+以下列出本页用于标签附着、摆放和视觉样式的成员；完整字段与类型见 [API 参考](/kernel/components/node/api-reference)。
+
+<ComponentProps
+    items={[
+      {
+        name: 'label',
+        kind: 'property',
+        type: "InputNode['label']",
+        description: '接受一个标签对象或对象数组；标签独立于节点正文，且不撑大节点形状。',
+      },
+      {
+        name: 'InputNodeLabel.position',
+        kind: 'property',
+        type: "InputNodeLabel['position']",
+        defaultValue: "'top'",
+        description: `选择标签附着位置：
+
+- 命名方位：\`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`。命名方向从节点边界附着；\`'center'\` 固定最终节点矩形中心，并忽略 \`placement\` 与 \`distance\`
+- 角度：\`number\`，按节点中心向该角度的射线附着标签
+- 边界比例：\`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`。附着到指定边，\`fraction\` 缺省为 \`0.5\`，范围为 \`0..1\``,
+    },
+    {
+      name: 'InputNodeLabel.placement',
+      kind: 'property',
+      type: "'outside' | 'inside'",
+      defaultValue: "'outside'",
+      description: '决定标签从附着点向节点外侧或内侧偏移；内侧标签不能使用引线。',
+    },
+    {
+      name: 'InputNodeLabel.distance',
+      kind: 'property',
+      type: 'number',
+      defaultValue: 'CompileOptions.labelDistance（默认 12）',
+      description: '设置节点边界到旋转后标签视觉框的净距，单位为用户坐标。',
+    },
+    {
+      name: 'InputNodeLabel.rotate',
+      kind: 'property',
+      type: "'none' | 'radial' | 'tangent' | number",
+      description: '`none` 不旋转，`radial` 沿附着方向，`tangent`在该方向加 90°；数字指定角度。',
+      defaultValue: "'none'",
+    },
+    {
+      name: 'InputNodeLabel.keepUpright',
+      kind: 'property',
+      type: 'boolean',
+      description: '文字倒置时翻转 180°，不改变标签附着点。',
+      defaultValue: 'false',
+    },
+    {
+      name: 'InputNodeLabel.pin',
+      kind: 'property',
+      type: "IRNodeLabel['pin']",
+      description: `仅外侧标签可用的引线：
+
+- \`true\`：使用默认细实线
+- \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`：自定义引线样式；\`strokeWidth\` 缺省为 \`1\`，\`dashPattern\` 与 \`dashOffset\` 控制虚线`,
+  },
+  ]}
+  />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Text · 文本', description: '编写多行正文与行内混排', url: '/kernel/components/node/text' },
+    { title: '实现原理', description: '理解尺寸、文字和引用的处理过程', url: '/kernel/components/node/mechanism' },
+    { title: 'Schema 参考', description: '查询节点家族的持久化字段', url: '/kernel/components/node/schema-reference' },
+  ]}
+/>

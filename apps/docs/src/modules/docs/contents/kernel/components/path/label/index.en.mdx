@@ -1,0 +1,180 @@
+---
+title: Path labels
+description: Place labels on a whole path or one step, with rotation, multiline text, and stroke gaps
+---
+
+Start with [Basic usage](/kernel/components/path/usage). A label can belong to a whole Path or one Step. Choose that scope before setting its position.
+
+## Using this topic
+
+The four forms below attach the `status` label to the same segment; Vanilla needs an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="draw-label-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Draw way={[[0, 0], { label: 'status' }, [120, 0]]} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0], label: { text: 'status' } },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [path({ way: [[0, 0], { label: 'status' }, [120, 0]] })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0], label: { text: 'status' } },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Choose the label scope
+
+| Syntax               | Scope                        | When to use               |
+| -------------------- | ---------------------------- | ------------------------- |
+| `<Path label>`       | Whole path                   | Name a relationship       |
+| `<Step label>`       | One step                     | Name a particular segment |
+| `{ label }` in `way` | Following connection segment | Add a label in Draw       |
+
+## Label a path
+
+`{ label }` annotates the next connection segment without creating a segment itself. The panel supports a line, two fold directions, and a quadratic Bezier: adjust `position`, then `side`, `sloped`, and text color. A fold allocates t evenly across its legs, so 0.5 lands at its corner; a curve samples at its Bezier parameter.
+
+<ComponentPreview files="draw-label" size="lg" />
+
+`position` accepts a number from 0 to 1: 0 is the start and 1 is the end. The keywords `at-start`, `very-near-start`, `near-start`, `midway`, `near-end`, `very-near-end`, and `at-end` map to 0, 0.125, 0.25, 0.5, 0.75, 0.875, and 1. `side` chooses a side of the line; `sloped: true` rotates text with the tangent. To center text on the line, omit `side` and set `sloped: true`. Do not pass `side: 'center'` to the public input.
+
+With Draw, put `{ label }` before the connection segment it annotates in `way`:
+
+```tsx
+<Draw way={['A', { label: { text: 'status', position: 0.5 } }, { curve: [180, -110] }, 'B']} />
+```
+
+With Path, pass the same object directly to the target `<Step>` through `label`:
+
+```tsx
+<Path>
+  <Step kind="move" to="A" />
+  <Step kind="curve" control={[180, -110]} to="B" label={{ text: 'status', position: 0.5 }} />
+</Path>
+```
+
+Whole-path placement uses path length. A Step follows its own action parameter: Bézier parameter for curves, angular progress for arcs, and allocation across legs for folds. See [Implementation](/kernel/components/path/mechanism#why-labels-cut-only-the-stroke).
+
+## Multiline text and stroke gaps
+
+`<Path label>` belongs to the whole path, while `<Step label>` belongs only to its step. Observe how the same text block creates a gap: the text keeps its position and the stroke stops on either side of its bounds.
+
+`label.text` reuses the same text-block input (TextBlock) as Node text: use one string (`\n` is a hard line break), or an array of lines with per-line `fill` / `font`. All lines remain one label block with one anchor, `position`, `side`, `sloped`, and `interrupt`; a gap uses the whole block's visual bounds rather than treating lines as separate labels.
+
+<ComponentPreview files="path-label-interruption" size="lg" />
+
+With the upper-left and lower-right nodes fixed, switch the connection route, `side`, and the label position from 0 to 1 to observe sampling and gaps on the same host Path. “Automatic center” omits `side` and enables only `sloped`, so it still follows the centered-label default gap rule.
+
+<ComponentPreview
+  files={['path-label-route-playground', 'path-label-route-playground.tsx', 'path-label-route-playground.controls.ts']}
+  size="md"
+  caption="Switch the route and label position: automatic center gaps the stroke; the other side values stay continuous by default."
+/>
+
+When `interrupt` is omitted, only that unfilled built-in Stroke + centered combination gets an automatic gap. `interrupt: false` forces a continuous stroke; `interrupt: true` can also gap a non-centered label. The gap extends by `4` user units beyond each side of the label's visual bounds by default; use `gap` to override it, and `gap: 0` for no extra clearance.
+
+Any effective `fill` — including `style.fill: 'transparent'`, or setting fill and then `style.fillOpacity: 0` — disables the automatic gap, and `interrupt: true` then reports an error. Any explicit boolean on Ribbon, a custom Path kind, or another non-built-in Stroke host also reports an error. The gap does not move labels, marks, dash phase, or endpoint arrows, and does not avoid label / arrow or mark collisions.
+
+Sampling a curve at a parameter, inverting distance, and taking a shape-preserving slice belong to the [`@retikz/math` curve-segment algorithms](/kernel/packages/math/algorithms#curve-slicing). They operate on plain geometry only; Core still decides label interruption, gap clearance, and Path output.
+
+## Related props
+
+These are the path-label props configured on this page. See the [API reference](/kernel/components/path/api-reference) for the complete field list and text-block input.
+
+<ComponentProps
+  items={[
+    {
+      name: 'label',
+      kind: 'property',
+      type: '<Path label>: IRGeometryLabel | Array<IRGeometryLabel>; <Step label>: InputStepLabel; way: { label: string | InputStepLabel }',
+      description:
+        "Choose the label host:\n\n- `<Path label>`: `IRGeometryLabel | Array<IRGeometryLabel>` for the entire path\n- `<Step label>`: `InputStepLabel` for the current step\n- `{ label: string | InputStepLabel }` in `way`: the following segment\n\nObject fields:\n\n- `text: TextBlock`: a string (`\\n` for line breaks) or `Array<{ text: string; fill?: string; font?: Font }>`\n- `position?: number | 'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`: keywords map to 0, 0.125, 0.25, 0.5, 0.75, 0.875, 1\n- `side?: 'top' | 'right' | 'bottom' | 'left'`: label side; defaults to top, or centered when `sloped: true`\n- `sloped?: boolean`: rotate along the tangent\n- `interrupt?: boolean`: cut an unfilled built-in Stroke path; only centered sloped labels interrupt automatically\n- `gap?: number`: extra space on each side of the cut, default 4",
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step composition',
+      description: 'Combine steps and control subpaths, connection boundaries, rounded corners, transforms, and marks',
+      url: '/kernel/components/path/step',
+    },
+
+    {
+      title: 'Implementation',
+      description: 'Follow path syntax through steps, references, geometry, arrows, and labels to the final result',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up input data contracts for paths, steps, labels, and arrow marks',
+      url: '/kernel/components/path/schema-reference',
+    },
+
+]}
+/>

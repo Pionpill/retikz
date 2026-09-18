@@ -54,13 +54,12 @@ const translations: Record<string, string> = {
   稳定错误码: 'Stable error code',
   失败上下文的结构化详情: 'Structured details of the failure context',
   面向调用方的原始错误消息: 'Original error message for the caller',
-  '占位节点的 id；其它 path / node `at.of` 通过这个 id 引用':
-    'Placeholder node ID, referenced by other paths or node `at.of` values',
-  '占位点位置；与 `<Node position>` 形态完全一致':
-    'Placeholder position, accepting the same forms as `<Node position>`',
+  '坐标点 id；路径端点和节点定位通过它引用此位置':
+    'Coordinate ID used by path endpoints and node positioning to reference this position',
+  '坐标点位置；不支持 Node 专属的自身锚点对齐': 'Coordinate position; does not support Node-only self-anchor alignment',
   '当前 Coordinate 的单项或多项检查请求': 'One or more inspection requests for the current Coordinate',
-  '笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }`':
-    'Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or partway `{ between: [A, B], fraction }` positioning',
+  '笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }`':
+    'Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }`',
   是否播放动画: 'Whether to play animations',
   动画控制器出口: 'Animation controller ref',
   'Scene 根动画': 'Scene-root animations',

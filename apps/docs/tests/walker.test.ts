@@ -89,15 +89,15 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
-  it('keeps top-level union object branches inspectable instead of resolving them to registry references', async () => {
+  it('preserves registered names within top-level unions', async () => {
     const { TransformSchema } = await import('@retikz/core');
     const r = walk(TransformSchema);
 
     expect(r.kind).toBe('alias');
     if (r.kind !== 'alias' || r.type.kind !== 'union') throw new Error('expected union alias');
     expect(r.type.members[0]).toMatchObject({
-      kind: 'object',
-      fields: [{ name: 'kind' }, { name: 'x' }, { name: 'y' }],
+      kind: 'ref',
+      name: 'TranslateSchema',
     });
   });
 
@@ -147,7 +147,13 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     expect(r.kind).toBe('union');
     if (r.kind === 'union') {
       const labels = r.members.map(m => (m.kind === 'ref' ? m.name : `<${m.kind}>`));
-      expect(labels).toEqual(['Position', 'PolarPosition', 'AtPosition', 'OffsetPosition', 'BetweenPosition']);
+      expect(labels).toEqual([
+        'PositionSchema',
+        'PolarPositionSchema',
+        'AtPositionSchema',
+        'OffsetPositionSchema',
+        'BetweenPositionSchema',
+      ]);
     }
   });
 });
@@ -262,11 +268,16 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     const scope = walk(ScopeSchema);
 
     if (scene.kind !== 'object' || scope.kind !== 'object') throw new Error('expected objects');
-    expect(scene.fields.find(field => field.name === 'theme')?.description).toBe(
-      'Sparse root Theme inherited by every Scene child.',
-    );
-    expect(scope.fields.find(field => field.name === 'theme')?.description).toBe(
-      'Sparse Theme override inherited by this Scope descendants.',
-    );
+    expect(scene.fields.find(field => field.name === 'theme')?.description).toBe(SceneSchema.shape.theme.description);
+    expect(scope.fields.find(field => field.name === 'theme')?.description).toBe(ScopeSchema.shape.theme.description);
   });
+});
+
+it('保留具名 union 子类型与共享节点几何名称', async () => {
+  const { BoundarySchema, NodeSchema, NodeLayoutSchema } = await import('@retikz/core');
+  expect(JSON.stringify(walk(BoundarySchema))).toContain('ShapeRefSchema');
+  expect(JSON.stringify(walk(NodeSchema))).toContain('AxisScaleSchema');
+  const layout = JSON.stringify(walk(NodeLayoutSchema));
+  expect(layout).toContain('BoxSizeSchema');
+  expect(layout).toContain('BoxSpacingSchema');
 });

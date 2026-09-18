@@ -6,13 +6,6 @@ export const CoordinateBetweenControlId = {
   Fraction: 'fraction',
 } as const;
 
-/** Coordinate 比例定位 playground 的固定取景 */
-export const coordinateBetweenFrame = {
-  width: 400,
-  height: 150,
-  viewBox: { x: -200, y: -75, width: 400, height: 150 },
-} as const;
-
 /** 两点比例位置的中文属性面板 */
 export const coordinateBetweenControls = definePreviewControls({
   presentation: 'panel',

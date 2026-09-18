@@ -43,12 +43,15 @@ export type SchemaRegistryEntry = {
   /** 渲染类型签名时使用的名称 */
   label: string;
   /** Reference / contract 页面 URL（含可选 #anchor） */
-  url: string;
+  url?: string;
   /** docs runtime 使用的可选本地化描述 */
   localizations?: Partial<Record<'zh' | 'en', SchemaRegistryLocalization>>;
 };
 
 export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
+  AxisScaleSchema: { schema: IR.AxisScaleSchema, label: 'AxisScaleSchema' },
+  BoxSizeSchema: { schema: IR.BoxSizeSchema, label: 'BoxSizeSchema' },
+  BoxSpacingSchema: { schema: IR.BoxSpacingSchema, label: 'BoxSpacingSchema' },
   NodeInspectOptionsSchema: {
     schema: NodeInspectOptionsSchema,
     label: 'NodeInspectOptions',
@@ -236,12 +239,40 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'EllipseClip',
     url: '/kernel/reference/schema/scope#ellipseclip',
   },
-  NodeSchema: { schema: IR.NodeSchema, label: 'Node', url: '/kernel/reference/schema/entity#node' },
-  NodeLabelSchema: { schema: IR.NodeLabelSchema, label: 'NodeLabel', url: '/kernel/reference/schema/entity#nodelabel' },
+  NodeStyleSchema: {
+    schema: IR.NodeStyleSchema,
+    label: 'NodeStyleSchema',
+    url: '/kernel/components/node/schema-reference#nodestyleschema',
+  },
+  NodeLayoutSchema: {
+    schema: IR.NodeLayoutSchema,
+    label: 'NodeLayoutSchema',
+    url: '/kernel/components/node/schema-reference#nodelayoutschema',
+  },
+  NodeLabelBoundaryPositionSchema: {
+    schema: IR.NodeLabelBoundaryPositionSchema,
+    label: 'NodeLabelBoundaryPositionSchema',
+    url: '/kernel/components/node/schema-reference#nodelabelboundarypositionschema',
+  },
+  NodeLabelPinSchema: {
+    schema: IR.NodeLabelPinSchema,
+    label: 'NodeLabelPinSchema',
+    url: '/kernel/components/node/schema-reference#nodelabelpinschema',
+  },
+  NodeSchema: {
+    schema: IR.NodeSchema,
+    label: 'NodeSchema',
+    url: '/kernel/components/node/schema-reference#nodeschema',
+  },
+  NodeLabelSchema: {
+    schema: IR.NodeLabelSchema,
+    label: 'NodeLabelSchema',
+    url: '/kernel/components/node/schema-reference#nodelabelschema',
+  },
   CoordinateSchema: {
     schema: IR.CoordinateSchema,
-    label: 'Coordinate',
-    url: '/kernel/reference/schema/entity#coordinate',
+    label: 'CoordinateSchema',
+    url: '/kernel/components/node/schema-reference#coordinateschema',
   },
   FontSchema: { schema: IR.FontSchema, label: 'Font', url: '/kernel/reference/schema/entity#font' },
   FontFamilySchema: {
@@ -284,7 +315,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   TextRunSchema: { schema: IR.TextRunSchema, label: 'TextRun', url: '/kernel/reference/schema/entity#textrun' },
   MathRunSchema: { schema: IR.MathRunSchema, label: 'MathRun', url: '/kernel/reference/schema/entity#mathrun' },
   ShapeRefSchema: { schema: IR.ShapeRefSchema, label: 'ShapeRef', url: '/kernel/reference/schema/entity#shaperef' },
-  BoundarySchema: { schema: IR.BoundarySchema, label: 'Boundary', url: '/kernel/reference/schema/entity#boundary' },
+  BoundarySchema: {
+    schema: IR.BoundarySchema,
+    label: 'BoundarySchema',
+    url: '/kernel/components/node/schema-reference#boundaryschema',
+  },
 
   PathStrokeSchema: {
     schema: IR.PathStrokeSchema,
@@ -311,7 +346,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'PathStructure',
     url: '/kernel/reference/schema/path#pathstructure',
   },
-  PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/reference/schema/path#path' },
+  PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/schema-reference#pathschema' },
   DrawableStyleSchema: {
     schema: IR.DrawableStyleSchema,
     label: 'DrawableStyle',
@@ -330,13 +365,13 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,
     label: 'PathMarkPlacement',
-    url: '/kernel/reference/schema/path#pathmarkplacement',
+    url: '/kernel/components/path/schema-reference#pathmarkplacementschema',
   },
-  StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/reference/schema/path#step' },
+  StepSchema: { schema: IR.StepSchema, label: 'Step', url: '/kernel/components/path/schema-reference#stepschema' },
   GeometryLabelSchema: {
     schema: IR.GeometryLabelSchema,
     label: 'GeometryLabel',
-    url: '/kernel/reference/schema/path#geometrylabel',
+    url: '/kernel/components/path/schema-reference#geometrylabelschema',
   },
   StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel', url: '/kernel/reference/schema/path#steplabel' },
   ControlPointSchema: {
@@ -483,43 +518,75 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   },
   OriginSchema: { schema: IR.OriginSchema, label: 'Origin', url: '/kernel/reference/schema/animation#origin' },
 
-  MoveStepSchema: { schema: IR.MoveStepSchema, label: 'MoveStep', url: '/kernel/reference/schema/path#move' },
-  LineStepSchema: { schema: IR.LineStepSchema, label: 'LineStep', url: '/kernel/reference/schema/path#line' },
+  MoveStepSchema: {
+    schema: IR.MoveStepSchema,
+    label: 'MoveStep',
+    url: '/kernel/components/path/schema-reference#movestepschema',
+  },
+  LineStepSchema: {
+    schema: IR.LineStepSchema,
+    label: 'LineStep',
+    url: '/kernel/components/path/schema-reference#linestepschema',
+  },
   AxisLineStepSchema: {
     schema: IR.AxisLineStepSchema,
     label: 'AxisLineStep',
-    url: '/kernel/reference/schema/path#axis-line',
+    url: '/kernel/components/path/schema-reference#axislinestepschema',
   },
-  FoldStepSchema: { schema: IR.FoldStepSchema, label: 'FoldStep', url: '/kernel/reference/schema/path#fold' },
-  CycleStepSchema: { schema: IR.CycleStepSchema, label: 'CycleStep', url: '/kernel/reference/schema/path#cycle' },
-  CurveStepSchema: { schema: IR.CurveStepSchema, label: 'CurveStep', url: '/kernel/reference/schema/path#curve' },
-  CubicStepSchema: { schema: IR.CubicStepSchema, label: 'CubicStep', url: '/kernel/reference/schema/path#cubic' },
-  BendStepSchema: { schema: IR.BendStepSchema, label: 'BendStep', url: '/kernel/reference/schema/path#bend' },
-  ArcStepSchema: { schema: IR.ArcStepSchema, label: 'ArcStep', url: '/kernel/reference/schema/path#arc' },
+  FoldStepSchema: {
+    schema: IR.FoldStepSchema,
+    label: 'FoldStep',
+    url: '/kernel/components/path/schema-reference#foldstepschema',
+  },
+  CycleStepSchema: {
+    schema: IR.CycleStepSchema,
+    label: 'CycleStep',
+    url: '/kernel/components/path/schema-reference#cyclestepschema',
+  },
+  CurveStepSchema: {
+    schema: IR.CurveStepSchema,
+    label: 'CurveStep',
+    url: '/kernel/components/path/schema-reference#curvestepschema',
+  },
+  CubicStepSchema: {
+    schema: IR.CubicStepSchema,
+    label: 'CubicStep',
+    url: '/kernel/components/path/schema-reference#cubicstepschema',
+  },
+  BendStepSchema: {
+    schema: IR.BendStepSchema,
+    label: 'BendStep',
+    url: '/kernel/components/path/schema-reference#bendstepschema',
+  },
+  ArcStepSchema: {
+    schema: IR.ArcStepSchema,
+    label: 'ArcStep',
+    url: '/kernel/components/path/schema-reference#arcstepschema',
+  },
   CirclePathStepSchema: {
     schema: IR.CirclePathStepSchema,
     label: 'CirclePathStep',
-    url: '/kernel/reference/schema/path#circlepath',
+    url: '/kernel/components/path/schema-reference#circlepathstepschema',
   },
   EllipsePathStepSchema: {
     schema: IR.EllipsePathStepSchema,
     label: 'EllipsePathStep',
-    url: '/kernel/reference/schema/path#ellipsepath',
+    url: '/kernel/components/path/schema-reference#ellipsepathstepschema',
   },
   RectangleStepSchema: {
     schema: IR.RectangleStepSchema,
     label: 'RectangleStep',
-    url: '/kernel/reference/schema/path#rectangle',
+    url: '/kernel/components/path/schema-reference#rectanglestepschema',
   },
   SmoothStepSchema: {
     schema: IR.SmoothStepSchema,
     label: 'SmoothStep',
-    url: '/kernel/reference/schema/path#smooth',
+    url: '/kernel/components/path/schema-reference#smoothstepschema',
   },
   GeneratorStepSchema: {
     schema: IR.GeneratorStepSchema,
     label: 'GeneratorStep',
-    url: '/kernel/reference/schema/path#generator',
+    url: '/kernel/components/path/schema-reference#generatorstepschema',
   },
 
   RelativeTargetSchema: {
@@ -536,17 +603,17 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ArrowMarkSchema: {
     schema: IR.ArrowMarkSchema,
     label: 'ArrowMark',
-    url: '/kernel/reference/schema/path#arrowmark',
+    url: '/kernel/components/path/schema-reference#arrowmarkschema',
   },
   ArrowDetailSchema: {
     schema: IR.ArrowDetailSchema,
     label: 'ArrowDetail',
-    url: '/kernel/reference/schema/path#arrowdetail',
+    url: '/kernel/components/path/schema-reference#arrowdetailschema',
   },
   ArrowEndDetailSchema: {
     schema: IR.ArrowEndDetailSchema,
     label: 'ArrowEndDetail',
-    url: '/kernel/reference/schema/path#arrowenddetail',
+    url: '/kernel/components/path/schema-reference#arrowenddetailschema',
   },
 
   LayoutInspectBoundsOptionsSchema: {

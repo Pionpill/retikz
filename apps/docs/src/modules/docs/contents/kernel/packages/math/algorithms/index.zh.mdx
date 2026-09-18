@@ -250,7 +250,7 @@ $$
 | `curve.parameterAtDistance` | 时间 O(b·n)，空间 O(1) | 按同一离散模型反解距离；`b` 为最大二分次数，命中默认容差可提前返回                         |
 | `curve.slice`               | 时间 O(1)，空间 O(1)   | 取得参数区间内、保持原种类的子曲线                                                         |
 
-绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/draw/label) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
+绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/path/label) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
 
 ## 过点曲线
 

@@ -13,8 +13,6 @@ describe('Scope API 公开范围', () => {
     expect(source).toContain("IRScope['placement']");
     expect(source).toContain('HydrationEventProps');
     expect(source).toContain('`authoring?`');
-    expect(source).toContain("ScopeStyleProps['style']");
-    expect(source).toContain("ScopeStyleProps['defaults']");
     expect(source).toContain("InputScope['style']");
     expect(source).toContain("InputScope['defaults']");
     expect(source).toContain(

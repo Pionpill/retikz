@@ -1,0 +1,242 @@
+---
+title: Basic usage
+description: Connect two nodes, choose an input form, and set the route and appearance
+---
+
+Draw a line from A to B. `Node.id` names each target, and `Draw.way` references them in order. For shaped nodes, the line attaches to the connection boundary rather than passing through the center.
+
+## Using this topic
+
+All four forms produce the same result. React accepts components or IR; Vanilla accepts authoring helpers or IR. The Vanilla snippets require `<div id="diagram"></div>` in HTML. Call `view.dispose()` before removing the host. For installation, see [Quick start](/kernel/components/get-start).
+
+<ComponentPreview files="draw-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[100, 0]}>
+      B
+    </Node>
+    <Draw way={['a', 'b']} />
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [100, 0], text: 'B' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', { position: [100, 0], text: 'B' }),
+    path({ way: ['a', 'b'] }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+// Call when removing the host.
+// view.dispose();
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [100, 0], text: 'B' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+// Call when removing the host.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+## Choose a route
+
+A straight line goes directly from A to B. To turn or curve, add an action between A and B. Try the panel below: a one-axis projection moves in only one direction, so it may miss B; a fold really connects to B. See [Path syntax](/kernel/components/path/draw) for complete usage.
+
+| Route                            | Enum / Step value                                        | `way` form                                      |
+| -------------------------------- | -------------------------------------------------------- | ----------------------------------------------- |
+| Straight                         | `kind: 'line'`                                           | `['a', 'b']`                                    |
+| Horizontal axis                  | `kind: 'axis-line'`<br />`axis: 'horizontal'`            | `['a', { horizontalTo: 'b' }]`                  |
+| Vertical axis                    | `kind: 'axis-line'`<br />`axis: 'vertical'`              | `['a', { verticalTo: 'b' }]`                    |
+| Horizontal, then vertical        | `DrawWay.Hv = '-\|'`<br />`kind: 'fold'`                 | `['a', '-\|', 'b']`                             |
+| Vertical, then horizontal        | `DrawWay.Vh = '\|-'`<br />`kind: 'fold'`                 | `['a', '\|-', 'b']`                             |
+| Horizontal, vertical, horizontal | `DrawWay.Hvh = '-\|-'`<br />`kind: 'fold'`               | `['a', '-\|-', 'b']`                            |
+| Vertical, horizontal, vertical   | `DrawWay.Vhv = '\|-\|'`<br />`kind: 'fold'`              | `['a', '\|-\|', 'b']`                           |
+| Quadratic Bezier                 | `kind: 'curve'`                                          | `['a', { curve: [50, -40] }, 'b']`              |
+| Cubic Bezier                     | `kind: 'cubic'`                                          | `['a', { cubic: [[30, -40], [70, -40]] }, 'b']` |
+| Bend shortcut                    | `kind: 'bend'`<br />`bendDirection: 'left'` or `'right'` | `['a', { bend: 'left' }, 'b']`                  |
+
+<ComponentPreview files="draw-orthogonal" size="md" />
+
+Curves use control points or a bend direction. Control points steer the curve; the curve does not have to pass through them.
+
+<ComponentPreview files="draw-curve" size="md" />
+
+## Set appearance
+
+Put colors, stroke width, dashes, and fill in `style`. Arrow direction, rounded corners, and `zIndex` stay at the root. Adjust one path in the preview below.
+
+<ComponentPreview files="draw-style" size="lg" />
+
+Closed routes can fill an area, and `zIndex` controls sibling stacking. Compare both in one preview.
+
+<ComponentPreview files="draw-fill-stack" size="lg" />
+
+## When to use Path
+
+Use Path with explicit Steps for clearer control over multiple subpaths or individual segments. Draw exposes common route and appearance props; use Path for whole-path `label`, `marks`, `rotate`, and `scale`. These forms draw the same fold; Step makes each action explicit.
+
+```tsx
+<Draw way={['a', '-|', 'b']} />
+
+<Path>
+  <Step kind="move" to="a" />
+  <Step kind="fold" via="-|" to="b" />
+</Path>
+```
+
+Import `Path` and `Step` from `@retikz/react` and replace Draw inside the existing Layout. Path also accepts `way`, but it cannot be supplied together with explicit steps.
+
+## Additional notes
+
+- Referenced names must be available in the current scope; see [Scope](/kernel/components/scope/usage).
+- Shared positioning syntax belongs to [Positioning](/kernel/components/basic/position); drawing explains only path-specific cursor and connection rules.
+- See [Arrows](/kernel/components/path/arrow) for endpoints and [Path labels](/kernel/components/path/label) for text.
+
+## Related props
+
+These are the props most relevant to this page. See the [API reference](/kernel/components/path/api-reference) for complete fields and types.
+
+<ComponentProps
+  items={[
+    {
+      name: 'way',
+      kind: 'property',
+      type: 'WayDSL',
+      required: true,
+      description:
+        'Describes an entire path with relative cursor operations and endpoints; cannot be supplied with explicit `Step` children',
+    },
+    {
+      name: 'style',
+      kind: 'property',
+      type: "InputPath['style']",
+      description: 'Sets visual path styling such as stroke, fill, and line pattern',
+    },
+    {
+      name: 'arrow',
+      kind: 'property',
+      type: "'none' | '->' | '<-' | '<->'",
+      description: 'Sets the start, end, or both endpoint arrows',
+    },
+    {
+      name: 'arrowDetail',
+      kind: 'property',
+      type: 'IRArrowDetail',
+      description:
+        'Shared appearance: `{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`. `start` / `end` override individual endpoints with the same fields; see `arrowPlacement` for overlap',
+    },
+    {
+      name: 'roundedCorners',
+      kind: 'property',
+      type: 'number',
+      description: 'Replaces path turns with rounded joins',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description: 'Controls the drawing layer relative to other primitives',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Path syntax',
+      description: 'Targets, folds, curves, and relative coordinates',
+      url: '/kernel/components/path/draw',
+    },
+    {
+      title: 'Step composition',
+      description: 'Combine subpaths and steps with boundaries, curves, corners, transforms, and marks',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public TypeScript contracts',
+      url: '/kernel/components/path/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up path input fields',
+      url: '/kernel/components/path/schema-reference',
+    },
+  ]}
+/>

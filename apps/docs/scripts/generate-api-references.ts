@@ -1,13 +1,23 @@
 import path from 'node:path';
 
+import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
 import { writeLayoutApiReferenceMdx } from './api-reference/layout';
 import { writeMathApiReferenceMdx } from './api-reference/math';
+import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+
+await writeDrawApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/path/api-reference/_includes'),
+);
+
+await writeNodeApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/node/api-reference/_includes'),
+);
 
 await writeInspectApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/inspect/api-reference/_includes'),

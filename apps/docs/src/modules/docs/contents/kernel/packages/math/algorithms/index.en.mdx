@@ -266,7 +266,7 @@ A cached `totalLength` must use the same `sampleCount`; otherwise total distance
 | `curve.parameterAtDistance` | Time O(b·n), space O(1) | Invert distance with the same discrete model; `b` is the maximum bisection count, with early exit at default tolerance |
 | `curve.slice`               | Time O(1), space O(1)   | Take a parameter-range subcurve without changing its curve kind                                                        |
 
-Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/draw/label); Math is not a drawing or label API.
+Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/path/label); Math is not a drawing or label API.
 
 ## Curves through points
 

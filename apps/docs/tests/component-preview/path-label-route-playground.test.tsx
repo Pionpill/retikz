@@ -6,16 +6,16 @@ import type { PreviewControlValues } from '@/modules/docs/components/component-p
 import { PreviewControlStateContext } from '@/modules/docs/components/component-preview/context';
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import {
+  createPreviewControlContract,
   pathLabelRoutePlaygroundControls,
   previewControlContract,
-} from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.controls';
-import {
-  pathLabelRoutePlaygroundControls as englishControls,
-  previewControlContract as englishPreviewControlContract,
-} from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.en.controls';
-import EnglishPathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.en.demo';
-import PathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.zh.demo';
+} from '@/modules/docs/contents/kernel/components/path/label/path-label-route-playground.controls';
+import EnglishPathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/path/label/path-label-route-playground.en.demo';
+import PathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/path/label/path-label-route-playground.zh.demo';
 import type { PreviewControlContract } from '@/modules/docs/preview';
+
+const englishPreviewControlContract = createPreviewControlContract('en');
+const englishControls = englishPreviewControlContract.controls;
 
 type PlaygroundScenario = {
   Demo: ComponentType;

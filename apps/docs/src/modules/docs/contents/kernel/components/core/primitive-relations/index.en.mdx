@@ -34,7 +34,7 @@ Once an anchor is specified, the endpoint no longer reads the adjacent step's di
 
 The mental rule is simply “omit anchor for dynamic, provide anchor for fixed.” See [Path Schema · Target](/kernel/reference/schema/path#target) for the complete target union, `offset`, angles, and edge proportions; see [Node Geometry](/kernel/components/node/usage) and [Shapes](/kernel/components/shapes) for standard anchors, boundaries, and shape-specific names.
 
-`axis-line` is an intentional exception: it takes the target center or explicit anchor, then projects it onto one local axis, so an omitted anchor does not dynamically attach on the target side. The source still clips normally toward the projected endpoint; see [Step · Orthogonal connections](/kernel/components/draw/step#orthogonal-connections).
+`axis-line` is an intentional exception: it takes the target center or explicit anchor, then projects it onto one local axis, so an omitted anchor does not dynamically attach on the target side. The source still clips normally toward the projected endpoint; see [Step composition · Orthogonal connections](/kernel/components/path/step#orthogonal-connections).
 
 ## Lines and routing
 
@@ -48,7 +48,7 @@ Endpoint mode decides where a connection lands; path steps decide how it travels
 | Orthogonal fold | `'-\|'` / `'\|-'`        | Flowcharts and structure maps |
 | Curve           | `{ bend }` / `{ curve }` | Avoidance and parallel edges  |
 
-Complete step and path-kind parameters belong to [Draw](/kernel/components/draw/usage) and [Path Schema](/kernel/reference/schema/path). This concept page gives selection guidance instead of duplicating an API dictionary.
+Complete step and path-kind parameters belong to [Draw](/kernel/components/path/usage) and [Path Schema](/kernel/reference/schema/path). This concept page gives selection guidance instead of duplicating an API dictionary.
 
 A path can move relative to its previous endpoint: `{ relative }` applies a temporary offset without advancing the accumulated base, while `{ relativeAccumulate }` advances it. React Sugar also accepts `'+dx,dy'` / `'++dx,dy'`:
 
@@ -113,7 +113,7 @@ The target Node uses an ellipse as its visual shape and a rectangle as its defau
     {
       title: 'Draw',
       description: 'Step, path kind, arrow, and routing APIs',
-      url: '/kernel/components/draw/usage',
+      url: '/kernel/components/path/usage',
     },
     {
       title: 'Scope',

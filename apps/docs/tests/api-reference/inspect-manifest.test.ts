@@ -46,7 +46,7 @@ describe('Inspect API Reference', () => {
       expect(errorCode).toContain('export const RetikzInspectErrorCode = {');
       expect(errorCode).toContain('} as const;');
       const registryFactory = source.split('### createInspectorRegistry\n')[1]?.split('\n### ')[0] ?? '';
-      expect(registryFactory).toContain('export const createInspectorRegistry =');
+      expect(registryFactory).toContain('export declare const createInspectorRegistry:');
       const inspectError = source.split('### RetikzInspectError\n')[1]?.split('\n### ')[0] ?? '';
       expect(inspectError).toContain('export class RetikzInspectError extends RetikzError');
       const inspectorContext = source.split('### InspectorContext\n')[1]?.split('\n### ')[0] ?? '';

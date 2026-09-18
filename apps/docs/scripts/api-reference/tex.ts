@@ -223,7 +223,12 @@ const renderReflectionType = (reflection: JSONOutput.DeclarationReflection): str
 /** 渲染函数签名 */
 const renderSignature = (signature: JSONOutput.SignatureReflection): string => {
   const parameters = signature.parameters ?? [];
-  const typeParameters = signature.typeParameters?.map(parameter => parameter.name).join(', ');
+  const typeParameters = signature.typeParameters
+    ?.map(
+      parameter =>
+        `${parameter.name}${parameter.type ? ` extends ${renderType(parameter.type)}` : ''}${parameter.default ? ` = ${renderType(parameter.default)}` : ''}`,
+    )
+    .join(', ');
   const prefix = typeParameters ? `<${typeParameters}>` : '';
   return `${prefix}(${parameters
     .map(parameter => `${parameter.name}${parameter.flags.isOptional ? '?' : ''}: ${renderType(parameter.type)}`)
@@ -365,10 +370,14 @@ const resolveObjectMembers = (
       if (!ts.isTypeReferenceNode(node)) return undefined;
       const referenceName = node.typeName.getText();
       const baseType = node.typeArguments?.[0];
+      if (referenceName === 'Record') return undefined;
       if (baseType && ['Readonly', 'Partial', 'Required', 'Pick', 'Omit'].includes(referenceName)) {
-        if (hasMember(baseType)) return `${print(baseType)}['${memberName}']`;
+        if (!hasMember(node)) return undefined;
+        if (ts.isTypeLiteralNode(baseType)) return undefined;
+        if (hasMember(baseType)) return visit(baseType);
         return visit(baseType);
       }
+      if (node.typeArguments?.length) return undefined;
       return hasMember(node) ? `${print(node)}['${memberName}']` : undefined;
     };
     return visit(declaration.type);
@@ -482,10 +491,8 @@ const resolveObjectMembers = (
       declaredType && comparableParts.length === types.length && comparableParts.every(item => types.includes(item))
         ? declaredType.getText()
         : undefined;
-    const referencedType = memberTypeReference(member.name);
     const fullType =
-      (referencedType ??
-        preservedType ??
+      (preservedType ??
         displayTypes
           .map(item =>
             checker.typeToString(
@@ -573,12 +580,33 @@ const resolveSourceSignature = (
     if (!declaration.initializer) return print(statement);
     const declarationKind = (declaration.parent.flags & ts.NodeFlags.Const) !== 0 ? 'const' : 'let';
     if (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
-      return `export ${declarationKind} ${declaration.name.getText()} = ${fallbackSignature};`;
+      return `export declare ${declarationKind} ${declaration.name.getText()}: ${declaration.type ? print(declaration.type) : fallbackSignature};`;
     if (
       ts.isObjectLiteralExpression(declaration.initializer) &&
       containsFunctionImplementation(declaration.initializer)
     )
       return `export declare ${declarationKind} ${declaration.name.getText()}: ${fallbackSignature};`;
+    const callSignatures = checker.getSignaturesOfType(
+      checker.getTypeOfSymbolAtLocation(symbol, declaration),
+      ts.SignatureKind.Call,
+    );
+    if (callSignatures.length > 0) {
+      const overloads = callSignatures.map(signature => {
+        const signatureDeclaration = signature.getDeclaration();
+        if (ts.isCallSignatureDeclaration(signatureDeclaration))
+          return printer
+            .printNode(ts.EmitHint.Unspecified, signatureDeclaration, signatureDeclaration.getSourceFile())
+            .replace(/;$/, '');
+        return checker.signatureToString(
+          signature,
+          declaration,
+          ts.TypeFormatFlags.NoTruncation |
+            ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
+            ts.TypeFormatFlags.WriteArrayAsGenericType,
+        );
+      });
+      return `export declare ${declarationKind} ${declaration.name.getText()}: {\n${overloads.map(signature => `  ${signature};`).join('\n')}\n};`;
+    }
     return print(statement);
   }
   if (ts.isFunctionDeclaration(declaration))
@@ -655,9 +683,15 @@ const toSymbol = (reflection: JSONOutput.DeclarationReflection, packageDirectory
 const escapeTableCell = (value: string): string =>
   value.replaceAll('\\', '\\\\').replaceAll('|', '\\|').replaceAll('\n', '<br />');
 
+/** 转义正文中的 MDX 语法字符，保留 Markdown 代码片段 */
+const escapeMdxText = (value: string): string =>
+  value.replace(/(`+)[\s\S]*?\1|[<{}]/g, part =>
+    part.startsWith('`') ? part : part === '<' ? '&lt;' : part === '{' ? '&#123;' : '&#125;',
+  );
+
 /** 中文是 JSDoc 真源；英文只采用受审查的翻译产物 */
 const localizeText = (value: string, lang: ApiReferenceLanguage, translate: (source: string) => string): string =>
-  lang === 'en' ? translate(value) : value;
+  escapeMdxText(lang === 'en' ? translate(value) : value);
 
 /** 在默认值列保留字面量的代码语义；无默认值时保持占位符 */
 const renderDefaultValue = (value: string): string => (value === '—' ? value : `\`${escapeTableCell(value)}\``);

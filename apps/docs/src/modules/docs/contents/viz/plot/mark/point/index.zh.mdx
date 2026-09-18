@@ -132,7 +132,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 
 同一阶段的 adjustments 保持声明顺序，但所有 role-space adjustment 都早于 coordinate projection，所有 screen-space initializer 都在投影之后。`seed`、有效行顺序、role、span 与最终离散 step 相同时，内置 jitter 会生成相同位置；无效位置仍保留随机序列槽位。需要整组屏幕位置的自定义算法见 [Position Adjustment](/viz/plot/mark/position-adjustment)。
 
-因此坐标系只决定“点在哪里”，PointMark 决定“每行生成什么 Node”，而具体形状、文字与视觉样式仍复用 [Node](/kernel/components/node/overview) 的能力。每个 mark 默认处于独立图层；调整整个 mark 与轴、图例的前后关系时使用 `layer={{ zIndex }}`，`zIndex` prop 只控制当前 mark 内 datum Node 的顺序。
+因此坐标系只决定“点在哪里”，PointMark 决定“每行生成什么 Node”，而具体形状、文字与视觉样式仍复用 [Node](/kernel/components/node/usage) 的能力。每个 mark 默认处于独立图层；调整整个 mark 与轴、图例的前后关系时使用 `layer={{ zIndex }}`，`zIndex` prop 只控制当前 mark 内 datum Node 的顺序。
 
 <SourceLinks
   sources={[
@@ -169,7 +169,7 @@ PointMark 在每个位置生成的是 core Node，而不是固定的圆。`shape
 
 ## API 参考
 
-下面只列 PointMark 特有或在本页重新定义语义的属性。字段名与显式 field / constant 绑定规则见[通道绑定](/viz/plot/channel/binding)；`transform`、`layer` 见[变换](/viz/plot/transform)；坐标视图相关属性见[坐标系](/viz/plot/coordinate)。`fill`、`stroke`、透明度、圆角、字体、阴影等共享视觉属性与 [Node 样式](/kernel/components/node/overview#视觉样式-api)一致，不在这里重复。
+下面只列 PointMark 特有或在本页重新定义语义的属性。字段名与显式 field / constant 绑定规则见[通道绑定](/viz/plot/channel/binding)；`transform`、`layer` 见[变换](/viz/plot/transform)；坐标视图相关属性见[坐标系](/viz/plot/coordinate)。`fill`、`stroke`、透明度、圆角、字体、阴影等共享视觉属性与 [Node 样式](/kernel/components/node/schema-reference#nodestyleschema)一致，不在这里重复。
 
 | 属性                                          | 类型                                                                                                                                                                            | 默认值                                       | 描述                                                                 |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------- |

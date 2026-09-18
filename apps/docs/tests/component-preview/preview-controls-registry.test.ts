@@ -750,7 +750,7 @@ describe('preview controls registry', () => {
         presentation: 'panel',
       },
       {
-        segments: ['kernel', 'components', 'node', 'positioning'],
+        segments: ['kernel', 'components', 'node', 'extend'],
         name: 'node-shape-connection',
         presentation: 'panel',
       },
@@ -761,7 +761,27 @@ describe('preview controls registry', () => {
       },
       {
         segments: ['kernel', 'components', 'node', 'labels'],
-        name: 'node-label',
+        name: 'node-label-list',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-position',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-spacing',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-rotate-pin',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-style',
         presentation: 'panel',
       },
       {
@@ -936,7 +956,7 @@ describe('preview controls registry', () => {
   });
 
   it('Node 形状连接 controls 锁定双节点的 shape、boundary、fit、gap 与 anchor', () => {
-    const segments = ['kernel', 'components', 'node', 'positioning'];
+    const segments = ['kernel', 'components', 'node', 'extend'];
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-shape-connection')]);
     const enDefinition = resolvePreviewControls(
       controlModules[buildLangControlsKey(segments, 'node-shape-connection', 'en')],
@@ -1052,7 +1072,7 @@ describe('preview controls registry', () => {
   });
 
   it('会改变包围盒的 Node controls playground 使用固定 viewBox', () => {
-    const positioningSegments = ['kernel', 'components', 'node', 'positioning'];
+    const positioningSegments = ['kernel', 'components', 'node', 'extend'];
     const usageSegments = ['kernel', 'components', 'node', 'usage'];
     const textSegments = ['kernel', 'components', 'node', 'text'];
     const cases = [
@@ -1096,8 +1116,8 @@ describe('preview controls registry', () => {
   it('Node 标签仅在启用旋转时显示 keepUpright', () => {
     const segments = ['kernel', 'components', 'node', 'labels'];
     const definitions = [
-      resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-label')]),
-      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-label', 'en')]),
+      resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-label-rotate-pin')]),
+      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-label-rotate-pin', 'en')]),
     ];
 
     const visibleIds = (definition: PreviewControlsDefinition | undefined, rotateMode: string) =>
@@ -1121,10 +1141,20 @@ describe('preview controls registry', () => {
   it('新增 controls demo 导出 previewControls 作为注册兜底', () => {
     const cases = [
       { segments: ['kernel', 'components', 'node', 'usage'], name: 'node-geometry', language: 'zh' },
-      { segments: ['kernel', 'components', 'node', 'positioning'], name: 'node-position', language: 'zh' },
-      { segments: ['kernel', 'components', 'node', 'positioning'], name: 'node-shape-connection', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'extend'], name: 'node-position', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'extend'], name: 'node-shape-connection', language: 'zh' },
       { segments: ['kernel', 'components', 'node', 'usage'], name: 'node-styled', language: 'zh' },
       { segments: ['kernel', 'components', 'node', 'usage'], name: 'node-z-index', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-list', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-list', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-position', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-position', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-spacing', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-spacing', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-rotate-pin', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-rotate-pin', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-style', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-style', language: 'en' },
       { segments: ['kernel', 'components', 'node', 'text'], name: 'text-attrs', language: 'zh' },
       { segments: ['kernel', 'components', 'node', 'text'], name: 'text-attrs', language: 'en' },
     ] as const;

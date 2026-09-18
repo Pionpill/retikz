@@ -1,0 +1,230 @@
+---
+title: Basic usage
+description: Create, name, and connect nodes, then configure shape, size, and appearance
+---
+
+Node combines position, text, and shape in one declaration. An `id` lets other nodes reference its position and paths connect to its border.
+
+## Using this topic
+
+All four forms draw the same Hello node at the origin. React examples export a component; Vanilla examples require an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="node-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      Hello
+    </Node>
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [node('a', { position: [0, 0], text: 'Hello' })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+Call `view.dispose()` before removing the Vanilla mount container.
+
+## Naming and connecting
+
+A Node needs an `id` to be registered for later references. Coordinate also registers its `id`; `Draw`, relative placement, and anchors can use these named objects. An unnamed Node still draws, but it ends with that drawing pass and leaves no node information for later connections or positioning. `position` sets each center; paths stop at the border by default.
+
+<ComponentPreview files="node-connection" size="xs" />
+
+Here Draw resolves both ends through the `a` and `b` IDs. See [Extended usage](/kernel/components/node/extend) for relative placement and connection surfaces.
+
+`<Draw>` corresponds to IR `type: 'path'`; see [Path](/kernel/components/path/usage) for endpoint and `way` rules. Node / Coordinate positioning can reference only objects whose layout and registration have completed (usually earlier siblings). Path / Draw endpoints may reference later siblings; see [reference timing](/kernel/components/node/mechanism#why-named-positioning-is-order-sensitive).
+
+## Choosing a shape
+
+An omitted `shape` inherits `Scope.defaults.node.shape`, falling back to a rectangle when no inherited value exists. This panel uses only Core shapes: switch presets, or choose polygon and adjust its side count. Use `text` or children for body text and `label` for annotations; see [Node text](/kernel/components/node/text) and [Node labels](/kernel/components/node/labels).
+
+| Input                                    | Core resolution                                              |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| omitted                                  | Inherit the Scope default shape, then fall back to rectangle |
+| `rectangle`                              | rectangle provider                                           |
+| `ellipse`                                | ellipse provider                                             |
+| `{ type: 'polygon', params: { sides } }` | polygon provider, with `sides` selecting the count           |
+| `circle`                                 | preset resolving to an equally circumscribed ellipse         |
+| `diamond`                                | preset resolving to a four-sided polygon                     |
+
+<ComponentPreview files="node-shape" size="sm" />
+
+For more shapes, import the Standard extension package from [Standard Shape](/library/standard/shape) and register it through `Layout.extensions.shapes`.
+
+## Size and transforms
+
+`layout.margin` expands the node's layout footprint. A boundary's `gap` changes only connection geometry, leaving the visual shape and layout footprint unchanged.
+
+Size and transforms share one node geometry: padding expands the content box, minimumSize sets a floor, and scale / rotate alter the final border. Margin leaves the node appearance unchanged and pushes automatic endpoints and standard anchors outward. Shape-specific anchors and side-fraction points stay on the visible contour. Adjust the same `q` while the edge provides a border reference.
+
+- Inner: `layout={{ padding: N }}` or `layout={{ padding: { default, x, y, left, right, top, bottom } }}`
+- Outer: `layout={{ margin: N }}` or `layout={{ margin: { default, x, y, left, right, top, bottom } }}`
+- `cornerRadius` — corner radius. `rectangle` / `polygon` / `star` / `sector` support rounding (`ellipse` and the like do not) via their params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` only affects the `rectangle` shape (default or explicit `'rectangle'`), and only merges when params don't already set `cornerRadius` (params wins when both are set)
+- `minimumSize` — floor the bbox without shrinking natural text width
+- `scale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
+- `rotate` — rotate around the node center; attached paths follow the rotated border
+
+<ComponentAlert
+  type="tip"
+  title="Four-side spacing precedence"
+  description="Both padding and margin merge each side independently: side (top / right / bottom / left) overrides axis (x / y), which overrides default. For example, { default: 8, x: 20, left: 30 } resolves to left 30, right 20, and top and bottom 8."
+/>
+
+<ComponentPreview files="node-geometry" size="md" />
+
+<Comparison target="tikz" title="Node Geometry Syntax">
+
+| retikz                             | TikZ mapping              |
+| ---------------------------------- | ------------------------- |
+| `layout.padding` / `layout.margin` | `inner sep` / `outer sep` |
+
+</Comparison>
+
+`layout.width` sets the unscaled visible border width, excluding margin, and cannot be smaller than the effective minimum width. It is distinct from the wrapping threshold `layout.maxTextWidth`.
+
+## Additional notes
+
+Put visual properties in `style`, and size and text layout in `layout`. [Scope](/kernel/components/scope/usage) supplies shared defaults.
+
+<ComponentPreview files="node-styled" size="md" />
+
+- **Stacking**: `zIndex` compares siblings only; higher values draw on top and ties preserve declaration order.
+- **Color**: `style.color` is the base color; numeric `fill` and `stroke` values derive colors from it, rather than setting opacity.
+- **Text and points**: a borderless Node still has text dimensions. Use Coordinate for an invisible reference point.
+- **Effects**: see [Visual effects](/kernel/components/effects) for shadows and animation.
+
+## Related props
+
+The following are the props most relevant to this page. See the [API reference](/kernel/components/node/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'position',
+      kind: 'property',
+      type: "InputNode['position']",
+      required: true,
+      description:
+        'Set the node center with Cartesian, polar, relative, offset, fractional, or anchor-aligned placement.',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description:
+        'Register a node name that later Paths, Draws, relative positions, and anchor alignments can reference.',
+    },
+    {
+      name: 'shape',
+      kind: 'property',
+      type: "IRNode['shape']",
+      defaultValue: 'Scope.defaults.node.shape → rectangle',
+      description: 'Choose a visual shape by built-in or registered name, or pass an object with `type` and `params`.',
+    },
+    {
+      name: 'layout',
+      kind: 'property',
+      type: "InputNode['layout']",
+      description:
+        'Fields used here:\n\n- `padding` / `margin`: a number or numeric `{ default?, x?, y?, left?, right?, top?, bottom? }`; side overrides axis, then default\n- `minimumSize`: a number or numeric `{ default?, width?, height? }`\n- `width?: number`: unscaled border width, excluding margin, no smaller than the minimum',
+    },
+    {
+      name: 'scale',
+      kind: 'property',
+      type: 'number | IRAxisScale',
+      description:
+        'A number scales uniformly. An object accepts `{ default?: number, x?: number, y?: number }`; axes override default and factors must be positive. Inherits Scope defaults, then falls back to 1.',
+      defaultValue: 'Scope.defaults.node.scale → 1',
+    },
+    {
+      name: 'rotate',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description:
+        'Rotate around the node center in degrees; positive values are visually clockwise in screen coordinates.',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description: 'Compare only sibling elements under the same parent; higher values draw on top.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Choose positions, anchors, and connection surfaces',
+      url: '/kernel/components/node/extend',
+    },
+    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'label · Label',
+      description: 'Place annotations and leader lines',
+      url: '/kernel/components/node/labels',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public entries, types, and extension contracts',
+      url: '/kernel/components/node/api-reference',
+    },
+  ]}
+/>

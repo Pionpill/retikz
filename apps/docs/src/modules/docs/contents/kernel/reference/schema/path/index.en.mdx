@@ -49,13 +49,13 @@ Core also exposes five reusable strict fragments for Path fields: stroke, fill, 
 
 ## Path
 
-<ZodSchema name="PathSchema" />
+[PathSchema](/kernel/components/path/schema-reference#pathschema)
 
 `PathSchema` is the open Core host schema for a Path. It combines the fragments above with `DrawableInstanceSchema` and `DrawableStyleSchema`, accepts an open `kind` name and JSON-safe `kindOptions`, and does not encode a closed list of Path kinds. During compile, Core resolves the selected `PathKindDefinition` and parses the complete subject with that definition's `schema`. Core's built-in `stroke` definition owns the complete `StrokePathSchema`, which requires `children` and rejects `kindOptions`; optional Standard Ribbon owns its own complete schema. The host schema remains reusable for custom definitions and Tier 2 owners.
 
 `PathDefaultSchema` is an explicit Core Scope-owner composition of `GraphicStyleSchema`, `PathStrokeSchema`, `PathFillSchema`, and `PathGeometrySchema` without `children`. It excludes instance, structure, decoration, and `children` fields; it is not an accidental projection of complete Path and is not an independent compile entry. The default `stroke` path consumes every applicable field. Tier 2 owners may retain their own defaults and field restrictions when composing these fragments.
 
-React `<Path thickness>` is component / builder sugar that becomes `strokeWidth` before IR is produced, so it is not part of `PathSchema`. See [Path styling](/kernel/components/draw/path#styling) for the preset values.
+React `<Path thickness>` is component / builder sugar that becomes `strokeWidth` before IR is produced, so it is not part of `PathSchema`. See [Path styling](/kernel/components/path/step#styling) for the preset values.
 
 ## DrawableStyle
 
@@ -73,67 +73,67 @@ React `<Path thickness>` is component / builder sugar that becomes `strokeWidth`
 
 `StepSchema` is a discriminated union — `Path.children` is an array of these. The `kind` field picks the variant:
 
-<ZodSchema name="StepSchema" />
+[StepSchema](/kernel/components/path/schema-reference#stepschema)
 
 ### Move
 
-<ZodSchema name="MoveStepSchema" />
+[MoveStepSchema](/kernel/components/path/schema-reference#movestepschema)
 
 ### Line
 
-<ZodSchema name="LineStepSchema" />
+[LineStepSchema](/kernel/components/path/schema-reference#linestepschema)
 
 ### Axis line
 
-<ZodSchema name="AxisLineStepSchema" />
+[AxisLineStepSchema](/kernel/components/path/schema-reference#axislinestepschema)
 
 ### Fold
 
-<ZodSchema name="FoldStepSchema" />
+[FoldStepSchema](/kernel/components/path/schema-reference#foldstepschema)
 
 The strict two-leg variants `-|` / `|-` reject `fraction`. Three-leg `-|-` / `|-|` accepts an optional normalized `fraction` in `0..1`, compiled as `0.5` when omitted. Corners are interpolated from unclipped references before NodeTarget endpoint clipping, and the result still lowers only to line commands.
 
 ### Cycle
 
-<ZodSchema name="CycleStepSchema" />
+[CycleStepSchema](/kernel/components/path/schema-reference#cyclestepschema)
 
 ### Curve
 
-<ZodSchema name="CurveStepSchema" />
+[CurveStepSchema](/kernel/components/path/schema-reference#curvestepschema)
 
 ### Cubic
 
-<ZodSchema name="CubicStepSchema" />
+[CubicStepSchema](/kernel/components/path/schema-reference#cubicstepschema)
 
 ### Bend
 
-<ZodSchema name="BendStepSchema" />
+[BendStepSchema](/kernel/components/path/schema-reference#bendstepschema)
 
 ### Arc
 
-<ZodSchema name="ArcStepSchema" />
+[ArcStepSchema](/kernel/components/path/schema-reference#arcstepschema)
 
 ### CirclePath
 
-<ZodSchema name="CirclePathStepSchema" />
+[CirclePathStepSchema](/kernel/components/path/schema-reference#circlepathstepschema)
 
 ### EllipsePath
 
-<ZodSchema name="EllipsePathStepSchema" />
+[EllipsePathStepSchema](/kernel/components/path/schema-reference#ellipsepathstepschema)
 
 ### Rectangle
 
-<ZodSchema name="RectangleStepSchema" />
+[RectangleStepSchema](/kernel/components/path/schema-reference#rectanglestepschema)
 
 <span id="smooth"></span>
 
 ### Smooth
 
-<ZodSchema name="SmoothStepSchema" />
+[SmoothStepSchema](/kernel/components/path/schema-reference#smoothstepschema)
 
 ### Generator
 
-<ZodSchema name="GeneratorStepSchema" />
+[GeneratorStepSchema](/kernel/components/path/schema-reference#generatorstepschema)
 
 ## GeometryLabel
 
@@ -142,7 +142,7 @@ It describes label text, normalized position along the host segment or centerlin
 
 `interrupt` declares JSON shape here, but is not drawing capability for every host. Once Core resolve knows the effective Path kind and fill, it applies the policy: an unfilled built-in `stroke` Path automatically gaps an omitted label with canonical `center` side; `sloped: true` without `side` is also canonical center. `false` keeps a continuous stroke and `true` can force a non-centered label gap. `true` on an effectively filled Stroke, and any explicit boolean on Ribbon, custom, or another non-built-in Stroke Path, fails loudly.
 
-<ZodSchema name="GeometryLabelSchema" />
+[GeometryLabelSchema](/kernel/components/path/schema-reference#geometrylabelschema)
 
 ## ControlPoint
 
@@ -185,7 +185,7 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 
 `ArrowMarkSchema` is the core IR arrow marker used inside `Path.marks`. Endpoint arrows are represented as marks at `pos: 0` or `pos: 1`; React `arrow` / `arrowDetail` sugar expands to this shape before it reaches core IR.
 
-<ZodSchema name="ArrowMarkSchema" />
+[ArrowMarkSchema](/kernel/components/path/schema-reference#arrowmarkschema)
 
 <span id="pathmarkplacement"></span>
 
@@ -193,16 +193,16 @@ For the endpoint rules of proportional placement, see [Placement](/kernel/refere
 
 `PathMarkPlacementSchema` places one mark at a normalized path position; orientation comes from the path tangent at that position. `endpointOverlap` applies only to the endpoint arrow selected at `pos: 0` or `pos: 1` by the built-in Stroke Path. `0` preserves the existing default, `0.5` is the midpoint between the default and fully entered placements, and `1` aligns the final visual back—resolved from the final size and outline—with the logical endpoint. Inline marks, duplicate unselected endpoint marks, and other Path kinds fail explicitly.
 
-<ZodSchema name="PathMarkPlacementSchema" />
+[PathMarkPlacementSchema](/kernel/components/path/schema-reference#pathmarkplacementschema)
 
 ## ArrowDetail
 
 `ArrowDetailSchema` is the visual configuration used by React `arrowDetail` sugar and `defaults.arrow`. Core Path IR no longer stores `arrow` / `arrowDetail`; endpoint arrows are `ArrowMark` entries in `marks`.
 
-<ZodSchema name="ArrowDetailSchema" />
+[ArrowDetailSchema](/kernel/components/path/schema-reference#arrowdetailschema)
 
 ### ArrowEndDetail
 
 The schema for `start` / `end` sub-objects — same field set as `ArrowDetail` minus the `start` / `end` fields themselves (no recursion):
 
-<ZodSchema name="ArrowEndDetailSchema" />
+[ArrowEndDetailSchema](/kernel/components/path/schema-reference#arrowenddetailschema)

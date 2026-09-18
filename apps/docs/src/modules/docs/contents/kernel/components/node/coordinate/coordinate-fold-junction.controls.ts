@@ -7,13 +7,6 @@ export const CoordinateFoldJunctionControlId = {
   JunctionY: 'junctionY',
 } as const;
 
-/** Coordinate 汇聚点 playground 的固定取景 */
-export const coordinateFoldJunctionFrame = {
-  width: 360,
-  height: 220,
-  viewBox: { x: -180, y: -110, width: 360, height: 220 },
-} as const;
-
 /** Coordinate 汇聚点的中文属性面板 */
 export const coordinateFoldJunctionControls = definePreviewControls({
   presentation: 'panel',

@@ -13,12 +13,12 @@ description: 用 ShapeDefinition 扩展 Node 的占位、连接边界、anchor �
 
 自定义 shape 同时拥有节点的占位、可见轮廓和默认连接几何。只有这三者属于同一个图形时，才应放进 `ShapeDefinition`。
 
-| 需求                                         | 选择                                                         |
-| -------------------------------------------- | ------------------------------------------------------------ |
-| 内置形状已经能表达                           | 直接使用 [Node](/kernel/components/node/overview)            |
-| 只想画一条可复用路径，不需要节点 id / anchor | 使用 [路径生成器](/kernel/components/draw/path-generator)    |
-| 视觉形状不变，只想改变连线落点               | 使用 [自定义连接面](/kernel/components/node/custom-boundary) |
-| 要新增完整的可布局、可绘制、可连接节点形状   | 使用本页的 `ShapeDefinition`                                 |
+| 需求                                         | 选择                                                             |
+| -------------------------------------------- | ---------------------------------------------------------------- |
+| 内置形状已经能表达                           | 直接使用 [Node](/kernel/components/node/usage)                   |
+| 只想画一条可复用路径，不需要节点 id / anchor | 使用 [路径生成器](/kernel/components/path/custom-path-generator) |
+| 视觉形状不变，只想改变连线落点               | 使用 [自定义连接面](/kernel/components/node/custom)              |
+| 要新增完整的可布局、可绘制、可连接节点形状   | 使用本页的 `ShapeDefinition`                                     |
 
 `node.shape` 可以是字符串，也可以是 `{ type, params }`。两种写法都必须 100% JSON 可序列化；`ShapeDefinition` 含函数，不能写进 IR，也不能从 JSON 恢复。
 
@@ -176,9 +176,9 @@ IR 只写注册名或带参引用；宿主负责在每次编译时提供相同�
 
 ## 相关
 
-- [Node](/kernel/components/node/overview)：使用内置或自定义 shape 的节点入口
+- [Node](/kernel/components/node/usage)：使用内置或自定义 shape 的节点入口
 - [Layout](/kernel/components/layout/usage)：React 宿主与 `shapes` 注入
 - [编译](/kernel/reference/runtime/compile)：`CompileOptions.shapes` 与 core 编译入口
 - [扩展机制](/kernel/reference/runtime/extensions)：所有 Definition / registry 能力的运行时索引
-- [自定义连接面](/kernel/components/node/custom-boundary)：只替换连接几何，不改变视觉 shape
-- [路径生成器](/kernel/components/draw/path-generator)：扩展 Path step，而不是 Node 形状
+- [自定义连接面](/kernel/components/node/custom)：只替换连接几何，不改变视觉 shape
+- [路径生成器](/kernel/components/path/custom-path-generator)：扩展 Path step，而不是 Node 形状

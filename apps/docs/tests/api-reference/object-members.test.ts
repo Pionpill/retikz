@@ -36,6 +36,11 @@ export type Omitted = Omit<Base, 'id'>;
 export type Optional = Partial<Base>;
 export type Mandatory = Required<Base>;
 export type Frozen = Readonly<Base>;
+export type InlineFrozen = Readonly<{ width?: number; route: Array<string> }>;
+type FactoryInput = { value: string };
+interface Factory { (value: string): string; (value: number): number; <T = FactoryInput>(value: T): T }
+const implementation = (value: string | number) => value;
+export const factory = implementation as Factory;
 export type Mutable = { -readonly [K in keyof Base]: Base[K] };
 export interface Inherited extends Base { extra: boolean }
 export type Combined = Base & { extra: boolean };
@@ -74,6 +79,12 @@ export type SchemaOwned = Base;
     expect(section('Optional')).toContain('| `readonly id?`');
     expect(section('Mandatory')).toContain('| `retries` | `number`');
     expect(section('Mandatory')).not.toContain('| `retries?`');
+    expect(section('InlineFrozen')).toContain('| `readonly width?` | `number`');
+    expect(section('InlineFrozen')).toContain('| `readonly route` | `Array<string>`');
+    expect(section('factory')).toContain('(value: string): string');
+    expect(section('factory')).toContain('(value: number): number');
+    expect(section('factory')).not.toContain('implementation');
+    expect(section('factory')).toContain('<T = FactoryInput>(value: T): T');
     expect(section('Frozen')).toContain('| `readonly retries?`');
     expect(section('Mutable')).toContain('| `id`');
     expect(section('Mutable')).not.toContain('| `readonly id`');

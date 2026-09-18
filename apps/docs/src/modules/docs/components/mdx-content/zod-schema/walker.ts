@@ -95,7 +95,7 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
         : undefined;
     return {
       kind: 'union',
-      members: schema.options.map(member => walkTypeImpl(member, skipRegistry, next)),
+      members: schema.options.map(member => walkTypeImpl(member, false, next)),
       ...(branches === undefined ? {} : { branches }),
     };
   }

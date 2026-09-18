@@ -139,7 +139,7 @@ Frame also accepts the remaining public Core `ScopeProps`, including cascading g
 | `style.opacity?`    | `number`                       | Title: —<br />Description: `0.7`                                        | Opacity of the complete header Node                                                            |
 | `zIndex?`           | `number`                       | `1`                                                                     | Header stacking order inside Frame                                                             |
 
-Both also accept public `NodeProps` except `position` and hydration event props, including margin, scale, rotate, label, meta, and animation. Explicit values keep Node semantics and override the defaults above. See [Node](/kernel/components/node/overview) for the complete shared contract.
+Both also accept public `NodeProps` except `position` and hydration event props, including margin, scale, rotate, label, meta, and animation. Explicit values keep Node semantics and override the defaults above. See [Node](/kernel/components/node/usage) for the complete shared contract.
 
 ### IR / persistence: `FrameInput`
 
@@ -171,5 +171,5 @@ Both also accept public `NodeProps` except `position` and hydration event props,
 
 - [Tier 2 Composite](/kernel/components/design/composite): Frame registration and lowering
 - [Scope](/kernel/components/scope/usage): the logical group and bounds emitted by Frame
-- [Path](/kernel/components/draw/path): the border emitted by Frame
-- [Node](/kernel/components/node/overview): the Core element reused by Frame headers and body
+- [Path](/kernel/components/path/step): the border emitted by Frame
+- [Node](/kernel/components/node/usage): the Core element reused by Frame headers and body
