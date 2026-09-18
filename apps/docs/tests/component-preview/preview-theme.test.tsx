@@ -22,7 +22,7 @@ import {
   PreviewThemeStyle,
   resolvePreviewTheme,
 } from '../../src/modules/docs/components/component-preview/theme';
-import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/layout/extended-usage/theme-inheritance';
+import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/layout/extend/theme-inheritance';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
 const originalThemeStyle = useComponentPreviewStore.getState().themeStyle;

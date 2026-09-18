@@ -175,7 +175,7 @@ describe('ComponentPreview 资源加载', () => {
     ['theme-inheritance', 'Composite'],
     ['layout-shape-injection', 'IR'],
   ])('为 Layout 扩展示例加载可执行的 Vanilla 模块（%s）', async (name, text) => {
-    const segments = ['kernel', 'components', 'layout', 'extended-usage'];
+    const segments = ['kernel', 'components', 'layout', 'extend'];
     const key = buildVanillaKey(segments, name);
     const rawLoader = vanillaOverrideLoaders[key];
     const moduleLoader = vanillaModuleLoaders[key];

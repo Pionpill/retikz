@@ -157,7 +157,7 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'user' },
           },
           {
-            id: 'extended-usage',
+            id: 'extend',
             label: 'kernel.layoutExtendedUsage',
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user' },
