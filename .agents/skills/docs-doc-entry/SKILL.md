@@ -1,31 +1,16 @@
 ---
 name: docs-doc-entry
-description: Use when writing a Retikz solution introduction, quick start or changelog page; introduction and quick start are beginner entries, while changelogs are release records.
+description: Use when writing Retikz introductions, quick starts, or changelogs.
 ---
 
-# 快捷入口文档
+# 入口文档
 
-先读 docs-doc-principle 和 [页型词典](../docs-doc-principle/references/page-contract.md)。简介与快速开始固定入门难度；更新日志是按版本检索的记录，不声明难度。
+先读 [文档总则](../docs-doc-principle/SKILL.md)，按其中条件加载公共规则；本入口只选择当前页型需要的细节。
 
-## 简介
+| 任务                           | 必读                                  |
+| ------------------------------ | ------------------------------------- |
+| 简介：帮助选择方案             | [简介](references/introduction.md)    |
+| 快速开始：首次接入到可观察结果 | [快速开始](references/quick-start.md) |
+| 更新日志：按版本查询真实变化   | [更新日志](references/changelog.md)   |
 
-用 description 与首段说明解决的问题、适用对象、边界与代表性结果。按能力意义组织少量章节；解释与相邻方案的选择关系，延伸阅读遵循 [LinkedSections](../docs-doc-principle/references/linked-sections.md)，不重复底部已有的前后页导航。不要重复根页的全部章节索引、完整 API 清单或内部架构。
-
-## 快速开始
-
-目标是从未接入到第一个可观察结果：必要前提 → 安装与使用 → 最小结果说明 → 延伸阅读。真实支持双宿主时使用 PackageManagerInstall 与 React / Vanilla DocTabs；每端闭合 import、接入和结果，不只创建配置对象。安装与使用之前不单列空 HTML 容器示例或重复接入说明；必要的挂载前提在对应宿主用法中就近交代。过程仅引入完成本例必需的概念；后续能力链接专题或组件基础用法。
-
-普通 TypeScript 工具无宿主差异时使用共同入口，不编造 React 包或 JSX。安装、Tab 与步骤的固定写法见 [DocTabs / DocSteps](../docs-doc-principle/references/doc-tabs-steps.md)。
-
-## 更新日志
-
-沿用实际发布数据、版本分组和已有 changelog 渲染组件，不手写另一套历史。先写变化及用户影响，再补必要技术细节和相关文档入口；代码标识符与版本号保持准确。版本详情与日志总页同为按需检索的记录，不声明难度；深入机制链接底层页。
-
-日志可能由 data 与渲染器提供，不为满足文件数量新增空 MDX。没有发布记录时如实说明，不虚构版本或变更。
-
-## 检查
-
-- 三入口名称、顺序、路径和难度声明符合词典；更新日志及版本详情不声明难度
-- 简介帮助选择，快速开始能跑通，更新日志来自真实记录
-- 两种接入支持情况准确；共享限制不藏在一个 Tab 内
-- 不因入口新增顺带重写所有下游页面
+简介与快速开始为入门；日志不设难度。不要为统一结构给日志创建空正文或重复发布数据。

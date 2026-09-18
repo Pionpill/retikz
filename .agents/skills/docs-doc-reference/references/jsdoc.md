@@ -1,11 +1,6 @@
----
-name: docs-api-jsdoc
-description: Use when writing or reviewing Retikz public API JSDoc and its API reference presentation, including reader clarity, examples, defaults, source-to-page coverage and Chinese/English parity. Applies to public package declarations even without a docs page; Schema field documentation stays with docs-doc-reference.
----
-
 # 公开 JSDoc 与 API 参考
 
-面向使用 Retikz 的开发者：同一份公开契约应在 IDE 悬浮提示与 API 参考页中可理解、可调用、可查询。页面结构与生成入口沿用 [docs-doc-reference](../docs-doc-reference/SKILL.md)，本 skill 拥有公开注释的写作与审查标准。
+用于公开声明的 JSDoc 编写与审查；没有文档页的公开符号同样适用。生成展示另读 [API 投影](api.md)。
 
 ## 范围与真源
 
@@ -41,7 +36,7 @@ description: Use when writing or reviewing Retikz public API JSDoc and its API r
 
 ### 默认值
 
-- 区分固定值、从上下文继承、按内容计算与没有默认值。动态缺省用 `@default` 描述来源或规则，不伪装成固定常量；没有默认值的必填项不填假值
+- 区分固定值、上下文继承、按内容计算与没有默认值；动态缺省在字段说明中解释，`@default` 标可定位的来源，不伪装成固定常量；必填项不填假值
 - `@default` 的值只能是可定位的代码字面量、常量、上下文或解析入口（如 `BUILTIN_ARROWS`、`ThemeStylesContext`）；禁止填入自然语言转述，语义解释留在字段说明
 - 说明生效顺序及条件，例如先采用显式值、再继承、最后采用内置值；与 schema `.default()`、解构默认、resolve 和宿主配置的实际行为一致
 - 生成 API 参考前，逐项回查 schema、解构、resolve、上下文合并和宿主逻辑中的缺省行为；存在固定值或可说明的动态缺省而字段未写 `@default` 时，先补齐 JSDoc 再生成，不以表格中的 `—` 代替核对
@@ -56,18 +51,9 @@ description: Use when writing or reviewing Retikz public API JSDoc and its API r
 - 包内示例不得依赖文档站私有文件或未随包发布的 demo；必要定义就地给出，调用方提供的前置对象须明确类型与来源
 - 使用当前解析/渲染器支持的代码围栏；核对 TS / TSX 高亮、缩进与示例外说明，不能假定 TypeDoc 支持的形态自定义生成器也完整支持
 
-## API 参考的阅读与投影
+## API 参考的投影
 
-- 以公开名称、签名和稳定锚点定位，摘要先于细节，不给参考页设置难度
-- 属性过多、单表难以查找时，可按使用职责分组；属性少时保留单表，不设置机械数量门槛。人工或 LLM 判断分组标题与字段归属，写入生成配置（如 `memberGroups`），脚本按配置展示；仅改变文档组织，不拆分源码对象或改变公开类型
-- 分组配置只维护双语标题与字段名，类型、必填、默认值和说明仍从源码提取。生成器须校验全部待展示字段恰好归属一组，拒绝遗漏、重复或失效字段，不制造空分组
-- 简短字段用表格；长约束、示例和复杂说明放字段可定位的详情，避免把长段落塞入单元格。完整类型可以保留，但巨型签名不能替代字段说明
-- 参考代码对函数、对象类型、接口、类、枚举与常量保留公开声明的 `export`、名称与泛型；无函数实现的常量保留 `=`、初始化值及 `as const`。对象初始化包含函数实现时，使用 `export declare const` 与成员签名代替实现体；函数与类不展示实现体，具体实现由源码链接承载，不得退化为匿名签名或仅有对象成员的推导类型
-- 独立展示的对象类型由 TypeScript 自动展开一级，含可确定成员的映射、交叉与继承，不逐符号配置开关；保留字段可选性、只读性、原始注释与默认值，索引签名单独展示。成员内部不递归展开，默认在「属性」页签展示字段列表，原声明放入按需切换的「类型定义」页签；类型定义保留完整声明（含 `export`、类型名与 `=`），不截取右侧类型表达式。只有多个字段组时才以 `DocSteps` 分段，单组直接显示表格。联合别名只在原声明通过命名类型等方式隐藏分支结构、且分支不超过 8 个、展开不超过 40 行和 500 字符时追加「展开类型」；直接写出的对象、字面量和基础关键字联合不重复展示。任一分支为 `Readonly`、数组、元组及其他已可直接读取的包装结构时也不展开，即使 TypeScript 解析后可结构化为对象。含条件类型、工具类型、`import(...)`、`$Zod` 或超限时只保留原声明与源码链接。函数及未确定成员的泛型保留签名，已有 Schema 引用继续优先
-- 对 `Omit` / `Pick` 与交叉组合形成的轻量 Props 包装，直接声明字段不超过 3 个、但解析字段超过 12 个或字段文本超过 500 字符时，默认页签改为「直接属性」：只列该声明新增字段，并自动说明继承类型和移除字段；完整组合声明保留在「类型定义」。不为单个符号配置例外，不把继承字段的大表作为默认内容
-- 对照源码检查重载、成员方法、回调、嵌套对象、`Readonly` / `Pick` / 交叉类型与继承：只有名称和签名出现，不代表其 JSDoc 已展示
-- 分别标记“源码缺说明”“提取/渲染丢信息”“翻译缺失或失真”“页面难查询”。生成器不支持时记录具体缺口，不手改 generated include，也不删掉必要注释迁就渲染器
-- 修改生成链路前读取 [现有投影与翻译约束](../docs-doc-reference/references/api.md)，按授权范围单独处理；不要借文档审查增加公共导出
+按 [API 生成与翻译](api.md) 检查声明、字段、默认、重载与示例是否完整投影。区分源码缺说明、提取丢信息、翻译失真与页面难查询；不手改 generated include，不为展示增加公共导出。
 
 ## 中文与英文
 

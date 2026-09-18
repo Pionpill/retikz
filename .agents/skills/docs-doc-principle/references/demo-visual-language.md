@@ -1,6 +1,6 @@
 # Demo 视觉语义
 
-仅在 demo 包含位置、引用、边界、控制柄、投影、测量线或多个视觉层级时读取。它定义静态 demo 与 controls playground 共用的视觉语言；controls 的交互契约仍由 `docs-doc-control` 拥有。
+仅在 demo 包含位置、引用、边界、控制柄、投影、测量线或多个视觉层级时读取。它定义静态 demo 与 controls playground 共用的视觉语言；controls 的交互契约仍由 [controls](controls.md) 拥有。
 
 ## 层级
 
@@ -24,4 +24,4 @@ dotted 只表示坐标轴、投影、控制柄、测量线等“实际不存在�
 - 一个 demo 只讲一个关系；两个对象能讲清就不放四个
 - 变化需要比较边界、顺序、变换或引用时，主动保留固定参照物，让差异在默认尺寸下一眼可见
 
-叙述图继续服从 `docs-figure-contract`；本文件只定义功能 demo 中对象与辅助信息的相对层级。
+叙述图继续服从 [figure-contract](figure-contract.md)；本文件只定义功能 demo 中对象与辅助信息的相对层级。

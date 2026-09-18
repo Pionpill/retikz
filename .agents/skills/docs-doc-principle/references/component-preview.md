@@ -1,6 +1,6 @@
 # ComponentPreview 按需契约
 
-仅在页面实际使用 `<ComponentPreview>`、源码视图、多文件或数据文件时读取。带 controls 的 demo 还必须读 `docs-doc-control`；controls 的字段、取景和交互规则不在这里重复。
+仅在页面实际使用 `<ComponentPreview>`、源码视图、多文件或数据文件时读取。带 controls 的 demo 还必须读 [controls](controls.md)；controls 的字段、取景和交互规则不在这里重复。
 
 ## 文件与入口
 
@@ -10,12 +10,12 @@
 - `<name>.demo.tsx` 与 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx` 仅为既有 demo 的兼容结构，不为新图创建；解析顺序为单文件图、单文件旧 demo、当前语言旧 demo
 - `files` 数组第一项是主 demo，其余是源码附属文件；只有需要 `diffFrom` 时使用对象形式
 - `hideCode` 显式传 `true` 时隐藏源码，传 `false` 时显示源码；未传时，带 controls 的预览默认隐藏源码并由左下角代码按钮展开，其他预览默认显示源码。叙述图使用 `hideCode`，并显式设置 `type="flow"` 或 `type="illustration"`，使读者可打开对应的图示说明。使用 `FlowDiagram`、`FlowLayout`、`FlowEntities` 或 `FlowRelations` 的叙述图为 `flow`，其它叙述图为 `illustration`；可复制组件用法保留默认源码视图且不设置 `type`
-- `hideCode` 的 demo 不写注释（包括 JSDoc 与 JSX 注释）；保留源码视图的 demo 如需注释，统一使用英文
-- `size` 必须在约 `1440px` viewport、800px 正文的真实页面按内容留白选择，不能只看源码的逻辑宽高；窄屏不参与默认 size 测算
+- demo 只保留解释非显然行为的必要注释，源码视图中的注释使用英文；不按 hideCode 状态禁止有维护价值的内部注释
+- 新增或调整 size、面板宽度时必须读 [尺寸测量](preview-sizing.md) 并按真实页面观测决定；窄屏另查可读性
 
 ## React、IR 与 Vanilla
 
-ComponentPreview 已展示当前任务可用的 React / Vanilla 写法时，正文不再用 DocTabs 重复完整示例或补充无关代码。仅补预览未覆盖的必要安装、初始化、注入差异或当前讲解的关键片段；先核对实际源码 Tab，不能假定每个 demo 都支持双端。
+基础、专题、扩展用法页的首个“接入方式”按 [四种接入规则](doc-tabs-steps.md) 展示。后续 ComponentPreview 已展示当前任务可用的 React / Vanilla 写法时，正文不再用 DocTabs 重复完整示例或补充无关代码。仅补预览未覆盖的必要安装、初始化、注入差异或当前讲解的关键片段；先核对实际源码 Tab，不能假定每个 demo 都支持双端。
 
 静态 demo 默认由源码管线执行并派生 IR，再从 IR 生成 Vanilla 代码。展示的 IR 与 Vanilla 配置必须是最上层、精简的 Source IR / authoring 语义，不得暴露 lower 后的 `base` 或完整解析结果；canonical runtime IR 仅供校验、渲染与生成结果验证。不要额外手写等价 IR / Vanilla 文件，除非自动结果不适合教学。
 
@@ -60,4 +60,4 @@ renderer、主题、全屏、重置、代码视图等是 Preview 宿主通用能
 
 ## 新文件验证
 
-新增 demo 文件后，用新启动的 `pnpm dev:docs` 或 docs build 验证。已有 Vite session 可能保留旧 eager registry，刷新页面并不保证新 demo 可发现；看到 `Demo ... not found` 先重启 dev server，再判断文件名或 registry 是否错误。
+新增 demo 文件后确认真实页面可发现并渲染；出现 `Demo ... not found` 时先重启本工作区 dev 服务再复查 eager registry、文件名与注册。生产构建仅在用户要求时执行。

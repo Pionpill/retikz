@@ -5,13 +5,13 @@ description: Use when editing apps/docs React components, shared components, lay
 
 # Develop Docs: 文档站组件规范
 
-用于修改 `apps/docs/src` 下的 React 组件、布局、共享组件和文档站 UI 代码。正文 MDX、demo 写作仍按 `docs-doc-*` skills；目录归属先读 `docs-standard-contract`。
+用于修改 `apps/docs/src` 下的 React 组件、布局、共享组件和文档站 UI 代码。正文 MDX、demo 写作仍按 `docs-doc-*` skills；目录归属先读 [code-structure](../docs-doc-principle/references/code-structure.md)。
 
 ## 必读
 
 - 根 `AGENTS.md`
 - `apps/docs/AGENTS.md`
-- `.agents/skills/docs-standard-contract/SKILL.md`
+- `.agents/skills/docs-doc-principle/references/code-structure.md`
 
 ## React 组件
 
@@ -23,23 +23,6 @@ description: Use when editing apps/docs React components, shared components, lay
 - 简单内部 helper 可留在同文件；被复用或承担独立职责时拆到 `utils.ts` / `types.ts` / `constants.ts`。
 - JSDoc 保持短，只写职责或非显而易见的约束；不要写临时说明、历史原因或长篇原理。
 
-示例：
-
-```tsx
-import type { FC } from 'react';
-
-export type ExamplePanelProps = {
-  title: string;
-};
-
-/** 示例面板。 */
-export const ExamplePanel: FC<ExamplePanelProps> = props => {
-  const { title } = props;
-
-  return <section>{title}</section>;
-};
-```
-
 ## UI 组件
 
 - 优先使用 `components/ui/*` 中 vendored shadcn 组件，不重复手写基础 button、dialog、popover、tooltip、dropdown、kbd 等控件。
@@ -48,13 +31,7 @@ export const ExamplePanel: FC<ExamplePanelProps> = props => {
 - 条件 class 使用 `cn()`；不要手拼 class 字符串。
 - Tailwind 使用 v4 CSS-first 约定；不要新增 v3 风格 `tailwind.config.js`。
 
-## 放置位置
-
-- 站点级布局、顶栏和全局面板容器放 `app/`。
-- docs 阅读模块专属组件放 `modules/docs/components/`。
-- 真跨模块复用组件放 `components/shared/`。
-- 无 React、无业务依赖的工具放 `lib/`。
-- 全局状态放 `store/`；docs 模块状态放 `modules/docs/store/`。
+目录归属与职责文件见 [代码结构](../docs-doc-principle/references/code-structure.md)。
 
 ## 导入与导出
 
@@ -65,7 +42,7 @@ export const ExamplePanel: FC<ExamplePanelProps> = props => {
 
 ## 验证
 
-修改 `apps/docs/src` 代码后至少执行：
+先用 Oxfmt 格式化本次文件，再对受影响源码执行 lint、类型检查及必要测试：
 
 ```bash
 pnpm --filter @retikz/docs exec oxlint . --fix

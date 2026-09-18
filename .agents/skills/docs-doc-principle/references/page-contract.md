@@ -4,18 +4,18 @@
 
 ## 页型与固定难度
 
-| 阅读任务                         | 主 skill           | 固定难度          | 阅读体验                                       |
-| -------------------------------- | ------------------ | ----------------- | ---------------------------------------------- |
-| 解决方案、包或组件家族总纲       | docs-doc-group     | beginner（入门）  | 说明是什么、解决什么、从哪开始，不要求内部知识 |
-| 简介、快速开始                   | docs-doc-entry     | beginner（入门）  | 说明价值、完成首次使用                         |
-| 更新日志                         | docs-doc-entry     | 不设              | 按版本查阅实际变更                             |
-| 基础用法、调用现有能力的使用专题 | docs-doc-usage     | beginner（入门）  | 给最小结果与可复制步骤，就近解释调用约束       |
-| 基础概念                         | docs-doc-concept   | beginner（入门）  | 先场景后术语，建立调用前必需模型               |
-| 核心概念、设计理念               | docs-doc-concept   | advanced（进阶）  | 解释公共约束、抽象关系与设计取舍               |
-| 自定义用法：定义并注册新能力     | docs-doc-extension | advanced（进阶）  | 在已有用法上完成定义、注入、引用与验证         |
-| API 参考、Schema 参考            | docs-doc-reference | 不设              | 完整、准确、可扫描地查询契约，不穿插入门教程   |
-| 进阶专题、实现原理、运行原理     | docs-doc-mechanism | internals（底层） | 明确前提，解释执行、数据变化、边界与源码定位   |
-| 跟做一个完整案例                 | docs-doc-example   | beginner（入门）  | 分步累加，每步产生可观察结果                   |
+| 阅读任务                           | 主 skill           | 固定难度          | 阅读体验                                       |
+| ---------------------------------- | ------------------ | ----------------- | ---------------------------------------------- |
+| 解决方案、包或组件家族总纲         | docs-doc-group     | beginner（入门）  | 说明是什么、解决什么、从哪开始，不要求内部知识 |
+| 简介、快速开始                     | docs-doc-entry     | beginner（入门）  | 说明价值、完成首次使用                         |
+| 更新日志                           | docs-doc-entry     | 不设              | 按版本查阅实际变更                             |
+| 基础、专题、扩展用法：调用现有能力 | docs-doc-usage     | beginner（入门）  | 给最小结果与可复制步骤，就近解释调用约束       |
+| 基础概念                           | docs-doc-concept   | beginner（入门）  | 先场景后术语，建立调用前必需模型               |
+| 核心概念、设计理念                 | docs-doc-concept   | advanced（进阶）  | 解释公共约束、抽象关系与设计取舍               |
+| 自定义用法：定义并注册新能力       | docs-doc-extension | advanced（进阶）  | 在已有用法上完成定义、注入、引用与验证         |
+| API 参考、Schema 参考              | docs-doc-reference | 不设              | 完整、准确、可扫描地查询契约，不穿插入门教程   |
+| 进阶专题、实现原理、运行原理       | docs-doc-mechanism | internals（底层） | 明确前提，解释执行、数据变化、边界与源码定位   |
+| 跟做一个完整案例                   | docs-doc-example   | beginner（入门）  | 分步累加，每步产生可观察结果                   |
 
 难度只用于需要线性学习的页面，不能因页面太长或术语多而改标签。API 参考、Schema 参考与更新日志是按需检索的资料，不声明难度。基础用法包含底层内容时拆出进阶专题；调用 API 位于底层包不代表其基础教程是底层难度。“进阶”侧栏可包含扩展指南与内部机制，难度仍按页型确定，不统一改成 internals。Showcase 是展示补充规则，沿用所属页型的固定难度。博客是独立文章体系，不套用解决方案页型或据此新增难度字段。
 
@@ -49,16 +49,14 @@
 | 中文 H2    | English H2             | 内容与组件                                             |
 | ---------- | ---------------------- | ------------------------------------------------------ |
 | 安装与使用 | Installation and usage | 可独立安装的包入口：PackageManagerInstall 后接 DocTabs |
-| 基础用法   | Basic usage            | 组件与能力教程：DocTabs，不重复 npm 下载说明           |
+| 接入方式   | Using this topic       | 基础、专题、扩展用法的最小结果与真实接入代码           |
 | 章节内容   | Contents               | 分组根页：LinkedSections 列直接子页                    |
 | 延伸阅读   | Further reading        | 相关页：LinkedSections，说明阅读目的                   |
 | 错误与限制 | Errors and limitations | 当前任务的真实限制与可观察失败，适用时出现             |
 
-安装与使用、基础用法的双宿主切换使用 DocTabs / DocTab，value 固定 react、vanilla，label 固定 React、Vanilla；复用现有全局接入偏好，不手写独立切换器。公共安装放 Tab 外，不同宿主的专属依赖放对应 Tab 内。真正无宿主差异的 TypeScript API 共用一份示例；只支持单端时说明实际入口，不虚构另一端。仅存在 React / Vanilla 等宿主子入口时说明其区别；只有包根入口时直接展示导入与调用，不额外强调“不需要 React / Vanilla 宿主”。
+接入方式的四栏、双宿主与单入口条件统一见 [DocTabs / DocSteps](doc-tabs-steps.md)，不在词典维护第二套规则。预览复用 [ComponentPreview](component-preview.md)。
 
-总入口同时展示 API 与 IR 接入时，使用 [四种接入 Tab](doc-tabs-steps.md) 展示代码，上方放隐藏源码的 ComponentPreview 展示共同结果。公共章节名与文档标题重复时改用具体任务名，如“基础用法”页中的“接入方式”。
-
-分步操作按需使用 DocSteps / DocStep；效果展示用 ComponentPreview，其 React / Vanilla 源码 Tab 已覆盖的用法不再用 DocTabs 重复展示；正文仅补必要接入说明和关键代码。具体组合读 [DocTabs / DocSteps](doc-tabs-steps.md)，demo 读 [ComponentPreview](component-preview.md)。
+有相关公开成员时按 [相关属性](component-props.md) 添加“相关属性 / Related props”，API、Schema、实现原理页除外。
 
 “章节内容”是直接子页导航；“延伸阅读”是相关主题导航，不复制同一组链接。收尾统一延伸阅读，不再新写相关、扩展阅读、接下来或 Related。无相关链接时不造空章节。正文中的单个链接仍用 Markdown；卡片写法读 [LinkedSections](linked-sections.md)。
 

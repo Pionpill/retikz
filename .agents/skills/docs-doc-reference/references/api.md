@@ -2,7 +2,7 @@
 
 先核对 `apps/docs/scripts/generate-api-references.ts` 与对应 `scripts/api-reference/` 配置；沿用现有生成命令与英文翻译产物，不直接手改生成 include。
 
-API Reference 只收录从 package `exports` 可达的真实公共标识符；入口、子路径、re-export 和 JSDoc 必须由 TypeScript 分析产物确定，不扫描任意内部源码文件。中文说明以中文 JSDoc 为源；英文说明由受审查的翻译产物生成，代码标识符、签名、枚举值、示例执行语义和 JSDoc 机器语义不翻译；示例中的读者说明按 [docs-api-jsdoc](../../docs-api-jsdoc/SKILL.md) 核对。不得在浏览器运行时调用 LLM 翻译，也不得把未经审查的机翻作为契约真源。
+API Reference 只收录从 package `exports` 可达的真实公共标识符；入口、子路径、re-export 和 JSDoc 必须由 TypeScript 分析产物确定，不扫描任意内部源码文件。中文说明以中文 JSDoc 为源；英文说明由受审查的翻译产物生成，代码标识符、签名、枚举值、示例执行语义和 JSDoc 机器语义不翻译；示例中的读者说明按 [JSDoc](jsdoc.md) 核对。不得在浏览器运行时调用 LLM 翻译，也不得把未经审查的机翻作为契约真源。
 
 每次 API Reference 变更先运行生成脚本，再由 LLM 翻译新增的中文读者说明并写回生成器的英文翻译产物；随后审阅术语、代码标识符和 Markdown / MDX 结构，重新生成英文 include。缺少翻译必须让生成失败；英文 include 不得遗留未翻译的读者说明，代码块内按说明与语义字面量区分检查。LLM 只参与生成时的翻译与审阅，不参与浏览器运行时。
 

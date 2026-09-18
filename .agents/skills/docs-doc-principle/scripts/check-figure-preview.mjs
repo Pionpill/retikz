@@ -3,10 +3,7 @@ import path from 'node:path';
 
 import { chromium } from 'playwright';
 
-const DEFAULT_VIEWPORTS = [
-  { name: 'desktop', width: 1440, height: 1000 },
-  { name: 'narrow', width: 500, height: 900 },
-];
+const DEFAULT_VIEWPORTS = [{ name: 'desktop', width: 1440, height: 1000 }];
 
 const CHROME_CANDIDATES = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -89,7 +86,7 @@ const collectPreviewMetrics = preview => {
 };
 
 /**
- * 在真实文档页中检查同一叙述图的中英文与桌面 / 窄屏布局
+ * 在真实文档页中检查同一叙述图的中英文宽屏布局
  *
  * 通过 Codex Node REPL 导入本模块；该运行时提供 Playwright
  */

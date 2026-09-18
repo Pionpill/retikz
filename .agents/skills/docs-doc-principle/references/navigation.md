@@ -1,11 +1,6 @@
----
-name: docs-doc-navigation
-description: Use when organizing a Retikz solution sidebar, choosing page ownership or URL segments, or moving documentation routes across Kernel, Standard, Plot and other solution interfaces.
----
-
 # 文档导航与路由
 
-先读 docs-doc-principle 与其 [页型词典](../docs-doc-principle/references/page-contract.md)。本 skill 负责页面放在哪里；正文由对应主写作 skill 负责。
+先读 docs-doc-principle 与其 [页型词典](page-contract.md)。本文件负责页面放在哪里；正文由对应主写作 skill 负责。
 
 ## 导航单位
 

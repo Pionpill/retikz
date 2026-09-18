@@ -1,13 +1,8 @@
----
-name: docs-standard-contract
-description: retikz docs 站代码与文件结构基础规范。Use when changing apps/docs source organization, module/component folder layout, docs-specific utils/types/constants placement, React context/store/hooks naming, or when deciding whether code belongs in modules/docs, layout, components/shared, store, or lib.
----
-
 # Docs Standard Contract: 文档站代码结构规范
 
 ## Overview
 
-用于 `apps/docs` 代码结构整理、文件命名、React 目录边界和 barrel 约束。写正文 MDX 仍读 docs-doc-principle；本 skill 只管代码 / 文件结构。
+用于 `apps/docs` 代码结构整理、文件命名、React 目录边界和 barrel 约束。写正文 MDX 仍读 docs-doc-principle；本文件只管代码 / 文件结构。
 
 ## 顶层职责
 

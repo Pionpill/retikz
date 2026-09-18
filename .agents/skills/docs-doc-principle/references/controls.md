@@ -1,13 +1,6 @@
----
-name: docs-doc-control
-description: Use when a retikz ComponentPreview has controls, a *.controls.ts contract, usePreviewControls, presets, or a playground that replaces repeated parameter-only demos.
----
-
 # ComponentPreview Controls 规范
 
-## 前置规则
-
-先读 [`docs-doc-principle`](../docs-doc-principle/SKILL.md)、[`ComponentPreview 按需契约`](../docs-doc-principle/references/component-preview.md) 与 [`Demo 视觉语义`](../docs-doc-principle/references/demo-visual-language.md)，再按页面类型读取组件页、扩展页、示例页或分组页 skill。本 skill 只补充 controls 特有规则。
+先读 [预览契约](component-preview.md)；有辅助标注时读 [视觉语义](demo-visual-language.md)。本文件只负责 controls 的内容与交互。
 
 ## 先定义试验场
 
@@ -18,7 +11,7 @@ description: Use when a retikz ComponentPreview has controls, a *.controls.ts co
 3. **不变量**：位置、参考物、连接关系、取景或 JSX 结构中哪些必须固定
 4. **变量**：哪些公开 API 由 controls 改变，变化是否肉眼可辨
 
-基础用法先按 [docs-doc-usage](../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。
+基础用法先按 [docs-doc-usage](../../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。
 
 后续同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
 
@@ -77,20 +70,9 @@ export default controlledPreview.Component;
 
 ## 取景与尺寸
 
-- 会改变位置、尺寸、旋转、阴影、滤镜、描边或其它包围盒的 playground 使用固定 `viewBox`
-- 默认以自然尺寸展示：数值 `width` / `height` 分别等于 `viewBox.width` / `viewBox.height`，保持 1 user unit 对应 1 CSS px；禁止用更大的输出尺寸配更小的 viewBox 无意放大主体
-- 操作 controls 时，相机、主体中心和不变量不得漂移；变化只发生在目标属性上
-- 用最小值、最大值和组合极值验证主体与效果边界不被裁切
-- 在 800px 正文宽度的真实页面选择显式 `<ComponentPreview size>`；常规内容四边约 12px，有顶部悬浮控件时顶部约 52px
-- controls playground 先尝试 `size="sm"`，再选择能够完整、清晰展示主体与面板的最小档位
-- 内容低矮、字段很少且缩小后仍清晰时使用 `xs`；主体、文字或多分组面板在 `sm` 下难以辨认时使用 `md`；`lg` 及以上只用于确有纵向空间需求的复杂场景，并在真实页面确认必要性
-- `size` 只解决预览区的纵向高度；横向拥挤、主体缩放或位置漂移应调整 `Layout width`、固定 `viewBox`、构图或右侧输出宽度
-- 不按组件重要性、源码中的 `width` / `height` 或 controls 数量机械决定档位；以真实页面中的主体可读性、留白和面板可操作性为准
-- ComponentPreview 尺寸测量脚本先按每个 `size` 的真实图形 bounds 确定最小可完整容纳图形高度加 40px 留白的档位，再在该档位采集 controls 的实测数据：field / section 数量、item / section gap、列数、滚动视口高度、完整 `scrollHeight`、剩余溢出和 `requiredWorkspaceHeight`。不要用 controls 数量或源码 `width` / `height` 猜测结果
-- 脚本同时在 25% 与 50% 控制面板宽度采样。以图形最小档位的 `remainingOverflow / workspaceHeight` 作为高度差比例：不超过 50% 时，先仅通过 `size` 尝试适配；`md` 及以下最多提升两档，`lg` 及以上最多一档。无论差距大小，50% 宽度只在图形实际宽度不超过 workspace 一半时可用；差距较大时优先检查它。两种调整可组合；在允许范围仍不能完整展示时，输出最大允许的 size / 面板宽度及剩余溢出，不追加其它启发式
-- `check:figure-size` 的 JSON 必须保留每个 size、两种面板宽度和上述原始观测值，以及 `heightGapRatio`、rule、推荐 size、`defaultSize: 50` 与剩余溢出。脚本负责确定性计算，LLM 只决定是否把建议应用到某一个已核验的 demo；不得批量修改现有 demo。仅在 zh / en 都建议 50% 且真实页面确认图不会被压缩时，才手动为该 demo 采用 `defaultSize: 50`
-- controls playground 右侧内容的显式输出宽度优先控制在 `400px` 或以下，一般不超过 `600px`；超过 `400px` 时验证拖拽面板分隔线前后主体没有缩放
-- controls 较多并导致主体或关键字段被挤压时优先增加高度档位，不缩小主体或裁掉面板字段
+会改变位置、尺寸、旋转、阴影、滤镜或描边的 demo 使用固定 viewBox；保持主体中心与参照物稳定，让变化只发生在目标属性上。自然输出保持 1 user unit 对应 1 CSS px。
+
+尺寸和面板宽度只按 [实测规则](preview-sizing.md) 决定，不再先试固定 sm、不按 controls 数量猜 size。默认、极值与组合值都要验证效果边界。
 
 ## 说明文字
 
@@ -106,13 +88,3 @@ caption 只补充读图线索，不重复上一段正文，也不塞 API 参考�
 4. 比较固定 viewBox、主体 bounds 与完整效果 bounds，确认不漂移、不裁切
 5. 打开真实页面检查面板滚动、源码栏、caption、显式 size、右侧输出宽度与 800px 宽度下的留白；拖拽面板分隔线时主体不得缩放
 6. 运行 docs `tsc --noEmit`、相关 Vitest、Oxfmt 与 `git diff --check`
-
-## 常见错误
-
-- controls 改了值，但 demo 没有消费该字段
-- 使用自动取景，造成用户误以为 position 或尺寸变化
-- 用多种强调色、粗连接线或高对比辅助线抢走主体注意力
-- 把 dotted 与 dashed 都当作普通“虚线”
-- 只导出命名 controls，缺少显式 contract 或 demo 的 `previewControls` 回退
-- 每个参数各放一个 demo，导致正文重复且无法直接比较
-- 用 controls 隐藏不同结构、错误路径或扩展链路
