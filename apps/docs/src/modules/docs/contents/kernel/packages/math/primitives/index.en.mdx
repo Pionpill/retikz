@@ -29,7 +29,7 @@ const distance = point.distance([20, 10], end); // 42.720018726587654
 
 Change the angle and length to see that the vector and its left-hand normal stay perpendicular.
 
-<ComponentPreview files="vector-normal" size="sm" caption="A vector and its left-hand normal" />
+<ComponentPreview files="vector-normal" size="lg" caption="A vector and its left-hand normal" />
 
 ### Algorithm notes
 
@@ -93,7 +93,7 @@ The demo adds the arc's boundary candidates to the point set, so the dashed rect
 
 <ComponentPreview
   files="bounds-playground"
-  size="sm"
+  size="md"
   caption="Change a point coordinate or arc angle to see how the points and arc jointly affect the axis-aligned bounds"
 />
 
@@ -103,7 +103,7 @@ When the input mixes points, curves, and basic shapes, the goal is one axis-alig
 
 Bounds calculation first generates candidate points from each geometry input type, then reduces those points only once; `boundsOf` does not identify geometry types itself.
 
-<ComponentPreview files="bounds-candidate-flow" size="sm" hideCode />
+<ComponentPreview files="bounds-candidate-flow" size="md" type="flow" hideCode />
 
 #### Points
 
@@ -181,7 +181,7 @@ $$
 
 <ComponentPreview
   files="ellipse-arc-playground"
-  size="sm"
+  size="xs"
   caption="Adjust the radii and angles to compare the shapes and their bounds"
 />
 

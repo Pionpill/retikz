@@ -12,7 +12,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const innerNodeId = values.nodeId;
 
   return (
-    <Layout viewBox={{ x: -100, y: -100, width: 480, height: 200 }}>
+    <Layout>
       <Node id="source" position={[140, -65]} style={{ stroke: 'gray', dashed: true }}>
         source
       </Node>

@@ -66,7 +66,7 @@ $$
 
 射线与圆弧的输入包含圆弧的圆心、半径、起始角度和终止角度。`intersectRayWithArc` 返回射线参数 `s`，实际交点可按 `origin + s * direction` 得到；它只保留射线正方向上的交点。
 
-<ComponentPreview files="ray-arc" size="md" caption="圆弧与射线的交点以紫色点显示" />
+<ComponentPreview files="ray-arc" size="sm" caption="圆弧与射线的交点以紫色点显示" />
 
 ### 算法解析
 
@@ -99,7 +99,7 @@ $$
 
 下方示意只展示当前选中的圆构造方案，避免把不同问题的结果混在一起。
 
-<ComponentPreview files="circle-constructions" size="md" caption="比较三角形外接圆、内切圆和点集最小包围圆" />
+<ComponentPreview files="circle-constructions" size="sm" caption="比较三角形外接圆、内切圆和点集最小包围圆" />
 
 ### 算法解析
 
@@ -198,7 +198,7 @@ $$
 
 下图展示一次查找：先从当前区间取中点 $t$，估算走到该处的长度，再与目标距离比较。菱形没有通向“参数 $t$”的回路表示未命中：根据长度偏大或偏小收窄 $[lo,hi]$，再从新区间取中点；命中容差后才输出参数。
 
-<ComponentPreview files="curve-distance-search-flow" size="sm" hideCode />
+<ComponentPreview files="curve-distance-search-flow" size="sm" type="flow" hideCode />
 
 从数学上看，每一小段参数变化带来的路程由曲线当时的速度决定。把所有小段路程累加，就是从起点走到 $t$ 的真实弧长：
 
@@ -250,7 +250,7 @@ $$
 | `curve.parameterAtDistance` | 时间 O(b·n)，空间 O(1) | 按同一离散模型反解距离；`b` 为最大二分次数，命中默认容差可提前返回                         |
 | `curve.slice`               | 时间 O(1)，空间 O(1)   | 取得参数区间内、保持原种类的子曲线                                                         |
 
-绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/draw/path#label-interruption) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
+绘制语义仍属于 Core：Core 会把最终 `PathCommand` 映射为这些数学段，再决定标签、断口、dash、箭头和命中。若要控制标签是否自动断线，请使用 [路径标签与描边断口](/kernel/components/draw/label) 的 `interrupt`，不要把 Math API 当作绘图或标签接口。
 
 ## 过点曲线
 
@@ -258,7 +258,7 @@ $$
 
 切换点集和张力，并移动面板中的控制点，观察点距不均、折返和重合点时的曲线变化。源码视图中的 `CubicSegment` 展示了每段三次贝塞尔曲线的两个控制点和终点。
 
-<ComponentPreview files="curve-playground" size="md" caption="比较点集、张力与三次贝塞尔段" />
+<ComponentPreview files="curve-playground" size="sm" caption="比较点集、张力与三次贝塞尔段" />
 
 ### 算法解析
 

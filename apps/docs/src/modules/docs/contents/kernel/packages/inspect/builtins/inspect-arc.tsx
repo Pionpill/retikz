@@ -12,12 +12,7 @@ const preview = defineControlledBuiltinInspectPreview(
   createPreviewControlContract,
   values => {
     return (
-      <InspectLayout
-        registry={registry}
-        width={380}
-        height={360}
-        viewBox={{ x: -190, y: -180, width: 380, height: 360 }}
-      >
+      <InspectLayout registry={registry} width={380} height={360}>
         <InspectPath
           request={{
             inspector: PATH_INSPECTOR_KEY,

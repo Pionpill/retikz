@@ -18,7 +18,7 @@ const ScopeTransformSteps: FC<ScopeTransformStepsProps> = props => {
   const { lang } = props;
   const i18n = scopeTransformStepsI18n[lang ?? 'zh'];
   return (
-    <Layout viewBox={{ x: -8, y: -72, width: 716, height: 184 }} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {stages.map((transforms, index) => (
         <Scope key={index} transforms={[{ kind: 'translate', x: positions[index], y: 0 }]}>
           <Node position={[0, -58]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>

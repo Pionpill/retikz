@@ -13,7 +13,7 @@ const ScopeOffsetRulers: FC<ScopeOffsetRulersProps> = props => {
   const { lang } = props;
   const i18n = scopeOffsetRulersI18n[lang ?? 'zh'];
   return (
-    <Layout viewBox={{ x: -5, y: -35, width: 510, height: 255 }} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[100, 120].map(x => (
         <Draw
           key={x}

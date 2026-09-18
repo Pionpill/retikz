@@ -11,7 +11,6 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   <Layout
     width={320}
     height={240}
-    viewBox={{ x: -80, y: -70, width: 320, height: 240 }}
     rootScope={{
       style: { stroke: values.stroke, strokeWidth: values.strokeWidth, opacity: values.opacity },
       defaults: { node: { style: { fill: values.fill, textColor: '#0f172a' }, layout: { padding: values.padding } } },

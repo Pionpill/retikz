@@ -27,7 +27,7 @@ description: 配置主题、注入能力、读取编译结果并控制更新
 
 需要在图外显示节点的排版尺寸时，用 `artifacts={{ nodeLayouts: true }}` 请求节点布局快照，再通过 `onArtifacts` 读取结果。回调在 React commit 后通知同次编译结果；快照不会随之后的更新而原地变化。
 
-<ComponentPreview files="layout-artifacts" size="sm" />
+<ComponentPreview files="layout-artifacts" size="xs" />
 
 示例把节点数量和正文宽度显示在图外。快照描述编译后的几何信息，不是实时 DOM 测量，也不能用于修改图形输入。
 

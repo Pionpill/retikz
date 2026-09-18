@@ -27,7 +27,7 @@ const ScopeEnvelopeComparison: FC<ScopeEnvelopeComparisonProps> = props => {
   const { lang } = props;
   const i18n = scopeEnvelopeComparisonI18n[lang ?? 'zh'];
   return (
-    <Layout viewBox={{ x: -10, y: -77, width: 560, height: 204 }} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[false, true].map((transformed, index) => (
         <Scope key={index} transforms={[{ kind: 'translate', x: 105 + index * 300, y: 0 }]}>
           <Node position={[0, -62]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>

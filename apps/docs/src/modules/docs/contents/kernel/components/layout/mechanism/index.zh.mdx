@@ -50,7 +50,7 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 自动计算只需要理解两步：合并内容边界，再向四边扩展 padding。下图只把蓝色 A、B 作为被测内容：A 是中心 `(30, 40)`、半径 `10` 的圆，B 是左上角 `(80, 50)`、宽高 `20 × 20` 的矩形。灰色虚线包住两者，橙色框在四边各多留 10 个绘图单位；测量线和文字只是教学标注，不计入这组内容的边界。
 
-<ComponentPreview files="layout-viewport-bounds" size="xl" type="illustration" hideCode />
+<ComponentPreview files="layout-viewport-bounds" size="lg" type="illustration" hideCode />
 
 根据 A、B 的坐标和尺寸，灰框最左为 `20`、最上为 `30`，最右为 `100`、最下为 `70`，所以内容边界是 `(20, 30, 80, 40)`。再看橙框：左、上各向外移 `10`，宽、高各增加 `20`，得到视窗 `(10, 20, 100, 60)`。这些四元组的顺序都是 `(x, y, width, height)`，不是两个角点。图中按同一比例放大绘制，数值仍表示原始绘图单位。
 
@@ -108,7 +108,7 @@ $$
 
 只传数值宽度时，`computeDisplaySize` 用视窗比例补齐高度。本例先得到宽高比 `200 / 100 = 2`，再算出显示高度 `400 / 2 = 200`：
 
-<ComponentPreview files="layout-viewbox-resolution" size="md" type="flow" hideCode />
+<ComponentPreview files="layout-viewbox-resolution" size="sm" type="flow" hideCode />
 
 对于同一个 `200 × 100` 视窗，其他尺寸配置分别走以下分支：
 

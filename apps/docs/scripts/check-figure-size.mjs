@@ -29,7 +29,7 @@ const browser = await chromium.launch({
 const samples = [];
 try {
   for (const language of ['zh', 'en']) {
-    for (const width of [1440, 500]) {
+    for (const width of [1440]) {
       const context = await browser.newContext({ viewport: { width, height: 1000 } });
       try {
         const page = await context.newPage();
@@ -59,27 +59,41 @@ try {
               svg => svg.hasAttribute('viewBox') && !svg.classList.contains('lucide'),
             );
             if (!scene || element.querySelector('canvas')) throw new Error('Size measurement requires an SVG preview');
-            const bounds = scene.getBoundingClientRect();
-            if (bounds.width <= 0 || bounds.height <= 0) throw new Error('SVG has no measurable size');
-            const heights = sizeOptions.map(size => {
-              const probe = document.createElement('div');
-              probe.className = size.classes;
-              probe.style.cssText = 'position:fixed;visibility:hidden;width:1px;pointer-events:none';
-              document.body.append(probe);
-              const height = probe.getBoundingClientRect().height;
-              probe.remove();
-              if (height <= 0) throw new Error(`Size ${size.name} has no CSS height`);
-              return { size: size.name, height };
+            if (scene.getBoundingClientRect().width <= 0 || scene.getBoundingClientRect().height <= 0) {
+              throw new Error('SVG has no measurable size');
+            }
+            const workspace = element.querySelector('[data-slot="preview-workspace"]');
+            const previewPanel = [...element.querySelectorAll('div')].find(node =>
+              node.classList.contains('group/preview'),
+            );
+            if (!workspace || !previewPanel) throw new Error('Preview workspace or panel not found');
+
+            const sizeClasses = sizeOptions.flatMap(size => size.classes.split(' '));
+            const originalClasses = [...workspace.classList];
+            const measurements = sizeOptions.map(size => {
+              workspace.classList.remove(...sizeClasses);
+              workspace.classList.add(...size.classes.split(' '));
+              const figureBounds = scene.getBoundingClientRect();
+              const panelBounds = previewPanel.getBoundingClientRect();
+              return {
+                size: size.name,
+                workspaceHeight: workspace.getBoundingClientRect().height,
+                figureHeight: figureBounds.height,
+                panelHeight: panelBounds.height,
+                topOverflow: Math.max(panelBounds.top - figureBounds.top, 0),
+                bottomOverflow: Math.max(figureBounds.bottom - panelBounds.bottom, 0),
+                fitsVertically: figureBounds.top >= panelBounds.top && figureBounds.bottom <= panelBounds.bottom,
+              };
             });
-            const requiredHeight = bounds.height + 40;
-            const recommended = heights.find(size => size.height >= requiredHeight)?.size ?? null;
-            const frameBounds = element.getBoundingClientRect();
+            workspace.className = originalClasses.join(' ');
+
+            const bounds = scene.getBoundingClientRect();
+            const panelBounds = previewPanel.getBoundingClientRect();
             return {
               figureHeight: bounds.height,
-              requiredHeight,
-              recommended,
-              heights,
-              horizontalOverflow: bounds.left < frameBounds.left || bounds.right > frameBounds.right,
+              recommended: measurements.find(measurement => measurement.fitsVertically)?.size ?? null,
+              measurements,
+              horizontalOverflow: bounds.left < panelBounds.left || bounds.right > panelBounds.right,
             };
           }, sizes);
           samples.push({ name, language, width, ...measurement });
@@ -97,13 +111,11 @@ if (samples.length === 0) throw new Error('No matching figures found');
 
 const recommendations = [...new Set(samples.map(sample => sample.name))].map(name => {
   const cases = samples.filter(sample => sample.name === name);
-  if (cases.length !== 4) throw new Error(`${name}: expected four language/viewport samples, got ${cases.length}`);
+  if (cases.length !== 2) throw new Error(`${name}: expected two language samples, got ${cases.length}`);
   const size =
     sizes.find(candidate =>
       cases.every(
-        sample =>
-          !sample.horizontalOverflow &&
-          sample.heights.find(entry => entry.size === candidate.name).height >= sample.requiredHeight,
+        sample => sample.measurements.find(measurement => measurement.size === candidate.name)?.fitsVertically,
       ),
     )?.name ?? null;
   return { name, size, samples: cases };

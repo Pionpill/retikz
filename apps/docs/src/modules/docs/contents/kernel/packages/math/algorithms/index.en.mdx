@@ -70,7 +70,7 @@ The input types are `LineLineInput` (two lines or segments defined by endpoints)
 
 Ray-arc input includes a circle center, radius, start angle, and end angle. `intersectRayWithArc` returns a ray parameter `s`; the actual point is `origin + s * direction`. Only intersections in the ray's forward direction are kept.
 
-<ComponentPreview files="ray-arc" size="md" caption="Purple points mark the intersections between the arc and ray" />
+<ComponentPreview files="ray-arc" size="sm" caption="Purple points mark the intersections between the arc and ray" />
 
 ### Algorithm notes
 
@@ -105,7 +105,7 @@ The demo shows only the selected construction, keeping these different geometric
 
 <ComponentPreview
   files="circle-constructions"
-  size="md"
+  size="sm"
   caption="Compare a triangle's circumcircle and incircle with a point set's minimal enclosing circle"
 />
 
@@ -214,7 +214,7 @@ This group of algorithms therefore does three connected jobs: estimate the dista
 
 The diagram shows one search attempt: take a midpoint $t$ from the current range, estimate the travelled length there, then compare it with the target distance. The loop from the diamond instead of the edge to “Parameter $t$” means “not close enough”: shrink $[lo,hi]$ according to whether the length is too large or too small, then take a new midpoint. Only a result within tolerance produces the parameter.
 
-<ComponentPreview files="curve-distance-search-flow" size="sm" hideCode />
+<ComponentPreview files="curve-distance-search-flow" size="sm" type="flow" hideCode />
 
 Mathematically, each tiny parameter change contributes distance according to the curve's instantaneous speed. Adding those contributions gives the true arc length from the start to $t$:
 
@@ -266,7 +266,7 @@ A cached `totalLength` must use the same `sampleCount`; otherwise total distance
 | `curve.parameterAtDistance` | Time O(b·n), space O(1) | Invert distance with the same discrete model; `b` is the maximum bisection count, with early exit at default tolerance |
 | `curve.slice`               | Time O(1), space O(1)   | Take a parameter-range subcurve without changing its curve kind                                                        |
 
-Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/draw/path#label-interruption); Math is not a drawing or label API.
+Drawing semantics remain in Core: it maps final `PathCommand`s into these mathematical segments, then decides labels, gaps, dashes, arrows, and hit testing. To control automatic label gaps, use `interrupt` on [Path labels and stroke gaps](/kernel/components/draw/label); Math is not a drawing or label API.
 
 ## Curves through points
 
@@ -274,7 +274,7 @@ The point-fitting curve algorithm turns a sequence of knots into connected cubic
 
 Use the panel to compare uneven spacing, zigzags, and coincident points, then move the control point to see the curve update. The expandable source view shows `CubicSegment` as two control points and an endpoint for each segment.
 
-<ComponentPreview files="curve-playground" size="md" caption="Compare point sets, tension, and cubic Bézier segments" />
+<ComponentPreview files="curve-playground" size="sm" caption="Compare point sets, tension, and cubic Bézier segments" />
 
 ### Algorithm notes
 

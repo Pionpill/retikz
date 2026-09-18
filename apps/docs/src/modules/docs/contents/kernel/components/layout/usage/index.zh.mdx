@@ -9,7 +9,7 @@ description: 组织图形输入，设置视框、全图默认值与渲染输出
 
 选择宿主与输入形式：React 使用 JSX 或 `ir` 属性；Vanilla 使用构造函数或直接传入 IR。四种写法都绘制同一个三角形节点图，显示范围自动计算。IR 是可保存为 JSON 的图形描述，可来自编辑器、LLM 或数据库。
 
-<ComponentPreview files="layout-basic" size="sm" hideCode />
+<ComponentPreview files="layout-basic" size="xs" hideCode />
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -137,15 +137,9 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 **默认不写 `viewBox`，Layout 会根据内容自动计算输出边界。** 下方 demo 初始只包含两个圆，灰色虚线框随它们的整体范围确定，无需手动填写起点或宽高。
 
-只有需要固定取景范围时，才显式传入 `viewBox={{ x, y, width, height }}`。此时输出边界采用指定范围，不再随内容自动扩展；可以留出空白，也可以缩小范围，只显示其中的部分内容。
+需要固定取景或裁剪时再使用 `viewBox`；普通组件用法 demo 保持自动取景，避免固定范围制造无意义留白。
 
-打开“显式指定视框”后调整起点和宽高，对比手动范围与默认自动取景；关闭后恢复自动边界。此示例未额外指定显示尺寸，两个圆的大小在切换时保持不变。
-
-<ComponentPreview
-  files="layout-viewbox"
-  size="md"
-  caption="灰色虚线始终标记输出边界。默认自动取景；显式指定视框后，浅灰点线标记手动范围，并显示对应参数。"
-/>
+<ComponentPreview files="layout-viewbox" size="sm" caption="灰色虚线标记由两个圆自动计算出的输出边界。" />
 
 ## 全图默认值
 

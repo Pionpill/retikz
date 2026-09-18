@@ -11,6 +11,7 @@
     "check:static": "node scripts/check-doc-static.mjs",
     "dev": "vite",
     "generate:api-reference": "tsx scripts/generate-api-references.ts && oxfmt src/modules/docs/contents/**/_includes/generated.*.mdx",
+    "generate:node-schema": "tsx scripts/generate-node-schema-reference.ts && oxfmt src/modules/docs/contents/kernel/components/node/schema-reference",
     "build": "tsc -b && vite build",
     "lint": "oxlint .",
     "preview": "vite preview",

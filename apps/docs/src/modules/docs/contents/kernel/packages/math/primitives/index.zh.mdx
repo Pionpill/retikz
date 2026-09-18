@@ -29,7 +29,7 @@ const distance = point.distance([20, 10], end); // 42.720018726587654
 
 拖动角度和长度可以观察向量与左手法向量始终正交。
 
-<ComponentPreview files="vector-normal" size="sm" caption="向量与左手法向量" />
+<ComponentPreview files="vector-normal" size="lg" caption="向量与左手法向量" />
 
 ### 算法解析
 
@@ -93,7 +93,7 @@ $$
 
 <ComponentPreview
   files="bounds-playground"
-  size="sm"
+  size="md"
   caption="修改点坐标或圆弧角度，观察点集与圆弧共同影响轴对齐边界"
 />
 
@@ -103,7 +103,7 @@ $$
 
 边界计算先按几何输入的类型生成候选点，再只对这些点做一次极值归约；`boundsOf` 本身不识别图元类型。
 
-<ComponentPreview files="bounds-candidate-flow" size="sm" hideCode />
+<ComponentPreview files="bounds-candidate-flow" size="md" type="flow" hideCode />
 
 #### 常规点
 
@@ -179,7 +179,7 @@ $$
 
 **圆弧与椭圆弧。** 角度遵循 SVG 坐标：y 轴向下，`0°` 指向 +x，`90°` 指向 +y；正角度在屏幕上顺时针增加。
 
-<ComponentPreview files="ellipse-arc-playground" size="sm" caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界" />
+<ComponentPreview files="ellipse-arc-playground" size="xs" caption="调整半轴、半径和角度，观察椭圆、圆弧及其边界" />
 
 ### 算法解析
 

@@ -16,9 +16,9 @@ export const createPreviewControlContract = (lang: Lang) => {
           {
             id: 'position',
             kind: 'point',
-            defaultValue: [0, 0],
-            min: [-50, -50],
-            max: [50, 50],
+            defaultValue: [50, 50],
+            min: [0, 0],
+            max: [100, 100],
             step: 1,
             label: i18n.position,
           },

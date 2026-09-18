@@ -24,7 +24,7 @@ const LayoutViewportBounds: FC<LayoutViewportBoundsProps> = props => {
   const { lang } = props;
   const i18n = layoutViewportBoundsI18n[lang ?? 'zh'];
   return (
-    <Layout viewBox={{ x: 0, y: 0, width: 420, height: 304 }} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <Node position={[210, 16]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>
         {i18n.padding}
       </Node>

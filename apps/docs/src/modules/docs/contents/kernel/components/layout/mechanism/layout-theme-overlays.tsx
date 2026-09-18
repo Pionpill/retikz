@@ -17,7 +17,7 @@ const LayoutThemeOverlays: FC<LayoutThemeOverlaysProps> = props => {
     [i18n.result, 'clean', 'light'],
   ];
   return (
-    <Layout viewBox={{ x: 0, y: 0, width: 420, height: 266 }} style={{ maxWidth: '100%', height: 'auto' }}>
+    <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       {[i18n.source, 'theme.style', 'theme.mode'].map((title, index) => (
         <Node
           key={title}

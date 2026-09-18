@@ -11,11 +11,7 @@ const LayoutDisplayComparison: FC<LayoutDisplayComparisonProps> = props => {
   const { lang } = props;
   const i18n = layoutDisplayComparisonI18n[lang ?? 'zh'];
   return (
-    <Layout
-      width={384}
-      viewBox={{ x: -12, y: -10, width: 424, height: 452 }}
-      style={{ maxWidth: '100%', height: 'auto' }}
-    >
+    <Layout width={384} style={{ maxWidth: '100%', height: 'auto' }}>
       {[1, 2].map(scale => (
         <Scope key={scale} transforms={[{ kind: 'translate', x: scale === 1 ? 100 : 0, y: scale === 1 ? 30 : 194 }]}>
           <Node position={[100 * scale, -18]} style={{ stroke: 'none', fill: 'none', font: { size: 14 } }}>

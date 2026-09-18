@@ -50,7 +50,7 @@ Layout first chooses a viewport source: its `viewBox` prop takes precedence over
 
 Automatic sizing has two steps: combine content bounds, then expand all four sides by padding. In the figure, only blue A and B count as measured content: A is a circle centered at `(30, 40)` with radius `10`; B is a `20 × 20` rectangle whose top-left corner is `(80, 50)`. The dashed gray bounds enclose both; the orange viewport adds 10 drawing units on each side. Measurement lines and text are teaching annotations, excluded from this content's bounds.
 
-<ComponentPreview files="layout-viewport-bounds" size="xl" type="illustration" hideCode />
+<ComponentPreview files="layout-viewport-bounds" size="lg" type="illustration" hideCode />
 
 From A and B's stated positions and sizes, the gray bounds have left `20`, top `30`, right `100`, and bottom `70`, giving content bounds `(20, 30, 80, 40)`. Then read the orange frame: moving left and top outward by `10` and adding `20` to each dimension gives viewport `(10, 20, 100, 60)`. These tuples mean `(x, y, width, height)`, not two corners. The figure enlarges everything at one scale; labels still refer to the original drawing units.
 
@@ -113,7 +113,7 @@ The lower host, shapes, and gaps appear twice as large, but A's drawing coordina
 
 With only a numeric width, `computeDisplaySize` derives height from the viewport ratio. Here it computes `200 / 100 = 2`, then display height `400 / 2 = 200`:
 
-<ComponentPreview files="layout-viewbox-resolution" size="md" type="flow" hideCode />
+<ComponentPreview files="layout-viewbox-resolution" size="sm" type="flow" hideCode />
 
 Other size settings for that same `200 × 100` viewport follow these branches:
 

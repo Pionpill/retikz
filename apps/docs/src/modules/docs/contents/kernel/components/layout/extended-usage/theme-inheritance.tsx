@@ -38,12 +38,7 @@ const ThemeCard: ThemeCardComponent = Object.assign(() => null, {
 export const previewControls = previewControlContract.controls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout
-    width={240}
-    height={140}
-    viewBox={{ x: -120, y: -70, width: 240, height: 140 }}
-    theme={resolvePreviewTheme(values.style, values.mode)}
-  >
+  <Layout width={240} height={140} theme={resolvePreviewTheme(values.style, values.mode)}>
     <ThemeCard label="Composite" />
   </Layout>
 ));

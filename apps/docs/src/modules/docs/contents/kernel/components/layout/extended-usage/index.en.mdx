@@ -27,7 +27,7 @@ This section demonstrates shape injection only; later custom-usage guides for ea
 
 To display node layout measurements outside a figure, request node-layout snapshots with `artifacts={{ nodeLayouts: true }}` and read them through `onArtifacts`. The callback reports the corresponding compilation result after React commits; later updates do not mutate a prior snapshot.
 
-<ComponentPreview files="layout-artifacts" size="sm" />
+<ComponentPreview files="layout-artifacts" size="xs" />
 
 The example displays the node count and text width outside the drawing. These snapshots describe compiled geometry, not live DOM measurements, and cannot modify drawing input.
 

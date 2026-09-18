@@ -9,7 +9,7 @@ description: Provide drawing input and configure framing, defaults, and renderin
 
 Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants draw the same three-node triangle with automatic framing. IR is a serializable drawing description that can come from an editor, an LLM, or a database.
 
-<ComponentPreview files="layout-basic" size="sm" hideCode />
+<ComponentPreview files="layout-basic" size="xs" hideCode />
 
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
@@ -137,14 +137,12 @@ See [Architecture](/kernel/components/design/principles) and [Composite](/kernel
 
 **Without `viewBox`, Layout automatically computes the output bounds from the content.** The demo initially contains only two circles. The gray dashed outline follows their combined extent, with no manual origin or dimensions.
 
-Pass `viewBox={{ x, y, width, height }}` only when a fixed frame is needed. The specified range then determines the output bounds instead of expanding with the content. It can add whitespace or narrow the frame to show only part of the drawing.
-
-Enable “Set explicit viewBox” to adjust the origin and dimensions and compare manual framing with automatic bounds. Disable it to return to automatic framing. This example sets no separate display dimensions, so both circles keep their size when switching modes.
+Use `viewBox` only for fixed framing or clipping. Ordinary component demos keep automatic framing so a fixed range does not add meaningless whitespace.
 
 <ComponentPreview
   files="layout-viewbox"
-  size="md"
-  caption="The gray dashed outline always marks the output bounds. Framing is automatic by default; an explicit viewBox adds a light-gray dotted guide and reveals its parameters."
+  size="sm"
+  caption="The gray dashed outline marks the output boundary calculated from the two circles."
 />
 
 ## Whole-figure defaults
