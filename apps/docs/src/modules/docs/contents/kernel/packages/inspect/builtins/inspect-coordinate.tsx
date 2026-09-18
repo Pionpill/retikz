@@ -11,7 +11,7 @@ const preview = defineControlledBuiltinInspectPreview(
   createPreviewControlContract,
   values => {
     return (
-      <InspectLayout registry={registry} width={380} height={160}>
+      <InspectLayout registry={registry} viewBox={{ x: -10, y: -10, width: 130, height: 130 }}>
         <InspectCoordinate
           id="A"
           position={values.position}

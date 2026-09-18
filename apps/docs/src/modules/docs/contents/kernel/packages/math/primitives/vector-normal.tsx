@@ -26,14 +26,14 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
           [-160, 0],
           [160, 0],
         ]}
-        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+        style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw
         way={[
           [0, -135],
           [0, 135],
         ]}
-        style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
+        style={{ stroke: 'gray', dashPattern: [1, 4], lineCap: 'round' }}
       />
 
       <Draw way={[Origin, vectorEnd]} arrow="->" style={{ stroke: 'darkorange', strokeWidth: 2 }} />
