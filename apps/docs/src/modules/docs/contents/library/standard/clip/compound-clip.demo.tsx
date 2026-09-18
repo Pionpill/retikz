@@ -11,7 +11,7 @@ export const previewControls = compoundClipControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout
     viewBox={{ x: -165, y: -100, width: 330, height: 200 }}
-    clips={[CompoundClipDefinition, CircleClipDefinition]}
+    extensions={{ clips: [CompoundClipDefinition, CircleClipDefinition] }}
   >
     <Node
       position={[0, 0]}

@@ -1,0 +1,200 @@
+---
+title: Custom paths
+description: Define and register whole-path output using public stroke compilation services
+---
+
+Start with [Basic usage](/kernel/components/path/usage), then define and register a new capability.
+
+## Applicability
+
+First decide whether the extension owns one segment or the whole path:
+
+| Need                                     | Choose                                                           |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| Add a parameterized curve segment        | [Path Generators](/kernel/components/path/custom-path-generator) |
+| Change whole-Path primitives or outlines | Custom Path kind                                                 |
+| Add only a new endpoint shape            | [Custom Arrows](/kernel/components/path/custom-arrow)            |
+
+If you only need another stroke color, width, dash, or arrow, use the existing Path props instead of inventing a kind for a style preset. For a filled Ribbon path, see the optional [Standard Ribbon](/library/standard/ribbon) definition.
+
+## Minimal result
+
+A custom Path kind extends **how the whole path is emitted**. IR stores only an open `kind` and JSON-safe `kindOptions`. After the host injects a `PathKindDefinition`, core resolves it from the shared registry and lets it produce Scene primitives.
+
+The `highlight` kind below reuses Core stroke emission and emits a wide underlay and a thin centerline from one path. Its definition, `<Layout extensions={{ pathKinds }}>` injection, and usage live in one runnable example.
+
+<ComponentPreview files="custom-path-highlight" size="xs" />
+
+## Define the capability
+
+Use `definePathKind` to declare an explicit registry key, a complete Path subject schema, and a compile function that owns the whole path. Compose the schema from the open `PathSchema` host plus the kind literal and `kindOptions`, so the definition owns the complete payload contract.
+
+```tsx
+import type { ScenePrimitive } from '@retikz/core';
+import { definePathKind, PathSchema } from '@retikz/core';
+import { z } from 'zod';
+
+const HighlightOptionsSchema = z.strictObject({
+  strokeWidth: z.number().positive(),
+});
+const HighlightPathSchema = PathSchema.extend({
+  kind: z.literal('highlight'),
+  kindOptions: HighlightOptionsSchema,
+});
+type HighlightPath = z.infer<typeof HighlightPathSchema>;
+
+const highlight = definePathKind<HighlightPath>({
+  name: 'highlight',
+  schema: HighlightPathSchema,
+  compile: context => {
+    const { kindOptions, ...strokePath } = context.path;
+    const base = context.emitStroke({
+      ...strokePath,
+      kind: 'stroke',
+      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth },
+    });
+    if (base === null) return null;
+    return {
+      ...base,
+      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+        primitive.type === 'path'
+          ? [
+              { ...primitive, stroke: '#facc15' },
+              { ...primitive, stroke: '#0f766e', strokeWidth: 1.5 },
+            ]
+          : [primitive],
+      ),
+    };
+  },
+});
+```
+
+`name` is the registry key; it is not inferred from an internal Zod schema literal. `schema` is the complete source subject schema: Core's open `PathSchema` accepts shared host fields first, then the selected definition parses `kind`, `kindOptions`, and any cross-field constraints during resolution. The definition and compile function are runtime capability and never enter IR.
+
+For inspection output, use the public `ownerOutput` contract with an independent Inspector; see [Inspect](/kernel/packages/inspect).
+
+## Register and use
+
+React injects definitions through `<Layout extensions={{ pathKinds }}>`; direct core calls use `CompileOptions.pathKinds`. A Path references only the registered name and instance options.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+<Layout extensions={{ pathKinds: [highlight] }}>
+  <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="line" to={[120, 0]} />
+  </Path>
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Vanilla uses the same definition through the `compile` option of `mount`. Prepare `<div id="diagram"></div>` in HTML first. The snippet reuses the definition above.
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      kind: 'highlight',
+      kindOptions: { strokeWidth: 12 },
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { pathKinds: [highlight] },
+});
+// Dispose when the host is removed.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+## Errors and limitations
+
+| Case                                            | Result                                                    |
+| ----------------------------------------------- | --------------------------------------------------------- |
+| Empty or non-string definition `name`           | `definePathKind` rejects it immediately                   |
+| Duplicate `stroke` or custom key                | Registry merge reports a duplicate registration           |
+| Path references an unknown kind                 | Compile lists available names and `options.pathKinds`     |
+| The selected definition schema rejects the Path | Error includes kind name and the relevant IR path         |
+| Provider returns `null`                         | The Path produces no primitives                           |
+| Selected non-null result omits owner output     | Core observation fails loudly                             |
+| Owner output or Inspector subject fails schema  | The corresponding validation stage fails loudly           |
+| Inspector returns an invalid Core child         | Error includes owner, occurrence, and output index        |
+| `boundsPoints` misses actual output bounds      | Auto layout and Path-level rotate/scale become inaccurate |
+
+A custom kind must return renderer-neutral Scene primitives. It cannot embed SVG elements, Canvas instances, ReactNode values, or functions, and it cannot require renderers to understand the custom `kind`.
+
+## Related props
+
+These are the members most often used to define, inject, and reference a custom Path kind. See the [API reference](/kernel/components/path/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'definePathKind',
+      kind: 'function',
+      type: '<TPath, TOwnerOutput>(definition: PathKindDefinition<TPath, TOwnerOutput>) => PathKindDefinition<TPath, TOwnerOutput>',
+      description: 'Create a registrable whole-Path provider and validate its name and basic schema contract.',
+    },
+    {
+      name: 'PathKindDefinition',
+      kind: 'type',
+      type: 'PathKindDefinition<TPath, TOwnerOutput>',
+      description: 'Declare the kind name, complete Path schema, and compilation function that emits Scene primitives.',
+    },
+    {
+      name: 'Layout.extensions.pathKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<AnyPathKindDefinition>',
+      description: 'Inject Path kind definitions into a React Layout.',
+    },
+    {
+      name: 'Path.kind',
+      kind: 'property',
+      type: 'string',
+      description: 'Reference a registered provider name; omit it for the built-in `stroke` provider.',
+    },
+    {
+      name: 'Path.kindOptions',
+      kind: 'property',
+      type: "IRPath['kindOptions']",
+      description: 'Pass JSON-safe instance parameters validated by the selected provider schema.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step composition',
+      description: 'Combine steps and control subpaths, connection boundaries, rounded corners, transforms, and marks',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: 'Implementation',
+      description: 'Follow path syntax through steps, references, geometry, arrows, and labels to the final result',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public TypeScript contracts for drawing components, authoring input, and extensions',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

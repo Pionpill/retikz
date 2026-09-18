@@ -1,0 +1,92 @@
+---
+title: Schema reference
+description: Persistent path and step fields, and drawing-specific configuration
+---
+
+This page contains drawing-owned input contracts. `PathSchema` accepts an open `kind`; the selected kind then validates the complete path. Built-in `stroke` normally needs at least two steps, with a single self-contained rectangle step as an exception, while a custom kind defines its own requirements.
+
+`way`, `arrow`, and `arrowPlacement` are authoring inputs normalized by Vanilla into steps or `marks`; they are not stored unchanged in persistent Path IR. `ArrowDetailSchema` belongs to that authoring configuration. Shared positioning, styles, and reusable fragments remain in [Shared path contracts](/kernel/reference/schema/path).
+
+## PathSchema
+
+<ZodSchema shallow name="PathSchema" />
+
+## StepSchema
+
+<ZodSchema shallow name="StepSchema" />
+
+## MoveStepSchema
+
+<ZodSchema shallow name="MoveStepSchema" />
+
+## LineStepSchema
+
+<ZodSchema shallow name="LineStepSchema" />
+
+## AxisLineStepSchema
+
+<ZodSchema shallow name="AxisLineStepSchema" />
+
+## FoldStepSchema
+
+<ZodSchema shallow name="FoldStepSchema" />
+
+## CycleStepSchema
+
+<ZodSchema shallow name="CycleStepSchema" />
+
+## CurveStepSchema
+
+<ZodSchema shallow name="CurveStepSchema" />
+
+## CubicStepSchema
+
+<ZodSchema shallow name="CubicStepSchema" />
+
+## BendStepSchema
+
+<ZodSchema shallow name="BendStepSchema" />
+
+## ArcStepSchema
+
+<ZodSchema shallow name="ArcStepSchema" />
+
+## CirclePathStepSchema
+
+<ZodSchema shallow name="CirclePathStepSchema" />
+
+## EllipsePathStepSchema
+
+<ZodSchema shallow name="EllipsePathStepSchema" />
+
+## RectangleStepSchema
+
+<ZodSchema shallow name="RectangleStepSchema" />
+
+## SmoothStepSchema
+
+<ZodSchema shallow name="SmoothStepSchema" />
+
+## GeneratorStepSchema
+
+<ZodSchema shallow name="GeneratorStepSchema" />
+
+## GeometryLabelSchema
+
+<ZodSchema shallow name="GeometryLabelSchema" />
+
+## ArrowMarkSchema
+
+<ZodSchema shallow name="ArrowMarkSchema" />
+
+## PathMarkPlacementSchema
+
+<ZodSchema shallow name="PathMarkPlacementSchema" />
+
+## ArrowDetailSchema
+
+<ZodSchema shallow name="ArrowDetailSchema" />
+
+## ArrowEndDetailSchema
+
+<ZodSchema shallow name="ArrowEndDetailSchema" />

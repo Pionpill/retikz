@@ -10,7 +10,7 @@ export const previewControls = coordinateOffsetChainControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout viewBox={coordinateOffsetChainFrame.viewBox}>
+    <Layout>
       <Draw
         way={coordinateOffsetChainFrame.xAxis}
         zIndex={-1}

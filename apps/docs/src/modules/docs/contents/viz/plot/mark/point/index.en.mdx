@@ -132,7 +132,7 @@ In ordinary glyph mode, a row whose field-bound size is missing, `null`, `NaN`, 
 
 Adjustments preserve declaration order within a stage, but every role-space adjustment runs before coordinate projection and every screen-space initializer runs afterward. Built-in jitter is reproducible when `seed`, effective row order, role, span, and final discrete step match; invalid positions still retain their random-sequence slots. See [Position Adjustment](/viz/plot/mark/position-adjustment) for custom algorithms that need the whole projected group.
 
-The coordinate frame decides where the point is, PointMark decides which Node is generated per row, and shape, text, and visual styling reuse [Node](/kernel/components/node/overview). Each mark lowers into its own layer. Use `layer={{ zIndex }}` to move the whole mark relative to axes and legends; the `zIndex` prop orders datum Nodes only inside this mark.
+The coordinate frame decides where the point is, PointMark decides which Node is generated per row, and shape, text, and visual styling reuse [Node](/kernel/components/node/usage). Each mark lowers into its own layer. Use `layer={{ zIndex }}` to move the whole mark relative to axes and legends; the `zIndex` prop orders datum Nodes only inside this mark.
 
 <SourceLinks
   sources={[
@@ -169,7 +169,7 @@ The coordinate frame decides where the point is, PointMark decides which Node is
 
 ## API Reference
 
-This table keeps only PointMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and explicit field / constant inputs, [transforms](/viz/plot/transform) for `transform` and `layer`, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared `fill`, `stroke`, opacity, corner, font, shadow, and related visual props follow [Node styling](/kernel/components/node/overview#visual-style-api) and are not duplicated here.
+This table keeps only PointMark-specific props and props whose meaning is redefined here. See [channel bindings](/viz/plot/channel/binding) for field and explicit field / constant inputs, [transforms](/viz/plot/transform) for `transform` and `layer`, and [coordinates](/viz/plot/coordinate) for coordinate-view props. Shared `fill`, `stroke`, opacity, corner, font, shadow, and related visual props follow [Node styling](/kernel/components/node/schema-reference#nodestyleschema) and are not duplicated here.
 
 | Prop                                          | Type                                                                                                                                                                            | Default                                                     | Description                                                                             |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |

@@ -13,7 +13,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   return (
     <Layout
       viewBox={{ x: -210, y: -80, width: 420, height: 160 }}
-      arrows={[DiamondArrowDefinition, OpenDiamondArrowDefinition]}
+      extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}
     >
       <Draw
         way={[

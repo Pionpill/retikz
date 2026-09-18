@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
 import { fadeIn } from '@retikz/core';
 import { Layout, Node } from '@retikz/react';
 import type { FC, ReactNode } from 'react';
@@ -163,7 +166,7 @@ describe('ComponentPreview Vanilla source', () => {
       <ComponentPreview files="coordinate-cartesian" />,
     );
     const kernelProps = await renderPreview(
-      ['kernel', 'components', 'node', 'overview'],
+      ['kernel', 'components', 'node', 'usage'],
       <ComponentPreview files="node-styled" />,
     );
 
@@ -212,6 +215,43 @@ describe('ComponentPreview Vanilla source', () => {
     expect(props.source?.react).toBeDefined();
     expect(props.source?.ir).toBeDefined();
     expect(props.source?.vanilla).toBeDefined();
+  });
+
+  it.each([
+    [undefined, true],
+    [false, false],
+    [true, true],
+  ] as const)('带 controls 的预览传入 hideCode=%s 时源码初始隐藏为 %s', async (hideCode, expected) => {
+    const controls = definePreviewControls({
+      presentation: 'panel',
+      sections: [{ controls: [{ kind: 'text', id: 'label', label: 'Label', defaultValue: 'Node' }] }],
+    });
+    const restore = installDemoRegistryContractFixture('code-visibility-fixture', {
+      controls,
+      canonicalValues: { label: 'Node' },
+      relatedApis: ['Node.text'],
+    });
+
+    try {
+      const props = await renderPreview(
+        fixtureSegments,
+        <ComponentPreview files="code-visibility-fixture" hideCode={hideCode} />,
+      );
+
+      expect(props.codeInitiallyHidden).toBe(expected);
+    } finally {
+      restore();
+    }
+  });
+
+  it('全图默认值 Demo 的 React 源码使用自动取景', async () => {
+    const source = await readFile(
+      resolve(process.cwd(), 'src/modules/docs/contents/kernel/components/layout/usage/layout-defaults.tsx'),
+      'utf8',
+    );
+
+    expect(source).not.toContain('width={320}');
+    expect(source).not.toContain('height={240}');
   });
 
   it('Standard Grid controls 的 canonical 状态生成可运行的 Vanilla 视图', async () => {
@@ -423,7 +463,7 @@ describe('ComponentPreview localized controls', () => {
 
   it('为 node-styled 解析真实 panel definition', async () => {
     const props = await renderPreview(
-      ['kernel', 'components', 'node', 'overview'],
+      ['kernel', 'components', 'node', 'usage'],
       <ComponentPreview files="node-styled" />,
     );
 

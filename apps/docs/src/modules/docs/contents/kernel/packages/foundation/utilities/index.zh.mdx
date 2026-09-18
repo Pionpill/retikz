@@ -58,7 +58,7 @@ compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 
 正常路径按下面的顺序运行：先校验权重，再解析前景与背景色，确认背景不透明后，才以 `foreground.a × weight` 作为有效 alpha 做 source-over sRGB 预合成。任一校验或解析失败都会抛出 `RetikzFoundationError`。
 
-<ComponentPreview files="opaque-color-flow" size="xs" hideCode />
+<ComponentPreview files="opaque-color-flow" size="sm" type="flow" hideCode />
 
 `StaticCssNamedColorHexByName` 是解析器支持的命名颜色清单。下面的目录直接使用该公开清单；可按颜色名或十六进制值搜索，也可以输入 Foundation 支持的静态 hex、`rgb()` 或 `hsl()` 色值预览。
 

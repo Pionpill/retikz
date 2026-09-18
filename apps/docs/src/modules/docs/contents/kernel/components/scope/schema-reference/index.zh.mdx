@@ -1,0 +1,111 @@
+---
+title: Schema 参考
+description: 查询 Scope 及其定位、变换与裁剪的公开数据契约
+---
+
+本页按名称选择 Scope 自有及 `clip` 直接相关的 `@retikz/core` schema，字段由源码读取。共享的图元默认值与变换 schema 只在 Scope 字段类型中保留名称，不在本页重复展开。React 属性见 [API 参考](/kernel/components/scope/api-reference)，首次使用见[基础用法](/kernel/components/scope/usage)。
+
+`ScopeSchema` 是 Tier 1 的容器节点。它不绘制新的视觉图元，而是给一组 children 建立局部变换、样式默认值、裁剪、层级与引用边界；Scope 本身仍可通过 `id` 被引用。
+
+<span id="scope"></span>
+
+## ScopeSchema
+
+<ZodSchema
+  shallow
+  name="ScopeSchema"
+  description="作用域容器：组织子树，并提供局部变换、样式默认值与裁剪。"
+  descriptions={{
+    style: '当前实例的视觉覆盖，按字段继承与覆盖',
+    defaults: '后代默认值通道及继承屏障',
+    type: '判别字段，标记此子节点为 scope',
+    theme: '当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色',
+    'style.color': '作用域级主色；可向 node、path、label 与 arrow 的对应颜色字段级联',
+    'style.fill': '作用域级默认填充；CSS color 字符串或 IRPaint',
+    'style.fillOpacity': '作用域级默认填充不透明度 0..1',
+    'style.stroke': '作用域级默认描边；CSS color 字符串或 IRPaint',
+    'style.strokeWidth': '作用域级默认描边宽度（用户单位）',
+    'style.strokeOpacity': '作用域级默认描边不透明度 0..1',
+    'style.opacity': '作用域级默认整体不透明度 0..1',
+    id: '可选引用 id；始终注册到父级命名空间',
+    localNamespace: '为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级',
+    transforms: '依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析',
+    placement: '在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target',
+    'defaults.node': '只作用于 node 的默认样式；不包含 id、position、text 等结构字段',
+    'defaults.path': '只作用于 path-like drawable 的默认样式；箭头使用独立 defaults.arrow 通道',
+    'defaults.label': 'node label 与 step / geometry label 共用的默认文字样式',
+    'defaults.arrow': '箭头默认外观，字段与 ArrowDetailSchema 相同',
+    'defaults.reset': '样式继承屏障：true 重置全部通道，或列出 node / path / label / arrow 中需要重置的通道',
+    zIndex: 'scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序',
+    clip: '以 scope 局部坐标描述的裁剪区域',
+    boundingShape: '给 scope id 生成的合成引用边界：rectangle 或 circle',
+    meta: 'JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释',
+    animations: '作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承',
+    children: '可递归包含 node、path、coordinate、scope 或 Tier 2 composite',
+  }}
+/>
+
+`Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
+
+## ScopePlacementSchema
+
+<ZodSchema
+  shallow
+  name="ScopePlacementSchema"
+  description="将变换后的 Scope 自身参照点对齐父坐标系目标。"
+  descriptions={{ target: '父坐标系中的定位目标', selfAnchor: '变换后 Scope 包络上的对齐点；省略时使用 center' }}
+/>
+
+## ScopePlacementTargetSchema
+
+<ZodSchema
+  shallow
+  name="ScopePlacementTargetSchema"
+  description="父坐标系中的显式坐标，或此前已解析的 Node、Coordinate、Scope 引用。"
+/>
+
+## ScopeSelfPointSchema
+
+<ZodSchema
+  shallow
+  name="ScopeSelfPointSchema"
+  description="Scope 固有包络上的锚点、局部原点 origin，或显式局部坐标。"
+/>
+
+## ScopeDefaultsSchema
+
+<ZodSchema
+  shallow
+  name="ScopeDefaultsSchema"
+  description="后代默认值通道及其继承屏障。"
+  descriptions={{
+    node: '节点默认样式，与其他通道独立',
+    path: '路径类图元默认样式；箭头使用独立 arrow 通道',
+    label: '节点标签与步骤标签的默认文字样式',
+    arrow: '箭头默认样式',
+    reset: '继承屏障：true 重置全部通道，或列出 node、path、label、arrow 中需要重置的通道',
+  }}
+/>
+
+## ClipSchema
+
+<ZodSchema
+  shallow
+  name="ClipSchema"
+  description="Scope.clip 的输入：内置矩形或按 kind 注册、可 JSON 序列化的自定义裁剪对象。"
+/>
+
+## RectClipSchema
+
+<ZodSchema
+  shallow
+  name="RectClipSchema"
+  description="Scope 局部坐标系中的矩形裁剪区域。"
+  descriptions={{
+    kind: '矩形裁剪区域的判别字段',
+    x: '矩形左上角的局部 x 坐标',
+    y: '矩形左上角的局部 y 坐标',
+    width: '矩形宽度，使用用户单位；零表示空裁剪区域',
+    height: '矩形高度，使用用户单位；零表示空裁剪区域',
+  }}
+/>

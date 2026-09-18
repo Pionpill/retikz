@@ -21,6 +21,7 @@ const canonicalValues = {
 /** Primitive Model controls in English */
 export const primitiveModelPlaygroundEnControls = definePreviewControls({
   presentation: 'panel',
+  defaultSize: 50,
   title: 'Primitive workbench',
   sections: [
     {

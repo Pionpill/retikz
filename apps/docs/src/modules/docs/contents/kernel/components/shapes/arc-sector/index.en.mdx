@@ -123,7 +123,7 @@ import { SectorShapeDefinition } from '@retikz/standard/shape';
 ```
 
 ```tsx
-<Layout shapes={[SectorShapeDefinition]}>
+<Layout extensions={{ shapes: [SectorShapeDefinition] }}>
   <Node shape={{ type: 'sector', params: { innerRadius: 0, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
   <Node shape={{ type: 'sector', params: { innerRadius: 40, outerRadius: 40, startAngle: 0, endAngle: 90 } }} />
 </Layout>
@@ -139,7 +139,7 @@ Besides the node's center plus 8 directional anchors (`center` / `top` …), Sec
 
 - **sector**: `outer-arc-mid` / `inner-arc-mid` / `apex` / `centroid` / `start-edge-mid` / `end-edge-mid`
 
-See [Node geometry](/kernel/components/node/overview) for Node shapes, sizes, boundaries, and anchors.
+See [Node geometry](/kernel/components/node/usage) for Node shapes, sizes, boundaries, and anchors.
 
 ### API Reference
 
@@ -238,6 +238,6 @@ As a result, `cornerRadius` changes both the visible Sector contour and automati
 
 ## Related
 
-- [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors when a shape is used as a node boundary
+- [Node geometry](/kernel/components/node/usage): sizes, boundaries, and anchors when a shape is used as a node boundary
 - [Circle / Ellipse](/kernel/components/shapes/circle-ellipse): half circles, segments, and partial ellipses
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

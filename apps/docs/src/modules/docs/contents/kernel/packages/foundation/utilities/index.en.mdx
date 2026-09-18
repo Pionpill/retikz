@@ -58,7 +58,7 @@ compositeOpaqueColor('#336699', '#ffffff', 0.2); // '#d6e0eb'
 
 The normal path validates the weight, parses foreground and backdrop, requires an opaque backdrop, then uses `foreground.a × weight` as the effective alpha for source-over sRGB precomposition. Any validation or parsing failure throws `RetikzFoundationError`.
 
-<ComponentPreview files="opaque-color-flow" size="xs" hideCode />
+<ComponentPreview files="opaque-color-flow" size="sm" type="flow" hideCode />
 
 `StaticCssNamedColorHexByName` is the named-color manifest supported by the parser. The catalog below consumes that public manifest directly. Search by color name or hex value, or enter a static hex, `rgb()`, or `hsl()` value supported by Foundation to preview it.
 

@@ -1,0 +1,230 @@
+---
+title: 实现原理
+description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸、主题覆盖机制
+---
+
+先读[基础用法](/kernel/components/layout/usage)。这里按属性背后的问题分别解释机制：为什么有时多出一层 Scope、不指定视窗时怎样取景，以及绘图配置如何与页面显示配合。各节可以独立阅读。
+
+## 隐式根作用域
+
+给一组子图元统一设置样式时，`rootScope` 并不是另一套样式系统。Layout 会按需把 JSX children 包进一层普通 Scope，让它们沿用 Scope 的继承与覆盖规则。
+
+看下面两组相同的节点：A 没有设置填充，B 显式设置橙色。左边通过 `rootScope.defaults.node.style.fill` 提供蓝色默认值，右边把同样的 `defaults` 写在显式 Scope 上。虚线框只标识包装关系，不是 Scope 自动绘制的边框。
+
+<ComponentPreview files="layout-root-scope" size="md" type="illustration" hideCode />
+
+两边的 A 都继承蓝色，B 都保留橙色。**defaults** 为未显式配置的后代图元提供默认值，不会强制改写节点属性；`rootScope.style` 则提供 `fill / stroke / opacity` 等通用绘图样式。图中的蓝色使用 `dodgerblue`，橙色使用 `darkorange`，均以低透明度填充，便于同时看清节点文字。
+
+实现上，`wrapRootScope` 先挑出有效的 `style / defaults`，有覆盖时才创建普通 Scope，再把原 children 放进去。图的左侧复用了这个包装函数，右侧直接声明 Scope，因此两种写法最终沿用同一套继承规则。
+
+包装与否取决于是否存在有效覆盖，而不是有没有传入 `rootScope` 这个对象：
+
+- **无有效覆盖**：不传、传 `{}`，或只传 `style: {}`、`defaults: {}` 等空覆盖时，直接使用原 children，不增加合成 Scope。
+- **有有效覆盖**：有实际样式、默认值或有效的 `defaults.reset` 时，包装一层普通 Scope，沿用既有继承规则。`reset` 为 `true` 或非空通道列表时表示切断相应的外层样式继承；`false` 或空列表本身不触发包装。
+- **直接传入 ir**：使用 IR 已描述的完整子图，忽略同时传入的 children 和 `rootScope`。要改变其中的作用域，应修改 IR 本身；宿主 CSS `style` 仍然生效。
+
+**这层合成 Scope 不是局部命名空间。** `rootScope` 只接收 `style / defaults`；需要 `localNamespace` 时，应在子图中显式使用 Scope，命名与引用机制见 [Scope 用法](/kernel/components/scope/usage)。
+
+<SourceLinks
+  sources={[
+    {
+      label: '按有效覆盖决定是否包装根 Scope',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 528,
+      endLine: 556,
+    },
+    {
+      label: 'Layout 的 ir 分支与 rootScope 边界',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 402,
+      endLine: 418,
+    },
+  ]}
+/>
+
+## 自动视窗
+
+没有指定 `viewBox` 时，Layout 的视窗不是由页面容器尺寸决定的，而是由绘图内容的布局边界决定的。这里的“布局边界”是各图元贡献的最左、最上、最右、最下范围合并得到的包围框，不只是节点中心点的范围；它在编译时得到，不是渲染后再读取 DOM 像素。
+
+先选择视窗来源：Layout 的 `viewBox` prop 优先，其次是输入 IR 中的 `viewBox`；两者都没有，才根据内容自动计算。显式视窗直接决定坐标窗口，不再按内容追加自动留白。
+
+自动计算只需要理解两步：合并内容边界，再向四边扩展 padding。下图只把蓝色 A、B 作为被测内容：A 是中心 `(30, 40)`、半径 `10` 的圆，B 是左上角 `(80, 50)`、宽高 `20 × 20` 的矩形。灰色虚线包住两者，橙色框在四边各多留 10 个绘图单位；测量线和文字只是教学标注，不计入这组内容的边界。
+
+<ComponentPreview files="layout-viewport-bounds" size="lg" type="illustration" hideCode />
+
+根据 A、B 的坐标和尺寸，灰框最左为 `20`、最上为 `30`，最右为 `100`、最下为 `70`，所以内容边界是 `(20, 30, 80, 40)`。再看橙框：左、上各向外移 `10`，宽、高各增加 `20`，得到视窗 `(10, 20, 100, 60)`。这些四元组的顺序都是 `(x, y, width, height)`，不是两个角点。图中按同一比例放大绘制，数值仍表示原始绘图单位。
+
+这对应下面的局部处理：编译得到内容边界，再扩展四边，生成自动视窗。不会先移动图元来让左上角归零。
+
+<ComponentPreview files="layout-auto-viewport" size="xs" type="flow" hideCode />
+
+一般地，边界为 `(x, y, w, h)`、留白为 `p` 时：
+
+$$
+(x', y', w', h') = (x-p,\ y-p,\ w+2p,\ h+2p)
+$$
+
+当前默认 `p = 10`，不是宿主 CSS 的 `padding`。Core 编译选项支持配置它，但 Layout 当前没有暴露这个 prop；需要自行控制取景留白时，用显式 `viewBox`。
+
+若没有任何内容边界，则直接使用 `{ x: 0, y: 0, width: 100, height: 100 }`，不再在这个兜底范围外加 padding。
+
+因此，移动或增删图元可能连带改变自动视窗。若要在多次更新之间比较相同坐标位置，应显式固定 `viewBox`；仅固定 `width / height` 不能固定取景范围。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout：显式 viewBox 覆盖输入值',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 434,
+    },
+    {
+      label: 'Core：选择显式视窗或自动边界',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 87,
+      endLine: 104,
+    },
+    {
+      label: '自动留白与无内容时的范围',
+      path: 'packages/kernel/core/src/compile/scene/layout.ts',
+      startLine: 26,
+      endLine: 35,
+    },
+    { label: '默认布局留白', path: 'packages/kernel/core/src/compile/constants.ts', startLine: 1, endLine: 5 },
+  ]}
+/>
+
+详细的边界算法可参考 [Math 包的边界计算](/kernel/packages/math/primitives#边界计算)。
+
+## 视窗与显示尺寸
+
+`viewBox` 决定“看哪一段绘图坐标”，`width / height` 决定“这个窗口在页面上占多大”。先确定视窗，再以它的宽高作为显示尺寸的推导依据；反过来，修改显示尺寸不会改写节点坐标，也不会重新定义视窗。
+
+两幅图都固定 `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`，A 位于 `(50, 50)`，B 位于 `(150, 50)`。上图不传宽高，下图只传 `width={400}`。先比较灰色宿主边框，再比较 A 相对左边、上边的位置。
+
+<ComponentPreview files="layout-display-comparison" size="xxl" type="illustration" hideCode />
+
+下图的宿主宽高、图形和间距都显示为上图的两倍，但 A 的绘图坐标仍是 `(50, 50)`：它始终位于窗口宽度的四分之一、高度的一半。图中两幅示意按同一比例绘制，点线标出 A 到宿主上边和左边的距离；它们没有各自缩放到同样大小。
+
+只传数值宽度时，`computeDisplaySize` 用视窗比例补齐高度。本例先得到宽高比 `200 / 100 = 2`，再算出显示高度 `400 / 2 = 200`：
+
+<ComponentPreview files="layout-viewbox-resolution" size="sm" type="flow" hideCode />
+
+对于同一个 `200 × 100` 视窗，其他尺寸配置分别走以下分支：
+
+| 尺寸配置                      | 宿主尺寸    | 推导方式         |
+| ----------------------------- | ----------- | ---------------- |
+| 不传宽高                      | 200 × 100   | 使用视窗宽高     |
+| 只传 `width={400}`            | 400 × 200   | 按比例补齐另一轴 |
+| 传 `width={400} height={300}` | 400 × 300   | 保留两轴显式值   |
+| 只传 `width="100%"`           | 100% × auto | 留给浏览器排版   |
+
+两轴都给时，Layout 不会把 `400 × 300` 改成 `400 × 200`。宿主尺寸与内部内容怎样适配属于 SVG / Canvas 的呈现行为，不能把宿主尺寸推导理解成重新布局图元。
+
+SVG 和 Canvas 共用这套显示尺寸计算。CSS 字符串不会被当作绘图坐标解析。
+
+<SourceLinks
+  sources={[
+    {
+      label: '数值比例补齐与 CSS 尺寸分支',
+      path: 'packages/kernel/react/src/render/display-size.ts',
+      startLine: 1,
+      endLine: 23,
+    },
+    {
+      label: 'SVG：将尺寸应用到根元素',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 178,
+      endLine: 181,
+    },
+    {
+      label: 'Canvas：复用显示尺寸计算',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 146,
+      endLine: 155,
+    },
+  ]}
+/>
+
+## 主题与局部覆盖
+
+Layout 只设置 `{ mode: 'light' }` 时，仍能保留外层选择的 `clean` 风格：主题按字段合并，后面未提供的字段会继续继承。这里的两个字段都属于 `theme`：
+
+- **theme.style**：选择主题风格，如 `clean`；与宿主 CSS 的 `style` prop 不同。
+- **theme.mode**：选择明暗模式，如 `dark` 或 `light`。
+
+下图从上到下是覆盖顺序。ThemeProvider 提供 `{ style: 'clean', mode: 'dark' }`，输入场景不设置主题，Layout 的 `theme` prop 只提供 `{ mode: 'light' }`。沿 `theme.style`、`theme.mode` 两列分别往下读，注意 `—` 表示“未提供”，不是清空。
+
+<ComponentPreview files="layout-theme-overlays" size="lg" type="illustration" hideCode />
+
+最终主题中的 `style: 'clean'` 来自 Provider，`mode: 'light'` 来自 Layout。若输入场景也提供主题，它会先覆盖 Provider，再接受 Layout 的覆盖。`mergeThemeOverlays` 逐层只写入已提供的字段，嵌套 ThemeProvider 也复用这套规则。
+
+合并主题和设置绘图样式是两个问题。**Composite** 是接收高层描述、再展开为基础图元的组合能力，可以消费主题生成自己的图元样式。`theme`、`rootScope` 和宿主 `style` 分别作用于以下位置，不构成同一个配置对象的三层优先级：
+
+| 配置                         | 作用位置                       | 用来决定什么               |
+| ---------------------------- | ------------------------------ | -------------------------- |
+| `theme`                      | 输入场景及消费主题的 Composite | 主题风格与明暗模式         |
+| `rootScope.style / defaults` | JSX 子图的根作用域             | 绘图样式与图元默认值       |
+| `style`                      | SVG / Canvas 宿主              | 页面 CSS，如背景与最大宽度 |
+
+Layout 把主题写入输入场景，供后续处理读取；它不会把主题风格直接转换成每个普通 Node 的填充色。确定普通 Node 的填充色用节点属性或 `rootScope`；限制整幅图在页面上的最大宽度用宿主 `style={{ maxWidth: '100%' }}`。
+
+还有两个与最终颜色有关的边界：
+
+- **Composite 仍遵守作用域覆盖规则**：若它展开出显式橙色的 Node，该颜色覆盖根 Scope 的蓝色默认值；若生成的 Node 没写 fill，则继承蓝色。这与第一节 A、B 的结果相同。
+- **明暗模式可能参与颜色计算**：图元使用数值颜色（按主色比例派生颜色）时，`mode` 会影响计算；显式的 `'darkorange'` 等字符串颜色则保持原值。切换主题不等于统一替换所有图元样式。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout：合并 Provider、输入与显式主题',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 434,
+    },
+    {
+      label: 'Theme 的逐字段合并',
+      path: 'packages/kernel/react/src/kernel/runtime/theme-context.ts',
+      startLine: 5,
+      endLine: 19,
+    },
+    {
+      label: 'Theme mode 与数值颜色的确定化',
+      path: 'packages/kernel/core/src/resolve/style/contextual-color.ts',
+      startLine: 18,
+      endLine: 41,
+    },
+    {
+      label: 'Composite 输出继续使用当前作用域',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 2203,
+      endLine: 2227,
+    },
+    {
+      label: 'Node 显式样式覆盖继承样式',
+      path: 'packages/kernel/core/src/resolve/style/node.ts',
+      startLine: 8,
+      endLine: 26,
+    },
+    {
+      label: '嵌套 ThemeProvider 的继承',
+      path: 'packages/kernel/react/src/kernel/runtime/ThemeProvider.tsx',
+      startLine: 17,
+      endLine: 24,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Scope 基础用法', description: '配置作用域继承与局部命名空间', url: '/kernel/components/scope/usage' },
+    {
+      title: '编译管线',
+      description: '查看 IR 到 Scene 的完整处理过程',
+      url: '/kernel/components/internals/compilation',
+    },
+    { title: 'Runtime', description: '深入持续更新、事务与增量执行', url: '/kernel/packages/runtime' },
+  ]}
+/>

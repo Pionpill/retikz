@@ -6,12 +6,12 @@ import { FlowDiagram } from '@retikz/diagram-react/flow';
 import type { AssertEqual } from '@retikz/foundation';
 import type { PlotLineageProps } from '@retikz/plot-react';
 import { Plot } from '@retikz/plot-react';
-import type { LayoutProps } from '@retikz/react';
+import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { resolveInputEmbedAdapter } from '@retikz/react';
 import type { ReactNode } from 'react';
 import { createElement, Fragment, isValidElement } from 'react';
 
-type PlotStandaloneProps = Pick<LayoutProps, 'className' | 'style' | 'renderer' | 'themeStyles'> & PlotLineageProps;
+type PlotStandaloneProps = Pick<LayoutProps & LayoutExtensions, 'className' | 'style' | 'renderer' | 'themeStyles'> & PlotLineageProps;
 
 const PLOT_STANDALONE_PROP_KEYS = [
   'className',

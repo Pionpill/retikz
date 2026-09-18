@@ -172,7 +172,7 @@ describe('Inspect demo source views', () => {
           vanilla.renderToSvgString(input, {
             adapters: original.adapters,
             compile: {
-              clips: root.props.clips,
+              clips: root.props.extensions?.clips,
               themeStyles: theme.PreviewThemeDefinitionBundle.core,
               measureText: measure.browserMeasurer,
             },

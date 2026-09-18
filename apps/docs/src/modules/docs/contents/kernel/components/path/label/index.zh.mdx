@@ -1,0 +1,180 @@
+---
+title: label · 标签
+description: 区分整条路径与单步标签，控制位置、朝向、多行文字和描边断口
+---
+
+先完成[基础用法](/kernel/components/path/usage)。同一句文字可以附着在整条 Path，也可以只附着在一个 Step；先选宿主，再调整位置。
+
+## 接入方式
+
+下面四种写法都在同一条线段上附加 `status` 标签；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="draw-label-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Draw way={[[0, 0], { label: 'status' }, [120, 0]]} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0], label: { text: 'status' } },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [path({ way: [[0, 0], { label: 'status' }, [120, 0]] })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0], label: { text: 'status' } },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 选择标签范围
+
+| 写法                   | 作用范围       | 何时使用           |
+| ---------------------- | -------------- | ------------------ |
+| `<Path label>`         | 整条路径       | 为一条关系命名     |
+| `<Step label>`         | 当前步骤       | 标注其中一段       |
+| `way` 中的 `{ label }` | 紧接着的连接段 | 在 Draw 中快速标注 |
+
+## 标注路径
+
+`{ label }` 修饰下一段产生的 `step.label`，不自己产生路径段。面板支持直线、两种折角与二次贝塞尔：拖动 `position`，再调整 `side`、`sloped` 与文字颜色。折角会把 t 平均分配给各腿，因此 `0.5` 固定落在拐角；曲线则按贝塞尔参数取点。
+
+<ComponentPreview files="draw-label" size="lg" />
+
+`position` 可以直接写 0–1 数值：0 为起点、1 为终点；也可使用 `at-start`、`very-near-start`、`near-start`、`midway`、`near-end`、`very-near-end`、`at-end`，分别对应 0、0.125、0.25、0.5、0.75、0.875、1。`side` 选择文字位于线的哪一侧；`sloped: true` 让文字沿切线旋转。想让文字居中压在线上时，省略 `side` 并设置 `sloped: true`，不要向公开输入传入 `side: 'center'`。
+
+Draw 在 `way` 里把 `{ label }` 放在要标注的连接段之前：
+
+```tsx
+<Draw way={['A', { label: { text: 'status', position: 0.5 } }, { curve: [180, -110] }, 'B']} />
+```
+
+Path 则直接把同一个对象传给目标 `<Step>` 的 `label`：
+
+```tsx
+<Path>
+  <Step kind="move" to="A" />
+  <Step kind="curve" control={[180, -110]} to="B" label={{ text: 'status', position: 0.5 }} />
+</Path>
+```
+
+整条 Path 的位置按路径长度计算；单个 Step 则遵循该动作的参数：曲线使用贝塞尔参数，圆弧使用角度进度，折角按各腿分配。具体原因见[实现原理](/kernel/components/path/mechanism#标签为什么只切断描边)。
+
+## 多行文字与描边断口
+
+`<Path label>` 作用于整条路径，`<Step label>` 只作用于当前步骤。下面观察同一块文字如何形成断口：文字仍在原位置，线在文字边界两侧停止。
+
+`label.text` 与 Node 复用同一种文字块输入（TextBlock）：可写单个字符串（其中 `\n` 是硬换行），也可写行数组并给每行单独设置 `fill` / `font`。所有行仍是同一个标签块，共享锚点、`position`、`side`、`sloped` 与 `interrupt`；断口按整个文字块的视觉边界计算，不会把每一行拆成独立标签。
+
+<ComponentPreview files="path-label-interruption" size="lg" />
+
+固定左上、右下两个节点后，切换连接路线、`side` 与 0–1 的标签位置，观察同一条宿主 Path 上的采样与断口。选择“自动居中”时不传 `side`、只启用 `sloped`，因此仍走居中标签的默认断线规则。
+
+<ComponentPreview
+  files={['path-label-route-playground', 'path-label-route-playground.tsx', 'path-label-route-playground.controls.ts']}
+  size="md"
+  caption="切换路线与标签位置；自动居中会断线，其它 side 默认保持连续。"
+/>
+
+省略 `interrupt` 时，只有这个无填充内置 Stroke + 居中的组合自动断线。`interrupt: false` 强制保留连续描边；`interrupt: true` 则可让非居中标签也断线。断口默认从标签视觉边界向两侧各额外留出 `4` user units；用 `gap` 覆盖该值，`gap: 0` 表示不加额外留白。
+
+任意有效 `fill`（包括 `style.fill: 'transparent'`，以及设置 fill 后再令 `style.fillOpacity: 0`）都会关闭自动断线，且 `interrupt: true` 会明确报错。Ribbon、custom Path kind 与其它非内置 Stroke Path 上的任意显式布尔值同样明确报错。断口不移动标签、marks、dash 或端点箭头，也不处理标签与箭头 / mark 的碰撞。
+
+曲线在参数处取点、按距离反解参数和保形裁切是 [`@retikz/math` 的曲线段算法](/kernel/packages/math/algorithms#曲线切片)。它只处理 纯几何数据；标签是否断线、断口间距和 Path 输出仍由 Core 决定。
+
+## 相关属性
+
+以下列出本页直接配置的路径标签属性；完整字段与文字块输入见 [API 参考](/kernel/components/path/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'label',
+      kind: 'property',
+      type: '<Path label>: IRGeometryLabel | Array<IRGeometryLabel>; <Step label>: InputStepLabel; way: { label: string | InputStepLabel }',
+      description:
+        "按标签宿主选择写法：\n\n- `<Path label>`：`IRGeometryLabel | Array<IRGeometryLabel>`，标注整条路径\n- `<Step label>`：`InputStepLabel`，标注当前步骤\n- `way` 中 `{ label: string | InputStepLabel }`：标注下一连接段\n\n对象字段：\n\n- `text: TextBlock`：字符串（`\\n` 换行）或行数组 `Array<{ text: string; fill?: string; font?: Font }>`\n- `position?: number | 'at-start' | 'very-near-start' | 'near-start' | 'midway' | 'near-end' | 'very-near-end' | 'at-end'`：分别对应 0、0.125、0.25、0.5、0.75、0.875、1\n- `side?: 'top' | 'right' | 'bottom' | 'left'`：文字在线的哪侧；省略时默认 top，`sloped: true` 时居中\n- `sloped?: boolean`：沿切线旋转\n- `interrupt?: boolean`：控制无填充内置 Stroke 的描边断口；省略时仅居中斜放标签自动断线\n- `gap?: number`：断口两侧额外间距，默认 4",
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step · 路径组合',
+      description: '组合多个路径步骤，控制子路径、连接面、圆角、变换与沿线标记',
+      url: '/kernel/components/path/step',
+    },
+
+    {
+      title: '实现原理',
+      description: '解释路径写法如何变成步骤，以及引用、几何、箭头和标签如何产生最终结果',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'Schema 参考',
+      description: '查询路径、步骤、标签与箭头标记的输入数据契约',
+      url: '/kernel/components/path/schema-reference',
+    },
+
+]}
+/>

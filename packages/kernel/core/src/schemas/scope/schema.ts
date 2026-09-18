@@ -85,7 +85,7 @@ export const ScopePropsSchema = strictObject({
   transforms: array(TransformSchema)
     .optional()
     .describe(
-      'Local transforms applied to all scope children. Array order is application order; translate variants are lowered at compile time.',
+      'Local transforms applied to all scope children. The last array item acts on local points first; translate variants are lowered at compile time.',
     ),
   placement: ScopePlacementSchema.optional().describe(
     'Optional final placement applied after intrinsic layout and local transforms.',

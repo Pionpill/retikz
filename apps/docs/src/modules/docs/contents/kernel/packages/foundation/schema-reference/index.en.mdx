@@ -1,0 +1,65 @@
+---
+title: Schema reference
+description: Look up input ranges, default rules, and validation structure for public @retikz/foundation base schemas
+---
+
+This page lists the domain-neutral schemas exported from the `@retikz/foundation` root entry. They define JSON parse boundaries and scalar validation; domain objects such as Nodes and Paths should use schemas owned by their domain package. See [Types & Schemas](/kernel/packages/foundation/types-schemas) for compile-time utilities and open-string builders, and the [API reference](/kernel/packages/foundation/api-reference) for assertions and other public signatures.
+
+Foundation schemas do not fill defaults: `parse()` validates input and returns the parsed value without coercion, trimming, or other transformation. JSON schemas retain recursive structure, while scalar schemas return the original number or string.
+
+## JSON value schemas
+
+`JsonValueSchema` accepts any JSON value, while `JsonObjectSchema` requires an object at the root.
+
+### JsonValueSchema
+
+<ZodSchema name="JsonValueSchema" />
+
+### JsonObjectSchema
+
+<ZodSchema name="JsonObjectSchema" />
+
+## String schemas
+
+### NonBlankStringSchema
+
+<ZodSchema name="NonBlankStringSchema" />
+
+## Number schemas
+
+### PositiveNumberSchema
+
+<ZodSchema name="PositiveNumberSchema" />
+
+### NonNegativeNumberSchema
+
+<ZodSchema name="NonNegativeNumberSchema" />
+
+### PositiveIntegerSchema
+
+<ZodSchema name="PositiveIntegerSchema" />
+
+### NonNegativeIntegerSchema
+
+<ZodSchema name="NonNegativeIntegerSchema" />
+
+### NormalizedFractionSchema
+
+<ZodSchema name="NormalizedFractionSchema" />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Types & Schemas',
+      description: 'Compile-time type utilities and open-string builders',
+      url: '/kernel/packages/foundation/types-schemas',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up complete public signatures and type contracts',
+      url: '/kernel/packages/foundation/api-reference',
+    },
+  ]}
+/>

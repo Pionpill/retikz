@@ -154,9 +154,9 @@ const GraphComponent: FC<GraphProps> = props => {
       },
     };
   }, [ambientGraphThemeStyles, generatedId, props]);
-  const hostProps = graphLayoutHostPropsOf(props);
+  const { shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles, ...hostProps } = graphLayoutHostPropsOf(props);
   return (
-    <Layout {...hostProps}>
+    <Layout {...hostProps} extensions={{ shapes, boundaries, clips, arrows, patterns, pathGenerators, pathKinds, composites, themeStyles }}>
       <GraphRuntimeEmbed input={collected.input} adapters={collected.adapters} />
     </Layout>
   );

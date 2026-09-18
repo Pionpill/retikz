@@ -10,6 +10,8 @@ import type { PreviewThemeMode } from '@/modules/docs/components/component-previ
 export type ComponentPreviewState = {
   hideCode: boolean;
   isExpand: boolean;
+  /** 是否仅显示解锁用的悬浮控制按钮 */
+  controlsLocked: boolean;
   dragEnabled: boolean;
   rendererMode: 'svg' | 'canvas';
   animationMode: AnimationMode;
@@ -23,6 +25,8 @@ export type ComponentPreviewState = {
   rangePlaybackDuration: number;
   setHideCode: (value: boolean) => void;
   setIsExpand: (value: boolean) => void;
+  /** 设置全站悬浮控制的锁定状态 */
+  setControlsLocked: (value: boolean) => void;
   setDragEnabled: (value: boolean) => void;
   setRendererMode: (value: 'svg' | 'canvas') => void;
   setAnimationMode: (value: AnimationMode) => void;
@@ -36,6 +40,8 @@ export type ComponentPreviewState = {
   setRangePlaybackDuration: (value: number) => void;
   toggleHideCode: () => void;
   toggleIsExpand: () => void;
+  /** 切换全站悬浮控制的锁定状态 */
+  toggleControlsLocked: () => void;
   toggleDragEnabled: () => void;
   toggleRendererMode: () => void;
   /** 切换新预览实例的属性面板默认状态 */
@@ -47,6 +53,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
     (set, get) => ({
       hideCode: false,
       isExpand: false,
+      controlsLocked: false,
       dragEnabled: false,
       rendererMode: 'svg',
       animationMode: 'system',
@@ -56,6 +63,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       rangePlaybackDuration: 2000,
       setHideCode: value => set({ hideCode: value }),
       setIsExpand: value => set({ isExpand: value }),
+      setControlsLocked: controlsLocked => set({ controlsLocked }),
       setDragEnabled: value => set({ dragEnabled: value }),
       setRendererMode: value => set({ rendererMode: value }),
       setAnimationMode: value => set({ animationMode: value }),
@@ -65,6 +73,7 @@ export const useComponentPreviewStore = create<ComponentPreviewState>()(
       setRangePlaybackDuration: value => set({ rangePlaybackDuration: value }),
       toggleHideCode: () => set({ hideCode: !get().hideCode }),
       toggleIsExpand: () => set({ isExpand: !get().isExpand }),
+      toggleControlsLocked: () => set({ controlsLocked: !get().controlsLocked }),
       toggleDragEnabled: () => set({ dragEnabled: !get().dragEnabled }),
       toggleRendererMode: () => set({ rendererMode: get().rendererMode === 'svg' ? 'canvas' : 'svg' }),
       toggleControlPanelDefaultOpen: () => set({ controlPanelDefaultOpen: !get().controlPanelDefaultOpen }),

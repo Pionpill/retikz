@@ -1,0 +1,33 @@
+/** 预览控件双语文案 */
+export const drawStyleControlsI18n = {
+  zh: {
+    drawPathAppearance: 'Draw 路径外观',
+    stroke: '描边',
+    color: '颜色',
+    width: '宽度',
+    dashed: '虚线',
+    dashoffset: '虚线偏移',
+    geometryAndEndpoints: '几何与端点',
+    arrow: '箭头方向',
+    none: '无',
+    end: '终点',
+    start: '起点',
+    bothEnds: '两端',
+    cornerRadius: '圆角半径',
+  },
+  en: {
+    drawPathAppearance: 'Draw path appearance',
+    stroke: 'Stroke',
+    color: 'Color',
+    width: 'Width',
+    dashed: 'Dashed',
+    dashoffset: 'dashOffset',
+    geometryAndEndpoints: 'Geometry and endpoints',
+    arrow: 'arrow',
+    none: 'None',
+    end: 'End',
+    start: 'Start',
+    bothEnds: 'Both ends',
+    cornerRadius: 'Corner radius',
+  },
+};

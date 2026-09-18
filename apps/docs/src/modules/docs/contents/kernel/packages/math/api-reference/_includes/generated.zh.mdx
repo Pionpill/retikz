@@ -11,7 +11,7 @@
 </p>
 
 ```ts
-readonly[(number, number, number, number, number, number)];
+export type AffineMatrix = readonly [number, number, number, number, number, number];
 ```
 
 ### ArcBoundingCandidatesInput
@@ -26,12 +26,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员            | 类型       | 默认值 | 说明               |
 | --------------- | ---------- | ------ | ------------------ |
 | `center`        | `Position` | —      | 圆心               |
 | `endAngleDeg`   | `number`   | —      | 结束角度，单位为度 |
 | `radius`        | `number`   | —      | 半径               |
 | `startAngleDeg` | `number`   | —      | 起始角度，单位为度 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ArcBoundingCandidatesInput = {
+  center: Position;
+  radius: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### ArcSweepAngleInput
 
@@ -41,12 +62,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员            | 类型     | 默认值 | 说明                 |
 | --------------- | -------- | ------ | -------------------- |
 | `angleDeg`      | `number` | —      | 待判定角度，单位为度 |
 | `endAngleDeg`   | `number` | —      | 结束角度，单位为度   |
 | `startAngleDeg` | `number` | —      | 起始角度，单位为度   |
 | `toleranceDeg?` | `number` | —      | 角度容差，单位为度   |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ArcSweepAngleInput = {
+  startAngleDeg: number;
+  endAngleDeg: number;
+  angleDeg: number;
+  toleranceDeg?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### AxisAlignedBounds
 
@@ -56,12 +98,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员   | 类型     | 默认值 | 说明        |
 | ------ | -------- | ------ | ----------- |
 | `maxX` | `number` | —      | 最大 x 坐标 |
 | `maxY` | `number` | —      | 最大 y 坐标 |
 | `minX` | `number` | —      | 最小 x 坐标 |
 | `minY` | `number` | —      | 最小 y 坐标 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type AxisAlignedBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### BoundsHalfAxes
 
@@ -71,10 +134,29 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员         | 类型     | 默认值 | 说明       |
 | ------------ | -------- | ------ | ---------- |
 | `halfHeight` | `number` | —      | y 方向半高 |
 | `halfWidth`  | `number` | —      | x 方向半宽 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type BoundsHalfAxes = {
+  halfWidth: number;
+  halfHeight: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### BoundsInsets
 
@@ -84,12 +166,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员     | 类型     | 默认值 | 说明         |
 | -------- | -------- | ------ | ------------ |
 | `bottom` | `number` | —      | 向下外扩距离 |
 | `left`   | `number` | —      | 向左外扩距离 |
 | `right`  | `number` | —      | 向右外扩距离 |
 | `top`    | `number` | —      | 向上外扩距离 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type BoundsInsets = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### BoundsRect
 
@@ -99,6 +202,10 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员     | 类型     | 默认值 | 说明          |
 | -------- | -------- | ------ | ------------- |
 | `height` | `number` | —      | 矩形高度      |
@@ -106,17 +213,57 @@ readonly[(number, number, number, number, number, number)];
 | `x`      | `number` | —      | 左上角 x 坐标 |
 | `y`      | `number` | —      | 左上角 y 坐标 |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type BoundsRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CenteredBox
 
 <p>
-  <ApiSourceLink label={'CenteredBox'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={16}>
+  <ApiSourceLink label={'CenteredBox'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={15}>
     以中心描述的矩形盒
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员      | 类型     | 默认值 | 说明                                      |
+| --------- | -------- | ------ | ----------------------------------------- |
+| `height`  | `number` | —      | 矩形盒高度                                |
+| `rotate?` | `number` | —      | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
+| `width`   | `number` | —      | 矩形盒宽度                                |
+| `x`       | `number` | —      | 中心横坐标                                |
+| `y`       | `number` | —      | 中心纵坐标                                |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-CenteredShape & { height: number; width: number }
+export type CenteredBox = CenteredShape & {
+  width: number;
+  height: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### CenteredShape
 
@@ -126,32 +273,75 @@ CenteredShape & { height: number; width: number }
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员      | 类型     | 默认值 | 说明                                      |
 | --------- | -------- | ------ | ----------------------------------------- |
 | `rotate?` | `number` | —      | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
 | `x`       | `number` | —      | 中心横坐标                                |
 | `y`       | `number` | —      | 中心纵坐标                                |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CenteredShape = {
+  x: number;
+  y: number;
+  rotate?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### Circle
 
 <p>
-  <ApiSourceLink label={'Circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={8}>
+  <ApiSourceLink label={'Circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={7}>
     圆：圆心 + 半径
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员     | 类型       | 默认值 | 说明 |
 | -------- | ---------- | ------ | ---- |
 | `center` | `Position` | —      | —    |
 | `radius` | `number`   | —      | —    |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type Circle = {
+  center: Position;
+  radius: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CircleCircleInput
 
 <p>
-  <ApiSourceLink label={'CircleCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={31}>
+  <ApiSourceLink label={'CircleCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={30}>
     两圆求交参数
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员      | 类型       | 默认值 | 说明         |
 | --------- | ---------- | ------ | ------------ |
@@ -160,13 +350,34 @@ CenteredShape & { height: number; width: number }
 | `radiusA` | `number`   | —      | 第一个圆半径 |
 | `radiusB` | `number`   | —      | 第二个圆半径 |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CircleCircleInput = {
+  centerA: Position;
+  radiusA: number;
+  centerB: Position;
+  radiusB: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CircularArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={49}>
+  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={48}>
     圆弧曲线段
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员                | 类型       | 默认值 | 说明                                   |
 | ------------------- | ---------- | ------ | -------------------------------------- |
@@ -177,13 +388,36 @@ CenteredShape & { height: number; width: number }
 | `radius`            | `number`   | —      | 半径                                   |
 | `startAngleDeg`     | `number`   | —      | 起始参数角，单位为度                   |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CircularArcCurveSegment = {
+  kind: 'arc';
+  center: Position;
+  radius: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+  counterClockwise?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CubicBezierCurveSegment
 
 <p>
-  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={32}>
+  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={31}>
     三次贝塞尔曲线段
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员       | 类型            | 默认值 | 说明         |
 | ---------- | --------------- | ------ | ------------ |
@@ -193,13 +427,35 @@ CenteredShape & { height: number; width: number }
 | `kind`     | `'cubicBezier'` | —      | 曲线种类     |
 | `to`       | `Position`      | —      | 终点         |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CubicBezierCurveSegment = {
+  kind: 'cubicBezier';
+  from: Position;
+  control1: Position;
+  control2: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CubicSegment
 
 <p>
-  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={46}>
+  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={45}>
     一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot）
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员       | 类型       | 默认值 | 说明 |
 | ---------- | ---------- | ------ | ---- |
@@ -207,21 +463,55 @@ CenteredShape & { height: number; width: number }
 | `control2` | `Position` | —      | —    |
 | `to`       | `Position` | —      | —    |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CubicSegment = {
+  control1: Position;
+  control2: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CurveApproximationOptions
 
 <p>
   <ApiSourceLink
     label={'CurveApproximationOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={101}
+    startLine={100}
   >
     曲线长度近似配置
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员           | 类型     | 默认值 | 说明                                |
 | -------------- | -------- | ------ | ----------------------------------- |
 | `sampleCount?` | `number` | —      | Bezier 与椭圆弧使用的等参数采样数量 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CurveApproximationOptions = {
+  sampleCount?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### CurveParameterAtDistanceOptions
 
@@ -229,56 +519,120 @@ CenteredShape & { height: number; width: number }
   <ApiSourceLink
     label={'CurveParameterAtDistanceOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={107}
+    startLine={106}
   >
     曲线距离到参数反解配置
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员              | 类型     | 默认值 | 说明                                               |
+| ----------------- | -------- | ------ | -------------------------------------------------- |
+| `bisectionSteps?` | `number` | —      | 二分反解最多执行次数                               |
+| `sampleCount?`    | `number` | —      | Bezier 与椭圆弧使用的等参数采样数量                |
+| `totalLength?`    | `number` | —      | 已按同一采样预算计算的完整曲线长度，省略时即时计算 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-CurveApproximationOptions & { bisectionSteps?: number; totalLength?: number }
+export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
+  totalLength?: number;
+  bisectionSteps?: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### CurveSegment
 
 <p>
-  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={85}>
+  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={84}>
     可参数化、可切片的零依赖曲线段
   </ApiSourceLink>
 </p>
 
 ```ts
-LineCurveSegment |
-  QuadraticBezierCurveSegment |
-  CubicBezierCurveSegment |
-  CircularArcCurveSegment |
-  EllipseArcCurveSegment;
+export type CurveSegment =
+  | LineCurveSegment
+  | QuadraticBezierCurveSegment
+  | CubicBezierCurveSegment
+  | CircularArcCurveSegment
+  | EllipseArcCurveSegment;
 ```
 
 ### CurveSegmentSample
 
 <p>
-  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={93}>
+  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={92}>
     曲线参数采样结果
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员      | 类型       | 默认值 | 说明                                            |
 | --------- | ---------- | ------ | ----------------------------------------------- |
 | `point`   | `Position` | —      | 参数位置对应的点                                |
 | `tangent` | `Vector2`  | —      | 沿曲线前进方向的单位切线；零导数回退为 `[1, 0]` |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type CurveSegmentSample = {
+  point: Position;
+  tangent: Vector2;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### Ellipse
 
 <p>
-  <ApiSourceLink label={'Ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={8}>
+  <ApiSourceLink label={'Ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={7}>
     椭圆：中心 + 半轴 + 可选旋转
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员      | 类型     | 默认值 | 说明                                      |
+| --------- | -------- | ------ | ----------------------------------------- |
+| `rotate?` | `number` | —      | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
+| `rx`      | `number` | —      | 沿本地 +x 的半轴长度                      |
+| `ry`      | `number` | —      | 沿本地 +y 的半轴长度                      |
+| `x`       | `number` | —      | 中心横坐标                                |
+| `y`       | `number` | —      | 中心纵坐标                                |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-CenteredShape & { rx: number; ry: number }
+export type Ellipse = CenteredShape & {
+  rx: number;
+  ry: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### EllipseArcAnglePointInput
 
@@ -288,12 +642,33 @@ CenteredShape & { rx: number; ry: number }
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员       | 类型       | 默认值 | 说明             |
 | ---------- | ---------- | ------ | ---------------- |
 | `angleDeg` | `number`   | —      | 参数角，单位为度 |
 | `center`   | `Position` | —      | 椭圆中心         |
 | `radiusX`  | `number`   | —      | x 方向半轴       |
 | `radiusY`  | `number`   | —      | y 方向半轴       |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type EllipseArcAnglePointInput = {
+  center: Position;
+  radiusX: number;
+  radiusY: number;
+  angleDeg: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### EllipseArcBoundingCandidatesInput
 
@@ -307,17 +682,44 @@ CenteredShape & { rx: number; ry: number }
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员            | 类型       | 默认值 | 说明                 |
+| --------------- | ---------- | ------ | -------------------- |
+| `center`        | `Position` | —      | 椭圆中心             |
+| `endAngleDeg`   | `number`   | —      | 结束参数角，单位为度 |
+| `radiusX`       | `number`   | —      | x 方向半轴           |
+| `radiusY`       | `number`   | —      | y 方向半轴           |
+| `startAngleDeg` | `number`   | —      | 起始参数角，单位为度 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleDeg: number }
+export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 'angleDeg'> & {
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### EllipseArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={65}>
+  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={64}>
     椭圆弧曲线段
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员                | 类型           | 默认值 | 说明                                   |
 | ------------------- | -------------- | ------ | -------------------------------------- |
@@ -330,29 +732,54 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `rotationDeg?`      | `number`       | —      | 本地椭圆相对世界坐标的旋转角，单位为度 |
 | `startAngleDeg`     | `number`       | —      | 起始参数角，单位为度                   |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type EllipseArcCurveSegment = {
+  kind: 'ellipseArc';
+  center: Position;
+  radiusX: number;
+  radiusY: number;
+  rotationDeg?: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+  counterClockwise?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### EllipseCircumscribeMode
 
 <p>
   <ApiSourceLink
     label={'EllipseCircumscribeMode'}
     path={'packages/kernel/math/src/primitives/ellipse.ts'}
-    startLine={24}
+    startLine={23}
   >
     椭圆外接内部盒的半轴策略
   </ApiSourceLink>
 </p>
 
 ```ts
-'proportional' | 'equal';
+export type EllipseCircumscribeMode = 'proportional' | 'equal';
 ```
 
 ### LineCircleInput
 
 <p>
-  <ApiSourceLink label={'LineCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={19}>
+  <ApiSourceLink label={'LineCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={18}>
     直线与圆求交参数
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员        | 类型       | 默认值 | 说明                   |
 | ----------- | ---------- | ------ | ---------------------- |
@@ -361,13 +788,34 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `origin`    | `Position` | —      | 直线起点               |
 | `radius`    | `number`   | —      | 圆半径                 |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type LineCircleInput = {
+  origin: Position;
+  direction: Position;
+  center: Position;
+  radius: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### LineCurveSegment
 
 <p>
-  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={10}>
+  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={9}>
     直线曲线段
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员   | 类型       | 默认值 | 说明     |
 | ------ | ---------- | ------ | -------- |
@@ -375,13 +823,33 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `kind` | `'line'`   | —      | 曲线种类 |
 | `to`   | `Position` | —      | 终点     |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type LineCurveSegment = {
+  kind: 'line';
+  from: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### LineLineInput
 
 <p>
-  <ApiSourceLink label={'LineLineInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={7}>
+  <ApiSourceLink label={'LineLineInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={6}>
     两条无限直线求交参数
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员 | 类型       | 默认值 | 说明                   |
 | ---- | ---------- | ------ | ---------------------- |
@@ -389,6 +857,23 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `a2` | `Position` | —      | 第一条直线上的第二个点 |
 | `b1` | `Position` | —      | 第二条直线上的第一个点 |
 | `b2` | `Position` | —      | 第二条直线上的第二个点 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type LineLineInput = {
+  a1: Position;
+  a2: Position;
+  b1: Position;
+  b2: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### Position
 
@@ -399,7 +884,7 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 </p>
 
 ```ts
-Vector2;
+export type Position = Vector2;
 ```
 
 ### QuadraticBezierCurveSegment
@@ -408,11 +893,15 @@ Vector2;
   <ApiSourceLink
     label={'QuadraticBezierCurveSegment'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={20}
+    startLine={19}
   >
     二次贝塞尔曲线段
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
 
 | 成员      | 类型                | 默认值 | 说明     |
 | --------- | ------------------- | ------ | -------- |
@@ -421,21 +910,64 @@ Vector2;
 | `kind`    | `'quadraticBezier'` | —      | 曲线种类 |
 | `to`      | `Position`          | —      | 终点     |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type QuadraticBezierCurveSegment = {
+  kind: 'quadraticBezier';
+  from: Position;
+  control: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### RayArcIntersectionInput
 
 <p>
   <ApiSourceLink
     label={'RayArcIntersectionInput'}
     path={'packages/kernel/math/src/algorithms/arc-intersection.ts'}
-    startLine={7}
+    startLine={6}
   >
     射线与圆弧求交参数
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员            | 类型       | 默认值 | 说明                   |
+| --------------- | ---------- | ------ | ---------------------- |
+| `center`        | `Position` | —      | 圆心                   |
+| `direction`     | `Position` | —      | 射线方向，不要求单位化 |
+| `endAngleDeg`   | `number`   | —      | 结束角度，单位为度     |
+| `origin`        | `Position` | —      | 射线起点               |
+| `radius`        | `number`   | —      | 半径                   |
+| `startAngleDeg` | `number`   | —      | 起始角度，单位为度     |
+| `tolerance?`    | `number`   | —      | 正向参数容差           |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-ArcBoundingCandidatesInput & { direction: Position; origin: Position; tolerance?: number }
+export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
+  origin: Position;
+  direction: Position;
+  tolerance?: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### Vector2
 
@@ -446,7 +978,7 @@ ArcBoundingCandidatesInput & { direction: Position; origin: Position; tolerance?
 </p>
 
 ```ts
-[number, number];
+export type Vector2 = [number, number];
 ```
 
 ### AFFINE_IDENTITY
@@ -458,39 +990,37 @@ ArcBoundingCandidatesInput & { direction: Position; origin: Position; tolerance?
 </p>
 
 ```ts
-AffineMatrix;
+export const AFFINE_IDENTITY: AffineMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 ```
 
 ### circle
 
 <p>
-  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={42}>
+  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={41}>
     圆相关几何算法
   </ApiSourceLink>
 </p>
 
 ```ts
-{
-  minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null;
-}
+export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null };
 ```
 
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={403}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={402}>
     可参数化曲线的纯几何运算
   </ApiSourceLink>
 </p>
 
 ```ts
-{
+export declare const curve: {
   approximateLength: (segment: CurveSegment, options: CurveApproximationOptions) => number;
   catmullRomToCubic: (knots: Array<Vector2>, tension: number) => Array<CubicSegment>;
   parameterAtDistance: (segment: CurveSegment, distance: number, options: CurveParameterAtDistanceOptions) => number;
   sampleAt: (segment: CurveSegment, parameter: number) => CurveSegmentSample;
   slice: (segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment;
-}
+};
 ```
 
 ### DEFAULT_EPSILON
@@ -502,40 +1032,35 @@ AffineMatrix;
 </p>
 
 ```ts
-1e-9;
+export const DEFAULT_EPSILON = 1e-9;
 ```
 
 ### ellipse
 
 <p>
-  <ApiSourceLink label={'ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={27}>
+  <ApiSourceLink label={'ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={26}>
     基于中心、本地半轴和可选旋转的椭圆运算
   </ApiSourceLink>
 </p>
 
 ```ts
-{
+export declare const ellipse: {
   boundaryPoint: (e: Ellipse, toward: Vector2) => Vector2;
   center: (e: Ellipse) => Vector2;
   circumscribedHalfAxes: (innerHalfAxes: BoundsHalfAxes, mode: EllipseCircumscribeMode) => BoundsHalfAxes;
   contains: (e: Ellipse, p: Vector2) => boolean;
   inscribedInBox: (box: CenteredBox) => Ellipse;
-}
+};
 ```
 
 ### intersect
 
-<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={115}>求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）</ApiSourceLink></p>
+<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={114}>求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）</ApiSourceLink></p>
 
 ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc-intersection` 单独导出
 
 ```ts
-{
-  circleCircle: (__namedParameters: CircleCircleInput) => Array<Vector2>;
-  lineCircle: (__namedParameters: LineCircleInput) => Array<Vector2>;
-  lineLine: (__namedParameters: LineLineInput) => Vector2 | null;
-  segmentSegment: (__namedParameters: LineLineInput) => Vector2 | null;
-}
+export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };
 ```
 
 ### point
@@ -547,13 +1072,13 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-{
+export declare const point: {
   against: (origin: Vector2, direction: Vector2, length: number) => Vector2;
   along: (origin: Vector2, direction: Vector2, length: number) => Vector2;
   distance: (a: Vector2, b: Vector2) => number;
   isEqual: (a: Vector2, b: Vector2) => boolean;
   shiftToward: (sourcePoint: Vector2, targetPoint: Vector2, distance: number) => Vector2;
-}
+};
 ```
 
 ### polygon
@@ -565,24 +1090,22 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-{
-  containsPoint: (vertices: Array<Vector2>, p: Vector2) => boolean;
-}
+export declare const polygon: { containsPoint: (vertices: Array<Vector2>, p: Vector2) => boolean };
 ```
 
 ### triangle
 
 <p>
-  <ApiSourceLink label={'triangle'} path={'packages/kernel/math/src/algorithms/triangle.ts'} startLine={8}>
+  <ApiSourceLink label={'triangle'} path={'packages/kernel/math/src/algorithms/triangle.ts'} startLine={7}>
     三角形外接圆与内切圆构造
   </ApiSourceLink>
 </p>
 
 ```ts
-{
+export declare const triangle: {
   circumCircle: (a: Vector2, b: Vector2, c: Vector2) => Circle | null;
   incircle: (a: Vector2, b: Vector2, c: Vector2) => Circle | null;
-}
+};
 ```
 
 ### vector2
@@ -594,7 +1117,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-{
+export declare const vector2: {
   add: (a: Vector2, b: Vector2) => Vector2;
   cross: (a: Vector2, b: Vector2) => number;
   dot: (a: Vector2, b: Vector2) => number;
@@ -605,7 +1128,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
   normalizeOrNull: (a: Vector2, epsilon: number) => Vector2 | null;
   scale: (a: Vector2, k: number) => Vector2;
   sub: (a: Vector2, b: Vector2) => Vector2;
-}
+};
 ```
 
 ### applyAffine
@@ -617,7 +1140,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(matrix: AffineMatrix, point: Vector2) => Vector2;
+export const applyAffine = (matrix: AffineMatrix, point: Vector2) => Vector2;
 ```
 
 #### 参数
@@ -638,7 +1161,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 输入为空时返回 undefined；调用方按自身语义决定兜底、报错或忽略
 
 ```ts
-(points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
+export const boundsOf = (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
 ```
 
 #### 参数
@@ -656,7 +1179,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => BoundsRect;
+export const boundsToRect = (__namedParameters: AxisAlignedBounds) => BoundsRect;
 ```
 
 #### 参数
@@ -674,7 +1197,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => Vector2;
+export const centerOfBounds = (__namedParameters: AxisAlignedBounds) => Vector2;
 ```
 
 #### 参数
@@ -698,7 +1221,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 不去重；端角恰在 90°·k 上时由调用方处理
 
 ```ts
-(__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
+export const collectArcBoundingCandidates = (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
 ```
 
 #### 参数
@@ -722,7 +1245,8 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 只处理轴对齐椭圆弧，候选点不去重
 
 ```ts
-(__namedParameters: EllipseArcBoundingCandidatesInput) => Array<Vector2>;
+export const collectEllipseArcBoundingCandidates = (__namedParameters: EllipseArcBoundingCandidatesInput) =>
+  Array<Vector2>;
 ```
 
 #### 参数
@@ -734,7 +1258,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 ### convexHull
 
 <p>
-  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={11}>
+  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={10}>
     凸包（Andrew's monotone chain）
   </ApiSourceLink>
 </p>
@@ -743,7 +1267,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 全部点共线时退化为两端点
 
 ```ts
-(points: Array<Vector2>) => Array<Vector2>;
+export const convexHull = (points: Array<Vector2>) => Array<Vector2>;
 ```
 
 #### 参数
@@ -763,7 +1287,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => Array<Vector2>;
+export const cornersOfBounds = (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
 ```
 
 #### 参数
@@ -781,7 +1305,8 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds, __namedParameters: BoundsInsets) => AxisAlignedBounds;
+export const expandBounds = (__namedParameters: AxisAlignedBounds, __namedParameters: BoundsInsets) =>
+  AxisAlignedBounds;
 ```
 
 #### 参数
@@ -804,7 +1329,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(matrix: AffineMatrix) => number | undefined;
+export const getAffineSimilarityScale = (matrix: AffineMatrix) => number | undefined;
 ```
 
 #### 参数
@@ -822,7 +1347,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
+export const halfAxesOfBounds = (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
 ```
 
 #### 参数
@@ -837,7 +1362,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
   <ApiSourceLink
     label={'intersectRayWithArc'}
     path={'packages/kernel/math/src/algorithms/arc-intersection.ts'}
-    startLine={20}
+    startLine={19}
   >
     射线（origin + s·direction）∩ 圆弧（center, radius, [startAngle, endAngle]）
   </ApiSourceLink>
@@ -846,7 +1371,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组
 
 ```ts
-(__namedParameters: RayArcIntersectionInput) => Array<number>;
+export const intersectRayWithArc = (__namedParameters: RayArcIntersectionInput) => Array<number>;
 ```
 
 #### 参数
@@ -866,7 +1391,7 @@ ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `.
 start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 
 ```ts
-(__namedParameters: ArcSweepAngleInput) => boolean;
+export const isAngleWithinArcSweep = (__namedParameters: ArcSweepAngleInput) => boolean;
 ```
 
 #### 参数
@@ -884,7 +1409,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(__namedParameters: BoundsRect) => boolean;
+export const isFiniteBoundsRect = (__namedParameters: BoundsRect) => boolean;
 ```
 
 #### 参数
@@ -906,7 +1431,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(matrix: AffineMatrix) => boolean;
+export const isFiniteNonSingularAffine = (matrix: AffineMatrix) => boolean;
 ```
 
 #### 参数
@@ -924,7 +1449,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isFiniteNumber = (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -942,7 +1467,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isFinitePoint = (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -960,7 +1485,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isInfiniteNumber = (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -978,7 +1503,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(rect: BoundsRect) => boolean;
+export const isPositiveBoundsRect = (rect: BoundsRect) => boolean;
 ```
 
 #### 参数
@@ -996,7 +1521,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 </p>
 
 ```ts
-(a: Vector2, b: Vector2, t: number) => Vector2;
+export const lerp = (a: Vector2, b: Vector2, t: number) => Vector2;
 ```
 
 #### 参数
@@ -1018,7 +1543,7 @@ start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 
 ```ts
-(shape: CenteredShape, local: Vector2) => Vector2;
+export const localToWorld = (shape: CenteredShape, local: Vector2) => Vector2;
 ```
 
 #### 参数
@@ -1037,7 +1562,7 @@ rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 </p>
 
 ```ts
-(a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
+export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
 ```
 
 #### 参数
@@ -1058,7 +1583,7 @@ rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 返回 `outer × inner`，即对点先应用 `inner`，再应用 `outer`
 
 ```ts
-(outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
+export const multiplyAffine = (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
 ```
 
 #### 参数
@@ -1077,7 +1602,7 @@ rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 </p>
 
 ```ts
-(center: Vector2, radius: number, angleDeg: number) => Vector2;
+export const pointAtArcAngle = (center: Vector2, radius: number, angleDeg: number) => Vector2;
 ```
 
 #### 参数
@@ -1099,7 +1624,7 @@ rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 与 pointAtArcAngle 同角度约定；θ 是参数角，不一定等于真实极角
 
 ```ts
-(__namedParameters: EllipseArcAnglePointInput) => Vector2;
+export const pointAtEllipseArcAngle = (__namedParameters: EllipseArcAnglePointInput) => Vector2;
 ```
 
 #### 参数
@@ -1117,7 +1642,7 @@ rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 </p>
 
 ```ts
-(__namedParameters: BoundsRect) => AxisAlignedBounds;
+export const rectToBounds = (__namedParameters: BoundsRect) => AxisAlignedBounds;
 ```
 
 #### 参数
@@ -1137,7 +1662,7 @@ rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 返回以形状中心和旋转为基准的本地坐标
 
 ```ts
-(shape: CenteredShape, world: Vector2) => Vector2;
+export const worldToLocal = (shape: CenteredShape, world: Vector2) => Vector2;
 ```
 
 #### 参数

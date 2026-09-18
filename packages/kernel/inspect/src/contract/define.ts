@@ -55,7 +55,14 @@ export const sealInspectorDefinition = (definition: AnyInspectorDefinitionInput)
   return sealedDefinition;
 };
 
-/** 以保留作者输入类型的方式定义 Inspector */
+/**
+ * 以保留作者输入类型的方式定义 Inspector
+ *
+ * @template TSubject 通过 subject schema 解析后的被观察对象类型
+ * @template TParsedOptions options schema 解析后的 options 类型
+ * @template TResolvedOptions callback 消费的已解析 options 类型
+ * @template TSourceOptions 传入 options schema 前的原始 options 输入类型
+ */
 export const defineInspector = <
   TSubject extends JsonValue,
   TParsedOptions extends JsonObject = Record<string, never>,

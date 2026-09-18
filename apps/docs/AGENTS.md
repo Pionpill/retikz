@@ -39,15 +39,14 @@ URL 段、`modules/docs/data/` 节点 `id`、`modules/docs/contents/` 目录段�
 
 docs 内容规则不复制在 AGENTS 中，按需动态加载：
 
-- 代码 / 文件结构基础规范：`.agents/skills/docs-standard-contract/SKILL.md`
+- 代码 / 文件结构：`docs-doc-principle/references/code-structure.md`
 - React 组件 / layout / shadcn UI 规范：`.agents/skills/develop-docs/SKILL.md`
 - 通用入口：`.agents/skills/docs-doc-principle/SKILL.md`；先读其页型词典，按阅读任务选择 skill，难度、页名、章节名与 URL 尾段统一
-- 带 controls 的 ComponentPreview：`docs-doc-control`
-- 导航与路由：`docs-doc-navigation`
+- controls、尺寸测量、插图、相关属性和导航：按 `docs-doc-principle` 的触发条件读取对应 references
 - 简介 / 快速开始 / 更新日志：`docs-doc-entry`
-- 基础与专题用法：`docs-doc-usage`；Standard composite 按需读其 reference
-- 扩展指南：`docs-doc-extension`
-- 示例页：`docs-doc-example`
+- 基础、专题与扩展用法：`docs-doc-usage`；Standard composite 按需读其 reference
+- 自定义能力：`docs-doc-extension`
+- 分步教程 / 成品展示：`docs-doc-example`
 - 解决方案 / 包 / 组件家族总纲：`docs-doc-group`
 - API / Schema 参考：`docs-doc-reference`
 - 概念页：`docs-doc-concept`

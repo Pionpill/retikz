@@ -3,7 +3,8 @@ import { BubbleChart, BubbleEncodings, ScatterChart, ScatterEncodings } from '@r
 import type { CoreProviderContribution } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
-import { Layout } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { useMemo } from 'react';
@@ -15,6 +16,7 @@ import {
   buildPreviewSourceIR,
   collectPreviewChartSources,
 } from '../../src/modules/docs/components/component-preview/utils';
+import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import { createGraphPreviewSource } from '../../src/modules/docs/preview';
 
 const hookedDatasets = { sample: [{ value: 1 }] };
@@ -92,6 +94,56 @@ const BubbleStandaloneDemo: FC = () => (
 );
 
 describe('buildPreviewIR', () => {
+  it('preserves rootScope styles and defaults in Source IR and Vanilla output', () => {
+    const preview = buildPreviewIR(() => (
+      <Layout
+        rootScope={{ style: { stroke: '#123456', strokeWidth: 3 }, defaults: { node: { layout: { padding: 12 } } } }}
+      >
+        <Node id="A" position={[0, 0]}>
+          a
+        </Node>
+        <Node id="B" position={[100, 0]}>
+          b
+        </Node>
+        <Draw way={['A', 'B']} />
+      </Layout>
+    ));
+    for (const scene of [preview.sourceIr, preview.ir]) {
+      expect(scene.children).toHaveLength(1);
+      expect(scene.children[0]).toMatchObject({
+        type: 'scope',
+        style: { stroke: '#123456', strokeWidth: 3 },
+        defaults: { node: { layout: { padding: 12 } } },
+        children: [{ type: 'node', id: 'A' }, { type: 'node', id: 'B' }, { type: 'path' }],
+      });
+    }
+    const vanilla = buildVanillaPreview(preview);
+    expect(vanilla.code).toContain('scope(');
+    expect(vanilla.code).toContain('#123456');
+    expect(vanilla.code).toContain('padding: 12');
+    expect(vanilla.svg).toContain('stroke="#123456"');
+  });
+
+  it.each<LayoutProps['rootScope']>([undefined, {}, { style: {} }, { defaults: { reset: false } }])(
+    'does not add a Scope for ineffective rootScope %j or host props',
+    rootScope => {
+      const preview = buildPreviewIR(() => (
+        <Layout rootScope={rootScope} style={{ opacity: 0.5 }} runtime={{ mode: 'static' }}>
+          <Node id="A" position={[0, 0]} />
+        </Layout>
+      ));
+      expect(preview.sourceIr.children).toHaveLength(1);
+      expect(preview.sourceIr.children[0]).toMatchObject({ type: 'node', id: 'A' });
+    },
+  );
+
+  it('keeps complete IR unchanged when rootScope is supplied', () => {
+    const ir = { type: 'scene' as const, version: 1 as const, children: [] };
+    const preview = buildPreviewIR(() => <Layout ir={ir} rootScope={{ style: { stroke: 'red' } }} />);
+    expect(preview.sourceIr).toBe(ir);
+    expect(preview.ir).toBe(ir);
+  });
+
   it('does not execute hookful embeddable root components', () => {
     const preview = buildPreviewIR(HookedEmbeddableDemo);
 

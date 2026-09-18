@@ -283,7 +283,7 @@ describe('<AppSidebar>', () => {
     expect(components.textContent).toContain('kernel.getStart');
     expect(components.textContent).toContain('kernel.concepts');
     expect(components.textContent).toContain('kernel.components');
-    expect(components.querySelectorAll('[data-slot="separator"]')).toHaveLength(2);
+    expect(components.querySelectorAll('[data-slot="separator"]')).toHaveLength(3);
 
     const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'introduction' });
     expect(about.textContent).toContain('about.introduction');
@@ -329,12 +329,14 @@ describe('<AppSidebar>', () => {
           'kernel.pkgFoundationValidationErrors',
           'kernel.pkgFoundationTypesSchemas',
           'kernel.pkgFoundationUtilities',
+          'kernel.pkgFoundationSchemaReference',
         ].includes(label),
       ),
     ).toEqual([
       'kernel.pkgFoundationUtilities',
       'kernel.pkgFoundationTypesSchemas',
       'kernel.pkgFoundationValidationErrors',
+      'kernel.pkgFoundationSchemaReference',
     ]);
     expect(container.textContent).toContain('kernel.pkgGroupCore');
     expect(container.textContent).toContain('kernel.pkgGroupExtension');

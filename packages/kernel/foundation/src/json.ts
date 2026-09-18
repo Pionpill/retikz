@@ -89,6 +89,7 @@ export const assertPlainDataContainers = (value: unknown, path = 'value'): void 
  * @param value 待复制的 JSON 安全数据
  * @param path 错误消息中用于定位当前值的路径
  * @returns 与输入结构相同但不共享可变对象的深冻结副本
+ * @template T 输入值的静态类型
  */
 export const cloneAndFreezeJson = <T>(value: T, path = 'value'): T => {
   return inspectPlainData(value, path, true) as T;

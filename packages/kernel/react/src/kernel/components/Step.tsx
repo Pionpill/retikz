@@ -236,7 +236,7 @@ export type SmoothStepProps = {
 export type GeneratorStepProps = {
   /** 生成器 step 鉴别字面量 */
   kind: 'generator';
-  /** path generator 名称；内置名或 `<Layout pathGenerators>` 注册名 */
+  /** path generator 名称；内置名或 `<Layout extensions={{ pathGenerators }}>` 注册名 */
   name: IRGeneratorStep['name'];
   /** 可选终点，会作为 generator context 的 `to` 传入 */
   to?: DslTarget;

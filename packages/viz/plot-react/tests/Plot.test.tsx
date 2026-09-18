@@ -243,7 +243,7 @@ describe('<Plot spec data> 薄包装', () => {
     const viaLayout = renderToStaticMarkup(
       <Layout
         ir={{ version: 1, type: 'scene', children: [spec] }}
-        composites={lowerPlots(data, { width: 480, height: 300 })}
+        extensions={{ composites: lowerPlots(data, { width: 480, height: 300 }) }}
         width={480}
         height={300}
       />,
@@ -273,7 +273,7 @@ describe('<Plot spec data> 薄包装', () => {
     const viaLayout = renderToStaticMarkup(
       <Layout
         ir={{ version: 1, type: 'scene', children: [placementSpec] }}
-        composites={lowerPlots(data, lowerOptions)}
+        extensions={{ composites: lowerPlots(data, lowerOptions) }}
         width={480}
         height={300}
       />,

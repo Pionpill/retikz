@@ -91,49 +91,13 @@ Core 另外公开五个可复用的严格 fragment，按描边、填充、几何
 
 ## 路径
 
-<ZodSchema
-  name="PathSchema"
-  description="路径图元：一组按顺序执行的 step 组成一条可描边、可填充、可带箭头的笔画。"
-  descriptions={{
-    style: '当前实例的视觉覆盖，按字段继承与覆盖',
-    type: '判别字段，标记此子节点为 path',
-    kind: 'Path kind provider 名；省略时使用内置 `stroke`',
-    kindOptions: '由选定 Path kind provider 消费的 JSON-safe 参数对象；完整 schema 在后续解析',
-    'style.color': '主色（TikZ color=）；stroke / 箭头 / step label 未单设则随它（跟主色不跟 stroke）',
-    'style.stroke':
-      '描边 paint：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；默认 currentColor',
-    'style.strokeWidth': '描边宽度（用户单位），默认 1',
-    'style.dashPattern': 'dash/gap 长度序列（如 [4, 2]），省略 = 实线',
-    'style.dashOffset': '虚线起点偏移（用户单位），可为正数、0 或负数；省略 = 0',
-    'style.fill':
-      '闭合区域填充：任意 CSS color 字符串，或 IRPaint（线性 / 径向渐变、pattern、image）；省略 = 无填充；与 `cycle` step 配合产生封闭形状',
-    'style.fillRule': '自交 / 嵌套子路径填充规则；`nonzero`（默认）方向缠绕，`evenodd` 交错',
-    'style.lineCap': '描边端点形状：`butt` 默认 / `round` / `square`',
-    'style.lineJoin': '描边拐角形状：`miter` 默认 / `round` / `bevel`',
-    'style.opacity': '整路径不透明度 0..1，同时作用于描边与填充',
-    'style.fillOpacity': '填充不透明度 0..1，只影响闭合区域',
-    'style.strokeOpacity': '描边不透明度 0..1，只影响描边',
-    'style.shadow': '主几何阴影预设或显式阴影对象',
-    'style.blendMode': '主几何与下方内容的混合模式',
-    id: '可选稳定 id：供其它元素 anchor 引用，也是水合事件绑定的挂点（带 id 才能给 path 绑 onClick 等 handler）',
-    meta: 'provenance 元数据：原样透传进本路径 emit 的 Scene 图元，renderer 忽略、不参与布局 / 样式；典型由 Tier 2 lowering 注入（标记来自哪个 datum / series / layer），须为 JSON 对象',
-    animations: '声明式动画 track 数组（关键帧 + 时长 / 缓动 / 触发器）；用法与 preset 见动画组件文档',
-    zIndex: '显式栈序：大者在上；缺省 0、同值保持声明顺序；只在同层子节点间生效',
-    rotate: '整条 path 旋转角（度，绕包围盒中心）',
-    scale: '整条 path 缩放（数字等比，或 `{ x, y }` 非等比，绕包围盒中心）',
-    roundedCorners: '线段相交处的几何圆角半径；与只改变描边外观的 `lineJoin` 不同',
-    label: '附着在 Path 或其它 path-like 宿主上的几何标签',
-    marks:
-      "沿路径放方向标记：每项 `{ pos, endpointOverlap?, mark }`，`pos∈[0,1]`、`mark.kind:'arrow'` + 已注册箭头名，朝向随该点切线；endpointOverlap 只适用于内置 Stroke Path 实际选中的端点 mark",
-    children: 'step 动作序列；首项通常应是 `move`',
-  }}
-/>
+[PathSchema](/kernel/components/path/schema-reference#pathschema)
 
 `PathSchema` 是 Core 的开放 Path host schema。它把上述 fragment 与 `DrawableInstanceSchema`、`DrawableStyleSchema` 组合，接受开放的 `kind` 名和 JSON-safe `kindOptions`，不在 Core 中编码封闭的 Path kind 列表。编译时 Core 先解析选中的 `PathKindDefinition`，再用该 definition 的 `schema` 解析完整 subject。Core 内置 `stroke` definition 由完整的 `StrokePathSchema` 负责，要求 `children` 且拒绝 `kindOptions`；可选的 Standard Ribbon 则在 Standard 中拥有自己的完整 schema。这个 host schema 可继续被自定义 definition 与 Tier 2 owner 复用。
 
 `PathDefaultSchema` 是 Core Scope owner 显式由 `GraphicStyleSchema`、`PathStrokeSchema`、`PathFillSchema` 和去掉 `children` 的 `PathGeometrySchema` 组合出的默认通道。它排除 instance、structure、decoration 字段和 `children`，不从完整 Path 偶然投影，也不是独立 compile 入口。默认 `stroke` path 消费其中全部适用字段。各 Tier 2 owner 仍可在此基础上保留自己的默认值和字段限制。
 
-React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换算成 `strokeWidth`，不属于 `PathSchema`；完整档位见 [Path 样式](/kernel/components/draw/path#样式)。
+React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换算成 `strokeWidth`，不属于 `PathSchema`；完整档位见 [Path 样式](/kernel/components/path/step#样式)。
 
 <span id="drawablestyle"></span>
 
@@ -180,69 +144,31 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 `StepSchema` 是判别联合 —— `Path.children` 是 Step 数组。`kind` 字段选变体：
 
-<ZodSchema name="StepSchema" description="单个路径动作；通过 kind 字段选择具体 step 变体。" />
+[StepSchema](/kernel/components/path/schema-reference#stepschema)
 
 <span id="move"></span>
 
 ### 移动
 
-<ZodSchema
-  name="MoveStepSchema"
-  description="移动动作：只移动路径光标，不绘制线段。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`move` —— 不画线，仅移动光标到目标点（SVG path "M"）',
-    to: 'move 动作的目标点',
-  }}
-/>
+[MoveStepSchema](/kernel/components/path/schema-reference#movestepschema)
 
 <span id="line"></span>
 
 ### 直线
 
-<ZodSchema
-  name="LineStepSchema"
-  description="直线动作：从当前光标到目标点绘制一条直线。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`line` —— 从光标到目标点画一条直线（SVG path "L"）',
-    to: '直线段的目标点',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[LineStepSchema](/kernel/components/path/schema-reference#linestepschema)
 
 <span id="axis-line"></span>
 
 ### 单轴直线
 
-<ZodSchema
-  name="AxisLineStepSchema"
-  description="单轴直线动作：解析目标参考点后，只沿当前 host 的一个局部轴绘制单段直线。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`axis-line` —— 投影目标后只画一段水平或垂直直线',
-    axis: '当前 host 的局部轴：horizontal 取目标 x；vertical 取目标 y',
-    to: '投影目标：仅支持笛卡尔坐标或 NodeTarget',
-    label: '边标注：按投影后的真实线段采样',
-  }}
-/>
+[AxisLineStepSchema](/kernel/components/path/schema-reference#axislinestepschema)
 
 <span id="fold"></span>
 
 ### 折角
 
-<ZodSchema
-  name="FoldStepSchema"
-  description="折角动作：按 via 经一个或两个直角中间点连接目标。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`fold`（两段或三段正交折线）',
-    via: '折角方向：`-|` / `|-` 为两段；`-|-` / `|-|` 为三段',
-    fraction: '仅三段 via 可用：中间腿的归一化位置 0..1，省略时编译为 0.5',
-    to: '折线段的目标点',
-    label: '边标注：附在本段上的文字标签（按 position 落在对应支段）',
-  }}
-/>
+[FoldStepSchema](/kernel/components/path/schema-reference#foldstepschema)
 
 两段变体与三段变体都是 strict object：`-|` / `|-` 不接受 `fraction`。三段转折点基于裁剪前 reference 插值，端点再朝路由内最近的非重合点执行既有 NodeTarget 裁剪；最终仍只 lower 为 line commands。
 
@@ -250,174 +176,61 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 ### 闭合
 
-<ZodSchema
-  name="CycleStepSchema"
-  description="闭合动作：回到最近一次 move 的起点，不携带 to 字段。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`cycle` —— 闭合回最近一次 move 的目标点（SVG path "Z"）',
-  }}
-/>
+[CycleStepSchema](/kernel/components/path/schema-reference#cyclestepschema)
 
 <span id="curve"></span>
 
 ### 二次曲线
 
-<ZodSchema
-  name="CurveStepSchema"
-  description="二次贝塞尔动作：一个控制点决定曲线弯曲。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`curve` —— 二次贝塞尔，从光标到目标点带 1 个控制点（SVG path "Q"）',
-    to: '曲线终点',
-    control: '二次贝塞尔单控制点',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[CurveStepSchema](/kernel/components/path/schema-reference#curvestepschema)
 
 <span id="cubic"></span>
 
 ### 三次曲线
 
-<ZodSchema
-  name="CubicStepSchema"
-  description="三次贝塞尔动作：两个控制点分别控制起点和终点切线。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`cubic` —— 三次贝塞尔，从光标到目标点带 2 个控制点（SVG path "C"）',
-    to: '曲线终点',
-    control1: '第一个控制点（影响起点切线）',
-    control2: '第二个控制点（影响终点切线）',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[CubicStepSchema](/kernel/components/path/schema-reference#cubicstepschema)
 
 <span id="bend"></span>
 
 ### 弯曲
 
-<ZodSchema
-  name="BendStepSchema"
-  description="弯曲动作：用方向和角度生成近似弧形的贝塞尔曲线。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`bend` —— 简记弧形：按方向 + 角度生成贝塞尔近似',
-    to: '弧形段的目标点',
-    bendDirection:
-      '弧形偏转方向（相对 from→to 弦的视觉左 / 右），可选；给 bendDirection/bendAngle 出对称弧，或给 outAngle/inAngle 出非对称曲线 / 自环（同时给时 out/in 优先）',
-    bendAngle: '弯曲角度（°），默认 30；限 (-180, 180)',
-    outAngle:
-      '起点出射角（°，TikZ `out=`）；与 inAngle 配合定起点控制点方向，给了 out/in 则优先于 bendDirection/bendAngle',
-    inAngle: '终点入射角（°，TikZ `in=`）；与 outAngle 配合定终点控制点方向',
-    looseness:
-      '曲线松紧因子（TikZ `looseness=`），默认约 1；越大控制点越往外推、曲线越松；from==to 时还缩放默认自环尺寸',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[BendStepSchema](/kernel/components/path/schema-reference#bendstepschema)
 
 <span id="arc"></span>
 
 ### 圆弧
 
-<ZodSchema
-  name="ArcStepSchema"
-  description="圆弧 / 椭圆弧动作：绕圆心按起止角扫弧；圆心缺省取光标，可显式指定。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`arc` —— 圆弧（radius 数字）或椭圆弧（radius: { x, y }），绕圆心扫角；笔停在弧端点而非圆心',
-    startAngle: '弧起始角（°），0=+x、90=+y（屏幕向下）',
-    endAngle: '弧终止角（°）；扫向由 startAngle 与 endAngle 大小关系隐式决定',
-    radius: '弧半径：数字表示正圆弧；对象 `{ x, y }` 表示椭圆弧',
-    center: '显式圆心；缺省取光标（上一 step anchor）',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[ArcStepSchema](/kernel/components/path/schema-reference#arcstepschema)
 
 <span id="circlepath"></span>
 
 ### 整圆路径
 
-<ZodSchema
-  name="CirclePathStepSchema"
-  description="圆动作：无角度=整圆（笔回圆心）；带 startAngle+endAngle=部分圆（chord/open）。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`circlePath` —— 无角度时整圆（笔回圆心）；带 startAngle+endAngle 时部分圆',
-    radius: '圆半径（用户单位）',
-    startAngle: '部分圆起始角（°）；与 endAngle 同给才生效',
-    endAngle: '部分圆终止角（°）',
-    closed: '闭合模式：整圆只允许 closed；部分圆允许 chord（弦，默认）/ open（纯弧）/ sector（扇形）',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[CirclePathStepSchema](/kernel/components/path/schema-reference#circlepathstepschema)
 
 <span id="ellipsepath"></span>
 
 ### 整椭圆路径
 
-<ZodSchema
-  name="EllipsePathStepSchema"
-  description="椭圆动作：无角度=整椭圆（笔回中心）；带 startAngle+endAngle=部分椭圆。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`ellipsePath` —— 无角度时整椭圆（笔回中心）；带 startAngle+endAngle 时部分椭圆',
-    radius: '椭圆半径对象 `{ x, y }`（半长轴 / 半短轴）',
-    startAngle: '部分椭圆起始角（°）；与 endAngle 同给才生效',
-    endAngle: '部分椭圆终止角（°）',
-    closed: '闭合模式：整椭圆只允许 closed；部分椭圆允许 chord（默认）/ open / sector',
-    label: '边标注：附在本段上的文字标签',
-  }}
-/>
+[EllipsePathStepSchema](/kernel/components/path/schema-reference#ellipsepathstepschema)
 
 <span id="rectangle"></span>
 
 ### 矩形
 
-<ZodSchema
-  name="RectangleStepSchema"
-  description="矩形动作：两对角定义的轴对齐矩形，可选圆角；编译为 path 命令。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`rectangle` —— 两对角间的轴对齐矩形（自带闭合），可圆角；自包含，不依赖光标',
-    from: '一角',
-    to: '对角（顺序无关，compile 归一化 min/max）',
-    cornerRadius: '四角同圆角半径；缺省直角，compile clamp 到边长一半',
-  }}
-/>
+[RectangleStepSchema](/kernel/components/path/schema-reference#rectanglestepschema)
 
 <span id="smooth"></span>
 
 ### 平滑曲线
 
-<ZodSchema
-  name="SmoothStepSchema"
-  description="平滑曲线动作：从当前游标开始依次穿过给定点列，并编译为三次贝塞尔命令。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`smooth` —— 从当前游标开始依次穿过 points，并编译为三次贝塞尔命令',
-    points: '游标之后依次经过的点列，至少一个；最后一点成为新游标',
-    tension: '控制切线长度与曲线松紧的正数倍率；默认 1',
-    label: '附着在整条平滑曲线上的边标注',
-  }}
-/>
+[SmoothStepSchema](/kernel/components/path/schema-reference#smoothstepschema)
 
 <span id="generator"></span>
 
 ### 生成器
 
-<ZodSchema
-  name="GeneratorStepSchema"
-  description="生成器动作：委托本次已注册的自定义 path generator 产出子路径。"
-  descriptions={{
-    type: '判别字段，标记本节点为 path step',
-    kind: '动作种类：`generator` —— 把本段委托给 CompileOptions.pathGenerators 里按 `name` 查到的生成器，编译期把 from / to / params 变成底层 path 命令',
-    name: '生成器名；由 CompileOptions.pathGenerators 显式注册。未注册名 compile 期报错（错误会列可用名）。IR 只存字符串，生成器函数不进 IR',
-    to: '可选终点（作为段末传给生成器）；纯参数化曲线（闭环 / 定长波形等）不需要终点时可省略',
-    params:
-      '传给生成器的 JSON 参数对象（须为纯 JSON 对象，由 JsonObjectSchema 校验）；生成器自身用 paramsSchema 校验形态。generator targetParams 列出的顶层 key 会先把节点目标解析到当前 Path 的局部坐标再运行',
-    label: '边标注：附在生成段上的文字标签',
-  }}
-/>
+[GeneratorStepSchema](/kernel/components/path/schema-reference#generatorstepschema)
 
 <span id="geometrylabel"></span>
 <span id="steplabel"></span>
@@ -429,24 +242,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 `interrupt` 只在这里声明 JSON 形态，不是所有宿主都支持的绘图能力。Core resolve 在知道最终 Path kind 与有效 fill 后决定策略：无填充内置 `stroke` Path 的 canonical `center` 标签省略时自动断线，`sloped: true` 而未给 `side` 也属于该情况。`false` 保持连续，`true` 可强制非居中标签断线；有效 fill 上的 `true`，以及 Ribbon、custom 或其它非内置 Stroke Path 上的任意显式布尔值都会 fail-loud。
 
-<ZodSchema
-  name="GeometryLabelSchema"
-  description="几何标签：附着在 path step 或可选 Standard Ribbon centerline 上的文本与定位规格。"
-  descriptions={{
-    text: '标签文字内容（单行；多行需 \\n）',
-    position: '沿段归一化位置：7 个 keyword 或 0..1 数字；默认 midway',
-    side: '标签相对锚点的可写方位：top / bottom / left / right；接受 compass 别名 north / south / east / west。center 只在 resolve 后产生，不能作为 IR side 写入',
-    sloped: '是否沿采样点切线旋转标签；为 true 且省略 side 时 canonicalize 为 center，显式 side 仍控制方位',
-    interrupt:
-      '是否请求在兼容宿主描边中产生文字断口；省略时由宿主策略决定，无填充内置 Stroke 的 canonical center 自动启用',
-    placement:
-      '标签 placement：outside 保持 Path 默认外侧语义；inside 可让 Standard Ribbon 等面状宿主在未指定 side 时放在内部',
-    distance: 'side 偏移距离，默认与 Path step label 一致',
-    textColor: '标签文字色；缺省回退 scope defaults.label → 宿主 path 主色 color → currentColor（跟主色不跟 stroke）',
-    opacity: '标签独立透明度 0..1；与所属 path opacity 相乘（跨 scope 不复合）',
-    font: '标签字体覆盖（family / size / weight / style 均可选）；逐字段回退 defaults.label → 渲染端默认',
-  }}
-/>
+[GeometryLabelSchema](/kernel/components/path/schema-reference#geometrylabelschema)
 
 <span id="controlpoint"></span>
 
@@ -514,21 +310,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 `ArrowMarkSchema` 是 Core IR 在 `Path.marks` 里使用的箭头标记。端点箭头写成 `pos: 0` 或 `pos: 1` 的 mark；React `arrow` / `arrowDetail` sugar 会先展开成这个结构，再进入 core IR。
 
-<ZodSchema
-  name="ArrowMarkSchema"
-  description="路径上的箭头标记；端点箭头和中段方向标记共用同一结构。"
-  descriptions={{
-    kind: '判别字段；当前支持 `arrow`',
-    shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时回退 stealth',
-    scale: '等比缩放因子',
-    length: '尖长（user units）',
-    width: '尖宽（user units）',
-    color: '描边色 override',
-    fill: '填充色 override（空心 shape 忽略）',
-    opacity: '箭头透明度 0..1',
-    lineWidth: '空心 shape 描边粗细',
-  }}
-/>
+[ArrowMarkSchema](/kernel/components/path/schema-reference#arrowmarkschema)
 
 <span id="pathmarkplacement"></span>
 
@@ -536,15 +318,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 `PathMarkPlacementSchema` 把一个 mark 放在路径归一化位置上；方向由该位置的路径切线决定。`endpointOverlap` 只用于内置 Stroke Path 实际选中的 `pos: 0` / `pos: 1` 端点箭头：`0` 保持现有默认放置，`0.5` 位于默认与完整进入位置的中点，`1` 让按最终尺寸和轮廓解析的视觉后缘对齐逻辑端点。中段、同侧未选中的重复端点，以及其它 Path kind 会明确失败。
 
-<ZodSchema
-  name="PathMarkPlacementSchema"
-  description="路径上的一个归一化标记位置及其 mark。"
-  descriptions={{
-    pos: '路径上的归一化位置 0..1；line-like step 按弧长，曲线 step 按参数位置',
-    endpointOverlap: '仅用于内置 Stroke Path 实际选中的端点箭头；0 保持现有默认放置，1 让最终视觉后缘对齐逻辑端点',
-    mark: '放置的标记；当前为沿路径切线定向的 ArrowMark',
-  }}
-/>
+[PathMarkPlacementSchema](/kernel/components/path/schema-reference#pathmarkplacementschema)
 
 <span id="arrowdetail"></span>
 
@@ -552,23 +326,7 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 `ArrowDetailSchema` 是 React `arrowDetail` sugar 和 `defaults.arrow` 的视觉配置 schema。Core Path IR 不再保存 `arrow` / `arrowDetail`；端点箭头也是 `marks` 里的 `ArrowMark`。
 
-<ZodSchema
-  name="ArrowDetailSchema"
-  description="路径级箭头视觉配置：顶层默认加可选起末端覆盖。"
-  descriptions={{
-    shape:
-      '箭头形状名（开放字符串）：内置 6 种 Core 箭头 normal / open / stealth / openStealth / circle / openCircle，以及 2 种 Standard 箭头 diamond / openDiamond，或经 `CompileOptions.arrows` 注册的扩展名（未注册名 compile 期报错）；默认 stealth',
-    scale: '等比缩放因子（默认 1），乘到 length / width 之后',
-    length: '尖长（user units，沿 path 方向），默认使用 Definition 的值，否则为 8',
-    width: '尖宽（user units，垂直 path 方向），默认使用 Definition 的值，否则为 8',
-    color: '描边色 override；缺省走 context-stroke（继承 path stroke）',
-    fill: '填充色 override（仅实心 shape 生效）；空心 shape 上 silent no-op（写了静默丢）',
-    opacity: '箭头独立透明度 0..1；缺省继承 path opacity',
-    lineWidth: '空心 shape 描边粗细（user units）；默认 1.5；实心 shape 忽略',
-    start: '起端 override（仅 arrow 含起端时生效：`<-` / `<->`）',
-    end: '末端 override（仅 arrow 含末端时生效：`->` / `<->`）',
-  }}
-/>
+[ArrowDetailSchema](/kernel/components/path/schema-reference#arrowdetailschema)
 
 <span id="arrowenddetail"></span>
 
@@ -576,17 +334,4 @@ React `<Path thickness>` 是组件 / builder 语法糖，会在生成 IR 前换�
 
 `start` / `end` 子对象的 schema —— 与 ArrowDetail 同字段集减去 `start` / `end` 字段自身（不递归）：
 
-<ZodSchema
-  name="ArrowEndDetailSchema"
-  description="单个箭头端点的视觉覆盖配置，不递归包含 start / end。"
-  descriptions={{
-    shape: '箭头形状名（开放字符串，含 `CompileOptions.arrows` 扩展名）；缺省时继承顶层，顶层也缺省时回退 stealth',
-    scale: '等比缩放因子',
-    length: '尖长（user units）',
-    width: '尖宽（user units）',
-    color: '描边色 override',
-    fill: '填充色 override（空心 shape 上 silent no-op）',
-    opacity: '箭头透明度 0..1',
-    lineWidth: '空心 shape 描边粗细',
-  }}
-/>
+[ArrowEndDetailSchema](/kernel/components/path/schema-reference#arrowenddetailschema)

@@ -1,0 +1,243 @@
+---
+title: Implementation
+description: Explain Layout's implicit root scope, automatic viewport, display sizing, and theme overlays
+---
+
+Read [Basic usage](/kernel/components/layout/usage) first. This page answers separate questions behind Layout's properties: when an extra Scope appears, how the viewport is chosen, and how drawing configuration relates to presentation. Each section stands on its own.
+
+## Implicit root scope
+
+When applying shared styling to a set of children, `rootScope` does not introduce another styling system. Layout conditionally wraps JSX children in an ordinary Scope, reusing its inheritance and override rules.
+
+Compare the two identical sets of nodes below: A has no fill of its own; B explicitly selects orange. The left side supplies blue through `rootScope.defaults.node.style.fill`; the right side puts the same `defaults` on an explicit Scope. The dashed frames identify the wrappers; they are not borders automatically drawn by Scope.
+
+<ComponentPreview files="layout-root-scope" size="md" type="illustration" hideCode />
+
+On both sides, A inherits blue and B stays orange. **defaults** supplies values that descendants have not set explicitly; it does not forcibly rewrite node properties. `rootScope.style` supplies general drawing styles such as `fill / stroke / opacity`. The figure uses `dodgerblue` and `darkorange` with translucent fills to keep the node text legible.
+
+Internally, `wrapRootScope` selects effective `style / defaults` overrides, creates an ordinary Scope only when needed, and places the original children inside it. The left side reuses that wrapper function; the right side declares Scope directly. Both therefore use the same inheritance rules.
+
+Wrapping depends on whether the configuration contributes an override, not merely whether the `rootScope` object exists:
+
+- **No effective override**: when omitted, `{}`, or limited to empty overrides such as `style: {}` and `defaults: {}`, use the original children without adding a synthetic Scope.
+- **Effective override**: actual styles, defaults, or an effective `defaults.reset` wrap the children in an ordinary Scope and reuse its inheritance rules. A `reset` of `true` or a nonempty channel list cuts the corresponding outer style inheritance; `false` or an empty list alone does not trigger wrapping.
+- **ir supplied**: use the complete child structure described by IR, ignoring any children and `rootScope` supplied alongside it. Change the IR itself to change its scopes; host CSS `style` remains applicable.
+
+**The synthetic Scope is not a local namespace.** `rootScope` only accepts `style / defaults`. Use an explicit Scope inside the drawing for `localNamespace`; see [Scope usage](/kernel/components/scope/usage) for naming and references.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Choose whether effective overrides require a root Scope',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 528,
+      endLine: 556,
+    },
+    {
+      label: 'Layout: ir and rootScope boundaries',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 402,
+      endLine: 418,
+    },
+  ]}
+/>
+
+## Automatic viewport
+
+Without `viewBox`, the viewport comes from the drawing's layout bounds, not the size of its page container. Layout bounds combine the leftmost, topmost, rightmost, and bottommost extents contributed by drawing elements, not just node centers. They are computed during compilation, not measured from rendered DOM pixels.
+
+Layout first chooses a viewport source: its `viewBox` prop takes precedence over the input IR's `viewBox`. Only when both are absent does it compute a range from the content. An explicit viewport directly sets the coordinate window without automatic content padding.
+
+Automatic sizing has two steps: combine content bounds, then expand all four sides by padding. In the figure, only blue A and B count as measured content: A is a circle centered at `(30, 40)` with radius `10`; B is a `20 × 20` rectangle whose top-left corner is `(80, 50)`. The dashed gray bounds enclose both; the orange viewport adds 10 drawing units on each side. Measurement lines and text are teaching annotations, excluded from this content's bounds.
+
+<ComponentPreview files="layout-viewport-bounds" size="lg" type="illustration" hideCode />
+
+From A and B's stated positions and sizes, the gray bounds have left `20`, top `30`, right `100`, and bottom `70`, giving content bounds `(20, 30, 80, 40)`. Then read the orange frame: moving left and top outward by `10` and adding `20` to each dimension gives viewport `(10, 20, 100, 60)`. These tuples mean `(x, y, width, height)`, not two corners. The figure enlarges everything at one scale; labels still refer to the original drawing units.
+
+The local process is: compile content bounds, expand all four sides, then produce the automatic viewport. It does not first move the drawing to make its top-left corner zero.
+
+<ComponentPreview files="layout-auto-viewport" size="xs" type="flow" hideCode />
+
+In general, bounds `(x, y, w, h)` and padding `p` produce:
+
+$$
+(x', y', w', h') = (x-p,\ y-p,\ w+2p,\ h+2p)
+$$
+
+The current default is `p = 10`, not host CSS `padding`. Core compile options can configure it, but Layout currently exposes no such prop; use an explicit `viewBox` to control the viewed margin yourself.
+
+If no content bounds exist, the result is directly `{ x: 0, y: 0, width: 100, height: 100 }`, without padding that fallback range again.
+
+Moving, adding, or removing elements can therefore change the automatic viewport. Set an explicit `viewBox` to compare positions within the same coordinate window across updates; fixing `width / height` alone does not fix the viewed range.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout: explicit viewBox overrides the input',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 434,
+    },
+    {
+      label: 'Core: select an explicit viewport or automatic bounds',
+      path: 'packages/kernel/core/src/compile/compile.ts',
+      startLine: 87,
+      endLine: 104,
+    },
+    {
+      label: 'Automatic padding and the no-content fallback',
+      path: 'packages/kernel/core/src/compile/scene/layout.ts',
+      startLine: 26,
+      endLine: 35,
+    },
+    {
+      label: 'Default layout padding',
+      path: 'packages/kernel/core/src/compile/constants.ts',
+      startLine: 1,
+      endLine: 5,
+    },
+  ]}
+/>
+
+For detailed bounds algorithms, see [Bounds calculations in the Math package](/kernel/packages/math/primitives#bounds-calculations).
+
+## Viewport and display size
+
+`viewBox` selects which drawing coordinates are visible; `width / height` determines how much page space that window occupies. The viewport is determined first; its dimensions then provide the basis for deriving display size. Changing display size in the other direction neither rewrites node coordinates nor redefines the viewport.
+
+Both drawings fix `viewBox={{ x: 0, y: 0, width: 200, height: 100 }}`, with A at `(50, 50)` and B at `(150, 50)`. The upper drawing omits both dimensions; the lower one supplies only `width={400}`. Compare the gray host frames first, then A's position relative to the left and top edges.
+
+<ComponentPreview files="layout-display-comparison" size="xxl" type="illustration" hideCode />
+
+The lower host, shapes, and gaps appear twice as large, but A's drawing coordinates remain `(50, 50)`: one quarter of the window width and halfway down its height. Both illustrations use the same scale. Dotted lines mark A's distances to the host's top and left edges; the two drawings have not been individually fitted to equal sizes.
+
+With only a numeric width, `computeDisplaySize` derives height from the viewport ratio. Here it computes `200 / 100 = 2`, then display height `400 / 2 = 200`:
+
+<ComponentPreview files="layout-viewbox-resolution" size="sm" type="flow" hideCode />
+
+Other size settings for that same `200 × 100` viewport follow these branches:
+
+| Size configuration         | Host size   | Derivation                           |
+| -------------------------- | ----------- | ------------------------------------ |
+| Neither dimension          | 200 × 100   | Use viewport dimensions              |
+| Only `width={400}`         | 400 × 200   | Derive the other axis proportionally |
+| `width={400} height={300}` | 400 × 300   | Keep both explicit values            |
+| Only `width="100%"`        | 100% × auto | Let the browser lay it out           |
+
+With both dimensions supplied, Layout does not change `400 × 300` to `400 × 200`. Fitting internal content into that host belongs to SVG / Canvas presentation; host sizing is not a new layout of drawing elements.
+
+SVG and Canvas share this display-size calculation. CSS strings are not parsed as drawing coordinates.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Numeric aspect-ratio completion and CSS dimensions',
+      path: 'packages/kernel/react/src/render/display-size.ts',
+      startLine: 1,
+      endLine: 23,
+    },
+    {
+      label: 'SVG: apply size to the root element',
+      path: 'packages/kernel/react/src/render/processing-result.tsx',
+      startLine: 178,
+      endLine: 181,
+    },
+    {
+      label: 'Canvas: reuse the display-size calculation',
+      path: 'packages/kernel/react/src/render/canvas/CanvasHost.tsx',
+      startLine: 146,
+      endLine: 155,
+    },
+  ]}
+/>
+
+## Themes and local overrides
+
+Layout retains the outer `clean` style when it supplies only `{ mode: 'light' }`: themes merge field by field, so omitted fields remain inherited. Both selectors here belong to `theme`:
+
+- **theme.style**: selects a theme style, such as `clean`; it is distinct from the host's CSS `style` prop.
+- **theme.mode**: selects light or dark mode, such as `dark` or `light`.
+
+Read the following figure from top to bottom in override order. ThemeProvider supplies `{ style: 'clean', mode: 'dark' }`, the input scene omits its theme, and Layout's `theme` prop supplies only `{ mode: 'light' }`. Follow the `theme.style` and `theme.mode` columns separately: `—` means omitted, not cleared.
+
+<ComponentPreview files="layout-theme-overlays" size="lg" type="illustration" hideCode />
+
+In the final theme, `style: 'clean'` comes from Provider, while `mode: 'light'` comes from Layout. If the input scene supplies a theme, it overrides Provider first, before Layout applies its own overrides. `mergeThemeOverlays` writes only the fields supplied at each layer. Nested ThemeProviders reuse this rule.
+
+Merging a theme and setting drawing styles are separate operations. A **Composite** accepts a high-level description and expands it into basic drawing elements; it can consume a theme to generate element styles. `theme`, `rootScope`, and host `style` target the following places, rather than forming three priority levels of one object:
+
+| Configuration                | Applied to                             | Controls                                       |
+| ---------------------------- | -------------------------------------- | ---------------------------------------------- |
+| `theme`                      | Input scene and theme-aware Composites | Theme style and light/dark mode                |
+| `rootScope.style / defaults` | Root scope of JSX children             | Drawing styles and element defaults            |
+| `style`                      | SVG / Canvas host                      | Page CSS, such as background and maximum width |
+
+Layout writes the theme into the input scene for later processing. It does not directly turn the selected theme style into every ordinary Node's fill. Use a node property or `rootScope` to set its fill; use host `style={{ maxWidth: '100%' }}` to constrain the drawing's maximum page width.
+
+Two further boundaries affect final colors:
+
+- **Composites still obey scope overrides**: an emitted Node with an explicit orange fill overrides the root Scope's blue default. Without a fill of its own, the emitted Node inherits blue, just like A and B in the first section.
+- **Light/dark mode can participate in color calculation**: with numeric colors (derived as a proportion of the master color), `mode` affects resolution. Explicit string colors such as `'darkorange'` retain their values. Changing the theme is not a blanket replacement of all element styles.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Layout: merge Provider, input, and explicit themes',
+      path: 'packages/kernel/react/src/kernel/runtime/Layout.tsx',
+      startLine: 420,
+      endLine: 434,
+    },
+    {
+      label: 'Field-wise Theme merge',
+      path: 'packages/kernel/react/src/kernel/runtime/theme-context.ts',
+      startLine: 5,
+      endLine: 19,
+    },
+    {
+      label: 'Theme mode and numeric color resolution',
+      path: 'packages/kernel/core/src/resolve/style/contextual-color.ts',
+      startLine: 18,
+      endLine: 41,
+    },
+    {
+      label: 'Composite outputs keep the current scope',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 2203,
+      endLine: 2227,
+    },
+    {
+      label: 'Explicit Node styles override inherited styles',
+      path: 'packages/kernel/core/src/resolve/style/node.ts',
+      startLine: 8,
+      endLine: 26,
+    },
+    {
+      label: 'Nested ThemeProvider inheritance',
+      path: 'packages/kernel/react/src/kernel/runtime/ThemeProvider.tsx',
+      startLine: 17,
+      endLine: 24,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Scope basic usage',
+      description: 'Configure scope inheritance and local namespaces',
+      url: '/kernel/components/scope/usage',
+    },
+    {
+      title: 'Compilation pipeline',
+      description: 'Follow the complete IR-to-Scene process',
+      url: '/kernel/components/internals/compilation',
+    },
+    {
+      title: 'Runtime',
+      description: 'Explore retained updates, transactions, and incremental execution',
+      url: '/kernel/packages/runtime',
+    },
+  ]}
+/>

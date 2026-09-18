@@ -27,6 +27,7 @@ import { PreviewResizeHandle, PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import {
   downloadPreviewImage,
+  buildPreviewControlsLockSlot,
   PAN_STEP,
   PreviewToolbar,
   PreviewToolbarButton,
@@ -44,6 +45,7 @@ import type {
   PreviewControlsDefinition,
   PreviewControlSlot,
   PreviewControlState,
+  PreviewFigureType,
   PreviewThemeMode,
   PreviewThemeStyleSelection,
   SizeKey,
@@ -73,6 +75,8 @@ export type ComponentPreviewDialogProps = {
   controlContract?: PreviewControlContract;
   /** 是否显示预览上下文栏 */
   showContextBar: boolean;
+  /** 叙述性图示的说明类型。 */
+  figureType?: PreviewFigureType;
   /** 与所属 Card 共享的局部主题 */
   themeMode: PreviewThemeMode;
   /** 更新 Card/Dialog 共享的局部主题 */
@@ -158,6 +162,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
     controlDefinition,
     controlContract,
     showContextBar,
+    figureType,
     themeMode,
     onThemeModeChange,
     enableThemeSwitch = false,
@@ -191,14 +196,16 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const aiCurrentPage = useAiChatStore(state => state.currentPage);
   const hasCode = sourceState.views.length > 0;
   const previewToolSlots = buildDialogPreviewToolSlots(previewState);
-  const resolvedDialogControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
+  const resolvedDialogControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots, [
+    buildPreviewControlsLockSlot(),
+  ]);
   const downloadLabel = previewState.rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
 
   const handleAskAi = () => {
-    const lang = aiCurrentPage?.lang ?? 'zh';
+    const promptLang = aiCurrentPage?.lang ?? 'zh';
     const pageTitle = aiCurrentPage?.title ?? '';
     openAi();
-    fillAiDraft(buildAskAiPrompt(lang, pageTitle, '', name));
+    fillAiDraft(buildAskAiPrompt(promptLang, pageTitle, '', name));
   };
   const previewPanel = (
     <PreviewWorkspace
@@ -206,6 +213,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       controlContract={controlContract}
       controlState={controlState}
       showContextBar={showContextBar}
+      figureType={figureType}
       themeMode={themeMode}
       onThemeModeChange={onThemeModeChange}
       enableThemeSwitch={enableThemeSwitch}
@@ -220,7 +228,7 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
       lang={lang}
       activeRender={sourceState.activeRender}
       controlSlots={resolvedDialogControlSlots}
-      previewClassName={cn('flex h-full w-full justify-center overflow-hidden p-10 select-none', alignClass[align])}
+      previewClassName={cn('flex h-full w-full justify-center overflow-hidden p-5 select-none', alignClass[align])}
       previewStyle={DOT_PATTERN_STYLE}
       pinControlsOnClick={false}
     />

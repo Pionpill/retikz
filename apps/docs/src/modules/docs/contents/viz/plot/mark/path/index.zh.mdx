@@ -165,7 +165,7 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 ## API 参考
 
-下面只列 PathMark 特有或在本页重新定义语义的属性。字段与常量绑定见[通道绑定](/viz/plot/channel/binding)，局部 `transform` 与图层属性见[变换](/viz/plot/transform)，坐标视图相关属性见[坐标系](/viz/plot/coordinate)。描边、填充、箭头、虚线、圆角、阴影等共享属性沿用 [Path 样式](/kernel/components/draw/path#样式)，不在这里重复。
+下面只列 PathMark 特有或在本页重新定义语义的属性。字段与常量绑定见[通道绑定](/viz/plot/channel/binding)，局部 `transform` 与图层属性见[变换](/viz/plot/transform)，坐标视图相关属性见[坐标系](/viz/plot/coordinate)。描边、填充、箭头、虚线、圆角、阴影等共享属性沿用 [Path 样式](/kernel/components/path/step#样式)，不在这里重复。
 
 | 属性             | 类型                                                                                                                                      | 默认值                                                     | 描述                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -187,4 +187,4 @@ PathMark 是底层线 mark：它只负责把一组有序锚点连接成一条 1D
 
 - [PointMark](/viz/plot/mark/point) —— 在每个观测位置叠加点
 - [坐标系](/viz/plot/coordinate) —— cartesian2D / polar2D 如何解释位置角色
-- [Path](/kernel/components/draw/path) —— lowering 后的路径样式、step 与箭头
+- [Path](/kernel/components/path/step) —— lowering 后的路径样式、step 与箭头

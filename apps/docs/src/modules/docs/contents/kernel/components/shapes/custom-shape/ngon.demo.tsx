@@ -106,7 +106,7 @@ const ngon = defineShape({
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout viewBox={{ x: -230, y: -125, width: 460, height: 250 }} shapes={[ngon]}>
+    <Layout viewBox={{ x: -230, y: -125, width: 460, height: 250 }} extensions={{ shapes: [ngon] }}>
       <Node
         id="source"
         position={[-155, 0]}

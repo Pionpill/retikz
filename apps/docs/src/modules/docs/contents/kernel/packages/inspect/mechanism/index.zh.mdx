@@ -22,6 +22,7 @@ description: 沿一次观测编译理解选择准入、最终产物收集、实�
 <ComponentPreview
   files="inspect-compile-flow"
   size="lg"
+  type="flow"
   hideCode
   caption="蓝色链路保留主图结果，橙色链路生成辅助观测内容，两路最终一起交给 Render。"
 />
@@ -34,7 +35,7 @@ Core 负责提供最终产物与隔离编译能力，Inspect 负责选择、观�
 
 先看选择规则如何找到实现。下图实线表示规则处理，注册表从下方提供定义；“查找定义”不等于立即调用 Inspector，真正执行还要等待最终几何。
 
-<ComponentPreview files="inspect-role-flow" size="sm" hideCode />
+<ComponentPreview files="inspect-role-flow" size="sm" type="flow" hideCode />
 
 准入就是在编译主图前，先确认选择规则能被合法执行。selection 中有两类规则：
 
@@ -107,7 +108,7 @@ Core 遍历候选站点时，通过 observer 的 `select()` 调用 `canInspectio
 
 下图假设同一个输入对象产生两个最终实例，并请求 `occurrenceIndex: 1`。按上排从左到右，再接下排阅读：准入先检查输入规则，Core 编译并收集通知后，才能选中第二个最终实例。索引从 0 开始；普通曲线并不必然产生多个实例。
 
-<ComponentPreview files="inspect-occurrence-flow" size="sm" hideCode />
+<ComponentPreview files="inspect-occurrence-flow" size="sm" type="flow" hideCode />
 
 `complete()` 进入 `compileInspectionObserverOutput()` 后，首先调用 `resolveAdmittedInspectionSelection()`。现在最终 observation 集已经齐全，才能按稳定实例顺序选择目标，并将从整图到对象的规则应用到曲线上。
 
@@ -117,7 +118,7 @@ request 可以声明在场景、authored 子树或对象上；其 `options: true
 
 下图以支持整图选择、且对象 owner 匹配的同一个 Inspector 为例。连线表示父子结构；蓝色表示开启，灰色虚线框表示关闭或封锁。A 继承父级开启；B 在子树关闭后可由对象重新开启；C 设置屏障后，对象即使请求开启也无效。开关只影响辅助观测，所有对象的主图仍正常绘制。
 
-<ComponentPreview files="inspect-selection-tree" size="md" hideCode />
+<ComponentPreview files="inspect-selection-tree" size="lg" type="flow" hideCode />
 
 这里 B 的 `options: false` 只关闭指定 Inspector，C 的 `barrier` 则封锁子树内全部 Inspector；React 中可用 `<InspectScope request={false}>` 声明这个屏障。
 
@@ -164,7 +165,7 @@ request 可以声明在场景、authored 子树或对象上；其 `options: true
 
 图中两路输入在 `inspect()` 汇合：左侧配置决定“显示什么”，右侧几何提供“画在哪里”。下排承接回调输出，依次整理片段、隔离编译，再由宿主转换为只读图层；箭头表示数据交接，不表示配置与几何校验并发执行。
 
-<ComponentPreview files="inspect-output-flow" size="md" hideCode />
+<ComponentPreview files="inspect-output-flow" size="sm" type="flow" hideCode />
 
 例如打开控制点选项后，Inspector 从 subject 读取控制点位置，返回点和线的 IR。此时还没有可显示的图层；片段编译与宿主交付见下一节。
 
@@ -222,7 +223,7 @@ driver 将回调输出经 `snapshotInspectorOutput()` 整理为片段，逐个�
 
 下图展开“准入 → 收集 → 匹配 → 辅助输出”的主线。多个 occurrence 汇入同一会话；`complete()` 的内部顺序是解析选择、校验 subject、调用 `inspect()`、隔离编译片段，然后生成 `InspectionPlane`。图中的选择函数和被观测集都是内部实现成员。
 
-<ComponentPreview files="inspect-observer-batch-flow" size="lg" hideCode />
+<ComponentPreview files="inspect-observer-batch-flow" size="xl" type="flow" hideCode />
 
 图中的 N 是本轮最终通知的数量，可能为 0；`observe()` 每条通知执行一次，`complete()` 则在这一轮成功编译的通知派发结束后执行一次。
 

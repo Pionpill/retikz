@@ -46,7 +46,7 @@ Use the playground to vary width, height, and corner radius continuously. The gr
 |               | `corner1` + `width` + `height` | Rectangle from one corner and size                   |
 |               | + `cornerRadius?`              | Rounded rectangle (clamped to half the smaller side) |
 
-This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/draw/path) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
+This shape sugar also forwards the shared Path props, including `stroke`, `fill`, `opacity`, `animations`, and `onClick`. See [Path](/kernel/components/path/step) for the full list and [Hydration](/kernel/packages/render/hydration) for how events are attached after rendering.
 
 ## As a node shape
 
@@ -69,7 +69,7 @@ The playground fixes the target rectangle at the origin. Adjust `cornerRadius` t
 
 <ComponentPreview files="node-connection-playground" size="sm" />
 
-Round corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). See [Node geometry](/kernel/components/node/overview) for shared sizing, boundary, and anchor behavior.
+Round corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). See [Node geometry](/kernel/components/node/usage) for shared sizing, boundary, and anchor behavior.
 
 ### API Reference
 
@@ -149,6 +149,6 @@ The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retain
 
 ## Related
 
-- [Node geometry](/kernel/components/node/overview): sizes, boundaries, and anchors for rectangular nodes
+- [Node geometry](/kernel/components/node/usage): sizes, boundaries, and anchors for rectangular nodes
 - [Polygon](/kernel/components/shapes/polygon): regular polygons and diamond
 - [Shapes](/kernel/components/shapes): Shapes overview and full definition

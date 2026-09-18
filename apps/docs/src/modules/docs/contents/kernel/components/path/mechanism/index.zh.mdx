@@ -1,0 +1,142 @@
+---
+title: 实现原理
+description: 解释路径写法、游标、端点引用、箭头接合与标签断口如何产生绘制结果
+---
+
+先读[基础用法](/kernel/components/path/usage)。本页解释绘制中的局部规则：为什么两种写法能得到相同路径，为什么端点能引用后定义节点，以及箭头和标签如何改变可见描边。
+
+## 两种写法如何汇合
+
+`<Draw way={['a', '-|', 'b']}>` 与先移动到 a、再折角连接 b 的两个 Step 表达同一条路线。React 的 Draw 只把输入交给 Path；Vanilla 的 `normalizePath` 再调用 `parseWay`，统一生成有序步骤。
+
+- 作者输入：为了便于编写而提供的 `way`、字符串目标与箭头简写
+- Source IR：可保存为 JSON 的 Path、Step 与 marks；仍保留节点引用
+- 路径命令：引用求值后得到的具体移动、直线、曲线与圆弧几何
+
+图中先把写法统一，再计算坐标。统一步骤不会提前把节点引用变成坐标，也不会直接生成 SVG。
+
+<ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
+
+`arrow="->"` 在这一入口转换成 `pos: 1` 的箭头 mark；`arrowDetail` 的端点覆盖与 `arrowPlacement` 的重叠值一并进入该 mark。因此直接编写 IR 时应使用 `marks`，不复制 React 的箭头简写字段。
+
+<SourceLinks
+  sources={[
+    { label: 'Draw 透传给 Path', path: 'packages/kernel/react/src/sugar/path/Draw.tsx', startLine: 28 },
+    {
+      label: 'way、步骤与箭头的统一入口',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 174,
+    },
+    { label: '箭头简写转换为 marks', path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts', startLine: 42 },
+  ]}
+/>
+
+## 步骤如何改变游标
+
+游标就是“下一笔从哪里开始”的位置。`move` 只移动游标；`line` 从游标画到目标；`cycle` 回到最近一次 move 建立的子路径起点。折角或曲线可能生成多条底层命令，但仍属于同一个步骤。
+
+例如先 `move [0, 0]`，再 `line [120, 0]`，游标从 A 到达 B；再一次 move 会开始独立子路径，不把两次 move 之间连起来。`way` 中的 `+` 偏移保持相对计算基点，`++` 则推进基点，两者因此可能画出不同的后续路线。
+
+生成器也是一个步骤：它收到当前局部游标和已解析的目标，返回命令后交回宿主 Path。它不拥有整条路径的箭头、描边或最终外层变换。具体写法见[Step · 路径组合](/kernel/components/path/step)与[自定义生成器](/kernel/components/path/custom-path-generator)。
+
+<SourceLinks
+  sources={[
+    { label: '逐步生成路径命令', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 59 },
+    { label: '生成器参数与输出校验', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts', startLine: 95 },
+  ]}
+/>
+
+## 为什么能引用后定义节点
+
+在同一范围中，Path 可以声明在节点 B 前面，仍以 B 作为终点。遍历时 Path 先进入待处理队列并保留输出位置；当前范围内的节点注册完成后，再解析端点并回填图元。
+
+这样既能得到 B 的连接边界，又保留 Path 原来的绘制层级。此规则针对延迟处理的路径；不能据此认为 Node 的位置或 Scope 的最终定位也都支持后定义引用。
+
+<SourceLinks
+  sources={[
+    {
+      label: '路径排队与绘制顺序占位',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 253,
+    },
+    {
+      label: '解析待处理路径并回填',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 124,
+    },
+  ]}
+/>
+
+## 逻辑路径与可见描边
+
+以下三幅状态图始终使用同一条 A → B 直线。灰点标记逻辑端点，点线保留完整路线：先有几何，再放置箭头，最后为居中文字留出断口。中间的操作箭头表示处理过程，不属于 A → B 这条线。
+
+<ComponentPreview files="draw-geometry-states" size="sm" hideCode type="illustration" />
+
+第一幅线从 A 连到 B；第二幅仍指向同一个 B，但主描边缩短到箭头接合处，避免穿出箭头。第三幅文字下的描边被移除，灰色路线仍连续，文字位置与终点也没有移动。
+
+这一区别也解释了圆角：`roundedCorners` 会改写路径几何，影响路径长度和沿线采样；`lineJoin` 仅改变尖角附近描边的外观。圆角、箭头接合与标签断口不是三个等价的“样式开关”。
+
+<SourceLinks
+  sources={[
+    { label: '几何、圆角与装饰输出', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 300 },
+    { label: '端点接合与路径缩短', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts', startLine: 150 },
+  ]}
+/>
+
+## 箭头如何接上路径
+
+箭头 definition 提供三个不同位置：`backX` 是轮廓后缘，`lineContactX` 是主描边的接合位置，`tipX` 是尖端。它们决定箭头放在哪里，以及主描边需要缩短多少；不能用同一个“箭头长度”替代。
+
+<ComponentPreview files="arrow-contact" size="lg" hideCode type="illustration" />
+
+`overlap: 1` 对齐的是最终视觉后缘，尺寸缩放与空心轮廓都会参与计算。改变重叠比例只移动端点装饰及其接合处，不重写节点锚点或路径逻辑采样。中间的 mark 只按局部切线定向，不作为端点缩短路径。
+
+未显式指定箭头颜色时，marker 使用 `contextStroke`，即在绘制时继承所属路径的描边色；带渐变等资源型描边时，需要给箭头显式纯色。内置与注入的箭头共用同一注册与解析路径。
+
+<SourceLinks
+  sources={[
+    { label: '箭头几何契约', path: 'packages/kernel/core/src/contract/arrow/types.ts', startLine: 4 },
+    { label: '颜色继承与 marker 物化', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts', startLine: 39 },
+  ]}
+/>
+
+## 标签为什么只切断描边
+
+标签先在未切断的路径上确定位置，再根据文字的视觉边界与 `gap` 算出需要移除的区间。保留下来的线段继续使用原来的路径归属；箭头、marks 与标签的位置不会因断口重新分配。
+
+无填充的内置 Stroke 路径上，居中标签默认留断口；`interrupt: false` 可以保留连续线。存在填充或使用其它 Path kind 时，自动规则不适用，显式请求还受宿主限制，具体条件见[label · 标签](/kernel/components/path/label)。最后的 `rotate` / `scale` 把线、文字和装饰作为同一组变换，避免它们分离。
+
+<SourceLinks
+  sources={[
+    { label: '标签断口与最终路径输出', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 300 },
+  ]}
+/>
+
+## 自定义路径接管哪一层
+
+`kind` 选择整条路径的处理器。Core 先找到同名 definition，用它的完整 schema 校验输入，再调用 compile。处理器可复用 `emitStroke`，也可以直接产生 Scene 图元；renderer 接收的是这些图元，无需识别自定义 kind 名。
+
+只增加一段波形时使用 generator；替换整条线的输出方式才使用 Path kind；只改变端点轮廓使用 ArrowDefinition。三者共享宿主，但各自的输入与产物不同。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Path kind 查找与分派',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 334,
+    },
+    { label: '处理器可复用的公开服务', path: 'packages/kernel/core/src/contract/path-kind/types.ts', startLine: 112 },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Step · 路径组合', description: '使用子路径、变换与圆角', url: '/kernel/components/path/step' },
+    { title: '自定义路径', description: '完成整条路径的扩展闭环', url: '/kernel/components/path/custom-path' },
+    { title: 'API 参考', description: '查询公开声明', url: '/kernel/components/path/api-reference' },
+    { title: 'Schema 参考', description: '查询持久化数据字段', url: '/kernel/components/path/schema-reference' },
+  ]}
+/>

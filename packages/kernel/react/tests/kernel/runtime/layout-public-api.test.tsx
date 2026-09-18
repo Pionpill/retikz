@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { infer as ZodInfer } from 'zod';
 import { literal } from 'zod';
 
-import type { LayoutProps, LayoutRuntimeOptions } from '../../../src';
+import type { LayoutExtensions, LayoutProps, LayoutRuntimeOptions } from '../../../src';
 import { Layout, LayoutRuntimeMode, Node } from '../../../src';
 
 describe('Layout public API', () => {
@@ -33,7 +33,7 @@ describe('Layout public API', () => {
       schema,
       compile: context => context.emitStroke(context.path),
     });
-    const pathKinds: NonNullable<LayoutProps['pathKinds']> = [definition];
+    const pathKinds: NonNullable<LayoutExtensions['pathKinds']> = [definition];
 
     expect(pathKinds).toEqual([definition]);
   });
