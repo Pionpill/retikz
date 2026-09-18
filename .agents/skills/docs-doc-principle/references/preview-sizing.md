@@ -1,6 +1,6 @@
 # 预览尺寸与 Control 空间
 
-用于新增或调整 ComponentPreview 的 size、control 面板宽度、取景或裁切。先在约 1440px viewport、约 800px 正文的真实页面运行 `apps/docs/scripts/check-figure-size.mjs`（包命令 `check:figure-size`）；用 `--help` 查询当前参数，不编造参数或用源码 width/height 替代实测。
+用于新增或调整 ComponentPreview 的 size、control 面板宽度、取景或裁切。先在约 1440px viewport、约 800px 正文的真实页面运行 `apps/docs/scripts/check-figure-size.mjs`（包命令 `check:figure-size`）。当前脚本只接受 `--url` 和可选的 `--figure` / `--browser`，不支持 `--help`；按实际参数直接运行，例如 `pnpm --filter @retikz/docs run check:figure-size -- --url http://localhost:7101/<route> --figure <demo>`，不编造参数或用源码 width/height 替代实测。
 
 ## 脚本计算顺序
 
