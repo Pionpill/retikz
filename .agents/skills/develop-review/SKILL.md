@@ -9,14 +9,14 @@ description: Use when auditing a retikz module or subsystem read-only to find be
 
 ## 边界
 
-| 场景                              | 用哪个 skill                |
-| --------------------------------- | --------------------------- |
-| 横向审一个模块，找 beta TODO 候选 | develop-review              |
-| 审计已有测试是否过期、重复或临时  | test-review                 |
-| 用户明确要求固定快照多模型评审    | cross-review                |
-| 为疑似 bug 写测试坐实             | cross-test                  |
-| 已登记 TODO 要修                  | flow-beta                   |
-| 新功能 / 新 IR / 新公开字段       | flow-alpha / develop-design |
+| 场景                              | 用哪个 skill                                                      |
+| --------------------------------- | ----------------------------------------------------------------- |
+| 横向审一个模块，找 beta TODO 候选 | develop-review                                                    |
+| 审计已有测试是否过期、重复或临时  | test-review                                                       |
+| 用户明确要求固定快照多模型评审    | cross-review                                                      |
+| 为疑似 bug 写测试坐实             | cross-test                                                        |
+| 已登记 TODO 要修                  | [beta](../flow-development/references/beta.md)                    |
+| 新功能 / 新 IR / 新公开字段       | [alpha](../flow-development/references/alpha.md) / develop-design |
 
 ## 启动前
 
@@ -34,7 +34,7 @@ git status --short
 ## 必读规则
 
 - 根和就近 `AGENTS.md`。
-- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应 `standard-*` skill。
+- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应层级 references。
 - 涉及文档一致性时读 `apps/docs/AGENTS.md` 和必要 docs skill。
 
 ## 审查维度
@@ -50,14 +50,7 @@ git status --short
 4. **schema / 数据结构 / AI 友好**：JSON 可序列化、zod `.describe` 完整与质量、const object enum、非法状态不可表达、同名同义。
 5. **文档一致性**：public API、props、IR 字段、默认值、demo、zh/en 是否与当前代码一致。纯内部范围可标不适用。
 
-## Subagent Review 命名重点
-
-只读 reviewer 必须把命名语义作为独立检查项，并按 [`standard-name`](../standard-name/SKILL.md) 对照：
-
-- 名称是否足以推断用途、数据类别和作用范围，尤其留意无上下文的 `base`、`data`、`value`、`item`、`target`、`result`、`key`
-- 函数是否采用动宾短语；导出函数是否包含完整领域语义，私有 helper 是否只在上下文明确时适度简化
-- 变量、参数和属性是否采用形容词或分类限定词 + 类别名，最后一个单词是否表达类别；布尔值是否使用可读的谓词形式
-- 发现命名不清时，必须报告具体位置、误导原因和建议名称，不得只写“可以优化”
+命名审查直接读取 standard-name 的适用 references；finding 给出位置、误导原因与建议名称，不再维护第二套命名清单。
 
 ## 分级
 
@@ -69,45 +62,7 @@ git status --short
 
 ## 报告
 
-写入：
-
-```text
-notes/reports/develop-review-YYYY-MM-DD-<module>.md
-```
-
-该目录被 `.gitignore` 忽略，报告不 stage、不 commit。
-
-报告结构：
-
-```md
-# Develop Review Report: <module>
-
-日期：
-审查范围：
-基准快照：
-所属分组 / 版本通道：
-覆盖率声明：
-
-## 结论概览
-
-## BLOCKING
-
-| # | 位置 | 维度 | 问题 | 建议改法 | 预估 Level | 坐实出口 |
-
-## WARNING
-
-| # | 位置 | 维度 | 观察 | 建议改法 | 预估 Level | 坐实出口 |
-
-## INFO
-
-| # | 位置 | 维度 | 观察 |
-
-## 横向发现
-
-## 建议 triage
-```
-
-无某档时写“无”。
+结果字段与留档按 [报告格式](references/report.md)。只报告有证据的发现，空类别注明无，不强制赞扬或凑数。
 
 ## 完成标志
 

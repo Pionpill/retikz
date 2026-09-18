@@ -4,7 +4,7 @@
 
 ## 职责
 
-Schema Reference 只提供字段完整、可扫描、可链接的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 只应链接到本页，不复制 schema 字段表。
+Schema Reference 提供字段完整、可扫描的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 仅展示 Schema 名称与摘要，不添加 Schema 超链接或复制字段表。
 
 页面位于对应 owner 的 schema-reference，不要求 reference 目录前缀；路径示意：
 
@@ -18,14 +18,26 @@ registry 位于：
 apps/docs/src/modules/docs/components/mdx-content/zod-schema/schema-registry.ts
 ```
 
+## 组件收录范围
+
+- 按组件职责列出所需 schema 名称，再从包公开入口与现有 registry 获取；包级导入范围不决定页面展示范围
+- 仅收录用户编写 IR 的输入 schema；排除解析态、Canonical、编译输出、运行时及重复的内部组合辅助 schema。`SceneSchema` 若是用户填写的 IR 根输入，不属于编译输出
+- 主 schema 之外，只收录组件所有的直接子 schema，或该页面承担的专属配置通道输入 schema；不把“字段直接引用”或“高度相关”当作扩展收录范围的理由
+- 共享 geometry、style、entity、default 等 schema 只在字段类型中保留源码原名，交给其所属组件或包的参考页说明；不重复建立小节，不沿共享引用递归收录全包
+- 复用真实 schema，不为文档新造组件专属 schema、复制字段定义或深层导入内部文件；所选 schema 的自身字段仍须完整展示与翻译
+
 ## ZodSchema 规则
+
+- 定义小节标题使用 Schema 原始标识符（保留 Schema 后缀）；只翻译说明，不翻译代码成员
+- 具名 Schema 在引用处显示原名，定义处展示自身字段；当前所有 Schema 类型展示均不使用超链接
+- 枚举能唯一对应公开常量时复用 `ApiValues` 悬浮展示取值；无法明确对应时直接显示枚举值，不猜测名称。`ApiValues` 保持枚举功能，不承载对象、联合类型或 Schema 详情
 
 - `name` 必须在 registry 注册；schema instance 必须来自包公开入口
 - 字段名、类型、必填和英文说明来自源码 `.describe()`
 - zh 传 `descriptions` 覆盖全部中文说明；en 不重复传英文说明
 - zh 只有顶层 `description` 不算完成；object schema 的每个字段与匿名对象点路径都必须由 `descriptions` 覆盖，不能依赖英文 `.describe()` fallback
 - anonymous object 子字段使用点路径，如 `font.family`、`label.text`
-- 合并页标题的实际 rehype slug 必须与 registry URL anchor 一致，不手猜连字符
+- registry 保留的 URL/anchor 仅作定位元数据，不据此生成类型超链接
 - 新独立页还要同步 data child、i18n 和双语正文
 
 新增 schema 的顺序：

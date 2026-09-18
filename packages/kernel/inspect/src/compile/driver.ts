@@ -247,7 +247,11 @@ export const resolveInspectionObserverOutput = (
   return Object.freeze({ primary, inspection: output.inspection, diagnostics: output.diagnostics });
 };
 
-/** 基于 Core observed compile 执行一次原子 Inspector compile */
+/**
+ * 基于 Core observed compile 执行一次原子 Inspector compile
+ *
+ * @template TComposites 当前 Scene 可用的 Composite Definition 集合
+ */
 export const compileInspectionToScene = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(
   ir: IRScene,
   options: Readonly<{

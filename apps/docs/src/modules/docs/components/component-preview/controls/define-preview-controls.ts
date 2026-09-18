@@ -15,7 +15,7 @@ const COLOR_HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const CURRENT_COLOR_VALUE = 'currentColor';
 const CONTRAST_COLOR_VALUE = 'contrast';
 const MIN_PANEL_SIZE = 18;
-const MAX_PANEL_SIZE = 45;
+const MAX_PANEL_SIZE = 50;
 
 /** 获取控件定义中的全部扁平字段 */
 export const getPreviewControlItems = (definition: PreviewControlsDefinition): Array<PreviewPanelControlItem> =>

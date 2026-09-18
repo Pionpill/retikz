@@ -25,7 +25,7 @@ export type ScopeProps = ScopeStyleProps &
      */
     localNamespace?: boolean;
     /**
-     * 局部 transform 列表；数组顺序应用，与 SVG transform list 一致
+     * 局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点
      * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale
      */
     transforms?: Array<InputTransform>;

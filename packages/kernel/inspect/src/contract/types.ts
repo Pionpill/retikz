@@ -44,7 +44,11 @@ export type InspectionAppearanceContext = Readonly<{
   semanticColors: CoreSemanticColors;
 }>;
 
-/** Inspector callback 读取的最终 occurrence 上下文 */
+/**
+ * Inspector callback 读取的最终 occurrence 上下文
+ *
+ * @template TOptions callback 消费的已解析 options 类型
+ */
 export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
   /** 按本次主图编译精度舍入数值 */
   round: (value: number) => number;
@@ -93,7 +97,14 @@ export type InspectorDefinition<
   inspect: (subject: TSubject, context: InspectorContext<TResolvedOptions>) => InspectorOutput;
 }>;
 
-/** 作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段 */
+/**
+ * 作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段
+ *
+ * @template TSubject 通过 subject schema 解析后的被观察对象类型
+ * @template TParsedOptions options schema 解析后的 options 类型
+ * @template TResolvedOptions callback 消费的已解析 options 类型
+ * @template TSourceOptions 传入 options schema 前的原始 options 输入类型
+ */
 export type InspectorDefinitionInput<
   TSubject extends JsonValue = JsonValue,
   TParsedOptions extends JsonObject = Record<string, never>,

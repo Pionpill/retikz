@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { buildPreviewIR } from '../src/modules/docs/components/component-preview/utils';
 import AiRoadmapDemo from '../src/modules/docs/contents/about/blog/origin/ai-roadmap';
 import PrimitiveRelationsDemo from '../src/modules/docs/contents/kernel/components/core/primitive-relations/anchors-auto-attach.demo';
-import { previewSource as DrawStylePreviewSource } from '../src/modules/docs/contents/kernel/components/draw/overview/draw-style.demo';
+import { previewSource as DrawStylePreviewSource } from '../src/modules/docs/contents/kernel/components/path/usage/draw-style.demo';
 import LearningPathTitleDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-01-title.demo';
 import LearningPathSpineDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-02-spine.demo';
 import LearningPathStacksDemo from '../src/modules/docs/contents/kernel/galleries/learning-path/learning-path-03-stacks.demo';

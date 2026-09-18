@@ -27,7 +27,7 @@ Import the Definitions a figure needs from `@retikz/standard/shape` and pass the
 import { Layout, Node } from '@retikz/react';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
-<Layout shapes={[CrossShapeDefinition]}>
+<Layout extensions={{ shapes: [CrossShapeDefinition] }}>
   <Node position={[0, 0]} shape="cross" layout={{ minimumSize: { width: 80, height: 80 } }}>
     cross
   </Node>

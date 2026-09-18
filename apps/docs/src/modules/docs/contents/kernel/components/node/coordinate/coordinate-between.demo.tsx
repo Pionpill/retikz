@@ -3,17 +3,13 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import {
-  coordinateBetweenControls,
-  coordinateBetweenFrame,
-  previewControlContract,
-} from './coordinate-between.controls';
+import { coordinateBetweenControls, previewControlContract } from './coordinate-between.controls';
 
 export const previewControls = coordinateBetweenControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout viewBox={coordinateBetweenFrame.viewBox}>
+    <Layout>
       <Node
         id="A"
         position={[-140, 0]}

@@ -17,10 +17,8 @@ const preview = defineControlledBuiltinInspectPreview(
     return (
       <InspectLayout
         registry={registry}
-        width={380}
-        height={360}
-        viewBox={{ x: -190, y: -180, width: 380, height: 360 }}
-        clips={[PathClipDefinition]}
+        viewBox={{ x: -180, y: -140, width: 360, height: 280 }}
+        extensions={{ clips: [PathClipDefinition] }}
         request={{ inspector: CLIP_INSPECTOR_KEY, options: { outline: values.outline, labels: values.labels } }}
       >
         <Scope

@@ -60,7 +60,7 @@ export type PathProps = HydrationEventProps & {
   marks?: IRPath['marks'];
   /** TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤 */
   way?: WayDSL;
-  /** 应当全部是 <Step /> */
+  /** 应当全部是 `<Step />` */
   children?: ReactNode;
 };
 

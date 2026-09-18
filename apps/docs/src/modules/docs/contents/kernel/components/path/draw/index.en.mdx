@@ -1,0 +1,217 @@
+---
+title: Path syntax
+description: Describe a Draw route with targets, operators, and relative coordinates
+---
+
+Describe a route with targets and operators. Start with [Basic usage](/kernel/components/path/usage) for your first drawing.
+
+## Using this topic
+
+The four forms below draw the same horizontal-then-vertical fold. Choose the form for your host; Vanilla needs an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="draw-way-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[120, 60]}>
+      B
+    </Node>
+    <Draw way={['a', '-|', 'b']} arrow="->" />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 60], text: 'B' },
+    {
+      type: 'path',
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', { position: [120, 60], text: 'B' }),
+    path({ way: ['a', '-|', 'b'], arrow: '->' }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 60], text: 'B' },
+    {
+      type: 'path',
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+<ComponentAlert
+  type="tip"
+  title="Draw is only shorthand"
+  description={
+    <>
+      <code>Draw</code> is React sugar; Core IR has no <code>Draw</code>. React turns <code>{'<Draw>'}</code> into the{' '}
+      underlying <code>{'<Path>'}</code>, whose normalization flow parses <code>way</code> into steps. When authoring IR{' '}
+      directly, use <code>path</code>.
+    </>
+  }
+/>
+
+`way` is the core of `<Draw>`: targets decide where the path goes, fold and curve operators decide how neighboring targets connect, `DrawWay.Cycle` closes the path, and relative coordinates change the target's evaluation base.
+
+Think of `way` as a tiny path language: targets produce points, `'-|'` / `'|-'` rewrite the segment between neighboring points, `{ label }` decorates the next segment, `{ curve }` / `{ cubic }` / `{ bend }` consume the next item to make a curve, and `{ arc }` / `{ circle }` / `{ ellipse }` draw around the previous point without consuming the next item.
+
+## Target Forms
+
+One `way` can mix target forms. Choose one based on where the position comes from:
+
+- **Node reference**: `'a'` points to an existing node. The line follows the node and attaches to its boundary.
+- **Cartesian coordinate**: `[120, 0]` gives a fixed position that does not depend on another node.
+- **Polar coordinate**: `{ origin: 'a', angle: 60, radius: 80 }` places a point by angle and distance from an origin, which is useful for arranging points around a node.
+- **Structured target**: `{ id: 'a', anchor: 'top' }` selects a node anchor or a boundary position when the line needs a precise landing point.
+
+<ComponentPreview files="draw-way-types" size="sm" />
+
+## Single-axis connections
+
+`{ horizontalTo }` connects only to the target x, while `{ verticalTo }` connects only to the target y. Each emits one `axis-line` Step, unlike the two segments produced by `-\|` / `\|-`. Directions use the current Scope's local axes.
+
+```tsx
+<Draw way={[[0, 0], { horizontalTo: [100, 60] }]} />
+<Draw way={[[0, 0], { verticalTo: [100, 60] }]} />
+```
+
+<ComponentPreview files="axis-line" size="sm" />
+
+The operator value accepts only Cartesian coordinates, NodeTarget, or their string shorthand. `parseWay` rejects relative, polar, offset, and between targets, as well as objects containing multiple Way operators.
+
+## Folds
+
+Switch among four fold directions and watch the blue path pass through one or two orthogonal corners. In `-\|-` / `\|-\|` modes, `fraction` moves the middle leg through `0..1` and defaults to `0.5`; the gray dotted line only marks the direct endpoint connection.
+
+<Comparison target="tikz" title="Fold Syntax">
+
+`'-|'` / `'|-'` follow the two-leg TikZ path syntax `(A) -| (B)` / `(A) |- (B)`. `'-|-'` / `'|-|'` add the common three-leg flowchart form. Bare tokens use the midpoint; `{ via: '-|-', fraction: 0.3 }` positions the middle leg explicitly.
+
+</Comparison>
+
+<ComponentPreview files="way-fold" size="sm" />
+
+## Closure
+
+Switch the path state to see “Closed path” replace the dotted gap with the solid return edge from `DrawWay.Cycle` and create a fillable region.
+
+<ComponentPreview files={['way-cycle', 'way-cycle.data.ts']} size="sm" />
+
+## Relative coordinates
+
+Both paths first move right by `[60, 0]`, then use the control-panel offset `[x, y]` for the second segment. The difference is not where the first segment is drawn, but whether its endpoint becomes the internal cursor:
+
+- **Blue `+`**: The first segment is drawn, but the cursor stays at the start. The second segment is still calculated from the `+` box, so its endpoint is “start + `[x, y]`” without adding the earlier `[60, 0]`.
+- **Orange `++`**: The first segment moves the cursor to the hollow dot. The second segment continues from that dot, so its endpoint is “start + `[60, 0]` + `[x, y]`”.
+- The gray dotted right-angle guides show the base for the second calculation: the upper one starts at the `+` box, and the lower one starts at the orange hollow dot. Solid dots are the final endpoints.
+
+<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
+
+## Related props
+
+These are the props most relevant to this page. See the [API reference](/kernel/components/path/api-reference) for complete fields and types.
+
+<ComponentProps
+  items={[
+    {
+      name: 'way',
+      kind: 'property',
+      type: 'Array<WayItem>',
+      required: true,
+      description:
+        "Requires at least two items, starting with a target; cannot accompany explicit Steps. Combine in route order:\n\n- Targets: node id, `[x, y]`, polar coordinates, or `{ id, anchor?, boundary? }`\n- Relative offsets: `{ position: [x, y], type: DrawWay.Relative | DrawWay.Accumulate }`, preserving or advancing the relative base\n- Folds: `'-|' | '|-' | '-|-' | '|-|'`; three-leg forms accept `{ via: '-|-' | '|-|', fraction?: number }`\n- Axis: `{ horizontalTo: target }` or `{ verticalTo: target }`, using only one target coordinate\n- Labels: `{ label: string | InputStepLabel }` for the following segment\n- Curves: `{ curve: [x, y] }`, `{ cubic: [[x1, y1], [x2, y2]] }`, or `{ bend: 'left' | 'right' }`, followed by an endpoint\n- Closure: `DrawWay.Cycle`, returning to the subpath start\n\nSee the API reference for arc and shape operators",
+    },
+    {
+      name: 'DrawWay',
+      kind: 'constant',
+      type: 'typeof DrawWay',
+      description:
+        '`Cycle` closes to the start; `Hv = -|`, `Vh = |-`, `Hvh = -|-`, and `Vhv = |-|` select the four fold directions. `Relative` and `Accumulate` may only be the `type` in `{ position, type }`: the former preserves the cursor, while the latter moves it to this segment’s endpoint',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Connect two nodes, choose Draw or Path, and set basic path appearance',
+      url: '/kernel/components/path/usage',
+    },
+    {
+      title: 'Implementation',
+      description: 'Follow path syntax through steps, references, geometry, arrows, and labels to the final result',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public TypeScript contracts for drawing components, authoring input, and extensions',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

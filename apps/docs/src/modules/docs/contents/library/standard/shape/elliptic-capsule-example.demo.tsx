@@ -8,7 +8,7 @@ import { ellipticCapsuleExampleControls, previewControlContract } from './ellipt
 
 export const previewControls = ellipticCapsuleExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} shapes={[EllipticCapsuleShapeDefinition]}>
+  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} extensions={{ shapes: [EllipticCapsuleShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'ellipticCapsule', params: { axis: values.axis, capDepth: values.capDepth } }}

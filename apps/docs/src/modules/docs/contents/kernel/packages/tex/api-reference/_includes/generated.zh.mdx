@@ -12,9 +12,27 @@
 
 控制由 `createLowerTex` 创建的 lowerer 如何向外报告失败。它不改变 TeX 解析或缓存语义，成功结果仍直接返回给 Core 的文本编译流程
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员            | 类型                                          | 默认值 | 说明                                                         |
 | --------------- | --------------------------------------------- | ------ | ------------------------------------------------------------ |
 | `onDiagnostic?` | `(diagnostic: TexLoweringDiagnostic) => void` | —      | 每次公开 lowering 失败时接收一次诊断，供应用记录、提示或上报 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type LowerTexOptions = {
+  onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### MathJaxEngineOptions
 
@@ -26,10 +44,29 @@
 
 指定内置配置档及其额外扩展，供 `createMathJaxEngine`、`createMathJaxLowerTex` 与 React Hook 在初始化时解析。它不包含 MathJax 实例，也不控制公式绘制样式
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员          | 类型                           | 默认值   | 说明                                           |
 | ------------- | ------------------------------ | -------- | ---------------------------------------------- |
 | `extensions?` | `Array<MathJaxExtensionValue>` | `[]`     | 在配置档之后追加的扩展，重复项会在初始化前去重 |
 | `profile?`    | `MathJaxProfileValue`          | `'base'` | 选择基础或数学扩展集合的内置配置档             |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MathJaxEngineOptions = {
+  profile?: MathJaxProfileValue;
+  extensions?: Array<MathJaxExtensionValue>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### MathJaxExtensionValue
 
@@ -42,7 +79,7 @@
 由 `MathJaxExtension` 派生的受限字符串集合，可在内置配置档之后追加。配置解析会去重并按稳定顺序加载，调用方无需自行处理 package 顺序
 
 ```ts
-ValueOf<typeof MathJaxExtension>;
+export type MathJaxExtensionValue = ValueOf<typeof MathJaxExtension>;
 ```
 
 ### MathJaxLowerTexOptions
@@ -51,7 +88,7 @@ ValueOf<typeof MathJaxExtension>;
   <ApiSourceLink
     label={'MathJaxLowerTexOptions'}
     path={'packages/kernel/tex/src/lower/create-mathjax.ts'}
-    startLine={14}
+    startLine={13}
   >
     一步创建 MathJax 引擎与 Core lowerer 的配置
   </ApiSourceLink>
@@ -59,9 +96,27 @@ ValueOf<typeof MathJaxExtension>;
 
 合并 `MathJaxEngineOptions` 的解析配置与 `LowerTexOptions` 的诊断回调，作为 `createMathJaxLowerTex` 的单一输入。它只描述工厂参数，不保存引擎、缓存或渲染状态
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员            | 类型                                          | 默认值   | 说明                                                         |
+| --------------- | --------------------------------------------- | -------- | ------------------------------------------------------------ |
+| `extensions?`   | `Array<MathJaxExtensionValue>`                | `[]`     | 在配置档之后追加的扩展，重复项会在初始化前去重               |
+| `onDiagnostic?` | `(diagnostic: TexLoweringDiagnostic) => void` | —        | 每次公开 lowering 失败时接收一次诊断，供应用记录、提示或上报 |
+| `profile?`      | `MathJaxProfileValue`                         | `'base'` | 选择基础或数学扩展集合的内置配置档                           |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-MathJaxEngineOptions & LowerTexOptions;
+export type MathJaxLowerTexOptions = MathJaxEngineOptions & LowerTexOptions;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### MathJaxProfileValue
 
@@ -74,7 +129,13 @@ MathJaxEngineOptions & LowerTexOptions;
 由 `MathJaxProfile` 派生的受限字符串集合，用于选择内置扩展组合；它只描述配置值，实际扩展加载由 MathJax 工厂负责
 
 ```ts
-ValueOf<typeof MathJaxProfile>;
+export type MathJaxProfileValue = ValueOf<typeof MathJaxProfile>;
+```
+
+#### 展开类型
+
+```ts
+export type MathJaxProfileValue = 'base' | 'math';
 ```
 
 ### MathJaxSvgEngine
@@ -87,9 +148,32 @@ ValueOf<typeof MathJaxProfile>;
 
 定义 `createLowerTex` 所需的最小引擎边界：输入 TeX 字符串和 display 选项，输出可由本包 SVG lowerer 消费的标记。调用方可使用内置 MathJax 工厂，也可注入兼容实现；通用 SVG 导入与渲染不属于该接口
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员      | 类型                                                     | 默认值 | 说明                                              |
 | --------- | -------------------------------------------------------- | ------ | ------------------------------------------------- |
 | `convert` | `(tex: string, options: { display: boolean }) => string` | —      | 把一段 TeX 和 display 模式转换成受支持的 SVG 标记 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type MathJaxSvgEngine = {
+  convert: (
+    tex: string,
+    options: {
+      display: boolean;
+    },
+  ) => string;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### TexLoweringDiagnostic
 
@@ -102,7 +186,27 @@ ValueOf<typeof MathJaxProfile>;
 描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `LowerTexOptions.onDiagnostic` 决定如何提示用户
 
 ```ts
-{ kind: 'engine-error'; message: string; source: string } | { kind: 'mathjax-error'; message: string; source: string } | { kind: 'unsupported-svg'; message: string; source: string } | { kind: 'malformed-svg'; message: string; source: string }
+export type TexLoweringDiagnostic =
+  | {
+      kind: 'engine-error';
+      source: string;
+      message: string;
+    }
+  | {
+      kind: 'mathjax-error';
+      source: string;
+      message: string;
+    }
+  | {
+      kind: 'unsupported-svg';
+      source: string;
+      message: string;
+    }
+  | {
+      kind: 'malformed-svg';
+      source: string;
+      message: string;
+    };
 ```
 
 ### MathJaxExtension
@@ -116,17 +220,17 @@ ValueOf<typeof MathJaxProfile>;
 值与 MathJax configuration 的扩展标识保持一致，并由 profile 解析阶段统一校验、去重和加载。它提供可传给引擎配置的稳定扩展标识
 
 ```ts
-{
-  Ams: 'ams';
-  Boldsymbol: 'boldsymbol';
-  Braket: 'braket';
-  Cancel: 'cancel';
-  Cases: 'cases';
-  Centernot: 'centernot';
-  Color: 'color';
-  Mathtools: 'mathtools';
-  Newcommand: 'newcommand';
-}
+export const MathJaxExtension = {
+  Ams: 'ams',
+  Newcommand: 'newcommand',
+  Boldsymbol: 'boldsymbol',
+  Braket: 'braket',
+  Cancel: 'cancel',
+  Cases: 'cases',
+  Centernot: 'centernot',
+  Mathtools: 'mathtools',
+  Color: 'color',
+} as const;
 ```
 
 ### MathJaxProfile
@@ -140,16 +244,16 @@ ValueOf<typeof MathJaxProfile>;
 `base` 仅启用基础 TeX 配置，`math` 额外启用常用数学扩展集合。它提供 `createMathJaxEngine` 与 lowerer 工厂可识别的扩展集合选择，不创建引擎，也不改变已创建实例
 
 ```ts
-{
-  Base: 'base';
-  Math: 'math';
-}
+export const MathJaxProfile = {
+  Base: 'base',
+  Math: 'math',
+} as const;
 ```
 
 ### createLowerTex
 
 <p>
-  <ApiSourceLink label={'createLowerTex'} path={'packages/kernel/tex/src/lower/lower-tex.ts'} startLine={24}>
+  <ApiSourceLink label={'createLowerTex'} path={'packages/kernel/tex/src/lower/lower-tex.ts'} startLine={23}>
     把同步 SVG engine 适配为 Core `LowerTex`，并缓存确定的解析结果
   </ApiSourceLink>
 </p>
@@ -157,7 +261,7 @@ ValueOf<typeof MathJaxProfile>;
 接收能输出受支持 SVG 子集的引擎与可选诊断回调，返回可直接注入 Core 文本编译流程的同步 lowerer。该函数负责 TeX → SVG → 路径的降解和结果缓存，不负责初始化引擎或渲染公式
 
 ```ts
-(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
+export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
 ```
 
 #### 参数
@@ -185,7 +289,7 @@ const lowerTex = createLowerTex(engine, {
 ### createMathJaxEngine
 
 <p>
-  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={43}>
+  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={42}>
     创建基于可选 `mathjax-full` peer 的同步 TeX → SVG 引擎
   </ApiSourceLink>
 </p>
@@ -193,7 +297,7 @@ const lowerTex = createLowerTex(engine, {
 异步加载并配置 `mathjax-full`，返回可被 `createLowerTex` 反复同步调用的引擎。输入配置只影响启用的 TeX 扩展；返回值只负责 TeX → SVG，不承担 SVG 路径降解、缓存或 Core 注入
 
 ```ts
-(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
+export const createMathJaxEngine = (options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
 ```
 
 #### 参数
@@ -229,7 +333,7 @@ const svg = engine.convert('\\frac{1}{2}', { display: false });
   <ApiSourceLink
     label={'createMathJaxLowerTex'}
     path={'packages/kernel/tex/src/lower/create-mathjax.ts'}
-    startLine={32}
+    startLine={31}
   >
     创建使用内置 MathJax profile 的 Core lowerer
   </ApiSourceLink>
@@ -238,7 +342,7 @@ const svg = engine.convert('\\frac{1}{2}', { display: false });
 异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `LowerTex`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权
 
 ```ts
-(options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
+export const createMathJaxLowerTex = (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
 ```
 
 #### 参数
@@ -271,7 +375,7 @@ const lowerTex = await createMathJaxLowerTex({
 ### MathJaxLowerTexState
 
 <p>
-  <ApiSourceLink label={'MathJaxLowerTexState'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={21}>
+  <ApiSourceLink label={'MathJaxLowerTexState'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={19}>
     MathJax lowerer 的异步初始化状态
   </ApiSourceLink>
 </p>
@@ -279,13 +383,24 @@ const lowerTex = await createMathJaxLowerTex({
 表示当前 React 组件对应配置的引擎与 lowerer 是否可用：loading 时尚未完成初始化，ready 提供可传给 `@retikz/react` 的 `lowerTex`，error 提供可展示的诊断。它是 Hook 的输出快照，不保存跨组件的 UI 状态
 
 ```ts
-{ status: 'loading' } | { lowerTex: LowerTex; status: 'ready' } | { diagnostic: TexLoweringDiagnostic; status: 'error' }
+export type MathJaxLowerTexState =
+  | {
+      status: 'loading';
+    }
+  | {
+      status: 'ready';
+      lowerTex: LowerTex;
+    }
+  | {
+      status: 'error';
+      diagnostic: TexLoweringDiagnostic;
+    };
 ```
 
 ### useLowerTex
 
 <p>
-  <ApiSourceLink label={'useLowerTex'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={75}>
+  <ApiSourceLink label={'useLowerTex'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={73}>
     按有效配置共享 MathJax engine，并异步创建当前组件的 lowerer
   </ApiSourceLink>
 </p>
@@ -293,7 +408,7 @@ const lowerTex = await createMathJaxLowerTex({
 接收与根入口工厂一致的 MathJax 配置，复用同一有效扩展集合的引擎，并返回可判别的初始化状态。ready 状态中的 lowerer 应传入 `Layout` 等 React authoring 入口；本 Hook 不渲染公式，也不处理应用级错误界面
 
 ```ts
-(options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
+export const useLowerTex = (options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
 ```
 
 #### 参数

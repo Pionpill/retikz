@@ -21,7 +21,7 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 1. 读取根与被审计包就近 `AGENTS.md`。
 2. 读取 `notes/architecture/capability-design.md` 和所属能力域 completeness 文档。
 3. 记录 `git rev-parse HEAD` 与 `git status --short`；结束时确认除 ignored report 外没有写入。
-4. 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 读取适用 `standard-*` skill。
+4. 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 读取适用层级 references。
 5. 读取与结论直接相关的当前代码、测试、公开 barrel 和下游消费方；不能只复述 ADR 或架构文档。
 
 ## 共同检查矩阵
@@ -39,138 +39,9 @@ description: Use when an Alpha ADR needs a pre-implementation capability gate, o
 
 “已有一个内置实现”“某个 adapter 能展示”或“当前代码恰好在该包”都不能作为完备或所有权证据。
 
-## `adr-gate`
+## 模式细则
 
-### 输入要求
+- adr-gate：读 [设计门禁](references/adr-gate.md)，只返回 findings，不写报告。
+- code-audit：读 [代码完备审计](references/code-audit.md)，包含 beta-entry / beta-exit 与报告格式。
 
-- 读取完整待审 ADR（Proposed，或获批设计的修订），检查核心决策、基础数据结构 / 公开契约、行为与失败语义；Accepted 不代替本轮证据或实现授权。
-- 读取同步简略 `PLAN.md`，检查目标与非目标、功能与包边界、能力完备性、同类设计、被否决方案和测试策略摘要。
-- 对照当前代码判断 ADR 是否复用既有机制；尚未实现不妨碍设计门禁。
-- 调用方提供固定快照和当前检查轮次；默认由主 agent 执行，执行计划已授权常规 reviewer 时记录其实际模型与循环上限。
-
-### Gate 重点
-
-- 简略 plan 必须选择明确结论：组合、扩展当前域、下沉、上移、不支持或延期。
-- 新增开放语义时，ADR 冻结必要公开 contract；简略 plan 验证内置与自定义同路的 define-registry 链路。能力天然闭合时，理由记录在 plan。
-- 基础数据结构、公开契约、默认 / 失败语义和跨包接口必须足以冻结功能，不能让 plan 或 implementer 再决定所有权或公开字段。
-- 发现需要另一个能力域先补底座时，当前 ADR 不得用局部 adapter / renderer patch 绕过。
-- 简略 plan 必须保留测试策略摘要，说明需要哪些证据层和关键不变量；具体 case、文件、路径、命令和数量在 ADR 确认后进入细化 plan / `TEST_CONTRACT.md`，不是当前 Gate 缺失项。
-- Gate 不得要求 ADR 增加文件 scope、private helper、业务逻辑步骤、Zod 拼装、测试 case、验证命令、commit 切分或 review 过程。
-- Gate finding 必须写入正确真源：公开契约、默认 / 失败语义和 breaking 行为属于 ADR；设计检查与实施准备属于 plan。
-
-### 输出契约
-
-只返回以下结构，不创建报告文件：
-
-```md
-ReviewerVerdict: REVIEWER_PASS | BLOCKED
-Round: <current>/<plan-limit>
-Reviewer: <actual-model>
-Snapshot: HEAD=<sha>; ADR=<path-and-content-version>; PLAN=<path-and-content-version>
-
-## BLOCKING
-
-- ID：AG-<序号>
-  检查轴：<共同检查矩阵中的一项>
-  问题：<会导致错误实现或边界破坏的具体事实>
-  证据：<ADR / plan 段落 + 1-2 个当前代码 / 契约路径>
-  必须修订：<明确应修订 ADR 还是 plan；实现细节留在 plan>
-
-## WARNING
-
-- ID：AW-<序号>
-  风险：<非阻断但必须处置的风险>
-  处置：修订 ADR | ADR 已记录接受理由
-
-## INFO
-
-- <可选建议>
-```
-
-单个评审员无 BLOCKING，且每个 WARNING 已修复或在 ADR 中记录可验证的接受理由时可以返回 `REVIEWER_PASS`。该值只表示 reviewer 输出合格；Architecture Gate 的 `GateVerdict: PASS` 由主 agent 结合固定快照、rubric、自审或执行计划已授权的单 reviewer 结果裁决。时间压力、已有实现、用户离线或“后续再补”都不能降低 finding 等级。
-
-## `code-audit`
-
-### 能力域范围
-
-| 能力域        | 主责与协作包                                       | 完备目标               |
-| ------------- | -------------------------------------------------- | ---------------------- |
-| Drawing       | math / core / render / react / vanilla / tex       | Drawing Complete       |
-| Data          | data 及其 plot 等消费边界                          | Data Complete          |
-| Visualization | plot / plot-react / plot-vanilla 及 data/core 接口 | Visualization Complete |
-
-Beta 调用方还必须传入阶段：`beta-entry` 或 `beta-exit`。每个能力域独立审计，主 AI负责汇总跨域重复所有权和依赖方向。
-
-### 报告
-
-写入：
-
-```text
-notes/reports/develop-completeness-YYYY-MM-DD-<domain>-<beta-entry-or-beta-exit>.md
-```
-
-报告必须包含：
-
-```md
-# Completeness Report: <domain>
-
-日期：
-检测范围：
-完备性目标：
-基准快照：
-阶段：beta-entry | beta-exit
-覆盖率声明：
-
-## Gate 结论
-
-PASS | BLOCKED | ESCALATE_ALPHA
-
-## 能力矩阵
-
-| 能力面 | 现状简述 | 内置功能 | 扩展功能 | 整体评价 | 边界结论 | 优化方向 |
-
-## Findings
-
-| ID | 等级 | 能力面 | 问题 | 为什么影响完备性 / 边界 | 建议动作 | 坐实依据 |
-
-## 跨包与公开表面
-
-## 建议排期
-
-## 不建议纳入当前能力域
-```
-
-`整体评价` 使用 10 分制双分数，单元格固定为三行：
-
-```text
-内置分数/扩展分数
-<0-10 整数>/<0-10 整数>
-<简短评价>
-```
-
-不得改用 5 分制、百分制或把两个分数分别写成 `x/10`。证据只列最关键的 1-2 个路径或文档段落，不把报告写成代码索引。
-
-等级定义：
-
-- **BLOCKING**：错误所有权、平行 IR / registry / pipeline、内置与自定义分叉、端到端断链、公开契约与实现不一致。
-- **WARNING**：不阻断当前边界，但影响下一能力轴、迁移质量或扩展体验。
-- **INFO**：文档、可诊断性或长期质量建议。
-- **ESCALATE_ALPHA**：修复必须净新增公开能力、公开组件、IR 形态、schema 字段或用户可见行为契约；Beta 不得实施。修改、重命名或移除既有契约仍按 Beta breaking 判定。
-
-`beta-entry` 把 findings 转成候选 TODO，但不修改 roadmap 或产品代码；scope 由人工确认。`beta-exit` 只有无 BLOCKING / ESCALATE_ALPHA 才能 PASS。
-
-## 完成标志
-
-### `adr-gate`
-
-- 覆盖共同检查矩阵，使用当前代码证据而非只读 ADR 自述。
-- 同时检查短 ADR 的长期功能契约和简略 plan 的设计检查结论，不把 plan 内容反向写入 ADR。
-- 输出严格符合 findings 契约，没有修改任何文件。
-- 主 agent 自审或计划内单 reviewer 结论已明确；Gate PASS 由调用方归并。
-
-### `code-audit`
-
-- 能力矩阵覆盖适用 completeness 能力面和所有作用域包。
-- 同时检查内部通用性、外部扩展、define-registry、包边界、公开表面与下游闭环。
-- ignored report 已写入，产品文件与暂存区相对基线不变。
-- Gate 结论与 findings 等级一致。
+默认主 agent 执行；代理仅按获批计划。结论必须对应当前代码与同一快照，单 reviewer PASS 不代替主 agent 的 Gate 裁决。审计不改产品、roadmap 或暂存区。

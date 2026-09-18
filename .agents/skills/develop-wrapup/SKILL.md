@@ -3,7 +3,7 @@ name: develop-wrapup
 description: Use when retikz implementation, adversarial testing, and docs are complete, and an ADR or beta TODO needs changelog, contract consistency review, or final human acknowledgement.
 ---
 
-# Stage 5: 收尾
+# 收尾
 
 把已实现、已测试、已文档化的改动封口：changelog、对账、人工确认与 plan 完成证据。commit / push / publish 仍按根 AGENTS 的当次授权规则。
 
@@ -16,9 +16,9 @@ description: Use when retikz implementation, adversarial testing, and docs are c
 
 ## Changelog
 
-用户可见改动起草 `apps/docs/src/modules/docs/data/changelog.ts` 条目，zh / en 同步。changelog 是数据驱动；不要维护旧的 changelog MDX 页面。
+用户可见改动起草 `apps/docs/src/modules/docs/data/changelog/` 中的对应 release 数据文件 条目，zh / en 同步。changelog 是数据驱动；不要维护旧的 changelog MDX 页面。
 
-写法按 `package-publish` 中当前 changelog 数据结构；若该 skill 与 `types.ts` 不一致，以源码类型为准。
+写法按 [发布准备](../package-publish/references/preparation.md) 与当前 changelog 数据结构；若该 skill 与 `types.ts` 不一致，以源码类型为准。
 
 internal-only 改动通常不写 changelog；breaking 必写迁移说明。
 
@@ -47,14 +47,7 @@ Contract 偏差通常涉及承诺取舍；1 轮后仍不一致时，halt 给人�
 
 ## ADR 长期一致性
 
-ADR 从 Proposed 起就应是长期功能与架构记录，不采用“先提交施工蓝图、发布前再清理”的工作方式。执行批准时已转为 Accepted；收尾仍必须逐段执行压缩审计，确保最终文本只保留长期决策：
-
-- 对账 ADR 的核心决策、基础数据结构 / 公开契约、默认 / 失败语义与兼容性，以及 reviewed plan 的功能边界和架构检查是否与最终实现一致。
-- 补充简短最终实现摘要与真实遗留风险；不写具体文件、私有命名、业务步骤、验证过程、测试 case、命令或 commit 历史。
-- 接受设计或批准执行时，`Proposed` -> `Accepted` 必须在同一改动中删除、压缩或迁出非长期内容，不得只更新状态；仍服务执行的材料进入 ignored plan，其余直接删除
-- 若发现待执行 ADR 已混入设计检查或施工细节，把仍服务当前执行的内容迁回镜像 plan 后再更新状态；不要把膨胀全文保存在 Proposed commit 或等待发布阶段清理。审计历史 Accepted ADR 时，若 ignored plan 已丢失，只清除或重述不属于长期契约的内容，不要求从 git 历史复原临时执行材料。
-- 若最终行为改变了公开契约、能力归属或功能边界，不能用收尾摘要掩盖；回到 ADR 修订、Architecture Gate 和必要的 Plan Gate。
-- plan、测试矩阵、状态与 review 记录始终 ignored，不因 ADR Accepted 而提交。
+逐篇按 [长期一致性检查](references/adr-consistency.md) 核对；发布审计复用同一标准，不只检查状态。
 
 ## 人工确认后落盘
 

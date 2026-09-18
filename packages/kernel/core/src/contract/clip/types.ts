@@ -44,8 +44,8 @@ export type ClipLowerContext = {
   lower: (shape: ClipShape) => SceneClipPath;
 };
 
-/** clip definition 的作者侧输入形态 */
-export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> = {
+/** 需要将 spec 解析为另一种 shape 的 clip definition 作者侧输入 */
+export type ClipDefinitionResolvedInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> = {
   /** 注册表 key，由 IR clip spec 的 `kind` 引用 */
   kind: TClip['kind'] & TShape['kind'];
   /** 该 clip spec 的 zod schema */
@@ -60,6 +60,37 @@ export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape
   lower: {
     bivarianceHack: (shape: TShape, context: ClipLowerContext) => SceneClipPath;
   }['bivarianceHack'];
+};
+
+/** spec 已是完整 ClipShape 时的精简 definition 作者侧输入 */
+export type ClipDefinitionIdentityInput<TShape extends ClipShape> = {
+  /** 注册表 key，与 spec 和 shape 的 kind 一致 */
+  kind: TShape['kind'];
+  /** 同时校验 spec 与完整 ClipShape snapshot */
+  schema: ZodType<TShape>;
+  /** @default spec => spec */
+  resolve?: never;
+  /** @default schema */
+  shapeSchema?: never;
+  /** 把已校验的 ClipShape 降低为渲染无关路径 */
+  lower: {
+    bivarianceHack: (shape: TShape, context: ClipLowerContext) => SceneClipPath;
+  }['bivarianceHack'];
+};
+
+/** clip definition 的作者侧输入形态 */
+export type ClipDefinitionInput<TClip extends ClipLike, TShape extends ClipShape = ClipShape> =
+  | ClipDefinitionResolvedInput<TClip, TShape>
+  | (TClip extends TShape ? (TShape extends TClip ? ClipDefinitionIdentityInput<TShape> : never) : never);
+
+/** 定义 clip 的公开 authoring 入口 */
+export type DefineClip = {
+  /** 当 spec 已是完整 ClipShape 时，派生 identity resolve 与 shapeSchema */
+  <TShape extends ClipShape>(definition: ClipDefinitionIdentityInput<TShape>): ClipDefinition<TShape, TShape>;
+  /** 当 spec 需要解析为完整 ClipShape 时，显式声明 resolve 与 shapeSchema */
+  <TClip extends ClipLike, TShape extends ClipShape>(
+    definition: ClipDefinitionResolvedInput<TClip, TShape>,
+  ): ClipDefinition<TClip, TShape>;
 };
 
 /** clip 定义的注册表形态：保留 schema 泛型并擦除 callback 参数 */

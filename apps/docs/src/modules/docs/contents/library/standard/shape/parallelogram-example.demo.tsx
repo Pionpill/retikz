@@ -8,7 +8,7 @@ import { parallelogramExampleControls, previewControlContract } from './parallel
 
 export const previewControls = parallelogramExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} shapes={[ParallelogramShapeDefinition]}>
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [ParallelogramShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{

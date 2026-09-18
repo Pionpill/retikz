@@ -22,7 +22,7 @@ Prefer dynamic attachment for flowcharts, DAGs, and relationships that should fo
 
 When a target supplies only an id, compilation reads the adjacent step's direction and intersects the target's connection boundary from its center. The same target therefore chooses different endpoints as the source moves:
 
-<ComponentPreview files="anchors-auto-attach" size="sm" hideCode />
+<ComponentPreview files="anchors-auto-attach" size="md" hideCode />
 
 The boundary selects which surface the line stops on. [Primitive Model · Outer Boundaries](/kernel/components/core/primitive-model#outer-boundaries) owns how shape, boundary, and `margin` form that geometry, so this page does not repeat box-model exceptions.
 
@@ -30,17 +30,17 @@ The boundary selects which surface the line stops on. [Primitive Model · Outer 
 
 Once an anchor is specified, the endpoint no longer reads the adjacent step's direction. Rectangles and ellipses use standard anchors, while complex shapes may expose semantic points of their own:
 
-<ComponentPreview files="anchors-explicit" size="sm" hideCode />
+<ComponentPreview files="anchors-explicit" size="md" hideCode />
 
-The mental rule is simply “omit anchor for dynamic, provide anchor for fixed.” See [Path Schema · Target](/kernel/reference/schema/path#target) for the complete target union, `offset`, angles, and edge proportions; see [Node Geometry](/kernel/components/node/overview) and [Shapes](/kernel/components/shapes) for standard anchors, boundaries, and shape-specific names.
+The mental rule is simply “omit anchor for dynamic, provide anchor for fixed.” See [Path Schema · Target](/kernel/reference/schema/path#target) for the complete target union, `offset`, angles, and edge proportions; see [Node Geometry](/kernel/components/node/usage) and [Shapes](/kernel/components/shapes) for standard anchors, boundaries, and shape-specific names.
 
-`axis-line` is an intentional exception: it takes the target center or explicit anchor, then projects it onto one local axis, so an omitted anchor does not dynamically attach on the target side. The source still clips normally toward the projected endpoint; see [Step · Orthogonal connections](/kernel/components/draw/step#orthogonal-connections).
+`axis-line` is an intentional exception: it takes the target center or explicit anchor, then projects it onto one local axis, so an omitted anchor does not dynamically attach on the target side. The source still clips normally toward the projected endpoint; see [Step composition · Orthogonal connections](/kernel/components/path/step#orthogonal-connections).
 
 ## Lines and routing
 
 Endpoint mode decides where a connection lands; path steps decide how it travels between endpoints. The same pair below uses a straight line, curve, and orthogonal fold:
 
-<ComponentPreview files="connection-styles" size="xs" hideCode />
+<ComponentPreview files="connection-styles" size="sm" hideCode />
 
 | Route           | Common form              | Best for                      |
 | --------------- | ------------------------ | ----------------------------- |
@@ -48,7 +48,7 @@ Endpoint mode decides where a connection lands; path steps decide how it travels
 | Orthogonal fold | `'-\|'` / `'\|-'`        | Flowcharts and structure maps |
 | Curve           | `{ bend }` / `{ curve }` | Avoidance and parallel edges  |
 
-Complete step and path-kind parameters belong to [Draw](/kernel/components/draw/overview) and [Path Schema](/kernel/reference/schema/path). This concept page gives selection guidance instead of duplicating an API dictionary.
+Complete step and path-kind parameters belong to [Draw](/kernel/components/path/usage) and [Path Schema](/kernel/reference/schema/path). This concept page gives selection guidance instead of duplicating an API dictionary.
 
 A path can move relative to its previous endpoint: `{ relative }` applies a temporary offset without advancing the accumulated base, while `{ relativeAccumulate }` advances it. React Sugar also accepts `'+dx,dy'` / `'++dx,dy'`:
 
@@ -56,7 +56,7 @@ A path can move relative to its previous endpoint: `{ relative }` applies a temp
 
 For a stable waypoint, declare a non-rendering `<Coordinate>` and route the path through it:
 
-<ComponentPreview files="connection-coordinate" size="xs" hideCode />
+<ComponentPreview files="connection-coordinate" size="sm" hideCode />
 
 [Positioning](/kernel/components/basic/position) owns the valid contexts for entity positions, offsets, between points, and path-relative targets.
 
@@ -64,9 +64,9 @@ For a stable waypoint, declare a non-rendering `<Coordinate>` and route the path
 
 `<Scope id="cluster">` registers its subtree bounds as a referenceable group boundary. An external path may use `'cluster'` for dynamic attachment or `'cluster.top'` for an explicit position:
 
-<ComponentPreview files="relation-scope" size="sm" hideCode />
+<ComponentPreview files="relation-scope" size="xs" hideCode />
 
-The light-gray dashed outline is the cluster's combined bounds. Group connections reuse the same auto / explicit choice as Nodes; see [Scope](/kernel/components/layout/scope) for namespaces, bbox modes, and transforms.
+The light-gray dashed outline is the cluster's combined bounds. Group connections reuse the same auto / explicit choice as Nodes; see [Scope](/kernel/components/scope/usage) for namespaces, bbox modes, and transforms.
 
 ## Try it yourself
 
@@ -74,7 +74,7 @@ The target Node uses an ellipse as its visual shape and a rectangle as its defau
 
 <ComponentPreview
   files="primitive-relations-playground"
-  size="sm"
+  size="md"
   caption="The light-gray dotted radius is only an orbit guide. The gray dashed outline is the active non-shape boundary; choose “Visual shape” to attach directly to the blue ellipse."
 />
 
@@ -113,12 +113,12 @@ The target Node uses an ellipse as its visual shape and a rectangle as its defau
     {
       title: 'Draw',
       description: 'Step, path kind, arrow, and routing APIs',
-      url: '/kernel/components/draw/overview',
+      url: '/kernel/components/path/usage',
     },
     {
       title: 'Scope',
       description: 'Grouping, namespaces, and referenceable group boundaries',
-      url: '/kernel/components/layout/scope',
+      url: '/kernel/components/scope/usage',
     },
   ]}
 />

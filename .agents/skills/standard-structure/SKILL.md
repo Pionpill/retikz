@@ -1,118 +1,34 @@
 ---
 name: standard-structure
-description: Use when changing retikz package file layout, dependency direction, layer placement, common constants/types/utils/index file organization, or deciding which standard layer skill to load.
+description: Use when changing Retikz package structure, dependencies, schemas, definitions, providers, resolvers, Vanilla normalization, compile pipelines, or Tier 2 composites.
 ---
 
-# Standard Structure
+# 分层规范
 
-retikz 纵向领域包按“shared → schemas → contract → providers → resolve → pipeline/compile”分层；`resolve/` 持有 Canonical 类型，并统一处理 Source IR、当前 context、默认、优先级与领域值转换。pipeline / compile 创建和维护 context、决定依赖顺序并调度 resolver。只有 Vanilla API 包的 `normalize/` 把 authoring Input 组装为 Source IR；Core / Tier 2 的 `parse/` 处理 unknown、序列化数据或 DSL 到 Source IR。本 skill 只做总纲和路由；目录、文件和符号名遵循 `standard-name`。
+先确定能力 owner，再选实际改动层。Source IR 是持久化契约；Vanilla Input 是 authoring 输入；Canonical 是领域内部确定形态。三者不建立平行 schema。
 
-## 包职能与数据边界
+## 必须保持
 
-- 核心能力包（Core、Plot 等 domain owner）拥有 Source IR schema、domain resolver 的 `CanonicalXxx` 与 `IRXxx + XxxResolveContext -> CanonicalXxx / XxxResolution` 的 `resolveXxx`、registry 消费、lowering / compile 和 Scene 语义。不得维护框架通用 Input、DOM 或框架生命周期
-- API 基础包（Vanilla、Plot Vanilla）拥有 TypeScript-only `InputXxx -> IRXxx` 的 `normalizeXxx`、共享 session / retained runtime 与 SSR 接线；不得重写 domain schema、resolve、lowering 或 Scene 语义
-- 框架包（React、Plot React）把 JSX / props / lifecycle 调度为对应 Vanilla `InputXxx`；不得直接重建 Core / Plot IR builder、session 或 renderer 编排
-- `normalizeXxx` 只存在于 Vanilla API 包并处理 `InputXxx -> IRXxx`；纵向领域包的 `resolveXxx` 消费 Source IR 与当前 context，统一产出 Canonical / Resolution。只有完全脱离领域且被多层复用的原子值转换才能进入 `shared`；`parseXxx` 只处理 `unknown` 边界
+- 领域包拥有 schema、resolve、lowering 与 Scene 语义；Vanilla 组装 Input → IR，React 等 adapter 调度 Vanilla，不绕开它新建 IR builder。
+- 外部 unknown 在 parse/schema 边界校验；内部按类型契约消费，仅保留补全后不变量与真实上下文错误。
+- schema 声明默认值；resolve 处理继承优先级、上下文 lookup 与默认应用时机；pipeline/compile 管理上下文及调度。
+- 依赖沿 shared → schemas → contract → providers → resolve → pipeline/compile，不反向导入。
+- 命名读 [standard-name](../standard-name/SKILL.md)；公共 JSDoc 读 [JSDoc](../docs-doc-reference/references/jsdoc.md)。
 
-## 入口类型
+## 按改动加载
 
-- 有命名类型且存在统一承载入口时，把类型写在入口处（如 `defineXxx<TParams>({...})`、builder 泛型、类泛型或构造入口），不要在其上下文回调、成员或内部参数上重复声明同一类型。
+| 场景                                     | 必读 reference                                       |
+| ---------------------------------------- | ---------------------------------------------------- |
+| 包职责、层级迁移、parse 或信任边界       | [所有权与数据边界](references/boundaries.md)         |
+| 跨 owner 导入、barrel、公共导出          | [导入导出](references/imports.md)                    |
+| shared 词汇、纯工具                      | [shared](references/shared.md)                       |
+| Zod、Source IR、默认、refinement         | [schema](references/schema.md)                       |
+| Definition、defineXxx、能力回调          | [contract](references/contract.md)                   |
+| 内置 definition、registry 合并           | [providers](references/providers.md)                 |
+| Canonical、继承、lookup、领域转换        | [resolve](references/resolve.md)                     |
+| Vanilla Input 与 authoring shorthand     | [normalize](references/normalize.md)                 |
+| lowering、layout、emit、context 生命周期 | [pipeline / compile](references/pipeline-compile.md) |
+| Tier 2 composite 设计、下层 surface 复用 | [Tier 2 复用](references/tier2-reuse.md)             |
+| React DSL 文件职责与依赖                 | [React DSL](references/react-dsl.md)                 |
 
-## 类型信任与校验边界
-
-- 内部调度按 TypeScript 类型契约设计，消费方通过明确的类型调用；不为纯 JavaScript 调度额外维护类型校验和错误分支，纯 JavaScript 调用由第三方自行负责校验
-- JSON、持久化配置和其他类型不明确的数据，只在 parse / schema 边界完成一次 parse / 校验；Vanilla / adapter 的 `normalizeXxx` 只把已类型化的 `InputXxx` 组装为 Source IR，纵向领域 `resolveXxx` 再消费 context 唯一产出 Canonical / Resolution。进入内部实现后必须使用明确的数据类型，不以 `unknown` 或未收窄的宽联合继续传递
-- 优先让 TypeScript 表达类型约束，避免重复的 `typeof`、对象结构检查和对应的 `throw`；不得在 normalize、resolve、lower 或 emit 重复 schema 已覆盖或明确 TypeScript 类型已保证的约束。只保留入口校验、schema 未覆盖且 TypeScript 无法表达的真实业务不变量或查找失败诊断
-- 只在对象会暴露给外部，或会通过公开 API 返回给外部时使用 `Object.freeze`；纯内部使用的中间对象不做多余冻结，复制与明确的所有权边界已经足够时不要额外防御
-
-## 按需加载
-
-| 改动内容                                                                  | 读取                                           |
-| ------------------------------------------------------------------------- | ---------------------------------------------- |
-| `shared/`、通用词汇、纯函数、无状态映射、工具类型                         | `standard-shared`                              |
-| `schemas/`、Zod schema、IR 类型、`.describe(...)`、`.superRefine(...)`    | `standard-schema`                              |
-| Vanilla API `normalize/`、Input / Source IR authoring 组装                | `standard-normalize`                           |
-| 纵向领域 `resolve/`、Canonical、context、默认、优先级、领域值转换         | `standard-resolve`                             |
-| `contract/`、`XxxDefinition`、`defineXxx()`、作者侧 API、context          | `standard-contract`                            |
-| `providers/`、内置 definition、registry resolver、`BUILTIN_*`、保留名诊断 | `standard-providers`                           |
-| `pipeline/` / `compile/`、context 生命周期与调度、lowering、options       | `standard-pipeline-compile`                    |
-| `parse/`、unknown / 字符串 / DSL 解析为 Source IR 节点或片段              | 本 skill；若改变 IR 形态再读 `standard-schema` |
-| 目录、文件、类型、函数、enum、registry 或组件命名                         | `standard-name`                                |
-
-define-registry 能力通常跨多层：先读本总纲判断 scope，再只加载本次会改到的层级 skill。
-
-## 依赖方向
-
-允许依赖方向：
-
-```text
-shared <- schemas <- contract <- providers <- resolve <- pipeline/compile
-shared/schemas <- parse
-shared/schemas <- Vanilla normalize
-```
-
-右侧消费左侧；左侧不反向读取右侧。`parse/` 是 unknown、字符串或 DSL 入 Source IR 的纯函数旁路，只依赖 `shared` / `schemas`，输出 `IRXxx` 节点或片段；不得依赖 `compile`、`providers` 或运行时 registry。Vanilla API `normalize/` 只依赖公开 `shared` / `schemas`，把 `InputXxx` 组装为 `IRXxx`；不得定义领域 schema、Canonical 或 compile 规则。纵向领域 `resolve/<domain>/` 从 schema IR 类型派生 `CanonicalXxx`，定义窄 `XxxResolveContext`，并统一处理默认、优先级、lookup、领域值转换和补全后不变量；pipeline / compile 只创建 context、管理阶段顺序并调度 resolver。跨层复用的纯函数优先下沉到 `shared`，IR 契约回 `schemas`，Canonical 类型与逻辑回 domain `resolve/`，作者协议回 `contract`，内置实现回 `providers`，编排消费留在 `pipeline/compile`。
-
-## 原子契约与组合
-
-- `shared`、`schemas` 与 `contract` 向上导出的公共内容，优先按稳定语义提供可独立复用的原子契约；上层包负责组合，不为单一消费方把组合结果下沉成底层 bundle
-- Canonical / normalized 结果及本层中间对象遵循根 AGENTS 的最小规范模型规则；缓存 key、索引、展示或适配投影等消费方派生信息不得倒灌回源模型或公共契约
-- 原子边界按可观察语义、不变量和扩展边界划分，不把每个字段机械拆成独立公共 API
-- 多个 Tier 2 反复从同一个大型底层 schema `pick` / `omit` 出相同字段子集时，先检查拥有该语义的下层是否缺少命名契约，再决定是否新增或复用原子 schema / type / contract
-- Tier 2 自己的默认值、禁用字段、输入收窄和领域组合仍留在 Tier 2；不要为了消除一次 `pick` 把消费方专属限制错误下沉
-- 原子契约必须继续复用同一 JSON / IR / registry / pipeline 真源，不得因组合便利复制一套平行词汇或消费路径
-
-## JSDoc
-
-- 中文注释和 JSDoc 的末句不写句号；多句内容只保留句间句号。
-- 整体 JSDoc 写功能视角：让读者先知道函数、类、类型负责什么，不从实现过程、内部步骤或历史背景开头。
-- 细节 JSDoc 可说明实现细节，但仍从功能目的出发简短描述；不要复述代码逐行做了什么。
-- React / Vanilla 等面向开发者使用的公开 JSDoc，主要描述功能、使用契约、默认值和可观察行为；验收标准是用户能看懂怎么用，不写 builder / emit / Scene primitive / renderer 物化等实现细节，也不按 LLM 理解优化。
-
-| 标签           | 用法                                           | 不写什么                              |
-| -------------- | ---------------------------------------------- | ------------------------------------- |
-| 主注释首句     | 写功能视角的一句话，说明负责什么               | 不写实现过程、内部步骤、历史背景      |
-| `@description` | 写主语义、输入输出契约、跨字段行为             | 不写设计理由、复杂度、非主路径补充    |
-| `@remarks`     | 写设计理由、非主路径补充、未来扩展钩子、复杂度 | 不复述代码逐行做了什么                |
-| `@default`     | 只写非 undefined 默认值                        | 可选字段默认缺省为 undefined 时不要写 |
-
-涉及算法选择、时间复杂度或空间复杂度时，用 `@remarks` 备注复杂度，不放进主 `@description`。
-
-## React DSL 目录范式
-
-`@retikz/react` 的 DSL 代码按 owner 拆分：
-
-```text
-kernel/
-  components/  Kernel DSL 标记组件
-  protocol/    displayName、水合事件、embeddable 等跨 owner 共享协议
-  adapter/     JSX props ↔ Vanilla `InputXxx` 转换逻辑：字段表与调度
-  runtime/     Layout 运行时、hydration 收集、renderer mode 接线
-sugar/         同步展开为 Kernel 的 Sugar 组件，可再按 path / shapes 分组
-render/        React 宿主渲染接线，可再按 svg / canvas / text 分组
-```
-
-- 组件、helper 与子目录命名遵循 `standard-name`。
-- 每个 owner 目录放 `index.ts` barrel，只导出当前 owner 的稳定 API。
-- `kernel/components` 可以依赖 `kernel/protocol`，不得依赖 `adapter` / `runtime` / `render` / `sugar`。
-- `kernel/adapter` 可以依赖 `kernel/components`、`kernel/protocol` 与 Vanilla `InputXxx` 合约，负责把 React props 构建为 Vanilla Input；不得依赖 `kernel/runtime` 或 `sugar`，也不得直接实现 Core Source IR builder 或绕过 Vanilla `normalizeXxx`。
-- `kernel/runtime` 可以依赖 `kernel/adapter`、`kernel/protocol` 与 `render`；`sugar` 可以依赖 `kernel/components` 与 `kernel/protocol`，不得依赖 `kernel/runtime`；`render` 不依赖 `kernel/runtime`。
-
-## 导入导出
-
-- 内部 owner 的 `index.ts` 默认使用 `export *`（type-only 聚合使用 `export type *`），递归聚合该 owner 的稳定 API。只有明确承担公共 facade 的入口，才可使用 `export { ... }`、`export type { ... }` 或 `export * as Namespace` 来裁剪公共面、处理冲突或建立稳定的公共名称；该入口必须有 `package.json` 的显式 `exports` 映射（字符串形式视为根 `.` 映射；对象形式只认可显式键，通配符仅表达路径映射，不能单独证明每个匹配文件都是稳定 API）、包内规范或 public-surface 测试作为依据，单个源码文件存在不构成公共入口。
-- 包根 `index.ts` 是否是公共 facade 由 package `exports`、包内规范或 public-surface 测试决定：作为公共 facade 时允许有证据的显式导出；作为 owner 聚合时继续使用 `export *`。无论采用哪种形式，都不得把内部实现、测试符号或仅为复用准备的符号转发到包外。
-- 不需要公开的模块不得进入向上 barrel；owner 内通过相邻路径或私有子 barrel 导入，不得为测试或复用便利转发到包根。
-- 包内跨 owner 的消费方从拥有者 barrel 导入；包外消费方使用 package root 或 `exports` 声明的 facade / 稳定子路径。不要从非拥有者模块转手 export 其它层内容。
-- 包外导入只能使用 package root 或 `package.json` `exports` 声明的稳定子路径，不得访问未声明的源码文件。包内跨 owner 导入必须经目标 owner 或稳定二级 owner 的 barrel；稳定二级 owner 必须具有独立职责、自己的 `index.ts`，并有包内规范或已验证的跨 owner / 公共使用依据，不能仅因目录存在而成立。同 owner 内部可从相邻模块导入，不要为了追求包根入口而制造自引用或循环依赖。无论哪种情况都不得跨 owner 进入实现文件；若缺少稳定 barrel，应先补充边界或重新判断所有权。
-- 同一文件中同 kind（type 或 value）且同 source 的 named import 必须合并为一条；type/value 因 lint 规则保持分离。
-- 内部尽量避免 import / export `as` 重命名；公共 facade 只有在稳定公共名称、冲突隔离或明确迁移契约需要时才建立别名。迁移别名必须有包内规范、弃用文档或 public-surface 测试依据；没有明确授权时，不得为了兼容旧 API 在内部保留旧名、fallback 或双轨实现。
-- 主题内部可相邻导入；模块外避免 deep import 到 `constants.ts` / `schema.ts` 等私有文件。
-
-## 改代码前检查
-
-1. 改动属于哪一层？是否只加载了必要 skill？
-2. import 是否沿允许依赖方向走？
-3. 新文件是否职责单一，必要时按共性文件拆分？
-4. barrel 是否只导出稳定 API，没有业务逻辑？
-5. 底层是否已经提供足够原子的公共契约？若需要重复 `pick` / `omit`，是否应先补下层命名契约而不是继续局部投影？
+跨层任务只加载实际涉及的层；不要因修改单个 schema 读取整套规范。公共能力变化仍须执行根 AGENTS 的设计、测试契约和文档同步要求。

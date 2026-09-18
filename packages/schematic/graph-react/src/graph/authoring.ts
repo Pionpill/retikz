@@ -6,7 +6,7 @@ import type {
   InputRelation,
   RelationInputEmbedProps,
 } from '@retikz/graph-vanilla';
-import type { LayoutProps } from '@retikz/react';
+import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import { createInputScene, Node, Path, Step, Text } from '@retikz/react';
 import type { AnyInputEmbedAdapter, InputChild, InputPath } from '@retikz/vanilla';
 import { normalizePath } from '@retikz/vanilla';
@@ -20,7 +20,7 @@ import type { RelationProps } from './Relation';
 
 /** Graph standalone 模式承接的 Layout 宿主属性，style 由 Graph 绘图契约拥有 */
 export type GraphLayoutHostProps = Pick<
-  LayoutProps,
+  LayoutProps & LayoutExtensions,
   | 'authoring'
   | 'compileDriver'
   | 'handlers'

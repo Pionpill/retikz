@@ -1,11 +1,15 @@
 import type { FC } from 'react';
-import { Link } from 'react-router';
 
 import { cn } from '@/lib';
 
+import { ApiValues, API_VALUE_REGISTRY } from '../api-values';
 import type { TypeRepr } from './types';
 
 const code = 'rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]';
+
+/** 展平等价的嵌套联合，仅用于类型声明排版 */
+const unionMembers = (repr: TypeRepr): Array<TypeRepr> =>
+  repr.kind === 'union' ? repr.members.flatMap(unionMembers) : [repr];
 
 export type RenderTypeProps = {
   repr: TypeRepr;
@@ -14,7 +18,7 @@ export type RenderTypeProps = {
   plain?: boolean;
 };
 
-/** TypeRepr → JSX；'ref' kind 渲染 react-router Link，其它就地渲染类型签名 */
+/** TypeRepr → 类型声明；具名类型保留原名，公开枚举提供值提示 */
 export const RenderType: FC<RenderTypeProps> = props => {
   const { repr, className, plain = false } = props;
   const codeClassName = plain ? undefined : code;
@@ -30,18 +34,32 @@ export const RenderType: FC<RenderTypeProps> = props => {
         </span>
       );
 
-    case 'enum':
+    case 'enum': {
+      const matches = Object.entries(API_VALUE_REGISTRY).filter(
+        ([, entry]) =>
+          entry.values.length === repr.values.length &&
+          entry.values.every((value, index) => value === repr.values[index]),
+      );
+      if (matches.length === 1) return <ApiValues name={matches[0][0]} />;
       return (
         <span className={cn(codeClassName, className)}>
-          {repr.values.map(v => (typeof v === 'string' ? `'${v}'` : String(v))).join(' | ')}
+          {repr.values.map((v, i) => (
+            <span key={i} className="inline-block whitespace-nowrap">
+              {i > 0 && ' | '}
+              {typeof v === 'string' ? `'${v}'` : String(v)}
+            </span>
+          ))}
         </span>
       );
+    }
 
     case 'array':
       return (
-        <span className={cn('inline-flex items-baseline gap-1', className)}>
-          <RenderType repr={repr.element} plain={plain} />
-          <span className={codeClassName}>[]</span>
+        <span className={cn(codeClassName, 'inline-block max-w-full', className)}>
+          {(repr.element.kind === 'union' || repr.element.kind === 'enum') && '('}
+          <RenderType repr={repr.element} plain />
+          {(repr.element.kind === 'union' || repr.element.kind === 'enum') && ')'}
+          []
           {repr.constraints.length > 0 && (
             <span className="text-xs text-muted-foreground">({repr.constraints.join(', ')})</span>
           )}
@@ -50,7 +68,7 @@ export const RenderType: FC<RenderTypeProps> = props => {
 
     case 'tuple':
       return (
-        <span className={cn(code, className)}>
+        <span className={cn(codeClassName, className)}>
           [
           {repr.elements.map((e, i) => (
             <span key={i}>
@@ -87,47 +105,58 @@ export const RenderType: FC<RenderTypeProps> = props => {
 
     case 'union':
       return (
-        <span className={cn('inline-flex flex-wrap items-baseline gap-1', className)}>
-          {repr.members.map((m, i) => (
-            <span key={i} className="inline-flex items-baseline gap-1">
-              {i > 0 && <span className="text-muted-foreground">|</span>}
-              <RenderType repr={m} plain={plain} />
+        <span className={cn('inline-block max-w-full align-top', className)}>
+          {unionMembers(repr).map((m, i) => (
+            <span key={i} className="grid grid-cols-[1ch_minmax(0,1fr)] items-start gap-x-1 [&+span]:mt-1">
+              <span className="text-muted-foreground">{'| '}</span>
+              <span className="min-w-0">
+                <RenderType repr={m} plain={plain} />
+              </span>
+            </span>
+          ))}
+        </span>
+      );
+
+    case 'intersection':
+      return (
+        <span className={cn('inline-block max-w-full align-top', className)}>
+          {repr.members.map((member, index) => (
+            <span key={index} className="grid grid-cols-[1ch_minmax(0,1fr)] items-start gap-x-1 [&+span]:mt-1">
+              <span className="text-muted-foreground">{index === 0 ? '' : '& '}</span>
+              <span className="min-w-0">
+                <RenderType repr={member} plain={plain} />
+              </span>
             </span>
           ))}
         </span>
       );
 
     case 'ref':
-      return (
-        <Link to={repr.url} className={cn(codeClassName, 'underline underline-offset-4', className)}>
-          {repr.name}
-        </Link>
-      );
+      return <span className={cn(codeClassName, className)}>{repr.name}</span>;
 
     case 'object':
       return (
-        <span className={cn('inline-flex flex-wrap items-baseline gap-x-1', codeClassName, className)}>
-          <span>{'{'}</span>
-          {repr.fields.map((field, index) => (
-            <span key={field.name} className="inline-flex items-baseline gap-1">
-              {index > 0 && <span>;</span>}
+        <span className={cn('inline-block max-w-full align-top leading-relaxed indent-0', codeClassName, className)}>
+          <span className="block">{'{'}</span>
+          {repr.fields.map(field => (
+            <span key={field.name} className="block pl-4 [overflow-wrap:anywhere]">
               <span>
                 {field.name}
-                {field.optional ? '?' : ''}:
+                {field.optional ? '?' : ''}:{' '}
               </span>
               <RenderType repr={field.type} plain />
               {field.constraints.length > 0 && (
                 <span className="text-xs text-muted-foreground">({field.constraints.join(', ')})</span>
               )}
+              ;
             </span>
           ))}
           {repr.additionalProperties && (
-            <span className="inline-flex items-baseline gap-1">
-              {repr.fields.length > 0 && <span>;</span>}
-              <span>[key: string]: unknown</span>
+            <span className="block pl-4">
+              <span>[key: string]: unknown;</span>
             </span>
           )}
-          <span>{'}'}</span>
+          <span className="block">{'}'}</span>
         </span>
       );
 

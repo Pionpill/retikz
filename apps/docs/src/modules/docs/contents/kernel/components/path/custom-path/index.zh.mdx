@@ -1,0 +1,200 @@
+---
+title: 自定义路径
+description: 定义并注册整条 Path 的输出方式，复用公开的描边编译能力
+---
+
+先熟悉[基础用法](/kernel/components/path/usage)，再定义并注入新的能力。
+
+## 适用边界
+
+先判断扩展发生在“一个段”还是“整条路径”：
+
+| 需求                                 | 选择                                                        |
+| ------------------------------------ | ----------------------------------------------------------- |
+| 新增一种参数化曲线段                 | [路径生成器](/kernel/components/path/custom-path-generator) |
+| 改变整条 Path 的图元、轮廓或组合方式 | 自定义 Path kind                                            |
+| 只增加新的端点造型                   | [自定义箭头](/kernel/components/path/custom-arrow)          |
+
+如果只是换描边色、线宽、虚线或箭头，直接使用现有 Path props；不要为样式组合创建新的 kind。需要填充式 Ribbon 路径时，见可选的 [Standard Ribbon](/library/standard/ribbon) definition。
+
+## 最小结果
+
+自定义 Path kind 扩展的是**整条路径如何输出**。IR 只保存开放的 `kind` 与 JSON-safe `kindOptions`；宿主注入 `PathKindDefinition` 后，core 从统一 registry 找到 provider，并由它生成 Scene 图元。
+
+下面的 `highlight` kind 复用 Core 描边编译器，把一条路径输出为宽底线与细中心线两层图元。definition、`<Layout extensions={{ pathKinds }}>` 注入和使用方式都包含在同一个示例中。
+
+<ComponentPreview files="custom-path-highlight" size="xs" />
+
+## 定义能力
+
+用 `definePathKind` 声明一个显式 registry key、完整 Path subject schema，以及整条路径的 compile 函数。schema 应在开放的 `PathSchema` 上组合该 kind 的 literal 与 `kindOptions`，从而让 definition 自己拥有完整的 payload 约束。
+
+```tsx
+import type { ScenePrimitive } from '@retikz/core';
+import { definePathKind, PathSchema } from '@retikz/core';
+import { z } from 'zod';
+
+const HighlightOptionsSchema = z.strictObject({
+  strokeWidth: z.number().positive(),
+});
+const HighlightPathSchema = PathSchema.extend({
+  kind: z.literal('highlight'),
+  kindOptions: HighlightOptionsSchema,
+});
+type HighlightPath = z.infer<typeof HighlightPathSchema>;
+
+const highlight = definePathKind<HighlightPath>({
+  name: 'highlight',
+  schema: HighlightPathSchema,
+  compile: context => {
+    const { kindOptions, ...strokePath } = context.path;
+    const base = context.emitStroke({
+      ...strokePath,
+      kind: 'stroke',
+      style: { ...strokePath.style, strokeWidth: kindOptions.strokeWidth },
+    });
+    if (base === null) return null;
+    return {
+      ...base,
+      primitives: base.primitives.flatMap<ScenePrimitive>(primitive =>
+        primitive.type === 'path'
+          ? [
+              { ...primitive, stroke: '#facc15' },
+              { ...primitive, stroke: '#0f766e', strokeWidth: 1.5 },
+            ]
+          : [primitive],
+      ),
+    };
+  },
+});
+```
+
+`name` 是 registry key，不从 Zod schema 的内部结构推导。`schema` 是该 kind 的完整 source subject schema：Core 的开放 `PathSchema` 先接受共享 host 字段，解析阶段找到 definition 后，再由这个 schema 校验 `kind`、`kindOptions` 与其它跨字段约束。definition 与 compile 函数只存在于运行时，不进入 IR。
+
+需要调试产物时，通过公开的 `ownerOutput` 与独立的 Inspector 协作，接线见 [Inspect](/kernel/packages/inspect)。
+
+## 注入与使用
+
+React 通过 `<Layout extensions={{ pathKinds }}>` 注入；直接调用 core 时使用 `CompileOptions.pathKinds`。Path 只引用注册名与实例配置。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+<Layout extensions={{ pathKinds: [highlight] }}>
+  <Path kind="highlight" kindOptions={{ strokeWidth: 12 }}>
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="line" to={[120, 0]} />
+  </Path>
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Vanilla 使用相同 definition，通过 `mount` 的 `compile` 选项注入；HTML 中先准备 `<div id="diagram"></div>`。下例沿用上方 definition。
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      kind: 'highlight',
+      kindOptions: { strokeWidth: 12 },
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { pathKinds: [highlight] },
+});
+// Dispose when the host is removed.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+## 错误与限制
+
+| 情况                                            | 结果                                            |
+| ----------------------------------------------- | ----------------------------------------------- |
+| definition `name` 为空或不是字符串              | `definePathKind` 立即拒绝                       |
+| 与 `stroke` 或自定义项重名                      | registry 合并时报重复注册                       |
+| Path 引用未注册 kind                            | 编译列出可用名称与 `options.pathKinds` 注入提示 |
+| 选定 definition schema 拒绝 Path                | 错误包含 kind 名和对应 IR 路径                  |
+| provider 返回 `null`                            | 该 Path 不产生图元                              |
+| 已请求的非空结果未发布 owner output             | Core 的观察结果契约明确报错                     |
+| owner output 或 Inspector subject 不符合 schema | 对应校验阶段明确报错                            |
+| Inspector 返回非法 Core child                   | 错误携 owner、occurrence 与 output index        |
+| `boundsPoints` 不覆盖真实输出边界               | 自动布局与 Path 级 rotate / scale 依据会失真    |
+
+自定义 kind 返回的是后端中立 Scene primitive，不能把 SVG element、Canvas 实例、ReactNode 或函数塞进结果，也不能要求 renderer 识别自定义 `kind`。
+
+## 相关属性
+
+以下列出定义、注入与引用自定义 Path kind 时最常用的成员；完整字段见 [API 参考](/kernel/components/path/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'definePathKind',
+      kind: 'function',
+      type: '<TPath, TOwnerOutput>(definition: PathKindDefinition<TPath, TOwnerOutput>) => PathKindDefinition<TPath, TOwnerOutput>',
+      description: '创建可注册的整条 Path provider，并校验名称与 schema 的基础契约。',
+    },
+    {
+      name: 'PathKindDefinition',
+      kind: 'type',
+      type: 'PathKindDefinition<TPath, TOwnerOutput>',
+      description: '声明 kind 名、完整 Path schema 与输出 Scene 图元的编译函数。',
+    },
+    {
+      name: 'Layout.extensions.pathKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<AnyPathKindDefinition>',
+      description: '在 React Layout 中注入 Path kind 定义。',
+    },
+    {
+      name: 'Path.kind',
+      kind: 'property',
+      type: 'string',
+      description: '引用已注册的 provider 名称；省略时使用内置 `stroke`。',
+    },
+    {
+      name: 'Path.kindOptions',
+      kind: 'property',
+      type: "IRPath['kindOptions']",
+      description: '传入由所选 provider schema 负责校验的 JSON-safe 实例参数。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step · 路径组合',
+      description: '组合多个路径步骤，控制子路径、连接面、圆角、变换与沿线标记',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: '实现原理',
+      description: '解释路径写法如何变成步骤，以及引用、几何、箭头和标签如何产生最终结果',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API 参考',
+      description: '查询绘制组件、作者侧输入和扩展契约的公开 TypeScript 声明',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

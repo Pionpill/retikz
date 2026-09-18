@@ -1,8 +1,10 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import type { CompiledNodeLayout, IRScene, ScenePrimitive, TextMeasurer, TextPrim } from '@retikz/core';
 import { compileToScene, fallbackMeasurer, isNodeLayoutCompileArtifact } from '@retikz/core';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -16,6 +18,7 @@ import type {
 import * as componentPreviewExports from '../../src/modules/docs/components/component-preview';
 import { ToolbarIconButton } from '../../src/modules/docs/components/component-preview/components';
 import { ToolbarIconButton as DirectToolbarIconButton } from '../../src/modules/docs/components/component-preview/components/ToolbarIconButton';
+import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import {
   getPreviewControlFields,
   resolveVisiblePreviewControlSections,
@@ -37,9 +40,48 @@ import {
   formatIR,
   irToVanillaCode,
 } from '../../src/modules/docs/components/component-preview/utils';
-import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/overview/node-geometry.controls';
+import { nodeGeometryFrame } from '../../src/modules/docs/contents/kernel/components/node/usage/node-geometry.controls';
 import { nodeTextRows } from '../../src/modules/docs/contents/viz/plot/channel/builtin/builtin-node-text.data';
 import { controlModules, demoModules, demoSources } from './load-preview-registry';
+
+/** 使用实际注册的 demo 和面板状态渲染 SVG，检查可见输出而不是源码写法 */
+const renderControlledDemo = (
+  segments: Array<string>,
+  name: string,
+  language: 'zh' | 'en',
+  overrides: PreviewControlValues,
+): string => {
+  const Demo = demoModules[resolveDemoKey(segments, name, language)]?.default;
+  const contract = resolvePreviewControlContract(controlModules[resolveControlsKey(segments, name, language)]);
+  if (!Demo || !contract) throw new Error(`Missing controlled demo: ${segments.join('/')}/${name}/${language}`);
+  return renderToStaticMarkup(
+    createElement(
+      PreviewControlStateContext.Provider,
+      {
+        value: {
+          canonicalValues: contract.canonicalValues,
+          values: { ...contract.canonicalValues, ...overrides },
+          setValue: () => undefined,
+          applyValues: () => undefined,
+          reset: () => undefined,
+        },
+      },
+      createElement(Demo, { lang: language }),
+    ),
+  );
+};
+
+/** 读取真实 SVG 取景尺寸，同时拒绝空白或无效画布 */
+const viewBoxArea = (markup: string): number => {
+  const values = markup
+    .match(/<svg\b[^>]*viewBox="([^"]+)"/)?.[1]
+    .split(/[ ,]+/)
+    .map(Number);
+  if (!values || values.length !== 4 || !values.every(Number.isFinite)) throw new Error('Invalid SVG viewBox');
+  expect(values[2]).toBeGreaterThan(0);
+  expect(values[3]).toBeGreaterThan(0);
+  return values[2] * values[3];
+};
 
 const sourceRowsOf = (field: PreviewTableControlField): PreviewTableRows => {
   if (field.rows !== undefined) return field.rows;
@@ -712,7 +754,7 @@ describe('preview controls registry', () => {
   });
 
   it('Node playground 的中英文 panel definition 保持运行时契约一致', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
+    const segments = ['kernel', 'components', 'node', 'usage'];
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-styled')]);
     const enDefinition = resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-styled', 'en')]);
     expect(zhDefinition?.presentation).toBe('panel');
@@ -745,27 +787,47 @@ describe('preview controls registry', () => {
   it('Node 分组新增 controls 的中英文运行时契约保持一致', () => {
     const cases = [
       {
-        segments: ['kernel', 'components', 'node', 'overview'],
+        segments: ['kernel', 'components', 'node', 'usage'],
         name: 'node-geometry',
         presentation: 'panel',
       },
       {
-        segments: ['kernel', 'components', 'node', 'overview'],
+        segments: ['kernel', 'components', 'node', 'extend'],
         name: 'node-shape-connection',
         presentation: 'panel',
       },
       {
-        segments: ['kernel', 'components', 'node', 'overview'],
+        segments: ['kernel', 'components', 'node', 'text'],
         name: 'node-text',
         presentation: 'panel',
       },
       {
-        segments: ['kernel', 'components', 'node', 'overview'],
-        name: 'node-label',
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-list',
         presentation: 'panel',
       },
       {
-        segments: ['kernel', 'components', 'node', 'overview'],
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-position',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-spacing',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-rotate-pin',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'labels'],
+        name: 'node-label-style',
+        presentation: 'panel',
+      },
+      {
+        segments: ['kernel', 'components', 'node', 'usage'],
         name: 'node-z-index',
         presentation: 'panel',
       },
@@ -833,7 +895,7 @@ describe('preview controls registry', () => {
   });
 
   it('Node 栈序 playground 用面板分别控制 a、b、c 的 zIndex', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
+    const segments = ['kernel', 'components', 'node', 'usage'];
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-z-index')]);
     const enDefinition = resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-z-index', 'en')]);
     const expected = [
@@ -936,7 +998,7 @@ describe('preview controls registry', () => {
   });
 
   it('Node 形状连接 controls 锁定双节点的 shape、boundary、fit、gap 与 anchor', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
+    const segments = ['kernel', 'components', 'node', 'extend'];
     const zhDefinition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-shape-connection')]);
     const enDefinition = resolvePreviewControls(
       controlModules[buildLangControlsKey(segments, 'node-shape-connection', 'en')],
@@ -982,54 +1044,8 @@ describe('preview controls registry', () => {
     expect(contractOf(enDefinition)).toEqual(expected);
   });
 
-  it('Node 几何 playground 使用覆盖全部控制极值的固定取景', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
-    const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-geometry')]);
-
-    expect(definition?.presentation).toBe('panel');
-    if (!definition || definition.presentation !== 'panel') return;
-
-    const fields = definition.sections.flatMap(section => section.controls);
-    const rangeControl = (id: string) => {
-      const field = fields.find(candidate => candidate.id === id);
-      if (!field || field.kind !== 'range') throw new Error(`Missing range control: ${id}`);
-      return field;
-    };
-    const rotateControl = rangeControl('rotate');
-    const rotateStep = rotateControl.step ?? 1;
-    const fixed = nodeGeometryFrame.viewBox;
-    const conservativeMeasureText: TextMeasurer = (_text, font) => ({
-      width: font.size * 2,
-      height: font.size * 2,
-      ascent: font.size * 1.6,
-      descent: font.size * 0.4,
-    });
-
-    for (let rotate = rotateControl.min; rotate <= rotateControl.max; rotate += rotateStep) {
-      const { bounds } = compileGeometryNode(
-        {
-          paddingX: rangeControl('paddingX').max,
-          paddingY: rangeControl('paddingY').max,
-          // margin 只把连接端点向中心收缩，不扩大节点的可见外框
-          margin: 0,
-          minimumWidth: rangeControl('minimumWidth').max,
-          minimumHeight: rangeControl('minimumHeight').max,
-          cornerRadius: rangeControl('cornerRadius').max,
-          scale: rangeControl('scale').max,
-          rotate,
-        },
-        conservativeMeasureText,
-      );
-
-      expect(bounds.x).toBeGreaterThanOrEqual(fixed.x);
-      expect(bounds.x + bounds.width).toBeLessThanOrEqual(fixed.x + fixed.width);
-      expect(bounds.y).toBeGreaterThanOrEqual(fixed.y);
-      expect(bounds.y + bounds.height).toBeLessThanOrEqual(fixed.y + fixed.height);
-    }
-  });
-
   it('Node 几何 playground 默认最小尺寸不遮蔽 padding', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
+    const segments = ['kernel', 'components', 'node', 'usage'];
     const definition = resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-geometry')]);
 
     expect(definition?.presentation).toBe('panel');
@@ -1068,23 +1084,22 @@ describe('preview controls registry', () => {
     expect(padded.layout.rect.height).toBeGreaterThan(unpadded.layout.rect.height);
   });
 
-  it('Primitive Model playground 用同源虚线轮廓显示规则 boundary', () => {
+  it('Primitive Model playground 仅为规则 boundary 输出虚线轮廓，并随 gap 扩大', () => {
     const segments = ['kernel', 'components', 'core', 'primitive-model'];
-    const contentRoot = resolve('src/modules/docs/contents/kernel/components/core/primitive-model');
-    const helperPath = resolve(contentRoot, 'primitive-model-playground-boundary.ts');
-    const source = demoSources[buildKey(segments, 'primitive-model-playground')];
-    const helperSource = existsSync(helperPath) ? readFileSync(helperPath, 'utf8') : '';
-
-    expect(source).toContain('shapes={[primitiveModelBoundaryGuideShape, SectorShapeDefinition, StarShapeDefinition]}');
-    expect(source).toContain('<BoundaryGuide shape=');
-    expect(source).toContain('dashPattern: [6, 4]');
-    expect(helperSource).toContain("if (params.boundary === 'shape') return;");
-    expect(helperSource).toContain('visual.definition.connectionEnvelope?.');
-    expect(helperSource).toContain('boundsConnectionEnvelope');
-
-    for (const locale of ['zh', 'en']) {
-      const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
-      expect(pageSource).toContain("files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}");
+    const render = (values: PreviewControlValues) =>
+      renderControlledDemo(segments, 'primitive-model-playground', 'zh', values);
+    const outlines = (markup: string) => markup.match(/<ellipse\b[^>]*stroke-dasharray="[^"]+"[^>]*>/g) ?? [];
+    expect(outlines(render({ boundary: 'shape' }))).toHaveLength(0);
+    const tight = outlines(render({ boundary: 'circle', gap: 0 }));
+    const expanded = outlines(render({ boundary: 'circle', gap: 10 }));
+    expect(tight).toHaveLength(1);
+    expect(expanded).toHaveLength(1);
+    const tightOutline = tight[0];
+    const expandedOutline = expanded[0];
+    if (tightOutline === undefined || expandedOutline === undefined) throw new Error('Missing boundary outline');
+    for (const axis of ['rx', 'ry']) {
+      const radius = (element: string) => Number(element.match(new RegExp(`\\b${axis}="([^"]+)"`))?.[1]);
+      expect(radius(expandedOutline) - radius(tightOutline)).toBeCloseTo(10);
     }
   });
 
@@ -1097,21 +1112,27 @@ describe('preview controls registry', () => {
     expect(source).toContain("position={{ of: 'Q', offset: [0, 0] }}");
   });
 
-  it('会改变包围盒的 Node controls playground 使用固定 viewBox', () => {
-    const overviewSegments = ['kernel', 'components', 'node', 'overview'];
+  it('Node controls playground 随形状与文字尺寸增大自动扩展取景', () => {
+    const positioningSegments = ['kernel', 'components', 'node', 'extend'];
+    const usageSegments = ['kernel', 'components', 'node', 'usage'];
     const textSegments = ['kernel', 'components', 'node', 'text'];
-    const cases = [
-      demoSources[buildKey(overviewSegments, 'node-shape-connection')],
-      demoSources[buildKey(overviewSegments, 'node-styled')],
-      demoSources[resolveDemoKey(textSegments, 'text-attrs', 'zh')],
-      demoSources[resolveDemoKey(textSegments, 'text-attrs', 'en')],
-    ];
-
-    for (const source of cases) expect(source).toMatch(/viewBox=\{\{ x: -?\d+/);
+    const shapeValues = { shapeB: 'circle', boundaryA: 'shape', boundaryB: 'shape' };
+    const shapeArea = (shapeA: string) =>
+      viewBoxArea(renderControlledDemo(positioningSegments, 'node-shape-connection', 'zh', { ...shapeValues, shapeA }));
+    expect(shapeArea('star')).toBeGreaterThan(shapeArea('circle'));
+    for (const language of ['zh', 'en'] as const) {
+      for (const [segments, name] of [
+        [usageSegments, 'node-styled'],
+        [textSegments, 'text-attrs'],
+      ] as const) {
+        const area = (fontSize: number) => viewBoxArea(renderControlledDemo(segments, name, language, { fontSize }));
+        expect(area(28), `${name} ${language}`).toBeGreaterThan(area(10));
+      }
+    }
   });
 
   it('Node 公共样式 playground 固定内容与形状，只暴露公共视觉属性', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
+    const segments = ['kernel', 'components', 'node', 'usage'];
     const expectedIds = [
       'fontFamily',
       'fontSize',
@@ -1139,10 +1160,10 @@ describe('preview controls registry', () => {
   });
 
   it('Node 标签仅在启用旋转时显示 keepUpright', () => {
-    const segments = ['kernel', 'components', 'node', 'overview'];
+    const segments = ['kernel', 'components', 'node', 'labels'];
     const definitions = [
-      resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-label')]),
-      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-label', 'en')]),
+      resolvePreviewControls(controlModules[buildControlsKey(segments, 'node-label-rotate-pin')]),
+      resolvePreviewControls(controlModules[buildLangControlsKey(segments, 'node-label-rotate-pin', 'en')]),
     ];
 
     const visibleIds = (definition: PreviewControlsDefinition | undefined, rotateMode: string) =>
@@ -1165,11 +1186,21 @@ describe('preview controls registry', () => {
 
   it('新增 controls demo 导出 previewControls 作为注册兜底', () => {
     const cases = [
-      { segments: ['kernel', 'components', 'node', 'overview'], name: 'node-geometry', language: 'zh' },
-      { segments: ['kernel', 'components', 'node', 'overview'], name: 'node-position', language: 'zh' },
-      { segments: ['kernel', 'components', 'node', 'overview'], name: 'node-shape-connection', language: 'zh' },
-      { segments: ['kernel', 'components', 'node', 'overview'], name: 'node-styled', language: 'zh' },
-      { segments: ['kernel', 'components', 'node', 'overview'], name: 'node-z-index', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'usage'], name: 'node-geometry', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'extend'], name: 'node-position', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'extend'], name: 'node-shape-connection', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'usage'], name: 'node-styled', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'usage'], name: 'node-z-index', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-list', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-list', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-position', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-position', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-spacing', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-spacing', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-rotate-pin', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-rotate-pin', language: 'en' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-style', language: 'zh' },
+      { segments: ['kernel', 'components', 'node', 'labels'], name: 'node-label-style', language: 'en' },
       { segments: ['kernel', 'components', 'node', 'text'], name: 'text-attrs', language: 'zh' },
       { segments: ['kernel', 'components', 'node', 'text'], name: 'text-attrs', language: 'en' },
     ] as const;
@@ -1933,7 +1964,7 @@ describe('preview controls registry', () => {
   });
 
   it('Scope 局部坐标 playground 可在任意 transform 下独立切换 placement，且中英文条件一致', () => {
-    const segments = ['kernel', 'components', 'layout', 'scope'];
+    const segments = ['kernel', 'components', 'scope', 'usage'];
     const zhModule = controlModules[buildControlsKey(segments, 'scope-translate-basic')];
     const enModule = controlModules[buildLangControlsKey(segments, 'scope-translate-basic', 'en')];
     const zhDefinition = resolvePreviewControls(zhModule);

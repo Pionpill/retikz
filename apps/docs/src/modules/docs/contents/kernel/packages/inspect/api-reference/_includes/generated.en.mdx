@@ -5,10 +5,14 @@
 ### RetikzInspectError
 
 <p>
-  <ApiSourceLink label={'RetikzInspectError'} path={'packages/kernel/inspect/src/error.ts'} startLine={39}>
+  <ApiSourceLink label={'RetikzInspectError'} path={'packages/kernel/inspect/src/error.ts'} startLine={38}>
     The structured error shared by the Inspect package
   </ApiSourceLink>
 </p>
+
+```ts
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {}
+```
 
 | Member        | Type                                                                                                                                                                                                                                                                                                                                                              | Default | Description |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
@@ -20,16 +24,42 @@
   <ApiSourceLink
     label={'AnyInspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={156}
+    startLine={167}
   >
     Heterogeneous author definitions accepted by registries, with options schemas and resolvers completed at
     registration
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                        | Type                                                                     | Default | Description                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------ |
+| `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —       | Concrete subject and context types are restored by the schema before invocation            |
+| `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —       | Merges admitted raw options, without consuming schema-transformed results                  |
+| `readonly namespace`          | `string`                                                                 | —       | registry namespace                                                                         |
+| `readonly optionsSchema?`     | `Readonly<{ parse: (value: unknown) => JsonObject }>`                    | —       | Produces JSON object options with defaults and transforms applied, even after type erasure |
+| `readonly owner`              | `CompileObservationOwner`                                                | —       | Core owner being observed                                                                  |
+| `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —       | Concrete options type restored by the admission schema                                     |
+| `readonly subjectSchema`      | `Readonly<{ parse: (value: unknown) => JsonValue }>`                     | —       | Restores a JSON-safe subject even after type erasure                                       |
+| `readonly type`               | `string`                                                                 | —       | registry type                                                                              |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-WithOptionalProperties<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>;
+export type AnyInspectorDefinitionInput = WithOptionalProperties<
+  AnyInspectorDefinition,
+  'optionsSchema' | 'resolveOptions'
+>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionAppearanceContext
 
@@ -43,9 +73,31 @@ WithOptionalProperties<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                    | Type                 | Default | Description                                                       |
+| ------------------------- | -------------------- | ------- | ----------------------------------------------------------------- |
+| `readonly colorScope`     | `number`             | —       | Consecutive index of the resolved request                         |
+| `readonly scopeColor`     | `CssColorValue`      | —       | Regular colors derived from the current Theme categorical palette |
+| `readonly semanticColors` | `CoreSemanticColors` | —       | Shared semantic colors of the current Core Theme                  |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ colorScope: number; scopeColor: CssColorValue; semanticColors: CoreSemanticColors }>;
+export type InspectionAppearanceContext = Readonly<{
+  colorScope: number;
+  scopeColor: CssColorValue;
+  semanticColors: CoreSemanticColors;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionCompileResult
 
@@ -59,13 +111,31 @@ Readonly<{ colorScope: number; scopeColor: CssColorValue; semanticColors: CoreSe
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                 | Type                                  | Default | Description                                     |
+| ---------------------- | ------------------------------------- | ------- | ----------------------------------------------- |
+| `readonly diagnostics` | `ReadonlyArray<InspectionDiagnostic>` | —       | Callback and fragment warnings in request order |
+| `readonly inspection`  | `InspectionPlane \| null`             | —       | Null when every callback produces no output     |
+| `readonly primary`     | `CompileResult`                       | —       | Primary result of regular Core compilation      |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{
-  diagnostics: ReadonlyArray<InspectionDiagnostic>;
-  inspection: InspectionPlane | null;
+export type InspectionCompileResult = Readonly<{
   primary: CompileResult;
+  inspection: InspectionPlane | null;
+  diagnostics: ReadonlyArray<InspectionDiagnostic>;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionDiagnostic
 
@@ -75,9 +145,29 @@ Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member            | Type                                                            | Default | Description                                                                           |
+| ----------------- | --------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `readonly cause`  | `Readonly<Pick<CompileWarning, 'code' \| 'message' \| 'path'>>` | —       | Callback code, message, and source path, or an unchanged projection of a Core warning |
+| `readonly origin` | `InspectionDiagnosticOrigin`                                    | —       | Request and output associated with the warning                                        |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>; origin: InspectionDiagnosticOrigin }>;
+export type InspectionDiagnostic = Readonly<{
+  origin: InspectionDiagnosticOrigin;
+  cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionDiagnosticOrigin
 
@@ -92,21 +182,28 @@ Readonly<{ cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>; o
 </p>
 
 ```ts
-Readonly<{ ruleIndex: number; stage: 'selection'; target: InspectionSelectionTarget | null }> |
-  Readonly<{
-    inspector: InspectorKey;
-    occurrence: CompileOccurrenceLocator;
-    owner: CompileObservationOwner;
-    stage: 'subject' | 'inspect';
-  }> |
-  Readonly<{
-    inspector: InspectorKey;
-    occurrence: CompileOccurrenceLocator;
-    outputIndex: number;
-    owner: CompileObservationOwner;
-    stage: 'output' | 'fragment';
-  }> |
-  Readonly<{ stage: 'complete' }>;
+export type InspectionDiagnosticOrigin =
+  | Readonly<{
+      stage: 'selection';
+      ruleIndex: number;
+      target: InspectionSelectionTarget | null;
+    }>
+  | Readonly<{
+      stage: 'subject' | 'inspect';
+      inspector: InspectorKey;
+      owner: CompileObservationOwner;
+      occurrence: CompileOccurrenceLocator;
+    }>
+  | Readonly<{
+      stage: 'output' | 'fragment';
+      inspector: InspectorKey;
+      owner: CompileObservationOwner;
+      occurrence: CompileOccurrenceLocator;
+      outputIndex: number;
+    }>
+  | Readonly<{
+      stage: 'complete';
+    }>;
 ```
 
 ### InspectionPlane
@@ -117,9 +214,27 @@ Readonly<{ ruleIndex: number; stage: 'selection'; target: InspectionSelectionTar
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member             | Type                                  | Default | Description                                                   |
+| ------------------ | ------------------------------------- | ------- | ------------------------------------------------------------- |
+| `readonly entries` | `ReadonlyArray<InspectionPlaneEntry>` | —       | Entries corresponding one-to-one to nonempty callback outputs |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ entries: ReadonlyArray<InspectionPlaneEntry> }>;
+export type InspectionPlane = Readonly<{
+  entries: ReadonlyArray<InspectionPlaneEntry>;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionPlaneEntry
 
@@ -129,16 +244,37 @@ Readonly<{ entries: ReadonlyArray<InspectionPlaneEntry> }>;
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                | Type                       | Default | Description                                                                             |
+| --------------------- | -------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `readonly colorScope` | `number`                   | —       | Consecutive color index at request level                                                |
+| `readonly inspector`  | `InspectorKey`             | —       | Inspector that produced this entry                                                      |
+| `readonly occurrence` | `CompileOccurrenceLocator` | —       | Final occurrence                                                                        |
+| `readonly owner`      | `CompileObservationOwner`  | —       | Owner being observed                                                                    |
+| `readonly scene`      | `Scene`                    | —       | A readonly Scene placed according to its fragment coordinateSpace                       |
+| `readonly transform`  | `AffineMatrix`             | —       | Matrix from the auxiliary Scene to the primary Scene; the identity matrix in scene mode |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{
-  colorScope: number;
+export type InspectionPlaneEntry = Readonly<{
   inspector: InspectorKey;
-  occurrence: CompileOccurrenceLocator;
   owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  colorScope: number;
   scene: Scene;
   transform: AffineMatrix;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionSelection
 
@@ -148,9 +284,27 @@ Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member           | Type                                     | Default | Description                                               |
+| ---------------- | ---------------------------------------- | ------- | --------------------------------------------------------- |
+| `readonly rules` | `ReadonlyArray<InspectionSelectionRule>` | —       | Rules participating in cascading after complete admission |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ rules: ReadonlyArray<InspectionSelectionRule> }>;
+export type InspectionSelection = Readonly<{
+  rules: ReadonlyArray<InspectionSelectionRule>;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionSelectionRule
 
@@ -161,12 +315,22 @@ Readonly<{ rules: ReadonlyArray<InspectionSelectionRule> }>;
 </p>
 
 ```ts
-Readonly<{
-  inspector: InspectorKey;
-  kind: 'request';
-  options: boolean | JsonObject;
-  target: InspectionSelectionTarget;
-}> | Readonly<{ kind: 'barrier'; target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }> }>;
+export type InspectionSelectionRule =
+  | Readonly<{
+      kind: 'request';
+      inspector: InspectorKey;
+      target: InspectionSelectionTarget;
+      options: boolean | JsonObject;
+    }>
+  | Readonly<{
+      kind: 'barrier';
+      target: Extract<
+        InspectionSelectionTarget,
+        {
+          kind: 'scene' | 'subtree';
+        }
+      >;
+    }>;
 ```
 
 ### InspectionSelectionTarget
@@ -182,39 +346,80 @@ Readonly<{
 </p>
 
 ```ts
-Readonly<{ kind: 'scene' }> |
-  Readonly<{ kind: 'subtree'; sourcePath: string }> |
-  Readonly<{ kind: 'self'; locator: Readonly<{ kind: 'authored'; occurrenceIndex?: number; sourcePath: string }> }>;
+export type InspectionSelectionTarget =
+  | Readonly<{
+      kind: 'scene';
+    }>
+  | Readonly<{
+      kind: 'subtree';
+      sourcePath: string;
+    }>
+  | Readonly<{
+      kind: 'self';
+      locator: Readonly<{
+        kind: 'authored';
+        sourcePath: string;
+        occurrenceIndex?: number;
+      }>;
+    }>;
 ```
 
 ### InspectorContext
 
 <p>
-  <ApiSourceLink label={'InspectorContext'} path={'packages/kernel/inspect/src/contract/types.ts'} startLine={48}>
+  <ApiSourceLink label={'InspectorContext'} path={'packages/kernel/inspect/src/contract/types.ts'} startLine={52}>
     Final occurrence context available to an Inspector callback
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                  | Type                                                                              | Default | Description                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `readonly ancestors`    | `ReadonlyArray<CompileObservationAncestor>`                                       | —       | Final logical container chain, ordered from outermost to innermost             |
+| `readonly appearance`   | `InspectionAppearanceContext`                                                     | —       | Appearance context allocated before the callback                               |
+| `readonly inspectorKey` | `InspectorKey`                                                                    | —       | Current Inspector key                                                          |
+| `readonly occurrence`   | `CompileOccurrenceLocator`                                                        | —       | Current final occurrence                                                       |
+| `readonly options`      | `TOptions`                                                                        | —       | canonical JSON-safe options                                                    |
+| `readonly owner`        | `CompileObservationOwner`                                                         | —       | Core owner currently being observed                                            |
+| `readonly provenance`   | `Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>` | —       | Probe or replay origin                                                         |
+| `readonly round`        | `(value: number) => number`                                                       | —       | Rounds a value using the precision of the current primary compile              |
+| `readonly transform`    | `AffineMatrix`                                                                    | —       | Final affine transform from observation-local coordinates to the primary Scene |
+| `readonly warn`         | `(code: string, message: string) => void`                                         | —       | Declares which partial results the current callback may omit                   |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{
-  ancestors: ReadonlyArray<CompileObservationAncestor>;
-  appearance: InspectionAppearanceContext;
-  inspectorKey: InspectorKey;
-  occurrence: CompileOccurrenceLocator;
-  options: TOptions;
-  owner: CompileObservationOwner;
-  provenance: Readonly<{ final: CompileOccurrenceLocator; origin: CompileOccurrenceLocator }>;
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
   round: (value: number) => number;
+  inspectorKey: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: Readonly<{
+    origin: CompileOccurrenceLocator;
+    final: CompileOccurrenceLocator;
+  }>;
   transform: AffineMatrix;
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
+  options: TOptions;
+  appearance: InspectionAppearanceContext;
   warn: (code: string, message: string) => void;
 }>;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TOptions`     | —           |
+| Type parameter | Description                                    |
+| -------------- | ---------------------------------------------- |
+| `TOptions`     | Resolved options type consumed by the callback |
 
 ### InspectorCoordinateSpace
 
@@ -229,7 +434,7 @@ Readonly<{
 </p>
 
 ```ts
-'local' | 'scene';
+export type InspectorCoordinateSpace = 'local' | 'scene';
 ```
 
 ### InspectorDefinitionInput
@@ -238,7 +443,7 @@ Readonly<{
   <ApiSourceLink
     label={'InspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={97}
+    startLine={108}
   >
     Author-facing Inspector definition; options fields may be omitted only when defaults satisfy their input and output
     types
@@ -246,23 +451,45 @@ Readonly<{
 </p>
 
 ```ts
-(WithOptionalProperties<
+export type InspectorDefinitionInput<
+  TSubject extends JsonValue = JsonValue,
+  TParsedOptions extends JsonObject = Record<string, never>,
+  TResolvedOptions extends JsonObject = TParsedOptions,
+  TSourceOptions extends JsonObject = TParsedOptions,
+> = WithOptionalProperties<
   InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
   'optionsSchema' | 'resolveOptions'
 > &
-  Readonly<{ optionsSchema: ZodType<TParsedOptions, TSourceOptions> }>) |
-  (conditional & Readonly<{ resolveOptions: (options: TParsedOptions) => TResolvedOptions }>) |
-  conditional;
+  (
+    | Readonly<{
+        optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
+      }>
+    | ([TParsedOptions, TSourceOptions] extends [Record<string, never>, Record<string, never>]
+        ? Readonly<{
+            optionsSchema?: never;
+          }>
+        : never)
+  ) &
+  (
+    | Readonly<{
+        resolveOptions: (options: TParsedOptions) => TResolvedOptions;
+      }>
+    | ([TParsedOptions] extends [TResolvedOptions]
+        ? Readonly<{
+            resolveOptions?: never;
+          }>
+        : never)
+  );
 ```
 
 #### Type parameters
 
-| Type parameter     | Description |
-| ------------------ | ----------- |
-| `TSubject`         | —           |
-| `TParsedOptions`   | —           |
-| `TResolvedOptions` | —           |
-| `TSourceOptions`   | —           |
+| Type parameter     | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `TSubject`         | Observed subject type parsed by the subject schema          |
+| `TParsedOptions`   | Options type parsed by the options schema                   |
+| `TResolvedOptions` | Resolved options type consumed by the callback              |
+| `TSourceOptions`   | Raw options input type before it reaches the options schema |
 
 ### InspectorFragment
 
@@ -272,9 +499,31 @@ Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                     | Type                       | Default | Description                                               |
+| -------------------------- | -------------------------- | ------- | --------------------------------------------------------- |
+| `readonly child`           | `IRChild`                  | —       | An ordinary IR child compiled in isolation by Core        |
+| `readonly coordinateSpace` | `InspectorCoordinateSpace` | —       | The coordinate space used by this fragment                |
+| `readonly type`            | `'fragment'`               | —       | The auxiliary fragment discriminator; not part of Core IR |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ child: IRChild; coordinateSpace: InspectorCoordinateSpace; type: 'fragment' }>;
+export type InspectorFragment = Readonly<{
+  type: 'fragment';
+  coordinateSpace: InspectorCoordinateSpace;
+  child: IRChild;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectorKey
 
@@ -284,9 +533,29 @@ Readonly<{ child: IRChild; coordinateSpace: InspectorCoordinateSpace; type: 'fra
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member               | Type     | Default | Description                        |
+| -------------------- | -------- | ------- | ---------------------------------- |
+| `readonly namespace` | `string` | —       | Namespace containing the Inspector |
+| `readonly type`      | `string` | —       | Type within the namespace          |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ namespace: string; type: string }>;
+export type InspectorKey = Readonly<{
+  namespace: string;
+  type: string;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectorOutput
 
@@ -297,60 +566,109 @@ Readonly<{ namespace: string; type: string }>;
 </p>
 
 ```ts
-IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
 ```
 
 ### InspectorRegistry
 
 <p>
-  <ApiSourceLink label={'InspectorRegistry'} path={'packages/kernel/inspect/src/providers/registry.ts'} startLine={10}>
+  <ApiSourceLink label={'InspectorRegistry'} path={'packages/kernel/inspect/src/providers/registry.ts'} startLine={9}>
     An opaque container for registered Inspectors
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                            | Type   | Default | Description |
+| --------------------------------- | ------ | ------- | ----------- |
+| `__@inspectorRegistryBrand@10968` | `true` | —       | —           |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ [inspectorRegistryBrand]: true }>;
+export type InspectorRegistry = Readonly<{
+  readonly [inspectorRegistryBrand]: true;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### RetikzInspectErrorCodeValue
 
 <p>
-  <ApiSourceLink label={'RetikzInspectErrorCodeValue'} path={'packages/kernel/inspect/src/error.ts'} startLine={22}>
+  <ApiSourceLink label={'RetikzInspectErrorCodeValue'} path={'packages/kernel/inspect/src/error.ts'} startLine={21}>
     Stable error code values for the Inspect package
   </ApiSourceLink>
 </p>
 
 ```ts
-ValueOf<typeof RetikzInspectErrorCode>;
+export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
+```
+
+#### Expanded type
+
+```ts
+export type RetikzInspectErrorCodeValue =
+  | 'INSPECTION_ERROR'
+  | 'INSPECTION_COMPILE_ERROR'
+  | 'INSPECTION_COMPILE_FAILED'
+  | 'INSPECTION_CONTRACT_ERROR'
+  | 'INSPECTION_REGISTRY_ERROR'
+  | 'INSPECTION_VANILLA_ERROR';
 ```
 
 ### RetikzInspectErrorOptions
 
 <p>
-  <ApiSourceLink label={'RetikzInspectErrorOptions'} path={'packages/kernel/inspect/src/error.ts'} startLine={25}>
+  <ApiSourceLink label={'RetikzInspectErrorOptions'} path={'packages/kernel/inspect/src/error.ts'} startLine={24}>
     Structured constructor options for Inspect errors
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member              | Type                                | Default | Description                                          |
+| ------------------- | ----------------------------------- | ------- | ---------------------------------------------------- |
+| `readonly cause?`   | `unknown`                           | —       | Original exception or value that caused this failure |
+| `readonly code`     | `RetikzInspectErrorCodeValue`       | —       | Stable error code                                    |
+| `readonly details?` | `Readonly<Record<string, unknown>>` | —       | Structured details of the failure context            |
+| `readonly message`  | `string`                            | —       | Original error message for the caller                |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{
-  cause?: unknown;
+export type RetikzInspectErrorOptions = Readonly<{
   code: RetikzInspectErrorCodeValue;
-  details?: Readonly<Record<string, unknown>>;
   message: string;
+  details?: Readonly<Record<string, unknown>>;
+  cause?: unknown;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### CLIP_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'CLIP_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={16}>
+  <ApiSourceLink label={'CLIP_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={14}>
     The built-in Core Clip Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'clip' }>;
+export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip' });
 ```
 
 ### ClipInspectOptionsSchema
@@ -369,14 +687,14 @@ Readonly<{ namespace: 'core'; type: 'clip' }>;
   <ApiSourceLink
     label={'COORDINATE_INSPECTOR_KEY'}
     path={'packages/kernel/inspect/src/providers/coordinate.ts'}
-    startLine={16}
+    startLine={14}
   >
     The built-in Core Coordinate Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'coordinate' }>;
+export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'coordinate' });
 ```
 
 ### CoordinateInspectOptionsSchema
@@ -396,13 +714,13 @@ Readonly<{ namespace: 'core'; type: 'coordinate' }>;
 ### NODE_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'NODE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={25}>
+  <ApiSourceLink label={'NODE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={23}>
     The built-in Core Node Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'node' }>;
+export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node' });
 ```
 
 ### NodeInspectOptionsSchema
@@ -418,13 +736,13 @@ Readonly<{ namespace: 'core'; type: 'node' }>;
 ### PATH_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'PATH_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={11}>
+  <ApiSourceLink label={'PATH_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={10}>
     The built-in Core stroke Path Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'path' }>;
+export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path' });
 ```
 
 ### PathInspectOptionsSchema
@@ -440,32 +758,32 @@ Readonly<{ namespace: 'core'; type: 'path' }>;
 ### RetikzInspectErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzInspectErrorCode'} path={'packages/kernel/inspect/src/error.ts'} startLine={6}>
+  <ApiSourceLink label={'RetikzInspectErrorCode'} path={'packages/kernel/inspect/src/error.ts'} startLine={5}>
     Stable error codes for the Inspect package
   </ApiSourceLink>
 </p>
 
 ```ts
-{
-  Compile: 'INSPECTION_COMPILE_ERROR';
-  CompileFailed: 'INSPECTION_COMPILE_FAILED';
-  Contract: 'INSPECTION_CONTRACT_ERROR';
-  Default: 'INSPECTION_ERROR';
-  Registry: 'INSPECTION_REGISTRY_ERROR';
-  Vanilla: 'INSPECTION_VANILLA_ERROR';
-}
+export const RetikzInspectErrorCode = {
+  Default: 'INSPECTION_ERROR',
+  Compile: 'INSPECTION_COMPILE_ERROR',
+  CompileFailed: 'INSPECTION_COMPILE_FAILED',
+  Contract: 'INSPECTION_CONTRACT_ERROR',
+  Registry: 'INSPECTION_REGISTRY_ERROR',
+  Vanilla: 'INSPECTION_VANILLA_ERROR',
+} as const;
 ```
 
 ### SCOPE_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'SCOPE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={23}>
+  <ApiSourceLink label={'SCOPE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={21}>
     The built-in Core Scope Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'scope' }>;
+export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'scope' });
 ```
 
 ### ScopeInspectOptionsSchema
@@ -484,14 +802,14 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'compileInspectionToScene'}
     path={'packages/kernel/inspect/src/compile/driver.ts'}
-    startLine={261}
+    startLine={255}
   >
     Runs an atomic Inspector compilation using Core observed compilation
   </ApiSourceLink>
 </p>
 
 ```ts
-<TComposites>(
+export const compileInspectionToScene = <TComposites>(
   ir: {
     animations?: Array<{
       delay?: number;
@@ -570,9 +888,9 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TComposites`  | —           |
+| Type parameter | Description                                                    |
+| -------------- | -------------------------------------------------------------- |
+| `TComposites`  | Composite Definition collection available to the current Scene |
 
 #### Parameters
 
@@ -587,14 +905,15 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'createDefaultInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={71}
+    startLine={70}
   >
     Creates the default Inspector registry with built-ins first and the same path for third-party definitions
   </ApiSourceLink>
 </p>
 
 ```ts
-(definitions: readonly Array<AnyInspectorDefinitionInput>) => Readonly<{ [inspectorRegistryBrand]: true }>;
+export const createDefaultInspectorRegistry = (definitions: readonly Array<AnyInspectorDefinitionInput>) =>
+  Readonly<{ [inspectorRegistryBrand]: true }>;
 ```
 
 #### Parameters
@@ -609,14 +928,14 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'createInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={29}
+    startLine={28}
   >
     Creates an Inspector registry without global state
   </ApiSourceLink>
 </p>
 
 ```ts
-(definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
+export const createInspectorRegistry = (definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
 ```
 
 #### Parameters
@@ -628,25 +947,25 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={61}>
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={66}>
     Defines an Inspector while preserving its author-input type
   </ApiSourceLink>
 </p>
 
 ```ts
-<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
+export const defineInspector = <TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
   definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
 ) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
 #### Type parameters
 
-| Type parameter     | Description |
-| ------------------ | ----------- |
-| `TSubject`         | —           |
-| `TParsedOptions`   | —           |
-| `TResolvedOptions` | —           |
-| `TSourceOptions`   | —           |
+| Type parameter     | Description                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| `TSubject`         | Observed subject type parsed by the subject schema          |
+| `TParsedOptions`   | Options type parsed by the options schema                   |
+| `TResolvedOptions` | Resolved options type consumed by the callback              |
+| `TSourceOptions`   | Raw options input type before it reaches the options schema |
 
 #### Parameters
 
@@ -660,14 +979,15 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'mergeInspectorRegistries'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={63}
+    startLine={62}
   >
     Merges created registries while preserving the definition order of each registry
   </ApiSourceLink>
 </p>
 
 ```ts
-(registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>) => InspectorRegistry;
+export const mergeInspectorRegistries = (registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>) =>
+  InspectorRegistry;
 ```
 
 #### Parameters
@@ -684,129 +1004,259 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'InspectCoordinateProps'}
     path={'packages/kernel/inspect/src/react/components.tsx'}
-    startLine={26}
+    startLine={24}
   >
     Props for an optional Inspector wrapper selecting only the current Coordinate
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member     | Type                                                                                                      | Default | Description                                                           |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------- |
+| `id`       | `string`                                                                                                  | —       | Placeholder node ID, referenced by other paths or node `at.of` values |
+| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Placeholder position, accepting the same forms as `<Node position>`   |
+| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —       | One or more inspection requests for the current Coordinate            |
+
+**position**: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or partway `{ between: [A, B], fraction }` positioning
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Omit<CoordinateProps, 'authoring'> & { request: Exclude<InspectionVanillaAuthoringInput, false> };
+export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
+  request: Exclude<InspectionVanillaAuthoringInput, false>;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectLayoutProps
 
 <p>
-  <ApiSourceLink label={'InspectLayoutProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={64}>
+  <ApiSourceLink label={'InspectLayoutProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={62}>
     Optional Layout wrapper props binding an Inspect registry, selection, and callbacks
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                   | Type                                                  | Default | Description                                                                                                                                                      |
+| ------------------------ | ----------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animate?`               | `boolean`                                             | —       | Whether to play animations                                                                                                                                       |
+| `animationProperties?`   | `AnimationPropertyRegistry`                           | —       | animation property registry                                                                                                                                      |
+| `animationRef?`          | `Ref<AnimationControls \| null>`                      | —       | Animation controller ref                                                                                                                                         |
+| `animations?`            | `ReadonlyArray<IRAnimationTrack>`                     | —       | Scene-root animations                                                                                                                                            |
+| `artifacts?`             | `CompileArtifactOptions`                              | —       | Requested compilation artifacts                                                                                                                                  |
+| `children?`              | `ReactNode`                                           | —       | Kernel or Sugar JSX children                                                                                                                                     |
+| `className?`             | `string`                                              | —       | Host className                                                                                                                                                   |
+| `easings?`               | `EasingRegistry`                                      | —       | easing registry                                                                                                                                                  |
+| `extensions?`            | `LayoutExtensions`                                    | —       | Runtime extensions grouped by capability, using the Core compilation contract                                                                                    |
+| `fontSize?`              | `number`                                              | `16`    | Default font size in drawing units; used when font.size is omitted and as the root size for font presets and rem, without overriding explicit numeric font sizes |
+| `handlers?`              | `HydrationHandlers`                                   | —       | Hydration handler registry for IR input                                                                                                                          |
+| `height?`                | `number \| string`                                    | —       | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                                                    |
+| `idPrefix?`              | `string`                                              | —       | SVG resource id prefix                                                                                                                                           |
+| `ir?`                    | `IRScene`                                             | —       | Persisted Source IR, used instead of children                                                                                                                    |
+| `lowerTex?`              | `LowerTex`                                            | —       | Formula lowering capability                                                                                                                                      |
+| `nodeDistance?`          | `number`                                              | `24`    | Default distance for relative node positioning in drawing units; applies when position uses direction/of and omits distance                                      |
+| `onArtifacts?`           | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —       | Notification after artifacts are committed successfully                                                                                                          |
+| `readonly onCommit?`     | `(result: InspectionCompileResult) => void`           | —       | Notification of the Inspect compilation result for the same revision                                                                                             |
+| `onCompileResult?`       | `(result: CompileResult) => void`                     | —       | Notification of the complete Core compilation result                                                                                                             |
+| `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void`          | —       | Notification for each committed diagnostic                                                                                                                       |
+| `readonly registry`      | `InspectorRegistry`                                   | —       | Inspector registry used by the current Layout                                                                                                                    |
+| `renderer?`              | `'svg' \| 'canvas'`                                   | `'svg'` | Rendering backend; an explicit value takes priority, otherwise inherits the Renderer context and uses SVG when no context is provided                            |
+| `readonly request?`      | `InspectionVanillaAuthoringInput`                     | —       | Optional scene requests; false sets a barrier for the entire drawing                                                                                             |
+| `rootScope?`             | `Pick<InputScope, 'style' \| 'defaults'>`             | —       | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                         |
+| `runtime?`               | `LayoutRuntimeOptions`                                | —       | Retained or static processing mode                                                                                                                               |
+| `readonly selection?`    | `InspectionSelection`                                 | —       | Explicit selection merged with authored wrapper rules                                                                                                            |
+| `snapshotAt?`            | `number`                                              | —       | Time at which to sample a static animation frame                                                                                                                 |
+| `style?`                 | `CSSProperties`                                       | —       | Host inline styles                                                                                                                                               |
+| `theme?`                 | `IRScene['theme']`                                    | —       | Theme written to the Scene root and inherited by descendant Composites                                                                                           |
+| `viewBox?`               | `IRViewBox`                                           | —       | Explicit viewport                                                                                                                                                |
+| `width?`                 | `number \| string`                                    | —       | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio                               |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Omit<LayoutProps, 'authoring' | 'compileDriver'> &
+export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'> &
   Readonly<{
-    onCommit?: (result: InspectionCompileResult) => void;
-    onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
     registry: InspectorRegistry;
-    request?: InspectionVanillaAuthoringInput;
     selection?: InspectionSelection;
+    request?: InspectionVanillaAuthoringInput;
+    onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
+    onCommit?: (result: InspectionCompileResult) => void;
   }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectNodeProps
 
 <p>
-  <ApiSourceLink label={'InspectNodeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={14}>
+  <ApiSourceLink label={'InspectNodeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={12}>
     Props for an optional Inspector wrapper selecting only the current Node
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `NodeProps`, with `'authoring'` removed. See “Type definition” for the complete composition.
+
+| Member    | Type                                              | Default | Description                                          |
+| --------- | ------------------------------------------------- | ------- | ---------------------------------------------------- |
+| `request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —       | One or more inspection requests for the current Node |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Omit<NodeProps, 'authoring'> & { request: Exclude<InspectionVanillaAuthoringInput, false> };
+export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
+  request: Exclude<InspectionVanillaAuthoringInput, false>;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectPathProps
 
 <p>
-  <ApiSourceLink label={'InspectPathProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={38}>
+  <ApiSourceLink label={'InspectPathProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={36}>
     Props for the optional Inspect Path wrapper
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `PathProps`, with `'authoring'` removed. See “Type definition” for the complete composition.
+
+| Member             | Type                                              | Default | Description                                     |
+| ------------------ | ------------------------------------------------- | ------- | ----------------------------------------------- |
+| `readonly request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —       | Inspector request for the current authored Path |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Omit<PathProps, 'authoring'> & Readonly<{ request: Exclude<InspectionVanillaAuthoringInput, false> }>;
+export type InspectPathProps = Omit<PathProps, 'authoring'> &
+  Readonly<{
+    request: Exclude<InspectionVanillaAuthoringInput, false>;
+  }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectScopeProps
 
 <p>
-  <ApiSourceLink label={'InspectScopeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={51}>
+  <ApiSourceLink label={'InspectScopeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={49}>
     Props for the optional Inspect Scope wrapper
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Direct members">
+
+The remaining members are inherited from `ScopeProps`, with `'authoring'` removed. See “Type definition” for the complete composition.
+
+| Member             | Type                              | Default | Description                                                                                  |
+| ------------------ | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `readonly request` | `InspectionVanillaAuthoringInput` | —       | Requests for the current subtree; false establishes a barrier that descendants cannot reopen |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Omit<ScopeProps, 'authoring'> & Readonly<{ request: InspectionVanillaAuthoringInput }>;
+export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
+  Readonly<{
+    request: InspectionVanillaAuthoringInput;
+  }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectCoordinate
 
 <p>
-  <ApiSourceLink label={'InspectCoordinate'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={32}>
+  <ApiSourceLink label={'InspectCoordinate'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={30}>
     Reuses the base Coordinate and only attaches runtime inspection requests
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectCoordinateProps>;
+export const InspectCoordinate = FC<InspectCoordinateProps>;
 ```
 
 ### InspectLayout
 
 <p>
-  <ApiSourceLink label={'InspectLayout'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={79}>
+  <ApiSourceLink label={'InspectLayout'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={77}>
     An optional Inspect host reusing the base Layout and static or retained runtime
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectLayoutProps>;
+export const InspectLayout = FC<InspectLayoutProps>;
 ```
 
 ### InspectNode
 
 <p>
-  <ApiSourceLink label={'InspectNode'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={20}>
+  <ApiSourceLink label={'InspectNode'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={18}>
     Reuses the base Node and only attaches runtime inspection requests
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectNodeProps>;
+export const InspectNode = FC<InspectNodeProps>;
 ```
 
 ### InspectPath
 
 <p>
-  <ApiSourceLink label={'InspectPath'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={45}>
+  <ApiSourceLink label={'InspectPath'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={43}>
     Reuses base Path lowering and only attaches a runtime-only Inspector authoring marker
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectPathProps>;
+export const InspectPath = FC<InspectPathProps>;
 ```
 
 ### InspectScope
 
 <p>
-  <ApiSourceLink label={'InspectScope'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={58}>
+  <ApiSourceLink label={'InspectScope'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={56}>
     Reuses base Scope lowering and only attaches a runtime-only Inspector authoring marker
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectScopeProps>;
+export const InspectScope = FC<InspectScopeProps>;
 ```
 
 ## `@retikz/inspect/vanilla`
@@ -817,20 +1267,39 @@ FC<InspectScopeProps>;
   <ApiSourceLink
     label={'CreateInspectionVanillaDriverOptions'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={68}
+    startLine={66}
   >
     Fixed configuration for the Inspect Vanilla compilation driver
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                   | Type                                         | Default | Description                                                                          |
+| ------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `readonly onCommit?`     | `(result: InspectionCompileResult) => void`  | —       | Notification after successful commit of the revision primary, plane, and diagnostics |
+| `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void` | —       | Notification for each committed Inspect diagnostic                                   |
+| `readonly registry`      | `InspectorRegistry`                          | —       | Inspector registry used by this host                                                 |
+| `readonly selection?`    | `InspectionSelection`                        | —       | Explicit selection merged with plain authoring rules                                 |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{
-  onCommit?: (result: InspectionCompileResult) => void;
-  onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
+export type CreateInspectionVanillaDriverOptions = Readonly<{
   registry: InspectorRegistry;
   selection?: InspectionSelection;
+  onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
+  onCommit?: (result: InspectionCompileResult) => void;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionVanillaAuthoringInput
 
@@ -838,14 +1307,15 @@ Readonly<{
   <ApiSourceLink
     label={'InspectionVanillaAuthoringInput'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={20}
+    startLine={19}
   >
     A Vanilla site can declare one request, multiple requests, or a barrier
   </ApiSourceLink>
 </p>
 
 ```ts
-false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
+export type InspectionVanillaAuthoringInput =
+  false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
 ```
 
 ### InspectionVanillaRequest
@@ -854,15 +1324,35 @@ false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
   <ApiSourceLink
     label={'InspectionVanillaRequest'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={12}
+    startLine={11}
   >
     One Inspector request in an optional Vanilla authoring declaration
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member               | Type                          | Default | Description                                                    |
+| -------------------- | ----------------------------- | ------- | -------------------------------------------------------------- |
+| `readonly inspector` | `InspectorKey`                | —       | Inspector key to request                                       |
+| `readonly options`   | `false \| true \| JsonObject` | —       | Sparse options, true, or false to disable inherited inspection |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
+export type InspectionVanillaRequest = Readonly<{
+  inspector: InspectorKey;
+  options: false | true | JsonObject;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### createInspectionVanillaAuthoring
 
@@ -870,14 +1360,14 @@ Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
   <ApiSourceLink
     label={'createInspectionVanillaAuthoring'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={31}
+    startLine={30}
   >
     Creates an opaque authoring marker recognized only by the Inspect Vanilla driver
   </ApiSourceLink>
 </p>
 
 ```ts
-(input: InspectionVanillaAuthoringInput) => InspectionVanillaAuthoring;
+export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthoringInput) => InspectionVanillaAuthoring;
 ```
 
 #### Parameters
@@ -892,14 +1382,14 @@ Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
   <ApiSourceLink
     label={'createInspectionVanillaDriver'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={145}
+    startLine={143}
   >
     Creates a Vanilla compilation driver binding an Inspector registry, selection, and committed callbacks
   </ApiSourceLink>
 </p>
 
 ```ts
-(options: CreateInspectionVanillaDriverOptions) => VanillaCompileDriver;
+export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDriverOptions) => VanillaCompileDriver;
 ```
 
 #### Parameters
