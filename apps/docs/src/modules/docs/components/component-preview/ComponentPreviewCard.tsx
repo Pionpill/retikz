@@ -12,7 +12,12 @@ import { alignClass, sizeClass } from './constants';
 import { PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import { usePreviewControlState } from './hooks';
-import { buildPreviewToolSlots, PreviewToolbar, PreviewToolbarButton, usePreviewPanelState } from './preview-panel';
+import {
+  buildPreviewControlsLockSlot,
+  buildPreviewToolSlots,
+  PreviewToolbarButton,
+  usePreviewPanelState,
+} from './preview-panel';
 import { InlineSourcePanel, useSourcePanelState } from './source-panel';
 import type {
   AlignKey,
@@ -188,24 +193,16 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
         toggleRendererMode: previewState.toggleRendererMode,
       })
     : [];
-  const sourceControlSlots =
-    hasCode && codeInitiallyHidden && !isCodeVisible
-      ? [
-          {
-            id: 'show-source',
-            placement: 'bottom-start' as const,
-            visibility: 'hover' as const,
-            render: () => (
-              <PreviewToolbar>
-                <PreviewToolbarButton label="Show code" onClick={handleShowCode}>
-                  <FileCode2 className="size-3.5" />
-                </PreviewToolbarButton>
-              </PreviewToolbar>
-            ),
-          },
-        ]
-      : [];
-  const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, sourceControlSlots, previewToolSlots);
+  const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots, [
+    buildPreviewControlsLockSlot({
+      leading:
+        hasCode && codeInitiallyHidden && !isCodeVisible ? (
+          <PreviewToolbarButton label="Show code" onClick={handleShowCode}>
+            <FileCode2 className="size-3.5" />
+          </PreviewToolbarButton>
+        ) : undefined,
+    }),
+  ]);
 
   return (
     <div ref={containerRef} className="my-6">

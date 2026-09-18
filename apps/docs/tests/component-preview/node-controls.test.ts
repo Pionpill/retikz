@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveVisiblePreviewControlSections } from '../../src/modules/docs/components/component-preview/controls';
-import { nodeLabelControls } from '../../src/modules/docs/contents/kernel/components/node/overview/node-label.controls';
-import { nodeLabelControls as nodeLabelEnControls } from '../../src/modules/docs/contents/kernel/components/node/overview/node-label.en.controls';
+import { nodeLabelControls } from '../../src/modules/docs/contents/kernel/components/node/labels/node-label.controls';
+import { nodeLabelControls as nodeLabelEnControls } from '../../src/modules/docs/contents/kernel/components/node/labels/node-label.en.controls';
 
 describe('Node controls', () => {
   it('shows keepUpright only for rotated labels', () => {

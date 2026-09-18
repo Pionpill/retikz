@@ -86,8 +86,9 @@ export default controlledPreview.Component;
 - 内容低矮、字段很少且缩小后仍清晰时使用 `xs`；主体、文字或多分组面板在 `sm` 下难以辨认时使用 `md`；`lg` 及以上只用于确有纵向空间需求的复杂场景，并在真实页面确认必要性
 - `size` 只解决预览区的纵向高度；横向拥挤、主体缩放或位置漂移应调整 `Layout width`、固定 `viewBox`、构图或右侧输出宽度
 - 不按组件重要性、源码中的 `width` / `height` 或 controls 数量机械决定档位；以真实页面中的主体可读性、留白和面板可操作性为准
-- ComponentPreview 尺寸测量脚本以默认渲染态的 `preview-control-field` 数量辅助建议：达到 5 个时，若图本身测得的最小档位为 `xs`、`sm` 或 `md`，脚本将建议提升一级。该建议仍须由真实页面的主体可读性与面板可操作性复核
-- 提升档位后，脚本会测量 control 面板是否仍纵向溢出，并临时将面板设为 50% 复测是否形成两列且不再溢出。仅当 SVG 实际宽度不超过 workspace 的一半、两种语言均满足该条件时，脚本才建议在该 demo 的 panel controls 声明 `defaultSize: 50`，将默认面板宽度从 25% 提升至两倍。不得批量修改现有 demo；只在目标 demo 的真实页面确认图不会被压缩后手动采用
+- ComponentPreview 尺寸测量脚本先按每个 `size` 的真实图形 bounds 确定最小可完整容纳图形高度加 40px 留白的档位，再在该档位采集 controls 的实测数据：field / section 数量、item / section gap、列数、滚动视口高度、完整 `scrollHeight`、剩余溢出和 `requiredWorkspaceHeight`。不要用 controls 数量或源码 `width` / `height` 猜测结果
+- 脚本同时在 25% 与 50% 控制面板宽度采样。以图形最小档位的 `remainingOverflow / workspaceHeight` 作为高度差比例：不超过 50% 时，先仅通过 `size` 尝试适配；`md` 及以下最多提升两档，`lg` 及以上最多一档。无论差距大小，50% 宽度只在图形实际宽度不超过 workspace 一半时可用；差距较大时优先检查它。两种调整可组合；在允许范围仍不能完整展示时，输出最大允许的 size / 面板宽度及剩余溢出，不追加其它启发式
+- `check:figure-size` 的 JSON 必须保留每个 size、两种面板宽度和上述原始观测值，以及 `heightGapRatio`、rule、推荐 size、`defaultSize: 50` 与剩余溢出。脚本负责确定性计算，LLM 只决定是否把建议应用到某一个已核验的 demo；不得批量修改现有 demo。仅在 zh / en 都建议 50% 且真实页面确认图不会被压缩时，才手动为该 demo 采用 `defaultSize: 50`
 - controls playground 右侧内容的显式输出宽度优先控制在 `400px` 或以下，一般不超过 `600px`；超过 `400px` 时验证拖拽面板分隔线前后主体没有缩放
 - controls 较多并导致主体或关键字段被挤压时优先增加高度档位，不缩小主体或裁掉面板字段
 

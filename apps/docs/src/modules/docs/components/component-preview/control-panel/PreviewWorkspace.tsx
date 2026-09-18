@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import type { Lang } from '@/i18n';
 import { cn } from '@/lib';
+import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import { ToolbarIconButton } from '../components';
 import { PreviewContextBar, PreviewThemeBoundary } from '../context-bar';
@@ -144,6 +145,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
     pinControlsOnClick,
   } = props;
   const previewTheme = usePreviewTheme(themeStyleSelection, themeMode);
+  const controlsLocked = useComponentPreviewStore(state => state.controlsLocked);
   const { direction, workspaceRef } = usePreviewWorkspaceDirection();
   const defaultControlPanelSize =
     controlPanelDefaultSize ??
@@ -166,7 +168,7 @@ export const PreviewWorkspace: FC<PreviewWorkspaceProps> = props => {
       data-slot="preview-context-pane"
       className="group/preview-context relative flex h-full min-h-0 flex-col overflow-hidden"
     >
-      {showContextBar ? (
+      {showContextBar && !controlsLocked ? (
         <PreviewContextBar
           themeMode={themeMode}
           onThemeModeChange={onThemeModeChange}

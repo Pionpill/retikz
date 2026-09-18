@@ -9,9 +9,9 @@
 - MDX 始终用 `<ComponentPreview files="<name>" />`；宿主按当前文档语言传入 `lang`
 - `<name>.demo.tsx` 与 `<name>.zh.demo.tsx` / `<name>.en.demo.tsx` 仅为既有 demo 的兼容结构，不为新图创建；解析顺序为单文件图、单文件旧 demo、当前语言旧 demo
 - `files` 数组第一项是主 demo，其余是源码附属文件；只有需要 `diffFrom` 时使用对象形式
-- 叙述图使用 `hideCode`，并显式设置 `type="flow"` 或 `type="illustration"`，使读者可打开对应的图示说明；可复制组件用法保留默认源码视图且不设置 `type`
+- `hideCode` 显式传 `true` 时隐藏源码，传 `false` 时显示源码；未传时，带 controls 的预览默认隐藏源码并由左下角代码按钮展开，其他预览默认显示源码。叙述图使用 `hideCode`，并显式设置 `type="flow"` 或 `type="illustration"`，使读者可打开对应的图示说明。使用 `FlowDiagram`、`FlowLayout`、`FlowEntities` 或 `FlowRelations` 的叙述图为 `flow`，其它叙述图为 `illustration`；可复制组件用法保留默认源码视图且不设置 `type`
 - `hideCode` 的 demo 不写注释（包括 JSDoc 与 JSX 注释）；保留源码视图的 demo 如需注释，统一使用英文
-- `size` 必须在 800px 正文的真实页面按内容留白选择，不能只看源码的逻辑宽高
+- `size` 必须在约 `1440px` viewport、800px 正文的真实页面按内容留白选择，不能只看源码的逻辑宽高；窄屏不参与默认 size 测算
 
 ## React、IR 与 Vanilla
 

@@ -49,7 +49,7 @@ export type ComponentPreviewProps = {
   size?: SizeKey;
   /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-5 / 居中等。 */
   previewClassName?: string;
-  /** 默认隐藏底部源码区，并在预览左下角提供展开源码的入口。 */
+  /** 源码初始可见性。未传时带 controls 的预览默认隐藏，并在预览左下角提供展开入口。 */
   hideCode?: boolean;
   /** 叙述性图示的说明类型；指定后显示图示说明入口。 */
   type?: PreviewFigureType;
@@ -71,7 +71,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     align = 'center',
     size = 'md',
     previewClassName,
-    hideCode = false,
+    hideCode,
     type,
     showTools = true,
     caption,
@@ -118,6 +118,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       ? (resolvePreviewControlContract(controlModule, lang) ?? resolvePreviewControlContract(mod, lang))
       : resolvePreviewControlContract(controlModule, lang);
   const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
+  const codeInitiallyHidden = hideCode ?? controlDefinition !== undefined;
   const baselineRawSource = resources?.baselineRawSource;
   const irJsonOverride = resources?.irJsonOverride;
   const vanillaOverride = resources?.vanillaOverride;
@@ -242,7 +243,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       previewClassName={previewClassName}
-      codeInitiallyHidden={hideCode}
+      codeInitiallyHidden={codeInitiallyHidden}
       figureType={type}
       showTools={showTools}
       controlContract={controlContract}

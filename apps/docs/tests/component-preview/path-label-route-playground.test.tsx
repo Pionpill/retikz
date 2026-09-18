@@ -8,13 +8,13 @@ import { getPreviewControlFields } from '@/modules/docs/components/component-pre
 import {
   pathLabelRoutePlaygroundControls,
   previewControlContract,
-} from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.controls';
+} from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.controls';
 import {
   pathLabelRoutePlaygroundControls as englishControls,
   previewControlContract as englishPreviewControlContract,
-} from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.en.controls';
-import EnglishPathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.en.demo';
-import PathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/path/path-label-route-playground.zh.demo';
+} from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.en.controls';
+import EnglishPathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.en.demo';
+import PathLabelRoutePlayground from '@/modules/docs/contents/kernel/components/draw/label/path-label-route-playground.zh.demo';
 import type { PreviewControlContract } from '@/modules/docs/preview';
 
 type PlaygroundScenario = {

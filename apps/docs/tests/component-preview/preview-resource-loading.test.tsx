@@ -160,7 +160,7 @@ describe('ComponentPreview 资源加载', () => {
 
   it('只加载请求指定的真实 demo 资源', async () => {
     const result = await loadPreviewResources({
-      segments: ['kernel', 'components', 'node', 'overview'],
+      segments: ['kernel', 'components', 'node', 'usage'],
       name: 'node-basic',
       lang: 'zh',
       controlName: null,
@@ -193,8 +193,8 @@ describe('ComponentPreview 资源加载', () => {
 
   it('首次渲染已存在的 demo 时显示 loading 占位', () => {
     const html = renderAtRoute(
-      '/kernel/components/node/overview',
-      <DemoLocationContext.Provider value={['kernel', 'components', 'node', 'overview']}>
+      '/kernel/components/node/usage',
+      <DemoLocationContext.Provider value={['kernel', 'components', 'node', 'usage']}>
         <ComponentPreview files="node-basic" />
       </DemoLocationContext.Provider>,
     );
@@ -210,12 +210,12 @@ describe('ComponentPreview 资源加载', () => {
 
     act(() => {
       root.render(
-        <MemoryRouter initialEntries={['/kernel/components/node/overview']}>
+        <MemoryRouter initialEntries={['/kernel/components/node/usage']}>
           <Routes>
             <Route
               path="/:moduleId/:sectionId/:pageId/:subPageId"
               element={
-                <DemoLocationContext.Provider value={['kernel', 'components', 'node', 'overview']}>
+                <DemoLocationContext.Provider value={['kernel', 'components', 'node', 'usage']}>
                   <ComponentPreview files="node-basic" />
                 </DemoLocationContext.Provider>
               }

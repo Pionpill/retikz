@@ -27,6 +27,7 @@ import { PreviewResizeHandle, PreviewWorkspace } from './control-panel';
 import { mergePreviewControlSlots } from './controls';
 import {
   downloadPreviewImage,
+  buildPreviewControlsLockSlot,
   PAN_STEP,
   PreviewToolbar,
   PreviewToolbarButton,
@@ -195,7 +196,9 @@ export const ComponentPreviewDialog: FC<ComponentPreviewDialogProps> = props => 
   const aiCurrentPage = useAiChatStore(state => state.currentPage);
   const hasCode = sourceState.views.length > 0;
   const previewToolSlots = buildDialogPreviewToolSlots(previewState);
-  const resolvedDialogControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots);
+  const resolvedDialogControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots, [
+    buildPreviewControlsLockSlot(),
+  ]);
   const downloadLabel = previewState.rendererMode === 'canvas' ? 'Download PNG' : 'Download SVG';
 
   const handleAskAi = () => {

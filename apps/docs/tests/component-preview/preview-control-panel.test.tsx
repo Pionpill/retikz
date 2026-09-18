@@ -28,6 +28,7 @@ import type {
   PreviewPanelControlsDefinition,
   PreviewThemeMode,
 } from '../../src/modules/docs/components/component-preview/types';
+import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
 vi.mock('../../src/components/ui/resizable', () => ({
   ResizablePanelGroup: ({
@@ -1193,6 +1194,19 @@ describe('PreviewWorkspace', () => {
     expect(themeBoundary).not.toBeNull();
     expect(previewPane?.classList.contains('pt-10')).toBe(false);
     expect(previewPanel?.classList.contains('pt-10')).toBe(false);
+  });
+
+  it('锁定悬浮工具时隐藏预览顶部内容', async () => {
+    const originalLocked = useComponentPreviewStore.getState().controlsLocked;
+
+    try {
+      await act(() => useComponentPreviewStore.getState().setControlsLocked(true));
+      const container = await mount(<WorkspaceHarness definition={definition} />);
+
+      expect(container.querySelector('[data-slot="preview-context-bar"]')).toBeNull();
+    } finally {
+      await act(() => useComponentPreviewStore.getState().setControlsLocked(originalLocked));
+    }
   });
 
   it('开放 panel 时使用两个 ResizablePanel 与 handle', async () => {
