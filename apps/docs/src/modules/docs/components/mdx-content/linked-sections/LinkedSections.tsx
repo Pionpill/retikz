@@ -60,7 +60,7 @@ export const LinkedSections: FC<LinkedSectionsProps> = props => {
           style={{ gridTemplateColumns: `repeat(${rowItems.length}, minmax(0, 1fr))` }}
         >
           {rowItems.map(item => (
-            <LinkedCard key={item.url} href={item.url}>
+            <LinkedCard key={item.url} href={item.url} className="justify-center">
               <span className="font-semibold">{item.title}</span>
               <span className="mt-1 text-center text-sm text-muted-foreground">{item.description}</span>
             </LinkedCard>

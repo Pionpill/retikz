@@ -49,6 +49,8 @@ describe('<LinkedSections>', () => {
     expect(html).toContain('data-linked-sections');
     expect(html).toContain('data-linked-section-row');
     expect(html).toContain('grid-template-columns:repeat(1, minmax(0, 1fr))');
+    expect(html).toContain('justify-center');
+    expect(html).not.toContain('min-h-10');
     expect(html).toContain('Geometry primitives');
     expect(html).toContain('Points, vectors, and curves');
     expect(html).toContain('href="/kernel/packages/math/primitives"');
