@@ -22,6 +22,7 @@ import type {
   PreviewControlContract,
   PreviewControlsDefinition,
   PreviewControlsOptions,
+  PreviewFigureType,
   PreviewThemeStyleSelection,
   SizeKey,
 } from './types';
@@ -46,10 +47,12 @@ export type ComponentPreviewProps = {
   align?: AlignKey;
   /** 渲染区高度档位，默认 `md`。 */
   size?: SizeKey;
-  /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-10 / 居中等。 */
+  /** 透传给 demo 渲染区父级 div 的 className，可覆盖默认高度 / p-5 / 居中等。 */
   previewClassName?: string;
-  /** 隐藏底部“View Code / 源码 / IR”面板与 Dialog 右侧栏，只保留 demo 渲染区。 */
+  /** 源码初始可见性。未传时带 controls 的预览默认隐藏，并在预览左下角提供展开入口。 */
   hideCode?: boolean;
+  /** 叙述性图示的说明类型；指定后显示图示说明入口。 */
+  type?: PreviewFigureType;
   /** 是否显示缩放、下载、渲染器等预览宿主工具栏，默认显示。 */
   showTools?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
@@ -68,7 +71,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     align = 'center',
     size = 'md',
     previewClassName,
-    hideCode = false,
+    hideCode,
+    type,
     showTools = true,
     caption,
   } = props;
@@ -114,6 +118,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       ? (resolvePreviewControlContract(controlModule, lang) ?? resolvePreviewControlContract(mod, lang))
       : resolvePreviewControlContract(controlModule, lang);
   const controlDefinition: PreviewControlsDefinition | undefined = controlContract?.controls;
+  const codeInitiallyHidden = hideCode ?? controlDefinition !== undefined;
   const baselineRawSource = resources?.baselineRawSource;
   const irJsonOverride = resources?.irJsonOverride;
   const vanillaOverride = resources?.vanillaOverride;
@@ -135,7 +140,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
             diffFrom,
             baselineRawSource,
             sourceContents: resourcesState.resources.sourceContents,
-            hideCode,
+            hideCode: false,
             irJsonOverride,
             exportedPreviewIR,
             vanillaOverride,
@@ -154,7 +159,6 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       sourceFiles,
       diffFrom,
       baselineRawSource,
-      hideCode,
       irJsonOverride,
       exportedPreviewIR,
       vanillaOverride,
@@ -239,6 +243,8 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       align={align}
       size={size}
       previewClassName={previewClassName}
+      codeInitiallyHidden={codeInitiallyHidden}
+      figureType={type}
       showTools={showTools}
       controlContract={controlContract}
       controlDefinition={controlDefinition}

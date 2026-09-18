@@ -1,6 +1,11 @@
 import type { ValueOf } from './types';
 
-/** Retikz 结构化领域错误的基础构造参数 */
+/**
+ * Retikz 结构化领域错误的基础构造参数
+ *
+ * @template TCode 错误分类代码的字符串类型
+ * @template TDetails 与错误代码关联的结构化详情类型
+ */
 export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<Record<string, unknown>>> = Readonly<{
   /** 结构化错误的分类代码 */
   code: TCode;
@@ -12,7 +17,12 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
   cause?: unknown;
 }>;
 
-/** Retikz 结构化领域错误的基础骨架 */
+/**
+ * Retikz 结构化领域错误的基础骨架
+ *
+ * @template TCode 错误分类代码的字符串类型
+ * @template TDetails 与错误代码关联的结构化详情类型
+ */
 export class RetikzError<
   TCode extends string = string,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
@@ -47,7 +57,12 @@ export const RetikzFoundationErrorCode = {
 /** Foundation 包稳定错误码取值 */
 export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
 
-/** Foundation 原子契约失败的统一结构化错误 */
+/**
+ * Foundation 原子契约失败的统一结构化错误
+ *
+ * @template TCode Foundation 错误码的具体字面量类型
+ * @template TDetails 与 Foundation 错误码关联的结构化详情类型
+ */
 export class RetikzFoundationError<
   TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,

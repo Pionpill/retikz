@@ -114,8 +114,8 @@ describe('ComponentPreviewCard dialog boundary', () => {
     });
 
     const workspace = container.querySelector('[data-slot="preview-workspace"]');
-    expect(workspace?.classList.contains('h-32')).toBe(true);
-    expect(workspace?.classList.contains('h-56')).toBe(false);
+    expect(workspace?.classList.contains('h-30')).toBe(true);
+    expect(workspace?.classList.contains('h-54')).toBe(false);
     expect(container.querySelector('button[aria-label="Preview size xs"]')?.getAttribute('data-state')).toBe('on');
 
     act(() => root.unmount());
@@ -147,7 +147,7 @@ describe('ComponentPreviewCard dialog boundary', () => {
     });
 
     expect(container.querySelector('.card-preview-class')).not.toBeNull();
-    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-56')).toBe(true);
+    expect(container.querySelector('[data-slot="preview-workspace"]')?.classList.contains('h-54')).toBe(true);
     expect(container.querySelector('.card-preview-class')?.classList.contains('h-full')).toBe(true);
     expect(container.querySelector('[data-slot="preview-context-bar"]')).toBeNull();
 

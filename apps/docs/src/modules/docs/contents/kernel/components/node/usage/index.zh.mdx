@@ -1,0 +1,215 @@
+---
+title: 基础用法
+description: 创建、命名与连接节点，配置形状、尺寸和基础外观
+---
+
+Node 把位置、文字和形状放在同一个声明中。设置 `id` 后，其它节点可以引用它的位置，路径可以连接它的边界。
+
+## 接入方式
+
+四种写法都在原点绘制同一个 Hello 节点。React 示例默认导出可挂载组件；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="node-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      Hello
+    </Node>
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [node('a', { position: [0, 0], text: 'Hello' })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+Vanilla 挂载容器移除前调用 `view.dispose()` 释放资源。
+
+## 命名与连接
+
+Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登记自己的 `id`，`Draw`、相对定位和锚点都可使用这些命名对象。未命名的 Node 仍会绘制，但在当前绘制后就结束，不会留下可供后续连接或定位读取的节点信息。`position` 决定中心，路径默认停在节点边界。
+
+<ComponentPreview files="node-connection" size="xs" />
+
+上图中 `Draw` 通过 `a` 和 `b` 的 id 定位两端。引用定位与连接面的不同写法见[扩展用法](/kernel/components/node/extend)。
+
+`<Draw>` 对应 IR 的 `type: 'path'`；端点与 `way` 规则见 [Path](/kernel/components/path/usage)。Node / Coordinate 的定位只能引用已完成布局并登记的对象（通常是前面声明的同级对象）；Path / Draw 端点可以引用后声明的同级对象，原因见[引用时序](/kernel/components/node/mechanism#命名引用为何受顺序影响)。
+
+## 选择形状
+
+`shape` 省略时先继承 `Scope.defaults.node.shape`，没有继承值时才使用矩形。下面的面板只使用 Core 自带的形状：切换预设形状，或选择 polygon 后调整边数。正文用 `text` 或 children；附加说明用 `label`，详细写法分别见[节点文字](/kernel/components/node/text)和[节点标签](/kernel/components/node/labels)。
+
+| 输入                                     | Core 的实际形状                         |
+| ---------------------------------------- | --------------------------------------- |
+| 省略                                     | 继承 Scope 默认形状，无继承值时使用矩形 |
+| `rectangle`                              | 矩形 provider                           |
+| `ellipse`                                | 椭圆 provider                           |
+| `{ type: 'polygon', params: { sides } }` | 多边形 provider，`sides` 指定边数       |
+| `circle`                                 | 预设，解析为等比例外接的 ellipse        |
+| `diamond`                                | 预设，解析为四边形 polygon              |
+
+<ComponentPreview files="node-shape" size="sm" />
+
+更多形状由 Standard 扩展包提供，按[Standard Shape](/library/standard/shape)的入口导入并通过 `Layout.extensions.shapes` 注册。
+
+## 尺寸与变换
+
+`layout.margin` 会扩大节点布局占位；连接面的 `gap` 只调整连接几何，不改变节点外观或布局占位。
+
+尺寸与变换采用同一套节点几何：padding 撑开内容盒，minimumSize 设置下限，scale / rotate 再改变最终边界；margin 不改节点外观，会外推自动连线端点与标准锚点；形状专属锚点与边上比例点仍沿视觉轮廓。用面板调整同一个 `q`，连接线提供边界参照。
+
+- 内边距：`layout={{ padding: N }}` 或 `layout={{ padding: { default, x, y, left, right, top, bottom } }}`
+- 外边距：`layout={{ margin: N }}` 或 `layout={{ margin: { default, x, y, left, right, top, bottom } }}`
+- `cornerRadius`——圆角半径。`rectangle` / `polygon` / `star` / `sector` 支持圆角（`ellipse` 等不支持），写在形状 params 里：`shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`、`star` / `sector` / `rectangle` 同理。顶层 `cornerRadius` 只对 `rectangle` 形状生效（默认或显式 `'rectangle'` 都算），且仅在 params 未显式给 `cornerRadius` 时合入；两者并存时 params 优先
+- `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
+- `scale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
+- `rotate`——绕节点中心旋转，连线跟随旋转后的边界贴附
+
+<ComponentAlert
+  type="tip"
+  title="四向间距的合并顺序"
+  description="padding 和 margin 都按每一侧合并：side（top / right / bottom / left）优先于 axis（x / y），axis 再优先于 default。例如 { default: 8, x: 20, left: 30 } 会得到 left 为 30、right 为 20、top 和 bottom 为 8。"
+/>
+
+<ComponentPreview files="node-geometry" size="md" />
+
+<Comparison target="tikz" title="Node 几何写法">
+
+| retikz                             | TikZ 对照                 |
+| ---------------------------------- | ------------------------- |
+| `layout.padding` / `layout.margin` | `inner sep` / `outer sep` |
+
+</Comparison>
+
+`layout.width` 设置缩放前的可见边框宽度，不包括 margin，且不能小于有效最小宽度。它与折行阈值 `layout.maxTextWidth` 是不同的设置。
+
+## 补充说明
+
+视觉属性集中写在 `style`，尺寸和文本排布集中写在 `layout`；共享默认值由 [Scope](/kernel/components/scope/usage) 管理。
+
+<ComponentPreview files="node-styled" size="md" />
+
+- **层级**：`zIndex` 只比较同层元素，数值较大者在上，同值保留声明顺序。
+- **颜色**：`style.color` 是主色；`fill`、`stroke` 的数值表示由主色派生的权重，不是透明度。
+- **纯文字与坐标点**：隐藏边框的 Node 仍有文字尺寸；只需要不可见引用点时使用 Coordinate。
+- **效果**：阴影、动画等见[视觉效果](/kernel/components/effects)。
+
+## 相关属性
+
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/node/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'position',
+      kind: 'property',
+      type: "InputNode['position']",
+      required: true,
+      description: '设置节点中心，可写笛卡尔、极坐标、相对、偏移、比例或锚点对齐位置。',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description: '登记为后续 Path、Draw、相对定位和锚点对齐可引用的节点名称。',
+    },
+    {
+      name: 'shape',
+      kind: 'property',
+      type: "IRNode['shape']",
+      defaultValue: 'Scope.defaults.node.shape → rectangle',
+      description: '选择视觉形状；可写内置或已注册的形状名，也可传入带 `type` 和 `params` 的对象。',
+    },
+    {
+      name: 'layout',
+      kind: 'property',
+      type: "InputNode['layout']",
+      description:
+        '本页使用的字段：\n\n- `padding` / `margin`：数字，或 `{ default?, x?, y?, left?, right?, top?, bottom? }` 数值对象；单边优先于轴，再到 default\n- `minimumSize`：数字，或 `{ default?, width?, height? }` 数值对象\n- `width?: number`：缩放前边框宽度，不含 margin，不能小于最小尺寸',
+    },
+    {
+      name: 'scale',
+      kind: 'property',
+      type: 'number | IRAxisScale',
+      description:
+        '数字统一缩放；对象可写 `{ default?: number, x?: number, y?: number }`，各轴优先于 default，倍率必须大于 0。先继承 Scope 默认值，最终回退到 1。',
+      defaultValue: 'Scope.defaults.node.scale → 1',
+    },
+    {
+      name: 'rotate',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description: '以度为单位绕节点中心旋转；正值在屏幕坐标中视觉顺时针。',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description: '只在同一父级的兄弟元素之间比较；数值更大者绘制在上方。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '选择定位方式、锚点与连接面', url: '/kernel/components/node/extend' },
+    { title: 'Text · 文本', description: '编写多行正文与行内混排', url: '/kernel/components/node/text' },
+    { title: 'label · 标签', description: '摆放附加标签并设置引线', url: '/kernel/components/node/labels' },
+    { title: 'API 参考', description: '查询公开入口、类型与扩展契约', url: '/kernel/components/node/api-reference' },
+  ]}
+/>

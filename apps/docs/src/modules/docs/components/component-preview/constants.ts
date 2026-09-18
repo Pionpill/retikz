@@ -11,17 +11,17 @@ export const alignClass: Record<AlignKey, string> = {
 };
 
 /**
- * 预览区高度档位 class
+ * 预览区高度档位 class，包含上下各 20px 留白
  * @description 高度 class 一律写字面量（不动态拼字符串），保证 Tailwind JIT 能静态扫到。
  */
 export const sizeClass: Record<SizeKey, string> = {
-  xs: 'h-32 sm:h-40',
-  sm: 'h-44 sm:h-56',
-  md: 'h-56 sm:h-72',
-  lg: 'h-72 sm:h-96',
-  xl: 'h-96 sm:h-[28rem]',
-  xxl: 'h-[28rem] sm:h-[32rem]',
-  xxxl: 'h-[32rem] sm:h-[40rem]',
+  xs: 'h-30',
+  sm: 'h-42 sm:h-46',
+  md: 'h-54 sm:h-62',
+  lg: 'h-70 sm:h-86',
+  xl: 'h-94 sm:h-102',
+  xxl: 'h-110 sm:h-118',
+  xxxl: 'h-126 sm:h-150',
 };
 
 /** size 档位的展示顺序（从小到大）；切换 UI 按这个数组渲染。 */

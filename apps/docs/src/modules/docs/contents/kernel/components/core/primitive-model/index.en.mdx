@@ -99,9 +99,9 @@ So the bounding box is the visual envelope used for rendering (plus `margin` it 
 
 The boundary sets the shape of the connection surface; `margin` always expands the rectangle supplied to connection resolution. Rect-driven boundaries such as circle / rectangle expand with it, while the default boundary of param-driven shapes such as star / sector still computes from params. `margin` is therefore stable layout clearance, and becomes connection clearance only when the boundary consumes rect dimensions.
 
-<ComponentPreview files="margin-boundary-gap" size="md" hideCode />
+<ComponentPreview files="margin-boundary-gap" size="sm" hideCode />
 
-Each column nests three layers: the innermost gray block is the text area, the solid currentColor outline is the rectangular shape, the dashed ring is the boundary, and the gray dots are named directional anchors. These shape / boundary examples are rect-driven, so `margin` moves the connection surface and anchors outward; the right column borrows circle only to change the surface shape. See [Node Geometry](/kernel/components/node/overview) for param-driven shapes and complete boundary options.
+Each column nests three layers: the innermost gray block is the text area, the solid currentColor outline is the rectangular shape, the dashed ring is the boundary, and the gray dots are named directional anchors. These shape / boundary examples are rect-driven, so `margin` moves the connection surface and anchors outward; the right column borrows circle only to change the surface shape. See [Node Geometry](/kernel/components/node/usage) for param-driven shapes and complete boundary options.
 
 ## Anchors
 
@@ -115,16 +115,16 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 | Shape-specific  | star tips, sector arc endpoints      | Semantic points on complex shapes     |
 | Edge proportion | `{ side: 'top', fraction: 0.25 }`    | Tables, lanes, frame edges            |
 
-<ComponentPreview files="anchors" size="lg" hideCode />
+<ComponentPreview files="anchors" size="sm" hideCode />
 
 The top row uses a rectangle to explain standard directional, angle, and edge-proportional anchors. The bottom row shows that complex shapes may add semantic points. The concept page distinguishes geometry owners instead of cataloging every shape-specific name:
 
 | Anchor family        | Geometry owner                | Authority                                           |
 | -------------------- | ----------------------------- | --------------------------------------------------- |
-| `center` / direction | Node shape / boundary         | [Node Geometry](/kernel/components/node/overview)   |
+| `center` / direction | Node shape / boundary         | [Node Geometry](/kernel/components/node/usage)      |
 | Numeric angle        | Selected connection boundary  | [Path target](/kernel/reference/schema/path#target) |
 | Shape-specific name  | The corresponding shape       | [Shapes](/kernel/components/shapes)                 |
-| `{ side, fraction }` | Real edge of the visual shape | [Node Geometry](/kernel/components/node/overview)   |
+| `{ side, fraction }` | Real edge of the visual shape | [Node Geometry](/kernel/components/node/usage)      |
 
 IR / schema keeps `top` / `right` / `bottom` / `left` plus four corners as its standard directional vocabulary, with `center` separate. A named direction asks the shape / boundary first and falls back to its AABB when absent; a numeric angle casts a ray onto the selected boundary; shape-specific names and edge proportions remain owned by the visual shape.
 
@@ -140,11 +140,11 @@ Complete names, per-shape semantic points, and boundary exceptions live on the N
 
 First edit the content and add a line break, then switch among rectangle, circle, ellipse, diamond, polygon, star, and sector to see one Node adopt different visual shapes. The first five derive their outer size from the content and inner frame; star and sector instead use representative geometry parameters supplied by the demo and place the text over that fixed geometry. The last two are optional Standard shapes; this demo injects them explicitly through `<Layout shapes>`, and ordinary use likewise imports their matching Definitions from `@retikz/standard/shape`. Sector uses equal inner and outer radii for its open-arc state.
 
-Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real graphConnector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/overview), and [Shapes](/kernel/components/shapes) pages for the complete APIs.
+Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real graphConnector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/usage), and [Shapes](/kernel/components/shapes) pages for the complete APIs.
 
 <ComponentPreview
   files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
-  size="md"
+  size="lg"
   caption="The light-gray dashed contour is the current regular boundary, the dotted radius is only an orbit guide, and the gray solid line is the real graphConnector. In shape mode, boundary coincides with the visual outline, so it is not drawn twice."
 />
 
@@ -202,7 +202,7 @@ Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `
     {
       title: 'Node',
       description: "The Node component's full props, shapes, styling, and positioning",
-      url: '/kernel/components/node/overview',
+      url: '/kernel/components/node/usage',
     },
     {
       title: 'Custom Shapes',

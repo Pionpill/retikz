@@ -18,7 +18,7 @@ const renderTexPlayground = (values: TexPlaygroundValues, lowerTex?: LowerTex) =
   const content = `${delimiters}${values.source}${delimiters}`;
 
   return (
-    <Layout viewBox={{ x: -210, y: -135, width: 420, height: 270 }} lowerTex={lowerTex}>
+    <Layout lowerTex={lowerTex}>
       <Node
         id="formula"
         position={[0, 0]}
@@ -36,7 +36,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 export const previewSource = controlledPreview.source;
 
 /** 在 MathJax 配置切换期间保留稳定取景，不把原始 TeX 当普通文本显示 */
-const renderTexPlaygroundLoading = () => <Layout viewBox={{ x: -210, y: -135, width: 420, height: 270 }} />;
+const renderTexPlaygroundLoading = () => <Layout />;
 
 /** 在固定取景中比较 TeX 源码、度量模式与字号 */
 const Demo: FC = () => {

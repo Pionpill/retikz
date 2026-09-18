@@ -20,6 +20,7 @@ export const BoundsPlaygroundControlId = {
 export const createBoundsPlaygroundControls = (i18n: typeof boundsPlaygroundI18n.zh) =>
   definePreviewControls({
     presentation: 'panel',
+    defaultSize: 50,
     title: i18n.label1,
     sections: [
       {

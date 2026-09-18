@@ -11,7 +11,7 @@
 </p>
 
 ```ts
-readonly[(number, number, number, number, number, number)];
+export type AffineMatrix = readonly [number, number, number, number, number, number];
 ```
 
 ### ArcBoundingCandidatesInput
@@ -26,12 +26,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member          | Type       | Default | Description            |
 | --------------- | ---------- | ------- | ---------------------- |
 | `center`        | `Position` | —       | Circle center          |
 | `endAngleDeg`   | `number`   | —       | End angle in degrees   |
 | `radius`        | `number`   | —       | Radius                 |
 | `startAngleDeg` | `number`   | —       | Start angle in degrees |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ArcBoundingCandidatesInput = {
+  center: Position;
+  radius: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### ArcSweepAngleInput
 
@@ -41,12 +62,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member          | Type     | Default | Description                |
 | --------------- | -------- | ------- | -------------------------- |
 | `angleDeg`      | `number` | —       | Angle to test in degrees   |
 | `endAngleDeg`   | `number` | —       | End angle in degrees       |
 | `startAngleDeg` | `number` | —       | Start angle in degrees     |
 | `toleranceDeg?` | `number` | —       | Angle tolerance in degrees |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ArcSweepAngleInput = {
+  startAngleDeg: number;
+  endAngleDeg: number;
+  angleDeg: number;
+  toleranceDeg?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### AxisAlignedBounds
 
@@ -56,12 +98,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member | Type     | Default | Description          |
 | ------ | -------- | ------- | -------------------- |
 | `maxX` | `number` | —       | Maximum x coordinate |
 | `maxY` | `number` | —       | Maximum y coordinate |
 | `minX` | `number` | —       | Minimum x coordinate |
 | `minY` | `number` | —       | Minimum y coordinate |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type AxisAlignedBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### BoundsHalfAxes
 
@@ -71,10 +134,29 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member       | Type     | Default | Description               |
 | ------------ | -------- | ------- | ------------------------- |
 | `halfHeight` | `number` | —       | Half-height on the y axis |
 | `halfWidth`  | `number` | —       | Half-width on the x axis  |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type BoundsHalfAxes = {
+  halfWidth: number;
+  halfHeight: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### BoundsInsets
 
@@ -84,12 +166,33 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member   | Type     | Default | Description                  |
 | -------- | -------- | ------- | ---------------------------- |
 | `bottom` | `number` | —       | Downward expansion distance  |
 | `left`   | `number` | —       | Leftward expansion distance  |
 | `right`  | `number` | —       | Rightward expansion distance |
 | `top`    | `number` | —       | Upward expansion distance    |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type BoundsInsets = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### BoundsRect
 
@@ -99,6 +202,10 @@ readonly[(number, number, number, number, number, number)];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member   | Type     | Default | Description           |
 | -------- | -------- | ------- | --------------------- |
 | `height` | `number` | —       | Rectangle height      |
@@ -106,17 +213,57 @@ readonly[(number, number, number, number, number, number)];
 | `x`      | `number` | —       | Top-left x coordinate |
 | `y`      | `number` | —       | Top-left y coordinate |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type BoundsRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CenteredBox
 
 <p>
-  <ApiSourceLink label={'CenteredBox'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={16}>
+  <ApiSourceLink label={'CenteredBox'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={15}>
     Rectangle box described from its center
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member    | Type     | Default | Description                                                                   |
+| --------- | -------- | ------- | ----------------------------------------------------------------------------- |
+| `height`  | `number` | —       | Height of the rectangular bounds                                              |
+| `rotate?` | `number` | —       | Optional radians of rotation about the center; 0 or omitted means no rotation |
+| `width`   | `number` | —       | Width of the rectangular bounds                                               |
+| `x`       | `number` | —       | Center x coordinate                                                           |
+| `y`       | `number` | —       | Center y coordinate                                                           |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-CenteredShape & { height: number; width: number }
+export type CenteredBox = CenteredShape & {
+  width: number;
+  height: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### CenteredShape
 
@@ -126,32 +273,75 @@ CenteredShape & { height: number; width: number }
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member    | Type     | Default | Description                                                                   |
 | --------- | -------- | ------- | ----------------------------------------------------------------------------- |
 | `rotate?` | `number` | —       | Optional radians of rotation about the center; 0 or omitted means no rotation |
 | `x`       | `number` | —       | Center x coordinate                                                           |
 | `y`       | `number` | —       | Center y coordinate                                                           |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CenteredShape = {
+  x: number;
+  y: number;
+  rotate?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### Circle
 
 <p>
-  <ApiSourceLink label={'Circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={8}>
+  <ApiSourceLink label={'Circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={7}>
     Circle: center and radius
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member   | Type       | Default | Description |
 | -------- | ---------- | ------- | ----------- |
 | `center` | `Position` | —       | —           |
 | `radius` | `number`   | —       | —           |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type Circle = {
+  center: Position;
+  radius: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CircleCircleInput
 
 <p>
-  <ApiSourceLink label={'CircleCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={31}>
+  <ApiSourceLink label={'CircleCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={30}>
     Parameters for intersecting two circles
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member    | Type       | Default | Description          |
 | --------- | ---------- | ------- | -------------------- |
@@ -160,13 +350,34 @@ CenteredShape & { height: number; width: number }
 | `radiusA` | `number`   | —       | First circle radius  |
 | `radiusB` | `number`   | —       | Second circle radius |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CircleCircleInput = {
+  centerA: Position;
+  radiusA: number;
+  centerB: Position;
+  radiusB: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CircularArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={49}>
+  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={48}>
     Circular arc curve segment
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member              | Type       | Default | Description                                                                                       |
 | ------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
@@ -177,13 +388,36 @@ CenteredShape & { height: number; width: number }
 | `radius`            | `number`   | —       | Radius                                                                                            |
 | `startAngleDeg`     | `number`   | —       | Start parameter angle in degrees                                                                  |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CircularArcCurveSegment = {
+  kind: 'arc';
+  center: Position;
+  radius: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+  counterClockwise?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CubicBezierCurveSegment
 
 <p>
-  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={32}>
+  <ApiSourceLink label={'CubicBezierCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={31}>
     Cubic Bézier curve segment
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member     | Type            | Default | Description          |
 | ---------- | --------------- | ------- | -------------------- |
@@ -193,14 +427,36 @@ CenteredShape & { height: number; width: number }
 | `kind`     | `'cubicBezier'` | —       | Curve kind           |
 | `to`       | `Position`      | —       | End point            |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CubicBezierCurveSegment = {
+  kind: 'cubicBezier';
+  from: Position;
+  control1: Position;
+  control2: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CubicSegment
 
 <p>
-  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={46}>
+  <ApiSourceLink label={'CubicSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={45}>
     One cubic Bézier segment: two control points and an endpoint (the start is the prior segment endpoint or the first
     knot)
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member     | Type       | Default | Description |
 | ---------- | ---------- | ------- | ----------- |
@@ -208,21 +464,55 @@ CenteredShape & { height: number; width: number }
 | `control2` | `Position` | —       | —           |
 | `to`       | `Position` | —       | —           |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CubicSegment = {
+  control1: Position;
+  control2: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### CurveApproximationOptions
 
 <p>
   <ApiSourceLink
     label={'CurveApproximationOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={101}
+    startLine={100}
   >
     Curve-length approximation configuration
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member         | Type     | Default | Description                                                               |
 | -------------- | -------- | ------- | ------------------------------------------------------------------------- |
 | `sampleCount?` | `number` | —       | Number of uniform parameter samples for Bézier curves and elliptical arcs |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CurveApproximationOptions = {
+  sampleCount?: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### CurveParameterAtDistanceOptions
 
@@ -230,56 +520,120 @@ CenteredShape & { height: number; width: number }
   <ApiSourceLink
     label={'CurveParameterAtDistanceOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={107}
+    startLine={106}
   >
     Configuration for inverting curve distance to a parameter
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member            | Type     | Default | Description                                                                                 |
+| ----------------- | -------- | ------- | ------------------------------------------------------------------------------------------- |
+| `bisectionSteps?` | `number` | —       | Maximum number of bisection iterations for inverse evaluation                               |
+| `sampleCount?`    | `number` | —       | Number of uniform parameter samples for Bézier curves and elliptical arcs                   |
+| `totalLength?`    | `number` | —       | Full curve length computed with the same sampling budget; calculated on demand when omitted |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-CurveApproximationOptions & { bisectionSteps?: number; totalLength?: number }
+export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
+  totalLength?: number;
+  bisectionSteps?: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### CurveSegment
 
 <p>
-  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={85}>
+  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={84}>
     Zero-dependency curve segment that can be parameterized and sliced
   </ApiSourceLink>
 </p>
 
 ```ts
-LineCurveSegment |
-  QuadraticBezierCurveSegment |
-  CubicBezierCurveSegment |
-  CircularArcCurveSegment |
-  EllipseArcCurveSegment;
+export type CurveSegment =
+  | LineCurveSegment
+  | QuadraticBezierCurveSegment
+  | CubicBezierCurveSegment
+  | CircularArcCurveSegment
+  | EllipseArcCurveSegment;
 ```
 
 ### CurveSegmentSample
 
 <p>
-  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={93}>
+  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={92}>
     Curve parameter sampling result
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member    | Type       | Default | Description                                                                           |
 | --------- | ---------- | ------- | ------------------------------------------------------------------------------------- |
 | `point`   | `Position` | —       | Point at the parameter position                                                       |
 | `tangent` | `Vector2`  | —       | Unit tangent in the direction of travel; falls back to `[1, 0]` for a zero derivative |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type CurveSegmentSample = {
+  point: Position;
+  tangent: Vector2;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### Ellipse
 
 <p>
-  <ApiSourceLink label={'Ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={8}>
+  <ApiSourceLink label={'Ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={7}>
     Ellipse: center, half-axes, and optional rotation
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member    | Type     | Default | Description                                                                   |
+| --------- | -------- | ------- | ----------------------------------------------------------------------------- |
+| `rotate?` | `number` | —       | Optional radians of rotation about the center; 0 or omitted means no rotation |
+| `rx`      | `number` | —       | Semi-axis length along local +x                                               |
+| `ry`      | `number` | —       | Semi-axis length along local +y                                               |
+| `x`       | `number` | —       | Center x coordinate                                                           |
+| `y`       | `number` | —       | Center y coordinate                                                           |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-CenteredShape & { rx: number; ry: number }
+export type Ellipse = CenteredShape & {
+  rx: number;
+  ry: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### EllipseArcAnglePointInput
 
@@ -289,12 +643,33 @@ CenteredShape & { rx: number; ry: number }
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member     | Type       | Default | Description                |
 | ---------- | ---------- | ------- | -------------------------- |
 | `angleDeg` | `number`   | —       | Parameter angle in degrees |
 | `center`   | `Position` | —       | Ellipse center             |
 | `radiusX`  | `number`   | —       | Half-axis on the x axis    |
 | `radiusY`  | `number`   | —       | Half-axis on the y axis    |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type EllipseArcAnglePointInput = {
+  center: Position;
+  radiusX: number;
+  radiusY: number;
+  angleDeg: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### EllipseArcBoundingCandidatesInput
 
@@ -308,17 +683,44 @@ CenteredShape & { rx: number; ry: number }
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member          | Type       | Default | Description                      |
+| --------------- | ---------- | ------- | -------------------------------- |
+| `center`        | `Position` | —       | Ellipse center                   |
+| `endAngleDeg`   | `number`   | —       | End parameter angle in degrees   |
+| `radiusX`       | `number`   | —       | Half-axis on the x axis          |
+| `radiusY`       | `number`   | —       | Half-axis on the y axis          |
+| `startAngleDeg` | `number`   | —       | Start parameter angle in degrees |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleDeg: number }
+export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 'angleDeg'> & {
+  startAngleDeg: number;
+  endAngleDeg: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### EllipseArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={65}>
+  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={64}>
     Elliptical arc curve segment
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member              | Type           | Default | Description                                                                                       |
 | ------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------- |
@@ -331,29 +733,54 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `rotationDeg?`      | `number`       | —       | Rotation of the local ellipse relative to world coordinates in degrees                            |
 | `startAngleDeg`     | `number`       | —       | Start parameter angle in degrees                                                                  |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type EllipseArcCurveSegment = {
+  kind: 'ellipseArc';
+  center: Position;
+  radiusX: number;
+  radiusY: number;
+  rotationDeg?: number;
+  startAngleDeg: number;
+  endAngleDeg: number;
+  counterClockwise?: boolean;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### EllipseCircumscribeMode
 
 <p>
   <ApiSourceLink
     label={'EllipseCircumscribeMode'}
     path={'packages/kernel/math/src/primitives/ellipse.ts'}
-    startLine={24}
+    startLine={23}
   >
     Half-axis strategy for the ellipse inner bounds box
   </ApiSourceLink>
 </p>
 
 ```ts
-'proportional' | 'equal';
+export type EllipseCircumscribeMode = 'proportional' | 'equal';
 ```
 
 ### LineCircleInput
 
 <p>
-  <ApiSourceLink label={'LineCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={19}>
+  <ApiSourceLink label={'LineCircleInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={18}>
     Parameters for intersecting a line and a circle
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member      | Type       | Default | Description                                   |
 | ----------- | ---------- | ------- | --------------------------------------------- |
@@ -362,13 +789,34 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `origin`    | `Position` | —       | Line origin                                   |
 | `radius`    | `number`   | —       | Circle radius                                 |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LineCircleInput = {
+  origin: Position;
+  direction: Position;
+  center: Position;
+  radius: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### LineCurveSegment
 
 <p>
-  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={10}>
+  <ApiSourceLink label={'LineCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={9}>
     Line curve segment
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member | Type       | Default | Description |
 | ------ | ---------- | ------- | ----------- |
@@ -376,13 +824,33 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `kind` | `'line'`   | —       | Curve kind  |
 | `to`   | `Position` | —       | End point   |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LineCurveSegment = {
+  kind: 'line';
+  from: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### LineLineInput
 
 <p>
-  <ApiSourceLink label={'LineLineInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={7}>
+  <ApiSourceLink label={'LineLineInput'} path={'packages/kernel/math/src/algorithms/intersect.ts'} startLine={6}>
     Parameters for intersecting two infinite lines
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member | Type       | Default | Description                     |
 | ------ | ---------- | ------- | ------------------------------- |
@@ -390,6 +858,23 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 | `a2`   | `Position` | —       | Second point on the first line  |
 | `b1`   | `Position` | —       | First point on the second line  |
 | `b2`   | `Position` | —       | Second point on the second line |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LineLineInput = {
+  a1: Position;
+  a2: Position;
+  b1: Position;
+  b2: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### Position
 
@@ -400,7 +885,7 @@ Omit<EllipseArcAnglePointInput, 'angleDeg'> & { endAngleDeg: number; startAngleD
 </p>
 
 ```ts
-Vector2;
+export type Position = Vector2;
 ```
 
 ### QuadraticBezierCurveSegment
@@ -409,11 +894,15 @@ Vector2;
   <ApiSourceLink
     label={'QuadraticBezierCurveSegment'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={20}
+    startLine={19}
   >
     Quadratic Bézier curve segment
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 | Member    | Type                | Default | Description   |
 | --------- | ------------------- | ------- | ------------- |
@@ -422,21 +911,64 @@ Vector2;
 | `kind`    | `'quadraticBezier'` | —       | Curve kind    |
 | `to`      | `Position`          | —       | End point     |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type QuadraticBezierCurveSegment = {
+  kind: 'quadraticBezier';
+  from: Position;
+  control: Position;
+  to: Position;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### RayArcIntersectionInput
 
 <p>
   <ApiSourceLink
     label={'RayArcIntersectionInput'}
     path={'packages/kernel/math/src/algorithms/arc-intersection.ts'}
-    startLine={7}
+    startLine={6}
   >
     Parameters for intersecting a ray and an arc
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member          | Type       | Default | Description                                  |
+| --------------- | ---------- | ------- | -------------------------------------------- |
+| `center`        | `Position` | —       | Circle center                                |
+| `direction`     | `Position` | —       | Ray direction; normalization is not required |
+| `endAngleDeg`   | `number`   | —       | End angle in degrees                         |
+| `origin`        | `Position` | —       | Ray origin                                   |
+| `radius`        | `number`   | —       | Radius                                       |
+| `startAngleDeg` | `number`   | —       | Start angle in degrees                       |
+| `tolerance?`    | `number`   | —       | Tolerance for the forward parameter          |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-ArcBoundingCandidatesInput & { direction: Position; origin: Position; tolerance?: number }
+export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
+  origin: Position;
+  direction: Position;
+  tolerance?: number;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### Vector2
 
@@ -447,7 +979,7 @@ ArcBoundingCandidatesInput & { direction: Position; origin: Position; tolerance?
 </p>
 
 ```ts
-[number, number];
+export type Vector2 = [number, number];
 ```
 
 ### AFFINE_IDENTITY
@@ -459,39 +991,37 @@ ArcBoundingCandidatesInput & { direction: Position; origin: Position; tolerance?
 </p>
 
 ```ts
-AffineMatrix;
+export const AFFINE_IDENTITY: AffineMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 ```
 
 ### circle
 
 <p>
-  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={42}>
+  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={41}>
     Circle-related geometry algorithms
   </ApiSourceLink>
 </p>
 
 ```ts
-{
-  minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null;
-}
+export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null };
 ```
 
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={403}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={402}>
     Pure geometric operations for parameterized curves
   </ApiSourceLink>
 </p>
 
 ```ts
-{
+export declare const curve: {
   approximateLength: (segment: CurveSegment, options: CurveApproximationOptions) => number;
   catmullRomToCubic: (knots: Array<Vector2>, tension: number) => Array<CubicSegment>;
   parameterAtDistance: (segment: CurveSegment, distance: number, options: CurveParameterAtDistanceOptions) => number;
   sampleAt: (segment: CurveSegment, parameter: number) => CurveSegmentSample;
   slice: (segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment;
-}
+};
 ```
 
 ### DEFAULT_EPSILON
@@ -503,40 +1033,35 @@ AffineMatrix;
 </p>
 
 ```ts
-1e-9;
+export const DEFAULT_EPSILON = 1e-9;
 ```
 
 ### ellipse
 
 <p>
-  <ApiSourceLink label={'ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={27}>
+  <ApiSourceLink label={'ellipse'} path={'packages/kernel/math/src/primitives/ellipse.ts'} startLine={26}>
     Ellipse operations based on a center, local half-axes, and optional rotation
   </ApiSourceLink>
 </p>
 
 ```ts
-{
+export declare const ellipse: {
   boundaryPoint: (e: Ellipse, toward: Vector2) => Vector2;
   center: (e: Ellipse) => Vector2;
   circumscribedHalfAxes: (innerHalfAxes: BoundsHalfAxes, mode: EllipseCircumscribeMode) => BoundsHalfAxes;
   contains: (e: Ellipse, p: Vector2) => boolean;
   inscribedInBox: (box: CenteredBox) => Ellipse;
-}
+};
 ```
 
 ### intersect
 
-<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={115}>Intersection primitives for lines, circles, and segments, consistently returning points (`Position | null` / `Array<Position>`)</ApiSourceLink></p>
+<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={114}>Intersection primitives for lines, circles, and segments, consistently returning points (`Position | null` / `Array<Position>`)</ApiSourceLink></p>
 
 ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is exported separately from `./arc-intersection`.
 
 ```ts
-{
-  circleCircle: (__namedParameters: CircleCircleInput) => Array<Vector2>;
-  lineCircle: (__namedParameters: LineCircleInput) => Array<Vector2>;
-  lineLine: (__namedParameters: LineLineInput) => Vector2 | null;
-  segmentSegment: (__namedParameters: LineLineInput) => Vector2 | null;
-}
+export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };
 ```
 
 ### point
@@ -548,13 +1073,13 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
 </p>
 
 ```ts
-{
+export declare const point: {
   against: (origin: Vector2, direction: Vector2, length: number) => Vector2;
   along: (origin: Vector2, direction: Vector2, length: number) => Vector2;
   distance: (a: Vector2, b: Vector2) => number;
   isEqual: (a: Vector2, b: Vector2) => boolean;
   shiftToward: (sourcePoint: Vector2, targetPoint: Vector2, distance: number) => Vector2;
-}
+};
 ```
 
 ### polygon
@@ -566,24 +1091,22 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
 </p>
 
 ```ts
-{
-  containsPoint: (vertices: Array<Vector2>, p: Vector2) => boolean;
-}
+export declare const polygon: { containsPoint: (vertices: Array<Vector2>, p: Vector2) => boolean };
 ```
 
 ### triangle
 
 <p>
-  <ApiSourceLink label={'triangle'} path={'packages/kernel/math/src/algorithms/triangle.ts'} startLine={8}>
+  <ApiSourceLink label={'triangle'} path={'packages/kernel/math/src/algorithms/triangle.ts'} startLine={7}>
     Triangle circumcircle and incircle construction
   </ApiSourceLink>
 </p>
 
 ```ts
-{
+export declare const triangle: {
   circumCircle: (a: Vector2, b: Vector2, c: Vector2) => Circle | null;
   incircle: (a: Vector2, b: Vector2, c: Vector2) => Circle | null;
-}
+};
 ```
 
 ### vector2
@@ -595,7 +1118,7 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
 </p>
 
 ```ts
-{
+export declare const vector2: {
   add: (a: Vector2, b: Vector2) => Vector2;
   cross: (a: Vector2, b: Vector2) => number;
   dot: (a: Vector2, b: Vector2) => number;
@@ -606,7 +1129,7 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
   normalizeOrNull: (a: Vector2, epsilon: number) => Vector2 | null;
   scale: (a: Vector2, k: number) => Vector2;
   sub: (a: Vector2, b: Vector2) => Vector2;
-}
+};
 ```
 
 ### applyAffine
@@ -618,7 +1141,7 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
 </p>
 
 ```ts
-(matrix: AffineMatrix, point: Vector2) => Vector2;
+export const applyAffine = (matrix: AffineMatrix, point: Vector2) => Vector2;
 ```
 
 #### Parameters
@@ -639,7 +1162,7 @@ ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is e
 Returns undefined for empty input; callers decide whether to fall back, report an error, or ignore it.
 
 ```ts
-(points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
+export const boundsOf = (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
 ```
 
 #### Parameters
@@ -657,7 +1180,7 @@ Returns undefined for empty input; callers decide whether to fall back, report a
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => BoundsRect;
+export const boundsToRect = (__namedParameters: AxisAlignedBounds) => BoundsRect;
 ```
 
 #### Parameters
@@ -675,7 +1198,7 @@ Returns undefined for empty input; callers decide whether to fall back, report a
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => Vector2;
+export const centerOfBounds = (__namedParameters: AxisAlignedBounds) => Vector2;
 ```
 
 #### Parameters
@@ -700,7 +1223,7 @@ Returns undefined for empty input; callers decide whether to fall back, report a
 Does not deduplicate candidates; callers handle endpoint angles that fall exactly on 90°·k.
 
 ```ts
-(__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
+export const collectArcBoundingCandidates = (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -725,7 +1248,8 @@ Does not deduplicate candidates; callers handle endpoint angles that fall exactl
 Handles only axis-aligned elliptical arcs and does not deduplicate candidates.
 
 ```ts
-(__namedParameters: EllipseArcBoundingCandidatesInput) => Array<Vector2>;
+export const collectEllipseArcBoundingCandidates = (__namedParameters: EllipseArcBoundingCandidatesInput) =>
+  Array<Vector2>;
 ```
 
 #### Parameters
@@ -737,7 +1261,7 @@ Handles only axis-aligned elliptical arcs and does not deduplicate candidates.
 ### convexHull
 
 <p>
-  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={11}>
+  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={10}>
     Convex hull (Andrew's monotone chain)
   </ApiSourceLink>
 </p>
@@ -745,7 +1269,7 @@ Handles only axis-aligned elliptical arcs and does not deduplicate candidates.
 Returns vertices in CCW order without intermediate collinear points. For fewer than three points, returns deduplicated points sorted by (x, y). All-collinear input degenerates to its two endpoints.
 
 ```ts
-(points: Array<Vector2>) => Array<Vector2>;
+export const convexHull = (points: Array<Vector2>) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -765,7 +1289,7 @@ Returns vertices in CCW order without intermediate collinear points. For fewer t
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => Array<Vector2>;
+export const cornersOfBounds = (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -783,7 +1307,8 @@ Returns vertices in CCW order without intermediate collinear points. For fewer t
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds, __namedParameters: BoundsInsets) => AxisAlignedBounds;
+export const expandBounds = (__namedParameters: AxisAlignedBounds, __namedParameters: BoundsInsets) =>
+  AxisAlignedBounds;
 ```
 
 #### Parameters
@@ -807,7 +1332,7 @@ Returns vertices in CCW order without intermediate collinear points. For fewer t
 </p>
 
 ```ts
-(matrix: AffineMatrix) => number | undefined;
+export const getAffineSimilarityScale = (matrix: AffineMatrix) => number | undefined;
 ```
 
 #### Parameters
@@ -825,7 +1350,7 @@ Returns vertices in CCW order without intermediate collinear points. For fewer t
 </p>
 
 ```ts
-(__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
+export const halfAxesOfBounds = (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
 ```
 
 #### Parameters
@@ -840,7 +1365,7 @@ Returns vertices in CCW order without intermediate collinear points. For fewer t
   <ApiSourceLink
     label={'intersectRayWithArc'}
     path={'packages/kernel/math/src/algorithms/arc-intersection.ts'}
-    startLine={20}
+    startLine={19}
   >
     Intersection of a ray (`origin + s·direction`) and an arc (`center`, `radius`, `[startAngle, endAngle]`)
   </ApiSourceLink>
@@ -849,7 +1374,7 @@ Returns vertices in CCW order without intermediate collinear points. For fewer t
 Returns forward ray parameters `s` in ascending order; returns an empty array for a zero direction or no valid intersections.
 
 ```ts
-(__namedParameters: RayArcIntersectionInput) => Array<number>;
+export const intersectRayWithArc = (__namedParameters: RayArcIntersectionInput) => Array<number>;
 ```
 
 #### Parameters
@@ -870,7 +1395,7 @@ Returns forward ray parameters `s` in ascending order; returns an empty array fo
 A positive start-to-end range sweeps clockwise on screen; a negative range sweeps counterclockwise.
 
 ```ts
-(__namedParameters: ArcSweepAngleInput) => boolean;
+export const isAngleWithinArcSweep = (__namedParameters: ArcSweepAngleInput) => boolean;
 ```
 
 #### Parameters
@@ -888,7 +1413,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(__namedParameters: BoundsRect) => boolean;
+export const isFiniteBoundsRect = (__namedParameters: BoundsRect) => boolean;
 ```
 
 #### Parameters
@@ -910,7 +1435,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(matrix: AffineMatrix) => boolean;
+export const isFiniteNonSingularAffine = (matrix: AffineMatrix) => boolean;
 ```
 
 #### Parameters
@@ -928,7 +1453,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isFiniteNumber = (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -946,7 +1471,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isFinitePoint = (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -964,7 +1489,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isInfiniteNumber = (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -982,7 +1507,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(rect: BoundsRect) => boolean;
+export const isPositiveBoundsRect = (rect: BoundsRect) => boolean;
 ```
 
 #### Parameters
@@ -1000,7 +1525,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 </p>
 
 ```ts
-(a: Vector2, b: Vector2, t: number) => Vector2;
+export const lerp = (a: Vector2, b: Vector2, t: number) => Vector2;
 ```
 
 #### Parameters
@@ -1022,7 +1547,7 @@ A positive start-to-end range sweeps clockwise on screen; a negative range sweep
 With `rotate = 0` or omitted, reduces to translation; otherwise rotates about the center before translating.
 
 ```ts
-(shape: CenteredShape, local: Vector2) => Vector2;
+export const localToWorld = (shape: CenteredShape, local: Vector2) => Vector2;
 ```
 
 #### Parameters
@@ -1041,7 +1566,7 @@ With `rotate = 0` or omitted, reduces to translation; otherwise rotates about th
 </p>
 
 ```ts
-(a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
+export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
 ```
 
 #### Parameters
@@ -1062,7 +1587,7 @@ With `rotate = 0` or omitted, reduces to translation; otherwise rotates about th
 Returns `outer × inner`: apply `inner` to a point first, then `outer`.
 
 ```ts
-(outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
+export const multiplyAffine = (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
 ```
 
 #### Parameters
@@ -1081,7 +1606,7 @@ Returns `outer × inner`: apply `inner` to a point first, then `outer`.
 </p>
 
 ```ts
-(center: Vector2, radius: number, angleDeg: number) => Vector2;
+export const pointAtArcAngle = (center: Vector2, radius: number, angleDeg: number) => Vector2;
 ```
 
 #### Parameters
@@ -1103,7 +1628,7 @@ Returns `outer × inner`: apply `inner` to a point first, then `outer`.
 Uses the same angle convention as `pointAtArcAngle`; θ is a parameter angle and not necessarily the true polar angle.
 
 ```ts
-(__namedParameters: EllipseArcAnglePointInput) => Vector2;
+export const pointAtEllipseArcAngle = (__namedParameters: EllipseArcAnglePointInput) => Vector2;
 ```
 
 #### Parameters
@@ -1121,7 +1646,7 @@ Uses the same angle convention as `pointAtArcAngle`; θ is a parameter angle and
 </p>
 
 ```ts
-(__namedParameters: BoundsRect) => AxisAlignedBounds;
+export const rectToBounds = (__namedParameters: BoundsRect) => AxisAlignedBounds;
 ```
 
 #### Parameters
@@ -1141,7 +1666,7 @@ Uses the same angle convention as `pointAtArcAngle`; θ is a parameter angle and
 Returns local coordinates relative to the shape center and rotation.
 
 ```ts
-(shape: CenteredShape, world: Vector2) => Vector2;
+export const worldToLocal = (shape: CenteredShape, world: Vector2) => Vector2;
 ```
 
 #### Parameters

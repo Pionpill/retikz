@@ -166,7 +166,7 @@ describe('<Layout theme>', () => {
     const markup = renderToStaticMarkup(
       <Layout
         theme={{ style: 'academic', mode: ThemeMode.Dark }}
-        themeStyles={testThemeStyles}
+        extensions={{ themeStyles: testThemeStyles }}
         width={100}
         height={100}
       >
@@ -186,8 +186,8 @@ describe('<Layout theme>', () => {
       <Layout
         ir={input}
         theme={theme}
-        composites={[themedBox]}
-        themeStyles={testThemeStyles}
+        extensions={{ composites: [themedBox], themeStyles: testThemeStyles }}
+        
         width={100}
         height={100}
       />,
@@ -205,8 +205,8 @@ describe('<Layout theme>', () => {
       <Layout
         ir={input}
         theme={theme}
-        composites={[themedBox]}
-        themeStyles={testThemeStyles}
+        extensions={{ composites: [themedBox], themeStyles: testThemeStyles }}
+        
         width={100}
         height={100}
       />,
@@ -219,8 +219,8 @@ describe('<Layout theme>', () => {
     const markup = renderToStaticMarkup(
       <Layout
         ir={{ ...input, theme: { style: 'academic', mode: ThemeMode.Dark } }}
-        composites={[themedBox]}
-        themeStyles={testThemeStyles}
+        extensions={{ composites: [themedBox], themeStyles: testThemeStyles }}
+        
         width={100}
         height={100}
       />,
@@ -245,7 +245,7 @@ describe('<Layout theme>', () => {
           ],
         }}
         theme={{ style: 'vibrant', mode: ThemeMode.Dark }}
-        themeStyles={testThemeStyles}
+        extensions={{ themeStyles: testThemeStyles }}
         width={100}
         height={100}
       />,
@@ -265,7 +265,7 @@ describe('<Layout theme>', () => {
             children: [{ namespace: 'theme-test', type: 'probe' }],
           }}
           theme={{ style: 'clean' }}
-          composites={[themeProbe]}
+          extensions={{ composites: [themeProbe] }}
           width={100}
           height={100}
         />
@@ -305,7 +305,7 @@ describe('<Layout theme>', () => {
     renderToStaticMarkup(
       <Layout
         theme={{ style: 'academic', mode: ThemeMode.Light }}
-        themeStyles={testThemeStyles}
+        extensions={{ themeStyles: testThemeStyles }}
         width={100}
         height={100}
       >
@@ -325,7 +325,7 @@ describe('<Layout theme>', () => {
   it('不同 Scope 内的匿名嵌入组件保持不同的内部 identity', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout themeStyles={testThemeStyles} width={100} height={100}>
+        <Layout extensions={{ themeStyles: testThemeStyles }} width={100} height={100}>
           <Scope>
             <ThemedBox />
           </Scope>

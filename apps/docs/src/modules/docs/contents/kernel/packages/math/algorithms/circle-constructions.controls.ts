@@ -27,6 +27,7 @@ export const CircleConstructionsVisibleWhen = {
 export const createCircleConstructionsControls = (i18n: typeof circleConstructionsI18n.zh) =>
   definePreviewControls({
     presentation: 'panel',
+    defaultSize: 50,
     title: i18n.label1,
     sections: [
       {

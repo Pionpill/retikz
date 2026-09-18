@@ -8,11 +8,8 @@ export const CoordinateOffsetChainControlId = {
   StepX: 'stepX',
 } as const;
 
-/** Coordinate 偏移链 playground 的固定取景 */
+/** Coordinate 偏移链 demo 的辅助轴线 */
 export const coordinateOffsetChainFrame = {
-  width: 400,
-  height: 191,
-  viewBox: { x: -220, y: -105, width: 440, height: 210 },
   xAxis: [
     [-200, 0],
     [200, 0],

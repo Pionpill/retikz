@@ -38,7 +38,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const testPoints: Array<Position> = [values.testPointA, values.testPointB, values.testPointC];
 
   return (
-    <Layout viewBox={{ x: -175, y: -115, width: 350, height: 230 }}>
+    <Layout>
       <Draw way={[...vertices, vertices[0]]} style={{ stroke: 'lightgray', strokeWidth: 2 }} />
       <Draw way={[...hull, hull[0]]} style={{ stroke: 'darkorange', strokeWidth: 2 }} />
       {testPoints.map((point, index) => (

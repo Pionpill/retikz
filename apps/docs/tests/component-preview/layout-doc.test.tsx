@@ -15,11 +15,11 @@ import { buildPreviewIR } from '../../src/modules/docs/components/component-prev
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import ScopeInspectionEnDemo, {
   previewSource as scopeInspectionEnSource,
-} from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-layout-inspection.en.demo';
-import { svg as scopeInspectionVanillaSvg } from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-layout-inspection.vanilla';
+} from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.en.demo';
+import { svg as scopeInspectionVanillaSvg } from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.vanilla';
 import ScopeInspectionZhDemo, {
   previewSource as scopeInspectionZhSource,
-} from '../../src/modules/docs/contents/kernel/components/layout/scope/scope-layout-inspection.zh.demo';
+} from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.zh.demo';
 import FlexEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-basic.en.demo';
 import FlexZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-basic.zh.demo';
 import OverflowEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-overflow.en.demo';
@@ -48,7 +48,7 @@ const NestedZhCanonical: FC = () => nestedZhSource.canonicalRender();
 const ScopeInspectionEnCanonical: FC = () => scopeInspectionEnSource.canonicalRender();
 const ScopeInspectionZhCanonical: FC = () => scopeInspectionZhSource.canonicalRender();
 const scopeInspectionVanillaSource = readFileSync(
-  resolve('src/modules/docs/contents/kernel/components/layout/scope/scope-layout-inspection.vanilla.ts'),
+  resolve('src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.vanilla.ts'),
   'utf8',
 );
 

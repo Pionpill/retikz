@@ -9,7 +9,7 @@ import { previewControlContract, trapezoidExampleControls } from './trapezoid-ex
 export const previewControls = trapezoidExampleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} shapes={[TrapezoidShapeDefinition]}>
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [TrapezoidShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{

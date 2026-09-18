@@ -1,0 +1,263 @@
+---
+title: 扩展用法
+description: 选择节点位置、锚点对齐和连线连接面
+---
+
+先完成[基础用法](/kernel/components/node/usage)，再选择节点中心的位置、需要对齐的锚点与连线接触的边界。
+
+## 接入方式
+
+下面把 B 的左侧对齐到 A 的右侧，再偏移 40 个单位；A 的文字变宽时，B 会保持这个边框间距。四种写法都使用同一锚点定位，并连接 A 与 B；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="node-connection-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node
+      id="b"
+      position={{ kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' }}
+    >
+      B
+    </Node>
+    <Draw way={['a', 'b']} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    {
+      type: 'node',
+      id: 'b',
+      position: { kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' },
+      text: 'B',
+    },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', {
+      position: { kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' },
+      text: 'B',
+    }),
+    path({ way: ['a', 'b'] }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    {
+      type: 'node',
+      id: 'b',
+      position: { kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' },
+      text: 'B',
+    },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 中心定位
+
+`position` 决定 Node 的中心。先在面板的“定位方式”中选择一种写法，再调整出现的字段，观察 `q` 相对固定参照节点 `a` / `b` 的位置。
+
+`position` 的五种可选写法如下：
+
+| 形式       | 写法                            | 作用                         |
+| ---------- | ------------------------------- | ---------------------------- |
+| 笛卡尔坐标 | `[x, y]`                        | 直接指定画布坐标             |
+| 极坐标     | `{ origin?, angle, radius }`    | 从原点按角度和半径定位       |
+| 方向相对   | `{ direction, of, distance? }`  | 从已命名参照点向一个方向移动 |
+| 引用点偏移 | `{ of, offset }`                | 在参照点上叠加二维偏移       |
+| 两点之间   | `{ between: [a, b], fraction }` | 按比例取两个点之间的位置     |
+
+<ComponentPreview files="node-position" size="lg" />
+
+定位引用的对象必须已完成布局并登记（通常是前面声明的同级对象）；方向定位的默认距离来自 `<Layout nodeDistance>`，`between` 的 `fraction: 0.5` 表示中点。完整输入类型见 [API 参考](/kernel/components/node/api-reference)，需要不可见辅助点时使用 [Coordinate](/kernel/components/node/coordinate)。
+
+## 锚点定位
+
+Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切换双方标准 anchor，并调整 offset、目标 margin、两端 rotate 与当前 Node scale；非对称 padding 和这些几何参数都会先参与布局。
+
+<ComponentPreview
+  files="node-anchor-position"
+  size="md"
+  caption="浅灰圆点标出 target.anchor + offset；它始终与 q 的 selfAnchor 重合。"
+/>
+
+例如，将 `q` 的左侧贴到 `a` 的右侧，并留出 16 个单位。`target.id` 引用前面声明的节点，`offset` 在目标锚点上再加一段偏移。
+
+```tsx
+<Layout>
+  <Node id="a" position={[0, 0]}>
+    A
+  </Node>
+  <Node id="q" position={{ kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [16, 0] }, selfAnchor: 'left' }}>
+    Q
+  </Node>
+</Layout>
+```
+
+`target.anchor` 与 `selfAnchor` 都省略时默认为 `center`。target 只能引用已完成布局的 Node、Coordinate 或 Scope；未定义、后定义、自引用和仍在布局中的祖先 Scope 会直接报错。
+
+## 形状与连接面
+
+节点的视觉轮廓和连线端点分三层控制：`shape` 选择画出来的形状，`boundary` 选择自动贴边使用的连接面，path 端点的 `anchor` 则指定一个命名连接点。分别修改 A / B，观察同一条边如何落到两端。
+
+<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size="md" />
+
+`anchor` 省略时，连线朝另一个端点自动贴边；标准命名 anchor（如 `top` / `right`）按 `boundary` 解析。`center` 会直接连到节点中心。形状专属 anchor 仍属于视觉 `shape`，具体名称见对应形状页。
+
+`shape` 有两种写法：无必填参数的形状可用裸字符串；`polygon` / `sector` / `star` 等带参形状必须写成 `{ type, params }`。Core 默认提供 `rectangle` / `ellipse` / `polygon`，并把 `circle` / `diamond` 作为基础 preset；`sector` / `star` 等可选 Node shape 需先通过 `<Layout extensions={{ shapes }}>` 或 `CompileOptions.shapes` 注入。按尺寸来源，它们又分为包住「文字 + padding」的文本容器形状，以及由半径 / 角度决定尺寸的几何形状。Sector 的 `innerRadius === outerRadius` 状态就是开放弧。
+
+每种形状的参数和专属 anchor 见对应页面：
+
+| shape             | 写法                                       | 文档                                                         |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| rectangle         | 默认 / `'rectangle'`                       | [Rectangle](/kernel/components/shapes/rectangle)             |
+| circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/shapes/circle-ellipse) |
+| sector            | `{ type:'sector', params }`                | [Arc / Sector](/kernel/components/shapes/arc-sector)         |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon)                 |
+| star              | `{ type:'star', params }`                  | [Star](/kernel/components/shapes/star)                       |
+
+`shape` 也接受经 `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes` 注册的名称，带参注册形状继续用 `{ type, params }`。详情见 [自定义形状](/kernel/components/shapes/custom-shape)。
+
+`boundary` 默认为 `'shape'`，也可选 `'circle'` / `'rectangle'` / `'ellipse'` 或注册的连接面。它只改变自动端点与标准 anchor 的解析，不改节点占位和视觉轮廓。三个内置替代面都支持 `{ fit, gap }`：`fit: 'tight'`（默认）使用形状提供的外包轮廓尽量贴近，`fit: 'bounds'` 则包住视觉形状在水平和垂直方向的外接矩形（AABB）；`gap` 再向外（正数）或向内（负数）调整半径 / 半轴。矩形的两种 `fit` 结果相同。
+
+在 playground 中切换 A / B 的 `fit` 并拖动 `gap`，浅色点状轮廓就是实际连接面。负 `gap` 允许穿过视觉形状，但通常会让连线盖住节点，不推荐；若它把任一有效半轴压到 0 或以下，编译会直接报错。单条边也可在端点对象中覆盖节点默认值，注册方式见 [自定义连接面](/kernel/components/node/custom)，端点写法见 [Path](/kernel/components/path/step)。
+
+## 相关属性
+
+以下列出定位、锚点对齐和自动贴边直接使用的成员；完整字段与类型见 [API 参考](/kernel/components/node/api-reference)。
+
+<ComponentProps
+    items={[
+      {
+        name: 'id',
+        kind: 'property',
+        type: 'string',
+        description: '登记可被 `Draw`、相对定位与锚点对齐引用的节点名称；引用必须在目标完成布局后进行。',
+      },
+      {
+        name: 'position',
+        kind: 'property',
+        type: "InputNode['position']",
+        required: true,
+        description: `选择一种定位形态：
+
+- **笛卡尔**：\`[x, y]\` 直接指定画布坐标
+- **极坐标**：\`{ origin?, angle, radius }\`；origin 缺省 \`[0, 0]\`
+- **方向相对**：\`{ direction, of, distance? }\`；direction 为八个命名方位，distance 依次回退到 nodeDistance 和 24
+- **引用点偏移**：\`{ of, offset: [dx, dy] }\`
+- **两点之间**：\`{ between: [a, b], fraction }\`；fraction 在 0..1，0.5 为中点
+- **锚点对齐**：\`{ kind: 'anchor', target: { id, anchor?, offset?, boundary? }, selfAnchor? }\`；双方 anchor 缺省 center，target 可覆盖连接面`,
+},
+{
+  name: 'shape',
+  kind: 'property',
+  type: "IRNode['shape']",
+  defaultValue: "Scope.defaults.node.shape → rectangle",
+  description: '选择视觉轮廓；无参形状可写名称，带参或注册形状写 `{ type, params }`。',
+},
+{
+  name: 'boundary',
+  kind: 'property',
+  type: 'IRBoundary',
+  description:
+    "选择连接面，不改变视觉形状：\n\n- `shape`：沿用视觉轮廓\n- `circle`/`ellipse`/`rectangle`：使用对应规则连接面\n- `{ type, params: { fit?: 'tight' | 'bounds', gap?: number } }`：为规则面选择贴合或外接框，并增加间距\n- 注册名称或 `{ type, params }`：引用自定义定义",
+  defaultValue: 'Scope.defaults.node.boundary → shape',
+},
+{
+  name: 'layout',
+  kind: 'property',
+  type: "InputNode['layout']",
+  description:
+    '本页使用的字段：\n\n- `padding`/`margin`：数字，或 `{ default?, x?, y?, left?, right?, top?, bottom? }`数值对象；单边优先于轴，再到 default\n- `minimumSize`：数字，或 `{ default?, width?, height? }`数值对象\n- `width?: number`：缩放前边框宽度，不含 margin，不能小于最小尺寸',
+},
+{
+  name: 'scale',
+  kind: 'property',
+  type: 'number | IRAxisScale',
+  description:
+    '数字统一缩放；对象可写 `{ default?: number, x?: number, y?: number }`，各轴优先于 default，倍率必须大于 0。先继承 Scope 默认值，最终回退到 1。',
+  defaultValue: 'Scope.defaults.node.scale → 1',
+  },
+  {
+  name: 'rotate',
+  kind: 'property',
+  type: 'number',
+  description: '绕节点中心旋转，单位为度；正值视觉顺时针，先继承 Scope 默认值。',
+  defaultValue: 'Scope.defaults.node.rotate → 0',
+  },
+  ]}
+  />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Coordinate · 坐标点', description: '组织不可见的辅助位置', url: '/kernel/components/node/coordinate' },
+    { title: '自定义连接面', description: '定义并注册新的连接规则', url: '/kernel/components/node/custom' },
+    { title: '实现原理', description: '理解尺寸、文字和引用的处理过程', url: '/kernel/components/node/mechanism' },
+    { title: 'API 参考', description: '查询公开入口、类型与扩展契约', url: '/kernel/components/node/api-reference' },
+  ]}
+/>

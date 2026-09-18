@@ -1,5 +1,15 @@
 /** @retikz/math 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  矩形盒高度: 'Height of the rectangular bounds',
+  矩形盒宽度: 'Width of the rectangular bounds',
+  二分反解最多执行次数: 'Maximum number of bisection iterations for inverse evaluation',
+  '已按同一采样预算计算的完整曲线长度，省略时即时计算':
+    'Full curve length computed with the same sampling budget; calculated on demand when omitted',
+  '沿本地 +x 的半轴长度': 'Semi-axis length along local +x',
+  '沿本地 +y 的半轴长度': 'Semi-axis length along local +y',
+  '射线方向，不要求单位化': 'Ray direction; normalization is not required',
+  射线起点: 'Ray origin',
+  正向参数容差: 'Tolerance for the forward parameter',
   圆心: 'Circle center',
   半径: 'Radius',
   '结束角度，单位为度': 'End angle in degrees',

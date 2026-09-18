@@ -35,31 +35,26 @@ export const kernelSection: Array<Section> = [
           {
             id: 'v0-5',
             label: 'kernel.changelogV05',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-4',
             label: 'kernel.changelogV04',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-3',
             label: 'kernel.changelogV03',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-2',
             label: 'kernel.changelogV02',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
           {
             id: 'v0-1',
             label: 'kernel.changelogV01',
-            difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'release', audience: 'user', sourceOfTruth: 'changelog' },
           },
         ],
@@ -155,13 +150,58 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.layout',
         sidebarGroup: 'kernel.components',
         children: [
-          { id: 'overview', label: 'kernel.layoutOverview', difficulty: DocDifficulty.Beginner },
-          { id: 'scope', label: 'kernel.layoutScope', difficulty: DocDifficulty.Advanced },
           {
-            id: 'custom-clip',
-            label: 'kernel.layoutCustomClip',
-            difficulty: DocDifficulty.Internals,
+            id: 'usage',
+            label: 'kernel.layoutUsage',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'extend',
+            label: 'kernel.layoutExtendedUsage',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          { id: 'mechanism', label: 'kernel.layoutMechanism', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.layoutApiReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'kernel.layoutSchemaReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+        ],
+      },
+      {
+        id: 'scope',
+        label: 'kernel.scope',
+        sidebarGroup: 'kernel.components',
+        children: [
+          {
+            id: 'usage',
+            label: 'kernel.scopeUsage',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'custom',
+            label: 'kernel.scopeCustom',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.clip'),
+          },
+          { id: 'mechanism', label: 'kernel.scopeMechanism', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.scopeApiReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'kernel.scopeSchemaReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
       },
@@ -170,44 +210,118 @@ export const kernelSection: Array<Section> = [
         label: 'kernel.node',
         sidebarGroup: 'kernel.components',
         children: [
-          { id: 'overview', label: 'kernel.nodeOverview', difficulty: DocDifficulty.Beginner },
-          { id: 'text', label: 'kernel.text', difficulty: DocDifficulty.Advanced },
-          { id: 'coordinate', label: 'kernel.coordinate', difficulty: DocDifficulty.Advanced },
           {
-            id: 'custom-boundary',
-            label: 'kernel.nodeCustomBoundary',
-            difficulty: DocDifficulty.Internals,
+            id: 'usage',
+            label: 'kernel.nodeUsage',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'extend',
+            label: 'kernel.nodePositioning',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'labels',
+            label: 'kernel.nodeLabels',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'text',
+            label: 'kernel.nodeText',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'coordinate',
+            label: 'kernel.nodeCoordinate',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'custom',
+            label: 'kernel.nodeCustom',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.boundary'),
+          },
+          { id: 'mechanism', label: 'kernel.nodeMechanism', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.nodeApiReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'kernel.nodeSchemaReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
       },
       {
-        id: 'draw',
-        label: 'kernel.draw',
+        id: 'path',
+        label: 'kernel.path',
         sidebarGroup: 'kernel.components',
         children: [
-          { id: 'overview', label: 'kernel.drawOverview', difficulty: DocDifficulty.Beginner },
-          { id: 'way', label: 'kernel.drawWay', difficulty: DocDifficulty.Advanced },
-          { id: 'path', label: 'kernel.path', difficulty: DocDifficulty.Advanced },
-          { id: 'step', label: 'kernel.step', difficulty: DocDifficulty.Advanced },
-          { id: 'arrow', label: 'kernel.arrow', difficulty: DocDifficulty.Advanced },
           {
-            id: 'path-generator',
-            label: 'kernel.drawPathGenerator',
-            difficulty: DocDifficulty.Internals,
+            id: 'usage',
+            label: 'kernel.pathUsage',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'draw',
+            label: 'kernel.draw',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'step',
+            label: 'kernel.step',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'arrow',
+            label: 'kernel.arrow',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'label',
+            label: 'kernel.pathLabel',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'custom-path-generator',
+            label: 'kernel.pathGenerator',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.path-generator'),
           },
           {
             id: 'custom-path',
-            label: 'kernel.drawCustomPath',
-            difficulty: DocDifficulty.Internals,
+            label: 'kernel.pathCustomPath',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.path-kind'),
           },
           {
             id: 'custom-arrow',
-            label: 'kernel.drawCustomArrow',
-            difficulty: DocDifficulty.Internals,
+            label: 'kernel.pathCustomArrow',
+            difficulty: DocDifficulty.Advanced,
             meta: extensionGuide('kernel.arrow'),
+          },
+          { id: 'mechanism', label: 'kernel.pathMechanism', difficulty: DocDifficulty.Internals },
+          {
+            id: 'api-reference',
+            label: 'kernel.pathApiReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'kernel.pathSchemaReference',
+            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
       },
@@ -377,7 +491,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgFoundationApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -385,6 +498,7 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
+          { id: 'schema-reference', label: 'kernel.pkgFoundationSchemaReference' },
         ],
       },
       {
@@ -413,7 +527,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgMathApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -464,7 +577,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgTexApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -495,7 +607,6 @@ export const kernelSection: Array<Section> = [
           {
             id: 'api-reference',
             label: 'kernel.pkgInspectApiReference',
-            difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'reference',
               audience: 'integrator',
@@ -503,7 +614,7 @@ export const kernelSection: Array<Section> = [
               sourceOfTruth: 'runtime',
             },
           },
-          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference', difficulty: DocDifficulty.Advanced },
+          { id: 'schema-reference', label: 'kernel.pkgInspectSchemaReference' },
         ],
       },
       {

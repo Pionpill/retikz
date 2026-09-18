@@ -27,6 +27,7 @@ describe('Kernel 包侧栏数据', () => {
           ['types-schemas', 'kernel.pkgFoundationTypesSchemas'],
           ['validation-errors', 'kernel.pkgFoundationValidationErrors'],
           ['api-reference', 'kernel.pkgFoundationApiReference'],
+          ['schema-reference', 'kernel.pkgFoundationSchemaReference'],
         ],
       ],
       [

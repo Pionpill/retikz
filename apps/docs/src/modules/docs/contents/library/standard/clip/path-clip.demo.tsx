@@ -9,7 +9,7 @@ import { pathClipControls, previewControlContract } from './path-clip.controls';
 export const previewControls = pathClipControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} clips={[PathClipDefinition]}>
+  <Layout viewBox={{ x: -125, y: -100, width: 250, height: 200 }} extensions={{ clips: [PathClipDefinition] }}>
     <Node
       position={[0, 0]}
       shape="rectangle"

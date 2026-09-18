@@ -21,10 +21,10 @@ import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import { CrossShapeDefinition } from '@retikz/standard/shape';
 
 <Layout
-  shapes={[CrossShapeDefinition]}
-  arrows={[DiamondArrowDefinition]}
-  clips={[CircleClipDefinition]}
-  pathKinds={[RibbonPathKindDefinition]}
+  extensions={{ shapes: [CrossShapeDefinition], arrows: [DiamondArrowDefinition], clips: [CircleClipDefinition], pathKinds: [RibbonPathKindDefinition] }}
+  
+  
+  
 >
   {/* 图形内容 */}
 </Layout>;
@@ -59,7 +59,7 @@ import { StandardArrowDefinitions } from '@retikz/standard/arrow';
 import { StandardClipDefinitions } from '@retikz/standard/clip';
 import { StandardShapeDefinitions } from '@retikz/standard/shape';
 
-<Layout shapes={StandardShapeDefinitions} arrows={StandardArrowDefinitions} clips={StandardClipDefinitions}>
+<Layout extensions={{ shapes: StandardShapeDefinitions, arrows: StandardArrowDefinitions, clips: StandardClipDefinitions }}  >
   {/* 图形内容 */}
 </Layout>;
 ```

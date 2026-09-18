@@ -5,32 +5,46 @@
 ### RetikzError
 
 <p>
-  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={16}>
+  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={26}>
     Retikz 结构化领域错误的基础骨架
   </ApiSourceLink>
 </p>
 
-| 成员          | 类型                                                                                              | 默认值 | 说明 |
-| ------------- | ------------------------------------------------------------------------------------------------- | ------ | ---- |
-| `constructor` | `<TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —      | —    |
-| `cause?`      | `unknown`                                                                                         | —      | —    |
-| `code`        | `TCode`                                                                                           | —      | —    |
-| `details`     | `TDetails`                                                                                        | —      | —    |
+```ts
+export class RetikzError<
+  TCode extends string = string,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends Error {}
+```
+
+| 成员               | 类型                                                                                              | 默认值 | 说明 |
+| ------------------ | ------------------------------------------------------------------------------------------------- | ------ | ---- |
+| `constructor`      | `<TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —      | —    |
+| `readonly cause?`  | `unknown`                                                                                         | —      | —    |
+| `readonly code`    | `TCode`                                                                                           | —      | —    |
+| `readonly details` | `TDetails`                                                                                        | —      | —    |
 
 #### 类型参数
 
-| 类型参数   | 说明 |
-| ---------- | ---- |
-| `TCode`    | —    |
-| `TDetails` | —    |
+| 类型参数   | 说明                           |
+| ---------- | ------------------------------ |
+| `TCode`    | 错误分类代码的字符串类型       |
+| `TDetails` | 与错误代码关联的结构化详情类型 |
 
 ### RetikzFoundationError
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={51}>
+  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={66}>
     Foundation 原子契约失败的统一结构化错误
   </ApiSourceLink>
 </p>
+
+```ts
+export class RetikzFoundationError<
+  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends RetikzError<TCode, TDetails> {}
+```
 
 | 成员          | 类型                                                                                                                                                                                      | 默认值 | 说明 |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
@@ -38,107 +52,143 @@
 
 #### 类型参数
 
-| 类型参数   | 说明 |
-| ---------- | ---- |
-| `TCode`    | —    |
-| `TDetails` | —    |
+| 类型参数   | 说明                                     |
+| ---------- | ---------------------------------------- |
+| `TCode`    | Foundation 错误码的具体字面量类型        |
+| `TDetails` | 与 Foundation 错误码关联的结构化详情类型 |
 
 ### AssertEqual
 
 <p>
-  <ApiSourceLink label={'AssertEqual'} path={'packages/kernel/foundation/src/types.ts'} startLine={15}>
+  <ApiSourceLink label={'AssertEqual'} path={'packages/kernel/foundation/src/types.ts'} startLine={24}>
     双向检查两个类型是否等价
   </ApiSourceLink>
 </p>
 
 ```ts
-conditional;
+export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
+  ? [TExpected] extends [TActual]
+    ? true
+    : false
+  : false;
 ```
 
 #### 类型参数
 
-| 类型参数    | 说明 |
-| ----------- | ---- |
-| `TActual`   | —    |
-| `TExpected` | —    |
+| 类型参数    | 说明                   |
+| ----------- | ---------------------- |
+| `TActual`   | 待比较的实际类型       |
+| `TExpected` | 作为比较基准的预期类型 |
 
 ### JsonObject
 
 <p>
-  <ApiSourceLink label={'JsonObject'} path={'packages/kernel/foundation/src/types.ts'} startLine={12}>
+  <ApiSourceLink label={'JsonObject'} path={'packages/kernel/foundation/src/types.ts'} startLine={16}>
     字符串键 JSON 对象
   </ApiSourceLink>
 </p>
 
 ```ts
-ZodInfer<typeof JsonObjectSchema>;
+export type JsonObject = ZodInfer<typeof JsonObjectSchema>;
+```
+
+#### 索引签名
+
+```ts
+[key: string]: JsonValue
 ```
 
 ### JsonValue
 
 <p>
-  <ApiSourceLink label={'JsonValue'} path={'packages/kernel/foundation/src/types.ts'} startLine={9}>
+  <ApiSourceLink label={'JsonValue'} path={'packages/kernel/foundation/src/types.ts'} startLine={13}>
     单个递归 JSON 值；readonly 数组允许 const Source 在 parse 边界直接收窄
   </ApiSourceLink>
 </p>
 
 ```ts
-string | number | boolean | null | ReadonlyArray<JsonValue> | {};
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ReadonlyArray<JsonValue>
+  | {
+      [key: string]: JsonValue;
+    };
 ```
 
 ### MergePropertiesOptions
 
 <p>
-  <ApiSourceLink label={'MergePropertiesOptions'} path={'packages/kernel/foundation/src/objects.ts'} startLine={4}>
+  <ApiSourceLink label={'MergePropertiesOptions'} path={'packages/kernel/foundation/src/objects.ts'} startLine={8}>
     属性浅合并的写入策略
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                       | 类型                                               | 默认值      | 说明                                                            |
+| -------------------------- | -------------------------------------------------- | ----------- | --------------------------------------------------------------- |
+| `readonly shouldOverride?` | `(value: T[keyof T], key: PropertyKey) => boolean` | `undefined` | 决定源属性是否参与写入；首次写入也调用，返回 false 时保留已有值 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ shouldOverride?: (value: indexedAccess, key: PropertyKey) => boolean }>;
+export type MergePropertiesOptions<T extends object> = Readonly<{
+  shouldOverride?: (value: T[keyof T], key: PropertyKey) => boolean;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
+| 类型参数 | 说明             |
+| -------- | ---------------- |
+| `T`      | 被合并的对象类型 |
 
 ### NonEmptyReadonlyArray
 
 <p>
-  <ApiSourceLink label={'NonEmptyReadonlyArray'} path={'packages/kernel/foundation/src/types.ts'} startLine={31}>
+  <ApiSourceLink label={'NonEmptyReadonlyArray'} path={'packages/kernel/foundation/src/types.ts'} startLine={58}>
     至少包含一个元素的只读数组
   </ApiSourceLink>
 </p>
 
 ```ts
-readonly [T, ...Array<T>]
+export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
+| 类型参数 | 说明         |
+| -------- | ------------ |
+| `T`      | 数组元素类型 |
 
 ### OpenString
 
 <p>
-  <ApiSourceLink label={'OpenString'} path={'packages/kernel/foundation/src/types.ts'} startLine={22}>
+  <ApiSourceLink label={'OpenString'} path={'packages/kernel/foundation/src/types.ts'} startLine={35}>
     保留已知字符串提示，同时接受任意字符串
   </ApiSourceLink>
 </p>
 
 ```ts
-T | (string & {});
+export type OpenString<T extends string> = T | (string & {});
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
+| 类型参数 | 说明                       |
+| -------- | -------------------------- |
+| `T`      | 已知字符串字面量的联合类型 |
 
 ### ParsedCssColor
 
@@ -148,6 +198,10 @@ T | (string & {});
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
 | 成员 | 类型     | 默认值 | 说明               |
 | ---- | -------- | ------ | ------------------ |
 | `a`  | `number` | —      | 不透明度，范围 0~1 |
@@ -155,24 +209,65 @@ T | (string & {});
 | `g`  | `number` | —      | 绿色通道，范围 0~1 |
 | `r`  | `number` | —      | 红色通道，范围 0~1 |
 
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ParsedCssColor = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### RetikzErrorOptions
 
 <p>
-  <ApiSourceLink label={'RetikzErrorOptions'} path={'packages/kernel/foundation/src/error.ts'} startLine={4}>
+  <ApiSourceLink label={'RetikzErrorOptions'} path={'packages/kernel/foundation/src/error.ts'} startLine={9}>
     Retikz 结构化领域错误的基础构造参数
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员               | 类型       | 默认值 | 说明                           |
+| ------------------ | ---------- | ------ | ------------------------------ |
+| `readonly cause?`  | `unknown`  | —      | 导致当前错误的原始异常或值     |
+| `readonly code`    | `TCode`    | —      | 结构化错误的分类代码           |
+| `readonly details` | `TDetails` | —      | 与错误代码关联的结构化错误详情 |
+| `readonly message` | `string`   | —      | 面向调用方的错误消息           |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ cause?: unknown; code: TCode; details: TDetails; message: string }>;
+export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<Record<string, unknown>>> = Readonly<{
+  code: TCode;
+  message: string;
+  details: TDetails;
+  cause?: unknown;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### 类型参数
 
-| 类型参数   | 说明 |
-| ---------- | ---- |
-| `TCode`    | —    |
-| `TDetails` | —    |
+| 类型参数   | 说明                           |
+| ---------- | ------------------------------ |
+| `TCode`    | 错误分类代码的字符串类型       |
+| `TDetails` | 与错误代码关联的结构化详情类型 |
 
 ### RetikzFoundationErrorCodeValue
 
@@ -180,184 +275,99 @@ Readonly<{ cause?: unknown; code: TCode; details: TDetails; message: string }>;
   <ApiSourceLink
     label={'RetikzFoundationErrorCodeValue'}
     path={'packages/kernel/foundation/src/error.ts'}
-    startLine={48}
+    startLine={58}
   >
     Foundation 包稳定错误码取值
   </ApiSourceLink>
 </p>
 
 ```ts
-ValueOf<typeof RetikzFoundationErrorCode>;
+export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+```
+
+#### 展开类型
+
+```ts
+export type RetikzFoundationErrorCodeValue =
+  | 'FOUNDATION_ERROR'
+  | 'FOUNDATION_NON_EMPTY_STRING_REQUIRED'
+  | 'FOUNDATION_POSITIVE_NUMBER_REQUIRED'
+  | 'FOUNDATION_JSON_ERROR'
+  | 'FOUNDATION_COLOR_ERROR';
 ```
 
 ### ValueOf
 
 <p>
-  <ApiSourceLink label={'ValueOf'} path={'packages/kernel/foundation/src/types.ts'} startLine={6}>
+  <ApiSourceLink label={'ValueOf'} path={'packages/kernel/foundation/src/types.ts'} startLine={10}>
     取得对象所有 value 的联合类型
   </ApiSourceLink>
 </p>
 
 ```ts
-indexedAccess;
+export type ValueOf<T extends object> = T[keyof T];
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
+| 类型参数 | 说明                 |
+| -------- | -------------------- |
+| `T`      | 提供属性值的对象类型 |
 
 ### WithOptionalProperties
 
 <p>
-  <ApiSourceLink label={'WithOptionalProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={28}>
+  <ApiSourceLink label={'WithOptionalProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={51}>
     将指定属性扩展为可选，同时保留其余属性
   </ApiSourceLink>
 </p>
 
 ```ts
-Omit<T, TKey> & Partial<Pick<T, TKey>>;
+export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Partial<Pick<T, TKey>>;
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
-| `TKey`   | —    |
+| 类型参数 | 说明                 |
+| -------- | -------------------- |
+| `T`      | 待调整属性的对象类型 |
+| `TKey`   | 需要设为可选的属性键 |
 
 ### WithRequiredProperties
 
 <p>
-  <ApiSourceLink label={'WithRequiredProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={25}>
+  <ApiSourceLink label={'WithRequiredProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={43}>
     将指定属性收窄为必填，同时保留其余属性
   </ApiSourceLink>
 </p>
 
 ```ts
-T & Required<Pick<T, TKey>>;
+export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
-| `TKey`   | —    |
-
-### JsonObjectSchema
-
-<p>
-  <ApiSourceLink label={'JsonObjectSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={13}>
-    字符串键 JSON 对象 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodRecord<ZodString, ZodType<JsonValue, JsonValue, $ZodTypeInternals<JsonValue, JsonValue>>>;
-```
-
-### JsonValueSchema
-
-<p>
-  <ApiSourceLink label={'JsonValueSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={8}>
-    递归 JSON 值 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodType<JsonValue, JsonValue>;
-```
-
-### NonBlankStringSchema
-
-<p>
-  <ApiSourceLink label={'NonBlankStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={18}>
-    非空白字符串 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodString;
-```
-
-### NonNegativeIntegerSchema
-
-<p>
-  <ApiSourceLink label={'NonNegativeIntegerSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={42}>
-    非负整数 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### NonNegativeNumberSchema
-
-<p>
-  <ApiSourceLink label={'NonNegativeNumberSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={36}>
-    非负数 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### NormalizedFractionSchema
-
-<p>
-  <ApiSourceLink label={'NormalizedFractionSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={45}>
-    闭区间 0..1 内的归一化数值 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### PositiveIntegerSchema
-
-<p>
-  <ApiSourceLink label={'PositiveIntegerSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={39}>
-    正整数 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### PositiveNumberSchema
-
-<p>
-  <ApiSourceLink label={'PositiveNumberSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={33}>
-    正数 schema
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
+| 类型参数 | 说明                 |
+| -------- | -------------------- |
+| `T`      | 待调整属性的对象类型 |
+| `TKey`   | 需要设为必填的属性键 |
 
 ### RetikzFoundationErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={34}>
+  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={44}>
     Foundation 包稳定错误码
   </ApiSourceLink>
 </p>
 
 ```ts
-{
-  Color: 'FOUNDATION_COLOR_ERROR';
-  Default: 'FOUNDATION_ERROR';
-  Json: 'FOUNDATION_JSON_ERROR';
-  NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED';
-  PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED';
-}
+export const RetikzFoundationErrorCode = {
+  Default: 'FOUNDATION_ERROR',
+  NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED',
+  PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED',
+  Json: 'FOUNDATION_JSON_ERROR',
+  Color: 'FOUNDATION_COLOR_ERROR',
+} as const;
 ```
 
 ### StaticCssNamedColorHexByName
@@ -375,19 +385,26 @@ ZodNumber;
 仅包含 `parseStaticCssColor()` 支持的命名颜色，不包含 transparent、函数和十六进制写法
 
 ```ts
-Readonly<Record<string, templateLiteral>>;
+export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
+  Object.fromEntries(
+    Object.entries(CSS_NAMED_COLOR_HEX).map(([name, colorHex]): [string, `#${string}`] => [
+      name,
+      `#${colorHex.toString(16).padStart(6, '0')}`,
+    ]),
+  ),
+);
 ```
 
 ### assertNonEmptyString
 
 <p>
-  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={7}>
+  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={6}>
     拒绝空串和全空白字符串
   </ApiSourceLink>
 </p>
 
 ```ts
-(value: string, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void
+export const assertNonEmptyString = (value: string, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void;
 ```
 
 #### 参数
@@ -407,7 +424,7 @@ Readonly<Record<string, templateLiteral>>;
 </p>
 
 ```ts
-(value: unknown, path: string) => void
+export const assertPlainDataContainers = (value: unknown, path: string) => void;
 ```
 
 #### 参数
@@ -422,13 +439,13 @@ Readonly<Record<string, templateLiteral>>;
 ### assertPositiveNumber
 
 <p>
-  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={24}>
+  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={23}>
     拒绝不是严格大于零的有限数值
   </ApiSourceLink>
 </p>
 
 ```ts
-(value: number, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void
+export const assertPositiveNumber = (value: number, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void;
 ```
 
 #### 参数
@@ -442,20 +459,20 @@ Readonly<Record<string, templateLiteral>>;
 ### cloneAndFreezeJson
 
 <p>
-  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={93}>
+  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={94}>
     校验 JSON 安全的普通数据，创建脱离原输入的深冻结副本
   </ApiSourceLink>
 </p>
 
 ```ts
-<T>(value: T, path: string) => T;
+export const cloneAndFreezeJson = <T>(value: T, path: string) => T;
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
+| 类型参数 | 说明             |
+| -------- | ---------------- |
+| `T`      | 输入值的静态类型 |
 
 #### 参数
 
@@ -479,7 +496,7 @@ Readonly<Record<string, templateLiteral>>;
 前景自身 alpha 与 weight 相乘，再按 source-over sRGB 得到不含透明度的确定性颜色
 
 ```ts
-(foreground: string, backdrop: string, weight: number) => templateLiteral;
+export const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number) => templateLiteral;
 ```
 
 #### 参数
@@ -493,20 +510,21 @@ Readonly<Record<string, templateLiteral>>;
 ### createOpenStringSchema
 
 <p>
-  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={25}>
+  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={28}>
     从已知 const object enum 建立保留提示的开放非空字符串 schema
   </ApiSourceLink>
 </p>
 
 ```ts
-<TValues>(values: TValues) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
+export const createOpenStringSchema = <TValues>(values: TValues) =>
+  ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
 ```
 
 #### 类型参数
 
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TValues` | —    |
+| 类型参数  | 说明                                  |
+| --------- | ------------------------------------- |
+| `TValues` | 已知字符串值的 const object enum 类型 |
 
 #### 参数
 
@@ -517,7 +535,7 @@ Readonly<Record<string, templateLiteral>>;
 ### createReadonlyMap
 
 <p>
-  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={5}>
+  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={7}>
     创建不暴露写方法的 Map 浅快照
   </ApiSourceLink>
 </p>
@@ -525,15 +543,16 @@ Readonly<Record<string, templateLiteral>>;
 输入 entries 会复制到独立存储；迭代与查询保持原生 Map 语义，`forEach` 的 owner 参数返回只读快照自身
 
 ```ts
-<TKey, TValue>(entries: Iterable<readonly [TKey, TValue]>) => ReadonlyMap<TKey, TValue>;
+export const createReadonlyMap = <TKey, TValue>(entries: Iterable<readonly [TKey, TValue]>) =>
+  ReadonlyMap<TKey, TValue>;
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `TKey`   | —    |
-| `TValue` | —    |
+| 类型参数 | 说明       |
+| -------- | ---------- |
+| `TKey`   | Map 键类型 |
+| `TValue` | Map 值类型 |
 
 #### 参数
 
@@ -544,13 +563,13 @@ Readonly<Record<string, templateLiteral>>;
 ### isRetikzError
 
 <p>
-  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={73}>
+  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={88}>
     判断动态值是否继承自 Retikz 结构化领域错误
   </ApiSourceLink>
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export const isRetikzError = (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -562,7 +581,7 @@ Readonly<Record<string, templateLiteral>>;
 ### mergeProperties
 
 <p>
-  <ApiSourceLink label={'mergeProperties'} path={'packages/kernel/foundation/src/objects.ts'} startLine={19}>
+  <ApiSourceLink label={'mergeProperties'} path={'packages/kernel/foundation/src/objects.ts'} startLine={24}>
     从左到右浅合并对象的自身可枚举属性，返回新对象
   </ApiSourceLink>
 </p>
@@ -570,14 +589,17 @@ Readonly<Record<string, templateLiteral>>;
 包含字符串与 symbol 键，跳过 undefined 源；默认保留所有属性值，不递归合并或修改输入
 
 ```ts
-<T>(sources: readonly Array<Readonly<T> | undefined>, options: MergePropertiesOptions<NoInfer<T>>) => Partial<T>;
+export const mergeProperties = <T>(
+  sources: readonly Array<Readonly<T> | undefined>,
+  options: MergePropertiesOptions<NoInfer<T>>,
+) => Partial<T>;
 ```
 
 #### 类型参数
 
-| 类型参数 | 说明 |
-| -------- | ---- |
-| `T`      | —    |
+| 类型参数 | 说明               |
+| -------- | ------------------ |
+| `T`      | 被浅合并的对象类型 |
 
 #### 参数
 
@@ -603,7 +625,7 @@ Readonly<Record<string, templateLiteral>>;
 </p>
 
 ```ts
-(input: string) => ParsedCssColor | null;
+export const parseStaticCssColor = (input: string) => ParsedCssColor | null;
 ```
 
 #### 参数

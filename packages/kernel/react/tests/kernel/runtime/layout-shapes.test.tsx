@@ -82,7 +82,7 @@ const clippedIr: IRScene = {
 describe('<Layout shapes> 自定义 shape 注入', () => {
   it('注入 shapes 后 <Node shape="hexagon"> 渲染出自定义 emit（ellipse）', () => {
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} shapes={[radialShape()]}>
+      <Layout width={100} height={100} extensions={{ shapes: [radialShape()] }}>
         <Node id="A" shape="hexagon" position={[0, 0]} text="hex" />
       </Layout>,
     );
@@ -104,7 +104,7 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
   it('passes boundary providers to compileToScene', () => {
     expect(() =>
       renderToStaticMarkup(
-        <Layout width={120} height={80} boundaries={[fixedBoundary()]}>
+        <Layout width={120} height={80} extensions={{ boundaries: [fixedBoundary()] }}>
           <Node id="A" position={[0, 0]} boundary="pin" layout={{ minimumSize: 40 }} />
           <Path>
             <Step kind="move" to={[100, 0]} />
@@ -132,7 +132,7 @@ describe('<Layout boundaries> custom boundary passthrough', () => {
 
 describe('<Layout clips> complete Clip definition passthrough', () => {
   it('forwards one complete clips registry to static Vanilla processing and SSR', () => {
-    const svg = renderToStaticMarkup(<Layout ir={clippedIr} clips={[customClip()]} runtime={{ mode: 'static' }} />);
+    const svg = renderToStaticMarkup(<Layout ir={clippedIr} extensions={{ clips: [customClip()] }} runtime={{ mode: 'static' }} />);
     expect(svg).toContain('<clipPath');
   });
 });

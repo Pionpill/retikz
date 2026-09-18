@@ -1,0 +1,190 @@
+---
+title: Implementation
+description: Understand how path syntax, cursor state, endpoint references, arrow contacts, and label gaps produce a drawing
+---
+
+Read [Basic usage](/kernel/components/path/usage) first. This page explains local drawing rules: why two input forms produce the same path, why endpoints can refer to later nodes, and how arrows and labels change the visible stroke.
+
+## Where the two forms meet
+
+`<Draw way={['a', '-|', 'b']}>` describes the same route as a move to a followed by a fold to b. React Draw forwards input to Path; Vanilla's `normalizePath` calls `parseWay` to produce a uniform ordered sequence of steps.
+
+- Author input: convenient `way` values, string targets, and arrow shorthand
+- Source IR: JSON-serializable Path, Step, and marks, still containing node references
+- Path commands: concrete move, line, curve, and arc geometry after references have been resolved
+
+The diagram separates normalization from coordinate calculation. Creating steps neither resolves every node reference immediately nor produces SVG directly.
+
+<ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
+
+At this entry, `arrow="->"` becomes an arrow mark at `pos: 1`. Per-end `arrowDetail` overrides and `arrowPlacement` overlap are included in that mark. When authoring IR directly, use `marks` rather than copying React's arrow shorthand fields.
+
+<SourceLinks
+  sources={[
+    { label: 'Draw forwards to Path', path: 'packages/kernel/react/src/sugar/path/Draw.tsx', startLine: 28 },
+    {
+      label: 'Normalize way, steps, and arrows',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 174,
+    },
+    {
+      label: 'Convert arrow shorthand to marks',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 42,
+    },
+  ]}
+/>
+
+## How steps change the cursor
+
+The cursor is the position where the next stroke starts. `move` changes that position without drawing; `line` draws from it to a target; `cycle` returns to the start of the current subpath established by the most recent move. A fold or curve may produce several commands while remaining one step.
+
+For example, `move [0, 0]` followed by `line [120, 0]` advances the cursor from A to B. Another move starts an independent subpath without drawing between the two move positions. In `way`, a `+` offset preserves the relative reference position while `++` advances it, so subsequent routes can differ.
+
+A generator is also a step. It receives the local cursor and resolved target, then returns commands to the host Path. It does not own whole-path arrows, stroke, or final outer transforms. See [Step composition](/kernel/components/path/step) and [Custom generators](/kernel/components/path/custom-path-generator).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Generate commands step by step',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 59,
+    },
+    {
+      label: 'Validate generator parameters and output',
+      path: 'packages/kernel/core/src/compile/path/stroke/lower.ts',
+      startLine: 95,
+    },
+  ]}
+/>
+
+## Why later nodes can be referenced
+
+Within the same scope, a Path can precede node B and still use B as its endpoint. Traversal queues the Path and reserves its output position. After registering nodes in the current scope, it resolves endpoints and fills the reserved position with the resulting primitives.
+
+This provides B's connection boundary while preserving the original drawing order. It applies to deferred paths; it does not imply that Node positioning or final Scope placement supports every forward reference.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Queue paths and reserve drawing order',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 253,
+    },
+    {
+      label: 'Resolve and insert deferred paths',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 124,
+    },
+  ]}
+/>
+
+## Logical path and visible stroke
+
+The three states below use the same A → B line. Gray dots mark logical endpoints, and the dotted line preserves the complete route: first geometry, then arrow placement, then a gap beneath centered text. The small arrows between states describe processing and are not part of A → B.
+
+<ComponentPreview files="draw-geometry-states" size="sm" hideCode type="illustration" />
+
+The first stroke connects A to B. The second still points at B, but its body ends at the arrow contact so it cannot protrude through the arrowhead. The third removes stroke beneath the text while the gray route, label position, and endpoint remain unchanged.
+
+This distinction also explains rounding: `roundedCorners` rewrites geometry, affecting length and along-path sampling; `lineJoin` changes only the stroke appearance at a corner. Rounding, arrow contact, and label interruption are different operations.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Geometry, rounding, and decorations',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 300,
+    },
+    {
+      label: 'Endpoint contact and stroke shortening',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 150,
+    },
+  ]}
+/>
+
+## How an arrow meets the path
+
+An arrow definition supplies three distinct positions: `backX` is its back edge, `lineContactX` is where the main stroke meets it, and `tipX` is its tip. These determine placement and stroke shortening; one generic arrow length cannot replace them.
+
+<ComponentPreview files="arrow-contact" size="lg" hideCode type="illustration" />
+
+`overlap: 1` aligns the final visual back edge, including scaling and hollow outlines. Overlap moves the endpoint decoration and its contact without changing the node anchor or logical path sampling. An interior mark follows the local tangent without shortening the path as an endpoint would.
+
+Without an explicit arrow color, the marker uses `contextStroke`, inheriting its host path's stroke at rendering time. Resource paints such as gradients require an explicit solid arrow color. Built-in and injected arrows share registration and resolution.
+
+<SourceLinks
+  sources={[
+    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/arrow/types.ts', startLine: 4 },
+    {
+      label: 'Inherited color and marker materialization',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 39,
+    },
+  ]}
+/>
+
+## Why labels cut only the stroke
+
+A label first finds its position on the uninterrupted path. Its visual text bounds and `gap` then determine the interval to remove. Remaining segments preserve their original path ownership; arrows, marks, and label positions are not redistributed after cutting.
+
+A centered label on an unfilled built-in Stroke path leaves a gap by default; `interrupt: false` preserves a continuous stroke. Filled paths and other Path kinds do not use that automatic rule, and explicit requests are subject to host restrictions. See [Path labels](/kernel/components/path/label). Final `rotate` and `scale` transform stroke, text, and decorations as one group.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Label gaps and final path output',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 300,
+    },
+  ]}
+/>
+
+## What a custom path takes over
+
+`kind` selects a whole-path processor. Core finds the named definition, validates the complete input with its schema, and calls compile. The processor may reuse `emitStroke` or produce Scene primitives directly. A renderer consumes those primitives without recognizing the custom kind name.
+
+Use a generator to add a waveform segment, a Path kind to replace whole-path output, and ArrowDefinition to change endpoint geometry. They share a host but have distinct inputs and results.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Find and dispatch a Path kind',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 334,
+    },
+    {
+      label: 'Public services available to a processor',
+      path: 'packages/kernel/core/src/contract/path-kind/types.ts',
+      startLine: 112,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step composition',
+      description: 'Use subpaths, transforms, and rounded corners',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: 'Custom paths',
+      description: 'Define and register whole-path output',
+      url: '/kernel/components/path/custom-path',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public declarations',
+      url: '/kernel/components/path/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent data fields',
+      url: '/kernel/components/path/schema-reference',
+    },
+  ]}
+/>
