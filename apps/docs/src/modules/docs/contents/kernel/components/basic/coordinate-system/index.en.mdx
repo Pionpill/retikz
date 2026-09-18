@@ -11,7 +11,7 @@ Cartesian coordinates are written as `[x, y]`. Like SVG / Canvas, retikz uses sc
 
 It helps to treat `[x, y]` as retikz's base coordinate shape: polar coordinates are not a separate rendering semantics, only another way to write a position. They eventually become an `[x, y]` point.
 
-<ComponentPreview files="coordinate-system" size="md" hideCode />
+<ComponentPreview files="coordinate-system" size="sm" hideCode />
 
 When translating a math diagram or TikZ tutorial, the common rule is: "up" usually becomes negative y in retikz, for example `[0, -80]`.
 
@@ -59,7 +59,7 @@ Coordinates and lengths use user units, the internal units of the drawing. At th
 
 `viewBox` selects the visible part of the user-unit world. Usually omit it to use content bounds plus padding. Display dimensions default to the final frame dimensions, without scaling the primitives.
 
-<ComponentPreview files="viewbox" size="md" hideCode />
+<ComponentPreview files="viewbox" size="sm" hideCode />
 
 The left side is the full user-unit world; the dashed frame is the window `viewBox` selects, and the right side illustrates the selected content. Display dimensions follow that range by default.
 

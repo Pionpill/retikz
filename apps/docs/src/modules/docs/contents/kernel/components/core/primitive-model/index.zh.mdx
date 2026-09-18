@@ -99,9 +99,9 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 boundary 决定连接面的形状；`margin` 总是扩大传给连接解析的外接矩形。circle / rectangle 等 rect 驱动 boundary 会随之向外扩，star / sector 等参数驱动 shape 的默认边界则仍按 params 计算。因此 `margin` 是稳定的布局留白，但只有 boundary 消费 rect 尺寸时才同时成为连接留白。
 
-<ComponentPreview files="margin-boundary-gap" size="md" hideCode />
+<ComponentPreview files="margin-boundary-gap" size="sm" hideCode />
 
-每列从内到外三层：最内灰块是文本区，currentColor 实线是矩形 shape，虚线是连接面，灰点是命名方位锚点。这里的 shape / boundary 都由 rect 驱动，所以 `margin` 会把连接面与锚点推开；右列借用 circle 后只是把连接面改成圆。参数驱动形状与完整 boundary 选项见 [Node 几何](/kernel/components/node/overview)。
+每列从内到外三层：最内灰块是文本区，currentColor 实线是矩形 shape，虚线是连接面，灰点是命名方位锚点。这里的 shape / boundary 都由 rect 驱动，所以 `margin` 会把连接面与锚点推开；右列借用 circle 后只是把连接面改成圆。参数驱动形状与完整 boundary 选项见 [Node 几何](/kernel/components/node/usage)。
 
 ## 锚点 Anchor
 
@@ -115,16 +115,16 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | shape 专属点 | star 的尖角、sector 的圆弧端点       | 复杂形状的语义连接       |
 | 边比例点     | `{ side: 'top', fraction: 0.25 }`    | 表格、泳道、框图边缘定位 |
 
-<ComponentPreview files="anchors" size="lg" hideCode />
+<ComponentPreview files="anchors" size="sm" hideCode />
 
 上排用矩形说明标准方位、角度与边比例 anchor；下排说明复杂 shape 还可以提供自己的语义点。这里的重点是区分几何所有者，不在概念页枚举每种 shape 的全部名称：
 
 | anchor 家族          | 几何所有者                 | 权威入口                                            |
 | -------------------- | -------------------------- | --------------------------------------------------- |
-| `center` / 标准方位  | Node 的 shape / boundary   | [Node 几何](/kernel/components/node/overview)       |
+| `center` / 标准方位  | Node 的 shape / boundary   | [Node 几何](/kernel/components/node/usage)          |
 | 数字角度             | 选定的 connection boundary | [Path target](/kernel/reference/schema/path#目标点) |
 | shape 专属名称       | 对应 shape                 | [Shapes](/kernel/components/shapes)                 |
-| `{ side, fraction }` | 视觉 shape 的真实边        | [Node 几何](/kernel/components/node/overview)       |
+| `{ side, fraction }` | 视觉 shape 的真实边        | [Node 几何](/kernel/components/node/usage)          |
 
 IR / schema 的标准方位只保留 `top` / `right` / `bottom` / `left` 与四个角点，`center` 独立存在。命名方位优先让 shape / boundary 自己解析，缺失时回退到 AABB；数字角度沿射线命中选定 boundary；shape 专属名称和边比例点始终由视觉 shape 负责。
 
@@ -140,11 +140,11 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star 与 sector，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector 则使用演示中预设的几何参数，文字叠加在既定外形上。后两种是 Standard 可选 shape，演示已通过 `<Layout shapes>` 显式注入；普通使用同样需要从 `@retikz/standard/shape` 导入对应 Definition。Sector 将等内外半径解释为开放弧。
 
-接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/overview)与[Shapes](/kernel/components/shapes) API 继续查对应组件页。
+接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/usage)与[Shapes](/kernel/components/shapes) API 继续查对应组件页。
 
 <ComponentPreview
   files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
-  size="md"
+  size="lg"
   caption="浅灰 dashed 轮廓是当前规则 boundary，淡灰 dotted 半径只是来源轨道辅助线，灰色实线是真实连接；shape 模式下 boundary 与视觉轮廓重合，因此不重复叠画。"
 />
 
@@ -202,7 +202,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
     {
       title: 'Node',
       description: 'Node 组件的完整 props、形状、样式与定位用法',
-      url: '/kernel/components/node/overview',
+      url: '/kernel/components/node/usage',
     },
     {
       title: '自定义形状',
