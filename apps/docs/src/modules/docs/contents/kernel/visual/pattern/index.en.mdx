@@ -1,0 +1,64 @@
+---
+title: Patterns
+description: Fill shapes and stroke regions with repeating lines, dots, grids, or custom textures
+---
+
+Patterns distinguish regions through texture, such as hatched nodes in a flowchart or a grid inside a geometric region. A pattern is a fill or stroke style: Node and Path define the outline, while the pattern defines the texture repeated within it.
+
+## The overall picture
+
+This example supplies a shared pattern through Scope. Compare the repeating texture in the node and path region with the child that overrides its inherited fill. Elements can share a pattern while retaining their own outlines.
+
+<ComponentPreview files="/kernel/visual/pattern/integration/pattern-integration" size="sm" />
+
+Scope passes styles to its children and can paint an independent envelope through `frame`. Node applies the pattern to its shape, while Path applies it to the region formed by its geometry. Patterns can also paint stroke regions. The texture tile repeats, not the node or path itself.
+
+## Responsibilities at a glance
+
+| Chapter               | Responsibility                                                     | When to read                                             |
+| --------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| Basic usage           | Choose built-in patterns and adjust color, spacing, and line style | Apply your first texture                                 |
+| Component integration | Explain Scope inheritance and Node / Path fills and strokes        | Share or override patterns across elements               |
+| Custom patterns       | Define repeating tiles and register their names                    | Lines, dots, and grids are insufficient                  |
+| Implementation        | Explain how definitions become repeating paint resources           | Understand size, resource reuse, and backend consumption |
+| API reference         | Document public types and registration interfaces                  | Write application or extension code                      |
+| Schema reference      | Document serializable fields and constraints                       | Construct, validate, or save drawing data                |
+
+## Choosing an approach and its boundaries
+
+Start with built-in `lines`, `dots`, or `grid`, adjusting color, spacing, and rotation for common textures. Define a custom pattern when you need a different repeating tile. Built-in and custom patterns use the same fill and stroke entries.
+
+Patterns do not change geometry, layout, or hit regions. To change a node outline, see [Node shapes](/kernel/components/node/shape); to draw a new region, use [Path](/kernel/components/path/usage). A two-point line has no visible fill area, so apply its pattern to the stroke instead.
+
+## Contents
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', description: 'Choose and style built-in textures', url: '/kernel/visual/pattern/usage' },
+    {
+      title: 'Component integration',
+      description: 'Apply patterns through Scope, Node, and Path',
+      url: '/kernel/visual/pattern/integration',
+    },
+    {
+      title: 'Custom patterns',
+      description: 'Define and register repeating tiles',
+      url: '/kernel/visual/pattern/custom-pattern',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand pattern resources and rendering',
+      url: '/kernel/visual/pattern/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public types and registration interfaces',
+      url: '/kernel/visual/pattern/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up serializable pattern configuration',
+      url: '/kernel/visual/pattern/schema-reference',
+    },
+  ]}
+/>

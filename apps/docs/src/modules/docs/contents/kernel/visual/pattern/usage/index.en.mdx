@@ -1,0 +1,148 @@
+---
+title: Basic usage
+description: Patterns repeat a small motif across a filled area or stroke. The built-in lines, dots, and grid patterns need no registration.
+---
+
+## Using this topic
+
+The examples below use Node, and all four forms render the same result. Path and Scope also support patterns; see [component integration](/kernel/visual/pattern/integration) for details. Vanilla requires `<div id="diagram"></div>` in the page; call `view.dispose()` before removing the host.
+
+<ComponentPreview files="pattern-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node
+      position={[0, 0]}
+      layout={{ minimumSize: 80 }}
+      style={{ fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } }}
+    />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } },
+    },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node({
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } },
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } },
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Choose a motif
+
+| shape | Motif                                        | Useful options                                  |
+| ----- | -------------------------------------------- | ----------------------------------------------- |
+| lines | Horizontal lines; rotation produces hatching | lineWidth, dashes, lineStyleCycle               |
+| dots  | Circles                                      | lineWidth sets the radius; defaults to size / 5 |
+| grid  | Horizontal and vertical lines                | horizontalStyle, verticalStyle                  |
+
+<ComponentPreview files="pattern-builtins" size="sm" />
+
+`size` is the base spacing in drawing units and defaults to 8. `rotation` rotates the entire pattern in degrees. Omitted `background` is transparent. Motif line styles and the geometry outline are configured separately.
+
+## Directional grids and line cycles
+
+Directional grid settings override the base line style for the corresponding direction.
+
+<ComponentPreview files="pattern-directional-grid" size="sm" />
+
+For lines, `lineStyleCycle` repeats styles across adjacent lines. `period` is an integer from 2 through 512. Override indices start at zero, must be unique, and must be less than period. The final tile size is size × period, while spacing remains size. Grid and dots do not consume this cycle.
+
+<ComponentPreview files="pattern-line-cycle" size="sm" />
+
+Dash selection follows `dashPattern` → `dashed` → `dotted`. Compare motif settings with the unchanged geometry outline below.
+
+<ComponentPreview files="pattern-playground" size="md" controlPanelDefaultSize={50} />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/pattern/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.fill / style.stroke',
+      kind: 'property',
+      type: 'IRPatternPaint',
+      description: 'Use kind: pattern and shape to select a motif; size sets spacing and rotation rotates the tile.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Component integration', url: '/kernel/visual/pattern/integration' },
+    { title: 'API reference', url: '/kernel/visual/pattern/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/pattern/schema-reference' },
+  ]}
+/>

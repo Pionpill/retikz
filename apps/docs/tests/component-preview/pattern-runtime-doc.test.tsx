@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { PreviewSourceConfig } from '../../src/modules/docs/components/component-preview/types';
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
-import { previewSource as customPatternPreviewSource } from '../../src/modules/docs/contents/kernel/components/effects/custom-pattern/custom-pattern-size.demo';
-import { previewSource as builtinPatternPreviewSource } from '../../src/modules/docs/contents/kernel/components/effects/pattern/pattern-playground.demo';
+import { previewSource as customPatternPreviewSource } from '../../src/modules/docs/contents/kernel/visual/pattern/custom-pattern/custom-pattern-size.demo';
+import { previewSource as builtinPatternPreviewSource } from '../../src/modules/docs/contents/kernel/visual/pattern/usage/pattern-playground.demo';
 
 const canonicalComponent = (previewSource: PreviewSourceConfig): FC => {
   const render = previewSource.canonicalRender;

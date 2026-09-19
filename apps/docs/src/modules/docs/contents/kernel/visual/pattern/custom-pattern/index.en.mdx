@@ -1,0 +1,51 @@
+---
+title: Custom patterns
+description: Custom patterns emit a repeating tile through PatternDefinition and remain ordinary pattern paints at the call site.
+---
+
+## Define and register
+
+Import definePattern from `@retikz/core`. Supply a name, optional defaultSize, and emit. Emit receives resolved size, color, and line styles and returns MarkerPrimitive geometry in tile-local coordinates.
+
+This example defines cross, registers it through Layout.extensions.patterns, and references the same name in fill.shape.
+
+<ComponentPreview files="custom-pattern-basic" size="sm" />
+
+React uses `extensions={{ patterns: [cross] }}`. Vanilla supplies `compile: { patterns: [cross] }` to mount / renderToSvgString. Core uses CompileOptions.patterns. Definitions belong to host configuration; emit functions cannot enter IR.
+
+## Control the period
+
+Returning a geometry iterable keeps context.size as the period. Return `{ tileSize, motif }` when final period differs from base spacing; tileSize must be finite and positive. Use context.round for consistent precision.
+
+<ComponentPreview files="custom-pattern-size" size="md" controlPanelDefaultSize={50} />
+
+## Errors and limitations
+
+Names must exist in the active compile registry. Tiles use structured MarkerPrimitive geometry, not DOM, functions, or arbitrary text primitives. Emit exceptions and invalid output are reported at the compile boundary; do not rely on silent fallback. Custom definitions consume background, directional styles, and cycles explicitly; receiving these fields does not make the compiler draw them automatically.
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/pattern/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'extensions.patterns',
+      kind: 'property',
+      type: 'Array<PatternDefinition>',
+      description:
+        'Each definition supplies name, optional defaultSize, and emit(context), returning a motif iterable or { tileSize, motif }.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/pattern/usage' },
+    { title: 'Component integration', url: '/kernel/visual/pattern/integration' },
+    { title: 'API reference', url: '/kernel/visual/pattern/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/pattern/schema-reference' },
+  ]}
+/>

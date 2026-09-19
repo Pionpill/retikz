@@ -1,0 +1,54 @@
+---
+title: Component integration
+description: Patterns use the shared paint contract for fills and strokes. Scope cascades styles and can decorate its envelope through frame.
+---
+
+| Component   | Entry                                                      |
+| ----------- | ---------------------------------------------------------- |
+| Scope       | style.fill / stroke; defaults.node/path.style; frame.style |
+| Node        | style.fill / stroke                                        |
+| Path / Draw | style.fill / stroke                                        |
+
+## Scope
+
+Scope.style.fill / stroke can supply both Node and Path. Use defaults.node.style or defaults.path.style to target one family. Explicit child fill / stroke overrides inherited paint; fill: 'none' disables filling.
+
+<ComponentPreview files="pattern-integration" size="sm" />
+
+### Independent frame
+
+Set `frame.style.fill` to decorate the group envelope without cascading paint to children. Unlike the cascading fill above, the frame stays beneath all content and its spacing does not change layout or anchors.
+
+<ComponentPreview files="/kernel/components/scope/usage/scope-frame" size="sm" />
+
+See [Scope usage](/kernel/components/scope/usage#envelope-frame) for shape, clipping, and empty-scope behavior.
+
+## Node and Path
+
+Node paints its shape with style.fill; text has its own styling. Path fills the enclosed area; use cycle to close it explicitly. A two-point line has no visible area to fill. A patterned stroke paints the stroke area rather than repeating the path geometry.
+
+<ComponentPreview files="pattern-surfaces" size="sm" />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/pattern/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.fill / style.stroke',
+      kind: 'property',
+      type: 'IRPatternPaint',
+      description: 'Use kind: pattern and shape to select a motif; size sets spacing and rotation rotates the tile.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/pattern/usage' },
+    { title: 'Implementation', url: '/kernel/visual/pattern/mechanism' },
+  ]}
+/>

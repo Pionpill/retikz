@@ -1,0 +1,120 @@
+---
+title: Schema 参考
+description: 查询可序列化输入字段与约束
+---
+
+字段由 Core 公开 Schema 读取。宿主注册函数和运行时结果不属于持久化输入。
+
+## PatternPaintSchema
+
+<ZodSchema
+  name="PatternPaintSchema"
+  description="以可重复图块填充或描边的图案配置"
+  descriptions={{
+    kind: '图案判别值 pattern',
+    shape: '内置 lines、dots、grid 或已注册的自定义名称',
+    color: '图案颜色；默认 currentColor',
+    background: '重复单元背景；省略时透明',
+    size: '基础尺寸或间距；依次使用显式值、定义默认值、8，最终周期可由定义覆盖',
+    lineWidth: '线条和网格的宽度；dots 使用它作为半径，省略时为 size / 5',
+    rotation: '整个图案的旋转角度，单位为度',
+    horizontalStyle: '网格横向线条的局部覆盖',
+    verticalStyle: '网格纵向线条的局部覆盖',
+    lineStyleCycle: '相邻线条的稀疏重复样式周期',
+    dashed: '虚线预设；显式 dashPattern 优先',
+    dotted: '点线预设；dashPattern 和 dashed 优先',
+    dashPattern: '显式虚线序列，优先于简写预设',
+    dashOffset: '虚线起始偏移，单位为用户坐标单位',
+    lineCap: '线条端点样式',
+    lineJoin: '线条转角连接样式',
+    'horizontalStyle.color': '线条颜色覆盖',
+    'horizontalStyle.lineWidth': '线宽覆盖，必须为正数，单位为用户坐标单位',
+    'horizontalStyle.dashed': '虚线预设；显式 dashPattern 优先',
+    'horizontalStyle.dotted': '点线预设；dashPattern 和 dashed 优先',
+    'horizontalStyle.dashPattern': '显式虚线序列，优先于简写预设',
+    'horizontalStyle.dashOffset': '虚线起始偏移，单位为用户坐标单位',
+    'horizontalStyle.lineCap': '线条端点样式',
+    'horizontalStyle.lineJoin': '线条转角连接样式',
+    'verticalStyle.color': '线条颜色覆盖',
+    'verticalStyle.lineWidth': '线宽覆盖，必须为正数，单位为用户坐标单位',
+    'verticalStyle.dashed': '虚线预设；显式 dashPattern 优先',
+    'verticalStyle.dotted': '点线预设；dashPattern 和 dashed 优先',
+    'verticalStyle.dashPattern': '显式虚线序列，优先于简写预设',
+    'verticalStyle.dashOffset': '虚线起始偏移，单位为用户坐标单位',
+    'verticalStyle.lineCap': '线条端点样式',
+    'verticalStyle.lineJoin': '线条转角连接样式',
+    'lineStyleCycle.period': '每周期的相邻线条数量，整数 2..512',
+    'lineStyleCycle.overrides': '按零基索引给出的稀疏线型覆盖；至少一项',
+    'lineStyleCycle.overrides.index': '周期内零基索引，必须小于 period 且不可重复',
+    'lineStyleCycle.overrides.style': '此索引的局部线型覆盖',
+    'lineStyleCycle.overrides.style.color': '线条颜色覆盖',
+    'lineStyleCycle.overrides.style.lineWidth': '线宽覆盖，必须为正数，单位为用户坐标单位',
+    'lineStyleCycle.overrides.style.dashed': '虚线预设；显式 dashPattern 优先',
+    'lineStyleCycle.overrides.style.dotted': '点线预设；dashPattern 和 dashed 优先',
+    'lineStyleCycle.overrides.style.dashPattern': '显式虚线序列，优先于简写预设',
+    'lineStyleCycle.overrides.style.dashOffset': '虚线起始偏移，单位为用户坐标单位',
+    'lineStyleCycle.overrides.style.lineCap': '线条端点样式',
+    'lineStyleCycle.overrides.style.lineJoin': '线条转角连接样式',
+  }}
+/>
+
+## PatternShapeNameSchema
+
+<ZodSchema name="PatternShapeNameSchema" description="内置或已注册的图案名称" />
+
+## PatternLineStyleSchema
+
+<ZodSchema
+  name="PatternLineStyleSchema"
+  description="图案中单条线的局部样式"
+  descriptions={{
+    color: '线条颜色覆盖',
+    lineWidth: '线宽覆盖，必须为正数，单位为用户坐标单位',
+    dashed: '虚线预设；显式 dashPattern 优先',
+    dotted: '点线预设；dashPattern 和 dashed 优先',
+    dashPattern: '显式虚线序列，优先于简写预设',
+    dashOffset: '虚线起始偏移，单位为用户坐标单位',
+    lineCap: '线条端点样式',
+    lineJoin: '线条转角连接样式',
+  }}
+/>
+
+## PatternLineStyleOverrideSchema
+
+<ZodSchema
+  name="PatternLineStyleOverrideSchema"
+  description="周期内指定索引的线型覆盖"
+  descriptions={{
+    index: '周期内零基线条索引',
+    style: '对应线条的局部样式',
+    'style.color': '线条颜色覆盖',
+    'style.lineWidth': '线宽覆盖，必须为正数，单位为用户坐标单位',
+    'style.dashed': '虚线预设；显式 dashPattern 优先',
+    'style.dotted': '点线预设；dashPattern 和 dashed 优先',
+    'style.dashPattern': '显式虚线序列，优先于简写预设',
+    'style.dashOffset': '虚线起始偏移，单位为用户坐标单位',
+    'style.lineCap': '线条端点样式',
+    'style.lineJoin': '线条转角连接样式',
+  }}
+/>
+
+## PatternLineStyleCycleSchema
+
+<ZodSchema
+  name="PatternLineStyleCycleSchema"
+  description="相邻线条的重复样式周期"
+  descriptions={{
+    period: '每周期的相邻线条数量，整数 2..512',
+    overrides: '按零基索引给出的稀疏线型覆盖；至少一项',
+    'overrides.index': '周期内零基索引，必须小于 period 且不可重复',
+    'overrides.style': '此索引的局部线型覆盖',
+    'overrides.style.color': '线条颜色覆盖',
+    'overrides.style.lineWidth': '线宽覆盖，必须为正数，单位为用户坐标单位',
+    'overrides.style.dashed': '虚线预设；显式 dashPattern 优先',
+    'overrides.style.dotted': '点线预设；dashPattern 和 dashed 优先',
+    'overrides.style.dashPattern': '显式虚线序列，优先于简写预设',
+    'overrides.style.dashOffset': '虚线起始偏移，单位为用户坐标单位',
+    'overrides.style.lineCap': '线条端点样式',
+    'overrides.style.lineJoin': '线条转角连接样式',
+  }}
+/>

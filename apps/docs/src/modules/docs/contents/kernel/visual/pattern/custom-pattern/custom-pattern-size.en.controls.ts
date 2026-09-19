@@ -1,21 +1,15 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-/** 自定义图案 playground 的稳定字段 id */
-export const CustomPatternSizeControlId = {
-  Size: 'size',
-  Rotation: 'rotation',
-  Color: 'color',
-  Background: 'background',
-} as const;
+import { CustomPatternSizeControlId } from './custom-pattern-size.controls';
 
-/** 自定义图案参数的中文属性面板 */
+/** Custom-pattern instance controls panel in English */
 export const customPatternSizeControls = definePreviewControls({
   presentation: 'panel',
-  title: '调整图案实例',
+  title: 'Tune the pattern instance',
   sections: [
     {
-      label: '重复单元',
+      label: 'Tile',
       controls: [
         {
           kind: 'range',
@@ -37,7 +31,7 @@ export const customPatternSizeControls = definePreviewControls({
       ],
     },
     {
-      label: '颜色',
+      label: 'Colors',
       controls: [
         { kind: 'color', id: CustomPatternSizeControlId.Color, label: 'color', defaultValue: '#008000' },
         {
@@ -46,9 +40,9 @@ export const customPatternSizeControls = definePreviewControls({
           label: 'background',
           defaultValue: 'transparent',
           options: [
-            { value: 'transparent', label: '透明' },
-            { value: '#fef3c7', label: '浅色' },
-            { value: '#0f172a', label: '深色' },
+            { value: 'transparent', label: 'Transparent' },
+            { value: '#fef3c7', label: 'Light' },
+            { value: '#0f172a', label: 'Dark' },
           ],
         },
       ],
@@ -62,14 +56,14 @@ export const previewControlContract = {
   presets: [
     {
       id: 'dense',
-      label: '密集',
+      label: 'Dense',
       values: { size: 6, rotation: 0, color: '#008000', background: 'transparent' },
     },
     {
       id: 'rotated',
-      label: '旋转',
+      label: 'Rotated',
       values: { size: 12, rotation: 45, color: '#ea580c', background: '#fef3c7' },
     },
   ],
-  relatedApis: ['IRPaint', 'PatternDefinition', 'Layout.patterns'],
+  relatedApis: ['IRPaint', 'PatternDefinition', 'Layout.extensions.patterns'],
 } satisfies PreviewControlContract;

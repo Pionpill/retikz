@@ -1,0 +1,86 @@
+---
+title: 实现原理
+description: 理解图案规格如何生成重复单元、复用 Scene 资源，并由 SVG 与 Canvas 绘制。
+---
+
+读过[基础用法](/kernel/visual/pattern/usage)后，本页解释三个问题：线条间距如何变成重复周期，相同图案如何复用，以及不同后端如何将纹理应用到图形。
+
+图案处理会经过以下几种数据：
+
+- 图案规格：IR 中保存的名称、尺寸和样式，描述要绘制什么。
+- 图案定义：按名称注册的生成逻辑，其 `emit` 函数负责生成纹理几何。
+- 重复单元：由最终周期和几何图元组成的可序列化结果，供后端平铺。
+
+下面的流程图展示它们的转换关系。定义只在 Core 中执行，renderer 接收的是生成后的数据。
+
+<ComponentPreview files="pattern-flow" size="xs" hideCode type="flow" />
+
+## 间距如何变成重复周期
+
+`resolvePaint` 先根据 `shape` 从当前 registry 取得定义，再确定基础尺寸：优先使用显式 `size`，其次是定义的 `defaultSize`，最后使用 8。未知名称会报错，不会替换为其他图案；尺寸必须是有限正数，并按当前编译精度圆整。
+
+样式随后由 `resolvePatternStyle` 整理。顶层线型构成基础值，网格的水平、垂直配置分别覆盖基础值；稀疏的 `lineStyleCycle.overrides` 会展开成完整周期，没有覆盖的位置沿用基础线型。这使定义可以直接消费每个位置的有效样式，不必再次解释稀疏配置。
+
+基础尺寸不一定等于最终周期。例如内置 `lines` 使用 `size: 10`、周期长度 3 时，相邻线条仍相隔 10，但要用 30 × 30 的重复单元容纳三种线型。否则每隔 10 就重新平铺，第二、第三种线型无法进入完整循环。
+
+下面用橙色区分周期中的强调线：左侧是一个完整单元，右侧扩大填充区域，线间距保持不变。
+
+<ComponentPreview files="pattern-period" size="sm" hideCode type="illustration" />
+
+这个差异由 `emit` 的返回值表达：只返回图元 iterable 时，沿用基础尺寸；返回 `{ tileSize, motif }` 时，使用显式周期。Core 会检查周期为有限正数，并校验生成的图元。因此自定义定义也能控制重复周期，而不需要后端识别新的图案名称。
+
+<SourceLinks
+  sources={[
+    { label: '名称绑定与基础尺寸', path: 'packages/kernel/core/src/resolve/resource/paint.ts' },
+    { label: '方向覆盖与周期样式展开', path: 'packages/kernel/core/src/resolve/resource/pattern.ts' },
+    { label: '内置线条的完整重复周期', path: 'packages/kernel/core/src/providers/pattern/definitions.ts' },
+  ]}
+/>
+
+## 多个图形如何复用同一份纹理
+
+编译阶段的 paint registry 将图案规格转换成资源引用。第一次遇到某个规格时，Core 调用已绑定定义的 `emit`，收集并校验几何，生成包含 `spec` 与 `tile` 的 Scene paint 资源；图形的填充或描边只保存指向它的 `resourceRef`。
+
+下面的 Node 填充与 Path 描边使用相同规格，两条引用汇入同一份 paint 资源，再由后端消费。
+
+<ComponentPreview files="pattern-resource" size="sm" hideCode type="flow" />
+
+同一 registry 内再次注册相同规格时，直接返回已有资源引用，跳过生成过程。资源键递归排序对象字段，所以仅仅交换配置字段顺序不会生成新资源；数组顺序仍然参与比较，因为周期配置等数组具有顺序含义。
+
+这里复用的是规格相同的资源，并不是比较最终画面是否相同。例如省略默认值与显式写出相同默认值，不保证合并为同一资源。缓存也属于创建出的 paint registry，不是跨所有编译任务的全局缓存。
+
+定义函数保留在 Core 的解析上下文中，不写入 IR 或 Scene。Scene 只携带规格、重复单元和引用，所以后端不需要 registry，也不需要重新执行用户的定义。
+
+<SourceLinks
+  sources={[
+    { label: '资源键、emit 调用与资源引用', path: 'packages/kernel/core/src/compile/resource/paint.ts' },
+    { label: '重复单元图元的输出检查', path: 'packages/kernel/core/src/compile/resource/marker-primitive.ts' },
+  ]}
+/>
+
+## 同一重复单元如何交给不同后端
+
+SVG 把重复单元转换为 `<pattern>`：宽高使用最终周期，`patternUnits="userSpaceOnUse"` 表示尺寸采用绘图用户单位，`rotation` 则转为 `patternTransform`。因此增大目标图形的轮廓会露出更多纹理，不会为了填满它而自动拉伸单元；这也不表示纹理固定为屏幕像素，视图缩放仍会影响显示。
+
+Canvas 先创建离屏画布，将重复单元画入其中，再用 `createPattern(..., 'repeat')` 创建纹理，并通过 `setTransform` 应用旋转。它需要可用的 `createOffscreen` 工厂；缺少离屏上下文时，这条路径无法生成纹理。
+
+两端最终都将纹理作为填充或描边使用，目标图形决定可见区域。图案本身不生成节点轮廓，也不改变布局或命中几何。
+
+背景处理需要留意：SVG 直接绘制 `motif`，不会单独把 `tile.background` 变成背景矩形；Canvas 会先绘制该背景再绘制 `motif`。内置定义已经把背景几何加入重复单元。自定义定义若需要两端都有背景，也应在 `emit` 中处理 `context.background`，不能仅依赖 Canvas 的背景步骤。
+
+<SourceLinks
+  sources={[
+    { label: 'SVG pattern 与用户单位', path: 'packages/kernel/render/src/svg/builders/paint-defs.ts' },
+    { label: 'Canvas 离屏纹理与旋转', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/pattern/usage' },
+    { title: '组件对接', url: '/kernel/visual/pattern/integration' },
+    { title: '自定义图案', url: '/kernel/visual/pattern/custom-pattern' },
+  ]}
+/>
