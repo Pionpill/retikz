@@ -16,7 +16,7 @@ import {
   StandardShapeProviders,
   StarShapeDefinition,
   StarShapeProvider,
-} from '../../src/shape';
+} from '../../src/node-shape';
 
 const scene = (children: IRScene['children']): IRScene => ({ type: 'scene', version: 1, children });
 

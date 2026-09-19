@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import ArcSectorAngleModel from '@/modules/docs/contents/kernel/components/path/mechanism/arc-sector-angle-model.demo';
+import ArcSectorAngleModel from '@/modules/docs/contents/library/standard/arc-sector/arc-sector-angle-model.demo';
 
 const attributeNumber = (markup: string, name: string) => {
   const value = markup.match(new RegExp(`${name}="([^"]+)"`))?.[1];

@@ -5,16 +5,17 @@ description: Standard adds reusable presentation components and optional drawing
 
 Standard handles drawing tasks that recur across diagrams: adding a reference grid, wrapping content in a background and border, or combining symbols with labels into a legend. You supply geometry, styles, or child graphics; Standard converts them into Core primitives for an SVG or Canvas backend.
 
-## Two kinds of capability
+## Capability groups
 
 Presentation components are higher-level abstractions built on Kernel, with semantics of their own: a grid describes the distribution of reference lines, while a legend describes how symbols correspond to labels. Components translate these higher-level descriptions into Kernel primitives rather than merely adding a visual style to a primitive.
 
 Extensions only add capabilities horizontally through Kernel's existing extension mechanisms, such as additional shape, arrow, clip, or ribbon definitions. They follow the corresponding Kernel contracts and consumption paths without introducing a new layer of composition semantics as presentation components do.
 
-| Group        | Provides                                            | Use it for                                                             |
-| ------------ | --------------------------------------------------- | ---------------------------------------------------------------------- |
-| Presentation | Grid, Axes, Frame, Surface, Legend                  | Composing reference grids, axes, frames, content surfaces, and legends |
-| Extensions   | Optional shape, arrow, clip, and ribbon definitions | Adding specific drawing rules beyond the basic primitives              |
+| Group        | Provides                                                      | Use it for                                                             |
+| ------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Presentation | Grid, Axes, Frame, Surface, Legend                            | Composing reference grids, axes, frames, content surfaces, and legends |
+| Shapes       | Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector | Draw standalone path contours from geometric parameters                |
+| Extensions   | Optional shape, arrow, clip, and ribbon definitions           | Adding specific drawing rules beyond the basic primitives              |
 
 Presentation components can be placed directly inside a React `Layout`. Import optional definitions from their exact capability entry and supply them to the current diagram's compile options. See [capability loading](/library/standard/capability-loading) for that wiring.
 
@@ -24,12 +25,15 @@ Kernel provides nodes, paths, compilation, and rendering. Standard composes rich
 
 Standard's `Grid` **draws grid lines**; Layout's `GridLayout` **arranges child graphics in grid regions**. They can be combined but serve different purposes. To arrange, wrap, or stack content, read the [Layout introduction](/library/layout/introduction).
 
+Shape composites preserve high-level geometry intent across JSON, React and Vanilla through the three packages’ `/shape` subpaths, then lower to Core Paths. Node shape extensions instead handle content boundaries and connection anchors.
+
 ## Choose an entry
 
 - `@retikz/standard-react`: compose presentation components in JSX
 - `@retikz/standard-vanilla`: author ordinary TypeScript input and use Vanilla rendering
 - `@retikz/standard`: validate persistent graphic data or use component definitions directly
-- `@retikz/standard/<capability>`: import optional drawing definitions on demand
+- The three packages’ `/shape` subpaths: shape Sources, React components and Vanilla `shape.xxx`
+- `@retikz/standard/node-shape`, `/arrow`, `/clip`, `/ribbon`: optional drawing definitions
 
 ## Next steps
 

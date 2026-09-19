@@ -1,5 +1,6 @@
 import { DrawWay } from '@retikz/core';
-import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const FONT = { size: 10 };

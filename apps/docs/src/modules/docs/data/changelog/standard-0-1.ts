@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 形状迁移', en: 'Unreleased · Shape migration' },
+          content: {
+            zh: '新增 Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 的持久化 composite。形状从三包 /shape 子入口导出，节点形状扩展迁至 @retikz/standard/node-shape。Vanilla 统一使用 shape.xxx，React 组件来自 @retikz/standard-react/shape；几何约束与 provider 按需装配共用同一契约。',
+            en: 'Adds persistent Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc and Sector composites. Shape APIs use dedicated /shape subpaths; node extensions move to @retikz/standard/node-shape. Vanilla uses shape.xxx and React components come from @retikz/standard-react/shape, sharing geometry validation and on-demand providers.',
+          },
+        },
+        {
           label: { zh: '首批语义 composite', en: 'First semantic composites' },
           content: {
             zh: '`Grid`、`Axes`、`Frame` 与 `Legend` 分别保存规则网格、静态数学坐标轴、带 Node-like header 的可视分组，以及已解析样本与含义的对应关系；lowering 后只产生既有 Core Scene primitives。',

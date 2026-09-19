@@ -1,5 +1,6 @@
 import type { Position } from '@retikz/math';
-import { Circle, Draw, Layout, Node } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

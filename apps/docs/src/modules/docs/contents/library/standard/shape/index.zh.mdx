@@ -1,14 +1,14 @@
 ---
-title: 形状扩展
-description: 从 @retikz/standard/shape 按需引入可选节点形状，并分别在 React 与 Vanilla 的编译入口传入 Definition。
+title: 节点形状
+description: 从 @retikz/standard/node-shape 按需引入可选节点形状，并分别在 React 与 Vanilla 的编译入口传入 Definition。
 ---
 
 形状扩展在 Core 提供的基础形状之上，补充了更多可选内容：
 
-| 包名             | 提供内容                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| `core`           | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形                                                     |
-| `standard/shape` | `cross`、`sector`、`star`、`contour`、`trapezoid`、`parallelogram`、`hexagon`、`cylinder`、`ellipticCapsule` |
+| 包名                  | 提供内容                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `core`                | `rectangle` — 矩形、`ellipse` — 椭圆、`polygon` — 多边形                                                     |
+| `standard/node-shape` | `cross`、`sector`、`star`、`contour`、`trapezoid`、`parallelogram`、`hexagon`、`cylinder`、`ellipticCapsule` |
 
 ## 用法
 
@@ -21,11 +21,11 @@ description: 从 @retikz/standard/shape 按需引入可选节点形状，并分�
 
 ### React 用法
 
-从 `@retikz/standard/shape` 导入当前图需要的 Definition，传给 React `Layout` 的 `shapes` 属性。Definition 与参数分离：Node 只保存 `shape` 名称和 JSON-safe `params`，导入模块不会全局注册形状。
+从 `@retikz/standard/node-shape` 导入当前图需要的 Definition，传给 React `Layout` 的 `shapes` 属性。Definition 与参数分离：Node 只保存 `shape` 名称和 JSON-safe `params`，导入模块不会全局注册形状。
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
   <Node position={[0, 0]} shape="cross" layout={{ minimumSize: { width: 80, height: 80 } }}>
@@ -40,7 +40,7 @@ import { CrossShapeDefinition } from '@retikz/standard/shape';
 
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 const svg = renderToSvgString(input, {
   compile: {

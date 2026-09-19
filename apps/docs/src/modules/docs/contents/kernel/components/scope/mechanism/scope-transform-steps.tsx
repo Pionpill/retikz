@@ -1,4 +1,5 @@
-import { Circle, Draw, Layout, Node, Scope } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { InputTransform } from '@retikz/vanilla';
 import type { FC } from 'react';
 

@@ -18,13 +18,15 @@ import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 <Layout
-  extensions={{ shapes: [CrossShapeDefinition], arrows: [DiamondArrowDefinition], clips: [CircleClipDefinition], pathKinds: [RibbonPathKindDefinition] }}
-  
-  
-  
+  extensions={{
+    shapes: [CrossShapeDefinition],
+    arrows: [DiamondArrowDefinition],
+    clips: [CircleClipDefinition],
+    pathKinds: [RibbonPathKindDefinition],
+  }}
 >
   {/* Figure content */}
 </Layout>;
@@ -37,7 +39,7 @@ import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 const svg = renderToSvgString(input, {
   compile: {
@@ -57,9 +59,11 @@ When the figure can use every official extension in a capability family, import 
 import { Layout } from '@retikz/react';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
 import { StandardClipDefinitions } from '@retikz/standard/clip';
-import { StandardShapeDefinitions } from '@retikz/standard/shape';
+import { StandardShapeDefinitions } from '@retikz/standard/node-shape';
 
-<Layout extensions={{ shapes: StandardShapeDefinitions, arrows: StandardArrowDefinitions, clips: StandardClipDefinitions }}  >
+<Layout
+  extensions={{ shapes: StandardShapeDefinitions, arrows: StandardArrowDefinitions, clips: StandardClipDefinitions }}
+>
   {/* Figure content */}
 </Layout>;
 ```
@@ -70,7 +74,7 @@ Vanilla passes the same collections to `compile`:
 import { renderToSvgString } from '@retikz/vanilla';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
 import { StandardClipDefinitions } from '@retikz/standard/clip';
-import { StandardShapeDefinitions } from '@retikz/standard/shape';
+import { StandardShapeDefinitions } from '@retikz/standard/node-shape';
 
 const svg = renderToSvgString(input, {
   compile: {

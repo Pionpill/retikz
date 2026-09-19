@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

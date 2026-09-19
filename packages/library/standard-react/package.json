@@ -37,6 +37,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./shape": {
+      "types": "./src/shape/index.ts",
+      "default": "./src/shape/index.ts"
     }
   },
   "publishConfig": {
@@ -48,6 +52,11 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./shape": {
+        "types": "./dist/types/shape/index.d.ts",
+        "import": "./dist/shape/index.js",
+        "default": "./dist/shape/index.js"
       }
     }
   },

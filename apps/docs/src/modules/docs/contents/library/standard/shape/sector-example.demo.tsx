@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { SectorShapeDefinition } from '@retikz/standard/shape';
+import { SectorShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

@@ -1,4 +1,5 @@
-import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle, Ellipse, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 /** 同一内容框在 proportional / equal 外接策略下的边界对照图 */

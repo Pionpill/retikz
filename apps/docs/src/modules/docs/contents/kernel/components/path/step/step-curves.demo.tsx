@@ -1,4 +1,5 @@
-import { Circle, Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Draw, Layout, Node, Path, Step } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC, ReactNode } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

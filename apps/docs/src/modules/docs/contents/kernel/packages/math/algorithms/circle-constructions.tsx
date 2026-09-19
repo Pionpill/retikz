@@ -1,6 +1,7 @@
 import type { Position } from '@retikz/math';
 import { circle, triangle } from '@retikz/math';
-import { Circle, Draw, Layout } from '@retikz/react';
+import { Draw, Layout } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

@@ -2,7 +2,8 @@ import type { FC } from 'react';
 import { forwardRef, Fragment, memo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { Circle, collectHydrationHandlers, Node, Path, Scope, Step } from '../../../src';
+import { collectHydrationHandlers, Node, Path, Scope, Step } from '../../../src';
+import type { PathProps } from '../../../src';
 
 /**
  * 水合：collectHydrationHandlers（与 InputScene 遍历同源，按 id 收 handler）
@@ -14,6 +15,13 @@ import { Circle, collectHydrationHandlers, Node, Path, Scope, Step } from '../..
 afterEach(() => {
   vi.restoreAllMocks();
 });
+
+const TestPathSugar: FC<Pick<PathProps, 'id' | 'onClick'>> = props => (
+  <Path id={props.id}>
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="line" to={[1, 1]} />
+  </Path>
+);
 
 describe('collectHydrationHandlers', () => {
   it('基本：<Node id onClick> 收成 { a: { click } }', () => {
@@ -55,9 +63,9 @@ describe('collectHydrationHandlers', () => {
     expect(handlers.b.click).toBe(clickB);
   });
 
-  it('Sugar：<Circle id onClick> handler 归到展开后承载 id 的 Kernel 元素', () => {
+  it('Sugar：<TestPathSugar id onClick> handler 归到展开后承载 id 的 Kernel 元素', () => {
     const click = vi.fn();
-    const handlers = collectHydrationHandlers(<Circle id="ring" center={[0, 0]} radius={1} onClick={click} />);
+    const handlers = collectHydrationHandlers(<TestPathSugar id="ring" onClick={click} />);
 
     expect(handlers.ring.click).toBe(click);
   });
@@ -148,7 +156,7 @@ describe('collectHydrationHandlers', () => {
   it('Sugar handler 不重复注册：展开后内层 Path 携带同 id 但无 handler', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const click = vi.fn();
-    const handlers = collectHydrationHandlers(<Circle id="ring" center={[0, 0]} radius={1} onClick={click} />);
+    const handlers = collectHydrationHandlers(<TestPathSugar id="ring" onClick={click} />);
 
     expect(handlers.ring.click).toBe(click);
     // 内层展开的 Path 虽透传了 id="ring"，但无 handler → 不触发重复 id warn

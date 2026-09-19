@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { ParallelogramShapeDefinition } from '@retikz/standard/shape';
+import { ParallelogramShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -8,7 +8,10 @@ import { parallelogramExampleControls, previewControlContract } from './parallel
 
 export const previewControls = parallelogramExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [ParallelogramShapeDefinition] }}>
+  <Layout
+    viewBox={{ x: -120, y: -80, width: 240, height: 160 }}
+    extensions={{ shapes: [ParallelogramShapeDefinition] }}
+  >
     <Node
       position={[0, 0]}
       shape={{

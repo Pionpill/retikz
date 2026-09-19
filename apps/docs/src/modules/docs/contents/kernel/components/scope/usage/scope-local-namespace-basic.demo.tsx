@@ -1,4 +1,5 @@
-import { Draw, Layout, Node, Rectangle, Scope } from '@retikz/react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

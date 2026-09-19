@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { HexagonShapeDefinition } from '@retikz/standard/shape';
+import { HexagonShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

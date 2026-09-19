@@ -13,10 +13,10 @@ However, eventual conversion does not mean a form is not a first-class IR repres
 
 ## Kernel and Sugar
 
-| Layer  | Examples                                                                                                                         | Enters IR directly | Notes                                          |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------- |
-| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>`                                                         | Yes                | One-to-one with IR nodes                       |
-| Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings, <br />shape helpers like `<Circle>` / `<Rectangle>` / `<Star>` | No                 | Synchronously expands to Kernel in the adapter |
+| Layer  | Examples                                                                 | Enters IR directly | Notes                                          |
+| ------ | ------------------------------------------------------------------------ | ------------------ | ---------------------------------------------- |
+| Kernel | `<Layout>` / `<Scope>` / `<Node>` / `<Coordinate>` / `<Path>` / `<Step>` | Yes                | One-to-one with IR nodes                       |
+| Sugar  | `<Draw way={...}>`, `DrawWay.Cycle`, relative-coordinate strings         | No                 | Synchronously expands to Kernel in the adapter |
 
 Sugar adds no new capability. Anything drawn with `<Draw>` can also be written manually with `<Path>` + `<Step>`. The two snippets below compile to the same result:
 
@@ -35,13 +35,13 @@ Sugar adds no new capability. Anything drawn with `<Draw>` can also be written m
 
 ## Expansion
 
-Equivalence means the corresponding expressions produce the same basic semantics and drawing result, not that Sugar is a textual substitution. The two-point connection proves this example; shape helpers and other shorthands expand through their own parsing rules.
+Equivalence means the corresponding expressions produce the same basic semantics and drawing result, not that Sugar is a textual substitution. The two-point connection proves this example; other shorthands expand through their own parsing rules.
 
 The convenient notation expands into basic IR (the persistable drawing declaration), then shared compilation produces Scene (the drawing result consumed by renderers). SVG and Canvas do not need to recognize authoring helpers such as Draw.
 
 <ComponentPreview files="sugar-flow" size="xs" hideCode />
 
-“Parse / expand” happens during IR construction: for example, Vanilla's `normalizePath` calls Core's `parseWay` to parse a Draw's `way` into basic steps. Shape helpers can also expand by composing basic components directly; not every Sugar component uses the same parser. The resulting basic IR then enters compilation.
+“Parse / expand” happens during IR construction: for example, Vanilla's `normalizePath` calls Core's `parseWay` to parse a Draw's `way` into basic steps. Standard shapes preserve their composite intent until compilation. The resulting basic IR then enters compilation.
 
 ## Choosing a Layer
 
@@ -72,17 +72,13 @@ Use [composites](/kernel/components/design/composite) to persist intent such as 
 
 Kernel provides the following Sugar components through `@retikz/react`. This list covers their purpose; follow the component links for usage.
 
-| Component                                                | Purpose                                              |
-| -------------------------------------------------------- | ---------------------------------------------------- |
-| [Draw](/kernel/components/path/usage)                    | Expand path shorthand into Path and Step             |
-| [EdgeLabel](/kernel/components/path/step)                | Convert child notation into Step label configuration |
-| [Circle, Ellipse](/kernel/components/path/api-reference) | Circle and ellipse paths                             |
-| [Arc, Sector](/kernel/components/path/api-reference)     | Circular arcs, elliptical arcs, and sector paths     |
-| [Rectangle](/kernel/components/path/api-reference)       | Rectangle paths                                      |
-| [RegularPolygon](/kernel/components/path/api-reference)  | Regular polygon paths                                |
-| [Star](/kernel/components/path/api-reference)            | Star paths                                           |
+| Component                                       | Purpose                                              |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| [Draw](/kernel/components/path/usage)           | Expand path shorthand into Path and Step             |
+| [EdgeLabel](/kernel/components/path/step)       | Convert child notation into Step label configuration |
+| [Arc, Sector](/library/standard/circle-ellipse) | Circular arcs, elliptical arcs, and sector paths     |
 
-Shape components simplify path authoring; they are a different entry point from a Node's `shape` configuration. `DrawWay.Cycle` and relative-coordinate strings are also shorthand, but are not components and are therefore omitted from this table.
+Circle, Ellipse and the other [Standard shapes](/library/standard/circle-ellipse) retain composite intent in IR. `DrawWay.Cycle` and relative-coordinate strings remain Kernel authoring shorthand.
 
 ## Further reading
 

@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { TrapezoidShapeDefinition } from '@retikz/standard/shape';
+import { TrapezoidShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

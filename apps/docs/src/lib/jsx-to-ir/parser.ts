@@ -1,22 +1,6 @@
-import {
-  Arc,
-  Circle,
-  Coordinate,
-  Draw,
-  EdgeLabel,
-  Ellipse,
-  Layout,
-  Node,
-  Path,
-  Rectangle,
-  RegularPolygon,
-  Scope,
-  Sector,
-  Star,
-  Step,
-  Text,
-} from '@retikz/react';
+import { Coordinate, Draw, EdgeLabel, Layout, Node, Path, Scope, Step, Text } from '@retikz/react';
 import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
+import { Arc, Circle, Ellipse, Rectangle, RegularPolygon, Sector, Star } from '@retikz/standard-react/shape';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';
 import type { FC, ReactElement, ReactNode } from 'react';

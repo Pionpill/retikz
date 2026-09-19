@@ -7,9 +7,11 @@ import { writeLayoutApiReferenceMdx } from './api-reference/layout';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
+import { writeStandardShapeApiReferences } from './api-reference/standard-shapes';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeStandardShapeApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/standard'));
 
 await writeDrawApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/path/api-reference/_includes'),

@@ -1,5 +1,6 @@
 import { intersectRayWithArc, pointAtArcAngle } from '@retikz/math';
-import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
+import { Draw, Layout, Path, Step } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

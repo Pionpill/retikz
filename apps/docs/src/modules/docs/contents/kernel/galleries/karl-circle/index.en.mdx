@@ -7,7 +7,7 @@ description: Academic illustration example — sin / cos / tan geometry for a 30
 
 This is the final figure from the [TikZ tutorial](https://tikz.dev/tutorial) — "Karl teaching his daughter trigonometry": a unit circle plus the sin / cos / tan geometry around a 30° angle.
 
-The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have used shape sugar such as [Circle](/kernel/components/path/api-reference) and [Sector](/kernel/components/path/api-reference), plus Standard [Grid](/library/standard/grid). They shorten the hand-written Path / Step pieces or retain reusable high-level drawing intent, while [Draw](/kernel/components/path/usage) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/usage) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
+The page breaks it into 7 accumulative steps. From a single naked circle each step adds one visible element and one retikz capability — by the end you have the full figure and have used shape sugar such as [Circle](/library/standard/circle-ellipse) and [Sector](/library/standard/arc-sector), plus Standard [Grid](/library/standard/grid). They shorten the hand-written Path / Step pieces or retain reusable high-level drawing intent, while [Draw](/kernel/components/path/usage) / [Coordinate](/kernel/components/node/coordinate) / [Node](/kernel/components/node/usage) keep building the full figure, plus polar positions, multi-Draw coordination, and multi-line / multi-color Node text.
 
 <ComponentPreview files="karl-circle-07-info" size="lg" />
 
@@ -57,7 +57,7 @@ Send the prompt bottom to the AI chat panel — the LLM will produce retikz IR /
 
 ### Step 1 — Unit circle
 
-Minimal start — one circle centered at the origin. Use [Circle](/kernel/components/path/api-reference) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle” at a glance. `lineCap="round"` softens the line endpoints.
+Minimal start — one circle centered at the origin. Use [Circle](/library/standard/circle-ellipse) here: `center + radius` keeps the first step short, and it still expands to the same underlying Path / Step shape, but the code reads like “this is a circle” at a glance. `lineCap="round"` softens the line endpoints.
 
 <ComponentPreview files="karl-circle-01-circle" size="lg" />
 
@@ -76,7 +76,7 @@ retikz coordinates are SVG pixels with y pointing downward — so "1 unit up" is
 
 ### Step 4 — 30° wedge + α label
 
-The wedge is the trickiest step. Use [Sector](/kernel/components/path/api-reference) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
+The wedge is the trickiest step. Use [Sector](/library/standard/arc-sector) here: it starts from the center, draws the arc, and closes back to the center, so the intent reads more directly than a hand-written `arc` + `line` path, and it is easier for a first-time reader to remember as one clear API.
 
 The α label is written as the `$\alpha$` inline formula (a real Greek letter) at a polar position (`{ angle, radius }`) — `{ angle: -15, radius: 22 }` places it visually centered in the wedge (a negative angle points toward the top of the screen). Its color comes from the node's `textColor` (the whole formula follows `textColor`; for per-segment colors see the `runs` in Step 7).
 
@@ -110,8 +110,8 @@ The frame is just this node's own `shape="rectangle"` + `dashed` + `stroke="ligh
 
 | Component                                                                         | Role in this example                                                                                                                       | Main steps                                                                                                                                                                             |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Circle](/kernel/components/path/api-reference)                                   | Unit circle                                                                                                                                | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label)                                                                                                  |
-| [Sector](/kernel/components/path/api-reference)                                   | 30° wedge                                                                                                                                  | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray)                                               |
+| [Circle](/library/standard/circle-ellipse)                                        | Unit circle                                                                                                                                | [1](#step-1--unit-circle), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label)                                                                                                  |
+| [Sector](/library/standard/arc-sector)                                            | 30° wedge                                                                                                                                  | [4](#step-4--30-wedge--α-label), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray)                                               |
 | [Grid](/library/standard/grid)                                                    | Background grid                                                                                                                            | [3](#step-3--grid--ticks)                                                                                                                                                              |
 | [Draw](/kernel/components/path/usage)                                             | Axes + tick marks + sin/cos/tan colored lines (edge labels use `$...$` formulas) + auxiliary ray                                           | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [5](#step-5--sin-α-red-line--cos-α-dodgerblue-line), [6](#step-6--tan-α-darkorange-line--auxiliary-ray) |
 | [Node](/kernel/components/node/usage) + [`$...$`](/kernel/packages/tex/authoring) | Axis x / y, tick fractions, α (inline formulas) + right info box (multi-line `{ runs }` mixing text + formula, per-run color, self-framed) | [2](#step-2--axes--endpoint-labels--named-anchors), [3](#step-3--grid--ticks), [4](#step-4--30-wedge--α-label), [7](#step-7--right-hand-multi-color-info-box)                          |

@@ -1,14 +1,14 @@
 ---
-title: Shape Extensions
-description: Import optional node shapes on demand from @retikz/standard/shape, then pass their Definitions through the React or Vanilla compile entry point.
+title: Node shapes
+description: Import optional node shapes on demand from @retikz/standard/node-shape, then pass their Definitions through the React or Vanilla compile entry point.
 ---
 
 Shape extensions build on Core's basic shapes and add more optional content:
 
-| Package          | Provided content                                                                                             |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| `core`           | `rectangle`, `ellipse`, `polygon`                                                                            |
-| `standard/shape` | `cross`, `sector`, `star`, `contour`, `trapezoid`, `parallelogram`, `hexagon`, `cylinder`, `ellipticCapsule` |
+| Package               | Provided content                                                                                             |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `core`                | `rectangle`, `ellipse`, `polygon`                                                                            |
+| `standard/node-shape` | `cross`, `sector`, `star`, `contour`, `trapezoid`, `parallelogram`, `hexagon`, `cylinder`, `ellipticCapsule` |
 
 ## Usage
 
@@ -21,11 +21,11 @@ Both styles explicitly assemble capabilities for the current figure. Importing t
 
 ### React usage
 
-Import the Definitions a figure needs from `@retikz/standard/shape` and pass them to the React `Layout` `shapes` prop. Definitions and parameters are separate: Node stores only a shape name and JSON-safe `params`, and the import does not register shapes globally.
+Import the Definitions a figure needs from `@retikz/standard/node-shape` and pass them to the React `Layout` `shapes` prop. Definitions and parameters are separate: Node stores only a shape name and JSON-safe `params`, and the import does not register shapes globally.
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
   <Node position={[0, 0]} shape="cross" layout={{ minimumSize: { width: 80, height: 80 } }}>
@@ -40,7 +40,7 @@ With `@retikz/vanilla`, put the Definition in `compile.shapes`. `input` can be a
 
 ```ts
 import { renderToSvgString } from '@retikz/vanilla';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 const svg = renderToSvgString(input, {
   compile: {

@@ -25,6 +25,15 @@ import * as IRPlot from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
 import * as StandardClipIR from '@retikz/standard/clip';
 import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
+import {
+  CircleSchema,
+  EllipseSchema,
+  RectangleSchema,
+  RegularPolygonSchema,
+  StarSchema,
+  ArcSchema,
+  SectorSchema,
+} from '@retikz/standard/shape';
 import * as IRTable from '@retikz/table';
 import type { core, z } from 'zod';
 
@@ -563,6 +572,17 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'ArcStep',
     url: '/kernel/components/path/schema-reference#arcstepschema',
   },
+  CircleSchema: { schema: CircleSchema, label: 'Circle', url: '/library/standard/circle-ellipse#circleschema' },
+  EllipseSchema: { schema: EllipseSchema, label: 'Ellipse', url: '/library/standard/circle-ellipse#ellipseschema' },
+  RectangleSchema: { schema: RectangleSchema, label: 'Rectangle', url: '/library/standard/rectangle#rectangleschema' },
+  RegularPolygonSchema: {
+    schema: RegularPolygonSchema,
+    label: 'RegularPolygon',
+    url: '/library/standard/regular-polygon#regularpolygonschema',
+  },
+  StarSchema: { schema: StarSchema, label: 'Star', url: '/library/standard/star#starschema' },
+  ArcSchema: { schema: ArcSchema, label: 'Arc', url: '/library/standard/arc-sector#arcschema' },
+  SectorSchema: { schema: SectorSchema, label: 'Sector', url: '/library/standard/arc-sector#sectorschema' },
   CirclePathStepSchema: {
     schema: IR.CirclePathStepSchema,
     label: 'CirclePathStep',

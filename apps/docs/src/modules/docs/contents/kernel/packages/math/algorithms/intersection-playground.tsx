@@ -1,6 +1,7 @@
 import type { Position } from '@retikz/math';
 import { intersect, vector2 } from '@retikz/math';
-import { Circle, Draw, Layout, Node } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC, ReactNode } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

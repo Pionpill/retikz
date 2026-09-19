@@ -65,6 +65,31 @@ export const librarySection: Array<Section> = [
         sidebarGroup: 'library.standardComposite',
       },
       {
+        id: 'circle-ellipse',
+        label: 'library.standardCircleEllipse',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      {
+        id: 'rectangle',
+        label: 'library.standardRectangle',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      {
+        id: 'regular-polygon',
+        label: 'library.standardRegularPolygon',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      { id: 'star', label: 'library.standardStar', difficulty: 'beginner', sidebarGroup: 'library.standardShapes' },
+      {
+        id: 'arc-sector',
+        label: 'library.standardArcSector',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      {
         id: 'shape',
         label: 'library.standardExtensionShape',
         difficulty: 'beginner',

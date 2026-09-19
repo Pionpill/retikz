@@ -207,7 +207,7 @@
     "standardSurface": "Surface",
     "standardLegend": "Legend",
     "standardExtension": "Extensions",
-    "standardExtensionShape": "Shapes",
+    "standardExtensionShape": "Node shapes",
     "standardExtensionArrow": "Arrows",
     "standardExtensionClip": "Clips",
     "standardExtensionRibbon": "Ribbon",
@@ -222,7 +222,13 @@
     "layoutContractArtifact": "Contract - Artifact",
     "layoutRuntime": "Runtime",
     "changelog": "Changelog",
-    "changelogV01": "v0.1"
+    "changelogV01": "v0.1",
+    "standardShapes": "Shapes",
+    "standardCircleEllipse": "Circles and ellipses",
+    "standardRectangle": "Rectangles",
+    "standardRegularPolygon": "Regular polygons",
+    "standardStar": "Stars",
+    "standardArcSector": "Arcs and sectors"
   },
   "schematic": {
     "label": "Schematic",

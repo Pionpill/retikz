@@ -1,5 +1,6 @@
 import type { WayDSL } from '@retikz/core';
-import { Circle, Draw, Layout, Node } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

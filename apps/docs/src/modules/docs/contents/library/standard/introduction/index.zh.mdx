@@ -5,16 +5,17 @@ description: Standard 为图形补充可复用的展现组件与可选绘图定�
 
 Standard 解决的是图形中反复出现的绘制需求：给一张图加参考网格、给内容加背景与边框，或把符号和说明组合成图例。你提供几何范围、样式或子图形，Standard 把它们转换为 Core 能处理的图元，最终由 SVG 或 Canvas 后端绘制。
 
-## 两类能力
+## 能力分组
 
 展现是建立在 Kernel 之上的上层封装，拥有自己的语义：例如网格描述参考线的分布，图例描述符号与说明的对应关系。组件接收这些高层描述，再将其转换为 Kernel 图元，而不只是给基础图元增加一种样式。
 
-扩展则仅基于 Kernel 已有的扩展机制横向补充能力，例如增加形状、箭头、裁剪或流带定义。它们沿用 Kernel 对应能力的契约与消费方式，不像展现组件那样建立一层新的组合语义。
+扩展则仅基于 Kernel 已有的扩展机制横向补充能力，例如增加节点形状、箭头、裁剪或流带定义。它们沿用 Kernel 对应能力的契约与消费方式，不像展现组件那样建立一层新的组合语义。
 
-| 分组 | 提供什么                           | 何时使用                                   |
-| ---- | ---------------------------------- | ------------------------------------------ |
-| 展现 | Grid、Axes、Frame、Surface、Legend | 直接组合网格、坐标轴、框架、内容表面与图例 |
-| 扩展 | 可选形状、箭头、裁剪和流带定义     | 基础绘图能力之外还需要特定绘图规则         |
+| 分组 | 提供什么                                                      | 何时使用                                   |
+| ---- | ------------------------------------------------------------- | ------------------------------------------ |
+| 展现 | Grid、Axes、Frame、Surface、Legend                            | 直接组合网格、坐标轴、框架、内容表面与图例 |
+| 形状 | Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector | 用几何参数绘制独立路径轮廓                 |
+| 扩展 | 可选节点形状、箭头、裁剪和流带定义                            | 基础绘图能力之外还需要特定绘图规则         |
 
 展现组件可以直接放在 React 的 `Layout` 中。扩展定义则按能力从精确的子入口导入，再装配到当前图的编译选项中；具体装配方式见[能力装载](/library/standard/capability-loading)。
 
@@ -24,12 +25,15 @@ Kernel 提供节点、路径、编译与渲染的基础。Standard 在这些基�
 
 Standard 的 `Grid` **画出网格线**；Layout 的 `GridLayout` **把子图形排进网格区域**。两者可以一起使用，但职责不同。需要排列、换行或叠放内容时，阅读 [Layout 介绍](/library/layout/introduction)。
 
+形状组件同样拥有持久化的高层语义，通过三包的 `/shape` 子入口提供 JSON、React 与 Vanilla 写法，再统一下沉为 Core Path。它们与 Node 的形状扩展不同：后者还负责内容边界与连接锚点。
+
 ## 选择入口
 
 - `@retikz/standard-react`：在 React JSX 中组合展现组件
 - `@retikz/standard-vanilla`：用普通 TypeScript 数据创建输入，并接入 Vanilla 渲染
 - `@retikz/standard`：读取和校验持久化图形数据，或直接使用组件定义
-- `@retikz/standard/<capability>`：按需导入可选绘图定义
+- 三包的 `/shape` 子入口：使用形状 Source、React 组件或 Vanilla `shape.xxx`
+- `@retikz/standard/node-shape`、`/arrow`、`/clip`、`/ribbon`：按需导入可选绘图定义
 
 ## 接下来
 

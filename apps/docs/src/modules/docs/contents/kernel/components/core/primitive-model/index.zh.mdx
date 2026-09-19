@@ -138,7 +138,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 ## 动手试一试
 
-先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star 与 sector，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector 则使用演示中预设的几何参数，文字叠加在既定外形上。后两种是 Standard 可选 shape，演示已通过 `<Layout shapes>` 显式注入；普通使用同样需要从 `@retikz/standard/shape` 导入对应 Definition。Sector 将等内外半径解释为开放弧。
+先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star 与 sector，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector 则使用演示中预设的几何参数，文字叠加在既定外形上。后两种是 Standard 可选 shape，演示已通过 `<Layout shapes>` 显式注入；普通使用同样需要从 `@retikz/standard/node-shape` 导入对应 Definition。Sector 将等内外半径解释为开放弧。
 
 接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/usage)与[Shapes](/kernel/components/node/shape) API 继续查对应组件页。
 
@@ -170,7 +170,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
     },
     {
       label: '从 star 顶点生成 tight 连接包络',
-      path: 'packages/library/standard/src/shape/definitions/star.ts',
+      path: 'packages/library/standard/src/node-shape/definitions/star.ts',
       startLine: 102,
       endLine: 102,
     },

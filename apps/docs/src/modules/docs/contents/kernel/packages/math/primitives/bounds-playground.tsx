@@ -1,6 +1,7 @@
 import type { AxisAlignedBounds, Position } from '@retikz/math';
 import { boundsOf, boundsToRect, collectArcBoundingCandidates } from '@retikz/math';
-import { Arc, Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Arc, Circle, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 import { Fragment } from 'react';
 

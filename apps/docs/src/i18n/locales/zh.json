@@ -207,7 +207,7 @@
     "standardSurface": "表面",
     "standardLegend": "图例",
     "standardExtension": "扩展",
-    "standardExtensionShape": "形状",
+    "standardExtensionShape": "节点形状",
     "standardExtensionArrow": "箭头",
     "standardExtensionClip": "裁剪",
     "standardExtensionRibbon": "流带",
@@ -222,7 +222,13 @@
     "layoutContractArtifact": "契约 - 产物",
     "layoutRuntime": "运行时",
     "changelog": "更新日志",
-    "changelogV01": "v0.1"
+    "changelogV01": "v0.1",
+    "standardShapes": "形状",
+    "standardCircleEllipse": "圆与椭圆",
+    "standardRectangle": "矩形",
+    "standardRegularPolygon": "正多边形",
+    "standardStar": "星形",
+    "standardArcSector": "圆弧与扇形"
   },
   "schematic": {
     "label": "结构库",
