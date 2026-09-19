@@ -7,19 +7,25 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 
 import { layoutViewboxResolutionI18n } from './layout-viewbox-resolution.i18n';
 
+/** 显示尺寸推导流程图的语言 */
 export type LayoutViewboxResolutionProps = Readonly<{ lang?: Lang }>;
 
+/** 将比例计算排成主链，数值宽度从下方接入高度计算 */
 const LayoutViewboxResolution: FC<LayoutViewboxResolutionProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = layoutViewboxResolutionI18n[lang];
   return (
-    <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
+    <PreviewFlowDiagram
+      {...logicFigureGraphProps()}
+      flowDefaults={{ entity: { layout: { lineHeight: 16 } } }}
+      style={{ maxWidth: '100%', height: 'auto' }}
+    >
       <FlowLayout
         kind="grid"
         id="viewport"
         placements={[
-          ['selection', 'range'],
-          ['sizing', 'display'],
+          ['selection', 'range', 'display'],
+          [null, null, 'sizing'],
         ]}
       >
         <FlowEntities
@@ -27,13 +33,11 @@ const LayoutViewboxResolution: FC<LayoutViewboxResolutionProps> = props => {
             {
               id: 'selection',
               role: 'state',
-              kind: LogicFigureEntityKind.ImportantData,
               text: [{ text: i18n.select }, { text: i18n.priority, fill: 'gray', font: { size: 12 } }],
             },
             {
               id: 'range',
               role: 'activity',
-              kind: LogicFigureEntityKind.Important,
               text: [{ text: i18n.range }, { text: i18n.automatic, fill: 'gray', font: { size: 12 } }],
             },
             {
@@ -44,6 +48,7 @@ const LayoutViewboxResolution: FC<LayoutViewboxResolutionProps> = props => {
             {
               id: 'display',
               role: 'activity',
+              kind: LogicFigureEntityKind.Important,
               text: [{ text: i18n.display }, { text: i18n.independent, fill: 'gray', font: { size: 12 } }],
             },
           ]}

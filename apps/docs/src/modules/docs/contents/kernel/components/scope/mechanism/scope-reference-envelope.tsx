@@ -5,73 +5,67 @@ import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
 import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
+import { scopeFlowDefaults, scopeFlowText } from './scope-flow';
 import { scopeReferenceEnvelopeI18n } from './scope-reference-envelope.i18n';
 
+/** 整体引用流程的语言 */
 export type ScopeReferenceEnvelopeProps = Readonly<{ lang?: Lang }>;
 
+/** 主线发布包络，真实身份判断的例外分支向下分离 */
 const ScopeReferenceEnvelope: FC<ScopeReferenceEnvelopeProps> = props => {
-  const { lang } = props;
-  const i18n = scopeReferenceEnvelopeI18n[lang ?? 'zh'];
-  const text = (key: keyof typeof i18n.nodes) => {
-    const [title, detail] = i18n.nodes[key];
-    return [{ text: title }, ...(detail ? [{ text: detail, fill: 'gray', font: { size: 12 } }] : [])];
-  };
-
+  const { lang = 'zh' } = props;
+  const t = scopeReferenceEnvelopeI18n[lang];
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      layout={{ direction: 'right' }}
+      flowDefaults={{
+        ...scopeFlowDefaults,
+        entity: { style: { font: { size: 14 } }, layout: { lineHeight: 16 } },
+      }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
       <FlowLayout
-        id="scope-reference-envelope"
+        id="reference-paths"
         kind="grid"
-        rowGap={38}
-        columnGap={30}
         placements={[
           ['layouts', 'envelope', 'resolved'],
           ['placeholder', 'check', 'preserve'],
         ]}
+        rowGap={32}
+        columnGap={42}
       >
         <FlowEntities
           items={[
+            { id: 'layouts', role: 'activity', text: scopeFlowText(t.nodes.layouts) },
+            { id: 'placeholder', role: 'activity', text: scopeFlowText(t.nodes.placeholder) },
+            { id: 'envelope', role: 'activity', text: scopeFlowText(t.nodes.envelope) },
             {
-              id: 'placeholder',
-              text: text('placeholder'),
-              role: 'state',
-              kind: LogicFigureEntityKind.ImportantData,
+              id: 'check',
+              role: 'gateway',
+              text: t.nodes.check[0],
+              layout: { minimumSize: { width: 0, height: 0 } },
             },
-            { id: 'check', text: text('check'), role: 'gateway' },
-            { id: 'resolved', text: text('resolved'), role: 'activity', kind: LogicFigureEntityKind.Important },
-            { id: 'layouts', text: text('layouts'), role: 'state' },
-            { id: 'envelope', text: text('envelope'), role: 'state', kind: LogicFigureEntityKind.ImportantData },
-            { id: 'preserve', text: text('preserve'), role: 'state' },
+            {
+              id: 'resolved',
+              role: 'activity',
+              kind: LogicFigureEntityKind.Important,
+              text: scopeFlowText(t.nodes.resolved),
+            },
+            { id: 'preserve', role: 'activity', text: scopeFlowText(t.nodes.preserve) },
           ]}
         />
       </FlowLayout>
+
       <FlowRelations
         items={[
-          { source: 'placeholder', target: 'check' },
           { source: 'layouts', target: 'envelope' },
           { source: 'envelope', target: 'resolved' },
-          {
-            source: 'check',
-            target: 'resolved',
-            label: i18n.edges.no,
-            labelFont: { size: 12 },
-            labelTextForeground: 'dimgray',
-          },
-          {
-            source: 'check',
-            target: 'preserve',
-            label: i18n.edges.yes,
-            labelFont: { size: 12 },
-            labelTextForeground: 'dimgray',
-          },
+          { source: 'placeholder', target: 'check' },
+          { source: 'check', target: 'resolved', label: t.edges.no },
+          { source: 'check', target: 'preserve', label: t.edges.yes },
         ]}
       />
     </PreviewFlowDiagram>
   );
 };
-
 export default ScopeReferenceEnvelope;

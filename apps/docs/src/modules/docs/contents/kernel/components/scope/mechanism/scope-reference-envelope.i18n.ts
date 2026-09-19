@@ -4,7 +4,7 @@ export const scopeReferenceEnvelopeI18n: Record<
   Lang,
   {
     nodes: Record<
-      'placeholder' | 'check' | 'resolved' | 'layouts' | 'envelope' | 'preserve',
+      'layouts' | 'placeholder' | 'envelope' | 'check' | 'resolved' | 'preserve',
       readonly [string, string]
     >;
     edges: Record<'yes' | 'no', string>;
@@ -12,30 +12,24 @@ export const scopeReferenceEnvelopeI18n: Record<
 > = {
   zh: {
     nodes: {
-      placeholder: ['占位条目', '父 frame · scope.id'],
+      layouts: ['汇总子树布局', '不含 Path 走线'],
+      placeholder: ['读取当前条目', '父 frame · scope.id'],
+      envelope: ['计算最终包络', '几何汇总 + 变换'],
       check: ['已被替换？', ''],
-      resolved: ['发布整体引用', 'replaceLayout'],
-      layouts: ['子树布局', '不含 Path 走线'],
-      envelope: ['最终包络', '几何汇总 + 变换'],
-      preserve: ['保留子节点', '同名覆盖已发生'],
+      resolved: ['更新原占位', 'replaceLayout'],
+      preserve: ['保留子节点', '不覆盖同名条目'],
     },
-    edges: {
-      yes: '是',
-      no: '否',
-    },
+    edges: { yes: '是', no: '否' },
   },
   en: {
     nodes: {
-      placeholder: ['Placeholder', 'Parent frame · id'],
+      layouts: ['Collect child layouts', 'Paths excluded'],
+      placeholder: ['Read current entry', 'Parent frame · scope.id'],
+      envelope: ['Compute envelope', 'Bounds + transforms'],
       check: ['Replaced?', ''],
-      resolved: ['Publish bounds', 'replaceLayout'],
-      layouts: ['Child layouts', 'Paths excluded'],
-      envelope: ['Final envelope', 'Bounds + transforms'],
-      preserve: ['Keep child entry', 'Same id replaced it'],
+      resolved: ['Update placeholder', 'replaceLayout'],
+      preserve: ['Keep child entry', 'Do not overwrite it'],
     },
-    edges: {
-      yes: 'Yes',
-      no: 'No',
-    },
+    edges: { yes: 'Yes', no: 'No' },
   },
 };

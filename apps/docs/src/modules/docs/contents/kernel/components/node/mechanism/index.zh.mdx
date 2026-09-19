@@ -5,13 +5,15 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
 
 本页解释用法背后的几何和引用时序。先阅读[基础用法](/kernel/components/node/usage)；只想查询字段时直接看参考页。
 
-## 文字与间距如何决定边框
+## 文字测量与边框尺寸
 
 节点边框需要先容纳正文，再满足形状和最小尺寸约束：
 
 - **文字框**：折行后每行文字占据的范围
 - **内容框**：在文字框四周加入 `padding`，为文字留出空间
 - **视觉边框**：形状包住内容框后的轮廓，`minimumSize` 为它设置尺寸下限
+
+普通正文在浏览器中通过 Canvas `measureText` 按实际字体、字号和字重测量宽度，再按 `maxTextWidth` 折行（西文按词，中文按字）。文字框取折行后的最大行宽，高度为行数乘以 `lineHeight`（默认字号的 1.2 倍），因此包含行间留白；字形的上升与下降高度用于安排基线。没有浏览器测量器时使用平均字宽估算；公式与混排则按各片段的度量对齐基线。
 
 下图跟踪同一个 Hello 节点。中间加入 padding，边框扩大；右侧再加标签，边框保持不变。
 
@@ -30,7 +32,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   ]}
 />
 
-## 标签为什么不撑大边框
+### 标签不参与边框尺寸计算
 
 上图右侧的 label 是独立附属文字。它需要已经确定的节点边框来计算附着位置，因此不反过来参与节点形状的尺寸计算。
 
@@ -56,27 +58,6 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 740,
       endLine: 759,
-    },
-  ]}
-/>
-
-## 锚点对齐为什么先测量再定位
-
-要把 B 的左侧放到 A 的右侧，编译器必须先知道 B 有多宽。下面的处理只针对 `position.kind: 'anchor'`，不是所有节点的额外布局步骤。
-
-<ComponentPreview files="node-layout-flow" size="xs" type="flow" hideCode />
-
-例如 A 的右侧锚点为 `[40, 0]`，B 宽 60、暂以 `[0, 0]` 为中心，B 的左侧锚点就是 `[-30, 0]`。目标再偏移 `[16, 0]` 后为 `[56, 0]`，所以把 B 平移 `[86, 0]`，两侧之间便留下 16 的间距。改变 B 的文字宽度时，平移量会重新计算。
-
-真实计算还会包含 padding、margin、scale 和 rotate；最终图元与登记的锚点一起平移，连线使用的也是这个结果。
-
-<SourceLinks
-  sources={[
-    {
-      label: '临时布局后的锚点差值与平移',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 50,
-      endLine: 110,
     },
   ]}
 />
@@ -128,37 +109,112 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
   ]}
 />
 
-## 命名引用为何受顺序影响
+## 命名引用与登记顺序
 
-Node 定位是在遍历到该节点时立即解析的：编译器先查询当前命名空间，得到布局后才注册这个节点的 `id`。所以 `position` 引用同一作用域里后声明的 Node / Coordinate / Scope 会失败，循环定位也无法成立。锚点定位可以引用前面已闭合的 Scope；若在 Scope 子树里引用仍在计算包围盒的祖先 Scope，则会被识别为未完成布局并直接报错。已闭合的空 Scope 虽然是 0×0，仍是合法 target。
+`id` 把一个已经完成布局的对象变成后续定位与连接可查询的几何句柄。编译器维护的是一组命名表；绘制图元与登记引用是两件事，因此没有 `id` 的 Node 仍会绘制。
 
-Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位，等当前作用域的 Node 与 Coordinate 都注册完成后再统一解析，因此路径端点可以引用后声明的同级节点。
+### 命名表保存布局记录
+
+命名表由 `NamespaceStack` 管理。它的 `frames` 是一个数组，每项是 `Map<string, NamespaceEntry>`；数组末项是当前栈顶，`register` 只写入这一项。下面把栈中的一个 Map 和键 `a` 对应的记录展开。图中的 `a` 已完成布局：中心为 `[40, 0]`，矩形宽 60、高 32，margin 为 0。
+
+<ComponentPreview files="namespace-storage" size="xxl" type="illustration" hideCode />
+
+Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析的 `NodeLayout`：保存矩形、形状定义、连接面、margin 等几何信息，也包含文字等布局结果。图中只展示引用所需的字段，不表示完整对象或内存布局。
+
+遍历到 Node 时，编译器先解析位置、计算正文与形状布局，再把布局投影到全局坐标；带 `id` 时才把这一结果写入当前 Map，状态为 `resolved`。Coordinate 使用同一张表，但保存的是零宽高几何记录。命名表是本次编译的运行时状态，不写回可持久化 IR。
+
+<SourceLinks
+  sources={[
+    { label: '命名栈与条目结构', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 5, endLine: 80 },
+    {
+      label: 'NodeLayout 的几何字段',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
+      startLine: 73,
+      endLine: 110,
+    },
+    {
+      label: '布局投影与 id 登记',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 704,
+      endLine: 730,
+    },
+  ]}
+/>
+
+### 定位即时查询，路径延迟消费
+
+查询 `a` 时，`lookupEntry` 从栈顶 Map 向栈底依次查找，命中后立即返回条目。定位解析器读取这份布局的几何视图：取中心可以得到 `[40, 0]`，取无旋转矩形的 `right` 锚点则得到 `[70, 0]`。自动贴边连接还需要另一端的方向，才能求出连接面上的交点；不是查到 id 就总返回同一个点。
+
+下图使用同一作用域内的声明数组 `[Path(a, b), Node a, Node b]`。路径写在两个节点之前，但遍历到它时只入队，不立刻查询端点。
+
+<ComponentPreview files="namespace-consumption" size="xxl" type="illustration" hideCode />
+
+- **Node / Coordinate 定位**：遍历到该对象时立即查询，使用当时已经登记的条目；不会等待后面的声明，也不能靠互相引用形成定位循环。存储的几何使用全局坐标，定位结果会按当前 Scope 的变换转换回局部坐标。
+- **Path / Draw 端点**：先在图元序列中留下占位，同时把路径、作用域变换、样式和占位位置存入待处理队列。当前作用域子节点登记完成后，再查询命名表、解析端点并回填原占位，因而既支持后声明的同级节点，也保留原有绘制顺序。
+
+例如，把 `Node b` 写在 `Node a` 前面，同时让 `b.position` 引用 `a`，定位无法获得尚未登记的 `a`；把 `Path(a, b)` 写在它们前面则可在收尾时解析。这个等待边界是当前作用域，并非等整棵图的所有未来声明都完成。
+
+<SourceLinks
+  sources={[
+    { label: '由内向外查找', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 240, endLine: 252 },
+    {
+      label: '布局投影为定位查询视图',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 66,
+      endLine: 91,
+    },
+    {
+      label: '路径入队并保留绘制位置',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 803,
+      endLine: 837,
+    },
+    {
+      label: '解析路径与回填占位',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 621,
+      endLine: 669,
+    },
+  ]}
+/>
+
+### Scope 控制条目的可见范围
+
+普通 Scope 不创建新的命名表：它的子节点继续写入当前 Map。`localNamespace` 为 true 时才 `pushFrame()`，子节点写入新的栈顶 Map；查询先找内层，再找外层，所以内层可以引用外部节点，同名条目则遮蔽外层条目。
+
+图中外层已有 `a`、`b`，局部 Scope `group` 内再定义 `a`、`c`。内层查询 `a` 命中局部条目，查询 `b` 才继续向外查找。离开 `group` 后局部 Map 出栈，外部重新看到原来的 `a`，看不到 `c`；局部条目不会合并进外层 Map。
+
+<ComponentPreview files="namespace-scope" size="xxl" type="illustration" hideCode />
+
+`group` 自己的 id 属于父 frame，不与局部子节点一起消失。进入 Scope 前先登记 `scope-placeholder`；子树布局完成后，用真实包围盒替换为 `resolved` 条目，再处理该 Scope 的待解析路径，最后弹出局部 frame。因此外部可以引用已闭合的 `group`，即使其内部 id 不可见；内部 Node 的锚点定位不能使用尚未闭合的祖先 Scope 包围盒。已闭合的空 Scope 是合法的零尺寸目标，与“尚未完成”不同。
+
+同一 frame 内重复登记相同 id 会覆盖旧条目并产生诊断；跨 frame 的同名遮蔽不属于同表重复。Scope 的几何变换和命名隔离也是独立的：变换影响保存和消费的几何，只有 `localNamespace` 决定是否建立新的 Map。
 
 <SourceLinks
   sources={[
     {
-      label: 'Node position 解析',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 42,
-      endLine: 81,
+      label: '写入、覆盖与状态替换',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 183,
+      endLine: 237,
     },
     {
-      label: '节点布局后注册 id',
+      label: 'Scope 先登记占位，再进入局部 frame',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 680,
-      endLine: 760,
+      startLine: 1045,
+      endLine: 1063,
     },
     {
-      label: 'Path 加入延迟输出队列',
+      label: 'localNamespace 的入栈条件',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 800,
-      endLine: 850,
+      startLine: 1135,
+      endLine: 1142,
     },
     {
-      label: '命名注册完成后解析 Path',
+      label: '发布包围盒、消费路径并出栈',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 620,
-      endLine: 650,
+      startLine: 1266,
+      endLine: 1300,
     },
   ]}
 />
@@ -202,7 +258,7 @@ Path / Draw 的端点采用另一种时机。路径先保留绘制顺序占位�
   ]}
 />
 
-## 自动对比色如何选择黑白
+## 自动对比色计算
 
 归一完成后，每一行沿同一套颜色优先级进入 Core。`<Text fill>` 是显式行色，直接覆盖 Node 默认；没有 `fill` 的行才继承 `Node.style.textColor`。下面只展开该值为 `contrast` 时的背景判断：
 
@@ -272,7 +328,7 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
   ]}
 />
 
-### 零尺寸记录如何影响输出
+### 零尺寸记录与渲染输出
 
 这里的“零尺寸”表示记录的宽为 0、高为 0，因此也常简写为 **0×0**。它只保存 Coordinate 的中心坐标，没有面积或可见内容，边界也退化到中心；这是一条供编译器定位和连线引用的内部几何记录，不是 Scene 图元。这样既能复用 Node 的 id 查询与 anchor 解析机制，又不会让纯引用点进入渲染输出或自动画布范围。
 

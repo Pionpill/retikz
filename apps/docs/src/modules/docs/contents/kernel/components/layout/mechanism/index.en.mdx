@@ -56,7 +56,7 @@ From A and B's stated positions and sizes, the gray bounds have left `20`, top `
 
 The local process is: compile content bounds, expand all four sides, then produce the automatic viewport. It does not first move the drawing to make its top-left corner zero.
 
-<ComponentPreview files="layout-auto-viewport" size="xs" type="flow" hideCode />
+<ComponentPreview files="layout-auto-viewport" size="sm" type="flow" hideCode />
 
 In general, bounds `(x, y, w, h)` and padding `p` produce:
 
@@ -113,7 +113,7 @@ The lower host, shapes, and gaps appear twice as large, but A's drawing coordina
 
 With only a numeric width, `computeDisplaySize` derives height from the viewport ratio. Here it computes `200 / 100 = 2`, then display height `400 / 2 = 200`:
 
-<ComponentPreview files="layout-viewbox-resolution" size="sm" type="flow" hideCode />
+<ComponentPreview files="layout-viewbox-resolution" size="md" type="flow" hideCode />
 
 Other size settings for that same `200 × 100` viewport follow these branches:
 

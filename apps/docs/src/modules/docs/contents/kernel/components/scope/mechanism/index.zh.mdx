@@ -34,7 +34,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 所以实现时，需要先知道绕哪里变换，再算整组最后要移动多少。流程如下：
 
-<ComponentPreview files="scope-transform-resolution" size="sm" type="flow" hideCode />
+<ComponentPreview files="scope-transform-resolution" size="lg" type="flow" hideCode />
 
 如果中心是原点或直接给出的坐标，一开始就知道它在哪；如果中心选在边框上，就要等里面的节点摆好、边框大小确定后再取点。图中上下两个入口对应这两种情况。
 
@@ -85,7 +85,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 实现中，`toLocal` 负责换成 Scope 的读数，`toWorld` 负责换回画布的读数。下图就是上面三步的计算过程：
 
-<ComponentPreview files="scope-coordinate-projection" size="md" type="flow" hideCode />
+<ComponentPreview files="scope-coordinate-projection" size="sm" type="flow" hideCode />
 
 `offset` 给出要在 Scope 内移动多少，`at` 用方向和距离表达这段移动。旋转时也一样：如果 Scope 转了一个角度，它里面的“横向”也会跟着转，偏移就沿这个方向移动。换算会一起考虑当前 Scope 和外层 Scope 的变换。
 
@@ -221,7 +221,7 @@ Scope 把里面的内容当作一组：可以一起放大、旋转，再一起�
 
 图中内置与自定义能力从同一入口参与解析，生成的路径进入资源表；资源引用再与子图元、变换一起挂到 Scene 分组。整条链路不依赖 `scope.id`，没有 id 的 Scope 同样可以裁剪。
 
-<ComponentPreview files="scope-clip-resource" size="sm" type="flow" hideCode />
+<ComponentPreview files="scope-clip-resource" size="lg" type="flow" hideCode />
 
 内置和自定义裁剪都通过 Clip Definition 的 `resolve` 与 `lower` 处理；资源表根据最终路径去重，随后把返回的 id 写入 `GroupPrim.clipRef`。
 

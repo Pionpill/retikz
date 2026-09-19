@@ -7,14 +7,20 @@ import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/com
 
 import { layoutAutoViewportI18n } from './layout-auto-viewport.i18n';
 
+/** 自动视窗流程图的语言 */
 export type LayoutAutoViewportProps = Readonly<{ lang?: Lang }>;
 
+/** 保留边界输入、扩展动作和视窗输出，仅强调扩展机制 */
 const LayoutAutoViewport: FC<LayoutAutoViewportProps> = props => {
   const { lang = 'zh' } = props;
   const i18n = layoutAutoViewportI18n[lang];
   return (
-    <PreviewFlowDiagram {...logicFigureGraphProps()} style={{ maxWidth: '100%', height: 'auto' }}>
-      <FlowLayout kind="grid" id="layout-auto-viewport" placements={[['bounds', 'padding', 'viewport']]}>
+    <PreviewFlowDiagram
+      {...logicFigureGraphProps()}
+      flowDefaults={{ entity: { layout: { lineHeight: 16 } } }}
+      style={{ maxWidth: '100%', height: 'auto' }}
+    >
+      <FlowLayout kind="linear" id="layout-auto-viewport" direction="right">
         <FlowEntities
           items={[
             {
@@ -31,7 +37,6 @@ const LayoutAutoViewport: FC<LayoutAutoViewportProps> = props => {
             {
               id: 'viewport',
               role: 'state',
-              kind: LogicFigureEntityKind.ImportantData,
               text: [{ text: i18n.viewport }, { text: i18n.viewportNote, fill: 'gray', font: { size: 12 } }],
             },
           ]}

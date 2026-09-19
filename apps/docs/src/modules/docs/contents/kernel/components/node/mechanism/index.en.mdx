@@ -5,13 +5,15 @@ description: Explain node sizing, connection geometry, text processing, and refe
 
 This page explains the geometry and reference timing behind the usage guides. Read [Basic usage](/kernel/components/node/usage) first; use the reference pages to look up fields.
 
-## How text and spacing determine the border
+## Text measurement and border sizing
 
 A node must contain its text before satisfying shape and minimum-size constraints:
 
 - **Text box**: the area occupied by the lines after wrapping
 - **Content box**: the text box plus `padding` on each side
 - **Visual border**: the shape enclosing that content, with a size floor set by `minimumSize`
+
+In the browser, plain text is measured with Canvas `measureText` using its actual font, size, and weight, then wrapped to `maxTextWidth` (by word for Western text and by character for CJK). The text box uses the widest resulting line and a height of line count times `lineHeight` (1.2 times the font size by default), so it includes line spacing; glyph ascent and descent position the baseline. Without a browser measurer, average character widths provide an estimate. Formulas and mixed runs instead align baselines using each fragment's metrics.
 
 Follow the same Hello node below. Padding enlarges the middle border; adding the label on the right leaves that border unchanged.
 
@@ -30,7 +32,7 @@ Fonts, wrapping, and padding change the required content area. `minimumSize` can
   ]}
 />
 
-## Why labels do not enlarge the border
+### Labels do not contribute to border sizing
 
 The label in the right-hand state is separate attached text. Its placement requires the completed node border, so it does not feed back into the visual shape size.
 
@@ -56,27 +58,6 @@ The label has its own text box. The compiler uses its rotated box and `distance`
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 740,
       endLine: 759,
-    },
-  ]}
-/>
-
-## Why anchor alignment measures before placement
-
-To place B's left edge at A's right edge, the compiler first needs B's width. This process applies to `position.kind: 'anchor'`; it is not an extra pass for every node.
-
-<ComponentPreview files="node-layout-flow" size="xs" type="flow" hideCode />
-
-Suppose A's right anchor is `[40, 0]` and B is 60 units wide, provisionally centered at `[0, 0]`. B's left anchor is `[-30, 0]`. Adding a `[16, 0]` target offset gives `[56, 0]`, so translating B by `[86, 0]` leaves a 16-unit border gap. Changing B's text width recalculates that translation.
-
-The real calculation also includes padding, margin, scale, and rotation. Emitted primitives and registered anchors move together, and connections use the same final geometry.
-
-<SourceLinks
-  sources={[
-    {
-      label: 'Provisional layout, anchor delta, and translation',
-      path: 'packages/kernel/core/src/compile/node/layout.ts',
-      startLine: 50,
-      endLine: 110,
     },
   ]}
 />
@@ -128,37 +109,117 @@ A regular connection surface first derives its rectangle from `fit`, then applie
   ]}
 />
 
-## Why named positioning is order-sensitive
+## Named references and registration order
 
-Node positioning resolves immediately when traversal reaches that node: the compiler queries the current namespace first, then registers the node's `id` only after its layout is known. A `position` that refers to a later Node / Coordinate / Scope therefore fails, and cyclic positioning cannot resolve. Anchor placement may target a previously closed Scope; targeting an ancestor Scope whose bounds is still being computed throws as an incomplete layout. A closed empty Scope is still a valid target even though its layout is 0×0.
+An `id` makes a laid-out object available as a geometry handle for later positioning and connections. Compilation maintains a stack of name maps. Emitting primitives and registering references are separate operations, so a Node without an `id` still renders.
 
-Path / Draw endpoints use a different phase. A path first reserves its drawing-order slot, then resolves only after every Node and Coordinate in the current scope has registered. Path endpoints can therefore refer to later sibling nodes.
+### Name maps store layout records
+
+`NamespaceStack` owns `frames`, an array of `Map<string, NamespaceEntry>`. The last item is the current stack top, and `register` writes only to that Map. The diagram expands one Map and its entry for `a`. This node has completed layout: its center is `[40, 0]`, its rectangle is 60 wide and 32 high, and its margin is zero.
+
+<ComponentPreview files="namespace-storage" size="xxl" type="illustration" hideCode />
+
+The Map key is the `id`; its value contains `layout` and `state`. `layout` is a resolved `NodeLayout`, containing the rectangle, shape definition, connection boundary, margins, and other layout results such as text. The diagram selects fields needed for references; it is neither the full object nor a memory layout.
+
+When traversal reaches a Node, compilation resolves its position, lays out its text and shape, then projects the layout into global coordinates. Only a named Node registers that result in the current Map with state `resolved`. Coordinate uses the same Map with a zero-width, zero-height geometry record. These maps are compilation runtime state, not data written back into persistent IR.
 
 <SourceLinks
   sources={[
     {
-      label: 'Resolve Node positions',
-      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
-      startLine: 42,
-      endLine: 81,
+      label: 'Namespace stack and entry structure',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 5,
+      endLine: 80,
     },
     {
-      label: 'Register ids after Node layout',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 680,
-      endLine: 760,
+      label: 'NodeLayout geometry fields',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
+      startLine: 73,
+      endLine: 110,
     },
     {
-      label: 'Queue paths for deferred emission',
+      label: 'Layout projection and id registration',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 800,
-      endLine: 850,
+      startLine: 704,
+      endLine: 730,
+    },
+  ]}
+/>
+
+### Positions query immediately; paths consume later
+
+To find `a`, `lookupEntry` searches Maps from the stack top toward the bottom and returns the first match. Position resolution reads a geometry view of that layout: its center is `[40, 0]`, while the `right` anchor of this unrotated rectangle is `[70, 0]`. Automatic boundary connections also need the direction toward the other endpoint to compute an intersection; an id does not always resolve to one fixed point.
+
+The next diagram uses the declaration array `[Path(a, b), Node a, Node b]` within one scope. The path precedes both nodes, but traversal only enqueues it instead of immediately looking up its endpoints.
+
+<ComponentPreview files="namespace-consumption" size="xxl" type="illustration" hideCode />
+
+- **Node / Coordinate positioning** queries immediately during traversal and uses the entries registered at that moment. It does not wait for later declarations and cannot resolve circular positioning dependencies. Stored geometry uses global coordinates; position results are converted back through the current Scope transforms into local coordinates.
+- **Path / Draw endpoints** first reserve a slot in the primitive sequence. The deferred queue stores the path, scope transforms, styles, and placeholder location. After the current scope's children register, compilation looks up names, resolves endpoints, and fills the original slot. This supports later sibling nodes while preserving drawing order.
+
+For example, placing `Node b` before `Node a` while making `b.position` refer to `a` cannot find the unregistered `a`. A `Path(a, b)` before both nodes can resolve at scope completion. That waiting boundary is the current scope, not every future declaration in the entire tree.
+
+<SourceLinks
+  sources={[
+    { label: 'Inside-out lookup', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 240, endLine: 252 },
+    {
+      label: 'Project layout into a position reference view',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 66,
+      endLine: 91,
     },
     {
-      label: 'Resolve paths after name registration',
+      label: 'Enqueue paths and reserve drawing order',
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 620,
-      endLine: 650,
+      startLine: 803,
+      endLine: 837,
+    },
+    {
+      label: 'Resolve paths and fill reserved slots',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 621,
+      endLine: 669,
+    },
+  ]}
+/>
+
+### Scope controls entry visibility
+
+An ordinary Scope does not create a name map: its children keep writing to the current Map. Only `localNamespace: true` calls `pushFrame()`, directing child registrations into a new top Map. Lookup searches inside first, then outside, so inner content can reference outer nodes while an inner name shadows an outer match.
+
+Here the outer Map already holds `a` and `b`; the local Scope `group` defines another `a` and a new `c`. Inside, querying `a` hits the local entry, while querying `b` continues outward. Leaving `group` pops the local Map: outside code sees the original `a` again and cannot see `c`. Local entries are not merged into the outer Map.
+
+<ComponentPreview files="namespace-scope" size="xxl" type="illustration" hideCode />
+
+The id of `group` itself belongs to the parent frame and survives the local children. Compilation registers it as `scope-placeholder` before entering the Scope. Once the subtree layout is complete, the real bounds replace that entry with state `resolved`; the Scope's pending paths resolve before the local frame is popped. Outside content can therefore reference a closed `group` even when its child ids are hidden. A Node inside cannot use an unfinished ancestor Scope's bounds for anchor positioning. A closed empty Scope is a valid zero-size target, distinct from an unfinished one.
+
+Registering a duplicate id in the same frame replaces the old entry and emits a diagnostic. Shadowing across frames is not a same-map duplicate. Scope transforms and name isolation are independent: transforms affect stored and consumed geometry; only `localNamespace` decides whether to create another Map.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Registration, replacement, and entry states',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 183,
+      endLine: 237,
+    },
+    {
+      label: 'Register the Scope placeholder in its parent',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1045,
+      endLine: 1063,
+    },
+    {
+      label: 'Push a frame only for localNamespace',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1135,
+      endLine: 1142,
+    },
+    {
+      label: 'Publish bounds, consume paths, then pop',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1266,
+      endLine: 1300,
     },
   ]}
 />
@@ -202,7 +263,7 @@ This also explains both boundaries: `<Text>` only works inside `<Node>`, and it 
   ]}
 />
 
-## How automatic contrast chooses black or white
+## Automatic contrast calculation
 
 After normalization, every line enters Core through the same color precedence. An explicit `<Text fill>` overrides the Node default; only lines without `fill` inherit `Node.style.textColor`. The diagram focuses on background evaluation when that value is `contrast`:
 
@@ -272,7 +333,7 @@ Node / Coordinate position references also resolve during traversal, so they see
   ]}
 />
 
-### How a zero-size record affects output
+### Zero-size records and rendered output
 
 “Zero-size” means that the record has width 0 and height 0, commonly shortened to **0×0**. It stores only the Coordinate's center position, with no area or visible content; its boundary also collapses to the center. This is an internal geometry record used for positioning and path references, not a Scene primitive. That lets it reuse Node id lookup and anchor resolution while keeping pure reference points out of rendered output and automatic canvas bounds.
 

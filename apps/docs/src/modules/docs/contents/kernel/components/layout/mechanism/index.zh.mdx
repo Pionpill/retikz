@@ -56,7 +56,7 @@ description: 解释 Layout 的隐式根作用域、自动视窗、显示尺寸�
 
 这对应下面的局部处理：编译得到内容边界，再扩展四边，生成自动视窗。不会先移动图元来让左上角归零。
 
-<ComponentPreview files="layout-auto-viewport" size="xs" type="flow" hideCode />
+<ComponentPreview files="layout-auto-viewport" size="sm" type="flow" hideCode />
 
 一般地，边界为 `(x, y, w, h)`、留白为 `p` 时：
 
@@ -108,7 +108,7 @@ $$
 
 只传数值宽度时，`computeDisplaySize` 用视窗比例补齐高度。本例先得到宽高比 `200 / 100 = 2`，再算出显示高度 `400 / 2 = 200`：
 
-<ComponentPreview files="layout-viewbox-resolution" size="sm" type="flow" hideCode />
+<ComponentPreview files="layout-viewbox-resolution" size="md" type="flow" hideCode />
 
 对于同一个 `200 × 100` 视窗，其他尺寸配置分别走以下分支：
 

@@ -84,7 +84,7 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 
 上图中 `Draw` 通过 `a` 和 `b` 的 id 定位两端。引用定位与连接面的不同写法见[扩展用法](/kernel/components/node/extend)。
 
-`<Draw>` 对应 IR 的 `type: 'path'`；端点与 `way` 规则见 [Path](/kernel/components/path/usage)。Node / Coordinate 的定位只能引用已完成布局并登记的对象（通常是前面声明的同级对象）；Path / Draw 端点可以引用后声明的同级对象，原因见[引用时序](/kernel/components/node/mechanism#命名引用为何受顺序影响)。
+`<Draw>` 对应 IR 的 `type: 'path'`；端点与 `way` 规则见 [Path](/kernel/components/path/usage)。Node / Coordinate 的定位只能引用已完成布局并登记的对象（通常是前面声明的同级对象）；Path / Draw 端点可以引用后声明的同级对象，原因见[引用时序](/kernel/components/node/mechanism#命名引用与登记顺序)。
 
 ## 选择形状
 
@@ -142,9 +142,9 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 
 - **层级**：`zIndex` 只比较同层元素，数值较大者在上，同值保留声明顺序。
 - **颜色**：`style.color` 是主色；`fill`、`stroke` 的数值表示由主色派生的权重，不是透明度。
-- **图案填充**：`style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充节点，详见[图案](/kernel/components/effects/pattern)。
+- **图案填充**：`style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充节点，详见[图案](/kernel/visual/pattern/usage)。
 - **纯文字与坐标点**：隐藏边框的 Node 仍有文字尺寸；只需要不可见引用点时使用 Coordinate。
-- **效果**：阴影、动画等见[视觉效果](/kernel/components/effects)。
+- **效果**：参见[阴影](/kernel/visual/shadow/usage)与[动画](/kernel/visual/animation/usage)。
 
 ## 相关属性
 

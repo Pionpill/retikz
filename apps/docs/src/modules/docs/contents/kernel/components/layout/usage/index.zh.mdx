@@ -155,7 +155,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 补充说明
 
-- **渲染后端**：默认输出 SVG，设置 `renderer="canvas"` 切换到 Canvas。动画播放与静态截帧见[动画](/kernel/components/effects/animation)。
+- **渲染后端**：默认输出 SVG，设置 `renderer="canvas"` 切换到 Canvas。动画播放与静态截帧见[动画](/kernel/visual/animation/usage)。
 - **输入优先级**：React 同时传入 `ir` 和 `children` 时采用 `ir`。
 - **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。
 - **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.style`。

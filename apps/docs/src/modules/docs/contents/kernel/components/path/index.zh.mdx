@@ -5,6 +5,14 @@ description: 用 Draw 快速连线，用 Path 与 Step 控制路径，共享箭�
 
 绘制把图中的位置连接成线、曲线或闭合轮廓。日常连线用 `<Draw way>`；需要多个子路径、逐段控制或整条路径变换时，使用 `<Path>` 与 `<Step>`。两种入口最终使用同一套路径语义，箭头和标签可以随路径一起生成。
 
+## 整体认识
+
+下图说明各入口如何组成一条路径：way 通过 Draw 交给 Path；显式 Step 描述逐段动作，arrow 与 label 补充方向和文字。箭头表示输入或配置的汇入关系。
+
+<ComponentPreview files="draw-anatomy" size="xs" hideCode type="flow" />
+
+Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存图形数据时，使用 Path 与 Step 组成的 IR；不必在保存时保留 React 组件。使用步骤的细粒度控制，也不意味着必须了解编译器。
+
 ## 职责一览
 
 | 成员           | 职责                           | 何时阅读                     |
@@ -14,14 +22,6 @@ description: 用 Draw 快速连线，用 Path 与 Step 控制路径，共享箭�
 | 箭头与标签     | 表达方向与关系名称             | 给路径补充语义               |
 | 形状快捷组件   | 将常见几何展开为 Path / Step   | 绘制圆、矩形、星形、弧或扇形 |
 | 三类自定义能力 | 扩展曲线段、整条路径或箭头轮廓 | 内置能力无法表达目标结果     |
-
-## 整体认识
-
-下图说明各入口如何组成一条路径：way 通过 Draw 交给 Path；显式 Step 描述逐段动作，arrow 与 label 补充方向和文字。箭头表示输入或配置的汇入关系。
-
-<ComponentPreview files="draw-anatomy" size="xs" hideCode type="flow" />
-
-Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存图形数据时，使用 Path 与 Step 组成的 IR；不必在保存时保留 React 组件。使用步骤的细粒度控制，也不意味着必须了解编译器。
 
 ## 选择与边界
 

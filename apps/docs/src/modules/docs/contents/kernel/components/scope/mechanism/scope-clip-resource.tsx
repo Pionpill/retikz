@@ -1,85 +1,62 @@
-import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
+import { FlowEntities, FlowGroup, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
-import {
-  LogicFigureEntityKind,
-  logicFigureGraphProps,
-  LogicFigureRelationKind,
-  logicFigureRelationKinds,
-} from '@/modules/docs/components/logic-figure';
+import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { scopeClipResourceI18n } from './scope-clip-resource.i18n';
+import { scopeFlowDefaults, scopeFlowText } from './scope-flow';
 
+/** 裁剪流程图的语言 */
 export type ScopeClipResourceProps = Readonly<{ lang?: Lang }>;
 
+/** 用两个对齐的阶段区分几何生成和资源输出 */
 const ScopeClipResource: FC<ScopeClipResourceProps> = props => {
-  const { lang } = props;
-  const i18n = scopeClipResourceI18n[lang ?? 'zh'];
-  const text = (key: keyof typeof i18n.nodes) => {
-    const [title, detail] = i18n.nodes[key];
-    return [{ text: title }, ...(detail ? [{ text: detail, fill: 'gray', font: { size: 12 } }] : [])];
-  };
-
+  const { lang = 'zh' } = props;
+  const t = scopeClipResourceI18n[lang];
   return (
     <PreviewFlowDiagram
       {...logicFigureGraphProps()}
-      relationKinds={logicFigureRelationKinds}
-      layout={{ direction: 'right' }}
+      flowDefaults={scopeFlowDefaults}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <FlowLayout
-        id="scope-clip-resource"
-        kind="grid"
-        rowGap={38}
-        columnGap={22}
-        placements={[
-          ['spec', 'resolve', 'path', 'resources', 'group'],
-          [null, 'definitions', null, null, 'children'],
-        ]}
-      >
-        <FlowEntities
-          items={[
-            { id: 'spec', text: text('spec'), role: 'state' },
-            { id: 'resolve', text: text('resolve'), role: 'activity', kind: LogicFigureEntityKind.Important },
-            { id: 'path', text: text('path'), role: 'state', kind: LogicFigureEntityKind.ImportantData },
-            { id: 'definitions', text: text('definitions'), role: 'participant' },
-            {
-              id: 'resources',
-              text: text('resources'),
-              role: 'resource',
-              kind: LogicFigureEntityKind.ImportantData,
-            },
-            { id: 'children', text: text('children'), role: 'state', kind: LogicFigureEntityKind.Secondary },
-            { id: 'group', text: text('group'), role: 'participant', kind: LogicFigureEntityKind.Important },
-          ]}
-        />
+      <FlowLayout id="clip-stages" kind="linear" direction="right" gap={58} align="start">
+        <FlowGroup id="clip-geometry" caption={{ title: { text: t.stages[0] } }}>
+          <FlowLayout id="clip-generation" kind="linear" direction="down" gap={36} itemWidth="match-largest">
+            <FlowEntities
+              items={(['resolve', 'lower'] as const).map(id => ({
+                id,
+                role: 'activity',
+                text: scopeFlowText(t.nodes[id]),
+              }))}
+            />
+          </FlowLayout>
+        </FlowGroup>
+        <FlowGroup id="clip-output" caption={{ title: { text: t.stages[1] } }}>
+          <FlowLayout id="clip-assembly" kind="linear" direction="down" gap={36} itemWidth="match-largest">
+            <FlowEntities
+              items={[
+                { id: 'store', role: 'activity', text: scopeFlowText(t.nodes.store) },
+                {
+                  id: 'assemble',
+                  role: 'activity',
+                  kind: LogicFigureEntityKind.Important,
+                  text: scopeFlowText(t.nodes.assemble),
+                },
+              ]}
+            />
+          </FlowLayout>
+        </FlowGroup>
       </FlowLayout>
       <FlowRelations
         items={[
-          { source: 'spec', target: 'resolve' },
-          { source: 'resolve', target: 'path' },
-          { source: 'definitions', target: 'resolve', role: 'dependency', kind: LogicFigureRelationKind.Secondary },
-          {
-            source: 'path',
-            target: 'resources',
-            label: i18n.edges.dedup,
-            labelFont: { size: 12 },
-            labelTextForeground: 'dimgray',
-          },
-          {
-            source: 'resources',
-            target: 'group',
-            label: i18n.edges.ref,
-            labelFont: { size: 12 },
-            labelTextForeground: 'dimgray',
-          },
-          { source: 'children', target: 'group' },
+          { source: 'resolve', target: 'lower' },
+          { source: 'lower', target: 'store', routing: { kind: 'orthogonal' } },
+          { source: 'store', target: 'assemble' },
         ]}
       />
     </PreviewFlowDiagram>
   );
 };
-
 export default ScopeClipResource;

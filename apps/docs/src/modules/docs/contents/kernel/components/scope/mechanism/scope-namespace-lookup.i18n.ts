@@ -3,47 +3,33 @@ import type { Lang } from '@/i18n';
 export const scopeNamespaceLookupI18n: Record<
   Lang,
   {
-    nodes: Record<
-      'lookup' | 'current' | 'hit' | 'register' | 'outer' | 'absent' | 'duplicate',
-      readonly [string, string]
-    >;
-    edges: Record<'hit' | 'miss' | 'allMiss' | 'write' | 'exists', string>;
+    stages: readonly [string, string];
+    nodes: Record<'current' | 'outer' | 'hit' | 'absent' | 'register' | 'replace', readonly [string, string]>;
+    edges: Record<'hit' | 'miss' | 'allMiss' | 'exists', string>;
   }
 > = {
   zh: {
+    stages: ['查找 · 首次命中即停止', '注册 · 只写当前 frame'],
     nodes: {
-      lookup: ['查找 id', 'lookup'],
-      current: ['当前 frame', '局部名称表'],
-      hit: ['返回条目', '首次命中即停止'],
-      register: ['注册 id', '只写当前 frame'],
-      outer: ['向外层查找', '父 frame → 根'],
-      absent: ['未找到', 'undefined'],
-      duplicate: ['同层重名', '警告 + 后定义覆盖'],
+      current: ['查当前 frame', 'lookup(id)'],
+      outer: ['逐层查外层 frame', '父 frame → … → 根 frame'],
+      hit: ['返回命中条目', '不再访问更外层'],
+      absent: ['返回 undefined', '所有 frame 都未命中'],
+      register: ['写入当前 frame', 'id → 新条目'],
+      replace: ['覆盖已有条目', '同时发出重名警告'],
     },
-    edges: {
-      hit: '命中',
-      miss: '未命中',
-      allMiss: '均未命中',
-      write: '写入',
-      exists: '已存在',
-    },
+    edges: { hit: '命中', miss: '未命中', allMiss: '均未命中', exists: '同层 id 已存在' },
   },
   en: {
+    stages: ['Lookup · Stop at first match', 'Registration · Current frame only'],
     nodes: {
-      lookup: ['Look up id', 'lookup'],
-      current: ['Current frame', 'Local id table'],
-      hit: ['Return entry', 'Stop at first hit'],
-      register: ['Register id', 'Current frame only'],
-      outer: ['Search outward', 'Parent → root'],
-      absent: ['Not found', 'undefined'],
-      duplicate: ['Duplicate id', 'Warn + last wins'],
+      current: ['Search current frame', 'lookup(id)'],
+      outer: ['Search outer frames', 'Parent → … → root frame'],
+      hit: ['Return matched entry', 'Do not search further'],
+      absent: ['Return undefined', 'No match in any frame'],
+      register: ['Write current frame', 'id → new entry'],
+      replace: ['Replace existing entry', 'Also warn about duplicate id'],
     },
-    edges: {
-      hit: 'Hit',
-      miss: 'Miss',
-      allMiss: 'None',
-      write: 'Write',
-      exists: 'Exists',
-    },
+    edges: { hit: 'Hit', miss: 'Miss', allMiss: 'All miss', exists: 'Same-frame id exists' },
   },
 };

@@ -3,18 +3,18 @@ import type { Lang } from '@/i18n';
 export const layoutAutoViewportI18n = {
   zh: {
     bounds: '内容布局边界',
-    boundsNote: '存在边界时',
+    boundsNote: '(20, 30, 80, 40)',
     padding: '四边扩展',
-    paddingNote: '默认每边 10',
+    paddingNote: 'padding = 10',
     viewport: '自动视窗',
-    viewportNote: '原点外移，宽高增大',
+    viewportNote: '(10, 20, 100, 60)',
   },
   en: {
     bounds: 'Content bounds',
-    boundsNote: 'When bounds exist',
+    boundsNote: '(20, 30, 80, 40)',
     padding: 'Expand four sides',
-    paddingNote: 'Default: 10 per side',
+    paddingNote: 'padding = 10',
     viewport: 'Auto viewport',
-    viewportNote: 'Shift origin; enlarge size',
+    viewportNote: '(10, 20, 100, 60)',
   },
 } satisfies Record<Lang, Record<string, string>>;

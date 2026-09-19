@@ -5,6 +5,14 @@ description: Connect with Draw or control paths with Path and Step, sharing arro
 
 Drawing connects positions into lines, curves, or closed outlines. Use `<Draw way>` for everyday connections. Choose `<Path>` and `<Step>` for multiple subpaths, explicit actions, or whole-path transforms. Both use the same path semantics and can produce arrows and labels alongside the path.
 
+## See how the parts fit
+
+The diagram shows how way shorthand reaches Path through Draw. Explicit Steps describe individual actions; arrow and label add direction and text. Arrows indicate inputs or configuration contributing to the path.
+
+<ComponentPreview files="draw-anatomy" size="xs" hideCode type="flow" />
+
+The Draw `way` value is convenient authoring input, not a separate persistent element. Store a graph as Path and Step IR without retaining React components. Explicit Step control does not require compiler knowledge.
+
 ## Responsibilities at a glance
 
 | Member                | Responsibility                                   | When to read                           |
@@ -13,14 +21,6 @@ Drawing connects positions into lines, curves, or closed outlines. Use `<Draw wa
 | Path and Step         | Compose paths from individual actions            | Moves, closure, or precise control     |
 | Arrows and labels     | Express direction and relationship names         | Annotating a path                      |
 | Three extension types | Add segments, whole-path output, or arrow shapes | Built-in capabilities are insufficient |
-
-## See how the parts fit
-
-The diagram shows how way shorthand reaches Path through Draw. Explicit Steps describe individual actions; arrow and label add direction and text. Arrows indicate inputs or configuration contributing to the path.
-
-<ComponentPreview files="draw-anatomy" size="xs" hideCode type="flow" />
-
-The Draw `way` value is convenient authoring input, not a separate persistent element. Store a graph as Path and Step IR without retaining React components. Explicit Step control does not require compiler knowledge.
 
 ## Choosing an entry and its boundaries
 

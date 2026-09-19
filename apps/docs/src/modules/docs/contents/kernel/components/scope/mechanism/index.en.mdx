@@ -34,7 +34,7 @@ Each box serves a different purpose:
 
 The implementation therefore needs to find the transform center before calculating how far to move the group:
 
-<ComponentPreview files="scope-transform-resolution" size="sm" type="flow" hideCode />
+<ComponentPreview files="scope-transform-resolution" size="lg" type="flow" hideCode />
 
 An origin or explicit-coordinate center is known immediately. A center selected from the box must wait until the child nodes are laid out and the box size is known. The two inputs in the diagram represent these cases.
 
@@ -85,7 +85,7 @@ Canvas coordinates are called world coordinates; coordinates inside the Scope ar
 
 In the implementation, `toLocal` converts to the Scope's reading, and `toWorld` converts back to the canvas reading. The flow below follows the same three steps:
 
-<ComponentPreview files="scope-coordinate-projection" size="md" type="flow" hideCode />
+<ComponentPreview files="scope-coordinate-projection" size="sm" type="flow" hideCode />
 
 `offset` specifies how far to move inside the Scope; `at` expresses that movement as a direction and distance. Rotation works similarly: when a Scope turns, its horizontal direction turns with it, and the offset follows that direction. The conversion includes both the current Scope's transforms and those of its enclosing Scopes.
 
@@ -226,7 +226,7 @@ Once the children finish, `replaceLayout` updates the placeholder to a resolved 
 
 Built-in and custom definitions enter the same resolution path. The resulting path enters the resource table, and its reference joins the child primitives and transforms on the Scene group. This chain does not depend on `scope.id`: an anonymous Scope can clip its children too.
 
-<ComponentPreview files="scope-clip-resource" size="sm" type="flow" hideCode />
+<ComponentPreview files="scope-clip-resource" size="lg" type="flow" hideCode />
 
 Built-in and custom clips both use Clip Definition's `resolve` and `lower`. The resource table deduplicates the resulting paths, and the returned id becomes `GroupPrim.clipRef`.
 
