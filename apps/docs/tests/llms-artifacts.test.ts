@@ -21,7 +21,7 @@ describe('LLM documentation artifacts', () => {
 
     expect(byPath.get('/kernel/components')).toMatchObject({ pageType: 'group', audience: 'user' });
     expect(byPath.get('/kernel/components/layout')).toMatchObject({ pageType: 'group' });
-    expect(byPath.get('/kernel/components/shapes/custom-shape')).toMatchObject({
+    expect(byPath.get('/kernel/components/node/custom-shape')).toMatchObject({
       pageType: 'extension',
       audience: 'extension-author',
       capability: 'kernel.shape',

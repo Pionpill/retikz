@@ -229,6 +229,12 @@ export const kernelSection: Array<Section> = [
             meta: { pageType: 'guide', audience: 'user' },
           },
           {
+            id: 'shape',
+            label: 'kernel.nodeShape',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
             id: 'text',
             label: 'kernel.nodeText',
             difficulty: DocDifficulty.Beginner,
@@ -239,6 +245,12 @@ export const kernelSection: Array<Section> = [
             label: 'kernel.nodeCoordinate',
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user' },
+          },
+          {
+            id: 'custom-shape',
+            label: 'kernel.nodeCustomShape',
+            difficulty: DocDifficulty.Advanced,
+            meta: extensionGuide('kernel.shape'),
           },
           {
             id: 'custom',
@@ -322,25 +334,6 @@ export const kernelSection: Array<Section> = [
             id: 'schema-reference',
             label: 'kernel.pathSchemaReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-        ],
-      },
-      {
-        id: 'shapes',
-        label: 'kernel.shapes',
-        sidebarGroup: 'kernel.components',
-        children: [
-          { id: 'circle-ellipse', label: 'kernel.shapesCircleEllipse', difficulty: DocDifficulty.Beginner },
-          { id: 'arc-sector', label: 'kernel.shapesArcSector', difficulty: DocDifficulty.Beginner },
-          { id: 'rectangle', label: 'kernel.shapesRectangle', difficulty: DocDifficulty.Beginner },
-          { id: 'polygon', label: 'kernel.shapesPolygon', difficulty: DocDifficulty.Beginner },
-          { id: 'star', label: 'kernel.shapesStar', difficulty: DocDifficulty.Beginner },
-          { id: 'contour', label: 'kernel.shapesContour', difficulty: DocDifficulty.Advanced },
-          {
-            id: 'custom-shape',
-            label: 'kernel.shapesCustomShape',
-            difficulty: DocDifficulty.Internals,
-            meta: extensionGuide('kernel.shape'),
           },
         ],
       },

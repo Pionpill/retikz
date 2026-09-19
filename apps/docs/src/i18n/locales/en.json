@@ -96,14 +96,6 @@
     "pathGenerator": "Custom generators",
     "pathCustomPath": "Custom paths",
     "pathCustomArrow": "Custom arrows",
-    "shapes": "Shapes",
-    "shapesCircleEllipse": "Circle / Ellipse",
-    "shapesArcSector": "Arc / Sector",
-    "shapesRectangle": "Rectangle",
-    "shapesPolygon": "Polygon",
-    "shapesStar": "Star",
-    "shapesContour": "Contour",
-    "shapesCustomShape": "Custom Shapes",
     "effects": "Effects",
     "effectsShadow": "Shadow",
     "effectsBlend": "Blend",
@@ -193,7 +185,9 @@
     "pathLabel": "label",
     "pathMechanism": "Implementation",
     "pathApiReference": "API reference",
-    "pathSchemaReference": "Schema reference"
+    "pathSchemaReference": "Schema reference",
+    "nodeShape": "shape · Node shapes",
+    "nodeCustomShape": "Custom shapes"
   },
   "library": {
     "components": "Components",

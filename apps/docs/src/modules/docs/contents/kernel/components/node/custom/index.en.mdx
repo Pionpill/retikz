@@ -18,7 +18,7 @@ Check whether an existing choice already solves the problem:
 | Reuse a registered shape's geometry    | Put the shape name in `boundary`      |
 | Add fixed directional ports or anchors | Register a `BoundaryDefinition`       |
 
-A boundary owns only “where the connection stops” and “where standard directional anchors sit.” It does not size the node or emit primitives; `shape` still owns visual geometry, layout bounds, and drawing. If the connection rule always matches a new visual shape, write a [custom shape](/kernel/components/shapes/custom-shape) instead of maintaining two geometries. Shape-specific custom anchors still belong to the visual shape, not the boundary extension.
+A boundary owns only “where the connection stops” and “where standard directional anchors sit.” It does not size the node or emit primitives; `shape` still owns visual geometry, layout bounds, and drawing. If the connection rule always matches a new visual shape, write a [custom shape](/kernel/components/node/custom-shape) instead of maintaining two geometries. Shape-specific custom anchors still belong to the visual shape, not the boundary extension.
 
 ## A complete example
 

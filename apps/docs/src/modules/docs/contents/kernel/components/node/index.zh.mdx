@@ -7,12 +7,13 @@ description: 用 Node、Text 与 Coordinate 组织可定位、可连接的图元
 
 ## 职责一览
 
-| 成员       | 职责                 | 何时使用                    |
-| ---------- | -------------------- | --------------------------- |
-| Node       | 提供位置、文字与形状 | 绘制可见对象或连接端点      |
-| Text       | 覆盖一整行的文字样式 | 在 JSX 中为某一整行设置样式 |
-| Coordinate | 命名不可见位置       | 组织定位参照与路径汇聚      |
-| 连接面扩展 | 定义连线停在哪里     | 连接规则不同于可见轮廓      |
+| 成员       | 职责                         | 何时使用                    |
+| ---------- | ---------------------------- | --------------------------- |
+| Node       | 提供位置、文字与形状         | 绘制可见对象或连接端点      |
+| Text       | 覆盖一整行的文字样式         | 在 JSX 中为某一整行设置样式 |
+| Coordinate | 命名不可见位置               | 组织定位参照与路径汇聚      |
+| 形状扩展   | 定义占位、轮廓与默认连接几何 | 内置形状无法表达目标        |
+| 连接面扩展 | 定义连线停在哪里             | 连接规则不同于可见轮廓      |
 
 ## 整体认识
 
@@ -26,20 +27,24 @@ description: 用 Node、Text 与 Coordinate 组织可定位、可连接的图元
 
 第一次使用从基础用法开始，再按任务阅读定位、文字和标签。正文与附加标签分开配置：正文参与节点尺寸，标签附着在已经确定的节点边界或中心。只需要定位参照时使用 Coordinate；需要文字、可见标记或有方向的边界时使用 Node。
 
-形状目录与自定义视觉轮廓由[形状](/kernel/components/shapes)负责；一组对象的局部坐标和共享默认值由 [Scope](/kernel/components/scope) 负责。只有连线接触位置需要与外观分离时，才考虑自定义连接面。原理和参考页供后续排查、扩展与字段查询，不是开始绘图的前置知识。
+内置轮廓见[节点形状](/kernel/components/node/shape)，新轮廓的定义与注册见[自定义形状](/kernel/components/node/custom-shape)；一组对象的局部坐标和共享默认值由 [Scope](/kernel/components/scope) 负责。只有连线接触位置需要与外观分离时，才考虑自定义连接面。原理和参考页供后续排查、扩展与字段查询，不是开始绘图的前置知识。
 
 ## 章节内容
 
 <LinkedSections
   items={[
+
     { title: '基础用法', description: '创建节点并连接两个命名对象', url: '/kernel/components/node/usage' },
     { title: '扩展用法', description: '选择定位方式、锚点与连接面', url: '/kernel/components/node/extend' },
     { title: 'label · 标签', description: '摆放附加标签并设置引线', url: '/kernel/components/node/labels' },
+    { title: 'shape · 节点形状', description: '选择内置形状、内容适配与锚点', url: '/kernel/components/node/shape' },
     { title: 'Text · 文本', description: '编写多行正文与行内混排', url: '/kernel/components/node/text' },
     { title: 'Coordinate · 坐标点', description: '组织不可见的辅助位置', url: '/kernel/components/node/coordinate' },
+    { title: '自定义形状', description: '定义并注册新的节点形状', url: '/kernel/components/node/custom-shape' },
     { title: '自定义连接面', description: '定义并注册新的连接规则', url: '/kernel/components/node/custom' },
     { title: '实现原理', description: '理解尺寸、文字和引用的处理过程', url: '/kernel/components/node/mechanism' },
     { title: 'API 参考', description: '查询公开入口、类型与扩展契约', url: '/kernel/components/node/api-reference' },
     { title: 'Schema 参考', description: '查询节点家族的持久化字段', url: '/kernel/components/node/schema-reference' },
-  ]}
+
+]}
 />

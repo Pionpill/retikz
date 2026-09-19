@@ -304,6 +304,131 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
   ]}
 />
 
+## 形状布局与连接
+
+### 圆与椭圆的内容外接
+
+`<Node>` 先把文字测量结果与 `padding` 合成内容框，再让 shape 定义从这个内框计算可见边界。下图给两边相同的内容框，只切换外接策略：
+
+<ComponentPreview files="circle-ellipse-circumscription" size="md" hideCode type="illustration" />
+
+默认 `ellipse` 把两个半轴分别乘以 √2；`circle` 则在编译时解析成 `ellipse + circumscribe:'equal'`，把内容框半对角线作为统一半径。解析后的同一份几何既产出可见的 ellipse 图元，也提供 anchor 与连接边界，所以 `<Draw>` / `<Path>` 的端点会贴到外轮廓。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'circle preset 解析为 equal ellipse',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'ellipse 外接、anchor 与图元生成',
+      path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
+      startLine: 9,
+      endLine: 45,
+    },
+  ]}
+/>
+
+### 矩形的圆角与连接边界
+
+`<Node>` 省略 `shape` 时会选择 `rectangle`。文字测量结果与 `padding` 先组成内容内框，再交给矩形 shape 同时生成可见轮廓和连接几何：
+
+<ComponentPreview files="rectangle-node-boundary" size="lg" hideCode type="illustration" />
+
+矩形不会为了外接内容额外放大半轴，所以边界正好包住「文字 + padding」。同一份 `cornerRadius` 参数既参与矩形绘制，也参与朝目标方向求边界交点；这就是圆角节点的连线会落在圆弧上，而不是落在已被磨掉的尖角上的原因。
+
+因此 `<Rectangle>` 的结果是纯 Path 图形；矩形 `<Node>` 则保留 id、方位 anchor 与边界求交能力。需要装文字并连接时，应选择 `<Node>`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node 默认形状与圆角参数解析',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: '文字与 padding 到形状边界的布局',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 81,
+      endLine: 127,
+    },
+    {
+      label: '矩形轮廓、anchor 与边界交点',
+      path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
+      startLine: 41,
+      endLine: 69,
+    },
+  ]}
+/>
+
+### 多边形的内容外接与连接轮廓
+
+沿主链看，Node 的内容尺寸先决定多边形要包住什么，再由 shape 参数决定用什么正多边形去包；上下两条输出表示同一套轮廓规则同时服务渲染与自动连接：
+
+<ComponentPreview files="polygon-node-flow" size="lg" hideCode type="illustration" />
+
+文字与 `padding` 先形成内容内框；`polygon` 形状实现再根据 `sides` 与 `rotate` 求出能完整外接这个内框的最小外接圆半径。所有顶点仍落在同一个圆上，所以长文本只会把正多边形整体放大，不会把它拉伸成不规则多边形。
+
+`cornerRadius` 不改变外接尺寸，而是在顶点环生成后应用倒角。同一套顶点与倒角规则既输出 Scene path，也用于从节点中心朝目标方向求边界交点，因此自动连接会落在圆角弧上。标准方位 anchor（`top`、`bottom` 等）仍取外接矩形；它们不等同于任意方向上的真实轮廓交点。
+
+`shape="diamond"` 只改变入口写法：编译器会先把它归一为 `polygon{ sides:4, rotate:0 }`，再进入完全相同的 provider 主链。对象形式 `{ type:'diamond', params:{ aspectRatio } }` 也走这条主链，其中 `aspectRatio` 表示最终轮廓的宽 / 高；缺省或设为 `1` 时等价于原有正菱形。扁菱形固定使用 0° / 90° / 180° / 270° 四个顶点方向，并由同一套顶点参与渲染、边界交点和连接面计算。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'diamond 预设归一',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: '内容内框的外接半径计算',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 89,
+      endLine: 114,
+    },
+    {
+      label: '轮廓输出、连接交点与方位 anchor',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 126,
+      endLine: 183,
+    },
+  ]}
+/>
+
+### 自定义形状的解析
+
+图中橙色是 JSON 数据，蓝色是运行时能力。两者在 compile 阶段按 shape 名汇合：registry 先合并内置与自定义定义，再校验 params，最后由同一份 definition 生成 Scene 图元与连接几何。
+
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="illustration" />
+
+执行顺序如下：
+
+1. 解析 `node.shape`；`circle` / `diamond` preset 先归一为真实 provider 名和 params
+2. 在统一 shape registry 中查找定义；内置项与自定义项不分两条消费路径
+3. 依次通过 JSON object 护栏与 definition 的 `paramsSchema`
+4. Node 布局调用 `circumscribe`，连接与 anchor 调用几何函数，规则连接面可调用 `connectionEnvelope`，绘制调用 `emit`
+
+<SourceLinks
+  sources={[
+    {
+      label: '合并内置与自定义形状注册表',
+      path: 'packages/kernel/core/src/providers/shape/registry.ts',
+      startLine: 6,
+      endLine: 12,
+    },
+    {
+      label: '解析 shape preset、provider 与 params',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+  ]}
+/>
+
 ## 延伸阅读
 
 <LinkedSections

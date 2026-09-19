@@ -72,15 +72,15 @@ React 组件不一定是语法糖；Scope 也不是语法糖，因为它在 IR �
 
 Kernel 通过 `@retikz/react` 提供以下语法糖组件；这里只列用途，具体写法见对应组件页。
 
-| 组件                                                        | 用途                               |
-| ----------------------------------------------------------- | ---------------------------------- |
-| [Draw](/kernel/components/path/usage)                       | 将简写路径展开为 Path 与 Step      |
-| [EdgeLabel](/kernel/components/path/step)                   | 将子元素写法转换为 Step 的标签配置 |
-| [Circle、Ellipse](/kernel/components/shapes/circle-ellipse) | 圆与椭圆路径                       |
-| [Arc、Sector](/kernel/components/shapes/arc-sector)         | 圆弧、椭圆弧与扇形路径             |
-| [Rectangle](/kernel/components/shapes/rectangle)            | 矩形路径                           |
-| [RegularPolygon](/kernel/components/shapes/polygon)         | 正多边形路径                       |
-| [Star](/kernel/components/shapes/star)                      | 星形路径                           |
+| 组件                                                     | 用途                               |
+| -------------------------------------------------------- | ---------------------------------- |
+| [Draw](/kernel/components/path/usage)                    | 将简写路径展开为 Path 与 Step      |
+| [EdgeLabel](/kernel/components/path/step)                | 将子元素写法转换为 Step 的标签配置 |
+| [Circle、Ellipse](/kernel/components/path/api-reference) | 圆与椭圆路径                       |
+| [Arc、Sector](/kernel/components/path/api-reference)     | 圆弧、椭圆弧与扇形路径             |
+| [Rectangle](/kernel/components/path/api-reference)       | 矩形路径                           |
+| [RegularPolygon](/kernel/components/path/api-reference)  | 正多边形路径                       |
+| [Star](/kernel/components/path/api-reference)            | 星形路径                           |
 
 形状组件简化的是路径写法，与 `Node` 的 `shape` 配置不是同一入口。`DrawWay.Cycle`、相对坐标字符串等也属于语法简写，但不是组件，因此不列入上表。
 

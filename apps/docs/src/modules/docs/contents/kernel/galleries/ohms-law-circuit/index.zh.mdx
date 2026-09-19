@@ -5,7 +5,7 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 
 ## 引言
 
-这一页用一张高中物理课本风的欧姆定律实验电路图，展示 [Layout](/kernel/components/layout/usage)、[Scope](/kernel/components/scope/usage)、[Node](/kernel/components/node/usage)、[Draw](/kernel/components/path/usage) 和 [Shape Registry](/kernel/components/shapes/custom-shape) 如何配合。
+这一页用一张高中物理课本风的欧姆定律实验电路图，展示 [Layout](/kernel/components/layout/usage)、[Scope](/kernel/components/scope/usage)、[Node](/kernel/components/node/usage)、[Draw](/kernel/components/path/usage) 和 [Shape Registry](/kernel/components/node/custom-shape) 如何配合。
 
 <ComponentPreview
   files={['ohms-law-circuit-06-labels', 'circuitShapes.tsx', 'circuit-01-meters.meter.tsx']}
@@ -50,13 +50,13 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 
 ### 步骤 1：把电表做成自定义形状
 
-电压表、电流表是一个圆形表头加左右两根引线，只在左右两个端点接线（和 [Shape Registry](/kernel/components/shapes/custom-shape) 里的「语义端点：二极管」一个思路）。把它做成自定义形状 `circuit-meter`，先平铺两个（A / V）认识一下。
+电压表、电流表是一个圆形表头加左右两根引线，只在左右两个端点接线（和 [Shape Registry](/kernel/components/node/custom-shape) 里的「语义端点：二极管」一个思路）。把它做成自定义形状 `circuit-meter`，先平铺两个（A / V）认识一下。
 
 <ComponentPreview files={['circuit-01-meters', 'circuit-01-meters.meter.tsx']} size="xs" />
 
 ### 步骤 2：平铺其余自定义符号
 
-电源、开关、电阻、滑动变阻器也不是 core 内置形状，用 [Shape Registry](/kernel/components/shapes/custom-shape) 自定义，集中放在 `circuitShapes.tsx`。它们都只认左右两个端点（电源长板正极在右、短板负极在左）；极板、触点、矩形框、斜箭头都画在形状内部。
+电源、开关、电阻、滑动变阻器也不是 core 内置形状，用 [Shape Registry](/kernel/components/node/custom-shape) 自定义，集中放在 `circuitShapes.tsx`。它们都只认左右两个端点（电源长板正极在右、短板负极在左）；极板、触点、矩形框、斜箭头都画在形状内部。
 
 <ComponentPreview files={['ohms-law-circuit-02-custom-shapes', 'circuitShapes.tsx']} size="xs" />
 
@@ -110,13 +110,13 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 
 ## 能力
 
-| 组件                                                      | 本例中的角色                                                   | 主要步骤                                                                                                                        |
-| --------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| [Layout](/kernel/components/layout/usage)                 | 固定 1280 x 760 视图，让所有 demo 共用同一套坐标系             | [1](#步骤-1把电表做成自定义形状), [2](#步骤-2平铺其余自定义符号), [3](#步骤-3将元件放到电路位置)                                |
-| [Scope](/kernel/components/scope/usage)                   | 统一样式默认值，并把测量单元平移复制复用                       | [4](#步骤-4用-scope-组合并复用测量单元)                                                                                         |
-| [Node](/kernel/components/node/usage)                     | 承载电表、电源、开关、电阻、滑动变阻器和文字标注               | [1](#步骤-1把电表做成自定义形状), [3](#步骤-3将元件放到电路位置), [4](#步骤-4用-scope-组合并复用测量单元), [6](#步骤-6标注元件) |
-| [Draw](/kernel/components/path/usage)                     | 用折线接出测量单元、用显式拐点连成主回路                       | [4](#步骤-4用-scope-组合并复用测量单元), [5](#步骤-5用折角连成闭合回路)                                                         |
-| [ShapeDefinition](/kernel/components/shapes/custom-shape) | 把电表、电源、开关、电阻和滑动变阻器做成有固定端点的自定义形状 | [1](#步骤-1把电表做成自定义形状), [2](#步骤-2平铺其余自定义符号)                                                                |
+| 组件                                                    | 本例中的角色                                                   | 主要步骤                                                                                                                        |
+| ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| [Layout](/kernel/components/layout/usage)               | 固定 1280 x 760 视图，让所有 demo 共用同一套坐标系             | [1](#步骤-1把电表做成自定义形状), [2](#步骤-2平铺其余自定义符号), [3](#步骤-3将元件放到电路位置)                                |
+| [Scope](/kernel/components/scope/usage)                 | 统一样式默认值，并把测量单元平移复制复用                       | [4](#步骤-4用-scope-组合并复用测量单元)                                                                                         |
+| [Node](/kernel/components/node/usage)                   | 承载电表、电源、开关、电阻、滑动变阻器和文字标注               | [1](#步骤-1把电表做成自定义形状), [3](#步骤-3将元件放到电路位置), [4](#步骤-4用-scope-组合并复用测量单元), [6](#步骤-6标注元件) |
+| [Draw](/kernel/components/path/usage)                   | 用折线接出测量单元、用显式拐点连成主回路                       | [4](#步骤-4用-scope-组合并复用测量单元), [5](#步骤-5用折角连成闭合回路)                                                         |
+| [ShapeDefinition](/kernel/components/node/custom-shape) | 把电表、电源、开关、电阻和滑动变阻器做成有固定端点的自定义形状 | [1](#步骤-1把电表做成自定义形状), [2](#步骤-2平铺其余自定义符号)                                                                |
 
 ## 限制
 
@@ -128,7 +128,7 @@ description: '高中物理欧姆定律实验电路示例：用自定义形状、
 
 ## 扩展阅读
 
-- **更多扩展点**：除自定义形状（[Shape Registry](/kernel/components/shapes/custom-shape)）外，retikz 还开放了[自定义箭头](/kernel/components/path/custom-arrow)、[自定义图案](/kernel/components/effects/custom-pattern)、[自定义生成器](/kernel/components/path/custom-path-generator)。
+- **更多扩展点**：除自定义形状（[Shape Registry](/kernel/components/node/custom-shape)）外，retikz 还开放了[自定义箭头](/kernel/components/path/custom-arrow)、[自定义图案](/kernel/components/effects/custom-pattern)、[自定义生成器](/kernel/components/path/custom-path-generator)。
 - **进阶 / 优化**：本页只是一个使用用例；反复画这类电路时，把它封装成专门的（更高 tier 的）组件，既能减少重复代码，也能精简 IR 持久化的内容。
 - **让 AI 更懂图**：在 IR 里给节点 / 路径的 `meta` 字段补上语义元数据，能让 AI 更准确地理解图的语义内容。
 - **相关组件 / 概念**：[Node](/kernel/components/node/usage) / [Scope](/kernel/components/scope/usage) / [Draw](/kernel/components/path/usage)，以及[定位](/kernel/components/basic/position)（E 标签用到的 `of` 关系定位）。

@@ -96,14 +96,6 @@
     "pathGenerator": "自定义生成器",
     "pathCustomPath": "自定义路径",
     "pathCustomArrow": "自定义箭头",
-    "shapes": "形状",
-    "shapesCircleEllipse": "Circle / Ellipse",
-    "shapesArcSector": "Arc / Sector",
-    "shapesRectangle": "Rectangle",
-    "shapesPolygon": "Polygon",
-    "shapesStar": "Star",
-    "shapesContour": "Contour",
-    "shapesCustomShape": "自定义形状",
     "effects": "效果",
     "effectsShadow": "阴影",
     "effectsBlend": "混合",
@@ -193,7 +185,9 @@
     "pathLabel": "label · 标签",
     "pathMechanism": "实现原理",
     "pathApiReference": "API 参考",
-    "pathSchemaReference": "Schema 参考"
+    "pathSchemaReference": "Schema 参考",
+    "nodeShape": "shape · 节点形状",
+    "nodeCustomShape": "自定义形状"
   },
   "library": {
     "components": "组件",

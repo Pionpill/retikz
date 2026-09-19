@@ -49,7 +49,7 @@ const svg = renderToSvgString(input, {
 });
 ```
 
-When an IR shape is neither a Core default nor registered in this invocation's `shapes`, Core fails explicitly at lookup instead of silently substituting a similar shape. `polygon` is a minimal Core built-in; see [Polygon](/kernel/components/shapes/polygon).
+When an IR shape is neither a Core default nor registered in this invocation's `shapes`, Core fails explicitly at lookup instead of silently substituting a similar shape. `polygon` is a minimal Core built-in; see [Polygon](/kernel/components/node/shape#polygon--diamond).
 
 ## Examples
 
@@ -201,5 +201,5 @@ Use `shape={{ type: 'contour', params }}` and inject `ContourShapeDefinition`. T
 ## Related
 
 - [Capability Loading](/library/standard/capability-loading): boundary between direct injection and the provider graph
-- [Shapes](/kernel/components/shapes): Core built-in shapes and node geometry
+- [Shapes](/kernel/components/node/shape): Core built-in shapes and node geometry
 - [Extensions](/library/standard/introduction): browse the other optional capabilities

@@ -49,7 +49,7 @@ const svg = renderToSvgString(input, {
 });
 ```
 
-当 IR 形状既不是 Core 默认项，也没有在本次 `shapes` 中注册时，Core 会在 lookup 时明确失败，不会以相近形状静默替代。`polygon` 是 Core 最小内置形状，详见 [Polygon](/kernel/components/shapes/polygon)。
+当 IR 形状既不是 Core 默认项，也没有在本次 `shapes` 中注册时，Core 会在 lookup 时明确失败，不会以相近形状静默替代。`polygon` 是 Core 最小内置形状，详见 [Polygon](/kernel/components/node/shape#polygon--diamond)。
 
 ## 例子
 
@@ -201,5 +201,5 @@ const svg = renderToSvgString(input, {
 ## 相关
 
 - [能力装载](/library/standard/capability-loading)：直接注入与 provider graph 的边界
-- [形状](/kernel/components/shapes)：Core 内置形状与节点几何
+- [形状](/kernel/components/node/shape)：Core 内置形状与节点几何
 - [扩展](/library/standard/introduction)：浏览其他可选能力

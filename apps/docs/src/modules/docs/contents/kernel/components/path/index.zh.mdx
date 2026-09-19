@@ -7,12 +7,13 @@ description: 用 Draw 快速连线，用 Path 与 Step 控制路径，共享箭�
 
 ## 职责一览
 
-| 成员           | 职责                           | 何时阅读                 |
-| -------------- | ------------------------------ | ------------------------ |
-| Draw 与 way    | 用紧凑写法描述走向             | 从日常连线开始           |
-| Path 与 Step   | 组合路径与逐段动作             | 多次移动、闭合或精确控制 |
-| 箭头与标签     | 表达方向与关系名称             | 给路径补充语义           |
-| 三类自定义能力 | 扩展曲线段、整条路径或箭头轮廓 | 内置能力无法表达目标结果 |
+| 成员           | 职责                           | 何时阅读                     |
+| -------------- | ------------------------------ | ---------------------------- |
+| Draw 与 way    | 用紧凑写法描述走向             | 从日常连线开始               |
+| Path 与 Step   | 组合路径与逐段动作             | 多次移动、闭合或精确控制     |
+| 箭头与标签     | 表达方向与关系名称             | 给路径补充语义               |
+| 形状快捷组件   | 将常见几何展开为 Path / Step   | 绘制圆、矩形、星形、弧或扇形 |
+| 三类自定义能力 | 扩展曲线段、整条路径或箭头轮廓 | 内置能力无法表达目标结果     |
 
 ## 整体认识
 
@@ -34,6 +35,7 @@ Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存�
 
 <LinkedSections
   items={[
+
     { title: '基础用法', description: '连接两个节点，选择输入方式', url: '/kernel/components/path/usage' },
     { title: 'Draw · 路径写法', description: '目标、折角、曲线与相对坐标', url: '/kernel/components/path/draw' },
     {
@@ -53,5 +55,6 @@ Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存�
     { title: '实现原理', description: '解释输入、几何与输出之间的关系', url: '/kernel/components/path/mechanism' },
     { title: 'API 参考', description: '查询公开 TypeScript 契约', url: '/kernel/components/path/api-reference' },
     { title: 'Schema 参考', description: '查询路径输入数据字段', url: '/kernel/components/path/schema-reference' },
-  ]}
+
+]}
 />

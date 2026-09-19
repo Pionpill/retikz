@@ -22,8 +22,8 @@ export const kernelV02: Release = {
         {
           label: { zh: '形状注册', en: 'Shape registry' },
           content: {
-            zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/kernel/components/shapes/custom-shape)',
-            en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/kernel/components/shapes/custom-shape)',
+            zh: 'ShapeDefinition 四方法,内置 4 形状改注册项,可发第三方形状库 [自定义形状](/kernel/components/node/custom-shape)',
+            en: 'Four-method ShapeDefinition; the 4 built-ins become registry entries; third-party shape libs possible [shape registry](/kernel/components/node/custom-shape)',
           },
         },
         {

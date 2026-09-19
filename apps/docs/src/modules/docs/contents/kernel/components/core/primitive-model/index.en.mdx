@@ -71,7 +71,7 @@ The gray block is the content box and the dashed rectangle is the inner frame; t
 
 Text-container shapes behave like buttons or DOM boxes: longer text makes the node grow. Param-driven shapes behave more like geometric glyphs: radius, angle, and point count already define the size, and text is attached to that geometry.
 
-To extend shapes yourself, `defineShape` must supply the same geometry answers — how the shape is enclosed, where a ray hits it, where named anchors live, and how it emits primitives — so the Node stays measurable, connectable, referenceable, and renderable like any built-in. Read [Custom Shapes](/kernel/components/shapes/custom-shape) for the implementation contract.
+To extend shapes yourself, `defineShape` must supply the same geometry answers — how the shape is enclosed, where a ray hits it, where named anchors live, and how it emits primitives — so the Node stays measurable, connectable, referenceable, and renderable like any built-in. Read [Custom Shapes](/kernel/components/node/custom-shape) for the implementation contract.
 
 ## Outer Boundaries
 
@@ -123,7 +123,7 @@ The top row uses a rectangle to explain standard directional, angle, and edge-pr
 | -------------------- | ----------------------------- | --------------------------------------------------- |
 | `center` / direction | Node shape / boundary         | [Node Geometry](/kernel/components/node/usage)      |
 | Numeric angle        | Selected connection boundary  | [Path target](/kernel/reference/schema/path#target) |
-| Shape-specific name  | The corresponding shape       | [Shapes](/kernel/components/shapes)                 |
+| Shape-specific name  | The corresponding shape       | [Shapes](/kernel/components/node/shape)             |
 | `{ side, fraction }` | Real edge of the visual shape | [Node Geometry](/kernel/components/node/usage)      |
 
 IR / schema keeps `top` / `right` / `bottom` / `left` plus four corners as its standard directional vocabulary, with `center` separate. A named direction asks the shape / boundary first and falls back to its AABB when absent; a numeric angle casts a ray onto the selected boundary; shape-specific names and edge proportions remain owned by the visual shape.
@@ -134,13 +134,13 @@ TikZ uses compass names such as `north` / `south` / `east` / `west`. retikz IR /
 
 </Comparison>
 
-Complete names, per-shape semantic points, and boundary exceptions live on the Node and Shapes pages; see [Custom Shapes](/kernel/components/shapes/custom-shape) for custom geometry. Continue with [Primitive Relations](/kernel/components/core/primitive-relations) for how another primitive references these points and how endpoints choose between auto and locked modes.
+Complete names, per-shape semantic points, and boundary exceptions live on the Node and Shapes pages; see [Custom Shapes](/kernel/components/node/custom-shape) for custom geometry. Continue with [Primitive Relations](/kernel/components/core/primitive-relations) for how another primitive references these points and how endpoints choose between auto and locked modes.
 
 ## Try it yourself
 
 First edit the content and add a line break, then switch among rectangle, circle, ellipse, diamond, polygon, star, and sector to see one Node adopt different visual shapes. The first five derive their outer size from the content and inner frame; star and sector instead use representative geometry parameters supplied by the demo and place the text over that fixed geometry. The last two are optional Standard shapes; this demo injects them explicitly through `<Layout shapes>`, and ordinary use likewise imports their matching Definitions from `@retikz/standard/shape`. Sector uses equal inner and outer radii for its open-arc state.
 
-Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real graphConnector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/usage), and [Shapes](/kernel/components/shapes) pages for the complete APIs.
+Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `ellipse`. Circle and ellipse also let you compare `fit: 'tight'` with `fit: 'bounds'`, while all three regular connection surfaces accept `gap`. Then adjust the source angle and observe the real graphConnector endpoint. The final `fill`, `stroke`, and `strokeWidth` fields provide only minimal appearance feedback; use the [Text](/kernel/components/node/text), [Node](/kernel/components/node/usage), and [Shapes](/kernel/components/node/shape) pages for the complete APIs.
 
 <ComponentPreview
   files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
@@ -207,7 +207,7 @@ Next switch among the four boundary modes: `shape`, `circle`, `rectangle`, and `
     {
       title: 'Custom Shapes',
       description: 'Supply the bounding / ray / anchor / emit geometry answers to register a new shape',
-      url: '/kernel/components/shapes/custom-shape',
+      url: '/kernel/components/node/custom-shape',
     },
   ]}
 />

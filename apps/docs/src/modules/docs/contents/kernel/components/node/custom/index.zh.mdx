@@ -18,7 +18,7 @@ description: 定义、注册并使用独立于节点外观的连接面
 | 借用已注册 shape 的连接几何 | 把 shape 名写进 `boundary`   |
 | 固定方向端口或方位 anchor   | 注册 `BoundaryDefinition`    |
 
-连接面只拥有“连线停在哪里”和“标准方位锚点在哪里”。它不计算节点尺寸，也不输出图元；视觉形状、占位和绘制仍由 `shape` 负责。若连接规则始终等同于新形状，应改写 [自定义形状](/kernel/components/shapes/custom-shape)，不要维护两份几何。形状专属自定义锚点仍属于视觉 shape，不由 boundary 扩展。
+连接面只拥有“连线停在哪里”和“标准方位锚点在哪里”。它不计算节点尺寸，也不输出图元；视觉形状、占位和绘制仍由 `shape` 负责。若连接规则始终等同于新形状，应改写 [自定义形状](/kernel/components/node/custom-shape)，不要维护两份几何。形状专属自定义锚点仍属于视觉 shape，不由 boundary 扩展。
 
 ## 最小闭环
 

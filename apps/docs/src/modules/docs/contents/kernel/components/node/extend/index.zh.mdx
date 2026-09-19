@@ -171,15 +171,15 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
 
 每种形状的参数和专属 anchor 见对应页面：
 
-| shape             | 写法                                       | 文档                                                         |
-| ----------------- | ------------------------------------------ | ------------------------------------------------------------ |
-| rectangle         | 默认 / `'rectangle'`                       | [Rectangle](/kernel/components/shapes/rectangle)             |
-| circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/shapes/circle-ellipse) |
-| sector            | `{ type:'sector', params }`                | [Arc / Sector](/kernel/components/shapes/arc-sector)         |
-| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon)                 |
-| star              | `{ type:'star', params }`                  | [Star](/kernel/components/shapes/star)                       |
+| shape             | 写法                                       | 文档                                                              |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| rectangle         | 默认 / `'rectangle'`                       | [Rectangle](/kernel/components/node/shape#rectangle)              |
+| circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/node/shape#circle--ellipse) |
+| sector            | `{ type:'sector', params }`                | [Arc / Sector](/library/standard/shape)                           |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/node/shape#polygon--diamond)         |
+| star              | `{ type:'star', params }`                  | [Star](/library/standard/shape)                                   |
 
-`shape` 也接受经 `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes` 注册的名称，带参注册形状继续用 `{ type, params }`。详情见 [自定义形状](/kernel/components/shapes/custom-shape)。
+`shape` 也接受经 `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes` 注册的名称，带参注册形状继续用 `{ type, params }`。详情见 [自定义形状](/kernel/components/node/custom-shape)。
 
 `boundary` 默认为 `'shape'`，也可选 `'circle'` / `'rectangle'` / `'ellipse'` 或注册的连接面。它只改变自动端点与标准 anchor 的解析，不改节点占位和视觉轮廓。三个内置替代面都支持 `{ fit, gap }`：`fit: 'tight'`（默认）使用形状提供的外包轮廓尽量贴近，`fit: 'bounds'` 则包住视觉形状在水平和垂直方向的外接矩形（AABB）；`gap` 再向外（正数）或向内（负数）调整半径 / 半轴。矩形的两种 `fit` 结果相同。
 

@@ -304,6 +304,131 @@ Node / Coordinate position references also resolve during traversal, so they see
   ]}
 />
 
+## Shape layout and connections
+
+### Circle and ellipse content bounds
+
+`<Node>` combines measured text and `padding` into a content box, then asks the shape definition to compute a visible boundary around that inner box. Both panels below start with the same content box and change only the circumscription policy:
+
+<ComponentPreview files="circle-ellipse-circumscription" size="md" hideCode type="illustration" />
+
+The default `ellipse` multiplies each half-axis by √2. During compilation, `circle` resolves to `ellipse + circumscribe:'equal'`, using the content-box half-diagonal as one shared radius. The same resolved geometry emits the visible ellipse primitive and provides anchors plus the connection boundary, so `<Draw>` / `<Path>` endpoints snap to the outer contour.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve the circle preset to an equal ellipse',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'Ellipse circumscription, anchors, and primitive emission',
+      path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
+      startLine: 9,
+      endLine: 45,
+    },
+  ]}
+/>
+
+### Rectangle corners and connection boundaries
+
+When `<Node>` omits `shape`, it selects `rectangle`. Text measurement and `padding` first form the inner content box, which the rectangle shape uses to produce both the visible outline and connection geometry:
+
+<ComponentPreview files="rectangle-node-boundary" size="lg" hideCode type="illustration" />
+
+A rectangle does not enlarge the half-axes when circumscribing the content, so its boundary wraps exactly around “text + padding.” The same `cornerRadius` participates in both drawing the rectangle and finding a boundary point toward a target. That is why a connection to a rounded node lands on the fillet arc rather than on the sharp corner that was rounded away.
+
+The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retains its id, directional anchors, and boundary-intersection behavior; use `<Node>` when the rectangle needs to hold text and connect.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Default Node shape and corner-radius resolution',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'Text and padding to shape-boundary layout',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 81,
+      endLine: 127,
+    },
+    {
+      label: 'Rectangle outline, anchors, and boundary intersection',
+      path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
+      startLine: 41,
+      endLine: 69,
+    },
+  ]}
+/>
+
+### Polygon content bounds and connection contours
+
+Along the main path, the Node content determines what the polygon must contain, then the shape parameters determine which regular polygon contains it. The two outputs show the same contour rules serving both rendering and automatic connections:
+
+<ComponentPreview files="polygon-node-flow" size="lg" hideCode type="illustration" />
+
+Text and `padding` first form the inner box. The polygon provider then derives the smallest circumradius that fully contains that box for the given `sides` and `rotate`. Every vertex still lies on one circle, so long text enlarges the regular polygon as a whole instead of stretching it into an irregular polygon.
+
+`cornerRadius` does not change the circumscribed size; it is applied after the vertex ring is available. The same vertex and fillet rules emit the Scene path and intersect a ray from the node center toward an automatic connection target, so an endpoint lands on the rounded arc. Standard directional anchors (`top`, `bottom`, and so on) still come from the external bounding box; they are not arbitrary-direction contour intersections.
+
+`shape="diamond"` changes only the entry form: the compiler first normalizes it to `polygon{ sides:4, rotate:0 }`, then sends it through the same provider path. The object form `{ type:'diamond', params:{ aspectRatio } }` uses that path too; `aspectRatio` is the final outline width divided by height, and omitted / `1` keeps the original regular diamond. Flattened diamonds keep their four vertices at 0° / 90° / 180° / 270°, and the same vertices drive rendering, boundary intersections, and connection envelopes.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'diamond preset normalization',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'Circumradius calculation for the inner box',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 89,
+      endLine: 114,
+    },
+    {
+      label: 'Contour output, connection hit, and directional anchors',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 126,
+      endLine: 183,
+    },
+  ]}
+/>
+
+### Resolving custom shapes
+
+Orange nodes in the figure are JSON data; blue nodes are runtime capabilities. They meet by shape name during compile: the registry merges built-ins and custom definitions, validates params, then uses one definition to produce Scene primitives and connection geometry.
+
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="illustration" />
+
+The execution order is:
+
+1. Resolve `node.shape`; normalize `circle` / `diamond` presets to real provider names and params
+2. Look up the definition in one shape registry; built-ins and custom definitions do not fork into separate consumption paths
+3. Validate through the JSON-object guard and the definition's `paramsSchema`
+4. Call `circumscribe` for Node layout, geometry hooks for connections and anchors, `connectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Merge built-in and custom shape registries',
+      path: 'packages/kernel/core/src/providers/shape/registry.ts',
+      startLine: 6,
+      endLine: 12,
+    },
+    {
+      label: 'Resolve shape presets, providers, and params',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+  ]}
+/>
+
 ## Further reading
 
 <LinkedSections

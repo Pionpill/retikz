@@ -162,6 +162,139 @@ Use a generator to add a waveform segment, a Path kind to replace whole-path out
   ]}
 />
 
+## Shape shortcut expansion
+
+### Circle and ellipse path expansion
+
+The upper route preserves a `Circle center` target, so a node id, polar point, or `[x, y]` coordinate can resolve later during Path compilation. The lower route must compute a center and radii in the React adapter first, so it accepts literal `[x, y]` geometry only:
+
+<ComponentPreview files="circle-ellipse-sugar-flow" size="md" hideCode type="illustration" />
+
+`Circle` from / corner / box forms and every `Ellipse` form take the lower route. Both routes expand to an equivalent `<Path>` plus a `circlePath` / `ellipsePath` Step. With angles present, `closed` then chooses a chord (`chord`, the default), a return to the center (`sector`), or an open arc (`open`).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Circle input normalization and Step expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/Circle.tsx',
+      startLine: 19,
+      endLine: 93,
+    },
+    {
+      label: 'Ellipse input normalization and Step expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/Ellipse.tsx',
+      startLine: 18,
+      endLine: 88,
+    },
+  ]}
+/>
+
+### Rectangle path expansion
+
+`<Rectangle>` first converges its four prop forms on two opposite corners, `from` and `to`. The upper route in the figure passes through Targets (resolvable points, including coordinates and node ids); the lower route computes the corners from dimensions in the React layer:
+
+<ComponentPreview files="rectangle-sugar-flow" size="lg" hideCode type="illustration" />
+
+Only `corner1 + corner2` passes both Targets through unchanged, so it can reference node ids. Forms such as `center + width + height` need arithmetic first and accept only literal `[x, y]` coordinates. The `rectangle` step then resolves both corners and emits an independent closed subpath; `cornerRadius` replaces each corner with an arc and is clamped to half the shorter side.
+
+If either node reference cannot be resolved, the whole Path is skipped with a warning instead of leaving a partial rectangle.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Rectangle prop normalization and Path expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/Rectangle.tsx',
+      startLine: 20,
+      endLine: 55,
+    },
+    {
+      label: 'Rectangle-step point resolution and closed outline emission',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 171,
+      endLine: 219,
+    },
+  ]}
+/>
+
+### Regular polygon vertex expansion
+
+The three input groups converge on one vertex ring before the single main path expands it into a Path:
+
+<ComponentPreview files="polygon-sugar-flow" size="md" hideCode type="illustration" />
+
+`radius` is already the circumradius. `sideLength` first converges on the same value through `R = sideLength / (2·sin(π/sides))`. Vertex `k` then uses the direction `rotate + k·360/sides`; `rotate` is baked into the vertex coordinates instead of being forwarded as a transform on the underlying Path.
+
+The output topology is therefore always one `move`, `sides - 1` `line` steps, and one `cycle`. A non-literal `[x, y]` center, or a `sides` value that is not an integer of at least 3, fails before the vertex ring is produced.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'RegularPolygon input normalization and Path expansion',
+      path: 'packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx',
+      startLine: 25,
+      endLine: 43,
+    },
+    {
+      label: 'Regular polygon vertex calculation',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 159,
+      endLine: 172,
+    },
+  ]}
+/>
+
+### How an angle span is determined
+
+Start with the axes and orange arrow: the span begins at `startAngle`, follows increasing screen-space angles to `endAngle`, and the difference is `sweepAngle`.
+
+<ComponentPreview files="arc-sector-angle-model" size="md" hideCode type="illustration" />
+
+Screen coordinates point x to the right and y downward, so `0°` points right, `90°` points down, and increasing angles look clockwise. Sugar accepts exactly two of `startAngle` / `endAngle` / `sweepAngle` and derives the third.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve sugar angle inputs',
+      path: 'packages/kernel/react/src/sugar/shapes/shape-helpers.ts',
+      startLine: 191,
+      endLine: 223,
+    },
+  ]}
+/>
+
+### Arc and sector path topology
+
+The three outputs on the right are not rendering effects; they are three equivalent `<Path>` / `<Step>` topologies. `<Arc>` and `<Sector>` resolve angles and radii first, then choose a branch based on open, closed, or hollow geometry.
+
+<ComponentPreview files="arc-sector-sugar-flow" size="sm" hideCode type="illustration" />
+
+- An open `<Arc>` starts at the center, draws one `arc` Step, and leaves the cursor at the arc endpoint.
+- A closed `<Arc>` and solid `<Sector>` use `circlePath` / `ellipsePath`; `closed` decides whether the endpoints form a chord or return to the center.
+- A hollow `<Sector>` draws the outer arc, a radial edge, the inner arc in reverse, then the radial edge back to the start. It must calculate both arc endpoints up front, so `center` must be a literal `[x, y]`.
+
+Stroke, fill, arrows, and whole-shape transforms all live on the outer `<Path>`; `label` belongs to the Step that draws the visible arc. Sugar stops at this boundary and introduces no parallel path or rendering semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Expand open and closed Arc forms',
+      path: 'packages/kernel/react/src/sugar/shapes/Arc.tsx',
+      startLine: 29,
+      endLine: 91,
+    },
+    {
+      label: 'Expand solid and hollow Sector forms',
+      path: 'packages/kernel/react/src/sugar/shapes/Sector.tsx',
+      startLine: 36,
+      endLine: 106,
+    },
+  ]}
+/>
+
+### Star vertex expansion
+
+Star alternates inner and outer radii to produce `2 × points` vertices, then emits one move, `2 × points - 1` lines and one cycle. Rotation is baked into the vertices and is not forwarded as a Path transform, avoiding double rotation.
+
 ## Further reading
 
 <LinkedSections

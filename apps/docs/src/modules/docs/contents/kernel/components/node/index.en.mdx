@@ -26,12 +26,13 @@ Position places the object, shape defines its visible outline, and text supplies
 
 Begin with Basic usage and continue to positioning, text, or labels as needed. Body text contributes to node size; labels attach to the completed border or center. Choose Coordinate for a pure positioning reference, and Node for visible marks, text, or directional borders.
 
-[Shapes](/kernel/components/shapes) owns the shape catalog and custom visual outlines. [Scope](/kernel/components/scope) owns local coordinates and shared defaults for groups. Define a custom boundary only when connection placement must differ from appearance. Implementation and references support later diagnosis, extension, and field lookup; they are not prerequisites for drawing.
+See [node shapes](/kernel/components/node/shape) for built-in outlines and [custom shapes](/kernel/components/node/custom-shape) for defining and registering new outlines. [Scope](/kernel/components/scope) owns local coordinates and shared defaults for groups. Define a custom boundary only when connection placement must differ from appearance. Implementation and references support later diagnosis, extension, and field lookup; they are not prerequisites for drawing.
 
 ## Contents
 
 <LinkedSections
   items={[
+
     {
       title: 'Basic usage',
       description: 'Create nodes and connect named objects',
@@ -47,6 +48,7 @@ Begin with Basic usage and continue to positioning, text, or labels as needed. B
       description: 'Place annotations and leader lines',
       url: '/kernel/components/node/labels',
     },
+    { title: 'shape · Node shapes', description: 'Choose built-in outlines, content sizing and anchors', url: '/kernel/components/node/shape' },
     { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
     {
       title: 'Coordinates',
@@ -58,6 +60,7 @@ Begin with Basic usage and continue to positioning, text, or labels as needed. B
       description: 'Define and register connection rules',
       url: '/kernel/components/node/custom',
     },
+    { title: 'Custom shapes', description: 'Define and register a new node shape', url: '/kernel/components/node/custom-shape' },
     {
       title: 'Implementation',
       description: 'Understand sizing, text, and reference timing',
@@ -73,5 +76,6 @@ Begin with Basic usage and continue to positioning, text, or labels as needed. B
       description: 'Look up persistent node-family fields',
       url: '/kernel/components/node/schema-reference',
     },
-  ]}
+
+]}
 />

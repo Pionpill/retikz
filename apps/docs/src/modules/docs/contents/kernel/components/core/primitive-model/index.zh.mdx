@@ -71,7 +71,7 @@ shape 不是简单的 CSS border-radius。它是一套几何定义：给定内�
 
 文本容器形状更像按钮或 DOM 盒子：文字变长，节点会变大。参数驱动形状更像一个几何 glyph：半径、角度、尖角数量已经定义了大小，文本只是附着在它上面。
 
-用 `defineShape` 扩展 shape 时，要补齐 shape 的几何回答——外接框怎么包住自己、射线打到哪、具名 anchor 在哪、如何 emit 成基础图元——让 Node 在可测量、可连接、可引用、可渲染上和内置 shape 一样。实现细节见 [自定义形状](/kernel/components/shapes/custom-shape)。
+用 `defineShape` 扩展 shape 时，要补齐 shape 的几何回答——外接框怎么包住自己、射线打到哪、具名 anchor 在哪、如何 emit 成基础图元——让 Node 在可测量、可连接、可引用、可渲染上和内置 shape 一样。实现细节见 [自定义形状](/kernel/components/node/custom-shape)。
 
 ## 外层边界 Boundary
 
@@ -123,7 +123,7 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 | -------------------- | -------------------------- | --------------------------------------------------- |
 | `center` / 标准方位  | Node 的 shape / boundary   | [Node 几何](/kernel/components/node/usage)          |
 | 数字角度             | 选定的 connection boundary | [Path target](/kernel/reference/schema/path#目标点) |
-| shape 专属名称       | 对应 shape                 | [Shapes](/kernel/components/shapes)                 |
+| shape 专属名称       | 对应 shape                 | [Shapes](/kernel/components/node/shape)             |
 | `{ side, fraction }` | 视觉 shape 的真实边        | [Node 几何](/kernel/components/node/usage)          |
 
 IR / schema 的标准方位只保留 `top` / `right` / `bottom` / `left` 与四个角点，`center` 独立存在。命名方位优先让 shape / boundary 自己解析，缺失时回退到 AABB；数字角度沿射线命中选定 boundary；shape 专属名称和边比例点始终由视觉 shape 负责。
@@ -134,13 +134,13 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
 
 </Comparison>
 
-完整命名、各 shape 的专属点和 boundary 例外由 Node / Shapes 页面维护；自定义几何见[自定义形状](/kernel/components/shapes/custom-shape)。这些点如何被另一个图元引用、端点如何在 auto / 锁定间解析，继续看[图元关系](/kernel/components/core/primitive-relations)。
+完整命名、各 shape 的专属点和 boundary 例外由 Node / Shapes 页面维护；自定义几何见[自定义形状](/kernel/components/node/custom-shape)。这些点如何被另一个图元引用、端点如何在 auto / 锁定间解析，继续看[图元关系](/kernel/components/core/primitive-relations)。
 
 ## 动手试一试
 
 先编辑内容并输入换行，再切换 rectangle、circle、ellipse、diamond、polygon、star 与 sector，观察同一个 Node 如何更换视觉 shape。前五类会让内容与内边框参与外形尺寸计算；star、sector 则使用演示中预设的几何参数，文字叠加在既定外形上。后两种是 Standard 可选 shape，演示已通过 `<Layout shapes>` 显式注入；普通使用同样需要从 `@retikz/standard/shape` 导入对应 Definition。Sector 将等内外半径解释为开放弧。
 
-接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/usage)与[Shapes](/kernel/components/shapes) API 继续查对应组件页。
+接着在 `shape`、`circle`、`rectangle`、`ellipse` 四种 boundary 间切换：circle / ellipse 还可比较 `fit: 'tight'` 与 `fit: 'bounds'`，三种规则连接面都可调整 `gap`。再改变来源角度，观察真实连线落点。最后的 `fill`、`stroke`、`strokeWidth` 只提供最小样式反馈；完整的[文本](/kernel/components/node/text)、[Node](/kernel/components/node/usage)与[Shapes](/kernel/components/node/shape) API 继续查对应组件页。
 
 <ComponentPreview
   files={['primitive-model-playground', 'primitive-model-playground-boundary.ts']}
@@ -207,7 +207,7 @@ TikZ 使用 `north` / `south` / `east` / `west` 这类 compass 名称。retikz �
     {
       title: '自定义形状',
       description: '补齐外接框 / 射线 / anchor / emit 这套几何回答，注册新 shape',
-      url: '/kernel/components/shapes/custom-shape',
+      url: '/kernel/components/node/custom-shape',
     },
   ]}
 />

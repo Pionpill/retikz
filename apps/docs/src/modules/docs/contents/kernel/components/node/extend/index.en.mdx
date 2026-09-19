@@ -171,15 +171,15 @@ With no `anchor`, the edge clips automatically toward the opposite endpoint. Sta
 
 See each shape page for its parameters and shape-specific anchors:
 
-| shape             | form                                       | docs                                                         |
-| ----------------- | ------------------------------------------ | ------------------------------------------------------------ |
-| rectangle         | default / `'rectangle'`                    | [Rectangle](/kernel/components/shapes/rectangle)             |
-| circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/shapes/circle-ellipse) |
-| sector            | `{ type:'sector', params }`                | [Arc / Sector](/kernel/components/shapes/arc-sector)         |
-| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/shapes/polygon)                 |
-| star              | `{ type:'star', params }`                  | [Star](/kernel/components/shapes/star)                       |
+| shape             | form                                       | docs                                                              |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| rectangle         | default / `'rectangle'`                    | [Rectangle](/kernel/components/node/shape#rectangle)              |
+| circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/node/shape#circle--ellipse) |
+| sector            | `{ type:'sector', params }`                | [Arc / Sector](/library/standard/shape)                           |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/node/shape#polygon--diamond)         |
+| star              | `{ type:'star', params }`                  | [Star](/library/standard/shape)                                   |
 
-`shape` also accepts names registered through `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes`; parametric registered shapes continue to use `{ type, params }`. See [Custom Shapes](/kernel/components/shapes/custom-shape).
+`shape` also accepts names registered through `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes`; parametric registered shapes continue to use `{ type, params }`. See [Custom Shapes](/kernel/components/node/custom-shape).
 
 `boundary` defaults to `'shape'` and can also use `'circle'`, `'rectangle'`, `'ellipse'`, or a registered connection surface. It changes only automatic endpoints and standard anchors, never the node footprint or visual contour. All three built-in alternatives accept `{ fit, gap }`: `fit: 'tight'` (the default) uses an enclosing contour supplied by the visual shape for a closer fit, while `fit: 'bounds'` encloses its axis-aligned bounding rectangle (AABB); `gap` then adjusts the radius or half-axes outward (positive) or inward (negative). Rectangle produces the same result for both fit modes.
 

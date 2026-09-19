@@ -1,0 +1,144 @@
+---
+title: Custom shapes
+description: Extend Node layout, connection boundaries, anchors, and Scene output with ShapeDefinition, then inject it through Layout.extensions.shapes or CompileOptions.shapes.
+---
+
+When built-in shapes cannot express a cylinder, cloud, or domain-specific icon, register a `ShapeDefinition`. The IR (intermediate representation) still stores only a JSON reference such as `shape: 'hexagon'` or `{ type, params }`; the function-bearing definition stays at runtime.
+
+The complete example below defines and injects `hexagon`. The nodes connect by id, and the endpoints stop on the real hexagon edges instead of the node centers.
+
+<ComponentPreview files="custom-shape" size="sm" />
+
+## Scope
+
+A custom shape owns a node's layout footprint, visible contour, and default connection geometry together. Use `ShapeDefinition` only when those responsibilities belong to the same graphic.
+
+| Need                                                        | Choose                                                                |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| A built-in shape already expresses it                       | Use [Node](/kernel/components/node/usage) directly                    |
+| A reusable path only, without a node id or anchors          | Use a [Path Generator](/kernel/components/path/custom-path-generator) |
+| Keep the visual shape but change where connections land     | Use a [Custom Boundary](/kernel/components/node/custom)               |
+| Add a complete layoutable, drawable, connectable node shape | Use `ShapeDefinition` from this page                                  |
+
+`node.shape` may be a string or `{ type, params }`. Both forms must remain 100% JSON-serializable. A `ShapeDefinition` contains functions, so it cannot enter the IR or be reconstructed from JSON.
+
+Core-default `rectangle` / `ellipse` / `polygon` definitions and custom definitions share one registry, parameter-validation, and consumption path. `circle` and `diamond` are compile-time presets normalized to `ellipse` and `polygon`; official optional items such as `star` / `sector` / `cross` / `contour` follow the same path after they are imported from `@retikz/standard/shape`.
+
+## Define the capability
+
+Use `defineShape()` to declare the registry name, parameter schema, and geometry responsibilities. Parameterless shapes use `z.strictObject({})`. This minimal definition reuses rectangle geometry while changing the registry name and layout footprint.
+
+```ts
+import { BUILTIN_SHAPES, defineShape } from '@retikz/core';
+import { z } from 'zod';
+
+const badge = defineShape({
+  name: 'badge',
+  paramsSchema: z.strictObject({}),
+  circumscribe: (halfWidth, halfHeight) => ({
+    halfWidth: halfWidth + 8,
+    halfHeight: halfHeight + 4,
+  }),
+  boundaryPoint: BUILTIN_SHAPES.rectangle.boundaryPoint,
+  anchor: BUILTIN_SHAPES.rectangle.anchor,
+  connectionEnvelope: BUILTIN_SHAPES.rectangle.connectionEnvelope,
+  emit: BUILTIN_SHAPES.rectangle.emit,
+});
+```
+
+A definition answers at least four questions: how large the content's outer box must be, where a connection stops in a target direction, which shape-specific anchors exist, and which `ScenePrimitive` values are emitted. To make built-in circle / ellipse boundaries with `fit: 'tight'` follow the shape closely, also provide `connectionEnvelope`; the example reuses rectangle's safe envelope. See [API reference](/kernel/components/node/api-reference) for the field signatures.
+
+### Parametric shapes
+
+To generate multiple variants from one registry name, put data in `{ type, params }` instead of closing it over in a factory. `paramsSchema` validates the input at compile time and passes the parsed result to every geometry function.
+
+The `ngon` example uses one definition for any regular polygon. Adjusting `sides` changes the count persisted in `shape.params`, while Node `scale` changes layout size only. Because `sides` is a count rather than a length, `scaleParams` returns the params unchanged.
+
+<ComponentPreview files="ngon" size="md" />
+
+### Multiple primitives
+
+`emit` returns `Iterable<ScenePrimitive>`, so one shape may produce several primitives. The subroutine box reuses rectangle layout, boundary, and anchor behavior, then emits a frame plus two vertical bars.
+
+<ComponentPreview files="subroutine" size="xs" />
+
+### Semantic connection points
+
+Some graphics cannot express their connection rules as “intersect a ray from the center with the visible contour.” The diode constrains `boundaryPoint` to its left and right terminals and exposes `input` / `output` through `anchor`, while its visual still consists of multiple primitives.
+
+<ComponentPreview files="diode" size="sm" />
+
+## Inject and use
+
+After creating the definition, inject it through core's `CompileOptions.shapes` or React's `<Layout extensions={{ shapes }}>`. Both entry points accept the same `ReadonlyArray<ShapeDefinition>`.
+
+```ts
+import { compileToScene } from '@retikz/core';
+
+const { scene } = compileToScene(ir, { shapes: [badge] });
+```
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+<Layout extensions={{ shapes: [badge] }}>
+  <Node id="status" shape="badge" position={[0, 0]} text="Ready" />
+</Layout>;
+```
+
+The IR stores only the registry name or parametric reference; the host must provide the same definition for every compile. If the document is persisted, persist the IR plus host configuration that identifies the extension package, not serialized definition functions.
+
+## Errors and limitations
+
+| Case                                      | Result and diagnostic                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| Empty `name`                              | Registration rejects a provider key that is not a non-empty string                    |
+| Same name as a built-in or custom item    | Registration throws `duplicate shape registration`; built-ins cannot be overridden    |
+| IR references an unregistered name        | Compile throws `Unknown shape`, lists available names, and points to `options.shapes` |
+| params are not a JSON object              | Compile reports JSON validation at the `node.shape.params` path                       |
+| params fail `paramsSchema`                | Compile reports the shape name, IR path, and zod details                              |
+| `anchor` does not recognize a custom name | Returning `undefined` lets compile throw `Unknown anchor`                             |
+| `edgePoint` is omitted                    | Using `{ side, fraction }` reports that the shape does not support side anchors       |
+| `connectionEnvelope` is omitted           | A built-in boundary with `fit: 'tight'` falls back to bounds and emits one warning    |
+| Invalid connection envelope               | Compile fails; axes must be finite and positive, and a circle's two axes must match   |
+
+<ComponentAlert
+  type="warn"
+  title="Keep local coordinates and rotation separate"
+  description="emit receives an axis-aligned rect; the compiler applies the Node rotation through an outer group. boundaryPoint / anchor answer world-space connection points and may receive a rotated rect. When rotation matters, enter local space with worldToLocal, calculate there, then return through localToWorld."
+/>
+
+By default, `scaleParams` deep-scales every numeric leaf by `Math.sqrt(sx * sy)`. That default suits lengths. Shapes with angles, counts, or numeric enum values must implement `scaleParams` and scale only actual lengths.
+
+## Related props
+
+[Complete API reference](/kernel/components/node/api-reference)
+
+<ComponentProps
+  items={[
+    {
+      name: 'ShapeDefinitionInput<TParams>',
+      kind: 'type',
+      type: 'ShapeDefinitionInput<TParams>',
+      description:
+        'Declare parameter schema, content bounds, connection points, anchors and Scene output through defineShape',
+    },
+    {
+      name: 'Layout.extensions.shapes',
+      kind: 'property',
+      type: 'ReadonlyArray<ShapeDefinition>',
+      description: 'Inject runtime definitions; IR shape stores only the name and JSON parameters',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/components/node/usage' },
+    { title: 'Implementation', url: '/kernel/components/node/mechanism' },
+    { title: 'API reference', url: '/kernel/components/node/api-reference' },
+    { title: 'Schema reference', url: '/kernel/components/node/schema-reference' },
+  ]}
+/>
