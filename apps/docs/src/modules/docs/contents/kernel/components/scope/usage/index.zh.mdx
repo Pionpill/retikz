@@ -229,6 +229,18 @@ Theme 与样式默认值是两条独立通道：`defaults.reset` 不重置 Theme
   description="把真正共享的局部样式写在 Scope 上，可以避免为每个 child 重复同一组字段，通常能显著减小配置对象和持久化 JSON。Plot 等 Tier 2 包也常在 lowering 时把系列或图层样式集中为 Scope 默认值，以压缩生成 IR 的体积。"
 />
 
+## 包络外框
+
+用 `frame` 给已有子图添加背景或边框。下面的点状图案只绘制在外框上，A、B 保留各自的白色填充。
+
+<ComponentPreview files="scope-frame" />
+
+`frame: {}` 开启无填充、1 单位宽的默认描边；`frame.padding` 默认 0，只向内容包络外侧增加间距。`boundingShape` 为 `rectangle` 时向四边扩张，为 `circle` 时增加半径。`frame.style` 不继承后代默认值，只共享有效颜色上下文。
+
+外框始终位于全部子内容下面，跟随 Scope 的变换、定位和裁剪。描边与阴影进入自动取景，但不改变布局、锚点或命中区域；显式 `viewBox` 保持不变。空 Scope 不产生外框，祖先外框也不会因后代外框扩大而反复变大。需要布局内边距或容器尺寸时使用 Standard Surface。
+
+普通 Path 不贡献现有 Scope 固有包络，因此仅含 Path 的 Scope 不生成外框；曲线、label、marker 也不保证被外框包住。外框以参与包络计算的 Node、Coordinate 等内容为依据，不按全部可见像素重新测量。
+
 ## 相关属性
 
 以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/scope/api-reference)。

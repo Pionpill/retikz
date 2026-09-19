@@ -229,6 +229,18 @@ Style is a supporting responsibility and does not alter local coordinates, refer
   description="Putting genuinely shared local styles on Scope avoids repeating the same fields on every child, often reducing both configuration objects and persisted JSON substantially. Tier 2 packages such as Plot also centralize series or layer styles as Scope defaults during lowering to keep generated IR compact."
 />
 
+## Envelope frame
+
+Use `frame` to add a background or outline to an existing subgraph. The dotted pattern below belongs only to the frame; A and B keep their own white fills.
+
+<ComponentPreview files="scope-frame" />
+
+`frame: {}` enables a 1-unit outline with no fill. `frame.padding` defaults to 0 and adds spacing outside the content envelope. `boundingShape: 'rectangle'` expands all four sides; `circle` increases the radius. `frame.style` ignores descendant defaults and shares only the effective color context.
+
+The frame stays below every child and follows Scope transforms, placement, and clipping. Its stroke and shadow contribute to automatic framing without changing layout, anchors, or hit regions. An explicit `viewBox` is unchanged. Empty scopes produce no frame, and descendant frames do not enlarge ancestor envelopes. Use Standard Surface for layout padding or container sizing.
+
+Ordinary Paths do not contribute to the existing intrinsic Scope envelope, so a Scope containing only Paths produces no frame. Curves, labels, and markers are not guaranteed to fit inside it. Frames follow envelope contributors such as Nodes and Coordinates rather than measuring all visible pixels.
+
 ## Related props
 
 The following are the props most relevant to this page. See the [API reference](/kernel/components/scope/api-reference) for the full contract.

@@ -5,7 +5,7 @@ description: 查询 Scope 及其定位、变换与裁剪的公开数据契约
 
 本页按名称选择 Scope 自有及 `clip` 直接相关的 `@retikz/core` schema，字段由源码读取。共享的图元默认值与变换 schema 只在 Scope 字段类型中保留名称，不在本页重复展开。React 属性见 [API 参考](/kernel/components/scope/api-reference)，首次使用见[基础用法](/kernel/components/scope/usage)。
 
-`ScopeSchema` 是 Tier 1 的容器节点。它不绘制新的视觉图元，而是给一组 children 建立局部变换、样式默认值、裁剪、层级与引用边界；Scope 本身仍可通过 `id` 被引用。
+`ScopeSchema` 是 Tier 1 的容器节点。它通过可选 `frame` 绘制独立包络装饰，并给一组 children 建立局部变换、样式默认值、裁剪、层级与引用边界；Scope 本身仍可通过 `id` 被引用。
 
 <span id="scope"></span>
 
@@ -46,6 +46,20 @@ description: 查询 Scope 及其定位、变换与裁剪的公开数据契约
 />
 
 `Scope.theme` 只包含稀疏的 `style` / `mode` 环境选择器，逐字段继承。Core 解析共享颜色，后代 Composite 按自身契约消费该环境；`defaults.reset` 不重置 Theme。
+
+## ScopeFrameSchema
+
+外框只记录装饰间距与独立样式；不接受 id、事件或独立动画。
+
+<ZodSchema
+  name="ScopeFrameSchema"
+  shallow
+  descriptions={{ padding: '均匀装饰间距，默认 0；不参与布局', style: '独立外框样式，仅共享有效颜色上下文' }}
+/>
+
+## ScopeFrameStyleSchema
+
+<ZodSchema name="ScopeFrameStyleSchema" shallow />
 
 ## ScopePlacementSchema
 

@@ -7,6 +7,14 @@ description: Organize primitives in a local context with shared transforms, defa
 
 Scope sits inside Layout and may be nested. Layout owns the complete drawing's input and presentation; Scope owns one subtree's context. Scope neither draws a primitive nor calculates automatic arrangements.
 
+## How the pieces work together
+
+The example places A, B, and their connection in one Scope, then translates the group to the right. Children still use simple local coordinates: A is at the origin and B is to its right. Scope maps those coordinates into the complete figure.
+
+<ComponentPreview files="/kernel/components/scope/usage/scope-basic" size="xs" />
+
+The same group can carry shared defaults, a clip region, or a group reference. Defaults reduce repeated configuration, clipping limits visibility, and a group reference lets external connections target the subfigure. These features are independent; configure only what the task needs.
+
 ## Responsibilities at a glance
 
 | Document         | Responsibility                                 | When to read                      |
@@ -17,19 +25,19 @@ Scope sits inside Layout and may be nested. Layout owns the complete drawing's i
 | API reference    | Public Scope props                             | Check an exact call contract      |
 | Schema reference | Persisted Scope and related structures         | Construct or save drawing data    |
 
-## How the pieces work together
-
-The example places A, B, and their connection in one Scope, then translates the group to the right. Children still use simple local coordinates: A is at the origin and B is to its right. Scope maps those coordinates into the complete figure.
-
-<ComponentPreview files="/kernel/components/scope/usage/scope-basic" size="xs" />
-
-The same group can carry shared defaults, a clip region, or a group reference. Defaults reduce repeated configuration, clipping limits visibility, and a group reference lets external connections target the subfigure. These features are independent; configure only what the task needs.
-
 ## Choosing the right capability
 
 Use `transforms` to move, rotate, or scale the group. Use `placement` to align a group anchor with an existing target. Enable `localNamespace` when reusing subfigures with fixed ids so each copy resolves its own internal names.
 
 For JSX organization alone, extract a React component. For automatic Flex or Grid arrangement, use the [Layout package](/library/layout). For circle, path, or compound clipping, check [Standard clipping](/library/standard/clip) before defining a new capability.
+
+## Envelope frame
+
+`frame` decorates the existing content envelope with an independent fill, stroke, and frame shadow. `style` and `defaults` continue to control child inheritance; the frame shares only the effective color context.
+
+`frame.padding` expands decoration without changing child positions, layout allocation, or Scope anchors. Frames do not participate in hit testing, and empty scopes produce no frame. `boundingShape` selects a rectangle or circle. Use Standard Surface to allocate space or constrain container dimensions.
+
+See [frame usage](/kernel/components/scope/usage#envelope-frame).
 
 ## Contents
 
