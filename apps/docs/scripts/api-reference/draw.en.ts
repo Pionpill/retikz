@@ -265,6 +265,44 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '当 name 为空时': 'When name is empty',
   'generator 输出的 JSON-safe 校验仍由 compile 阶段负责':
     'JSON-safe validation of generator output remains the responsibility of compilation',
+  '`<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius {x,y}）；必给角度（startAngle / endAngle / sweepAngle 三选二）':
+    '`<Arc>` inputs: circular arc (numeric radius) or elliptical arc (radius {x,y}); exactly two of startAngle, endAngle and sweepAngle are required',
+  '默认开放弧；给 `close="chord"`（弦闭合）或 `close="sector"`（连回圆心成扇形）可闭合成可填充区域。\n  `label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 midway，按 startAngle..endAngle 线性映射）':
+    'Open by default; `close="chord"` joins the endpoints, while `close="sector"` joins them to the center to form a fillable region. `label` is forwarded to the arc step, placing text along the arc (`position` defaults to midway and maps linearly across startAngle..endAngle).',
+  "闭合方式：缺省 / `'open'` 开放弧；`'chord'` 两端点连弦闭合；`'sector'` 连回圆心成扇形（均可填充）":
+    "Closure: omitted or `'open'` leaves an open arc; `'chord'` joins endpoints; `'sector'` joins them through the center. Closed regions can be filled.",
+  '弧上边标注（透传到底层 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射）':
+    'Arc label forwarded to the underlying step; `position` defaults to midway and maps linearly across startAngle..endAngle',
+  '`<Rectangle>` 形态：四选一定两对角': '`<Rectangle>` inputs: one of four forms determines two opposite corners',
+  '`<RegularPolygon>` 形态：中心 + 外接圆半径（或边长）+ 边数':
+    '`<RegularPolygon>` inputs: center, circumradius (or side length), and side count',
+  '`<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）':
+    '`<Sector>` inputs: a circular or elliptical wedge closed through its center; exactly two angle inputs are required',
+  '实心扇形走 circlePath / ellipsePath 的 `closed="sector"`，圆心 = 游标，故 `center` 可为\n  节点 id / 极坐标等任意 Target。给 innerRadius（圆）或 innerRadiusX + innerRadiusY（椭圆）画**空心扇形**\n  （环形扇区 / donut 切片）；空心需算内 / 外弧端点，`center` 须 literal 笛卡尔。\n  `label` 透传到弧 step，沿弧定位（`position` 缺省 midway）':
+    'Solid sectors use circlePath / ellipsePath with `closed="sector"`; the center is the cursor, so `center` accepts any Target, including node IDs and polar coordinates. Supply an inner radius to draw a hollow sector (annular sector / donut slice). Hollow sectors calculate inner and outer arc endpoints and require a literal Cartesian center. `label` is forwarded to the arc step and defaults to midway.',
+  '`<Star>` 形态：中心 + 外/内半径（或外半径 + 内半径比例）+ 角数':
+    '`<Star>` inputs: center, outer/inner radii (or outer radius and inner ratio), and point count',
+  'Arc sugar——弧线（默认开放，可弦闭合 / 扇形闭合）':
+    'Arc sugar: an open arc by default, optionally closed by a chord or through the center',
+  'center 透传（任意 Target，可为节点 id / 极坐标）。\n  开放弧展开为 `<Path><Step move(center)><Step arc(center)></Path>`（pen 停在弧端点，输出与旧版一致）；\n  `close="chord"|"sector"` 改走 circlePath / ellipsePath 的对应 closed 模式（圆心 = 游标）':
+    'Forwards center as any Target, including node IDs and polar coordinates. An open arc expands to `<Path><Step move(center)><Step arc(center)></Path>` and leaves the cursor at the arc endpoint. `close="chord"|"sector"` uses the matching closed mode of circlePath / ellipsePath, with the center as the cursor.',
+  'Circle sugar——展开为 Path + circlePath step': 'Circle sugar: expands to Path and a circlePath step',
+  'Ellipse sugar——展开为 Path + ellipsePath step': 'Ellipse sugar: expands to Path and an ellipsePath step',
+  'Rectangle sugar——展开为 `<Path><Step move(from)><Step rectangle(from,to)></Path>`':
+    'Rectangle sugar: expands to `<Path><Step move(from)><Step rectangle(from,to)></Path>`',
+  '`{ corner1, corner2 }` 透传（任意 Target，直接作 rectangle 的 from/to）；其余形态需算坐标 → 限 literal 笛卡尔':
+    '`{ corner1, corner2 }` forwards any Target directly as rectangle from/to; other forms compute coordinates and require literal Cartesian inputs',
+  'RegularPolygon sugar——正多边形，展开为 `<Path>` 的 `move + (sides-1) line + cycle`':
+    'RegularPolygon sugar: a regular polygon expanded to `<Path>` with `move + (sides-1) line + cycle`',
+  '纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔（组件内算顶点）。`sides >= 3`。\n  边长形态由 `R = sideLength / (2·sin(π/sides))` 反算外接半径':
+    'Pure geometric sugar with no IR changes. Center must be literal Cartesian coordinates because vertices are computed in the component. `sides >= 3`. The side-length form derives circumradius as `R = sideLength / (2·sin(π/sides))`.',
+  'Sector sugar——扇形': 'Sector sugar: a sector',
+  '实心（无内半径）：`move(center) → circlePath/ellipsePath(closed="sector")`——圆心 = 游标，\n  center 接任意 Target。空心（给内半径）：`move(外弧起点) → 外弧 → line(内弧终点) → 内弧(反向) → line(回外弧起点)`——\n  末段用 line 回起点而非 cycle（内弧不在 hasTo 内，cycle 会从前一段闭合而错位），需 literal center 算端点':
+    'Solid sectors (without an inner radius): `move(center) → circlePath/ellipsePath(closed="sector")`, with center as cursor and any Target accepted. Hollow sectors: move to the outer arc start, draw the outer arc, line to the inner arc end, draw the reversed inner arc, and line back to the outer start. The last segment uses line rather than cycle to avoid closing from the wrong previous segment; endpoint calculations require a literal center.',
+  'Star sugar——星形，展开为 `<Path>` 的 `move + (2·points-1) line + cycle`（交替外/内半径顶点）':
+    'Star sugar: expands to `<Path>` with `move + (2·points-1) line + cycle`, alternating outer and inner vertices',
+  '纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔。`points >= 2`。\n  缺省 innerRadius = outerRadius × 0.5':
+    'Pure geometric sugar with no IR changes. Center must be literal Cartesian coordinates. `points >= 2`. By default, innerRadius = outerRadius × 0.5.',
 };
 
 /** 缺少中文说明的翻译时阻止参考生成 */

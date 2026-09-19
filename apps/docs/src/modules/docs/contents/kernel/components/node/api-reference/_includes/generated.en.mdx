@@ -742,6 +742,123 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 </DocTabs>
 
+### ShapeDefinition
+
+<p>
+  <ApiSourceLink label={'ShapeDefinition'} path={'packages/kernel/core/src/contract/shape/types.ts'} startLine={173}>
+    Erased shape definition stored in the registry
+  </ApiSourceLink>
+</p>
+
+All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete type during compilation. The registry is homogeneous and non-generic to avoid variance issues or any. Use `defineShape<TParams>` for type safety at the definition site.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                | Type                                                                                                                                   | Default                                                                | Description                                                                                                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                                                                      | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                   |
+| `boundaryPoint`       | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                                                        | —                                                                      | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                    |
+| `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`   | —                                                                      | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                        |
+| `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                      | `[0, 0]`                                                               | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                          |
+| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `Unsupported; tight boundary falls back to bounds and emits a warning` | Return regular connection-envelope half-axes that safely contain the visual outline<br />Shares the center and rotation of `rect`; excludes visual expansion from stroke, shadow, filter and label |
+| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: Record<string, JsonValue>) => Position`                                              | `Unsupported`                                                          | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                      |
+| `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                                                                      | Emit visual primitives inside an axis-aligned rect                                                                                                                                                 |
+| `keyPoints?`          | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                                                                      | Return stable provider-named structural key points; names must be unique within an instance                                                                                                        |
+| `name`                | `string`                                                                                                                               | —                                                                      | Shape name referenced by IR `node.shape`                                                                                                                                                           |
+| `outline?`            | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                                                                      | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                            |
+| `paramsSchema`        | `ZodType<Record<string, JsonValue>, unknown, $ZodTypeInternals<Record<string, JsonValue>, unknown>>`                                   | —                                                                      | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                    |
+| `scaleParams?`        | `(params: Record<string, JsonValue>, sx: number, sy: number) => Record<string, JsonValue>`                                             | `Deep-scale numeric leaves in params by `Math.sqrt(sx \* sy)``         | Return params after applying node scale<br />Use for shapes whose params include angles or other non-length fields                                                                                 |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### ShapeDefinitionInput
+
+<p>
+  <ApiSourceLink
+    label={'ShapeDefinitionInput'}
+    path={'packages/kernel/core/src/contract/shape/types.ts'}
+    startLine={105}
+  >
+    A registrable shape definition
+  </ApiSourceLink>
+</p>
+
+Runtime capability contract shared by third-party and built-in shapes; the definition itself is not stored in IR. Each capability function receives instance-level `params` as its last argument.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                | Type                                                                                                                                                               | Default                                                                | Description                                                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                                                    | —                                                                      | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                   |
+| `boundaryPoint`       | `(rect: Rect, toward: Position, params: TParams) => Position`                                                                                                      | —                                                                      | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                    |
+| `circumscribe`        | `(<br />    innerHalfWidth: number,<br />    innerHalfHeight: number,<br />    params: TParams,<br />  ) => { halfWidth: number; halfHeight: number }`             | —                                                                      | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                        |
+| `circumscribeOffset?` | `(params: TParams) => Position`                                                                                                                                    | `[0, 0]`                                                               | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                          |
+| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                                                   | `Unsupported; tight boundary falls back to bounds and emits a warning` | Return regular connection-envelope half-axes that safely contain the visual outline<br />Shares the center and rotation of `rect`; excludes visual expansion from stroke, shadow, filter and label |
+| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                                            | `Unsupported`                                                          | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                      |
+| `emit`                | `(<br />    rect: Rect,<br />    style: ResolvedShapeStyle,<br />    round: (n: number) => number,<br />    params: TParams,<br />  ) => Iterable<ScenePrimitive>` | —                                                                      | Emit visual primitives inside an axis-aligned rect                                                                                                                                                 |
+| `keyPoints?`          | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                                                 | —                                                                      | Return stable provider-named structural key points; names must be unique within an instance                                                                                                        |
+| `name`                | `string`                                                                                                                                                           | —                                                                      | Shape name referenced by IR `node.shape`                                                                                                                                                           |
+| `outline?`            | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                                                                                                      | —                                                                      | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                            |
+| `paramsSchema`        | `ZodType<TParams>`                                                                                                                                                 | —                                                                      | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                    |
+| `scaleParams?`        | `(params: TParams, sx: number, sy: number) => TParams`                                                                                                             | `Deep-scale numeric leaves in params by `Math.sqrt(sx \* sy)``         | Return params after applying node scale<br />Use for shapes whose params include angles or other non-length fields                                                                                 |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ShapeDefinitionInput<TParams extends JsonObject> = {
+  name: string;
+  paramsSchema: ZodType<TParams>;
+  circumscribe: (
+    innerHalfWidth: number,
+    innerHalfHeight: number,
+    params: TParams,
+  ) => {
+    halfWidth: number;
+    halfHeight: number;
+  };
+  circumscribeOffset?: (params: TParams) => Position;
+  boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
+  anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
+  connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
+  outline?: (rect: Rect, params: TParams) => ReadonlyArray<PathCommand>;
+  keyPoints?: (rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>;
+  edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
+  emit: (
+    rect: Rect,
+    style: ResolvedShapeStyle,
+    round: (n: number) => number,
+    params: TParams,
+  ) => Iterable<ScenePrimitive>;
+  scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `TParams`      | —           |
+
 ### BUILTIN_BOUNDARIES
 
 <p>
@@ -759,6 +876,26 @@ export const BUILTIN_BOUNDARIES = defineBuiltinProviderArray<BoundaryDefinition,
   circleBoundary,
   rectangleBoundary,
   ellipseBoundary,
+]);
+```
+
+### BUILTIN_SHAPES
+
+<p>
+  <ApiSourceLink
+    label={'BUILTIN_SHAPES'}
+    path={'packages/kernel/core/src/providers/shape/definitions.ts'}
+    startLine={15}
+  >
+    Built-in shape provider definitions; circle and diamond are IR shape presets without separate provider keys
+  </ApiSourceLink>
+</p>
+
+```ts
+export const BUILTIN_SHAPES = defineBuiltinProviderArray<ShapeDefinition, BuiltinShapeProviderName>([
+  rectangle,
+  ellipseShape,
+  polygon,
 ]);
 ```
 
@@ -801,5 +938,33 @@ export declare const defineBoundary: <TParams extends Record<string, JsonValue>>
 | Parameter | Type                               | Description |
 | --------- | ---------------------------------- | ----------- |
 | `def`     | `BoundaryDefinitionInput<TParams>` | —           |
+
+> **Notes:** Currently centralizes type erasure; the entry point aligns registry APIs and leaves room for future validation or normalization
+
+### defineShape
+
+<p>
+  <ApiSourceLink label={'defineShape'} path={'packages/kernel/core/src/contract/shape/define.ts'} startLine={9}>
+    Define a shape registry entry and erase the parameter generic for registry storage
+  </ApiSourceLink>
+</p>
+
+```ts
+export declare const defineShape: <TParams extends Record<string, JsonValue>>(
+  def: ShapeDefinitionInput<TParams>,
+) => ShapeDefinition;
+```
+
+#### Type parameters
+
+| Type parameter | Description |
+| -------------- | ----------- |
+| `TParams`      | —           |
+
+#### Parameters
+
+| Parameter | Type                            | Description |
+| --------- | ------------------------------- | ----------- |
+| `def`     | `ShapeDefinitionInput<TParams>` | —           |
 
 > **Notes:** Currently centralizes type erasure; the entry point aligns registry APIs and leaves room for future validation or normalization

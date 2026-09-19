@@ -109,6 +109,47 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Define a boundary registry entry and erase its parameter generic for registry storage',
   '当前只集中封装擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间':
     'Currently centralizes type erasure; the entry point aligns registry APIs and leaves room for future validation or normalization',
+  '不支持；tight boundary 回退到 bounds 并发出 warning':
+    'Unsupported; tight boundary falls back to bounds and emits a warning',
+  不支持: 'Unsupported',
+  '按 `Math.sqrt(sx * sy)` 深度缩放 params 中的数值叶子': 'Deep-scale numeric leaves in params by `Math.sqrt(sx * sy)`',
+  'shape 定义的擦除形态：registry 存这个': 'Erased shape definition stored in the registry',
+  '所有函数收 `JsonObject`（实际类型由 `paramsSchema.parse` 在编译期保证）；registry 同构\n  不泛型化（避免逆变 / 落 any）。定义点用 `defineShape<TParams>` 拿类型安全':
+    'All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete type during compilation. The registry is homogeneous and non-generic to avoid variance issues or any. Use `defineShape<TParams>` for type safety at the definition site.',
+  '解析命名 anchor 的世界坐标；不支持时返回 `undefined`':
+    'Resolve a named anchor in world coordinates; return `undefined` when unsupported',
+  '返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点':
+    'Return the intersection of the shape boundary with a ray from the rect center toward `toward`',
+  '`rect` 可包含旋转；实现需要按需转换坐标': '`rect` may include rotation; transform coordinates as needed',
+  '根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴':
+    'Compute the complete shape AABB half-axes from content half-axes and params',
+  '外接 AABB 中心相对 node `position` 的未旋转局部偏移':
+    'Unrotated local offset of the AABB center relative to the node `position`',
+  返回安全包含视觉几何轮廓的规则连接面半轴:
+    'Return regular connection-envelope half-axes that safely contain the visual outline',
+  '结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩':
+    'Shares the center and rotation of `rect`; excludes visual expansion from stroke, shadow, filter and label',
+  '解析标准 side 上 `t ∈ [0, 1]` 的比例点': 'Resolve a proportional point at `t ∈ [0, 1]` on a standard side',
+  '`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor':
+    '`rect` may include rotation; omission means side anchors are unsupported',
+  '生成轴对齐 rect 内的视觉 primitive': 'Emit visual primitives inside an axis-aligned rect',
+  '返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一':
+    'Return stable provider-named structural key points; names must be unique within an instance',
+  'shape 名称，由 IR `node.shape` 引用': 'Shape name referenced by IR `node.shape`',
+  '返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何':
+    'Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry',
+  '实例参数 schema': 'Instance parameter schema',
+  '解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`':
+    'The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters',
+  '返回 node scale 后的 params': 'Return params after applying node scale',
+  '适用于 params 含角度等非长度字段的 shape': 'Use for shapes whose params include angles or other non-length fields',
+  '可注册的 shape 定义': 'A registrable shape definition',
+  '描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。\n  每个能力函数都以实例级 `params` 作为末位参数':
+    'Runtime capability contract shared by third-party and built-in shapes; the definition itself is not stored in IR. Each capability function receives instance-level `params` as its last argument.',
+  '内置 shape provider 注册项；circle / diamond 是 IR 内置 shape preset，不占独立 provider key':
+    'Built-in shape provider definitions; circle and diamond are IR shape presets without separate provider keys',
+  '定义 shape 注册项，并把参数泛型擦除为 registry 可存储形态':
+    'Define a shape registry entry and erase the parameter generic for registry storage',
 };
 
 /** 新增中文说明缺译时阻止生成 */

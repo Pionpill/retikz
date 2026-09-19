@@ -2,6 +2,72 @@
 
 ## React 组件
 
+### ArcProps
+
+<p><ApiSourceLink label={"ArcProps"} path={"packages/kernel/react/src/sugar/shapes/Arc.tsx"} startLine={17}>`<Arc>` 形态：圆弧（radius number）/ 椭圆弧（radius &#123;x,y&#125;）；必给角度（startAngle / endAngle / sweepAngle 三选二）</ApiSourceLink></p>
+
+默认开放弧；给 `close="chord"`（弦闭合）或 `close="sector"`（连回圆心成扇形）可闭合成可填充区域。
+`label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 midway，按 startAngle..endAngle 线性映射）
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员              | 类型                            | 默认值 | 说明                                                                                                                                                                                            |
+| ----------------- | ------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRPath['animations']`          | —      | 路径级时间轴动画；渲染端播放或降级为静态，不参与布局                                                                                                                                            |
+| `arrow?`          | `InputPath['arrow']`            | —      | 路径级箭头方向<br />`'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头                                                                                                            |
+| `arrowDetail?`    | `InputPath['arrowDetail']`      | —      | 箭头详细配置<br />顶层默认 + 可选 `start` / `end` 子对象逐字段 merge override。空心 shape<br />（open / openStealth / openDiamond / openCircle）上 `fill` silent no-op                          |
+| `arrowPlacement?` | `InputPath['arrowPlacement']`   | —      | 箭头端点放置配置<br />`overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置                                                              |
+| `authoring?`      | `unknown`                       | —      | 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR                                                                                                                      |
+| `center`          | `DslTarget`                     | —      | —                                                                                                                                                                                               |
+| `close?`          | `'open' \| 'chord' \| 'sector'` | —      | 闭合方式：缺省 / `'open'` 开放弧；`'chord'` 两端点连弦闭合；`'sector'` 连回圆心成扇形（均可填充）                                                                                               |
+| `endAngle?`       | `number`                        | —      | —                                                                                                                                                                                               |
+| `id?`             | `IRPath['id']`                  | —      | 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定                                                                                                         |
+| `kind?`           | `IRPath['kind']`                | —      | —                                                                                                                                                                                               |
+| `kindOptions?`    | `IRPath['kindOptions']`         | —      | —                                                                                                                                                                                               |
+| `label?`          | `PathVisualProps['label']`      | —      | 弧上边标注（透传到底层 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射）                                                                                                       |
+| `marks?`          | `IRPath['marks']`               | —      | 沿路径在归一化位置放标记（首批仅箭头）<br />每个 `{ pos, mark }`：`pos∈[0,1]`，`mark.kind:'arrow'` + 视觉子集（shape 为已注册箭头名，方向随路径切线）                                           |
+| `meta?`           | `IRPath['meta']`                | —      | 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象                                                                                                               |
+| `onClick?`        | `HydrationHandler`              | —      | 单击该图元（DOM `click`）                                                                                                                                                                       |
+| `onDoubleClick?`  | `HydrationHandler`              | —      | 双击该图元（DOM `dblclick`）                                                                                                                                                                    |
+| `onPointerDown?`  | `HydrationHandler`              | —      | 指针在该图元上按下（DOM `pointerdown`）                                                                                                                                                         |
+| `onPointerEnter?` | `HydrationHandler`              | —      | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                                                                                                                     |
+| `onPointerLeave?` | `HydrationHandler`              | —      | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                                                                                                                         |
+| `onPointerMove?`  | `HydrationHandler`              | —      | 指针在该图元上移动（DOM `pointermove`）                                                                                                                                                         |
+| `onPointerUp?`    | `HydrationHandler`              | —      | 指针在该图元上抬起（DOM `pointerup`）                                                                                                                                                           |
+| `onRightClick?`   | `HydrationHandler`              | —      | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`                                                                                                    |
+| `onWheel?`        | `HydrationHandler`              | —      | 在该图元上滚轮（DOM `wheel`）                                                                                                                                                                   |
+| `radius`          | `IRStepRadius`                  | —      | —                                                                                                                                                                                               |
+| `rotate?`         | `IRPath['rotate']`              | —      | 整条 path 旋转（度，绕包围盒中心，正向 = 屏幕 y-down 视觉顺时针）<br />等价把 path 包一层绕其包围盒中心旋转的 Scope；端点先在当前 scope resolve 再整体旋转                                      |
+| `roundedCorners?` | `IRPath['roundedCorners']`      | —      | 折线拐角几何圆角半径（TikZ `rounded corners=`）<br />对每个 line↔line 接缝插切圆弧、改路径几何（区别于 lineJoin 仅描边）；curve / arc / bezier / fold 接缝保持尖；按相邻段长 clamp；省略 = 尖角 |
+| `scale?`          | `IRPath['scale']`               | —      | 整条 path 缩放（绕包围盒中心）：number 等比，或 `{ x, y }` 非等比                                                                                                                               |
+| `startAngle?`     | `number`                        | —      | —                                                                                                                                                                                               |
+| `style?`          | `InputPath['style']`            | —      | 实例视觉覆盖，逐字段覆盖继承默认值                                                                                                                                                              |
+| `sweepAngle?`     | `number`                        | —      | —                                                                                                                                                                                               |
+| `thickness?`      | `PathThicknessValue`            | —      | 语义 stroke 档位糖（TikZ `ultra thin` … `ultra thick`）；构造 IR 时解析为 `strokeWidth`，显式 `strokeWidth` 始终优先                                                                            |
+| `way?`            | `WayDSL`                        | —      | TikZ 风格路径走向简写，由 Vanilla 统一解析为步骤                                                                                                                                                |
+| `zIndex?`         | `IRPath['zIndex']`              | —      | 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效                                                                                                                       |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type ArcProps = PathVisualProps &
+  AngleInput & {
+    close?: 'open' | 'chord' | 'sector';
+    label?: InputStepLabel;
+  } & {
+    center: DslTarget;
+    radius: IRStepRadius;
+  };
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### ArcStepProps
 
 <p>
@@ -181,6 +247,38 @@ export type CirclePathStepProps = {
 </DocTab>
 
 </DocTabs>
+
+### CircleProps
+
+```ts
+export type CircleProps = PathVisualProps &
+  AngleInput &
+  BoxAdjustmentProps & {
+    fit?: 'contain' | 'cover';
+    box?: ShapeBox;
+    closed?: 'chord' | 'open' | 'sector';
+  } & (
+    | {
+        center: IRTarget;
+        radius: number;
+      }
+    | {
+        center: IRTarget;
+        diameter: number;
+      }
+    | {
+        from: [number, number];
+        to: [number, number];
+      }
+    | {
+        corner1: [number, number];
+        corner2: [number, number];
+      }
+    | {
+        box: ShapeBox;
+      }
+  );
+```
 
 ### CubicStepProps
 
@@ -380,6 +478,34 @@ export type EllipsePathStepProps = {
 </DocTab>
 
 </DocTabs>
+
+### EllipseProps
+
+```ts
+export type EllipseProps = PathVisualProps &
+  AngleInput &
+  BoxAdjustmentProps & {
+    box?: ShapeBox;
+    closed?: 'chord' | 'open' | 'sector';
+  } & (
+    | {
+        center: IRTarget;
+        radius: IRStepAnisotropicRadius;
+      }
+    | {
+        center: IRTarget;
+        diameterX: number;
+        diameterY: number;
+      }
+    | {
+        corner1: [number, number];
+        corner2: [number, number];
+      }
+    | {
+        box: ShapeBox;
+      }
+  );
+```
 
 ### FoldStepProps
 
@@ -585,6 +711,35 @@ export type PathProps = HydrationEventProps & {
 
 </DocTabs>
 
+### RectangleProps
+
+<p><ApiSourceLink label={"RectangleProps"} path={"packages/kernel/react/src/sugar/shapes/Rectangle.tsx"} startLine={11}>`<Rectangle>` 形态：四选一定两对角</ApiSourceLink></p>
+
+```ts
+export type RectangleProps = PathVisualProps & {
+  cornerRadius?: number;
+} & (
+    | {
+        corner1: IRTarget;
+        corner2: IRTarget;
+      }
+    | {
+        center: [number, number];
+        width: number;
+        height: number;
+      }
+    | {
+        center: [number, number];
+        side: number;
+      }
+    | {
+        corner1: [number, number];
+        width: number;
+        height: number;
+      }
+  );
+```
+
 ### RectangleStepProps
 
 <p>
@@ -624,6 +779,54 @@ export type RectangleStepProps = {
 </DocTab>
 
 </DocTabs>
+
+### RegularPolygonProps
+
+<p><ApiSourceLink label={"RegularPolygonProps"} path={"packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx"} startLine={10}>`<RegularPolygon>` 形态：中心 + 外接圆半径（或边长）+ 边数</ApiSourceLink></p>
+
+```ts
+export type RegularPolygonProps = PathVisualProps & {
+  rotate?: number;
+} & (
+    | {
+        center: [number, number];
+        radius: number;
+        sides: number;
+      }
+    | {
+        center: [number, number];
+        sideLength: number;
+        sides: number;
+      }
+  );
+```
+
+### SectorProps
+
+<p><ApiSourceLink label={"SectorProps"} path={"packages/kernel/react/src/sugar/shapes/Sector.tsx"} startLine={19}>`<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）</ApiSourceLink></p>
+
+实心扇形走 circlePath / ellipsePath 的 `closed="sector"`，圆心 = 游标，故 `center` 可为
+节点 id / 极坐标等任意 Target。给 innerRadius（圆）或 innerRadiusX + innerRadiusY（椭圆）画**空心扇形**
+（环形扇区 / donut 切片）；空心需算内 / 外弧端点，`center` 须 literal 笛卡尔。
+`label` 透传到弧 step，沿弧定位（`position` 缺省 midway）
+
+```ts
+export type SectorProps = PathVisualProps &
+  AngleInput & {
+    label?: InputStepLabel;
+  } & (
+    | {
+        center: DslTarget;
+        radius: number;
+        innerRadius?: number;
+      }
+    | {
+        center: DslTarget;
+        radius: IRStepAnisotropicRadius;
+        innerRadius?: IRStepAnisotropicRadius;
+      }
+  );
+```
 
 ### SmoothStepProps
 
@@ -670,6 +873,29 @@ export type SmoothStepProps = {
 
 </DocTabs>
 
+### StarProps
+
+<p><ApiSourceLink label={"StarProps"} path={"packages/kernel/react/src/sugar/shapes/Star.tsx"} startLine={10}>`<Star>` 形态：中心 + 外/内半径（或外半径 + 内半径比例）+ 角数</ApiSourceLink></p>
+
+```ts
+export type StarProps = PathVisualProps & {
+  rotate?: number;
+} & (
+    | {
+        center: [number, number];
+        outerRadius: number;
+        innerRadius: number;
+        points: number;
+      }
+    | {
+        center: [number, number];
+        outerRadius: number;
+        points: number;
+        innerRatio?: number;
+      }
+  );
+```
+
 ### StepProps
 
 十四种 kind：'move' / 'line'（默认） / 'axis-line'（单轴投影连接） / 'fold'（折角） / 'cycle'（闭合） / 'curve'（二次贝塞尔） / 'cubic'（三次贝塞尔） / 'bend'（弧形简记） / 'arc'（圆 / 椭圆弧段） / 'circlePath'（整圆 / 部分圆） / 'ellipsePath'（整椭圆 / 部分椭圆） / 'rectangle'（矩形） / 'smooth'（过点平滑曲线） / 'generator'（内置或注册路径生成器）。除 'move' / 'cycle' / 'rectangle' 外均可挂 `label?: IRStepLabel`，等价于 sugar `<EdgeLabel>` child（prop 优先）；'smooth' 用 `points` 而非 `to`，'generator' 用 `name` + JSON-safe `params`。每个 kind 有对应 named type export，便于 wrapper / forwardRef / `Pick<>` 派生
@@ -692,6 +918,34 @@ export type StepProps =
   | GeneratorStepProps;
 ```
 
+### Arc
+
+<p>
+  <ApiSourceLink label={'Arc'} path={'packages/kernel/react/src/sugar/shapes/Arc.tsx'} startLine={31}>
+    Arc sugar——弧线（默认开放，可弦闭合 / 扇形闭合）
+  </ApiSourceLink>
+</p>
+
+center 透传（任意 Target，可为节点 id / 极坐标）。
+开放弧展开为 `<Path><Step move(center)><Step arc(center)></Path>`（pen 停在弧端点，输出与旧版一致）；
+`close="chord"|"sector"` 改走 circlePath / ellipsePath 的对应 closed 模式（圆心 = 游标）
+
+```ts
+export declare const Arc: FC<ArcProps>;
+```
+
+### Circle
+
+<p>
+  <ApiSourceLink label={'Circle'} path={'packages/kernel/react/src/sugar/shapes/Circle.tsx'} startLine={55}>
+    Circle sugar——展开为 Path + circlePath step
+  </ApiSourceLink>
+</p>
+
+```ts
+export declare const Circle: FC<CircleProps>;
+```
+
 ### Draw
 
 <p>
@@ -706,6 +960,18 @@ React 只负责 JSX sugar；`normalizePath` 是 `way` 的唯一 parser 调度位
 export declare const Draw: FC<DrawProps>;
 ```
 
+### Ellipse
+
+<p>
+  <ApiSourceLink label={'Ellipse'} path={'packages/kernel/react/src/sugar/shapes/Ellipse.tsx'} startLine={51}>
+    Ellipse sugar——展开为 Path + ellipsePath step
+  </ApiSourceLink>
+</p>
+
+```ts
+export declare const Ellipse: FC<EllipseProps>;
+```
+
 ### Path
 
 <p><ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={71}>Path 用一组 `<Step>` 声明路径</ApiSourceLink></p>
@@ -714,6 +980,54 @@ export declare const Draw: FC<DrawProps>;
 
 ```ts
 export declare const Path: FC<PathProps>;
+```
+
+### Rectangle
+
+<p><ApiSourceLink label={"Rectangle"} path={"packages/kernel/react/src/sugar/shapes/Rectangle.tsx"} startLine={25}>Rectangle sugar——展开为 `<Path><Step move(from)><Step rectangle(from,to)></Path>`</ApiSourceLink></p>
+
+`{ corner1, corner2 }` 透传（任意 Target，直接作 rectangle 的 from/to）；其余形态需算坐标 → 限 literal 笛卡尔
+
+```ts
+export declare const Rectangle: FC<RectangleProps>;
+```
+
+### RegularPolygon
+
+<p><ApiSourceLink label={"RegularPolygon"} path={"packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx"} startLine={26}>RegularPolygon sugar——正多边形，展开为 `<Path>` 的 `move + (sides-1) line + cycle`</ApiSourceLink></p>
+
+纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔（组件内算顶点）。`sides >= 3`。
+边长形态由 `R = sideLength / (2·sin(π/sides))` 反算外接半径
+
+```ts
+export declare const RegularPolygon: FC<RegularPolygonProps>;
+```
+
+### Sector
+
+<p>
+  <ApiSourceLink label={'Sector'} path={'packages/kernel/react/src/sugar/shapes/Sector.tsx'} startLine={38}>
+    Sector sugar——扇形
+  </ApiSourceLink>
+</p>
+
+实心（无内半径）：`move(center) → circlePath/ellipsePath(closed="sector")`——圆心 = 游标，
+center 接任意 Target。空心（给内半径）：`move(外弧起点) → 外弧 → line(内弧终点) → 内弧(反向) → line(回外弧起点)`——
+末段用 line 回起点而非 cycle（内弧不在 hasTo 内，cycle 会从前一段闭合而错位），需 literal center 算端点
+
+```ts
+export declare const Sector: FC<SectorProps>;
+```
+
+### Star
+
+<p><ApiSourceLink label={"Star"} path={"packages/kernel/react/src/sugar/shapes/Star.tsx"} startLine={26}>Star sugar——星形，展开为 `<Path>` 的 `move + (2·points-1) line + cycle`（交替外/内半径顶点）</ApiSourceLink></p>
+
+纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔。`points >= 2`。
+缺省 innerRadius = outerRadius × 0.5
+
+```ts
+export declare const Star: FC<StarProps>;
 ```
 
 ### Step

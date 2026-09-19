@@ -2,6 +2,71 @@
 
 ## React components
 
+### ArcProps
+
+<p><ApiSourceLink label={"ArcProps"} path={"packages/kernel/react/src/sugar/shapes/Arc.tsx"} startLine={17}>`<Arc>` inputs: circular arc (numeric radius) or elliptical arc (radius &#123;x,y&#125;); exactly two of startAngle, endAngle and sweepAngle are required</ApiSourceLink></p>
+
+Open by default; `close="chord"` joins the endpoints, while `close="sector"` joins them to the center to form a fillable region. `label` is forwarded to the arc step, placing text along the arc (`position` defaults to midway and maps linearly across startAngle..endAngle).
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member            | Type                            | Default | Description                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animations?`     | `IRPath['animations']`          | —       | Path-level timeline animation; rendered as animation or a static fallback, without participating in layout                                                                                                                                                                                                          |
+| `arrow?`          | `InputPath['arrow']`            | —       | Path-level arrow direction<br />`'->'` at the end, `'<-'` at the start, or `'<->'` at both ends; omitted or `'none'` means no arrows                                                                                                                                                                                |
+| `arrowDetail?`    | `InputPath['arrowDetail']`      | —       | Detailed arrow configuration<br />Top-level defaults with optional `start` and `end` overrides merged field by field. On hollow shapes (open, openStealth, openDiamond, and openCircle), `fill` is a silent no-op                                                                                                   |
+| `arrowPlacement?` | `InputPath['arrowPlacement']`   | —       | Endpoint arrow placement<br />Shared `overlap` for actual endpoints, with per-end `start` and `end` overrides; interpolates from default placement to alignment of the final visual back edge with the logical endpoint                                                                                             |
+| `authoring?`      | `unknown`                       | —       | Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                      |
+| `center`          | `DslTarget`                     | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `close?`          | `'open' \| 'chord' \| 'sector'` | —       | Closure: omitted or `'open'` leaves an open arc; `'chord'` joins endpoints; `'sector'` joins them through the center. Closed regions can be filled.                                                                                                                                                                 |
+| `endAngle?`       | `number`                        | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `id?`             | `IRPath['id']`                  | —       | Path id, used by other paths or positions to reference it and by hydration to bind event handlers                                                                                                                                                                                                                   |
+| `kind?`           | `IRPath['kind']`                | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `kindOptions?`    | `IRPath['kindOptions']`         | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `label?`          | `PathVisualProps['label']`      | —       | Arc label forwarded to the underlying step; `position` defaults to midway and maps linearly across startAngle..endAngle                                                                                                                                                                                             |
+| `marks?`          | `IRPath['marks']`               | —       | Place marks at normalized positions along the path; currently only arrows<br />Each `{ pos, mark }` uses `pos∈[0,1]` and `mark.kind:'arrow'` plus visual settings; shape is a registered arrow name and direction follows the path tangent                                                                          |
+| `meta?`           | `IRPath['meta']`                | —       | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                           |
+| `onClick?`        | `HydrationHandler`              | —       | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                 |
+| `onDoubleClick?`  | `HydrationHandler`              | —       | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                       |
+| `onPointerDown?`  | `HydrationHandler`              | —       | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                                                 |
+| `onPointerEnter?` | `HydrationHandler`              | —       | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                                                     |
+| `onPointerLeave?` | `HydrationHandler`              | —       | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                                                        |
+| `onPointerMove?`  | `HydrationHandler`              | —       | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                                                 |
+| `onPointerUp?`    | `HydrationHandler`              | —       | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                                                  |
+| `onRightClick?`   | `HydrationHandler`              | —       | Context menu on this element (DOM `contextmenu`); call `event.preventDefault()` in the handler to suppress the browser menu                                                                                                                                                                                         |
+| `onWheel?`        | `HydrationHandler`              | —       | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                                                         |
+| `radius`          | `IRStepRadius`                  | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `rotate?`         | `IRPath['rotate']`              | —       | Rotate the whole path in degrees about its bounding-box center; positive angles are visually clockwise in screen-down coordinates<br />Equivalent to a Scope rotating the path around its bounding-box center; endpoints resolve in the current scope before rotation                                               |
+| `roundedCorners?` | `IRPath['roundedCorners']`      | —       | Geometric rounding radius at polyline corners (TikZ `rounded corners=`)<br />Insert a tangent arc at each line-to-line joint, changing geometry rather than only stroke appearance. Curve, arc, Bézier, and fold joints stay sharp; the radius is clamped to adjacent segment lengths. Omission keeps sharp corners |
+| `scale?`          | `IRPath['scale']`               | —       | Scale the whole path around its bounding-box center: a number for uniform scaling or `{ x, y }` for independent axes                                                                                                                                                                                                |
+| `startAngle?`     | `number`                        | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `style?`          | `InputPath['style']`            | —       | Instance visual overrides, replacing inherited defaults field by field                                                                                                                                                                                                                                              |
+| `sweepAngle?`     | `number`                        | —       | —                                                                                                                                                                                                                                                                                                                   |
+| `thickness?`      | `PathThicknessValue`            | —       | Semantic stroke-width shorthand (TikZ `ultra thin` through `ultra thick`), normalized to `strokeWidth`; explicit `strokeWidth` takes precedence                                                                                                                                                                     |
+| `way?`            | `WayDSL`                        | —       | TikZ-style route shorthand, parsed into steps by Vanilla                                                                                                                                                                                                                                                            |
+| `zIndex?`         | `IRPath['zIndex']`              | —       | Explicit stack order: larger values are above; defaults to 0, equal values preserve declaration order, and comparison is limited to siblings                                                                                                                                                                        |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ArcProps = PathVisualProps &
+  AngleInput & {
+    close?: 'open' | 'chord' | 'sector';
+    label?: InputStepLabel;
+  } & {
+    center: DslTarget;
+    radius: IRStepRadius;
+  };
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### ArcStepProps
 
 <p>
@@ -181,6 +246,38 @@ export type CirclePathStepProps = {
 </DocTab>
 
 </DocTabs>
+
+### CircleProps
+
+```ts
+export type CircleProps = PathVisualProps &
+  AngleInput &
+  BoxAdjustmentProps & {
+    fit?: 'contain' | 'cover';
+    box?: ShapeBox;
+    closed?: 'chord' | 'open' | 'sector';
+  } & (
+    | {
+        center: IRTarget;
+        radius: number;
+      }
+    | {
+        center: IRTarget;
+        diameter: number;
+      }
+    | {
+        from: [number, number];
+        to: [number, number];
+      }
+    | {
+        corner1: [number, number];
+        corner2: [number, number];
+      }
+    | {
+        box: ShapeBox;
+      }
+  );
+```
 
 ### CubicStepProps
 
@@ -380,6 +477,34 @@ export type EllipsePathStepProps = {
 </DocTab>
 
 </DocTabs>
+
+### EllipseProps
+
+```ts
+export type EllipseProps = PathVisualProps &
+  AngleInput &
+  BoxAdjustmentProps & {
+    box?: ShapeBox;
+    closed?: 'chord' | 'open' | 'sector';
+  } & (
+    | {
+        center: IRTarget;
+        radius: IRStepAnisotropicRadius;
+      }
+    | {
+        center: IRTarget;
+        diameterX: number;
+        diameterY: number;
+      }
+    | {
+        corner1: [number, number];
+        corner2: [number, number];
+      }
+    | {
+        box: ShapeBox;
+      }
+  );
+```
 
 ### FoldStepProps
 
@@ -585,6 +710,35 @@ export type PathProps = HydrationEventProps & {
 
 </DocTabs>
 
+### RectangleProps
+
+<p><ApiSourceLink label={"RectangleProps"} path={"packages/kernel/react/src/sugar/shapes/Rectangle.tsx"} startLine={11}>`<Rectangle>` inputs: one of four forms determines two opposite corners</ApiSourceLink></p>
+
+```ts
+export type RectangleProps = PathVisualProps & {
+  cornerRadius?: number;
+} & (
+    | {
+        corner1: IRTarget;
+        corner2: IRTarget;
+      }
+    | {
+        center: [number, number];
+        width: number;
+        height: number;
+      }
+    | {
+        center: [number, number];
+        side: number;
+      }
+    | {
+        corner1: [number, number];
+        width: number;
+        height: number;
+      }
+  );
+```
+
 ### RectangleStepProps
 
 <p>
@@ -625,6 +779,51 @@ export type RectangleStepProps = {
 </DocTab>
 
 </DocTabs>
+
+### RegularPolygonProps
+
+<p><ApiSourceLink label={"RegularPolygonProps"} path={"packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx"} startLine={10}>`<RegularPolygon>` inputs: center, circumradius (or side length), and side count</ApiSourceLink></p>
+
+```ts
+export type RegularPolygonProps = PathVisualProps & {
+  rotate?: number;
+} & (
+    | {
+        center: [number, number];
+        radius: number;
+        sides: number;
+      }
+    | {
+        center: [number, number];
+        sideLength: number;
+        sides: number;
+      }
+  );
+```
+
+### SectorProps
+
+<p><ApiSourceLink label={"SectorProps"} path={"packages/kernel/react/src/sugar/shapes/Sector.tsx"} startLine={19}>`<Sector>` inputs: a circular or elliptical wedge closed through its center; exactly two angle inputs are required</ApiSourceLink></p>
+
+Solid sectors use circlePath / ellipsePath with `closed="sector"`; the center is the cursor, so `center` accepts any Target, including node IDs and polar coordinates. Supply an inner radius to draw a hollow sector (annular sector / donut slice). Hollow sectors calculate inner and outer arc endpoints and require a literal Cartesian center. `label` is forwarded to the arc step and defaults to midway.
+
+```ts
+export type SectorProps = PathVisualProps &
+  AngleInput & {
+    label?: InputStepLabel;
+  } & (
+    | {
+        center: DslTarget;
+        radius: number;
+        innerRadius?: number;
+      }
+    | {
+        center: DslTarget;
+        radius: IRStepAnisotropicRadius;
+        innerRadius?: IRStepAnisotropicRadius;
+      }
+  );
+```
 
 ### SmoothStepProps
 
@@ -670,6 +869,29 @@ export type SmoothStepProps = {
 
 </DocTabs>
 
+### StarProps
+
+<p><ApiSourceLink label={"StarProps"} path={"packages/kernel/react/src/sugar/shapes/Star.tsx"} startLine={10}>`<Star>` inputs: center, outer/inner radii (or outer radius and inner ratio), and point count</ApiSourceLink></p>
+
+```ts
+export type StarProps = PathVisualProps & {
+  rotate?: number;
+} & (
+    | {
+        center: [number, number];
+        outerRadius: number;
+        innerRadius: number;
+        points: number;
+      }
+    | {
+        center: [number, number];
+        outerRadius: number;
+        points: number;
+        innerRatio?: number;
+      }
+  );
+```
+
 ### StepProps
 
 Fourteen kinds: 'move', 'line' (default), 'axis-line' (single-axis projection), 'fold', 'cycle', 'curve' (quadratic Bézier), 'cubic', 'bend', 'arc', 'circlePath', 'ellipsePath', 'rectangle', 'smooth', and 'generator'. All except 'move', 'cycle', and 'rectangle' accept `label?: IRStepLabel`, equivalent to an `<EdgeLabel>` child with the prop taking precedence. 'smooth' uses `points` instead of `to`; 'generator' uses `name` and JSON-safe `params`. Named types for each kind support wrappers and derived props
@@ -692,6 +914,32 @@ export type StepProps =
   | GeneratorStepProps;
 ```
 
+### Arc
+
+<p>
+  <ApiSourceLink label={'Arc'} path={'packages/kernel/react/src/sugar/shapes/Arc.tsx'} startLine={31}>
+    Arc sugar: an open arc by default, optionally closed by a chord or through the center
+  </ApiSourceLink>
+</p>
+
+Forwards center as any Target, including node IDs and polar coordinates. An open arc expands to `<Path><Step move(center)><Step arc(center)></Path>` and leaves the cursor at the arc endpoint. `close="chord"|"sector"` uses the matching closed mode of circlePath / ellipsePath, with the center as the cursor.
+
+```ts
+export declare const Arc: FC<ArcProps>;
+```
+
+### Circle
+
+<p>
+  <ApiSourceLink label={'Circle'} path={'packages/kernel/react/src/sugar/shapes/Circle.tsx'} startLine={55}>
+    Circle sugar: expands to Path and a circlePath step
+  </ApiSourceLink>
+</p>
+
+```ts
+export declare const Circle: FC<CircleProps>;
+```
+
 ### Draw
 
 <p>
@@ -706,6 +954,18 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 export declare const Draw: FC<DrawProps>;
 ```
 
+### Ellipse
+
+<p>
+  <ApiSourceLink label={'Ellipse'} path={'packages/kernel/react/src/sugar/shapes/Ellipse.tsx'} startLine={51}>
+    Ellipse sugar: expands to Path and an ellipsePath step
+  </ApiSourceLink>
+</p>
+
+```ts
+export declare const Ellipse: FC<EllipseProps>;
+```
+
 ### Path
 
 <p><ApiSourceLink label={"Path"} path={"packages/kernel/react/src/kernel/components/Path.tsx"} startLine={71}>Path declares a route using a sequence of `<Step>` elements</ApiSourceLink></p>
@@ -714,6 +974,50 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 
 ```ts
 export declare const Path: FC<PathProps>;
+```
+
+### Rectangle
+
+<p><ApiSourceLink label={"Rectangle"} path={"packages/kernel/react/src/sugar/shapes/Rectangle.tsx"} startLine={25}>Rectangle sugar: expands to `<Path><Step move(from)><Step rectangle(from,to)></Path>`</ApiSourceLink></p>
+
+`{ corner1, corner2 }` forwards any Target directly as rectangle from/to; other forms compute coordinates and require literal Cartesian inputs
+
+```ts
+export declare const Rectangle: FC<RectangleProps>;
+```
+
+### RegularPolygon
+
+<p><ApiSourceLink label={"RegularPolygon"} path={"packages/kernel/react/src/sugar/shapes/RegularPolygon.tsx"} startLine={26}>RegularPolygon sugar: a regular polygon expanded to `<Path>` with `move + (sides-1) line + cycle`</ApiSourceLink></p>
+
+Pure geometric sugar with no IR changes. Center must be literal Cartesian coordinates because vertices are computed in the component. `sides >= 3`. The side-length form derives circumradius as `R = sideLength / (2·sin(π/sides))`.
+
+```ts
+export declare const RegularPolygon: FC<RegularPolygonProps>;
+```
+
+### Sector
+
+<p>
+  <ApiSourceLink label={'Sector'} path={'packages/kernel/react/src/sugar/shapes/Sector.tsx'} startLine={38}>
+    Sector sugar: a sector
+  </ApiSourceLink>
+</p>
+
+Solid sectors (without an inner radius): `move(center) → circlePath/ellipsePath(closed="sector")`, with center as cursor and any Target accepted. Hollow sectors: move to the outer arc start, draw the outer arc, line to the inner arc end, draw the reversed inner arc, and line back to the outer start. The last segment uses line rather than cycle to avoid closing from the wrong previous segment; endpoint calculations require a literal center.
+
+```ts
+export declare const Sector: FC<SectorProps>;
+```
+
+### Star
+
+<p><ApiSourceLink label={"Star"} path={"packages/kernel/react/src/sugar/shapes/Star.tsx"} startLine={26}>Star sugar: expands to `<Path>` with `move + (2·points-1) line + cycle`, alternating outer and inner vertices</ApiSourceLink></p>
+
+Pure geometric sugar with no IR changes. Center must be literal Cartesian coordinates. `points >= 2`. By default, innerRadius = outerRadius × 0.5.
+
+```ts
+export declare const Star: FC<StarProps>;
 ```
 
 ### Step
