@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { Node, Path, Scope, Step } from '../../../src/kernel';
 import { createInputScene } from '../../../src/kernel/adapter/input-scene';
+import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
 import { Draw, EdgeLabel } from '../../../src/sugar';
 
 describe('React JSX Input 场景', () => {
@@ -145,4 +146,16 @@ describe('React JSX Input 场景', () => {
     expect(vanillaScene).toEqual(jsonScene);
     expect(reactScene).toEqual(jsonScene);
   });
+});
+
+it('Scope 外框在 React、Vanilla 和 IR roundtrip 中保持等价', () => {
+  const input = createInputScene(
+    <Scope frame={{ padding: 12, style: { fill: 'red' } }}>
+      <Node position={[0, 0]} />
+    </Scope>,
+  );
+  const ir = normalizeScene(input.scene).ir;
+  expect(ir.children[0]).toMatchObject({ frame: { padding: 12, style: { fill: 'red' } } });
+  const restored = normalizeScene(createInputScene(convertIRToReactNode(ir)).scene).ir;
+  expect(compileToScene(restored).scene).toEqual(compileToScene(ir).scene);
 });

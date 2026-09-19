@@ -378,3 +378,25 @@ describe('Canvas hitTest', () => {
     expect(hitTest(compile(1), { x: 102, y: 0 }, { context2d: ctx() })).toBe('edge');
   });
 });
+
+describe('Scene 禁用命中', () => {
+  it('匿名装饰不命中祖先，禁用 group 排除整个子树并穿透到下方内容', () => {
+    const base: Scene = {
+      layout: { x: 0, y: 0, width: 100, height: 100 },
+      primitives: [
+        { type: 'rect', id: 'below', x: 0, y: 0, width: 100, height: 100, fill: 'red' },
+        {
+          type: 'group',
+          id: 'scope',
+          children: [{ type: 'rect', hitTest: false, x: 0, y: 0, width: 100, height: 100, fill: 'blue' }],
+        },
+        {
+          type: 'group',
+          hitTest: false,
+          children: [{ type: 'rect', id: 'hidden-target', x: 0, y: 0, width: 100, height: 100, fill: 'green' }],
+        },
+      ],
+    };
+    expect(hitTest(base, { x: 50, y: 50 }, { context2d: createGeometryContext() })).toBe('below');
+  });
+});

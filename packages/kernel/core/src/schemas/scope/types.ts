@@ -1,5 +1,5 @@
 ﻿import type { ValueOf } from '@retikz/foundation';
-import type { infer as ZodInfer } from 'zod';
+import type { infer as ZodInfer, input as ZodInput } from 'zod';
 
 import type { IRComposite } from '../composite';
 import type { IRCoordinate } from '../coordinate';
@@ -7,7 +7,13 @@ import type { IRNode } from '../node';
 import type { IRPathBase } from '../path';
 import type { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 import type { ArrowDefaultSchema, LabelDefaultSchema, NodeDefaultSchema, PathDefaultSchema } from './schema';
-import type { ScopeDefaultsSchema, ScopePlacementSchema, ScopePlacementTargetSchema, ScopePropsSchema } from './schema';
+import type {
+  ScopeFrameSchema,
+  ScopeDefaultsSchema,
+  ScopePlacementSchema,
+  ScopePlacementTargetSchema,
+  ScopePropsSchema,
+} from './schema';
 
 /** every node 默认样式（排除 type / id / position / text / label 的全部 node 样式字段） */
 export type IRNodeDefault = ZodInfer<typeof NodeDefaultSchema>;
@@ -31,7 +37,13 @@ export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
 export type StyleChannel = ValueOf<typeof ScopeStyleChannel>;
 
 /** Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合 */
-export type IRScopeProps = ZodInfer<typeof ScopePropsSchema>;
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame'> & {
+  /** 可省略默认值的包络装饰 */
+  frame?: IRScopeFrame;
+};
+
+/** Scope 外框的可省略默认值输入 */
+export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
 
 /**
  * Scope IR 类型——手写而非 z.infer 派生
