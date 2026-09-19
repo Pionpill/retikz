@@ -142,6 +142,7 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 
 - **层级**：`zIndex` 只比较同层元素，数值较大者在上，同值保留声明顺序。
 - **颜色**：`style.color` 是主色；`fill`、`stroke` 的数值表示由主色派生的权重，不是透明度。
+- **图案填充**：`style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充节点，详见[图案](/kernel/components/effects/pattern)。
 - **纯文字与坐标点**：隐藏边框的 Node 仍有文字尺寸；只需要不可见引用点时使用 Coordinate。
 - **效果**：阴影、动画等见[视觉效果](/kernel/components/effects)。
 

@@ -142,6 +142,7 @@ Put visual properties in `style`, and size and text layout in `layout`. [Scope](
 
 - **Stacking**: `zIndex` compares siblings only; higher values draw on top and ties preserve declaration order.
 - **Color**: `style.color` is the base color; numeric `fill` and `stroke` values derive colors from it, rather than setting opacity.
+- **Pattern fills**: `style.fill` also accepts pattern objects such as `{ kind: 'pattern', shape: 'lines' }` to fill a node with lines, dots, or a grid. See [Patterns](/kernel/components/effects/pattern).
 - **Text and points**: a borderless Node still has text dimensions. Use Coordinate for an invisible reference point.
 - **Effects**: see [Visual effects](/kernel/components/effects) for shadows and animation.
 

@@ -144,6 +144,8 @@ Closed routes can fill an area, and `zIndex` controls sibling stacking. Compare 
 
 <ComponentPreview files="draw-fill-stack" size="lg" />
 
+For a closed Path / Draw, `style.fill` also accepts pattern objects such as `{ kind: 'pattern', shape: 'lines' }` to fill the area with lines, dots, or a grid. See [Patterns](/kernel/components/effects/pattern).
+
 ## When to use Path
 
 Use Path with explicit Steps for clearer control over multiple subpaths or individual segments. Draw exposes common route and appearance props; use Path for whole-path `label`, `marks`, `rotate`, and `scale`. These forms draw the same fold; Step makes each action explicit.

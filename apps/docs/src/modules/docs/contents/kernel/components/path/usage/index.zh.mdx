@@ -144,6 +144,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 <ComponentPreview files="draw-fill-stack" size="lg" />
 
+闭合 Path / Draw 的 `style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充区域，详见[图案](/kernel/components/effects/pattern)。
+
 ## 何时使用 Path
 
 需要多个子路径或逐段控制时，用 Path 组织显式 Step 更清楚。Draw 只暴露常用路径写法与外观属性；整条路径的 `label`、`marks`、`rotate` 和 `scale` 需要使用 Path。下面两种写法画同一条折线；Step 把每个动作写得更明确。
