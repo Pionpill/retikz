@@ -135,6 +135,36 @@ describe('ComponentPreviewCard dialog boundary', () => {
     act(() => root.unmount());
   });
 
+  it('正文预览卡悬浮时显示左下角工具按钮', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(<ComponentPreviewCard name="bottom-start-tools" Component={Demo} />);
+    });
+
+    expect(container.querySelector('.bottom-2.left-2')).not.toBeNull();
+
+    act(() => root.unmount());
+  });
+
+  it('可为模块首页隐藏左下角工具按钮', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <ComponentPreviewCard name="no-bottom-start-tools" Component={Demo} showBottomStartControls={false} />,
+      );
+    });
+
+    expect(container.querySelector('.bottom-2.left-2')).toBeNull();
+
+    act(() => root.unmount());
+  });
+
   it('将 previewClassName 合并到 inline 预览容器', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

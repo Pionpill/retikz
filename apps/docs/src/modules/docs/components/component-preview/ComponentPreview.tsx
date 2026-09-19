@@ -55,6 +55,8 @@ export type ComponentPreviewProps = {
   type?: PreviewFigureType;
   /** 是否显示缩放、下载、渲染器等预览宿主工具栏，默认显示。 */
   showTools?: boolean;
+  /** 是否显示预览区左下角的源码与控制锁定入口，默认显示。 */
+  showBottomStartControls?: boolean;
   /** 紧跟在预览卡正下方的读图或操作说明。 */
   caption?: ReactNode;
 };
@@ -74,6 +76,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
     hideCode,
     type,
     showTools = true,
+    showBottomStartControls = true,
     caption,
   } = props;
   const [themeStyleSelection, setThemeStyleSelection] = useState<PreviewThemeStyleSelection>('inherit');
@@ -246,6 +249,7 @@ export const ComponentPreview: FC<ComponentPreviewProps> = props => {
       codeInitiallyHidden={codeInitiallyHidden}
       figureType={type}
       showTools={showTools}
+      showBottomStartControls={showBottomStartControls}
       controlContract={controlContract}
       controlDefinition={controlDefinition}
       controlPanelDefaultOpen={controlPanelDefaultOpen}

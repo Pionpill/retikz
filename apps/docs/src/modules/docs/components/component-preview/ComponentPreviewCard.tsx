@@ -59,6 +59,8 @@ export type ComponentPreviewCardProps = {
   showAskAi?: boolean;
   /** 是否显示缩放、下载、渲染器等预览宿主工具栏。 */
   showTools?: boolean;
+  /** 是否显示预览区左下角的源码与控制锁定入口。 */
+  showBottomStartControls?: boolean;
   /** 是否默认不展示源码区，而由预览区左下角入口展开。 */
   codeInitiallyHidden?: boolean;
   /** 叙述性图示的说明类型。 */
@@ -102,6 +104,7 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     previewClassName,
     showAskAi = true,
     showTools = true,
+    showBottomStartControls = true,
     codeInitiallyHidden = false,
     figureType,
     controlDefinition,
@@ -175,7 +178,6 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
     fillAiDraft(prompt);
   }, [aiCurrentPage, fillAiDraft, name, openAi]);
   const handleShowCode = useCallback(() => setLocalIsCodeVisible(true), []);
-
   const previewToolSlots = showTools
     ? buildPreviewToolSlots({
         transform: previewState.transform,
@@ -193,16 +195,22 @@ export const ComponentPreviewCard: FC<ComponentPreviewCardProps> = props => {
         toggleRendererMode: previewState.toggleRendererMode,
       })
     : [];
-  const resolvedCardControlSlots = mergePreviewControlSlots(controlSlots, previewToolSlots, [
-    buildPreviewControlsLockSlot({
-      leading:
-        hasCode && codeInitiallyHidden && !isCodeVisible ? (
-          <PreviewToolbarButton label="Show code" onClick={handleShowCode}>
-            <FileCode2 className="size-3.5" />
-          </PreviewToolbarButton>
-        ) : undefined,
-    }),
-  ]);
+  const resolvedCardControlSlots = mergePreviewControlSlots(
+    controlSlots,
+    previewToolSlots,
+    showBottomStartControls
+      ? [
+          buildPreviewControlsLockSlot({
+            leading:
+              hasCode && codeInitiallyHidden && !isCodeVisible ? (
+                <PreviewToolbarButton label="Show code" onClick={handleShowCode}>
+                  <FileCode2 className="size-3.5" />
+                </PreviewToolbarButton>
+              ) : undefined,
+          }),
+        ]
+      : [],
+  );
 
   return (
     <div ref={containerRef} className="my-6">

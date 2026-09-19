@@ -98,6 +98,7 @@ export const ModuleLandingPage: FC<ModuleLandingPageProps> = props => {
                     <ComponentPreview
                       {...demo.preview}
                       previewClassName={cn('!p-0 sm:!p-0', demo.preview.previewClassName)}
+                      showBottomStartControls={false}
                     />
                   </DemoLocationContext.Provider>
                 </article>
