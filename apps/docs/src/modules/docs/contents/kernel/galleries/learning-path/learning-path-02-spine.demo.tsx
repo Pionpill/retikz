@@ -28,11 +28,11 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       id={id}
       position={position}
       shape="rectangle"
-      cornerRadius={hasBox ? 4.5 : 0}
+      cornerRadius={hasBox ? 3.825 : 0}
       style={{
         ...(fill === undefined ? {} : { fill }),
         stroke: hasBox ? NODE_STROKE : 'none',
-        strokeWidth: hasBox ? 0.5 : 0,
+        strokeWidth: hasBox ? 0.425 : 0,
         textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
         font: {
           ...SANS_FONT,
@@ -40,7 +40,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
           weight: isTitle || isHeader ? 'bold' : 'normal',
         },
       }}
-      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
+      layout={{ padding: hasBox ? 4.25 : 3.4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -49,20 +49,20 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 
 const Demo: FC = () => (
   <Layout>
-    <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
+    <RoadmapNode id="title" position={[343.4, 17]} variant="title" width={170} height={34}>
       AI Expert in 2022
     </RoadmapNode>
-    <RoadmapNode id="fundamentals" position={[404, 95]} variant="optional" width={90} height={30}>
+    <RoadmapNode id="fundamentals" position={[343.4, 80.75]} variant="optional" width={76.5} height={25.5}>
       Fundamentals
     </RoadmapNode>
-    <RoadmapNode id="choose" position={[404, 162]} variant="header" width={130} height={25}>
+    <RoadmapNode id="choose" position={[343.4, 137.7]} variant="header" width={110.5} height={21.25}>
       Choose your path
     </RoadmapNode>
 
     {/* Step 2: 中段 spine —— 2 条 line。
         Sugar Draw way 数组：[源 id, 目标 id]，retikz 自动用节点 id 解析锚点 */}
-    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
-    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
+    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
   </Layout>
 );
 

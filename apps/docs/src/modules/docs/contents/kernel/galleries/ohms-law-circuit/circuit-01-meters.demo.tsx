@@ -15,8 +15,8 @@ const CircuitDemo: FC = () => (
         },
       }}
     >
-      <Meter position={[520, 360]} text="A" />
-      <Meter position={[760, 360]} text="V" />
+      <Meter position={[260, 180]} text="A" />
+      <Meter position={[380, 180]} text="V" />
     </Scope>
   </Layout>
 );

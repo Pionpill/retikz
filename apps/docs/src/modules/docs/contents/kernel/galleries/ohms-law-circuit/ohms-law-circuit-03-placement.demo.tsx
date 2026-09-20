@@ -12,19 +12,19 @@ const CircuitDemo: FC = () => (
     <Scope
       defaults={{
         path: {
-          style: { stroke: INK, strokeWidth: 3, lineCap: 'round', lineJoin: 'round' },
+          style: { stroke: INK, strokeWidth: 1.5, lineCap: 'round', lineJoin: 'round' },
         },
         node: {
           style: { font: FONT, stroke: 'none' },
           layout: { padding: 0 },
         },
-        label: { font: { ...FONT, size: 16 } },
+        label: { font: { ...FONT, size: 14 } },
       }}
     >
-      <Switch id="switch" position={[350, 200]} />
-      <Meter id="ammeter" position={[625, 200]} text="A" />
-      <Battery id="battery" position={[160, 320]} rotate={90} />
-      <Rheostat id="rheostat" position={[460, 440]} />
+      <Switch id="switch" position={[175, 100]} />
+      <Meter id="ammeter" position={[312.5, 100]} text="A" />
+      <Battery id="battery" position={[80, 160]} rotate={90} />
+      <Rheostat id="rheostat" position={[230, 220]} />
     </Scope>
   </Layout>
 );

@@ -54,6 +54,8 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ## 过程
 
+节点尺寸、坐标与间距按原图的 85% 排布，保留文字字号，使桌面预览可以完整展示。
+
 ### 步骤 1：title — RoadmapNode 4 variant
 
 先抽出 `RoadmapNode` 组件——4 个 variant 共用 [Node](/kernel/components/node/usage) 的 shape / 圆角 / 字体，按 variant 选不同的色和字号：
@@ -89,11 +91,11 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/components/basic/position) `{ direction: 'bottom', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
 
-- `<Layout ... nodeDistance={41}>` 在容器一次性设全局节点间距
+- `<Layout ... nodeDistance={34.85}>` 在容器一次性设全局节点间距
 - 段内每个 AtPosition 节点都引用上一个节点 id；视觉上紧贴成"色块条"
 
 ```tsx
-<RoadmapNode id="papers" position={[105, 68]} ...>Papers With Code</RoadmapNode>
+<RoadmapNode id="papers" position={[89.25, 57.8]} ...>Papers With Code</RoadmapNode>
 <RoadmapNode id="git" position={{ direction: 'bottom', of: 'papers' }} ...>GIT - Version Control</RoadmapNode>
 <RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
 ```
@@ -112,9 +114,9 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 <Draw
   way={[
     'choose', // move 起点
-    { curve: [404, 200] },
-    [360, 195], // 第 1 段 quadratic：control + target
-    { curve: [316, 190] },
+    { curve: [343.4, 170] },
+    [306, 165.75], // 第 1 段 quadratic：control + target
+    { curve: [268.6, 161.5] },
     'data-scientist', // 第 2 段：control + target id
   ]}
   arrow="->"
@@ -136,26 +138,26 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 最后一层装饰——一次性演示 `dashPattern` / `arrow` 在起点 / 边标注。它的作用是补气质，不是改变结构，所以放在最后最顺。
 
-| 装饰                              | Draw 配置                                                      | way 算子                                                                    |
-| --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 青色虚线推荐路径                  | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
-| 短虚线「more bottom」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[起点, 终点]` 两坐标即可                                               |
-| 红 X 装饰（2 条交叉线）           | `stroke="#ff0000"` + `strokeWidth={4}`                         | 同上                                                                        |
+| 装饰                              | Draw 配置                                                           | way 算子                                                                    |
+| --------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 青色虚线推荐路径                  | `stroke="#287fad"` + `dashPattern={[5.1, 5.1]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
+| 短虚线「more bottom」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[3.4, 3.4]}` | way `[起点, 终点]` 两坐标即可                                               |
+| 红 X 装饰（2 条交叉线）           | `stroke="#ff0000"` + `strokeWidth={4}`                              | 同上                                                                        |
 
 ```tsx
 <Draw
   way={[
-    [251.88, 359.77],
+    [214.098, 305.804],
     { label: 'recommended' },
-    { curve: [200, 320] },
-    [225, 241],
-    { curve: [250, 162] },
-    [327, 186],
-    { curve: [404, 210] },
+    { curve: [170, 272] },
+    [191.25, 204.85],
+    { curve: [212.5, 137.7] },
+    [277.95, 158.1],
+    { curve: [343.4, 178.5] },
     'choose',
   ]}
   arrow="<-"
-  style={{ stroke: '#287fad', strokeWidth: 2, dashPattern: [6, 6] }}
+  style={{ stroke: '#287fad', strokeWidth: 2, dashPattern: [5.1, 5.1] }}
 />
 ```
 
