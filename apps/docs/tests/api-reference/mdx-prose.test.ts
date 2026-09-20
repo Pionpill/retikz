@@ -16,7 +16,7 @@ it('JSDoc 正文中的比较符和对象字面量可编译为 MDX，代码片段
     writeFileSync(tsconfigPath, JSON.stringify({ compilerOptions: { strict: true }, files: ['./index.ts'] }), 'utf8');
     writeFileSync(
       entry,
-      '/** Tension <1 uses { x, y }; preserve `Map<T>` */\nexport interface Options {\n/** Offset { x, y } <1; `Array<T>` */\noffset: number;\n}',
+      '/** Tension <1 uses { x, y }; preserve `Map<T>` */\nexport interface Options {\n/** Offset { x, y } <1; `Array<T>` */\noffset: number;\n/** Transform a point */\ntransform: (\n  x: number,\n  y: number,\n) => number;\n}',
       'utf8',
     );
     for (const lang of ['zh', 'en'] as const) {
@@ -32,6 +32,8 @@ it('JSDoc 正文中的比较符和对象字面量可编译为 MDX，代码片段
       );
       expect(source).toContain('Tension &lt;1 uses &#123; x, y &#125;; preserve `Map<T>`');
       expect(source).toContain('Offset &#123; x, y &#125; &lt;1; `Array<T>`');
+      expect(source).toContain('`(`<br />`x: number,`<br />`y: number,`<br />`) => number`');
+      expect(source).not.toContain('`(<br />');
       await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
     }
   } finally {

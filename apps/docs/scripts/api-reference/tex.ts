@@ -683,6 +683,13 @@ const toSymbol = (reflection: JSONOutput.DeclarationReflection, packageDirectory
 const escapeTableCell = (value: string): string =>
   value.replaceAll('\\', '\\\\').replaceAll('|', '\\|').replaceAll('\n', '<br />');
 
+/** 每行独立保留代码语义，换行标签放在代码片段之外 */
+const renderTableCode = (value: string): string =>
+  value
+    .split(/\r?\n/)
+    .map(line => `\`${escapeTableCell(line.trim())}\``)
+    .join('<br />');
+
 /** 转义正文中的 MDX 语法字符，保留 Markdown 代码片段 */
 const escapeMdxText = (value: string): string =>
   value.replace(/(`+)[\s\S]*?\1|[<{}]/g, part =>
@@ -694,7 +701,7 @@ const localizeText = (value: string, lang: ApiReferenceLanguage, translate: (sou
   escapeMdxText(lang === 'en' ? translate(value) : value);
 
 /** 在默认值列保留字面量的代码语义；无默认值时保持占位符 */
-const renderDefaultValue = (value: string): string => (value === '—' ? value : `\`${escapeTableCell(value)}\``);
+const renderDefaultValue = (value: string): string => (value === '—' ? value : renderTableCode(value));
 
 /** 渲染一个公开 API 的成员表 */
 const renderMembers = (
@@ -709,7 +716,7 @@ const renderMembers = (
       .filter((value): value is string => Boolean(value))
       .map(value => localizeText(value, lang, translate))
       .join('\n');
-    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | \`${escapeTableCell(member.type)}\` | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
+    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | ${renderTableCode(member.type)} | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
   });
   const table = [`| ${labels.join(' | ')} |`, '| --- | --- | --- | --- |', ...rows].join('\n');
   return table;
@@ -737,7 +744,7 @@ const renderParameters = (
     '| --- | --- | --- |',
     ...parameters.map(
       parameter =>
-        `| \`${parameter.name}\` | \`${escapeTableCell(parameter.type)}\` | ${escapeTableCell(localizeText(parameter.description || '—', lang, translate))} |`,
+        `| \`${parameter.name}\` | ${renderTableCode(parameter.type)} | ${escapeTableCell(localizeText(parameter.description || '—', lang, translate))} |`,
     ),
   ].join('\n');
 };
