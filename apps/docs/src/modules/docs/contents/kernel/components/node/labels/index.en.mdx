@@ -56,6 +56,7 @@ const view = mount(document.getElementById('diagram')!, input);
 <DocTab value="vanilla-ir" label="Vanilla + IR">
 
 ```ts
+import type { IRScene } from '@retikz/core';
 import { mount } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
@@ -90,7 +91,8 @@ Choose a named direction, numeric angle, boundary fraction, or the center on one
 To attach multiple labels, place the same object form in an array:
 
 ```tsx
-import type { IRScene } from '@retikz/core';
+import { Node } from '@retikz/react';
+
 <Node
   position={[0, 0]}
   label={[
@@ -156,41 +158,41 @@ These members control label attachment, placement, and visual style. See the [AP
 - Named direction: \`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`. A named direction attaches from the node border; \`'center'\` fixes the final node-rectangle center and ignores \`placement\` and \`distance\`
 - Angle: \`number\`, attaching along the ray from the node center at that angle
 - Boundary fraction: \`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`. It attaches to one edge; \`fraction\` defaults to \`0.5\` and ranges from \`0..1\``,
-    },
-    {
-      name: 'InputNodeLabel.placement',
-      kind: 'property',
-      type: "'outside' | 'inside'",
-      defaultValue: "'outside'",
-      description: 'Offsets the label outward or inward from its attachment; inside labels cannot use a leader line.',
-    },
-    {
-      name: 'InputNodeLabel.distance',
-      kind: 'property',
-      type: 'number',
-      defaultValue: 'CompileOptions.labelDistance (12 by default)',
-      description: 'Sets the user-unit gap from the node border to the rotated label visual box.',
-    },
-    {
-      name: 'InputNodeLabel.rotate',
-      kind: 'property',
-      type: "'none' | 'radial' | 'tangent' | number",
-      description:
-        '`none`leaves the text unrotated;`radial`follows the attachment direction;`tangent`adds 90°. A number sets an explicit angle.',
-      defaultValue: "'none'",
-    },
-    {
-      name: 'InputNodeLabel.keepUpright',
-      kind: 'property',
-      type: 'boolean',
-      description: 'Flips upside-down text by 180° without changing its attachment point.',
-      defaultValue: 'false',
-    },
-    {
-      name: 'InputNodeLabel.pin',
-      kind: 'property',
-      type: "IRNodeLabel['pin']",
-      description: `Leader line for outside labels only:
+  },
+  {
+    name: 'InputNodeLabel.placement',
+    kind: 'property',
+    type: "'outside' | 'inside'",
+    defaultValue: "'outside'",
+    description: 'Offsets the label outward or inward from its attachment; inside labels cannot use a leader line.',
+  },
+  {
+    name: 'InputNodeLabel.distance',
+    kind: 'property',
+    type: 'number',
+    defaultValue: 'CompileOptions.labelDistance (12 by default)',
+    description: 'Sets the user-unit gap from the node border to the rotated label visual box.',
+  },
+  {
+    name: 'InputNodeLabel.rotate',
+    kind: 'property',
+    type: "'none' | 'radial' | 'tangent' | number",
+    description:
+      '`none`leaves the text unrotated;`radial`follows the attachment direction;`tangent`adds 90°. A number sets an explicit angle.',
+    defaultValue: "'none'",
+  },
+  {
+    name: 'InputNodeLabel.keepUpright',
+    kind: 'property',
+    type: 'boolean',
+    description: 'Flips upside-down text by 180° without changing its attachment point.',
+    defaultValue: 'false',
+  },
+  {
+    name: 'InputNodeLabel.pin',
+    kind: 'property',
+    type: "IRNodeLabel['pin']",
+    description: `Leader line for outside labels only:
 
 - \`true\`: uses the default thin solid line
 - \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`: customizes the leader line; \`strokeWidth\` defaults to \`1\`, while \`dashPattern\` and \`dashOffset\` control dashes`,

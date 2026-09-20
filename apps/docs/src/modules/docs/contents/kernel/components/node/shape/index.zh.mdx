@@ -78,15 +78,15 @@ Vanilla 挂载容器移除前调用 `view.dispose()` 释放资源。
 
 ## Rectangle
 
-`<Node>` 不写 `shape` 时就是矩形，边界包住「文字 + padding」、尺寸由文字内容驱动。流程图节点几乎都是这种。
+`shape` 省略时先继承 `Scope.defaults.node.shape`，没有继承值时才使用矩形。显式写 `shape="rectangle"` 可覆盖继承；矩形边界由文字、padding 和尺寸约束共同决定。
 
 ```tsx
 import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node>label</Node>
-<Node shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
+<Node position={[0, 0]}>label</Node>
+<Node position={[0, 0]} shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
 ```
 
 playground 固定目标矩形在原点。调整 `cornerRadius` 比较直角与圆角边界，再通过轨道角度与距离移动来源节点；自动贴边会落在真实边界上，命名 / 数字 anchor 则给出稳定的显式位置。
@@ -110,8 +110,8 @@ import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node shape="circle">label</Node>
-<Node shape="ellipse">label</Node>
+<Node position={[0, 0]} shape="circle">label</Node>
+<Node position={[0, 0]} shape="ellipse">label</Node>
 ```
 
 在 playground 中切换 `circle` / `ellipse`：前者是 `circumscribe:'equal'` 的等轴预设，后者默认按各轴 × √2 外接「文字 + padding」。调整轨道角度与距离移动来源节点；保持自动贴边，或切换命名 / 数字 anchor，直接比较端点在两种边界上的落点。
@@ -136,9 +136,9 @@ import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
-<Node shape="diamond">label</Node>
-<Node shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
+<Node position={[0, 0]} shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+<Node position={[0, 0]} shape="diamond">label</Node>
+<Node position={[0, 0]} shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
 ```
 
 playground 把六边形与 `diamond` 预设放在同一场景比较；字符串 `diamond` 保持正菱形，对象形式可通过 `aspectRatio` 调整宽高比。选择六边形时可调整 `cornerRadius`，再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随尖角或圆角轮廓，并与命名 / 数字 anchor 对照。

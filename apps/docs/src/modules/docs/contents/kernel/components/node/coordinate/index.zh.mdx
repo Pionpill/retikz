@@ -100,8 +100,6 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
-接入后再选择 `position` 的五种中心 / 点定位形态：
-
 `Coordinate.position` 接受五种中心 / 点定位形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例定位 `{ between, fraction }`。Node 额外支持依赖自身真实尺寸的 `{ kind: 'anchor', target, selfAnchor? }`；Coordinate 可以作为它的 target，但自身没有 `selfAnchor` 定位。
 
 ## 何时使用

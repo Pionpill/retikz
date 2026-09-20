@@ -56,6 +56,7 @@ const view = mount(document.getElementById('diagram')!, input);
 <DocTab value="vanilla-ir" label="Vanilla + IR">
 
 ```ts
+import type { IRScene } from '@retikz/core';
 import { mount } from '@retikz/vanilla/dom';
 
 const ir: IRScene = {
@@ -90,7 +91,8 @@ const view = mount(document.getElementById('diagram')!, ir);
 需要同时附加多个标签时，把同一份对象写法放进数组：
 
 ```tsx
-import type { IRScene } from '@retikz/core';
+import { Node } from '@retikz/react';
+
 <Node
   position={[0, 0]}
   label={[
@@ -155,40 +157,40 @@ import type { IRScene } from '@retikz/core';
 - 命名方位：\`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`。命名方向从节点边界附着；\`'center'\` 固定最终节点矩形中心，并忽略 \`placement\` 与 \`distance\`
 - 角度：\`number\`，按节点中心向该角度的射线附着标签
 - 边界比例：\`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`。附着到指定边，\`fraction\` 缺省为 \`0.5\`，范围为 \`0..1\``,
-    },
-    {
-      name: 'InputNodeLabel.placement',
-      kind: 'property',
-      type: "'outside' | 'inside'",
-      defaultValue: "'outside'",
-      description: '决定标签从附着点向节点外侧或内侧偏移；内侧标签不能使用引线。',
-    },
-    {
-      name: 'InputNodeLabel.distance',
-      kind: 'property',
-      type: 'number',
-      defaultValue: 'CompileOptions.labelDistance（默认 12）',
-      description: '设置节点边界到旋转后标签视觉框的净距，单位为用户坐标。',
-    },
-    {
-      name: 'InputNodeLabel.rotate',
-      kind: 'property',
-      type: "'none' | 'radial' | 'tangent' | number",
-      description: '`none` 不旋转，`radial` 沿附着方向，`tangent`在该方向加 90°；数字指定角度。',
-      defaultValue: "'none'",
-    },
-    {
-      name: 'InputNodeLabel.keepUpright',
-      kind: 'property',
-      type: 'boolean',
-      description: '文字倒置时翻转 180°，不改变标签附着点。',
-      defaultValue: 'false',
-    },
-    {
-      name: 'InputNodeLabel.pin',
-      kind: 'property',
-      type: "IRNodeLabel['pin']",
-      description: `仅外侧标签可用的引线：
+  },
+  {
+    name: 'InputNodeLabel.placement',
+    kind: 'property',
+    type: "'outside' | 'inside'",
+    defaultValue: "'outside'",
+    description: '决定标签从附着点向节点外侧或内侧偏移；内侧标签不能使用引线。',
+  },
+  {
+    name: 'InputNodeLabel.distance',
+    kind: 'property',
+    type: 'number',
+    defaultValue: 'CompileOptions.labelDistance（默认 12）',
+    description: '设置节点边界到旋转后标签视觉框的净距，单位为用户坐标。',
+  },
+  {
+    name: 'InputNodeLabel.rotate',
+    kind: 'property',
+    type: "'none' | 'radial' | 'tangent' | number",
+    description: '`none` 不旋转，`radial` 沿附着方向，`tangent`在该方向加 90°；数字指定角度。',
+    defaultValue: "'none'",
+  },
+  {
+    name: 'InputNodeLabel.keepUpright',
+    kind: 'property',
+    type: 'boolean',
+    description: '文字倒置时翻转 180°，不改变标签附着点。',
+    defaultValue: 'false',
+  },
+  {
+    name: 'InputNodeLabel.pin',
+    kind: 'property',
+    type: "IRNodeLabel['pin']",
+    description: `仅外侧标签可用的引线：
 
 - \`true\`：使用默认细实线
 - \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`：自定义引线样式；\`strokeWidth\` 缺省为 \`1\`，\`dashPattern\` 与 \`dashOffset\` 控制虚线`,

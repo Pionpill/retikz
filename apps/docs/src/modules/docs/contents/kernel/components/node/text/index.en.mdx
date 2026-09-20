@@ -100,7 +100,7 @@ Select “Wrapping a long sentence”, then adjust `maxTextWidth` to compare the
 
 - `text` accepts a string or a IRLine array; `'\n'` creates hard breaks, while the array form gives each line independent styles
 - `layout.align` controls horizontal alignment within the block and `layout.lineHeight` controls spacing; both are block-level properties
-- `layout.maxTextWidth` is a wrap threshold, not a fixed paragraph width; Western text wraps by word, CJK by character, and unbreakable tokens overflow as a whole
+- `layout.maxTextWidth` is a plain-text wrap threshold, not a fixed paragraph width; Western text wraps by word, CJK by character, and unbreakable tokens overflow as a whole
 - Each line can override `fill` / `opacity` / `font`; [`<Text>` children](/kernel/components/node/text) express the same structure in JSX
 - Changing `shape` keeps the shape-specific circumscription rules around the multiline content
 
@@ -132,7 +132,7 @@ These two nodes compile to identical output:
 
 ## Mixed runs within a line
 
-Both runs below remain on one line. Vanilla API and IR use the same `text` data structure. For formulas, see [TeX](/kernel/packages/tex).
+Both runs below remain on one line. Vanilla API and IR use the same `text` data structure. If any line contains `{ runs }` or a resolved formula, the whole text block uses mixed layout and does not wrap automatically at `maxTextWidth`. Split the content into separate line-array items when a break is needed. For formulas, see [TeX](/kernel/packages/tex).
 
 ```tsx
 <Node position={[0, 0]} text={[{ runs: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
@@ -160,6 +160,8 @@ import { NodeTextColor } from '@retikz/core';
 
 Text only works inside Node and takes string or number children. Block alignment, line height, and wrapping width belong to `Node.layout.align`, `lineHeight`, and `maxTextWidth`; per-line fonts belong to Text `font`.
 
+Automatic wrapping applies only to plain-text blocks; mixed runs and formulas do not wrap automatically. A fixed `layout.width` does not clip text: compilation fails if the content cannot fit.
+
 ## Related props
 
 These members provide body text, wrapping, and per-line overrides. See the [API reference](/kernel/components/node/api-reference) for the complete field list and types.
@@ -177,61 +179,61 @@ These members provide body text, wrapping, and per-line overrides. See the [API 
   - Text run: \`{ text, fill?, opacity?, font? }\`
   - Math run: \`{ tex, displayMode?, fill?, opacity? }\`, which requires \`lowerTex\`
   - \`runs\` lay out text and formulas in order on one baseline`,
-    },
-    {
-      name: 'children',
-      kind: 'property',
-      type: 'ReactNode',
-      description:
-        'Supplies React body text in JSX order. Strings and `<Text>`may mix, unless explicit`text`is present.',
-    },
-    {
-      name: 'layout.align',
-      kind: 'property',
-      type: "'start' | 'middle' | 'end'",
-      defaultValue: "'middle'",
-      description:
-        'Sets horizontal alignment inside a multiline text block, not the Node position or label attachment point.',
-    },
-    {
-      name: 'layout.lineHeight',
-      kind: 'property',
-      type: 'number',
-      defaultValue: 'font.size × 1.2',
-      description: 'Sets the user-unit line height between adjacent body-text lines.',
-    },
-    {
-      name: 'layout.maxTextWidth',
-      kind: 'property',
-      type: 'number',
-      description: 'Sets the automatic-wrapping threshold; omitting it disables automatic wrapping.',
-    },
-    {
-      name: 'Text.fill',
-      kind: 'property',
-      type: "TextProps['fill']",
-      description: 'Overrides the current line color; omitted values inherit the node text color.',
-    },
-    {
-      name: 'Text.opacity',
-      kind: 'property',
-      type: 'number',
-      description: 'Current line opacity, from 0 to 1.',
-    },
-    {
-      name: 'Text.font',
-      kind: 'property',
-      type: 'IRFont',
-      description:
-        '`{ family?: string, size?: number, weight?, style? }` overrides this line only. Missing fields inherit the node font; weight and style use the standard font options.',
-    },
-    {
-      name: 'style.textColor',
-      kind: 'property',
-      type: 'ContextualColor',
-      defaultValue: '`currentColor`',
-      description:
-        'Sets the inherited body-text color. `NodeTextColor.Contrast` derives black or white from a resolvable opaque fill.',
+},
+{
+  name: 'children',
+  kind: 'property',
+  type: 'ReactNode',
+  description:
+    'Supplies React body text in JSX order. Strings and `<Text>`may mix, unless explicit`text`is present.',
+},
+{
+  name: 'layout.align',
+  kind: 'property',
+  type: "'start' | 'middle' | 'end'",
+  defaultValue: "'middle'",
+  description:
+    'Sets horizontal alignment inside a multiline text block, not the Node position or label attachment point.',
+},
+{
+  name: 'layout.lineHeight',
+  kind: 'property',
+  type: 'number',
+  defaultValue: 'font.size × 1.2',
+  description: 'Sets the user-unit line height between adjacent body-text lines.',
+},
+{
+  name: 'layout.maxTextWidth',
+  kind: 'property',
+  type: 'number',
+    description: 'Sets the plain-text wrapping threshold; a fixed width also limits the available text width.',
+},
+{
+  name: 'Text.fill',
+  kind: 'property',
+  type: "TextProps['fill']",
+  description: 'Overrides the current line color; omitted values inherit the node text color.',
+},
+{
+  name: 'Text.opacity',
+  kind: 'property',
+  type: 'number',
+  description: 'Current line opacity, from 0 to 1.',
+},
+{
+  name: 'Text.font',
+  kind: 'property',
+  type: 'IRFont',
+  description:
+    '`{ family?: string, size?: number, weight?, style? }` overrides this line only. Missing fields inherit the node font; weight and style use the standard font options.',
+},
+{
+  name: 'style.textColor',
+  kind: 'property',
+  type: 'ContextualColor',
+  defaultValue: '`currentColor`',
+  description:
+    'Sets the inherited body-text color. `NodeTextColor.Contrast` derives black or white from a resolvable opaque fill.',
     },
     ]}
     />

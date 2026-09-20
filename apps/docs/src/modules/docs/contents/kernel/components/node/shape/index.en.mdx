@@ -78,15 +78,15 @@ Call `view.dispose()` before removing the Vanilla mount container.
 
 ## Rectangle
 
-A `<Node>` without a `shape` is a rectangle: the boundary wraps "text + padding" and is sized by the text content. Almost every flowchart node is this form.
+An omitted `shape` inherits `Scope.defaults.node.shape`, falling back to a rectangle when no inherited value exists. Use `shape="rectangle"` to override inheritance. Text, padding, and size constraints determine the rectangle boundary.
 
 ```tsx
 import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node>label</Node>
-<Node shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
+<Node position={[0, 0]}>label</Node>
+<Node position={[0, 0]} shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
 ```
 
 The playground fixes the target rectangle at the origin. Adjust `cornerRadius` to compare sharp and rounded boundaries, then move the source with the orbit angle and distance; automatic clipping lands on the real boundary, while named and numeric anchors provide stable explicit positions.
@@ -110,8 +110,8 @@ import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node shape="circle">label</Node>
-<Node shape="ellipse">label</Node>
+<Node position={[0, 0]} shape="circle">label</Node>
+<Node position={[0, 0]} shape="ellipse">label</Node>
 ```
 
 Switch between `circle` and `ellipse` in the playground: the former is the isotropic `circumscribe:'equal'` preset, while the latter defaults to circumscribing "text + padding" by scaling each axis by √2. Adjust the orbit angle and distance to move the source; keep automatic clipping or choose a named or numeric anchor to compare endpoint placement on both boundaries.
@@ -136,9 +136,9 @@ import { Node } from '@retikz/react';
 ```
 
 ```tsx
-<Node shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
-<Node shape="diamond">label</Node>
-<Node shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
+<Node position={[0, 0]} shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+<Node position={[0, 0]} shape="diamond">label</Node>
+<Node position={[0, 0]} shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
 ```
 
 The playground compares a hexagon with the `diamond` preset in one scene; the string `diamond` remains a regular diamond, while the object form accepts `aspectRatio` to control its width-to-height ratio. Select the hexagon to adjust `cornerRadius`, then move the source with the orbit angle and distance to see automatic clipping follow sharp or rounded contours and compare it with named or numeric anchors.

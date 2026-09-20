@@ -64,7 +64,7 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
 
 ## 视觉形状与连接几何
 
-`shape` 决定画出来的轮廓，也拥有形状专属锚点；`boundary` 则只在解析自动连线端点、标准方位锚点和数字角度锚点时参与。`boundary` 省略或写成 `'shape'` 时，两条几何路径才重合。
+`shape` 决定画出来的轮廓，也拥有形状专属锚点；`boundary` 则只在解析自动连线端点、标准方位锚点和数字角度锚点时参与。`boundary` 省略时先继承 `Scope.defaults.node.boundary`，没有继承值时才回退到 `'shape'`。最终采用 `'shape'` 时，连接几何沿用视觉形状。
 
 下面三个 Q 的可见圆形和连线方向相同。中间改用矩形连接面，右侧再增加 margin；比较线端的位置，圆形本身始终不变。灰色点线是教学辅助边界。
 
@@ -111,17 +111,21 @@ description: 解释节点尺寸、连接面、文字处理与引用时序
 
 ## 命名引用与登记顺序
 
-`id` 把一个已经完成布局的对象变成后续定位与连接可查询的几何句柄。编译器维护的是一组命名表；绘制图元与登记引用是两件事，因此没有 `id` 的 Node 仍会绘制。
+`id` 把一个已经完成布局的对象变成后续定位与连接可查询的几何句柄。编译器维护的是一组命名表；绘制图元与登记引用是两件事，因此没有 `id` 的 Node 仍会绘制，但不会登记到命名表，也无法被后续对象通过命名引用访问。
 
 ### 命名表保存布局记录
 
-命名表由 `NamespaceStack` 管理。它的 `frames` 是一个数组，每项是 `Map<string, NamespaceEntry>`；数组末项是当前栈顶，`register` 只写入这一项。下面把栈中的一个 Map 和键 `a` 对应的记录展开。图中的 `a` 已完成布局：中心为 `[40, 0]`，矩形宽 60、高 32，margin 为 0。
+`NamespaceStack` 是编译器管理命名引用的栈结构。它把命名表按从外到内的层级组织起来，每一层称为一个 **frame（命名帧）**，用 `Map<string, NamespaceEntry>` 保存这一层的 `id → 布局记录`。
 
-<ComponentPreview files="namespace-storage" size="xxl" type="illustration" hideCode />
+这些 frame 存在内部数组 `frames` 中：首项是始终保留的根 frame，末项是当前栈顶。初始时只有根 frame；进入独立命名空间时在末尾压入新 frame，离开时弹出。`register` 只写入栈顶的 Map，查询则从栈顶向外逐层查找。
 
-Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析的 `NodeLayout`：保存矩形、形状定义、连接面、margin 等几何信息，也包含文字等布局结果。图中只展示引用所需的字段，不表示完整对象或内存布局。
+下面把栈中的一个 Map 和键 `a` 对应的记录展开。图中的 `a` 已完成布局：中心为 `[40, 0]`，矩形宽 60、高 32。
 
-遍历到 Node 时，编译器先解析位置、计算正文与形状布局，再把布局投影到全局坐标；带 `id` 时才把这一结果写入当前 Map，状态为 `resolved`。Coordinate 使用同一张表，但保存的是零宽高几何记录。命名表是本次编译的运行时状态，不写回可持久化 IR。
+<ComponentPreview files="namespace-storage" size="xl" type="illustration" hideCode />
+
+Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析的 `NodeLayout`：保存矩形、形状定义、连接面、margin 等几何信息，也包含文字等布局结果。图中用嵌套 Map 展示对象层级：`layout` 是对象，里面的 `rect` 也是对象；`shapeName` 是形状名。图中仅为示意，具体数据结构以代码为准。
+
+遍历到 Node 时，编译器完成正文与形状布局及定位，再把布局投影到全局坐标；带 `id` 时才把这一结果写入当前 Map，状态为 `resolved`。Coordinate 使用同一张表，但保存的是零宽高几何记录。命名表是本次编译的运行时状态，不写回可持久化 IR。
 
 <SourceLinks
   sources={[
@@ -301,9 +305,7 @@ Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析
 
 <ComponentPreview files="coordinate-resolution-flow" size="xs" type="flow" hideCode />
 
-Coordinate 的 `position` 会立即解析。若它依赖另一个 id，该 id 必须已经在当前可见命名空间中登记；引用同一层里后定义的 Node / Coordinate 会直接报错。位置解析成功后，编译器把结果投影到全局坐标，保存成一条只有中心坐标的零尺寸几何记录，再按 `id` 登记。
-
-Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到已登记的 id。Path 则先排队，等当前 Scope 的 children 完成登记后再解析端点，所以同一作用域里的 path 可以引用写在它后面的 Coordinate。`localNamespace` 带来的可见范围仍遵循 [Scope 的命名空间规则](/kernel/components/scope/mechanism#命名空间与-id-冲突)。
+编译器解析 `position`，应用当前 Scope 的变换得到全局坐标，再将这个位置登记为零宽高的几何记录。登记使用前文的 `NamespaceStack`；[即时定位与延迟路径](#定位即时查询路径延迟消费)的查询时机和可见范围同样适用。
 
 <SourceLinks
   sources={[
@@ -312,12 +314,6 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 766,
       endLine: 800,
-    },
-    {
-      label: 'children 遍历与 path 延迟回填',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 620,
-      endLine: 650,
     },
     {
       label: '定位引用解析',
@@ -329,6 +325,10 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
 />
 
 ### 零尺寸记录与渲染输出
+
+下面以无 Scope 变换的 `hub` 为例：输入位置为 `[40, 20]`，登记记录中的矩形宽高均为 0，因此查询 `hub.right` 仍得到同一个点。图中仅为示意，具体数据结构以代码为准。
+
+<ComponentPreview files="coordinate-storage" size="xl" type="illustration" hideCode />
 
 这里的“零尺寸”表示记录的宽为 0、高为 0，因此也常简写为 **0×0**。它只保存 Coordinate 的中心坐标，没有面积或可见内容，边界也退化到中心；这是一条供编译器定位和连线引用的内部几何记录，不是 Scene 图元。这样既能复用 Node 的 id 查询与 anchor 解析机制，又不会让纯引用点进入渲染输出或自动画布范围。
 
@@ -389,9 +389,9 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
 
 ### 矩形的圆角与连接边界
 
-`<Node>` 省略 `shape` 时会选择 `rectangle`。文字测量结果与 `padding` 先组成内容内框，再交给矩形 shape 同时生成可见轮廓和连接几何：
+当显式选择 `rectangle`，或未配置形状且没有继承值时，Node 使用矩形。文字测量结果与 `padding` 先组成内容内框，再交给矩形 shape 同时生成可见轮廓和连接几何：
 
-<ComponentPreview files="rectangle-node-boundary" size="lg" hideCode type="illustration" />
+<ComponentPreview files="rectangle-node-boundary" size="sm" hideCode type="flow" />
 
 矩形不会为了外接内容额外放大半轴，所以边界正好包住「文字 + padding」。同一份 `cornerRadius` 参数既参与矩形绘制，也参与朝目标方向求边界交点；这就是圆角节点的连线会落在圆弧上，而不是落在已被磨掉的尖角上的原因。
 
@@ -424,7 +424,7 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
 
 沿主链看，Node 的内容尺寸先决定多边形要包住什么，再由 shape 参数决定用什么正多边形去包；上下两条输出表示同一套轮廓规则同时服务渲染与自动连接：
 
-<ComponentPreview files="polygon-node-flow" size="lg" hideCode type="illustration" />
+<ComponentPreview files="polygon-node-flow" size="md" hideCode type="flow" />
 
 文字与 `padding` 先形成内容内框；`polygon` 形状实现再根据 `sides` 与 `rotate` 求出能完整外接这个内框的最小外接圆半径。所有顶点仍落在同一个圆上，所以长文本只会把正多边形整体放大，不会把它拉伸成不规则多边形。
 
@@ -459,7 +459,7 @@ Node / Coordinate 的定位引用同样在遍历时解析，因此只看得到�
 
 图中橙色是 JSON 数据，蓝色是运行时能力。两者在 compile 阶段按 shape 名汇合：registry 先合并内置与自定义定义，再校验 params，最后由同一份 definition 生成 Scene 图元与连接几何。
 
-<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="illustration" />
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="flow" />
 
 执行顺序如下：
 

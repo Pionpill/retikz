@@ -1,55 +1,44 @@
-import { Draw, Layout, Node } from '@retikz/react';
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
-/** 自定义形状从 JSON 引用与运行时定义汇合到 Scene 和连接几何的流程 */
-const Demo: FC = () => (
-  <Layout>
-    <Node
-      id="ref"
-      position={[-190, -60]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
-    >
-      形状引用（JSON）
-    </Node>
-    <Node
-      id="definition"
-      position={[-190, 60]}
-      cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
-    >
-      ShapeDefinition
-    </Node>
-    <Node
-      id="compile"
-      position={[0, 0]}
-      cornerRadius={4}
-      style={{ stroke: 'gray', fill: 'lightgray', fillOpacity: 0.16, font: { weight: 'bold' } }}
-    >
-      Registry + compile
-    </Node>
-    <Node
-      id="scene"
-      position={[190, -60]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08 }}
-    >
-      Scene 图元
-    </Node>
-    <Node
-      id="geometry"
-      position={[190, 60]}
-      cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08 }}
-    >
-      边界与 anchors
-    </Node>
+import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
-    <Draw way={['ref', 'compile']} arrow="->" />
-    <Draw way={['definition', 'compile']} arrow="->" style={{ dashPattern: [5, 4], stroke: 'gray' }} />
-    <Draw way={['compile', 'scene']} arrow="->" />
-    <Draw way={['compile', 'geometry']} arrow="->" />
-  </Layout>
+/** 形状引用与运行时定义汇合后的编译输出 */
+const Demo: FC = () => (
+  <PreviewFlowDiagram
+    {...logicFigureGraphProps()}
+    layout={{ direction: 'right' }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
+    <FlowLayout id="custom-shape" kind="linear" direction="right" align="center">
+      <FlowLayout id="inputs" kind="linear" direction="down" align="center">
+        <FlowEntities
+          items={[
+            { id: 'ref', text: '形状引用（JSON）', role: 'resource', kind: 'docs.logic.importantData' },
+            { id: 'definition', text: 'ShapeDefinition', role: 'concept', kind: 'docs.logic.important' },
+          ]}
+        />
+      </FlowLayout>
+      <FlowEntities items={[{ id: 'compile', text: 'Registry + compile', role: 'activity' }]} />
+      <FlowLayout id="outputs" kind="linear" direction="down" align="center">
+        <FlowEntities
+          items={[
+            { id: 'scene', text: 'Scene 图元', role: 'resource', kind: 'docs.logic.importantData' },
+            { id: 'geometry', text: '边界与 anchors', role: 'concept', kind: 'docs.logic.important' },
+          ]}
+        />
+      </FlowLayout>
+    </FlowLayout>
+    <FlowRelations
+      items={[
+        { source: 'ref', target: 'compile' },
+        { source: 'definition', target: 'compile' },
+        { source: 'compile', target: 'scene' },
+        { source: 'compile', target: 'geometry' },
+      ]}
+    />
+  </PreviewFlowDiagram>
 );
 
 export default Demo;

@@ -1,4 +1,4 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import { List, Map } from '@retikz/standard-react';
 import type { FC } from 'react';
 
@@ -24,13 +24,9 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
           content: `[${index}]  ${text}`,
         }))}
       />
-      <Node
-        position={[120, 133]}
-        text={t.queue}
-        style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
-      />
       <List
-        transforms={[{ kind: 'translate', x: 24, y: 154 }]}
+        transforms={[{ kind: 'translate', x: 24, y: 135 }]}
+        label={{ text: t.queue, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
         layout={{ width: 192, height: 36, padding: 0 }}
         style={{ font: { size: 14 } }}
         items={[
@@ -40,92 +36,82 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
           },
         ]}
       />
-      <Scope transforms={[{ kind: 'translate', x: 377, y: 166 }]}>
-        <Node
-          position={[108, -30]}
-          text={t.map}
-          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
-        />
-        <Map
-          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
-          layout={{ height: 32, gap: 2, padding: 0, key: { width: 60 }, value: { width: 152 } }}
-          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
-          entries={[
-            {
-              key: { id: 'map-a-key', content: 'a', style: { fill: 'dodgerblue' } },
-              value: { id: 'map-a', content: '{ layout, state }', style: { fill: 'dodgerblue' } },
-            },
-            {
-              key: { id: 'map-b-key', content: 'b' },
-              value: { id: 'map-b', content: '{ layout, state }' },
-            },
-          ]}
-        />
-      </Scope>
-      <Draw way={['child-0.left', [0, 47], [0, 172], 'queued.left']} arrow="->" style={{ stroke: 'gray' }} />
-      <Node
-        position={[210, 89]}
-        text={t.enqueue}
-        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
-      />
-      <Draw way={['child-1.bottom', [314, 166], 'map-a-key.left']} arrow="->" style={{ stroke: 'gray' }} />
-      <Draw way={['child-2.bottom', [634, 65], [634, 200], 'map-b.right']} arrow="->" style={{ stroke: 'gray' }} />
-      <Node
-        position={[498, 95]}
-        text={t.register}
-        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      <Map
+        transforms={[{ kind: 'translate', x: 440, y: 137 }]}
+        label={{ text: t.map, position: 'bottom', opacity: 0.8, font: { size: 12 } }}
+        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
+        style={{ font: { size: 13 }, textColor: 'currentColor' }}
+        entries={[
+          {
+            key: { id: 'map-a-key', content: 'a', style: { fill: 'dodgerblue' } },
+            value: { id: 'map-a', content: '{ layout, state }', style: { fill: 'dodgerblue' } },
+          },
+          {
+            key: { id: 'map-b-key', content: 'b' },
+            value: { id: 'map-b', content: '{ layout, state }' },
+          },
+        ]}
       />
       <Draw
-        way={['queued.bottom', [120, 238], [344, 238], [344, 166], 'map-a-key.left']}
+        way={[
+          'child-0.bottom',
+          { label: { text: `1. ${t.enqueue}`, side: 'left', textColor: 'gray', font: { size: 12 } } },
+          { verticalTo: 'queued.top' },
+        ]}
         arrow="->"
-        style={{ stroke: 'gray' }}
       />
-      <Node
-        position={[204, 261]}
-        text={t.flush}
-        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      <Draw
+        way={[
+          'child-1.bottom',
+          [314, 95],
+          { label: { text: `2. ${t.register}`, textColor: 'gray', font: { size: 12 } } },
+          { horizontalTo: 'map-a-key.top' },
+          { verticalTo: 'map-a-key.top' },
+        ]}
+        arrow="->"
       />
-      <Node
-        position={[325, 292]}
-        text={t.immediate}
-        style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
+      <Draw way={['child-2.right', [694, 47], '|-', 'map-b.right']} arrow="->" />
+      <Draw
+        way={[
+          'queued.right',
+          { label: { text: `3. ${t.flush}`, textColor: 'gray', font: { size: 12 } } },
+          { horizontalTo: 'map-a-key.left' },
+        ]}
+        arrow="->"
+      />{' '}
+      <Map
+        transforms={[{ kind: 'translate', x: 45, y: 269 }]}
+        label={{ text: t.immediate, opacity: 0.8, font: { size: 12 } }}
+        layout={{ height: 32, padding: 0, key: { width: 90 }, value: { width: 114 } }}
+        style={{ font: { size: 13 }, textColor: 'currentColor' }}
+        entries={[
+          {
+            key: { id: 'query-id-key', content: 'id', style: { fill: 'dodgerblue' } },
+            value: { id: 'query-id', content: "'a'", style: { fill: 'dodgerblue' } },
+          },
+          {
+            key: { id: 'query-anchor-key', content: 'anchor' },
+            value: { id: 'query-anchor', content: "'right'" },
+          },
+        ]}
       />
-      <Scope transforms={[{ kind: 'translate', x: 45, y: 330 }]}>
-        <Node
-          position={[104, -30]}
-          text=""
-          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
-        />
-        <Map
-          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
-          layout={{ height: 32, gap: 2, padding: 0, key: { width: 90 }, value: { width: 114 } }}
-          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
-          entries={[
-            {
-              key: { id: 'query-id-key', content: 'id', style: { fill: 'dodgerblue' } },
-              value: { id: 'query-id', content: "'a'", style: { fill: 'dodgerblue' } },
-            },
-            {
-              key: { id: 'query-anchor-key', content: 'anchor' },
-              value: { id: 'query-anchor', content: "'right'" },
-            },
-          ]}
-        />
-      </Scope>
       <Node
         id="point"
-        position={[538, 347]}
+        position={[585, 285]}
+        cornerRadius={8}
         text="[70, 0]"
-        style={{ fill: 'none', stroke: 'none', font: { size: 16 } }}
+        style={{ fill: 'dodgerblue', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
       />
-      <Draw way={['query-id.right', [310, 330], [310, 347], 'point.left']} arrow="->" style={{ stroke: 'gray' }} />
-      <Node
-        position={[395, 314]}
-        text={t.result}
-        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      <Draw
+        way={[
+          'query-id.right',
+          { label: { text: t.result, textColor: 'gray', font: { size: 12 } } },
+          { horizontalTo: 'point.left' },
+        ]}
+        arrow="->"
       />
       <Node
-        position={[325, 409]}
+        position={[325, 364]}
         text={t.note}
         style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
       />

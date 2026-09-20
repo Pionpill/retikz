@@ -17,13 +17,7 @@ const CoordinateResolutionFlow: FC<CoordinateResolutionFlowProps> = props => {
       layout={{ direction: 'right' }}
       style={{ maxWidth: '100%', height: 'auto' }}
     >
-      <FlowLayout
-        id="coordinate-resolution-flow"
-        kind="grid"
-        columnGap={24}
-        rowGap={30}
-        placements={[['n0', 'n1', 'n2', 'n3']]}
-      >
+      <FlowLayout id="coordinate-resolution-flow" kind="grid" placements={[['n0', 'n1', 'n2', 'n3']]}>
         <FlowEntities items={labels.map((text, index) => ({ id: `n${index}`, text, role: 'activity' }))} />
       </FlowLayout>
       <FlowRelations

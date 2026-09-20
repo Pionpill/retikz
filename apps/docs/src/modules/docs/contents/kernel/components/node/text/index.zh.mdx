@@ -100,7 +100,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 - `text` 接字符串或 IRLine 数组；字符串里的 `'\n'` 是硬换行，数组则让每行拥有独立样式
 - `layout.align` 控制多行块内的水平对齐，`layout.lineHeight` 控制行距；两者都是块级属性
-- `layout.maxTextWidth` 是折行阈值，不是固定段落宽；西文按词、CJK 按字折行，不可断长词会整体溢出
+- `layout.maxTextWidth` 是普通文本的折行阈值，不是固定段落宽；西文按词、CJK 按字折行，不可断长词会整体溢出
 - 每行可覆盖 `fill` / `opacity` / `font`，也可以用 [`<Text>` 子元素](/kernel/components/node/text)表达相同结构
 - 多行内容换到不同 `shape` 后，外接边界继续遵循各形状自己的外接规则
 
@@ -132,7 +132,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 行内混排
 
-下面两段文字仍在同一行；Vanilla API 和 IR 也使用同一 `text` 数据结构。公式接入见 [TeX](/kernel/packages/tex)。
+下面两段文字仍在同一行；Vanilla API 和 IR 也使用同一 `text` 数据结构。只要正文包含 `{ runs }` 或已解析的公式，整个文本块就走混排布局，不按 `maxTextWidth` 自动折行；需要换行时显式拆成多个行数组项。公式接入见 [TeX](/kernel/packages/tex)。
 
 ```tsx
 <Node position={[0, 0]} text={[{ runs: [{ text: 'Status: ' }, { text: 'ready', fill: 'green' }] }]} />
@@ -160,6 +160,8 @@ import { NodeTextColor } from '@retikz/core';
 
 Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。块级对齐、行距与折行宽度分别写在 `Node.layout.align`、`lineHeight` 与 `maxTextWidth`；行级字体写在 Text 的 `font`。
 
+自动折行仅适用于普通文本块；混排与公式不自动折行。固定 `layout.width` 也不会裁切文字，若内容无法装入则编译报错。
+
 ## 相关属性
 
 以下列出正文内容、折行与行级覆盖直接使用的成员；完整字段与类型见 [API 参考](/kernel/components/node/api-reference)。
@@ -177,58 +179,58 @@ Text 只在 Node 中生效，每个 Text 的 children 是字符串或数字。�
   - 文字段：\`{ text, fill?, opacity?, font? }\`
   - 公式段：\`{ tex, displayMode?, fill?, opacity? }\`，需要 \`lowerTex\`
   - \`runs\` 在同一基线上依次排版文字和公式`,
-    },
-    {
-      name: 'children',
-      kind: 'property',
-      type: 'ReactNode',
-      description: 'React 中按 JSX 顺序提供正文；字符串与 `<Text>`可混排，显式`text`存在时不再采用它。',
-    },
-    {
-      name: 'layout.align',
-      kind: 'property',
-      type: "'start' | 'middle' | 'end'",
-      defaultValue: "'middle'",
-      description: '设置多行文本块内部的水平对齐，不影响节点的 position 或 label 附着点。',
-    },
-    {
-      name: 'layout.lineHeight',
-      kind: 'property',
-      type: 'number',
-      defaultValue: 'font.size × 1.2',
-      description: '设置相邻正文行的行高，单位为用户坐标。',
-    },
-    {
-      name: 'layout.maxTextWidth',
-      kind: 'property',
-      type: 'number',
-      description: '设置自动折行阈值；省略时不自动折行。',
-    },
-    {
-      name: 'Text.fill',
-      kind: 'property',
-      type: "TextProps['fill']",
-      description: '覆盖当前行的文字颜色；省略时继承节点文字颜色。',
-    },
-    {
-      name: 'Text.opacity',
-      kind: 'property',
-      type: 'number',
-      description: '当前行透明度，范围 0..1。',
-    },
-    {
-      name: 'Text.font',
-      kind: 'property',
-      type: 'IRFont',
-      description:
-        '`{ family?: string, size?: number, weight?, style? }`；只覆盖当前行，未提供的字段继承节点字体。weight 和 style 的写法与基础字体配置相同。',
-    },
-    {
-      name: 'style.textColor',
-      kind: 'property',
-      type: 'ContextualColor',
-      defaultValue: '`currentColor`',
-      description: '设置正文的继承文字颜色；写 `NodeTextColor.Contrast` 时从可解析的不透明 fill 计算黑白对比色。',
+},
+{
+  name: 'children',
+  kind: 'property',
+  type: 'ReactNode',
+  description: 'React 中按 JSX 顺序提供正文；字符串与 `<Text>`可混排，显式`text`存在时不再采用它。',
+},
+{
+  name: 'layout.align',
+  kind: 'property',
+  type: "'start' | 'middle' | 'end'",
+  defaultValue: "'middle'",
+  description: '设置多行文本块内部的水平对齐，不影响节点的 position 或 label 附着点。',
+},
+{
+  name: 'layout.lineHeight',
+  kind: 'property',
+  type: 'number',
+  defaultValue: 'font.size × 1.2',
+  description: '设置相邻正文行的行高，单位为用户坐标。',
+},
+{
+  name: 'layout.maxTextWidth',
+  kind: 'property',
+  type: 'number',
+    description: '设置普通文本的折行阈值；固定宽度也会限制可用文字宽度。',
+},
+{
+  name: 'Text.fill',
+  kind: 'property',
+  type: "TextProps['fill']",
+  description: '覆盖当前行的文字颜色；省略时继承节点文字颜色。',
+},
+{
+  name: 'Text.opacity',
+  kind: 'property',
+  type: 'number',
+  description: '当前行透明度，范围 0..1。',
+},
+{
+  name: 'Text.font',
+  kind: 'property',
+  type: 'IRFont',
+  description:
+    '`{ family?: string, size?: number, weight?, style? }`；只覆盖当前行，未提供的字段继承节点字体。weight 和 style 的写法与基础字体配置相同。',
+},
+{
+  name: 'style.textColor',
+  kind: 'property',
+  type: 'ContextualColor',
+  defaultValue: '`currentColor`',
+  description: '设置正文的继承文字颜色；写 `NodeTextColor.Contrast` 时从可解析的不透明 fill 计算黑白对比色。',
     },
     ]}
     />

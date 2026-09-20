@@ -1,121 +1,50 @@
-import { Draw, Layout, Node } from '@retikz/react';
+import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
 import type { FC } from 'react';
 
-/** Node polygon 从内容内框收敛为渲染与连接轮廓的局部流程图 */
-const Demo: FC = () => (
-  <Layout>
-    <Node
-      id="inner-box"
-      position={[0, -140]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
-    >
-      text + padding
-    </Node>
-    <Node
-      id="shape-params"
-      position={[-125, -60]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
-    >
-      sides + rotate
-    </Node>
-    <Node
-      id="diamond"
-      position={[-125, 30]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
-    >
-      diamond preset
-    </Node>
-    <Node
-      id="fit"
-      position={[0, -60]}
-      text={['fit', 'circumradius']}
-      cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14, weight: 'bold' } }}
-    />
-    <Node
-      id="rounding"
-      position={[125, 35]}
-      cornerRadius={4}
-      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 14 } }}
-    >
-      cornerRadius
-    </Node>
-    <Node
-      id="contour"
-      position={[0, 35]}
-      cornerRadius={4}
-      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 14 } }}
-    >
-      rounded contour
-    </Node>
-    <Node
-      id="scene-path"
-      position={[-85, 135]}
-      cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
-    >
-      Scene Path
-    </Node>
-    <Node
-      id="boundary-hit"
-      position={[85, 135]}
-      cornerRadius={4}
-      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 14 } }}
-    >
-      boundary hit
-    </Node>
+import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/theme';
+import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
-    <Draw way={['inner-box', 'fit']} arrow="->" style={{ stroke: 'gray' }} />
-    <Draw way={['shape-params', 'fit']} arrow="->" style={{ stroke: 'gray' }} />
-    <Draw
-      way={[
-        'diamond',
-        { label: { text: '4 / 0', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'shape-params',
+/** 多边形的内容外接与轮廓消费流程 */
+const Demo: FC = () => (
+  <PreviewFlowDiagram
+    {...logicFigureGraphProps()}
+    layout={{ direction: 'right' }}
+    style={{ maxWidth: '100%', height: 'auto' }}
+  >
+    <FlowLayout
+      id="polygon"
+      kind="grid"
+      placements={[
+        ['inner-box', null, 'rounding', null],
+        ['shape-params', 'fit', 'contour', 'scene-path'],
+        ['diamond', null, null, 'boundary-hit'],
       ]}
-      arrow="->"
-      style={{ stroke: 'gray', dashPattern: [4, 3] }}
-    />
-    <Draw
-      way={[
-        'fit',
-        { label: { text: 'circumscribe', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'contour',
+    >
+      <FlowEntities
+        items={[
+          { id: 'inner-box', text: 'text + padding', role: 'resource', kind: 'docs.logic.importantData' },
+          { id: 'shape-params', text: 'sides + rotate', role: 'resource', kind: 'docs.logic.importantData' },
+          { id: 'diamond', text: 'diamond preset', role: 'resource', kind: 'docs.logic.importantData' },
+          { id: 'fit', text: 'fit\ncircumradius', role: 'activity' },
+          { id: 'rounding', text: 'cornerRadius', role: 'resource', kind: 'docs.logic.importantData' },
+          { id: 'contour', text: 'rounded contour', role: 'resource' },
+          { id: 'scene-path', text: 'Scene Path', role: 'concept', kind: 'docs.logic.important' },
+          { id: 'boundary-hit', text: 'boundary hit', role: 'concept', kind: 'docs.logic.important' },
+        ]}
+      />
+    </FlowLayout>
+    <FlowRelations
+      items={[
+        { source: 'inner-box', target: 'fit' },
+        { source: 'shape-params', target: 'fit' },
+        { source: 'diamond', target: 'shape-params', label: '4 / 0' },
+        { source: 'fit', target: 'contour', label: 'circumscribe' },
+        { source: 'rounding', target: 'contour', label: 'fillet' },
+        { source: 'contour', target: 'scene-path', label: 'emit' },
+        { source: 'contour', target: 'boundary-hit', label: 'intersect' },
       ]}
-      arrow="->"
-      style={{ stroke: 'gray' }}
     />
-    <Draw
-      way={[
-        'rounding',
-        { label: { text: 'fillet', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'contour',
-      ]}
-      arrow="->"
-      style={{ stroke: 'gray', dashPattern: [4, 3] }}
-    />
-    <Draw
-      way={[
-        'contour',
-        { label: { text: 'emit', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'scene-path',
-      ]}
-      arrow="->"
-      style={{ stroke: 'gray' }}
-    />
-    <Draw
-      way={[
-        'contour',
-        { label: { text: 'intersect', side: 'top', sloped: true, textColor: 'gray', font: { size: 12 } } },
-        'boundary-hit',
-      ]}
-      arrow="->"
-      style={{ stroke: 'gray' }}
-    />
-  </Layout>
+  </PreviewFlowDiagram>
 );
 
 export default Demo;

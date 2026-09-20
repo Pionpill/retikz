@@ -15,12 +15,13 @@ Position places the object, shape defines its visible outline, and text supplies
 
 ## Responsibilities at a glance
 
-| Member             | Responsibility                | When to use                                      |
-| ------------------ | ----------------------------- | ------------------------------------------------ |
-| Node               | Position, text, and shape     | Visible objects and connection endpoints         |
-| Text               | Style a complete text line    | Style individual lines in JSX                    |
-| Coordinate         | Name an invisible position    | Position references and path junctions           |
-| Boundary extension | Choose where connections stop | Connection rules differ from the visible outline |
+| Member             | Responsibility                                          | When to use                                      |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------------ |
+| Node               | Position, text, and shape                               | Visible objects and connection endpoints         |
+| Text               | Style a complete text line                              | Style individual lines in JSX                    |
+| Coordinate         | Name an invisible position                              | Position references and path junctions           |
+| Shape extension    | Define layout, outline, and default connection geometry | Built-in shapes cannot express the target        |
+| Boundary extension | Choose where connections stop                           | Connection rules differ from the visible outline |
 
 ## Choices and boundaries
 

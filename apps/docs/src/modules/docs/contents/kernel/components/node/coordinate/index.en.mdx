@@ -100,8 +100,6 @@ const view = mount(document.getElementById('diagram')!, ir);
 </DocTab>
 </DocTabs>
 
-After integrating it, choose among the five center/point forms accepted by `position`:
-
 `Coordinate.position` accepts five center/point forms: Cartesian `[x, y]` / polar `{ angle, radius, origin? }` / relative `{ direction, of, distance? }` / offset `{ of, offset }` / proportional `{ between, fraction }`. Node additionally supports `{ kind: 'anchor', target, selfAnchor? }`, which depends on its real measured size. A Coordinate may be that form's target, but Coordinate itself has no `selfAnchor` placement.
 
 ## When to use

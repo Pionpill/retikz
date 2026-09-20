@@ -64,7 +64,7 @@ The label has its own text box. The compiler uses its rotated box and `distance`
 
 ## Visual shape vs connection geometry
 
-`shape` owns the rendered contour and shape-specific anchors. `boundary` participates only when resolving automatic path endpoints, standard directional anchors, and numeric-angle anchors. The two geometry paths coincide only when `boundary` is omitted or set to `'shape'`.
+`shape` owns the rendered contour and shape-specific anchors. `boundary` participates only when resolving automatic path endpoints, standard directional anchors, and numeric-angle anchors. An omitted `boundary` inherits `Scope.defaults.node.boundary`, falling back to `'shape'` when no inherited value exists. A final value of `'shape'` uses the visual shape for connection geometry.
 
 All three Q nodes keep the same visible circle and connection direction. The middle uses a rectangular boundary; the right adds margin. Compare the line endpoints while the circle stays unchanged. Dotted outlines are teaching guides.
 
@@ -111,17 +111,21 @@ A regular connection surface first derives its rectangle from `fit`, then applie
 
 ## Named references and registration order
 
-An `id` makes a laid-out object available as a geometry handle for later positioning and connections. Compilation maintains a stack of name maps. Emitting primitives and registering references are separate operations, so a Node without an `id` still renders.
+An `id` makes a laid-out object available as a geometry handle for later positioning and connections. Compilation maintains a stack of name maps. Emitting primitives and registering references are separate operations, so a Node without an `id` still renders, but is not registered in the name map and cannot be accessed by later objects through a named reference.
 
 ### Name maps store layout records
 
-`NamespaceStack` owns `frames`, an array of `Map<string, NamespaceEntry>`. The last item is the current stack top, and `register` writes only to that Map. The diagram expands one Map and its entry for `a`. This node has completed layout: its center is `[40, 0]`, its rectangle is 60 wide and 32 high, and its margin is zero.
+`NamespaceStack` is the compiler's stack for managing named references. It organizes name maps from outer to inner levels. Each level is called a **frame**, using a `Map<string, NamespaceEntry>` to store its `id → layout record` entries.
 
-<ComponentPreview files="namespace-storage" size="xxl" type="illustration" hideCode />
+These frames are stored in the internal `frames` array: the first item is the permanent root frame, and the last item is the current stack top. Initially, only the root frame exists. Entering a separate namespace pushes a new frame onto the end; leaving it pops that frame. `register` writes only to the top Map, while lookup searches from the top outward.
 
-The Map key is the `id`; its value contains `layout` and `state`. `layout` is a resolved `NodeLayout`, containing the rectangle, shape definition, connection boundary, margins, and other layout results such as text. The diagram selects fields needed for references; it is neither the full object nor a memory layout.
+The diagram expands one Map and its entry for `a`. This node has completed layout: its center is `[40, 0]`, its rectangle is 60 wide and 32 high.
 
-When traversal reaches a Node, compilation resolves its position, lays out its text and shape, then projects the layout into global coordinates. Only a named Node registers that result in the current Map with state `resolved`. Coordinate uses the same Map with a zero-width, zero-height geometry record. These maps are compilation runtime state, not data written back into persistent IR.
+<ComponentPreview files="namespace-storage" size="xl" type="illustration" hideCode />
+
+The Map key is the `id`; its value contains `layout` and `state`. `layout` is a resolved `NodeLayout`, containing the rectangle, shape definition, connection boundary, margins, and other layout results such as text. Nested Map components show the object hierarchy: `layout` is an object, and its `rect` field is an object too. `shapeName` holds the shape name. The diagram is illustrative; refer to the code for the exact data structures.
+
+When traversal reaches a Node, compilation completes text and shape layout and positioning, then projects the layout into global coordinates. Only a named Node registers that result in the current Map with state `resolved`. Coordinate uses the same Map with a zero-width, zero-height geometry record. These maps are compilation runtime state, not data written back into persistent IR.
 
 <SourceLinks
   sources={[
@@ -306,9 +310,7 @@ Read left to right: resolve the position from known IDs, register the zero-size 
 
 <ComponentPreview files="coordinate-resolution-flow" size="xs" type="flow" hideCode />
 
-A Coordinate's `position` resolves immediately. If it depends on another id, that id must already be registered in the currently visible namespace; referencing a Node / Coordinate declared later at the same level throws. Once resolved, the compiler projects the result into global coordinates, stores it as a zero-size geometry record containing only the center coordinate, and registers it by `id`.
-
-Node / Coordinate position references also resolve during traversal, so they see only ids registered so far. Paths are queued and resolve their endpoints after the current Scope's children have registered, so a path can target a Coordinate declared later in the same scope. Visibility introduced by `localNamespace` still follows [Scope namespace rules](/kernel/components/scope/mechanism#namespaces-and-id-conflicts).
+The compiler resolves `position`, applies the current Scope transform to obtain global coordinates, and registers the position as a zero-width, zero-height geometry record in the same `NamespaceStack`. The timing and visibility rules from [immediate positioning and deferred paths](#positions-query-immediately-paths-consume-later) also apply.
 
 <SourceLinks
   sources={[
@@ -317,12 +319,6 @@ Node / Coordinate position references also resolve during traversal, so they see
       path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
       startLine: 766,
       endLine: 800,
-    },
-    {
-      label: 'child traversal and deferred path resolution',
-      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
-      startLine: 620,
-      endLine: 650,
     },
     {
       label: 'position reference resolution',
@@ -334,6 +330,10 @@ Node / Coordinate position references also resolve during traversal, so they see
 />
 
 ### Zero-size records and rendered output
+
+For `hub` with no Scope transform, the input position is `[40, 20]`. Its registered rectangle has zero width and height, so querying `hub.right` returns the same point. The diagram is illustrative; refer to the code for the exact data structures.
+
+<ComponentPreview files="coordinate-storage" size="xl" type="illustration" hideCode />
 
 “Zero-size” means that the record has width 0 and height 0, commonly shortened to **0×0**. It stores only the Coordinate's center position, with no area or visible content; its boundary also collapses to the center. This is an internal geometry record used for positioning and path references, not a Scene primitive. That lets it reuse Node id lookup and anchor resolution while keeping pure reference points out of rendered output and automatic canvas bounds.
 
@@ -394,9 +394,9 @@ The default `ellipse` multiplies each half-axis by √2. During compilation, `ci
 
 ### Rectangle corners and connection boundaries
 
-When `<Node>` omits `shape`, it selects `rectangle`. Text measurement and `padding` first form the inner content box, which the rectangle shape uses to produce both the visible outline and connection geometry:
+Node uses a rectangle when `rectangle` is selected explicitly, or when neither an explicit nor an inherited shape is configured. Text measurement and `padding` first form the inner content box, which the rectangle shape uses to produce both the visible outline and connection geometry:
 
-<ComponentPreview files="rectangle-node-boundary" size="lg" hideCode type="illustration" />
+<ComponentPreview files="rectangle-node-boundary" size="sm" hideCode type="flow" />
 
 A rectangle does not enlarge the half-axes when circumscribing the content, so its boundary wraps exactly around “text + padding.” The same `cornerRadius` participates in both drawing the rectangle and finding a boundary point toward a target. That is why a connection to a rounded node lands on the fillet arc rather than on the sharp corner that was rounded away.
 
@@ -429,7 +429,7 @@ The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retain
 
 Along the main path, the Node content determines what the polygon must contain, then the shape parameters determine which regular polygon contains it. The two outputs show the same contour rules serving both rendering and automatic connections:
 
-<ComponentPreview files="polygon-node-flow" size="lg" hideCode type="illustration" />
+<ComponentPreview files="polygon-node-flow" size="md" hideCode type="flow" />
 
 Text and `padding` first form the inner box. The polygon provider then derives the smallest circumradius that fully contains that box for the given `sides` and `rotate`. Every vertex still lies on one circle, so long text enlarges the regular polygon as a whole instead of stretching it into an irregular polygon.
 
@@ -464,7 +464,7 @@ Text and `padding` first form the inner box. The polygon provider then derives t
 
 Orange nodes in the figure are JSON data; blue nodes are runtime capabilities. They meet by shape name during compile: the registry merges built-ins and custom definitions, validates params, then uses one definition to produce Scene primitives and connection geometry.
 
-<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="illustration" />
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="flow" />
 
 The execution order is:
 

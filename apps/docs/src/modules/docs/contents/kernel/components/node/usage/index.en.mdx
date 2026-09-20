@@ -105,16 +105,17 @@ For more shapes, import the Standard extension package from [Standard Shape](/li
 
 ## Size and transforms
 
-`layout.margin` expands the node's layout footprint. A boundary's `gap` changes only connection geometry, leaving the visual shape and layout footprint unchanged.
+Adjust the same q in the panel to compare text spacing, border size, and rotation. The connection is a fixed reference showing how its endpoint follows the geometry.
 
-Size and transforms share one node geometry: padding expands the content box, minimumSize sets a floor, and scale / rotate alter the final border. Margin leaves the node appearance unchanged and pushes automatic endpoints and standard anchors outward. Shape-specific anchors and side-fraction points stay on the visible contour. Adjust the same `q` while the edge provides a border reference.
+| Goal               | Common configuration                                   | Result                                                          |
+| ------------------ | ------------------------------------------------------ | --------------------------------------------------------------- |
+| Space around text  | `layout={{ padding: 12 }}`                             | Add inner spacing around the text                               |
+| Minimum dimensions | `layout={{ minimumSize: { width: 100, height: 48 } }}` | Enforce a size floor; more content can enlarge it               |
+| Outer spacing      | `layout={{ margin: 8 }}`                               | Expand layout and connection bounds without changing appearance |
+| Rectangle corners  | `cornerRadius={8}`                                     | Round the rectangle corners                                     |
+| Scale or rotate    | `scale={1.5}` / `rotate={30}`                          | Transform the node geometry and update attached connections     |
 
-- Inner: `layout={{ padding: N }}` or `layout={{ padding: { default, x, y, left, right, top, bottom } }}`
-- Outer: `layout={{ margin: N }}` or `layout={{ margin: { default, x, y, left, right, top, bottom } }}`
-- `cornerRadius` — corner radius. `rectangle` / `polygon` / `star` / `sector` support rounding (`ellipse` and the like do not) via their params: `shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`, and likewise for `star` / `sector` / `rectangle`. The top-level `cornerRadius` only affects the `rectangle` shape (default or explicit `'rectangle'`), and only merges when params don't already set `cornerRadius` (params wins when both are set)
-- `minimumSize` — floor the bbox without shrinking natural text width
-- `scale` — uniform / per-axis scale; affects bbox, font size, padding, and path attachment
-- `rotate` — rotate around the node center; attached paths follow the rotated border
+`padding` / `margin` can also control individual sides. See [node shapes](/kernel/components/node/shape) for corner parameters and precedence, and [extended usage](/kernel/components/node/extend#shapes-and-connection-surfaces) for margin versus connection surfaces.
 
 <ComponentAlert
   type="tip"
@@ -132,7 +133,19 @@ Size and transforms share one node geometry: padding expands the content box, mi
 
 </Comparison>
 
-`layout.width` sets the unscaled visible border width, excluding margin, and cannot be smaller than the effective minimum width. It is distinct from the wrapping threshold `layout.maxTextWidth`.
+### Fixed width, minimum width, and wrapping
+
+Each column uses one width setting: short text above and the same longer sentence below. Compare whether the borders keep the same width and whether the text wraps.
+
+| Setting                    | Controls                                        | When content changes                                                                     |
+| -------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `layout.width`             | Unscaled visible border width, excluding margin | Keeps the width fixed and reflows plain text into the available space                    |
+| `layout.minimumSize.width` | A lower bound on visible border width           | Expands short text to the minimum; longer text can enlarge the border                    |
+| `layout.maxTextWidth`      | A plain-text wrapping threshold                 | Wraps long text without stretching short text; padding and shape still affect the border |
+
+<ComponentPreview files="node-width-comparison" size="md" />
+
+A fixed width must accommodate the effective minimum size, padding, and shape geometry. If an unbreakable word or mixed content still cannot fit, compilation fails rather than clipping it or shrinking its font. See [text](/kernel/components/node/text#multiple-lines-and-wrapping) for multiline and mixed-run limits.
 
 ## Additional notes
 
@@ -179,7 +192,7 @@ The following are the props most relevant to this page. See the [API reference](
       kind: 'property',
       type: "InputNode['layout']",
       description:
-        'Fields used here:\n\n- `padding` / `margin`: a number or numeric `{ default?, x?, y?, left?, right?, top?, bottom? }`; side overrides axis, then default\n- `minimumSize`: a number or numeric `{ default?, width?, height? }`\n- `width?: number`: unscaled border width, excluding margin, no smaller than the minimum',
+        'Fields used here:\n\n- `padding` / `margin`: a number or numeric `{ default?, x?, y?, left?, right?, top?, bottom? }`; side overrides axis, then default\n- `minimumSize`: a number or numeric `{ default?, width?, height? }`\n- `width?: number`: unscaled border width, excluding margin, no smaller than the minimum\n- `maxTextWidth?: number`: plain-text wrapping threshold, not a fixed border width',
     },
     {
       name: 'scale',
@@ -193,7 +206,7 @@ The following are the props most relevant to this page. See the [API reference](
       name: 'rotate',
       kind: 'property',
       type: 'number',
-      defaultValue: '0',
+      defaultValue: 'Scope.defaults.node.rotate → 0',
       description:
         'Rotate around the node center in degrees; positive values are visually clockwise in screen coordinates.',
     },

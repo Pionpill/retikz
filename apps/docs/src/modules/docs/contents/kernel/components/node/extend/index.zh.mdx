@@ -167,6 +167,8 @@ Node 还支持第六种、依赖自身真实尺寸的锚点对齐。用面板切
 
 `anchor` 省略时，连线朝另一个端点自动贴边；标准命名 anchor（如 `top` / `right`）按 `boundary` 解析。`center` 会直接连到节点中心。形状专属 anchor 仍属于视觉 `shape`，具体名称见对应形状页。
 
+`layout.margin` 会外推自动端点、标准方位和角度锚点，并扩大布局占位；形状专属锚点与边上比例点仍沿视觉轮廓。连接面的 `gap` 只调整连接几何，不增加布局占位，两者都不改变可见形状。
+
 `shape` 有两种写法：无必填参数的形状可用裸字符串；`polygon` / `sector` / `star` 等带参形状必须写成 `{ type, params }`。Core 默认提供 `rectangle` / `ellipse` / `polygon`，并把 `circle` / `diamond` 作为基础 preset；`sector` / `star` 等可选 Node shape 需先通过 `<Layout extensions={{ shapes }}>` 或 `CompileOptions.shapes` 注入。按尺寸来源，它们又分为包住「文字 + padding」的文本容器形状，以及由半径 / 角度决定尺寸的几何形状。Sector 的 `innerRadius === outerRadius` 状态就是开放弧。
 
 每种形状的参数和专属 anchor 见对应页面：

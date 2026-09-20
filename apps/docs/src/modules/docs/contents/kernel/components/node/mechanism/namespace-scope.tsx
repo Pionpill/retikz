@@ -1,4 +1,4 @@
-import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
 import { Map } from '@retikz/standard-react';
 import type { FC } from 'react';
 
@@ -25,104 +25,92 @@ const NamespaceScope: FC<NamespaceScopeProps> = props => {
         text={t.after}
         style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
       />
-      <Scope transforms={[{ kind: 'translate', x: 20, y: 72 }]}>
-        <Node
-          position={[108, -30]}
-          text={t.top}
-          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
-        />
-        <Map
-          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
-          layout={{ height: 32, gap: 2, padding: 0, key: { width: 60 }, value: { width: 152 } }}
-          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
-          entries={[
-            {
-              key: { id: 'inner-a-key', content: 'a', style: { fill: 'dodgerblue' } },
-              value: { id: 'inner-a', content: t.innerLayout, style: { fill: 'dodgerblue' } },
-            },
-            {
-              key: { id: 'inner-c-key', content: 'c' },
-              value: { id: 'inner-c', content: t.localLayout },
-            },
-          ]}
-        />
-      </Scope>
+      <Map
+        id="local-frame"
+        transforms={[{ kind: 'translate', x: 20, y: 56 }]}
+        label={{ text: t.top, opacity: 0.8, font: { size: 12 } }}
+        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 152 } }}
+        style={{ font: { size: 13 }, textColor: 'currentColor' }}
+        entries={[
+          {
+            key: { id: 'inner-a-key', content: 'a', style: { fill: 'dodgerblue' } },
+            value: { id: 'inner-a', content: t.innerLayout, style: { fill: 'dodgerblue' } },
+          },
+          {
+            key: { id: 'inner-c-key', content: 'c' },
+            value: { id: 'inner-c', content: t.localLayout },
+          },
+        ]}
+      />
       <Node
         position={[143, 151]}
         text={t.hit}
         style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
       />
-      <Node
-        position={[166, 179]}
-        text={t.miss}
-        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      <Map
+        transforms={[{ kind: 'translate', x: 20, y: 237 }]}
+        label={{ text: t.root, opacity: 0.8, font: { size: 12 } }}
+        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 206 } }}
+        style={{ font: { size: 13 }, textColor: 'currentColor' }}
+        entries={[
+          {
+            key: { id: 'outer-a-key', content: 'a' },
+            value: { id: 'outer-a', content: t.outerLayout },
+          },
+          {
+            key: { id: 'outer-b-key', content: 'b' },
+            value: { id: 'outer-b', content: t.outerLayout },
+          },
+          {
+            key: { id: 'outer-group-key', content: 'group' },
+            value: { id: 'outer-group', content: 'scope-placeholder' },
+          },
+        ]}
       />
-      <Scope transforms={[{ kind: 'translate', x: 20, y: 253 }]}>
-        <Node
-          position={[135, -30]}
-          text={t.root}
-          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
-        />
-        <Map
-          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
-          layout={{ height: 32, gap: 2, padding: 0, key: { width: 60 }, value: { width: 206 } }}
-          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
-          entries={[
-            {
-              key: { id: 'outer-a-key', content: 'a' },
-              value: { id: 'outer-a', content: t.outerLayout },
-            },
-            {
-              key: { id: 'outer-b-key', content: 'b' },
-              value: { id: 'outer-b', content: t.outerLayout },
-            },
-            {
-              key: { id: 'outer-group-key', content: 'group' },
-              value: { id: 'outer-group', content: 'scope-placeholder' },
-            },
-          ]}
-        />
-      </Scope>
-      <Scope transforms={[{ kind: 'translate', x: 370, y: 253 }]}>
-        <Node
-          position={[135, -30]}
-          text={t.root}
-          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
-        />
-        <Map
-          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
-          layout={{ height: 32, gap: 2, padding: 0, key: { width: 60 }, value: { width: 206 } }}
-          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
-          entries={[
-            {
-              key: { id: 'after-a-key', content: 'a', style: { fill: 'dodgerblue' } },
-              value: { id: 'after-a', content: t.outerLayout, style: { fill: 'dodgerblue' } },
-            },
-            {
-              key: { id: 'after-b-key', content: 'b' },
-              value: { id: 'after-b', content: t.outerLayout },
-            },
-            {
-              key: { id: 'after-group-key', content: 'group' },
-              value: { id: 'after-group', content: 'resolved' },
-            },
-          ]}
-        />
-      </Scope>
-      <Draw way={[[8, 72], [-5, 72], [-5, 287], 'outer-b-key.left']} arrow="->" style={{ stroke: 'gray' }} />
+      <Map
+        transforms={[{ kind: 'translate', x: 370, y: 237 }]}
+        label={{ text: t.root, opacity: 0.8, font: { size: 12 } }}
+        layout={{ height: 32, padding: 0, key: { width: 60 }, value: { width: 206 } }}
+        style={{ font: { size: 13 }, textColor: 'currentColor' }}
+        entries={[
+          {
+            key: { id: 'after-a-key', content: 'a', style: { fill: 'dodgerblue' } },
+            value: { id: 'after-a', content: t.outerLayout, style: { fill: 'dodgerblue' } },
+          },
+          {
+            key: { id: 'after-b-key', content: 'b' },
+            value: { id: 'after-b', content: t.outerLayout },
+          },
+          {
+            key: { id: 'after-group-key', content: 'group' },
+            value: { id: 'after-group', content: 'resolved' },
+          },
+        ]}
+      />
+      <Draw
+        way={[
+          'local-frame.left',
+          { horizontalTo: [-28, 0] },
+          { label: { text: t.miss, side: 'right', textColor: 'gray', font: { size: 12 } } },
+          { verticalTo: 'outer-b-key.left' },
+          { horizontalTo: 'outer-b-key.left' },
+        ]}
+        arrow="->"
+      />
       <Node
         id="after-query"
+        cornerRadius={8}
         position={[505, 80]}
         text={t.result}
-        style={{ fill: 'none', stroke: 'none', font: { size: 14 } }}
+        style={{ fill: 'gray', fillOpacity: 0.14, stroke: 'none', font: { size: 13 } }}
       />
-      <Draw way={['after-query.right', [665, 80], [665, 253], 'after-a.right']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['after-query.right', [665, 80], '|-', 'after-a.right']} arrow="->" />
       <Node
         position={[505, 178]}
         text={t.removed}
         style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
       />
-      <Draw way={['outer-group.right', 'after-group-key.left']} arrow="->" style={{ stroke: 'gray' }} />
+      <Draw way={['outer-group.right', { horizontalTo: 'after-group-key.left' }]} arrow="->" />
       <Node
         position={[325, 383]}
         text={t.note}

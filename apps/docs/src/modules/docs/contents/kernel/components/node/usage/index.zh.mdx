@@ -105,16 +105,17 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 
 ## 尺寸与变换
 
-`layout.margin` 会扩大节点布局占位；连接面的 `gap` 只调整连接几何，不改变节点外观或布局占位。
+用下面的面板调整同一个 q，观察文字周围的留白、边框大小及旋转后的外观。连线作为固定参照，显示端点如何跟随几何变化。
 
-尺寸与变换采用同一套节点几何：padding 撑开内容盒，minimumSize 设置下限，scale / rotate 再改变最终边界；margin 不改节点外观，会外推自动连线端点与标准锚点；形状专属锚点与边上比例点仍沿视觉轮廓。用面板调整同一个 `q`，连接线提供边界参照。
+| 目的         | 常用配置                                               | 结果                                     |
+| ------------ | ------------------------------------------------------ | ---------------------------------------- |
+| 给正文留白   | `layout={{ padding: 12 }}`                             | 在文字四周增加内间距                     |
+| 设置尺寸下限 | `layout={{ minimumSize: { width: 100, height: 48 } }}` | 边框至少达到指定尺寸，内容较多时继续扩大 |
+| 增加外间距   | `layout={{ margin: 8 }}`                               | 外扩布局占位和连接位置，外观不变         |
+| 设置矩形圆角 | `cornerRadius={8}`                                     | 将矩形尖角变成圆角                       |
+| 缩放或旋转   | `scale={1.5}` / `rotate={30}`                          | 改变节点几何，连线随之更新               |
 
-- 内边距：`layout={{ padding: N }}` 或 `layout={{ padding: { default, x, y, left, right, top, bottom } }}`
-- 外边距：`layout={{ margin: N }}` 或 `layout={{ margin: { default, x, y, left, right, top, bottom } }}`
-- `cornerRadius`——圆角半径。`rectangle` / `polygon` / `star` / `sector` 支持圆角（`ellipse` 等不支持），写在形状 params 里：`shape={{ type:'polygon', params:{ sides:6, cornerRadius:8 } }}`、`star` / `sector` / `rectangle` 同理。顶层 `cornerRadius` 只对 `rectangle` 形状生效（默认或显式 `'rectangle'` 都算），且仅在 params 未显式给 `cornerRadius` 时合入；两者并存时 params 优先
-- `minimumSize`——撑开 bbox（不缩水 text 自然宽度）
-- `scale`——均匀 / 分轴缩放，影响 bbox + 字号 + padding + 路径附着点
-- `rotate`——绕节点中心旋转，连线跟随旋转后的边界贴附
+`padding` / `margin` 也可分别控制各边。形状圆角及参数优先级见[节点形状](/kernel/components/node/shape)，margin 与连接面的区别见[扩展用法](/kernel/components/node/extend#形状与连接面)。
 
 <ComponentAlert
   type="tip"
@@ -132,7 +133,19 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 
 </Comparison>
 
-`layout.width` 设置缩放前的可见边框宽度，不包括 margin，且不能小于有效最小宽度。它与折行阈值 `layout.maxTextWidth` 是不同的设置。
+### 固定宽度、最小宽度与折行
+
+下面每列使用一种宽度配置：上排是短文本，下排换成同一段长文本。比较两排边框是否等宽，以及文字是否折行。
+
+| 配置                       | 控制对象                          | 内容变化时                                                 |
+| -------------------------- | --------------------------------- | ---------------------------------------------------------- |
+| `layout.width`             | 缩放前的可见边框宽度，不含 margin | 保持固定宽度，普通文本按可用空间折行                       |
+| `layout.minimumSize.width` | 可见边框宽度下限                  | 短文本撑到下限，长文本可继续扩大边框                       |
+| `layout.maxTextWidth`      | 普通文本的折行阈值                | 长文本折行，短文本不会被撑满；padding 和形状仍参与边框尺寸 |
+
+<ComponentPreview files="node-width-comparison" size="md" />
+
+固定宽度必须容纳有效最小尺寸、padding 和形状几何。不可断长词或混排内容仍装不下时会报错，不会自动裁切或缩小字号。多行与混排限制见[文本](/kernel/components/node/text#多行与折行)。
 
 ## 补充说明
 
@@ -177,7 +190,7 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
       kind: 'property',
       type: "InputNode['layout']",
       description:
-        '本页使用的字段：\n\n- `padding` / `margin`：数字，或 `{ default?, x?, y?, left?, right?, top?, bottom? }` 数值对象；单边优先于轴，再到 default\n- `minimumSize`：数字，或 `{ default?, width?, height? }` 数值对象\n- `width?: number`：缩放前边框宽度，不含 margin，不能小于最小尺寸',
+        '本页使用的字段：\n\n- `padding` / `margin`：数字，或 `{ default?, x?, y?, left?, right?, top?, bottom? }` 数值对象；单边优先于轴，再到 default\n- `minimumSize`：数字，或 `{ default?, width?, height? }` 数值对象\n- `width?: number`：缩放前边框宽度，不含 margin，不能小于最小尺寸\n- `maxTextWidth?: number`：普通文本折行阈值，不是固定边框宽度',
     },
     {
       name: 'scale',
@@ -191,7 +204,7 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
       name: 'rotate',
       kind: 'property',
       type: 'number',
-      defaultValue: '0',
+      defaultValue: 'Scope.defaults.node.rotate → 0',
       description: '以度为单位绕节点中心旋转；正值在屏幕坐标中视觉顺时针。',
     },
     {
