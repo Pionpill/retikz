@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { IRAnimationTrack, IRScene } from '@retikz/core';
-import { cameraTo, fadeIn, spin } from '@retikz/core';
+import { cameraTo, fadeIn } from '@retikz/core';
 import type { AnimationControls } from '@retikz/render/animation';
 import { createRef } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -116,7 +116,24 @@ describe('preset 集成', () => {
   it('<Layout animations={[cameraTo(...)]}> → SVG 输出含镜头 @keyframes', async () => {
     const c = await mount(
       <Layout width={100} height={100} animations={[cameraTo({ from: [0, 0, 100, 100], to: [25, 25, 50, 50] })]}>
-        <Node id="a" position={[0, 0]} animations={[spin()]} style={{ fill: 'red' }} layout={{ minimumSize: 2 }} />
+        <Node
+          id="a"
+          position={[0, 0]}
+          animations={[
+            {
+              property: 'rotate',
+              keyframes: [
+                { at: 0, value: 0 },
+                { at: 1, value: 360 },
+              ],
+              duration: 1000,
+              easing: 'linear',
+              iterations: 'infinite',
+            },
+          ]}
+          style={{ fill: 'red' }}
+          layout={{ minimumSize: 2 }}
+        />
       </Layout>,
     );
     const style = c.querySelector('style');
