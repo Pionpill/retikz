@@ -1104,6 +1104,9 @@ importers:
       '@retikz/core':
         specifier: workspace:^
         version: link:../../kernel/core
+      '@retikz/layout':
+        specifier: workspace:^
+        version: link:../layout
       '@retikz/standard':
         specifier: workspace:*
         version: link:../standard
