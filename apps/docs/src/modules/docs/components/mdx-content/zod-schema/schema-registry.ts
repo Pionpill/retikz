@@ -724,6 +724,8 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/standard/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
+  ListSchema: { schema: StandardIR.ListSchema, label: 'List', url: '/library/standard/list#listschema' },
+  MapSchema: { schema: StandardIR.MapSchema, label: 'Map', url: '/library/standard/map#mapschema' },
   SurfaceSchema: {
     schema: StandardIR.SurfaceSchema,
     label: 'Surface',

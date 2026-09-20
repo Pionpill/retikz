@@ -281,3 +281,20 @@ it('保留具名 union 子类型与共享节点几何名称', async () => {
   expect(layout).toContain('BoxSizeSchema');
   expect(layout).toContain('BoxSpacingSchema');
 });
+
+it('shows required and readonly fields plus forbidden union inputs accurately', () => {
+  const schema = z
+    .strictObject({
+      data: z.array(z.string()).readonly().optional(),
+      items: z.never().optional(),
+    })
+    .required({ data: true });
+  const result = walk(schema);
+  expect(result).toMatchObject({
+    kind: 'object',
+    fields: [
+      { name: 'data', optional: false, type: { kind: 'array', element: { kind: 'primitive', name: 'string' } } },
+      { name: 'items', optional: true, type: { kind: 'primitive', name: 'never' } },
+    ],
+  });
+});

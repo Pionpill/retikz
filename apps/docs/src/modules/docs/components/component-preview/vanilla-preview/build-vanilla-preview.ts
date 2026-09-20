@@ -87,6 +87,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
+import type { IRCell, IRList, IRMap } from '@retikz/standard';
 import {
   AxesDefinition,
   AxesSchema,
@@ -96,6 +97,8 @@ import {
   GridSchema,
   LegendDefinition,
   LegendSchema,
+  ListDefinition,
+  MapDefinition,
   SurfaceDefinition,
   SurfaceSchema,
 } from '@retikz/standard';
@@ -109,6 +112,10 @@ import {
   legend,
   LegendInputEmbedAdapter,
   surface,
+  list,
+  map,
+  ListInputEmbedAdapter,
+  MapInputEmbedAdapter,
   surfaceChild,
   SurfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla';
@@ -243,7 +250,9 @@ type StandardKind =
   | 'axes'
   | 'frame'
   | 'surface'
-  | 'legend';
+  | 'legend'
+  | 'list'
+  | 'map';
 
 type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
@@ -299,7 +308,12 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
   const visit = (child: IRChild): void => {
     if (isComposite(child)) {
       const authoredId = (child as { id?: unknown }).id;
-      if (child.namespace === 'standard' && typeof authoredId === 'string') {
+      if (
+        child.namespace === 'standard' &&
+        child.type !== 'list' &&
+        child.type !== 'map' &&
+        typeof authoredId === 'string'
+      ) {
         const kind = child.type as StandardKind;
         if (
           [
@@ -308,6 +322,8 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
             'frame',
             'surface',
             'legend',
+            'list',
+            'map',
             'circle',
             'ellipse',
             'rectangle',
@@ -455,6 +471,44 @@ const convertStandardChild = (
         ...input,
         ...(title === undefined ? {} : { title: convertPreviewChild(title, state, graphState) }),
         content: normalizedContent,
+      });
+    }
+    case 'list': {
+      const { namespace: _namespace, type: _type, data, items, ...input } = child as IRList;
+      void _namespace;
+      void _type;
+      if (data !== undefined) return list(nextLibraryId('list', state), { ...input, data });
+      return list(nextLibraryId('list', state), {
+        ...input,
+        items: items.map(cell =>
+          typeof cell === 'string'
+            ? cell
+            : {
+                ...cell,
+                content:
+                  typeof cell.content === 'string'
+                    ? cell.content
+                    : convertPreviewChild(cell.content, state, graphState),
+              },
+        ),
+      });
+    }
+    case 'map': {
+      const { namespace: _namespace, type: _type, data, entries, ...input } = child as IRMap;
+      void _namespace;
+      void _type;
+      const convertCell = (cell: string | IRCell) =>
+        typeof cell === 'string'
+          ? cell
+          : {
+              ...cell,
+              content:
+                typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
+            };
+      if (data !== undefined) return map(nextLibraryId('map', state), { ...input, data });
+      return map(nextLibraryId('map', state), {
+        ...input,
+        entries: entries.map(entry => ({ key: convertCell(entry.key), value: convertCell(entry.value) })),
       });
     }
     case 'surface': {
@@ -671,6 +725,8 @@ const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInput
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('map') ? [MapInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
@@ -704,6 +760,8 @@ const standardDefinitionByName = {
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  ListDefinition,
+  MapDefinition,
   SurfaceDefinition,
   LegendDefinition,
 } as const;
@@ -739,6 +797,8 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
       grid: 0,
       axes: 0,
       frame: 0,
+      list: 0,
+      map: 0,
       surface: 0,
       flexLayout: 0,
       gridLayout: 0,
@@ -778,6 +838,8 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
           'frame',
           'surface',
           'legend',
+          'list',
+          'map',
           'circle',
           'ellipse',
           'rectangle',

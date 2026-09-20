@@ -1,6 +1,6 @@
 /** 渲染时的类型表示（中间结构，与 Zod 解耦） */
 export type TypeRepr =
-  | { kind: 'primitive'; name: 'string' | 'number' | 'boolean' }
+  | { kind: 'primitive'; name: 'string' | 'number' | 'boolean' | 'never' }
   | { kind: 'literal'; value: string | number | boolean | null }
   | { kind: 'enum'; values: ReadonlyArray<string | number> }
   | { kind: 'array'; element: TypeRepr; constraints: Array<string> }

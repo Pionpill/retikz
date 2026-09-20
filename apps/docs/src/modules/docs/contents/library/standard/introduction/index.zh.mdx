@@ -13,11 +13,13 @@ Standard 解决的是图形中反复出现的绘制需求：给一张图加参�
 
 | 分组 | 提供什么                                                      | 何时使用                                   |
 | ---- | ------------------------------------------------------------- | ------------------------------------------ |
-| 展现 | Grid、Axes、Frame、Surface、Legend                            | 直接组合网格、坐标轴、框架、内容表面与图例 |
+| 展现 | Grid、Axes、Frame、Surface、Legend、List、Map                 | 直接组合网格、坐标轴、框架、内容表面与图例 |
 | 形状 | Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector | 用几何参数绘制独立路径轮廓                 |
 | 扩展 | 可选节点形状、箭头、裁剪和流带定义                            | 基础绘图能力之外还需要特定绘图规则         |
 
 展现组件可以直接放在 React 的 `Layout` 中。扩展定义则按能力从精确的子入口导入，再装配到当前图的编译选项中；具体装配方式见[能力装载](/library/standard/capability-loading)。
+
+[动画预设](/library/standard/animation)从 `@retikz/standard` 根入口导入，直接生成 Core 动画轨道，交给 Node、Path 或 Scope 的 `animations` 使用，无需注册或装载定义。
 
 ## 与 Kernel、Layout 的关系
 
@@ -38,3 +40,5 @@ Standard 的 `Grid` **画出网格线**；Layout 的 `GridLayout` **把子图形
 ## 接下来
 
 先按[快速开始](/library/standard/get-start)画出一个网格，再选择侧栏中的展现组件或扩展能力。版本变化见[更新日志](/library/standard/changelog)。
+
+使用 [List](/library/standard/list) 绘制一维槽位，用 [Map](/library/standard/map) 展示键值或字段记录；整体与单元格都支持样式覆盖。

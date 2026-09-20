@@ -13,10 +13,17 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 动画预设分层', en: 'Unreleased · Animation preset ownership' },
+          content: {
+            zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/standard 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Standard 双语文档和 API 参考同步按归属拆分。',
+            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/standard root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Standard guides and API references follow their owners.',
+          },
+        },
+        {
           label: { zh: '未发布 · List / Map', en: 'Unreleased · List / Map' },
           content: {
-            zh: '新增一维 List 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ListItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
-            en: 'Adds one-dimensional List and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ListItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
+            zh: 'List / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。List / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 List 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ListItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
+            en: 'List / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. List / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional List and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ListItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
           },
         },
         {

@@ -43,6 +43,7 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   if (schema instanceof z.ZodString) return { kind: 'primitive', name: 'string' };
   if (schema instanceof z.ZodNumber) return { kind: 'primitive', name: 'number' };
   if (schema instanceof z.ZodBoolean) return { kind: 'primitive', name: 'boolean' };
+  if (schema instanceof z.ZodNever) return { kind: 'primitive', name: 'never' };
   if (schema instanceof z.ZodNull) return { kind: 'literal', value: null };
   if (schema instanceof z.ZodLiteral) {
     const [value] = schema.values;
@@ -82,6 +83,11 @@ function walkTypeImpl(schema: AnySchema, skipRegistry: boolean, ctx: WalkCtx = R
   }
   if (schema instanceof z.ZodLazy) {
     return walkTypeImpl(schema.unwrap(), false, next);
+  }
+  if (schema instanceof z.ZodReadonly) return walkTypeImpl(schema.unwrap(), false, next);
+  if (schema instanceof z.ZodNonOptional) {
+    const inner = schema.unwrap();
+    return walkTypeImpl(inner instanceof z.ZodOptional ? inner.unwrap() : inner, false, next);
   }
   if (schema instanceof z.ZodPipe) {
     if (schema.out instanceof z.ZodTransform) return walkTypeImpl(schema.in, false, next);

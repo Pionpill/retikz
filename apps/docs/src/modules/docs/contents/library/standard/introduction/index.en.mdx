@@ -13,11 +13,13 @@ Extensions only add capabilities horizontally through Kernel's existing extensio
 
 | Group        | Provides                                                      | Use it for                                                             |
 | ------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Presentation | Grid, Axes, Frame, Surface, Legend                            | Composing reference grids, axes, frames, content surfaces, and legends |
+| Presentation | Grid, Axes, Frame, Surface, Legend, List, Map                 | Composing reference grids, axes, frames, content surfaces, and legends |
 | Shapes       | Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector | Draw standalone path contours from geometric parameters                |
 | Extensions   | Optional shape, arrow, clip, and ribbon definitions           | Adding specific drawing rules beyond the basic primitives              |
 
 Presentation components can be placed directly inside a React `Layout`. Import optional definitions from their exact capability entry and supply them to the current diagram's compile options. See [capability loading](/library/standard/capability-loading) for that wiring.
+
+Import [animation presets](/library/standard/animation) from the `@retikz/standard` root. They generate Core tracks for the `animations` array on Node, Path, or Scope, without registration or definition loading.
 
 ## Kernel and Layout
 
@@ -38,3 +40,5 @@ Shape composites preserve high-level geometry intent across JSON, React and Vani
 ## Next steps
 
 Draw a grid with the [quick start](/library/standard/get-start), then choose a presentation component or extension in the sidebar. Read the [changelog](/library/standard/changelog) for version changes.
+
+Use [List](/library/standard/list) for one-dimensional cells and [Map](/library/standard/map) for key/value or field records. Both support overall and per-cell styling.
