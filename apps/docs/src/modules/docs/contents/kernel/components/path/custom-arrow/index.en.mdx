@@ -57,6 +57,27 @@ const bracket = defineArrow({
 
 `emit` uses `baseSize` local coordinates. `backX` promises the base axial envelope back, `lineContactX` defines where the main stroke joins the marker, and `tipX` describes the visual tip; they must satisfy `backX <= lineContactX <= tipX`. Core lets the path overlap the contact baseline by half of its own stroke width before the marker paints over the joint. Endpoint overlap combines final `length × scale` with hollow `lineWidth` / `outerInset`, so ratio `1` aligns the final visual back with the logical endpoint.
 
+## Arrow connection
+
+An arrow definition supplies three distinct positions: `backX` is its back edge, `lineContactX` is where the main stroke meets it, and `tipX` is its tip. These determine placement and stroke shortening; one generic arrow length cannot replace them.
+
+<ComponentPreview files="arrow-contact" size="lg" hideCode type="illustration" />
+
+`overlap: 1` aligns the final visual back edge, including scaling and hollow outlines. Overlap moves the endpoint decoration and its contact without changing the node anchor or logical path sampling. An interior mark follows the local tangent without shortening the path as an endpoint would.
+
+Without an explicit arrow color, the marker uses `contextStroke`, inheriting its host path's stroke at rendering time. Resource paints such as gradients require an explicit solid arrow color. Built-in and injected arrows share registration and resolution.
+
+<SourceLinks
+  sources={[
+    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/arrow/types.ts', startLine: 4 },
+    {
+      label: 'Inherited color and marker materialization',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 39,
+    },
+  ]}
+/>
+
 ## Register and use
 
 React injects definitions through `<Layout extensions={{ arrows }}>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.

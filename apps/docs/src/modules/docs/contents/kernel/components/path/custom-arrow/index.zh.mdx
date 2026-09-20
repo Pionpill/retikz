@@ -57,6 +57,23 @@ const bracket = defineArrow({
 
 `emit` 使用 `baseSize` 局部坐标。`backX` 承诺箭头轴向包络的基础后缘，`lineContactX` 定义主描边接入 marker 的基准，`tipX` 描述视觉尖端；三者必须满足 `backX <= lineContactX <= tipX`。Core 会让路径越过接合基准半个自身描边宽度，再由 marker 覆盖接头；端点重叠则结合最终 `length × scale` 和空心 `lineWidth` / `outerInset`，让比例 `1` 的最终视觉后缘对齐逻辑端点。
 
+## 箭头接合
+
+箭头 definition 提供三个不同位置：`backX` 是轮廓后缘，`lineContactX` 是主描边的接合位置，`tipX` 是尖端。它们决定箭头放在哪里，以及主描边需要缩短多少；不能用同一个“箭头长度”替代。
+
+<ComponentPreview files="arrow-contact" size="lg" hideCode type="illustration" />
+
+`overlap: 1` 对齐的是最终视觉后缘，尺寸缩放与空心轮廓都会参与计算。改变重叠比例只移动端点装饰及其接合处，不重写节点锚点或路径逻辑采样。中间的 mark 只按局部切线定向，不作为端点缩短路径。
+
+未显式指定箭头颜色时，marker 使用 `contextStroke`，即在绘制时继承所属路径的描边色；带渐变等资源型描边时，需要给箭头显式纯色。内置与注入的箭头共用同一注册与解析路径。
+
+<SourceLinks
+  sources={[
+    { label: '箭头几何契约', path: 'packages/kernel/core/src/contract/arrow/types.ts', startLine: 4 },
+    { label: '颜色继承与 marker 物化', path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts', startLine: 39 },
+  ]}
+/>
+
 ## 注入与使用
 
 React 通过 `<Layout extensions={{ arrows }}>` 注入；直接调用 core 时使用 `CompileOptions.arrows`。随后在端点或沿线 mark 中引用注册名。
