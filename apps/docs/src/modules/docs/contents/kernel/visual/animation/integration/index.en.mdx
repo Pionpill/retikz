@@ -1,0 +1,97 @@
+---
+title: Component integration
+description: The same track targets different output depending on its component. Scope animation is not a descendant default.
+---
+
+| Component | Entry               |
+| --------- | ------------------- |
+| Scope     | animations          |
+| Node      | animations          |
+| Path      | animations          |
+| Layout    | animations: viewBox |
+
+Core provides `fadeIn`, `scaleIn`, `slideIn`, and `drawOn`, plus the `colorShift`, `cameraTo`, `loop`, and `stagger` utilities. Import `grow`, `growUp`, `pulse`, `spin`, `flash`, `blink`, and `wiggle` from `@retikz/standard`; see [Standard animation presets](/library/standard/animation). Both layers return the same track data without additional registration.
+
+## Scope
+
+`Scope.animations` targets the entire output group. Nodes, paths, and text move together while their static layout relationships remain unchanged. These tracks are not descendant defaults: `defaults.node` and `defaults.path` do not contain `animations`.
+
+| Goal              | Suitable animations                      | Use case                                                  |
+| ----------------- | ---------------------------------------- | --------------------------------------------------------- |
+| Group entrance    | `fadeIn`, `slideIn`, `scaleIn`, `grow`   | Reveal nodes and their connecting paths together          |
+| Group emphasis    | `pulse`, `flash`, `wiggle`               | Emphasize a region while keeping its internal arrangement |
+| Continuous motion | `spin` or translateX / translateY tracks | Rotate or translate the whole group                       |
+| Group visibility  | An opacity track                         | Change visibility for the whole group                     |
+
+The example applies vertical translation to one Scope. Observe the distances between the node, triangular path, and text: the composition moves without changing its internal layout.
+
+<ComponentPreview files="animation-integration" size="sm" controls={{ animation: true }} />
+
+Scope is suited to transforms and opacity. Applying `colorShift` or `drawOn` to Scope does not automatically animate every descendant: color, stroke width, and stroke reveal belong on actual geometry. Canvas does not inherit group color tracks into children. To introduce elements individually, attach tracks to each Node / Path and stagger them with delay or `stagger`.
+
+## Node
+
+`Node.animations` supports individual entrances, emphasis, and visual movement. Choose tracks according to whether the target is the whole node or its primary shape's style.
+
+| Goal                | Suitable animations                    | Conditions                                                            |
+| ------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| Node entrance       | `fadeIn`, `slideIn`, `scaleIn`, `grow` | Combine distinct properties, such as fading and sliding               |
+| Node emphasis       | `pulse`, `flash`, `blink`, `wiggle`    | Highlight a node through scale, opacity, or rotation                  |
+| Directional growth  | `growUp`, scaleX / scaleY tracks       | Scale around an origin without recalculating layout                   |
+| Shape style changes | `colorShift`, strokeWidth tracks       | Use nodes emitted as direct geometry; distinguish text-bearing groups |
+
+The left node fades in while sliding from the left. The right repeatedly pulses in scale. Both contain text and attached labels, so those outputs animate with the shape. The entrance retains its final state; use the preview playback controls to replay it.
+
+<ComponentPreview files="animation-node" size="md" controls={{ animation: true }} />
+
+A Node with body text or effective static rotation groups its shape, text, and attached labels, then animates that group. A shape-only Node animates its geometry; separate labels do not automatically follow. Using the same component does not guarantee the same animation boundary.
+
+For fill or stroke animation on a text-bearing node, do not treat a group track as a shape-only channel: Canvas does not inherit animated group colors into descendants. A separate shape-only node can own the style animation while text remains an independent primitive. Visual movement also does not recompute endpoints of external connections. Use Scope to move an entire composition together.
+
+## Path
+
+`Path.animations` supports stroke reveal, visibility, and visual transforms. Revealing a path changes visible stroke progress without generating new path geometry.
+
+| Goal                      | Suitable animations                                          | Conditions                                                     |
+| ------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------- |
+| Reveal along the path     | `drawOn` / a pathDraw track                                  | Requires an actual stroke; does not grow a filled region       |
+| Path visibility           | `fadeIn`, `flash`, an opacity track                          | Applies to the animated path body                              |
+| Path entrance or emphasis | `slideIn`, `scaleIn`, `spin`, `wiggle`                       | Check whether labels and marks belong to the same output group |
+| Stroke style changes      | `colorShift({ channel: 'stroke', ... })`, strokeWidth tracks | Suitable for stroked paths emitted directly as geometry        |
+
+The left uses `drawOn` to reveal a polyline; the right uses `wiggle` on an arrowed path. Neither has an additional static overall transform, so labels remain independent: the left label does not reveal with the stroke, and the right label does not rotate with the path.
+
+<ComponentPreview files="animation-path" size="md" controls={{ animation: true }} />
+
+Path normally attaches tracks to its primary primitive. An effective static overall rotate / scale adds an outer group containing the body, labels, and marks, and tracks attach to that group instead. Do not organize animation around incidental grouping. Use an explicitly animated Scope when a path, labels, and other nodes must move together.
+
+`drawOn` reveals strokes; it does not move an endpoint arrow along the path or progressively reveal labels and marks. Do not use it to grow an unstroked fill or recursively reveal a group's descendants. Draw does not expose `animations`; use Path for animated paths.
+
+## Layout
+
+Layout `animations` accepts only viewBox camera tracks, which move or scale the viewing window rather than individual elements. Element-level viewBox tracks and other properties at the root warn and are dropped. See [orchestration and camera](/kernel/visual/animation/extended-usage#orchestration-and-camera) for examples.
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/animation/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description:
+        'Tracks contain property, keyframes (at and value), and duration; optional fields include delay, easing, iterations, direction, fill, trigger, and origin.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/animation/usage' },
+    { title: 'Implementation', url: '/kernel/visual/animation/mechanism' },
+  ]}
+/>

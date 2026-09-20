@@ -1,0 +1,71 @@
+import type { IRAnimationTrack } from '@retikz/core';
+import { createInputScene, Layout, Node } from '@retikz/react';
+import type { AnimationPropertyDefinition } from '@retikz/render/animation';
+import { normalizeScene } from '@retikz/vanilla';
+import type { FC } from 'react';
+
+import type { PreviewSourceConfig } from '@/modules/docs/preview';
+import { usePreviewControls } from '@/modules/docs/preview';
+
+import { customPropertyControls, previewControlContract } from './custom-property.controls';
+
+export const previewControls = customPropertyControls;
+
+// 自定义属性通道 'blur'：interpolate 线性插值、applyCanvas 写 ctx.filter。仅 Canvas 生效，故 renderer="canvas"。
+const blur: AnimationPropertyDefinition = {
+  interpolate: (from, to, t) => (from as number) + ((to as number) - (from as number)) * t,
+  applyCanvas: (ctx, _prim, value) => {
+    ctx.filter = `blur(${value as number}px)`;
+  },
+};
+
+/** 创建从指定模糊值过渡到清晰状态的轨道 */
+const createBlurIn = (from: number, duration: number): IRAnimationTrack => ({
+  property: 'blur',
+  keyframes: [
+    { at: 0, value: from },
+    { at: 1, value: 0 },
+  ],
+  duration,
+});
+
+export const previewSource = {
+  deriveIR: false,
+} satisfies PreviewSourceConfig;
+
+/** 源码面板使用 canonical 状态生成 IR 与 Vanilla，避免执行带 hook 的交互组件 */
+const previewInput = createInputScene(
+  <Node
+    id="a"
+    position={[0, 0]}
+    animations={[
+      createBlurIn(previewControlContract.canonicalValues.blur, previewControlContract.canonicalValues.duration),
+    ]}
+    style={{ fill: '#3b82f6' }}
+  >
+    blur
+  </Node>,
+);
+
+export const previewIR = normalizeScene(previewInput.scene, { adapters: previewInput.adapters }).ir;
+
+const Demo: FC = () => {
+  const values = usePreviewControls(customPropertyControls);
+  const blurIn = createBlurIn(values.blur, values.duration);
+  const replayKey = `${values.blur}-${values.duration}`;
+
+  return (
+    <Layout
+      viewBox={{ x: -80, y: -50, width: 160, height: 100 }}
+      key={replayKey}
+      renderer="canvas"
+      animationProperties={{ blur }}
+    >
+      <Node id="a" position={[0, 0]} animations={[blurIn]} style={{ fill: '#3b82f6' }}>
+        blur
+      </Node>
+    </Layout>
+  );
+};
+
+export default Demo;
