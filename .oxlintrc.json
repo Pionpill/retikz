@@ -27,6 +27,7 @@
     {
       "files": ["**/*.{js,jsx,ts,tsx}"],
       "rules": {
+        "import/newline-after-import": "error",
         "eslint/constructor-super": "error",
         "eslint/for-direction": "error",
         "eslint/getter-return": "error",
