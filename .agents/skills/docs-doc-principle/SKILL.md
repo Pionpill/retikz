@@ -30,21 +30,21 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 
 命中条件即在修改对应内容前读取；同一任务已读且未变化的文件不重复读。reference 中的相对链接以其所在目录解析，命令默认从仓库根运行。
 
-| 当前任务涉及                            | 必读 reference                                                      |
-| --------------------------------------- | ------------------------------------------------------------------- |
-| 新建、移动页面或调整侧栏                | [导航与路由](references/navigation.md)                              |
-| 文档站文件归属、目录或导入变化          | [代码结构](references/code-structure.md)                            |
-| ComponentPreview、源码视图、多文件 demo | [预览契约](references/component-preview.md)                         |
-| controls、presets、交互试验场           | [Controls](references/controls.md)                                  |
-| 调整 demo 高度、面板宽度或裁切          | [尺寸测量](references/preview-sizing.md)                            |
-| 接入方式、安装、宿主切换                | [DocTabs / DocSteps](references/doc-tabs-steps.md)                  |
-| 章节涉及可集中回查的公开成员            | [相关属性](references/component-props.md)                           |
-| 文中 API、公开常量或 SourceLinks        | [文中 API](references/inline-api.md)                                |
-| 章节索引或延伸阅读                      | [LinkedSections](references/linked-sections.md)                     |
-| 功能 demo 的辅助线、坐标或比较参照      | [Demo 视觉语义](references/demo-visual-language.md)                 |
-| 叙述性结构、关系或流程图                | [插图契约](references/figure-contract.md)                           |
-| 解释实现流程、依赖、映射或状态演进      | 插图契约 + [逻辑图](references/figure-logic.md)                     |
-| Standard composite                      | [Standard 专项](../docs-doc-usage/references/standard-composite.md) |
+| 当前任务涉及                                 | 必读 reference                                                      |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| 新建、移动页面或调整侧栏                     | [导航与路由](references/navigation.md)                              |
+| 文档站文件归属、目录或导入变化               | [代码结构](references/code-structure.md)                            |
+| ComponentPreview、源码视图、多文件 demo      | [预览契约](references/component-preview.md)                         |
+| controls、presets、交互试验场                | [Controls](references/controls.md)                                  |
+| 调整 demo 高度、面板宽度或裁切               | [尺寸测量](references/preview-sizing.md)                            |
+| 接入方式、安装、宿主切换                     | [DocTabs / DocSteps](references/doc-tabs-steps.md)                  |
+| 章节涉及可集中回查的公开成员                 | [相关属性](references/component-props.md)                           |
+| 文中 API、公开常量或 SourceLinks             | [文中 API](references/inline-api.md)                                |
+| 章节索引或延伸阅读                           | [LinkedSections](references/linked-sections.md)                     |
+| 功能 demo 的辅助线、坐标或比较参照           | [Demo 视觉语义](references/demo-visual-language.md)                 |
+| 叙述性结构、关系或流程图                     | [插图契约](references/figure-contract.md)                           |
+| 解释实现流程、依赖、数据结构与读写、状态演进 | 插图契约 + [逻辑图](references/figure-logic.md)                     |
+| Standard composite                           | [Standard 专项](../docs-doc-usage/references/standard-composite.md) |
 
 ## 共性约束
 
