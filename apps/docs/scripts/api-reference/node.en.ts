@@ -77,14 +77,14 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '创建作者侧节点输入，支持 id 简写与完整配置':
     'Create node authoring input with an ID shorthand or a complete configuration',
   '连接面命名 anchor 的名字': 'Name of a boundary anchor',
-  '包含标准 anchor 名，也允许 boundary 自定义额外名字':
-    'Includes standard anchor names and additional names defined by a boundary',
+  '类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析':
+    'The type accepts strings; Node reference resolution passes only non-center standard directions to the boundary. The visual shape resolves the center and shape-specific names',
   '不支持；调用方回退或报告不支持该 anchor':
     'Unsupported; the caller falls back or reports that the anchor is unsupported',
   '直接使用视觉 rect': 'Use the visual rect directly',
   'Boundary 定义的擦除形态：registry 存这个': 'Erased Boundary definition stored by the registry',
-  '可选的命名 anchor 支持，用于标准连接点或自定义连接点':
-    'Optional named-anchor support for standard or custom connection points',
+  '可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调':
+    'Optional standard directional anchors; Node references to the center or shape-specific names do not call this callback',
   '从中心指向 toward 的射线与连接面的交点':
     'Intersection between the boundary and a ray from the center toward the target',
   '注册表 key，由 IR `boundary` 引用': 'Registry key referenced by IR `boundary`',
