@@ -1,0 +1,89 @@
+---
+title: 实现原理
+description: 从当前图元与已有背景理解混合颜色、透明度合成、绘制顺序与组隔离。
+---
+
+[基础用法](/kernel/visual/blend/usage)展示模式效果。本页解释背景从哪里来，以及为什么更换绘制顺序会改变画面。
+
+## 混合的背景不是指定的另一个节点
+
+混合发生在实际绘制时：
+
+- **前景**是当前准备绘制的图元。
+- **背景**是当前位置在本次绘制前已经积累的结果。
+- **混合函数**根据前景色与背景色计算混合颜色，再结合透明度合成到目标。
+
+blendMode 不建立节点间引用。背景可能由多个先前图元组成，也可能受 SVG 宿主背景影响。声明顺序与 zIndex 影响绘制先后，空间重叠本身不能决定谁是背景。
+
+下图固定 A 为 normal 的橙色矩形，B 为 multiply 的蓝色矩形。左侧先画 A，中央再画 B；右侧改为先画 B，再按 normal 画 A。两者位置及各自模式不变。
+
+<ComponentPreview files="blend-order" size="md" hideCode type="illustration" />
+
+中央重叠区由 B 与已有 A 混合；右侧 A 最后以 normal 覆盖该区域。multiply 的颜色公式虽然具有交换性，这两次绘制却不是交换公式参数：最后执行的模式已经不同。
+
+<SourceLinks
+  sources={[
+    { label: 'Canvas 绘制顺序与逐图元混合', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+    { label: 'Scene 层级与 zIndex', path: 'packages/kernel/core/src/compile/orchestration/traversal.ts' },
+  ]}
+/>
+
+## 混合颜色与透明度是两个步骤
+
+先考虑不透明背景。背景通道 b、前景通道 s 都归一化到 0 到 1。multiply 的结果是 $b \times s$，screen 则是 $1 - (1 - b) \times (1 - s)$，所以前者通常变暗，后者通常变亮。
+
+若 b = 0.8、s = 0.4，multiply 得到 0.32。前景只有 50% 不透明度时，最终通道不是 0.32，而是 $0.5 \times 0.32 + 0.5 \times 0.8 = 0.56$。这组数字解释单个通道，不是图中命名色的数值。
+
+下面把两步分开：已有背景既参与混合颜色计算，也参与透明度合成；最终结果成为下一图元的背景。
+
+<ComponentPreview files="blend-flow" size="md" hideCode type="flow" />
+
+上述简式仅适用于不透明背景。透明背景还需考虑两者的覆盖与 alpha，不能直接把 RGB 相乘当作最终像素。Retikz 把模式交给 SVG 或 Canvas 原生合成，没有在 Core 中维护逐像素混合器。
+
+<SourceLinks
+  sources={[
+    { label: 'SVG mix-blend-mode 映射', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
+    { label: 'Canvas globalCompositeOperation 映射', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## Scope 默认样式分别作用于后代图元
+
+默认样式决定每个后代的配置；隔离组需要独立的合成背景，让内部图元先彼此混合，再把整组结果放回外部背景。
+
+下图左侧是当前逐图元路径；右侧表示隔离组所需的额外中间结果，只用于说明区别，**不是当前 blendMode 提供的能力**。
+
+<ComponentPreview files="blend-boundary" size="md" hideCode type="flow" />
+
+主几何携带 blendMode；文字、标签、引脚独立输出，不会自动成为一个统一混合图层。Scope 默认样式不创建离屏缓冲区，也不建立隔离边界。“所有子节点设置同一模式”不等于“整个组只混合一次”。
+
+<SourceLinks
+  sources={[
+    { label: '主几何的 blendMode 输出', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: '路径几何样式输出', path: 'packages/kernel/core/src/compile/path/stroke/output.ts' },
+  ]}
+/>
+
+## 后端在图元绘制范围内应用混合状态
+
+SVG 将模式写为几何元素的 `mix-blend-mode` 样式，省略或 normal 不增加该样式。实际背景由浏览器 SVG/CSS 合成环境决定，透明 SVG 与宿主背景需要一起考虑。
+
+Canvas 先 save，再设置 `globalCompositeOperation`，绘制后 restore。它恢复进入作用域前的状态，避免模式泄漏到后续图元；省略或 normal 直接走普通绘制路径。
+
+比较两端时需要保持背景、颜色、透明度与顺序一致。相同模式名称不保证逐像素相同，透明画布、宿主背景、滤镜与抗锯齿仍会影响结果。
+
+<SourceLinks
+  sources={[
+    { label: 'SVG 样式合并', path: 'packages/kernel/render/src/svg/builders/prim.ts' },
+    { label: 'Canvas withBlend 的 save / restore', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/blend/usage' },
+    { title: '组件对接', url: '/kernel/visual/blend/integration' },
+  ]}
+/>

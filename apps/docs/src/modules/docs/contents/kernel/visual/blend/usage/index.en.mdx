@@ -1,0 +1,131 @@
+---
+title: Basic usage
+description: Blend modes control how the current element combines with content already drawn beneath it. Color, opacity, and drawing order all affect the result.
+---
+
+## Using this topic
+
+All four forms render the same result. Vanilla requires `<div id="diagram"></div>` in the page; call `view.dispose()` before removing the host.
+
+<ComponentPreview files="blend-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node position={[25, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'dodgerblue' }} />
+    <Node position={[0, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'darkorange', blendMode: 'multiply' }} />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [25, 0], layout: { minimumSize: 80 }, style: { fill: 'dodgerblue' } },
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: 'darkorange', blendMode: 'multiply' },
+    },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node({ position: [25, 0], layout: { minimumSize: 80 }, style: { fill: 'dodgerblue' } }),
+    node({ position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'darkorange', blendMode: 'multiply' } }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [25, 0], layout: { minimumSize: 80 }, style: { fill: 'dodgerblue' } },
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: 'darkorange', blendMode: 'multiply' },
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Choose a mode
+
+Multiply commonly darkens overlapping colors; screen combines lighter colors. The demo places multiply on the left and screen on the right, with both overlap regions visible for comparison.
+
+<ComponentPreview files="blend-modes" size="sm" />
+
+`zIndex` and declaration order determine what is already beneath an element. White, black, and transparent backgrounds can produce different results.
+
+## Parameter playground
+
+Change the mode and inspect the overlap. Each element is composited separately; the setting does not create an isolated group layer.
+
+<ComponentPreview files="blend-playground" size="md" controlPanelDefaultSize={50} />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/blend/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.blendMode',
+      kind: 'property',
+      type: 'BlendModeValue',
+      description: 'This page uses normal source-over, multiply, and screen; see the API reference for all modes.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Component integration', url: '/kernel/visual/blend/integration' },
+    { title: 'API reference', url: '/kernel/visual/blend/api-reference' },
+  ]}
+/>

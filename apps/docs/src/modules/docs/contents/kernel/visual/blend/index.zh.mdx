@@ -1,0 +1,44 @@
+---
+title: 混合
+description: 混合模式控制重叠图元如何叠色。选择模式时同时考虑背景、透明度和绘制顺序；组件默认值不会创建隔离图层。
+---
+
+混合适合表现区域重叠或叠色关系，例如让蓝色节点与橙色路径交叠处产生不同颜色。图元提供前景颜色，已经绘制的内容提供背景，混合模式决定两者如何组合。
+
+## 整体认识
+
+下面左侧节点与路径继承 `multiply`，重叠区域出现叠色；右侧节点覆盖为 `normal`，与蓝色背景按普通透明度合成。比较重叠部分，而不是只看图元未重叠处的颜色。
+
+<ComponentPreview files="/kernel/visual/blend/integration/blend-integration" size="sm" />
+
+Scope 在这里共享 Node 和 Path 的默认配置，不建立隔离图层。每个主几何依次与已有背景合成，因此透明度、背景颜色和绘制顺序都会影响结果。
+
+## 职责一览
+
+| 章节     | 职责                                      | 何时阅读                     |
+| -------- | ----------------------------------------- | ---------------------------- |
+| 基础用法 | 比较普通合成、正片叠底与滤色              | 选择重叠区域的颜色效果       |
+| 组件对接 | 说明 Node、Path 与 Scope 默认值的作用范围 | 在多个图元之间共享或覆盖模式 |
+| 实现原理 | 解释绘制顺序与后端合成                    | 排查颜色与预期不符的原因     |
+| API 参考 | 查询模式名称和相关公开类型                | 精确设置混合模式             |
+
+## 选择与边界
+
+普通覆盖使用 `normal`；需要重叠处变暗时尝试 `multiply`，需要变亮时尝试 `screen`。先在实际背景上比较，再调整透明度，避免把模式名称当成固定输出颜色。
+
+混合不会生成新的交集几何，也不会改变布局。需要重复纹理时使用[图案](/kernel/visual/pattern/usage)，需要偏移投影时使用[阴影](/kernel/visual/shadow/usage)。Scope 的默认值不能替代图层隔离或整组离屏合成。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '比较普通合成、正片叠底与滤色', url: '/kernel/visual/blend/usage' },
+    {
+      title: '组件对接',
+      description: '说明 Node、Path 与 Scope 默认值的作用范围',
+      url: '/kernel/visual/blend/integration',
+    },
+    { title: '实现原理', description: '解释绘制顺序与后端合成', url: '/kernel/visual/blend/mechanism' },
+    { title: 'API 参考', description: '查询模式名称和相关公开类型', url: '/kernel/visual/blend/api-reference' },
+  ]}
+/>
