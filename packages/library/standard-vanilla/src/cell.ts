@@ -1,11 +1,17 @@
 import type { CoreDependencyProvider } from '@retikz/core';
 import type { IRCell } from '@retikz/standard';
-import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
+import { ListProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
 import { PathClipProvider } from '@retikz/standard/clip';
 import type { InputChild, InputEmbedAdapter } from '@retikz/vanilla';
 
 /** 单元格接受纯文本或根 Scene 的统一 authoring 输入；字符串保留到 Standard IR */
 export type InputCell = Omit<IRCell, 'content'> & { content: string | InputChild };
+
+/** JSON 数据可交替嵌套两种结构，根入口装配依赖而不使 provider 相互依赖 */
+export const dataCellDependencies = {
+  roots: [ListProvider.key, MapProvider.key],
+  providers: [ListProvider, MapProvider, PathClipProvider],
+};
 
 /** 归一化每格的唯一 child，并保留其依赖与 authoring sites */
 export const normalizeCells = (

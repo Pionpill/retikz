@@ -24,9 +24,9 @@ describe('List / Map Source contracts', () => {
       entries: [{ key: { content }, value: { content, style: { fill: 'none' } } }],
     };
     const parsed = MapSchema.parse(JSON.parse(JSON.stringify(source)));
-    expect(parsed.entries[0].key).not.toHaveProperty('style');
+    expect(parsed.entries?.[0].key).not.toHaveProperty('style');
     expect(parsed.style?.fillOpacity).toBe(0);
-    expect(parsed.entries[0].value).toMatchObject({ style: { fill: 'none' } });
+    expect(parsed.entries?.[0].value).toMatchObject({ style: { fill: 'none' } });
   });
   it('allows repeated display keys and empty structures', () => {
     expect(

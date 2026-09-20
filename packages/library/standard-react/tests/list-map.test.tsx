@@ -1,6 +1,6 @@
 import { createInputScene, Node } from '@retikz/react';
 import { list, map, ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla';
-import { normalizeScene, scene } from '@retikz/vanilla';
+import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
 import { List, ListItem, Map, MapEntry, MapKey, MapValue } from '../src';
@@ -174,4 +174,29 @@ describe('List / Map adapter parity', () => {
     ).toThrow(/exactly one MapKey/);
     expect(() => createInputScene(<ListItem text="orphan" />)).toThrow(/direct child/);
   });
+});
+
+it('passes mixed JSON data through React and Vanilla with identical contributions', () => {
+  const data = { id: 'ordinary data', values: ['', '', null, { enabled: false }] };
+  const input = createInputScene(<Map data={data} layout={{ value: { width: 70 } }} />);
+  const react = normalizeScene(input.scene, { adapters: input.adapters });
+  const vanilla = normalizeScene(scene({ children: [map('map', { data, layout: { value: { width: 70 } } })] }), {
+    adapters: [MapInputEmbedAdapter],
+  });
+  expect(react.ir).toEqual(vanilla.ir);
+  expect(react.contributions).toEqual(vanilla.contributions);
+  expect(react.ir.children[0]).toMatchObject({ data });
+  expect(react.ir.children[0]).not.toHaveProperty('entries');
+  const listInput = createInputScene(<List data={['', '', data]} />);
+  const reactList = normalizeScene(listInput.scene, { adapters: listInput.adapters });
+  const vanillaList = normalizeScene(scene({ children: [list('list', { data: ['', '', data] })] }), {
+    adapters: [ListInputEmbedAdapter],
+  });
+  expect(reactList.ir).toEqual(vanillaList.ir);
+  expect(reactList.contributions).toEqual(vanillaList.contributions);
+  expect(renderToSvgString(input.scene, { adapters: input.adapters })).toEqual(
+    renderToSvgString(scene({ children: [map('map', { data, layout: { value: { width: 70 } } })] }), {
+      adapters: [MapInputEmbedAdapter],
+    }),
+  );
 });

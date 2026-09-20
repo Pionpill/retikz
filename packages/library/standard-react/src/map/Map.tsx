@@ -11,15 +11,17 @@ import type { StandardEmbeddableComponent } from '../shared';
 import { collectMapEntries } from './convert-children';
 
 /** Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
-export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries'> &
+export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data'> &
   (
-    | { entries: Array<{ key: string | CellProps; value: string | CellProps }>; children?: never }
-    | { entries?: never; children?: ReactNode }
+    | { data: NonNullable<IRMap['data']>; entries?: never; children?: never }
+    | { data?: never; entries: Array<{ key: string | CellProps; value: string | CellProps }>; children?: never }
+    | { data?: never; entries?: never; children?: ReactNode }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */
 const createMapInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  const { entries: dataEntries, children, ...input } = props as MapProps;
+  const { data, entries: dataEntries, children, ...input } = props as MapProps;
+  if (data !== undefined) return { ...input, data } satisfies InputMap;
   const entries = dataEntries ?? collectMapEntries(children);
   const collected = createCellsInput(
     entries.flatMap(entry =>

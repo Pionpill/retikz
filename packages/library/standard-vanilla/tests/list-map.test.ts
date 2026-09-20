@@ -36,3 +36,19 @@ describe('List / Map provider assembly', () => {
     expect(JSON.stringify(normalized.ir)).not.toContain('authoring-map');
   });
 });
+
+it('assembles both data definitions and clipping from either root adapter', () => {
+  for (const child of [
+    map('map', { data: { values: [1, { id: 'a' }] }, layout: { width: 30 } }),
+    list('list', { data: [{ values: [1, 1] }], layout: { height: 20 } }),
+  ]) {
+    const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
+    const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
+    const result = compileToScene(normalized.ir, options);
+    expect(result.scene.primitives.length).toBeGreaterThan(0);
+    expect(result.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+    expect(normalized.ir.children[0]).toHaveProperty('data');
+    expect(normalized.ir.children[0]).not.toHaveProperty('entries');
+    expect(normalized.ir.children[0]).not.toHaveProperty('items');
+  }
+});

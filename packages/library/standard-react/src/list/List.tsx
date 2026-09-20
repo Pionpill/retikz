@@ -11,12 +11,17 @@ import type { StandardEmbeddableComponent } from '../shared';
 import { ListItem } from './ListItem';
 
 /** List 的 React authoring 属性 */
-export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items'> &
-  ({ items: Array<string | CellProps>; children?: never } | { items?: never; children?: ReactNode });
+export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data'> &
+  (
+    | { data: NonNullable<IRList['data']>; items?: never; children?: never }
+    | { data?: never; items: Array<string | CellProps>; children?: never }
+    | { data?: never; items?: never; children?: ReactNode }
+  );
 
 /** 保留单元格样式并收集每格的唯一 drawable */
 const createListInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  const { items, children, ...input } = props as ListProps;
+  const { data, items, children, ...input } = props as ListProps;
+  if (data !== undefined) return { ...input, data } satisfies InputList;
   const cells = items ?? collectCellMarkers(children, ListItem, 'List').map(markerCell);
   const collected = createCellsInput(
     cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),

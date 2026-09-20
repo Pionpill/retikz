@@ -3,16 +3,22 @@ import { createList, ListProvider } from '@retikz/standard';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import type { InputCell } from './cell';
-import { normalizeCells } from './cell';
+import { dataCellDependencies, normalizeCells } from './cell';
 import { StandardListEmbedKind } from './constants';
 
 /** List 的 Vanilla authoring 输入 */
-export type InputList = Omit<IRList, 'namespace' | 'type' | 'items'> & { items: Array<string | InputCell> };
+export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data'> &
+  ({ items: Array<string | InputCell>; data?: never } | { data: NonNullable<IRList['data']>; items?: never });
 
 /** 将 List 输入与嵌套内容交给根级 traversal */
 export const ListInputEmbedAdapter: InputEmbedAdapter<InputList> = {
   kind: StandardListEmbedKind,
   lower: (props, context) => {
+    if (props.data !== undefined)
+      return {
+        node: createList({ namespace: 'standard', type: 'list', ...props }),
+        providerDependencies: dataCellDependencies,
+      };
     const { items, ...input } = props;
     const normalized = normalizeCells(
       items.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
