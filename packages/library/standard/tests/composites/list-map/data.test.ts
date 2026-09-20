@@ -76,17 +76,17 @@ describe('JSON data presentation', () => {
       type: 'map',
       ...options,
       entries: [
-        { key: '"1"', value: 'null' },
-        { key: '"2"', value: 'false' },
+        { key: '1', value: 'null' },
+        { key: '2', value: 'false' },
         {
-          key: '"z"',
+          key: 'z',
           value: {
             content: {
               namespace: 'standard',
               type: 'list',
               items: [
                 { content: '1' },
-                { content: { namespace: 'standard', type: 'map', entries: [{ key: '"id"', value: '"a"' }] } },
+                { content: { namespace: 'standard', type: 'map', entries: [{ key: 'id', value: '"a"' }] } },
               ],
             },
           },

@@ -7,11 +7,10 @@ import type { IRMap } from './schemas';
 
 /** 一次测量键值内容，按两列最大宽度与行高直接排布 */
 export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext): LayoutCompositeCompileResult => {
-  const { namespace: _namespace, type: _type, entries, style, layout, ...scope } = resolveMap(node);
+  const { namespace: _namespace, type: _type, entries, style, layout, label, ...scope } = resolveMap(node);
   void _namespace;
   void _type;
-  void style;
-  if (entries.length === 0) return compileCells([], 0, 0, scope, context);
+  if (entries.length === 0) return compileCells([], 0, 0, scope, context, [], { label, style });
   const measured = entries
     .flatMap(entry => [entry.key, entry.value])
     .map((cell, index) => measureCell(cell, context, index, scope));
@@ -41,5 +40,8 @@ export const compileMap = (node: IRMap, context: LayoutCompositeCompileContext):
     });
     y += height + layout.gap.row;
   }
-  return compileCells(cells, keyWidth + layout.gap.column + valueWidth, y - layout.gap.row, scope, context);
+  return compileCells(cells, keyWidth + layout.gap.column + valueWidth, y - layout.gap.row, scope, context, [], {
+    label,
+    style,
+  });
 };

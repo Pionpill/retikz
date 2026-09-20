@@ -200,3 +200,29 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
     }),
   );
 });
+
+it('preserves container labels in data and marker inputs with matching Vanilla output', () => {
+  const label = { text: 'Container title' };
+  const input = createInputScene(
+    <>
+      <Map data={{ values: [1, 2] }} label={label} />
+      <List label={[label, { text: 'Below', position: 'bottom' }]}>
+        <ListItem text="cell" />
+      </List>
+    </>,
+  );
+  const vanillaInput = scene({
+    children: [
+      map('map', { data: { values: [1, 2] }, label }),
+      list('list', { items: [{ content: 'cell' }], label: [label, { text: 'Below', position: 'bottom' }] }),
+    ],
+  });
+  const adapters = [ListInputEmbedAdapter, MapInputEmbedAdapter];
+  expect(normalizeScene(input.scene, { adapters: input.adapters }).ir).toEqual(
+    normalizeScene(vanillaInput, { adapters }).ir,
+  );
+  const svg = renderToSvgString(input.scene, { adapters: input.adapters });
+  expect(svg).toEqual(renderToSvgString(vanillaInput, { adapters }));
+  expect(svg).toContain('Container title');
+  expect(svg).toContain('Below');
+});

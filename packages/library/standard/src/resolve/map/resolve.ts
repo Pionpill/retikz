@@ -10,7 +10,7 @@ export const resolveMap = (source: IRMap): CanonicalMap => {
     data === undefined
       ? entries
       : Object.entries(data).map(([key, value]) => ({
-          key: createDataCell(key),
+          key,
           value: createDataCell(value),
         }));
   const { key: keyStyle, value: valueStyle, ...style } = source.style ?? {};

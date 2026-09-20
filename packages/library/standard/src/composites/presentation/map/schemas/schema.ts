@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
+import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { JsonObjectSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { array, literal, never, strictObject, string, union } from 'zod';
 
@@ -32,6 +32,7 @@ const MapBaseSchema = CompositeBaseSchema.extend({
     'JSON object rendered recursively in own enumerable key order; mutually exclusive with entries.',
   ),
   style: MapStyleSchema.optional(),
+  label: NodeSchema.shape.label,
   layout: MapLayoutSchema.optional(),
 });
 

@@ -249,3 +249,12 @@ it('measures fixed-cell content naturally without repeated layout compilation', 
   expect(calls).toBeGreaterThan(0);
   expect(calls).toBeLessThanOrEqual(6);
 });
+
+it('keeps label visual overflow outside the parent allocation including indexed lists', () => {
+  const source = { namespace: 'standard', type: 'list', showIndex: true, items: [cell('a', 40, 20)] };
+  const before = compile(source).observed;
+  const after = compile({ ...source, label: { text: 'a very long title outside allocation', distance: 30 } }).observed;
+  expect(after.allocationBounds).toEqual(before.allocationBounds);
+  expect(after.slotSize).toEqual(before.slotSize);
+  expect(after.visualBounds.height).toBeGreaterThan(before.visualBounds.height);
+});

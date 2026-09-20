@@ -21,11 +21,12 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
     layout,
     showIndex,
     indexStart,
+    label,
     ...scope
   } = resolveList(node);
   void _namespace;
   void _type;
-  if (items.length === 0) return compileCells([], 0, 0, scope, context);
+  if (items.length === 0) return compileCells([], 0, 0, scope, context, [], { label, style });
   const { direction, gap } = layout;
   const horizontal = direction === ListDirection.Row;
   const measured = items.map((cell, index) => measureCell(cell, context, index, scope));
@@ -64,21 +65,21 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
       height: cellHeight,
       role: 'list-cell',
     };
-    const label = indices[index];
+    const indexResult = indices[index];
     if (showIndex)
       extra.push(
-        context.replay(label, {
+        context.replay(indexResult, {
           transforms: [
             {
               kind: 'translate',
               x:
                 (horizontal ? cursor + cellWidth / 2 : indexWidth / 2) -
-                label.slotSize.width / 2 -
-                label.allocationBounds.x,
+                indexResult.slotSize.width / 2 -
+                indexResult.allocationBounds.x,
               y:
                 (horizontal ? indexHeight / 2 : cursor + cellHeight / 2) -
-                label.slotSize.height / 2 -
-                label.allocationBounds.y,
+                indexResult.slotSize.height / 2 -
+                indexResult.allocationBounds.y,
             },
           ],
         }),
@@ -93,5 +94,6 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
     scope,
     context,
     extra,
+    { label, style },
   );
 };

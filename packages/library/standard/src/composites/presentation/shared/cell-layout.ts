@@ -141,6 +141,7 @@ export const compileCells = (
   scope: CompositeCompileScopeProps,
   context: LayoutCompositeCompileContext,
   extra: Array<CompositeCompileChild> = [],
+  decoration: Pick<IRNode, 'label' | 'style'> = {},
 ): LayoutCompositeCompileResult => {
   const axisSize = (axis: 'x' | 'y', natural: number) =>
     resolveLayoutAxisSize({
@@ -160,6 +161,35 @@ export const compileCells = (
   const handles: Array<SpatialHandleDeclaration> = [{ key: 'container', role: 'container', bounds: allocationBounds }];
   const children: Array<IRChild | CompositeCompileChild> = cells.map(cell => emitCell(cell, context));
   children.push(...extra);
+  if (decoration.label !== undefined || scope.id !== undefined) {
+    const { font, textColor, color, opacity } = decoration.style ?? {};
+    children.push({
+      type: 'scope',
+      defaults: { reset: ['node'] },
+      children: [
+        {
+          type: 'node',
+          position: [allocationBounds.width / 2, allocationBounds.height / 2],
+          shape: 'rectangle',
+          style: {
+            fill: 'none',
+            stroke: 'none',
+            strokeWidth: 0,
+            ...(font === undefined ? {} : { font }),
+            ...(textColor === undefined ? {} : { textColor }),
+            ...(color === undefined ? {} : { color }),
+            ...(opacity === undefined ? {} : { opacity }),
+          },
+          layout: {
+            minimumSize: { width: allocationBounds.width, height: allocationBounds.height },
+            padding: 0,
+            margin: 0,
+          },
+          ...(decoration.label === undefined ? {} : { label: decoration.label }),
+        },
+      ],
+    });
+  }
   for (const {
     measured: { cell },
     role,

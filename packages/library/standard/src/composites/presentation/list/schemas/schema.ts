@@ -1,4 +1,4 @@
-import { CompositeBaseSchema, ScopePropsSchema } from '@retikz/core';
+import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import {
   JsonValueSchema,
   NonBlankStringSchema,
@@ -27,6 +27,7 @@ const ListBaseSchema = CompositeBaseSchema.extend({
     .optional()
     .describe('JSON array rendered recursively without inferred cell ids; mutually exclusive with items.'),
   style: CellStyleSchema.optional(),
+  label: NodeSchema.shape.label,
   layout: ListLayoutSchema.optional(),
   showIndex: boolean().default(false).describe('Show an index strip above rows or to the left of columns.'),
   indexStart: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),

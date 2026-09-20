@@ -41,11 +41,11 @@ React 经 Vanilla 表达同一契约；adapter 仅归一 authoring、保留嵌�
 | 值                     | 呈现                                                             |
 | ---------------------- | ---------------------------------------------------------------- |
 | 非空对象 / 数组        | 分别递归为 Map / List                                            |
-| 字符串与对象键         | 带引号和必要转义的 JSON 字面量，区分空字符串、`"null"` 与 `null` |
+| 字符串值               | 带引号和必要转义的 JSON 字面量，区分空字符串、`"null"` 与 `null` |
 | 有限数字、布尔值、null | JSON 字面量，保留 0、false、null                                 |
 | 嵌套空对象 / 数组      | 文本 `{}` / `[]`；空根结构仍为零自然尺寸                         |
 
-对象遵循 ECMAScript 自有可枚举字符串键顺序，整数索引键优先，不排序；数组保持顺序和重复值。所有字段均为普通数据，包括 id、style、content、type、namespace；生成的格和嵌套容器不推导 id，根显式 id 仍有效。
+对象键直接显示原始文本，不额外添加引号；不推导 id。对象遵循 ECMAScript 自有可枚举字符串键顺序，整数索引键优先，不排序；数组保持顺序和重复值。所有字段均为普通数据，包括 id、style、content、type、namespace；生成的格和嵌套容器不推导 id，根显式 id 仍有效。
 
 data 只接受 JSON 值树，不接收函数、undefined、Symbol、BigInt、非有限数、稀疏数组、循环引用、Date、Map / Set 或自定义实例；不调用 toJSON、序列化清洗或生成循环占位。沿既有类型化输入与外部 parse 边界校验，不重复反射验证。
 
@@ -96,3 +96,11 @@ Inspection 与命名引用分离：根 handle 为 `container`，有 id 的格以
 未知配置、非 JSON Source、错误 data 根类型、入口混用、非法 content、负或非有限尺寸 / gap / padding、非法 indexStart、重复格 id 在 Source 边界失败。缺失 / 冲突定义、测量、proposal 与引用失败保留下层原因和位置，不返回部分结构。
 
 相同 Source、definitions、测量和主题在 React / Vanilla 下得到等价 IR、布局、Scene、空间结果与诊断，SVG / Canvas 无专用分支。本能力不改变 Surface、Legend、Layout、Table 契约，不保留旧 helper 兼容别名；具体文档图配色与业务含义不进入组件模型。
+
+## 附属标签
+
+List / Map 提供与 Node 同形的可选 `label`，接受单个标签或标签数组，完整复用 Core Node label 的位置、间距、内外侧、文字、旋转及引线契约。省略样式时使用 Core Node label 的默认值，不设置 Standard 专属字号、颜色或间距。`defaults.label`、主题与显式标签样式沿 Core 规则解析；容器共用 style 的字体、文字颜色和主色作为标签宿主外观，角色与单元格覆盖不影响容器标签。
+
+标签附着于容器 allocation 矩形；List 开启索引时该矩形包含索引条。标签不参与单元格尺寸、容器 allocation 或命名连接边界计算，但参与最终可见范围。空容器也可附着标签，标签不生成额外 id。标签宿主不继承后代 Node 的几何与外观默认，容器尺寸与标签外观分别由容器布局、容器共用文字样式及 label 通道控制。整体变换、裁切与命名隔离继续沿根 Scope 语义；单格裁切不裁切容器标签。
+
+React、Vanilla、直接 IR 和 data / 显式单元格入口表达同一契约；data 不把根 label 隐式传播给嵌套容器。复杂标题内容仍使用外部布局组合。
