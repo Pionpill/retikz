@@ -1,0 +1,58 @@
+---
+title: Shadows
+description: Shadows offset primary geometry against the backdrop. They do not change connection geometry or flatten node text or an entire Scope into the shadow.
+---
+
+Shadows emphasize card-like nodes and path outlines, helping separate foreground from background. Node and Path supply the primary geometry; shadow styles specify offset, blur, and color. Scope can provide shared defaults for its children.
+
+## The overall picture
+
+Scope supplies separate shadow defaults for Node and Path below. The left node and middle path use those defaults; the right node disables its shadow with `shadow: 'none'`. Observe each shadow relative to its outline, rather than treating the entire subgraph as one image casting a shared shadow.
+
+<ComponentPreview files="/kernel/visual/shadow/integration/shadow-integration" size="sm" />
+
+The configuration is shared, but each element casts its own shadow. Scope does not accept `style.shadow`, and node text and attached labels do not automatically become part of the primary geometry's shadow.
+
+## Responsibilities at a glance
+
+| Chapter               | Responsibility                                           | When to read                                     |
+| --------------------- | -------------------------------------------------------- | ------------------------------------------------ |
+| Basic usage           | Choose presets or configure offset, blur, and color      | Add a shadow to a shape                          |
+| Component integration | Distinguish primary-geometry shadows from Scope defaults | Share settings across nodes and paths            |
+| Implementation        | Explain style resolution and backend rendering           | Investigate shadow bounds or backend differences |
+| API reference         | Document public shadow types                             | Write precise style configuration                |
+| Schema reference      | Document shadow fields and constraints                   | Validate or save configuration                   |
+
+## Choosing an approach and its boundaries
+
+Use presets for common depth effects. Configure offset and blur when you need a specific direction or a hard edge. Children can override defaults or use `none` to disable an inherited shadow.
+
+Shadows do not change layout, anchors, or connection geometry. Adjust position or layout to change actual spacing; use [blend modes](/kernel/visual/blend/usage) to control overlapping colors. SVG and Canvas use their own rendering mechanisms, so blurred edges are not guaranteed to match pixel for pixel.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Choose presets or configure offset, blur, and color',
+      url: '/kernel/visual/shadow/usage',
+    },
+    {
+      title: 'Component integration',
+      description: 'Distinguish primary-geometry shadows from Scope defaults',
+      url: '/kernel/visual/shadow/integration',
+    },
+    {
+      title: 'Implementation',
+      description: 'Explain style resolution and backend rendering',
+      url: '/kernel/visual/shadow/mechanism',
+    },
+    { title: 'API reference', description: 'Document public shadow types', url: '/kernel/visual/shadow/api-reference' },
+    {
+      title: 'Schema reference',
+      description: 'Document shadow fields and constraints',
+      url: '/kernel/visual/shadow/schema-reference',
+    },
+  ]}
+/>

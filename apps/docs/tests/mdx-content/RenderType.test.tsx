@@ -11,7 +11,7 @@ describe('RenderType', () => {
       <RenderType
         repr={{
           kind: 'array',
-          element: { kind: 'ref', name: 'TransformSchema', url: '/kernel/reference/schema/transform' },
+          element: { kind: 'ref', name: 'TransformSchema', url: '/kernel/components/scope/schema-reference' },
           constraints: [],
         }}
       />,

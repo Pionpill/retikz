@@ -15,21 +15,22 @@ afterEach(() => {
 });
 
 describe('LLM documentation artifacts', () => {
+  it('excludes the removed Kernel reference section from the manifest', () => {
+    const manifest = collectDocManifest(docsRoot);
+    expect(manifest.some(entry => entry.path.startsWith('/kernel/reference'))).toBe(false);
+  });
+
   it('把分组落地页和显式页型归一到 manifest', () => {
     const manifest = collectDocManifest(docsRoot);
     const byPath = new Map(manifest.map(entry => [entry.path, entry]));
 
-    expect(byPath.get('/kernel/components')).toMatchObject({ pageType: 'group', audience: 'user' });
+    expect(byPath.has('/kernel/components')).toBe(false);
+    expect(byPath.get('/kernel/components/introduction')).toMatchObject({ pageType: 'entry', audience: 'user' });
     expect(byPath.get('/kernel/components/layout')).toMatchObject({ pageType: 'group' });
     expect(byPath.get('/kernel/components/node/custom-shape')).toMatchObject({
       pageType: 'extension',
       audience: 'extension-author',
       capability: 'kernel.shape',
-    });
-    expect(byPath.get('/kernel/reference/runtime/extensions')).toMatchObject({
-      pageType: 'reference',
-      audience: 'extension-author',
-      capability: 'kernel.extensions',
     });
   });
 

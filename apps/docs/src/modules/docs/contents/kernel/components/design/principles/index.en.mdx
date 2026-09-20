@@ -27,7 +27,7 @@ Extensible capabilities do not use a built-in switch followed by an extension pa
 2. **One registry**: `BUILTIN_*` and `options.xxx` become one `ReadonlyMap` at the start of each compile call.
 3. **One consumer path**: resolvers, diagnostics, and compile consumers do not branch on where a key came from.
 
-Built-ins register first and custom items follow. Registry construction rejects empty and duplicate keys. When a consumer later encounters an unknown key, that capability's contract determines whether to throw or warn and skip. First-class therefore means the same protocol and execution path, not that a custom item can silently override a built-in. See [Extension Mechanisms](/kernel/reference/runtime/extensions) for extension families, injection points, and failure semantics.
+Built-ins register first and custom items follow. Registry construction rejects empty and duplicate keys. When a consumer later encounters an unknown key, that capability's contract determines whether to throw or warn and skip. First-class therefore means the same protocol and execution path, not that a custom item can silently override a built-in.
 
 ## Capability ownership
 
@@ -82,15 +82,12 @@ When a subpackage lacks a capability, first decide whether the need is compositi
       description: 'Preserve domain intent and lower high-level nodes',
       url: '/kernel/components/design/composite',
     },
-    {
-      title: 'Extension Mechanisms',
-      description: 'Look up Definitions, registries, host lowerers, and guides',
-      url: '/kernel/reference/runtime/extensions',
-    },
+
     {
       title: 'Schema',
       description: 'Look up the current IR fields and contracts',
-      url: '/kernel/reference/schema',
+      url: '/kernel/components/layout/schema-reference',
     },
-  ]}
+
+]}
 />

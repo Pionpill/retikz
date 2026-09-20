@@ -34,7 +34,7 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 
 ### ⚠️ 写图前**必须先看下面这段 Schema 速查**
 
-retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/kernel/reference/schema/*\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
+retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/kernel/components/{layout,node,path,scope}/schema-reference\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
 
 \`\`\`
 Scene = {
@@ -110,8 +110,8 @@ Coordinate = {
 
 需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
 
-- 定位：\`/kernel/components/basic/position\` · \`/kernel/reference/schema/placement\`
-- IR：\`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
+- 定位：\`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
+- IR：\`/kernel/components/layout/schema-reference\` · \`/kernel/components/node/schema-reference\` · \`/kernel/components/path/schema-reference\`
 - 组件：\`/kernel/components/{tikz,node/usage,path/usage,path/draw,path/step,path/arrow}\`
 - 形状 sugar：\`/library/standard/circle-ellipse\`
 - 完整范例：\`/kernel/galleries/karl-circle\`
@@ -140,7 +140,7 @@ When you need to draw a diagram, use one of the two fenced blocks below; otherwi
 
 ### ⚠️ **Read the Schema cheatsheet below BEFORE drawing**
 
-retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/kernel/reference/schema/*\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
+retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/kernel/components/{layout,node,path,scope}/schema-reference\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
 
 \`\`\`
 Scene = {
@@ -216,8 +216,8 @@ Coordinate = {
 
 For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
 
-- Positioning: \`/kernel/components/basic/position\` · \`/kernel/reference/schema/placement\`
-- IR: \`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
+- Positioning: \`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
+- IR: \`/kernel/components/layout/schema-reference\` · \`/kernel/components/node/schema-reference\` · \`/kernel/components/path/schema-reference\`
 - Components: \`/kernel/components/{tikz,node/usage,path/usage,path/draw,path/step,path/arrow}\`
 - Shape sugar: \`/library/standard/circle-ellipse\`
 - Worked example: \`/kernel/galleries/karl-circle\`

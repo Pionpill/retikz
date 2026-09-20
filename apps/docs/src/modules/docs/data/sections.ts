@@ -27,5 +27,6 @@ export const getSectionsByArea = (areaId: string | undefined): Array<Section> =>
 export const getNavigationSectionsByArea = (areaId: string | undefined): Array<Section> =>
   getSectionsByArea(areaId)
     .map((section, index) => ({ section, order: section.navigationOrder ?? index }))
+    .filter(({ section }) => !(areaId === 'kernel' && section.id === 'visual'))
     .sort((left, right) => left.order - right.order)
     .map(({ section }) => section);

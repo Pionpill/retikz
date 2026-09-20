@@ -1,0 +1,42 @@
+---
+title: 阴影
+description: 阴影为主几何添加偏移投影，让图形在背景上更容易辨认。它不改变连接几何，也不把节点文字或整个 Scope 合成到投影中。
+---
+
+阴影适合突出卡片节点、强调路径轮廓，或让前景与背景更容易区分。Node 和 Path 提供需要投影的主几何，阴影样式提供偏移、模糊和颜色；Scope 可以统一子图元的默认值。
+
+## 整体认识
+
+下面由 Scope 为 Node 和 Path 分别设置阴影默认值。左侧节点与中间路径使用默认投影，右侧节点通过 `shadow: 'none'` 关闭投影。观察投影与主轮廓的关系，而不是把整个子图看成一张共同投影的图片。
+
+<ComponentPreview files="/kernel/visual/shadow/integration/shadow-integration" size="sm" />
+
+共享的是配置，每个图元仍独立产生阴影。Scope 本身不接受 `style.shadow`，节点的文字与附属标签也不会自动成为主几何阴影的一部分。
+
+## 职责一览
+
+| 章节        | 职责                           | 何时阅读               |
+| ----------- | ------------------------------ | ---------------------- |
+| 基础用法    | 选择预设或配置偏移、模糊与颜色 | 为图形添加投影         |
+| 组件对接    | 区分主几何投影与 Scope 默认值  | 统一配置多个节点或路径 |
+| 实现原理    | 解释样式解析与后端绘制         | 排查投影范围或后端差异 |
+| API 参考    | 查询阴影相关公开类型           | 精确编写样式配置       |
+| Schema 参考 | 查询阴影对象字段与约束         | 校验或保存配置         |
+
+## 选择与边界
+
+常见层次效果先使用预设；需要明确的光照方向或硬边投影时，再配置偏移与模糊。子元素可以覆盖默认值，或使用 `none` 关闭继承的阴影。
+
+阴影不改变布局、锚点与连接几何。若要改变图形之间的实际距离，应调整位置或布局；若要控制重叠颜色，则使用[混合模式](/kernel/visual/blend/usage)。SVG 与 Canvas 使用各自的绘制机制，模糊边缘不保证逐像素一致。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '选择预设或配置偏移、模糊与颜色', url: '/kernel/visual/shadow/usage' },
+    { title: '组件对接', description: '区分主几何投影与 Scope 默认值', url: '/kernel/visual/shadow/integration' },
+    { title: '实现原理', description: '解释样式解析与后端绘制', url: '/kernel/visual/shadow/mechanism' },
+    { title: 'API 参考', description: '查询阴影相关公开类型', url: '/kernel/visual/shadow/api-reference' },
+    { title: 'Schema 参考', description: '查询阴影对象字段与约束', url: '/kernel/visual/shadow/schema-reference' },
+  ]}
+/>

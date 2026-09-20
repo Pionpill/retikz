@@ -284,6 +284,20 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 动画预设分层', en: 'Unreleased · Animation preset ownership' },
+          content: {
+            zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/standard 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Standard 双语文档和 API 参考同步按归属拆分。',
+            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/standard root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Standard guides and API references follow their owners.',
+          },
+        },
+        {
+          label: { zh: 'Scope 包络外框', en: 'Scope envelope frames' },
+          content: {
+            zh: '`Scope.frame` 为固有包络添加独立填充、描边、图案与阴影，支持均匀装饰间距；不改变布局、锚点或命中。React、Vanilla 与直接 IR 使用同一契约。Scene 的 `hitTest: false` 在 SVG、Canvas 与 retained 更新中排除装饰命中。',
+            en: '`Scope.frame` adds independent fill, stroke, patterns, shadows, and uniform decoration spacing to the intrinsic envelope without changing layout, anchors, or hit regions. React, Vanilla, and direct IR share the contract. Scene `hitTest: false` excludes decoration from SVG, Canvas, and retained hit testing.',
+          },
+        },
+        {
           label: { zh: 'Node 与 Scope 锚点布局', en: 'Node and Scope anchor layout' },
           content: {
             zh: '`Node.position` 支持 anchor-to-anchor 分支；`IRScope.placement` 可把 Scope 自身 center / side / corner 对齐已完成 target，rotate / scale 统一通过 `pivot` 绑定固有包络。',

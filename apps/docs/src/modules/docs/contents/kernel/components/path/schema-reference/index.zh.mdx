@@ -5,7 +5,7 @@ description: 路径与步骤的持久化字段，以及绘制专属配置
 
 本页收录绘制拥有的输入契约。`PathSchema` 接受开放的 `kind`；实际 kind 的完整 schema 再校验该路径。内置 `stroke` 通常需要至少两个步骤；单个自包含的 rectangle 步骤是例外，自定义 kind 的要求由其 definition 决定。
 
-`way`、`arrow` 与 `arrowPlacement` 是作者侧输入，由 Vanilla 转换成步骤或 `marks`；不会原样写入持久化 Path。`ArrowDetailSchema` 属于这条专属配置通道。共享定位、样式及供其它包组合的字段片段仍见[路径共享契约](/kernel/reference/schema/path)。
+`way`、`arrow` 与 `arrowPlacement` 是作者侧输入，由 Vanilla 转换成步骤或 `marks`；不会原样写入持久化 Path。`ArrowDetailSchema` 属于这条专属配置通道。
 
 ## PathSchema
 

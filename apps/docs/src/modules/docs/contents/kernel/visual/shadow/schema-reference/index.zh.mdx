@@ -1,0 +1,21 @@
+---
+title: Schema 参考
+description: 查询可序列化输入字段与约束
+---
+
+字段由 Core 公开 Schema 读取。宿主注册函数和运行时结果不属于持久化输入。
+
+## DropShadowSchema
+
+<ZodSchema
+  name="DropShadowSchema"
+  description="主几何的外投影配置"
+  descriptions={{
+    preset: '预设档位，为偏移、模糊和颜色提供初值；显式字段优先',
+    offsetX: '水平偏移；无预设时必填',
+    offsetY: '垂直偏移；屏幕坐标中正数向下，无预设时必填',
+    blur: '非负模糊半径；0 表示硬边',
+    color: '阴影颜色；没有预设也没有显式颜色时为半透明黑色',
+    opacity: '对解析后阴影颜色施加的透明度乘数',
+  }}
+/>

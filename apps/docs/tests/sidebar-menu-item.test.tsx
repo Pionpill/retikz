@@ -283,7 +283,16 @@ describe('<AppSidebar>', () => {
     expect(components.textContent).toContain('kernel.getStart');
     expect(components.textContent).toContain('kernel.concepts');
     expect(components.textContent).toContain('kernel.components');
-    expect(components.querySelectorAll('[data-slot="separator"]')).toHaveLength(3);
+    expect(Array.from(components.querySelectorAll('h4')).map(heading => heading.textContent)).toEqual([
+      'kernel.concepts',
+      'kernel.components',
+      'kernel.visual',
+      'kernel.internals',
+    ]);
+    const visual = renderSidebar({ moduleId: 'kernel', sectionId: 'visual', pageId: 'pattern', subPageId: 'usage' });
+    expect(visual.textContent).toContain('kernel.components');
+    expect(visual.textContent).toContain('kernel.visual');
+    expect(visual.textContent).toContain('kernel.internals');
 
     const about = renderSidebar({ moduleId: 'about', sectionId: null, pageId: 'introduction' });
     expect(about.textContent).toContain('about.introduction');

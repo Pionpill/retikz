@@ -1,0 +1,55 @@
+---
+title: 组件对接
+description: 阴影作用于每个图元的主几何，不是整个 Scope 的离屏投影。
+---
+
+| 组件        | 接入方式                                  |
+| ----------- | ----------------------------------------- |
+| Scope       | defaults.node.style / defaults.path.style |
+| Node        | style.shadow                              |
+| Path / Draw | style.shadow                              |
+
+## Scope
+
+Scope.style 不接受 shadow。用 defaults.node.style.shadow 和 defaults.path.style.shadow 分别提供默认值；子元素通过 style.shadow 覆盖，none 关闭阴影。
+
+<ComponentPreview files="shadow-integration" size="sm" />
+
+## Node
+
+Node 的阴影只作用于主形状，节点文字、标签和引脚是独立输出，不随主形状投影。调整偏移与模糊，观察主体投影移动，而文字和顶部标签保持清晰。
+
+示例显式使用蓝色投影和较高不透明度，便于在明暗背景下观察；这不是阴影预设的默认颜色。
+
+<ComponentPreview files="shadow-node" size="lg" />
+
+## Path
+
+Path 的主路径与端点箭头属于同一效果边界，路径标签独立输出。调整偏移或将模糊设为 0，可以观察线条与箭头的投影；关闭阴影时，路径与标签的位置不变。示例沿用上方的蓝色投影以突出边界。
+
+<ComponentPreview files="shadow-path" size="lg" />
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/shadow/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.shadow',
+      kind: 'property',
+      type: 'ShadowPresetValue | IRDropShadow',
+      description:
+        '预设为 none、sm、md、lg、xl、2xl；对象使用 preset 或同时提供 offsetX 与 offsetY，可覆盖 blur、color、opacity。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/shadow/usage' },
+    { title: '实现原理', url: '/kernel/visual/shadow/mechanism' },
+  ]}
+/>

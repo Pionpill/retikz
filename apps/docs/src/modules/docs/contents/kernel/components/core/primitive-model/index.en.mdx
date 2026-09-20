@@ -119,12 +119,12 @@ Anchors are the stable points that a Node exposes to other primitives. Paths, po
 
 The top row uses a rectangle to explain standard directional, angle, and edge-proportional anchors. The bottom row shows that complex shapes may add semantic points. The concept page distinguishes geometry owners instead of cataloging every shape-specific name:
 
-| Anchor family        | Geometry owner                | Authority                                           |
-| -------------------- | ----------------------------- | --------------------------------------------------- |
-| `center` / direction | Node shape / boundary         | [Node Geometry](/kernel/components/node/usage)      |
-| Numeric angle        | Selected connection boundary  | [Path target](/kernel/reference/schema/path#target) |
-| Shape-specific name  | The corresponding shape       | [Shapes](/kernel/components/node/shape)             |
-| `{ side, fraction }` | Real edge of the visual shape | [Node Geometry](/kernel/components/node/usage)      |
+| Anchor family        | Geometry owner                | Authority                                               |
+| -------------------- | ----------------------------- | ------------------------------------------------------- |
+| `center` / direction | Node shape / boundary         | [Node Geometry](/kernel/components/node/usage)          |
+| Numeric angle        | Selected connection boundary  | [Path target](/kernel/components/path/schema-reference) |
+| Shape-specific name  | The corresponding shape       | [Shapes](/kernel/components/node/shape)                 |
+| `{ side, fraction }` | Real edge of the visual shape | [Node Geometry](/kernel/components/node/usage)          |
 
 IR / schema keeps `top` / `right` / `bottom` / `left` plus four corners as its standard directional vocabulary, with `center` separate. A named direction asks the shape / boundary first and falls back to its AABB when absent; a numeric angle casts a ray onto the selected boundary; shape-specific names and edge proportions remain owned by the visual shape.
 

@@ -43,7 +43,6 @@ describe('SCHEMA_REGISTRY', () => {
       SceneSchema: { schema: SceneSchema },
       ContextualColorSchema: {
         schema: ContextualColorSchema,
-        url: '/kernel/reference/schema/style#contextualcolorschema',
       },
       LayoutInspectSpacingOptionsSchema: { schema: LayoutInspectSpacingOptionsSchema },
       TableSchema: { schema: TableSchema },
@@ -91,7 +90,7 @@ describe('SCHEMA_REGISTRY', () => {
     expect(lookupSchema(CoordinateSchema)?.url).toBe('/kernel/components/node/schema-reference#coordinateschema');
     expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/components/path/schema-reference#movestepschema');
     expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/schema-reference#axislinestepschema');
-    expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
+    expect(lookupSchema(RelativeTargetSchema)?.url).toBeUndefined();
     expect(lookupSchema(LayoutInspectSpacingOptionsSchema)?.url).toBe(
       '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
     );

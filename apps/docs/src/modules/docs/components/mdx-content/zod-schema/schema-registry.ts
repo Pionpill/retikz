@@ -86,11 +86,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'StrokePathInspectOptions',
     url: '/kernel/packages/inspect/schema-reference#pathinspectoptionsschema',
   },
-  SceneSchema: { schema: IR.SceneSchema, label: 'Scene', url: '/kernel/reference/schema/scene' },
+  SceneSchema: {
+    schema: IR.SceneSchema,
+    label: 'Scene',
+    url: '/kernel/components/layout/schema-reference#sceneschema',
+  },
   ThemeSchema: {
     schema: IR.ThemeSchema,
     label: 'Theme',
-    url: '/kernel/reference/schema/scene#theme',
+
     localizations: {
       zh: {
         description: 'Scene 或 Scope 的稀疏 Theme 环境选择；style 与 mode 分别继承',
@@ -101,12 +105,15 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
       },
     },
   },
-  ChildSchema: { schema: IR.ChildSchema, label: 'Child', url: '/kernel/reference/schema/scene#child' },
-  ViewBoxSchema: { schema: IR.ViewBoxSchema, label: 'ViewBox', url: '/kernel/reference/schema/scene#viewbox' },
+  ChildSchema: { schema: IR.ChildSchema, label: 'Child' },
+  ViewBoxSchema: {
+    schema: IR.ViewBoxSchema,
+    label: 'ViewBox',
+    url: '/kernel/components/layout/schema-reference#viewboxschema',
+  },
   CompositeNodeSchema: {
     schema: IR.CompositeNodeSchema,
     label: 'CompositeNode',
-    url: '/kernel/reference/schema/scene#compositenode',
   },
   JsonObjectSchema: {
     schema: JsonObjectSchema,
@@ -149,7 +156,17 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/packages/foundation/schema-reference#normalizedfractionschema',
   },
 
-  ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/reference/schema/scope#scope' },
+  ScopeFrameSchema: {
+    schema: IR.ScopeFrameSchema,
+    label: 'ScopeFrame',
+    url: '/kernel/components/scope/schema-reference#scopeframeschema',
+  },
+  ScopeFrameStyleSchema: {
+    schema: IR.ScopeFrameStyleSchema,
+    label: 'ScopeFrameStyle',
+    url: '/kernel/components/scope/schema-reference#scopeframestyleschema',
+  },
+  ScopeSchema: { schema: IR.ScopeSchema, label: 'Scope', url: '/kernel/components/scope/schema-reference#scopeschema' },
   AnchorRefSchema: {
     schema: IR.AnchorRefSchema,
     label: 'AnchorRefSchema',
@@ -203,17 +220,16 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   ScopePlacementSchema: {
     schema: IR.ScopePlacementSchema,
     label: 'ScopePlacement',
-    url: '/kernel/reference/schema/scope#scopeplacement',
+    url: '/kernel/components/scope/schema-reference#scopeplacementschema',
   },
   ScopeSelfPointSchema: {
     schema: IR.ScopeSelfPointSchema,
     label: 'ScopeSelfPoint',
-    url: '/kernel/reference/schema/scope#scopeselfpoint',
+    url: '/kernel/components/scope/schema-reference#scopeselfpointschema',
   },
   NodeDefaultSchema: {
     schema: IR.NodeDefaultSchema,
     label: 'NodeDefault',
-    url: '/kernel/reference/schema/scope#default-channels',
   },
   ScopeDefaultsSchema: {
     // 独立定义视图不改变其他页面按原实例展开 defaults 的行为
@@ -224,29 +240,29 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PathDefaultSchema: {
     schema: IR.PathDefaultSchema,
     label: 'PathDefault',
-    url: '/kernel/reference/schema/scope#default-channels',
   },
   LabelDefaultSchema: {
     schema: IR.LabelDefaultSchema,
     label: 'LabelDefault',
-    url: '/kernel/reference/schema/scope#default-channels',
   },
   TransformSchema: {
     schema: IR.TransformSchema,
     label: 'Transform',
-    url: '/kernel/reference/schema/scope#transform',
+    url: '/viz/plot/reference/transform#transformschema',
   },
-  ClipSchema: { schema: IR.ClipSchema, label: 'Clip', url: '/kernel/reference/schema/scope#clip' },
-  RectClipSchema: { schema: IR.RectClipSchema, label: 'RectClip', url: '/kernel/reference/schema/scope#rectclip' },
+  ClipSchema: { schema: IR.ClipSchema, label: 'Clip', url: '/kernel/components/scope/schema-reference#clipschema' },
+  RectClipSchema: {
+    schema: IR.RectClipSchema,
+    label: 'RectClip',
+    url: '/kernel/components/scope/schema-reference#rectclipschema',
+  },
   CircleClipSchema: {
     schema: StandardClipIR.CircleClipSchema,
     label: 'CircleClip',
-    url: '/kernel/reference/schema/scope#circleclip',
   },
   EllipseClipSchema: {
     schema: StandardClipIR.EllipseClipSchema,
     label: 'EllipseClip',
-    url: '/kernel/reference/schema/scope#ellipseclip',
   },
   NodeStyleSchema: {
     schema: IR.NodeStyleSchema,
@@ -283,47 +299,40 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'CoordinateSchema',
     url: '/kernel/components/node/schema-reference#coordinateschema',
   },
-  FontSchema: { schema: IR.FontSchema, label: 'Font', url: '/kernel/reference/schema/entity#font' },
+  FontSchema: { schema: IR.FontSchema, label: 'Font' },
   FontFamilySchema: {
     schema: IR.FontFamilySchema,
     label: 'FontFamily',
-    url: '/kernel/reference/schema/entity#fontfamily',
   },
   FontWeightSchema: {
     schema: IR.FontWeightSchema,
     label: 'FontWeight',
-    url: '/kernel/reference/schema/entity#fontweight',
   },
   FontStyleSchema: {
     schema: IR.FontStyleSchema,
     label: 'FontStyle',
-    url: '/kernel/reference/schema/entity#fontstyle',
   },
   TextAlignSchema: {
     schema: IR.TextAlignSchema,
     label: 'TextAlign',
-    url: '/kernel/reference/schema/entity#textalign',
   },
   LineHeightSchema: {
     schema: IR.LineHeightSchema,
     label: 'LineHeight',
-    url: '/kernel/reference/schema/entity#lineheight',
   },
-  TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock', url: '/kernel/reference/schema/entity#textblock' },
-  LineSchema: { schema: IR.LineSchema, label: 'Line', url: '/kernel/reference/schema/entity#irline' },
+  TextBlockSchema: { schema: IR.TextBlockSchema, label: 'TextBlock' },
+  LineSchema: { schema: IR.LineSchema, label: 'Line' },
   StyledLineSchema: {
     schema: IR.StyledLineSchema,
     label: 'StyledLine',
-    url: '/kernel/reference/schema/entity#styledline',
   },
   MixedLineSchema: {
     schema: IR.MixedLineSchema,
     label: 'MixedLine',
-    url: '/kernel/reference/schema/entity#mixedline',
   },
-  TextRunSchema: { schema: IR.TextRunSchema, label: 'TextRun', url: '/kernel/reference/schema/entity#textrun' },
-  MathRunSchema: { schema: IR.MathRunSchema, label: 'MathRun', url: '/kernel/reference/schema/entity#mathrun' },
-  ShapeRefSchema: { schema: IR.ShapeRefSchema, label: 'ShapeRef', url: '/kernel/reference/schema/entity#shaperef' },
+  TextRunSchema: { schema: IR.TextRunSchema, label: 'TextRun' },
+  MathRunSchema: { schema: IR.MathRunSchema, label: 'MathRun' },
+  ShapeRefSchema: { schema: IR.ShapeRefSchema, label: 'ShapeRef' },
   BoundarySchema: {
     schema: IR.BoundarySchema,
     label: 'BoundarySchema',
@@ -333,38 +342,31 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PathStrokeSchema: {
     schema: IR.PathStrokeSchema,
     label: 'PathStroke',
-    url: '/kernel/reference/schema/path#pathstroke',
   },
   PathFillSchema: {
     schema: IR.PathFillSchema,
     label: 'PathFill',
-    url: '/kernel/reference/schema/path#pathfill',
   },
   PathGeometrySchema: {
     schema: IR.PathGeometrySchema,
     label: 'PathGeometry',
-    url: '/kernel/reference/schema/path#pathgeometry',
   },
   PathDecorationSchema: {
     schema: IR.PathDecorationSchema,
     label: 'PathDecoration',
-    url: '/kernel/reference/schema/path#pathdecoration',
   },
   PathStructureSchema: {
     schema: IR.PathStructureSchema,
     label: 'PathStructure',
-    url: '/kernel/reference/schema/path#pathstructure',
   },
   PathSchema: { schema: IR.PathSchema, label: 'Path', url: '/kernel/components/path/schema-reference#pathschema' },
   DrawableStyleSchema: {
     schema: IR.DrawableStyleSchema,
     label: 'DrawableStyle',
-    url: '/kernel/reference/schema/path#drawablestyle',
   },
   DrawableInstanceSchema: {
     schema: IR.DrawableInstanceSchema,
     label: 'DrawableInstance',
-    url: '/kernel/reference/schema/path#drawableinstance',
   },
   RibbonPathOptionsSchema: {
     schema: RibbonPathOptionsSchema,
@@ -382,150 +384,160 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'GeometryLabel',
     url: '/kernel/components/path/schema-reference#geometrylabelschema',
   },
-  StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel', url: '/kernel/reference/schema/path#steplabel' },
+  StepLabelSchema: { schema: IR.StepLabelSchema, label: 'StepLabel' },
   ControlPointSchema: {
     schema: IR.ControlPointSchema,
     label: 'ControlPoint',
-    url: '/kernel/reference/schema/path#controlpoint',
   },
-  TargetSchema: { schema: IR.TargetSchema, label: 'Target', url: '/kernel/reference/schema/path#target' },
-  PositionSchema: { schema: IR.PositionSchema, label: 'Position', url: '/kernel/reference/schema/placement#position' },
+  TargetSchema: { schema: IR.TargetSchema, label: 'Target' },
+  PositionSchema: { schema: IR.PositionSchema, label: 'Position' },
   PolarPositionSchema: {
     schema: IR.PolarPositionSchema,
     label: 'PolarPosition',
-    url: '/kernel/reference/schema/placement#polarposition',
   },
   AtPositionSchema: {
     schema: IR.AtPositionSchema,
     label: 'AtPosition',
-    url: '/kernel/reference/schema/placement#atposition',
   },
   OffsetPositionSchema: {
     schema: IR.OffsetPositionSchema,
     label: 'OffsetPosition',
-    url: '/kernel/reference/schema/placement#offsetposition',
   },
   BetweenPositionSchema: {
     schema: IR.BetweenPositionSchema,
     label: 'BetweenPosition',
-    url: '/kernel/reference/schema/placement#betweenposition',
   },
   AnchorPositionSchema: {
     schema: IR.AnchorPositionSchema,
     label: 'AnchorPosition',
-    url: '/kernel/reference/schema/placement#anchorposition',
   },
   AbsoluteTargetSchema: {
     schema: IR.AbsoluteTargetSchema,
     label: 'AbsoluteTarget',
-    url: '/kernel/reference/schema/placement#absolutetarget',
   },
   NodeTargetSchema: {
     schema: IR.NodeTargetSchema,
     label: 'NodeTarget',
-    url: '/kernel/reference/schema/placement#nodetarget',
   },
 
   GraphicPaintSchema: {
     schema: IR.GraphicPaintSchema,
     label: 'GraphicPaint',
-    url: '/kernel/reference/schema/style#graphicpaint',
   },
   GraphicOpacitySchema: {
     schema: IR.GraphicOpacitySchema,
     label: 'GraphicOpacity',
-    url: '/kernel/reference/schema/style#graphicopacity',
   },
   GraphicEffectsSchema: {
     schema: IR.GraphicEffectsSchema,
     label: 'GraphicEffects',
-    url: '/kernel/reference/schema/style#graphiceffects',
   },
   StrokeStyleSchema: {
     schema: IR.StrokeStyleSchema,
     label: 'StrokeStyle',
-    url: '/kernel/reference/schema/style#strokestyle',
   },
   StrokeWidthSchema: {
     schema: IR.StrokeWidthSchema,
     label: 'StrokeWidth',
-    url: '/kernel/reference/schema/style#strokewidth',
   },
   ContextualColorSchema: {
     schema: IR.ContextualColorSchema,
     label: 'ContextualColor',
-    url: '/kernel/reference/schema/style#contextualcolorschema',
   },
   PaintValueSchema: {
     schema: IR.PaintValueSchema,
     label: 'PaintValue',
-    url: '/kernel/reference/schema/style#paintvalue',
   },
   GraphicStyleSchema: {
     schema: IR.GraphicStyleSchema,
     label: 'GraphicStyle',
-    url: '/kernel/reference/schema/style#graphicstyle',
   },
   CascadingGraphicStyleSchema: {
     schema: IR.CascadingGraphicStyleSchema,
     label: 'CascadingGraphicStyle',
-    url: '/kernel/reference/schema/style#cascadinggraphicstyle',
   },
   DropShadowSchema: {
     schema: IR.DropShadowSchema,
     label: 'DropShadow',
-    url: '/kernel/reference/schema/style#dropshadow',
+    url: '/kernel/visual/shadow/schema-reference#dropshadowschema',
   },
   GradientStopSchema: {
     schema: IR.GradientStopSchema,
     label: 'GradientStop',
-    url: '/kernel/reference/schema/style#gradientstop',
   },
-  PaintSchema: { schema: IR.PaintSchema, label: 'Paint', url: '/kernel/reference/schema/style#paint' },
+  PaintSchema: { schema: IR.PaintSchema, label: 'Paint' },
   LinearGradientPaintSchema: {
     schema: IR.LinearGradientPaintSchema,
     label: 'LinearGradientPaint',
-    url: '/kernel/reference/schema/style#lineargradient',
   },
   RadialGradientPaintSchema: {
     schema: IR.RadialGradientPaintSchema,
     label: 'RadialGradientPaint',
-    url: '/kernel/reference/schema/style#radialgradient',
   },
   ConicGradientPaintSchema: {
     schema: IR.ConicGradientPaintSchema,
     label: 'ConicGradientPaint',
-    url: '/kernel/reference/schema/style#conicgradient',
+  },
+  PatternShapeNameSchema: {
+    schema: IR.PatternShapeNameSchema,
+    label: 'PatternShapeNameSchema',
+    url: '/kernel/visual/pattern/schema-reference#patternshapenameschema',
+  },
+  PatternLineStyleSchema: {
+    schema: IR.PatternLineStyleSchema,
+    label: 'PatternLineStyleSchema',
+    url: '/kernel/visual/pattern/schema-reference#patternlinestyleschema',
+  },
+  PatternLineStyleOverrideSchema: {
+    schema: IR.PatternLineStyleOverrideSchema,
+    label: 'PatternLineStyleOverrideSchema',
+    url: '/kernel/visual/pattern/schema-reference#patternlinestyleoverrideschema',
+  },
+  PatternLineStyleCycleSchema: {
+    schema: IR.PatternLineStyleCycleSchema,
+    label: 'PatternLineStyleCycleSchema',
+    url: '/kernel/visual/pattern/schema-reference#patternlinestylecycleschema',
   },
   PatternPaintSchema: {
     schema: IR.PatternPaintSchema,
     label: 'PatternPaint',
-    url: '/kernel/reference/schema/style#pattern',
+    url: '/kernel/visual/pattern/schema-reference#patternpaintschema',
   },
   ImagePaintSchema: {
     schema: IR.ImagePaintSchema,
     label: 'ImagePaint',
-    url: '/kernel/reference/schema/style#image',
   },
 
   AnimationTrackSchema: {
     schema: IR.AnimationTrackSchema,
     label: 'AnimationTrack',
-    url: '/kernel/reference/schema/animation#animationtrack',
+    url: '/kernel/visual/animation/schema-reference#animationtrackschema',
   },
   KeyframeSchema: {
     schema: IR.KeyframeSchema,
     label: 'Keyframe',
-    url: '/kernel/reference/schema/animation#keyframe',
+    url: '/kernel/visual/animation/schema-reference#keyframeschema',
   },
-  EasingSchema: { schema: IR.EasingSchema, label: 'Easing', url: '/kernel/reference/schema/animation#easing' },
-  TriggerSchema: { schema: IR.TriggerSchema, label: 'Trigger', url: '/kernel/reference/schema/animation#trigger' },
+  EasingSchema: {
+    schema: IR.EasingSchema,
+    label: 'Easing',
+    url: '/kernel/visual/animation/schema-reference#easingschema',
+  },
+  TriggerSchema: {
+    schema: IR.TriggerSchema,
+    label: 'Trigger',
+    url: '/kernel/visual/animation/schema-reference#triggerschema',
+  },
   EventTriggerSchema: {
     schema: IR.EventTriggerSchema,
     label: 'EventTrigger',
-    url: '/kernel/reference/schema/animation#eventtrigger',
+    url: '/kernel/visual/animation/schema-reference#eventtriggerschema',
   },
-  OriginSchema: { schema: IR.OriginSchema, label: 'Origin', url: '/kernel/reference/schema/animation#origin' },
+  OriginSchema: {
+    schema: IR.OriginSchema,
+    label: 'Origin',
+    url: '/kernel/visual/animation/schema-reference#originschema',
+  },
 
   MoveStepSchema: {
     schema: IR.MoveStepSchema,
@@ -612,12 +624,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RelativeTargetSchema: {
     schema: IR.RelativeTargetSchema,
     label: 'RelativeTarget',
-    url: '/kernel/reference/schema/path#relative',
   },
   RelativeAccumulateTargetSchema: {
     schema: IR.RelativeAccumulateTargetSchema,
     label: 'RelativeAccumulateTarget',
-    url: '/kernel/reference/schema/path#relativeaccumulate',
   },
 
   ArrowMarkSchema: {

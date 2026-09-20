@@ -119,12 +119,12 @@ Anchor 是 Node 暴露给其它图元引用的点。路径、定位和标签都�
 
 上排用矩形说明标准方位、角度与边比例 anchor；下排说明复杂 shape 还可以提供自己的语义点。这里的重点是区分几何所有者，不在概念页枚举每种 shape 的全部名称：
 
-| anchor 家族          | 几何所有者                 | 权威入口                                            |
-| -------------------- | -------------------------- | --------------------------------------------------- |
-| `center` / 标准方位  | Node 的 shape / boundary   | [Node 几何](/kernel/components/node/usage)          |
-| 数字角度             | 选定的 connection boundary | [Path target](/kernel/reference/schema/path#目标点) |
-| shape 专属名称       | 对应 shape                 | [Shapes](/kernel/components/node/shape)             |
-| `{ side, fraction }` | 视觉 shape 的真实边        | [Node 几何](/kernel/components/node/usage)          |
+| anchor 家族          | 几何所有者                 | 权威入口                                                |
+| -------------------- | -------------------------- | ------------------------------------------------------- |
+| `center` / 标准方位  | Node 的 shape / boundary   | [Node 几何](/kernel/components/node/usage)              |
+| 数字角度             | 选定的 connection boundary | [Path target](/kernel/components/path/schema-reference) |
+| shape 专属名称       | 对应 shape                 | [Shapes](/kernel/components/node/shape)                 |
+| `{ side, fraction }` | 视觉 shape 的真实边        | [Node 几何](/kernel/components/node/usage)              |
 
 IR / schema 的标准方位只保留 `top` / `right` / `bottom` / `left` 与四个角点，`center` 独立存在。命名方位优先让 shape / boundary 自己解析，缺失时回退到 AABB；数字角度沿射线命中选定 boundary；shape 专属名称和边比例点始终由视觉 shape 负责。
 

@@ -5,7 +5,7 @@ description: Persistent path and step fields, and drawing-specific configuration
 
 This page contains drawing-owned input contracts. `PathSchema` accepts an open `kind`; the selected kind then validates the complete path. Built-in `stroke` normally needs at least two steps, with a single self-contained rectangle step as an exception, while a custom kind defines its own requirements.
 
-`way`, `arrow`, and `arrowPlacement` are authoring inputs normalized by Vanilla into steps or `marks`; they are not stored unchanged in persistent Path IR. `ArrowDetailSchema` belongs to that authoring configuration. Shared positioning, styles, and reusable fragments remain in [Shared path contracts](/kernel/reference/schema/path).
+`way`, `arrow`, and `arrowPlacement` are authoring inputs normalized by Vanilla into steps or `marks`; they are not stored unchanged in persistent Path IR. `ArrowDetailSchema` belongs to that authoring configuration.
 
 ## PathSchema
 

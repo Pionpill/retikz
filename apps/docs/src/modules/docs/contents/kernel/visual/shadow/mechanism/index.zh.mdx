@@ -1,0 +1,78 @@
+---
+title: 实现原理
+description: 从投影参数、几何边界到滤镜区域，理解阴影为什么改变取景而不改变节点连接。
+---
+
+阅读[基础用法](/kernel/visual/shadow/usage)后，本页解释预设如何成为实际投影、阴影范围如何参与取景，以及 SVG 和 Canvas 如何消费同一结果。
+
+## 预设解析为主几何的投影样式
+
+字符串预设直接取得对应投影字段。对象配置先取 preset 的字段，再用显式字段覆盖。例如 `{ preset: 'md', offsetX: 12 }` 保留预设的其他字段，只改水平偏移。对象最终没有 color 时，解析器补为 `rgba(0,0,0,0.5)`。
+
+“关闭”需要区分两种输入：字符串 `'none'` 没有投影结果；对象中的 `preset: 'none'` 只是没有预设底值，如果同时提供 offsetX 和 offsetY，仍能形成显式投影。不能把“出现 none”理解成忽略整个对象。
+
+解析后的 shadow 随主几何进入 Scene。Node 文字、标签等独立输出不会因为主形状带阴影就一起产生投影。Scope 的默认样式也不是把后代先合成一张图片。
+
+下面从同一解析结果分出两条消费路径：一条估算可见范围，一条负责绘制。边界估算并不是生成阴影像素的渲染步骤。
+
+<ComponentPreview files="shadow-flow" size="md" hideCode type="flow" />
+
+<SourceLinks
+  sources={[
+    { label: '预设与显式字段合并', path: 'packages/kernel/core/src/resolve/style/drawable.ts' },
+    { label: 'Node 主几何的 Scene 样式', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+  ]}
+/>
+
+## 阴影扩大取景范围，连接点仍由原几何决定
+
+这里有三个不同范围：
+
+- **原几何边界**：形状本身占据的位置；阴影不修改节点尺寸、路径点或连接面。
+- **可见范围估算**：在原边界外增加偏移与模糊所需的空间，参与自动取景。
+- **输出窗口**：最终显示的 viewBox；显式指定后，不会为了投影自动扩大。
+
+下面跟踪同一个宽 100、高 60 的矩形。蓝色是实体，灰色点线是原几何参考，橙色是估算边界。三幅图尺度相同。
+
+<ComponentPreview files="shadow-bounds" size="md" hideCode type="illustration" />
+
+取 `offsetX = 12`、`offsetY = 8`、`blur = 6`。实现分别外扩左 6、右 18、上 6、下 14。原边界 `(0, 0, 100, 60)` 变为 `(-6, -6, 124, 80)`：
+
+| 方向    | 外扩量                                           |
+| ------- | ------------------------------------------------ |
+| 左 / 右 | blur + max(0, -offsetX) / blur + max(0, offsetX) |
+| 上 / 下 | blur + max(0, -offsetY) / blur + max(0, offsetY) |
+
+这是一套布局用的外溢估算，不是逐像素扫描模糊结果。自动布局收集它与原几何范围，连接点仍在原形状上。显式 viewBox 若只容纳原矩形，阴影仍可能落到输出窗口外。
+
+<SourceLinks
+  sources={[{ label: '阴影边界外扩与布局收集', path: 'packages/kernel/core/src/compile/orchestration/bounds.ts' }]}
+/>
+
+## SVG 单独扩展滤镜的计算区域
+
+SVG 滤镜有自己的计算区域。即使画布留出了空间，滤镜区域过小也会先裁掉投影。尤其是水平直线，其包围盒高度可能为零；按包围盒百分比扩大仍可能得到零高度。
+
+Retikz 使用 `filterUnits="userSpaceOnUse"`，以 Scene 的 viewBox 为基础，再按偏移与 blur 外扩滤镜区域。它扩大的是滤镜计算窗口，不会改写显式 viewBox。
+
+相同投影字段生成相同稳定 key，供当前 SVG 输出复用滤镜定义，图元通过 filter 引用使用它。key 按 offsetX、offsetY、blur、color、opacity 的固定顺序生成，不依赖对象字段书写顺序。
+
+SVG 使用 `feDropShadow`，其中 `stdDeviation = blur / 2`。Canvas 则保存上下文、设置 shadow 参数、绘制图元，再恢复上下文。Canvas 的偏移向量按当前变换矩阵映射，blur 按两个轴尺度的几何平均值校准，以适应缩放。
+
+两端共享投影意图，但模糊栅格化不保证逐像素相同。阴影颜色自身的 alpha 与显式 opacity 共同影响透明度。
+
+<SourceLinks
+  sources={[
+    { label: '滤镜区域、稳定 key 与 feDropShadow', path: 'packages/kernel/render/src/svg/builders/shadow-defs.ts' },
+    { label: 'Canvas 变换校准与上下文恢复', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/shadow/usage' },
+    { title: '组件对接', url: '/kernel/visual/shadow/integration' },
+  ]}
+/>

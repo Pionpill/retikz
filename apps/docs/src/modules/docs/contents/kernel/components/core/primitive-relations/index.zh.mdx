@@ -32,7 +32,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 
 <ComponentPreview files="anchors-explicit" size="md" hideCode />
 
-概念上只需记住“省略 anchor 是动态，提供 anchor 是固定”。完整 target union、`offset`、角度与边比例写法见 [Path schema · 目标点](/kernel/reference/schema/path#目标点)；标准 anchor、boundary 与各 shape 专属名称见 [Node 几何](/kernel/components/node/usage)和 [Shapes](/kernel/components/node/shape)。
+概念上只需记住“省略 anchor 是动态，提供 anchor 是固定”。完整 target union、`offset`、角度与边比例写法见 [Path schema · 目标点](/kernel/components/path/schema-reference)；标准 anchor、boundary 与各 shape 专属名称见 [Node 几何](/kernel/components/node/usage)和 [Shapes](/kernel/components/node/shape)。
 
 `axis-line` 是一个有意的例外：它取 target 中心或显式 anchor 后投影到单个局部轴，所以省略 anchor 也不会在 target 端动态贴边。source 端仍朝投影后的终点正常裁切；详见 [Step · 路径组合 · 正交连接](/kernel/components/path/step#正交连接)。
 
@@ -48,7 +48,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 | 正交折线 | `'-\|'` / `'\|-'`        | 流程图、结构图         |
 | 曲线     | `{ bend }` / `{ curve }` | 避让、双向边、平滑关系 |
 
-完整 step 与 path kind 参数属于 [Draw](/kernel/components/path/usage)和 [Path schema](/kernel/reference/schema/path)。关系页只给选择思路，不复制 API 字典。
+完整 step 与 path kind 参数属于 [Draw](/kernel/components/path/usage)和 [Path schema](/kernel/components/path/schema-reference)。关系页只给选择思路，不复制 API 字典。
 
 路径内部可以相对上一段终点移动：`{ relative }` 临时偏移但不推进累计基准，`{ relativeAccumulate }` 偏移后把新终点作为下一段基准。React Sugar 也支持 `'+dx,dy'` / `'++dx,dy'`：
 

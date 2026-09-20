@@ -286,16 +286,10 @@ describe('<SectionNav>', () => {
     );
 
     const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
-    expect(links.map(link => getLinkLabel(link))).toEqual([
-      'kernel.components',
-      'kernel.packages',
-      'kernel.reference',
-      'kernel.gallery',
-    ]);
+    expect(links.map(link => getLinkLabel(link))).toEqual(['kernel.components', 'kernel.packages', 'kernel.gallery']);
     expect(links.map(link => link.getAttribute('href'))).toEqual([
       '/kernel/components',
       '/kernel/packages',
-      '/kernel/reference',
       '/kernel/galleries',
     ]);
   });

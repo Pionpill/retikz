@@ -1,0 +1,117 @@
+---
+title: Basic usage
+description: Shadows add a drop shadow to primary geometry, using a size preset or explicit overrides.
+---
+
+## Using this topic
+
+All four forms render the same result. Vanilla requires `<div id="diagram"></div>` in the page; call `view.dispose()` before removing the host.
+
+<ComponentPreview files="shadow-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node position={[0, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'steelblue', shadow: 'md' }} />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [node({ position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } })],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Configure a shadow
+
+Use an object such as `{ preset: 'md', blur: 6 }` to override a preset, or provide both offsetX and offsetY. Both offsets are required without a preset. Blur is nonnegative; positive offsetY points downward in screen coordinates. Opacity multiplies the resolved shadow color's alpha.
+
+<ComponentPreview files="shadow-object" size="sm" />
+
+`shadow: 'none'` disables an inherited shadow. Shadows do not change node connection boundaries. A fixed viewBox can still clip them, so leave sufficient output space.
+
+## Parameter playground
+
+Adjust offset and blur to observe the shadow outside primary geometry. See [Component integration](/kernel/visual/shadow/integration) for text and label boundaries.
+
+<ComponentPreview files="shadow-playground" size="md" controlPanelDefaultSize={50} />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/shadow/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.shadow',
+      kind: 'property',
+      type: 'ShadowPresetValue | IRDropShadow',
+      description:
+        'Presets are none, sm, md, lg, xl, and 2xl. Objects supply a preset or both offsetX and offsetY, with optional blur, color, and opacity overrides.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Component integration', url: '/kernel/visual/shadow/integration' },
+    { title: 'API reference', url: '/kernel/visual/shadow/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/shadow/schema-reference' },
+  ]}
+/>

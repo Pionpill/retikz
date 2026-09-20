@@ -27,7 +27,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 2. **同一注册表**：`BUILTIN_*` 与 `options.xxx` 在每次编译开始时合并为同一个 `ReadonlyMap`。
 3. **同一消费路径**：resolver、错误诊断和 compile consumer 不区分 key 来自内置还是调用方。
 
-内置项会先注册，自定义项随后加入；建表阶段拒绝空 key 和重复 key。消费阶段遇到未知 key 时，再按具体能力的契约选择报错，或告警后跳过。因此“一等公民”表示同一协议与执行路径，不表示自定义项可以静默覆盖内置项。完整扩展族、注入入口与异常语义查[扩展机制](/kernel/reference/runtime/extensions)。
+内置项会先注册，自定义项随后加入；建表阶段拒绝空 key 和重复 key。消费阶段遇到未知 key 时，再按具体能力的契约选择报错，或告警后跳过。因此“一等公民”表示同一协议与执行路径，不表示自定义项可以静默覆盖内置项。
 
 ## 能力归属原则
 
@@ -78,15 +78,12 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
       description: '理解 domain 高层节点如何保留意图并下沉',
       url: '/kernel/components/design/composite',
     },
-    {
-      title: '扩展机制',
-      description: '查询 Definition、registry、host lowerer 与具体指南',
-      url: '/kernel/reference/runtime/extensions',
-    },
+
     {
       title: '结构',
       description: '查询当前 IR schema 与字段契约',
-      url: '/kernel/reference/schema',
+      url: '/kernel/components/layout/schema-reference',
     },
-  ]}
+
+]}
 />

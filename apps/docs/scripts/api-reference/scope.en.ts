@@ -1,5 +1,7 @@
 /** 经核对的 Scope API 英文说明，标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '固有包络的独立外框；位于内容下方，不参与布局、引用或命中':
+    'Independent intrinsic-envelope frame below all content; excluded from layout, references, and hit testing',
   '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',
   '双击该图元（DOM `dblclick`）': 'Double-click on this element (DOM `dblclick`)',
   '指针在该图元上按下（DOM `pointerdown`）': 'Pointer pressed on this element (DOM `pointerdown`)',

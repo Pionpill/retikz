@@ -1,0 +1,55 @@
+---
+title: Component integration
+description: Shadows apply to each element’s primary geometry, not to an offscreen image of the whole Scope.
+---
+
+| Component   | Entry                                     |
+| ----------- | ----------------------------------------- |
+| Scope       | defaults.node.style / defaults.path.style |
+| Node        | style.shadow                              |
+| Path / Draw | style.shadow                              |
+
+## Scope
+
+Scope.style does not accept shadow. Supply defaults.node.style.shadow and defaults.path.style.shadow separately; children override with style.shadow, and none disables the effect.
+
+<ComponentPreview files="shadow-integration" size="sm" />
+
+## Node
+
+A Node shadow applies only to its primary shape. Text, labels, and pins are separate outputs. Adjust offset and blur: the shape shadow moves while the text and top label remain crisp.
+
+This example explicitly uses a blue shadow with higher opacity for visibility on light and dark backgrounds; this is not the preset's default color.
+
+<ComponentPreview files="shadow-node" size="lg" />
+
+## Path
+
+Path geometry and endpoint arrows share the effect boundary, while the path label is a separate output. Change the offset or set blur to 0 to inspect both the line and arrow shadows. Disabling the shadow leaves the path and label positions unchanged. This example uses the same explicit blue shadow as above.
+
+<ComponentPreview files="shadow-path" size="lg" />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/shadow/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.shadow',
+      kind: 'property',
+      type: 'ShadowPresetValue | IRDropShadow',
+      description:
+        'Presets are none, sm, md, lg, xl, and 2xl. Objects supply a preset or both offsetX and offsetY, with optional blur, color, and opacity overrides.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/shadow/usage' },
+    { title: 'Implementation', url: '/kernel/visual/shadow/mechanism' },
+  ]}
+/>
