@@ -12,6 +12,7 @@ import {
   refineShapeAngles,
   ShapeRadiusAxesSchema,
 } from '../shared';
+
 const properties = {
   ...ShapePathSchema.shape,
   namespace: literal('standard'),

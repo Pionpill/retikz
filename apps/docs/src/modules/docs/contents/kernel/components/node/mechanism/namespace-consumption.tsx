@@ -1,11 +1,10 @@
-import { Draw, Layout, Node } from '@retikz/react';
-import { List } from '@retikz/standard-react';
+import { Draw, Layout, Node, Scope } from '@retikz/react';
+import { List, Map } from '@retikz/standard-react';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
 
 import { namespaceConsumptionI18n } from './namespace-consumption.i18n';
-import { NamespaceCaption, NamespaceTable } from './NamespaceDiagramParts';
 
 /** 引用时序图的语言 */
 export type NamespaceConsumptionProps = { lang?: Lang };
@@ -18,47 +17,101 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
     <Layout style={{ maxWidth: '100%', height: 'auto' }}>
       <List
         transforms={[{ kind: 'translate', x: 24, y: 29 }]}
-        layout={{ cellSize: { width: 192, height: 36 }, padding: 0 }}
+        layout={{ width: 192, height: 36, padding: 0 }}
         style={{ font: { size: 14 } }}
-        items={['Path(a, b)', 'Node a', 'Node b'].map((text, index) => ({ id: `child-${index}`, content: <Node position={[0, 0]} text={`[${index}]  ${text}`} style={{ fill: 'none', stroke: 'none' }} layout={{ padding: 0, margin: 0 }} /> }))}
+        items={['Path(a, b)', 'Node a', 'Node b'].map((text, index) => ({
+          id: `child-${index}`,
+          content: `[${index}]  ${text}`,
+        }))}
       />
-      <NamespaceCaption position={[120, 133]} text={t.queue} />
+      <Node
+        position={[120, 133]}
+        text={t.queue}
+        style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
+      />
       <List
         transforms={[{ kind: 'translate', x: 24, y: 154 }]}
-        layout={{ cellSize: { width: 192, height: 36 }, padding: 0 }}
+        layout={{ width: 192, height: 36, padding: 0 }}
         style={{ font: { size: 14 } }}
-        items={[{ id: 'queued', content: <Node position={[0, 0]} text="[0]  Path(a, b)" style={{ fill: 'none', stroke: 'none' }} layout={{ padding: 0, margin: 0 }} /> }]}
-      />
-      <NamespaceTable
-        position={[377, 166]}
-        title={t.map}
-        rows={[
-          { id: 'map-a', key: 'a', value: '{ layout, state }', active: true },
-          { id: 'map-b', key: 'b', value: '{ layout, state }' },
+        items={[
+          {
+            id: 'queued',
+            content: '[0]  Path(a, b)',
+          },
         ]}
       />
+      <Scope transforms={[{ kind: 'translate', x: 377, y: 166 }]}>
+        <Node
+          position={[108, -30]}
+          text={t.map}
+          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
+        />
+        <Map
+          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
+          layout={{ height: 32, gap: 2, padding: 0, key: { width: 60 }, value: { width: 152 } }}
+          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
+          entries={[
+            {
+              key: { id: 'map-a-key', content: 'a', style: { fill: 'dodgerblue' } },
+              value: { id: 'map-a', content: '{ layout, state }', style: { fill: 'dodgerblue' } },
+            },
+            {
+              key: { id: 'map-b-key', content: 'b' },
+              value: { id: 'map-b', content: '{ layout, state }' },
+            },
+          ]}
+        />
+      </Scope>
       <Draw way={['child-0.left', [0, 47], [0, 172], 'queued.left']} arrow="->" style={{ stroke: 'gray' }} />
-      <NamespaceCaption position={[210, 89]} text={t.enqueue} secondary />
+      <Node
+        position={[210, 89]}
+        text={t.enqueue}
+        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      />
       <Draw way={['child-1.bottom', [314, 166], 'map-a-key.left']} arrow="->" style={{ stroke: 'gray' }} />
       <Draw way={['child-2.bottom', [634, 65], [634, 200], 'map-b.right']} arrow="->" style={{ stroke: 'gray' }} />
-      <NamespaceCaption position={[498, 95]} text={t.register} secondary />
+      <Node
+        position={[498, 95]}
+        text={t.register}
+        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      />
       <Draw
         way={['queued.bottom', [120, 238], [344, 238], [344, 166], 'map-a-key.left']}
         arrow="->"
         style={{ stroke: 'gray' }}
       />
-      <NamespaceCaption position={[204, 261]} text={t.flush} secondary />
-      <NamespaceCaption position={[325, 292]} text={t.immediate} />
-      <NamespaceTable
-        position={[45, 330]}
-        title=""
-        keyWidth={92}
-        valueWidth={116}
-        rows={[
-          { id: 'query-id', key: 'id', value: "'a'", active: true },
-          { id: 'query-anchor', key: 'anchor', value: "'right'" },
-        ]}
+      <Node
+        position={[204, 261]}
+        text={t.flush}
+        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
       />
+      <Node
+        position={[325, 292]}
+        text={t.immediate}
+        style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
+      />
+      <Scope transforms={[{ kind: 'translate', x: 45, y: 330 }]}>
+        <Node
+          position={[104, -30]}
+          text=""
+          style={{ fill: 'none', stroke: 'none', textColor: 'currentColor', font: { size: 14 } }}
+        />
+        <Map
+          transforms={[{ kind: 'translate', x: 0, y: -16 }]}
+          layout={{ height: 32, gap: 2, padding: 0, key: { width: 90 }, value: { width: 114 } }}
+          style={{ fill: 'gray', font: { size: 13 }, textColor: 'currentColor' }}
+          entries={[
+            {
+              key: { id: 'query-id-key', content: 'id', style: { fill: 'dodgerblue' } },
+              value: { id: 'query-id', content: "'a'", style: { fill: 'dodgerblue' } },
+            },
+            {
+              key: { id: 'query-anchor-key', content: 'anchor' },
+              value: { id: 'query-anchor', content: "'right'" },
+            },
+          ]}
+        />
+      </Scope>
       <Node
         id="point"
         position={[538, 347]}
@@ -66,8 +119,16 @@ const NamespaceConsumption: FC<NamespaceConsumptionProps> = props => {
         style={{ fill: 'none', stroke: 'none', font: { size: 16 } }}
       />
       <Draw way={['query-id.right', [310, 330], [310, 347], 'point.left']} arrow="->" style={{ stroke: 'gray' }} />
-      <NamespaceCaption position={[395, 314]} text={t.result} secondary />
-      <NamespaceCaption position={[325, 409]} text={t.note} secondary />
+      <Node
+        position={[395, 314]}
+        text={t.result}
+        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      />
+      <Node
+        position={[325, 409]}
+        text={t.note}
+        style={{ fill: 'none', stroke: 'none', textColor: 'gray', font: { size: 12 } }}
+      />
     </Layout>
   );
 };

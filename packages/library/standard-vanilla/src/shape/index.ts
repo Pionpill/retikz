@@ -2,24 +2,31 @@ import type { InputEmbed } from '@retikz/vanilla';
 
 import type { InputCircle } from './circle';
 import { CircleInputEmbedAdapter } from './circle';
+
 export * from './circle';
 import type { InputEllipse } from './ellipse';
 import { EllipseInputEmbedAdapter } from './ellipse';
+
 export * from './ellipse';
 import type { InputRectangle } from './rectangle';
 import { RectangleInputEmbedAdapter } from './rectangle';
+
 export * from './rectangle';
 import type { InputRegularPolygon } from './regular-polygon';
 import { RegularPolygonInputEmbedAdapter } from './regular-polygon';
+
 export * from './regular-polygon';
 import type { InputStar } from './star';
 import { StarInputEmbedAdapter } from './star';
+
 export * from './star';
 import type { InputArc } from './arc';
 import { ArcInputEmbedAdapter } from './arc';
+
 export * from './arc';
 import type { InputSector } from './sector';
 import { SectorInputEmbedAdapter } from './sector';
+
 export * from './sector';
 /** Standard 形状家族的 Vanilla 作者入口 */
 export const shape = Object.freeze({

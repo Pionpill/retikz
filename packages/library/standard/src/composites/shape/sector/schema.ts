@@ -3,6 +3,7 @@ import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { literal, strictObject, union } from 'zod';
 
 import { ShapePathSchema, ShapeAnglesSchema, refineShapeAngles, ShapeRadiusAxesSchema } from '../shared';
+
 const properties = {
   ...ShapePathSchema.shape,
   namespace: literal('standard'),

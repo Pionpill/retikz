@@ -13,6 +13,13 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · List / Map', en: 'Unreleased · List / Map' },
+          content: {
+            zh: '新增一维 List 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ListItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
+            en: 'Adds one-dimensional List and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ListItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
+          },
+        },
+        {
           label: { zh: '未发布 · 形状迁移', en: 'Unreleased · Shape migration' },
           content: {
             zh: '新增 Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 的持久化 composite。形状从三包 /shape 子入口导出，节点形状扩展迁至 @retikz/standard/node-shape。Vanilla 统一使用 shape.xxx，React 组件来自 @retikz/standard-react/shape；几何约束与 provider 按需装配共用同一契约。',

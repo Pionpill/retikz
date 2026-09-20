@@ -6,6 +6,7 @@ import { array, enum as zodEnum, literal, strictObject, union } from 'zod';
 import { STANDARD_NAMESPACE } from '../../shared';
 import { StandardPathBorderStyleSchema } from '../shared/schemas';
 import { FrameHeaderDirection } from './constants';
+
 const FrameHeaderShape = {
   ...NodeSchema.omit({ type: true, position: true, text: true }).shape,
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text rendered as Frame header content.'),

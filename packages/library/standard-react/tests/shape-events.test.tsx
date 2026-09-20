@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { CircleProps } from '../src/shape';
+
 type HydrationContext = Parameters<NonNullable<CircleProps['onClick']>>[1];
 import { Layout } from '@retikz/react';
 import { createRoot } from 'react-dom/client';

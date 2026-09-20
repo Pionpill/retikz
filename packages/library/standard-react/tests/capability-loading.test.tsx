@@ -60,7 +60,9 @@ describe('Standard React definition loading', () => {
       children: [createGrid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })],
     };
 
-    const svg = renderToStaticMarkup(<Layout ir={ir} extensions={{ composites: [GridDefinition] }} width={120} height={80} />);
+    const svg = renderToStaticMarkup(
+      <Layout ir={ir} extensions={{ composites: [GridDefinition] }} width={120} height={80} />,
+    );
 
     expect(svg).toContain('<path');
   });

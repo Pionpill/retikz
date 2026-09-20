@@ -1,0 +1,220 @@
+---
+title: 映射
+description: 使用 Map 绘制可复用的数据结构槽位，设置整体及单元格样式并引用具体单元格。
+---
+
+`Map` 把有序键值对画成对齐的两列，也适合展示对象字段。键默认深色、值默认浅色；输入只决定展示顺序，不执行字典查询或去重。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/standard/clip` 注入 `PathClipDefinition`。
+
+<ComponentPreview files="map-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Map } from '@retikz/standard-react';
+
+export const Example = () => (
+  <Layout>
+    <Map
+      entries={[
+        { key: 'a', value: '1' },
+        { key: 'b', value: '2' },
+      ]}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { MapDefinition } from '@retikz/standard';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    map('example', {
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [MapInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { MapDefinition } from '@retikz/standard';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [MapDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 数据配置与组件组合
+
+简单文字使用 `entries`：`key` / `value` 可以直接是字符串；需要定制时才写 `{ content: string, id?, style?, layout? }`。复杂内容使用 `MapEntry、MapKey、MapValue`；`entries` 与 `children` 二选一，数据数组中不嵌 JSX。
+
+单格用 `text` 写文字，或用 `children` 放恰好一个 drawable，二者互斥。字符串保留在 IR 中，由 Standard 在编译时转为零内边距、无背景、无描边的文本节点，仍继承单格字体与文字颜色。多个图元先用 Scope 组合。
+
+每个 MapEntry 必须有一个 MapKey 和一个 MapValue；它们分别承接键和值的单格属性。
+
+<ComponentPreview files="map-composition" size="sm" />
+
+## 整体与单元格样式
+
+`style` 设置所有格的共同样式；单元格自己的 `style` 只覆盖当前格。`layout.gap` 设置间隙，`layout.padding` 设置每格内边距；单格可通过自己的 `layout.width`、`height`、`padding` 和 `overflow` 覆盖整体值。
+
+Map 的覆盖顺序是 **结构默认 → 整体 style → style.key / style.value → 单格 style**。因此显式设置整体 `fillOpacity` 会覆盖键深值浅的默认，而单格仍能进一步强调。`font` 按字段合并，不会因只改字号而丢失字体族。
+
+<ComponentPreview files="map-styles" size="sm" />
+
+## 排列与尺寸
+
+每条 entry 固定占一行。`layout.width` / `height` 设置所有格的固定边框尺寸（含 padding），省略或 `'auto'` 时自适应。覆盖顺序为 **整体 layout → layout.key / layout.value → 单格 layout**，宽高分别继承；单格显式 `'auto'` 可解除继承的固定尺寸。
+
+默认两列分别取本列最大需求，同一行取较高单元格的高度。固定尺寸覆盖按原值绘制，较小单元格从行列起点对齐，不会被拉伸填满轨道；因此单格覆盖后，同列边框宽度或同行边框高度可能不同。`layout.gap` 接受数字或 `{ row, column }`。相同展示 key 可以重复；顺序完全来自 entries。
+
+内容在内边距区域居中。父容器提供额外空间时，槽位仍从起点排列，剩余空间留在末端。空数组自然尺寸为零。固定单格尺寸小于内容或内边距时仍保留尺寸，默认裁切超出内容，不缩放文字；父容器无法容纳整组槽位与间隙时仍会报错。
+
+## 引用具体单元格
+
+给单元格设置 `id` 后，可以用 `Draw` 的 `way` 引用，例如 `'selected.right'`。引用区域是该格分配到的矩形，不包含间隙、索引或内容的视觉溢出；关闭背景也不改变它。content 自己的 id 仍指向内容几何。
+
+整体变换与 `localNamespace` 沿 [Scope](/kernel/components/scope/usage) 规则生效。组件内单元格 id 不能重复；未设置 id 的格不会按数组下标生成稳定身份。Inspection 另行提供 `container` 与 `cell:<id>` 空间 handle，不替代命名引用。
+
+## 补充说明
+
+默认 gap 为 2、padding 为 8，无描边、无圆角，自适应单元格的 `overflow` 默认为 `visible`，固定任一轴时默认为 `clip`，可显式覆盖。List 与 Map value 背景为 gray / 0.14，Map key 为 gray / 0.4。使用固定尺寸或 `layout.overflow: 'clip'` 时，直接 IR 还需在 `clips` 中注入 `@retikz/standard/clip` 的 `PathClipDefinition`。
+
+直接 IR 的 content 同样支持字符串或一个可绘制 child。嵌套组件需要自己的 Definition；Vanilla 使用相应 adapter，JSON 不保存函数或 JSX。整体 `style` 专用于单元格视觉，其他 Scope 属性仍由根容器消费。任意矩阵、合并格与数据处理请使用表格能力。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'MapEntry 组合，与 entries 互斥；每条记录各有一个 MapKey 和 MapValue。',
+    },
+    {
+      name: 'MapKey / MapValue',
+      type: '{ id?; style?; layout?; text?; children? }',
+      description: '每格 text 与唯一 drawable child 二选一。',
+    },
+    {
+      name: 'entries',
+      type: 'Array<{ key: string | CellProps; value: string | CellProps }>',
+      description: '每行恰好一对键值，允许重复展示键。',
+    },
+    {
+      name: 'style',
+      type: '{ fill?; fillOpacity?; stroke?; font?; textColor?; opacity?; cornerRadius?; key?: CellStyle; value?: CellStyle }',
+      description: '所有格的稀疏视觉默认，单格同名字段优先。',
+    },
+    {
+      name: 'style.key / style.value',
+      type: 'CellStyle',
+      description: '键和值的视觉覆盖，优先于 style 直接字段，低于单格 style。',
+    },
+    {
+      name: 'layout.key / layout.value',
+      type: "{ width?: number | 'auto'; height?: number | 'auto'; padding?; overflow? }",
+      description: '键和值的尺寸及格内布局默认，覆盖整体 layout。',
+    },
+    {
+      name: 'layout',
+      type: "{ width?: number | 'auto'; height?: number | 'auto'; gap?; padding?; overflow?; key?: CellLayout; value?: CellLayout }",
+      description: '所有格的尺寸、间距与内边距默认；单格可覆盖 width / height / padding / overflow。',
+    },
+  ]}
+/>
+
+## Schema 参考
+
+### MapSchema
+
+<ZodSchema name="MapSchema" />
+
+字段来自实际 schema。工厂保留稀疏输入；schema.parse 会物化声明的静态默认，不恢复省略意图。
+
+## 延伸阅读
+
+- [表面](/library/standard/surface)
+- [列表](/library/standard/list)
+- [节点命名引用原理](/kernel/components/node/mechanism)

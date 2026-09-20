@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector } from '../src/shape';
+
 const ir = (jsx: ReactNode) => {
   const input = createInputScene(jsx);
   return { children: processToStaticInputResult(input.scene, { adapters: input.adapters }).scene };

@@ -1,0 +1,220 @@
+---
+title: Map
+description: Draw reusable data-structure cells with Map, style the structure and individual cells, and reference cell boundaries.
+---
+
+`Map` draws ordered key/value pairs in two aligned columns, including object fields. Keys use darker fills and values lighter fills. Input order controls presentation, with no lookup or deduplication semantics.
+
+## Using this component
+
+After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/standard/clip`.
+
+<ComponentPreview files="map-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Map } from '@retikz/standard-react';
+
+export const Example = () => (
+  <Layout>
+    <Map
+      entries={[
+        { key: 'a', value: '1' },
+        { key: 'b', value: '2' },
+      ]}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { MapDefinition } from '@retikz/standard';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    map('example', {
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [MapInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { MapDefinition } from '@retikz/standard';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [MapDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Data and composition
+
+Use `entries` for text: `key` and `value` accept strings directly; use `{ content: string, id?, style?, layout? }` only for customized cells. Use MapEntry, MapKey, and MapValue for complex content. Choose either `entries` or `children`; data arrays do not contain JSX.
+
+Each cell accepts either `text` or exactly one drawable child. IR preserves strings; Standard expands them during compilation into text nodes with zero padding and margin, no background, and no stroke; cell font and text color still apply. Wrap multiple drawables in a Scope.
+
+Each MapEntry requires exactly one MapKey and one MapValue; each slot carries its own cell props.
+
+<ComponentPreview files="map-composition" size="sm" />
+
+## Style the structure and individual cells
+
+Root `style` supplies common cell styling. A cell's own `style` overrides only that cell. Use `layout.gap` for spacing and `layout.padding` for common padding; each cell may override width, height, padding and overflow.
+
+Precedence is **structural defaults → overall style → style.key / style.value → cell style**. An explicit overall `fillOpacity` therefore overrides the default key/value contrast. Font fields merge independently.
+
+<ComponentPreview files="map-styles" size="sm" />
+
+## Ordering and dimensions
+
+Each entry occupies one row. `layout.width` / `height` set shared fixed border-box dimensions including padding. Omitted axes or `'auto'` use automatic sizing. Precedence is **overall layout → layout.key / layout.value → cell layout**, independently per axis; a cell can use `'auto'` to clear an inherited fixed dimension.
+
+Automatic columns use their maximum effective width and each row uses its maximum height. Fixed cells keep their specified dimensions at the track start rather than stretching, so overrides may produce different border widths within a column or heights within a row. `layout.gap` accepts a number or `{ row, column }`. Display keys may repeat; entries determine order.
+
+Content is centered inside the padding. Extra parent space remains at the end, without stretching cells. Empty arrays have zero natural size. Fixed cells retain their dimensions and clip oversized content by default, including when padding exceeds the available size. Text is not scaled or automatically wrapped to fit. An insufficient parent allocation for the whole structure still fails.
+
+## Reference individual cells
+
+Assign a cell `id` to target its boundary from `Draw`, such as `'selected.right'`. The target is the allocated rectangle, excluding gaps, indices, and visual overflow. Disabling the background does not change it. A content id continues to identify the content geometry.
+
+Transforms and `localNamespace` follow [Scope](/kernel/components/scope/usage). Cell ids must be unique within a component. Unnamed cells do not acquire index-based identities. Inspection separately exposes `container` and `cell:<id>` spatial handles; these do not replace named references.
+
+## Additional notes
+
+Defaults are gap 2, padding 8, and no stroke or corner radius. Automatic cells default to visible overflow; fixing either axis defaults to clip unless explicitly overridden. List cells and Map values use gray / 0.14; Map keys use gray / 0.4. When fixing dimensions or setting `layout.overflow: 'clip'`, direct IR must also supply `PathClipDefinition` from `@retikz/standard/clip` through `clips`.
+
+Direct IR content also accepts a string or one drawable child. Nested composites need their definitions, or their Vanilla adapters. JSON contains neither callbacks nor JSX. Root `style` is specific to cell visuals; other Scope props apply to the root container. General matrices, merged cells, and data processing belong to table capabilities.
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'MapEntry composition, mutually exclusive with entries; each entry has one MapKey and MapValue.',
+    },
+    {
+      name: 'MapKey / MapValue',
+      type: '{ id?; style?; layout?; text?; children? }',
+      description: 'Each cell accepts text or exactly one drawable child.',
+    },
+    {
+      name: 'entries',
+      type: 'Array<{ key: string | CellProps; value: string | CellProps }>',
+      description: 'Exactly one key/value pair per row; display keys may repeat.',
+    },
+    {
+      name: 'style',
+      type: '{ fill?; fillOpacity?; stroke?; font?; textColor?; opacity?; cornerRadius?; key?: CellStyle; value?: CellStyle }',
+      description: 'Sparse visual defaults for cells; per-cell fields take precedence.',
+    },
+    {
+      name: 'style.key / style.value',
+      type: 'CellStyle',
+      description: 'Key/value visual overrides, after shared style fields and before individual cell style.',
+    },
+    {
+      name: 'layout.key / layout.value',
+      type: "{ width?: number | 'auto'; height?: number | 'auto'; padding?; overflow? }",
+      description: 'Role-specific dimensions and cell layout overriding the shared layout.',
+    },
+    {
+      name: 'layout',
+      type: "{ width?: number | 'auto'; height?: number | 'auto'; gap?; padding?; overflow?; key?: CellLayout; value?: CellLayout }",
+      description: 'Shared cell dimensions and spacing; cells override width / height / padding / overflow.',
+    },
+  ]}
+/>
+
+## Schema reference
+
+### MapSchema
+
+<ZodSchema name="MapSchema" />
+
+Fields come from the actual schema. Factories preserve sparse input; schema.parse materializes declared static defaults and does not restore omission intent.
+
+## Further reading
+
+- [Surface](/library/standard/surface)
+- [列表](/library/standard/list)
+- [Node naming and references](/kernel/components/node/mechanism)
