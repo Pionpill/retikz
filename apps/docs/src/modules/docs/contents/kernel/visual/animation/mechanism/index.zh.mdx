@@ -1,0 +1,115 @@
+---
+title: 实现原理
+description: 从轨道、关键帧与时序数据建立动画模型，再理解编译、时间求值与后端播放。
+---
+
+[基础用法](/kernel/visual/animation/usage)介绍动画声明。本页先拆开一条动画的数据结构，建立轨道、关键帧与时序的概念，再跟踪这些数据如何进入 Scene、求出属性值并播放。
+
+## 轨道用关键帧和时序描述一个属性的变化
+
+动画声明不保存每一帧画面，而是保存足够计算中间状态的数据。先认识三个概念：
+
+- **轨道（track）**：描述一个属性的完整变化，例如 opacity 从 0.2 变到 1。
+- **关键帧（keyframe）**：指定某个进度位置的属性值，中间的值由插值计算。
+- **时序参数（timing）**：决定等待多久、一次变化持续多久、重复几次，以及活动区间前后采用什么状态。
+
+下面是一条完整的透明度轨道，后文的时间求值图也使用这组数据：
+
+```ts
+import type { IRAnimationTrack } from '@retikz/core';
+
+const track = {
+  property: 'opacity',
+  keyframes: [
+    { at: 0, value: 0.2 },
+    { at: 1, value: 1 },
+  ],
+  duration: 1000,
+  delay: 200,
+  easing: 'linear',
+  iterations: 1,
+  direction: 'normal',
+  fill: 'forwards',
+  trigger: 'load',
+} satisfies IRAnimationTrack;
+```
+
+`property` 回答“改变什么”，`keyframes` 回答“经过哪些值”，其余参数回答“按什么时间规则变化”。`at` 是一次迭代内 0 到 1 的归一化位置，不是毫秒；上例的 `at: 0.5` 对应活动区间内 500ms，加上 delay 才是时间轴上的 700ms。`value` 是该属性的绝对值，不是相对前一帧的增量；关键帧按 `at` 升序排列。
+
+目标不保存在轨道内部：同一份 track 放进 `Node.animations`、`Path.animations` 或 `Scope.animations`，由所挂载组件决定作用对象。一个对象的 `animations` 数组可以分别放透明度、位移等轨道。预设函数也只是生成这些数据，运行时不需要另认一种“预设动画”。
+
+整个声明可以序列化为 JSON。DOM 引用、事件回调、当前播放时间和暂停状态都不写入轨道；它们由挂载后的运行时管理。这样，同一声明才可以交给 SVG、Canvas 或静态截帧消费。
+
+<SourceLinks
+  sources={[
+    { label: '关键帧、轨道与 JSON 数据契约', path: 'packages/kernel/core/src/schemas/animation/schema.ts' },
+    { label: '预设生成普通轨道', path: 'packages/kernel/core/src/parse/animation.ts' },
+  ]}
+/>
+
+## 时间参数与关键帧共同确定属性值
+
+以 opacity 为例：`delay = 200ms`、`duration = 1000ms`，关键帧为 `0 → 0.2` 和 `1 → 1`，linear easing，一次正向播放，基础 opacity 为 1。
+
+下图在固定位置展示同一矩形。t = 100ms 尚未进入活动区间，默认 fill 为 forwards，因此没有动画值，仍显示基础 opacity；后续三幅才是求值结果。
+
+<ComponentPreview files="animation-samples" size="md" hideCode type="illustration" />
+
+t = 700ms 时，减去 delay 得到局部时间 500ms，进度为 0.5。段内进度同样为 0.5，linear 不改变进度，最终值为 $0.2 + (1 - 0.2) \times 0.5 = 0.6$。
+
+下面展开单次求值。活动区间外可以返回“无动画值”，调用方保留基础输出，并不是把属性设为零。
+
+<ComponentPreview files="animation-flow" size="sm" hideCode type="flow" />
+
+循环时，先求迭代编号和迭代内进度，再按 direction 翻转。alternate 在奇数次迭代反向，编号从 0 开始。若改为两次 alternate，t = 1450ms 时局部时间为 1250ms：迭代编号 1、局部进度 0.25，反向后为 0.75，opacity 为 0.8。
+
+fill 决定区间前后是否施加轨道：backwards 保留起始侧，forwards 保留结束侧，both 保留两侧，none 两侧都不用轨道值。结束值还要经过 direction，反向结束不一定是最后一个关键帧的值。
+
+确定轨道进度后，再通过缓动与插值求出属性值。
+
+多关键帧时，先找到相邻两帧，再将该段归一化到 0 到 1。例如关键帧位于 0、0.4、1，轨道进度 0.7 对应第二段的 $\frac{0.7 - 0.4}{1 - 0.4} = 0.5$。
+
+easing 作用于段内进度。段起点关键帧的 easing 优先于轨道 easing，缺省为 linear。cubic-bezier 先根据输入进度求曲线参数，再读取纵坐标，不能直接把进度当作曲线参数。
+
+最后才按值类型插值：数字线性插值，颜色通过 Oklch 插值，viewBox 的数值分量分别插值；自定义属性可交给注册插值器。因此时间走过一半，并不意味着颜色通道或视觉位移一定完成一半。
+
+<SourceLinks
+  sources={[
+    { label: '时间参数、段定位、缓动与插值', path: 'packages/kernel/render/src/animation/evaluate.ts' },
+    { label: 'Oklch 颜色插值', path: 'packages/kernel/render/src/animation/oklch.ts' },
+  ]}
+/>
+
+## 后端与输出模式决定轨道的播放路径
+
+Scene 保留轨道，后端和输出模式决定执行方式。下图区分自动、交互和静态路径，避免把所有 SVG 动画理解成 JavaScript 每帧重绘。
+
+<ComponentPreview files="animation-playback" size="md" hideCode type="flow" />
+
+| 路径         | 实际消费方式                                                                |
+| ------------ | --------------------------------------------------------------------------- |
+| SVG 自动播放 | 支持的轨道映射为 CSS @keyframes，由浏览器推进                               |
+| SVG 交互播放 | 输出可序列化的 WAAPI 描述，运行时绑定目标并调用 element.animate             |
+| Canvas       | 共享时钟推进时间，绘制阶段求值并重新绘制                                    |
+| SVG 静态截帧 | snapshotAt 对自动播放轨道求值，写成静态属性或 transform，不输出持续播放规则 |
+
+共享轨道含义，不代表 CSS 每帧调用 evaluateTrack。求值器服务 Canvas、静态采样及需要 JavaScript 求值的路径；原生 SVG 动画由浏览器执行。
+
+静态截帧不是录制交互：未触发的交互轨道保留基础状态。SVG 自定义属性没有内置静态映射时会告警并保留基础输出，注册属性不会自动使其成为可导出的 CSS 属性。
+
+<SourceLinks
+  sources={[
+    { label: 'SVG CSS 输出与静态截帧', path: 'packages/kernel/render/src/svg/animation/keyframes.ts' },
+    { label: 'WAAPI 描述', path: 'packages/kernel/render/src/svg/animation/waapi.ts' },
+    { label: '共享时钟与运行时绑定', path: 'packages/kernel/render/src/animation/runtime.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/animation/usage' },
+    { title: '组件对接', url: '/kernel/visual/animation/integration' },
+  ]}
+/>

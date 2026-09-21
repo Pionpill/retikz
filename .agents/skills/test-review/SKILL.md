@@ -9,13 +9,13 @@ description: Use when auditing an existing retikz test suite, module test direct
 
 ## 边界
 
-| 场景                             | 用哪个 skill     |
-| -------------------------------- | ---------------- |
-| 审计已有测试是否过期、重复或临时 | test-review      |
-| 横向审实现、架构与文档一致性     | develop-review   |
-| 为疑似缺陷构造边界 case          | cross-test       |
-| Alpha 实现完成后的对抗性验证     | develop-test     |
-| 已接受测试清理建议并实施         | develop-refactor |
+| 场景                             | 用哪个 skill                               |
+| -------------------------------- | ------------------------------------------ |
+| 审计已有测试是否过期、重复或临时 | test-review                                |
+| 横向审实现、架构与文档一致性     | develop-review                             |
+| 为疑似缺陷构造边界 case          | cross-test                                 |
+| Alpha 实现完成后的对抗性验证     | [alpha](../cross-test/references/alpha.md) |
+| 已接受测试清理建议并实施         | develop-refactor                           |
 
 不要用测试数量、行数或覆盖率百分比直接决定保留与删除。唯一标准是：该 case 是否以最小必要粒度保护仍然存在的行为契约。
 
@@ -85,42 +85,7 @@ docs 测试额外检查：
 
 ## 报告
 
-报告写入 ignored 路径：
-
-```text
-notes/reports/test-review-YYYY-MM-DD-<scope>.md
-```
-
-```md
-# Test Review Report: <scope>
-
-日期：
-范围：
-基准快照：
-测试与实现读取范围：
-
-## 结论概览
-
-## 保留
-
-| 测试 | 保护的当前契约 | 保留证据 |
-
-## 合并
-
-| 测试 | 重复证据 | 保留目标 | 最小保留断言 |
-
-## 删除
-
-| 测试 | 分类 | 过期或耦合证据 | 替代覆盖 / 风险承担 |
-
-## 临时测试
-
-| 测试 | 验证结论 | 删除或转正动作 |
-
-## 建议实施顺序
-```
-
-没有某类时写“无”。报告不得 stage 或 commit。
+结果字段与留档按 [报告格式](references/report.md)。只报告有证据的发现，空类别注明无，不强制赞扬或凑数。
 
 ## 完成标志
 

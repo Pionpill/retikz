@@ -1,0 +1,205 @@
+---
+title: Implementation
+description: Understand how path syntax, cursor state, endpoint references, arrow contacts, and label gaps produce a drawing
+---
+
+Read [Basic usage](/kernel/components/path/usage) first. This page explains local drawing rules: why two input forms produce the same path, why endpoints can refer to later nodes, and how labels leave gaps in curves.
+
+## Where the two forms meet
+
+`<Draw way={['a', '-|', 'b']}>` describes the same route as a move to a followed by a fold to b. React Draw forwards input to Path; Vanilla's `normalizePath` calls `parseWay` to produce a uniform ordered sequence of steps.
+
+- Author input: convenient `way` values, string targets, and arrow shorthand
+- Source IR: JSON-serializable Path, Step, and marks, still containing node references
+- Path commands: concrete move, line, curve, and arc geometry after references have been resolved
+
+The diagram separates normalization from coordinate calculation. Creating steps neither resolves every node reference immediately nor produces SVG directly.
+
+<ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
+
+At this entry, `arrow="->"` becomes an arrow mark at `pos: 1`. Per-end `arrowDetail` overrides and `arrowPlacement` overlap are included in that mark. When authoring IR directly, use `marks` rather than copying React's arrow shorthand fields.
+
+<SourceLinks
+  sources={[
+    { label: 'Draw forwards to Path', path: 'packages/kernel/react/src/sugar/path/Draw.tsx', startLine: 28 },
+    {
+      label: 'Normalize way, steps, and arrows',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 174,
+    },
+    {
+      label: 'Convert arrow shorthand to marks',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 42,
+    },
+  ]}
+/>
+
+## How steps change the cursor
+
+The cursor is the position where the next stroke starts. `move` changes that position without drawing; `line` draws from it to a target; `cycle` returns to the start of the current subpath established by the most recent move. A fold or curve may produce several commands while remaining one step.
+
+For example, `move [0, 0]` followed by `line [120, 0]` advances the cursor from A to B. Another move starts an independent subpath without drawing between the two move positions. In `way`, a `+` offset preserves the relative reference position while `++` advances it, so subsequent routes can differ.
+
+Keep A = [0, 0] and B = [120, 0], then add C = [0, 60] and D = [120, 60]. The upper row shows field excerpts from the step array. Below it, blue dots show the pen position and gray dots are fixed coordinate references. The state tables are reading summaries, not additional stored objects.
+
+<ComponentPreview files="path-cursor" size="xxxl" hideCode type="illustration" />
+
+The second move sets both the pen position and subpath start to C, preserves A → B, and draws no line between B and C. A line to D followed by cycle returns along the same horizontal line to C, so C → D and D → C overlap in the final view. It does not return to A. The implementation remembers the latest move target rather than inferring the closure point from the first step of the whole path.
+
+A generator is also a step. It receives the local cursor and resolved target, then returns commands to the host Path. It does not own whole-path arrows, stroke, or final outer transforms. See [Step composition](/kernel/components/path/step) and [Custom generators](/kernel/components/path/custom-path-generator).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Cursor and latest move target',
+      path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts',
+      startLine: 87,
+    },
+    {
+      label: 'Generate commands step by step',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 59,
+    },
+    {
+      label: 'Validate generator parameters and output',
+      path: 'packages/kernel/core/src/compile/path/stroke/lower.ts',
+      startLine: 95,
+    },
+  ]}
+/>
+
+## Why later nodes can be referenced
+
+Within the same scope, a Path can precede node B and still use B as its endpoint. Traversal queues the Path and reserves its output position. After registering nodes in the current scope, it resolves endpoints and fills the reserved position with the resulting primitives.
+
+For the declaration order Path(a → b), Node a, Node b, the figure expands only the relevant task fields. Arrows indicate entry expansion, object references, or the labeled replacement operation. The `path` retains node references; Node output primitives are abbreviated.
+
+<ComponentPreview files="path-deferred" size="xxxl" hideCode type="illustration" />
+
+`placeholderSlot` references both the output array and the placeholder object. Once nodes are registered, compilation resolves a and b, finds that placeholder in the array, and replaces it with path primitives. It does not store a fixed index. With the default `zIndex` shown here, the Path stays before both Nodes; explicit `zIndex` still participates in subsequent sorting. Pending tasks and placeholders are local to compilation and are not sent to the renderer as Scene primitives.
+
+This provides B's connection boundary while preserving the original drawing order. It applies to deferred paths; it does not imply that Node positioning or final Scope placement supports every forward reference.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Queue paths and reserve drawing order',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 801,
+    },
+    {
+      label: 'Resolve and insert deferred paths',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 621,
+    },
+  ]}
+/>
+
+## How paths are resolved and cut
+
+A label gap depends on a path whose coordinates have already been resolved. These figures follow one quadratic Bézier from A = [0, 0], through control point [90, -100], to B = [180, 0]. Its curve Step has a label at `position: 0.5`, with no rounding, arrows, or outer transforms.
+
+### From steps to locatable segments
+
+Node references resolve to coordinates before Steps emit concrete commands. One Step may emit several commands, as a fold does with multiple lines. Each drawable segment records its source Step, subpath, and cumulative distance range.
+
+<ComponentPreview files="path-resolution" size="xxxl" hideCode type="illustration" />
+
+Here `move` establishes A without adding length; `curve` emits `quad`, retaining the control point. `occurrences[0]` describes the drawable curve: `commandIndex` points into commands, `sourceStepIndex` identifies the authored Step, and `subPathIndex` identifies the continuous subpath. Distance ranges locate gaps without discarding curve structure. Displayed lengths are rounded to one decimal place.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Generate commands from Steps',
+      path: 'packages/kernel/core/src/compile/path/stroke/emit.ts',
+      startLine: 50,
+    },
+    {
+      label: 'Record drawable segments and distance ranges',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 190,
+    },
+  ]}
+/>
+
+### From label bounds to a cut interval
+
+First locate the label and the local direction of travel (tangent) on the complete path, then measure the laid-out text bounds. This figure assumes measured bounds of 48 × 20, `gap: 6`, and stroke width 2. These are illustrative measurement inputs, not the size of the string `label` in every font.
+
+<ComponentPreview files="path-label-interval" size="xl" hideCode type="illustration" />
+
+The left panel projects the bounds onto the tangent. Here the tangent is horizontal, so each side occupies 24. Adding `gap` and half the stroke width reserves 31 units of path distance per side. The right panel and distance axis highlight the same interval centered on the label's path distance. Bounds and the axis are explanatory guides, not final drawing elements.
+
+This converts occupied space into a distance interval rather than intersecting a rectangle with the curve point by point. The interval stays within the label's subpath; overlapping intervals are merged, and endpoint arrow contact regions are protected separately. Positioning happens before cutting, so labels are not redistributed along the remaining fragments.
+
+This single symmetric curve Step has a parameter midpoint that also lies halfway along its length. In general, parameter fractions differ from arc-length fractions; `position: 0.5` must not be generalized to half the total length for every path.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Position labels and retain path samples',
+      path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
+      startLine: 225,
+    },
+    {
+      label: 'Create and merge intervals from text bounds',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 331,
+    },
+  ]}
+/>
+
+### Why curves can be cut too
+
+The gap starts as two distance values. Compilation finds the drawable segments containing them, converts them into curve locations, and takes the slices before and after the gap.
+
+<ComponentPreview files="path-curve-cut" size="xl" hideCode type="illustration" />
+
+All three panels preserve A, B, and the curve's shape. Blue in the middle panel marks the removed interval. The final panel outputs the outer slices with no commands in the gap, rather than hiding the curve behind a background-colored rectangle. Each fragment starts with its own `move` and still uses `quad`. Recomputed control points keep both slices on the original curve instead of connecting cut points with straight lines.
+
+Cubic Béziers, circular arcs, and elliptical arcs likewise retain their command types. When a gap crosses commands, their unremoved ranges are retained separately, then adjacent pieces within the same subpath are joined. Sampling, distance lookup, and shape-preserving slicing algorithms are explained in [Math · Curve slicing](/kernel/packages/math/algorithms#curve-slicing).
+
+Centered labels on unfilled built-in Stroke paths leave gaps by default; `interrupt: false` disables this. Conditions for filled paths and other Path kinds are covered in [Path labels](/kernel/components/path/label).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Slice commands while preserving curve types',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 424,
+    },
+    {
+      label: 'Assemble independent fragments after cutting',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 495,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step composition',
+      description: 'Use subpaths, transforms, and rounded corners',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: 'Custom paths',
+      description: 'Define and register whole-path output',
+      url: '/kernel/components/path/custom-path',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public declarations',
+      url: '/kernel/components/path/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent data fields',
+      url: '/kernel/components/path/schema-reference',
+    },
+  ]}
+/>

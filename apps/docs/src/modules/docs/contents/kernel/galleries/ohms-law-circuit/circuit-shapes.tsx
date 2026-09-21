@@ -20,12 +20,12 @@ type CircuitLabel = IRNodeLabel | Array<IRNodeLabel>;
 
 const INK = 'currentColor';
 /** 线条 / 引线统一描边宽度，和 Step 1 电表保持一致 */
-const STROKE_WIDTH = 3;
+const STROKE_WIDTH = 1.5;
 /** 各元件每侧引线长度（viewBox 单位） */
-const BATTERY_LEAD = 51;
-const SWITCH_LEAD = 56;
+const BATTERY_LEAD = 25.5;
+const SWITCH_LEAD = 28;
 /** 电阻 / 滑动变阻器共用（滑动变阻器整体与电阻一致，仅多一条斜箭头） */
-const RESISTOR_LEAD = 39;
+const RESISTOR_LEAD = 19.5;
 
 /** 引用某个元件的固定端点（如 battery 的 right），导线靠它落到元件边框而非猜中心坐标 */
 export const at = (id: string, anchor: IRAnchorRef): IRNodeTarget => ({ id, anchor });
@@ -86,8 +86,8 @@ const circuitBattery: ShapeDefinition = defineShape({
   name: 'circuit-battery',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
-    halfWidth: Math.max(innerHalfWidth, 8 + BATTERY_LEAD),
-    halfHeight: Math.max(innerHalfHeight, 28),
+    halfWidth: Math.max(innerHalfWidth, 4 + BATTERY_LEAD),
+    halfHeight: Math.max(innerHalfHeight, 14),
   }),
   boundaryPoint: horizontalBoundaryPoint,
   anchor: batteryAnchor,
@@ -96,10 +96,10 @@ const circuitBattery: ShapeDefinition = defineShape({
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
     const leftX = rect.x - rect.width / 2;
     const rightX = rect.x + rect.width / 2;
-    const negativePlateX = rect.x - 8;
-    const positivePlateX = rect.x + 8;
-    const positiveHalf = rect.height * 0.8;
-    const negativeHalf = rect.height * 0.4 - 2;
+    const negativePlateX = rect.x - 4;
+    const positivePlateX = rect.x + 4;
+    const positiveHalf = rect.height * 0.571;
+    const negativeHalf = rect.height * 0.286 - 2;
     const shared = {
       stroke,
       strokeOpacity: style.strokeOpacity,
@@ -152,8 +152,8 @@ const circuitSwitch: ShapeDefinition = defineShape({
   name: 'circuit-switch',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
-    halfWidth: Math.max(innerHalfWidth, 22 + SWITCH_LEAD),
-    halfHeight: Math.max(innerHalfHeight, 26),
+    halfWidth: Math.max(innerHalfWidth, 11 + SWITCH_LEAD),
+    halfHeight: Math.max(innerHalfHeight, 13),
   }),
   boundaryPoint: horizontalBoundaryPoint,
   anchor: horizontalTerminalAnchor,
@@ -161,7 +161,7 @@ const circuitSwitch: ShapeDefinition = defineShape({
     const stroke = style.stroke ?? 'currentColor';
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
     const halfWidth = rect.width / 2;
-    const contactRadius = 6;
+    const contactRadius = 3;
     const leftContactX = rect.x - (halfWidth - SWITCH_LEAD);
     const rightContactX = rect.x + (halfWidth - SWITCH_LEAD);
     const leverEnd: Position = [round(rightContactX), round(rect.y - rect.height * 0.45)];
@@ -220,8 +220,8 @@ const circuitResistor: ShapeDefinition = defineShape({
   name: 'circuit-resistor',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
-    halfWidth: Math.max(innerHalfWidth, 52 + RESISTOR_LEAD),
-    halfHeight: Math.max(innerHalfHeight, 24),
+    halfWidth: Math.max(innerHalfWidth, 26 + RESISTOR_LEAD),
+    halfHeight: Math.max(innerHalfHeight, 12),
   }),
   boundaryPoint: horizontalBoundaryPoint,
   anchor: horizontalTerminalAnchor,
@@ -230,7 +230,7 @@ const circuitResistor: ShapeDefinition = defineShape({
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
     const halfWidth = rect.width / 2;
     const bodyHalfWidth = halfWidth - RESISTOR_LEAD;
-    const bodyHalfHeight = 16;
+    const bodyHalfHeight = 8;
 
     yield {
       type: 'path',
@@ -274,8 +274,8 @@ const circuitRheostat: ShapeDefinition = defineShape({
   name: 'circuit-rheostat',
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => ({
-    halfWidth: Math.max(innerHalfWidth, 52 + RESISTOR_LEAD),
-    halfHeight: Math.max(innerHalfHeight, 24),
+    halfWidth: Math.max(innerHalfWidth, 26 + RESISTOR_LEAD),
+    halfHeight: Math.max(innerHalfHeight, 12),
   }),
   boundaryPoint: horizontalBoundaryPoint,
   anchor: horizontalTerminalAnchor,
@@ -284,9 +284,9 @@ const circuitRheostat: ShapeDefinition = defineShape({
     const strokeWidth = style.strokeWidth ?? STROKE_WIDTH;
     const halfWidth = rect.width / 2;
     const bodyHalfWidth = halfWidth - RESISTOR_LEAD;
-    const bodyHalfHeight = 16;
-    const tipX = rect.x + 42;
-    const tipY = rect.y - bodyHalfHeight - 21.5;
+    const bodyHalfHeight = 8;
+    const tipX = rect.x + 21;
+    const tipY = rect.y - bodyHalfHeight - 10.75;
 
     yield {
       type: 'path',
@@ -325,7 +325,7 @@ const circuitRheostat: ShapeDefinition = defineShape({
     yield {
       type: 'path',
       commands: [
-        { kind: 'move', to: [round(rect.x - 42), round(rect.y + bodyHalfHeight + 21.5)] },
+        { kind: 'move', to: [round(rect.x - 21), round(rect.y + bodyHalfHeight + 10.75)] },
         { kind: 'line', to: [round(tipX), round(tipY)] },
       ],
       stroke,
@@ -337,9 +337,9 @@ const circuitRheostat: ShapeDefinition = defineShape({
     yield {
       type: 'path',
       commands: [
-        { kind: 'move', to: [round(tipX - 16), round(tipY + 4)] },
+        { kind: 'move', to: [round(tipX - 8), round(tipY + 2)] },
         { kind: 'line', to: [round(tipX), round(tipY)] },
-        { kind: 'line', to: [round(tipX - 5), round(tipY + 16)] },
+        { kind: 'line', to: [round(tipX - 2.5), round(tipY + 8)] },
       ],
       stroke,
       strokeWidth,
@@ -383,7 +383,7 @@ export const Battery: FC<{ id?: string; position: Position; rotate?: number; lab
     label={label}
     shape="circuit-battery"
     style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
-    layout={{ minimumSize: { width: 118, height: 56 } }}
+    layout={{ minimumSize: { width: 59, height: 28 } }}
   />
 );
 
@@ -395,7 +395,7 @@ export const Switch: FC<{ id?: string; position: Position; label?: CircuitLabel 
     label={label}
     shape="circuit-switch"
     style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
-    layout={{ minimumSize: { width: 156, height: 52 } }}
+    layout={{ minimumSize: { width: 78, height: 26 } }}
   />
 );
 
@@ -407,7 +407,7 @@ export const Resistor: FC<{ id?: string; position: Position; label?: CircuitLabe
     label={label}
     shape="circuit-resistor"
     style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
-    layout={{ minimumSize: { width: 182, height: 48 } }}
+    layout={{ minimumSize: { width: 91, height: 24 } }}
   />
 );
 
@@ -419,6 +419,6 @@ export const Rheostat: FC<{ id?: string; position: Position; label?: CircuitLabe
     label={label}
     shape="circuit-rheostat"
     style={{ stroke: INK, strokeWidth: STROKE_WIDTH, fill: 'none' }}
-    layout={{ minimumSize: { width: 182, height: 48 } }}
+    layout={{ minimumSize: { width: 91, height: 24 } }}
   />
 );

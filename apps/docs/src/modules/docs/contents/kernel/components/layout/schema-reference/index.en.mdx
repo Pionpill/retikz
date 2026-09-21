@@ -1,0 +1,23 @@
+---
+title: Schema reference
+description: Look up the scene root and viewport schemas consumed by Layout
+---
+
+`SceneSchema` validates scene data passed to `Layout.ir`, and `ViewBoxSchema` validates the viewport. Both are exported from `@retikz/core`.
+For initial setup, see [Basic usage](/kernel/components/layout/usage). React props are covered by the [API reference](/kernel/components/layout/api-reference); these schemas do not validate `LayoutProps`.
+
+## SceneSchema
+
+<ZodSchema shallow name="SceneSchema" />
+
+## ViewBoxSchema
+
+<ZodSchema shallow name="ViewBoxSchema" />
+
+## Additional notes
+
+- **Required and omitted fields**: `type`, `version`, and `children` are required; `theme`, `viewBox`, and `animations` may be omitted. Validation does not fill in the latter three fields; automatic framing and theme inheritance are handled during compilation.
+- **Theme inheritance**: When the scene root specifies no theme, it starts from the default light environment. A child Scope overrides only explicitly supplied theme fields and inherits the rest.
+- **Framing and size**: Coordinates increase rightward and downward, using scene coordinate units rather than host CSS dimensions. An explicit viewport receives no additional automatic padding; when omitted, framing is derived from content bounds and the padding in the compile options.
+- **Camera animation**: Animation may change framing during playback; static layout retains the framing at the end of the animation.
+- **Child nodes**: Node, Path, Coordinate, Scope, and composite nodes are supported.

@@ -302,7 +302,7 @@ describe('<Layout> 的 Vanilla Input processing', () => {
 
     await act(() =>
       root.render(
-        <Layout theme={{ style: 'academic', mode: ThemeMode.Light }} themeStyles={[testThemeStyle]}>
+        <Layout theme={{ style: 'academic', mode: ThemeMode.Light }} extensions={{ themeStyles: [testThemeStyle] }}>
           <Scope theme={{ mode: ThemeMode.Dark }}>
             <ThemeProbe />
           </Scope>

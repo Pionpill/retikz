@@ -1,0 +1,188 @@
+---
+title: Custom generators
+description: Define and register a parameterized curve segment for a generator Step
+---
+
+Start with [Basic usage](/kernel/components/path/usage), then define and register a new capability.
+
+## Applicability
+
+Define a generator when the existing `line`, `curve`, `cubic`, `bend`, `smooth`, and `arc` actions cannot express a reusable parameterized segment.
+
+| Need                                      | Choose                                              |
+| ----------------------------------------- | --------------------------------------------------- |
+| One quadratic or cubic Bezier             | Existing `curve` / `cubic`                          |
+| A smooth curve through several points     | Existing `smooth`                                   |
+| A reusable parameterized curve segment    | Path generator                                      |
+| Different Scene output for the whole Path | [Custom Paths](/kernel/components/path/custom-path) |
+
+A generator does not own whole-path stroke, arrows, ribbons, or transforms. The host Path and its selected Path kind still own those concerns.
+
+## Minimal result
+
+A path generator extends **one path action**. `<Step kind="generator">` stores only a provider name and JSON parameters. After the host injects a `PathGeneratorDefinition`, core converts that segment into ordinary path commands and returns them to the current Path kind.
+
+The runnable example below keeps the `sin` definition, `<Layout extensions={{ pathGenerators }}>` injection, and generator Step together. Open the code view to copy the complete loop.
+
+<ComponentPreview files="path-generator-sin" size="xs" />
+
+## Define the capability
+
+Use `definePathGenerator` to declare a stable name, a parameter schema, optional target parameters, and a function that generates `PathCommand[]` from the current cursor.
+
+```ts
+import { definePathGenerator } from '@retikz/core';
+import { z } from 'zod';
+
+const sin = definePathGenerator({
+  name: 'sin',
+  paramsSchema: z.strictObject({
+    amplitude: z.number().nonnegative(),
+    waves: z.number().int().positive(),
+  }),
+  generate: ({ from, to, params }) => {
+    if (to === undefined) {
+      throw new Error('path generator "sin" requires step.to.');
+    }
+    const amplitude = typeof params.amplitude === 'number' ? params.amplitude : 0;
+    const waves = typeof params.waves === 'number' ? params.waves : 1;
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const length = Math.hypot(dx, dy);
+    const normal: [number, number] = length === 0 ? [0, 0] : [-dy / length, dx / length];
+    const pointAt = (t: number): [number, number] => {
+      const offset = Math.sin(t * Math.PI * 2 * waves) * amplitude;
+      return [from[0] + dx * t + normal[0] * offset, from[1] + dy * t + normal[1] * offset];
+    };
+
+    return Array.from({ length: waves * 4 }, (_, i) => {
+      const start = i / (waves * 4);
+      const end = (i + 1) / (waves * 4);
+      return { kind: 'quad' as const, control: pointAt((start + end) / 2), to: pointAt(end) };
+    });
+  },
+});
+```
+
+The definition is runtime capability and never enters IR. IR keeps only `name`, optional `to`, and JSON-safe `params`, so diagram data remains serializable, persistable, and portable across adapters.
+
+`params` carries ordinary settings such as numbers. List a field in `targetParams` when it should be resolved as a coordinate or node reference. For example, `targetParams: ['control']` resolves `params.control` into `resolvedTargets.control` for `generate`.
+
+## Register and use
+
+React injects definitions through `<Layout extensions={{ pathGenerators }}>`; direct core calls use `CompileOptions.pathGenerators`. A generator Step then references the registered name.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+<Layout extensions={{ pathGenerators: [sin] }}>
+  <Path>
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="generator" name="sin" to={[120, 0]} params={{ amplitude: 12, waves: 3 }} />
+  </Path>
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Vanilla uses the same definition through the `compile` option of `mount`. Prepare `<div id="diagram"></div>` in HTML first. The snippet reuses the definition above.
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'generator', name: 'sin', to: [120, 0], params: { amplitude: 12, waves: 3 } },
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { pathGenerators: [sin] },
+});
+// Dispose when the host is removed.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+## Errors and limitations
+
+| Case                                     | Result                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| Empty name                               | `definePathGenerator` rejects it immediately                              |
+| Duplicate registered name                | Registry merge reports a duplicate registration                           |
+| Step references an unknown name          | Compile lists available names and the injection option                    |
+| `paramsSchema` rejects input             | Error includes provider name and the relevant IR path                     |
+| Parsed params contain functions/`NaN`    | The JSON-safe guard rejects them                                          |
+| A `targetParams` value is not a Target   | Compile identifies the offending key                                      |
+| A `targetParams` node id cannot resolve  | Its key is omitted from `resolvedTargets`; `generate` handles the absence |
+| `generate` throws                        | Error wraps the generator name and preserves the cause                    |
+| Non-array, unknown, or non-finite output | Output validation prevents invalid geometry entering Scene                |
+
+A generator may return `move` commands to create subpaths, but it cannot return Scene primitives or bypass the current Path kind's style and decoration pipeline.
+
+## Related props
+
+These are the members most often used to define, inject, and call a path generator. See the [API reference](/kernel/components/path/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'definePathGenerator',
+      kind: 'function',
+      type: '(definition: PathGeneratorDefinition) => PathGeneratorDefinition',
+      description: 'Create a registrable path generator definition and validate its non-empty name.',
+    },
+    {
+      name: 'PathGeneratorDefinition',
+      kind: 'type',
+      type: 'PathGeneratorDefinition',
+      description:
+        'Declare the name, parameter schema, target parameters, and function that generates `PathCommand[]` from the cursor.',
+    },
+    {
+      name: 'Layout.extensions.pathGenerators',
+      kind: 'property',
+      type: 'ReadonlyArray<PathGeneratorDefinition>',
+      description: 'Inject generator definitions into a React Layout.',
+    },
+    {
+      name: 'Step kind="generator"',
+      kind: 'property',
+      type: 'GeneratorStepProps',
+      description: 'Call the registered generator with its name, JSON-safe `params`, and an optional `to` target.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step composition',
+      description: 'Choose and combine moves, lines, folds, curves, arcs, and generator steps',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: 'Implementation',
+      description: 'Follow path syntax through steps, references, geometry, arrows, and labels to the final result',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public TypeScript contracts for drawing components, authoring input, and extensions',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

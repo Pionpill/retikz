@@ -20,7 +20,7 @@ export const circuitMeter: ShapeDefinition = defineShape({
   paramsSchema: z.strictObject({}),
   circumscribe: (innerHalfWidth, innerHalfHeight) => {
     const radius = Math.sqrt(innerHalfWidth * innerHalfWidth + innerHalfHeight * innerHalfHeight);
-    return { halfWidth: radius + 55, halfHeight: radius };
+    return { halfWidth: radius + 27.5, halfHeight: radius };
   },
   boundaryPoint: (rect, toward) => {
     const terminal: Position = worldToLocal(rect, toward)[0] < 0 ? [-rect.width / 2, 0] : [rect.width / 2, 0];
@@ -80,13 +80,13 @@ export const Meter: FC<{
   size?: number;
   fontSize?: number;
   label?: IRNodeLabel | Array<IRNodeLabel>;
-}> = ({ id, position, text, size = 48, fontSize = 32, label }) => (
+}> = ({ id, position, text, size = 24, fontSize = 14, label }) => (
   <Node
     id={id}
     position={position}
     label={label}
     shape="circuit-meter"
-    style={{ stroke: INK, strokeWidth: 3, fill: 'none', font: { ...FONT, size: fontSize } }}
+    style={{ stroke: INK, strokeWidth: 1.5, fill: 'none', font: { ...FONT, size: fontSize } }}
     layout={{ minimumSize: size }}
   >
     {text}

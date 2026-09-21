@@ -40,18 +40,20 @@ export const AppSidebarMenu: FC<AppSidebarMenuProps> = props => {
           const categoryPath = category.path;
           if (scoped) {
             return (
-              <AppSidebarModuleList
-                key={category.value}
-                modules={category.modules}
-                moduleId={moduleId}
-                categoryValue={category.value}
-                ungrouped={category.ungrouped}
-                onNavigate={onNavigate}
-              />
+              <Fragment key={`${category.value}-${idx}`}>
+                {idx > 0 && <Separator className="my-3" />}
+                <AppSidebarModuleList
+                  modules={category.modules}
+                  moduleId={moduleId}
+                  categoryValue={category.value}
+                  ungrouped={category.ungrouped}
+                  onNavigate={onNavigate}
+                />
+              </Fragment>
             );
           }
           return (
-            <Fragment key={category.value}>
+            <Fragment key={`${category.value}-${idx}`}>
               {idx > 0 && <Separator className="my-3" />}
               <section className="flex flex-col">
                 {category.label &&

@@ -5646,3 +5646,33 @@ describe('builtin retained renderers', () => {
     session.dispose();
   });
 });
+
+it('Scope 外框在 SVG retained 更新与移除时保持命中隔离', () => {
+  const host = document.createElementNS(SVG_NAMESPACE, 'svg');
+  const source = (padding?: number): IRScene => ({
+    version: 1,
+    type: 'scene',
+    children: [
+      {
+        type: 'scope',
+        id: 'group',
+        ...(padding === undefined ? {} : { frame: { padding, style: { fill: 'white' } } }),
+        children: [{ type: 'node', id: 'child', position: [0, 0], text: 'A' }],
+      },
+    ],
+  });
+  const { session } = createSession('svg', host, { ir: source(4) });
+  expect(host.querySelectorAll('[pointer-events="none"]')).toHaveLength(1);
+  const frame = host.querySelector('[pointer-events="none"]');
+  session.update({
+    baseRevision: session.revision(),
+    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source(20))],
+  });
+  expect(host.querySelector('[pointer-events="none"]')).toBe(frame);
+  expect(host.querySelector('[data-retikz-id="child"]')).not.toBeNull();
+  session.update({
+    baseRevision: session.revision(),
+    owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, source())],
+  });
+  expect(host.querySelector('[pointer-events="none"]')).toBeNull();
+});

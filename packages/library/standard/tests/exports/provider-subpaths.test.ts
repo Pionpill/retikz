@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import * as root from '../../src';
 import * as arrow from '../../src/arrow';
 import * as clip from '../../src/clip';
+import * as nodeShape from '../../src/node-shape';
 import * as ribbon from '../../src/ribbon';
 import * as shape from '../../src/shape';
 
@@ -30,9 +31,13 @@ describe('Standard provider subpath exports', () => {
     ]) {
       expect(root).not.toHaveProperty(name);
     }
-    expect(shape.CrossShapeDefinition).toBeDefined();
-    expect(shape.TrapezoidShapeDefinition).toBeDefined();
-    expect(shape.CylinderShapeProvider).toBeDefined();
+    expect(root).not.toHaveProperty('CircleDefinition');
+    expect(shape.CircleDefinition).toBeDefined();
+    expect(shape).not.toHaveProperty('CrossShapeDefinition');
+    expect(nodeShape).not.toHaveProperty('CircleDefinition');
+    expect(nodeShape.CrossShapeDefinition).toBeDefined();
+    expect(nodeShape.TrapezoidShapeDefinition).toBeDefined();
+    expect(nodeShape.CylinderShapeProvider).toBeDefined();
     expect(arrow.BarArrowDefinition).toBeDefined();
     expect(arrow.CrowFootArrowProvider).toBeDefined();
     expect(arrow.KiteArrowDefinition).toBeDefined();
@@ -45,11 +50,14 @@ describe('Standard provider subpath exports', () => {
     expect(ribbon.RibbonPathKindDefinition).toBeDefined();
   });
 
-  it('declares all four Standard provider subpaths', () => {
-    const entries = ['.', './shape', './arrow', './clip', './ribbon'];
+  it('declares separate node-shape and shape subpaths', () => {
+    const entries = ['.', './arrow', './clip', './ribbon', './node-shape', './shape'];
     expect(Object.keys(manifest.exports)).toEqual(entries);
     expect(Object.keys(manifest.publishConfig.exports)).toEqual(entries);
-    expect(manifest.exports['./shape']).toEqual({ types: './src/shape/index.ts', default: './src/shape/index.ts' });
+    expect(manifest.exports['./node-shape']).toEqual({
+      types: './src/node-shape/index.ts',
+      default: './src/node-shape/index.ts',
+    });
     expect(manifest.exports['./arrow']).toEqual({ types: './src/arrow/index.ts', default: './src/arrow/index.ts' });
     expect(manifest.exports['./clip']).toEqual({ types: './src/clip/index.ts', default: './src/clip/index.ts' });
     expect(manifest.exports['./ribbon']).toEqual({ types: './src/ribbon/index.ts', default: './src/ribbon/index.ts' });

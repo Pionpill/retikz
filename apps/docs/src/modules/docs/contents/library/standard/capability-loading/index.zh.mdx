@@ -18,13 +18,15 @@ import { Layout } from '@retikz/react';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 <Layout
-  shapes={[CrossShapeDefinition]}
-  arrows={[DiamondArrowDefinition]}
-  clips={[CircleClipDefinition]}
-  pathKinds={[RibbonPathKindDefinition]}
+  extensions={{
+    shapes: [CrossShapeDefinition],
+    arrows: [DiamondArrowDefinition],
+    clips: [CircleClipDefinition],
+    pathKinds: [RibbonPathKindDefinition],
+  }}
 >
   {/* 图形内容 */}
 </Layout>;
@@ -37,7 +39,7 @@ import { renderToSvgString } from '@retikz/vanilla';
 import { DiamondArrowDefinition } from '@retikz/standard/arrow';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
-import { CrossShapeDefinition } from '@retikz/standard/shape';
+import { CrossShapeDefinition } from '@retikz/standard/node-shape';
 
 const svg = renderToSvgString(input, {
   compile: {
@@ -57,9 +59,11 @@ const svg = renderToSvgString(input, {
 import { Layout } from '@retikz/react';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
 import { StandardClipDefinitions } from '@retikz/standard/clip';
-import { StandardShapeDefinitions } from '@retikz/standard/shape';
+import { StandardShapeDefinitions } from '@retikz/standard/node-shape';
 
-<Layout shapes={StandardShapeDefinitions} arrows={StandardArrowDefinitions} clips={StandardClipDefinitions}>
+<Layout
+  extensions={{ shapes: StandardShapeDefinitions, arrows: StandardArrowDefinitions, clips: StandardClipDefinitions }}
+>
   {/* 图形内容 */}
 </Layout>;
 ```
@@ -70,7 +74,7 @@ Vanilla 只需要把同样的集合传给 `compile`：
 import { renderToSvgString } from '@retikz/vanilla';
 import { StandardArrowDefinitions } from '@retikz/standard/arrow';
 import { StandardClipDefinitions } from '@retikz/standard/clip';
-import { StandardShapeDefinitions } from '@retikz/standard/shape';
+import { StandardShapeDefinitions } from '@retikz/standard/node-shape';
 
 const svg = renderToSvgString(input, {
   compile: {
@@ -117,4 +121,4 @@ IR 只保存图形数据，例如节点的 `shape: 'cross'`、路径中的箭头
 - [箭头](/library/standard/arrow)：可选端点标记
 - [裁剪](/library/standard/clip)：递归组合裁剪
 - [Ribbon](/library/standard/ribbon)：可选 Ribbon Path kind Definition 与 provider contribution
-- [Core 编译参考](/kernel/reference/runtime/compile)：查看 CompileOptions 与 provider graph 的完整契约
+- [Core 编译参考](/kernel/packages/core/overview)：查看 CompileOptions 与 provider graph 的完整契约

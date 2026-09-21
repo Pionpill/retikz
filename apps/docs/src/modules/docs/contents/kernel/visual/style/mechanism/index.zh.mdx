@@ -1,0 +1,67 @@
+---
+title: 实现原理
+description: 了解图案、阴影与混合如何从样式配置进入 Scene，并由 SVG 和 Canvas 分别绘制。
+---
+
+三种 style 都先由 Core 解析成 renderer-agnostic 的 Scene 信息；后端负责把资源、投影或合成状态落到 SVG 与 Canvas。它们不会改变 Node 与 Path 的基础几何或连接面。
+
+## pattern · 图案
+
+图案规格包含名称、间距和线型。Core 从当前 registry 找到 PatternDefinition，以显式 `size`、定义 defaultSize 或 8 决定基础尺寸；定义的 `emit` 生成可序列化重复单元。相同规格在一次编译中复用同一 Scene paint resource，图元只持有资源引用。
+
+<ComponentPreview files="pattern-flow" size="xs" hideCode type="flow" />
+
+`lineStyleCycle` 可以让连续线条使用不同样式，因此最终 tile 周期可以大于基础间距。SVG 将结果写成 user-space `<pattern>`；Canvas 在离屏画布绘制单元后用 repeat pattern 填充。两端接收相同单元，不需要重新执行自定义定义。
+
+<ComponentPreview files="pattern-period" size="sm" hideCode type="illustration" />
+
+<SourceLinks
+  sources={[
+    { label: '图案定义与注册', path: 'packages/kernel/core/src/providers/pattern/registry.ts' },
+    { label: '图案规格解析', path: 'packages/kernel/core/src/resolve/resource/pattern.ts' },
+  ]}
+/>
+
+## shadow · 阴影
+
+字符串预设先展开为投影字段；对象配置在预设上覆盖显式字段。解析后的 shadow 跟随主几何进入 Scene，一路用于绘制，另一路扩大自动 viewBox 的可见范围。这个范围估算不改变原形状、Path 点位或连接面。
+
+<ComponentPreview files="shadow-flow" size="md" hideCode type="flow" />
+
+SVG 为同一投影字段复用 `feDropShadow` 滤镜，并单独扩大滤镜计算区域；Canvas 在绘制每个主几何前设置 shadow 状态、完成后恢复。两端共享投影意图，但抗锯齿和栅格化不保证逐像素一致。
+
+<ComponentPreview files="shadow-bounds" size="md" hideCode type="illustration" />
+
+<SourceLinks
+  sources={[
+    { label: '阴影预设与对象解析', path: 'packages/kernel/core/src/resolve/style/drawable.ts' },
+    { label: 'SVG 阴影滤镜', path: 'packages/kernel/render/src/svg/builders/shadow-defs.ts' },
+  ]}
+/>
+
+## blend · 混合
+
+blendMode 不引用另一个节点。前景是当前主几何，背景是当前绘制位置已经累积的结果，因此颜色、透明度、声明顺序和 zIndex 都会影响结果。Scope defaults 只把模式传给后代，不会创建离屏隔离组。
+
+<ComponentPreview files="blend-order" size="md" hideCode type="illustration" />
+
+SVG 将模式写入 `mix-blend-mode`；Canvas 在单个图元的 save / restore 范围内设置 `globalCompositeOperation`。文字和标签作为独立输出不自动加入主几何的混合边界。
+
+<ComponentPreview files="blend-boundary" size="md" hideCode type="flow" />
+
+<SourceLinks
+  sources={[
+    { label: '主几何的混合样式输出', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: 'Canvas 图元合成状态', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'pattern · 图案', url: '/kernel/visual/style/pattern' },
+    { title: 'shadow · 阴影', url: '/kernel/visual/style/shadow' },
+    { title: 'blend · 混合', url: '/kernel/visual/style/blend' },
+  ]}
+/>

@@ -1,18 +1,4 @@
-﻿import type { LucideIcon } from 'lucide-react';
-import {
-  BlocksIcon,
-  BoxesIcon,
-  ChartColumnIncreasingIcon,
-  ChartSplineIcon,
-  DatabaseIcon,
-  ImagesIcon,
-  Layers3Icon,
-  NetworkIcon,
-  PackageIcon,
-  PanelTopIcon,
-  TableIcon,
-  WorkflowIcon,
-} from 'lucide-react';
+import { BoxesIcon } from 'lucide-react';
 import type { FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -30,6 +16,7 @@ import { buildDocPath } from '@/modules/docs/layout';
 
 import { HeaderNavigationContent } from './HeaderNavigationContent';
 import { HeaderNavigationTrigger } from './HeaderNavigationTrigger';
+import { moduleSectionIcons, resolveHeaderSectionLabel } from './utils';
 
 export type ModuleNavProps = {
   /** 覆盖默认的桌面端显示类，用于移动端首页抽屉复用。 */
@@ -42,28 +29,6 @@ export type ModuleNavProps = {
   withinNavigationMenu?: boolean;
 };
 
-const moduleSectionIcons: Record<DocModuleId, Record<string, LucideIcon>> = {
-  kernel: {
-    components: BlocksIcon,
-    packages: PackageIcon,
-    galleries: ImagesIcon,
-  },
-  library: {
-    standard: Layers3Icon,
-    layout: PanelTopIcon,
-  },
-  schematic: {
-    graph: NetworkIcon,
-    diagram: WorkflowIcon,
-  },
-  viz: {
-    data: DatabaseIcon,
-    chart: ChartColumnIncreasingIcon,
-    table: TableIcon,
-    plot: ChartSplineIcon,
-  },
-};
-
 const getModuleSections = (moduleId: DocModuleId): Array<Section> =>
   getNavigationSectionsByArea(moduleId).filter(
     section => section.label && !(moduleId === 'kernel' && section.id === 'reference'),
@@ -72,7 +37,7 @@ const getModuleSections = (moduleId: DocModuleId): Array<Section> =>
 /** 顶栏水平模块入口。 */
 export const ModuleNav: FC<ModuleNavProps> = props => {
   const { className, mobile = false, onNavigate, withinNavigationMenu = false } = props;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const moduleId = pathname.split('/').filter(Boolean)[0];
@@ -131,7 +96,9 @@ export const ModuleNav: FC<ModuleNavProps> = props => {
                       <Icon className="size-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-foreground">{t(section.label as I18nKey)}</span>
+                      <span className="block text-sm font-medium text-foreground">
+                        {resolveHeaderSectionLabel(String(t(section.label as I18nKey)), i18n?.resolvedLanguage)}
+                      </span>
                       {section.navigationDescription && (
                         <span
                           data-module-nav-description

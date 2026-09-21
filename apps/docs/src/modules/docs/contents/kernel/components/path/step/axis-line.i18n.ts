@@ -1,0 +1,33 @@
+/** 预览控件双语文案 */
+export const axisLineControlsI18n = {
+  zh: {
+    orthogonalConnections: '正交连接',
+    connection: '连接',
+    connectionType: '连接方式',
+    horizontalAxis: '水平单轴',
+    verticalAxis: '垂直单轴',
+    foldConnection: '折线连接',
+    fold: '折线',
+    foldDirection: '折线方向',
+    horizontalVertical: '水平 → 垂直',
+    verticalHorizontal: '垂直 → 水平',
+    horizontalVerticalHorizontal: '水平 → 垂直 → 水平',
+    verticalHorizontalVertical: '垂直 → 水平 → 垂直',
+    middlePosition: '中间位置',
+  },
+  en: {
+    orthogonalConnections: 'Orthogonal connections',
+    connection: 'Connection',
+    connectionType: 'Connection type',
+    horizontalAxis: 'Horizontal axis',
+    verticalAxis: 'Vertical axis',
+    foldConnection: 'Fold connection',
+    fold: 'Fold',
+    foldDirection: 'Fold direction',
+    horizontalVertical: 'Horizontal → vertical',
+    verticalHorizontal: 'Vertical → horizontal',
+    horizontalVerticalHorizontal: 'Horizontal → vertical → horizontal',
+    verticalHorizontalVertical: 'Vertical → horizontal → vertical',
+    middlePosition: 'Middle position',
+  },
+};

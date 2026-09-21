@@ -1,0 +1,79 @@
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle, Ellipse, Rectangle } from '@retikz/standard-react/shape';
+import type { FC } from 'react';
+
+/** 同一内容框在 proportional / equal 外接策略下的边界对照图 */
+const Demo: FC = () => (
+  <Layout>
+    <Node position={[-170, -100]} style={{ stroke: 'none', fill: 'none', font: { size: 14, weight: 'bold' } }}>
+      ellipse · proportional
+    </Node>
+    <Node position={[170, -100]} style={{ stroke: 'none', fill: 'none', font: { size: 14, weight: 'bold' } }}>
+      circle preset · equal
+    </Node>
+
+    <Ellipse
+      center={[-170, -10]}
+      radius={{ x: 73.54, y: 33.94 }}
+      style={{ stroke: 'dodgerblue', strokeWidth: 1.5, fill: 'dodgerblue', fillOpacity: 0.06 }}
+    />
+    <Rectangle
+      center={[-170, -10]}
+      width={104}
+      height={48}
+      style={{ stroke: 'lightgray', dashPattern: [5, 4], fill: 'none' }}
+    />
+    <Node position={[-170, -10]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}>
+      内容 + padding
+    </Node>
+    <Draw
+      way={[
+        [-170, -10],
+        [-96.46, -10],
+      ]}
+      style={{ stroke: 'lightgray' }}
+    />
+    <Circle center={[-96.46, -10]} radius={3} style={{ stroke: 'none', fill: 'dodgerblue' }} />
+    <Node position={[-102, 43]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 11 } }}>
+      连接边界
+    </Node>
+    <Node position={[-170, 82]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}>
+      两个半轴分别 × √2
+    </Node>
+
+    <Circle
+      center={[170, -10]}
+      radius={57.27}
+      style={{ stroke: 'darkorange', strokeWidth: 1.5, fill: 'darkorange', fillOpacity: 0.06 }}
+    />
+    <Rectangle
+      center={[170, -10]}
+      width={104}
+      height={48}
+      style={{ stroke: 'lightgray', dashPattern: [5, 4], fill: 'none' }}
+    />
+    <Node position={[170, -10]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}>
+      内容 + padding
+    </Node>
+    <Draw
+      way={[
+        [170, -10],
+        [227.27, -10],
+      ]}
+      style={{ stroke: 'lightgray' }}
+    />
+    <Circle center={[227.27, -10]} radius={3} style={{ stroke: 'none', fill: 'darkorange' }} />
+    <Node position={[224, 61]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 11 } }}>
+      连接边界
+    </Node>
+    <Node position={[170, 82]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}>
+      半径 = 内容框半对角线
+    </Node>
+
+    <Node position={[0, 120]} style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 11 } }}>
+      同一个 ellipse provider · 两种 circumscribe 策略
+    </Node>
+  </Layout>
+);
+
+export default Demo;

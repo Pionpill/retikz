@@ -1,0 +1,92 @@
+import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+/** Circle / Ellipse Standard 输入归一化到 Path Step 的局部流程图 */
+const Demo: FC = () => (
+  <Layout>
+    <Node
+      id="target-input"
+      position={[-275, -72]}
+      text={['Circle / Ellipse', 'center + radius / diameter']}
+      cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+    />
+    <Node
+      id="literal-input"
+      position={[-275, 72]}
+      text={['字面量几何', 'from / corners / box']}
+      cornerRadius={4}
+      style={{ stroke: 'darkorange', fill: 'darkorange', fillOpacity: 0.08, font: { size: 13 } }}
+    />
+    <Node
+      id="pass-target"
+      position={[-75, -72]}
+      cornerRadius={4}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+    >
+      保留 target 引用
+    </Node>
+    <Node
+      id="compute-geometry"
+      position={[-75, 72]}
+      text={['计算中心与半径', '只接 [x, y]']}
+      cornerRadius={4}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 13 } }}
+    />
+    <Node
+      id="path-step"
+      position={[145, 0]}
+      text={['Path + Step', 'circlePath / ellipsePath']}
+      cornerRadius={4}
+      style={{ stroke: 'dodgerblue', fill: 'dodgerblue', fillOpacity: 0.08, font: { size: 13, weight: 'bold' } }}
+    />
+    <Node
+      id="angles"
+      position={[145, 100]}
+      cornerRadius={4}
+      style={{ stroke: 'dimgray', fill: 'lightgray', fillOpacity: 0.16, font: { size: 12 } }}
+    >
+      angles + closed
+    </Node>
+    <Node
+      id="path-output"
+      position={[310, 0]}
+      text={['Path 几何', '轮廓 / 部分弧']}
+      cornerRadius={4}
+      style={{ stroke: 'darkviolet', fill: 'darkviolet', fillOpacity: 0.08, font: { size: 13 } }}
+    />
+
+    <Draw way={['target-input', 'pass-target']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw way={['literal-input', 'compute-geometry']} arrow="->" style={{ stroke: 'gray' }} />
+    <Draw
+      way={[
+        'pass-target',
+        { label: { text: '透传', side: 'top', sloped: true, textColor: 'gray', font: { size: 11 } } },
+        'path-step',
+      ]}
+      arrow="->"
+      style={{ stroke: 'gray' }}
+    />
+    <Draw
+      way={[
+        'compute-geometry',
+        { label: { text: '归一化', side: 'bottom', sloped: true, textColor: 'gray', font: { size: 11 } } },
+        'path-step',
+      ]}
+      arrow="->"
+      style={{ stroke: 'gray' }}
+    />
+    <Draw way={['angles', 'path-step']} arrow="->" style={{ stroke: 'gray', dashPattern: [4, 3] }} />
+    <Draw
+      way={[
+        'path-step',
+        { label: { text: '编译', side: 'top', sloped: true, textColor: 'gray', font: { size: 11 } } },
+        'path-output',
+      ]}
+      arrow="->"
+      style={{ stroke: 'gray' }}
+    />
+  </Layout>
+);
+
+export default Demo;

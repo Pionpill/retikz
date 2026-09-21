@@ -1,26 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  AnimationTrackSchema,
-  blink,
-  cameraTo,
-  colorShift,
-  drawOn,
-  fadeIn,
-  flash,
-  grow,
-  growUp,
-  loop,
-  pulse,
-  scaleIn,
-  slideIn,
-  spin,
-  stagger,
-  wiggle,
-} from '../../src';
+import { AnimationTrackSchema, cameraTo, colorShift, drawOn, fadeIn, loop, scaleIn, slideIn, stagger } from '../../src';
 
 describe('Sugar=Kernel 等价（默认参数）', () => {
-  it('fadeIn / drawOn / scaleIn / grow', () => {
+  it('fadeIn / drawOn / scaleIn', () => {
     expect(fadeIn()).toEqual({
       property: 'opacity',
       keyframes: [
@@ -48,28 +31,9 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
       duration: 400,
       easing: 'ease-out',
     });
-    expect(grow()).toEqual({
-      property: 'scale',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 1 },
-      ],
-      duration: 400,
-      easing: 'ease-out',
-    });
   });
 
-  it('growUp / slideIn / colorShift', () => {
-    expect(growUp()).toEqual({
-      property: 'scaleY',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 1 },
-      ],
-      origin: 'bottom',
-      duration: 500,
-      easing: 'ease-out',
-    });
+  it('slideIn / colorShift', () => {
     expect(slideIn()).toEqual({
       property: 'translateX',
       keyframes: [
@@ -90,7 +54,7 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
     });
   });
 
-  it('cameraTo / pulse / spin', () => {
+  it('cameraTo', () => {
     expect(cameraTo({ from: [0, 0, 100, 100], to: [10, 10, 50, 50] })).toEqual({
       property: 'viewBox',
       keyframes: [
@@ -100,73 +64,6 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
       duration: 800,
       easing: 'ease-in-out',
     });
-    expect(pulse()).toEqual({
-      property: 'scale',
-      keyframes: [
-        { at: 0, value: 1 },
-        { at: 0.5, value: 1.1 },
-        { at: 1, value: 1 },
-      ],
-      iterations: 'infinite',
-      duration: 1000,
-      easing: 'ease-in-out',
-    });
-    expect(spin()).toEqual({
-      property: 'rotate',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 1, value: 360 },
-      ],
-      iterations: 'infinite',
-      duration: 1000,
-      easing: 'linear',
-    });
-  });
-
-  it('flash / blink / wiggle（强调系列，末帧 = base）', () => {
-    expect(flash()).toEqual({
-      property: 'opacity',
-      keyframes: [
-        { at: 0, value: 1 },
-        { at: 0.5, value: 0 },
-        { at: 1, value: 1 },
-      ],
-      iterations: 2,
-      duration: 300,
-      easing: 'ease-in-out',
-    });
-    expect(blink()).toEqual({
-      property: 'opacity',
-      keyframes: [
-        { at: 0, value: 1 },
-        { at: 0.5, value: 0 },
-        { at: 1, value: 1 },
-      ],
-      iterations: 'infinite',
-      duration: 800,
-      easing: 'ease-in-out',
-    });
-    expect(wiggle()).toEqual({
-      property: 'rotate',
-      keyframes: [
-        { at: 0, value: 0 },
-        { at: 0.25, value: 5 },
-        { at: 0.5, value: -5 },
-        { at: 0.75, value: 5 },
-        { at: 1, value: 0 },
-      ],
-      iterations: 3,
-      duration: 400,
-      easing: 'ease-in-out',
-    });
-  });
-
-  it('flash / blink / wiggle opts 覆盖（dim / angle / iterations / origin）', () => {
-    expect(flash({ dim: 0.3, iterations: 4 }).keyframes[1]).toEqual({ at: 0.5, value: 0.3 });
-    expect(flash({ iterations: 4 }).iterations).toBe(4);
-    expect(blink({ iterations: 5 }).iterations).toBe(5);
-    expect(wiggle({ angle: 10 }).keyframes[1]).toEqual({ at: 0.25, value: 10 });
-    expect(wiggle({ origin: 'bottom' }).origin).toBe('bottom');
   });
 
   it('每个 preset 产出都通过 AnimationTrackSchema（合法 IR）', () => {
@@ -174,16 +71,9 @@ describe('Sugar=Kernel 等价（默认参数）', () => {
       fadeIn(),
       drawOn(),
       scaleIn(),
-      grow(),
-      growUp(),
       slideIn(),
       colorShift({ from: '#000', to: '#fff' }),
       cameraTo({ from: [0, 0, 1, 1], to: [0, 0, 2, 2] }),
-      pulse(),
-      spin(),
-      flash(),
-      blink(),
-      wiggle(),
     ]) {
       expect(AnimationTrackSchema.safeParse(track).success).toBe(true);
     }

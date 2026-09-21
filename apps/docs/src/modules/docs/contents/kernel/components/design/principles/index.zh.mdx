@@ -9,9 +9,9 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 先记住两个稳定产物：**IR 是描述边界，Scene 是执行边界**。React JSX 与 Vanilla `InputScene` 都先汇入同一条归一化主数据流，已经校验的外部 IR 则直接进入编译；Core 只输出 Scene，不直接输出 SVG 字符串、DOM 或 Canvas 像素。
 
-<ComponentPreview files="principles-packages" size="sm" hideCode />
+<ComponentPreview files="principles-packages" size="md" hideCode />
 
-图中的实线是数据流：作者输入进入 IR，`compileToScene` 同次生成 Scene 与 typed artifacts，renderer 再把 Scene 输出为 SVG 或 Canvas。虚线是能力依赖：`@retikz/math` 提供纯几何底座，`@retikz/tex` 作为可选 lowerer 接入编译，而不是成为 IR 或 renderer 的特殊分支。
+图中的实线是数据流：作者输入进入 IR，`compileToScene` 同次生成 Scene 与 typed artifacts，renderer 再把 Scene 输出为 SVG 或 Canvas。下方的次要节点表示可选辅助能力：`@retikz/tex` 作为 lowerer 接入编译，`@retikz/inspect` 读取最终编译结果生成只读辅助内容。虚线区分这些辅助关系与主数据流；它们不成为 IR 或 renderer 的特殊分支。
 
 完整的九个 Kernel 包及职责见[分层 · 包结构](/kernel/components/design/layers#包结构)。上图只画主要输入与渲染链路，不是完整依赖图。
 
@@ -19,7 +19,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 可扩展能力不采用“内置 switch + 扩展补丁”。每个能力先定义 `XxxDefinition` 协议，再由内置项与 `defineXxx(...)` 创建的自定义项共同进入一个有效 registry，最后由 compile 使用相同 key 查找和消费。
 
-<ComponentPreview files="principles-registry" size="xs" hideCode />
+<ComponentPreview files="principles-registry" size="md" hideCode />
 
 “内置与扩展都是一等公民”具体意味着三件事：
 
@@ -27,7 +27,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 2. **同一注册表**：`BUILTIN_*` 与 `options.xxx` 在每次编译开始时合并为同一个 `ReadonlyMap`。
 3. **同一消费路径**：resolver、错误诊断和 compile consumer 不区分 key 来自内置还是调用方。
 
-内置项会先注册，自定义项随后加入；建表阶段拒绝空 key 和重复 key。消费阶段遇到未知 key 时，再按具体能力的契约选择报错，或告警后跳过。因此“一等公民”表示同一协议与执行路径，不表示自定义项可以静默覆盖内置项。完整扩展族、注入入口与异常语义查[扩展机制](/kernel/reference/runtime/extensions)。
+内置项会先注册，自定义项随后加入；建表阶段拒绝空 key 和重复 key。消费阶段遇到未知 key 时，再按具体能力的契约选择报错，或告警后跳过。因此“一等公民”表示同一协议与执行路径，不表示自定义项可以静默覆盖内置项。
 
 ## 能力归属原则
 
@@ -35,7 +35,7 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
 
 建立整体框架后，再判断一项需求改变的是书写体验、共享绘图语义、高层领域模型、可替换编译策略，还是后端运行行为，并从第一责任 owner 开始设计。
 
-<ComponentPreview files="principles-placement" size="md" hideCode />
+<ComponentPreview files="principles-placement" size="lg" hideCode />
 
 图中箭头指向第一责任 owner，节点第二行给出常见实现锚点；这不代表一项能力只能改一个包。同一能力可以包含 authoring、contract、compile 与 runtime 接线，但每层语义只能有一个真源。
 
@@ -78,15 +78,12 @@ retikz 把“描述图形”“解释能力”和“执行输出”分开：作�
       description: '理解 domain 高层节点如何保留意图并下沉',
       url: '/kernel/components/design/composite',
     },
-    {
-      title: '扩展机制',
-      description: '查询 Definition、registry、host lowerer 与具体指南',
-      url: '/kernel/reference/runtime/extensions',
-    },
+
     {
       title: '结构',
       description: '查询当前 IR schema 与字段契约',
-      url: '/kernel/reference/schema',
+      url: '/kernel/components/layout/schema-reference',
     },
-  ]}
+
+]}
 />

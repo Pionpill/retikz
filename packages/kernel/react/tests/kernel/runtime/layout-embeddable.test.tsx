@@ -140,7 +140,7 @@ describe('<Layout> Composite provider graph', () => {
     User.inputEmbedAdapter = userAdapter;
 
     const svg = renderToStaticMarkup(
-      <Layout width={100} height={100} composites={[definitionOf(userKey)]}>
+      <Layout width={100} height={100} extensions={{ composites: [definitionOf(userKey)] }}>
         <Demo id="embedded" data={null} />
         <User id="manual" data={null} />
       </Layout>,
@@ -202,7 +202,7 @@ describe('<Layout> Composite provider graph', () => {
     const Valid = makeFixture({ displayName: 'Valid', key, makeDefinition });
     expect(() =>
       renderToStaticMarkup(
-        <Layout width={100} height={100} composites={[definitionOf(key)]}>
+        <Layout width={100} height={100} extensions={{ composites: [definitionOf(key)] }}>
           <Valid id="conflict" data={null} />
         </Layout>,
       ),

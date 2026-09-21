@@ -9,12 +9,12 @@ description: Use when adding or changing retikz unit, integration, or regression
 
 ## 边界
 
-| 场景                             | 用哪个 skill              |
-| -------------------------------- | ------------------------- |
-| 从 ADR / TODO 定义行为和测试证据 | test-contract             |
-| 审计历史测试是否重复或过期       | test-review               |
-| 主动构造异常输入寻找缺陷         | cross-test / develop-test |
-| 实施已接受的测试整理             | develop-refactor          |
+| 场景                             | 用哪个 skill                                            |
+| -------------------------------- | ------------------------------------------------------- |
+| 从 ADR / TODO 定义行为和测试证据 | test-contract                                           |
+| 审计历史测试是否重复或过期       | test-review                                             |
+| 主动构造异常输入寻找缺陷         | cross-test / [alpha](../cross-test/references/alpha.md) |
+| 实施已接受的测试整理             | develop-refactor                                        |
 
 本 skill 不决定产品设计、不写实现或临时探索测试，也不以覆盖率百分比代替契约。
 

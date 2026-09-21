@@ -12,7 +12,7 @@ import {
 import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
 import { controlModules, demoModules } from './load-preview-registry';
 
-const segments = ['kernel', 'components', 'draw', 'arrow'];
+const segments = ['kernel', 'components', 'path', 'arrow'];
 const name = 'arrow-endpoint-overlap';
 
 const demoModule = demoModules[resolveDemoKey(segments, name, 'zh')];

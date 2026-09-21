@@ -1,0 +1,169 @@
+---
+title: pattern · 图案
+description: 图案把一个重复单元铺满填充区域或描边。内置 lines、dots、grid 可直接使用，无需注册。
+---
+
+## 接入方式
+
+以下以 Node 为例，四种写法绘制相同结果。Path 与 Scope 的差异见本页后面的「组件对接」。Vanilla 需要页面已有 `<div id="diagram"></div>`；移除容器前调用 `view.dispose()`。
+
+<ComponentPreview files="pattern-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node
+      position={[0, 0]}
+      layout={{ minimumSize: 80 }}
+      style={{ fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } }}
+    />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } },
+    },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node({
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } },
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: { kind: 'pattern', shape: 'lines', color: 'steelblue', size: 10 } },
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 选择重复单元
+
+| shape | 图案                        | 常用配置                                |
+| ----- | --------------------------- | --------------------------------------- |
+| lines | 水平线；rotation 可变为斜线 | lineWidth、虚线、lineStyleCycle         |
+| dots  | 圆点                        | lineWidth 指定点半径；省略时为 size / 5 |
+| grid  | 横线与竖线                  | horizontalStyle、verticalStyle          |
+
+<ComponentPreview files="pattern-builtins" size="sm" />
+
+`size` 是基础间距，单位与图形坐标一致，默认 8；`rotation` 以度旋转整个图案。`background` 省略时透明。图案线型与外轮廓的线型分别配置，不会互相替代。
+
+## 网格与周期线条
+
+网格的方向配置在顶层线型上覆盖，只改变相应方向。
+
+<ComponentPreview files="pattern-directional-grid" size="sm" />
+
+lines 的 `lineStyleCycle` 按相邻线条循环：`period` 为 2–512 的整数，覆盖项的 `index` 从 0 开始、不可重复且必须小于 period。最终重复单元边长为 size × period，线条间距仍为 size。grid 和 dots 不消费此周期配置。
+
+<ComponentPreview files="pattern-line-cycle" size="sm" />
+
+虚线选择优先级为 `dashPattern` → `dashed` → `dotted`。调整下面参数观察重复单元与轮廓的区别。
+
+<ComponentPreview files="pattern-playground" size="md" controlPanelDefaultSize={50} />
+
+## 组件对接
+
+| 组件        | 接入方式                                                           |
+| ----------- | ------------------------------------------------------------------ |
+| Scope       | `style.fill / stroke`、`defaults.node/path.style` 或 `frame.style` |
+| Node        | `style.fill / stroke`                                              |
+| Path / Draw | `style.fill / stroke`                                              |
+
+### Scope 的传递与覆盖
+
+Scope 的 `style.fill` 和 `style.stroke` 可传递给 Node 与 Path；只影响一类图元时使用 `defaults.node.style` 或 `defaults.path.style`。下图中左侧 Node 和闭合 Path 继承线条图案，右侧 Node 用点状图案覆盖继承值。`fill: 'none'` 关闭填充，`frame.style` 则只装饰整组包络，不会传递给子图元。
+
+<ComponentPreview files="pattern-integration" size="sm" />
+
+### Node 与 Path 的绘制面
+
+同一份图案可用于 Node 的形状填充或描边，也可用于 Path。下图对比圆形 Node 和闭合三角 Path：Path 的 `fill` 只对有面积的闭合路径可见，`stroke` 始终沿描边绘制；两点线段没有可供填充的面积。
+
+<ComponentPreview files="pattern-surfaces" size="sm" />
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/style/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.fill / style.stroke',
+      kind: 'property',
+      type: 'IRPatternPaint',
+      description: '对象以 kind: pattern、shape 指定图案；size 控制间距，rotation 控制整体旋转。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义图案', url: '/kernel/visual/style/custom-pattern' },
+    { title: '实现原理', url: '/kernel/visual/style/mechanism#pattern-图案' },
+    { title: 'API 参考', url: '/kernel/visual/style/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/style/schema-reference#pattern-图案' },
+  ]}
+/>

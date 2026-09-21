@@ -1,0 +1,82 @@
+---
+title: Animation
+description: Animation drives elements or the camera with keyframes. Choose the target before configuring triggers, playback, and static output. Easing and Canvas property channels can be extended.
+---
+
+Animation introduces elements, emphasizes states, and guides attention through a drawing. Keyframes describe property values over time, components determine the target, and playback controls decide when to start, pause, or seek. Static exports also need a deliberate frame selection.
+
+> **Note:** The site follows your system's animation preference by default. If animations are disabled or reduced motion is enabled, examples will not play their animations. To view them, open the “…” menu on the right of the header and choose “Animation playback → On”.
+
+Core provides `fadeIn`, `scaleIn`, `slideIn`, and `drawOn`, plus the `colorShift`, `cameraTo`, `loop`, and `stagger` utilities. Import `grow`, `growUp`, `pulse`, `spin`, `flash`, `blink`, and `wiggle` from `@retikz/standard`; see [Standard animation presets](/library/standard/animation). Both layers return the same track data without additional registration.
+
+## The overall picture
+
+The example places nodes, a path, and text inside one Scope, then moves them together with a vertical translation track. During playback, observe their relative positions: animation changes the group's presentation without recalculating its internal layout.
+
+<ComponentPreview
+  files="/kernel/visual/animation/integration/animation-integration"
+  size="sm"
+  controls={{ animation: true }}
+/>
+
+Keyframes specify the change, Scope specifies which elements change together, and the preview controls manage time. Use a Layout `viewBox` track to move the viewing window instead of the elements. Add triggers and playback handles when interaction should start the animation.
+
+## Responsibilities at a glance
+
+| Chapter               | Responsibility                                               | When to read                                              |
+| --------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| Basic usage           | Introduce presets and keyframe tracks                        | Create your first animation                               |
+| Component integration | Distinguish Node, Path, Scope, and Layout targets            | Animate an element, a group, or the camera                |
+| Extended usage        | Combine triggers, playback, camera tracks, and static output | Control interaction, coordinate timing, or export a frame |
+| Custom animation      | Extend easing and Canvas property channels                   | Go beyond built-in interpolation or properties            |
+| Implementation        | Explain track compilation and runtime evaluation             | Understand targets and backend differences                |
+| API reference         | Document presets, controls, and extension types              | Write precise calls                                       |
+| Schema reference      | Document tracks, keyframes, and triggers                     | Construct or save declarative animation                   |
+
+## Choosing an approach and its boundaries
+
+Start with presets for common entrances or emphasis. Write keyframes when you need precise timing and values. Use Scope to animate several independent elements together; consult component integration for the target boundaries of individual Node and Path animations.
+
+Tracks are serializable data, while playback handles and custom functions belong to the runtime. Animation does not rerun automatic layout. Static output and reduced-motion policies also need consideration. A custom Canvas property channel does not automatically provide equivalent SVG support; check backend capabilities before extending it.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Introduce presets and keyframe tracks',
+      url: '/kernel/visual/animation/usage',
+    },
+    {
+      title: 'Component integration',
+      description: 'Distinguish Node, Path, Scope, and Layout targets',
+      url: '/kernel/visual/animation/integration',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine triggers, playback, camera tracks, and static output',
+      url: '/kernel/visual/animation/extended-usage',
+    },
+    {
+      title: 'Custom animation',
+      description: 'Extend easing and Canvas property channels',
+      url: '/kernel/visual/animation/custom-animation',
+    },
+    {
+      title: 'Implementation',
+      description: 'Explain track compilation and runtime evaluation',
+      url: '/kernel/visual/animation/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Document presets, controls, and extension types',
+      url: '/kernel/visual/animation/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Document tracks, keyframes, and triggers',
+      url: '/kernel/visual/animation/schema-reference',
+    },
+  ]}
+/>

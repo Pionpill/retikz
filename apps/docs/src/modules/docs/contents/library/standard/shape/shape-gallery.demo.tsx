@@ -9,7 +9,7 @@ import {
   SectorShapeDefinition,
   StarShapeDefinition,
   TrapezoidShapeDefinition,
-} from '@retikz/standard/shape';
+} from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 /** 分三行展示 Standard 的九个可选节点形状 */
@@ -32,17 +32,19 @@ const Demo: FC = () => {
 
   return (
     <Layout
-      shapes={[
-        ContourShapeDefinition,
-        CrossShapeDefinition,
-        SectorShapeDefinition,
-        StarShapeDefinition,
-        TrapezoidShapeDefinition,
-        ParallelogramShapeDefinition,
-        HexagonShapeDefinition,
-        CylinderShapeDefinition,
-        EllipticCapsuleShapeDefinition,
-      ]}
+      extensions={{
+        shapes: [
+          ContourShapeDefinition,
+          CrossShapeDefinition,
+          SectorShapeDefinition,
+          StarShapeDefinition,
+          TrapezoidShapeDefinition,
+          ParallelogramShapeDefinition,
+          HexagonShapeDefinition,
+          CylinderShapeDefinition,
+          EllipticCapsuleShapeDefinition,
+        ],
+      }}
     >
       <Node
         position={[-150, -90]}

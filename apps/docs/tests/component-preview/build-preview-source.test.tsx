@@ -30,7 +30,7 @@ import {
 import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import PathInspectorDemo, {
   previewSource as pathInspectorPreviewSource,
-} from '../../src/modules/docs/contents/kernel/components/draw/path/path-inspector.demo';
+} from '../../src/modules/docs/contents/kernel/components/path/step/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
 } from '../../src/modules/docs/contents/library/standard/frame/frame-playground.demo';

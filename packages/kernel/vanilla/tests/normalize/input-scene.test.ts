@@ -1,5 +1,13 @@
-import type { AnyCompositeDefinition, IRPath } from '@retikz/core';
-import { CompositeBaseSchema, DEFAULT_RESOLVED_THEME, defineComposite, SceneSchema, ThemeMode } from '@retikz/core';
+import type { AnyCompositeDefinition, CompileWarning, IRPath } from '@retikz/core';
+import {
+  compileToScene,
+  CompileWarningCode,
+  CompositeBaseSchema,
+  DEFAULT_RESOLVED_THEME,
+  defineComposite,
+  SceneSchema,
+  ThemeMode,
+} from '@retikz/core';
 import { describe, expect, it, vi } from 'vitest';
 import { literal, string } from 'zod';
 
@@ -216,6 +224,26 @@ describe('@retikz/vanilla InputScene', () => {
     ]);
   });
 
+  it('同一 namespace 的后定义 identity 保留给 Core 以警告并覆盖解析目标', () => {
+    const normalized = normalizeScene(
+      scene([
+        node('A', { position: [0, 0] }),
+        scope({}, [node('A', { position: [120, 0] })]),
+        path('edge', { way: [[0, -40], 'A'] }),
+      ]),
+    );
+    const warnings: Array<CompileWarning> = [];
+
+    const compiled = compileToScene(normalized.ir, { onWarn: warning => warnings.push(warning) }).scene;
+    const edge = compiled.primitives.find(primitive => primitive.type === 'path' && primitive.id === 'edge');
+    const line = edge?.type === 'path' ? edge.commands.find(command => command.kind === 'line') : undefined;
+
+    expect(warnings).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: CompileWarningCode.DuplicateNodeId })]),
+    );
+    expect(line?.to[0]).toBeGreaterThan(60);
+  });
+
   it('空 children 的省略 type Input 必须显式声明 Scope，避免错误归类', () => {
     const ambiguous: InputScene = {
       children: [{ children: [] }],
@@ -388,7 +416,7 @@ describe('@retikz/vanilla InputScene', () => {
     expect(wrapped.runtimeMeta.identityIndex.get('chart')).toEqual(['default', 'chart']);
   });
 
-  it('embed slot 与根 Scene 共享公开 identity 索引', () => {
+  it('embed slot 与根 Scene 共享公开 identity 索引，后定义覆盖此前定位', () => {
     const slotAdapter: InputEmbedAdapter<{ slots: ReadonlyArray<ReadonlyArray<InputChild>> }> = {
       kind: 'slot-output',
       lower: (props, context) => {
@@ -408,31 +436,25 @@ describe('@retikz/vanilla InputScene', () => {
     };
     const slotChildren = [node('shared', { position: [0, 0] })];
 
-    expect(() =>
-      normalizeScene(
-        scene([embed('slot-output', 'frame', { slots: [slotChildren] }), node('shared', { position: [1, 0] })]),
-        {
-          adapters: [slotAdapter],
-        },
-      ),
-    ).toThrow(/duplicate identity "shared"/i);
-    expect(() =>
-      normalizeScene(
-        scene([node('shared', { position: [1, 0] }), embed('slot-output', 'frame', { slots: [slotChildren] })]),
-        {
-          adapters: [slotAdapter],
-        },
-      ),
-    ).toThrow(/duplicate identity "shared"/i);
-    expect(() =>
-      normalizeScene(
-        scene([embed('slot-output', 'frame', { slots: [slotChildren, [node('shared', { position: [2, 0] })]] })]),
-        { adapters: [slotAdapter] },
-      ),
-    ).toThrow(/duplicate identity "shared"/i);
+    const rootLater = normalizeScene(
+      scene([embed('slot-output', 'frame', { slots: [slotChildren] }), node('shared', { position: [1, 0] })]),
+      { adapters: [slotAdapter] },
+    );
+    const slotLater = normalizeScene(
+      scene([node('shared', { position: [1, 0] }), embed('slot-output', 'frame', { slots: [slotChildren] })]),
+      { adapters: [slotAdapter] },
+    );
+    const secondSlotLater = normalizeScene(
+      scene([embed('slot-output', 'frame', { slots: [slotChildren, [node('shared', { position: [2, 0] })]] })]),
+      { adapters: [slotAdapter] },
+    );
+
+    expect(rootLater.runtimeMeta.parentIndex.get('shared')).toBe('default');
+    expect(slotLater.runtimeMeta.parentIndex.get('shared')).toBe('frame');
+    expect(secondSlotLater.runtimeMeta.parentIndex.get('shared')).toBe('frame');
   });
 
-  it('同一 embed 外层 identity 只能被所有 slot 合计复用一次', () => {
+  it('同一 embed 外层 identity 在后续 slot 中可被后定义覆盖', () => {
     const multiSlotAdapter: InputEmbedAdapter<{ slots: ReadonlyArray<ReadonlyArray<InputChild>> }> = {
       kind: 'multi-slot-output',
       lower: (props, context) => {
@@ -450,26 +472,16 @@ describe('@retikz/vanilla InputScene', () => {
       },
     };
 
-    expect(() =>
-      normalizeScene(
-        scene([
-          embed('multi-slot-output', 'outer', {
-            slots: [[node('outer', { position: [0, 0] })]],
-          }),
-        ]),
-        { adapters: [multiSlotAdapter] },
-      ),
-    ).not.toThrow();
-    expect(() =>
-      normalizeScene(
-        scene([
-          embed('multi-slot-output', 'outer', {
-            slots: [[node('outer', { position: [0, 0] })], [node('outer', { position: [1, 0] })]],
-          }),
-        ]),
-        { adapters: [multiSlotAdapter] },
-      ),
-    ).toThrow(/duplicate identity "outer"/i);
+    const normalized = normalizeScene(
+      scene([
+        embed('multi-slot-output', 'outer', {
+          slots: [[node('outer', { position: [0, 0] })], [node('outer', { position: [1, 0] })]],
+        }),
+      ]),
+      { adapters: [multiSlotAdapter] },
+    );
+
+    expect(normalized.runtimeMeta.parentIndex.get('outer')).toBe('outer');
   });
 
   it('embed slot 的 Scope Theme 诊断路径不重复 embed 段', () => {
@@ -501,10 +513,7 @@ describe('@retikz/vanilla InputScene', () => {
     expect(sourcePaths).toEqual(['children[0].embed.children[0].theme']);
   });
 
-  it('缺失 adapter 或重复 identity 时在 Input normalizer fail-loud', () => {
+  it('缺失 adapter 时在 Input normalizer fail-loud', () => {
     expect(() => normalizeScene(scene([embed('missing', 'x', {})]))).toThrow(/adapter/i);
-    expect(() => normalizeScene(scene([node('a', { position: [0, 0] }), node('a', { position: [1, 0] })]))).toThrow(
-      /duplicate identity "a"/i,
-    );
   });
 });

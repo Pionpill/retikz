@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { StarShapeDefinition } from '@retikz/standard/shape';
+import { StarShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -9,7 +9,7 @@ import { previewControlContract, starExampleControls } from './star-example.cont
 export const previewControls = starExampleControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} shapes={[StarShapeDefinition]}>
+  <Layout viewBox={{ x: -105, y: -85, width: 210, height: 170 }} extensions={{ shapes: [StarShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'star', params: values }}

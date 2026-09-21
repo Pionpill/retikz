@@ -16,6 +16,16 @@ import {
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
+import {
+  CircleInputEmbedAdapter,
+  EllipseInputEmbedAdapter,
+  RectangleInputEmbedAdapter,
+  RegularPolygonInputEmbedAdapter,
+  StarInputEmbedAdapter,
+  ArcInputEmbedAdapter,
+  SectorInputEmbedAdapter,
+} from '../src/shape';
+
 const input = scene({
   children: [
     grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } }),
@@ -39,6 +49,13 @@ describe('Standard Vanilla definition loading', () => {
       FrameInputEmbedAdapter,
       SurfaceInputEmbedAdapter,
       LegendInputEmbedAdapter,
+      CircleInputEmbedAdapter,
+      EllipseInputEmbedAdapter,
+      RectangleInputEmbedAdapter,
+      RegularPolygonInputEmbedAdapter,
+      StarInputEmbedAdapter,
+      ArcInputEmbedAdapter,
+      SectorInputEmbedAdapter,
     ]);
     expect(Object.isFrozen(StandardInputEmbedAdapters)).toBe(true);
     expect(Object.isFrozen(GridInputEmbedAdapter)).toBe(false);

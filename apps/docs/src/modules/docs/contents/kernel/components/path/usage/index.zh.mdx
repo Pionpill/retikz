@@ -1,0 +1,226 @@
+---
+title: 基础用法
+description: 连接两个节点，选择输入方式，并设置连线与外观
+---
+
+从 A 到 B 画一条线。`Node.id` 是引用名，`Draw.way` 按顺序引用这些目标；节点已有形状时，连线会附着到连接面，而不是穿过节点中心。
+
+## 接入方式
+
+四种写法绘制同一结果。React 使用组件或 IR；Vanilla 使用作者侧构造函数或 IR。Vanilla 示例需要 HTML 容器 `<div id="diagram"></div>`，容器移除前调用 `view.dispose()`。安装见[快速开始](/kernel/components/get-start)。
+
+<ComponentPreview files="draw-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[100, 0]}>
+      B
+    </Node>
+    <Draw way={['a', 'b']} />
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [100, 0], text: 'B' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', { position: [100, 0], text: 'B' }),
+    path({ way: ['a', 'b'] }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+// Call when removing the host.
+// view.dispose();
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [100, 0], text: 'B' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+// Call when removing the host.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+## 选择路线
+
+直线就是从 A 直接连到 B。想拐弯或画曲线，就在 A 和 B 中间加一个动作。下面可以切换看看：单轴投影只往一个方向走，所以不一定能连到 B；折线会真的连到 B。完整写法见[路径写法](/kernel/components/path/draw)。
+
+| 连接方式         | 枚举 / Step 值                                           | `way` 写法                                      |
+| ---------------- | -------------------------------------------------------- | ----------------------------------------------- |
+| 直连             | `kind: 'line'`                                           | `['a', 'b']`                                    |
+| 水平单轴         | `kind: 'axis-line'`<br />`axis: 'horizontal'`            | `['a', { horizontalTo: 'b' }]`                  |
+| 垂直单轴         | `kind: 'axis-line'`<br />`axis: 'vertical'`              | `['a', { verticalTo: 'b' }]`                    |
+| 水平后垂直       | `DrawWay.Hv = '-\|'`<br />`kind: 'fold'`                 | `['a', '-\|', 'b']`                             |
+| 垂直后水平       | `DrawWay.Vh = '\|-'`<br />`kind: 'fold'`                 | `['a', '\|-', 'b']`                             |
+| 水平、垂直、水平 | `DrawWay.Hvh = '-\|-'`<br />`kind: 'fold'`               | `['a', '-\|-', 'b']`                            |
+| 垂直、水平、垂直 | `DrawWay.Vhv = '\|-\|'`<br />`kind: 'fold'`              | `['a', '\|-\|', 'b']`                           |
+| 二次贝塞尔       | `kind: 'curve'`                                          | `['a', { curve: [50, -40] }, 'b']`              |
+| 三次贝塞尔       | `kind: 'cubic'`                                          | `['a', { cubic: [[30, -40], [70, -40]] }, 'b']` |
+| 弯曲简写         | `kind: 'bend'`<br />`bendDirection: 'left'` 或 `'right'` | `['a', { bend: 'left' }, 'b']`                  |
+
+<ComponentPreview files="draw-orthogonal" size="md" />
+
+曲线通过控制点或弯曲方向改变形状；控制点拉动曲线的方向，并不是曲线必须经过的位置。
+
+<ComponentPreview files="draw-curve" size="md" />
+
+## 设置外观
+
+颜色、线宽、虚线与填充写在 `style`；箭头方向、圆角与 `zIndex` 写在根层。下面集中调整同一条线的外观。
+
+<ComponentPreview files="draw-style" size="lg" />
+
+闭合路线还可填充区域，`zIndex` 控制同层覆盖次序；下面在同一面板比较两者。
+
+<ComponentPreview files="draw-fill-stack" size="lg" />
+
+闭合 Path / Draw 的 `style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充区域，详见[图案](/kernel/visual/style/pattern)。
+
+## 何时使用 Path
+
+需要多个子路径或逐段控制时，用 Path 组织显式 Step 更清楚。Draw 只暴露常用路径写法与外观属性；整条路径的 `label`、`marks`、`rotate` 和 `scale` 需要使用 Path。下面两种写法画同一条折线；Step 把每个动作写得更明确。
+
+```tsx
+<Draw way={['a', '-|', 'b']} />
+
+<Path>
+  <Step kind="move" to="a" />
+  <Step kind="fold" via="-|" to="b" />
+</Path>
+```
+
+从 `@retikz/react` 导入 `Path`、`Step`，在现有 Layout 内替换 Draw 即可。Path 也接受 `way`，但不能与显式步骤同时提供。
+
+## 补充说明
+
+- 引用名必须能在当前范围中找到；命名空间规则见[范围](/kernel/components/scope/usage)。
+- 通用定位语法见[定位](/kernel/components/basic/position)，绘制页只解释路径特有的相对游标与连接规则。
+- 端点箭头见[箭头](/kernel/components/path/arrow)，边上的文字见[label · 标签](/kernel/components/path/label)。
+
+## 相关属性
+
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/path/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'way',
+      kind: 'property',
+      type: 'WayDSL',
+      required: true,
+      description: '按相对游标和端点描述整条路径，不能与显式 `Step` 同时提供',
+    },
+    { name: 'style', kind: 'property', type: "InputPath['style']", description: '设置路径描边、填充和线型等视觉样式' },
+    {
+      name: 'arrow',
+      kind: 'property',
+      type: "'none' | '->' | '<-' | '<->'",
+      description: '设置起点、终点或双端箭头方向',
+    },
+    {
+      name: 'arrowDetail',
+      kind: 'property',
+      type: 'IRArrowDetail',
+      description:
+        '共享外观：`{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`。`start` / `end` 可用同一组字段覆盖单端；端点重叠见 `arrowPlacement`',
+    },
+    {
+      name: 'roundedCorners',
+      kind: 'property',
+      type: 'number',
+      description: '把路径转角替换为圆角连接',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description: '控制路径与其他图元的绘制层级',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Draw · 路径写法', description: '目标、折角、曲线与相对坐标', url: '/kernel/components/path/draw' },
+    {
+      title: 'Step · 路径组合',
+      description: '组合子路径与步骤，控制连接面、曲线、圆角、变换与标记',
+      url: '/kernel/components/path/step',
+    },
+    { title: 'API 参考', description: '查询公开 TypeScript 契约', url: '/kernel/components/path/api-reference' },
+    { title: 'Schema 参考', description: '查询路径输入数据字段', url: '/kernel/components/path/schema-reference' },
+  ]}
+/>

@@ -17,6 +17,7 @@ export const EllipseArcPlaygroundControlId = {
 export const createEllipseArcPlaygroundControls = (i18n: typeof ellipseArcPlaygroundI18n.zh) =>
   definePreviewControls({
     presentation: 'panel',
+    defaultSize: 50,
     title: i18n.label1,
     sections: [
       {

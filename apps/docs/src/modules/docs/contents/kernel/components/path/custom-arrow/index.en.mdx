@@ -1,0 +1,208 @@
+---
+title: Custom arrows
+description: Define and register arrow geometry for endpoints and marks along a path
+---
+
+Start with [Basic usage](/kernel/components/path/usage), then define and register a new capability.
+
+## Applicability
+
+Core provides the `normal`, `open`, `stealth`, `openStealth`, `circle`, and `openCircle` basic arrows by default. The remaining official diamond pair is available on demand from [Arrow Extensions](/library/standard/arrow). Register a definition only when neither the Core nor the assembled Standard outline fits.
+
+| Need                                        | Choose                                              |
+| ------------------------------------------- | --------------------------------------------------- |
+| Resize or recolor an existing arrow         | `arrowDetail`                                       |
+| Use different registered shapes at each end | `arrowDetail.start` / `end`                         |
+| Add a new endpoint outline                  | Custom Arrow                                        |
+| Change the output of the whole relation     | [Custom Paths](/kernel/components/path/custom-path) |
+
+An ArrowDefinition serves both Path endpoints and `marks[].mark.shape`. It does not own arrow direction, mark position, path stroke, or renderer instances.
+
+## Minimal result
+
+A custom arrow extends **endpoint marker geometry**. IR stores only an open shape name and visual parameters. After the host injects an `ArrowDefinition`, core resolves it from the shared registry and emits renderer-neutral `MarkerPrimitive` geometry during compilation.
+
+The example below registers a hollow `bracket` arrow through `<Layout extensions={{ arrows }}>`. Its definition, injection, and Draw usage live in one runnable file.
+
+<ComponentPreview files="custom-arrow-basic" size="xs" />
+
+## Define the capability
+
+A minimal definition needs a stable `name`, a visual back at `backX`, the path contact at `lineContactX`, and an `emit` function that returns marker-local geometry.
+
+```tsx
+import { defineArrow } from '@retikz/core';
+
+const bracket = defineArrow({
+  name: 'bracket',
+  hollow: true,
+  backX: 2,
+  lineContactX: 2,
+  tipX: 8,
+  emit: ({ stroke, lineWidth }) => [
+    {
+      type: 'path',
+      commands: [
+        { kind: 'move', to: [8, 1] },
+        { kind: 'line', to: [2, 1] },
+        { kind: 'line', to: [2, 9] },
+        { kind: 'line', to: [8, 9] },
+      ],
+      stroke: typeof stroke === 'string' ? stroke : { kind: 'contextStroke' },
+      strokeWidth: lineWidth,
+    },
+  ],
+});
+```
+
+`emit` uses `baseSize` local coordinates. `backX` promises the base axial envelope back, `lineContactX` defines where the main stroke joins the marker, and `tipX` describes the visual tip; they must satisfy `backX <= lineContactX <= tipX`. Core lets the path overlap the contact baseline by half of its own stroke width before the marker paints over the joint. Endpoint overlap combines final `length × scale` with hollow `lineWidth` / `outerInset`, so ratio `1` aligns the final visual back with the logical endpoint.
+
+## Arrow connection
+
+An arrow definition supplies three distinct positions: `backX` is its back edge, `lineContactX` is where the main stroke meets it, and `tipX` is its tip. These determine placement and stroke shortening; one generic arrow length cannot replace them.
+
+<ComponentPreview files="arrow-contact" size="lg" hideCode type="illustration" />
+
+`overlap: 1` aligns the final visual back edge, including scaling and hollow outlines. Overlap moves the endpoint decoration and its contact without changing the node anchor or logical path sampling. An interior mark follows the local tangent without shortening the path as an endpoint would.
+
+Without an explicit arrow color, the marker uses `contextStroke`, inheriting its host path's stroke at rendering time. Resource paints such as gradients require an explicit solid arrow color. Built-in and injected arrows share registration and resolution.
+
+<SourceLinks
+  sources={[
+    { label: 'Arrow geometry contract', path: 'packages/kernel/core/src/contract/arrow/types.ts', startLine: 4 },
+    {
+      label: 'Inherited color and marker materialization',
+      path: 'packages/kernel/core/src/compile/path/stroke/shrink.ts',
+      startLine: 39,
+    },
+  ]}
+/>
+
+## Register and use
+
+React injects definitions through `<Layout extensions={{ arrows }}>`; direct core calls use `CompileOptions.arrows`. Endpoints and path marks then reference the registered name.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+
+<Layout extensions={{ arrows: [bracket] }}>
+  <Draw
+    way={[
+      [0, 0],
+      [120, 0],
+    ]}
+    arrow="->"
+    arrowDetail={{ shape: 'bracket' }}
+  />
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+The definition never enters IR. React, Vanilla, or persisted IR can reference the same shape string as long as the compile host injects the same definition.
+
+Vanilla uses the same definition through the `compile` option of `mount`. Prepare `<div id="diagram"></div>` in HTML first. The snippet reuses the definition above.
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+      arrow: '->',
+      arrowDetail: { shape: 'bracket' },
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { arrows: [bracket] },
+});
+// Dispose when the host is removed.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+Without a fixed color, the same arrow definition follows each path stroke. Compare the two differently colored lines below.
+
+<ComponentPreview files="custom-arrow-inherit" size="xs" />
+
+## Errors and limitations
+
+| Case                                                    | Result                                                          |
+| ------------------------------------------------------- | --------------------------------------------------------------- |
+| Empty name                                              | Registry rejects the non-empty key contract                     |
+| Duplicate Core, Standard, or custom name                | Registry merge reports a duplicate registration                 |
+| Unknown `arrowDetail.shape`                             | Compile lists available names and `options.arrows`              |
+| Invalid `baseSize`, back / contact / tip, or dimensions | Compile rejects invalid marker geometry                         |
+| Unknown primitive or non-finite geometry                | Marker validation prevents invalid Scene output                 |
+| Recursive arrows, clips, or text in marker              | The narrow `MarkerPrimitive` contract rejects them              |
+| Path uses an IRPaint stroke                             | Marker cannot inherit a resource paint; set a solid arrow color |
+
+MarkerPrimitive allows only `path`, `ellipse`, `rect`, and groups containing the same subset. Do not return SVG `<marker>` elements, Canvas objects, text layout, or external paint resource references.
+
+## Related props
+
+These are the members most often used to define, inject, and reference a custom arrow. See the [API reference](/kernel/components/path/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineArrow',
+      kind: 'function',
+      type: '(definition: ArrowDefinition) => ArrowDefinition',
+      description: 'Create a registrable arrow definition and return it unchanged.',
+    },
+    {
+      name: 'ArrowDefinition',
+      kind: 'type',
+      type: 'ArrowDefinition',
+      description:
+        'Declare the arrow name, hollow state, base size, and `emit` function that produces marker primitives.',
+    },
+    {
+      name: 'Layout.extensions.arrows',
+      kind: 'property',
+      type: 'ReadonlyArray<ArrowDefinition>',
+      description: 'Inject arrow definitions into a React Layout so Path and Draw can resolve them by name.',
+    },
+    {
+      name: 'Draw.arrowDetail',
+      kind: 'property',
+      type: "DrawProps['arrowDetail']",
+      description: 'Choose a registered endpoint `shape` and override visual details such as color and size.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Arrows',
+      description: 'Set endpoint arrow direction, shape, size, color, and overlap',
+      url: '/kernel/components/path/arrow',
+    },
+    {
+      title: 'Implementation',
+      description: 'Follow path syntax through steps, references, geometry, arrows, and labels to the final result',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public TypeScript contracts for drawing components, authoring input, and extensions',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

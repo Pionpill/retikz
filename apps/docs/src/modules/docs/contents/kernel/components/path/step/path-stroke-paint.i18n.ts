@@ -1,0 +1,33 @@
+/** 预览控件双语文案 */
+export const pathStrokePaintControlsI18n = {
+  zh: {
+    gradientStroke: '渐变描边',
+    gradient: '渐变',
+    gradientType: '渐变类型',
+    linear: '线性渐变',
+    radial: '径向渐变',
+    conic: '锥形渐变',
+    angle: '角度',
+    center: '中心',
+    radius: '半径',
+    startAngle: '起始角度',
+    startColor: '起点颜色',
+    middleColor: '中点颜色',
+    endColor: '终点颜色',
+  },
+  en: {
+    gradientStroke: 'Gradient stroke',
+    gradient: 'Gradient',
+    gradientType: 'Gradient type',
+    linear: 'Linear',
+    radial: 'Radial',
+    conic: 'Conic',
+    angle: 'Angle',
+    center: 'Center',
+    radius: 'Radius',
+    startAngle: 'Start angle',
+    startColor: 'Start color',
+    middleColor: 'Middle color',
+    endColor: 'End color',
+  },
+};

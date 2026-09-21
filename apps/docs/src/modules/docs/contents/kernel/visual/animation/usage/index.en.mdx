@@ -1,0 +1,189 @@
+---
+title: Basic usage
+description: Animation describes property changes with keyframes. Built-in presets return the same track data used by handwritten animation.
+---
+
+Core provides `fadeIn`, `scaleIn`, `slideIn`, and `drawOn`, plus the `colorShift`, `cameraTo`, `loop`, and `stagger` utilities. Import `grow`, `growUp`, `pulse`, `spin`, `flash`, `blink`, and `wiggle` from `@retikz/standard`; see [Standard animation presets](/library/standard/animation). Both layers return the same track data without additional registration.
+
+## Using this topic
+
+All four forms render the same result. Vanilla requires `<div id="diagram"></div>` in the page; call `view.dispose()` before removing the host.
+
+<ComponentPreview files="animation-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node
+      position={[0, 0]}
+      layout={{ minimumSize: 80 }}
+      animations={[
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ]}
+    />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ],
+    },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node({
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Entrance and emphasis
+
+| Purpose              | Core presets / utilities | Optional Standard effects         |
+| -------------------- | ------------------------ | --------------------------------- |
+| Opacity entrance     | fadeIn                   | —                                 |
+| Scale entrance       | scaleIn                  | grow, growUp                      |
+| Translation entrance | slideIn                  | —                                 |
+| Stroke reveal        | drawOn                   | —                                 |
+| State emphasis       | colorShift, loop         | pulse, spin, flash, blink, wiggle |
+
+<ComponentPreview files="entrance" size="md" controls={{ animation: true }} />
+
+A Node with text or rotation attaches animations to its wrapper group, so its text moves with it. Use Scope to animate several independent elements together; see [Component integration](/kernel/visual/animation/integration). Consult API signatures for preset options. Duration and delay use milliseconds.
+
+<ComponentPreview files="emphasis" size="sm" controls={{ animation: true }} />
+
+## Write a track
+
+One track describes one property. Keyframe at values range from 0 to 1 in nondecreasing order; value is absolute. Duration must be positive. Easing can be set on the track or a keyframe, where it applies to the segment leading to the next frame.
+
+<ComponentPreview files="handwritten-track" size="sm" controls={{ animation: true }} />
+
+## Parameter playground
+
+Change parameters to observe timing. Disabling playback displays the base state rather than automatically sampling the final frame.
+
+<ComponentPreview files="animation-playground" size="md" controlPanelDefaultSize={50} controls={{ animation: true }} />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/animation/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description:
+        'Tracks contain property, keyframes (at and value), and duration; optional fields include delay, easing, iterations, direction, fill, trigger, and origin.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Component integration', url: '/kernel/visual/animation/integration' },
+    { title: 'API reference', url: '/kernel/visual/animation/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/animation/schema-reference' },
+  ]}
+/>

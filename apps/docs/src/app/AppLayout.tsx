@@ -48,7 +48,7 @@ export const AppLayout: FC = () => {
           autoSaveId="docs-view"
           className="min-h-[calc(100dvh-3.5rem)] flex-1 overflow-x-clip! overflow-y-visible!"
         >
-          <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible!">
+          <ResizablePanel order={1} className="overflow-x-clip! overflow-y-visible! min-w-0!">
             <Outlet />
           </ResizablePanel>
           {rightPanelOpenDesktop && (

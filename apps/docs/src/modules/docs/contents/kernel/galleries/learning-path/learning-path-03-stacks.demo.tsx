@@ -28,11 +28,11 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       id={id}
       position={position}
       shape="rectangle"
-      cornerRadius={hasBox ? 4.5 : 0}
+      cornerRadius={hasBox ? 3.825 : 0}
       style={{
         ...(fill === undefined ? {} : { fill }),
         stroke: hasBox ? NODE_STROKE : 'none',
-        strokeWidth: hasBox ? 0.5 : 0,
+        strokeWidth: hasBox ? 0.425 : 0,
         textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
         font: {
           ...SANS_FONT,
@@ -40,7 +40,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
           weight: isTitle || isHeader ? 'bold' : 'normal',
         },
       }}
-      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
+      layout={{ padding: hasBox ? 4.25 : 3.4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -48,60 +48,72 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <Layout nodeDistance={41}>
-    <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
+  <Layout nodeDistance={34.85}>
+    <RoadmapNode id="title" position={[343.4, 17]} variant="title" width={170} height={34}>
       AI Expert in 2022
     </RoadmapNode>
-    <RoadmapNode id="fundamentals" position={[404, 95]} variant="optional" width={90} height={30}>
+    <RoadmapNode id="fundamentals" position={[343.4, 80.75]} variant="optional" width={76.5} height={25.5}>
       Fundamentals
     </RoadmapNode>
-    <RoadmapNode id="choose" position={[404, 162]} variant="header" width={130} height={25}>
+    <RoadmapNode id="choose" position={[343.4, 137.7]} variant="header" width={110.5} height={21.25}>
       Choose your path
     </RoadmapNode>
 
-    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
-    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
+    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
 
     {/* === Step 3：两侧色块条 ===
         左侧 "Required for any path" 列 —— 4 蓝色按钮紧贴堆叠；
         段头 papers 用绝对坐标，剩 3 个用 AtPosition direction=bottom，
-        靠 <Layout nodeDistance={41}> 自动按 intro.svg 的 41 间隔堆叠 */}
+        靠 <Layout nodeDistance={34.85}> 按紧凑间距堆叠 */}
 
-    <RoadmapNode id="required-header" position={[100, 35]} variant="header" width={160} height={22.5}>
+    <RoadmapNode id="required-header" position={[85, 29.75]} variant="header" width={136} height={19.125}>
       Required for any path
     </RoadmapNode>
-    <RoadmapNode id="papers" position={[105, 68]} variant="required" width={210} height={30}>
+    <RoadmapNode id="papers" position={[89.25, 57.8]} variant="required" width={178.5} height={25.5}>
       Papers With Code
     </RoadmapNode>
-    <RoadmapNode id="git" position={{ direction: 'bottom', of: 'papers' }} variant="required" width={210} height={30}>
+    <RoadmapNode
+      id="git"
+      position={{ direction: 'bottom', of: 'papers' }}
+      variant="required"
+      width={178.5}
+      height={25.5}
+    >
       GIT - Version Control
     </RoadmapNode>
-    <RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} variant="required" width={210} height={30}>
+    <RoadmapNode
+      id="semver"
+      position={{ direction: 'bottom', of: 'git' }}
+      variant="required"
+      width={178.5}
+      height={25.5}
+    >
       Semantic Versioning
     </RoadmapNode>
     <RoadmapNode
       id="changelog"
       position={{ direction: 'bottom', of: 'semver' }}
       variant="required"
-      width={210}
-      height={30}
+      width={178.5}
+      height={25.5}
     >
       Keep a Changelog
     </RoadmapNode>
 
     {/* Legend 列：header + 1 蓝 + 1 灰，作图例 */}
-    <RoadmapNode id="legend-header" position={[700, 36]} variant="header" width={80} height={20}>
+    <RoadmapNode id="legend-header" position={[595, 30.6]} variant="header" width={68} height={17}>
       Legend
     </RoadmapNode>
-    <RoadmapNode id="legend-blue" position={[705, 68]} variant="required" width={210} height={30}>
+    <RoadmapNode id="legend-blue" position={[599.25, 57.8]} variant="required" width={178.5} height={25.5}>
       Personal Recommendation!
     </RoadmapNode>
     <RoadmapNode
       id="legend-gray"
       position={{ direction: 'bottom', of: 'legend-blue' }}
       variant="optional"
-      width={210}
-      height={30}
+      width={178.5}
+      height={25.5}
     >
       Available Options
     </RoadmapNode>

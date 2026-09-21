@@ -16,7 +16,7 @@ export const DocsHome: FC = () => {
   const demos = [
     {
       id: 'layout',
-      layout: 'compact' as const,
+      span: { columns: 4, rows: 2 },
       location: ['library', 'layout'],
       preview: {
         files: 'layout-nested',
@@ -26,7 +26,7 @@ export const DocsHome: FC = () => {
     },
     {
       id: 'bubble-chart',
-      layout: 'compact' as const,
+      span: { columns: 4, rows: 2 },
       location: ['viz', 'chart', 'points', 'bubble'],
       preview: {
         files: 'bubble-basic',
@@ -36,7 +36,7 @@ export const DocsHome: FC = () => {
     },
     {
       id: 'primitive-model',
-      layout: 'compact' as const,
+      span: { columns: 4, rows: 2 },
       location: ['kernel', 'components', 'core', 'primitive-model'],
       preview: {
         files: 'node-model-layers',
@@ -45,8 +45,18 @@ export const DocsHome: FC = () => {
       },
     },
     {
+      id: 'namespace-storage',
+      span: { columns: 4, rows: 2 },
+      location: ['kernel', 'components', 'node', 'mechanism'],
+      preview: {
+        files: 'namespace-storage',
+        size: 'md' as const,
+        ...MODULE_LANDING_PREVIEW,
+      },
+    },
+    {
       id: 'karl-circle',
-      layout: 'compact' as const,
+      span: { columns: 2, rows: 2 },
       location: ['kernel', 'galleries', 'karl-circle'],
       preview: {
         files: 'karl-circle-06-tan',
@@ -56,7 +66,7 @@ export const DocsHome: FC = () => {
     },
     {
       id: 'detail-table',
-      layout: 'compact' as const,
+      span: { columns: 4, rows: 2 },
       location: ['viz', 'table', 'detail'],
       preview: {
         files: 'table-layout-playground',
@@ -66,7 +76,7 @@ export const DocsHome: FC = () => {
     },
     {
       id: 'polar-tracks',
-      layout: 'compact' as const,
+      span: { columns: 4, rows: 2 },
       location: ['viz', 'plot', 'coordinate', 'composition'],
       preview: {
         files: 'coordinate-composition-tracks-polar',

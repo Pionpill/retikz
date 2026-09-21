@@ -5,6 +5,7 @@ import { Step } from '@retikz/react';
 import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-arc.controls';
+
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-arc.controls';
 
 const registry = createDefaultInspectorRegistry();
@@ -12,12 +13,7 @@ const preview = defineControlledBuiltinInspectPreview(
   createPreviewControlContract,
   values => {
     return (
-      <InspectLayout
-        registry={registry}
-        width={380}
-        height={360}
-        viewBox={{ x: -190, y: -180, width: 380, height: 360 }}
-      >
+      <InspectLayout registry={registry} viewBox={{ x: -110, y: -110, width: 220, height: 120 }}>
         <InspectPath
           request={{
             inspector: PATH_INSPECTOR_KEY,

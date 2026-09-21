@@ -1,0 +1,136 @@
+---
+title: shadow · 阴影
+description: 阴影为图元的主几何添加投影，可使用档位预设或对象覆盖。
+---
+
+## 接入方式
+
+四种写法绘制相同结果。Vanilla 需要页面已有 `<div id="diagram"></div>`；移除容器前调用 `view.dispose()`。
+
+<ComponentPreview files="shadow-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node position={[0, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'steelblue', shadow: 'md' }} />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [node({ position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } })],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 选择预设
+
+`none`、`sm`、`md`、`lg`、`xl` 与 `2xl` 提供由近到远、由硬到柔的常用投影。`none` 可显式关闭 Scope 默认值；精确的对象配置见[自定义阴影](/kernel/visual/style/custom-shadow)。
+
+<ComponentPreview files="shadow-presets" size="sm" />
+
+## 组件对接
+
+| 组件        | 接入方式                                      |
+| ----------- | --------------------------------------------- |
+| Scope       | `defaults.node.style` / `defaults.path.style` |
+| Node        | `style.shadow`                                |
+| Path / Draw | `style.shadow`                                |
+
+### Scope 的默认值
+
+`Scope.style` 不接受 `shadow`；它只通过两类 defaults 向后代主几何传递默认值。下图中 Node 与闭合 Path 都继承 Scope 的投影，右侧 Node 以 `none` 显式关闭它。
+
+<ComponentPreview files="shadow-integration" size="sm" />
+
+### Node 的主几何投影
+
+Node 的文字、标签和引脚是独立输出，不随形状投影。调整下方控件时，只有蓝色矩形主形状的偏移、模糊、颜色和不透明度改变，顶部标签保持清晰。
+
+<ComponentPreview files="shadow-node" size="lg" />
+
+### Path 与箭头的效果边界
+
+Path 的路径和箭头属于同一主几何，因此共享一份投影；路径标签保持独立。下方示例复用同一组控件，便于对照 Node 与 Path 的作用边界。
+
+<ComponentPreview files="shadow-path" size="lg" />
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/style/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.shadow',
+      kind: 'property',
+      type: 'ShadowPresetValue | IRDropShadow',
+      description:
+        '预设为 none、sm、md、lg、xl、2xl；对象使用 preset 或同时提供 offsetX 与 offsetY，可覆盖 blur、color、opacity。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义阴影', url: '/kernel/visual/style/custom-shadow' },
+    { title: '实现原理', url: '/kernel/visual/style/mechanism#shadow-阴影' },
+    { title: 'API 参考', url: '/kernel/visual/style/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/style/schema-reference#shadow-阴影' },
+  ]}
+/>

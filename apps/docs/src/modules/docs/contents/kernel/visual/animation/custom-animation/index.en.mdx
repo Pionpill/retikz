@@ -1,0 +1,56 @@
+---
+title: Custom animation
+description: Custom animation extends easing names or Canvas property channels. Callbacks remain in host configuration while tracks stay JSON-safe.
+---
+
+## Custom easing
+
+Register a name-to-cubic-bezier tuple mapping through Layout.easings, then reference the name in a preset or track easing.
+
+<ComponentPreview files="custom-easing" size="sm" controls={{ animation: true }} />
+
+Vanilla uses animation.easings. Easing maps time progress; it does not add animatable properties.
+
+## Custom property channels
+
+Import AnimationPropertyDefinition from `@retikz/render/animation` and provide interpolate and applyCanvas. Register the name-to-definition mapping through Layout.animationProperties; Vanilla uses canvas.animationProperties.
+
+The blur channel interpolates a radius and updates the Canvas context before the current primitive is drawn.
+
+<ComponentPreview files="custom-property" size="md" controls={{ animation: true }} />
+
+## Support boundary
+
+Custom property values must be JSON values interpreted by the definition. applyCanvas runs within save / restore and does not change layout. This contract provides a Canvas application function, not automatic SVG property animation. Unsupported or unregistered channels are not portable across backends.
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/animation/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'easings',
+      kind: 'property',
+      type: 'EasingRegistry',
+      description: 'Names map to [x1, y1, x2, y2] tuples; function easing is limited to Canvas / JavaScript paths.',
+    },
+    {
+      name: 'animationProperties',
+      kind: 'property',
+      type: 'AnimationPropertyRegistry',
+      description: 'Names map to property definitions with interpolate and applyCanvas.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/animation/usage' },
+    { title: 'Component integration', url: '/kernel/visual/animation/integration' },
+    { title: 'API reference', url: '/kernel/visual/animation/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/animation/schema-reference' },
+  ]}
+/>

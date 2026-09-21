@@ -1,5 +1,5 @@
 import { Draw, Layout, Node } from '@retikz/react';
-import { StarShapeDefinition } from '@retikz/standard/shape';
+import { StarShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 /**
@@ -11,7 +11,7 @@ import type { FC } from 'react';
 const M = 18;
 
 const Demo: FC = () => (
-  <Layout shapes={[StarShapeDefinition]}>
+  <Layout extensions={{ shapes: [StarShapeDefinition] }}>
     {/* 椭圆：rect 驱动，margin 外扩 → 端点退开 margin */}
     <Node
       id="ell"

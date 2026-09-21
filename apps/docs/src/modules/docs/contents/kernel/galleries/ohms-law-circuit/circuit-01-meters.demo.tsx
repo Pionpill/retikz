@@ -6,7 +6,7 @@ import { circuitMeter, Meter } from './circuit-01-meters.meter';
 const FONT = { family: 'Arial, sans-serif' } as const;
 
 const CircuitDemo: FC = () => (
-  <Layout shapes={[circuitMeter]}>
+  <Layout extensions={{ shapes: [circuitMeter] }}>
     <Scope
       defaults={{
         node: {
@@ -15,8 +15,8 @@ const CircuitDemo: FC = () => (
         },
       }}
     >
-      <Meter position={[520, 360]} text="A" />
-      <Meter position={[760, 360]} text="V" />
+      <Meter position={[260, 180]} text="A" />
+      <Meter position={[380, 180]} text="V" />
     </Scope>
   </Layout>
 );

@@ -1,4 +1,5 @@
-import { Circle, Layout } from '@retikz/react';
+import { Layout } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const Demo: FC = () => (

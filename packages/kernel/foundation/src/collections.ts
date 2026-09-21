@@ -1,6 +1,8 @@
 /**
  * 创建不暴露写方法的 Map 浅快照
  * @description 输入 entries 会复制到独立存储；迭代与查询保持原生 Map 语义，`forEach` 的 owner 参数返回只读快照自身
+ * @template TKey Map 键类型
+ * @template TValue Map 值类型
  */
 export const createReadonlyMap = <TKey, TValue>(
   entries: Iterable<readonly [TKey, TValue]>,

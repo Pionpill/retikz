@@ -6,6 +6,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { inspectRoleFlowI18n } from './inspect-role-flow.i18n';
+
 export type InspectRoleFlowProps = Readonly<{ lang?: Lang }>;
 const InspectRoleFlow: FC<InspectRoleFlowProps> = props => {
   const { lang = 'zh' } = props;

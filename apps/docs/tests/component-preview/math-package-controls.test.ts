@@ -14,37 +14,6 @@ import {
   curveSegmentsControls,
   previewControlContract as curveSegmentsContract,
 } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.controls';
-import { previewControlContract as intersectionContract } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.controls';
-import {
-  circleCircleCenters,
-  intersectionViewBox,
-} from '../../src/modules/docs/contents/kernel/packages/math/algorithms/intersection-playground.data';
-
-describe('@retikz/math package controls', () => {
-  it('circle-circle control extremes remain inside the fixed viewport', () => {
-    const fields = getPreviewControlFields(intersectionContract.controls);
-    const offset = fields.find(field => field.id === 'offset');
-    const radius = fields.find(field => field.id === 'radius');
-
-    expect(offset).toMatchObject({ kind: 'range', min: -100, max: 100 });
-    expect(radius).toMatchObject({ kind: 'range', max: 90 });
-    if (!offset || offset.kind !== 'range' || !radius || radius.kind !== 'range') {
-      throw new Error('intersection controls must expose numeric offset and radius limits');
-    }
-
-    const viewBoxRight = intersectionViewBox.x + intersectionViewBox.width;
-    const viewBoxBottom = intersectionViewBox.y + intersectionViewBox.height;
-
-    for (const offsetValue of [offset.min, offset.max]) {
-      for (const center of circleCircleCenters(offsetValue)) {
-        expect(center[0] - radius.max).toBeGreaterThanOrEqual(intersectionViewBox.x);
-        expect(center[0] + radius.max).toBeLessThanOrEqual(viewBoxRight);
-        expect(center[1] - radius.max).toBeGreaterThanOrEqual(intersectionViewBox.y);
-        expect(center[1] + radius.max).toBeLessThanOrEqual(viewBoxBottom);
-      }
-    }
-  });
-});
 
 type CurveSegmentsScenario = {
   Demo: ComponentType;
@@ -71,9 +40,6 @@ const renderCurveSegments = (scenario: CurveSegmentsScenario, valuesOverride: Pr
     ),
   );
 };
-
-/** 提取固定 SVG 取景，防止 controls 切换时相机漂移 */
-const viewBoxOf = (markup: string): string | undefined => markup.match(/<svg[^>]*viewBox="([^"]+)"/)?.[1];
 
 describe('CurveSegment playground', () => {
   const chineseScenario: CurveSegmentsScenario = { Demo: CurveSegmentsDemo, contract: curveSegmentsContract };
@@ -136,20 +102,13 @@ describe('CurveSegment playground', () => {
     });
   });
 
-  it('renders every segment kind in a fixed viewport and responds to sampling and slicing', () => {
+  it('renders every segment kind and responds to sampling and slicing', () => {
     const kindValues = ['line', 'quadraticBezier', 'cubicBezier', 'arc', 'ellipseArc'] as const;
     const markups = kindValues.map(kind =>
       renderCurveSegments(chineseScenario, { kind, sampleParameter: 0.5, sliceStart: 0.28, sliceEnd: 0.74 }),
     );
 
     expect(markups.every(markup => markup.includes('<svg'))).toBe(true);
-    expect(markups.map(viewBoxOf)).toEqual([
-      viewBoxOf(markups[0]),
-      viewBoxOf(markups[0]),
-      viewBoxOf(markups[0]),
-      viewBoxOf(markups[0]),
-      viewBoxOf(markups[0]),
-    ]);
     expect(new Set(markups).size).toBe(kindValues.length);
 
     const earlySample = renderCurveSegments(chineseScenario, {

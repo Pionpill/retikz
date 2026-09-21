@@ -30,11 +30,11 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       id={id}
       position={position}
       shape="rectangle"
-      cornerRadius={hasBox ? 4.5 : 0}
+      cornerRadius={hasBox ? 3.825 : 0}
       style={{
         ...(fill === undefined ? {} : { fill }),
         stroke: hasBox ? NODE_STROKE : 'none',
-        strokeWidth: hasBox ? 0.5 : 0,
+        strokeWidth: hasBox ? 0.425 : 0,
         textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
         font: {
           ...SANS_FONT,
@@ -42,7 +42,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
           weight: isTitle || isHeader ? 'bold' : 'normal',
         },
       }}
-      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
+      layout={{ padding: hasBox ? 4.25 : 3.4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -50,103 +50,115 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 };
 
 const Demo: FC = () => (
-  <Layout nodeDistance={41}>
-    <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
+  <Layout nodeDistance={34.85}>
+    <RoadmapNode id="title" position={[343.4, 17]} variant="title" width={170} height={34}>
       AI Expert in 2022
     </RoadmapNode>
-    <RoadmapNode id="fundamentals" position={[404, 95]} variant="optional" width={90} height={30}>
+    <RoadmapNode id="fundamentals" position={[343.4, 80.75]} variant="optional" width={76.5} height={25.5}>
       Fundamentals
     </RoadmapNode>
-    <RoadmapNode id="choose" position={[404, 162]} variant="header" width={130} height={25}>
+    <RoadmapNode id="choose" position={[343.4, 137.7]} variant="header" width={110.5} height={21.25}>
       Choose your path
     </RoadmapNode>
 
-    <RoadmapNode id="required-header" position={[100, 35]} variant="header" width={160} height={22.5}>
+    <RoadmapNode id="required-header" position={[85, 29.75]} variant="header" width={136} height={19.125}>
       Required for any path
     </RoadmapNode>
-    <RoadmapNode id="papers" position={[105, 68]} variant="required" width={210} height={30}>
+    <RoadmapNode id="papers" position={[89.25, 57.8]} variant="required" width={178.5} height={25.5}>
       Papers With Code
     </RoadmapNode>
-    <RoadmapNode id="git" position={{ direction: 'bottom', of: 'papers' }} variant="required" width={210} height={30}>
+    <RoadmapNode
+      id="git"
+      position={{ direction: 'bottom', of: 'papers' }}
+      variant="required"
+      width={178.5}
+      height={25.5}
+    >
       GIT - Version Control
     </RoadmapNode>
-    <RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} variant="required" width={210} height={30}>
+    <RoadmapNode
+      id="semver"
+      position={{ direction: 'bottom', of: 'git' }}
+      variant="required"
+      width={178.5}
+      height={25.5}
+    >
       Semantic Versioning
     </RoadmapNode>
     <RoadmapNode
       id="changelog"
       position={{ direction: 'bottom', of: 'semver' }}
       variant="required"
-      width={210}
-      height={30}
+      width={178.5}
+      height={25.5}
     >
       Keep a Changelog
     </RoadmapNode>
 
-    <RoadmapNode id="legend-header" position={[700, 36]} variant="header" width={80} height={20}>
+    <RoadmapNode id="legend-header" position={[595, 30.6]} variant="header" width={68} height={17}>
       Legend
     </RoadmapNode>
-    <RoadmapNode id="legend-blue" position={[705, 68]} variant="required" width={210} height={30}>
+    <RoadmapNode id="legend-blue" position={[599.25, 57.8]} variant="required" width={178.5} height={25.5}>
       Personal Recommendation!
     </RoadmapNode>
     <RoadmapNode
       id="legend-gray"
       position={{ direction: 'bottom', of: 'legend-blue' }}
       variant="optional"
-      width={210}
-      height={30}
+      width={178.5}
+      height={25.5}
     >
       Available Options
     </RoadmapNode>
 
-    <RoadmapNode id="data-scientist" position={[316, 245]} variant="optional" width={111} height={30}>
+    <RoadmapNode id="data-scientist" position={[268.6, 208.25]} variant="optional" width={94.35} height={25.5}>
       Data Scientist
     </RoadmapNode>
     <RoadmapNode
       id="machine-learning"
-      position={{ direction: 'bottom', of: 'data-scientist', distance: 61 }}
+      position={{ direction: 'bottom', of: 'data-scientist', distance: 51.85 }}
       variant="optional"
-      width={111}
-      height={30}
+      width={94.35}
+      height={25.5}
     >
       Machine Learning
     </RoadmapNode>
     <RoadmapNode
       id="deep-learning"
-      position={{ direction: 'bottom', of: 'machine-learning', distance: 60 }}
+      position={{ direction: 'bottom', of: 'machine-learning', distance: 51 }}
       variant="optional"
-      width={111}
-      height={30}
+      width={94.35}
+      height={25.5}
     >
       Deep Learning
     </RoadmapNode>
-    <RoadmapNode id="data-engineer" position={[495, 245]} variant="optional" width={111} height={30}>
+    <RoadmapNode id="data-engineer" position={[420.75, 208.25]} variant="optional" width={94.35} height={25.5}>
       Data Engineer
     </RoadmapNode>
     <RoadmapNode
       id="big-data-engineer"
-      position={{ direction: 'bottom', of: 'data-engineer', distance: 61 }}
+      position={{ direction: 'bottom', of: 'data-engineer', distance: 51.85 }}
       variant="optional"
-      width={111}
-      height={30}
+      width={94.35}
+      height={25.5}
     >
       Big Data Engineer
     </RoadmapNode>
 
-    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
-    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
-    <Draw way={['data-scientist', 'machine-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
-    <Draw way={['machine-learning', 'deep-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
-    <Draw way={['data-engineer', 'big-data-engineer']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 2 }} />
+    <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
+    <Draw way={['fundamentals', 'choose']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
+    <Draw way={['data-scientist', 'machine-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
+    <Draw way={['machine-learning', 'deep-learning']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
+    <Draw way={['data-engineer', 'big-data-engineer']} arrow="->" style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }} />
     <Draw
-      way={['choose', { curve: [404, 200] }, [360, 195], { curve: [316, 190] }, 'data-scientist']}
+      way={['choose', { curve: [343.4, 170] }, [306, 165.75], { curve: [268.6, 161.5] }, 'data-scientist']}
       arrow="->"
-      style={{ stroke: EDGE_BLUE, strokeWidth: 2 }}
+      style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }}
     />
     <Draw
-      way={['choose', { curve: [404, 200] }, [449.5, 195], { curve: [495, 190] }, 'data-engineer']}
+      way={['choose', { curve: [343.4, 170] }, [382.075, 165.75], { curve: [420.75, 161.5] }, 'data-engineer']}
       arrow="->"
-      style={{ stroke: EDGE_BLUE, strokeWidth: 2 }}
+      style={{ stroke: EDGE_BLUE, strokeWidth: 1.7 }}
     />
 
     {/* === Step 5：装饰层 ===
@@ -154,49 +166,49 @@ const Demo: FC = () => (
            dashPattern=[6,6] 虚线 + arrow="<-" 把箭头放起点指向 Deep Learning */}
     <Draw
       way={[
-        [251.88, 359.77],
-        { label: 'recommended' },
-        { curve: [200, 320] },
-        [225, 241],
-        { curve: [250, 162] },
-        [327, 186],
-        { curve: [404, 210] },
+        [214.098, 305.804],
+        { label: { text: 'recommended', position: 0.2, side: 'left', distance: 16, font: { size: 12 } } },
+        { curve: [170, 272] },
+        [191.25, 204.85],
+        { curve: [212.5, 137.7] },
+        [277.95, 158.1],
+        { curve: [343.4, 178.5] },
         'choose',
       ]}
       arrow="<-"
-      style={{ stroke: EDGE_RECOMMEND, strokeWidth: 2, dashPattern: [6, 6] }}
+      style={{ stroke: EDGE_RECOMMEND, strokeWidth: 1.7, dashPattern: [5.1, 5.1] }}
     />
 
     {/* 2) "more bottom" 短虚线 — 4px 粗 + dashPattern [4,4] */}
     <Draw
       way={[
-        [315.21, 387],
-        [315.21, 437],
+        [267.928, 328.95],
+        [267.928, 371.45],
       ]}
-      style={{ stroke: EDGE_BLUE, strokeWidth: 4, dashPattern: [4, 4] }}
+      style={{ stroke: EDGE_BLUE, strokeWidth: 3.4, dashPattern: [3.4, 3.4] }}
     />
     <Draw
       way={[
-        [494.21, 321],
-        [494.21, 371],
+        [420.078, 272.85],
+        [420.078, 315.35],
       ]}
-      style={{ stroke: EDGE_BLUE, strokeWidth: 4, dashPattern: [4, 4] }}
+      style={{ stroke: EDGE_BLUE, strokeWidth: 3.4, dashPattern: [3.4, 3.4] }}
     />
 
     {/* 3) 红色 X — 2 条 4px 粗交叉线 */}
     <Draw
       way={[
-        [194, 258],
-        [244, 308],
+        [164.9, 219.3],
+        [207.4, 261.8],
       ]}
-      style={{ stroke: EDGE_RED, strokeWidth: 4 }}
+      style={{ stroke: EDGE_RED, strokeWidth: 3.4 }}
     />
     <Draw
       way={[
-        [194, 308],
-        [244, 258],
+        [164.9, 261.8],
+        [207.4, 219.3],
       ]}
-      style={{ stroke: EDGE_RED, strokeWidth: 4 }}
+      style={{ stroke: EDGE_RED, strokeWidth: 3.4 }}
     />
   </Layout>
 );

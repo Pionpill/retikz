@@ -31,15 +31,17 @@ export const RenderTable: FC<Props> = ({ rows }) => {
           {rows.map((r, i) => (
             <tr key={`${r.path ?? r.originalName ?? r.name}-${i}`} data-schema-path={r.path}>
               <td className={cn(td, 'font-mono whitespace-nowrap')}>
-                <span style={{ marginInlineStart: `${(r.depth ?? 0) * 16}px` }}>
-                  {r.isChild ? '' : (r.branchLabel ?? r.name)}
+                <span style={{ marginInlineStart: `${(r.depth ?? (r.isChild ? 1 : 0)) * 16}px` }}>
+                  {r.isChild ? r.originalName : (r.branchLabel ?? r.name)}
                 </span>
               </td>
               <td className={td}>
-                {r.isChild && r.originalName != null && (
-                  <span className="font-mono text-muted-foreground">{`${r.originalName}: `}</span>
+                {r.type.kind === 'object' &&
+                ((!r.isChild && rows[i + 1]?.isChild) || (rows[i + 1]?.depth ?? 0) > (r.depth ?? 0)) ? (
+                  <span className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">object</span>
+                ) : (
+                  <RenderType repr={r.type} />
                 )}
-                <RenderType repr={r.type} />
                 {r.constraints.length > 0 && (
                   <span className="ml-2 text-xs text-muted-foreground">({r.constraints.join(', ')})</span>
                 )}

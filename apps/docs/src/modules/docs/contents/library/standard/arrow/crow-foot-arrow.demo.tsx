@@ -8,7 +8,7 @@ import { crowFootArrowControls, previewControlContract } from './crow-foot-arrow
 
 export const previewControls = crowFootArrowControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} arrows={[CrowFootArrowDefinition]}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [CrowFootArrowDefinition] }}>
     <Draw
       way={[
         [-120, 0],

@@ -3,7 +3,7 @@ import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import type { FC } from 'react';
 
 const Demo: FC = () => (
-  <Layout pathKinds={[RibbonPathKindDefinition]} rootScope={{ style: { color: '#172033' } }}>
+  <Layout extensions={{ pathKinds: [RibbonPathKindDefinition] }} rootScope={{ style: { color: '#172033' } }}>
     <Path
       kind="ribbon"
       kindOptions={{

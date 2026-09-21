@@ -14,7 +14,7 @@
 
 ## 用法与预览
 
-说明高层意图和必要字段；最小示例先于 controls。参数空间由 docs-doc-control 管理，保持取景、默认值、visibleWhen、重置与双语一致。公开属性的教学覆盖不能靠字段数量取代语义覆盖。
+说明高层意图和必要字段；最小示例先于 controls。参数空间由 [controls](../../docs-doc-principle/references/controls.md) 管理，保持取景、默认值、visibleWhen、重置与双语一致。公开属性的教学覆盖不能靠字段数量取代语义覆盖。
 
 复用 ComponentPreview 的 IR / Vanilla 源码派生与真实 render；controls 的基线是稳定 canonicalValues，不是实时交互值。未注册转换器时不宣称完整预览通过，也不在仅文档规范任务中顺带开发转换器；需要代码补齐时确认该范围授权。
 

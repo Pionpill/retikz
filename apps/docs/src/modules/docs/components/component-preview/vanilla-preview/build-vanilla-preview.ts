@@ -87,6 +87,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
+import type { IRCell, IRList, IRMap } from '@retikz/standard';
 import {
   AxesDefinition,
   AxesSchema,
@@ -96,6 +97,8 @@ import {
   GridSchema,
   LegendDefinition,
   LegendSchema,
+  ListDefinition,
+  MapDefinition,
   SurfaceDefinition,
   SurfaceSchema,
 } from '@retikz/standard';
@@ -109,9 +112,39 @@ import {
   legend,
   LegendInputEmbedAdapter,
   surface,
+  list,
+  map,
+  ListInputEmbedAdapter,
+  MapInputEmbedAdapter,
   surfaceChild,
   SurfaceInputEmbedAdapter,
 } from '@retikz/standard-vanilla';
+import {
+  shape,
+  CircleInputEmbedAdapter,
+  EllipseInputEmbedAdapter,
+  RectangleInputEmbedAdapter,
+  RegularPolygonInputEmbedAdapter,
+  StarInputEmbedAdapter,
+  ArcInputEmbedAdapter,
+  SectorInputEmbedAdapter,
+} from '@retikz/standard-vanilla/shape';
+import {
+  CircleSchema,
+  CircleDefinition,
+  EllipseSchema,
+  EllipseDefinition,
+  RectangleSchema,
+  RectangleDefinition,
+  RegularPolygonSchema,
+  RegularPolygonDefinition,
+  StarSchema,
+  StarDefinition,
+  ArcSchema,
+  ArcDefinition,
+  SectorSchema,
+  SectorDefinition,
+} from '@retikz/standard/shape';
 import type { IRTable } from '@retikz/table';
 import { TableSchema, TableStructureKind } from '@retikz/table';
 import { embedTable, TableInputEmbedAdapter } from '@retikz/table-vanilla';
@@ -205,7 +238,21 @@ const buildCorePreview = (preview: PreviewIR, options: BuildVanillaPreviewOption
   };
 };
 
-type StandardKind = 'grid' | 'axes' | 'frame' | 'surface' | 'legend';
+type StandardKind =
+  | 'circle'
+  | 'ellipse'
+  | 'rectangle'
+  | 'regularPolygon'
+  | 'star'
+  | 'arc'
+  | 'sector'
+  | 'grid'
+  | 'axes'
+  | 'frame'
+  | 'surface'
+  | 'legend'
+  | 'list'
+  | 'map';
 
 type LayoutKind = 'flexLayout' | 'gridLayout' | 'overlayLayout';
 
@@ -261,9 +308,31 @@ const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: Libr
   const visit = (child: IRChild): void => {
     if (isComposite(child)) {
       const authoredId = (child as { id?: unknown }).id;
-      if (child.namespace === 'standard' && typeof authoredId === 'string') {
+      if (
+        child.namespace === 'standard' &&
+        child.type !== 'list' &&
+        child.type !== 'map' &&
+        typeof authoredId === 'string'
+      ) {
         const kind = child.type as StandardKind;
-        if (['grid', 'axes', 'frame', 'surface', 'legend'].includes(kind)) {
+        if (
+          [
+            'grid',
+            'axes',
+            'frame',
+            'surface',
+            'legend',
+            'list',
+            'map',
+            'circle',
+            'ellipse',
+            'rectangle',
+            'regularPolygon',
+            'star',
+            'arc',
+            'sector',
+          ].includes(kind)
+        ) {
           // 在转换子项目标前预留确定性 ID
           nextLibraryId(kind, libraryState, authoredId);
           libraryState.counts[kind] -= 1;
@@ -308,6 +377,55 @@ const convertStandardChild = (
 ): InputChild => {
   const childId = (child as { id?: string }).id;
   switch (child.type) {
+    case 'circle': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = CircleSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.circle(nextLibraryId('circle', state, childId), input);
+    }
+    case 'ellipse': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = EllipseSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.ellipse(nextLibraryId('ellipse', state, childId), input);
+    }
+    case 'rectangle': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = RectangleSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.rectangle(nextLibraryId('rectangle', state, childId), input);
+    }
+    case 'regularPolygon': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = RegularPolygonSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.regularPolygon(nextLibraryId('regularPolygon', state, childId), input);
+    }
+    case 'star': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = StarSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.star(nextLibraryId('star', state, childId), input);
+    }
+    case 'arc': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = ArcSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.arc(nextLibraryId('arc', state, childId), input);
+    }
+    case 'sector': {
+      const { namespace: _namespace, type: _type, id: _id, ...input } = SectorSchema.parse(child);
+      void _namespace;
+      void _type;
+      void _id;
+      return shape.sector(nextLibraryId('sector', state, childId), input);
+    }
     case 'grid': {
       const { namespace: _namespace, type: _type, ...input } = GridSchema.parse(child);
       void _namespace;
@@ -353,6 +471,44 @@ const convertStandardChild = (
         ...input,
         ...(title === undefined ? {} : { title: convertPreviewChild(title, state, graphState) }),
         content: normalizedContent,
+      });
+    }
+    case 'list': {
+      const { namespace: _namespace, type: _type, data, items, ...input } = child as IRList;
+      void _namespace;
+      void _type;
+      if (data !== undefined) return list(nextLibraryId('list', state), { ...input, data });
+      return list(nextLibraryId('list', state), {
+        ...input,
+        items: items.map(cell =>
+          typeof cell === 'string'
+            ? cell
+            : {
+                ...cell,
+                content:
+                  typeof cell.content === 'string'
+                    ? cell.content
+                    : convertPreviewChild(cell.content, state, graphState),
+              },
+        ),
+      });
+    }
+    case 'map': {
+      const { namespace: _namespace, type: _type, data, entries, ...input } = child as IRMap;
+      void _namespace;
+      void _type;
+      const convertCell = (cell: string | IRCell) =>
+        typeof cell === 'string'
+          ? cell
+          : {
+              ...cell,
+              content:
+                typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
+            };
+      if (data !== undefined) return map(nextLibraryId('map', state), { ...input, data });
+      return map(nextLibraryId('map', state), {
+        ...input,
+        entries: entries.map(entry => ({ key: convertCell(entry.key), value: convertCell(entry.value) })),
       });
     }
     case 'surface': {
@@ -558,9 +714,19 @@ const convertPreviewChild = (
 };
 
 const standardAdapters = (state: LibraryConversionState): ReadonlyArray<AnyInputEmbedAdapter> => [
+  ...(state.adapters.has('circle') ? [CircleInputEmbedAdapter] : []),
+  ...(state.adapters.has('ellipse') ? [EllipseInputEmbedAdapter] : []),
+  ...(state.adapters.has('rectangle') ? [RectangleInputEmbedAdapter] : []),
+  ...(state.adapters.has('regularPolygon') ? [RegularPolygonInputEmbedAdapter] : []),
+  ...(state.adapters.has('star') ? [StarInputEmbedAdapter] : []),
+  ...(state.adapters.has('arc') ? [ArcInputEmbedAdapter] : []),
+  ...(state.adapters.has('sector') ? [SectorInputEmbedAdapter] : []),
+
   ...(state.adapters.has('grid') ? [GridInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('axes') ? [AxesInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('frame') ? [FrameInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('list') ? [ListInputEmbedAdapter as AnyInputEmbedAdapter] : []),
+  ...(state.adapters.has('map') ? [MapInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('surface') ? [SurfaceInputEmbedAdapter as AnyInputEmbedAdapter] : []),
   ...(state.adapters.has('legend') ? [LegendInputEmbedAdapter as AnyInputEmbedAdapter] : []),
 ];
@@ -583,9 +749,19 @@ const graphAdapters = (state: GraphConversionState): ReadonlyArray<AnyInputEmbed
 ];
 
 const standardDefinitionByName = {
+  CircleDefinition,
+  EllipseDefinition,
+  RectangleDefinition,
+  RegularPolygonDefinition,
+  StarDefinition,
+  ArcDefinition,
+  SectorDefinition,
+
   GridDefinition,
   AxesDefinition,
   FrameDefinition,
+  ListDefinition,
+  MapDefinition,
   SurfaceDefinition,
   LegendDefinition,
 } as const;
@@ -611,9 +787,18 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
   const ids = new Map<string, string>();
   const libraryState: LibraryConversionState = {
     counts: {
+      circle: 0,
+      ellipse: 0,
+      rectangle: 0,
+      regularPolygon: 0,
+      star: 0,
+      arc: 0,
+      sector: 0,
       grid: 0,
       axes: 0,
       frame: 0,
+      list: 0,
+      map: 0,
       surface: 0,
       flexLayout: 0,
       gridLayout: 0,
@@ -647,7 +832,22 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     preview.ir.children,
     new Set(
       Array.from(libraryState.adapters).filter((kind): kind is StandardKind =>
-        ['grid', 'axes', 'frame', 'surface', 'legend'].includes(kind),
+        [
+          'grid',
+          'axes',
+          'frame',
+          'surface',
+          'legend',
+          'list',
+          'map',
+          'circle',
+          'ellipse',
+          'rectangle',
+          'regularPolygon',
+          'star',
+          'arc',
+          'sector',
+        ].includes(kind),
       ),
     ),
     new Set(

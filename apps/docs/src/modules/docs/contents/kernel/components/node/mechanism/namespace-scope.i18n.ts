@@ -1,0 +1,31 @@
+/** 局部命名空间栈图的双语说明 */
+export const namespaceScopeI18n = {
+  zh: {
+    innerLayout: '内层 a 的 layout',
+    localLayout: '局部 c 的 layout',
+    outerLayout: '外层 layout',
+    inside: '进入 group：pushFrame()',
+    after: '离开 group：popFrame()',
+    top: 'frames[1]：栈顶 / 局部 Map',
+    root: 'frames[0]：外层 Map',
+    hit: "lookup('a') 命中内层 a",
+    miss: "lookup('b') 内层无 → 向外找",
+    result: "lookup('a') → 外层 a\nlookup('c') → 未找到",
+    removed: '局部 Map 出栈，不合并进外层',
+    note: '普通 Scope 不 push / pop，子节点直接写入当前 Map',
+  },
+  en: {
+    innerLayout: 'inner a.layout',
+    localLayout: 'local c.layout',
+    outerLayout: 'outer layout',
+    inside: 'Enter group: pushFrame()',
+    after: 'Leave group: popFrame()',
+    top: 'frames[1]: top / local Map',
+    root: 'frames[0]: outer Map',
+    hit: "lookup('a') hits inner a",
+    miss: "lookup('b'): miss inside → try outer",
+    result: "lookup('a') → outer a\nlookup('c') → not found",
+    removed: 'Pop the local Map; do not merge it',
+    note: 'Ordinary Scope does not push / pop; children write to the current Map',
+  },
+};

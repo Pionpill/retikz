@@ -6,6 +6,7 @@ import { TextAttrsControlId } from './text-attrs.controls';
 /** Text line-level overrides controls panel in English */
 export const textAttrsControls = definePreviewControls({
   presentation: 'panel',
+  defaultSize: 50,
   title: 'Line Properties',
   sections: [
     {

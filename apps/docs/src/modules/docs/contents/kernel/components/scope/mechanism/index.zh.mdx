@@ -1,0 +1,288 @@
+---
+title: 实现原理
+description: 解释 Scope 的变换顺序、跨坐标系引用、局部命名空间、整体包络与裁剪资源
+---
+
+先了解[基础用法](/kernel/components/scope/usage)。本页分别解释 Scope 的变换、引用和裁剪为何呈现出对应行为；每节只展开当前属性所需的局部机制。
+
+## 变换与最终定位
+
+Scope 把里面的内容当作一组：可以一起放大、旋转，再一起移到目标位置。下面这组 A、B 节点先绕原点放大 `1.4` 倍，再旋转 `30°`，最后把原点移到 `[16, 14]`。
+
+图中橙点是原点，灰色点线是固定坐标轴。观察虚线框和两个节点：它们始终一起变化。
+
+<ComponentPreview files="scope-transform-steps" size="md" type="illustration" hideCode />
+
+前两步里，原点不动，整组内容围绕它缩放、旋转；最后一步才把整组移走。B 点的坐标也随之变化：`[14, 0]` → `[19.6, 0]` → 约 `[17, 9.8]` → 约 `[33, 23.8]`。
+
+对应到属性，`pivot` 指定绕哪个点缩放或旋转，`placement` 指定最后对齐哪里。本例两项变换都用 `pivot: 'origin'`，最后设置 `placement={{ target: [16, 14], selfAnchor: 'origin' }}`，意思是“把整组的原点移到 `[16, 14]`”。
+
+注意数组顺序：`transforms` **从后往前作用**。要先缩放再旋转，就按 `[旋转, 缩放]` 声明；`placement` 在这些变换之后执行。
+
+如果不想绕原点，而想绕整组右边的中点旋转，怎么找到这个点？先把里面的节点摆好，再用一个边框把它们框起来，就能找到边框右边的中点。这个变换前的边框，在实现中叫“固有包络”。
+
+下图对比同一组内容变换前后的边框，暂不做最后的平移。右图的灰色虚线保留原来的位置，方便比较。
+
+<ComponentPreview files="scope-envelope-comparison" size="md" type="illustration" hideCode />
+
+橙框随着内容放大、旋转，橙色 `right` 点也跟着移动：它始终是边框右边的中点，转过来以后不一定是画布上最靠右的点。这些边框是帮助理解的辅助线，Scope 不会自动画出它们。
+
+这两个边框各有用途：
+
+- **选旋转或缩放中心**：`pivot: 'right'` 从变换前的边框取点。
+- **选最后的对齐位置**：`selfAnchor: 'right'` 从变换后的边框取点，再把这个点移到 `target`。
+
+所以实现时，需要先知道绕哪里变换，再算整组最后要移动多少。流程如下：
+
+<ComponentPreview files="scope-transform-resolution" size="lg" type="flow" hideCode />
+
+如果中心是原点或直接给出的坐标，一开始就知道它在哪；如果中心选在边框上，就要等里面的节点摆好、边框大小确定后再取点。图中上下两个入口对应这两种情况。
+
+目标位置 `placement.target` 会提前算好并保存。自身变换确定后，最后要移动的距离就是“目标位置 − 变换后选中的点”。编译器把这次平移放到数组最前面，让它最后作用。这样，无论整组怎样缩放、旋转，都能把选中的点准确移到目标，不用手动补偿。
+
+若目标写成 `{ id: 'target' }`，它必须是前面已经完成布局的对象。后面的对象、Scope 自己、它里面的子对象，以及尚未完成布局的 Scope，都不能作为目标，否则会报错。
+
+想进一步了解坐标怎么算，可以看 Math 的[坐标变换](/kernel/packages/math/transforms)。绕某个点旋转或缩放，可以理解为先把这个点移到原点，完成变换，再移回去。
+
+<SourceLinks
+  sources={[
+    {
+      label: '进入子树前冻结 placement 目标',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 847,
+      endLine: 881,
+    },
+    {
+      label: '包络锚点、最终平移与预解析分支',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 939,
+      endLine: 1041,
+    },
+    {
+      label: '变换收敛为平移、旋转与缩放',
+      path: 'packages/kernel/core/src/compile/scope.ts',
+      startLine: 51,
+      endLine: 103,
+    },
+  ]}
+/>
+
+## 跨坐标系引用
+
+假设画布上已经有一个点 A，位置是 `[100, 0]`。现在要在一个**横向放大两倍**的 Scope 里放点 B：以 A 为起点，沿 Scope 的横向再走 `10`。B 最后会在画布的哪里？
+
+答案是 `[120, 0]`，不是 `[110, 0]`。因为 Scope 里的长度也放大了两倍，里面的 `10` 对应画布上的 `20`。可以把它想成两把刻度不同的尺子：同一个位置，上下两把尺子的读数不同。下图只看横坐标，纵坐标都为 `0`。
+
+<ComponentPreview files="scope-offset-rulers" size="lg" type="illustration" hideCode />
+
+从橙色的 A 点开始，按下面三步读图：
+
+1. **换成 Scope 的读数**：画布上的 `100`，在 Scope 的尺子上是 `50`。
+2. **在 Scope 里走 10**：从 `50` 走到 `60`。
+3. **换回画布的读数**：Scope 的 `60`，对应画布上的 `120`，这就是 B 的位置。
+
+这里“画布上的坐标”叫全局坐标，“Scope 内的坐标”叫局部坐标。引用 `{ id: 'A' }` 是为了找到 A 的位置；偏移 `[10, 0]` 则按当前 Scope 的尺子计算。不能把两把尺子的读数直接相加。
+
+实现中，`toLocal` 负责换成 Scope 的读数，`toWorld` 负责换回画布的读数。下图就是上面三步的计算过程：
+
+<ComponentPreview files="scope-coordinate-projection" size="sm" type="flow" hideCode />
+
+`offset` 给出要在 Scope 内移动多少，`at` 用方向和距离表达这段移动。旋转时也一样：如果 Scope 转了一个角度，它里面的“横向”也会跟着转，偏移就沿这个方向移动。换算会一起考虑当前 Scope 和外层 Scope 的变换。
+
+有些变换要等内部节点摆好后才能确定，例如绕边框上的点旋转、最后对齐目标。编译器会把这些最终变换同步到引用位置和绘图结果，保证“引用到的位置”和“实际画出的位置”一致。
+
+如果缩放比例是 `0`，图形可以被压扁，但这时已经无法从画布位置反推 Scope 内的读数。需要这种换算的引用会报错：`non-invertible scope transform`。
+
+<SourceLinks
+  sources={[
+    {
+      label: '局部偏移与全局结果解析',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      startLine: 33,
+      endLine: 81,
+    },
+    {
+      label: '绑定正向与逆向投影',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 67,
+      endLine: 84,
+    },
+    {
+      label: '逆变换与零缩放错误',
+      path: 'packages/kernel/core/src/compile/transform.ts',
+      startLine: 34,
+      endLine: 64,
+    },
+    {
+      label: '补入最终变换并同步延迟结果',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1207,
+      endLine: 1231,
+    },
+  ]}
+/>
+
+## 命名空间与 id 冲突
+
+命名空间中的一层 id 查找表称为 frame。普通 Scope 复用当前 frame；只有 `localNamespace` 为 `true` 时，才为其子树压入新的 frame，离开子树后再弹出。
+
+查找从当前 frame 向外进行，**首次命中就返回**；只有未命中才继续。图中查找可以沿父 frame 一直访问到根，注册却只写当前 frame；同层重名时另行发出警告并覆盖条目。
+
+<ComponentPreview files="scope-namespace-lookup" size="lg" type="flow" hideCode />
+
+注册只写当前 frame，因此两种同名情况有不同结果：
+
+| 情况                   | 结果                                              |
+| ---------------------- | ------------------------------------------------- |
+| 内外 frame 使用同名 id | 内层遮蔽外层；离开内层后仍可找到外层条目          |
+| 同一 frame 重复 id     | 发出 `DUPLICATE_NODE_ID` 警告，后定义覆盖查找条目 |
+
+覆盖的是引用查找结果，不会删除先前图元的绘制输出。普通 Scope 的子 id 本就在外层共用的 frame 中，离开 Scope 后仍可查找。启用 `localNamespace` 后，子 id 只留在新 frame，离开后不再向外可见。
+
+`scope.id` 在子 frame 入栈前登记到父 frame，所以外部可以通过这个 id 引用整组；这不会导出局部 frame 中的子 id。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'frame 的压入与弹出',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 155,
+      endLine: 172,
+    },
+    {
+      label: '同层注册与覆盖诊断',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 185,
+      endLine: 214,
+    },
+    { label: '首次命中即返回', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 240, endLine: 252 },
+    {
+      label: '先登记整体 id，再进入局部 frame',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1125,
+      endLine: 1137,
+    },
+  ]}
+/>
+
+## 整体引用与包络
+
+给 Scope 设置 `id` 后，后续图元可以引用整组的中心或边界。编译器为此生成一个整体布局条目：它提供位置与锚点几何，但本身不是额外绘制的节点。
+
+- 占位条目：进入子树前在父 frame 登记的 id，表示身份已知、布局尚未完成。
+- 完整包络：前文固有包络应用当前 Scope 及祖先变换后的几何结果，用于替换占位条目，向外提供引用。
+
+图中汇总的包络用于更新父 frame 的占位条目，不是第二次注册同名 id。更新前还会检查条目身份：若它已被同名子节点替换，就保留后定义的子节点。
+
+<ComponentPreview files="scope-reference-envelope" size="md" type="flow" hideCode />
+
+包络汇总 Node、Coordinate 和嵌套 Scope 的布局，不包含 Path 走线。`boundingShape` 默认使用矩形包络（AABB，即与坐标轴对齐的包围盒）；`circle` 则从布局角点计算最小外接圆。它决定整体引用的边界，不会自动创建裁剪区。
+
+例如 Scope 内两节点之间的路径绕到很远处，Scope 的整体引用边界仍由布局决定，不会被这条路径撑大。这种引用包络也不能等同于整张图的最终绘制范围。
+
+子树完成后，`replaceLayout` 将占位更新为已解析条目。如果未启用局部命名空间，又给子节点设置了与 Scope 相同的 id，子节点会按“后定义覆盖”规则替换占位；收尾时不会再用 Scope 包络覆盖它。未设置 Scope `id` 时，不发布整体引用，而是把子布局传给父级继续汇总。
+
+<SourceLinks
+  sources={[
+    {
+      label: '按布局生成矩形或圆形包络',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 884,
+      endLine: 896,
+    },
+    {
+      label: '父 frame 中的占位条目',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1043,
+      endLine: 1062,
+    },
+    {
+      label: '最终包络发布与无 id 分支',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1233,
+      endLine: 1253,
+    },
+    {
+      label: '原位更新与占位身份检查',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 217,
+      endLine: 237,
+    },
+  ]}
+/>
+
+## 裁剪与分组输出
+
+`clip` 决定子树哪些部分可见，与用于引用的整体包络独立。JSON 裁剪描述通过注册的 Clip Definition 解析为裁剪形状，再降级为 Scene 裁剪路径。
+
+- 裁剪资源：Scene 单独保存的裁剪路径，同一次编译内相同路径复用同一资源。
+- `clipRef`：分组持有的资源 id，将裁剪区关联到该组子图元。
+- `GroupPrim`：Scene 的分组输出，承载子图元、最终变换以及可选的裁剪引用。
+
+图中内置与自定义能力从同一入口参与解析，生成的路径进入资源表；资源引用再与子图元、变换一起挂到 Scene 分组。整条链路不依赖 `scope.id`，没有 id 的 Scope 同样可以裁剪。
+
+<ComponentPreview files="scope-clip-resource" size="lg" type="flow" hideCode />
+
+内置和自定义裁剪都通过 Clip Definition 的 `resolve` 与 `lower` 处理；资源表根据最终路径去重，随后把返回的 id 写入 `GroupPrim.clipRef`。
+
+**Core 负责描述“裁哪里”，Render 负责真正执行裁剪。** Core 把裁剪路径放进 `Scene.resources`，再用分组的 `clipRef` 指向它；不会提前把超出边界的图形切碎或删除。
+
+- **SVG Render**：把裁剪路径生成 `<clipPath>`，再通过分组的 `clip-path` 属性应用，由 SVG 按这个区域显示内容。
+- **Canvas Render**：先保存绘图状态、应用分组变换，再调用 `ctx.clip()` 设置裁剪区，绘制组内内容，最后恢复状态，避免影响后面的绘制。
+
+因此，同一份 Scene 可以交给不同后端：裁剪路径、所属分组和变换由 Core 确定，后端用各自的裁剪 API 实现相同的可见范围。
+
+裁剪描述使用 Scope 的局部坐标，裁剪区随分组一起变换。例如 Scope 旋转 30° 时，局部矩形裁剪区与子图一起旋转，不会固定在画布原来的位置。
+
+有子图元输出、有效变换、id 或 clip 时会生成分组。空子树且没有这些语义时，Scope 不产生空 Group。裁剪本身不改写前述整体引用包络。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Clip Definition 解析与路径降级',
+      path: 'packages/kernel/core/src/compile/resource/clip.ts',
+      startLine: 248,
+      endLine: 310,
+    },
+    {
+      label: '单次编译内的资源去重',
+      path: 'packages/kernel/core/src/compile/resource/clip.ts',
+      startLine: 312,
+      endLine: 338,
+    },
+    {
+      label: 'Group 剪枝、变换与 clipRef',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1064,
+      endLine: 1098,
+    },
+    {
+      label: 'SVG 生成裁剪路径',
+      path: 'packages/kernel/render/src/svg/builders/clip-defs.ts',
+      startLine: 8,
+      endLine: 18,
+    },
+    {
+      label: 'SVG 分组应用裁剪',
+      path: 'packages/kernel/render/src/svg/builders/prim.ts',
+      startLine: 243,
+      endLine: 257,
+    },
+    {
+      label: '分组变换下应用裁剪',
+      path: 'packages/kernel/render/src/canvas/draw-scene.ts',
+      startLine: 825,
+      endLine: 842,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '组合变换、局部引用与裁剪', url: '/kernel/components/scope/usage' },
+    { title: '自定义用法', description: '注册自定义 Clip Definition', url: '/kernel/components/scope/custom' },
+    { title: '架构', description: '了解 IR、Core 与 Scene 的职责边界', url: '/kernel/components/design/principles' },
+  ]}
+/>

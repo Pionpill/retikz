@@ -1,0 +1,217 @@
+---
+title: Draw · 路径写法
+description: 用目标、算子和相对坐标描述 Draw 的路径走向
+---
+
+用目标和算子描述连接路线；首次绘图请先阅读[基础用法](/kernel/components/path/usage)。
+
+## 接入方式
+
+下面四种入口都画同一条先水平、再垂直的折线。按使用的宿主选择写法即可；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="draw-way-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[120, 60]}>
+      B
+    </Node>
+    <Draw way={['a', '-|', 'b']} arrow="->" />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 60], text: 'B' },
+    {
+      type: 'path',
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', { position: [120, 60], text: 'B' }),
+    path({ way: ['a', '-|', 'b'], arrow: '->' }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 60], text: 'B' },
+    {
+      type: 'path',
+      marks: [{ pos: 1, mark: { kind: 'arrow' } }],
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'fold', via: '-|', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+<ComponentAlert
+  type="tip"
+  title="Draw 只是一层简写"
+  description={
+    <>
+      <code>Draw</code> 是 React 提供的语法糖，Core 的 IR 里没有 <code>Draw</code>。React 会把 <code>{'<Draw>'}</code>{' '}
+      转为底层 <code>{'<Path>'}</code>，再由 Path 的规范化流程把 <code>way</code> 解析成 steps；直接写 IR 时使用{' '}
+      <code>path</code>。
+    </>
+  }
+/>
+
+`way` 是 `<Draw>` 的路径简写：目标给出点，`-|` / `|-` 决定怎么转弯，`{ label }` 给下一段加文字，`DrawWay.Cycle` 把路径闭合。
+
+目标可以是坐标，也可以引用节点：`'-|'` / `'|-'` 改写前后两个点之间的段，`{ label }` 修饰下一段，`{ curve }` / `{ cubic }` / `{ bend }` 消耗下一项生成曲线，`{ arc }` / `{ circle }` / `{ ellipse }` 围绕上一点画形状而不消耗下一项。
+
+## 目标写法
+
+同一条 `way` 可以混合不同的目标写法，按位置从哪里来选择：
+
+- **节点引用**：`'a'` 指向已有节点，连线会随节点移动，并自动贴到节点边缘
+- **笛卡尔坐标**：`[120, 0]` 直接给出固定位置，适合不依赖其他节点的点
+- **极坐标**：`{ origin: 'a', angle: 60, radius: 80 }` 从原点按角度和距离取点，适合围绕节点排布
+- **结构化目标**：`{ id: 'a', anchor: 'top' }` 可以指定节点锚点或边上的位置，适合精确控制连线落点
+
+<ComponentPreview files="draw-way-types" size="sm" />
+
+## 单轴连接
+
+`{ horizontalTo }` 只连接到目标 x，`{ verticalTo }` 只连接到目标 y；两者各自产生一个 `axis-line` Step，不像 `-\|` / `\|-` 那样发出两段。方向按当前 Scope 的局部坐标轴解释。
+
+```tsx
+<Draw way={[[0, 0], { horizontalTo: [100, 60] }]} />
+<Draw way={[[0, 0], { verticalTo: [100, 60] }]} />
+```
+
+<ComponentPreview files="axis-line" size="sm" />
+
+算子值只接受笛卡尔坐标、NodeTarget 或对应字符串 shorthand。relative、polar、offset、between，以及同时含多个 Way operator 的对象会由 `parseWay` 直接拒绝。
+
+## 折角
+
+切换四种折角方向，观察蓝色路径经过一个或两个正交转折点。选择 `-\|-` / `\|-\|` 后可用 `fraction` 在 `0..1` 内移动中间腿，默认 `0.5`；灰色 dotted 直线只标出两个端点的直接连接。
+
+<Comparison target="tikz" title="折角写法">
+
+`'-|'` / `'|-'` 沿用 TikZ path 的 `(A) -| (B)` / `(A) |- (B)` 两段写法。`'-|-'` / `'|-|'` 是流程图常见的三段扩展；裸 token 使用中点，`{ via: '-|-', fraction: 0.3 }` 可配置中间腿位置。
+
+</Comparison>
+
+<ComponentPreview files="way-fold" size="sm" />
+
+## 闭合
+
+切换路径状态，观察“闭合路径”如何用 `DrawWay.Cycle` 的实线回边取代 dotted 缺口，并形成可填充区域。
+
+<ComponentPreview files={['way-cycle', 'way-cycle.data.ts']} size="sm" />
+
+## 相对坐标
+
+两条线都会先向右偏移 `[60, 0]`，再使用面板中的二维偏移 `[x, y]` 画第二段。区别不在第一段画在哪里，而在第一段之后是否把内部游标移到终点：
+
+- **蓝色 `+`**：第一段只画出来，游标仍停在起点。因此第二段仍从 `+` 方框的位置计算，终点是“起点 + `[x, y]`”，不会叠加前面的 `[60, 0]`
+- **橙色 `++`**：第一段结束后，游标移到空心圆。因此第二段从空心圆继续计算，终点是“起点 + `[60, 0]` + `[x, y]`”
+- 灰色 dotted 直角辅助线标出第二段的计算基准：上方从 `+` 方框开始，下方从橙色空心圆开始；实心圆是各自的最终终点
+
+<ComponentPreview files={['way-relative', 'way-relative.data.ts']} size="sm" />
+
+## 相关属性
+
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/path/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'way',
+      kind: 'property',
+      type: 'Array<WayItem>',
+      required: true,
+      description:
+        "至少包含两项，首项是目标；不能与显式 Step 同时提供。按路线顺序组合：\n\n- 目标：节点 id、`[x, y]`、极坐标或 `{ id, anchor?, boundary? }`\n- 相对偏移：`{ position: [x, y], type: DrawWay.Relative | DrawWay.Accumulate }`，分别保持或推进相对计算基点\n- 折角：`'-|' | '|-' | '-|-' | '|-|'`；三段可写 `{ via: '-|-' | '|-|', fraction?: number }`\n- 单轴：`{ horizontalTo: target }` 或 `{ verticalTo: target }`，只连接目标的一个坐标\n- 标签：`{ label: string | InputStepLabel }`，标注下一段\n- 曲线：`{ curve: [x, y] }`、`{ cubic: [[x1, y1], [x2, y2]] }` 或 `{ bend: 'left' | 'right' }`，随后给出终点\n- 闭合：`DrawWay.Cycle`，回到子路径起点\n\n完整圆弧与形状算子见 API 参考",
+    },
+    {
+      name: 'DrawWay',
+      kind: 'constant',
+      type: 'typeof DrawWay',
+      description:
+        '`Cycle` 闭合回起点；`Hv = -|`、`Vh = |-`、`Hvh = -|-`、`Vhv = |-|` 分别表示四种折角方向。`Relative` 与 `Accumulate` 只能作为 `{ position, type }` 的 `type`：前者不推进游标，后者把游标移到本段终点',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '基础用法',
+      description: '从连接两个节点开始，选择 Draw 或 Path 并设置基本路径外观',
+      url: '/kernel/components/path/usage',
+    },
+    {
+      title: '实现原理',
+      description: '解释路径写法如何变成步骤，以及引用、几何、箭头和标签如何产生最终结果',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API 参考',
+      description: '查询绘制组件、作者侧输入和扩展契约的公开 TypeScript 声明',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>
