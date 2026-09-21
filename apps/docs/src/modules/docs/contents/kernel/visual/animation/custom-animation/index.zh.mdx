@@ -1,0 +1,56 @@
+---
+title: 自定义动画
+description: 自定义动画可扩展缓动名称或 Canvas 属性通道；回调保留在宿主配置中，轨道保持 JSON 安全。
+---
+
+## 自定义缓动
+
+通过 Layout.easings 注册名称到 cubic-bezier 四元组的映射，在预设或轨道的 easing 中引用该名称。
+
+<ComponentPreview files="custom-easing" size="sm" controls={{ animation: true }} />
+
+Vanilla 使用 animation.easings。缓动改变时间进度映射，不增加可动画属性。
+
+## 自定义属性通道
+
+从 `@retikz/render/animation` 导入 AnimationPropertyDefinition 类型，提供 interpolate 与 applyCanvas。通过 Layout.animationProperties 注册名称到定义的映射；Vanilla 使用 canvas.animationProperties。
+
+下面的 blur 通道插值模糊半径，在绘制当前图元前写 Canvas context。
+
+<ComponentPreview files="custom-property" size="md" controls={{ animation: true }} />
+
+## 支持边界
+
+自定义属性 value 必须是 JSON 值，定义负责解释并插值。applyCanvas 在 save / restore 作用域中执行；不因此获得修改布局的能力。此入口只提供 Canvas 应用函数，不会自动生成 SVG 属性动画。未支持或未注册的通道不能当作跨后端能力使用。
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/animation/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'easings',
+      kind: 'property',
+      type: 'EasingRegistry',
+      description: '名称映射到四元组 [x1, y1, x2, y2]；函数缓动仅适用于 Canvas / JS 路径。',
+    },
+    {
+      name: 'animationProperties',
+      kind: 'property',
+      type: 'AnimationPropertyRegistry',
+      description: '名称映射到包含 interpolate 与 applyCanvas 的属性定义。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/animation/usage' },
+    { title: '组件对接', url: '/kernel/visual/animation/integration' },
+    { title: 'API 参考', url: '/kernel/visual/animation/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/animation/schema-reference' },
+  ]}
+/>

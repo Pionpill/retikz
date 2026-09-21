@@ -1,0 +1,43 @@
+---
+title: style · Styles
+description: Patterns, shadows, and blending provide static visual treatment for primitives through paint, projection, and compositing.
+---
+
+Style groups visual treatment that does not change over time. Pattern repeats a motif, shadow projects primary geometry, and blend controls how that geometry combines with the backdrop already drawn. They can be combined, but answer different visual questions.
+
+## Responsibilities at a glance
+
+| Member             | Responsibility                                    | Read it when                                             |
+| ------------------ | ------------------------------------------------- | -------------------------------------------------------- |
+| pattern · Patterns | Repeat a motif across a fill or stroke            | You need texture, grids, or hatching                     |
+| shadow · Shadows   | Add a controllable projection to primary geometry | You need depth or separation from a backdrop             |
+| blend · Blending   | Composite foreground with the existing backdrop   | You need overlap darkening, lightening, or colour mixing |
+
+All three are consumed through primitive `style`. Pattern is a `fill` or `stroke` paint; shadow and blendMode are primary-geometry style fields. Scope only passes shadow or blendMode to Node and Path through defaults; it is not itself a projection or compositing layer.
+
+## Styles in one scene
+
+The same set of primitives can use all three styles independently: the patterned rectangle on the left changes its fill, the centre rectangle projects a shadow from its primary geometry, and the blue foreground circle on the right uses `multiply` to composite with the red circle drawn before it. None changes primitive geometry or layout; each is applied while the existing primary geometry is painted.
+
+<ComponentPreview files="style-overview" hideCode type="illustration" />
+
+Pattern controls texture inside a fill or stroke. Shadow adds depth between primary geometry and its backdrop. Blend depends on draw order, so it changes only the relationship between foreground pixels and pixels already behind them. Choose the corresponding page for the task at hand.
+
+## Choosing a style
+
+Start with pattern, shadow, or blend. Read custom patterns to register a motif, and custom shadows to combine presets with explicit projection fields. Implementation, API, and Schema references each compare the three styles on one page.
+
+## Sections
+
+<LinkedSections
+  items={[
+    { title: 'pattern · Patterns', url: '/kernel/visual/style/pattern' },
+    { title: 'shadow · Shadows', url: '/kernel/visual/style/shadow' },
+    { title: 'blend · Blending', url: '/kernel/visual/style/blend' },
+    { title: 'Custom patterns', url: '/kernel/visual/style/custom-pattern' },
+    { title: 'Custom shadows', url: '/kernel/visual/style/custom-shadow' },
+    { title: 'Implementation', url: '/kernel/visual/style/mechanism' },
+    { title: 'API reference', url: '/kernel/visual/style/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/style/schema-reference' },
+  ]}
+/>

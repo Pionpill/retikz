@@ -9,7 +9,7 @@ Read [TeX usage](/kernel/packages/tex) first for lowerer injection. This page fo
 
 Core recognizes a formula, the engine typesets it as SVG, Tex converts it into paths with metrics, and Core lays out the result. Tex owns typesetting integration and SVG conversion; Core owns text input and Scene output.
 
-<ComponentPreview files="tex-overview-flow" size="xs" hideCode />
+<ComponentPreview files="tex-overview-flow" size="xs" type="flow" hideCode />
 
 Follow the same `x^2` formula through four stages below. The final diagram maps these stages to code members; internal members are reading anchors, not additional public APIs.
 
@@ -103,7 +103,7 @@ Formula lowering may repeat during text relayout, component rerenders, or when t
 
 This figure only shows how a formula request hits the cache, or is parsed by MathJax and written back:
 
-<ComponentPreview files="tex-lower-cache" size="sm" hideCode />
+<ComponentPreview files="tex-lower-cache" size="sm" type="flow" hideCode />
 
 `createLowerTex` maintains an in-memory cache per lowerer. Its key contains TeX source, inline / display mode, font size, and host color. Successful results and deterministic MathJax / SVG failures are cached. An exception from `engine.convert` is transient and not cached, so the next call can retry. Every public failure calls the latest `onDiagnostic`.
 
@@ -136,7 +136,7 @@ This is asynchronous preparation before the main flow, not work repeated for eve
 
 The host connects preparation to compilation: React puts the returned lowerer into compile configuration once the hook is ready; Vanilla awaits creation before compiling with it. To include formulas in the first output, wait for readiness before submitting that compile. Compiling earlier without a lowerer follows the string/explicit-run branches above; compilation does not automatically wait for the engine.
 
-<ComponentPreview files="tex-react-lifecycle" size="xs" hideCode />
+<ComponentPreview files="tex-react-lifecycle" size="xs" type="flow" hideCode />
 
 When the extension set changes, the hook immediately enters `loading` and clears the old lowerer; an async result for an unmounted or stale request cannot write back. If `mathjax-full` is missing or engine initialization fails, the hook returns `error` and removes the failed shared entry, allowing a later mount to retry.
 
@@ -153,7 +153,7 @@ When the extension set changes, the hook immediately enters `loading` and clears
 
 This expands the four stages for one successful request with a ready engine and a cache miss. A hit returns an existing `LoweredTex` and skips engine typesetting and SVG conversion; failures are covered above. The two appearances of `layoutInlineLine()` show the call and return sides of the same line-layout invocation.
 
-<ComponentPreview files="tex-conversion-flow" size="md" hideCode />
+<ComponentPreview files="tex-conversion-flow" size="sm" type="flow" hideCode />
 
 Start with `createLowerTex()` for orchestration and caching, follow `lowerMathJaxSvg()` into the path parser, and return to Core's `layoutInlineLine()` to see metrics become primitives. Read `useLowerTex` separately for asynchronous initialization.
 

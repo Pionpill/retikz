@@ -1,0 +1,210 @@
+---
+title: 基础用法
+description: 组织图形输入，设置视框、全图默认值与渲染输出
+---
+
+`<Layout>` 是 React 图形的顶层入口。把 Node、Path 等组件放入其中即可显示图形；默认自动取景，通常不必设置宽高或 viewBox。安装步骤见[快速开始](/kernel/components/get-start)。
+
+## 接入方式
+
+选择宿主与输入形式：React 使用 JSX 或 `ir` 属性；Vanilla 使用构造函数或直接传入 IR。四种写法都绘制同一个三角形节点图，显示范围自动计算。IR 是可保存为 JSON 的图形描述，可来自编辑器、LLM 或数据库。
+
+<ComponentPreview files="layout-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+从 `@retikz/react` 导入组件，直接声明图元。
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[120, 0]}>
+      B
+    </Node>
+    <Node id="c" position={[60, 60]}>
+      C
+    </Node>
+    <Draw way={['a', 'b', 'c', 'a']} />
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+从 `@retikz/core` 导入 IR 类型，把数据交给 `<Layout ir>`；无需 JSX children。
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 0], text: 'B' },
+    { type: 'node', id: 'c', position: [60, 60], text: 'C' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+        { type: 'step', kind: 'line', to: { id: 'c' } },
+        { type: 'step', kind: 'line', to: { id: 'a' } },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+从 `@retikz/vanilla` 构造场景，通过 `/dom` 的 `mount` 挂载到已有的 `diagram` 容器。
+
+```ts
+import { scene, node, path } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', { position: [120, 0], text: 'B' }),
+    node('c', { position: [60, 60], text: 'C' }),
+    path({ way: ['a', 'b', 'c', 'a'] }),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+容器移除前调用 `view.dispose()` 释放挂载资源。
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+将已有 IR 直接传给 `mount`，不经过 React，也不需要用 Vanilla 构造函数重建图元。示例使用已有的 `diagram` 容器。
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 0], text: 'B' },
+    { type: 'node', id: 'c', position: [60, 60], text: 'C' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+        { type: 'step', kind: 'line', to: { id: 'c' } },
+        { type: 'step', kind: 'line', to: { id: 'a' } },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+容器移除前调用 `view.dispose()` 释放挂载资源。
+
+</DocTab>
+</DocTabs>
+
+生成、持久化或转换 IR 的完整模型见[架构](/kernel/components/design/principles)与[复合](/kernel/components/design/composite)。
+
+## 输出边界
+
+**默认不写 `viewBox`，Layout 会根据内容自动计算输出边界。** 下方 demo 初始只包含两个圆，灰色虚线框随它们的整体范围确定，无需手动填写起点或宽高。
+
+需要固定取景或裁剪时再使用 `viewBox`；普通组件用法 demo 保持自动取景，避免固定范围制造无意义留白。
+
+<ComponentPreview files="layout-viewbox" size="sm" caption="灰色虚线标记由两个圆自动计算出的输出边界。" />
+
+## 全图默认值
+
+全图默认值通过包住所有图元的根 [Scope](/kernel/components/scope/usage) 设置，React、Vanilla 和 IR 都可以使用。Layout 为 JSX 提供了 `rootScope` 便捷属性，自动创建这层 Scope，并将 `style` 与 `defaults` 传给它；Vanilla 使用 `scope(...)`，IR 则在场景的 `children` 中声明 `type: 'scope'`，同样包住全部图元。
+
+| 属性        | 类型                                      | 描述                                       |
+| ----------- | ----------------------------------------- | ------------------------------------------ |
+| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | 全图级联视觉覆盖、四个默认值通道与继承屏障 |
+
+下面三个 Node 和三条 Path（通过 Draw 声明）都没有局部样式。调整 `rootScope.style` 的描边与不透明度，观察所有图元一起变化；`rootScope.defaults.node` 的填充和内边距只作用于节点。示例的蓝色、线宽与内边距为演示设置，不是库的默认值。
+
+<ComponentPreview files="layout-defaults" size="md" />
+
+## 补充说明
+
+- **渲染后端**：默认输出 SVG，设置 `renderer="canvas"` 切换到 Canvas。动画播放与静态截帧见[动画](/kernel/visual/animation/usage)。
+- **输入优先级**：React 同时传入 `ir` 和 `children` 时采用 `ir`。
+- **全图默认值**：传入完整 `ir` 时，应在 IR 中声明根 Scope；Layout 不再应用 `rootScope`，存在有效配置时会在开发环境提示。
+- **样式作用范围**：`Layout.style` 设置宿主 CSS；图元样式使用 `rootScope.style`。
+
+## 相关属性
+
+<ComponentProps
+  items={[
+    {
+      name: 'ir',
+      kind: 'property',
+      type: 'IRScene',
+      description: '直接传入可持久化的 Source IR；与 `children` 同时提供时优先采用它。',
+    },
+    {
+      name: 'viewBox',
+      kind: 'property',
+      type: 'IRViewBox',
+      defaultValue: '按内容计算',
+      description: '需要固定取景或裁剪时设置；省略时 Layout 根据图元范围自动确定输出边界。',
+    },
+    {
+      name: 'rootScope',
+      kind: 'property',
+      type: "Pick<InputScope, 'style' | 'defaults'>",
+      description: 'JSX 子图的隐式根 Scope；为全图设置级联样式和各类图元的默认值。',
+    },
+    {
+      name: 'renderer',
+      kind: 'property',
+      type: "'svg' | 'canvas'",
+      defaultValue: "'svg'",
+      description: '选择 SVG 或 Canvas 后端；未显式设置时优先继承 Renderer 上下文。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '扩展用法',
+      description: '配置主题、注入能力、读取编译结果并控制更新',
+      url: '/kernel/components/layout/extend',
+    },
+    { title: 'Inspect', description: '为图形添加观测辅助内容', url: '/kernel/packages/inspect' },
+    { title: 'Layout 布局包', description: '自动排列图形内容', url: '/library/layout' },
+    { title: 'API 参考', description: '查询 Layout 完整属性', url: '/kernel/components/layout/api-reference' },
+    { title: 'Schema 参考', description: '查询可持久化的场景数据', url: '/kernel/components/layout/schema-reference' },
+  ]}
+/>

@@ -152,6 +152,13 @@ export const kernelV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 形状迁移', en: 'Unreleased · Shape migration' },
+          content: {
+            zh: '移除七个形状 Sugar 与 Props 导出，改从 @retikz/standard-react 导入。Core Path steps 和内置 Node shapes 保持现有职责。',
+            en: 'Removes the seven shape Sugar components and Props exports; import them from @retikz/standard-react. Core Path steps and built-in Node shapes retain their responsibilities.',
+          },
+        },
+        {
           label: { zh: '薄 React adapter', en: 'Thin React adapter' },
           content: {
             zh: 'core 与 React 解耦,Kernel 直对应 IR 节点、Sugar 编译期展开为 Kernel',

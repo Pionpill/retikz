@@ -1,0 +1,61 @@
+---
+title: Path · 绘制
+description: 用 Draw 快速连线，用 Path 与 Step 控制路径，共享箭头与标签
+---
+
+绘制把图中的位置连接成线、曲线或闭合轮廓。日常连线用 `<Draw way>`；需要多个子路径、逐段控制或整条路径变换时，使用 `<Path>` 与 `<Step>`。两种入口最终使用同一套路径语义，箭头和标签可以随路径一起生成。
+
+## 整体认识
+
+下图说明各入口如何组成一条路径：way 通过 Draw 交给 Path；显式 Step 描述逐段动作，arrow 与 label 补充方向和文字。箭头表示输入或配置的汇入关系。
+
+<ComponentPreview files="draw-anatomy" size="xs" hideCode type="flow" />
+
+Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存图形数据时，使用 Path 与 Step 组成的 IR；不必在保存时保留 React 组件。使用步骤的细粒度控制，也不意味着必须了解编译器。
+
+## 职责一览
+
+| 成员           | 职责                           | 何时阅读                     |
+| -------------- | ------------------------------ | ---------------------------- |
+| Draw 与 way    | 用紧凑写法描述走向             | 从日常连线开始               |
+| Path 与 Step   | 组合路径与逐段动作             | 多次移动、闭合或精确控制     |
+| 箭头与标签     | 表达方向与关系名称             | 给路径补充语义               |
+| 形状快捷组件   | 将常见几何展开为 Path / Step   | 绘制圆、矩形、星形、弧或扇形 |
+| 三类自定义能力 | 扩展曲线段、整条路径或箭头轮廓 | 内置能力无法表达目标结果     |
+
+## 选择与边界
+
+先读基础用法，再按任务选择路径写法、路径组合、箭头或标签。`way` 负责简洁表达走向，Step 负责显式指定动作；它们的完整字段分别在 API 与 Schema 参考中查询。
+
+节点形状和定位由[节点](/kernel/components/node)负责；一组图元的局部变换与裁剪见[范围](/kernel/components/scope)。可变宽带状关系使用 [Standard Ribbon](/library/standard/ribbon)，图的自动排布由对应领域组件负责。
+
+仅调整颜色、粗细或已有箭头不需要自定义。新增一种曲线段用路径生成器，改变整条路径的输出用自定义路径，新增端点轮廓用自定义箭头。三种教程分别说明定义、注入和引用，内部处理集中在实现原理。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+
+    { title: '基础用法', description: '连接两个节点，选择输入方式', url: '/kernel/components/path/usage' },
+    { title: 'Draw · 路径写法', description: '目标、折角、曲线与相对坐标', url: '/kernel/components/path/draw' },
+    {
+      title: 'Step · 路径组合',
+      description: '组合子路径与步骤，控制连接面、曲线、圆角、变换与标记',
+      url: '/kernel/components/path/step',
+    },
+    { title: '形状绘制', description: '圆、多边形、星形、弧与扇形的路径快捷写法', url: '/library/standard/circle-ellipse' },
+    { title: 'arrow · 箭头', description: '方向、形状与端点重叠', url: '/kernel/components/path/arrow' },
+    { title: 'label · 标签', description: '范围、位置、朝向与描边断口', url: '/kernel/components/path/label' },
+    {
+      title: '自定义生成器',
+      description: '定义并注册新的曲线段',
+      url: '/kernel/components/path/custom-path-generator',
+    },
+    { title: '自定义路径', description: '定义整条路径的输出', url: '/kernel/components/path/custom-path' },
+    { title: '自定义箭头', description: '定义新的端点轮廓', url: '/kernel/components/path/custom-arrow' },
+    { title: '实现原理', description: '解释输入、几何与输出之间的关系', url: '/kernel/components/path/mechanism' },
+    { title: 'API 参考', description: '查询公开 TypeScript 契约', url: '/kernel/components/path/api-reference' },
+    { title: 'Schema 参考', description: '查询路径输入数据字段', url: '/kernel/components/path/schema-reference' },
+
+]}
+/>

@@ -1,5 +1,6 @@
 import { DrawWay } from '@retikz/core';
-import { Circle, Draw, Ellipse, Layout, Node, Rectangle } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle, Ellipse, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 const IHW = 28; // 内框半宽（共享）

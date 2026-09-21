@@ -1,0 +1,70 @@
+---
+title: 动画
+description: 动画以关键帧驱动图元或镜头随时间变化。先选择动画目标，再配置触发、播放与静态输出；缓动和 Canvas 属性通道可以扩展。
+---
+
+动画适合展示图元进入、强调状态或引导视线沿图形移动。关键帧描述属性在不同时间的值，组件决定动画目标，播放控制决定何时开始以及如何暂停或定位时间。导出静态图形时，还需要明确采用哪一帧。
+
+> **备注：** 站点默认跟随系统的动画设置。如果系统关闭了动画或启用了“减少动态效果”，示例将不会播放对应的动画。可通过页头右侧的「…」菜单，选择「动画播放 → 开启」来查看动画效果。
+
+Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `colorShift`、`cameraTo`、`loop`、`stagger` 通用工具。`grow`、`growUp`、`pulse`、`spin`、`flash`、`blink`、`wiggle` 从 `@retikz/standard` 导入，详见 [Standard 动画预设](/library/standard/animation)。两层返回相同的轨道数据，不需要额外注册。
+
+## 整体认识
+
+下面把节点、路径和文字放在同一个 Scope 中，通过一条纵向位移轨道让它们一起运动。播放时观察各图元之间的相对位置：动画改变整组的呈现，不重新计算内部布局。
+
+<ComponentPreview
+  files="/kernel/visual/animation/integration/animation-integration"
+  size="sm"
+  controls={{ animation: true }}
+/>
+
+关键帧说明如何变化，Scope 说明谁一起变化，预览的播放控件则控制时间。需要移动观察窗口而不是图元时，改用 Layout 的 `viewBox` 轨道；需要交互启动时，再接入触发器和播放句柄。
+
+## 职责一览
+
+| 章节        | 职责                                        | 何时阅读                       |
+| ----------- | ------------------------------------------- | ------------------------------ |
+| 基础用法    | 使用预设与关键帧轨道                        | 完成第一个动画                 |
+| 组件对接    | 区分 Node、Path、Scope 与 Layout 的动画目标 | 决定移动单个图元、整组还是镜头 |
+| 扩展用法    | 组合触发、播放、镜头与静态输出              | 控制交互、编排节奏或导出静态帧 |
+| 自定义动画  | 扩展缓动与 Canvas 属性通道                  | 内置插值或属性不能满足需求     |
+| 实现原理    | 解释轨道编译与运行时求值                    | 理解动画目标和后端差异         |
+| API 参考    | 查询预设、控制句柄与扩展类型                | 精确编写调用                   |
+| Schema 参考 | 查询轨道、关键帧与触发器数据                | 构造或保存声明式动画           |
+
+## 选择与边界
+
+先使用预设表达常见入场或强调效果；需要精确时间与数值时编写关键帧。跨多个独立图元的整体运动使用 Scope，单个 Node、Path 的绑定范围则见组件对接页。
+
+动画轨道是可保存的数据，播放句柄和自定义函数属于运行时。动画不驱动自动布局重算；静态输出与减少动态效果策略也需要单独考虑。自定义 Canvas 属性通道不代表 SVG 自动具备相同能力，应在扩展前核对后端支持。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '使用预设与关键帧轨道', url: '/kernel/visual/animation/usage' },
+    {
+      title: '组件对接',
+      description: '区分 Node、Path、Scope 与 Layout 的动画目标',
+      url: '/kernel/visual/animation/integration',
+    },
+    {
+      title: '扩展用法',
+      description: '组合触发、播放、镜头与静态输出',
+      url: '/kernel/visual/animation/extended-usage',
+    },
+    {
+      title: '自定义动画',
+      description: '扩展缓动与 Canvas 属性通道',
+      url: '/kernel/visual/animation/custom-animation',
+    },
+    { title: '实现原理', description: '解释轨道编译与运行时求值', url: '/kernel/visual/animation/mechanism' },
+    { title: 'API 参考', description: '查询预设、控制句柄与扩展类型', url: '/kernel/visual/animation/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询轨道、关键帧与触发器数据',
+      url: '/kernel/visual/animation/schema-reference',
+    },
+  ]}
+/>

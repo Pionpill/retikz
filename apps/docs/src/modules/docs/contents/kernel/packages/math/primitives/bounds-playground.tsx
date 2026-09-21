@@ -1,6 +1,7 @@
 import type { AxisAlignedBounds, Position } from '@retikz/math';
 import { boundsOf, boundsToRect, collectArcBoundingCandidates } from '@retikz/math';
-import { Arc, Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Arc, Circle, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 import { Fragment } from 'react';
 
@@ -45,7 +46,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const center: Position = [rect.x + rect.width / 2, rect.y + rect.height / 2];
 
   return (
-    <Layout viewBox={{ x: -125, y: -105, width: 250, height: 220 }}>
+    <Layout>
       <Draw
         way={[
           [-115, 0],

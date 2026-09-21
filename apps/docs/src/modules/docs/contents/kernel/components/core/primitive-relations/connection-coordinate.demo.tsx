@@ -1,4 +1,5 @@
-import { Circle, Coordinate, Draw, Layout, Node } from '@retikz/react';
+import { Coordinate, Draw, Layout, Node } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 /**

@@ -26,7 +26,7 @@ description: 用 defineComposite 定义数据驱动的图元展开，再通过 R
 import { Layout } from '@retikz/react';
 import { barChart, ir } from './bar-chart';
 
-export const Diagram = () => <Layout ir={ir} composites={[barChart]} />;
+export const Diagram = () => <Layout ir={ir} extensions={{ composites: [barChart] }} />;
 ```
 
 </DocTab>

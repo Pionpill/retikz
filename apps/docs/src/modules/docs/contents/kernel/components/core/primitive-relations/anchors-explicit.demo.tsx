@@ -1,5 +1,5 @@
 import { Draw, Layout, Node } from '@retikz/react';
-import { StarShapeDefinition } from '@retikz/standard/shape';
+import { StarShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC, ReactElement } from 'react';
 
 /**
@@ -47,7 +47,7 @@ const ring = (tag: string, cx: number, dirs: Array<Dir>): Array<ReactElement> =>
 ];
 
 const Demo: FC = () => (
-  <Layout shapes={[StarShapeDefinition]}>
+  <Layout extensions={{ shapes: [StarShapeDefinition] }}>
     <Node
       id="rect-o"
       position={[-185, 0]}

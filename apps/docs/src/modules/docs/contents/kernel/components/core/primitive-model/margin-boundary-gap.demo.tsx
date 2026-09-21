@@ -1,4 +1,5 @@
-import { Circle, Draw, Layout, Node, Rectangle } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 // 每列三层嵌套：文本区（内容盒，lightgray）→ shape（内框，currentColor 实线）→ 连接面（虚线）。

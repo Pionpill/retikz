@@ -1,0 +1,118 @@
+---
+title: Extended usage
+description: Configure themes, inject capabilities, read compiled results, and control updates
+---
+
+Start with [Basic usage](/kernel/components/layout/usage). Use the options below when you need themes for composites, custom shapes, geometry results outside the figure, or control over updates. These examples focus on React `<Layout>` props and callbacks.
+
+## Theme configuration
+
+`theme` selects the theme for descendant Composites (compound components); it does not automatically style ordinary Node / Path primitives. Use each primitive's `style` and `rootScope` for figure-wide defaults. Switch the theme style and color mode in the panel to observe color changes on the same card; its position and dimensions stay fixed.
+
+<ComponentPreview files={['theme-inheritance', 'theme-card.ts']} size="sm" />
+
+Explicit `theme` fields override the root theme in existing IR; omitted fields keep their values. See [Theme](/kernel/components/design/theme) for inheritance rules.
+
+## Capability injection
+
+Pass extension definitions by capability through `Layout.extensions`. `shapes` is one category: the `ShapeDefinition` below supplies the folded file's footprint, connection boundary, and emitted primitives, then registers through `extensions={{ shapes: [fileShape] }}`. Both Nodes reference the registered `drawio-file` name, and the connector ends on the custom outline.
+
+<ComponentPreview files={['layout-shape-injection', 'layout-file-shape.ts']} size="sm" />
+
+`extensions` also supports connection boundaries (`boundaries`), clipping regions (`clips`), arrows (`arrows`), patterns (`patterns`), path generators (`pathGenerators`), path kinds (`pathKinds`), composites (`composites`), and theme styles (`themeStyles`). These definitions enter their respective registries through `extensions` and are consumed during compilation.
+
+This section demonstrates shape injection only; later custom-usage guides for each topic explain how to define and use the other capabilities. See the [API reference](/kernel/components/layout/api-reference) for the complete fields.
+
+## Reading compile artifacts
+
+To display node layout measurements outside a figure, request node-layout snapshots with `artifacts={{ nodeLayouts: true }}` and read them through `onArtifacts`. The callback reports the corresponding compilation result after React commits; later updates do not mutate a prior snapshot.
+
+<ComponentPreview files="layout-artifacts" size="xs" />
+
+The example displays the node count and text width outside the drawing. These snapshots describe compiled geometry, not live DOM measurements, and cannot modify drawing input.
+
+## Execution modes and update strategies
+
+<ComponentAlert
+  type="warn"
+  title="@retikz/runtime is still under development"
+  description="Its API and processing behavior are not yet stable. These settings apply to the current version only; review them again when upgrading."
+/>
+
+Choose whether to retain processing state and allow incremental computation:
+
+| Configuration               | Update behavior                             | Use case                                                            |
+| --------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| `retained + auto` (default) | Retain state; allow incremental computation | Local updates; keep the last successful result on failure           |
+| `retained + full`           | Retain state; recompute on changes          | Full recomputation;<br />keep the last successful result on failure |
+| `static`                    | Process the current figure afresh           | Reduce resident processing state                                    |
+
+```tsx
+<Layout /> {/* retained + auto */}
+<Layout runtime={{ mode: 'retained', updateStrategy: 'full' }} />
+<Layout runtime={{ mode: 'static' }} />
+```
+
+If processing a subsequent input fails in retained mode, the last successful result stays visible. This does not provide undo or history navigation. Receive structured diagnostics through `runtime.onDiagnostic`, for example `runtime={{ onDiagnostic: diagnostic => console.warn(diagnostic) }}`.
+
+`runtime.mode: 'static'` cannot be combined with `updateStrategy` or `onDiagnostic`.
+
+## Additional notes
+
+- **Empty configuration**: An omitted or empty `rootScope`, overrides containing only optional fields set to `undefined`, and isolated `defaults.reset: false` / `[]` create no root Scope wrapper.
+- **Host styles**: `Layout.style` always means host CSS. See [Basic usage](/kernel/components/layout/usage#whole-figure-defaults) for whole-figure primitive defaults.
+
+## Related props
+
+These are the props most relevant to this page. See the [API reference](/kernel/components/layout/api-reference) for complete fields and types.
+
+<ComponentProps
+  items={[
+    {
+      name: 'extensions',
+      kind: 'property',
+      type: 'LayoutExtensions',
+      description: 'Injects custom definitions into React Layout, including clips, boundaries, and path capabilities',
+    },
+    {
+      name: 'artifacts',
+      kind: 'property',
+      type: 'CompileArtifactOptions',
+      description: 'Declares which artifact types to collect from compilation',
+    },
+    {
+      name: 'onArtifacts',
+      kind: 'property',
+      type: '(artifacts: ReadonlyArray<CompileArtifact>) => void',
+      description: 'Receives the result after artifact collection completes',
+    },
+    {
+      name: 'runtime',
+      kind: 'property',
+      type: 'LayoutRuntimeOptions',
+      description: 'Configures reactive update strategy, static mode, and diagnostic callbacks',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Provide input and configure framing and defaults',
+      url: '/kernel/components/layout/usage',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand root scopes, framing, sizing, and theme overlays',
+      url: '/kernel/components/layout/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up complete prop contracts',
+      url: '/kernel/components/layout/api-reference',
+    },
+  ]}
+/>

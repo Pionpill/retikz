@@ -1,6 +1,7 @@
 import type { CurveSegment, CurveSegmentSample, Position } from '@retikz/math';
 import { curve } from '@retikz/math';
-import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
+import { Draw, Layout, Path, Step } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC, ReactNode } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -115,7 +116,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const controlPolygon = controlPolygonOf(sourceSegment);
 
   return (
-    <Layout viewBox={{ x: -175, y: -125, width: 350, height: 250 }}>
+    <Layout>
       {controlPolygon && (
         <Draw way={controlPolygon} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
       )}

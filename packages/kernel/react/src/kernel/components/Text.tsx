@@ -3,6 +3,7 @@ import type { FC } from 'react';
 
 import { TIKZ_TEXT } from '../protocol';
 
+/** Node 内单行文字的内容与样式覆盖 */
 export type TextProps = {
   /** 行内容（字符串或数字；数字按文本渲染） */
   children: string | number;
@@ -10,7 +11,7 @@ export type TextProps = {
   fill?: Extract<IRLine, { text: string }>['fill'];
   /** 行级透明度 0~1；不填走 Node 块级默认 */
   opacity?: number;
-  /** 行级字体覆盖；missing 字段继承 Node 的 `font` 块级值 */
+  /** 行级字体覆盖；缺省字段继承 Node 的 `font` 块级值 */
   font?: IRFont;
 };
 

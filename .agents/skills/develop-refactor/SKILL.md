@@ -5,7 +5,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 
 # 重构流程
 
-面向不新增公开能力的重构：搬迁、拆分、合并、重命名、依赖收敛、内部抽象调整、测试或类型结构整理。若需要新增 DSL / API / IR / schema / renderer 可见行为，停止并转 `flow-alpha` / `develop-design`；若来自 beta roadmap TODO，按 `flow-beta` 对齐 scope。
+面向不新增公开能力的重构：搬迁、拆分、合并、重命名、依赖收敛、内部抽象调整、测试或类型结构整理。若需要新增 DSL / API / IR / schema / renderer 可见行为，停止并转 [alpha](../flow-development/references/alpha.md) / `develop-design`；若来自 beta roadmap TODO，按 [beta](../flow-development/references/beta.md) 对齐 scope。
 
 ## 启动确认
 
@@ -18,7 +18,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 - 中大型先写 plan，通常使用 `superpowers:writing-plans`；小型不强制临时 plan。
 - plan 放 `.gitignore` 已覆盖的临时目录：`notes/plans/` 或就近 `**/_notes/plans/`，默认不 stage / commit。
 - plan 至少写清：目标、非目标、文件 scope、分步策略、行为等价性、验证命令、回滚点、预期提交粒度。
-- plan 写完后由主 agent 自审；已授权常规 reviewer 时交一个只读 subagent，修订后复用同一 reviewer，直到通过或达到计划循环上限。常规 plan review 不使用 `cross-review`。
+- plan 自审与已授权单 reviewer 循环按 [常规评审](../flow-development/references/review-cycle.md)，不另建 gate。
 
 ## Review 重点
 
@@ -36,7 +36,7 @@ description: Use when retikz work is primarily refactoring, reorganization, rena
 - 小型重构：主 agent 直接执行并跑受影响验证，不自动派 agent。
 - 中型优化重构：按已确认计划连续执行；计划有 reviewer 时使用单 reviewer 循环。
 - 大型功能型重构：按 `flow-long-task` 执行；计划已授权自动 commit 时按确认粒度提交，不在每个 commit 前重新询问。
-- 常规 staged diff / 完工 review 不使用 `cross-review`；计划已授权时固定快照给一个 reviewer，主 agent 修改验证后复用该 reviewer。只有大型任务最终整体 review 或用户明确要求时才进入 `cross-review`。
+- 常规评审使用上述单 reviewer 规则；多模型 cross-review 仅按独立授权执行。
 - 发现必须改公开契约、文档可见行为或 roadmap 外目标时，halt 并请用户裁决是否换流。
 
 ## 验证

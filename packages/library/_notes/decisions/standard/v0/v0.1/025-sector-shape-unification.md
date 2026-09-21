@@ -7,6 +7,7 @@ keywords: 'Sector、Node、shape、sector、ArcShapeDefinition、ArcShapeProvide
 
 - 状态：Accepted（2026-08-15，Sector 统一定义与公开面收敛完成）
 - 决策日期：2026-08-14
+- 后继：[ADR-029](./029-shape-composites.md) 已接受将本文中 Kernel React Arc Sugar 的归属迁到 Standard Tier 2；本文节点 Sector 契约不变，设计接受不表示迁移完成
 - 关联：[Standard v0.1 roadmap](./roadmap.md) · [Standard library design](../../../../architecture/standard-library-design.md)
 
 ## 背景与目标

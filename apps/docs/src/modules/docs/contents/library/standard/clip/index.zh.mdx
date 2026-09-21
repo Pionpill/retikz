@@ -27,7 +27,7 @@ description: 从 @retikz/standard/clip 按需引入可选裁剪，并分别在 R
 import { Layout, Node, Scope } from '@retikz/react';
 import { CircleClipDefinition } from '@retikz/standard/clip';
 
-<Layout clips={[CircleClipDefinition]}>
+<Layout extensions={{ clips: [CircleClipDefinition] }}>
   <Scope clip={{ kind: 'circle', cx: 0, cy: 0, r: 56 }}>
     <Node position={[0, 0]} layout={{ minimumSize: { width: 160, height: 120 } }} />
   </Scope>
@@ -97,7 +97,7 @@ const svg = renderToSvgString(input, {
 | `commands`  | `Array<PathCommand>`       | 至少一条结构化路径命令       |
 | `fillRule?` | `'nonzero'` \| `'evenodd'` | 填充规则；省略时为 `nonzero` |
 
-使用时注入 `PathClipDefinition`。路径命令的写法参阅 [自定义路径](/kernel/components/draw/custom-path)。
+使用时注入 `PathClipDefinition`。路径命令的写法参阅 [自定义路径](/kernel/components/path/custom-path)。
 
 ### 组合裁剪
 
@@ -119,5 +119,5 @@ const svg = renderToSvgString(input, {
 ## 相关
 
 - [能力装载](/library/standard/capability-loading)：直接注入与 provider graph 的边界
-- [自定义裁剪区](/kernel/components/layout/custom-clip)：定义新的裁剪 kind 与完整 `ClipDefinition` 契约
+- [自定义裁剪区](/kernel/components/scope/custom)：定义新的裁剪 kind 与完整 `ClipDefinition` 契约
 - [扩展](/library/standard/introduction)：浏览其他可选能力

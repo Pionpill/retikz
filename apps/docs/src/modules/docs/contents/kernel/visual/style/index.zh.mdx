@@ -1,0 +1,43 @@
+---
+title: style · 样式
+description: 图案、阴影与混合为图元提供静态外观；它们在绘制时分别作用于填充、投影和已有背景。
+---
+
+style 汇集不随时间变化的图元外观。pattern 提供重复纹理，shadow 为主几何增加投影，blend 决定当前主几何怎样与已绘制背景合成。它们可以同时使用，但各自解决不同问题。
+
+## 职责一览
+
+| 成员           | 职责                         | 何时阅读                       |
+| -------------- | ---------------------------- | ------------------------------ |
+| pattern · 图案 | 用重复单元填充区域或描边     | 需要纹理、网格或斜线时         |
+| shadow · 阴影  | 为主几何添加可控投影         | 需要层次、悬浮感或分离背景时   |
+| blend · 混合   | 将前景与已绘制背景按模式合成 | 需要叠色、变暗或提亮重叠区域时 |
+
+三者都由图元的 `style` 消费。pattern 是 `fill` 或 `stroke` 的一种 paint；shadow 与 blendMode 是主几何的样式字段。Scope 只可通过 defaults 向 Node、Path 传递 shadow 或 blendMode，不会自身成为投影或混合图层。
+
+## 整体认识
+
+同一组图元可以分别使用三种样式：左侧图案接管矩形的填充；中间阴影从主几何向外投射；右侧蓝色前景圆以 `multiply` 与先绘制的红色背景圆合成。它们都不改变图元的几何或布局，只在绘制时处理已有的主几何。
+
+<ComponentPreview files="style-overview" hideCode type="illustration" />
+
+图案决定填充或描边内部呈现的纹理；阴影增加主几何与背景之间的层次；混合依赖绘制顺序，因此只会改变前景与它后方已存在像素的关系。根据要解决的问题进入对应页面即可。
+
+## 选择样式
+
+先从 pattern、shadow 或 blend 的用法页开始。需要注册新的重复单元时阅读自定义图案；需要组合预设与显式投影字段时阅读自定义阴影。实现原理、API 与 Schema 各在同一页按三种样式并列，避免在多个小组之间来回跳转。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: 'pattern · 图案', url: '/kernel/visual/style/pattern' },
+    { title: 'shadow · 阴影', url: '/kernel/visual/style/shadow' },
+    { title: 'blend · 混合', url: '/kernel/visual/style/blend' },
+    { title: '自定义图案', url: '/kernel/visual/style/custom-pattern' },
+    { title: '自定义阴影', url: '/kernel/visual/style/custom-shadow' },
+    { title: '实现原理', url: '/kernel/visual/style/mechanism' },
+    { title: 'API 参考', url: '/kernel/visual/style/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/style/schema-reference' },
+  ]}
+/>

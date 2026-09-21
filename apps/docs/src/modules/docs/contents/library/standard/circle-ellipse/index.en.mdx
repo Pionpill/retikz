@@ -1,0 +1,108 @@
+---
+title: Circles and ellipses
+description: Draw circles and ellipses with shared Standard semantics across React, Vanilla and JSON
+---
+
+Standard Circle / Ellipse preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/standard/shape).
+
+## Entry points
+
+Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/standard/node-shape`.
+
+React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx(id, input)` with the same explicit identity for the embed and its final path. React does not persist an automatic occurrence id. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+
+| Entry   | Public API                                                                                      |
+| ------- | ----------------------------------------------------------------------------------------------- |
+| React   | `Circle, Ellipse` — `@retikz/standard-react/shape`                                              |
+| Vanilla | `shape.circle, shape.ellipse` — `@retikz/standard-vanilla/shape`                                |
+| JSON    | `CircleSchema / CircleDefinition, EllipseSchema / EllipseDefinition` — `@retikz/standard/shape` |
+
+## Usage
+
+`<Circle>` / `<Ellipse>` draw a circle / ellipse outline at a position, expanding to an underlying `<Path>`. They fit cases where you know the center and radius, or only have a box.
+
+```tsx
+import { Circle, Ellipse } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Circle center={[0, 0]} radius={32} style={{ fill: "none" }} />
+<Ellipse center={[0, 0]} radius={{ x: 48, y: 28 }} style={{ fill: "none" }} />
+```
+
+The common form is `center + radius`. If you already have a rectangular area, you can also use `corner1 + corner2` or `box`.
+
+| Form                         | Best for                                                   |
+| ---------------------------- | ---------------------------------------------------------- |
+| `{ center, radius }`         | Known center and radius                                    |
+| `{ center, diameter }`       | Known diameter                                             |
+| `{ from, to }`               | Diameter endpoints                                         |
+| `{ corner1, corner2 }`       | Fit inside a box                                           |
+| `{ box }`                    | Describe the box with `x/y/origin + width + height`        |
+| + `fit="contain" \| "cover"` | Fit the circle inside or outside the box                   |
+| + `inset` / `outset`         | Shrink or expand the box before fitting                    |
+| + angles + `closed="sector"` | Draw a partial circle whose arc ends connect to the center |
+
+<ComponentPreview files="circle-basic" size="sm" />
+
+Ellipse works like Circle, but the radius is split into `radius: { x, y }`. It also supports `corner1 + corner2` and `box`.
+
+| Form                               | Best for                                                    |
+| ---------------------------------- | ----------------------------------------------------------- |
+| `{ center, radius }`               | Known center and radii                                      |
+| `{ center, diameterX, diameterY }` | Known diameters                                             |
+| `{ corner1, corner2 }`             | Fit inside a box                                            |
+| `{ box }`                          | Describe the box with `x/y/origin + width + height`         |
+| + `inset` / `outset`               | Shrink or expand the box before fitting                     |
+| + angles + `closed="sector"`       | Draw a partial ellipse whose arc ends connect to the center |
+
+<ComponentPreview files="ellipse-basic" size="sm" />
+
+The playground places all four input forms against one reference box. Switch construction, inset / outset the box, then enable a partial segment to compare the input bounds, final ellipse, and closure.
+
+<ComponentPreview files="ellipse-playground" size="sm" controlPanelDefaultSize={50} />
+
+## Input constraints
+
+Choose exactly one geometry description. Radii, diameters, side lengths and dimensions must be finite and nonnegative. Adjusted boxes must retain positive dimensions. Partial arcs require exactly two of startAngle, endAngle and sweepAngle, preserving signed sweeps and revolutions.
+
+## Compilation
+
+The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+
+### Circle and ellipse path expansion
+
+The upper route preserves a `Circle center` target, so a node id, polar point, or `[x, y]` coordinate can resolve later during Path compilation. The lower route must compute a center and radii in the Standard lowering first, so it accepts literal `[x, y]` geometry only:
+
+<ComponentPreview files="circle-ellipse-lowering-flow" size="md" hideCode type="illustration" />
+
+`Circle` from / corner / box forms and `Ellipse` corner / box forms take the lower route. Ellipse center forms preserve Target references. Both routes expand to an equivalent `<Path>` plus a `circlePath` / `ellipsePath` Step. With angles present, `closed` then chooses a chord (`chord`, the default), a return to the center (`sector`), or an open arc (`open`).
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Circle input normalization and Step expansion',
+      path: 'packages/library/standard/src/composites/shape/circle/pipeline.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Ellipse input normalization and Step expansion',
+      path: 'packages/library/standard/src/composites/shape/ellipse/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## Schema reference
+
+### CircleSchema
+
+<ZodSchema name="CircleSchema" />
+
+### EllipseSchema
+
+<ZodSchema name="EllipseSchema" />
+
+## API reference
+
+{/* @include library/standard/circle-ellipse/generated */}

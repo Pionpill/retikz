@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { PreviewControlValues } from '../../src/modules/docs/components/component-preview';
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
-import LayoutViewboxDemo from '../../src/modules/docs/contents/kernel/components/layout/overview/layout-viewbox.demo';
+import LayoutViewboxDemo from '../../src/modules/docs/contents/kernel/components/layout/usage/layout-viewbox.demo';
 
 const renderLayoutViewboxDemo = (values: PreviewControlValues): string =>
   renderToStaticMarkup(
@@ -33,12 +33,14 @@ const extractLightgrayGuidePath = (markup: string): string => {
 describe('Layout controls', () => {
   it('changing viewBox keeps display dimensions equal to the frame', () => {
     const canonical = renderLayoutViewboxDemo({
+      viewBoxEnabled: true,
       viewBoxX: -120,
       viewBoxY: -120,
       viewBoxWidth: 240,
       viewBoxHeight: 240,
     });
     const widerViewBox = renderLayoutViewboxDemo({
+      viewBoxEnabled: true,
       viewBoxX: -120,
       viewBoxY: -120,
       viewBoxWidth: 400,

@@ -1,0 +1,121 @@
+---
+title: Extended usage
+description: Combine triggers, playback handles, staggering, and camera tracks, then configure snapshots and reduced-motion policy.
+---
+
+After declaring tracks in [basic usage](/kernel/visual/animation/usage), control when they start, coordinate multiple elements, and choose a frame for static output. This page covers triggers and playback, staggering and camera movement, and snapshots and reduced motion.
+
+## Triggers and playback
+
+### Choose a trigger
+
+| trigger                | Activation                     |
+| ---------------------- | ------------------------------ |
+| load or omitted        | On load                        |
+| visible                | On entering the visible region |
+| manual                 | Through a playback handle      |
+| `{ onEvent: 'click' }` | On the named runtime event     |
+
+Event triggers need an interactive host. An exported static SVG string cannot execute your application event handlers by itself. Visibility detection belongs to each backend host: SVG accounts for scroll-container clipping, while Canvas checks intersection with the browser viewport. Activation timing can therefore differ during nested scrolling.
+
+<ComponentPreview
+  files="animation-trigger"
+  size="lg"
+  caption="Changing the trigger reloads the scene. Scroll inside the visible example, use the button for manual mode, or click the element in event mode."
+/>
+
+### Control time
+
+React exposes AnimationControls through Layout.animationRef. Vanilla exposes view.animation on the mounted view. These scene-clock handles offer play(), pause(), and seek(ms). In an element event handler, context.animation controls the corresponding id.
+
+This example resets time before playing and can pause or seek to 600ms.
+
+<ComponentPreview files="manual-controls" size="sm" controls={{ animation: true }} />
+
+Handle operations do not replace the playback enablement policy. See [Snapshots and reduced motion](#static-output-and-playback-policy).
+
+## Orchestration and camera
+
+### Stagger and repeat
+
+stagger accepts tracks, adds delays to successive items, and returns tracks to attach to elements. It does not discover or arrange child nodes. loop wraps a track for repeated playback.
+
+<ComponentPreview files="stagger" size="sm" controls={{ animation: true }} />
+
+Different properties can use separate tracks. Multiple tracks for the same property are not automatically added together; consolidate them when necessary. Transform channels depend on array order and do not recalculate static layout.
+
+### Camera
+
+cameraTo produce viewBox tracks for Layout.animations. Keyframe values are `[x, y, width, height]`. Camera motion changes framing without moving node coordinates or connection boundaries.
+
+<ComponentPreview files="camera" size="sm" controls={{ animation: true }} />
+
+Provide explicit camera bounds so that the settled view matches the base viewBox used when animation is disabled.
+
+## Static output and playback policy
+
+### Choose a snapshot time
+
+React uses Layout.snapshotAt. Vanilla rendering or mounting options use animation.snapshotAt, in milliseconds. Snapshot time takes precedence over playback enablement and samples only load or omitted triggers. Manual, visible, and event-triggered tracks retain base values.
+
+<ComponentPreview files="snapshot" size="sm" />
+
+Snapshots suit SSR, posters, and thumbnails without ongoing playback rules.
+
+### Playback policy
+
+| Intent        | React             | Vanilla                  |
+| ------------- | ----------------- | ------------------------ |
+| Follow system | Omit animate      | Omit animation.enabled   |
+| Force on      | `animate={true}`  | animation.enabled: true  |
+| Force off     | `animate={false}` | animation.enabled: false |
+
+Explicit enablement overrides the system reduced-motion preference and should follow application accessibility policy. Disabling animation without a snapshot displays base properties rather than evaluating the final frame.
+
+### Design the settled state
+
+Fill defaults to forwards, retaining the final frame after playback. Coordinate final values in handwritten tracks, colorShift, or cameraTo with the intended settled state. Schema validation does not compare keyframes with base styles.
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/animation/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'animationRef',
+      kind: 'property',
+      type: 'Ref<AnimationControls | null>',
+      description: 'Layout scene-clock handle with play(), pause(), and seek(ms).',
+    },
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description: 'Layout accepts viewBox tracks only, with [x, y, width, height] values.',
+    },
+    {
+      name: 'snapshotAt',
+      kind: 'property',
+      type: 'number',
+      description: 'Static snapshot time in milliseconds; samples autoplay tracks only.',
+    },
+    {
+      name: 'animate',
+      kind: 'property',
+      type: 'boolean',
+      description: 'Omitted follows the system; true forces playback and false disables it.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/animation/usage' },
+    { title: 'Component integration', url: '/kernel/visual/animation/integration' },
+    { title: 'API reference', url: '/kernel/visual/animation/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/animation/schema-reference' },
+  ]}
+/>

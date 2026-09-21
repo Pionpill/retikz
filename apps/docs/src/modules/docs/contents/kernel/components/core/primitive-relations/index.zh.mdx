@@ -22,7 +22,7 @@ description: 接着图元模型，说明 path 引用图元时如何在动态贴�
 
 目标只给 id 时，编译器先看相邻 step 的方向，再从目标中心朝该方向命中 connection boundary。所以下图中同一个目标会按来源位置选择不同端点：
 
-<ComponentPreview files="anchors-auto-attach" size="sm" hideCode />
+<ComponentPreview files="anchors-auto-attach" size="md" hideCode />
 
 boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响这层几何由[图元模型 · 外层边界](/kernel/components/core/primitive-model#外层边界-boundary)统一解释；本页不重复维护盒模型例外。
 
@@ -30,17 +30,17 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 
 指定 anchor 后，端点不再读取相邻 step 的方向。矩形、椭圆使用通用标准 anchor，复杂 shape 还可以提供自己的语义点：
 
-<ComponentPreview files="anchors-explicit" size="sm" hideCode />
+<ComponentPreview files="anchors-explicit" size="md" hideCode />
 
-概念上只需记住“省略 anchor 是动态，提供 anchor 是固定”。完整 target union、`offset`、角度与边比例写法见 [Path schema · 目标点](/kernel/reference/schema/path#目标点)；标准 anchor、boundary 与各 shape 专属名称见 [Node 几何](/kernel/components/node/overview)和 [Shapes](/kernel/components/shapes)。
+概念上只需记住“省略 anchor 是动态，提供 anchor 是固定”。完整 target union、`offset`、角度与边比例写法见 [Path schema · 目标点](/kernel/components/path/schema-reference)；标准 anchor、boundary 与各 shape 专属名称见 [Node 几何](/kernel/components/node/usage)和 [Shapes](/kernel/components/node/shape)。
 
-`axis-line` 是一个有意的例外：它取 target 中心或显式 anchor 后投影到单个局部轴，所以省略 anchor 也不会在 target 端动态贴边。source 端仍朝投影后的终点正常裁切；详见 [Step · 正交连接](/kernel/components/draw/step#正交连接)。
+`axis-line` 是一个有意的例外：它取 target 中心或显式 anchor 后投影到单个局部轴，所以省略 anchor 也不会在 target 端动态贴边。source 端仍朝投影后的终点正常裁切；详见 [Step · 路径组合 · 正交连接](/kernel/components/path/step#正交连接)。
 
 ## 连线与路由
 
 端点模式决定“连到哪里”，path step 决定“中间怎么走”。下面用同一对端点比较直线、曲线与折线：
 
-<ComponentPreview files="connection-styles" size="xs" hideCode />
+<ComponentPreview files="connection-styles" size="sm" hideCode />
 
 | 路线     | 常用写法                 | 适合                   |
 | -------- | ------------------------ | ---------------------- |
@@ -48,7 +48,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 | 正交折线 | `'-\|'` / `'\|-'`        | 流程图、结构图         |
 | 曲线     | `{ bend }` / `{ curve }` | 避让、双向边、平滑关系 |
 
-完整 step 与 path kind 参数属于 [Draw](/kernel/components/draw/overview)和 [Path schema](/kernel/reference/schema/path)。关系页只给选择思路，不复制 API 字典。
+完整 step 与 path kind 参数属于 [Draw](/kernel/components/path/usage)和 [Path schema](/kernel/components/path/schema-reference)。关系页只给选择思路，不复制 API 字典。
 
 路径内部可以相对上一段终点移动：`{ relative }` 临时偏移但不推进累计基准，`{ relativeAccumulate }` 偏移后把新终点作为下一段基准。React Sugar 也支持 `'+dx,dy'` / `'++dx,dy'`：
 
@@ -56,7 +56,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 
 需要稳定路由点时，用 `<Coordinate>` 声明一个可引用但不渲染的位置，再让 path 经过它：
 
-<ComponentPreview files="connection-coordinate" size="xs" hideCode />
+<ComponentPreview files="connection-coordinate" size="sm" hideCode />
 
 实体位置、偏移、between 与 path-relative 的适用范围集中在[定位](/kernel/components/basic/position)。
 
@@ -64,9 +64,9 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 
 `<Scope id="cluster">` 会把子树外接框注册为可引用的组边界。外部 path 可以用 `'cluster'` 动态贴边，也可以用 `'cluster.top'` 锁定位置：
 
-<ComponentPreview files="relation-scope" size="sm" hideCode />
+<ComponentPreview files="relation-scope" size="xs" hideCode />
 
-图中的淡灰虚线是 cluster 的合成外接框。分组连接仍复用与 Node 相同的 auto / explicit 选择；命名空间、bbox 模式与 transform 行为见 [Scope](/kernel/components/layout/scope)。
+图中的淡灰虚线是 cluster 的合成外接框。分组连接仍复用与 Node 相同的 auto / explicit 选择；命名空间、bbox 模式与 transform 行为见 [Scope](/kernel/components/scope/usage)。
 
 ## 动手试一试
 
@@ -74,7 +74,7 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
 
 <ComponentPreview
   files="primitive-relations-playground"
-  size="sm"
+  size="md"
   caption="淡灰 dotted 半径只是来源轨道辅助线；灰色 dashed 轮廓表示当前非 shape 连接面，选择“视觉形状”时连线直接落到蓝色椭圆。"
 />
 
@@ -113,12 +113,12 @@ boundary 决定“线停在哪一层表面”，`margin` 与 shape 如何影响�
     {
       title: 'Draw',
       description: '查询 step、path kind、arrow 与 route API',
-      url: '/kernel/components/draw/overview',
+      url: '/kernel/components/path/usage',
     },
     {
       title: 'Scope',
       description: '分组、命名空间与可引用组边界',
-      url: '/kernel/components/layout/scope',
+      url: '/kernel/components/scope/usage',
     },
   ]}
 />

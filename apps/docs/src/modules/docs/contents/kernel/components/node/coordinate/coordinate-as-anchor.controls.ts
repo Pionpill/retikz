@@ -9,11 +9,8 @@ export const CoordinateAsAnchorControlId = {
   VerticalDistance: 'verticalDistance',
 } as const;
 
-/** Coordinate 虚拟锚点 playground 的固定取景 */
+/** Coordinate 虚拟锚点 demo 的辅助轴线 */
 export const coordinateAsAnchorFrame = {
-  width: 400,
-  height: 250,
-  viewBox: { x: -220, y: -140, width: 440, height: 280 },
   xAxis: [
     [-200, 0],
     [200, 0],

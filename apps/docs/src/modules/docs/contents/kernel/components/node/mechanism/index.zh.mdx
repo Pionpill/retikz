@@ -1,0 +1,497 @@
+---
+title: 实现原理
+description: 解释节点尺寸、连接面、文字处理与引用时序
+---
+
+本页解释用法背后的几何和引用时序。先阅读[基础用法](/kernel/components/node/usage)；只想查询字段时直接看参考页。
+
+## 文字测量与边框尺寸
+
+节点边框需要先容纳正文，再满足形状和最小尺寸约束：
+
+- **文字框**：折行后每行文字占据的范围
+- **内容框**：在文字框四周加入 `padding`，为文字留出空间
+- **视觉边框**：形状包住内容框后的轮廓，`minimumSize` 为它设置尺寸下限
+
+普通正文在浏览器中通过 Canvas `measureText` 按实际字体、字号和字重测量宽度，再按 `maxTextWidth` 折行（西文按词，中文按字）。文字框取折行后的最大行宽，高度为行数乘以 `lineHeight`（默认字号的 1.2 倍），因此包含行间留白；字形的上升与下降高度用于安排基线。没有浏览器测量器时使用平均字宽估算；公式与混排则按各片段的度量对齐基线。
+
+下图跟踪同一个 Hello 节点。中间加入 padding，边框扩大；右侧再加标签，边框保持不变。
+
+<ComponentPreview files="node-size-states" size="md" type="illustration" hideCode />
+
+字体、折行阈值和内边距都会改变需要容纳的内容；`minimumSize` 只能扩大边框，不能把文字压小。`scale` 在计算过程中同时作用于字体、间距和形状参数；`rotate` 再改变最终边框的朝向。
+
+<SourceLinks
+  sources={[
+    {
+      label: '正文与间距参与形状布局',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 137,
+      endLine: 305,
+    },
+  ]}
+/>
+
+### 标签不参与边框尺寸计算
+
+上图右侧的 label 是独立附属文字。它需要已经确定的节点边框来计算附着位置，因此不反过来参与节点形状的尺寸计算。
+
+标签有自己的文字框。编译器根据标签旋转后的框和 `distance` 计算中心位置，使视觉框与节点边界保持指定净距。这一结果同时用于文字、引线和视框收集：节点边框不变，自动 viewBox 仍会包含外侧标签。
+
+`Node.scale` 不缩放 `distance`；外层 Scope 的缩放则会一起变换节点、标签和间距。这解释了两种缩放看起来不同的原因。
+
+<SourceLinks
+  sources={[
+    {
+      label: '标签视觉框与附着偏移',
+      path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
+      startLine: 160,
+      endLine: 191,
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: '节点与标签分别收集内容范围',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 740,
+      endLine: 759,
+    },
+  ]}
+/>
+
+## 视觉形状与连接几何
+
+`shape` 决定画出来的轮廓，也拥有形状专属锚点；`boundary` 则只在解析自动连线端点、标准方位锚点和数字角度锚点时参与。`boundary` 省略时先继承 `Scope.defaults.node.boundary`，没有继承值时才回退到 `'shape'`。最终采用 `'shape'` 时，连接几何沿用视觉形状。
+
+下面三个 Q 的可见圆形和连线方向相同。中间改用矩形连接面，右侧再增加 margin；比较线端的位置，圆形本身始终不变。灰色点线是教学辅助边界。
+
+<ComponentPreview files="connection-surfaces" size="md" type="illustration" hideCode />
+
+| 引用方式                                    | 实际采用的几何              |
+| ------------------------------------------- | --------------------------- |
+| 自动连线、`.top`、`.30`                     | `boundary`，再外扩 `margin` |
+| 形状专属锚点（如 `tip-0`）                  | 视觉 `shape`                |
+| `{ anchor: { side, fraction } }` 边上比例点 | 视觉 `shape`                |
+
+因此，`margin` 会外推连接端点与标准 border anchor，并扩大节点布局占位，却不会重画视觉形状。形状专属锚点与边上比例点保持在原轮廓上；某个 shape 没实现标准方位锚点时，core 会回退到它的外接矩形。
+
+规则连接面先按 `fit` 求矩形，再应用 `gap`；自动端点、数字角度和标准命名 anchor 会共享这一结果。Core 的 ellipse / polygon，以及已注入的 star / contour，都会提供 贴合形状的 `tight` 外包轮廓；rectangle 的 `tight` 与 `bounds` 一致，已注入的 Sector 按 bounds 处理。自定义 shape 若未实现 `connectionEnvelope`，`tight` 会安全回退到 bounds，并产生一次结构化 warning。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'tight 包络、fallback 与缓存',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+      startLine: 48,
+      endLine: 93,
+    },
+    {
+      label: '内置 boundary 的 fit 与 gap',
+      path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
+      startLine: 10,
+      endLine: 101,
+    },
+    {
+      label: '视觉轮廓、连接面与 anchor 分流',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 89,
+      endLine: 160,
+    },
+    {
+      label: 'margin 与锚点类型的解析边界',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 9,
+      endLine: 51,
+    },
+  ]}
+/>
+
+## 命名引用与登记顺序
+
+`id` 把一个已经完成布局的对象变成后续定位与连接可查询的几何句柄。编译器维护的是一组命名表；绘制图元与登记引用是两件事，因此没有 `id` 的 Node 仍会绘制，但不会登记到命名表，也无法被后续对象通过命名引用访问。
+
+### 命名表保存布局记录
+
+`NamespaceStack` 是编译器管理命名引用的栈结构。它把命名表按从外到内的层级组织起来，每一层称为一个 **frame（命名帧）**，用 `Map<string, NamespaceEntry>` 保存这一层的 `id → 布局记录`。
+
+这些 frame 存在内部数组 `frames` 中：首项是始终保留的根 frame，末项是当前栈顶。初始时只有根 frame；进入独立命名空间时在末尾压入新 frame，离开时弹出。`register` 只写入栈顶的 Map，查询则从栈顶向外逐层查找。
+
+下面把栈中的一个 Map 和键 `a` 对应的记录展开。图中的 `a` 已完成布局：中心为 `[40, 0]`，矩形宽 60、高 32。
+
+<ComponentPreview files="namespace-storage" size="xl" type="illustration" hideCode />
+
+Map 的 key 是 `id`，value 包含 `layout` 和 `state`。`layout` 是已解析的 `NodeLayout`：保存矩形、形状定义、连接面、margin 等几何信息，也包含文字等布局结果。图中用嵌套 Map 展示对象层级：`layout` 是对象，里面的 `rect` 也是对象；`shapeName` 是形状名。图中仅为示意，具体数据结构以代码为准。
+
+遍历到 Node 时，编译器完成正文与形状布局及定位，再把布局投影到全局坐标；带 `id` 时才把这一结果写入当前 Map，状态为 `resolved`。Coordinate 使用同一张表，但保存的是零宽高几何记录。命名表是本次编译的运行时状态，不写回可持久化 IR。
+
+<SourceLinks
+  sources={[
+    { label: '命名栈与条目结构', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 5, endLine: 80 },
+    {
+      label: 'NodeLayout 的几何字段',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
+      startLine: 73,
+      endLine: 110,
+    },
+    {
+      label: '布局投影与 id 登记',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 704,
+      endLine: 730,
+    },
+  ]}
+/>
+
+### 定位即时查询，路径延迟消费
+
+查询 `a` 时，`lookupEntry` 从栈顶 Map 向栈底依次查找，命中后立即返回条目。定位解析器读取这份布局的几何视图：取中心可以得到 `[40, 0]`，取无旋转矩形的 `right` 锚点则得到 `[70, 0]`。自动贴边连接还需要另一端的方向，才能求出连接面上的交点；不是查到 id 就总返回同一个点。
+
+下图使用同一作用域内的声明数组 `[Path(a, b), Node a, Node b]`。路径写在两个节点之前，但遍历到它时只入队，不立刻查询端点。
+
+<ComponentPreview files="namespace-consumption" size="xxl" type="illustration" hideCode />
+
+- **Node / Coordinate 定位**：遍历到该对象时立即查询，使用当时已经登记的条目；不会等待后面的声明，也不能靠互相引用形成定位循环。存储的几何使用全局坐标，定位结果会按当前 Scope 的变换转换回局部坐标。
+- **Path / Draw 端点**：先在图元序列中留下占位，同时把路径、作用域变换、样式和占位位置存入待处理队列。当前作用域子节点登记完成后，再查询命名表、解析端点并回填原占位，因而既支持后声明的同级节点，也保留原有绘制顺序。
+
+例如，把 `Node b` 写在 `Node a` 前面，同时让 `b.position` 引用 `a`，定位无法获得尚未登记的 `a`；把 `Path(a, b)` 写在它们前面则可在收尾时解析。这个等待边界是当前作用域，并非等整棵图的所有未来声明都完成。
+
+<SourceLinks
+  sources={[
+    { label: '由内向外查找', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 240, endLine: 252 },
+    {
+      label: '布局投影为定位查询视图',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 66,
+      endLine: 91,
+    },
+    {
+      label: '路径入队并保留绘制位置',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 803,
+      endLine: 837,
+    },
+    {
+      label: '解析路径与回填占位',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 621,
+      endLine: 669,
+    },
+  ]}
+/>
+
+### Scope 控制条目的可见范围
+
+普通 Scope 不创建新的命名表：它的子节点继续写入当前 Map。`localNamespace` 为 true 时才 `pushFrame()`，子节点写入新的栈顶 Map；查询先找内层，再找外层，所以内层可以引用外部节点，同名条目则遮蔽外层条目。
+
+图中外层已有 `a`、`b`，局部 Scope `group` 内再定义 `a`、`c`。内层查询 `a` 命中局部条目，查询 `b` 才继续向外查找。离开 `group` 后局部 Map 出栈，外部重新看到原来的 `a`，看不到 `c`；局部条目不会合并进外层 Map。
+
+<ComponentPreview files="namespace-scope" size="xxl" type="illustration" hideCode />
+
+`group` 自己的 id 属于父 frame，不与局部子节点一起消失。进入 Scope 前先登记 `scope-placeholder`；子树布局完成后，用真实包围盒替换为 `resolved` 条目，再处理该 Scope 的待解析路径，最后弹出局部 frame。因此外部可以引用已闭合的 `group`，即使其内部 id 不可见；内部 Node 的锚点定位不能使用尚未闭合的祖先 Scope 包围盒。已闭合的空 Scope 是合法的零尺寸目标，与“尚未完成”不同。
+
+同一 frame 内重复登记相同 id 会覆盖旧条目并产生诊断；跨 frame 的同名遮蔽不属于同表重复。Scope 的几何变换和命名隔离也是独立的：变换影响保存和消费的几何，只有 `localNamespace` 决定是否建立新的 Map。
+
+<SourceLinks
+  sources={[
+    {
+      label: '写入、覆盖与状态替换',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 183,
+      endLine: 237,
+    },
+    {
+      label: 'Scope 先登记占位，再进入局部 frame',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1045,
+      endLine: 1063,
+    },
+    {
+      label: 'localNamespace 的入栈条件',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1135,
+      endLine: 1142,
+    },
+    {
+      label: '发布包围盒、消费路径并出栈',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1266,
+      endLine: 1300,
+    },
+  ]}
+/>
+
+## 行归一化与优先级
+
+`<Text>` 是一个返回 `null` 的标记组件，本身不创建 DOM 或图形。只有 `<Node>` 收集 children 时会识别这个标记，并把不同 JSX 输入归一到同一份 `Node.text` 契约：
+
+例如 `<Node>A<Text fill="red">B</Text>C</Node>` 会产生三行：第一行 A、第二行红色 B、第三行 C。对应文本输入如下；若同时提供 `text="X"`，最终只采用 X。
+
+```ts
+['A', { text: 'B', fill: 'red' }, 'C'];
+```
+
+<ComponentPreview files="text-normalization" size="xs" type="flow" hideCode />
+
+显式 `text` prop 优先；只要它存在，children 就不再参与文本收集。没有 `text` prop 时，适配层按 JSX 顺序递归读取字符串、数字、数组、Fragment 与 `<Text>`：
+
+| 输入            | 归一规则                                     | `Node.text` 结果 |
+| --------------- | -------------------------------------------- | ---------------- |
+| 字符串 / 数字   | 相邻内容拼接，按 Node 文本规则处理 `\n`      | 普通字符串行     |
+| 无样式 `<Text>` | 先结束当前普通行，再把自身作为独立一行       | 普通字符串行     |
+| 有样式 `<Text>` | 先结束当前普通行，再保留当前行的样式覆盖字段 | IRLine 对象行    |
+
+这也解释了两个边界：`<Text>` 只能在 `<Node>` 内生效，而且它表达的是一整行，不是行内 span。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Text 标记组件',
+      path: 'packages/kernel/react/src/kernel/components/Text.tsx',
+      startLine: 20,
+      endLine: 23,
+    },
+    {
+      label: 'Node children 行归一化',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 120,
+      endLine: 192,
+    },
+  ]}
+/>
+
+## 自动对比色计算
+
+归一完成后，每一行沿同一套颜色优先级进入 Core。`<Text fill>` 是显式行色，直接覆盖 Node 默认；没有 `fill` 的行才继承 `Node.style.textColor`。下面只展开该值为 `contrast` 时的背景判断：
+
+<ComponentPreview files="text-contrast-flow" size="sm" type="flow" hideCode />
+
+当 Node 使用 `NodeTextColor.Contrast` 时，Core 在样式级联后读取最终 `fill`。只有静态且有效不透明度为 1 的颜色参与黑白文字与背景的对比度计算（WCAG 相对明度），并解析成 `#000000` 或 `#ffffff`；缺省、半透明、gradient、`var()` 等无法闭合求值的背景使用固定 `currentColor`，同时发出 `TEXT_AUTO_CONTRAST_UNRESOLVED`。Node 的整体 `opacity` 不参与背景判断。
+
+行级 `font` 仍参与当前行的宽度测量；换行、`align` 与 `lineHeight` 继续由 Node 的块级配置负责。同一行需要多段样式时，使用 `text` prop 的 `{ runs }` IRLine。
+
+<SourceLinks
+  sources={[
+    {
+      label: '样式级联后解析',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 680,
+      endLine: 695,
+    },
+    {
+      label: 'Node 对比色解析',
+      path: 'packages/kernel/core/src/resolve/node/text-color.ts',
+      startLine: 55,
+      endLine: 111,
+    },
+    {
+      label: 'Node 正文文本布局',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
+      startLine: 34,
+      endLine: 129,
+    },
+  ]}
+/>
+
+## 坐标点的登记与输出
+
+本节只放大 `<Coordinate>` 如何在 compile 中成为可引用的几何句柄；完整的 JSX → IR → Scene 管线见[架构](/kernel/components/design/principles)。
+
+### 先登记，再引用
+
+图中从左到右展示一个坐标点从位置输入到可被引用的过程。查询只读取已经登记的 id，登记完成后，后续节点和路径才能使用它。
+
+<ComponentPreview files="coordinate-resolution-flow" size="xs" type="flow" hideCode />
+
+编译器解析 `position`，应用当前 Scope 的变换得到全局坐标，再将这个位置登记为零宽高的几何记录。登记使用前文的 `NamespaceStack`；[即时定位与延迟路径](#定位即时查询路径延迟消费)的查询时机和可见范围同样适用。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Coordinate 位置解析与登记',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 766,
+      endLine: 800,
+    },
+    {
+      label: '定位引用解析',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      startLine: 42,
+      endLine: 81,
+    },
+  ]}
+/>
+
+### 零尺寸记录与渲染输出
+
+下面以无 Scope 变换的 `hub` 为例：输入位置为 `[40, 20]`，登记记录中的矩形宽高均为 0，因此查询 `hub.right` 仍得到同一个点。图中仅为示意，具体数据结构以代码为准。
+
+<ComponentPreview files="coordinate-storage" size="xl" type="illustration" hideCode />
+
+这里的“零尺寸”表示记录的宽为 0、高为 0，因此也常简写为 **0×0**。它只保存 Coordinate 的中心坐标，没有面积或可见内容，边界也退化到中心；这是一条供编译器定位和连线引用的内部几何记录，不是 Scene 图元。这样既能复用 Node 的 id 查询与 anchor 解析机制，又不会让纯引用点进入渲染输出或自动画布范围。
+
+- **不画任何图元**——没有形状、没有文字，渲染产物里完全不出现。
+- **不撑大画布**——远处的 coordinate 不会让最终 viewBox 自动变大；必须有实际 `<Node>` / `<Path>` 落在那片区域，画布才覆盖过去（调试定位时常踩这点）。
+- **命名 / 角度 anchor 退化为中心**——因为宽和高都是 0，各方向的边界都和中心重合，所以 `hub.top` / `hub.bottom` / `hub.30` 都等于中心点；需要方向 anchor 就改用 `<Node>`。
+- **边上比例点会报错**——`{ anchor: { side, fraction } }` 需要一条真实边，而零尺寸记录只有中心点，没有可取样的边。
+
+<SourceLinks
+  sources={[
+    {
+      label: '零尺寸几何记录构造',
+      path: 'packages/kernel/core/src/compile/node/synthetic.ts',
+      startLine: 64,
+      endLine: 121,
+    },
+    {
+      label: '命名 anchor 解析',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 102,
+      endLine: 160,
+    },
+    {
+      label: '零尺寸边上比例点拒绝',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 28,
+      endLine: 51,
+    },
+  ]}
+/>
+
+## 形状布局与连接
+
+### 圆与椭圆的内容外接
+
+`<Node>` 先把文字测量结果与 `padding` 合成内容框，再让 shape 定义从这个内框计算可见边界。下图给两边相同的内容框，只切换外接策略：
+
+<ComponentPreview files="circle-ellipse-circumscription" size="md" hideCode type="illustration" />
+
+默认 `ellipse` 把两个半轴分别乘以 √2；`circle` 则在编译时解析成 `ellipse + circumscribe:'equal'`，把内容框半对角线作为统一半径。解析后的同一份几何既产出可见的 ellipse 图元，也提供 anchor 与连接边界，所以 `<Draw>` / `<Path>` 的端点会贴到外轮廓。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'circle preset 解析为 equal ellipse',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'ellipse 外接、anchor 与图元生成',
+      path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
+      startLine: 9,
+      endLine: 45,
+    },
+  ]}
+/>
+
+### 矩形的圆角与连接边界
+
+当显式选择 `rectangle`，或未配置形状且没有继承值时，Node 使用矩形。文字测量结果与 `padding` 先组成内容内框，再交给矩形 shape 同时生成可见轮廓和连接几何：
+
+<ComponentPreview files="rectangle-node-boundary" size="sm" hideCode type="flow" />
+
+矩形不会为了外接内容额外放大半轴，所以边界正好包住「文字 + padding」。同一份 `cornerRadius` 参数既参与矩形绘制，也参与朝目标方向求边界交点；这就是圆角节点的连线会落在圆弧上，而不是落在已被磨掉的尖角上的原因。
+
+因此 `<Rectangle>` 的结果是纯 Path 图形；矩形 `<Node>` 则保留 id、方位 anchor 与边界求交能力。需要装文字并连接时，应选择 `<Node>`。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Node 默认形状与圆角参数解析',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: '文字与 padding 到形状边界的布局',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 81,
+      endLine: 127,
+    },
+    {
+      label: '矩形轮廓、anchor 与边界交点',
+      path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
+      startLine: 41,
+      endLine: 69,
+    },
+  ]}
+/>
+
+### 多边形的内容外接与连接轮廓
+
+沿主链看，Node 的内容尺寸先决定多边形要包住什么，再由 shape 参数决定用什么正多边形去包；上下两条输出表示同一套轮廓规则同时服务渲染与自动连接：
+
+<ComponentPreview files="polygon-node-flow" size="md" hideCode type="flow" />
+
+文字与 `padding` 先形成内容内框；`polygon` 形状实现再根据 `sides` 与 `rotate` 求出能完整外接这个内框的最小外接圆半径。所有顶点仍落在同一个圆上，所以长文本只会把正多边形整体放大，不会把它拉伸成不规则多边形。
+
+`cornerRadius` 不改变外接尺寸，而是在顶点环生成后应用倒角。同一套顶点与倒角规则既输出 Scene path，也用于从节点中心朝目标方向求边界交点，因此自动连接会落在圆角弧上。标准方位 anchor（`top`、`bottom` 等）仍取外接矩形；它们不等同于任意方向上的真实轮廓交点。
+
+`shape="diamond"` 只改变入口写法：编译器会先把它归一为 `polygon{ sides:4, rotate:0 }`，再进入完全相同的 provider 主链。对象形式 `{ type:'diamond', params:{ aspectRatio } }` 也走这条主链，其中 `aspectRatio` 表示最终轮廓的宽 / 高；缺省或设为 `1` 时等价于原有正菱形。扁菱形固定使用 0° / 90° / 180° / 270° 四个顶点方向，并由同一套顶点参与渲染、边界交点和连接面计算。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'diamond 预设归一',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: '内容内框的外接半径计算',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 89,
+      endLine: 114,
+    },
+    {
+      label: '轮廓输出、连接交点与方位 anchor',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 126,
+      endLine: 183,
+    },
+  ]}
+/>
+
+### 自定义形状的解析
+
+图中橙色是 JSON 数据，蓝色是运行时能力。两者在 compile 阶段按 shape 名汇合：registry 先合并内置与自定义定义，再校验 params，最后由同一份 definition 生成 Scene 图元与连接几何。
+
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="flow" />
+
+执行顺序如下：
+
+1. 解析 `node.shape`；`circle` / `diamond` preset 先归一为真实 provider 名和 params
+2. 在统一 shape registry 中查找定义；内置项与自定义项不分两条消费路径
+3. 依次通过 JSON object 护栏与 definition 的 `paramsSchema`
+4. Node 布局调用 `circumscribe`，连接与 anchor 调用几何函数，规则连接面可调用 `connectionEnvelope`，绘制调用 `emit`
+
+<SourceLinks
+  sources={[
+    {
+      label: '合并内置与自定义形状注册表',
+      path: 'packages/kernel/core/src/providers/shape/registry.ts',
+      startLine: 6,
+      endLine: 12,
+    },
+    {
+      label: '解析 shape preset、provider 与 params',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '选择定位方式、锚点与连接面', url: '/kernel/components/node/extend' },
+    { title: 'Text · 文本', description: '编写多行正文与行内混排', url: '/kernel/components/node/text' },
+    { title: 'label · 标签', description: '摆放附加标签并设置引线', url: '/kernel/components/node/labels' },
+    { title: '自定义连接面', description: '定义并注册新的连接规则', url: '/kernel/components/node/custom' },
+  ]}
+/>

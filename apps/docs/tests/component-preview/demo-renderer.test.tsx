@@ -7,9 +7,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import '../../src/i18n';
 import { buildAnimationControlSlots } from '../../src/modules/docs/components/component-preview/controls/animation-controls';
 import {
   buildConfiguredControlSlots,
+  buildPreviewControlsLockSlot,
   buildPreviewToolSlots,
   DemoRenderer,
   PreviewControlSlotLayer,
@@ -158,6 +160,49 @@ describe('useComponentPreviewStore', () => {
 });
 
 describe('PreviewControlSlotLayer', () => {
+  it('锁定时只保留解锁按钮，并以不同图标表示两种状态', () => {
+    const originalLocked = useComponentPreviewStore.getState().controlsLocked;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const slots: Array<PreviewControlSlot> = [
+      buildPreviewControlsLockSlot({ leading: <span>Show code</span> }),
+      {
+        id: 'other-control',
+        placement: 'bottom-end',
+        visibility: 'always',
+        render: () => <span>Other control</span>,
+      },
+    ];
+    const hoverMarkup = renderToStaticMarkup(
+      <PreviewControlSlotLayer slots={[slots[0]]} runtime={previewControlRuntime} />,
+    );
+
+    try {
+      expect(slots[0].visibility).toBe('hover');
+      expect(hoverMarkup).toContain('pointer-events-none opacity-0');
+      expect(hoverMarkup).toContain('aria-label="Lock floating tools"');
+
+      act(() => {
+        useComponentPreviewStore.getState().setControlsLocked(false);
+        root.render(<PreviewControlSlotLayer slots={slots} pinned runtime={previewControlRuntime} />);
+      });
+      expect(container.innerHTML).toContain('lucide-lock-open');
+      expect(container.textContent).toContain('Show code');
+      expect(container.textContent).toContain('Other control');
+
+      act(() => useComponentPreviewStore.getState().setControlsLocked(true));
+      expect(container.innerHTML).toContain('lucide-lock');
+      expect(container.textContent).not.toContain('Show code');
+      expect(container.textContent).not.toContain('Other control');
+    } finally {
+      act(() => {
+        useComponentPreviewStore.getState().setControlsLocked(originalLocked);
+        root.unmount();
+      });
+    }
+  });
+
   it('同一位置的插槽分别遵循各自可见性', () => {
     const slots: Array<PreviewControlSlot> = [
       {

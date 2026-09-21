@@ -8,7 +8,7 @@ import type { ConnectionEnvelopeKind } from '../shape';
 
 /**
  * 连接面命名 anchor 的名字
- * @description 包含标准 anchor 名，也允许 boundary 自定义额外名字
+ * @description 类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析
  */
 export type BoundaryAnchorName = AnchorValue | (string & {});
 
@@ -36,7 +36,7 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
   /** 从中心指向 toward 的射线与连接面的交点 */
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**
-   * 可选的命名 anchor 支持，用于标准连接点或自定义连接点
+   * 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调
    * @default 不支持；调用方回退或报告不支持该 anchor
    */
   anchor?: (rect: Rect, name: BoundaryAnchorName, params: TParams) => Position | undefined;

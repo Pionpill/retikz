@@ -1,0 +1,189 @@
+---
+title: 基础用法
+description: 动画用关键帧描述属性随时间的变化。内置预设返回同样的轨道数据，可与手写轨道组合。
+---
+
+Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `colorShift`、`cameraTo`、`loop`、`stagger` 通用工具。`grow`、`growUp`、`pulse`、`spin`、`flash`、`blink`、`wiggle` 从 `@retikz/standard` 导入，详见 [Standard 动画预设](/library/standard/animation)。两层返回相同的轨道数据，不需要额外注册。
+
+## 接入方式
+
+四种写法绘制相同结果。Vanilla 需要页面已有 `<div id="diagram"></div>`；移除容器前调用 `view.dispose()`。
+
+<ComponentPreview files="animation-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node
+      position={[0, 0]}
+      layout={{ minimumSize: 80 }}
+      animations={[
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ]}
+    />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ],
+    },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node({
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      animations: [
+        {
+          property: 'opacity',
+          keyframes: [
+            { at: 0, value: 0 },
+            { at: 1, value: 1 },
+          ],
+          duration: 800,
+        },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 入场与强调
+
+| 目的       | Core 基础预设 / 工具 | Standard 可选效果                 |
+| ---------- | -------------------- | --------------------------------- |
+| 透明度入场 | fadeIn               | —                                 |
+| 缩放入场   | scaleIn              | grow、growUp                      |
+| 位移入场   | slideIn              | —                                 |
+| 描边揭示   | drawOn               | —                                 |
+| 状态强调   | colorShift、loop     | pulse、spin、flash、blink、wiggle |
+
+<ComponentPreview files="entrance" size="md" controls={{ animation: true }} />
+
+带文本或旋转的 Node 会把动画挂到包裹整个节点的组上，文字随节点一起运动。跨多个独立图元的整体动画使用 Scope，详见[组件对接](/kernel/visual/animation/integration)。预设参数以 API 签名为准，时长与延迟的单位都是毫秒。
+
+<ComponentPreview files="emphasis" size="sm" controls={{ animation: true }} />
+
+## 手写轨道
+
+一条轨道描述一个 property。keyframes 的 at 为 0..1 且按非递减顺序排列；value 是绝对值。duration 必须大于 0。easing 可以放在轨道或某个关键帧上，关键帧的 easing 作用于到下一帧的区间。
+
+<ComponentPreview files="handwritten-track" size="sm" controls={{ animation: true }} />
+
+## 参数试验场
+
+修改同一动画的参数观察时序变化；关闭播放时显示基础状态，并非自动采样最后一帧。
+
+<ComponentPreview files="animation-playground" size="md" controlPanelDefaultSize={50} controls={{ animation: true }} />
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/animation/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description:
+        '轨道包含 property、keyframes（at 与 value）、duration；可选 delay、easing、iterations、direction、fill、trigger 与 origin。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '组件对接', url: '/kernel/visual/animation/integration' },
+    { title: 'API 参考', url: '/kernel/visual/animation/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/animation/schema-reference' },
+  ]}
+/>

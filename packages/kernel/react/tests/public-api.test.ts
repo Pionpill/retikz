@@ -13,8 +13,6 @@ const PUBLIC_RUNTIME_EXPORTS = [
   'Coordinate',
   'Scope',
   'Draw',
-  'Circle',
-  'Rectangle',
   'convertIRToReactNode',
   'RendererModeProvider',
   'AnimationModeProvider',

@@ -93,6 +93,7 @@ export const HeaderActions: FC = () => {
   const setSidebarOpen = useLayoutStore(s => s.setSidebarOpen);
   const previewHideCode = useComponentPreviewStore(s => s.hideCode);
   const previewIsExpand = useComponentPreviewStore(s => s.isExpand);
+  const previewControlsLocked = useComponentPreviewStore(s => s.controlsLocked);
   const previewDragEnabled = useComponentPreviewStore(s => s.dragEnabled);
   const previewRendererMode = useComponentPreviewStore(s => s.rendererMode);
   const previewAnimationMode = useComponentPreviewStore(s => s.animationMode);
@@ -102,6 +103,7 @@ export const HeaderActions: FC = () => {
   const previewRangePlaybackDuration = useComponentPreviewStore(s => s.rangePlaybackDuration);
   const togglePreviewHideCode = useComponentPreviewStore(s => s.toggleHideCode);
   const togglePreviewIsExpand = useComponentPreviewStore(s => s.toggleIsExpand);
+  const togglePreviewControlsLocked = useComponentPreviewStore(s => s.toggleControlsLocked);
   const togglePreviewDragEnabled = useComponentPreviewStore(s => s.toggleDragEnabled);
   const togglePreviewRendererMode = useComponentPreviewStore(s => s.toggleRendererMode);
   const setPreviewAnimationMode = useComponentPreviewStore(s => s.setAnimationMode);
@@ -343,6 +345,9 @@ export const HeaderActions: FC = () => {
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem checked={previewDragEnabled} onCheckedChange={togglePreviewDragEnabled}>
                   {t('preview.dragComponent')}
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem checked={previewControlsLocked} onCheckedChange={togglePreviewControlsLocked}>
+                  {t('preview.lockControls')}
                 </DropdownMenuCheckboxItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

@@ -5,7 +5,7 @@ keywords: 'preset、factory'
 
 # ADR-021：具名动画 preset factory
 
-- 状态：Accepted（preset 与等价测试已实现；文档动画页待补）
+- 状态：Accepted（预设归属由 Standard ADR-031 部分替代）
 - 决策日期：2026-06-07
 - 关联：[ADR-017 动画 IR](./017-timeline-animation-ir.md) · [ADR-018 SVG](./018-svg-playback.md) · [ADR-019 Canvas](./019-canvas-playback.md) · [ADR-020 runtime](./020-runtime-control.md)
 
@@ -33,9 +33,9 @@ preset 是 framework-agnostic 的纯 factory，返回 IRAnimationTrack，而不�
 
 intro preset 的末帧等于 base；循环 preset 按其循环语义播放。stagger 是纯数组 helper，仅叠加每项 delay，不建立完整 timeline DSL。React、Vanilla 和直接 IR 共享同一 factory，preset 输出不绕过 schema、播放或降级契约。
 
-## 兼容性与实现结果
+## 当前归属与兼容性
 
-preset 作为 core 的 additive pure API 实现；React/Vanilla 可 re-export，已有 raw AnimationTrack 不受影响。
+[Standard ADR-031](../../../../../library/_notes/decisions/standard/v0/v0.1/031-animation-preset-migration.md) 部分替代本决策的包归属：Core 保留 fadeIn、scaleIn、slideIn、drawOn、colorShift、cameraTo、loop、stagger；grow、growUp、pulse、spin、flash、blink、wiggle 及其专属选项由 Standard 拥有。迁出项不保留 Core 或 adapter 的兼容转导出。纯工厂、手写轨道等价与已有 JSON 不受影响的原则继续成立。
 
 ## 遗留风险
 

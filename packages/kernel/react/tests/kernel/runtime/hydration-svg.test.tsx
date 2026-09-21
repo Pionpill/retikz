@@ -1,4 +1,3 @@
-import { pulse } from '@retikz/core';
 // @vitest-environment jsdom
 import type { HydrationContext } from '@retikz/render/hydration';
 import { StrictMode } from 'react';
@@ -37,7 +36,20 @@ describe('SVG 水合', () => {
               position={[0, 0]}
               shape="circle"
               meta={{ label: 'ball' }}
-              animations={[{ ...pulse({ peak: 1.4, duration: 500 }), trigger: 'manual', iterations: 1 }]}
+              animations={[
+                {
+                  property: 'scale',
+                  keyframes: [
+                    { at: 0, value: 1 },
+                    { at: 0.5, value: 1.4 },
+                    { at: 1, value: 1 },
+                  ],
+                  duration: 500,
+                  easing: 'ease-in-out',
+                  trigger: 'manual',
+                  iterations: 1,
+                },
+              ]}
               onClick={(_event, context) => context.animation.restart()}
               style={{ fill: 'darkorange', stroke: 'none' }}
             />

@@ -1,0 +1,321 @@
+---
+title: Basic usage
+description: Use Scope for local coordinates, group references, defaults, and clipping
+---
+
+Use Scope to move a group, share defaults, or clip children. Place it inside Layout or another Scope; each Scope affects only its own subtree.
+
+## Using this topic
+
+Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants keep the left `x = 0` reference and move A and B inside Scope 80 units to the right.
+
+<ComponentPreview files="scope-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Import components from `@retikz/react` and declare Scope with its child subtree directly.
+
+```tsx
+import { Draw, Layout, Node, Scope } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="origin" position={[0, 0]}>
+      x = 0
+    </Node>
+    <Scope transforms={[{ kind: 'translate', x: 80, y: 0 }]}>
+      <Node id="A" position={[0, 0]}>
+        A
+      </Node>
+      <Node id="B" position={[100, 0]}>
+        B
+      </Node>
+      <Draw way={['A', 'B']} arrow="->" />
+    </Scope>
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+Import the IR type from `@retikz/core` and pass the Scope subtree to `<Layout ir>`, without JSX children.
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
+    {
+      type: 'scope',
+      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+Build Scope with `@retikz/vanilla`, then mount it into an existing `diagram` container using the `/dom` entry.
+
+```ts
+import { node, path, scene, scope } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('origin', { position: [0, 0], text: 'x = 0' }),
+    scope({ transforms: [{ kind: 'translate', x: 80, y: 0 }] }, [
+      node('A', { position: [0, 0], text: 'A' }),
+      node('B', { position: [100, 0], text: 'B' }),
+      path({ way: ['A', 'B'], arrow: '->' }),
+    ]),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+Call `view.dispose()` before removing the container to release mounted resources.
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+Pass existing IR directly to `mount`, without React or rebuilding the Scope subtree through Vanilla builders.
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'origin', position: [0, 0], text: 'x = 0' },
+    {
+      type: 'scope',
+      transforms: [{ kind: 'translate', x: 80, y: 0 }],
+      children: [
+        { type: 'node', id: 'A', position: [0, 0], text: 'A' },
+        { type: 'node', id: 'B', position: [100, 0], text: 'B' },
+        {
+          type: 'path',
+          arrow: '->',
+          children: [
+            { type: 'step', kind: 'move', to: { id: 'A' } },
+            { type: 'step', kind: 'line', to: { id: 'B' } },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+Call `view.dispose()` before removing the container to release mounted resources.
+
+</DocTab>
+</DocTabs>
+
+## When to use Scope
+
+| Category        | Property               | Effect                                                                  |
+| --------------- | ---------------------- | ----------------------------------------------------------------------- |
+| Group target    | `placement`            | Align the whole group by its own anchor; sees completed targets only    |
+|                 | `id` + `boundingShape` | Make the group referenceable externally; path routes stay out of bounds |
+| Subtree context | `transforms`           | Transform the whole subfigure; does not place raw children              |
+|                 | `localNamespace`       | Isolate reusable child ids; `scope.id` stays in the parent              |
+|                 | `theme`                | Switch a local domain theme; Core primitives are not recolored          |
+|                 | `style` / `defaults`   | Share defaults; explicit element values win                             |
+|                 | `clip`                 | Limit the subtree's visible area; no renderer-specific semantics        |
+|                 | `zIndex`               | Move the group among parent-level content; child order stays unchanged  |
+
+<ComponentAlert
+  type="warn"
+  title="Do not wrap Scope for code structure alone"
+  description="Without a local Theme, shared transforms, references, namespaces, defaults, or clipping, Scope only adds an unnecessary context boundary."
+/>
+
+## Transform inputs
+
+Five translation forms mirror Node's relative-position model; `rotate` and `scale` set the local axes and scale. Array order follows an SVG transform list, so the last item acts on a local point first.
+
+| kind                | Key fields                     | Effect                                             |
+| ------------------- | ------------------------------ | -------------------------------------------------- |
+| `translate`         | `x`, `y`                       | Fixed Cartesian translation                        |
+| `polar-translate`   | `origin?`, `angle`, `radius`   | Polar placement from an origin or reference target |
+| `at-translate`      | `direction`, `of`, `distance?` | Place in a reference target's direction            |
+| `offset-translate`  | `of`, `offset?`                | Add a local offset to a reference target           |
+| `between-translate` | `between`, `fraction`          | Interpolate between two endpoints                  |
+| `rotate`            | `degrees`, `pivot?`            | Rotate around a Scope self point                   |
+| `scale`             | `x`, `y?`, `pivot?`            | Scale around a Scope self point                    |
+
+## Local coordinates
+
+`O` / `T` are fixed referents outside the Scope, while `q` provides its intrinsic envelope. The panel selects one of seven transforms and independently toggles `placement` in every mode; `placement` is not a transform kind, but the outer placement applied after transforms.
+
+<ComponentPreview
+  files="scope-translate-basic"
+  size="sm"
+  controlPanelDefaultSize={50}
+  caption="Square q is the only envelope subject; the small dot only marks the local origin. Self placement is off by default. When enabled, choose O or T as the placement target; selfAnchor locks the square's selected anchor to it. Final placement then cancels the five translate-only transforms, so the panel hides their ineffective transform referent."
+/>
+
+`placement.target` accepts only a parent-frame `[x, y]` or a previously completed `{ id, anchor?, offset? }`. `selfAnchor` defaults to `center` and also accepts standard anchors, numeric angles, `{ side, fraction }`, `origin`, or an explicit local point.
+
+`rotate.pivot` and `scale.pivot` use the same self-point vocabulary and default to `origin`. A pivot reads the intrinsic envelope before placement, so moving a Scope cannot feed back into its rotation or scale center. Other relative directions remain local: rotating Scope also rotates the visual direction of `right` with the axes.
+
+## Group references and namespaces
+
+With an `id`, Scope derives a referenceable group target from the children bounds. Use the panel to switch `boundingShape` and the connection anchor: the boundary shape and attachment point change independently, while the children stay fixed.
+
+<ComponentPreview files="scope-id-reference" size="md" />
+
+Use `localNamespace` only when a reusable subfigure truly carries fixed ids. The panel starts with both Nodes named `A`: the blue outer arrow reaches the outer A with isolation enabled, then the same-named A inside the dotted boundary when it is disabled. Duplicate ids keep rendering and emit a warning; the later id replaces the earlier resolution target. Rename the inner id to `B` to remove the conflict.
+
+<ComponentPreview files="scope-local-namespace-basic" size="sm" />
+
+## Clipping and stacking
+
+`clip` uses Scope-local coordinates and becomes a renderer-agnostic Scene resource downstream. The panel shows Core's `rect` plus `circle` / `ellipse` / `polygon` / `path` / `compound` provided by Standard and injected into the drawing. Register a [Custom Clip](/kernel/components/scope/custom) when a domain needs another operation or geometry kind.
+
+<ComponentPreview files="scope-clip" size="sm" />
+
+`zIndex` moves the whole Scope among siblings without reordering children inside it. Adjust all four Nodes and both Scopes in the panel to compare within-group and whole-group stacking.
+
+<ComponentPreview files="scope-z-index" size="md" />
+
+## Additional notes
+
+**Local Theme.** `<Scope theme>` writes sparse `style` / `mode` selectors to `IRScope.theme` and affects descendant composites only. Fields inherit independently: `{ mode: ThemeMode.Dark }` changes the light/dark environment while retaining the outer `style`. During compilation, Core regenerates shared colors through the current style registry; an unregistered style fails immediately. See [Layout: Inherited Theme](/kernel/components/layout/extend#theme-configuration) for the complete example.
+
+Theme and style defaults are independent channels. `defaults.reset` does not reset Theme, and Theme does not fill Node or Path colors. Omitting `style` uses the owning package's default baseline; within a nested `Scope`, omitting `style` inherits the outer style and cannot reset to that baseline.
+
+**Style defaults.** Scope also exposes `style.color`, shared visual properties, and `defaults.node` / `defaults.path` / `defaults.label` / `defaults.arrow`. Values cascade per field, explicit element values win, and `defaults.reset` cuts only selected outer channels.
+
+Style is a supporting responsibility and does not alter local coordinates, references, or clipping. Consult the [API reference](/kernel/components/scope/api-reference) for color, stroke, and opacity fields rather than creating extra Scopes for visual variants.
+
+<ComponentAlert
+  type="tip"
+  title="Shared defaults also reduce configuration size"
+  description="Putting genuinely shared local styles on Scope avoids repeating the same fields on every child, often reducing both configuration objects and persisted JSON substantially. Tier 2 packages such as Plot also centralize series or layer styles as Scope defaults during lowering to keep generated IR compact."
+/>
+
+## Envelope frame
+
+Use `frame` to add a background or outline to an existing subgraph. The dotted pattern below belongs only to the frame; A and B keep their own white fills.
+
+<ComponentPreview files="scope-frame" />
+
+`frame: {}` enables a 1-unit outline with no fill. `frame.padding` defaults to 0 and adds spacing outside the content envelope. `boundingShape: 'rectangle'` expands all four sides; `circle` increases the radius. `frame.style` ignores descendant defaults and shares only the effective color context.
+
+The frame stays below every child and follows Scope transforms, placement, and clipping. Its stroke and shadow contribute to automatic framing without changing layout, anchors, or hit regions. An explicit `viewBox` is unchanged. Empty scopes produce no frame, and descendant frames do not enlarge ancestor envelopes. Use Standard Surface for layout padding or container sizing.
+
+Ordinary Paths do not contribute to the existing intrinsic Scope envelope, so a Scope containing only Paths produces no frame. Curves, labels, and markers are not guaranteed to fit inside it. Frames follow envelope contributors such as Nodes and Coordinates rather than measuring all visible pixels.
+
+## Related props
+
+The following are the props most relevant to this page. See the [API reference](/kernel/components/scope/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'transforms',
+      kind: 'property',
+      type: 'Array<InputTransform>',
+      description:
+        'Transform the whole subtree in SVG transform-list order; the last array item acts on local points first.',
+    },
+    {
+      name: 'placement',
+      kind: 'property',
+      type: "IRScope['placement']",
+      description:
+        'After local layout and transforms, align a chosen anchor on the Scope envelope to a parent-frame target.',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description:
+        "Register the Scope envelope in the parent namespace for external references; the current Scope's own id is unaffected by `localNamespace`.",
+    },
+    {
+      name: 'localNamespace',
+      kind: 'property',
+      type: 'boolean',
+      defaultValue: 'false',
+      description:
+        'When enabled, it isolates only children ids, including nested Scopes, so they are referenceable only inside this Scope.',
+    },
+    {
+      name: 'clip',
+      kind: 'property',
+      type: "IRScope['clip']",
+      description: 'Define a clip region in Scope-local coordinates to limit the visible area of all children.',
+    },
+    {
+      name: 'zIndex',
+      kind: 'property',
+      type: 'number',
+      defaultValue: '0',
+      description:
+        'Adjust the Scope as a whole among sibling stacking order without changing the relative order of its children.',
+    },
+    {
+      name: 'theme',
+      kind: 'property',
+      type: "IRScope['theme']",
+      description:
+        'Provide a local Theme override inherited by descendant composite elements; omitted fields continue using the outer Theme.',
+    },
+  ]}
+/>
+
+## Errors and limitations
+
+- `placement` can reference only completed targets, never self, descendants, or unfinished Scopes.
+- Zero scaling is valid visually, but inverse coordinate projection across it fails.
+- Duplicate ids in one namespace warn and use the later definition. Use `localNamespace` to isolate reusable child ids.
+- Base Scope has no layout-inspection props; use the Layout package’s `LayoutInspectScope` for subtree inspection.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Schema reference',
+      description: 'Look up persisted structures',
+      url: '/kernel/components/scope/schema-reference',
+    },
+    { title: 'Hydration', description: 'Bind events to a group', url: '/kernel/packages/render/hydration' },
+  ]}
+/>

@@ -1,4 +1,5 @@
-import type { FC } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router';
 
@@ -7,6 +8,8 @@ import { cn } from '@/lib';
 import type { DocNavigationAreaId, I18nKey } from '@/modules/docs/data';
 import { getDocPackageVersion, getNavigationSectionsByArea } from '@/modules/docs/data';
 import { buildDocPath } from '@/modules/docs/layout';
+
+import { resolveHeaderSectionIcon, resolveHeaderSectionLabel } from './utils';
 
 export type SectionNavProps = {
   /** 当前 URL 所属 area，允许 home-owned About。 */
@@ -30,6 +33,7 @@ type SectionNavLink = {
   label: I18nKey;
   path: string;
   active: boolean;
+  icon?: LucideIcon;
   version?: string;
 };
 
@@ -37,7 +41,8 @@ type SectionNavLink = {
 export const SectionNav: FC<SectionNavProps> = props => {
   const { areaId, sectionId, onNavigate, mobile = false, withinNavigationMenu = false } = props;
   const { pathname } = useLocation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayLabel = (label: I18nKey): string => resolveHeaderSectionLabel(String(t(label)), i18n?.resolvedLanguage);
   const currentPath = normalizePath(pathname);
   const navigationSections = getNavigationSectionsByArea(areaId);
   const links: Array<SectionNavLink> = navigationSections.flatMap(section => {
@@ -57,6 +62,7 @@ export const SectionNav: FC<SectionNavProps> = props => {
         label: section.label,
         path: buildDocPath(areaId, section.id, null),
         active: sectionId === section.id,
+        icon: resolveHeaderSectionIcon(areaId, section.id),
         version: getDocPackageVersion({ moduleId: areaId, sectionId: section.id }),
       },
     ];
@@ -67,6 +73,16 @@ export const SectionNav: FC<SectionNavProps> = props => {
       mobile && 'px-2 py-1.5',
       active && 'font-medium text-foreground',
     );
+  const linkContent = (link: SectionNavLink): ReactNode => {
+    const Icon = link.icon;
+    return (
+      <>
+        {Icon ? <Icon data-slot="header-section-icon" aria-hidden className="size-3.5 shrink-0" /> : null}
+        <span data-slot="header-section-label">{displayLabel(link.label)}</span>
+      </>
+    );
+  };
+  const linkClass = (link: SectionNavLink): string => cn(linkClassName(link.active), link.icon && 'gap-1.5');
 
   if (withinNavigationMenu) {
     return (
@@ -74,23 +90,23 @@ export const SectionNav: FC<SectionNavProps> = props => {
         {links.map(link => (
           <NavigationMenuItem key={link.id} className="flex items-center">
             {link.version ? (
-              <NavigationMenuLink active={link.active} asChild className={linkClassName(link.active)}>
+              <NavigationMenuLink active={link.active} asChild className={linkClass(link)}>
                 <Link
                   to={link.path}
                   onClick={onNavigate}
-                  aria-label={`${t(link.label)} ${link.version}`}
+                  aria-label={`${displayLabel(link.label)} ${link.version}`}
                   className="group/package-link relative"
                 >
-                  {t(link.label)}
+                  {linkContent(link)}
                   <span data-slot="package-version-tooltip" aria-hidden className={packageVersionTooltipClassName}>
                     {link.version}
                   </span>
                 </Link>
               </NavigationMenuLink>
             ) : (
-              <NavigationMenuLink active={link.active} asChild className={linkClassName(link.active)}>
+              <NavigationMenuLink active={link.active} asChild className={linkClass(link)}>
                 <Link to={link.path} onClick={onNavigate}>
-                  {t(link.label)}
+                  {linkContent(link)}
                 </Link>
               </NavigationMenuLink>
             )}
@@ -112,10 +128,10 @@ export const SectionNav: FC<SectionNavProps> = props => {
             to={link.path}
             data-active={link.active ? '' : undefined}
             onClick={onNavigate}
-            className={cn(linkClassName(link.active), 'group/package-link relative')}
-            aria-label={`${t(link.label)} ${link.version}`}
+            className={cn(linkClass(link), 'group/package-link relative')}
+            aria-label={`${displayLabel(link.label)} ${link.version}`}
           >
-            {t(link.label)}
+            {linkContent(link)}
             <span data-slot="package-version-tooltip" aria-hidden className={packageVersionTooltipClassName}>
               {link.version}
             </span>
@@ -126,9 +142,9 @@ export const SectionNav: FC<SectionNavProps> = props => {
             to={link.path}
             data-active={link.active ? '' : undefined}
             onClick={onNavigate}
-            className={linkClassName(link.active)}
+            className={linkClass(link)}
           >
-            {t(link.label)}
+            {linkContent(link)}
           </Link>
         ),
       )}

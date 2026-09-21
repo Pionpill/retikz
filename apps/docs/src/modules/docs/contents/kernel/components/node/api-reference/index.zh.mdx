@@ -1,0 +1,10 @@
+---
+title: API 参考
+description: 查询节点家族的 React、Vanilla、形状与连接面扩展公开 API
+---
+
+本页从公开包入口生成：React 的 Node、Text、Coordinate 与 Props，Vanilla 的 node、coordinate 与输入类型，以及 Core 的节点类型、形状与连接面定义和注册入口。共享事件上下文见[水合](/kernel/packages/render/hydration)，持久化字段见 [Schema 参考](/kernel/components/node/schema-reference)。首次调用见[基础用法](/kernel/components/node/usage)。
+
+Node 的 `shape`、`boundary`、`rotate`、`scale` 省略时先继承 `Scope.defaults.node`；表中默认值表示没有继承配置时的最终回退值。
+
+{/* @include kernel/components/node/api-reference/generated */}

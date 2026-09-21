@@ -25,6 +25,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
+import type { IRCell, IRList, IRMap } from '@retikz/standard';
 
 import {
   entityPreviewAuthoringInput,
@@ -289,12 +290,40 @@ const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
   return `scope(${formatObject(config, indent)}, ${childrenStr})`;
 };
 
-const STANDARD_HELPER_ORDER: ReadonlyArray<string> = ['grid', 'axes', 'frame', 'surface', 'surfaceChild', 'legend'];
+const STANDARD_SHAPE_KINDS: ReadonlyArray<string> = [
+  'circle',
+  'ellipse',
+  'rectangle',
+  'regularPolygon',
+  'star',
+  'arc',
+  'sector',
+];
+const STANDARD_HELPER_ORDER: ReadonlyArray<string> = [
+  'grid',
+  'axes',
+  'frame',
+  'surface',
+  'surfaceChild',
+  'list',
+  'map',
+  'legend',
+  'shape',
+];
 const STANDARD_ADAPTER_ORDER: ReadonlyArray<string> = [
+  'CircleInputEmbedAdapter',
+  'EllipseInputEmbedAdapter',
+  'RectangleInputEmbedAdapter',
+  'RegularPolygonInputEmbedAdapter',
+  'StarInputEmbedAdapter',
+  'ArcInputEmbedAdapter',
+  'SectorInputEmbedAdapter',
   'GridInputEmbedAdapter',
   'AxesInputEmbedAdapter',
   'FrameInputEmbedAdapter',
   'SurfaceInputEmbedAdapter',
+  'ListInputEmbedAdapter',
+  'MapInputEmbedAdapter',
   'LegendInputEmbedAdapter',
 ];
 const LAYOUT_HELPER_ORDER: ReadonlyArray<string> = ['flexLayout', 'gridLayout', 'overlayLayout'];
@@ -326,9 +355,18 @@ const GRAPH_ADAPTER_ORDER: ReadonlyArray<string> = [
 
 /** docs 预览能够显式注入的 Standard definition 名 */
 export type StandardPreviewDefinitionName =
+  | 'CircleDefinition'
+  | 'EllipseDefinition'
+  | 'RectangleDefinition'
+  | 'RegularPolygonDefinition'
+  | 'StarDefinition'
+  | 'ArcDefinition'
+  | 'SectorDefinition'
   | 'GridDefinition'
   | 'AxesDefinition'
   | 'FrameDefinition'
+  | 'ListDefinition'
+  | 'MapDefinition'
   | 'SurfaceDefinition'
   | 'LegendDefinition';
 
@@ -347,9 +385,18 @@ export type GraphPreviewDefinitionName =
   | 'RelationDefinition';
 
 const STANDARD_DEFINITION_BY_KIND: Readonly<Record<string, StandardPreviewDefinitionName>> = {
+  circle: 'CircleDefinition',
+  ellipse: 'EllipseDefinition',
+  rectangle: 'RectangleDefinition',
+  regularPolygon: 'RegularPolygonDefinition',
+  star: 'StarDefinition',
+  arc: 'ArcDefinition',
+  sector: 'SectorDefinition',
   grid: 'GridDefinition',
   axes: 'AxesDefinition',
   frame: 'FrameDefinition',
+  list: 'ListDefinition',
+  map: 'MapDefinition',
   surface: 'SurfaceDefinition',
   legend: 'LegendDefinition',
 };
@@ -387,6 +434,16 @@ const previewOwnedChildren = (child: IRChild & { namespace: string; type: string
     const row = BlockRowSchema.parse(child);
     return 'children' in row ? [...(row.children ?? [])] : [];
   }
+  if (child.namespace === 'standard' && child.type === 'list')
+    return ((child as IRList).items ?? []).flatMap(cell =>
+      typeof cell === 'string' || typeof cell.content === 'string' ? [] : [cell.content],
+    );
+  if (child.namespace === 'standard' && child.type === 'map')
+    return ((child as IRMap).entries ?? []).flatMap(entry =>
+      [entry.key, entry.value].flatMap(cell =>
+        typeof cell === 'string' || typeof cell.content === 'string' ? [] : [cell.content],
+      ),
+    );
   if (child.namespace === 'standard' && child.type === 'surface') return [record.child as IRChild];
   if (
     child.namespace === 'layout' &&
@@ -458,7 +515,13 @@ export const collectPreviewDefinitions = (
         if (definitionName === undefined) {
           throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${child.namespace}.${child.type}".`);
         }
-        if (!standardAdapterKinds.has(child.type)) standard.add(definitionName);
+        if (!standardAdapterKinds.has(child.type)) {
+          standard.add(definitionName);
+          if ((child.type === 'list' || child.type === 'map') && (child as IRList | IRMap).data !== undefined) {
+            standard.add('ListDefinition');
+            standard.add('MapDefinition');
+          }
+        }
       } else if (child.namespace === 'layout') {
         const definitionName = (
           LAYOUT_DEFINITION_BY_KIND as Readonly<Record<string, LayoutPreviewDefinitionName | undefined>>
@@ -511,9 +574,14 @@ const standardCanonicalId = (kind: string, embedId: string): string => {
 const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
   const visit = (child: IRChild): void => {
     if ('namespace' in child) {
-      if (child.namespace === 'standard' && typeof (child as { id?: unknown }).id === 'string') {
+      if (
+        child.namespace === 'standard' &&
+        child.type !== 'list' &&
+        child.type !== 'map' &&
+        typeof (child as { id?: unknown }).id === 'string'
+      ) {
         const kind = child.type;
-        if (STANDARD_HELPER_ORDER.includes(kind)) {
+        if (STANDARD_HELPER_ORDER.includes(kind) || STANDARD_SHAPE_KINDS.includes(kind)) {
           const authoredId = (child as unknown as { id: string }).id;
           const count = (ctx.standardCounts.get(kind) ?? 0) + 1;
           ctx.standardCounts.set(kind, count);
@@ -550,15 +618,39 @@ const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => 
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
   const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
-  if (!STANDARD_HELPER_ORDER.includes(record.type) || !STANDARD_ADAPTER_ORDER.includes(adapterName)) {
+  if (
+    !(STANDARD_HELPER_ORDER.includes(record.type) || STANDARD_SHAPE_KINDS.includes(record.type)) ||
+    !STANDARD_ADAPTER_ORDER.includes(adapterName)
+  ) {
     throw new Error(`Cannot generate Vanilla code for Tier 2 composite "${record.namespace}.${record.type}".`);
   }
 
   const count = (ctx.standardCounts.get(record.type) ?? 0) + 1;
   ctx.standardCounts.set(record.type, count);
-  ctx.standardHelpers.add(record.type);
+  ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
   const generatedId = `preview-${record.type}-${count}`;
+  if (record.type === 'list' || record.type === 'map') {
+    if (record.data !== undefined)
+      return `${record.type}(${formatString(generatedId)}, ${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
+    const cellCode = (cell: string | IRCell) => {
+      if (typeof cell === 'string') return formatString(cell);
+      const { content, ...props } = cell;
+      return formatObject({ ...props, content: '__CELL_CONTENT__' }, indent + 2).replace(
+        "'__CELL_CONTENT__'",
+        typeof content === 'string' ? formatString(content) : childCode(content, indent + 3, ctx),
+      );
+    };
+    const input = stripKeys(record, ['namespace', 'type', 'items', 'entries']);
+    const field = record.type === 'list' ? 'items' : 'entries';
+    const values =
+      record.type === 'list'
+        ? ((child as IRList).items ?? []).map(cellCode)
+        : ((child as IRMap).entries ?? []).map(
+            entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
+          );
+    return `${record.type}(${formatString(generatedId)}, ${formatObject({ ...input, [field]: '__CELLS__' }, indent).replace("'__CELLS__'", `[${values.join(', ')}]`)})`;
+  }
   if (record.type === 'surface') {
     const surface = record as typeof record & { child: IRChild };
     if ('namespace' in surface.child) {
@@ -568,6 +660,10 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
     const input = stripKeys(record, ['namespace', 'type', 'id', 'child']);
     const surfaceChildCode = childCode(surface.child, indent + 1, ctx);
     return `surface(${formatString(generatedId)}, ${formatObject({ ...input, child: '__SURFACE_CHILD__' }, indent).replace("'__SURFACE_CHILD__'", `surfaceChild(${surfaceChildCode})`)})`;
+  }
+  if (STANDARD_SHAPE_KINDS.includes(record.type)) {
+    const input = stripKeys(record, ['namespace', 'type', 'id']);
+    return `shape.${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
   }
   const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
   return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
@@ -869,7 +965,15 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     new Set(ctx.graphCounts.keys()),
   );
   if (standardHelpers.length > 0) {
-    imports.push(`import { ${[...standardHelpers, ...standardAdapters].join(', ')} } from '@retikz/standard-vanilla';`);
+    const shapeAdapters = new Set(
+      STANDARD_SHAPE_KINDS.map(kind => `${kind.charAt(0).toUpperCase()}${kind.slice(1)}InputEmbedAdapter`),
+    );
+    const members = [...standardHelpers, ...standardAdapters];
+    const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
+    const rootMembers = members.filter(name => !shapeMembers.includes(name));
+    if (rootMembers.length > 0) imports.push(`import { ${rootMembers.join(', ')} } from '@retikz/standard-vanilla';`);
+    if (shapeMembers.length > 0)
+      imports.push(`import { ${shapeMembers.join(', ')} } from '@retikz/standard-vanilla/shape';`);
   }
   if (layoutHelpers.length > 0) {
     imports.push(`import { ${[...layoutHelpers, ...layoutAdapters].join(', ')} } from '@retikz/layout-vanilla';`);

@@ -1,0 +1,90 @@
+# ComponentPreview Controls 规范
+
+先读 [预览契约](component-preview.md)；有辅助标注时读 [视觉语义](demo-visual-language.md)。本文件只负责 controls 的内容与交互。
+
+## 先定义试验场
+
+写代码前明确四件事：
+
+1. **任务**：用户通过操作要理解哪一个公开能力
+2. **主体**：哪一个对象是观察重点
+3. **不变量**：位置、参考物、连接关系、取景或 JSX 结构中哪些必须固定
+4. **变量**：哪些公开 API 由 controls 改变，变化是否肉眼可辨
+
+基础用法先按 [docs-doc-usage](../../docs-doc-usage/SKILL.md) 展示无 controls 的最小源码示例，再引入交互试验场；不要用 playground 替代首个入门 demo。
+
+后续同一任务、主体和结构下的连续参数、闭合集合与通用样式，优先合并为一个 playground。controls 很少也可以使用 panel；不要为了字段少而制造额外静态 demo。不同 JSX 结构、组合关系、职责边界、错误行为或编译机制仍保留独立案例。
+
+## 面板组织
+
+- demo 为展示效果覆盖 API 默认值时，在正文或 caption 明示；主体参数与辅助显示参数按职责分组
+- 默认使用 `presentation: 'panel'`；面板便于后续继续扩展字段
+- 按能力所有者、职责层级或视觉对象分 section，不按字段类型机械分组
+- 双节点、多层对象分别分组，如“节点 A / 节点 B”“主体 / 标签 / 阴影”
+- controls 包含只读 `table` 数据时，数据 section 默认作为首个 section，先展示输入再操作绑定、变换或样式
+- Plot demo 使用行数据绘图时，默认在 controls 首个 section 展示只读 `table`；没有可写字段时也使用仅含数据表的 panel。叙述图或无需数据即可理解的固定示意除外
+- Plot demo 的行数据放在同级 `*.data.ts`，由 demo 与 controls 共用，并在 `<ComponentPreview files>` 中列出
+- 数据只是不变量或观察背景时，数据 section 设置 `defaultCollapsed: true`；理解绑定、排序或分组必须依赖原始数据时保持展开
+- `table` 滚动视口默认完整展示 5 行正文，header 不计入；更多行继续滚动，渲染行数上限单独控制
+- 用 `visibleWhen` 隐藏当前分支无效的字段；不要让用户操作没有效果的 control
+- 中文页面的 controls 面板必须提供完整中文文案：title、section、字段 label、option label、preset label 与帮助文字都使用中文；API 名可按需作为补充，但不得充当唯一 label。双语 demo 的这些可见文案与图内文本统一放同级 `<name>.i18n.ts`，controls 只按当前 `Lang` 读取，不维护 `*.en.controls.ts` 等平行翻译文件
+- API、枚举和数据字段的 `value` 保持原值；只本地化用户可见 label，不翻译代码中的标识符
+- label 简短，让用户能直接判断控制目标，不重复括号说明
+- 范围覆盖有意义的最小值、最大值和代表性极值；默认值保持可读、可比较
+- 复杂组件允许较多 controls，但所有字段必须可滚动到达，源码栏不得遮挡面板
+
+## 稳定文档契约
+
+每个 controls 模块显式导出 `previewControlContract`，不要依赖 registry 从任意命名导出推断。双语 controls 则显式导出按 `Lang` 读取同级 i18n 字典的 contract 工厂，由预览器按当前文档语言调用；字段 id、默认值、范围、canonicalValues 与 relatedApis 仍保持语言无关：
+
+```ts
+import type { PreviewControlContract } from '@/modules/docs/components/component-preview/author';
+
+export const previewControlContract = {
+  controls: exampleControls,
+  canonicalValues: { distance: 80 },
+  relatedApis: ['Node.position'],
+} satisfies PreviewControlContract;
+```
+
+- `canonicalValues` 是截图、测试、Reset 与无交互环境的稳定基线；列出全部字段
+- `relatedApis` 只列 controls 直接解释的公开 API，不列宿主 actions 或间接实现
+- `presets` 只收录有用户语义的完整状态，不把任意排列包装成 preset
+- zh / en 的 id、kind、默认值、范围、option value、条件和 canonical 状态保持一致；本地化 title、section、字段与 option label、preset label 及帮助文字
+- demo 同时显式导出注册回退；使用 `defineControlledPreview` 复用一份 JSX，交互视图读取实时值，IR / Vanilla 源码视图读取 canonical 状态：
+
+```tsx
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+export const previewControls = exampleControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
+  <Layout>{/* 使用 values */}</Layout>
+));
+
+export const previewSource = controlledPreview.source;
+export default controlledPreview.Component;
+```
+
+- 只有无法共享渲染函数的 hook / Effect demo 才手写 `deriveIR: false`，并按需导出 `previewIR` 或 Vanilla override
+
+## 取景与尺寸
+
+会改变位置、尺寸、旋转、阴影、滤镜或描边的 demo 使用固定 viewBox；保持主体中心与参照物稳定，让变化只发生在目标属性上。自然输出保持 1 user unit 对应 1 CSS px。
+
+尺寸和面板宽度只按 [实测规则](preview-sizing.md) 决定，不再先试固定 sm、不按 controls 数量猜 size。默认、极值与组合值都要验证效果边界。
+
+## 说明文字
+
+需要解释“操作什么、观察什么或哪些线只是辅助”时，使用 `ComponentPreview` 的 `caption` 属性，让说明紧跟在预览正下方。不要在 MDX 中另写灰色 `span` 模拟说明。
+
+caption 只补充读图线索，不重复上一段正文，也不塞 API 参考或长教程。
+
+## 验证
+
+1. 比较 zh / en controls 契约，确认除文案外结构一致
+2. 操作每个职责层级至少一个字段，并验证条件字段显示与隐藏
+3. 验证默认、最小、最大、组合极值与语义 presets，再 Reset 回 canonical 状态
+4. 比较固定 viewBox、主体 bounds 与完整效果 bounds，确认不漂移、不裁切
+5. 打开真实页面检查面板滚动、源码栏、caption、显式 size、右侧输出宽度与 800px 宽度下的留白；拖拽面板分隔线时主体不得缩放
+6. 运行 docs `tsc --noEmit`、相关 Vitest、Oxfmt 与 `git diff --check`

@@ -5,7 +5,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ## 引言
 
-本页以 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的封面为题材，5 步演示 [Draw](/kernel/components/draw/overview) 的核心能力：直线 line、二次贝塞尔 curve、虚线 dashPattern、箭头 arrow、边标注 label。
+本页以 [AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap) 的封面为题材，5 步演示 [Draw](/kernel/components/path/usage) 的核心能力：直线 line、二次贝塞尔 curve、虚线 dashPattern、箭头 arrow、边标注 label。
 
 <ComponentPreview files="learning-path-05-dashed" size="xxl" />
 
@@ -54,9 +54,11 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ## 过程
 
+节点尺寸、坐标与间距按原图的 85% 排布，保留文字字号，使桌面预览可以完整展示。
+
 ### 步骤 1：title — RoadmapNode 4 variant
 
-先抽出 `RoadmapNode` 组件——4 个 variant 共用 [Node](/kernel/components/node/overview) 的 shape / 圆角 / 字体，按 variant 选不同的色和字号：
+先抽出 `RoadmapNode` 组件——4 个 variant 共用 [Node](/kernel/components/node/usage) 的 shape / 圆角 / 字体，按 variant 选不同的色和字号：
 
 | variant    | 用途       | 视觉                                          |
 | ---------- | ---------- | --------------------------------------------- |
@@ -71,7 +73,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ### 步骤 2：中段 spine — 2 条 Draw line
 
-下方加 `Fundamentals` 灰底 mini 按钮 + `Choose your path` 小标题，配 2 条竖直 [Draw](/kernel/components/draw/overview) line 连起来：
+下方加 `Fundamentals` 灰底 mini 按钮 + `Choose your path` 小标题，配 2 条竖直 [Draw](/kernel/components/path/usage) line 连起来：
 
 ```tsx
 <Draw way={['title', 'fundamentals']} arrow="->" style={{ stroke: "#1f6286", strokeWidth: 2 }} />
@@ -89,11 +91,11 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 加左右两个独立的色块条——左侧 4 个蓝色「必修」按钮、右侧 2 个图例按钮（1 蓝 1 灰）。每列**段头**先用绝对坐标落点，剩余节点再用 [AtPosition](/kernel/components/basic/position) `{ direction: 'bottom', of: 'prev-id' }` 紧贴堆叠：先定骨架，再让同列内容自动往下长，这样最容易读，也最容易改。
 
-- `<Layout ... nodeDistance={41}>` 在容器一次性设全局节点间距
+- `<Layout ... nodeDistance={34.85}>` 在容器一次性设全局节点间距
 - 段内每个 AtPosition 节点都引用上一个节点 id；视觉上紧贴成"色块条"
 
 ```tsx
-<RoadmapNode id="papers" position={[105, 68]} ...>Papers With Code</RoadmapNode>
+<RoadmapNode id="papers" position={[89.25, 57.8]} ...>Papers With Code</RoadmapNode>
 <RoadmapNode id="git" position={{ direction: 'bottom', of: 'papers' }} ...>GIT - Version Control</RoadmapNode>
 <RoadmapNode id="semver" position={{ direction: 'bottom', of: 'git' }} ...>Semantic Versioning</RoadmapNode>
 ```
@@ -104,7 +106,7 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 ### 步骤 4：5 路径按钮 + curve 合并曲线
 
-加中央 5 个路径按钮（2 子列 3 + 2 紧贴堆叠），再用 [Draw](/kernel/components/draw/overview) 的 `{ curve }` infix 算子把 `Choose` header 连到 2 子列的段顶。这里开始才进入“结构化连接”的部分：先摆节点，再画分叉曲线。
+加中央 5 个路径按钮（2 子列 3 + 2 紧贴堆叠），再用 [Draw](/kernel/components/path/usage) 的 `{ curve }` infix 算子把 `Choose` header 连到 2 子列的段顶。这里开始才进入“结构化连接”的部分：先摆节点，再画分叉曲线。
 
 合并曲线用 2 段拼接的 quadratic Bezier——对应 Draw way 里 **2 个连续的 `{ curve: [cx, cy] }` infix 算子**，每个修饰下一段：
 
@@ -112,9 +114,9 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 <Draw
   way={[
     'choose', // move 起点
-    { curve: [404, 200] },
-    [360, 195], // 第 1 段 quadratic：control + target
-    { curve: [316, 190] },
+    { curve: [343.4, 170] },
+    [306, 165.75], // 第 1 段 quadratic：control + target
+    { curve: [268.6, 161.5] },
     'data-scientist', // 第 2 段：control + target id
   ]}
   arrow="->"
@@ -136,26 +138,26 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 最后一层装饰——一次性演示 `dashPattern` / `arrow` 在起点 / 边标注。它的作用是补气质，不是改变结构，所以放在最后最顺。
 
-| 装饰                              | Draw 配置                                                      | way 算子                                                                    |
-| --------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 青色虚线推荐路径                  | `stroke="#287fad"` + `dashPattern={[6,6]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
-| 短虚线「more bottom」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[4,4]}` | way `[起点, 终点]` 两坐标即可                                               |
-| 红 X 装饰（2 条交叉线）           | `stroke="#ff0000"` + `strokeWidth={4}`                         | 同上                                                                        |
+| 装饰                              | Draw 配置                                                           | way 算子                                                                    |
+| --------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 青色虚线推荐路径                  | `stroke="#287fad"` + `dashPattern={[5.1, 5.1]}` + `arrow="<-"`      | 3 段连续 `{ curve }` infix，前置 `{ label: 'recommended' }` 给第 1 段挂标注 |
+| 短虚线「more bottom」提示（2 条） | `stroke="#1f6286"` + `strokeWidth={4}` + `dashPattern={[3.4, 3.4]}` | way `[起点, 终点]` 两坐标即可                                               |
+| 红 X 装饰（2 条交叉线）           | `stroke="#ff0000"` + `strokeWidth={4}`                              | 同上                                                                        |
 
 ```tsx
 <Draw
   way={[
-    [251.88, 359.77],
+    [214.098, 305.804],
     { label: 'recommended' },
-    { curve: [200, 320] },
-    [225, 241],
-    { curve: [250, 162] },
-    [327, 186],
-    { curve: [404, 210] },
+    { curve: [170, 272] },
+    [191.25, 204.85],
+    { curve: [212.5, 137.7] },
+    [277.95, 158.1],
+    { curve: [343.4, 178.5] },
     'choose',
   ]}
   arrow="<-"
-  style={{ stroke: '#287fad', strokeWidth: 2, dashPattern: [6, 6] }}
+  style={{ stroke: '#287fad', strokeWidth: 2, dashPattern: [5.1, 5.1] }}
 />
 ```
 
@@ -167,9 +169,9 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 
 | 组件                                            | 在本例中扮演的角色                                                                                                                                   | 主要 step                                                                                                                    |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [Draw](/kernel/components/draw/overview)        | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
-| [Way 算子](/kernel/components/draw/way)         | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
-| [Node](/kernel/components/node/overview)        | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
+| [Draw](/kernel/components/path/usage)           | 全部 12 条连线（2 spine line / 3 子列短 line / 2 quadratic 合并 / 1 推荐虚线 / 2 short dashed / 2 红 X）+ stroke / strokeWidth / dashPattern / arrow | [2](#步骤-2中段-spine--2-条-draw-line), [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x) |
+| [Way 算子](/kernel/components/path/draw)        | `{ curve }` infix 走 quadratic / `{ label }` infix 挂边标注 / 节点 id 自动锚 border                                                                  | [4](#步骤-45-路径按钮--curve-合并曲线), [5](#步骤-5装饰--虚线推荐路径--短虚线--红-x)                                         |
+| [Node](/kernel/components/node/usage)           | 全部 16 个 roadmap 节点（title / header / required / optional）—— 4 variant 抽成 `RoadmapNode`                                                       | [1](#步骤-1title--roadmapnode-4-variant), [3](#步骤-3两侧色块条--atposition-紧贴堆叠)                                        |
 | [AtPosition](/kernel/components/basic/position) | 三个色块段内的紧贴堆叠（`{ direction: 'bottom', of: prevId }` + 全局 `nodeDistance`）                                                                | [3](#步骤-3两侧色块条--atposition-紧贴堆叠), [4](#步骤-45-路径按钮--curve-合并曲线)                                          |
 
 ## 限制
@@ -177,12 +179,12 @@ description: 路线图类绘图示例——以 AMAI-GmbH/AI-Expert-Roadmap 封�
 | 能力                   | 计划        | 现状 / 兜底                                                                                                                                                               |
 | ---------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 数学 y-up 坐标系       | 🚧 未来支持 | 缩放本身可用 Scope 的 `scale` 变换；但 [`<Layout>`](/kernel/components/layout) 还没有「y 轴朝上」开关（`scale` 的 y 取负会连文字翻转），本例直接用 intro.svg 原始像素坐标 |
-| 节点超链接             | 🚧 未来支持 | [`<Node>`](/kernel/components/node/overview) 暂不支持 `href`，intro.svg 的 `<a xlink:href>` 丢失（按钮可见不可点）；需要时外层包 `<a>` 或另放 link 列表                   |
-| 节点阴影 / drop shadow | 🚧 未来支持 | [`<Node>`](/kernel/components/node/overview) 暂无 shadow，本例省略 intro.svg 按钮的双 rect 阴影                                                                           |
+| 节点超链接             | 🚧 未来支持 | [`<Node>`](/kernel/components/node/usage) 暂不支持 `href`，intro.svg 的 `<a xlink:href>` 丢失（按钮可见不可点）；需要时外层包 `<a>` 或另放 link 列表                      |
+| 节点阴影 / drop shadow | 🚧 未来支持 | [`<Node>`](/kernel/components/node/usage) 暂无 shadow，本例省略 intro.svg 按钮的双 rect 阴影                                                                              |
 | 曲线箭头沿 chord 缩短  | 🚧 未来支持 | 当前 arrow shrink 沿弦方向缩短，curve / cubic 箭头偏出边框几像素（直线 / 折角不受影响）；后续改成沿 tangent 缩短                                                          |
 
 ## 扩展阅读
 
-- [Draw](/kernel/components/draw/overview) · [Way 算子](/kernel/components/draw/way) · [Node](/kernel/components/node/overview) · [定位](/kernel/components/basic/position)
+- [Draw](/kernel/components/path/usage) · [Way 算子](/kernel/components/path/draw) · [Node](/kernel/components/node/usage) · [定位](/kernel/components/basic/position)
 - [Karl 单位圆](/kernel/galleries/karl-circle) —— 另一个综合示例，几何 / 三角函数题材
 - 原始出处：[AMAI-GmbH/AI-Expert-Roadmap](https://github.com/AMAI-GmbH/AI-Expert-Roadmap)（MIT License）

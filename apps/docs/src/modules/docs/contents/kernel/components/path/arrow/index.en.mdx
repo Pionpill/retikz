@@ -1,0 +1,220 @@
+---
+title: Arrows
+description: Set endpoint arrow direction, shape, size, color, and overlap
+---
+
+Add endpoint arrows and control their direction, appearance, and overlap. Start with [Basic usage](/kernel/components/path/usage).
+
+## Using this topic
+
+The four forms below draw the same path with arrows at both ends; Vanilla needs an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="arrow-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Draw
+      way={[
+        [0, 0],
+        [120, 0],
+      ]}
+      arrow="<->"
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      marks: [
+        { pos: 0, mark: { kind: 'arrow' } },
+        { pos: 1, mark: { kind: 'arrow' } },
+      ],
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+      marks: [
+        { pos: 0, mark: { kind: 'arrow' } },
+        { pos: 1, mark: { kind: 'arrow' } },
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      marks: [
+        { pos: 0, mark: { kind: 'arrow' } },
+        { pos: 1, mark: { kind: 'arrow' } },
+      ],
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+Arrows are driven by three independent props:
+
+- **`arrow`** — direction enum: `'->'` end / `'<-'` start / `'<->'` both / `'none'` (default) = none
+- **`arrowDetail`** — visual detail object, 8 top-level fields + optional `start` / `end` sub-objects. **Omit it for the default "stealth sharp barb inheriting the path stroke / opacity" behavior**
+- **`arrowPlacement`** — endpoint-placement object whose normalized `overlap` moves an arrow across its logical endpoint, with optional `start` / `end` overrides
+
+All three props sit on `<Draw>` and `<Path>` with identical syntax and effect — the examples below use `<Draw>`; the `<Path>` equivalent is the same.
+
+By default, the arrow tip stays at the resolved path start / end, and arrows are not repeated at intermediate nodes. Use `arrowPlacement` when a hollow circle or another arrow should cross a Node boundary. It does not change the NodeTarget, anchor, boundary, or the logical path-sampling positions.
+
+## Direction, shape, and appearance
+
+One panel combines the `arrow` direction, six Core basic arrows, two optional Standard arrows, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. The panel explicitly injects the Standard Definitions it uses. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 8.
+
+<ComponentPreview files="arrow-appearance" size="lg" />
+
+Core provides six basic arrows by default, including hollow triangle, hollow stealth, and the circle pair. The remaining solid / hollow diamond pair comes from [`@retikz/standard/arrow`](/library/standard/arrow); using a Standard name requires injecting its Definition through the current `<Layout extensions={{ arrows }}>` or `CompileOptions.arrows`:
+
+| Solid                               | Hollow                                  | Typical use                         |
+| ----------------------------------- | --------------------------------------- | ----------------------------------- |
+| `'normal'` Core filled triangle     | `'open'` Core hollow triangle           | Basic triangle / UML generalization |
+| `'stealth'` Core sharp barb         | `'openStealth'` Core hollow sharp barb  | Default arrow, modern flow charts   |
+| `'diamond'` Standard filled diamond | `'openDiamond'` Standard hollow diamond | UML composition / aggregation       |
+| `'circle'` Core filled dot          | `'openCircle'` Core hollow dot          | Connection dot / open endpoint      |
+
+Additional notes:
+
+- Multi-node paths (e.g. a → b → c) clip per-segment, but the arrow only attaches to the overall **start** / **end** — never to intermediate nodes
+- **Merge semantics**: sub-object fields win first; fields not in the sub-object fall back to the top-level defaults; fields not at the top level fall back to the built-in defaults. Example: `arrowDetail={{ shape: 'stealth', start: { color: 'red' } }}` → both ends use stealth, start in red, end inherits the path stroke
+- **Hollow shapes silently ignore `fill`**: when `shape ∈ { open / openStealth / openDiamond / openCircle }`, the `fill` field is silently dropped. Hollow shapes are driven entirely by `color` (stroke) + `lineWidth` (stroke width); writing `fill='red'` will not render a red fill
+
+`scale` multiplies after `length` / `width`; for example, `length=10, scale=1.5` produces an effective length of 15.
+
+## Endpoint overlap
+
+`arrowPlacement.overlap` is normalized between two final placements: `0` preserves the existing default, `0.5` is the midpoint between the default and fully entered positions, and `1` aligns the final visual back with the logical endpoint. The back, path contact, and tip are separate geometry facts, so even a barbed `stealth` arrow is fully inside at `1`.
+
+The calculation uses the resolved `length × scale`; hollow arrows also account for `lineWidth` and outer-outline compensation. After enlarging, shrinking, or overriding the length, `1` still means that the whole arrow's final visual back is aligned rather than a fixed user-unit offset.
+
+<ComponentPreview
+  files="arrow-endpoint-overlap"
+  size="sm"
+  caption="Switch among Core built-in arrows and drag the ratio; watch the enlarged stealth barb fully enter the patterned rectangle boundary at 1."
+/>
+
+The shared top-level `overlap` applies only to endpoints actually created by `arrow`. `start.overlap` / `end.overlap` override it per endpoint, and an explicit `0` is preserved. For example, `arrow="<->" arrowPlacement={{ overlap: 0.5, start: { overlap: 0 } }}` moves only the end halfway inside.
+
+<ComponentAlert
+  type="warn"
+  title="Overlap does not change paint order"
+  description="Whether an arrow remains visible after entering a node still follows the existing zIndex and declaration order. arrowPlacement does not add clipping, raise the arrow, or change node fill."
+/>
+
+`arrowPlacement` is the authoring form; normalization stores it as `endpointOverlap` on endpoint marks. Use the latter when writing IR directly. It must correspond to a real endpoint arrow. No arrow, an endpoint object for an end that was not created, a direct-IR inline mark, a duplicate endpoint mark that was not selected, and `endpointOverlap` on a non-built-in Stroke Path all fail explicitly instead of becoming silent no-ops.
+
+## Related props
+
+These are the arrow props configured on this page. See the [API reference](/kernel/components/path/api-reference) for all fields and registered shapes.
+
+<ComponentProps
+  items={[
+    {
+      name: 'arrow',
+      kind: 'property',
+      type: "InputPath['arrow'] = 'none' | '->' | '<-' | '<->'",
+      defaultValue: "'none'",
+      description:
+        "Choose which endpoint arrows are created: `'->'` at the end only, `'<-'` at the start only, `'<->'` at both ends, and `'none'` or omission for none. It determines endpoints only; intermediate nodes in a multi-node path do not gain arrows.",
+    },
+    {
+      name: 'arrowDetail',
+      kind: 'property',
+      type: 'IRArrowDetail',
+      description:
+        'Shared defaults and per-end overrides:\n\n- `IRArrowEndDetail`: `{ shape?: string; scale?: number; length?: number; width?: number; color?: string; fill?: string; opacity?: number; lineWidth?: number }`\n- `start?: IRArrowEndDetail` / `end?: IRArrowEndDetail`: override specified fields and inherit the rest\n\n`shape` accepts `normal`, `open`, `stealth`, `openStealth`, `circle`, `openCircle`, or a registered name; Standard also provides `diamond` and `openDiamond`. Hollow shapes ignore fill; filled shapes ignore lineWidth. Defaults to stealth with length / width of 8; scale multiplies both, while color and opacity inherit from the path.',
+    },
+    {
+      name: 'arrowPlacement',
+      kind: 'property',
+      type: 'InputPathArrowPlacement { overlap?: number; start?: { overlap?: number }; end?: { overlap?: number } }',
+      description:
+        '`overlap` must be within `[0, 1]`: `0` preserves default placement and `1` aligns the arrow final visual back with the logical endpoint. The top-level value is shared by created endpoints; `start.overlap` / `end.overlap` override it per end, and explicit `0` is preserved. Configure an end only when `arrow` creates that endpoint arrow.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Connect two nodes, choose Draw or Path, and set basic path appearance',
+      url: '/kernel/components/path/usage',
+    },
+    {
+      title: 'Implementation',
+      description: 'Follow path syntax through steps, references, geometry, arrows, and labels to the final result',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public TypeScript contracts for drawing components, authoring input, and extensions',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

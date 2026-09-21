@@ -34,7 +34,7 @@ compile/     context 生命周期、IR 到 Scene 的调度、layout、lowering �
 parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 ```
 
-改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-*` skill 分流。
+改这些层的依赖方向、文件职责或 define-registry 能力前，按根 AGENTS 的 `standard-structure` 加载对应层级 references。
 
 ## 几何与坐标
 
@@ -81,6 +81,6 @@ parse/       字符串 / DSL / Sugar parser，输出 IR 节点或 IR 片段
 
 ## 测试
 
-- schema / IR 改动：补 schema 行为测试，并按 `standard-schema` 同步描述、类型和 docs。
+- schema / IR 改动：补 schema 行为测试，并按 [schema](../../../.agents/skills/standard-structure/references/schema.md) 同步描述、类型和 docs。
 - compile / lowering 改动：补 compile 输出和边界输入测试。
 - 几何 / shape / path 改动：补几何或 snapshot 回归，避免只靠视觉 demo。

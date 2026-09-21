@@ -1278,3 +1278,43 @@ describe('Core Runtime Program incremental style update', () => {
     expect(session.artifact(program).value.output.result).toEqual(compileToScene(next, options));
   });
 });
+
+it('Scope 外框更新、资源撤销和匿名组删除与全量编译等价', () => {
+  const program = createCoreProgram({});
+  const owners = createRuntimeOwnerRegistry({ builtins: [CoreOwnerDefinition] });
+  const programs = createRuntimeProgramRegistry({ owners, builtins: [program] });
+  const initial: IRScene = { version: 1, type: 'scene', children: [] };
+  const session = createRuntimeSession({
+    owners,
+    programs,
+    initialSnapshots: [createRuntimeOwnerInput(CoreOwnerDefinition, initial)],
+  });
+  const states: Array<IRScene> = [
+    {
+      ...initial,
+      children: [
+        {
+          type: 'scope',
+          frame: { padding: 8, style: { fill: { kind: 'pattern', shape: 'dots' } } },
+          children: [{ type: 'node', position: [0, 0], text: 'A' }],
+        },
+      ],
+    },
+    {
+      ...initial,
+      children: [
+        {
+          type: 'scope',
+          frame: { padding: 20, style: { fill: 'red' } },
+          children: [{ type: 'node', position: [80, 0], text: 'B' }],
+        },
+      ],
+    },
+    { ...initial, children: [{ type: 'scope', children: [{ type: 'node', position: [80, 0], text: 'B' }] }] },
+    initial,
+  ];
+  for (const ir of states) {
+    session.update({ baseRevision: session.revision(), owners: [createRuntimeOwnerUpdate(CoreOwnerDefinition, ir)] });
+    expect(session.artifact(program).value.output.result.scene).toEqual(compileToScene(ir).scene);
+  }
+});

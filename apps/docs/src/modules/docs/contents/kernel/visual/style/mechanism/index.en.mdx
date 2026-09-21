@@ -1,0 +1,67 @@
+---
+title: Implementation
+description: How patterns, shadows, and blending move from style configuration into Scene and then SVG or Canvas drawing.
+---
+
+Core resolves all three styles into renderer-agnostic Scene information. Renderers materialize resources, projections, or compositing state without changing the base geometry or connection boundaries of Nodes and Paths.
+
+## pattern · Patterns
+
+A pattern specification names a motif and supplies spacing and line style. Core finds its PatternDefinition in the active registry, resolves size from the explicit value, the definition default, or 8, and lets `emit` create a serializable tile. Matching specifications reuse one Scene paint resource within a compilation.
+
+<ComponentPreview files="pattern-flow" size="xs" hideCode type="flow" />
+
+`lineStyleCycle` can make a tile period larger than its base spacing. SVG materializes the result as a user-space `<pattern>`; Canvas paints the tile offscreen and repeats it. Neither backend reruns a custom definition.
+
+<ComponentPreview files="pattern-period" size="sm" hideCode type="illustration" />
+
+<SourceLinks
+  sources={[
+    { label: 'Pattern definition registry', path: 'packages/kernel/core/src/providers/pattern/registry.ts' },
+    { label: 'Pattern specification resolution', path: 'packages/kernel/core/src/resolve/resource/pattern.ts' },
+  ]}
+/>
+
+## shadow · Shadows
+
+Preset strings expand to projection fields, while object fields override a preset. The resolved shadow travels with primary geometry into Scene for drawing and separately expands automatic viewBox bounds. That estimate never changes the original geometry, Path points, or connection boundaries.
+
+<ComponentPreview files="shadow-flow" size="md" hideCode type="flow" />
+
+SVG reuses a `feDropShadow` filter for equal fields and expands its calculation region. Canvas sets shadow state for one primary geometry and restores it afterwards. The projection intent is shared, but rasterization is not guaranteed pixel-identical.
+
+<ComponentPreview files="shadow-bounds" size="md" hideCode type="illustration" />
+
+<SourceLinks
+  sources={[
+    { label: 'Shadow preset and object resolution', path: 'packages/kernel/core/src/resolve/style/drawable.ts' },
+    { label: 'SVG shadow filters', path: 'packages/kernel/render/src/svg/builders/shadow-defs.ts' },
+  ]}
+/>
+
+## blend · Blending
+
+blendMode does not name another node. The foreground is the current primary geometry and the backdrop is what has already accumulated at that position, so colour, opacity, declaration order, and zIndex affect the result. Scope defaults pass modes to descendants; they do not create an isolated offscreen group.
+
+<ComponentPreview files="blend-order" size="md" hideCode type="illustration" />
+
+SVG writes `mix-blend-mode`; Canvas sets `globalCompositeOperation` inside a primitive save / restore boundary. Text and labels are separate outputs and do not automatically join the primary geometry boundary.
+
+<ComponentPreview files="blend-boundary" size="md" hideCode type="flow" />
+
+<SourceLinks
+  sources={[
+    { label: 'Primary-geometry blend output', path: 'packages/kernel/core/src/compile/node/emit.ts' },
+    { label: 'Canvas primitive compositing state', path: 'packages/kernel/render/src/canvas/draw-scene.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'pattern · Patterns', url: '/kernel/visual/style/pattern' },
+    { title: 'shadow · Shadows', url: '/kernel/visual/style/shadow' },
+    { title: 'blend · Blending', url: '/kernel/visual/style/blend' },
+  ]}
+/>

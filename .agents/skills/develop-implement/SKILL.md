@@ -3,7 +3,7 @@ name: develop-implement
 description: Use when implementing a retikz alpha ADR or beta TODO after design or roadmap scope is fixed, including schema, public API, compile, adapter, test, and docs-visible behavior changes.
 ---
 
-# Stage 2: 实现
+# 实现
 
 把 reviewed implementation plan 或 Beta TODO 落到代码和测试。Alpha ADR 负责长期功能契约，镜像 plan 负责文件、逻辑、测试和执行细节；红色改动走 Spec-First，黄色按规模决定，绿色直接实现。
 
@@ -11,18 +11,18 @@ description: Use when implementing a retikz alpha ADR or beta TODO after design 
 
 - 根 `AGENTS.md` 与就近 `AGENTS.md`。
 - Alpha 必须阅读全文 ADR、镜像 `PLAN.md`、`TEST_CONTRACT.md` 与适用 `TASK_STATE.md` / `REVIEW.md`。
-- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应 `standard-*` skill。
-- beta TODO 由 `flow-beta` 调用本 skill 时，以 `flow-beta` 的简化规则覆盖本阶段的 Spec-First 要求。
+- 涉及 schema / contract / providers / pipeline / compile 时，按 `standard-structure` 分流读取对应层级 references。
+- beta TODO 由 [beta](../flow-development/references/beta.md) 调用本 skill 时，以 [beta](../flow-development/references/beta.md) 的简化规则覆盖本阶段的 Spec-First 要求。
 
 ## 输入
 
 - alpha：状态为 `Accepted` 的长期 ADR；人工执行批准时已完成接受，Architecture Gate 与 Plan Gate 已 PASS，镜像 `PLAN.md` / `TEST_CONTRACT.md` 完整且可未提交。
-- beta：已登记的 roadmap TODO，scope 与预估 level 已明确。
+- beta：已登记在 ignored 实施 plan 的获批 TODO，scope 与预估 level 已明确。
 - 当前受影响文件、已有测试、相关 docs 页面。
 
 ## 判级
 
-Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 `flow-alpha` red / yellow / green 表；跨级取最高级。
+Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 [alpha](../flow-development/references/alpha.md) red / yellow / green 表；跨级取最高级。
 
 - **red**：IR schema、public API、compile 核心、包公共入口等，强制 Spec-First。
 - **yellow**：adapter / parser / renderer 接线等，按风险和 step 数决定是否 Spec-First。
@@ -52,7 +52,7 @@ Alpha 按 reviewed `PLAN.md` 的文件 scope 使用 `flow-alpha` red / yellow / 
 - 不用 `as any`、`@ts-ignore`、跳测、粗暴 lint disable 绕过问题。
 - 每个 plan task 或 Beta TODO 子任务保持可 review 的提交粒度。
 - 不因 ADR / plan 未提交而扩大 scope。文件、私有逻辑、测试点或命令变化先更新 plan；公开契约、能力归属或功能边界变化必须 halt，回到 ADR 与 Architecture Gate。
-- subagent 担任 Implementer 时只完成代码与测试文件修改，报告改动文件、已知风险和待验证点，不运行 ESLint、`tsc`、测试或构建；主 agent 整合后按根 AGENTS 统一验证。
+- 已授权 subagent 的文件所有权、交接与集中验证按 codex-develop-flow；未授权时由主 agent 执行。
 - 主 agent 直接实现时，按根 AGENTS 运行受影响包 `oxlint --fix`、`tsc --noEmit` 和必要 vitest。
 - 连续 3 轮修不动同一 step，halt 并报告失败 case、错误日志和判断。
 

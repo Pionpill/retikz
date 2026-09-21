@@ -1,11 +1,36 @@
 import path from 'node:path';
 
+import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
+import { writeLayoutApiReferenceMdx } from './api-reference/layout';
 import { writeMathApiReferenceMdx } from './api-reference/math';
+import { writeNodeApiReferenceMdx } from './api-reference/node';
+import { writeScopeApiReferenceMdx } from './api-reference/scope';
+import { writeStandardAnimationApiReference } from './api-reference/standard-animation';
+import { writeStandardShapeApiReferences } from './api-reference/standard-shapes';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
+import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeStandardAnimationApiReference(
+  path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/animation/api-reference/_includes'),
+);
+await writeStyleApiReference(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/style/api-reference/_includes'),
+);
+await writeAnimationApiReference(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/animation/api-reference/_includes'),
+);
+await writeStandardShapeApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/standard'));
+
+await writeDrawApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/path/api-reference/_includes'),
+);
+
+await writeNodeApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/node/api-reference/_includes'),
+);
 
 await writeInspectApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/inspect/api-reference/_includes'),
@@ -19,4 +44,12 @@ await writeFoundationApiReferenceMdx(
 );
 await writeMathApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/packages/math/api-reference/_includes'),
+);
+
+await writeLayoutApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/layout/api-reference/_includes'),
+);
+
+await writeScopeApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/scope/api-reference/_includes'),
 );

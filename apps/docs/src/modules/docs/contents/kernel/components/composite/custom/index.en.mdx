@@ -26,7 +26,7 @@ Save bar-chart.ts from the preview source into your application, then choose a h
 import { Layout } from '@retikz/react';
 import { barChart, ir } from './bar-chart';
 
-export const Diagram = () => <Layout ir={ir} composites={[barChart]} />;
+export const Diagram = () => <Layout ir={ir} extensions={{ composites: [barChart] }} />;
 ```
 
 </DocTab>

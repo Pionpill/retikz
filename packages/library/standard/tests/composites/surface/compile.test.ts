@@ -232,3 +232,19 @@ describe('Surface layout compile', () => {
     expect(result.observed.visualBounds).toEqual({ x: -30, y: -30, width: 84, height: 74 });
   });
 });
+
+it('Surface 完整 Scope 属性透传独立外框', () => {
+  const surface = createSurface({
+    namespace: 'standard',
+    type: 'surface',
+    frame: { padding: 8, style: { fill: 'red' } },
+    child: { type: 'node', position: [0, 0], text: 'A' },
+  });
+  const { scene } = compileToScene(
+    { version: 1, type: 'scene', children: [surface] },
+    { composites: [SurfaceDefinition] },
+  );
+  const serialized = JSON.stringify(scene.primitives);
+  expect(serialized).toContain('"hitTest":false');
+  expect(serialized).toContain('"fill":"red"');
+});
