@@ -42,7 +42,8 @@ vi.mock('../src/app/header/MobileNav', () => ({
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const roots: Array<Root> = [];
-const getLinkLabel = (link: HTMLAnchorElement | null): string | undefined => link?.firstChild?.textContent ?? undefined;
+const getLinkLabel = (link: HTMLAnchorElement | null): string | undefined =>
+  link?.querySelector('[data-slot="header-section-label"]')?.textContent ?? link?.firstChild?.textContent ?? undefined;
 
 const LocationProbe = () => {
   const { pathname } = useLocation();
@@ -292,6 +293,9 @@ describe('<SectionNav>', () => {
       '/kernel/packages',
       '/kernel/galleries',
     ]);
+    expect(container.querySelector('a[href="/kernel/components"] [data-slot="header-section-icon"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/kernel/packages"] [data-slot="header-section-icon"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/kernel/galleries"] [data-slot="header-section-icon"]')).toBeNull();
   });
 
   it('展示当前 area 的分组入口并标记当前 section', () => {

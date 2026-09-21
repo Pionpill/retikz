@@ -237,7 +237,7 @@
     "homeDescription": "用实体、关系、结构块与流程组织复杂信息，将领域模型转化为清晰、可组合的结构化图示。",
     "graph": "Graph · 图式",
     "graphNavigationDescription": "表达实体、关系与结构化信息",
-    "diagram": "Diagram · 图示",
+    "diagram": "Diagram · 结构图",
     "diagramNavigationDescription": "构建流程图与各类图示",
     "diagramFramework": "图示框架",
     "flowDiagram": "Flow · 逻辑图",
