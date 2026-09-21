@@ -26,6 +26,9 @@ export type PreviewThemeMode = 'inherit' | 'light' | 'dark';
 /** 单张预览的主题风格选择；inherit 表示跟随 docs 全局设置。 */
 export type PreviewThemeStyleSelection = 'inherit' | PreviewThemeStyleValue;
 
+/** 叙述性图示的说明类型。 */
+export type PreviewFigureType = 'flow' | 'illustration';
+
 /** 预览区控制插槽位置。 */
 export type PreviewControlPlacement =
   | 'top-start'

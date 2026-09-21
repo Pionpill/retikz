@@ -12,7 +12,7 @@ export const RawSvgFrame: FC<RawSvgFrameProps> = props => {
 
   return (
     <div
-      className="flex max-h-full max-w-full [&>svg]:max-h-full [&>svg]:max-w-full"
+      className="flex max-h-full max-w-full items-center justify-center [&>svg]:max-h-full [&>svg]:max-w-full"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );

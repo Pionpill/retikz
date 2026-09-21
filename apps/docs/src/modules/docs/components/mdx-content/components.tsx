@@ -12,6 +12,7 @@ import { ShowcaseGallery, ShowcaseTabs } from '../showcase';
 import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
+import { ComponentProps } from './component-props';
 import { DocStep, DocSteps } from './doc-steps';
 import { DocTab, DocTabs } from './doc-tabs';
 import { ExamplePrompt } from './example-prompt';
@@ -158,6 +159,7 @@ export const mdxComponents: MDXComponents = {
   DocTabs,
   DocTab,
   ComponentAlert,
+  ComponentProps,
   ComponentPreview,
   ExamplePrompt,
   LinkedCard,

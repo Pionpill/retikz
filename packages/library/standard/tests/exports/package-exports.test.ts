@@ -21,15 +21,15 @@ const adapterManifests = [
 
 describe('Standard package exports', () => {
   it('keeps composites at the root and makes optional providers explicit subpaths', () => {
-    const entries = ['.', './shape', './arrow', './clip', './ribbon'];
+    const entries = ['.', './arrow', './clip', './ribbon', './node-shape', './shape'];
     expect(Object.keys(standardManifest.exports)).toEqual(entries);
     expect(Object.keys(standardManifest.publishConfig.exports)).toEqual(entries);
   });
 
-  it('keeps Standard adapters root-only after Layout ownership moves', () => {
+  it('exposes the shape family through dedicated adapter subpaths', () => {
     for (const manifest of adapterManifests) {
-      expect(Object.keys(manifest.exports)).toEqual(['.']);
-      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.']);
+      expect(Object.keys(manifest.exports)).toEqual(['.', './shape']);
+      expect(Object.keys(manifest.publishConfig.exports)).toEqual(['.', './shape']);
     }
   });
 });

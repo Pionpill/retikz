@@ -1,0 +1,220 @@
+---
+title: Basic usage
+description: Provide drawing input and configure framing, defaults, and rendering
+---
+
+`<Layout>` is the top-level React drawing entry. Place Node, Path, or other drawing components inside it. Framing is automatic by default, so ordinary figures need no explicit size or viewBox. See [Quick start](/kernel/components/get-start) for setup.
+
+## Integration options
+
+Choose a host and input format: React accepts JSX or an `ir` prop; Vanilla accepts builder output or IR directly. All four variants draw the same three-node triangle with automatic framing. IR is a serializable drawing description that can come from an editor, an LLM, or a database.
+
+<ComponentPreview files="layout-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Import components from `@retikz/react` and declare primitives directly.
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node id="b" position={[120, 0]}>
+      B
+    </Node>
+    <Node id="c" position={[60, 60]}>
+      C
+    </Node>
+    <Draw way={['a', 'b', 'c', 'a']} />
+  </Layout>
+);
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+Import the IR type from `@retikz/core` and pass data to `<Layout ir>`, without JSX children.
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 0], text: 'B' },
+    { type: 'node', id: 'c', position: [60, 60], text: 'C' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+        { type: 'step', kind: 'line', to: { id: 'c' } },
+        { type: 'step', kind: 'line', to: { id: 'a' } },
+      ],
+    },
+  ],
+};
+
+const Demo: FC = () => <Layout ir={ir} />;
+
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+Build a scene with `@retikz/vanilla`, then mount it into an existing `diagram` container using the `/dom` entry.
+
+```ts
+import { scene, node, path } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', { position: [120, 0], text: 'B' }),
+    node('c', { position: [60, 60], text: 'C' }),
+    path({ way: ['a', 'b', 'c', 'a'] }),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+Call `view.dispose()` before removing the container to release mounted resources.
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+Pass IR directly to `mount`, without React or rebuilding primitives through Vanilla builders. This example uses an existing `diagram` container.
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    { type: 'node', id: 'b', position: [120, 0], text: 'B' },
+    { type: 'node', id: 'c', position: [60, 60], text: 'C' },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+        { type: 'step', kind: 'line', to: { id: 'c' } },
+        { type: 'step', kind: 'line', to: { id: 'a' } },
+      ],
+    },
+  ],
+};
+
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+Call `view.dispose()` before removing the container to release mounted resources.
+
+</DocTab>
+</DocTabs>
+
+See [Architecture](/kernel/components/design/principles) and [Composite](/kernel/components/design/composite) for IR generation, persistence, and conversion.
+
+## Output Boundary
+
+**Without `viewBox`, Layout automatically computes the output bounds from the content.** The demo initially contains only two circles. The gray dashed outline follows their combined extent, with no manual origin or dimensions.
+
+Use `viewBox` only for fixed framing or clipping. Ordinary component demos keep automatic framing so a fixed range does not add meaningless whitespace.
+
+<ComponentPreview
+  files="layout-viewbox"
+  size="sm"
+  caption="The gray dashed outline marks the output boundary calculated from the two circles."
+/>
+
+## Whole-figure defaults
+
+Whole-figure defaults are defined by a root [Scope](/kernel/components/scope/usage) wrapping all primitives, available in React, Vanilla and IR. Layout provides the `rootScope` shorthand for JSX: it creates this Scope and passes through `style` and `defaults`. In Vanilla, use `scope(...)`; in IR, declare `type: 'scope'` in the scene's `children` and wrap all primitives in it.
+
+| Property    | Type                                      | Description                                                                |
+| ----------- | ----------------------------------------- | -------------------------------------------------------------------------- |
+| `rootScope` | `Pick<InputScope, 'style' \| 'defaults'>` | Figure-wide visual cascade, four default channels and inheritance barriers |
+
+The three Nodes and three Paths (declared with Draw) have no local styles. Change the stroke and opacity in `rootScope.style` to update every primitive; fill and padding in `rootScope.defaults.node` affect only the nodes. The blue color, stroke width and padding are chosen for this demo, not library defaults.
+
+<ComponentPreview files="layout-defaults" size="md" />
+
+## Additional notes
+
+- **Rendering backend**: SVG is the default output. Set `renderer="canvas"` to switch to Canvas. See [Animation](/kernel/visual/animation/usage) for playback and static snapshots.
+- **Input precedence**: When React receives both `ir` and `children`, `ir` takes precedence.
+- **Whole-figure defaults**: With complete `ir`, declare the root Scope in the IR itself. Layout does not apply `rootScope` and warns in development when it contains effective settings.
+- **Style scope**: `Layout.style` sets host CSS; use `rootScope.style` for primitive styles.
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'ir',
+      kind: 'property',
+      type: 'IRScene',
+      description: 'Pass persisted Source IR directly. When it is provided with `children`, it takes precedence.',
+    },
+    {
+      name: 'viewBox',
+      kind: 'property',
+      type: 'IRViewBox',
+      defaultValue: 'Derived from content',
+      description:
+        'Set it for fixed framing or clipping. When omitted, Layout derives the output boundary from the primitives.',
+    },
+    {
+      name: 'rootScope',
+      kind: 'property',
+      type: "Pick<InputScope, 'style' | 'defaults'>",
+      description:
+        'The implicit root Scope for JSX children. Use it to set figure-wide cascading styles and primitive defaults.',
+    },
+    {
+      name: 'renderer',
+      kind: 'property',
+      type: "'svg' | 'canvas'",
+      defaultValue: "'svg'",
+      description: 'Choose the SVG or Canvas backend. When omitted, the Renderer context takes precedence.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Configure themes, inject capabilities, read compiled results, and control updates',
+      url: '/kernel/components/layout/extend',
+    },
+    { title: 'Inspect', description: 'Add inspection overlays to a drawing', url: '/kernel/packages/inspect' },
+    { title: 'Layout package', description: 'Arrange drawing content automatically', url: '/library/layout' },
+    { title: 'API reference', description: 'Look up all Layout props', url: '/kernel/components/layout/api-reference' },
+    {
+      title: 'Schema reference',
+      description: 'Look up persisted scene data',
+      url: '/kernel/components/layout/schema-reference',
+    },
+  ]}
+/>

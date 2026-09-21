@@ -1,0 +1,164 @@
+---
+title: 圆弧与扇形
+description: 用 Standard 的形状语义绘制圆弧与扇形，在 React、Vanilla 和 JSON 之间保持一致
+---
+
+用 Standard 的 Arc / Sector 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/standard/shape)。
+
+## 接入方式
+
+形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/standard/node-shape`。
+
+React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx(id, input)`，显式 id 同时标识 embed 和最终路径；React 省略 id 时不会持久化自动 occurrence id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+
+| 入口    | 公开 API                                                                                |
+| ------- | --------------------------------------------------------------------------------------- |
+| React   | `Arc, Sector` — `@retikz/standard-react/shape`                                          |
+| Vanilla | `shape.arc, shape.sector` — `@retikz/standard-vanilla/shape`                            |
+| JSON    | `ArcSchema / ArcDefinition, SectorSchema / SectorDefinition` — `@retikz/standard/shape` |
+
+## 用法
+
+`<Arc>`（开放弧）/ `<Sector>`（闭合扇形）在指定位置画一段角度片段，展开成底层 `<Path>`。适合角度标记、圆环片段、扇区高亮这类图。
+
+```tsx
+import { Arc, Sector } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
+<Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} style={{ fill: "darkorange" }} />
+```
+
+### Arc
+
+`<Arc>` 默认画一段不闭合的弧。它适合做箭头弧线、环形标记或装饰线。
+
+| 写法                                   | 适合   |
+| -------------------------------------- | ------ |
+| `{ center, radius: number, angles }`   | 圆弧   |
+| `{ center, radius: { x, y }, angles }` | 椭圆弧 |
+
+角度从 +x 方向开始；`90` 指向屏幕下方。角度三选二：`startAngle` / `endAngle` / `sweepAngle`（扫掠角）任给两个即可，例如 `{ startAngle: 30, sweepAngle: 90 }`。`center` 接任意 target（节点 id / 极坐标 / 笛卡尔）。
+
+<ComponentPreview files="arc-basic" size="sm" />
+
+**视觉属性**
+
+`<Arc>` 透传整套 `<Path>` 视觉属性：`stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale` 等。常见的有箭头弧（`arrow="->"`）、虚线弧（`dashPattern` / `dashOffset`）和中段方向标记（`marks`，朝向随切线）。
+
+<ComponentPreview files="arc-visual" size="sm" />
+
+**闭合方式**
+
+默认是开放弧；给 `close` 可把弧闭合成可填充区域：
+
+| `close`         | 含义                   |
+| --------------- | ---------------------- |
+| 缺省 / `'open'` | 开放弧，不闭合、不填充 |
+| `'chord'`       | 两端点连弦闭合，成弓形 |
+| `'sector'`      | 两端连回圆心，成扇形   |
+
+<ComponentPreview files="arc-close" size="sm" />
+
+**弧上标注**
+
+`label` 透传到底层弧 step，文字沿弧定位（`position` 缺省 `midway`，按 `startAngle..endAngle` 线性映射），用法与边标注一致。Sector 同样支持，见下方饼图示例。
+
+### Sector
+
+`<Sector>` 会从圆心出发，画弧，再回到圆心。给 `innerRadius` 可以画空心扇形；圆使用 `number`，椭圆使用 `{ x, y }`。
+
+| 写法                                   | 适合         |
+| -------------------------------------- | ------------ |
+| `{ center, radius: number, angles }`   | 圆扇形       |
+| `{ center, radius: { x, y }, angles }` | 椭圆扇形     |
+| 加 `innerRadius: number`               | 空心圆扇形   |
+| 加 `innerRadius: { x, y }`             | 空心椭圆扇形 |
+
+<ComponentPreview files="sector-basic" size="sm" />
+
+**圆心接节点、扇区标注**
+
+实心扇形的圆心就是游标，所以 `center` 可以直接接节点 id（或极坐标），把扇形钉在某个节点上；配合 `sweepAngle` 和 `label`，几段就能拼出带标签的饼图。
+
+> 空心扇形（给了内半径）需要计算内 / 外弧端点，`center` 仍须 literal 笛卡尔 `[x, y]`。
+
+<ComponentPreview files="sector-label" size="sm" />
+
+**整体变换**
+
+`rotate` / `scale` 透传到 `<Path>`，把整条扇形绕包围盒中心变换（免包 `<Scope>`）。`rotate` 让轴对齐椭圆扇形倾斜——这是目前画"斜椭圆扇形"的方式。
+
+<ComponentPreview files="sector-transform" size="sm" />
+
+Arc 与 Sector 共用椭圆半径和角度模型。掌握上面的基础写法后，可以用 playground 同时调整两者：左侧观察 Arc 的开放 / 闭合方式，右侧观察 Sector 的内弧如何改变环宽。
+
+<ComponentPreview files="arc-sector-playground" size="sm" controlPanelDefaultSize={50} />
+
+## 输入约束
+
+半径必须为有限非负数。恰好提供 startAngle、endAngle、sweepAngle 中的两个，保留 sweep 的方向和圈数。 环形扇区要求字面坐标中心，内半径不能大于外半径。内半径为零时画实心扇形；椭圆内半径的两轴必须同时为零或同时为正。label 只落在外弧。
+
+## 编译过程
+
+Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时把形状意图展开为 Path steps，Core 再解析 Target、生成几何并渲染。不会添加 Node 或额外 Scope。除正多边形和星形将 rotate 烘焙进顶点外，其余旋转与缩放使用 Path 规则。
+
+### 角度范围如何确定
+
+先看图中的坐标轴和橙色箭头：角度从 `startAngle` 出发，沿屏幕坐标中的递增方向扫到 `endAngle`，两者之差就是 `sweepAngle`。
+
+<ComponentPreview files="arc-sector-angle-model" size="md" hideCode type="illustration" />
+
+屏幕坐标的 x 向右、y 向下，所以 `0°` 指向右侧，`90°` 指向下方，角度递增看起来是顺时针。Standard 接受 `startAngle` / `endAngle` / `sweepAngle` 中恰好两个，再补出第三个。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Standard 角度输入解析',
+      path: 'packages/library/standard/src/composites/shape/shared/geometry.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+### 弧与扇形的路径拓扑
+
+图右侧不是三种渲染特效，而是三种等价的 `<Path>` / `<Step>` 拓扑。`<Arc>` 与 `<Sector>` 先解析角度和半径，再根据开放、闭合或空心选择其中一条分支。
+
+<ComponentPreview files="arc-sector-lowering-flow" size="sm" hideCode type="illustration" />
+
+- 开放 `<Arc>` 从圆心开始，用一个 `arc` Step 画弧，游标停在弧终点。
+- 闭合 `<Arc>` 与实心 `<Sector>` 使用 `circlePath` / `ellipsePath`；`closed` 决定两端连弦，还是连回圆心。
+- 空心 `<Sector>` 依次画外弧、径向边、反向内弧和回起点的径向边。它必须先算出内外弧端点，因此 `center` 只能是字面量 `[x, y]`。
+
+描边、填充、箭头和整体变换统一落在外层 `<Path>`；`label` 挂在承担可见弧线的 Step 上。Standard 到这里就结束，不引入另一套路径或渲染语义。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Arc 的开放与闭合展开',
+      path: 'packages/library/standard/src/composites/shape/arc/pipeline.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Sector 的实心与空心展开',
+      path: 'packages/library/standard/src/composites/shape/sector/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## Schema 参考
+
+### ArcSchema
+
+<ZodSchema name="ArcSchema" />
+
+### SectorSchema
+
+<ZodSchema name="SectorSchema" />
+
+## API 参考
+
+{/* @include library/standard/arc-sector/generated */}

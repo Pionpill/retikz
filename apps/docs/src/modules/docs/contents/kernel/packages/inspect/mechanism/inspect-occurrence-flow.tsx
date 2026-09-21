@@ -6,6 +6,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { inspectOccurrenceFlowI18n } from './inspect-occurrence-flow.i18n';
+
 export type InspectOccurrenceFlowProps = Readonly<{ lang?: Lang }>;
 const InspectOccurrenceFlow: FC<InspectOccurrenceFlowProps> = props => {
   const { lang = 'zh' } = props;

@@ -24,6 +24,20 @@ const entity = (input: Record<string, unknown> = {}) =>
   });
 
 describe('Entity lowering', () => {
+  it.each(['IR', 'Source IR\nCanonical IR'])('keeps resource caps aligned with activity bounds for %s', text => {
+    const definitions = resolveCoreProviderDependencies({
+      contributions: [{ roots: [Graph.EntityProviderKey], providers: Graph.createGraphProviders() }],
+    });
+    const boundsOf = (role: string) =>
+      compileToScene({ type: 'scene', version: 1, children: [entity({ role, text })] }, { ...definitions, padding: 0 })
+        .scene.layout;
+    const activity = boundsOf('activity');
+    const resource = boundsOf('resource');
+
+    expect(resource.y).toBeCloseTo(activity.y);
+    expect(resource.height).toBeCloseTo(activity.height);
+  });
+
   it('layout 分组保留 role 独占 padding 的限制', () => {
     expect(
       Graph.EntitySchema.safeParse({ namespace: 'graph', type: 'entity', role: 'participant', layout: { padding: 1 } })

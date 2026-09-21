@@ -1,0 +1,67 @@
+---
+title: Animation presets
+description: Generate Core tracks for growth, pulses, rotation, blinking, and wiggling, then play them on existing components.
+---
+
+Standard offers optional effects using the same tracks and playback as [Kernel animation](/kernel/visual/animation). Each factory converts options into keyframe data without creating a player or requiring registration.
+
+## Using presets
+
+Install `@retikz/standard` in an existing Retikz project and import factories from its root. React, Vanilla, and direct IR share these factories: place their results in the target's animations array. No Standard React or Vanilla adapter is needed for these effects.
+
+```ts
+import { fadeIn, loop } from '@retikz/core';
+import { pulse, wiggle } from '@retikz/standard';
+
+const entrance = fadeIn();
+const emphasis = pulse({ peak: 1.15 });
+const repeatedWiggle = loop(wiggle({ angle: 8 }), { iterations: 2 });
+```
+
+## Choose an effect
+
+| Effect | Property change                       | Defaults                      |
+| ------ | ------------------------------------- | ----------------------------- |
+| grow   | scale 0 → 1                           | 400ms entrance                |
+| growUp | scaleY 0 → 1                          | 500ms, bottom origin          |
+| pulse  | scale 1 → peak → 1                    | 1000ms, peak=1.1, infinite    |
+| spin   | rotate 0 → 360                        | 1000ms, linear, infinite      |
+| flash  | opacity 1 → dim → 1                   | 300ms, dim=0, 2 iterations    |
+| blink  | opacity 1 → dim → 1                   | 800ms, dim=0, infinite        |
+| wiggle | rotate 0 → angle → −angle → angle → 0 | 400ms, angle=5°, 3 iterations |
+
+Each element below uses the default effect. Replay to observe growth and finite effects again. Rotation uses a rectangle so its orientation remains visible.
+
+<ComponentPreview files="animation-presets" size="lg" controls={{ animation: true }} />
+
+grow is equivalent to `scaleIn({ from: 0 })` but belongs to Standard as a convenience effect. Wrap pulse or spin with Core loop to select a finite iteration count; stagger offsets the start of multiple effects.
+
+## Parameters share the existing playback contract
+
+Every factory accepts duration, delay, easing, and trigger. grow, growUp, pulse, spin, and wiggle also accept origin. flash / blink provide dim and iterations; wiggle provides angle and iterations; pulse provides peak. See the [API reference](/library/standard/animation/api-reference).
+
+Factories do not read the target's current style or change layout and connections. See [component integration](/kernel/visual/animation/integration) for Node, Path, and Scope targets, and [extended usage](/kernel/visual/animation/extended-usage) for triggers, snapshots, and reduced-motion policy.
+
+Generated tracks contain ordinary JSON rather than preset names. Saved IR can play without importing Standard again. Existing Core imports of these effects must move to Standard; the old entry no longer re-exports them.
+
+## Related props
+
+<ComponentProps
+  items={[
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description: 'Pass generated effect tracks to Node, Path, or Scope.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'API reference', url: '/library/standard/animation/api-reference' },
+    { title: 'Kernel basic animation', url: '/kernel/visual/animation/usage' },
+  ]}
+/>

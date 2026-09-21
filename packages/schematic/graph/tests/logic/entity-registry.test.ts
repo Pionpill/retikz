@@ -41,8 +41,8 @@ describe('Entity definition registry', () => {
     });
     expect(registry.get('resource')).toMatchObject({
       shape: { type: 'ellipticCapsule', params: { axis: 'vertical', capDepth: 8 } },
-      padding: { x: 10, y: 5 },
-      minimumSize: { width: 56, height: 40 },
+      padding: { x: 10, y: 0 },
+      minimumSize: { width: 56, height: 0 },
     });
     expect(registry.get('concept')).toMatchObject({
       shape: 'ellipse',

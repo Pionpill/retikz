@@ -5,140 +5,190 @@
 ### RetikzError
 
 <p>
-  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={16}>
+  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={26}>
     Base structure for Retikz structured domain errors
   </ApiSourceLink>
 </p>
 
-| Member        | Type                                                                                              | Default | Description |
-| ------------- | ------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor` | `<TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
-| `cause?`      | `unknown`                                                                                         | —       | —           |
-| `code`        | `TCode`                                                                                           | —       | —           |
-| `details`     | `TDetails`                                                                                        | —       | —           |
+```ts
+export class RetikzError<
+  TCode extends string = string,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends Error {}
+```
+
+| Member             | Type                                                                                                                                                                                                    | Default | Description |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `constructor`      | `<TCode extends string = string, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
+| `readonly cause?`  | `unknown`                                                                                                                                                                                               | —       | —           |
+| `readonly code`    | `TCode`                                                                                                                                                                                                 | —       | —           |
+| `readonly details` | `TDetails`                                                                                                                                                                                              | —       | —           |
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TCode`        | —           |
-| `TDetails`     | —           |
+| Type parameter | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| `TCode`        | String type of the error classification code          |
+| `TDetails`     | Structured detail type associated with the error code |
 
 ### RetikzFoundationError
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={51}>
+  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={66}>
     Unified structured error for Foundation atomic-contract failures
   </ApiSourceLink>
 </p>
 
-| Member        | Type                                                                                                                                                                                      | Default | Description |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor` | `<TCode, TDetails>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
+```ts
+export class RetikzFoundationError<
+  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends RetikzError<TCode, TDetails> {}
+```
+
+| Member        | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default | Description |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `constructor` | `<TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TCode`        | —           |
-| `TDetails`     | —           |
+| Type parameter | Description                                                    |
+| -------------- | -------------------------------------------------------------- |
+| `TCode`        | Concrete literal type of a Foundation error code               |
+| `TDetails`     | Structured detail type associated with a Foundation error code |
 
 ### AssertEqual
 
 <p>
-  <ApiSourceLink label={'AssertEqual'} path={'packages/kernel/foundation/src/types.ts'} startLine={15}>
+  <ApiSourceLink label={'AssertEqual'} path={'packages/kernel/foundation/src/types.ts'} startLine={24}>
     Bi-directionally checks whether two types are equivalent
   </ApiSourceLink>
 </p>
 
 ```ts
-conditional;
+export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
+  ? [TExpected] extends [TActual]
+    ? true
+    : false
+  : false;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TActual`      | —           |
-| `TExpected`    | —           |
+| Type parameter | Description                                   |
+| -------------- | --------------------------------------------- |
+| `TActual`      | Actual type being compared                    |
+| `TExpected`    | Expected type used as the comparison baseline |
 
 ### JsonObject
 
 <p>
-  <ApiSourceLink label={'JsonObject'} path={'packages/kernel/foundation/src/types.ts'} startLine={12}>
+  <ApiSourceLink label={'JsonObject'} path={'packages/kernel/foundation/src/types.ts'} startLine={16}>
     String-keyed JSON object
   </ApiSourceLink>
 </p>
 
 ```ts
-ZodInfer<typeof JsonObjectSchema>;
+export type JsonObject = ZodInfer<typeof JsonObjectSchema>;
+```
+
+#### Index signatures
+
+```ts
+[key: string]: JsonValue
 ```
 
 ### JsonValue
 
 <p>
-  <ApiSourceLink label={'JsonValue'} path={'packages/kernel/foundation/src/types.ts'} startLine={9}>
+  <ApiSourceLink label={'JsonValue'} path={'packages/kernel/foundation/src/types.ts'} startLine={13}>
     A single recursive JSON value. Readonly arrays allow const sources to narrow directly at the parse boundary.
   </ApiSourceLink>
 </p>
 
 ```ts
-string | number | boolean | null | ReadonlyArray<JsonValue> | {};
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ReadonlyArray<JsonValue>
+  | {
+      [key: string]: JsonValue;
+    };
 ```
 
 ### MergePropertiesOptions
 
 <p>
-  <ApiSourceLink label={'MergePropertiesOptions'} path={'packages/kernel/foundation/src/objects.ts'} startLine={4}>
+  <ApiSourceLink label={'MergePropertiesOptions'} path={'packages/kernel/foundation/src/objects.ts'} startLine={8}>
     Write policy for shallow property merging
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member                     | Type                                               | Default     | Description                                                                                                        |
+| -------------------------- | -------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `readonly shouldOverride?` | `(value: T[keyof T], key: PropertyKey) => boolean` | `undefined` | Decides whether a source property is written; also runs for initial writes, and false preserves any existing value |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ shouldOverride?: (value: indexedAccess, key: PropertyKey) => boolean }>;
+export type MergePropertiesOptions<T extends object> = Readonly<{
+  shouldOverride?: (value: T[keyof T], key: PropertyKey) => boolean;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
+| Type parameter | Description              |
+| -------------- | ------------------------ |
+| `T`            | Object type being merged |
 
 ### NonEmptyReadonlyArray
 
 <p>
-  <ApiSourceLink label={'NonEmptyReadonlyArray'} path={'packages/kernel/foundation/src/types.ts'} startLine={31}>
+  <ApiSourceLink label={'NonEmptyReadonlyArray'} path={'packages/kernel/foundation/src/types.ts'} startLine={58}>
     Readonly array with at least one element
   </ApiSourceLink>
 </p>
 
 ```ts
-readonly [T, ...Array<T>]
+export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
+| Type parameter | Description        |
+| -------------- | ------------------ |
+| `T`            | Array element type |
 
 ### OpenString
 
 <p>
-  <ApiSourceLink label={'OpenString'} path={'packages/kernel/foundation/src/types.ts'} startLine={22}>
+  <ApiSourceLink label={'OpenString'} path={'packages/kernel/foundation/src/types.ts'} startLine={35}>
     Preserves known-string suggestions while accepting any string
   </ApiSourceLink>
 </p>
 
 ```ts
-T | (string & {});
+export type OpenString<T extends string> = T | (string & {});
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
+| Type parameter | Description                    |
+| -------------- | ------------------------------ |
+| `T`            | Union of known string literals |
 
 ### ParsedCssColor
 
@@ -148,6 +198,10 @@ T | (string & {});
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member | Type     | Default | Description                    |
 | ------ | -------- | ------- | ------------------------------ |
 | `a`    | `number` | —       | Opacity in the range 0–1       |
@@ -155,24 +209,65 @@ T | (string & {});
 | `g`    | `number` | —       | Green channel in the range 0–1 |
 | `r`    | `number` | —       | Red channel in the range 0–1   |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type ParsedCssColor = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### RetikzErrorOptions
 
 <p>
-  <ApiSourceLink label={'RetikzErrorOptions'} path={'packages/kernel/foundation/src/error.ts'} startLine={4}>
+  <ApiSourceLink label={'RetikzErrorOptions'} path={'packages/kernel/foundation/src/error.ts'} startLine={9}>
     Base construction parameters for a Retikz structured domain error
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member             | Type       | Default | Description                                             |
+| ------------------ | ---------- | ------- | ------------------------------------------------------- |
+| `readonly cause?`  | `unknown`  | —       | Original exception or value that caused this error      |
+| `readonly code`    | `TCode`    | —       | Classification code of the structured error             |
+| `readonly details` | `TDetails` | —       | Structured error details associated with the error code |
+| `readonly message` | `string`   | —       | Error message for the caller                            |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-Readonly<{ cause?: unknown; code: TCode; details: TDetails; message: string }>;
+export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<Record<string, unknown>>> = Readonly<{
+  code: TCode;
+  message: string;
+  details: TDetails;
+  cause?: unknown;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TCode`        | —           |
-| `TDetails`     | —           |
+| Type parameter | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| `TCode`        | String type of the error classification code          |
+| `TDetails`     | Structured detail type associated with the error code |
 
 ### RetikzFoundationErrorCodeValue
 
@@ -180,184 +275,99 @@ Readonly<{ cause?: unknown; code: TCode; details: TDetails; message: string }>;
   <ApiSourceLink
     label={'RetikzFoundationErrorCodeValue'}
     path={'packages/kernel/foundation/src/error.ts'}
-    startLine={48}
+    startLine={58}
   >
     Stable Foundation package error-code values
   </ApiSourceLink>
 </p>
 
 ```ts
-ValueOf<typeof RetikzFoundationErrorCode>;
+export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+```
+
+#### Expanded type
+
+```ts
+export type RetikzFoundationErrorCodeValue =
+  | 'FOUNDATION_ERROR'
+  | 'FOUNDATION_NON_EMPTY_STRING_REQUIRED'
+  | 'FOUNDATION_POSITIVE_NUMBER_REQUIRED'
+  | 'FOUNDATION_JSON_ERROR'
+  | 'FOUNDATION_COLOR_ERROR';
 ```
 
 ### ValueOf
 
 <p>
-  <ApiSourceLink label={'ValueOf'} path={'packages/kernel/foundation/src/types.ts'} startLine={6}>
+  <ApiSourceLink label={'ValueOf'} path={'packages/kernel/foundation/src/types.ts'} startLine={10}>
     Obtains the union of all object values
   </ApiSourceLink>
 </p>
 
 ```ts
-indexedAccess;
+export type ValueOf<T extends object> = T[keyof T];
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
+| Type parameter | Description                                   |
+| -------------- | --------------------------------------------- |
+| `T`            | Object type that provides the property values |
 
 ### WithOptionalProperties
 
 <p>
-  <ApiSourceLink label={'WithOptionalProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={28}>
+  <ApiSourceLink label={'WithOptionalProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={51}>
     Makes selected properties optional while preserving the remaining properties
   </ApiSourceLink>
 </p>
 
 ```ts
-Omit<T, TKey> & Partial<Pick<T, TKey>>;
+export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Partial<Pick<T, TKey>>;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
-| `TKey`         | —           |
+| Type parameter | Description                               |
+| -------------- | ----------------------------------------- |
+| `T`            | Object type whose properties are adjusted |
+| `TKey`         | Property keys made optional               |
 
 ### WithRequiredProperties
 
 <p>
-  <ApiSourceLink label={'WithRequiredProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={25}>
+  <ApiSourceLink label={'WithRequiredProperties'} path={'packages/kernel/foundation/src/types.ts'} startLine={43}>
     Narrows selected properties to required while preserving the remaining properties
   </ApiSourceLink>
 </p>
 
 ```ts
-T & Required<Pick<T, TKey>>;
+export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
-| `TKey`         | —           |
-
-### JsonObjectSchema
-
-<p>
-  <ApiSourceLink label={'JsonObjectSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={13}>
-    Schema for a string-keyed JSON object
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodRecord<ZodString, ZodType<JsonValue, JsonValue, $ZodTypeInternals<JsonValue, JsonValue>>>;
-```
-
-### JsonValueSchema
-
-<p>
-  <ApiSourceLink label={'JsonValueSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={8}>
-    Schema for recursive JSON values
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodType<JsonValue, JsonValue>;
-```
-
-### NonBlankStringSchema
-
-<p>
-  <ApiSourceLink label={'NonBlankStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={18}>
-    Schema for non-blank strings
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodString;
-```
-
-### NonNegativeIntegerSchema
-
-<p>
-  <ApiSourceLink label={'NonNegativeIntegerSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={42}>
-    Schema for non-negative integers
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### NonNegativeNumberSchema
-
-<p>
-  <ApiSourceLink label={'NonNegativeNumberSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={36}>
-    Schema for non-negative numbers
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### NormalizedFractionSchema
-
-<p>
-  <ApiSourceLink label={'NormalizedFractionSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={45}>
-    Schema for normalized numbers in the closed interval 0..1
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### PositiveIntegerSchema
-
-<p>
-  <ApiSourceLink label={'PositiveIntegerSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={39}>
-    Schema for positive integers
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
-
-### PositiveNumberSchema
-
-<p>
-  <ApiSourceLink label={'PositiveNumberSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={33}>
-    Schema for positive numbers
-  </ApiSourceLink>
-</p>
-
-```ts
-ZodNumber;
-```
+| Type parameter | Description                               |
+| -------------- | ----------------------------------------- |
+| `T`            | Object type whose properties are adjusted |
+| `TKey`         | Property keys made required               |
 
 ### RetikzFoundationErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={34}>
+  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={44}>
     Stable Foundation package error codes
   </ApiSourceLink>
 </p>
 
 ```ts
-{
-  Color: 'FOUNDATION_COLOR_ERROR';
-  Default: 'FOUNDATION_ERROR';
-  Json: 'FOUNDATION_JSON_ERROR';
-  NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED';
-  PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED';
-}
+export const RetikzFoundationErrorCode = {
+  Default: 'FOUNDATION_ERROR',
+  NonEmptyStringRequired: 'FOUNDATION_NON_EMPTY_STRING_REQUIRED',
+  PositiveNumberRequired: 'FOUNDATION_POSITIVE_NUMBER_REQUIRED',
+  Json: 'FOUNDATION_JSON_ERROR',
+  Color: 'FOUNDATION_COLOR_ERROR',
+} as const;
 ```
 
 ### StaticCssNamedColorHexByName
@@ -375,19 +385,30 @@ ZodNumber;
 Contains only named colors supported by `parseStaticCssColor()`; excludes transparent, functions, and hexadecimal notation.
 
 ```ts
-Readonly<Record<string, templateLiteral>>;
+export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>> = Object.freeze(
+  Object.fromEntries(
+    Object.entries(CSS_NAMED_COLOR_HEX).map(([name, colorHex]): [string, `#${string}`] => [
+      name,
+      `#${colorHex.toString(16).padStart(6, '0')}`,
+    ]),
+  ),
+);
 ```
 
 ### assertNonEmptyString
 
 <p>
-  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={7}>
+  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={6}>
     Rejects empty and all-whitespace strings
   </ApiSourceLink>
 </p>
 
 ```ts
-(value: string, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void
+export declare const assertNonEmptyString: (
+  value: string,
+  label: string,
+  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
+) => void;
 ```
 
 #### Parameters
@@ -407,7 +428,7 @@ Readonly<Record<string, templateLiteral>>;
 </p>
 
 ```ts
-(value: unknown, path: string) => void
+export declare const assertPlainDataContainers: (value: unknown, path: string) => void;
 ```
 
 #### Parameters
@@ -422,13 +443,17 @@ Readonly<Record<string, templateLiteral>>;
 ### assertPositiveNumber
 
 <p>
-  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={24}>
+  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={23}>
     Rejects finite numbers that are not strictly greater than zero
   </ApiSourceLink>
 </p>
 
 ```ts
-(value: number, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void
+export declare const assertPositiveNumber: (
+  value: number,
+  label: string,
+  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
+) => void;
 ```
 
 #### Parameters
@@ -442,20 +467,20 @@ Readonly<Record<string, templateLiteral>>;
 ### cloneAndFreezeJson
 
 <p>
-  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={93}>
+  <ApiSourceLink label={'cloneAndFreezeJson'} path={'packages/kernel/foundation/src/json.ts'} startLine={94}>
     Validates JSON-safe plain data and creates a deeply frozen copy detached from the original input
   </ApiSourceLink>
 </p>
 
 ```ts
-<T>(value: T, path: string) => T;
+export declare const cloneAndFreezeJson: <T>(value: T, path: string) => T;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
+| Type parameter | Description                    |
+| -------------- | ------------------------------ |
+| `T`            | Static type of the input value |
 
 #### Parameters
 
@@ -479,7 +504,7 @@ Deeply frozen copy with the same structure as the input but no shared mutable ob
 Multiplies the foreground alpha by weight, then uses source-over sRGB compositing to produce a deterministic opaque color.
 
 ```ts
-(foreground: string, backdrop: string, weight: number) => templateLiteral;
+export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => templateLiteral;
 ```
 
 #### Parameters
@@ -493,20 +518,22 @@ Multiplies the foreground alpha by weight, then uses source-over sRGB compositin
 ### createOpenStringSchema
 
 <p>
-  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={25}>
+  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={28}>
     Creates an open non-blank string schema with suggestions from a known const-object enum
   </ApiSourceLink>
 </p>
 
 ```ts
-<TValues>(values: TValues) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
+export declare const createOpenStringSchema: <TValues extends Readonly<Record<string, string>>>(
+  values: TValues,
+) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TValues`      | —           |
+| Type parameter | Description                                   |
+| -------------- | --------------------------------------------- |
+| `TValues`      | Const-object enum type of known string values |
 
 #### Parameters
 
@@ -517,7 +544,7 @@ Multiplies the foreground alpha by weight, then uses source-over sRGB compositin
 ### createReadonlyMap
 
 <p>
-  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={5}>
+  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={7}>
     Creates a shallow Map snapshot that exposes no mutating methods
   </ApiSourceLink>
 </p>
@@ -525,15 +552,17 @@ Multiplies the foreground alpha by weight, then uses source-over sRGB compositin
 Copies input entries into independent storage while preserving native Map iteration and lookup semantics; the `forEach` owner argument is the readonly snapshot itself.
 
 ```ts
-<TKey, TValue>(entries: Iterable<readonly [TKey, TValue]>) => ReadonlyMap<TKey, TValue>;
+export declare const createReadonlyMap: <TKey, TValue>(
+  entries: Iterable<readonly [TKey, TValue]>,
+) => ReadonlyMap<TKey, TValue>;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TKey`         | —           |
-| `TValue`       | —           |
+| Type parameter | Description    |
+| -------------- | -------------- |
+| `TKey`         | Map key type   |
+| `TValue`       | Map value type |
 
 #### Parameters
 
@@ -544,13 +573,13 @@ Copies input entries into independent storage while preserving native Map iterat
 ### isRetikzError
 
 <p>
-  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={73}>
+  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={88}>
     Determines whether a dynamic value inherits from a Retikz structured domain error
   </ApiSourceLink>
 </p>
 
 ```ts
-(value: unknown) => predicate;
+export declare const isRetikzError: (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -562,7 +591,7 @@ Copies input entries into independent storage while preserving native Map iterat
 ### mergeProperties
 
 <p>
-  <ApiSourceLink label={'mergeProperties'} path={'packages/kernel/foundation/src/objects.ts'} startLine={19}>
+  <ApiSourceLink label={'mergeProperties'} path={'packages/kernel/foundation/src/objects.ts'} startLine={24}>
     Shallowly merges own enumerable properties from left to right into a new object
   </ApiSourceLink>
 </p>
@@ -570,14 +599,17 @@ Copies input entries into independent storage while preserving native Map iterat
 Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
 
 ```ts
-<T>(sources: readonly Array<Readonly<T> | undefined>, options: MergePropertiesOptions<NoInfer<T>>) => Partial<T>;
+export declare const mergeProperties: <T extends object>(
+  sources: readonly Array<Readonly<T> | undefined>,
+  options: MergePropertiesOptions<NoInfer<T>>,
+) => Partial<T>;
 ```
 
 #### Type parameters
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `T`            | —           |
+| Type parameter | Description                        |
+| -------------- | ---------------------------------- |
+| `T`            | Object type being shallowly merged |
 
 #### Parameters
 
@@ -603,7 +635,7 @@ A new, potentially filtered object, hence the `Partial<T>` return type
 </p>
 
 ```ts
-(input: string) => ParsedCssColor | null;
+export declare const parseStaticCssColor: (input: string) => ParsedCssColor | null;
 ```
 
 #### Parameters

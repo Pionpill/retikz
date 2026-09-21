@@ -1,0 +1,190 @@
+---
+title: shape · Node shapes
+description: Choose built-in Core node shapes and configure content sizing, corners and anchors
+---
+
+Building on [basic usage](/kernel/components/node/usage), `shape` controls the visual outline, content sizing and default connection boundary. Core includes rectangle, ellipse and polygon; circle and diamond are presets of ellipse and polygon. For outlines alone, see [Path shape drawing](/library/standard/circle-ellipse).
+
+## Using this topic
+
+All four forms draw the same circular Hello node at the origin. React examples export a component; Vanilla examples require an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="shape-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node shape="circle" id="a" position={[0, 0]}>
+      Hello
+    </Node>
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', shape: 'circle', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [node('a', { shape: 'circle', position: [0, 0], text: 'Hello' })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', shape: 'circle', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+Call `view.dispose()` before removing the Vanilla mount container.
+
+## Rectangle
+
+An omitted `shape` inherits `Scope.defaults.node.shape`, falling back to a rectangle when no inherited value exists. Use `shape="rectangle"` to override inheritance. Text, padding, and size constraints determine the rectangle boundary.
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node position={[0, 0]}>label</Node>
+<Node position={[0, 0]} shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
+```
+
+The playground fixes the target rectangle at the origin. Adjust `cornerRadius` to compare sharp and rounded boundaries, then move the source with the orbit angle and distance; automatic clipping lands on the real boundary, while named and numeric anchors provide stable explicit positions.
+
+<ComponentPreview files="rectangle-node-connection-playground" size="sm" />
+
+Round corners with the top-level `cornerRadius`, or with `shape={{ type:'rectangle', params:{ cornerRadius } }}` (params win when both are present). See [Node geometry](/kernel/components/node/usage) for shared sizing, boundary, and anchor behavior.
+
+### Shape options
+
+| `shape`                 | Boundary                            | Parameters                      |
+| ----------------------- | ----------------------------------- | ------------------------------- |
+| omitted / `"rectangle"` | Inner box wrapping "text + padding" | `cornerRadius?` (corner radius) |
+
+## Circle / Ellipse
+
+When you need a circular / elliptical node rather than a line (to hold text, to be referenced by a connection), set `shape` on `<Node>`.
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node position={[0, 0]} shape="circle">label</Node>
+<Node position={[0, 0]} shape="ellipse">label</Node>
+```
+
+Switch between `circle` and `ellipse` in the playground: the former is the isotropic `circumscribe:'equal'` preset, while the latter defaults to circumscribing "text + padding" by scaling each axis by √2. Adjust the orbit angle and distance to move the source; keep automatic clipping or choose a named or numeric anchor to compare endpoint placement on both boundaries.
+
+<ComponentPreview files="circle-ellipse-node-connection-playground" size="sm" />
+
+The center and 8 directional anchors (`center` / `top` …) still apply. See [Node](/kernel/components/node/usage) for shared props such as `position` / `fill` / `padding` / `label`.
+
+### Shape options
+
+| `shape`                                     | Boundary                                                                          | Parameters                                                                                                                |
+| ------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `"circle"`                                  | Circle circumscribing the text (= the `circumscribe:'equal'` preset of `ellipse`) | None                                                                                                                      |
+| `"ellipse"` or `{ type:'ellipse', params }` | Circumscribed ellipse                                                             | `circumscribe?`: `'proportional'` (default, each axis × √2) / `'equal'` (isotropic, radius = half the inner box diagonal) |
+
+## Polygon / Diamond
+
+When you need a polygon **node** (to hold text, to be referenced by a connection) rather than a line, set `shape={{ type:'polygon', params }}` on `<Node>`. The boundary takes the regular polygon that circumscribes "text + padding", sized by the text.
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node position={[0, 0]} shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+<Node position={[0, 0]} shape="diamond">label</Node>
+<Node position={[0, 0]} shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
+```
+
+The playground compares a hexagon with the `diamond` preset in one scene; the string `diamond` remains a regular diamond, while the object form accepts `aspectRatio` to control its width-to-height ratio. Select the hexagon to adjust `cornerRadius`, then move the source with the orbit angle and distance to see automatic clipping follow sharp or rounded contours and compare it with named or numeric anchors.
+
+<ComponentPreview files="polygon-node-connection-playground" size="sm" />
+
+See [Node geometry](/kernel/components/node/usage) for shared sizing, boundary, and anchor behavior.
+
+### Shape options
+
+| `shape`                       | Boundary                                | Parameters                                                                    |
+| ----------------------------- | --------------------------------------- | ----------------------------------------------------------------------------- |
+| `{ type: 'polygon', params }` | Regular polygon circumscribing the text | `sides` (≥3) / `rotate?` / `cornerRadius?` / `aspectRatio?` (four sides only) |
+| `"diamond"`                   | = `polygon{ sides:4, rotate:0 }` preset | None                                                                          |
+| `{ type: 'diamond', params }` | Parametric four-sided diamond           | `aspectRatio?` (width / height, default `1`)                                  |
+
+`cornerRadius` (user units) rounds every vertex; omitted / `0` = sharp corners, clamped per corner to the largest non-self-intersecting radius.
+
+## Standard shapes
+
+Stars, sectors, contours, crosses, cylinders and other optional shapes come from [Standard shape extensions](/library/standard/shape), which explains registration and their parameters. To define a new visual shape, see [custom shapes](/kernel/components/node/custom-shape); to change only connection rules, see [custom boundaries](/kernel/components/node/custom).
+
+## Related props
+
+[Complete API reference](/kernel/components/node/api-reference)
+
+<ComponentProps
+  items={[
+    {
+      name: 'shape',
+      kind: 'property',
+      type: 'string | { type: string; params?: JsonObject }',
+      defaultValue: "'rectangle'",
+      description:
+        'Use a name without required parameters, or `{ type, params }`. Supports rectangle, ellipse, polygon and the circle and diamond presets. Inherits Scope defaults before falling back',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/components/node/usage' },
+    { title: 'Implementation', url: '/kernel/components/node/mechanism' },
+    { title: 'API reference', url: '/kernel/components/node/api-reference' },
+    { title: 'Schema reference', url: '/kernel/components/node/schema-reference' },
+  ]}
+/>

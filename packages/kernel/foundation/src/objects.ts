@@ -1,6 +1,10 @@
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
 
-/** 属性浅合并的写入策略 */
+/**
+ * 属性浅合并的写入策略
+ *
+ * @template T 被合并的对象类型
+ */
 export type MergePropertiesOptions<T extends object> = Readonly<{
   /** 决定源属性是否参与写入；首次写入也调用，返回 false 时保留已有值
    * @default undefined
@@ -15,6 +19,7 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
  * @param options 属性写入策略
  * @returns 可能经过过滤的新对象，因此返回类型为 `Partial<T>`
  * @throws 属性读取或策略回调失败时抛出 RetikzFoundationError，原始异常保留为 cause
+ * @template T 被浅合并的对象类型
  */
 export const mergeProperties = <T extends object>(
   sources: ReadonlyArray<Readonly<T> | undefined>,

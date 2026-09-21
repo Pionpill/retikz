@@ -1,0 +1,70 @@
+import { Draw, Layout, Node } from '@retikz/react';
+import { Arc, Circle } from '@retikz/standard-react/shape';
+import type { FC } from 'react';
+
+/** Arc / Sector 共用的屏幕坐标角度模型 */
+const Demo: FC = () => (
+  <Layout>
+    <Draw
+      way={[
+        [-125, 0],
+        [135, 0],
+      ]}
+      arrow="->"
+      style={{ stroke: 'lightgray' }}
+    />
+    <Draw
+      way={[
+        [0, -105],
+        [0, 110],
+      ]}
+      arrow="->"
+      style={{ stroke: 'lightgray' }}
+    />
+    <Circle center={[0, 0]} radius={70} style={{ stroke: 'lightgray', fill: 'transparent', dashPattern: [3, 3] }} />
+    <Draw
+      way={[
+        [0, 0],
+        [57.34, -40.15],
+      ]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Draw
+      way={[
+        [0, 0],
+        [-23.94, 65.78],
+      ]}
+      style={{ stroke: 'gray', dashPattern: [4, 3] }}
+    />
+    <Arc
+      center={[0, 0]}
+      radius={70}
+      startAngle={-35}
+      endAngle={110}
+      arrow="->"
+      style={{ stroke: 'darkorange', strokeWidth: 3 }}
+    />
+    <Circle center={[0, 0]} radius={3} style={{ stroke: 'none', fill: 'currentColor' }} />
+
+    <Node position={[152, -12]} style={{ stroke: 'none', font: { size: 13 } }}>
+      0° / +x
+    </Node>
+    <Node position={[38, 112]} style={{ stroke: 'none', font: { size: 13 } }}>
+      90° / +y
+    </Node>
+    <Node position={[92, -55]} style={{ stroke: 'none', font: { size: 13 } }}>
+      startAngle
+    </Node>
+    <Node position={[-70, 88]} style={{ stroke: 'none', font: { size: 13 } }}>
+      endAngle
+    </Node>
+    <Node position={[125, 58]} style={{ stroke: 'none', textColor: 'darkorange', font: { size: 13, weight: 'bold' } }}>
+      sweepAngle
+    </Node>
+    <Node position={[-28, -16]} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }}>
+      center
+    </Node>
+  </Layout>
+);
+
+export default Demo;

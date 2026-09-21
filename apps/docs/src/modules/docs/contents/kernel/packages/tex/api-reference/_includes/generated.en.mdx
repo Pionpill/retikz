@@ -12,9 +12,27 @@
 
 Controls how a lowerer created by `createLowerTex` reports failures. It does not alter TeX parsing or cache semantics; successful results still flow directly into Core text compilation.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member          | Type                                          | Default | Description                                                                                                |
 | --------------- | --------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
 | `onDiagnostic?` | `(diagnostic: TexLoweringDiagnostic) => void` | —       | Receives one diagnostic for each public lowering failure so the application can log, notify, or report it. |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LowerTexOptions = {
+  onDiagnostic?: (diagnostic: TexLoweringDiagnostic) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### MathJaxEngineOptions
 
@@ -26,10 +44,29 @@ Controls how a lowerer created by `createLowerTex` reports failures. It does not
 
 Selects a built-in profile and extra extensions for `createMathJaxEngine`, `createMathJaxLowerTex`, and the React Hook to resolve during initialization. It contains no MathJax instance and does not control formula styling.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member        | Type                           | Default  | Description                                                                                  |
 | ------------- | ------------------------------ | -------- | -------------------------------------------------------------------------------------------- |
 | `extensions?` | `Array<MathJaxExtensionValue>` | `[]`     | Appends extensions after the selected profile; duplicates are removed before initialization. |
 | `profile?`    | `MathJaxProfileValue`          | `'base'` | Selects the built-in profile for the base or math extension set.                             |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type MathJaxEngineOptions = {
+  profile?: MathJaxProfileValue;
+  extensions?: Array<MathJaxExtensionValue>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### MathJaxExtensionValue
 
@@ -42,7 +79,7 @@ Selects a built-in profile and extra extensions for `createMathJaxEngine`, `crea
 A constrained string set derived from `MathJaxExtension`, which can be appended after the built-in profile. Configuration resolution deduplicates and loads values in a stable order, so callers do not need to manage package order.
 
 ```ts
-ValueOf<typeof MathJaxExtension>;
+export type MathJaxExtensionValue = ValueOf<typeof MathJaxExtension>;
 ```
 
 ### MathJaxLowerTexOptions
@@ -51,7 +88,7 @@ ValueOf<typeof MathJaxExtension>;
   <ApiSourceLink
     label={'MathJaxLowerTexOptions'}
     path={'packages/kernel/tex/src/lower/create-mathjax.ts'}
-    startLine={14}
+    startLine={13}
   >
     Configuration for creating a MathJax engine and Core lowerer in one step
   </ApiSourceLink>
@@ -59,9 +96,27 @@ ValueOf<typeof MathJaxExtension>;
 
 Combines the resolution configuration from `MathJaxEngineOptions` with the diagnostic callback from `LowerTexOptions` as the single input to `createMathJaxLowerTex`. It describes factory arguments only and stores no engine, cache, or rendering state.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+| Member          | Type                                          | Default  | Description                                                                                                |
+| --------------- | --------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| `extensions?`   | `Array<MathJaxExtensionValue>`                | `[]`     | Appends extensions after the selected profile; duplicates are removed before initialization.               |
+| `onDiagnostic?` | `(diagnostic: TexLoweringDiagnostic) => void` | —        | Receives one diagnostic for each public lowering failure so the application can log, notify, or report it. |
+| `profile?`      | `MathJaxProfileValue`                         | `'base'` | Selects the built-in profile for the base or math extension set.                                           |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-MathJaxEngineOptions & LowerTexOptions;
+export type MathJaxLowerTexOptions = MathJaxEngineOptions & LowerTexOptions;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### MathJaxProfileValue
 
@@ -74,7 +129,13 @@ MathJaxEngineOptions & LowerTexOptions;
 A constrained string set derived from `MathJaxProfile` for selecting a built-in extension set. It describes configuration values only; the MathJax factory performs the actual extension loading.
 
 ```ts
-ValueOf<typeof MathJaxProfile>;
+export type MathJaxProfileValue = ValueOf<typeof MathJaxProfile>;
+```
+
+#### Expanded type
+
+```ts
+export type MathJaxProfileValue = 'base' | 'math';
 ```
 
 ### MathJaxSvgEngine
@@ -87,9 +148,32 @@ ValueOf<typeof MathJaxProfile>;
 
 Defines the minimal engine boundary required by `createLowerTex`: it accepts a TeX string and display option, then returns markup consumable by this package’s SVG lowerer. Callers may use the built-in MathJax factory or inject a compatible implementation; general SVG importing and rendering are outside this interface.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
 | Member    | Type                                                     | Default | Description                                              |
 | --------- | -------------------------------------------------------- | ------- | -------------------------------------------------------- |
 | `convert` | `(tex: string, options: { display: boolean }) => string` | —       | Converts TeX and display mode into supported SVG markup. |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type MathJaxSvgEngine = {
+  convert: (
+    tex: string,
+    options: {
+      display: boolean;
+    },
+  ) => string;
+};
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### TexLoweringDiagnostic
 
@@ -102,7 +186,27 @@ Defines the minimal engine boundary required by `createLowerTex`: it accepts a T
 Describes why the engine, MathJax parsing, or SVG lowering phase could not produce formula paths. It carries displayable or loggable failure facts only and does not recover errors; callers choose how to notify users through `LowerTexOptions.onDiagnostic`.
 
 ```ts
-{ kind: 'engine-error'; message: string; source: string } | { kind: 'mathjax-error'; message: string; source: string } | { kind: 'unsupported-svg'; message: string; source: string } | { kind: 'malformed-svg'; message: string; source: string }
+export type TexLoweringDiagnostic =
+  | {
+      kind: 'engine-error';
+      source: string;
+      message: string;
+    }
+  | {
+      kind: 'mathjax-error';
+      source: string;
+      message: string;
+    }
+  | {
+      kind: 'unsupported-svg';
+      source: string;
+      message: string;
+    }
+  | {
+      kind: 'malformed-svg';
+      source: string;
+      message: string;
+    };
 ```
 
 ### MathJaxExtension
@@ -116,17 +220,17 @@ Describes why the engine, MathJax parsing, or SVG lowering phase could not produ
 Values match MathJax configuration extension identifiers and are validated, deduplicated, and loaded together during profile resolution. It provides stable extension identifiers for engine configuration.
 
 ```ts
-{
-  Ams: 'ams';
-  Boldsymbol: 'boldsymbol';
-  Braket: 'braket';
-  Cancel: 'cancel';
-  Cases: 'cases';
-  Centernot: 'centernot';
-  Color: 'color';
-  Mathtools: 'mathtools';
-  Newcommand: 'newcommand';
-}
+export const MathJaxExtension = {
+  Ams: 'ams',
+  Newcommand: 'newcommand',
+  Boldsymbol: 'boldsymbol',
+  Braket: 'braket',
+  Cancel: 'cancel',
+  Cases: 'cases',
+  Centernot: 'centernot',
+  Mathtools: 'mathtools',
+  Color: 'color',
+} as const;
 ```
 
 ### MathJaxProfile
@@ -140,16 +244,16 @@ Values match MathJax configuration extension identifiers and are validated, dedu
 `base` enables only the base TeX configuration, while `math` additionally enables common math extensions. It selects an extension set recognized by `createMathJaxEngine` and lowerer factories; it neither creates nor changes an engine instance.
 
 ```ts
-{
-  Base: 'base';
-  Math: 'math';
-}
+export const MathJaxProfile = {
+  Base: 'base',
+  Math: 'math',
+} as const;
 ```
 
 ### createLowerTex
 
 <p>
-  <ApiSourceLink label={'createLowerTex'} path={'packages/kernel/tex/src/lower/lower-tex.ts'} startLine={24}>
+  <ApiSourceLink label={'createLowerTex'} path={'packages/kernel/tex/src/lower/lower-tex.ts'} startLine={23}>
     Adapts a synchronous SVG engine to Core `LowerTex` and caches deterministic results
   </ApiSourceLink>
 </p>
@@ -157,7 +261,7 @@ Values match MathJax configuration extension identifiers and are validated, dedu
 Accepts an engine that emits the supported SVG subset and an optional diagnostic callback, then returns a synchronous lowerer that can be injected directly into Core text compilation. This function performs TeX-to-SVG-to-path lowering and result caching; it does not initialize the engine or render formulas.
 
 ```ts
-(engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
+export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
 ```
 
 #### Parameters
@@ -185,7 +289,7 @@ const lowerTex = createLowerTex(engine, {
 ### createMathJaxEngine
 
 <p>
-  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={43}>
+  <ApiSourceLink label={'createMathJaxEngine'} path={'packages/kernel/tex/src/mathjax/engine.ts'} startLine={42}>
     Creates a synchronous TeX-to-SVG engine from the optional `mathjax-full` peer dependency
   </ApiSourceLink>
 </p>
@@ -193,7 +297,7 @@ const lowerTex = createLowerTex(engine, {
 Asynchronously loads and configures `mathjax-full`, returning an engine that `createLowerTex` can invoke synchronously and repeatedly. Input configuration affects only enabled TeX extensions; the returned value handles TeX-to-SVG only, not SVG path lowering, caching, or Core injection.
 
 ```ts
-(options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
+export declare const createMathJaxEngine: (options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
 ```
 
 #### Parameters
@@ -229,7 +333,7 @@ const svg = engine.convert('\\frac{1}{2}', { display: false });
   <ApiSourceLink
     label={'createMathJaxLowerTex'}
     path={'packages/kernel/tex/src/lower/create-mathjax.ts'}
-    startLine={32}
+    startLine={31}
   >
     Creates a Core lowerer using a built-in MathJax profile
   </ApiSourceLink>
@@ -238,7 +342,7 @@ const svg = engine.convert('\\frac{1}{2}', { display: false });
 Asynchronously loads the optional `mathjax-full`, creates a synchronous SVG engine, and returns a `LowerTex` for Core. Use it when the engine implementation does not need to be replaced; when the application already owns a compatible engine, use `createLowerTex` instead.
 
 ```ts
-(options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
+export declare const createMathJaxLowerTex: (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
 ```
 
 #### Parameters
@@ -271,7 +375,7 @@ const lowerTex = await createMathJaxLowerTex({
 ### MathJaxLowerTexState
 
 <p>
-  <ApiSourceLink label={'MathJaxLowerTexState'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={21}>
+  <ApiSourceLink label={'MathJaxLowerTexState'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={19}>
     Asynchronous initialization state of a MathJax lowerer
   </ApiSourceLink>
 </p>
@@ -279,13 +383,24 @@ const lowerTex = await createMathJaxLowerTex({
 Indicates whether the engine and lowerer for the current React component configuration are available: loading has not finished initialization, ready provides `lowerTex` for `@retikz/react`, and error provides a displayable diagnostic. It is a Hook output snapshot and stores no UI state across components.
 
 ```ts
-{ status: 'loading' } | { lowerTex: LowerTex; status: 'ready' } | { diagnostic: TexLoweringDiagnostic; status: 'error' }
+export type MathJaxLowerTexState =
+  | {
+      status: 'loading';
+    }
+  | {
+      status: 'ready';
+      lowerTex: LowerTex;
+    }
+  | {
+      status: 'error';
+      diagnostic: TexLoweringDiagnostic;
+    };
 ```
 
 ### useLowerTex
 
 <p>
-  <ApiSourceLink label={'useLowerTex'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={75}>
+  <ApiSourceLink label={'useLowerTex'} path={'packages/kernel/tex/src/react/use-lower-tex.ts'} startLine={73}>
     Shares a MathJax engine by effective configuration and asynchronously creates the current component’s lowerer
   </ApiSourceLink>
 </p>
@@ -293,7 +408,7 @@ Indicates whether the engine and lowerer for the current React component configu
 Accepts the same MathJax configuration as the root-entry factories, reuses an engine for the same effective extension set, and returns a discriminated initialization state. Pass the lowerer in ready state to React authoring entry points such as `Layout`; this Hook does not render formulas or handle application-level error UI.
 
 ```ts
-(options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
+export declare const useLowerTex: (options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
 ```
 
 #### Parameters

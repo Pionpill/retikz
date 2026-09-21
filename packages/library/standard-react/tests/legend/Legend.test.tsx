@@ -334,7 +334,7 @@ describe('<Legend>', () => {
     const directOutput = renderToStaticMarkup(
       <Layout
         ir={{ type: 'scene', version: 1, children: [direct] }}
-        composites={[LegendDefinition]}
+        extensions={{ composites: [LegendDefinition] }}
         width={200}
         height={120}
       />,

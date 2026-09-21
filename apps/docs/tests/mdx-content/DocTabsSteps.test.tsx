@@ -37,6 +37,24 @@ afterEach(async () => {
 });
 
 describe('MDX DocTabs / DocSteps', () => {
+  it('使用 shadcn 默认标签外观', async () => {
+    const container = await render(
+      <DocTabs defaultValue="react">
+        <DocTab value="react" label="React">
+          React body
+        </DocTab>
+        <DocTab value="vanilla" label="Vanilla">
+          Vanilla body
+        </DocTab>
+      </DocTabs>,
+    );
+
+    const tabsList = container.querySelector('[role="tablist"]');
+    const trigger = container.querySelector('[role="tab"]');
+    expect(tabsList?.getAttribute('data-variant')).toBe('default');
+    expect(trigger?.className).not.toContain('rounded-none');
+  });
+
   it('整篇编译保留步骤内 Markdown、代码缩进、反斜杠与自定义组件，切换后显示另一分支', async () => {
     const code = "const formula = '\\\\frac{a}{b}';\n  render(formula);";
     const source = [

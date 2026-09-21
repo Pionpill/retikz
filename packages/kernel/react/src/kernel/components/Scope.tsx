@@ -25,7 +25,7 @@ export type ScopeProps = ScopeStyleProps &
      */
     localNamespace?: boolean;
     /**
-     * 局部 transform 列表；数组顺序应用，与 SVG transform list 一致
+     * 局部 transform 列表；遵循 SVG transform list，最后一项先作用于局部点
      * @description 支持 translate / polar-translate / at-translate / offset-translate / between-translate / rotate / scale
      */
     transforms?: Array<InputTransform>;
@@ -40,6 +40,8 @@ export type ScopeProps = ScopeStyleProps &
     clip?: IRScope['clip'];
     /** scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB） */
     boundingShape?: IRScope['boundingShape'];
+    /** 固有包络的独立外框；位于内容下方，不参与布局、引用或命中 */
+    frame?: IRScope['frame'];
     /** 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局，也不下传给子元素。须为 JSON 可序列化对象 */
     meta?: IRScope['meta'];
     /** scope 整体的时间轴动画；渲染端播放或降级为静态，不参与布局，也不下传给子元素 */

@@ -1,0 +1,514 @@
+---
+title: Implementation
+description: Explain node sizing, connection geometry, text processing, and reference timing
+---
+
+This page explains the geometry and reference timing behind the usage guides. Read [Basic usage](/kernel/components/node/usage) first; use the reference pages to look up fields.
+
+## Text measurement and border sizing
+
+A node must contain its text before satisfying shape and minimum-size constraints:
+
+- **Text box**: the area occupied by the lines after wrapping
+- **Content box**: the text box plus `padding` on each side
+- **Visual border**: the shape enclosing that content, with a size floor set by `minimumSize`
+
+In the browser, plain text is measured with Canvas `measureText` using its actual font, size, and weight, then wrapped to `maxTextWidth` (by word for Western text and by character for CJK). The text box uses the widest resulting line and a height of line count times `lineHeight` (1.2 times the font size by default), so it includes line spacing; glyph ascent and descent position the baseline. Without a browser measurer, average character widths provide an estimate. Formulas and mixed runs instead align baselines using each fragment's metrics.
+
+Follow the same Hello node below. Padding enlarges the middle border; adding the label on the right leaves that border unchanged.
+
+<ComponentPreview files="node-size-states" size="md" type="illustration" hideCode />
+
+Fonts, wrapping, and padding change the required content area. `minimumSize` can enlarge the border but cannot shrink its text. `scale` affects fonts, spacing, and shape parameters during sizing; `rotate` changes the final border orientation.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Lay out text, spacing, and the shape',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 137,
+      endLine: 305,
+    },
+  ]}
+/>
+
+### Labels do not contribute to border sizing
+
+The label in the right-hand state is separate attached text. Its placement requires the completed node border, so it does not feed back into the visual shape size.
+
+The label has its own text box. The compiler uses its rotated box and `distance` to place the center while preserving the requested border gap. Text, leader lines, and viewBox collection share that result: the node border stays fixed, while the automatic viewBox includes the outside label.
+
+`Node.scale` does not scale `distance`; an outer Scope scale transforms the node, label, and gap together. This is why the two kinds of scaling look different.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Label visual box and attachment offset',
+      path: 'packages/kernel/core/src/compile/node/label/geometry.ts',
+      startLine: 160,
+      endLine: 191,
+    },
+  ]}
+/>
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Collect node and label extents separately',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 740,
+      endLine: 759,
+    },
+  ]}
+/>
+
+## Visual shape vs connection geometry
+
+`shape` owns the rendered contour and shape-specific anchors. `boundary` participates only when resolving automatic path endpoints, standard directional anchors, and numeric-angle anchors. An omitted `boundary` inherits `Scope.defaults.node.boundary`, falling back to `'shape'` when no inherited value exists. A final value of `'shape'` uses the visual shape for connection geometry.
+
+All three Q nodes keep the same visible circle and connection direction. The middle uses a rectangular boundary; the right adds margin. Compare the line endpoints while the circle stays unchanged. Dotted outlines are teaching guides.
+
+<ComponentPreview files="connection-surfaces" size="md" type="illustration" hideCode />
+
+| Reference form                              | Geometry used                    |
+| ------------------------------------------- | -------------------------------- |
+| Automatic endpoint, `.top`, or `.30`        | `boundary`, expanded by `margin` |
+| Shape-specific anchor such as `tip-0`       | Visual `shape`                   |
+| `{ anchor: { side, fraction } }` edge point | Visual `shape`                   |
+
+As a result, `margin` pushes connection endpoints and standard border anchors outward and expands the node's layout footprint, but never redraws the visual shape. Shape-specific anchors and edge points stay on the original contour. If a shape does not implement a standard directional anchor, core falls back to its bounding rectangle.
+
+A regular connection surface first derives its rectangle from `fit`, then applies `gap`; automatic endpoints, numeric-angle anchors, and standard named anchors share that resolved result. Core ellipse and polygon, along with injected star and contour shapes, provide shape-aware `tight` envelopes. Rectangle gives the same result for `tight` and `bounds`, while injected Sector uses bounds in this release. If a custom shape omits `connectionEnvelope`, `tight` safely falls back to bounds and emits one structured warning.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Tight envelopes, fallback, and cache',
+      path: 'packages/kernel/core/src/compile/node/boundary.ts',
+      startLine: 48,
+      endLine: 93,
+    },
+    {
+      label: 'Built-in boundary fit and gap',
+      path: 'packages/kernel/core/src/providers/boundary/definitions.ts',
+      startLine: 10,
+      endLine: 101,
+    },
+    {
+      label: 'Route visual contours, boundaries, and anchors',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 89,
+      endLine: 160,
+    },
+    {
+      label: 'Apply margin by anchor category',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 9,
+      endLine: 51,
+    },
+  ]}
+/>
+
+## Named references and registration order
+
+An `id` makes a laid-out object available as a geometry handle for later positioning and connections. Compilation maintains a stack of name maps. Emitting primitives and registering references are separate operations, so a Node without an `id` still renders, but is not registered in the name map and cannot be accessed by later objects through a named reference.
+
+### Name maps store layout records
+
+`NamespaceStack` is the compiler's stack for managing named references. It organizes name maps from outer to inner levels. Each level is called a **frame**, using a `Map<string, NamespaceEntry>` to store its `id → layout record` entries.
+
+These frames are stored in the internal `frames` array: the first item is the permanent root frame, and the last item is the current stack top. Initially, only the root frame exists. Entering a separate namespace pushes a new frame onto the end; leaving it pops that frame. `register` writes only to the top Map, while lookup searches from the top outward.
+
+The diagram expands one Map and its entry for `a`. This node has completed layout: its center is `[40, 0]`, its rectangle is 60 wide and 32 high.
+
+<ComponentPreview files="namespace-storage" size="xl" type="illustration" hideCode />
+
+The Map key is the `id`; its value contains `layout` and `state`. `layout` is a resolved `NodeLayout`, containing the rectangle, shape definition, connection boundary, margins, and other layout results such as text. Nested Map components show the object hierarchy: `layout` is an object, and its `rect` field is an object too. `shapeName` holds the shape name. The diagram is illustrative; refer to the code for the exact data structures.
+
+When traversal reaches a Node, compilation completes text and shape layout and positioning, then projects the layout into global coordinates. Only a named Node registers that result in the current Map with state `resolved`. Coordinate uses the same Map with a zero-width, zero-height geometry record. These maps are compilation runtime state, not data written back into persistent IR.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Namespace stack and entry structure',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 5,
+      endLine: 80,
+    },
+    {
+      label: 'NodeLayout geometry fields',
+      path: 'packages/kernel/core/src/compile/node/types.ts',
+      startLine: 73,
+      endLine: 110,
+    },
+    {
+      label: 'Layout projection and id registration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 704,
+      endLine: 730,
+    },
+  ]}
+/>
+
+### Positions query immediately; paths consume later
+
+To find `a`, `lookupEntry` searches Maps from the stack top toward the bottom and returns the first match. Position resolution reads a geometry view of that layout: its center is `[40, 0]`, while the `right` anchor of this unrotated rectangle is `[70, 0]`. Automatic boundary connections also need the direction toward the other endpoint to compute an intersection; an id does not always resolve to one fixed point.
+
+The next diagram uses the declaration array `[Path(a, b), Node a, Node b]` within one scope. The path precedes both nodes, but traversal only enqueues it instead of immediately looking up its endpoints.
+
+<ComponentPreview files="namespace-consumption" size="xxl" type="illustration" hideCode />
+
+- **Node / Coordinate positioning** queries immediately during traversal and uses the entries registered at that moment. It does not wait for later declarations and cannot resolve circular positioning dependencies. Stored geometry uses global coordinates; position results are converted back through the current Scope transforms into local coordinates.
+- **Path / Draw endpoints** first reserve a slot in the primitive sequence. The deferred queue stores the path, scope transforms, styles, and placeholder location. After the current scope's children register, compilation looks up names, resolves endpoints, and fills the original slot. This supports later sibling nodes while preserving drawing order.
+
+For example, placing `Node b` before `Node a` while making `b.position` refer to `a` cannot find the unregistered `a`. A `Path(a, b)` before both nodes can resolve at scope completion. That waiting boundary is the current scope, not every future declaration in the entire tree.
+
+<SourceLinks
+  sources={[
+    { label: 'Inside-out lookup', path: 'packages/kernel/core/src/compile/namespace.ts', startLine: 240, endLine: 252 },
+    {
+      label: 'Project layout into a position reference view',
+      path: 'packages/kernel/core/src/compile/orchestration/position-context.ts',
+      startLine: 66,
+      endLine: 91,
+    },
+    {
+      label: 'Enqueue paths and reserve drawing order',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 803,
+      endLine: 837,
+    },
+    {
+      label: 'Resolve paths and fill reserved slots',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 621,
+      endLine: 669,
+    },
+  ]}
+/>
+
+### Scope controls entry visibility
+
+An ordinary Scope does not create a name map: its children keep writing to the current Map. Only `localNamespace: true` calls `pushFrame()`, directing child registrations into a new top Map. Lookup searches inside first, then outside, so inner content can reference outer nodes while an inner name shadows an outer match.
+
+Here the outer Map already holds `a` and `b`; the local Scope `group` defines another `a` and a new `c`. Inside, querying `a` hits the local entry, while querying `b` continues outward. Leaving `group` pops the local Map: outside code sees the original `a` again and cannot see `c`. Local entries are not merged into the outer Map.
+
+<ComponentPreview files="namespace-scope" size="xxl" type="illustration" hideCode />
+
+The id of `group` itself belongs to the parent frame and survives the local children. Compilation registers it as `scope-placeholder` before entering the Scope. Once the subtree layout is complete, the real bounds replace that entry with state `resolved`; the Scope's pending paths resolve before the local frame is popped. Outside content can therefore reference a closed `group` even when its child ids are hidden. A Node inside cannot use an unfinished ancestor Scope's bounds for anchor positioning. A closed empty Scope is a valid zero-size target, distinct from an unfinished one.
+
+Registering a duplicate id in the same frame replaces the old entry and emits a diagnostic. Shadowing across frames is not a same-map duplicate. Scope transforms and name isolation are independent: transforms affect stored and consumed geometry; only `localNamespace` decides whether to create another Map.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Registration, replacement, and entry states',
+      path: 'packages/kernel/core/src/compile/namespace.ts',
+      startLine: 183,
+      endLine: 237,
+    },
+    {
+      label: 'Register the Scope placeholder in its parent',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1045,
+      endLine: 1063,
+    },
+    {
+      label: 'Push a frame only for localNamespace',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1135,
+      endLine: 1142,
+    },
+    {
+      label: 'Publish bounds, consume paths, then pop',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 1266,
+      endLine: 1300,
+    },
+  ]}
+/>
+
+## Line normalization and precedence
+
+`<Text>` is a marker component that returns `null`; it creates no DOM or graphic by itself. It is recognized only while `<Node>` collects its children, where the React inputs converge on the same `Node.text` contract:
+
+For example, `<Node>A<Text fill="red">B</Text>C</Node>` produces three lines: A, red B, and C. Its text input is shown below. Supplying `text="X"` instead selects only X.
+
+```ts
+['A', { text: 'B', fill: 'red' }, 'C'];
+```
+
+<ComponentPreview files="text-normalization" size="xs" type="flow" hideCode />
+
+An explicit `text` prop wins. When it is present, children do not participate in text collection. Without `text`, the adapter recursively reads strings, numbers, arrays, Fragments, and `<Text>` markers in JSX order:
+
+| Input             | Normalization rule                                     | `Node.text` result |
+| ----------------- | ------------------------------------------------------ | ------------------ |
+| String / number   | Adjacent content joins; Node text rules handle `\n`    | Plain string line  |
+| Unstyled `<Text>` | Flush the current plain line, then add a separate line | Plain string line  |
+| Styled `<Text>`   | Flush the current plain line and retain line overrides | IRLine object line |
+
+This also explains both boundaries: `<Text>` only works inside `<Node>`, and it represents a whole line rather than an inline span.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Text marker component',
+      path: 'packages/kernel/react/src/kernel/components/Text.tsx',
+      startLine: 20,
+      endLine: 23,
+    },
+    {
+      label: 'Node child-line normalization',
+      path: 'packages/kernel/react/src/kernel/adapter/input-scene.ts',
+      startLine: 120,
+      endLine: 192,
+    },
+  ]}
+/>
+
+## Automatic contrast calculation
+
+After normalization, every line enters Core through the same color precedence. An explicit `<Text fill>` overrides the Node default; only lines without `fill` inherit `Node.style.textColor`. The diagram focuses on background evaluation when that value is `contrast`:
+
+<ComponentPreview files="text-contrast-flow" size="sm" type="flow" hideCode />
+
+When a Node uses `NodeTextColor.Contrast`, Core reads the final `fill` after style cascading. Only a static color with effective opacity 1 is used to compare black and white text against the background (using WCAG relative luminance) and resolves to `#000000` or `#ffffff`. Missing, translucent, gradient, `var()`, and other unresolved backgrounds use the fixed `currentColor` fallback and emit `TEXT_AUTO_CONTRAST_UNRESOLVED`. The Node's overall `opacity` does not participate in this background decision.
+
+A per-line `font` still participates in that line's width measurement; wrapping, `align`, and `lineHeight` remain Node block-level responsibilities. Use a `{ runs }` IRLine through `text` when one line needs multiple styles.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve after style cascading',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 680,
+      endLine: 695,
+    },
+    {
+      label: 'Node contrast resolution',
+      path: 'packages/kernel/core/src/resolve/node/text-color.ts',
+      startLine: 55,
+      endLine: 111,
+    },
+    {
+      label: 'Node body text layout',
+      path: 'packages/kernel/core/src/compile/node/content/layout.ts',
+      startLine: 34,
+      endLine: 129,
+    },
+  ]}
+/>
+
+## Coordinate registration and output
+
+This section focuses on how `<Coordinate>` becomes a referenceable geometry handle during compilation. See [Architecture Principles](/kernel/components/design/principles) for the full JSX → IR → Scene pipeline.
+
+### Register first, then reference
+
+Read left to right: resolve the position from known IDs, register the zero-size point, then make it available to later references.
+
+<ComponentPreview files="coordinate-resolution-flow" size="xs" type="flow" hideCode />
+
+The compiler resolves `position`, applies the current Scope transform to obtain global coordinates, and registers the position as a zero-width, zero-height geometry record in the same `NamespaceStack`. The timing and visibility rules from [immediate positioning and deferred paths](#positions-query-immediately-paths-consume-later) also apply.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Coordinate position resolution and registration',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 766,
+      endLine: 800,
+    },
+    {
+      label: 'position reference resolution',
+      path: 'packages/kernel/core/src/resolve/position/resolve.ts',
+      startLine: 42,
+      endLine: 81,
+    },
+  ]}
+/>
+
+### Zero-size records and rendered output
+
+For `hub` with no Scope transform, the input position is `[40, 20]`. Its registered rectangle has zero width and height, so querying `hub.right` returns the same point. The diagram is illustrative; refer to the code for the exact data structures.
+
+<ComponentPreview files="coordinate-storage" size="xl" type="illustration" hideCode />
+
+“Zero-size” means that the record has width 0 and height 0, commonly shortened to **0×0**. It stores only the Coordinate's center position, with no area or visible content; its boundary also collapses to the center. This is an internal geometry record used for positioning and path references, not a Scene primitive. That lets it reuse Node id lookup and anchor resolution while keeping pure reference points out of rendered output and automatic canvas bounds.
+
+- **Draws no primitive** — no shape, no text; it never appears in the rendered output.
+- **Never enlarges the canvas** — a far-away coordinate won't grow the final viewBox on its own; an actual `<Node>` / `<Path>` must land in that region for the canvas to cover it (a common gotcha when debugging placement).
+- **Named / angular anchors collapse to the center** — because both dimensions are 0, every directional boundary coincides with the center, so `hub.top` / `hub.bottom` / `hub.30` all equal that point; use `<Node>` when you need directional anchors.
+- **Side-fraction anchors throw** — `{ anchor: { side, fraction } }` needs a real edge to sample, while a zero-size record has only a center point and no edge.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'zero-size geometry record construction',
+      path: 'packages/kernel/core/src/compile/node/synthetic.ts',
+      startLine: 64,
+      endLine: 121,
+    },
+    {
+      label: 'named anchor resolution',
+      path: 'packages/kernel/core/src/compile/node/anchors.ts',
+      startLine: 102,
+      endLine: 160,
+    },
+    {
+      label: 'zero-size side-fraction rejection',
+      path: 'packages/kernel/core/src/compile/reference/anchor-cache.ts',
+      startLine: 28,
+      endLine: 51,
+    },
+  ]}
+/>
+
+## Shape layout and connections
+
+### Circle and ellipse content bounds
+
+`<Node>` combines measured text and `padding` into a content box, then asks the shape definition to compute a visible boundary around that inner box. Both panels below start with the same content box and change only the circumscription policy:
+
+<ComponentPreview files="circle-ellipse-circumscription" size="md" hideCode type="illustration" />
+
+The default `ellipse` multiplies each half-axis by √2. During compilation, `circle` resolves to `ellipse + circumscribe:'equal'`, using the content-box half-diagonal as one shared radius. The same resolved geometry emits the visible ellipse primitive and provides anchors plus the connection boundary, so `<Draw>` / `<Path>` endpoints snap to the outer contour.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve the circle preset to an equal ellipse',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'Ellipse circumscription, anchors, and primitive emission',
+      path: 'packages/kernel/core/src/providers/shape/ellipse.ts',
+      startLine: 9,
+      endLine: 45,
+    },
+  ]}
+/>
+
+### Rectangle corners and connection boundaries
+
+Node uses a rectangle when `rectangle` is selected explicitly, or when neither an explicit nor an inherited shape is configured. Text measurement and `padding` first form the inner content box, which the rectangle shape uses to produce both the visible outline and connection geometry:
+
+<ComponentPreview files="rectangle-node-boundary" size="sm" hideCode type="flow" />
+
+A rectangle does not enlarge the half-axes when circumscribing the content, so its boundary wraps exactly around “text + padding.” The same `cornerRadius` participates in both drawing the rectangle and finding a boundary point toward a target. That is why a connection to a rounded node lands on the fillet arc rather than on the sharp corner that was rounded away.
+
+The result of `<Rectangle>` is pure Path geometry. A rectangular `<Node>` retains its id, directional anchors, and boundary-intersection behavior; use `<Node>` when the rectangle needs to hold text and connect.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Default Node shape and corner-radius resolution',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'Text and padding to shape-boundary layout',
+      path: 'packages/kernel/core/src/compile/node/layout.ts',
+      startLine: 81,
+      endLine: 127,
+    },
+    {
+      label: 'Rectangle outline, anchors, and boundary intersection',
+      path: 'packages/kernel/core/src/providers/shape/rectangle.ts',
+      startLine: 41,
+      endLine: 69,
+    },
+  ]}
+/>
+
+### Polygon content bounds and connection contours
+
+Along the main path, the Node content determines what the polygon must contain, then the shape parameters determine which regular polygon contains it. The two outputs show the same contour rules serving both rendering and automatic connections:
+
+<ComponentPreview files="polygon-node-flow" size="md" hideCode type="flow" />
+
+Text and `padding` first form the inner box. The polygon provider then derives the smallest circumradius that fully contains that box for the given `sides` and `rotate`. Every vertex still lies on one circle, so long text enlarges the regular polygon as a whole instead of stretching it into an irregular polygon.
+
+`cornerRadius` does not change the circumscribed size; it is applied after the vertex ring is available. The same vertex and fillet rules emit the Scene path and intersect a ray from the node center toward an automatic connection target, so an endpoint lands on the rounded arc. Standard directional anchors (`top`, `bottom`, and so on) still come from the external bounding box; they are not arbitrary-direction contour intersections.
+
+`shape="diamond"` changes only the entry form: the compiler first normalizes it to `polygon{ sides:4, rotate:0 }`, then sends it through the same provider path. The object form `{ type:'diamond', params:{ aspectRatio } }` uses that path too; `aspectRatio` is the final outline width divided by height, and omitted / `1` keeps the original regular diamond. Flattened diamonds keep their four vertices at 0° / 90° / 180° / 270°, and the same vertices drive rendering, boundary intersections, and connection envelopes.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'diamond preset normalization',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+    {
+      label: 'Circumradius calculation for the inner box',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 89,
+      endLine: 114,
+    },
+    {
+      label: 'Contour output, connection hit, and directional anchors',
+      path: 'packages/kernel/core/src/providers/shape/polygon.ts',
+      startLine: 126,
+      endLine: 183,
+    },
+  ]}
+/>
+
+### Resolving custom shapes
+
+Orange nodes in the figure are JSON data; blue nodes are runtime capabilities. They meet by shape name during compile: the registry merges built-ins and custom definitions, validates params, then uses one definition to produce Scene primitives and connection geometry.
+
+<ComponentPreview files="custom-shape-flow" size="sm" hideCode type="flow" />
+
+The execution order is:
+
+1. Resolve `node.shape`; normalize `circle` / `diamond` presets to real provider names and params
+2. Look up the definition in one shape registry; built-ins and custom definitions do not fork into separate consumption paths
+3. Validate through the JSON-object guard and the definition's `paramsSchema`
+4. Call `circumscribe` for Node layout, geometry hooks for connections and anchors, `connectionEnvelope` for regular tight-fit surfaces, and `emit` for drawing
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Merge built-in and custom shape registries',
+      path: 'packages/kernel/core/src/providers/shape/registry.ts',
+      startLine: 6,
+      endLine: 12,
+    },
+    {
+      label: 'Resolve shape presets, providers, and params',
+      path: 'packages/kernel/core/src/resolve/node/shape.ts',
+      startLine: 35,
+      endLine: 106,
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Choose positions, anchors, and connection surfaces',
+      url: '/kernel/components/node/extend',
+    },
+    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'label · Label',
+      description: 'Place annotations and leader lines',
+      url: '/kernel/components/node/labels',
+    },
+    {
+      title: 'Custom boundaries',
+      description: 'Define and register connection rules',
+      url: '/kernel/components/node/custom',
+    },
+  ]}
+/>

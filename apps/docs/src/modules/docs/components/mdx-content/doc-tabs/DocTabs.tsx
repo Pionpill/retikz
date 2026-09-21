@@ -38,13 +38,9 @@ export const DocTabs: FC<DocTabsProps> = props => {
       className="my-6 min-w-0 gap-0"
     >
       <div className="overflow-x-auto">
-        <TabsList variant="line" className="gap-6 p-0 group-data-[orientation=horizontal]/tabs:h-10">
+        <TabsList>
           {tabs.map(tab => (
-            <TabsTrigger
-              key={tab.props.value}
-              value={tab.props.value}
-              className="h-10 flex-none rounded-none border-0 px-0 pb-3 pt-2 text-base font-semibold group-data-[orientation=horizontal]/tabs:after:bottom-0"
-            >
+            <TabsTrigger key={tab.props.value} value={tab.props.value}>
               {tab.props.label}
             </TabsTrigger>
           ))}

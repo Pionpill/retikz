@@ -1,0 +1,219 @@
+---
+title: label · Label
+description: Attach node labels and control position, spacing, rotation, and leader lines
+---
+
+`text` is the node body; `label` is separate text attached to the border or center. Start with [Basic usage](/kernel/components/node/usage). Labels do not enlarge the node shape.
+
+## Using this topic
+
+Put one `label` object on a Node to attach separate text to its border. The four forms below attach `status` to the same node; Vanilla needs an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="node-label-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Node position={[0, 0]} label={{ text: 'status', position: 'top' }}>
+      Q
+    </Node>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } }],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [node({ position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', position: [0, 0], text: 'Q', label: { text: 'status', position: 'top' } }],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Adding labels
+
+`label` accepts one object or an array. Choose the attachment point, then adjust its style:
+
+- `position` defaults to `'top'` and accepts `'top'`, `'top-right'`, `'right'`, `'bottom-right'`, `'bottom'`, `'bottom-left'`, `'left'`, and `'top-left'`
+- It also accepts the center `'center'`, an angle such as `30`, or a boundary fraction such as `{ boundary: 'right', fraction: 0.25 }`; centered labels have no collision avoidance
+- `placement` defaults to `'outside'`; use `'inside'` to place the label inside the border
+- `font` / `textColor` use explicit label values first, then `Scope.defaults.label`, and finally inherit missing values from the node
+- `opacity` is 0..1 and multiplies the node opacity
+
+<ComponentPreview files="node-label-list" size="sm" />
+
+## Label position
+
+Choose a named direction, numeric angle, boundary fraction, or the center on one label. Center labels hide ineffective position fields.
+
+<ComponentPreview files="node-label-position" size="md" />
+
+To attach multiple labels, place the same object form in an array:
+
+```tsx
+import { Node } from '@retikz/react';
+
+<Node
+  position={[0, 0]}
+  label={[
+    { text: 'status', position: 'top' },
+    { text: 'owner', position: 'bottom' },
+  ]}
+/>;
+```
+
+## Spacing and placement
+
+`distance` is the net gap, along the placement direction, between the node boundary and the **rotated label visual box**. When omitted, it uses `<Layout labelDistance>` (default `12`); `0` makes the visual box touch the boundary. `placement: 'inside'` turns the direction inward and preserves the same gap on the inner side. Rectangle nodes can also use `position: { boundary, fraction }` to attach to a proportional point on a specific side. `position: 'center'` always uses the final node rectangle center and ignores `placement` and `distance`.
+
+- `boundary` accepts `'top'` / `'right'` / `'bottom'` / `'left'`
+- `fraction` is the 0..1 proportional position on that side and defaults to `0.5`
+- `placement: 'inside'` cannot be combined with `pin`; keep labels outside when a leader line is needed
+
+<ComponentPreview files="node-label-spacing" size="md" />
+
+## Rotation and leader lines
+
+`label.rotate` spins the label text around **its own center**: `'radial'` follows the direction defined by `position`, using the selected side's outward normal for a boundary-fraction position; `'tangent'` is its tangent (radial + 90°), and a number is an explicit angle in degrees. `placement: 'inside'` reverses only the label offset, not this orientation. `keepUpright` flips it 180° when it would otherwise read upside-down. Rotation changes the visual box projection along the placement direction, so the compiler adjusts the label center to preserve the same `distance` gap.
+
+`label.pin` adds a **leader line** from the node border to the label: `pin: true` is a default thin solid line (inherits the label color); `pin: { stroke, strokeWidth, dashPattern, dashOffset }` customizes it; omitted / `false` = no leader. Its endpoint is the exact intersection of the placement ray and the rotated visual box, with no hidden padding; the preceding box geometry still owns label placement.
+
+<ComponentPreview files="node-label-rotate-pin" size="lg" />
+
+<Comparison target="tikz" title="Node Label Syntax">
+
+| retikz                                                      | TikZ mapping                         |
+| ----------------------------------------------------------- | ------------------------------------ |
+| `label={{ text: 'foo', position: 'top' }}` / `position: 30` | `[label=above:foo]` / `label=30:foo` |
+| `label={{ text: 'foo', position: 'right', pin: true }}`     | `[pin=right:foo]`                    |
+
+</Comparison>
+
+## Label style
+
+The position stays fixed at the right outside of the node while the panel controls color, font size, and opacity.
+
+<ComponentPreview files="node-label-style" size="lg" />
+
+## Related props
+
+These members control label attachment, placement, and visual style. See the [API reference](/kernel/components/node/api-reference) for the complete field list and types.
+
+<ComponentProps
+    items={[
+      {
+        name: 'label',
+        kind: 'property',
+        type: "InputNode['label']",
+        description:
+          'Accepts one label object or an array. Labels are separate from node text and do not enlarge the node shape.',
+      },
+      {
+        name: 'InputNodeLabel.position',
+        kind: 'property',
+        type: "InputNodeLabel['position']",
+        defaultValue: "'top'",
+        description: `Chooses the label attachment point:
+
+- Named direction: \`'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left' | 'center'\`. A named direction attaches from the node border; \`'center'\` fixes the final node-rectangle center and ignores \`placement\` and \`distance\`
+- Angle: \`number\`, attaching along the ray from the node center at that angle
+- Boundary fraction: \`{ boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }\`. It attaches to one edge; \`fraction\` defaults to \`0.5\` and ranges from \`0..1\``,
+  },
+  {
+    name: 'InputNodeLabel.placement',
+    kind: 'property',
+    type: "'outside' | 'inside'",
+    defaultValue: "'outside'",
+    description: 'Offsets the label outward or inward from its attachment; inside labels cannot use a leader line.',
+  },
+  {
+    name: 'InputNodeLabel.distance',
+    kind: 'property',
+    type: 'number',
+    defaultValue: 'CompileOptions.labelDistance (12 by default)',
+    description: 'Sets the user-unit gap from the node border to the rotated label visual box.',
+  },
+  {
+    name: 'InputNodeLabel.rotate',
+    kind: 'property',
+    type: "'none' | 'radial' | 'tangent' | number",
+    description:
+      '`none`leaves the text unrotated;`radial`follows the attachment direction;`tangent`adds 90°. A number sets an explicit angle.',
+    defaultValue: "'none'",
+  },
+  {
+    name: 'InputNodeLabel.keepUpright',
+    kind: 'property',
+    type: 'boolean',
+    description: 'Flips upside-down text by 180° without changing its attachment point.',
+    defaultValue: 'false',
+  },
+  {
+    name: 'InputNodeLabel.pin',
+    kind: 'property',
+    type: "IRNodeLabel['pin']",
+    description: `Leader line for outside labels only:
+
+- \`true\`: uses the default thin solid line
+- \`{ stroke?, strokeWidth?, dashPattern?, dashOffset? }\`: customizes the leader line; \`strokeWidth\` defaults to \`1\`, while \`dashPattern\` and \`dashOffset\` control dashes`,
+  },
+  ]}
+  />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Node text', description: 'Write multi-line content and mixed runs', url: '/kernel/components/node/text' },
+    {
+      title: 'Implementation',
+      description: 'Understand sizing, text, and reference timing',
+      url: '/kernel/components/node/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent node-family fields',
+      url: '/kernel/components/node/schema-reference',
+    },
+  ]}
+/>

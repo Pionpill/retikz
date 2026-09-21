@@ -58,11 +58,51 @@ export const librarySection: Array<Section> = [
         difficulty: 'advanced',
         sidebarGroup: 'library.standardComposite',
       },
+      { id: 'list', label: 'library.standardList', difficulty: 'beginner', sidebarGroup: 'library.standardComposite' },
+      { id: 'map', label: 'library.standardMap', difficulty: 'beginner', sidebarGroup: 'library.standardComposite' },
       {
         id: 'legend',
         label: 'library.standardLegend',
         difficulty: 'advanced',
         sidebarGroup: 'library.standardComposite',
+      },
+      {
+        id: 'circle-ellipse',
+        label: 'library.standardCircleEllipse',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      {
+        id: 'rectangle',
+        label: 'library.standardRectangle',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      {
+        id: 'regular-polygon',
+        label: 'library.standardRegularPolygon',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      { id: 'star', label: 'library.standardStar', difficulty: 'beginner', sidebarGroup: 'library.standardShapes' },
+      {
+        id: 'arc-sector',
+        label: 'library.standardArcSector',
+        difficulty: 'beginner',
+        sidebarGroup: 'library.standardShapes',
+      },
+      {
+        id: 'animation',
+        label: 'library.standardAnimation',
+        sidebarGroup: 'library.standardExtension',
+        meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
+        children: [
+          {
+            id: 'api-reference',
+            label: 'kernel.visualApiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+        ],
       },
       {
         id: 'shape',

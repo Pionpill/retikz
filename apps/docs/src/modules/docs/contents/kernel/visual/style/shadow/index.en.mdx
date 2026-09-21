@@ -1,0 +1,136 @@
+---
+title: shadow · Shadows
+description: Shadows add a drop shadow to primary geometry, using a size preset or explicit overrides.
+---
+
+## Using this topic
+
+All four forms render the same result. Vanilla requires `<div id="diagram"></div>` in the page; call `view.dispose()` before removing the host.
+
+<ComponentPreview files="shadow-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node position={[0, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'steelblue', shadow: 'md' }} />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [node({ position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } })],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'steelblue', shadow: 'md' } },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Choose a preset
+
+`none`, `sm`, `md`, `lg`, `xl`, and `2xl` cover common projection scales. `none` explicitly disables a Scope default. See [Custom shadows](/kernel/visual/style/custom-shadow) for object configuration.
+
+<ComponentPreview files="shadow-presets" size="sm" />
+
+## Component integration
+
+| Component   | Entry                                         |
+| ----------- | --------------------------------------------- |
+| Scope       | `defaults.node.style` / `defaults.path.style` |
+| Node        | `style.shadow`                                |
+| Path / Draw | `style.shadow`                                |
+
+### Scope defaults
+
+`Scope.style` does not accept `shadow`; defaults pass it to descendant primary geometry. In the demo, both the Node and closed Path inherit the Scope projection, while the Node on the right explicitly disables it with `none`.
+
+<ComponentPreview files="shadow-integration" size="sm" />
+
+### Node primary geometry
+
+Node text, labels, and pins are separate outputs and do not receive the shape shadow. Adjust the controls below to change only the blue rectangle's offset, blur, colour, and opacity; its top label remains crisp.
+
+<ComponentPreview files="shadow-node" size="lg" />
+
+### Shared Path and arrow boundary
+
+A Path and its arrow belong to the same primary geometry, so they share one projection; the path label remains independent. This demo uses the same control values to compare the effect boundary with Node.
+
+<ComponentPreview files="shadow-path" size="lg" />
+
+## Related props
+
+These are the entries used here; see the full declarations in [API](/kernel/visual/style/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.shadow',
+      kind: 'property',
+      type: 'ShadowPresetValue | IRDropShadow',
+      description:
+        'Presets are none, sm, md, lg, xl, and 2xl. Objects supply a preset or both offsetX and offsetY, with optional blur, color, and opacity overrides.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Custom shadows', url: '/kernel/visual/style/custom-shadow' },
+    { title: 'Implementation', url: '/kernel/visual/style/mechanism#shadow-shadows' },
+    { title: 'API reference', url: '/kernel/visual/style/api-reference' },
+    { title: 'Schema reference', url: '/kernel/visual/style/schema-reference#shadow-shadows' },
+  ]}
+/>

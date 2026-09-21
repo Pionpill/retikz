@@ -83,7 +83,7 @@ describe('多 Layout 实例 marker id 隔离', () => {
             <Step kind="line" to={[80, 0]} />
           </Path>
         </Layout>
-        <Layout width={100} height={100} arrows={[TestOpenArrowDefinition]}>
+        <Layout width={100} height={100} extensions={{ arrows: [TestOpenArrowDefinition] }}>
           <Path arrow="->" arrowDetail={{ shape: 'testOpen' }}>
             <Step kind="move" to={[0, 0]} />
             <Step kind="line" to={[80, 0]} />

@@ -20,7 +20,7 @@ export type ArrowEmitContext = {
  * @description 描述箭头 marker 的尺寸、接触点和几何生成能力；定义本身不进入 IR
  */
 export type ArrowDefinition = {
-  /** arrow 名称，由 IR `arrowDetail.shape` 引用 */
+  /** arrow 名称，由 IR `marks[].mark.shape` 引用；作者侧使用 `arrowDetail.shape` */
   name: string;
   /**
    * marker 局部基准边长（viewBox `0 0 baseSize baseSize`，refY = baseSize/2）；缺省 10

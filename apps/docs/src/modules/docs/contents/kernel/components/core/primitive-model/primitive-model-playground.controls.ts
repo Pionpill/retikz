@@ -41,6 +41,7 @@ const canonicalValues = {
 /** 图元模型的中文操作面板 */
 export const primitiveModelPlaygroundControls = definePreviewControls({
   presentation: 'panel',
+  defaultSize: 50,
   title: '图元实验台',
   sections: [
     {

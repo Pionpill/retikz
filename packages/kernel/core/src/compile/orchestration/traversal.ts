@@ -43,6 +43,7 @@ import {
   resolveBoundaryReference,
   resolveComposite,
   resolveNode,
+  resolveScopeFrame,
   resolvePath as resolvePathValue,
   resolveStrokePathProviders,
   resolveTheme,
@@ -1068,12 +1069,19 @@ export const compileChildrenToPrimitives = (
     const scopeIrPath = `${locatorPrefix}children[${index}].scope`;
     const hasScopeTransforms = scopeTransforms.length > 0;
     const isPrunable =
-      scopePrimitiveSink.length === 0 && !hasScopeTransforms && child.id === undefined && child.clip === undefined;
+      (input.framePrimitives?.length ?? 0) === 0 &&
+      scopePrimitiveSink.length === 0 &&
+      !hasScopeTransforms &&
+      child.id === undefined &&
+      child.clip === undefined;
     if (isPrunable) return;
 
     const group: GroupPrim = {
       type: 'group',
-      children: stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
+      children: [
+        ...(input.framePrimitives ?? []),
+        ...stableSortByZIndex(sealSink(scopePrimitiveSink), runtime.state.zIndexOf),
+      ],
     };
     if (child.id !== undefined) group.id = child.id;
     if (child.meta !== undefined) group.meta = child.meta;
@@ -1147,6 +1155,7 @@ export const compileChildrenToPrimitives = (
     const scopeCompileObservations: TraversalFrame['compileObservationSink'] = [];
     const scopeSpatialHandles: TraversalFrame['spatialHandleSink'] = [];
     let scopeTransforms: Array<Transform> = [];
+    let framePrimitives: Array<ScenePrimitive> = [];
     try {
       const scopeFrame: TraversalFrame = {
         ancestors: scopeAncestors,
@@ -1177,6 +1186,34 @@ export const compileChildrenToPrimitives = (
       }
 
       const intrinsicLayout = createIntrinsicScopeLayout(child, scopeLayouts);
+      if (child.frame !== undefined && scopeLayouts.length > 0) {
+        const appearance = resolveScopeFrame(child.frame, scopeFrame.styleStack, {
+          mode: theme.mode,
+          patterns: context.patterns,
+          round: context.round,
+          irPath: `${scopeFrame.locatorPrefix}frame`,
+        });
+        const { padding, fill, stroke, ...style } = appearance;
+        const frameLayout: NodeLayout = {
+          ...intrinsicLayout,
+          ...style,
+          id: undefined,
+          rect: {
+            ...intrinsicLayout.rect,
+            width: intrinsicLayout.rect.width + 2 * padding,
+            height: intrinsicLayout.rect.height + 2 * padding,
+          },
+          fillResolution: fill,
+          strokeResolution: stroke,
+        };
+        framePrimitives = emitNodePrimitives(frameLayout, context.round, context.paint.register).map(primitive => ({
+          ...primitive,
+          hitTest: false,
+        }));
+        if (semanticOwner !== undefined)
+          runtime.state.identityTracker?.recordPrimitives(framePrimitives, semanticOwner, 'scope-frame');
+      }
+
       scopeTransforms = resolveFinalScopeTransforms(
         child,
         index,
@@ -1250,12 +1287,6 @@ export const compileChildrenToPrimitives = (
       }
       flushPendingPathEmissions(scopePendingPaths);
       frame.compileObservationSink.push(...scopeCompileObservations);
-      for (const contribution of scopeBounds) {
-        frame.boundsSink.push({
-          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
-          shadow: contribution.shadow,
-        });
-      }
       for (const contribution of effectiveAllocations(scopeAllocations)) {
         pushAllocation(
           frame.allocationSink,
@@ -1274,6 +1305,7 @@ export const compileChildrenToPrimitives = (
     }
 
     const clipRef = emitScopeGroup(child, {
+      framePrimitives,
       index,
       scopeTransforms,
       scopePrimitiveSink,
@@ -1281,6 +1313,55 @@ export const compileChildrenToPrimitives = (
       ...(semanticOwner === undefined ? {} : { semanticOwner }),
       ...(preResolvedClipShape === undefined ? {} : { resolvedClipShape: preResolvedClipShape }),
     });
+    for (const contribution of scopeBounds) {
+      if (contribution.decoration === true) {
+        const bounds = collectLayoutBounds(undefined, contribution.points);
+        if (bounds === undefined) continue;
+        const rectangle = boundsToRect(bounds);
+        const projected = optionalVisualBoundsOfPrimitives(
+          [
+            {
+              type: 'group',
+              transforms: scopeTransforms,
+              ...(clipRef === undefined ? {} : { clipRef }),
+              children: [{ type: 'rect', ...rectangle, fill: 'black' }],
+            },
+          ],
+          context.clip.resources(),
+        );
+        if (projected !== undefined) frame.boundsSink.push({ points: allocationPointsOf(projected), decoration: true });
+      } else {
+        frame.boundsSink.push({
+          points: contribution.points.map(point => applyTransformChain(point, scopeTransforms)),
+          shadow: contribution.shadow,
+        });
+      }
+    }
+    if (framePrimitives.length > 0) {
+      const decorationBounds = optionalVisualBoundsOfPrimitives(
+        [
+          {
+            type: 'group',
+            children: framePrimitives,
+            transforms: scopeTransforms,
+            ...(clipRef === undefined ? {} : { clipRef }),
+          },
+        ],
+        [...context.paint.resources(), ...context.clip.resources()],
+      );
+      if (decorationBounds !== undefined) {
+        const { x, y, width, height } = decorationBounds;
+        frame.boundsSink.push({
+          decoration: true,
+          points: [
+            [x, y],
+            [x + width, y],
+            [x, y + height],
+            [x + width, y + height],
+          ],
+        });
+      }
+    }
     publishClipObservation(clipRef, scopeOccurrence, {
       ...frame,
       ancestors: scopeAncestors,
@@ -1528,6 +1609,7 @@ export const compileChildrenToPrimitives = (
               ? contribution.points
               : contribution.points.map(point => applyTransformChain(point, transforms)),
           shadow: contribution.shadow,
+          ...(contribution.decoration === undefined ? {} : { decoration: contribution.decoration }),
         });
       }
     } else {
@@ -1535,7 +1617,11 @@ export const compileChildrenToPrimitives = (
         ...runtime.context.paint.resources(),
         ...runtime.context.clip.resources(),
       ]);
-      if (visualBounds !== undefined) frame.boundsSink.push({ points: allocationPointsOf(visualBounds) });
+      if (visualBounds !== undefined)
+        frame.boundsSink.push({
+          points: allocationPointsOf(visualBounds),
+          ...(transaction.bounds.some(contribution => contribution.decoration === true) ? { decoration: true } : {}),
+        });
     }
     for (const contribution of effectiveAllocations(transaction.allocations)) {
       pushAllocation(

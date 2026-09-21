@@ -54,7 +54,7 @@ export const modules: ReadonlyArray<ModuleEntry> = [
     navigationLabel: 'kernel.navigationLabel',
     navigationDescription: 'kernel.navigationDescription',
     quickLinks: [
-      { label: 'kernel.components', path: '/kernel/components/node/overview' },
+      { label: 'kernel.components', path: '/kernel/components/node/usage' },
       { label: 'kernel.packages', path: '/kernel/packages' },
       { label: 'kernel.gallery', path: '/kernel/galleries/karl-circle' },
     ],

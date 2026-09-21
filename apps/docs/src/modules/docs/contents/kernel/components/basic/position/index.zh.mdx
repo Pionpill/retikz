@@ -95,7 +95,7 @@ Node 的 anchor 定位先完成当前 Node 的文本测量、shape、padding、m
 <Draw way={[[0, 0], { relativeAccumulate: [40, 0] }, { relativeAccumulate: [0, 30] }]} />
 ```
 
-<ComponentPreview files="positioning-path-relative" size="sm" />
+<ComponentPreview files="positioning-path-relative" size="md" />
 
 它们只属于 path target，不用于 `<Node>.position` / `<Coordinate>.position`。如果要摆放实体，请用笛卡尔、极坐标、相对定位、偏移定位、比例定位，或 Node 专用的 anchor 定位。
 
@@ -164,11 +164,6 @@ Node 的 anchor 定位先完成当前 Node 的文本测量、shape、padding、m
       title: '图元关系',
       description: 'path 如何引用图元、端点在动态贴边与锁定间解析',
       url: '/kernel/components/core/primitive-relations',
-    },
-    {
-      title: '定位 schema',
-      description: 'position 各形态的字段速查与类型定义',
-      url: '/kernel/reference/schema/placement',
     },
   ]}
 />

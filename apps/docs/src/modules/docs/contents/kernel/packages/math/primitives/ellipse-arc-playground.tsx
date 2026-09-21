@@ -1,6 +1,7 @@
 import type { Ellipse, Position } from '@retikz/math';
 import { boundsOf, boundsToRect, centerOfBounds, collectArcBoundingCandidates, ellipse } from '@retikz/math';
-import { Arc, Circle, Draw, Ellipse as EllipseShape, Layout, Rectangle } from '@retikz/react';
+import { Draw, Layout } from '@retikz/react';
+import { Arc, Circle, Ellipse as EllipseShape, Rectangle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -40,7 +41,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const arcBoundsRect = boundsToRect(arcBounds);
 
   return (
-    <Layout viewBox={{ x: -150, y: -105, width: 300, height: 220 }}>
+    <Layout>
       <Draw
         way={[
           [-145, 0],

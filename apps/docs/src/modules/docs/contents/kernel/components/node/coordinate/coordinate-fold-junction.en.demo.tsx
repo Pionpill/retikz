@@ -3,14 +3,13 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { coordinateFoldJunctionFrame } from './coordinate-fold-junction.controls';
 import { coordinateFoldJunctionControls, previewControlContract } from './coordinate-fold-junction.en.controls';
 
 export const previewControls = coordinateFoldJunctionControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout viewBox={coordinateFoldJunctionFrame.viewBox}>
+    <Layout>
       <Node id="A" position={[-120, -55]}>
         A
       </Node>

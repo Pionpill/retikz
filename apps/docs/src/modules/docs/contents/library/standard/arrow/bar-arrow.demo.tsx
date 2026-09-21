@@ -8,7 +8,7 @@ import { barArrowControls, previewControlContract } from './bar-arrow.controls';
 
 export const previewControls = barArrowControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} arrows={[BarArrowDefinition]}>
+  <Layout viewBox={{ x: -160, y: -70, width: 320, height: 140 }} extensions={{ arrows: [BarArrowDefinition] }}>
     <Draw
       way={[
         [-120, 0],

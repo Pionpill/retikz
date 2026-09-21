@@ -1,5 +1,5 @@
 import type { IRNode, IRScope } from '@retikz/core';
-import { SectorShapeDefinition } from '@retikz/standard/shape';
+import { SectorShapeDefinition } from '@retikz/standard/node-shape';
 import { describe, expect, it } from 'vitest';
 
 import type { LowerPlotsOptions } from '../../../src/pipeline/expand';

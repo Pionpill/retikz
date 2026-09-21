@@ -1,0 +1,28 @@
+---
+title: 自定义阴影
+description: 使用对象配置组合阴影预设和显式字段，并通过 controls 调整投影的偏移、模糊与颜色。
+---
+
+字符串预设适合常规层级；需要单独控制投影时，向 `style.shadow` 传对象。对象先从可选 `preset` 取得初值，再以显式 `offsetX`、`offsetY`、`blur`、`color` 和 `opacity` 覆盖。没有 preset 时必须同时提供两个偏移。
+
+## 覆盖预设或完全指定投影
+
+下面左侧在 `md` 预设上修改颜色和透明度，右侧不使用预设并给出完整偏移与模糊。`shadow: 'none'` 才是关闭继承投影的写法；对象 `{ preset: 'none', ... }` 仍可用显式字段形成投影。
+
+<ComponentPreview files="shadow-object" size="sm" />
+
+## 调整连续参数
+
+偏移和模糊只改变主几何周围的投影，不改变节点连接面或 Path 的几何。固定 viewBox 没有预留空间时仍会裁切阴影。
+
+<ComponentPreview files="shadow-playground" size="md" controlPanelDefaultSize={50} />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'shadow · 阴影', url: '/kernel/visual/style/shadow' },
+    { title: '实现原理', url: '/kernel/visual/style/mechanism#shadow-阴影' },
+    { title: 'Schema 参考', url: '/kernel/visual/style/schema-reference#dropshadowschema' },
+  ]}
+/>

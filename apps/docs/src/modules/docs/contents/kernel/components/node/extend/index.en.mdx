@@ -1,0 +1,284 @@
+---
+title: Extended usage
+description: Choose node positions, anchor alignment, and connection surfaces
+---
+
+Start with [Basic usage](/kernel/components/node/usage), then choose node positions, alignment anchors, and connection surfaces.
+
+## Using this topic
+
+Align B's left edge with A's right edge, then offset it by 40 units. B keeps this border gap when A's text grows. All four forms use this anchor placement and connect A to B; Vanilla needs an existing `<div id="diagram"></div>`.
+
+<ComponentPreview files="node-connection-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Draw, Layout, Node } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Node id="a" position={[0, 0]}>
+      A
+    </Node>
+    <Node
+      id="b"
+      position={{ kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' }}
+    >
+      B
+    </Node>
+    <Draw way={['a', 'b']} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    {
+      type: 'node',
+      id: 'b',
+      position: { kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' },
+      text: 'B',
+    },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { node, path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node('a', { position: [0, 0], text: 'A' }),
+    node('b', {
+      position: { kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' },
+      text: 'B',
+    }),
+    path({ way: ['a', 'b'] }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', id: 'a', position: [0, 0], text: 'A' },
+    {
+      type: 'node',
+      id: 'b',
+      position: { kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [40, 0] }, selfAnchor: 'left' },
+      text: 'B',
+    },
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: { id: 'a' } },
+        { type: 'step', kind: 'line', to: { id: 'b' } },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## Center placement
+
+`position` determines a Node's center. Choose a form in the panel, then adjust the fields that appear to see `q` move relative to the fixed reference nodes `a` and `b`.
+
+`position` accepts these five forms:
+
+| Form                 | Syntax                          | Purpose                                         |
+| -------------------- | ------------------------------- | ----------------------------------------------- |
+| Cartesian            | `[x, y]`                        | Specify a canvas coordinate directly            |
+| Polar                | `{ origin?, angle, radius }`    | Place from an origin by angle and radius        |
+| Directional relative | `{ direction, of, distance? }`  | Move from a named reference in a direction      |
+| Referent offset      | `{ of, offset }`                | Add a two-dimensional offset to a reference     |
+| Between two points   | `{ between: [a, b], fraction }` | Take a proportional position between two points |
+
+<ComponentPreview files="node-position" size="lg" />
+
+Referenced objects must have completed layout and registration (usually earlier siblings). Directional placement inherits its default distance from `<Layout nodeDistance>`, while `fraction: 0.5` is the midpoint for `between`. See the full input union in the [API reference](/kernel/components/node/api-reference), or use [Coordinate](/kernel/components/node/coordinate) for invisible helper points.
+
+## Anchor placement
+
+Node also supports a sixth form that depends on its real measured size: anchor-to-anchor placement. Use the panel to switch both standard anchors and adjust offset, target margin, both rotations, and the current Node's scale; asymmetric padding and all of those geometry inputs are laid out first.
+
+<ComponentPreview
+  files="node-anchor-position"
+  size="md"
+  caption="The light-gray marker shows target.anchor + offset; it always coincides with q's selfAnchor."
+/>
+
+For example, align the left side of `q` to the right side of `a`, with a 16-unit gap. `target.id` refers to the earlier node; `offset` adds a displacement to its anchor.
+
+```tsx
+import type { IRScene } from '@retikz/core';
+<Layout>
+  <Node id="a" position={[0, 0]}>
+    A
+  </Node>
+  <Node id="q" position={{ kind: 'anchor', target: { id: 'a', anchor: 'right', offset: [16, 0] }, selfAnchor: 'left' }}>
+    Q
+  </Node>
+</Layout>;
+```
+
+Both `target.anchor` and `selfAnchor` default to `center`. The target must be an already-laid-out Node, Coordinate, or Scope; undefined, later, self, and still-open ancestor Scope references throw immediately.
+
+## Shapes and connection surfaces
+
+A node's visual contour and connection endpoints have three independent controls: `shape` selects what is drawn, `boundary` selects the surface used for automatic clipping, and an endpoint `anchor` selects a named attachment point. Change A and B independently to see how the same edge resolves at both ends.
+
+<ComponentPreview files={['node-shape-connection', 'node-shape-connection-boundary.ts']} size="md" />
+
+With no `anchor`, the edge clips automatically toward the opposite endpoint. Standard named anchors such as `top` and `right` resolve against `boundary`; `center` connects directly to the node center. Shape-specific anchors still belong to the visual `shape`; see each shape page for their names.
+
+`layout.margin` pushes automatic endpoints, standard directional anchors, and angular anchors outward and expands the layout footprint. Shape-specific anchors and side-fraction points stay on the visual outline. A boundary’s `gap` changes only connection geometry, not the layout footprint; neither changes the visible shape.
+
+`shape` has two forms: shapes without required parameters accept a bare string, while parametric shapes such as `polygon`, `sector`, and `star` require `{ type, params }`. Core provides `rectangle` / `ellipse` / `polygon` by default and exposes `circle` / `diamond` as basic presets; optional Node shapes such as `sector` / `star` must first be injected through `<Layout extensions={{ shapes }}>` or `CompileOptions.shapes`. By size source, they divide into text-container shapes that wrap "text + padding" and geometric shapes sized by radii or angles. A Sector with `innerRadius === outerRadius` is the open-arc state.
+
+See each shape page for its parameters and shape-specific anchors:
+
+| shape             | form                                       | docs                                                              |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------------------- |
+| rectangle         | default / `'rectangle'`                    | [Rectangle](/kernel/components/node/shape#rectangle)              |
+| circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/node/shape#circle--ellipse) |
+| sector            | `{ type:'sector', params }`                | [Arc / Sector](/library/standard/shape)                           |
+| polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/node/shape#polygon--diamond)         |
+| star              | `{ type:'star', params }`                  | [Star](/library/standard/shape)                                   |
+
+`shape` also accepts names registered through `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes`; parametric registered shapes continue to use `{ type, params }`. See [Custom Shapes](/kernel/components/node/custom-shape).
+
+`boundary` defaults to `'shape'` and can also use `'circle'`, `'rectangle'`, `'ellipse'`, or a registered connection surface. It changes only automatic endpoints and standard anchors, never the node footprint or visual contour. All three built-in alternatives accept `{ fit, gap }`: `fit: 'tight'` (the default) uses an enclosing contour supplied by the visual shape for a closer fit, while `fit: 'bounds'` encloses its axis-aligned bounding rectangle (AABB); `gap` then adjusts the radius or half-axes outward (positive) or inward (negative). Rectangle produces the same result for both fit modes.
+
+Switch A and B between fit modes and drag `gap` in the playground; the light dotted contour is the actual connection surface. A negative gap may cross the visual shape, but this usually makes connections cover the node and is not recommended. Compilation fails if it reduces either effective half-axis to zero or below. An individual edge can override the node default in its endpoint object. See [Custom Boundaries](/kernel/components/node/custom) for registration and [Path](/kernel/components/path/step) for endpoint syntax.
+
+## Related props
+
+These are the members used directly for placement, anchor alignment, and automatic attachment. See the [API reference](/kernel/components/node/api-reference) for the complete field list and types.
+
+<ComponentProps
+    items={[
+      {
+        name: 'id',
+        kind: 'property',
+        type: 'string',
+        description:
+          'Registers the name that `Draw`, relative placement, and anchor alignment can reference; the target must already have completed layout.',
+      },
+      {
+        name: 'position',
+        kind: 'property',
+        type: "InputNode['position']",
+        required: true,
+        description: `Choose one placement form:
+
+- **Cartesian**: \`[x, y]\` sets canvas coordinates directly
+- **Polar**: \`{ origin?, angle, radius }\`; origin defaults to \`[0, 0]\`
+- **Relative**: \`{ direction, of, distance? }\`; direction is one of eight named directions and distance falls back to nodeDistance then 24
+- **Offset**: \`{ of, offset: [dx, dy] }\`
+- **Between**: \`{ between: [a, b], fraction }\`; fraction is 0..1 and 0.5 is the midpoint
+- **Anchor alignment**: \`{ kind: 'anchor', target: { id, anchor?, offset?, boundary? }, selfAnchor? }\`; both anchors default to center and target can override the connection surface`,
+},
+{
+  name: 'shape',
+  kind: 'property',
+  type: "IRNode['shape']",
+  defaultValue: "Scope.defaults.node.shape → rectangle",
+  description:
+    'Selects the visual outline. Parameterless shapes accept a name; parameterized or registered shapes use `{ type, params }`.',
+},
+{
+  name: 'boundary',
+  kind: 'property',
+  type: 'IRBoundary',
+  description:
+    "Chooses the connection surface without redrawing the shape:\n\n- `shape`: follow the visual contour\n- `circle`/`ellipse`/`rectangle`: use a regular surface\n- `{ type, params: { fit?: 'tight' | 'bounds', gap?: number } }`: fit the contour or bounds and add a gap\n- A registered name or `{ type, params }`: select a custom definition",
+  defaultValue: 'Scope.defaults.node.boundary → shape',
+},
+{
+  name: 'layout',
+  kind: 'property',
+  type: "InputNode['layout']",
+  description:
+    'Fields used here:\n\n- `padding`/`margin`: a number or numeric `{ default?, x?, y?, left?, right?, top?, bottom? }`; side overrides axis, then default\n- `minimumSize`: a number or numeric `{ default?, width?, height? }`\n- `width?: number`: unscaled border width, excluding margin, no smaller than the minimum',
+},
+{
+  name: 'scale',
+  kind: 'property',
+  type: 'number | IRAxisScale',
+  description:
+    'A number scales uniformly. An object accepts `{ default?: number, x?: number, y?: number }`; axes override default and factors must be positive. Inherits Scope defaults, then falls back to 1.',
+  defaultValue: 'Scope.defaults.node.scale → 1',
+  },
+  {
+  name: 'rotate',
+  kind: 'property',
+  type: 'number',
+  description:
+  'Rotates around the node center in degrees, clockwise for positive values; inherits Scope defaults.',
+  defaultValue: 'Scope.defaults.node.rotate → 0',
+  },
+  ]}
+  />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Coordinates',
+      description: 'Organize invisible reference points',
+      url: '/kernel/components/node/coordinate',
+    },
+    {
+      title: 'Custom boundaries',
+      description: 'Define and register connection rules',
+      url: '/kernel/components/node/custom',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand sizing, text, and reference timing',
+      url: '/kernel/components/node/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public entries, types, and extension contracts',
+      url: '/kernel/components/node/api-reference',
+    },
+  ]}
+/>

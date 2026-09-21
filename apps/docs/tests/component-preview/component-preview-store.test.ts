@@ -32,6 +32,14 @@ describe('ComponentPreview store controls panel preference', () => {
     expect(useComponentPreviewStore.getState().themeMode).toBe('dark');
   });
 
+  it('保存全站悬浮控制锁定状态', () => {
+    const state = useComponentPreviewStore.getState();
+
+    expect(state).toMatchObject({ controlsLocked: false });
+    expect(state).toHaveProperty('setControlsLocked');
+    expect(state).toHaveProperty('toggleControlsLocked');
+  });
+
   it('stores the default range playback duration', () => {
     expect(useComponentPreviewStore.getState().rangePlaybackDuration).toBe(2000);
 

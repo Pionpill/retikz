@@ -1,0 +1,97 @@
+---
+title: 组件对接
+description: 同一轨道放到不同组件上，其动画目标也不同。Scope 的动画不是子元素默认值。
+---
+
+| 组件   | 接入方式            |
+| ------ | ------------------- |
+| Scope  | animations          |
+| Node   | animations          |
+| Path   | animations          |
+| Layout | animations: viewBox |
+
+Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `colorShift`、`cameraTo`、`loop`、`stagger` 通用工具。`grow`、`growUp`、`pulse`、`spin`、`flash`、`blink`、`wiggle` 从 `@retikz/standard` 导入，详见 [Standard 动画预设](/library/standard/animation)。两层返回相同的轨道数据，不需要额外注册。
+
+## Scope
+
+`Scope.animations` 作用于整组输出。组内 Node、Path 和文字一起运动，彼此的静态布局关系保持不变；它不是传递给子元素的默认动画，`defaults.node` 和 `defaults.path` 不包含 `animations`。
+
+| 目标     | 合适的动画                             | 适用场景                       |
+| -------- | -------------------------------------- | ------------------------------ |
+| 整组入场 | `fadeIn`、`slideIn`、`scaleIn`、`grow` | 一组节点与连接线一起出现       |
+| 整组强调 | `pulse`、`flash`、`wiggle`             | 强调一个完整区域，保留内部排布 |
+| 持续运动 | `spin` 或 translateX / translateY 轨道 | 整体旋转、往返平移             |
+| 整组显隐 | opacity 轨道                           | 同时改变整组的可见程度         |
+
+下面对同一个 Scope 应用上下平移轨道。观察节点、三角路径和文字之间的距离：整个组合运动，内部布局不变。
+
+<ComponentPreview files="animation-integration" size="sm" controls={{ animation: true }} />
+
+Scope 适合变换和透明度动画。不要把 `colorShift` 或 `drawOn` 放在 Scope 上期待其自动作用于所有后代：颜色、描边宽度和描边画出需要落到实际几何图元上，Canvas 不会把组上的颜色轨道继承给子图元。需要逐个元素依次出现时，为各个 Node / Path 配置轨道，再用 delay 或 `stagger` 错峰。
+
+## Node
+
+`Node.animations` 适合单个节点的入场、状态强调和位置变化。按希望改变的是“整个节点”还是“主形状样式”选择轨道。
+
+| 目标         | 合适的动画                             | 使用条件                                             |
+| ------------ | -------------------------------------- | ---------------------------------------------------- |
+| 节点入场     | `fadeIn`、`slideIn`、`scaleIn`、`grow` | 可组合不同属性，例如淡入与滑入                       |
+| 节点强调     | `pulse`、`flash`、`blink`、`wiggle`    | 用缩放、透明度或旋转突出节点                         |
+| 定向生长     | `growUp`、scaleX / scaleY 轨道         | 按支点缩放外观，不重新计算布局                       |
+| 形状样式变化 | `colorShift`、strokeWidth 轨道         | 用于输出为直接几何图元的节点，需区分带文字节点的分组 |
+
+下面左侧节点淡入并从左滑入，右侧节点循环缩放强调。两者都包含文字和附属标签，因此它们会随节点主体一起变化。左侧入场结束后保持最终状态，可用预览播放控件重播。
+
+<ComponentPreview files="animation-node" size="md" controls={{ animation: true }} />
+
+带正文文字或有效静态旋转的 Node 会把主体、文字和附属标签放在同一输出组上，动画作用于该组；纯形状 Node 的动画作用于形状本身，其独立标签不会自动随动。因此不能仅根据“都是 Node”推断所有动画作用范围相同。
+
+需要对带文字节点只做填充色或描边动画时，不要把组上的 fill / stroke 轨道当作主形状专用通道；Canvas 不支持组颜色轨道向后代继承。可以用独立的无正文形状节点承接样式动画，把文字作为独立图元。节点的视觉位移也不会让外部连接线重新计算端点；要让组合一起运动，应使用 Scope。
+
+## Path
+
+`Path.animations` 适合路径的描边展示、显隐和视觉变换。路径画出改变的是可见描边进度，不会生成新的路径几何。
+
+| 目标           | 合适的动画                                                 | 使用条件                         |
+| -------------- | ---------------------------------------------------------- | -------------------------------- |
+| 沿路径画出     | `drawOn` / pathDraw 轨道                                   | 必须有实际描边；不是填充区域生长 |
+| 路径显隐       | `fadeIn`、`flash`、opacity 轨道                            | 作用于动画绑定的路径主体         |
+| 路径入场或强调 | `slideIn`、`scaleIn`、`spin`、`wiggle`                     | 注意标签与标记是否属于同一输出组 |
+| 描边样式变化   | `colorShift({ channel: 'stroke', ... })`、strokeWidth 轨道 | 适合直接输出为几何图元的描边路径 |
+
+下面左侧用 `drawOn` 逐步显示折线，右侧用 `wiggle` 摆动带箭头的路径。两条路径没有额外的静态整体变换，标签独立输出：左侧标签不随描边逐渐出现，右侧标签也不随路径摆动。
+
+<ComponentPreview files="animation-path" size="md" controls={{ animation: true }} />
+
+Path 通常将轨道绑定到主体图元。有有效的静态整体 rotate / scale 时，会增加包含主体、标签和 mark 的外层组，动画也改为绑定该组。不要为了偶然的分组结果来组织动画；需要路径、标签及其他节点稳定地统一运动时，显式使用带动画的 Scope。
+
+`drawOn` 只揭示描边，不会让端点箭头沿路径前进，也不会按进度逐个显示标签或 mark。避免把它用于没有描边的填充形状，或期望它在组上递归画出全部后代。Draw 不暴露 `animations`，需要路径动画时使用 Path。
+
+## Layout
+
+Layout 的 `animations` 只接受 viewBox 镜头轨道，适合移动或缩放观察窗口，而不是改变某个图元的位置。元素层的 viewBox，以及根层的其它属性轨道会产生告警并被丢弃。镜头示例见[动画编排与镜头](/kernel/visual/animation/extended-usage#动画编排与镜头)。
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/animation/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description:
+        '轨道包含 property、keyframes（at 与 value）、duration；可选 delay、easing、iterations、direction、fill、trigger 与 origin。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/animation/usage' },
+    { title: '实现原理', url: '/kernel/visual/animation/mechanism' },
+  ]}
+/>

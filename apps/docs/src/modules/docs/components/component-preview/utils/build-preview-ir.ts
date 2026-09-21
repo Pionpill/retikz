@@ -1,5 +1,6 @@
 import type { AnyPathKindDefinition, CoreProviderContribution, IRScene } from '@retikz/core';
-import { createInputScene, isEmbeddableMarked, Layout, Scope } from '@retikz/react';
+import { createInputScene, isEmbeddableMarked, Layout, wrapRootScope } from '@retikz/react';
+import type { LayoutProps } from '@retikz/react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { createElement, isValidElement } from 'react';
@@ -13,6 +14,8 @@ import { previewEmbedPropsOf, previewHostDimensionsOf } from './preview-embed';
 const COMPONENT_EXPANSION_LIMIT = 16;
 
 type PreviewRootProps = {
+  extensions?: LayoutProps['extensions'];
+  rootScope?: LayoutProps['rootScope'];
   children?: ReactNode;
   ir?: IRScene;
   viewBox?: IRScene['viewBox'];
@@ -34,28 +37,6 @@ const resolvePreviewRootElement = (
   const component = element.type as (props: FunctionComponentProps) => ReactNode;
   return resolvePreviewRootElement(component(element.props), depth - 1);
 };
-
-const LAYOUT_OWN_PROPS = new Set([
-  'children',
-  'ir',
-  'width',
-  'height',
-  'viewBox',
-  'authoring',
-  'compileDriver',
-  'className',
-  'style',
-  'nodeDistance',
-  'shapes',
-  'arrows',
-  'patterns',
-  'pathGenerators',
-  'pathKinds',
-  'animate',
-  'animations',
-  'easings',
-  'animationProperties',
-]);
 
 /** ComponentPreview 派生出的 IR 渲染信息。 */
 export type PreviewIR = {
@@ -79,13 +60,8 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
     isEmbeddableRoot && EmbeddableRoot !== undefined
       ? createElement(EmbeddableRoot, previewEmbedPropsOf(EmbeddableRoot, props))
       : props.children;
-  if (props.ir === undefined) {
-    const styleProps = Object.fromEntries(
-      Object.entries(props).filter(([key, value]) => !LAYOUT_OWN_PROPS.has(key) && value !== undefined),
-    );
-    if (!isEmbeddableRoot && Object.keys(styleProps).length > 0) {
-      childNode = createElement(Scope, styleProps, props.children);
-    }
+  if (rootElement?.type === Layout && props.ir === undefined) {
+    childNode = wrapRootScope(props.children, props.rootScope ?? {});
   }
   const normalized =
     props.ir === undefined
@@ -117,7 +93,7 @@ export const buildPreviewIR = (Component: ComponentPreviewDemoComponent, lang: L
   }
   const hostDimensions =
     rootElement !== null && (isLayout || isEmbeddableRoot) ? previewHostDimensionsOf(rootElement.type, props) : {};
-  const pathKinds = isLayout ? (props.pathKinds as ReadonlyArray<AnyPathKindDefinition> | undefined) : undefined;
+  const pathKinds = isLayout ? props.extensions?.pathKinds : undefined;
   return {
     ir,
     sourceIr,

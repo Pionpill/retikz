@@ -16,6 +16,14 @@
 
 ## 功能规划
 
+### 动画效果预设
+
+Core 保留基础预设和通用轨道工具，Standard 提供生长、循环与状态强调等可选效果，统一生成 Core 动画轨道并复用现有播放机制。相关决策：[031](./031-animation-preset-migration.md)。
+
+### 形状
+
+为圆、椭圆、矩形、正多边形、星形、圆弧和扇形建立可持久化的 Tier 2 语义，统一 Vanilla `shape.xxx` 与 React 入口；与 Node 的节点形状扩展保持独立。相关决策：[029](./029-shape-composites.md)。
+
 ### 开放接入
 
 主要场景：
@@ -42,6 +50,7 @@
 规划内容：
 
 - 提供 Grid、Axes、Frame 与已解析的 Legend 呈现。
+- 提供可引用单元格的一维 List 与键值 Map 呈现，复用 Layout 与 Surface；见 [ADR-030](./030-list-map-presentation.md)。
 - 保留领域包的数据信息所有权，只接收通用绘图输入。
 
 预期效果：

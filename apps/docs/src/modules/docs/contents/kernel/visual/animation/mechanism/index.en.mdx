@@ -1,0 +1,121 @@
+---
+title: Implementation
+description: Establish the track, keyframe, and timing model, then follow compilation, evaluation, and backend playback.
+---
+
+[Basic usage](/kernel/visual/animation/usage) introduces declarations. This page first examines animation data to establish tracks, keyframes, and timing, then follows that data into Scene, property evaluation, and playback.
+
+## A track describes one property through keyframes and timing
+
+An animation declaration stores enough data to calculate intermediate states rather than storing every rendered frame. Three concepts establish the model:
+
+- **Track**: the complete change of one property, such as opacity moving from 0.2 to 1.
+- **Keyframe**: a property value at a specified progress position; interpolation supplies intermediate values.
+- **Timing**: the delay, duration of one iteration, repetition count, and behavior outside the active interval.
+
+This complete opacity track also supplies the data for the evaluation figures later on:
+
+```ts
+import type { IRAnimationTrack } from '@retikz/core';
+
+const track = {
+  property: 'opacity',
+  keyframes: [
+    { at: 0, value: 0.2 },
+    { at: 1, value: 1 },
+  ],
+  duration: 1000,
+  delay: 200,
+  easing: 'linear',
+  iterations: 1,
+  direction: 'normal',
+  fill: 'forwards',
+  trigger: 'load',
+} satisfies IRAnimationTrack;
+```
+
+`property` identifies what changes, `keyframes` defines the values it passes through, and timing determines when those changes occur. `at` is a normalized position from 0 to 1 within one iteration, not milliseconds. In this example, `at: 0.5` corresponds to 500ms inside the active interval, or 700ms on the timeline after adding delay. Each `value` is absolute rather than a delta from the previous frame. Frames are ordered by `at`.
+
+The track does not contain its target. Placing the same track in `Node.animations`, `Path.animations`, or `Scope.animations` lets the owning component determine that target. An object's `animations` array can hold separate opacity and translation tracks. Preset functions produce the same data; the runtime does not need a separate preset-animation representation.
+
+The declaration is JSON-serializable. DOM references, event callbacks, current playback time, and paused state remain outside the track and belong to the mounted runtime. This allows SVG, Canvas, and static snapshots to consume the same declaration.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Keyframes, tracks, and the JSON data contract',
+      path: 'packages/kernel/core/src/schemas/animation/schema.ts',
+    },
+    { label: 'Presets produce ordinary tracks', path: 'packages/kernel/core/src/parse/animation.ts' },
+  ]}
+/>
+
+## Timing and keyframes determine the property value
+
+Consider opacity with `delay = 200ms`, `duration = 1000ms`, keyframes `0 → 0.2` and `1 → 1`, linear easing, one forward iteration, and base opacity 1.
+
+The same rectangle stays at a fixed position in each view. At t = 100ms the track is inactive. Default fill is forwards, so there is no animation value and base opacity remains. The next three views show evaluation results.
+
+<ComponentPreview files="animation-samples" size="md" hideCode type="illustration" />
+
+At t = 700ms, subtracting delay gives local time 500ms and progress 0.5. Segment progress is also 0.5 and linear leaves it unchanged. The result is $0.2 + (1 - 0.2) \times 0.5 = 0.6$.
+
+The flow expands one evaluation. Outside the active interval it can return no animation value, leaving the base output unchanged rather than setting the property to zero.
+
+<ComponentPreview files="animation-flow" size="sm" hideCode type="flow" />
+
+Repeats first determine iteration index and progress; direction then may reverse progress. Alternate reverses odd iterations, starting at index 0. With two alternate iterations, t = 1450ms gives local time 1250ms, iteration 1, and progress 0.25. Reversal gives 0.75, producing opacity 0.8.
+
+Fill controls application outside the interval: backwards retains the starting side, forwards the ending side, both retains both, and none retains neither. Direction still affects the ending value; a reverse iteration need not finish at the last keyframe.
+
+Once track progress is determined, easing and interpolation produce the property value.
+
+With multiple keyframes, evaluation finds the surrounding pair and normalizes progress inside that segment. With frames at 0, 0.4, and 1, overall progress 0.7 becomes $\frac{0.7 - 0.4}{1 - 0.4} = 0.5$ in segment two.
+
+Easing transforms segment progress. The starting keyframe's easing overrides track easing; the default is linear. Cubic-bezier solves for its curve parameter from input progress before reading the vertical coordinate. Progress is not directly the curve parameter.
+
+Interpolation happens afterward: numbers interpolate linearly, colors in Oklch, and numeric viewBox components independently. Registered interpolators can handle custom properties. Half the elapsed time therefore need not mean halfway color channels or visible movement.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Timing, segment selection, easing, and interpolation',
+      path: 'packages/kernel/render/src/animation/evaluate.ts',
+    },
+    { label: 'Oklch color interpolation', path: 'packages/kernel/render/src/animation/oklch.ts' },
+  ]}
+/>
+
+## Backend and output mode determine the playback path
+
+Scene retains tracks; backend and output mode determine execution. This figure separates autoplay, interaction, and static output instead of treating all SVG animation as JavaScript frame-by-frame drawing.
+
+<ComponentPreview files="animation-playback" size="md" hideCode type="flow" />
+
+| Path                | Consumer                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| SVG autoplay        | Supported tracks map to CSS @keyframes advanced by the browser                                    |
+| SVG interaction     | Serializable WAAPI descriptors bind targets through element.animate                               |
+| Canvas              | A shared clock advances time; drawing evaluates tracks and redraws                                |
+| SVG static snapshot | snapshotAt evaluates autoplay into static attributes or transforms without ongoing playback rules |
+
+Shared semantics do not mean CSS calls evaluateTrack every frame. The evaluator serves Canvas, static sampling, and paths needing JavaScript evaluation. Native SVG animation runs in the browser.
+
+Snapshots do not replay interactions. Untriggered interaction tracks keep the base state. SVG custom properties without a built-in static mapping warn and retain base output. Registering a property does not automatically make it exportable as CSS.
+
+<SourceLinks
+  sources={[
+    { label: 'SVG CSS generation and snapshots', path: 'packages/kernel/render/src/svg/animation/keyframes.ts' },
+    { label: 'WAAPI descriptors', path: 'packages/kernel/render/src/svg/animation/waapi.ts' },
+    { label: 'Shared clock and runtime binding', path: 'packages/kernel/render/src/animation/runtime.ts' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Basic usage', url: '/kernel/visual/animation/usage' },
+    { title: 'Component integration', url: '/kernel/visual/animation/integration' },
+  ]}
+/>

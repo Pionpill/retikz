@@ -22,6 +22,7 @@ Validate selection rules first, then let Core compile the primary figure and pub
 <ComponentPreview
   files="inspect-compile-flow"
   size="lg"
+  type="flow"
   hideCode
   caption="The blue branch preserves the primary result; the orange branch generates auxiliary inspection content. Both are delivered to Render together."
 />
@@ -38,7 +39,7 @@ Core provides final outputs and isolated compilation. Inspect owns selection, In
 
 First see how a rule finds its implementation. Solid lines show rule processing; the registry supplies definitions from below. Looking up a definition does not invoke the Inspector yet: execution still needs final geometry.
 
-<ComponentPreview files="inspect-role-flow" size="sm" hideCode />
+<ComponentPreview files="inspect-role-flow" size="sm" type="flow" hideCode />
 
 Admission checks that selection rules can be executed legally before compiling the primary figure. A selection contains two kinds of rule:
 
@@ -124,7 +125,7 @@ Each observation also carries `ancestors`, an outside-in chain of the Scope and 
 
 This example assumes one input produces two final instances and requests `occurrenceIndex: 1`. Read the top row left to right, then continue on the bottom row: admission checks input rules first; only after Core compilation and notification collection can matching select the second instance. Indexing starts at 0; an ordinary curve does not necessarily produce multiple instances.
 
-<ComponentPreview files="inspect-occurrence-flow" size="sm" hideCode />
+<ComponentPreview files="inspect-occurrence-flow" size="sm" type="flow" hideCode />
 
 When `complete()` enters `compileInspectionObserverOutput()`, it first calls `resolveAdmittedInspectionSelection()`. The final observation set is now available, so targets can be selected in stable instance order and scene-to-object rules can be applied to the curve.
 
@@ -134,7 +135,7 @@ A request can be declared on a scene, authored subtree, or object. Its `options:
 
 The tree below follows one Inspector that supports scene-wide selection, with matching object owners. Lines represent parent-child structure; blue means enabled, and gray dashed boxes mean disabled or blocked. A inherits the parent's enabled state. B disables inspection for its subtree, but the object can reopen it. C sets a barrier, so even an explicit request cannot reopen inspection. These switches affect auxiliary inspection only; all objects still render in the primary figure.
 
-<ComponentPreview files="inspect-selection-tree" size="md" hideCode />
+<ComponentPreview files="inspect-selection-tree" size="lg" type="flow" hideCode />
 
 B's `options: false` disables only the selected Inspector; C's `barrier` blocks every Inspector in the subtree. In React, `<InspectScope request={false}>` declares that barrier.
 
@@ -187,7 +188,7 @@ For matched requests, the driver validates and freezes observation values with `
 
 Two inputs meet at `inspect()`: configuration on the left decides what to show, while geometry on the right supplies where to draw it. The bottom row follows callback output through fragment preparation, isolated compilation, and host adaptation into readonly layers. Arrows express data handoffs, not concurrent configuration and geometry validation.
 
-<ComponentPreview files="inspect-output-flow" size="md" hideCode />
+<ComponentPreview files="inspect-output-flow" size="sm" type="flow" hideCode />
 
 With control points enabled, the Inspector reads their positions from the subject and returns point and line IR. There are no displayable layers yet; the next section explains fragment compilation and host delivery.
 
@@ -263,7 +264,7 @@ An `inspect(subject, context)` callback can call `context.warn(code, message)` w
 
 This expands the admission, capture, matching, and auxiliary-output stages. Multiple occurrences converge on one session. Inside `complete()`, selection resolution precedes subject validation, `inspect()`, isolated fragment compilation, and `InspectionPlane` creation. Selection functions and captured storage in the figure are internal implementation members.
 
-<ComponentPreview files="inspect-observer-batch-flow" size="lg" hideCode />
+<ComponentPreview files="inspect-observer-batch-flow" size="xl" type="flow" hideCode />
 
 N is the number of final notifications in this compile and may be 0. `observe()` runs once per notification; `complete()` runs once after notification dispatch for this successful compile.
 

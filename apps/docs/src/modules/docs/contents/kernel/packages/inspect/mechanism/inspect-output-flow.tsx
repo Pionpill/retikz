@@ -6,6 +6,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { inspectOutputFlowI18n } from './inspect-output-flow.i18n';
+
 export type InspectOutputFlowProps = Readonly<{ lang?: Lang }>;
 const InspectOutputFlow: FC<InspectOutputFlowProps> = props => {
   const { lang = 'zh' } = props;

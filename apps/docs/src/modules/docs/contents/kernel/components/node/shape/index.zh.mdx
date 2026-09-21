@@ -1,0 +1,190 @@
+---
+title: shape · 节点形状
+description: 选择 Core 内置节点形状，配置内容适配、圆角与形状锚点
+---
+
+在[基础用法](/kernel/components/node/usage)之上，`shape` 同时决定节点的视觉轮廓、内容占位和默认连接边界。Core 内置 rectangle、ellipse、polygon；circle 与 diamond 分别是 ellipse 与 polygon 的预设。只绘制轮廓时见 [Path 形状绘制](/library/standard/circle-ellipse)。
+
+## 接入方式
+
+四种写法都在原点绘制同一个圆形 Hello 节点。React 示例默认导出可挂载组件；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="shape-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node shape="circle" id="a" position={[0, 0]}>
+      Hello
+    </Node>
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', shape: 'circle', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({ children: [node('a', { shape: 'circle', position: [0, 0], text: 'Hello' })] });
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [{ type: 'node', shape: 'circle', id: 'a', position: [0, 0], text: 'Hello' }],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+Vanilla 挂载容器移除前调用 `view.dispose()` 释放资源。
+
+## Rectangle
+
+`shape` 省略时先继承 `Scope.defaults.node.shape`，没有继承值时才使用矩形。显式写 `shape="rectangle"` 可覆盖继承；矩形边界由文字、padding 和尺寸约束共同决定。
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node position={[0, 0]}>label</Node>
+<Node position={[0, 0]} shape={{ type: 'rectangle', params: { cornerRadius: 10 } }}>rounded</Node>
+```
+
+playground 固定目标矩形在原点。调整 `cornerRadius` 比较直角与圆角边界，再通过轨道角度与距离移动来源节点；自动贴边会落在真实边界上，命名 / 数字 anchor 则给出稳定的显式位置。
+
+<ComponentPreview files="rectangle-node-connection-playground" size="sm" />
+
+圆角既可以用顶层 `cornerRadius`，也可以写成 `shape={{ type:'rectangle', params:{ cornerRadius } }}`（两者并存时 params 优先）。Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/usage)。
+
+### 形状选项
+
+| `shape`              | 边界                         | 参数                        |
+| -------------------- | ---------------------------- | --------------------------- |
+| 缺省 / `"rectangle"` | 包住「文字 + padding」的内框 | `cornerRadius?`（圆角半径） |
+
+## Circle / Ellipse
+
+当你要的不是一条线、而是一个圆形 / 椭圆形的节点时（装文字、被连线引用），给 `<Node>` 设 `shape`。
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node position={[0, 0]} shape="circle">label</Node>
+<Node position={[0, 0]} shape="ellipse">label</Node>
+```
+
+在 playground 中切换 `circle` / `ellipse`：前者是 `circumscribe:'equal'` 的等轴预设，后者默认按各轴 × √2 外接「文字 + padding」。调整轨道角度与距离移动来源节点；保持自动贴边，或切换命名 / 数字 anchor，直接比较端点在两种边界上的落点。
+
+<ComponentPreview files="circle-ellipse-node-connection-playground" size="sm" />
+
+节点中心与 8 个方位 anchor（`center` / `top` …）照常可用。`position` / `fill` / `padding` / `label` 等通用属性见 [Node](/kernel/components/node/usage)。
+
+### 形状选项
+
+| `shape`                                     | 边界                                                             | 参数                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `"circle"`                                  | 能容纳文字的外接圆（= `ellipse` 的 `circumscribe:'equal'` 预设） | 无                                                                                            |
+| `"ellipse"` 或 `{ type:'ellipse', params }` | 外接椭圆                                                         | `circumscribe?`：`'proportional'`（默认，各轴 × √2）/ `'equal'`（等轴，半径取内框对角线之半） |
+
+## Polygon / Diamond
+
+当你要的是一个多边形**节点**（装文字、被连线引用）而不是一条线时，给 `<Node>` 设 `shape={{ type:'polygon', params }}`。边界取能容纳「文字 + padding」的正多边形外接圆，尺寸由文字驱动。
+
+```tsx
+import { Node } from '@retikz/react';
+```
+
+```tsx
+<Node position={[0, 0]} shape={{ type: 'polygon', params: { sides: 6 } }}>label</Node>
+<Node position={[0, 0]} shape="diamond">label</Node>
+<Node position={[0, 0]} shape={{ type: 'diamond', params: { aspectRatio: 1.8 } }}>label</Node>
+```
+
+playground 把六边形与 `diamond` 预设放在同一场景比较；字符串 `diamond` 保持正菱形，对象形式可通过 `aspectRatio` 调整宽高比。选择六边形时可调整 `cornerRadius`，再通过轨道角度与距离移动来源节点，观察自动贴边如何跟随尖角或圆角轮廓，并与命名 / 数字 anchor 对照。
+
+<ComponentPreview files="polygon-node-connection-playground" size="sm" />
+
+Node 的通用尺寸、边界与 anchor 见 [Node 几何](/kernel/components/node/usage)。
+
+### 形状选项
+
+| `shape`                       | 边界                                  | 参数                                                                     |
+| ----------------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
+| `{ type: 'polygon', params }` | 能容纳文字的正多边形外接圆            | `sides`（≥3） / `rotate?` / `cornerRadius?` / `aspectRatio?`（仅四边形） |
+| `"diamond"`                   | = `polygon{ sides:4, rotate:0 }` 预设 | 无                                                                       |
+| `{ type: 'diamond', params }` | 可参数化的四边形菱形                  | `aspectRatio?`（宽 / 高，缺省 `1`）                                      |
+
+`cornerRadius`（用户单位）给每个顶点倒角，省略 / `0` = 直角，逐角夹紧到不自交的最大半径。
+
+## Standard 形状
+
+星形、扇形、任意轮廓、十字形、圆柱等由 [Standard 形状扩展](/library/standard/shape)提供，需要按该页说明装配。这里不重复其参数与示例。内置形状无法表达目标时，见[自定义形状](/kernel/components/node/custom-shape)；只改变连接规则时，见[自定义连接面](/kernel/components/node/custom)。
+
+## 相关属性
+
+[完整 API 参考](/kernel/components/node/api-reference)
+
+<ComponentProps
+  items={[
+    {
+      name: 'shape',
+      kind: 'property',
+      type: 'string | { type: string; params?: JsonObject }',
+      defaultValue: "'rectangle'",
+      description:
+        '无必填参数时写名称；带参时写 `{ type, params }`。支持 rectangle、ellipse、polygon 与 circle、diamond 预设，省略时先继承 Scope 默认值',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/components/node/usage' },
+    { title: '实现原理', url: '/kernel/components/node/mechanism' },
+    { title: 'API 参考', url: '/kernel/components/node/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/components/node/schema-reference' },
+  ]}
+/>

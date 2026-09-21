@@ -89,6 +89,33 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     });
   });
 
+  it('preserves registered names within top-level unions', async () => {
+    const { TransformSchema } = await import('@retikz/core');
+    const r = walk(TransformSchema);
+
+    expect(r.kind).toBe('alias');
+    if (r.kind !== 'alias' || r.type.kind !== 'union') throw new Error('expected union alias');
+    expect(r.type.members[0]).toMatchObject({
+      kind: 'ref',
+      name: 'TranslateSchema',
+    });
+  });
+
+  it('walks intersections so custom clip branches retain both contracts', async () => {
+    const { ClipSchema } = await import('@retikz/core');
+    const r = walk(ClipSchema);
+
+    expect(r.kind).toBe('alias');
+    if (r.kind !== 'alias' || r.type.kind !== 'union') throw new Error('expected union alias');
+    expect(r.type.members[1]).toMatchObject({
+      kind: 'intersection',
+      members: [
+        { kind: 'object', fields: [{ name: 'kind' }] },
+        { kind: 'ref', name: 'JsonObjectSchema' },
+      ],
+    });
+  });
+
   it('walks z.discriminatedUnion same as union', () => {
     const A = z.object({ type: z.literal('a'), x: z.number() });
     const B = z.object({ type: z.literal('b'), y: z.string() });
@@ -120,7 +147,13 @@ describe('walker — tuple / lazy / union / discriminatedUnion', () => {
     expect(r.kind).toBe('union');
     if (r.kind === 'union') {
       const labels = r.members.map(m => (m.kind === 'ref' ? m.name : `<${m.kind}>`));
-      expect(labels).toEqual(['Position', 'PolarPosition', 'AtPosition', 'OffsetPosition', 'BetweenPosition']);
+      expect(labels).toEqual([
+        'PositionSchema',
+        'PolarPositionSchema',
+        'AtPositionSchema',
+        'OffsetPositionSchema',
+        'BetweenPositionSchema',
+      ]);
     }
   });
 });
@@ -235,11 +268,33 @@ describe('walker — top-level entry + object + optional + constraints', () => {
     const scope = walk(ScopeSchema);
 
     if (scene.kind !== 'object' || scope.kind !== 'object') throw new Error('expected objects');
-    expect(scene.fields.find(field => field.name === 'theme')?.description).toBe(
-      'Sparse root Theme inherited by every Scene child.',
-    );
-    expect(scope.fields.find(field => field.name === 'theme')?.description).toBe(
-      'Sparse Theme override inherited by this Scope descendants.',
-    );
+    expect(scene.fields.find(field => field.name === 'theme')?.description).toBe(SceneSchema.shape.theme.description);
+    expect(scope.fields.find(field => field.name === 'theme')?.description).toBe(ScopeSchema.shape.theme.description);
+  });
+});
+
+it('保留具名 union 子类型与共享节点几何名称', async () => {
+  const { BoundarySchema, NodeSchema, NodeLayoutSchema } = await import('@retikz/core');
+  expect(JSON.stringify(walk(BoundarySchema))).toContain('ShapeRefSchema');
+  expect(JSON.stringify(walk(NodeSchema))).toContain('AxisScaleSchema');
+  const layout = JSON.stringify(walk(NodeLayoutSchema));
+  expect(layout).toContain('BoxSizeSchema');
+  expect(layout).toContain('BoxSpacingSchema');
+});
+
+it('shows required and readonly fields plus forbidden union inputs accurately', () => {
+  const schema = z
+    .strictObject({
+      data: z.array(z.string()).readonly().optional(),
+      items: z.never().optional(),
+    })
+    .required({ data: true });
+  const result = walk(schema);
+  expect(result).toMatchObject({
+    kind: 'object',
+    fields: [
+      { name: 'data', optional: false, type: { kind: 'array', element: { kind: 'primitive', name: 'string' } } },
+      { name: 'items', optional: true, type: { kind: 'primitive', name: 'never' } },
+    ],
   });
 });

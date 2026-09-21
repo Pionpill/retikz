@@ -39,7 +39,7 @@ In the diagram, the dashed lines are the fixed world axes, while the orange shap
 
 <ComponentPreview
   files="coordinate-spaces"
-  size="md"
+  size="lg"
   caption="Adjust the shape center, rotation, and local point to see the world point move"
 />
 
@@ -71,6 +71,7 @@ The upper lane maps a local point to a world point: `localToWorld` rotates aroun
 <ComponentPreview
   files="coordinate-conversion-flow"
   size="sm"
+  type="flow"
   hideCode
   caption="The upper and lower lanes are inverse transforms that share CenteredShape parameters"
 />
@@ -160,7 +161,8 @@ The first four values compose rotation, scale, reflection, or shear. The final t
 
 <ComponentPreview
   files="affine-composition-flow"
-  size="sm"
+  size="md"
+  type="flow"
   hideCode
   caption="The inner transform runs first and the outer follows; compose them, then apply the resulting matrix to a point"
 />

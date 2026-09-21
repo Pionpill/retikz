@@ -9,7 +9,7 @@ export const previewControls = textAttrsControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout viewBox={{ x: -210, y: -95, width: 420, height: 190 }}>
+    <Layout>
       <Node id="text" position={[0, 0]} style={{ textColor: '#64748b' }} layout={{ align: 'start', padding: 18 }}>
         Inherit Node style
         <Text

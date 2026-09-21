@@ -1,0 +1,61 @@
+---
+title: Schema 参考
+description: 查询 @retikz/foundation 公开基础 schema 的输入范围、默认值规则与校验结构
+---
+
+本页收录 `@retikz/foundation` 根入口公开的通用 schema。它们用于 JSON parse 边界和无领域标量校验；Node、Path 等领域对象应使用所属领域包拥有的 schema。编译期类型工具与开放字符串构造器见 [类型与契约](/kernel/packages/foundation/types-schemas)，断言与其他公开签名见 [API 参考](/kernel/packages/foundation/api-reference)。
+
+所有 Foundation schema 都没有填充默认值：`parse()` 只校验输入并返回已解析值，不做 coercion、trim 或其他变换。JSON schema 保留递归结构；标量 schema 返回原始 number 或 string。
+
+## JSON 值 schema
+
+`JsonValueSchema` 接受任意 JSON 值；`JsonObjectSchema` 要求根值为对象。
+
+### JsonValueSchema
+
+<ZodSchema name="JsonValueSchema" description="递归 JSON 值：字符串、有限数值、布尔值、null、数组或对象。" />
+
+### JsonObjectSchema
+
+<ZodSchema name="JsonObjectSchema" description="键为 string、值为递归 JSON 值的对象。" />
+
+## 字符串 schema
+
+### NonBlankStringSchema
+
+<ZodSchema name="NonBlankStringSchema" description="至少包含一个非空白字符的 string。" />
+
+## 数值 schema
+
+### PositiveNumberSchema
+
+<ZodSchema name="PositiveNumberSchema" description="严格大于 0 的有限 number。" />
+
+### NonNegativeNumberSchema
+
+<ZodSchema name="NonNegativeNumberSchema" description="大于或等于 0 的有限 number。" />
+
+### PositiveIntegerSchema
+
+<ZodSchema name="PositiveIntegerSchema" description="严格大于 0 的安全整数。" />
+
+### NonNegativeIntegerSchema
+
+<ZodSchema name="NonNegativeIntegerSchema" description="大于或等于 0 的安全整数。" />
+
+### NormalizedFractionSchema
+
+<ZodSchema name="NormalizedFractionSchema" description="闭区间 0..1 内的 number。" />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: '类型与契约',
+      description: '编译期类型工具与开放字符串构造器',
+      url: '/kernel/packages/foundation/types-schemas',
+    },
+    { title: 'API 参考', description: '查询完整公开签名与类型契约', url: '/kernel/packages/foundation/api-reference' },
+  ]}
+/>

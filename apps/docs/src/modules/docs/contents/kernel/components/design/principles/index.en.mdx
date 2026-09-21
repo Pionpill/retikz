@@ -9,9 +9,9 @@ retikz separates describing a drawing, supplying capabilities, and executing out
 
 Start with two stable artifacts: **IR is the description boundary, and Scene is the execution boundary**. React JSX and Vanilla `InputScene` data converge through one normalization flow, while validated external IR enters compilation directly. Core outputs Scene rather than SVG strings, DOM objects, or Canvas pixels.
 
-<ComponentPreview files="principles-packages" size="sm" hideCode />
+<ComponentPreview files="principles-packages" size="md" hideCode />
 
-Solid arrows show data flow: author input becomes IR, `compileToScene` creates Scene and typed artifacts together, and a renderer emits the Scene as SVG or Canvas. Dashed arrows show capability dependencies: `@retikz/math` supplies pure geometry, while `@retikz/tex` enters as an optional lowerer instead of creating a special IR or renderer branch.
+Solid arrows show data flow: author input becomes IR, `compileToScene` creates Scene and typed artifacts together, and a renderer emits the Scene as SVG or Canvas. The secondary nodes below show optional supporting capabilities: `@retikz/tex` enters compilation as a lowerer, while `@retikz/inspect` reads the final compilation result to produce read-only helper content. Dashed arrows distinguish these supporting relationships from the main data flow; neither creates a special IR or renderer branch.
 
 See [Layers · Packages](/kernel/components/design/layers#packages) for all nine Kernel packages and their responsibilities. The figure shows the main input-to-rendering path, not every dependency.
 
@@ -19,7 +19,7 @@ See [Layers · Packages](/kernel/components/design/layers#packages) for all nine
 
 Extensible capabilities do not use a built-in switch followed by an extension patch. Each capability begins with an `XxxDefinition` protocol. Built-in items and custom items created with `defineXxx(...)` enter one effective registry, after which compile looks up and consumes both through the same key path.
 
-<ComponentPreview files="principles-registry" size="xs" hideCode />
+<ComponentPreview files="principles-registry" size="md" hideCode />
 
 “Built-ins and extensions are first-class” means three concrete things:
 
@@ -27,7 +27,7 @@ Extensible capabilities do not use a built-in switch followed by an extension pa
 2. **One registry**: `BUILTIN_*` and `options.xxx` become one `ReadonlyMap` at the start of each compile call.
 3. **One consumer path**: resolvers, diagnostics, and compile consumers do not branch on where a key came from.
 
-Built-ins register first and custom items follow. Registry construction rejects empty and duplicate keys. When a consumer later encounters an unknown key, that capability's contract determines whether to throw or warn and skip. First-class therefore means the same protocol and execution path, not that a custom item can silently override a built-in. See [Extension Mechanisms](/kernel/reference/runtime/extensions) for extension families, injection points, and failure semantics.
+Built-ins register first and custom items follow. Registry construction rejects empty and duplicate keys. When a consumer later encounters an unknown key, that capability's contract determines whether to throw or warn and skip. First-class therefore means the same protocol and execution path, not that a custom item can silently override a built-in.
 
 ## Capability ownership
 
@@ -35,7 +35,7 @@ Capabilities that only change authoring notation without adding drawing semantic
 
 Once the overall framework is clear, decide whether a request changes authoring ergonomics, shared drawing semantics, a high-level domain model, a replaceable compile strategy, or backend runtime behavior. Design from that first owner.
 
-<ComponentPreview files="principles-placement" size="md" hideCode />
+<ComponentPreview files="principles-placement" size="lg" hideCode />
 
 Each arrow points to the first owner, while the second line in the node shows common implementation anchors; this does not mean only one package can change. One capability may need authoring, contract, compile, and runtime wiring, but each semantic layer has one source of truth.
 
@@ -82,15 +82,12 @@ When a subpackage lacks a capability, first decide whether the need is compositi
       description: 'Preserve domain intent and lower high-level nodes',
       url: '/kernel/components/design/composite',
     },
-    {
-      title: 'Extension Mechanisms',
-      description: 'Look up Definitions, registries, host lowerers, and guides',
-      url: '/kernel/reference/runtime/extensions',
-    },
+
     {
       title: 'Schema',
       description: 'Look up the current IR fields and contracts',
-      url: '/kernel/reference/schema',
+      url: '/kernel/components/layout/schema-reference',
     },
-  ]}
+
+]}
 />
