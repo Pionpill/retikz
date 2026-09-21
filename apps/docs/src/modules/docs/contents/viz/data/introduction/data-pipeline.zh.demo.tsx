@@ -2,7 +2,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 数据落地页 "数据流水线" 插图
+ * 数据简介的“数据流水线”插图
  * @description 外部数据集在运行时进入数据层，经字段模型与解析归一形成规范化行，再交给不同消费模块
  */
 const Demo: FC = () => (
