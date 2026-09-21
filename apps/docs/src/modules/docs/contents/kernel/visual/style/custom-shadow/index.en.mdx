@@ -1,0 +1,28 @@
+---
+title: Custom shadows
+description: Combine shadow presets with explicit fields, then tune offset, blur, and colour with controls.
+---
+
+String presets cover common elevation. For a specific projection, pass an object to `style.shadow`. It starts from an optional `preset`, then explicit `offsetX`, `offsetY`, `blur`, `color`, and `opacity` override it. Both offsets are required without a preset.
+
+## Override a preset or specify a projection
+
+The left example modifies the colour and opacity of `md`; the right example supplies a projection without a preset. Use `shadow: 'none'` to disable an inherited shadow. An object with `{ preset: 'none', ... }` can still create a projection through explicit fields.
+
+<ComponentPreview files="shadow-object" size="sm" />
+
+## Tune continuous values
+
+Offset and blur only affect the projection around primary geometry. They do not change node connection boundaries or Path geometry, and a fixed viewBox can still clip the result.
+
+<ComponentPreview files="shadow-playground" size="md" controlPanelDefaultSize={50} />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'shadow · Shadows', url: '/kernel/visual/style/shadow' },
+    { title: 'Implementation', url: '/kernel/visual/style/mechanism#shadow-阴影' },
+    { title: 'Schema reference', url: '/kernel/visual/style/schema-reference#dropshadowschema' },
+  ]}
+/>

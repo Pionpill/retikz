@@ -10,13 +10,18 @@ import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardAnimationApiReference } from './api-reference/standard-animation';
 import { writeStandardShapeApiReferences } from './api-reference/standard-shapes';
 import { writeTexApiReferenceMdx } from './api-reference/tex';
-import { writeVisualApiReferences } from './api-reference/visual';
+import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
 await writeStandardAnimationApiReference(
   path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/animation/api-reference/_includes'),
 );
-await writeVisualApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual'));
+await writeStyleApiReference(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/style/api-reference/_includes'),
+);
+await writeAnimationApiReference(
+  path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/animation/api-reference/_includes'),
+);
 await writeStandardShapeApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/standard'));
 
 await writeDrawApiReferenceMdx(

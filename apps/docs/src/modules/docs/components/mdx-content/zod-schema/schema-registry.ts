@@ -459,7 +459,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   DropShadowSchema: {
     schema: IR.DropShadowSchema,
     label: 'DropShadow',
-    url: '/kernel/visual/shadow/schema-reference#dropshadowschema',
+    url: '/kernel/visual/style/schema-reference#dropshadowschema',
   },
   GradientStopSchema: {
     schema: IR.GradientStopSchema,
@@ -481,27 +481,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   PatternShapeNameSchema: {
     schema: IR.PatternShapeNameSchema,
     label: 'PatternShapeNameSchema',
-    url: '/kernel/visual/pattern/schema-reference#patternshapenameschema',
+    url: '/kernel/visual/style/schema-reference#patternshapenameschema',
   },
   PatternLineStyleSchema: {
     schema: IR.PatternLineStyleSchema,
     label: 'PatternLineStyleSchema',
-    url: '/kernel/visual/pattern/schema-reference#patternlinestyleschema',
+    url: '/kernel/visual/style/schema-reference#patternlinestyleschema',
   },
   PatternLineStyleOverrideSchema: {
     schema: IR.PatternLineStyleOverrideSchema,
     label: 'PatternLineStyleOverrideSchema',
-    url: '/kernel/visual/pattern/schema-reference#patternlinestyleoverrideschema',
+    url: '/kernel/visual/style/schema-reference#patternlinestyleoverrideschema',
   },
   PatternLineStyleCycleSchema: {
     schema: IR.PatternLineStyleCycleSchema,
     label: 'PatternLineStyleCycleSchema',
-    url: '/kernel/visual/pattern/schema-reference#patternlinestylecycleschema',
+    url: '/kernel/visual/style/schema-reference#patternlinestylecycleschema',
   },
   PatternPaintSchema: {
     schema: IR.PatternPaintSchema,
     label: 'PatternPaint',
-    url: '/kernel/visual/pattern/schema-reference#patternpaintschema',
+    url: '/kernel/visual/style/schema-reference#patternpaintschema',
   },
   ImagePaintSchema: {
     schema: IR.ImagePaintSchema,

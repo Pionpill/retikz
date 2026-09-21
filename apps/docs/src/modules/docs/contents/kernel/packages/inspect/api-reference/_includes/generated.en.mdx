@@ -581,9 +581,9 @@ export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChil
 
 <DocTab value="members" label="Members">
 
-| Member                            | Type   | Default | Description |
-| --------------------------------- | ------ | ------- | ----------- |
-| `__@inspectorRegistryBrand@10968` | `true` | —       | —           |
+| Member                             | Type   | Default | Description |
+| ---------------------------------- | ------ | ------- | ----------- |
+| `__@inspectorRegistryBrand@684042` | `true` | —       | —           |
 
 </DocTab>
 
@@ -809,7 +809,9 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
 </p>
 
 ```ts
-export const compileInspectionToScene = <TComposites>(
+export declare const compileInspectionToScene: <
+  TComposites extends readonly Array<AnyCompositeDefinition> = readonly [],
+>(
   ir: {
     animations?: Array<{
       delay?: number;
@@ -845,7 +847,6 @@ export const compileInspectionToScene = <TComposites>(
       }>;
       origin?:
         | 'center'
-        | [number, number]
         | 'top'
         | 'right'
         | 'bottom'
@@ -853,7 +854,8 @@ export const compileInspectionToScene = <TComposites>(
         | 'top-right'
         | 'top-left'
         | 'bottom-right'
-        | 'bottom-left';
+        | 'bottom-left'
+        | [number, number];
       property: OpenString<
         ValueOf<{
           Fill: 'fill';
@@ -896,7 +898,7 @@ export const compileInspectionToScene = <TComposites>(
 
 | Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Description |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| [number, number] \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —           |
+| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —           |
 | `options` | `Readonly<{ compileOptions?: CompileOptions<TComposites>; registry: InspectorRegistry; selection: InspectionSelection }>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | —           |
 
 ### createDefaultInspectorRegistry
@@ -912,8 +914,9 @@ export const compileInspectionToScene = <TComposites>(
 </p>
 
 ```ts
-export const createDefaultInspectorRegistry = (definitions: readonly Array<AnyInspectorDefinitionInput>) =>
-  Readonly<{ [inspectorRegistryBrand]: true }>;
+export declare const createDefaultInspectorRegistry: (
+  definitions: readonly Array<AnyInspectorDefinitionInput>,
+) => Readonly<{ [inspectorRegistryBrand]: true }>;
 ```
 
 #### Parameters
@@ -935,7 +938,9 @@ export const createDefaultInspectorRegistry = (definitions: readonly Array<AnyIn
 </p>
 
 ```ts
-export const createInspectorRegistry = (definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
+export declare const createInspectorRegistry: (
+  definitions: readonly Array<AnyInspectorDefinitionInput>,
+) => InspectorRegistry;
 ```
 
 #### Parameters
@@ -953,7 +958,12 @@ export const createInspectorRegistry = (definitions: readonly Array<AnyInspector
 </p>
 
 ```ts
-export const defineInspector = <TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
+export declare const defineInspector: <
+  TSubject extends JsonValue,
+  TParsedOptions extends Record<string, JsonValue> = Record<string, never>,
+  TResolvedOptions extends Record<string, JsonValue> = TParsedOptions,
+  TSourceOptions extends Record<string, JsonValue> = TParsedOptions,
+>(
   definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
 ) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
@@ -986,8 +996,9 @@ export const defineInspector = <TSubject, TParsedOptions, TResolvedOptions, TSou
 </p>
 
 ```ts
-export const mergeInspectorRegistries = (registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>) =>
-  InspectorRegistry;
+export declare const mergeInspectorRegistries: (
+  registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>,
+) => InspectorRegistry;
 ```
 
 #### Parameters
@@ -1014,13 +1025,11 @@ export const mergeInspectorRegistries = (registries: readonly Array<Readonly<{ [
 
 <DocTab value="members" label="Members">
 
-| Member     | Type                                                                                                      | Default | Description                                                           |
-| ---------- | --------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------- |
-| `id`       | `string`                                                                                                  | —       | Placeholder node ID, referenced by other paths or node `at.of` values |
-| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Placeholder position, accepting the same forms as `<Node position>`   |
-| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —       | One or more inspection requests for the current Coordinate            |
-
-**position**: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or partway `{ between: [A, B], fraction }` positioning
+| Member     | Type                                                                                                      | Default | Description                                                                                                                                                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                                                                                  | —       | Coordinate ID used by path endpoints and node positioning to reference this position                                                                                                                                                            |
+| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Coordinate position; does not support Node-only self-anchor alignment<br />Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }` |
+| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —       | One or more inspection requests for the current Coordinate                                                                                                                                                                                      |
 
 </DocTab>
 
@@ -1208,7 +1217,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 </p>
 
 ```ts
-export const InspectCoordinate = FC<InspectCoordinateProps>;
+export declare const InspectCoordinate: FC<InspectCoordinateProps>;
 ```
 
 ### InspectLayout
@@ -1220,7 +1229,7 @@ export const InspectCoordinate = FC<InspectCoordinateProps>;
 </p>
 
 ```ts
-export const InspectLayout = FC<InspectLayoutProps>;
+export declare const InspectLayout: FC<InspectLayoutProps>;
 ```
 
 ### InspectNode
@@ -1232,7 +1241,7 @@ export const InspectLayout = FC<InspectLayoutProps>;
 </p>
 
 ```ts
-export const InspectNode = FC<InspectNodeProps>;
+export declare const InspectNode: FC<InspectNodeProps>;
 ```
 
 ### InspectPath
@@ -1244,7 +1253,7 @@ export const InspectNode = FC<InspectNodeProps>;
 </p>
 
 ```ts
-export const InspectPath = FC<InspectPathProps>;
+export declare const InspectPath: FC<InspectPathProps>;
 ```
 
 ### InspectScope
@@ -1256,7 +1265,7 @@ export const InspectPath = FC<InspectPathProps>;
 </p>
 
 ```ts
-export const InspectScope = FC<InspectScopeProps>;
+export declare const InspectScope: FC<InspectScopeProps>;
 ```
 
 ## `@retikz/inspect/vanilla`
@@ -1367,7 +1376,9 @@ export type InspectionVanillaRequest = Readonly<{
 </p>
 
 ```ts
-export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthoringInput) => InspectionVanillaAuthoring;
+export declare const createInspectionVanillaAuthoring: (
+  input: InspectionVanillaAuthoringInput,
+) => InspectionVanillaAuthoring;
 ```
 
 #### Parameters
@@ -1389,7 +1400,9 @@ export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthori
 </p>
 
 ```ts
-export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDriverOptions) => VanillaCompileDriver;
+export declare const createInspectionVanillaDriver: (
+  options: CreateInspectionVanillaDriverOptions,
+) => VanillaCompileDriver;
 ```
 
 #### Parameters

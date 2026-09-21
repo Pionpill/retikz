@@ -579,9 +579,9 @@ export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChil
 
 <DocTab value="members" label="属性">
 
-| 成员                             | 类型   | 默认值 | 说明 |
-| -------------------------------- | ------ | ------ | ---- |
-| `__@inspectorRegistryBrand@2899` | `true` | —      | —    |
+| 成员                               | 类型   | 默认值 | 说明 |
+| ---------------------------------- | ------ | ------ | ---- |
+| `__@inspectorRegistryBrand@675882` | `true` | —      | —    |
 
 </DocTab>
 
@@ -807,7 +807,9 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
 </p>
 
 ```ts
-export const compileInspectionToScene = <TComposites>(
+export declare const compileInspectionToScene: <
+  TComposites extends readonly Array<AnyCompositeDefinition> = readonly [],
+>(
   ir: {
     animations?: Array<{
       delay?: number;
@@ -843,7 +845,6 @@ export const compileInspectionToScene = <TComposites>(
       }>;
       origin?:
         | 'center'
-        | [number, number]
         | 'top'
         | 'right'
         | 'bottom'
@@ -851,7 +852,8 @@ export const compileInspectionToScene = <TComposites>(
         | 'top-right'
         | 'top-left'
         | 'bottom-right'
-        | 'bottom-left';
+        | 'bottom-left'
+        | [number, number];
       property: OpenString<
         ValueOf<{
           Fill: 'fill';
@@ -894,7 +896,7 @@ export const compileInspectionToScene = <TComposites>(
 
 | 参数      | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 说明 |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| [number, number] \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —    |
+| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —    |
 | `options` | `Readonly<{ compileOptions?: CompileOptions<TComposites>; registry: InspectorRegistry; selection: InspectionSelection }>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | —    |
 
 ### createDefaultInspectorRegistry
@@ -910,8 +912,9 @@ export const compileInspectionToScene = <TComposites>(
 </p>
 
 ```ts
-export const createDefaultInspectorRegistry = (definitions: readonly Array<AnyInspectorDefinitionInput>) =>
-  Readonly<{ [inspectorRegistryBrand]: true }>;
+export declare const createDefaultInspectorRegistry: (
+  definitions: readonly Array<AnyInspectorDefinitionInput>,
+) => Readonly<{ [inspectorRegistryBrand]: true }>;
 ```
 
 #### 参数
@@ -933,7 +936,9 @@ export const createDefaultInspectorRegistry = (definitions: readonly Array<AnyIn
 </p>
 
 ```ts
-export const createInspectorRegistry = (definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
+export declare const createInspectorRegistry: (
+  definitions: readonly Array<AnyInspectorDefinitionInput>,
+) => InspectorRegistry;
 ```
 
 #### 参数
@@ -951,7 +956,12 @@ export const createInspectorRegistry = (definitions: readonly Array<AnyInspector
 </p>
 
 ```ts
-export const defineInspector = <TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
+export declare const defineInspector: <
+  TSubject extends JsonValue,
+  TParsedOptions extends Record<string, JsonValue> = Record<string, never>,
+  TResolvedOptions extends Record<string, JsonValue> = TParsedOptions,
+  TSourceOptions extends Record<string, JsonValue> = TParsedOptions,
+>(
   definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
 ) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
@@ -984,8 +994,9 @@ export const defineInspector = <TSubject, TParsedOptions, TResolvedOptions, TSou
 </p>
 
 ```ts
-export const mergeInspectorRegistries = (registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>) =>
-  InspectorRegistry;
+export declare const mergeInspectorRegistries: (
+  registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>,
+) => InspectorRegistry;
 ```
 
 #### 参数
@@ -1012,13 +1023,11 @@ export const mergeInspectorRegistries = (registries: readonly Array<Readonly<{ [
 
 <DocTab value="members" label="属性">
 
-| 成员       | 类型                                                                                                      | 默认值 | 说明                                                     |
-| ---------- | --------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------- |
-| `id`       | `string`                                                                                                  | —      | 占位节点的 id；其它 path / node `at.of` 通过这个 id 引用 |
-| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —      | 占位点位置；与 `<Node position>` 形态完全一致            |
-| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —      | 当前 Coordinate 的单项或多项检查请求                     |
-
-**position**：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例 partway `{ between: [A, B], fraction }`
+| 成员       | 类型                                                                                                      | 默认值 | 说明                                                                                                                                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                                                                                  | —      | 坐标点 id；路径端点和节点定位通过它引用此位置                                                                                                                                                                          |
+| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —      | 坐标点位置；不支持 Node 专属的自身锚点对齐<br />笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` |
+| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —      | 当前 Coordinate 的单项或多项检查请求                                                                                                                                                                                   |
 
 </DocTab>
 
@@ -1206,7 +1215,7 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 </p>
 
 ```ts
-export const InspectCoordinate = FC<InspectCoordinateProps>;
+export declare const InspectCoordinate: FC<InspectCoordinateProps>;
 ```
 
 ### InspectLayout
@@ -1218,7 +1227,7 @@ export const InspectCoordinate = FC<InspectCoordinateProps>;
 </p>
 
 ```ts
-export const InspectLayout = FC<InspectLayoutProps>;
+export declare const InspectLayout: FC<InspectLayoutProps>;
 ```
 
 ### InspectNode
@@ -1230,7 +1239,7 @@ export const InspectLayout = FC<InspectLayoutProps>;
 </p>
 
 ```ts
-export const InspectNode = FC<InspectNodeProps>;
+export declare const InspectNode: FC<InspectNodeProps>;
 ```
 
 ### InspectPath
@@ -1242,7 +1251,7 @@ export const InspectNode = FC<InspectNodeProps>;
 </p>
 
 ```ts
-export const InspectPath = FC<InspectPathProps>;
+export declare const InspectPath: FC<InspectPathProps>;
 ```
 
 ### InspectScope
@@ -1254,7 +1263,7 @@ export const InspectPath = FC<InspectPathProps>;
 </p>
 
 ```ts
-export const InspectScope = FC<InspectScopeProps>;
+export declare const InspectScope: FC<InspectScopeProps>;
 ```
 
 ## `@retikz/inspect/vanilla`
@@ -1365,7 +1374,9 @@ export type InspectionVanillaRequest = Readonly<{
 </p>
 
 ```ts
-export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthoringInput) => InspectionVanillaAuthoring;
+export declare const createInspectionVanillaAuthoring: (
+  input: InspectionVanillaAuthoringInput,
+) => InspectionVanillaAuthoring;
 ```
 
 #### 参数
@@ -1387,7 +1398,9 @@ export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthori
 </p>
 
 ```ts
-export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDriverOptions) => VanillaCompileDriver;
+export declare const createInspectionVanillaDriver: (
+  options: CreateInspectionVanillaDriverOptions,
+) => VanillaCompileDriver;
 ```
 
 #### 参数

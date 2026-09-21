@@ -17,12 +17,12 @@ export class RetikzError<
 > extends Error {}
 ```
 
-| 成员               | 类型                                                                                              | 默认值 | 说明 |
-| ------------------ | ------------------------------------------------------------------------------------------------- | ------ | ---- |
-| `constructor`      | `<TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —      | —    |
-| `readonly cause?`  | `unknown`                                                                                         | —      | —    |
-| `readonly code`    | `TCode`                                                                                           | —      | —    |
-| `readonly details` | `TDetails`                                                                                        | —      | —    |
+| 成员               | 类型                                                                                                                                                                                                    | 默认值 | 说明 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
+| `constructor`      | `<TCode extends string = string, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —      | —    |
+| `readonly cause?`  | `unknown`                                                                                                                                                                                               | —      | —    |
+| `readonly code`    | `TCode`                                                                                                                                                                                                 | —      | —    |
+| `readonly details` | `TDetails`                                                                                                                                                                                              | —      | —    |
 
 #### 类型参数
 
@@ -46,9 +46,9 @@ export class RetikzFoundationError<
 > extends RetikzError<TCode, TDetails> {}
 ```
 
-| 成员          | 类型                                                                                                                                                                                      | 默认值 | 说明 |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
-| `constructor` | `<TCode, TDetails>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —      | —    |
+| 成员          | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | 默认值 | 说明 |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
+| `constructor` | `<TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —      | —    |
 
 #### 类型参数
 
@@ -404,7 +404,11 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 </p>
 
 ```ts
-export const assertNonEmptyString = (value: string, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void;
+export declare const assertNonEmptyString: (
+  value: string,
+  label: string,
+  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
+) => void;
 ```
 
 #### 参数
@@ -424,7 +428,7 @@ export const assertNonEmptyString = (value: string, label: string, ownerError: R
 </p>
 
 ```ts
-export const assertPlainDataContainers = (value: unknown, path: string) => void;
+export declare const assertPlainDataContainers: (value: unknown, path: string) => void;
 ```
 
 #### 参数
@@ -445,7 +449,11 @@ export const assertPlainDataContainers = (value: unknown, path: string) => void;
 </p>
 
 ```ts
-export const assertPositiveNumber = (value: number, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void;
+export declare const assertPositiveNumber: (
+  value: number,
+  label: string,
+  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
+) => void;
 ```
 
 #### 参数
@@ -465,7 +473,7 @@ export const assertPositiveNumber = (value: number, label: string, ownerError: R
 </p>
 
 ```ts
-export const cloneAndFreezeJson = <T>(value: T, path: string) => T;
+export declare const cloneAndFreezeJson: <T>(value: T, path: string) => T;
 ```
 
 #### 类型参数
@@ -496,7 +504,7 @@ export const cloneAndFreezeJson = <T>(value: T, path: string) => T;
 前景自身 alpha 与 weight 相乘，再按 source-over sRGB 得到不含透明度的确定性颜色
 
 ```ts
-export const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number) => templateLiteral;
+export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => templateLiteral;
 ```
 
 #### 参数
@@ -516,8 +524,9 @@ export const compositeOpaqueColor = (foreground: string, backdrop: string, weigh
 </p>
 
 ```ts
-export const createOpenStringSchema = <TValues>(values: TValues) =>
-  ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
+export declare const createOpenStringSchema: <TValues extends Readonly<Record<string, string>>>(
+  values: TValues,
+) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
 ```
 
 #### 类型参数
@@ -543,8 +552,9 @@ export const createOpenStringSchema = <TValues>(values: TValues) =>
 输入 entries 会复制到独立存储；迭代与查询保持原生 Map 语义，`forEach` 的 owner 参数返回只读快照自身
 
 ```ts
-export const createReadonlyMap = <TKey, TValue>(entries: Iterable<readonly [TKey, TValue]>) =>
-  ReadonlyMap<TKey, TValue>;
+export declare const createReadonlyMap: <TKey, TValue>(
+  entries: Iterable<readonly [TKey, TValue]>,
+) => ReadonlyMap<TKey, TValue>;
 ```
 
 #### 类型参数
@@ -569,7 +579,7 @@ export const createReadonlyMap = <TKey, TValue>(entries: Iterable<readonly [TKey
 </p>
 
 ```ts
-export const isRetikzError = (value: unknown) => predicate;
+export declare const isRetikzError: (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -589,7 +599,7 @@ export const isRetikzError = (value: unknown) => predicate;
 包含字符串与 symbol 键，跳过 undefined 源；默认保留所有属性值，不递归合并或修改输入
 
 ```ts
-export const mergeProperties = <T>(
+export declare const mergeProperties: <T extends object>(
   sources: readonly Array<Readonly<T> | undefined>,
   options: MergePropertiesOptions<NoInfer<T>>,
 ) => Partial<T>;
@@ -625,7 +635,7 @@ export const mergeProperties = <T>(
 </p>
 
 ```ts
-export const parseStaticCssColor = (input: string) => ParsedCssColor | null;
+export declare const parseStaticCssColor: (input: string) => ParsedCssColor | null;
 ```
 
 #### 参数

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import type { PreviewControlState } from '../../src/modules/docs/components/component-preview/types';
-import ShadowPlayground from '../../src/modules/docs/contents/kernel/visual/shadow/usage/shadow-playground.demo';
+import ShadowPlayground from '../../src/modules/docs/contents/kernel/visual/style/custom-shadow/shadow-playground.demo';
 
 const renderAtOffset = (offsetX: number, offsetY: number) => {
   const values = {

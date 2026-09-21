@@ -261,7 +261,7 @@ export const MathJaxProfile = {
 接收能输出受支持 SVG 子集的引擎与可选诊断回调，返回可直接注入 Core 文本编译流程的同步 lowerer。该函数负责 TeX → SVG → 路径的降解和结果缓存，不负责初始化引擎或渲染公式
 
 ```ts
-export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
+export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
 ```
 
 #### 参数
@@ -297,7 +297,7 @@ const lowerTex = createLowerTex(engine, {
 异步加载并配置 `mathjax-full`，返回可被 `createLowerTex` 反复同步调用的引擎。输入配置只影响启用的 TeX 扩展；返回值只负责 TeX → SVG，不承担 SVG 路径降解、缓存或 Core 注入
 
 ```ts
-export const createMathJaxEngine = (options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
+export declare const createMathJaxEngine: (options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
 ```
 
 #### 参数
@@ -342,7 +342,7 @@ const svg = engine.convert('\\frac{1}{2}', { display: false });
 异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `LowerTex`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权
 
 ```ts
-export const createMathJaxLowerTex = (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
+export declare const createMathJaxLowerTex: (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
 ```
 
 #### 参数
@@ -408,7 +408,7 @@ export type MathJaxLowerTexState =
 接收与根入口工厂一致的 MathJax 配置，复用同一有效扩展集合的引擎，并返回可判别的初始化状态。ready 状态中的 lowerer 应传入 `Layout` 等 React authoring 入口；本 Hook 不渲染公式，也不处理应用级错误界面
 
 ```ts
-export const useLowerTex = (options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
+export declare const useLowerTex: (options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
 ```
 
 #### 参数

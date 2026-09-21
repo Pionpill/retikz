@@ -387,20 +387,26 @@ export const kernelSection: Array<Section> = [
     navigationDescription: 'kernel.visualNavigationDescription',
     pages: [
       {
-        id: 'pattern',
-        label: 'kernel.effectsPattern',
+        id: 'style',
+        label: 'kernel.visualStyle',
         sidebarGroup: 'kernel.visual',
         meta: { pageType: 'group', audience: 'user' },
         children: [
           {
-            id: 'usage',
-            label: 'kernel.visualUsage',
+            id: 'pattern',
+            label: 'kernel.effectsPattern',
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
           },
           {
-            id: 'integration',
-            label: 'kernel.visualIntegration',
+            id: 'shadow',
+            label: 'kernel.effectsShadow',
+            difficulty: DocDifficulty.Beginner,
+            meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'blend',
+            label: 'kernel.effectsBlend',
             difficulty: DocDifficulty.Beginner,
             meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
           },
@@ -411,39 +417,9 @@ export const kernelSection: Array<Section> = [
             meta: extensionGuide('kernel.pattern'),
           },
           {
-            id: 'mechanism',
-            label: 'kernel.visualMechanism',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'api-reference',
-            label: 'kernel.visualApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'schema-reference',
-            label: 'kernel.visualSchemaReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'schema' },
-          },
-        ],
-      },
-      {
-        id: 'shadow',
-        label: 'kernel.effectsShadow',
-        sidebarGroup: 'kernel.visual',
-        meta: { pageType: 'group', audience: 'user' },
-        children: [
-          {
-            id: 'usage',
-            label: 'kernel.visualUsage',
-            difficulty: DocDifficulty.Beginner,
-            meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'integration',
-            label: 'kernel.visualIntegration',
-            difficulty: DocDifficulty.Beginner,
+            id: 'custom-shadow',
+            label: 'kernel.visualCustomShadow',
+            difficulty: DocDifficulty.Advanced,
             meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
           },
           {
@@ -461,37 +437,6 @@ export const kernelSection: Array<Section> = [
             id: 'schema-reference',
             label: 'kernel.visualSchemaReference',
             meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'schema' },
-          },
-        ],
-      },
-      {
-        id: 'blend',
-        label: 'kernel.effectsBlend',
-        sidebarGroup: 'kernel.visual',
-        meta: { pageType: 'group', audience: 'user' },
-        children: [
-          {
-            id: 'usage',
-            label: 'kernel.visualUsage',
-            difficulty: DocDifficulty.Beginner,
-            meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'integration',
-            label: 'kernel.visualIntegration',
-            difficulty: DocDifficulty.Beginner,
-            meta: { pageType: 'guide', audience: 'user', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'mechanism',
-            label: 'kernel.visualMechanism',
-            difficulty: DocDifficulty.Internals,
-            meta: { pageType: 'guide', audience: 'maintainer', sourceOfTruth: 'runtime' },
-          },
-          {
-            id: 'api-reference',
-            label: 'kernel.visualApiReference',
-            meta: { pageType: 'reference', audience: 'integrator', sourceOfTruth: 'runtime' },
           },
         ],
       },

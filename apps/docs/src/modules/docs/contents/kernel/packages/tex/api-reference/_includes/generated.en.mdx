@@ -261,7 +261,7 @@ export const MathJaxProfile = {
 Accepts an engine that emits the supported SVG subset and an optional diagnostic callback, then returns a synchronous lowerer that can be injected directly into Core text compilation. This function performs TeX-to-SVG-to-path lowering and result caching; it does not initialize the engine or render formulas.
 
 ```ts
-export const createLowerTex = (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
+export declare const createLowerTex: (engine: MathJaxSvgEngine, options?: LowerTexOptions) => LowerTex;
 ```
 
 #### Parameters
@@ -297,7 +297,7 @@ const lowerTex = createLowerTex(engine, {
 Asynchronously loads and configures `mathjax-full`, returning an engine that `createLowerTex` can invoke synchronously and repeatedly. Input configuration affects only enabled TeX extensions; the returned value handles TeX-to-SVG only, not SVG path lowering, caching, or Core injection.
 
 ```ts
-export const createMathJaxEngine = (options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
+export declare const createMathJaxEngine: (options?: MathJaxEngineOptions) => Promise<MathJaxSvgEngine>;
 ```
 
 #### Parameters
@@ -342,7 +342,7 @@ const svg = engine.convert('\\frac{1}{2}', { display: false });
 Asynchronously loads the optional `mathjax-full`, creates a synchronous SVG engine, and returns a `LowerTex` for Core. Use it when the engine implementation does not need to be replaced; when the application already owns a compatible engine, use `createLowerTex` instead.
 
 ```ts
-export const createMathJaxLowerTex = (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
+export declare const createMathJaxLowerTex: (options?: MathJaxLowerTexOptions) => Promise<LowerTex>;
 ```
 
 #### Parameters
@@ -408,7 +408,7 @@ export type MathJaxLowerTexState =
 Accepts the same MathJax configuration as the root-entry factories, reuses an engine for the same effective extension set, and returns a discriminated initialization state. Pass the lowerer in ready state to React authoring entry points such as `Layout`; this Hook does not render formulas or handle application-level error UI.
 
 ```ts
-export const useLowerTex = (options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
+export declare const useLowerTex: (options?: MathJaxLowerTexOptions) => MathJaxLowerTexState;
 ```
 
 #### Parameters

@@ -1141,7 +1141,7 @@ export declare const vector2: {
 </p>
 
 ```ts
-export const applyAffine = (matrix: AffineMatrix, point: Vector2) => Vector2;
+export declare const applyAffine: (matrix: AffineMatrix, point: Vector2) => Vector2;
 ```
 
 #### Parameters
@@ -1162,7 +1162,7 @@ export const applyAffine = (matrix: AffineMatrix, point: Vector2) => Vector2;
 Returns undefined for empty input; callers decide whether to fall back, report an error, or ignore it.
 
 ```ts
-export const boundsOf = (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
+export declare const boundsOf: (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
 ```
 
 #### Parameters
@@ -1180,7 +1180,7 @@ export const boundsOf = (points: readonly Array<Vector2>) => AxisAlignedBounds |
 </p>
 
 ```ts
-export const boundsToRect = (__namedParameters: AxisAlignedBounds) => BoundsRect;
+export declare const boundsToRect: (__namedParameters: AxisAlignedBounds) => BoundsRect;
 ```
 
 #### Parameters
@@ -1198,7 +1198,7 @@ export const boundsToRect = (__namedParameters: AxisAlignedBounds) => BoundsRect
 </p>
 
 ```ts
-export const centerOfBounds = (__namedParameters: AxisAlignedBounds) => Vector2;
+export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => Vector2;
 ```
 
 #### Parameters
@@ -1223,7 +1223,7 @@ export const centerOfBounds = (__namedParameters: AxisAlignedBounds) => Vector2;
 Does not deduplicate candidates; callers handle endpoint angles that fall exactly on 90°·k.
 
 ```ts
-export const collectArcBoundingCandidates = (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
+export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -1248,8 +1248,9 @@ export const collectArcBoundingCandidates = (__namedParameters: ArcBoundingCandi
 Handles only axis-aligned elliptical arcs and does not deduplicate candidates.
 
 ```ts
-export const collectEllipseArcBoundingCandidates = (__namedParameters: EllipseArcBoundingCandidatesInput) =>
-  Array<Vector2>;
+export declare const collectEllipseArcBoundingCandidates: (
+  __namedParameters: EllipseArcBoundingCandidatesInput,
+) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -1269,7 +1270,7 @@ export const collectEllipseArcBoundingCandidates = (__namedParameters: EllipseAr
 Returns vertices in CCW order without intermediate collinear points. For fewer than three points, returns deduplicated points sorted by (x, y). All-collinear input degenerates to its two endpoints.
 
 ```ts
-export const convexHull = (points: Array<Vector2>) => Array<Vector2>;
+export declare const convexHull: (points: Array<Vector2>) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -1289,7 +1290,7 @@ export const convexHull = (points: Array<Vector2>) => Array<Vector2>;
 </p>
 
 ```ts
-export const cornersOfBounds = (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
+export declare const cornersOfBounds: (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
 ```
 
 #### Parameters
@@ -1307,8 +1308,10 @@ export const cornersOfBounds = (__namedParameters: AxisAlignedBounds) => Array<V
 </p>
 
 ```ts
-export const expandBounds = (__namedParameters: AxisAlignedBounds, __namedParameters: BoundsInsets) =>
-  AxisAlignedBounds;
+export declare const expandBounds: (
+  __namedParameters: AxisAlignedBounds,
+  __namedParameters: BoundsInsets,
+) => AxisAlignedBounds;
 ```
 
 #### Parameters
@@ -1332,7 +1335,7 @@ export const expandBounds = (__namedParameters: AxisAlignedBounds, __namedParame
 </p>
 
 ```ts
-export const getAffineSimilarityScale = (matrix: AffineMatrix) => number | undefined;
+export declare const getAffineSimilarityScale: (matrix: AffineMatrix) => number | undefined;
 ```
 
 #### Parameters
@@ -1350,7 +1353,7 @@ export const getAffineSimilarityScale = (matrix: AffineMatrix) => number | undef
 </p>
 
 ```ts
-export const halfAxesOfBounds = (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
+export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
 ```
 
 #### Parameters
@@ -1374,7 +1377,7 @@ export const halfAxesOfBounds = (__namedParameters: AxisAlignedBounds) => Bounds
 Returns forward ray parameters `s` in ascending order; returns an empty array for a zero direction or no valid intersections.
 
 ```ts
-export const intersectRayWithArc = (__namedParameters: RayArcIntersectionInput) => Array<number>;
+export declare const intersectRayWithArc: (__namedParameters: RayArcIntersectionInput) => Array<number>;
 ```
 
 #### Parameters
@@ -1395,7 +1398,7 @@ export const intersectRayWithArc = (__namedParameters: RayArcIntersectionInput) 
 A positive start-to-end range sweeps clockwise on screen; a negative range sweeps counterclockwise.
 
 ```ts
-export const isAngleWithinArcSweep = (__namedParameters: ArcSweepAngleInput) => boolean;
+export declare const isAngleWithinArcSweep: (__namedParameters: ArcSweepAngleInput) => boolean;
 ```
 
 #### Parameters
@@ -1413,7 +1416,7 @@ export const isAngleWithinArcSweep = (__namedParameters: ArcSweepAngleInput) => 
 </p>
 
 ```ts
-export const isFiniteBoundsRect = (__namedParameters: BoundsRect) => boolean;
+export declare const isFiniteBoundsRect: (__namedParameters: BoundsRect) => boolean;
 ```
 
 #### Parameters
@@ -1435,7 +1438,7 @@ export const isFiniteBoundsRect = (__namedParameters: BoundsRect) => boolean;
 </p>
 
 ```ts
-export const isFiniteNonSingularAffine = (matrix: AffineMatrix) => boolean;
+export declare const isFiniteNonSingularAffine: (matrix: AffineMatrix) => boolean;
 ```
 
 #### Parameters
@@ -1453,7 +1456,7 @@ export const isFiniteNonSingularAffine = (matrix: AffineMatrix) => boolean;
 </p>
 
 ```ts
-export const isFiniteNumber = (value: unknown) => predicate;
+export declare const isFiniteNumber: (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -1471,7 +1474,7 @@ export const isFiniteNumber = (value: unknown) => predicate;
 </p>
 
 ```ts
-export const isFinitePoint = (value: unknown) => predicate;
+export declare const isFinitePoint: (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -1489,7 +1492,7 @@ export const isFinitePoint = (value: unknown) => predicate;
 </p>
 
 ```ts
-export const isInfiniteNumber = (value: unknown) => predicate;
+export declare const isInfiniteNumber: (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -1507,7 +1510,7 @@ export const isInfiniteNumber = (value: unknown) => predicate;
 </p>
 
 ```ts
-export const isPositiveBoundsRect = (rect: BoundsRect) => boolean;
+export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 ```
 
 #### Parameters
@@ -1525,7 +1528,7 @@ export const isPositiveBoundsRect = (rect: BoundsRect) => boolean;
 </p>
 
 ```ts
-export const lerp = (a: Vector2, b: Vector2, t: number) => Vector2;
+export declare const lerp: (a: Vector2, b: Vector2, t: number) => Vector2;
 ```
 
 #### Parameters
@@ -1547,7 +1550,7 @@ export const lerp = (a: Vector2, b: Vector2, t: number) => Vector2;
 With `rotate = 0` or omitted, reduces to translation; otherwise rotates about the center before translating.
 
 ```ts
-export const localToWorld = (shape: CenteredShape, local: Vector2) => Vector2;
+export declare const localToWorld: (shape: CenteredShape, local: Vector2) => Vector2;
 ```
 
 #### Parameters
@@ -1566,7 +1569,7 @@ export const localToWorld = (shape: CenteredShape, local: Vector2) => Vector2;
 </p>
 
 ```ts
-export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
+export declare const mergeBounds: (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
 ```
 
 #### Parameters
@@ -1587,7 +1590,7 @@ export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => Axi
 Returns `outer × inner`: apply `inner` to a point first, then `outer`.
 
 ```ts
-export const multiplyAffine = (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
+export declare const multiplyAffine: (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
 ```
 
 #### Parameters
@@ -1606,7 +1609,7 @@ export const multiplyAffine = (outer: AffineMatrix, inner: AffineMatrix) => Affi
 </p>
 
 ```ts
-export const pointAtArcAngle = (center: Vector2, radius: number, angleDeg: number) => Vector2;
+export declare const pointAtArcAngle: (center: Vector2, radius: number, angleDeg: number) => Vector2;
 ```
 
 #### Parameters
@@ -1628,7 +1631,7 @@ export const pointAtArcAngle = (center: Vector2, radius: number, angleDeg: numbe
 Uses the same angle convention as `pointAtArcAngle`; θ is a parameter angle and not necessarily the true polar angle.
 
 ```ts
-export const pointAtEllipseArcAngle = (__namedParameters: EllipseArcAnglePointInput) => Vector2;
+export declare const pointAtEllipseArcAngle: (__namedParameters: EllipseArcAnglePointInput) => Vector2;
 ```
 
 #### Parameters
@@ -1646,7 +1649,7 @@ export const pointAtEllipseArcAngle = (__namedParameters: EllipseArcAnglePointIn
 </p>
 
 ```ts
-export const rectToBounds = (__namedParameters: BoundsRect) => AxisAlignedBounds;
+export declare const rectToBounds: (__namedParameters: BoundsRect) => AxisAlignedBounds;
 ```
 
 #### Parameters
@@ -1666,7 +1669,7 @@ export const rectToBounds = (__namedParameters: BoundsRect) => AxisAlignedBounds
 Returns local coordinates relative to the shape center and rotation.
 
 ```ts
-export const worldToLocal = (shape: CenteredShape, world: Vector2) => Vector2;
+export declare const worldToLocal: (shape: CenteredShape, world: Vector2) => Vector2;
 ```
 
 #### Parameters

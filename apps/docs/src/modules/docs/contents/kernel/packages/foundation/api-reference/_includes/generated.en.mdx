@@ -17,12 +17,12 @@ export class RetikzError<
 > extends Error {}
 ```
 
-| Member             | Type                                                                                              | Default | Description |
-| ------------------ | ------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor`      | `<TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
-| `readonly cause?`  | `unknown`                                                                                         | —       | —           |
-| `readonly code`    | `TCode`                                                                                           | —       | —           |
-| `readonly details` | `TDetails`                                                                                        | —       | —           |
+| Member             | Type                                                                                                                                                                                                    | Default | Description |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `constructor`      | `<TCode extends string = string, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
+| `readonly cause?`  | `unknown`                                                                                                                                                                                               | —       | —           |
+| `readonly code`    | `TCode`                                                                                                                                                                                                 | —       | —           |
+| `readonly details` | `TDetails`                                                                                                                                                                                              | —       | —           |
 
 #### Type parameters
 
@@ -46,9 +46,9 @@ export class RetikzFoundationError<
 > extends RetikzError<TCode, TDetails> {}
 ```
 
-| Member        | Type                                                                                                                                                                                      | Default | Description |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor` | `<TCode, TDetails>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode, TDetails>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
+| Member        | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default | Description |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| `constructor` | `<TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
 
 #### Type parameters
 
@@ -404,7 +404,11 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 </p>
 
 ```ts
-export const assertNonEmptyString = (value: string, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void;
+export declare const assertNonEmptyString: (
+  value: string,
+  label: string,
+  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
+) => void;
 ```
 
 #### Parameters
@@ -424,7 +428,7 @@ export const assertNonEmptyString = (value: string, label: string, ownerError: R
 </p>
 
 ```ts
-export const assertPlainDataContainers = (value: unknown, path: string) => void;
+export declare const assertPlainDataContainers: (value: unknown, path: string) => void;
 ```
 
 #### Parameters
@@ -445,7 +449,11 @@ export const assertPlainDataContainers = (value: unknown, path: string) => void;
 </p>
 
 ```ts
-export const assertPositiveNumber = (value: number, label: string, ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined) => void;
+export declare const assertPositiveNumber: (
+  value: number,
+  label: string,
+  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
+) => void;
 ```
 
 #### Parameters
@@ -465,7 +473,7 @@ export const assertPositiveNumber = (value: number, label: string, ownerError: R
 </p>
 
 ```ts
-export const cloneAndFreezeJson = <T>(value: T, path: string) => T;
+export declare const cloneAndFreezeJson: <T>(value: T, path: string) => T;
 ```
 
 #### Type parameters
@@ -496,7 +504,7 @@ Deeply frozen copy with the same structure as the input but no shared mutable ob
 Multiplies the foreground alpha by weight, then uses source-over sRGB compositing to produce a deterministic opaque color.
 
 ```ts
-export const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number) => templateLiteral;
+export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => templateLiteral;
 ```
 
 #### Parameters
@@ -516,8 +524,9 @@ export const compositeOpaqueColor = (foreground: string, backdrop: string, weigh
 </p>
 
 ```ts
-export const createOpenStringSchema = <TValues>(values: TValues) =>
-  ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
+export declare const createOpenStringSchema: <TValues extends Readonly<Record<string, string>>>(
+  values: TValues,
+) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
 ```
 
 #### Type parameters
@@ -543,8 +552,9 @@ export const createOpenStringSchema = <TValues>(values: TValues) =>
 Copies input entries into independent storage while preserving native Map iteration and lookup semantics; the `forEach` owner argument is the readonly snapshot itself.
 
 ```ts
-export const createReadonlyMap = <TKey, TValue>(entries: Iterable<readonly [TKey, TValue]>) =>
-  ReadonlyMap<TKey, TValue>;
+export declare const createReadonlyMap: <TKey, TValue>(
+  entries: Iterable<readonly [TKey, TValue]>,
+) => ReadonlyMap<TKey, TValue>;
 ```
 
 #### Type parameters
@@ -569,7 +579,7 @@ export const createReadonlyMap = <TKey, TValue>(entries: Iterable<readonly [TKey
 </p>
 
 ```ts
-export const isRetikzError = (value: unknown) => predicate;
+export declare const isRetikzError: (value: unknown) => predicate;
 ```
 
 #### Parameters
@@ -589,7 +599,7 @@ export const isRetikzError = (value: unknown) => predicate;
 Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
 
 ```ts
-export const mergeProperties = <T>(
+export declare const mergeProperties: <T extends object>(
   sources: readonly Array<Readonly<T> | undefined>,
   options: MergePropertiesOptions<NoInfer<T>>,
 ) => Partial<T>;
@@ -625,7 +635,7 @@ A new, potentially filtered object, hence the `Partial<T>` return type
 </p>
 
 ```ts
-export const parseStaticCssColor = (input: string) => ParsedCssColor | null;
+export declare const parseStaticCssColor: (input: string) => ParsedCssColor | null;
 ```
 
 #### Parameters

@@ -1140,7 +1140,7 @@ export declare const vector2: {
 </p>
 
 ```ts
-export const applyAffine = (matrix: AffineMatrix, point: Vector2) => Vector2;
+export declare const applyAffine: (matrix: AffineMatrix, point: Vector2) => Vector2;
 ```
 
 #### 参数
@@ -1161,7 +1161,7 @@ export const applyAffine = (matrix: AffineMatrix, point: Vector2) => Vector2;
 输入为空时返回 undefined；调用方按自身语义决定兜底、报错或忽略
 
 ```ts
-export const boundsOf = (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
+export declare const boundsOf: (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
 ```
 
 #### 参数
@@ -1179,7 +1179,7 @@ export const boundsOf = (points: readonly Array<Vector2>) => AxisAlignedBounds |
 </p>
 
 ```ts
-export const boundsToRect = (__namedParameters: AxisAlignedBounds) => BoundsRect;
+export declare const boundsToRect: (__namedParameters: AxisAlignedBounds) => BoundsRect;
 ```
 
 #### 参数
@@ -1197,7 +1197,7 @@ export const boundsToRect = (__namedParameters: AxisAlignedBounds) => BoundsRect
 </p>
 
 ```ts
-export const centerOfBounds = (__namedParameters: AxisAlignedBounds) => Vector2;
+export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => Vector2;
 ```
 
 #### 参数
@@ -1221,7 +1221,7 @@ export const centerOfBounds = (__namedParameters: AxisAlignedBounds) => Vector2;
 不去重；端角恰在 90°·k 上时由调用方处理
 
 ```ts
-export const collectArcBoundingCandidates = (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
+export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
 ```
 
 #### 参数
@@ -1245,8 +1245,9 @@ export const collectArcBoundingCandidates = (__namedParameters: ArcBoundingCandi
 只处理轴对齐椭圆弧，候选点不去重
 
 ```ts
-export const collectEllipseArcBoundingCandidates = (__namedParameters: EllipseArcBoundingCandidatesInput) =>
-  Array<Vector2>;
+export declare const collectEllipseArcBoundingCandidates: (
+  __namedParameters: EllipseArcBoundingCandidatesInput,
+) => Array<Vector2>;
 ```
 
 #### 参数
@@ -1263,11 +1264,11 @@ export const collectEllipseArcBoundingCandidates = (__namedParameters: EllipseAr
   </ApiSourceLink>
 </p>
 
-返回 CCW 顺序顶点、不含共线中间点；点数 < 3 时返回按 (x,y) 排序去重后的点。
+返回 CCW 顺序顶点、不含共线中间点；点数 &lt; 3 时返回按 (x,y) 排序去重后的点。
 全部点共线时退化为两端点
 
 ```ts
-export const convexHull = (points: Array<Vector2>) => Array<Vector2>;
+export declare const convexHull: (points: Array<Vector2>) => Array<Vector2>;
 ```
 
 #### 参数
@@ -1287,7 +1288,7 @@ export const convexHull = (points: Array<Vector2>) => Array<Vector2>;
 </p>
 
 ```ts
-export const cornersOfBounds = (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
+export declare const cornersOfBounds: (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
 ```
 
 #### 参数
@@ -1305,8 +1306,10 @@ export const cornersOfBounds = (__namedParameters: AxisAlignedBounds) => Array<V
 </p>
 
 ```ts
-export const expandBounds = (__namedParameters: AxisAlignedBounds, __namedParameters: BoundsInsets) =>
-  AxisAlignedBounds;
+export declare const expandBounds: (
+  __namedParameters: AxisAlignedBounds,
+  __namedParameters: BoundsInsets,
+) => AxisAlignedBounds;
 ```
 
 #### 参数
@@ -1329,7 +1332,7 @@ export const expandBounds = (__namedParameters: AxisAlignedBounds, __namedParame
 </p>
 
 ```ts
-export const getAffineSimilarityScale = (matrix: AffineMatrix) => number | undefined;
+export declare const getAffineSimilarityScale: (matrix: AffineMatrix) => number | undefined;
 ```
 
 #### 参数
@@ -1347,7 +1350,7 @@ export const getAffineSimilarityScale = (matrix: AffineMatrix) => number | undef
 </p>
 
 ```ts
-export const halfAxesOfBounds = (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
+export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
 ```
 
 #### 参数
@@ -1371,7 +1374,7 @@ export const halfAxesOfBounds = (__namedParameters: AxisAlignedBounds) => Bounds
 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组
 
 ```ts
-export const intersectRayWithArc = (__namedParameters: RayArcIntersectionInput) => Array<number>;
+export declare const intersectRayWithArc: (__namedParameters: RayArcIntersectionInput) => Array<number>;
 ```
 
 #### 参数
@@ -1391,7 +1394,7 @@ export const intersectRayWithArc = (__namedParameters: RayArcIntersectionInput) 
 start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 
 ```ts
-export const isAngleWithinArcSweep = (__namedParameters: ArcSweepAngleInput) => boolean;
+export declare const isAngleWithinArcSweep: (__namedParameters: ArcSweepAngleInput) => boolean;
 ```
 
 #### 参数
@@ -1409,7 +1412,7 @@ export const isAngleWithinArcSweep = (__namedParameters: ArcSweepAngleInput) => 
 </p>
 
 ```ts
-export const isFiniteBoundsRect = (__namedParameters: BoundsRect) => boolean;
+export declare const isFiniteBoundsRect: (__namedParameters: BoundsRect) => boolean;
 ```
 
 #### 参数
@@ -1431,7 +1434,7 @@ export const isFiniteBoundsRect = (__namedParameters: BoundsRect) => boolean;
 </p>
 
 ```ts
-export const isFiniteNonSingularAffine = (matrix: AffineMatrix) => boolean;
+export declare const isFiniteNonSingularAffine: (matrix: AffineMatrix) => boolean;
 ```
 
 #### 参数
@@ -1449,7 +1452,7 @@ export const isFiniteNonSingularAffine = (matrix: AffineMatrix) => boolean;
 </p>
 
 ```ts
-export const isFiniteNumber = (value: unknown) => predicate;
+export declare const isFiniteNumber: (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -1467,7 +1470,7 @@ export const isFiniteNumber = (value: unknown) => predicate;
 </p>
 
 ```ts
-export const isFinitePoint = (value: unknown) => predicate;
+export declare const isFinitePoint: (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -1485,7 +1488,7 @@ export const isFinitePoint = (value: unknown) => predicate;
 </p>
 
 ```ts
-export const isInfiniteNumber = (value: unknown) => predicate;
+export declare const isInfiniteNumber: (value: unknown) => predicate;
 ```
 
 #### 参数
@@ -1503,7 +1506,7 @@ export const isInfiniteNumber = (value: unknown) => predicate;
 </p>
 
 ```ts
-export const isPositiveBoundsRect = (rect: BoundsRect) => boolean;
+export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 ```
 
 #### 参数
@@ -1521,7 +1524,7 @@ export const isPositiveBoundsRect = (rect: BoundsRect) => boolean;
 </p>
 
 ```ts
-export const lerp = (a: Vector2, b: Vector2, t: number) => Vector2;
+export declare const lerp: (a: Vector2, b: Vector2, t: number) => Vector2;
 ```
 
 #### 参数
@@ -1543,7 +1546,7 @@ export const lerp = (a: Vector2, b: Vector2, t: number) => Vector2;
 rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 
 ```ts
-export const localToWorld = (shape: CenteredShape, local: Vector2) => Vector2;
+export declare const localToWorld: (shape: CenteredShape, local: Vector2) => Vector2;
 ```
 
 #### 参数
@@ -1562,7 +1565,7 @@ export const localToWorld = (shape: CenteredShape, local: Vector2) => Vector2;
 </p>
 
 ```ts
-export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
+export declare const mergeBounds: (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
 ```
 
 #### 参数
@@ -1583,7 +1586,7 @@ export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => Axi
 返回 `outer × inner`，即对点先应用 `inner`，再应用 `outer`
 
 ```ts
-export const multiplyAffine = (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
+export declare const multiplyAffine: (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
 ```
 
 #### 参数
@@ -1602,7 +1605,7 @@ export const multiplyAffine = (outer: AffineMatrix, inner: AffineMatrix) => Affi
 </p>
 
 ```ts
-export const pointAtArcAngle = (center: Vector2, radius: number, angleDeg: number) => Vector2;
+export declare const pointAtArcAngle: (center: Vector2, radius: number, angleDeg: number) => Vector2;
 ```
 
 #### 参数
@@ -1624,7 +1627,7 @@ export const pointAtArcAngle = (center: Vector2, radius: number, angleDeg: numbe
 与 pointAtArcAngle 同角度约定；θ 是参数角，不一定等于真实极角
 
 ```ts
-export const pointAtEllipseArcAngle = (__namedParameters: EllipseArcAnglePointInput) => Vector2;
+export declare const pointAtEllipseArcAngle: (__namedParameters: EllipseArcAnglePointInput) => Vector2;
 ```
 
 #### 参数
@@ -1642,7 +1645,7 @@ export const pointAtEllipseArcAngle = (__namedParameters: EllipseArcAnglePointIn
 </p>
 
 ```ts
-export const rectToBounds = (__namedParameters: BoundsRect) => AxisAlignedBounds;
+export declare const rectToBounds: (__namedParameters: BoundsRect) => AxisAlignedBounds;
 ```
 
 #### 参数
@@ -1662,7 +1665,7 @@ export const rectToBounds = (__namedParameters: BoundsRect) => AxisAlignedBounds
 返回以形状中心和旋转为基准的本地坐标
 
 ```ts
-export const worldToLocal = (shape: CenteredShape, world: Vector2) => Vector2;
+export declare const worldToLocal: (shape: CenteredShape, world: Vector2) => Vector2;
 ```
 
 #### 参数
