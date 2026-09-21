@@ -111,7 +111,7 @@ const NamespaceStorage: FC<NamespaceStorageProps> = props => {
             label: {
               text: t.write,
               position: 0.25,
-              side: 'left',
+              side: 'right',
               textColor: 'gray',
               font: { size: 12 },
             },

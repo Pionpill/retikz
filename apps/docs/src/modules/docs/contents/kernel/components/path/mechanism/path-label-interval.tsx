@@ -75,16 +75,16 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
       ))}
       <Path
         way={[
-          [0, 130],
-          [600, 130],
+          [0, 110],
+          [600, 110],
         ]}
         arrow="->"
         label={{ text: t.distance, side: 'bottom', distance: 55, textColor: 'gray', font: { size: 12 } }}
       />
       <Path
         way={[
-          [(cutStart / cutLength) * 560, 130],
-          [(cutEnd / cutLength) * 560, 130],
+          [(cutStart / cutLength) * 560, 110],
+          [(cutEnd / cutLength) * 560, 110],
         ]}
         style={{ stroke: 'dodgerblue', strokeWidth: 5 }}
         label={{ text: t.removed, textColor: 'gray', font: { size: 12 } }}
@@ -92,12 +92,12 @@ const PathLabelInterval: FC<PathLabelIntervalProps> = props => {
       {[0, cutStart, cutDistance, cutEnd, cutLength].map(s => (
         <Node
           key={s}
-          position={[(s / cutLength) * 560, 160]}
+          position={[(s / cutLength) * 560, 135]}
           text={cutNumber(s)}
           style={{ stroke: 'none', font: { size: 12 } }}
         />
       ))}
-      <Node position={[280, 240]} text={t.note} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />
+      <Node position={[280, 190]} text={t.note} style={{ stroke: 'none', textColor: 'gray', font: { size: 12 } }} />
     </Layout>
   );
 };
