@@ -40,7 +40,11 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
         id: 'coordinate-system',
         layout: 'compact',
         location: ['kernel', 'components', 'basic', 'coordinate-system'],
-        preview: { files: 'coordinate-system', size: 'md', ...MODULE_LANDING_PREVIEW },
+        preview: {
+          files: '/kernel/components/scope/mechanism/scope-transform-steps',
+          size: 'md',
+          ...MODULE_LANDING_PREVIEW,
+        },
       },
       {
         id: 'karl-circle',
@@ -52,7 +56,11 @@ const MODULE_HOME_CONFIGURATIONS: Record<DocModuleId, ModuleHomeConfiguration> =
         id: 'layout',
         layout: 'compact',
         location: ['kernel', 'components', 'layout', 'overview'],
-        preview: { files: 'layout-basic', size: 'md', ...MODULE_LANDING_PREVIEW },
+        preview: {
+          files: '/kernel/components/node/mechanism/namespace-storage',
+          size: 'md',
+          ...MODULE_LANDING_PREVIEW,
+        },
       },
     ],
   },

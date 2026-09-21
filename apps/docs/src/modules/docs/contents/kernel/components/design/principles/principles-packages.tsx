@@ -7,6 +7,7 @@ import { PreviewFlowDiagram } from '@/modules/docs/components/component-preview/
 import { LogicFigureEntityKind, logicFigureGraphProps } from '@/modules/docs/components/logic-figure';
 
 import { principlesPackagesI18n } from './principles-packages.i18n';
+
 export type PrinciplesPackagesProps = { lang?: Lang };
 const Demo: FC<PrinciplesPackagesProps> = props => {
   const text = principlesPackagesI18n[props.lang ?? 'zh'];

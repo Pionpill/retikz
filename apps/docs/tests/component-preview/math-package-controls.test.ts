@@ -14,6 +14,7 @@ import {
   curveSegmentsControls,
   previewControlContract as curveSegmentsContract,
 } from '../../src/modules/docs/contents/kernel/packages/math/algorithms/curve-segments.controls';
+
 type CurveSegmentsScenario = {
   Demo: ComponentType;
   contract: PreviewControlContract;

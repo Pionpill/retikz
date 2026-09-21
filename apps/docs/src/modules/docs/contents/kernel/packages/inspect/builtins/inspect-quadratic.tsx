@@ -5,6 +5,7 @@ import { Scope, Step } from '@retikz/react';
 import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-quadratic.controls';
+
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-quadratic.controls';
 
 const registry = createDefaultInspectorRegistry();

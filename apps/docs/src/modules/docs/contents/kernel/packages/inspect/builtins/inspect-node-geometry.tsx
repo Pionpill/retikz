@@ -5,6 +5,7 @@ import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-node-geometry.controls';
 import { inspectNodeGeometryI18n } from './inspect-node-geometry.i18n';
+
 export {
   createPreviewControlContract,
   previewControlContract,

@@ -7,6 +7,7 @@ import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-clip.controls';
 import { inspectClipI18n } from './inspect-clip.i18n';
+
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-clip.controls';
 
 const registry = createDefaultInspectorRegistry();

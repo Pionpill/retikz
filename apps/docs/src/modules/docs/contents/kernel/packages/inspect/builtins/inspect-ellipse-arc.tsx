@@ -5,6 +5,7 @@ import { Step } from '@retikz/react';
 import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-ellipse-arc.controls';
+
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-ellipse-arc.controls';
 
 const registry = createDefaultInspectorRegistry();

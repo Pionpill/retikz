@@ -4,6 +4,7 @@ import { InspectCoordinate, InspectLayout } from '@retikz/inspect/react';
 import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-coordinate.controls';
+
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-coordinate.controls';
 
 const registry = createDefaultInspectorRegistry();

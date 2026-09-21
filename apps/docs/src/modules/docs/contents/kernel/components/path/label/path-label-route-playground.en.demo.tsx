@@ -4,6 +4,7 @@ import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { renderPathLabelRoutePlayground } from './path-label-route-playground';
 import { createPreviewControlContract as createEnglishPreviewContract } from './path-label-route-playground.controls';
+
 const pathLabelRoutePlaygroundControls = createEnglishPreviewContract('en').controls;
 const previewControlContract = createEnglishPreviewContract('en');
 

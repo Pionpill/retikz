@@ -1,6 +1,7 @@
 import type { IRTextBlock } from '@retikz/core';
 
 import type { Lang } from '@/i18n';
+
 export const principlesRegistryI18n: Record<
   Lang,
   { builtins: IRTextBlock; custom: IRTextBlock; resolver: IRTextBlock; registry: IRTextBlock; consumer: IRTextBlock }
