@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { ZodType } from 'zod';
 import { literal, number, strictObject } from 'zod';
 
-import type { ClipShape, SceneClipPath } from '../../src';
-import { defineClip } from '../../src';
+import type { ClipShape, IRScene, SceneClipPath } from '../../src';
+import { compileToScene, defineClip } from '../../src';
 
 type TicketClip = {
   kind: 'ticket';
@@ -77,5 +77,40 @@ describe('Clip definition contract', () => {
       ],
       fillRule: 'nonzero',
     });
+  });
+
+  it('derives identity resolve and shapeSchema from a ClipShape schema', () => {
+    const definition = defineClip({
+      kind: 'ticket',
+      schema: TicketClipShapeSchema,
+      lower: shape => ({
+        commands: [
+          { kind: 'move', to: [0, 0] },
+          { kind: 'line', to: [shape.size, shape.size] },
+        ],
+        fillRule: 'nonzero',
+      }),
+    });
+    const spec = { kind: 'ticket', size: 4 } as const;
+
+    expect(definition.shapeSchema).toBe(TicketClipShapeSchema);
+    expect(definition.resolve(spec, { round: value => value, resolve: () => spec })).toBe(spec);
+
+    const scene: IRScene = {
+      version: 1,
+      type: 'scene',
+      children: [{ type: 'scope', clip: spec, children: [] }],
+    };
+    expect(compileToScene(scene, { clips: [definition] }).scene.resources).toMatchObject([
+      {
+        kind: 'clip',
+        path: {
+          commands: [
+            { kind: 'move', to: [0, 0] },
+            { kind: 'line', to: [4, 4] },
+          ],
+        },
+      },
+    ]);
   });
 });

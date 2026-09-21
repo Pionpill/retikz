@@ -1,0 +1,187 @@
+---
+title: 自定义生成器
+description: 定义并注册参数化曲线段，供 generator Step 使用
+---
+
+先熟悉[基础用法](/kernel/components/path/usage)，再定义并注入新的能力。
+
+## 适用边界
+
+当现有 `line`、`curve`、`cubic`、`bend`、`smooth` 与 `arc` 不能表达一种可复用的参数化曲线段时，再定义路径生成器。
+
+| 需求                        | 选择                                              |
+| --------------------------- | ------------------------------------------------- |
+| 一次性二次或三次贝塞尔      | 现有 `curve` / `cubic`                            |
+| 穿过一组点的平滑曲线        | 现有 `smooth`                                     |
+| 新增可复用的参数化曲线段    | 路径生成器                                        |
+| 改变整条 Path 的 Scene 输出 | [自定义路径](/kernel/components/path/custom-path) |
+
+生成器不拥有整条 Path 的描边、箭头、流带或变换；这些仍由宿主 Path 与当前 Path kind 负责。
+
+## 最小结果
+
+路径生成器扩展的是**一段路径动作**。`<Step kind="generator">` 只保存生成器名称与 JSON 参数；宿主注入 `PathGeneratorDefinition` 后，core 再把这一段转换成普通路径命令，交回当前 Path kind 继续处理。
+
+下面的 `sin` definition、`<Layout extensions={{ pathGenerators }}>` 注入和 generator Step 都在同一个可运行示例里。打开代码视图即可复制完整闭环。
+
+<ComponentPreview files="path-generator-sin" size="xs" />
+
+## 定义能力
+
+用 `definePathGenerator` 声明四件事：稳定名称、参数 schema、可选目标参数，以及如何从当前游标生成 `PathCommand[]`。
+
+```ts
+import { definePathGenerator } from '@retikz/core';
+import { z } from 'zod';
+
+const sin = definePathGenerator({
+  name: 'sin',
+  paramsSchema: z.strictObject({
+    amplitude: z.number().nonnegative(),
+    waves: z.number().int().positive(),
+  }),
+  generate: ({ from, to, params }) => {
+    if (to === undefined) {
+      throw new Error('path generator "sin" requires step.to.');
+    }
+    const amplitude = typeof params.amplitude === 'number' ? params.amplitude : 0;
+    const waves = typeof params.waves === 'number' ? params.waves : 1;
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const length = Math.hypot(dx, dy);
+    const normal: [number, number] = length === 0 ? [0, 0] : [-dy / length, dx / length];
+    const pointAt = (t: number): [number, number] => {
+      const offset = Math.sin(t * Math.PI * 2 * waves) * amplitude;
+      return [from[0] + dx * t + normal[0] * offset, from[1] + dy * t + normal[1] * offset];
+    };
+
+    return Array.from({ length: waves * 4 }, (_, i) => {
+      const start = i / (waves * 4);
+      const end = (i + 1) / (waves * 4);
+      return { kind: 'quad' as const, control: pointAt((start + end) / 2), to: pointAt(end) };
+    });
+  },
+});
+```
+
+definition 是运行时能力，不进入 IR。IR 只保留 `name`、可选 `to` 与 JSON-safe `params`，因此图形数据仍可序列化、持久化和跨 adapter 传递。
+
+`params` 保存数值等普通配置；需要把其中某个字段当作坐标或节点引用时，在 `targetParams` 列出该字段名。例如 `targetParams: ['control']` 会把 `params.control` 解析到 `resolvedTargets.control`，供 `generate` 使用。
+
+## 注入与使用
+
+React 通过 `<Layout extensions={{ pathGenerators }}>` 注入；直接调用 core 时使用 `CompileOptions.pathGenerators`。生成器名称随后写在 generator Step 上。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+<Layout extensions={{ pathGenerators: [sin] }}>
+  <Path>
+    <Step kind="move" to={[0, 0]} />
+    <Step kind="generator" name="sin" to={[120, 0]} params={{ amplitude: 12, waves: 3 }} />
+  </Path>
+</Layout>;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Vanilla 使用相同 definition，通过 `mount` 的 `compile` 选项注入；HTML 中先准备 `<div id="diagram"></div>`。下例沿用上方 definition。
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'generator', name: 'sin', to: [120, 0], params: { amplitude: 12, waves: 3 } },
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  compile: { pathGenerators: [sin] },
+});
+// Dispose when the host is removed.
+// view.dispose();
+```
+
+</DocTab>
+</DocTabs>
+
+## 错误与限制
+
+| 情况                            | 结果                                                      |
+| ------------------------------- | --------------------------------------------------------- |
+| 名称为空                        | `definePathGenerator` 立即拒绝                            |
+| 与另一已注册项重名              | registry 合并时报重复注册                                 |
+| Step 引用未注册名称             | 编译报错，并列出可用名称与注入入口                        |
+| `paramsSchema` 拒绝参数         | 错误包含生成器名与对应 IR 路径                            |
+| 参数解析后含函数、`NaN` 等      | JSON-safe 护栏拒绝                                        |
+| `targetParams` 值不是 Target    | 编译指出具体字段                                          |
+| `targetParams` 指向不存在的节点 | 对应 key 不写入 `resolvedTargets`；由 `generate` 处理缺省 |
+| `generate` 抛错                 | 错误包装生成器名称并保留原始原因                          |
+| 返回非数组、未知命令或无限坐标  | 输出校验拒绝，不让坏几何进入 Scene                        |
+
+生成器可以返回 `move` 创建子路径，但不能直接返回 Scene primitive，也不能绕开当前 Path kind 的样式与装饰流程。
+
+## 相关属性
+
+以下列出定义、注入与调用路径生成器时最常用的成员；完整字段见 [API 参考](/kernel/components/path/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'definePathGenerator',
+      kind: 'function',
+      type: '(definition: PathGeneratorDefinition) => PathGeneratorDefinition',
+      description: '创建可注册的路径生成器定义，并校验非空名称。',
+    },
+    {
+      name: 'PathGeneratorDefinition',
+      kind: 'type',
+      type: 'PathGeneratorDefinition',
+      description: '声明名称、参数 schema、目标参数以及从当前游标生成 `PathCommand[]` 的函数。',
+    },
+    {
+      name: 'Layout.extensions.pathGenerators',
+      kind: 'property',
+      type: 'ReadonlyArray<PathGeneratorDefinition>',
+      description: '在 React Layout 中注入生成器定义。',
+    },
+    {
+      name: 'Step kind="generator"',
+      kind: 'property',
+      type: 'GeneratorStepProps',
+      description: '用注册名称、JSON-safe `params` 和可选 `to` 调用生成器步骤。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Step · 路径组合',
+      description: '选择并组合移动、直线、折角、曲线、圆弧和生成器步骤',
+      url: '/kernel/components/path/step',
+    },
+    {
+      title: '实现原理',
+      description: '解释路径写法如何变成步骤，以及引用、几何、箭头和标签如何产生最终结果',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API 参考',
+      description: '查询绘制组件、作者侧输入和扩展契约的公开 TypeScript 声明',
+      url: '/kernel/components/path/api-reference',
+    },
+  ]}
+/>

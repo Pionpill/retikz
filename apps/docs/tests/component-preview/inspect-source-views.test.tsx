@@ -50,6 +50,7 @@ import Demo6, {
   createPreviewControlContract as contract6,
   previewSource as source6,
 } from '../../src/modules/docs/contents/kernel/packages/inspect/builtins/inspect-scope';
+
 const demos = [
   ['inspect-quadratic', Demo0, source0, contract0],
   ['inspect-cubic', Demo1, source1, contract1],
@@ -172,7 +173,7 @@ describe('Inspect demo source views', () => {
           vanilla.renderToSvgString(input, {
             adapters: original.adapters,
             compile: {
-              clips: root.props.clips,
+              clips: root.props.extensions?.clips,
               themeStyles: theme.PreviewThemeDefinitionBundle.core,
               measureText: measure.browserMeasurer,
             },

@@ -22,6 +22,8 @@ export type ZodSchemaProps = {
   descriptions?: Readonly<Partial<Record<string, string>>>;
   /** 递归展开 array、tuple 与 union 内的匿名字段，并使用 canonical typed path */
   expandNested?: boolean;
+  /** 仅展示一级字段，不额外平铺匿名对象子行 */
+  shallow?: boolean;
 };
 
 /** 递归把嵌套 object 字段平铺为 TableRow 列表（父行后紧跟匿名子行） */
@@ -150,7 +152,7 @@ const applyCanonicalDescriptions = (
   });
 
 export const ZodSchema: FC<ZodSchemaProps> = props => {
-  const { name, description, descriptions, expandNested = false } = props;
+  const { name, description, descriptions, expandNested = false, shallow = false } = props;
   const { i18n, t } = useTranslation();
   const entry = (SCHEMA_REGISTRY as Record<string, (typeof SCHEMA_REGISTRY)[string] | undefined>)[name];
 
@@ -183,7 +185,7 @@ export const ZodSchema: FC<ZodSchemaProps> = props => {
     } else {
       const overridden =
         effectiveDescriptions != null ? applyDescriptions(repr.fields, effectiveDescriptions) : repr.fields;
-      rows = flattenFields(overridden);
+      rows = shallow ? overridden : flattenFields(overridden);
     }
   } else if (expandNested) {
     const nestedRows = expandTypeRows(repr.type, [[]], 0);

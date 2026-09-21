@@ -1,0 +1,268 @@
+---
+title: Custom clipping
+description: Define a JSON-safe clip shape for Scope, then register and use it from a React or Vanilla host
+---
+
+When Core's built-in `rect` and Standard's circle / ellipse / polygon / path / compound clips do not fit, define a new shape with one `ClipDefinition`. The Definition stays out of IR; IR stores only a `kind` and serializable parameters, while renderers, visual bounds, and hit testing share the same lowered result.
+
+## Applicability boundary
+
+This page assumes [basic Scope clipping](/kernel/components/scope/usage#clipping-and-stacking). First decide whether an existing capability already expresses the requirement:
+
+| Need                                                | Choose                                                              |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| One-off rectangle                                   | Write the Core built-in `rect` clip spec                            |
+| Circle, ellipse, polygon, path, or combined regions | Inject a Definition from [Clip Extensions](/library/standard/clip)  |
+| New static 2D clipping geometry                     | Define one complete `ClipDefinition` that lowers to `SceneClipPath` |
+| Renderer-specific mask / filter behavior            | Outside Clip; use an explicit backend capability                    |
+
+## Minimal complete result
+
+The rounded rectangle below clips two circular nodes. The code panel initially shows the shared `roundedRectClip` Definition; switch to React or Vanilla for host entry points, or inspect the serializable IR for the same result.
+
+<ComponentPreview
+  files={['clip-registry', 'clip-registry.definition.ts']}
+  defaultSourceFile="clip-registry.definition.ts"
+  size="md"
+/>
+
+## Define the capability
+
+Keep the Definition in a reusable module, such as `rounded-rect-clip.ts`. When the spec already is the complete shape, provide only `schema` and `lower`: `defineClip` derives `resolve: spec => spec` and reuses that schema as `shapeSchema`. Supply `resolve` and `shapeSchema` explicitly only when shorthand, references, or configuration resolve to another shape. `lower` returns a structured path, never an SVG string or Canvas callback.
+
+```ts
+import type { PathCommand } from '@retikz/core';
+import { defineClip } from '@retikz/core';
+import { z } from 'zod';
+
+const roundedRectClipSchema = z.strictObject({
+  kind: z.literal('rounded-rect'),
+  x: z.number(),
+  y: z.number(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+  radius: z.number().nonnegative(),
+});
+export const roundedRectClip = defineClip({
+  kind: 'rounded-rect',
+  schema: roundedRectClipSchema,
+  lower: shape => {
+    const right = shape.x + shape.width;
+    const bottom = shape.y + shape.height;
+    const radius = Math.min(shape.radius, shape.width / 2, shape.height / 2);
+    const commands: Array<PathCommand> = [
+      { kind: 'move', to: [shape.x + radius, shape.y] },
+      { kind: 'line', to: [right - radius, shape.y] },
+      { kind: 'quad', control: [right, shape.y], to: [right, shape.y + radius] },
+      { kind: 'line', to: [right, bottom - radius] },
+      { kind: 'quad', control: [right, bottom], to: [right - radius, bottom] },
+      { kind: 'line', to: [shape.x + radius, bottom] },
+      { kind: 'quad', control: [shape.x, bottom], to: [shape.x, bottom - radius] },
+      { kind: 'line', to: [shape.x, shape.y + radius] },
+      { kind: 'quad', control: [shape.x, shape.y], to: [shape.x + radius, shape.y] },
+      { kind: 'close' },
+    ];
+    return { commands, fillRule: 'nonzero' };
+  },
+});
+```
+
+## Register and use
+
+The Definition is a shared React / Vanilla runtime object and never becomes persistent scene data. In the chosen host, register it in `clips`, then reference it through `Scope.clip.kind`.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+Register the Definition through `Layout.extensions.clips`; Scope contains only its persistent `kind` and parameters.
+
+```tsx
+import { Layout, Node, Scope } from '@retikz/react';
+import { roundedRectClip } from './rounded-rect-clip';
+
+const Demo = () => (
+  <Layout extensions={{ clips: [roundedRectClip] }}>
+    <Scope clip={{ kind: 'rounded-rect', x: -150, y: -72, width: 300, height: 144, radius: 36 }}>
+      <Node
+        position={[-88, -8]}
+        shape="circle"
+        style={{ fill: 'skyblue', stroke: 'none' }}
+        layout={{ minimumSize: { width: 160, height: 160 } }}
+      />
+      <Node
+        position={[84, 8]}
+        shape="circle"
+        style={{ fill: 'darkorange', stroke: 'none' }}
+        layout={{ minimumSize: { width: 170, height: 170 } }}
+      />
+      <Node
+        position={[0, 0]}
+        text="custom clip"
+        style={{ fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, textColor: 'contrast' }}
+        layout={{ minimumSize: { width: 132, height: 42 } }}
+      />
+    </Scope>
+    <Node
+      position={[0, 80]}
+      text="rounded-rect provider"
+      style={{ fill: 'none', stroke: 'none', textColor: 'dodgerblue' }}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+Register the same Definition through `renderToSvgString`'s `compile.clips`; the input still contains only a JSON-safe spec.
+
+```ts
+import type { InputScene } from '@retikz/vanilla';
+import { renderToSvgString } from '@retikz/vanilla';
+import { roundedRectClip } from './rounded-rect-clip';
+
+const input: InputScene = {
+  type: 'scene',
+  children: [
+    {
+      type: 'scope',
+      clip: {
+        kind: 'rounded-rect',
+        x: -150,
+        y: -72,
+        width: 300,
+        height: 144,
+        radius: 36,
+      },
+      children: [
+        {
+          type: 'node',
+          position: [-88, -8],
+          shape: 'circle',
+          style: { fill: 'skyblue', stroke: 'none' },
+          layout: { minimumSize: { width: 160, height: 160 } },
+        },
+        {
+          type: 'node',
+          position: [84, 8],
+          shape: 'circle',
+          style: { fill: 'darkorange', stroke: 'none' },
+          layout: { minimumSize: { width: 170, height: 170 } },
+        },
+        {
+          type: 'node',
+          position: [0, 0],
+          text: 'custom clip',
+          style: { fill: 'dodgerblue', stroke: 'dodgerblue', strokeWidth: 2, textColor: 'contrast' },
+          layout: { minimumSize: { width: 132, height: 42 } },
+        },
+      ],
+    },
+    {
+      type: 'node',
+      position: [0, 80],
+      text: 'rounded-rect provider',
+      style: { fill: 'none', stroke: 'none', textColor: 'dodgerblue' },
+    },
+  ],
+};
+const svg = renderToSvgString(input, { compile: { clips: [roundedRectClip] } });
+```
+
+</DocTab>
+</DocTabs>
+
+Pass the JSON in the IR panel to Core as `ir`, and still supply the Definition at compile time:
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { roundedRectClip } from './rounded-rect-clip';
+
+const { scene } = compileToScene(ir, { clips: [roundedRectClip] });
+```
+
+A `{ capability: 'clip', name: kind }` provider in a provider graph likewise creates a complete Definition and participates in the same conflict checks as explicit `clips`.
+
+## Errors and limits
+
+| Case                                   | Result                                                                                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Duplicate kind                         | The registry reports a definition conflict and never overwrites it                                       |
+| Unknown `clip.kind`                    | Reports the kind and suggests Core `options.clips`, React `extensions.clips`, or Vanilla `compile.clips` |
+| Definition / spec / shape kind differs | Fails as a provider contract violation before `lower`                                                    |
+| Spec or shape fails its schema         | Reports the provider key, schema phase, and validation cause                                             |
+| Recursion exceeds `maxClipDepth`       | Fails; `resolve` / `lower` share a 32-edge budget by default                                             |
+
+A compound shape appends child commands in authored order and applies its outer `fillRule`; it is not a geometric intersection. Use nested `<Scope clip>` elements for intersection.
+
+For registry resolution, shape snapshots, path canonicalization, and resource deduplication, see the [Scope mechanism](/kernel/components/scope/mechanism).
+
+## Related props
+
+These are the members most often used to define, inject, and reference a custom clip. See the [API reference](/kernel/components/scope/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineClip',
+      kind: 'function',
+      type: 'DefineClip',
+      description:
+        'Creates a registrable clipping capability. Omit `resolve` and `shapeSchema` when the input already is the full shape',
+    },
+    {
+      name: 'ClipDefinition',
+      kind: 'type',
+      type: 'ClipDefinition<TClip, TShape>',
+      description: 'The registrable clip definition returned by `defineClip`',
+    },
+    {
+      name: 'ClipResolveContext',
+      kind: 'type',
+      type: 'ClipResolveContext',
+      description: 'Provides precision rounding and child-clip resolution',
+    },
+    {
+      name: 'ClipLowerContext',
+      kind: 'type',
+      type: 'ClipLowerContext',
+      description: 'Provides precision rounding and child-shape path lowering',
+    },
+    {
+      name: 'Layout.extensions.clips',
+      kind: 'property',
+      type: 'ReadonlyArray<ClipDefinition>',
+      description: 'The React-host entry point for registering clips',
+    },
+    {
+      name: 'Scope.clip',
+      kind: 'property',
+      type: "IRScope['clip']",
+      description: 'References a registered clip by its `kind` and parameters',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Scope basics',
+      description: 'Use built-in clips and local coordinates',
+      url: '/kernel/components/scope/usage',
+    },
+    {
+      title: 'Clip extensions',
+      description: 'Assemble official circle, ellipse, polygon, path, and compound clips',
+      url: '/library/standard/clip',
+    },
+
+    {
+      title: 'Compile options',
+      description: 'Look up CompileOptions.clips and the recursion limit',
+      url: '/kernel/packages/core/overview',
+    },
+
+]}
+/>

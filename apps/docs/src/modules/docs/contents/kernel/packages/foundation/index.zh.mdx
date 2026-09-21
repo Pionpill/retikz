@@ -57,22 +57,24 @@ Object.isFrozen(snapshot.settings); // true
 
 ## 职责一览
 
-| 文档       | 职责                          | 适合何时查阅           |
-| ---------- | ----------------------------- | ---------------------- |
-| 通用工具   | 只读集合、JSON 快照与静态颜色 | 需要复用通用工具时     |
-| 类型与契约 | 编译期类型与运行时 schema     | 需要复用基础数据契约时 |
-| 校验与错误 | 结构化错误与标量断言          | 需要确定失败边界时     |
-| API 参考   | 公开签名、类型与返回契约      | 精确查询接口时         |
+| 文档        | 职责                          | 适合何时查阅           |
+| ----------- | ----------------------------- | ---------------------- |
+| 通用工具    | 只读集合、JSON 快照与静态颜色 | 需要复用通用工具时     |
+| 类型与契约  | 编译期类型与开放值构造器      | 需要复用基础类型工具时 |
+| 校验与错误  | 结构化错误与标量断言          | 需要确定失败边界时     |
+| API 参考    | 公开签名、类型与返回契约      | 精确查询接口时         |
+| Schema 参考 | 基础 schema 的字段与校验结构  | 查询可解析数据契约时   |
 
 ## 章节内容
 
 <LinkedSections
   items={[
     { title: '通用工具', description: '集合、JSON 与静态颜色工具', url: '/kernel/packages/foundation/utilities' },
-    { title: '类型与契约', description: '类型工具与运行时 schema', url: '/kernel/packages/foundation/types-schemas' },
+    { title: '类型与契约', description: '类型工具与开放值构造器', url: '/kernel/packages/foundation/types-schemas' },
     { title: '校验与错误', description: '结构化错误与标量断言', url: '/kernel/packages/foundation/validation-errors' },
 
     { title: 'API 参考', description: '查询完整公开契约', url: '/kernel/packages/foundation/api-reference' },
+    { title: 'Schema 参考', description: '查询基础 schema 的字段与校验结构', url: '/kernel/packages/foundation/schema-reference' },
 
 ]}
 />

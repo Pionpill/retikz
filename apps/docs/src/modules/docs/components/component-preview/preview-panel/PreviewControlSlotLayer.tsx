@@ -2,8 +2,10 @@ import type { FC } from 'react';
 import { useMemo } from 'react';
 
 import { cn } from '@/lib';
+import { useComponentPreviewStore } from '@/modules/docs/store';
 
 import type { PreviewControlPlacement, PreviewControlRuntime, PreviewControlSlot } from '../types';
+import { PREVIEW_CONTROLS_LOCK_SLOT_ID } from './controls';
 
 const DEFAULT_PLACEMENT: PreviewControlPlacement = 'top-start';
 
@@ -31,14 +33,16 @@ export type PreviewControlSlotLayerProps = {
 /** 将预览控制插槽渲染到预览区九宫格位置。 */
 export const PreviewControlSlotLayer: FC<PreviewControlSlotLayerProps> = props => {
   const { slots, runtime, pinned } = props;
+  const controlsLocked = useComponentPreviewStore(state => state.controlsLocked);
   const groups = useMemo(() => {
     const next = new Map<PreviewControlPlacement, Array<PreviewControlSlot>>();
-    for (const slot of slots) {
+    const visibleSlots = controlsLocked ? slots.filter(slot => slot.id === PREVIEW_CONTROLS_LOCK_SLOT_ID) : slots;
+    for (const slot of visibleSlots) {
       const placement = slot.placement ?? DEFAULT_PLACEMENT;
       next.set(placement, [...(next.get(placement) ?? []), slot]);
     }
     return [...next.entries()];
-  }, [slots]);
+  }, [controlsLocked, slots]);
 
   return (
     <>

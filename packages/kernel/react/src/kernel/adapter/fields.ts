@@ -58,6 +58,7 @@ void _assertPathFieldsCheck;
  *   （style 级联值与 defaults 通道）；同 NODE_FIELDS 互锁防漂移，builder / unbuilder 共用
  */
 export const SCOPE_FIELDS = [
+  'frame',
   'theme',
   'id',
   'localNamespace',

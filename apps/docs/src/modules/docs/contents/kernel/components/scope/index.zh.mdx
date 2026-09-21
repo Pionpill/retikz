@@ -1,0 +1,56 @@
+---
+title: Scope · 范围
+description: 用局部范围组织一组图元，共享变换、样式默认值、引用边界与裁剪
+---
+
+`<Scope>` 为一组图元建立局部范围。比如把两个节点和它们之间的连线作为一个子图，整体移动时无需逐个修改坐标；需要复用这组内容时，也可以隔离内部 id，避免和外部图元冲突。
+
+Scope 位于 Layout 内，可以嵌套。Layout 负责整张图的输入与呈现，Scope 负责其中一组内容的上下文；Scope 默认不绘制图形；显式设置 `frame` 可装饰包络，但不提供自动排版。
+
+## 整体认识
+
+下面把 A、B 和连线放进同一个 Scope，再整体向右平移。子图内仍使用简单的局部坐标：A 位于原点，B 在右侧；Scope 负责把这套坐标映射到整张图中。
+
+<ComponentPreview files="/kernel/components/scope/usage/scope-basic" size="xs" />
+
+这种分组还可以承载共同的样式默认值、裁剪区域或整体引用。样式默认值减少重复配置，裁剪限制可见区域，整体引用让外部连线把子图当成一个目标。它们彼此独立，只设置当前任务需要的字段即可。
+
+## 职责一览
+
+| 章节         | 职责                            | 何时阅读             |
+| ------------ | ------------------------------- | -------------------- |
+| 基础用法     | 变换、整体引用、默认值与裁剪    | 组织一个局部子图     |
+| 自定义裁剪区 | 定义并注册新的裁剪能力          | 内置裁剪不能满足需求 |
+| 实现原理     | 局部坐标、命名空间与 Scene 输出 | 排查引用或变换结果   |
+| API 参考     | Scope 组件的公开属性            | 精确查询调用契约     |
+| Schema 参考  | 可保存的 Scope 数据及关联结构   | 构造或保存图形数据   |
+
+## 选择与边界
+
+需要一起移动、旋转或缩放时使用 `transforms`；需要把整组的某个锚点对齐已有目标时使用 `placement`。需要多次复用带固定 id 的子图时，再开启 `localNamespace`，让内部名字只在自己的范围内解析。
+
+仅为了整理 JSX，应拆普通 React 组件。需要 Flex、Grid 等自动排列时使用 [Layout 布局包](/library/layout)；需要扩展圆形、路径或组合裁剪时，先查看 [Standard 裁剪扩展](/library/standard/clip)，已有能力不必重新定义。
+
+## 包络外框
+
+`frame` 根据已有内容包络绘制独立外框，可设置填充、描边与外框阴影。`style` 和 `defaults` 继续控制子图元继承；外框只共享有效颜色上下文。
+
+`frame.padding` 只扩张装饰，不改变子内容位置、布局空间或 Scope 锚点。外框不参与命中，空 Scope 不产生外框；矩形或圆形轮廓由 `boundingShape` 决定。需要分配空间或约束容器尺寸时使用 Standard Surface。
+
+查看[外框用法](/kernel/components/scope/usage#包络外框)。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '基础用法', description: '完成局部变换、引用、默认值与裁剪', url: '/kernel/components/scope/usage' },
+    { title: '自定义裁剪区', description: '定义并注册新的裁剪能力', url: '/kernel/components/scope/custom' },
+    { title: '实现原理', description: '跟踪子树如何变成 Scene 分组', url: '/kernel/components/scope/mechanism' },
+    { title: 'API 参考', description: '查询 Scope 组件属性', url: '/kernel/components/scope/api-reference' },
+    {
+      title: 'Schema 参考',
+      description: '查询 Scope 及关联数据结构',
+      url: '/kernel/components/scope/schema-reference',
+    },
+  ]}
+/>

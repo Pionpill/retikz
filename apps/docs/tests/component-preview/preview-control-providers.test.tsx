@@ -24,7 +24,7 @@ const AnimatedDemo: FC = () => (
 );
 
 const RibbonDemo: FC = () => (
-  <Layout width={40} height={20} pathKinds={[RibbonPathKindDefinition]}>
+  <Layout width={40} height={20} extensions={{ pathKinds: [RibbonPathKindDefinition] }}>
     <Node id="ribbon" position={[0, 0]} />
   </Layout>
 );

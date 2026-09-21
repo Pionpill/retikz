@@ -1,6 +1,6 @@
 /** 渲染时的类型表示（中间结构，与 Zod 解耦） */
 export type TypeRepr =
-  | { kind: 'primitive'; name: 'string' | 'number' | 'boolean' }
+  | { kind: 'primitive'; name: 'string' | 'number' | 'boolean' | 'never' }
   | { kind: 'literal'; value: string | number | boolean | null }
   | { kind: 'enum'; values: ReadonlyArray<string | number> }
   | { kind: 'array'; element: TypeRepr; constraints: Array<string> }
@@ -14,7 +14,8 @@ export type TypeRepr =
       /** discriminated union 的稳定分支身份；普通 union 省略 */
       branches?: Array<DiscriminatedUnionBranch>;
     }
-  | { kind: 'ref'; name: string; url: string } // 命中注册表
+  | { kind: 'intersection'; members: [TypeRepr, TypeRepr] }
+  | { kind: 'ref'; name: string; url?: string } // 命中注册表
   | { kind: 'object'; fields: Array<ObjectField>; additionalProperties: boolean } // 匿名/未注册 object，就地展开
   | { kind: 'unknown'; note: string };
 

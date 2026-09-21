@@ -52,7 +52,7 @@ Retikz also structures its contracts to make these descriptions easier for LLMs 
 - **Semantically grouped properties**: Node, for example, puts visual overrides in `style` and size, spacing, and text layout in `layout`, while content and references retain their own fields. Grouping helps a model locate properties by editing intent instead of navigating a flat list of mixed responsibilities.
 - **Controlled discriminator branches**: `kind` distinguishes genuinely different operations, while parameters express variations of the same operation. Orthogonal folds, for example, share `kind: 'fold'` and use `via` to select the route, instead of introducing a separate operation for every direction. This keeps semantic branches explicit without multiplying equivalent concepts.
 
-Together, these choices let models focus on what a figure should express, reduce low-level detail generation, and keep results validatable, editable, and reusable. See the [Schema Reference](/kernel/reference/schema) for specific fields and constraints.
+Together, these choices let models focus on what a figure should express, reduce low-level detail generation, and keep results validatable, editable, and reusable. See the [Schema Reference](/kernel/components/layout/schema-reference) for specific fields and constraints.
 
 ## Why choose Retikz
 

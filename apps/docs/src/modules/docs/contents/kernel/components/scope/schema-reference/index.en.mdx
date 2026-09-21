@@ -1,0 +1,50 @@
+---
+title: Schema reference
+description: Look up public Scope, placement, transform, and clipping data contracts
+---
+
+This page selects Scope-owned and directly clipping-related schemas from `@retikz/core` by name and reads their fields from source. Shared drawable-default and transform schemas stay as named field types on Scope instead of being repeated here. See [API reference](/kernel/components/scope/api-reference) for React props and [Basic usage](/kernel/components/scope/usage) to get started.
+
+`ScopeSchema` is the Tier 1 container node. Its optional `frame` paints an independent envelope decoration. It establishes local transforms, style defaults, clipping, stacking, and reference boundaries for a child subtree. A Scope can still be referenced through its own `id`.
+
+<span id="scope"></span>
+
+## ScopeSchema
+
+<ZodSchema shallow name="ScopeSchema" />
+
+`Scope.theme` contains only sparse `style` / `mode` environment selectors, inherited per field. Core resolves shared colors; descendant composites consume this environment according to their own contracts. `defaults.reset` does not reset Theme.
+
+## ScopeFrameSchema
+
+A frame stores decoration spacing and independent styling, without an id, events, or independent animations.
+
+<ZodSchema name="ScopeFrameSchema" shallow />
+
+## ScopeFrameStyleSchema
+
+<ZodSchema name="ScopeFrameStyleSchema" shallow />
+
+## ScopePlacementSchema
+
+<ZodSchema shallow name="ScopePlacementSchema" />
+
+## ScopePlacementTargetSchema
+
+<ZodSchema shallow name="ScopePlacementTargetSchema" />
+
+## ScopeSelfPointSchema
+
+<ZodSchema shallow name="ScopeSelfPointSchema" />
+
+## ScopeDefaultsSchema
+
+<ZodSchema shallow name="ScopeDefaultsSchema" />
+
+## ClipSchema
+
+<ZodSchema shallow name="ClipSchema" />
+
+## RectClipSchema
+
+<ZodSchema shallow name="RectClipSchema" />

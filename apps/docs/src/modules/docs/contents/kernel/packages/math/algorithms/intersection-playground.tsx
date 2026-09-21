@@ -1,13 +1,14 @@
 import type { Position } from '@retikz/math';
 import { intersect, vector2 } from '@retikz/math';
-import { Circle, Draw, Layout, Node } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC, ReactNode } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
 import { defineControlledPreview } from '@/modules/docs/preview';
 
 import { intersectionPlaygroundControls, previewControlContract } from './intersection-playground.controls';
-import { circleCircleCenters, intersectionViewBox } from './intersection-playground.data';
+import { circleCircleCenters } from './intersection-playground.data';
 
 export const previewControls = intersectionPlaygroundControls;
 
@@ -88,7 +89,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const scene = sceneOf(values);
 
   return (
-    <Layout viewBox={intersectionViewBox}>
+    <Layout>
       {scene.geometry}
       {scene.hits.map((hit, index) => (
         <Circle

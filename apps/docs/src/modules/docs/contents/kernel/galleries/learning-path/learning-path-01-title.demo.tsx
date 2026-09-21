@@ -30,11 +30,11 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
       id={id}
       position={position}
       shape="rectangle"
-      cornerRadius={hasBox ? 4.5 : 0}
+      cornerRadius={hasBox ? 3.825 : 0}
       style={{
         ...(fill === undefined ? {} : { fill }),
         stroke: hasBox ? NODE_STROKE : 'none',
-        strokeWidth: hasBox ? 0.5 : 0,
+        strokeWidth: hasBox ? 0.425 : 0,
         textColor: hasBox ? LEAF_TEXT : TITLE_TEXT,
         font: {
           ...SANS_FONT,
@@ -42,7 +42,7 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
           weight: isTitle || isHeader ? 'bold' : 'normal',
         },
       }}
-      layout={{ padding: hasBox ? 5 : 4, minimumSize: { width, height } }}
+      layout={{ padding: hasBox ? 4.25 : 3.4, minimumSize: { width, height } }}
     >
       {children}
     </Node>
@@ -52,8 +52,8 @@ const RoadmapNode: FC<RoadmapNodeProps> = ({ id, position, variant = 'required',
 const Demo: FC = () => (
   <Layout>
     {/* 标题：白底（无 fill）、24px 加粗黑字，居中顶部。
-        位置 (404, 20) + 宽 200 × 高 40 完全复刻 intro.svg 的 (304, 0, 200×40) 标题框 */}
-    <RoadmapNode id="title" position={[404, 20]} variant="title" width={200} height={40}>
+        使用紧凑的节点尺寸与坐标，保留原图的层次关系 */}
+    <RoadmapNode id="title" position={[343.4, 17]} variant="title" width={170} height={34}>
       AI Expert in 2022
     </RoadmapNode>
   </Layout>

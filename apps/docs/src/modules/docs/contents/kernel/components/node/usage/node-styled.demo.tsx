@@ -1,0 +1,42 @@
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { nodeStyledControls, previewControlContract } from './node-styled.controls';
+
+export const previewControls = nodeStyledControls;
+
+const controlledPreview = defineControlledPreview(previewControlContract, values => {
+  return (
+    <Layout>
+      <Node
+        id="node"
+        position={[0, 0]}
+        shape="rectangle"
+        style={{
+          fill: values.fill,
+          stroke: values.stroke,
+          strokeWidth: values.strokeWidth,
+          dashed: values.dashed,
+          opacity: values.opacity,
+          textColor: 'currentColor',
+          font: {
+            family: values.fontFamily,
+            size: values.fontSize,
+            weight: values.fontWeight,
+            style: values.fontStyle,
+          },
+        }}
+        layout={{ padding: 18 }}
+      >
+        Node
+      </Node>
+    </Layout>
+  );
+});
+
+export const previewSource = controlledPreview.source;
+const Demo: FC = controlledPreview.Component;
+
+export default Demo;

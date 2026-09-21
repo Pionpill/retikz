@@ -1,6 +1,7 @@
 import type { Position } from '@retikz/math';
 import { curve } from '@retikz/math';
-import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
+import { Draw, Layout, Path, Step } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -41,7 +42,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
   const segments = curve.catmullRomToCubic(points, values.tension);
 
   return (
-    <Layout viewBox={{ x: -175, y: -120, width: 350, height: 240 }}>
+    <Layout>
       <Draw way={points} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
       <Path style={{ stroke: 'darkorange', strokeWidth: 2 }}>
         <Step kind="move" to={points[0]} />

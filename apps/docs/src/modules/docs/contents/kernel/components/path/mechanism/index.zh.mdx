@@ -1,0 +1,169 @@
+---
+title: 实现原理
+description: 解释路径写法、游标、端点引用、箭头接合与标签断口如何产生绘制结果
+---
+
+先读[基础用法](/kernel/components/path/usage)。本页解释绘制中的局部规则：为什么两种写法能得到相同路径，为什么端点能引用后定义节点，以及标签如何在曲线上留出断口。
+
+## 两种写法如何汇合
+
+`<Draw way={['a', '-|', 'b']}>` 与先移动到 a、再折角连接 b 的两个 Step 表达同一条路线。React 的 Draw 只把输入交给 Path；Vanilla 的 `normalizePath` 再调用 `parseWay`，统一生成有序步骤。
+
+- 作者输入：为了便于编写而提供的 `way`、字符串目标与箭头简写
+- Source IR：可保存为 JSON 的 Path、Step 与 marks；仍保留节点引用
+- 路径命令：引用求值后得到的具体移动、直线、曲线与圆弧几何
+
+图中先把写法统一，再计算坐标。统一步骤不会提前把节点引用变成坐标，也不会直接生成 SVG。
+
+<ComponentPreview files="draw-compilation" size="sm" hideCode type="flow" />
+
+`arrow="->"` 在这一入口转换成 `pos: 1` 的箭头 mark；`arrowDetail` 的端点覆盖与 `arrowPlacement` 的重叠值一并进入该 mark。因此直接编写 IR 时应使用 `marks`，不复制 React 的箭头简写字段。
+
+<SourceLinks
+  sources={[
+    { label: 'Draw 透传给 Path', path: 'packages/kernel/react/src/sugar/path/Draw.tsx', startLine: 28 },
+    {
+      label: 'way、步骤与箭头的统一入口',
+      path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts',
+      startLine: 174,
+    },
+    { label: '箭头简写转换为 marks', path: 'packages/kernel/vanilla/src/normalize/path/normalize.ts', startLine: 42 },
+  ]}
+/>
+
+## 步骤如何改变游标
+
+游标就是“下一笔从哪里开始”的位置。`move` 只移动游标；`line` 从游标画到目标；`cycle` 回到最近一次 move 建立的子路径起点。折角或曲线可能生成多条底层命令，但仍属于同一个步骤。
+
+例如先 `move [0, 0]`，再 `line [120, 0]`，游标从 A 到达 B；再一次 move 会开始独立子路径，不把两次 move 之间连起来。`way` 中的 `+` 偏移保持相对计算基点，`++` 则推进基点，两者因此可能画出不同的后续路线。
+
+下面沿用 A = [0, 0]、B = [120, 0]，再加入 C = [0, 60]、D = [120, 60]。上方是步骤数组的字段摘录；下方蓝点表示当前笔位，灰点是固定坐标参照，状态表是便于阅读的摘要，并非额外存储的对象。
+
+<ComponentPreview files="path-cursor" size="xxxl" hideCode type="illustration" />
+
+执行第二次 move 后，笔位和子路径起点都变为 C，A → B 的线条保持不变，B 与 C 之间没有连线。随后 line 到 D，cycle 沿同一水平线返回 C，因此末幅 C → D 与 D → C 重合；它不会回到 A。源码通过最近的 move 目标记录闭合起点，不需要从整条路径的首个步骤重新推断。
+
+生成器也是一个步骤：它收到当前局部游标和已解析的目标，返回命令后交回宿主 Path。它不拥有整条路径的箭头、描边或最终外层变换。具体写法见[Step · 路径组合](/kernel/components/path/step)与[自定义生成器](/kernel/components/path/custom-path-generator)。
+
+<SourceLinks
+  sources={[
+    { label: '游标与最近 move 目标', path: 'packages/kernel/core/src/compile/path/stroke/cursor.ts', startLine: 87 },
+    { label: '逐步生成路径命令', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 59 },
+    { label: '生成器参数与输出校验', path: 'packages/kernel/core/src/compile/path/stroke/lower.ts', startLine: 95 },
+  ]}
+/>
+
+## 为什么能引用后定义节点
+
+在同一范围中，Path 可以声明在节点 B 前面，仍以 B 作为终点。遍历时 Path 先进入待处理队列并保留输出位置；当前范围内的节点注册完成后，再解析端点并回填图元。
+
+以声明顺序 Path(a → b)、Node a、Node b 为例，下图展开待处理任务的必要字段。箭头表示条目展开、对象引用或标注的回填操作；`path` 保留节点引用，Node 的输出图元作省略展示。
+
+<ComponentPreview files="path-deferred" size="xxxl" hideCode type="illustration" />
+
+`placeholderSlot` 同时引用输出数组与占位对象。节点登记完成后，编译器解析 a、b，在数组中找到该占位对象并用路径图元替换；它保存的不是固定下标。图中使用默认 `zIndex`，回填后的 Path 仍排在两个 Node 的图元之前；显式 `zIndex` 仍参与后续排序。待处理任务与占位只服务于本次编译，不会作为 Scene 图元交给 renderer。
+
+这样既能得到 B 的连接边界，又保留 Path 原来的绘制层级。此规则针对延迟处理的路径；不能据此认为 Node 的位置或 Scope 的最终定位也都支持后定义引用。
+
+<SourceLinks
+  sources={[
+    {
+      label: '路径排队与绘制顺序占位',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 801,
+    },
+    {
+      label: '解析待处理路径并回填',
+      path: 'packages/kernel/core/src/compile/orchestration/traversal.ts',
+      startLine: 621,
+    },
+  ]}
+/>
+
+## 路径如何解析与截断
+
+标签断口依赖一条已经解析出坐标的路径。下面用同一条二次贝塞尔曲线说明：从 A = [0, 0] 出发，控制点为 [90, -100]，终点 B = [180, 0]；标签位于这个 curve Step 的 `position: 0.5`。示例不设置圆角、箭头或外层变换。
+
+### 从步骤到可定位的路径段
+
+节点引用先求出目标坐标，再由各 Step 生成具体路径命令。一个 Step 不一定只生成一条命令，例如折角会展开成多段直线。路径还会记录每条绘制命令来自哪个 Step、属于哪条子路径，以及它在整条路线上的累计距离范围。
+
+<ComponentPreview files="path-resolution" size="xxxl" hideCode type="illustration" />
+
+图中 `move` 只建立 A，不占据路径长度；`curve` 生成 `quad` 命令，保留控制点。`occurrences[0]` 是这条曲线的绘制段记录：`commandIndex` 指向命令数组，`sourceStepIndex` 指回作者步骤，`subPathIndex` 标识连续子路径。距离范围让后续处理能回答“断口落在哪一段”，而不必丢掉原有曲线结构。图中长度仅为展示取一位小数。
+
+<SourceLinks
+  sources={[
+    { label: '从 Step 生成命令', path: 'packages/kernel/core/src/compile/path/stroke/emit.ts', startLine: 50 },
+    {
+      label: '建立绘制段及距离范围',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 190,
+    },
+  ]}
+/>
+
+### 从标签边界到截断区间
+
+先在完整路径上确定标签的位置和当地的前进方向（切线），再测量排版后的文字边界。本图使用一组已测边界作为输入：宽 48、高 20，`gap: 6`，线宽 2。它用于说明截断关系，不代表字符串 `label` 在任意字体下都有这个尺寸。
+
+<ComponentPreview files="path-label-interval" size="xl" hideCode type="illustration" />
+
+左图把文字边界投影到标签处的切线方向；本例切线水平，因此两侧各占 24。每侧再加上 `gap` 和半个线宽，共预留 31 的路径距离。右图与下方距离轴标出同一个待移除区间：以标签的路径距离为中心，向前、向后分别留出这段空间。图中的边界和距离轴只作解释，不参与最终绘制。
+
+这里不是拿一个矩形与曲线逐点求交，而是把标签占用的空间转换成沿路径的距离区间。区间限制在标签所属子路径内；多个标签产生的重叠区间会合并，端点箭头的接合区域另有保护。标签先定位、再计算断口，所以截断不会让标签重新沿剩余片段排一次位置。
+
+示例只有一个对称的 curve Step，参数中点恰好也在曲线中间。一般曲线的参数比例不等于弧长比例，不能把这里的 `position: 0.5` 推广为所有路径都按总长度取一半。
+
+<SourceLinks
+  sources={[
+    {
+      label: '定位标签并保留路径采样结果',
+      path: 'packages/kernel/core/src/compile/path/stroke/sampling.ts',
+      startLine: 225,
+    },
+    {
+      label: '文字边界生成并合并断口区间',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 331,
+    },
+  ]}
+/>
+
+### 为什么曲线也能截断
+
+断口起止先是两个距离值。编译器找到它们所在的绘制段，再换算成该曲线上的两个切点，分别取出断口之前和之后的子曲线。
+
+<ComponentPreview files="path-curve-cut" size="xl" hideCode type="illustration" />
+
+三幅图的 A、B 与曲线形状保持一致。中图蓝色部分是移除区间；右图直接输出两侧子曲线，中间没有路径命令，也不靠一块背景色遮住原线。每个独立片段从自己的 `move` 开始，之后仍是 `quad`：控制点随切片重新计算，因此保留下来的部分沿原曲线走，不会被替换成连接切点的直线。
+
+三次贝塞尔、圆弧和椭圆弧也保留各自的命令类型。断口跨过多条命令时，分别保留各段未被移除的范围，再把同一子路径内相接的部分组合起来。取点、距离反查和保形切片的具体算法见 [Math · 曲线切片](/kernel/packages/math/algorithms#曲线切片)。
+
+无填充的内置 Stroke 路径上，居中标签默认留断口；`interrupt: false` 可关闭。填充路径及其它 Path kind 的适用条件见 [label · 标签](/kernel/components/path/label)。
+
+<SourceLinks
+  sources={[
+    {
+      label: '按原曲线类型生成切片命令',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 424,
+    },
+    {
+      label: '组织截断后的独立片段',
+      path: 'packages/kernel/core/src/compile/path/stroke/interruption.ts',
+      startLine: 495,
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Step · 路径组合', description: '使用子路径、变换与圆角', url: '/kernel/components/path/step' },
+    { title: '自定义路径', description: '完成整条路径的扩展闭环', url: '/kernel/components/path/custom-path' },
+    { title: 'API 参考', description: '查询公开声明', url: '/kernel/components/path/api-reference' },
+    { title: 'Schema 参考', description: '查询持久化数据字段', url: '/kernel/components/path/schema-reference' },
+  ]}
+/>

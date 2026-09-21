@@ -1,0 +1,158 @@
+---
+title: blend · 混合
+description: 混合模式决定当前图元如何与已绘制的背景叠色。结果同时取决于颜色、透明度和绘制顺序。
+---
+
+## 接入方式
+
+四种写法绘制相同结果。Vanilla 需要页面已有 `<div id="diagram"></div>`；移除容器前调用 `view.dispose()`。
+
+<ComponentPreview files="blend-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+
+const Demo: FC = () => (
+  <Layout>
+    <Node position={[25, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'dodgerblue' }} />
+    <Node position={[0, 0]} layout={{ minimumSize: 80 }} style={{ fill: 'darkorange', blendMode: 'multiply' }} />
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [25, 0], layout: { minimumSize: 80 }, style: { fill: 'dodgerblue' } },
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: 'darkorange', blendMode: 'multiply' },
+    },
+  ],
+};
+const Demo: FC = () => <Layout ir={ir} />;
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```tsx
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    node({ position: [25, 0], layout: { minimumSize: 80 }, style: { fill: 'dodgerblue' } }),
+    node({ position: [0, 0], layout: { minimumSize: 80 }, style: { fill: 'darkorange', blendMode: 'multiply' } }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    { type: 'node', position: [25, 0], layout: { minimumSize: 80 }, style: { fill: 'dodgerblue' } },
+    {
+      type: 'node',
+      position: [0, 0],
+      layout: { minimumSize: 80 },
+      style: { fill: 'darkorange', blendMode: 'multiply' },
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+## 选择模式
+
+multiply 常用于让重叠部分变暗，screen 常用于叠加亮色。下面左侧为 multiply，右侧为 screen，保留各自的重叠区域以便比较。
+
+<ComponentPreview files="blend-modes" size="sm" />
+
+`zIndex` 和声明顺序决定下方已经画了什么。白色、黑色和透明背景可能产生很不同的结果，不能脱离背景单独判断一个模式。
+
+## 参数试验场
+
+切换模式并观察重叠区域。这里改变的是每个图元的合成方式，不会创建隔离的组图层。
+
+<ComponentPreview files="blend-playground" size="md" controlPanelDefaultSize={50} />
+
+## 组件对接
+
+| 组件        | 接入方式                                      |
+| ----------- | --------------------------------------------- |
+| Scope       | `defaults.node.style` / `defaults.path.style` |
+| Node        | `style.blendMode`                             |
+| Path / Draw | `style.blendMode`                             |
+
+### Scope 的默认模式
+
+混合不作用于 Scope 本身。Scope 只能经由 defaults 把默认模式传给每个后代图元；每个主几何在绘制时与当时已有背景分别合成，不会形成一个统一混合图层。下图对比继承 `multiply` 的 Node 与 Path，并显示子元素以 `normal` 恢复普通覆盖合成的结果。
+
+<ComponentPreview files="blend-integration" size="sm" />
+
+### Node 的主形状混合
+
+下图以相同的橙色背景对比 `normal` 和 `multiply`。只有蓝色矩形主形状参与合成，Node 的文字与顶部标签不自动继承；改变 `zIndex` 或声明顺序会改变已有背景，因此同一模式也可能得到不同结果。
+
+<ComponentPreview files="blend-node" size="sm" />
+
+### Path 与箭头的混合
+
+Path 与箭头使用同一模式并共同参与合成，路径标签仍独立输出。下图同样以 `normal` 和 `multiply` 对照，观察箭头越过橙色背景时才出现的颜色变化。
+
+<ComponentPreview files="blend-path" size="sm" />
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/style/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'style.blendMode',
+      kind: 'property',
+      type: 'BlendModeValue',
+      description: '本页使用 normal 普通合成、multiply 正片叠底与 screen 滤色；完整模式见 API 参考。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '实现原理', url: '/kernel/visual/style/mechanism#blend-混合' },
+    { title: 'API 参考', url: '/kernel/visual/style/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/style/schema-reference#blend-混合' },
+  ]}
+/>

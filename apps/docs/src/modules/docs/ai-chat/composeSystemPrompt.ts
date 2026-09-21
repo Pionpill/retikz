@@ -28,13 +28,13 @@ const diagramProtocolZh = (preference: DiagramFormatPreference): string => {
 需要画图时用下面两种围栏代码块之一，否则正常用 markdown。
 
 - \`\`\`retikz-ir\`\`\`：直接给 @retikz/core 的 IR JSON。
-- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 21 个 retikz 组件 — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`RegularPolygon\` / \`Star\`，以及 Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
+- \`\`\`retikz-tsx\`\`\`：JSX，仅允许 21 个 retikz 组件 — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`，Sugar \`Draw\` / \`EdgeLabel\` + Standard 形状 \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`RegularPolygon\` / \`Star\`，以及 Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`；props 只能是字面量（字符串 / 数字 / 布尔 / null / 数组字面量 / 对象字面量）；**禁止** 变量引用、表达式、\`.map()\`、hooks、模板插值、spread。
 
 **两种围栏块都只用于"完整可运行单元"**——retikz-tsx 必须有最外层 \`<Layout>\` 包裹；retikz-ir 必须是完整 Scene 对象（含 \`version\` / \`type\` / \`children\`）。**只展示改动 / 片段 / 单独几个标签时用普通 \`\`\`tsx 或 \`\`\`json 围栏**，不要用 retikz-* 否则会被当成完整图去渲染、报 parse 错。
 
 ### ⚠️ 写图前**必须先看下面这段 Schema 速查**
 
-retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/kernel/reference/schema/*\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
+retikz 是新库，字段名与 TikZ / d3 / mermaid / "你训练时见过的某个 graph 库"**都不一致**。下面是 IR 顶层骨架；细节字段缺失时再查 \`/kernel/components/{layout,node,path,scope}/schema-reference\` 页面。**不要凭训练记忆编字段名（如 \`entities\`、\`paths\`、\`nodes\`、\`edges\` 这些都不存在）**。
 
 \`\`\`
 Scene = {
@@ -104,16 +104,16 @@ Coordinate = {
 
 ### 形状 sugar（一行画几何形，仅 retikz-tsx）
 
-\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radius={{ x: 30, y: 15 }} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid bounds={{ start: [0,0], end: [60,40] }} line={{ spacing: 10 }} />\` · \`<Axes origin={{ position: [80,60] }} x={{ extent: 60, ticks: { source: { kind: 'spacing', spacing: 10 } } }} y={{ extent: 40 }} />\` · \`<Frame id="group"><FrameTitle>Group</FrameTitle><FrameDescription>Details</FrameDescription><Node position={[0,0]} text="A" /></Frame>\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`。FrameTitle / FrameDescription 只能作为 Frame 的直接 child，Frame body 只接受直接 Node children。Axes 的 y 正值只在自身 lowering 中视觉向上，不改变其它 Core Position 仍为 y-down。Circle/Ellipse 带 \`startAngle\`+\`endAngle\` 画部分弧；视觉 prop（fill/stroke/...）与 Path 一致。Grid 的角点 bounds 使用 literal \`[x, y]\`，中心 bounds 还可使用 \`position\` + \`width\` / \`height\`，其中 PolarPosition 由 Core 解析。
+\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radius={{ x: 30, y: 15 }} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} style={{ fill: "#eee" }} />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid bounds={{ start: [0,0], end: [60,40] }} line={{ spacing: 10 }} />\` · \`<Axes origin={{ position: [80,60] }} x={{ extent: 60, ticks: { source: { kind: 'spacing', spacing: 10 } } }} y={{ extent: 40 }} />\` · \`<Frame id="group"><FrameTitle>Group</FrameTitle><FrameDescription>Details</FrameDescription><Node position={[0,0]} text="A" /></Frame>\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} style={{ fill: "#fbbf24" }} />\`。FrameTitle / FrameDescription 只能作为 Frame 的直接 child，Frame body 只接受直接 Node children。Axes 的 y 正值只在自身 lowering 中视觉向上，不改变其它 Core Position 仍为 y-down。Circle/Ellipse 带 \`startAngle\`+\`endAngle\` 画部分弧；视觉属性通过 style 与 Path 一致。Grid 的角点 bounds 使用 literal \`[x, y]\`，中心 bounds 还可使用 \`position\` + \`width\` / \`height\`，其中 PolarPosition 由 Core 解析。
 
 ### 复杂场景的扩展参考
 
 需要 polar 坐标 / 多段 path / Node 锚点 / Draw way DSL / EdgeLabel / 弧 / 扇形等更深字段时，下面页面给出权威字段表（用 markdown 链接引用即可，path 以 / 开头）：
 
-- 定位：\`/kernel/components/basic/position\` · \`/kernel/reference/schema/placement\`
-- IR：\`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- 组件：\`/kernel/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- 形状 sugar：\`/kernel/components/shapes/circle-ellipse\`
+- 定位：\`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
+- IR：\`/kernel/components/layout/schema-reference\` · \`/kernel/components/node/schema-reference\` · \`/kernel/components/path/schema-reference\`
+- 组件：\`/kernel/components/{tikz,node/usage,path/usage,path/draw,path/step,path/arrow}\`
+- 形状 sugar：\`/library/standard/circle-ellipse\`
 - 完整范例：\`/kernel/galleries/karl-circle\`
 
 这些页面已经收录在 prompt 末尾的 llms.txt 索引里。Schema 不熟时**务必参照上面速查 + 引用页面**，不要凭记忆瞎写——产出非法 IR 会被自动校验拦下，比一次写对成本高得多。`;
@@ -134,13 +134,13 @@ const diagramProtocolEn = (preference: DiagramFormatPreference): string => {
 When you need to draw a diagram, use one of the two fenced blocks below; otherwise answer normally with markdown.
 
 - \`\`\`retikz-ir\`\`\`: feed @retikz/core IR JSON directly.
-- \`\`\`retikz-tsx\`\`\`: JSX, only the 21 retikz components allowed — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`RegularPolygon\` / \`Star\`, plus Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
+- \`\`\`retikz-tsx\`\`\`: JSX, only the 21 retikz components allowed — Kernel \`Layout\` / \`Node\` / \`Path\` / \`Step\` / \`Text\` / \`Coordinate\` / \`Scope\`, Sugar \`Draw\` / \`EdgeLabel\` + Standard shapes \`Circle\` / \`Ellipse\` / \`Arc\` / \`Sector\` / \`Rectangle\` / \`RegularPolygon\` / \`Star\`, plus Standard Tier 2 \`Grid\` / \`Axes\` / \`Frame\` / \`FrameTitle\` / \`FrameDescription\`. Props must be literals (string / number / boolean / null / array literal / object literal). **No** variable references, expressions, \`.map()\`, hooks, template interpolation, or spread.
 
 **Both fenced blocks are for "complete, runnable units" only** — retikz-tsx must include the outer \`<Layout>\` wrapper; retikz-ir must be a complete Scene object (with \`version\` / \`type\` / \`children\`). **When showing only changes / snippets / a handful of standalone tags, use plain \`\`\`tsx or \`\`\`json fences instead** — using retikz-* will be treated as a full diagram and will throw a parse error.
 
 ### ⚠️ **Read the Schema cheatsheet below BEFORE drawing**
 
-retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/kernel/reference/schema/*\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
+retikz is a new library; field names disagree with TikZ / d3 / mermaid / "whatever graph lib you've seen in training". Below is the IR top-level skeleton; consult \`/kernel/components/{layout,node,path,scope}/schema-reference\` pages for deeper details. **Do NOT guess field names from training memory (no \`entities\`, no \`paths\` top-level field, no \`nodes\`, no \`edges\`)**.
 
 \`\`\`
 Scene = {
@@ -210,16 +210,16 @@ Coordinate = {
 
 ### Shape sugar (one-liner geometry, retikz-tsx only)
 
-\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radius={{ x: 30, y: 15 }} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} fill="#eee" />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid bounds={{ start: [0,0], end: [60,40] }} line={{ spacing: 10 }} />\` · \`<Axes origin={{ position: [80,60] }} x={{ extent: 60, ticks: { source: { kind: 'spacing', spacing: 10 } } }} y={{ extent: 40 }} />\` · \`<Frame id="group"><FrameTitle>Group</FrameTitle><FrameDescription>Details</FrameDescription><Node position={[0,0]} text="A" /></Frame>\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} fill="#fbbf24" />\`. FrameTitle / FrameDescription must be direct children of Frame, and the Frame body only accepts direct Node children. Positive y values point visually up only inside Axes lowering; other Core Positions remain y-down. Circle/Ellipse with \`startAngle\`+\`endAngle\` draw a partial arc; visual props (fill/stroke/...) match Path. Grid corner bounds use literal \`[x, y]\` positions; centered bounds also accept \`position\` + \`width\` / \`height\`, with PolarPosition resolved by Core.
+\`<Circle center={[0,0]} radius={20} />\` · \`<Ellipse center={[0,0]} radius={{ x: 30, y: 15 }} />\` · \`<Arc center={[0,0]} radius={20} startAngle={0} endAngle={90} />\` · \`<Sector center={[0,0]} radius={20} startAngle={0} endAngle={60} style={{ fill: "#eee" }} />\` · \`<Rectangle corner1={[0,0]} corner2={[40,20]} cornerRadius={4} />\` · \`<Grid bounds={{ start: [0,0], end: [60,40] }} line={{ spacing: 10 }} />\` · \`<Axes origin={{ position: [80,60] }} x={{ extent: 60, ticks: { source: { kind: 'spacing', spacing: 10 } } }} y={{ extent: 40 }} />\` · \`<Frame id="group"><FrameTitle>Group</FrameTitle><FrameDescription>Details</FrameDescription><Node position={[0,0]} text="A" /></Frame>\` · \`<RegularPolygon center={[0,0]} radius={25} sides={6} />\` · \`<Star center={[0,0]} outerRadius={25} points={5} style={{ fill: "#fbbf24" }} />\`. FrameTitle / FrameDescription must be direct children of Frame, and the Frame body only accepts direct Node children. Positive y values point visually up only inside Axes lowering; other Core Positions remain y-down. Circle/Ellipse with \`startAngle\`+\`endAngle\` draw a partial arc; visual properties use style, matching Path. Grid corner bounds use literal \`[x, y]\` positions; centered bounds also accept \`position\` + \`width\` / \`height\`, with PolarPosition resolved by Core.
 
 ### When you need more depth
 
 For polar coordinates / multi-segment paths / Node anchors / Draw way DSL / EdgeLabel / arcs / wedges — these pages have authoritative field tables (reference by site-relative path starting with /):
 
-- Positioning: \`/kernel/components/basic/position\` · \`/kernel/reference/schema/placement\`
-- IR: \`/kernel/reference/schema/scene\` · \`.../entity\` · \`.../path\`
-- Components: \`/kernel/components/{tikz,node/overview,draw/overview,draw/way,draw/path,draw/step,draw/arrow}\`
-- Shape sugar: \`/kernel/components/shapes/circle-ellipse\`
+- Positioning: \`/kernel/components/basic/position\` · \`/kernel/components/basic/position\`
+- IR: \`/kernel/components/layout/schema-reference\` · \`/kernel/components/node/schema-reference\` · \`/kernel/components/path/schema-reference\`
+- Components: \`/kernel/components/{tikz,node/usage,path/usage,path/draw,path/step,path/arrow}\`
+- Shape sugar: \`/library/standard/circle-ellipse\`
 - Worked example: \`/kernel/galleries/karl-circle\`
 
 These pages are already indexed in the llms.txt at the end of this prompt. When unsure about the schema, **follow the cheatsheet + cite the relevant page** — don't improvise. Invalid IR will be rejected by automated validation, costing more than getting it right once.`;

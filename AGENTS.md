@@ -30,10 +30,10 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 
 - 任务开始先按“任务规模与执行策略”判定小 / 中 / 大，再加载对应 flow；多个条件并存时取最高级。
 - 查找 ADR 先用 `pnpm adr:search <关键词> --owner <owner>` 检索摘要，可加 `--version v0.x`；未命中时换词、扩大范围或加 `--body` 补查。再阅读全文命中 ADR 并追踪前置 / 替代关系，不默认全量读取；检索规范见 `develop-design`，发布全文审计不因此省略。
-- 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取 `standard-shared` / `standard-schema` / `standard-contract` / `standard-providers` / `standard-resolve` / `standard-normalize` / `standard-pipeline-compile` / `standard-tier2-reuse`。
-- 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；组件页 / 示例页 / 分组页 / 概念页 / blog 再读对应 docs skill。
+- 新增、移动、拆分或审查 `packages/**` 的目录、文件、导出类型、函数、枚举、registry 或组件命名时，先读 `.agents/skills/standard-name/SKILL.md`。改文件分层、依赖方向、shared / schemas / contract / providers / resolve / Vanilla normalize / pipeline / compile、define-registry 能力，或进行 Tier 2 composite 设计 / review 前，先读 `.agents/skills/standard-structure/SKILL.md`，再按实际层级读取其 references；命名仍以 standard-name 为准。
+- 写 `apps/docs` 正文、demo、导航、i18n、schema registry 前，先读 `docs-doc-principle`；再按页型选择主写作 skill，共享组件、controls、测量、插图与导航规则只按触发条件加载 references，不全量读取。
 - 只有大型任务在执行计划获用户确认后才读 `flow-long-task`；主模型为 Astra / Sol 且计划已授权多 agent 协作时再读 `codex-develop-flow`，最后分流到具体 flow / develop skill。中型任务不读 `flow-long-task`；只有包含可分离功能实现且计划明确授权模型角色分工时可单独读 `codex-develop-flow`。中小型任务不因多文件、多步骤或可能多 commit 自动升级。
-- 发包、alpha/beta/rc 流程、跨模型评审、文档外站转换等长流程按对应 skill 执行，不把步骤复制进 AGENTS。
+- Alpha / Beta / RC 按 `flow-development` 选择阶段 reference；主题按 `theme-contract` 选择风格 reference。发包、跨模型评审、文档外站转换按对应 skill 执行，不把步骤复制进 AGENTS。
 - ADR 按 owner / 大版本 / 中版本归档，文件用三位编号 `001-xxx.md`，不设 alpha / beta / rc 子目录；roadmap 只保留版本重点功能、目标与必要边界 / 依赖，ADR 仅用编号链接，细则见 `develop-design`。ADR `Accepted` 表示设计获批，不代表实现或发布完成。
 - 所有发布组发包前都必须按 `package-publish` 从实际交付改动及依赖识别相关 ADR，逐篇阅读全文审计长期一致性、状态与当前公开契约；未纳入本次交付且不影响发布快照的未完成能力不阻塞发布、不因 alpha 递增迁移。ADR 不得残留文件 scope、私有实现、测试 case / 路径 / 命令、commit 切分或 review 记录。不得以状态字段、roadmap 勾选或 commit message 代替内容检查。
 - 重构优先走 `.agents/skills/develop-refactor/SKILL.md`；纯审计仍走 `develop-review`。
@@ -145,6 +145,7 @@ pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
 - 调度 subagent / 外部模型必须来自用户已确认的中大型任务执行计划，或用户对当前小任务的单独明确授权；不得在执行中以“风险较高”为由临时追加。计划必须写明角色、数量、并发方式、review 时点与最大循环次数。
 - 中大型任务的常规 plan / 实现 / commit review 默认只使用一个只读 subagent；主 agent 按 finding 修改并验证后，复用同一 reviewer 继续循环，达到计划上限时停止交人工。小型任务默认由主 agent 自审。
 - `cross-review` 只在大型任务最终整体 review，或用户明确要求多模型交叉验证时使用；执行前必须在计划中或当次请求中授权，不用于常规 plan gate、逐 commit review 或中小型任务的默认完工检查。
+- 为避免本地 Codex 在高负载下卡死，同一会话默认只运行一条长时命令或浏览器核验链路；未经用户明确授权，不并发启动 dev server、构建、测试或多 agent 批次。格式化命令使用 `oxfmt --threads 3`；确需并发时分批执行，并在每批结束后确认环境仍可响应。
 - 获准 `cross-review` 时固定同一快照，并发使用 2–3 个 fresh、独立且不同于主 agent 的 reviewer；模型不足时可用同一非主模型的两个 fresh 实例并如实记录。每轮与最大轮数以已确认计划为准；未声明时只授权一轮。修订后只有仍在已授权轮数内才冻结新快照复审。
 - 不要 `git add -A` 混入无关改动。不要 `git reset --hard` / `git checkout --` 回滚用户改动，除非用户明确要求。
 
@@ -193,7 +194,7 @@ Control: <human-directed|llm-autonomous>
 
 - IR 必须 100% JSON 可序列化，禁止函数、ReactNode、class 实例。
 - 只有可持久化 IR 使用 Zod schema：`XxxSchema` 是运行时真源，允许省略默认字段的 Source 用 `z.input` 派生，解析结果用 `z.output` / `z.infer`；Input、Canonical、compile 消费态不设平行 schema。schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
-- 静态默认值保留真实 `.default()`，resolve 复用同一 schema 的默认，不另写一份常量。继承先合并原始配置，再应用默认与变换；直接 parse 的结果是已物化快照，其默认字段再次参与合并时视为显式值。上下文继承字段可用 `.removeDefault().optional()` 精确复用权威字段，不复制约束或 describe；细则见 `standard-schema` / `standard-resolve`。
+- 静态默认值保留真实 `.default()`，resolve 复用同一 schema 的默认，不另写一份常量。继承先合并原始配置，再应用默认与变换；直接 parse 的结果是已物化快照，其默认字段再次参与合并时视为显式值。上下文继承字段可用 `.removeDefault().optional()` 精确复用权威字段，不复制约束或 describe；细则见 [schema](.agents/skills/standard-structure/references/schema.md) / [resolve](.agents/skills/standard-structure/references/resolve.md)。
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - `IRXxx`、`InputXxx`、`CanonicalXxx`、`XxxResolveContext`、`XxxResolution`、Definition、enum 和阶段函数的命名及目录归属遵循 `standard-name`；纵向领域的 `CanonicalXxx` 由 `resolve/<domain>/resolve.ts` 产出并定义在同 domain `types.ts`。分层意义的 `normalize/` 与阶段级 `normalizeXxx` 只属于 Vanilla API 包。
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`。

@@ -406,6 +406,7 @@ const assertAnimationTrack = (owner: string, value: unknown, path: string): void
 
 /** 校验 Scene primitive 的共享 id/meta/animations 字段 */
 const assertSceneCommon = (owner: string, value: Record<string, unknown>, path: string): void => {
+  if (value.hitTest !== undefined && value.hitTest !== false) failProviderOutput(owner, `an invalid ${path}.hitTest`);
   if (value.id !== undefined && typeof value.id !== 'string') failProviderOutput(owner, `an invalid ${path}.id`);
   if (value.meta !== undefined) assertJsonSchema(owner, value.meta, `${path}.meta`, JsonObjectSchema);
   if (value.animations !== undefined) {
@@ -457,7 +458,7 @@ const visitScenePrimitive = (
   context: SceneValidationContext,
 ): void => {
   const value = providerOutputRecord(owner, primitive, path);
-  const commonFields = ['type', 'id', 'meta', 'animations'];
+  const commonFields = ['type', 'id', 'meta', 'animations', 'hitTest'];
   switch (value.type) {
     case 'rect':
       assertProviderOutputKeys(

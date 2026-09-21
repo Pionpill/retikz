@@ -81,6 +81,21 @@ export const PreviewRelation: typeof RuntimeRelation = Object.assign(
 
 const withFlowThemeStyles = (props: FlowDiagramProps): FlowDiagramProps => ({
   ...props,
+  // Docs 流程图比常规默认字号小 2px，页面显式 defaults 仍优先
+  flowDefaults: {
+    ...props.flowDefaults,
+    entity: {
+      ...props.flowDefaults?.entity,
+      style: {
+        ...props.flowDefaults?.entity?.style,
+        font: { size: 14, ...props.flowDefaults?.entity?.style?.font },
+      },
+    },
+    relation: {
+      ...props.flowDefaults?.relation,
+      labelFont: { size: 12, ...props.flowDefaults?.relation?.labelFont },
+    },
+  },
   diagramThemeStyles:
     props.diagramThemeStyles === undefined
       ? PreviewThemeDefinitionBundle.diagram

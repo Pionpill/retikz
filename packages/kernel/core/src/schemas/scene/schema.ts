@@ -26,21 +26,23 @@ export const ChildSchema: ZodType<IRChild> = lazy(() =>
 registerRecursiveChildSchema(ChildSchema);
 
 export const ViewBoxSchema = strictObject({
-  x: number().describe('ViewBox left-top x'),
-  y: number().describe('ViewBox left-top y'),
-  width: PositiveNumberSchema.describe('ViewBox width in user units.'),
-  height: PositiveNumberSchema.describe('ViewBox height in user units.'),
-}).describe('Explicit viewBox overriding auto-computed layout bounds.');
+  x: number().describe('Left edge in scene coordinate units; must be finite and may be negative.'),
+  y: number().describe('Top edge in scene coordinate units; must be finite and may be negative.'),
+  width: PositiveNumberSchema.describe('Width in scene coordinate units; must be finite and greater than zero.'),
+  height: PositiveNumberSchema.describe('Height in scene coordinate units; must be finite and greater than zero.'),
+}).describe('Visible scene rectangle, specified by its top-left corner, width, and height.');
 
 export const SceneSchema = strictObject({
   type: literal('scene').describe('Discriminator marking this object as the root scene'),
-  version: literal(1).describe('IR major version number; bump only on breaking schema changes'),
-  theme: ThemeSchema.optional().describe('Sparse root Theme inherited by every Scene child.'),
-  children: array(ChildSchema).describe('Top-level children of the scene; nodes register ids that paths can reference'),
-  viewBox: ViewBoxSchema.optional().describe('Explicit viewBox. Omitting viewBox uses automatic bounds plus padding.'),
+  version: literal(1).describe('Scene data format version; currently must be 1, independent of the package version.'),
+  theme: ThemeSchema.optional().describe('Root theme selection; sets only the style and mode fields to override.'),
+  children: array(ChildSchema).describe('Ordered top-level scene children; an empty array is allowed.'),
+  viewBox: ViewBoxSchema.optional().describe(
+    'Explicit framing; when omitted, bounds are computed from content plus padding.',
+  ),
   animations: array(AnimationTrackSchema)
     .optional()
     .describe(
-      'Scene-root animation tracks. Use the `viewBox` property to animate framing; static layout remains the settled framing.',
+      'Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks.',
     ),
-}).describe('Top-level retikz IR scene — the canonical, JSON-serializable representation of a drawing');
+}).describe('JSON-serializable scene data describing one drawing.');

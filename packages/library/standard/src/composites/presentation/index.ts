@@ -4,3 +4,5 @@ export * from './grid';
 export * from './legend';
 export * from './shared';
 export * from './surface';
+export * from './list';
+export * from './map';

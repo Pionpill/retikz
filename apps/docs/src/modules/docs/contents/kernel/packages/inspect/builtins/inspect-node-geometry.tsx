@@ -5,6 +5,7 @@ import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-node-geometry.controls';
 import { inspectNodeGeometryI18n } from './inspect-node-geometry.i18n';
+
 export {
   createPreviewControlContract,
   previewControlContract,
@@ -17,12 +18,7 @@ const preview = defineControlledBuiltinInspectPreview(
   (values, lang) => {
     const i18n = inspectNodeGeometryI18n[lang];
     return (
-      <InspectLayout
-        registry={registry}
-        width={380}
-        height={360}
-        viewBox={{ x: -190, y: -180, width: 380, height: 360 }}
-      >
+      <InspectLayout registry={registry} viewBox={{ x: -110, y: -90, width: 220, height: 180 }}>
         <InspectNode
           position={values.position}
           shape="ellipse"

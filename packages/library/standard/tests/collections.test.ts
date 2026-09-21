@@ -57,7 +57,7 @@ import {
   StarShapeProvider,
   TrapezoidShapeDefinition,
   TrapezoidShapeProvider,
-} from '../src/shape';
+} from '../src/node-shape';
 
 describe('Standard extension collections', () => {
   it('groups all Standard shape definitions and providers', () => {

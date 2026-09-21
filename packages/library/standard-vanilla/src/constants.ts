@@ -12,3 +12,9 @@ export const StandardLegendEmbedKind = 'standard.legend';
 
 /** Standard Surface embed 的稳定 kind */
 export const StandardSurfaceEmbedKind = 'standard.surface';
+
+/** Standard List embed 的稳定 kind */
+export const StandardListEmbedKind = 'standard.list';
+
+/** Standard Map embed 的稳定 kind */
+export const StandardMapEmbedKind = 'standard.map';

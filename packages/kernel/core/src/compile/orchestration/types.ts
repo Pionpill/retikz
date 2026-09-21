@@ -397,6 +397,8 @@ export type ScopeLayoutPlaceholderContext = {
 };
 
 export type EmitScopeGroupContext = {
+  /** 不参与布局与命中的包络装饰 */
+  framePrimitives?: Array<ScenePrimitive>;
   index: number;
   scopeTransforms: ReadonlyArray<Transform>;
   scopePrimitiveSink: Array<InternalScenePrimitive>;
@@ -409,6 +411,8 @@ export type EmitScopeGroupContext = {
 
 /** 自动 viewBox 的当前 frame 几何贡献 */
 export type LayoutBoundsContribution = {
+  /** 包络装饰的可见范围，需要沿祖先裁剪收敛 */
+  decoration?: true;
   /** 当前 frame 中的几何点 */
   points: Array<IRPosition>;
   /** 与该点集关联的阴影外溢 */

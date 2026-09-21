@@ -21,7 +21,7 @@ type TexExtensionsValues = PreviewControlValuesFor<typeof texExtensionsControls>
 const extensions: Array<MathJaxExtensionValue> = [...TexExtensions];
 
 /** 在 MathJax 配置切换期间保留稳定取景，不把原始 TeX 当普通文本显示 */
-const renderTexExtensionsLoading = () => <Layout viewBox={{ x: -220, y: -135, width: 440, height: 270 }} />;
+const renderTexExtensionsLoading = () => <Layout />;
 
 /** 根据固定 extensions 和公式示例展示 MathJax 配置效果 */
 const renderTexExtensions = (values: TexExtensionsValues, lowerTex?: LowerTex) => {
@@ -42,7 +42,7 @@ const renderTexExtensions = (values: TexExtensionsValues, lowerTex?: LowerTex) =
   ];
 
   return (
-    <Layout viewBox={{ x: -220, y: -135, width: 440, height: 270 }} lowerTex={lowerTex}>
+    <Layout lowerTex={lowerTex}>
       <Node
         position={[0, -25]}
         text={extensionStatus}

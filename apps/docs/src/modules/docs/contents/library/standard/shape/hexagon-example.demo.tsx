@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { HexagonShapeDefinition } from '@retikz/standard/shape';
+import { HexagonShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -8,7 +8,7 @@ import { hexagonExampleControls, previewControlContract } from './hexagon-exampl
 
 export const previewControls = hexagonExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} shapes={[HexagonShapeDefinition]}>
+  <Layout viewBox={{ x: -120, y: -80, width: 240, height: 160 }} extensions={{ shapes: [HexagonShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'hexagon', params: { shoulderDepth: values.shoulderDepth, cornerRadius: values.cornerRadius } }}

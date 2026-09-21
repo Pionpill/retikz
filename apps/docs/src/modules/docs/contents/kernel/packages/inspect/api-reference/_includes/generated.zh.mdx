@@ -5,10 +5,14 @@
 ### RetikzInspectError
 
 <p>
-  <ApiSourceLink label={'RetikzInspectError'} path={'packages/kernel/inspect/src/error.ts'} startLine={39}>
+  <ApiSourceLink label={'RetikzInspectError'} path={'packages/kernel/inspect/src/error.ts'} startLine={38}>
     Inspect 包统一的结构化错误
   </ApiSourceLink>
 </p>
+
+```ts
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {}
+```
 
 | 成员          | 类型                                                                                                                                                                                                                                                                                                                                                              | 默认值 | 说明 |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---- |
@@ -20,15 +24,41 @@
   <ApiSourceLink
     label={'AnyInspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={156}
+    startLine={167}
   >
     registry 接收的异构作者定义，注册时统一补齐选项 schema 与 resolver
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                          | 类型                                                                     | 默认值 | 说明                                                 |
+| ----------------------------- | ------------------------------------------------------------------------ | ------ | ---------------------------------------------------- |
+| `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —      | 具体 subject/context 类型由调用前的 schema 恢复      |
+| `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —      | 合并已准入的原始 options，不消费 schema 变换后的结果 |
+| `readonly namespace`          | `string`                                                                 | —      | registry namespace                                   |
+| `readonly optionsSchema?`     | `Readonly<{ parse: (value: unknown) => JsonObject }>`                    | —      | 擦除后仍产出已应用默认值与变换的 JSON object options |
+| `readonly owner`              | `CompileObservationOwner`                                                | —      | 被观察的 Core owner                                  |
+| `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —      | 具体 options 类型由准入 schema 恢复                  |
+| `readonly subjectSchema`      | `Readonly<{ parse: (value: unknown) => JsonValue }>`                     | —      | 擦除后仍恢复 JSON-safe subject                       |
+| `readonly type`               | `string`                                                                 | —      | registry type                                        |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-WithOptionalProperties<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions'>;
+export type AnyInspectorDefinitionInput = WithOptionalProperties<
+  AnyInspectorDefinition,
+  'optionsSchema' | 'resolveOptions'
+>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionAppearanceContext
 
@@ -42,9 +72,31 @@ WithOptionalProperties<AnyInspectorDefinition, 'optionsSchema' | 'resolveOptions
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                      | 类型                 | 默认值 | 说明                                            |
+| ------------------------- | -------------------- | ------ | ----------------------------------------------- |
+| `readonly colorScope`     | `number`             | —      | resolved request 连续序号                       |
+| `readonly scopeColor`     | `CssColorValue`      | —      | 由当前 Theme categorical palette 派生的常规颜色 |
+| `readonly semanticColors` | `CoreSemanticColors` | —      | 当前 Core Theme 的共享语义颜色                  |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ colorScope: number; scopeColor: CssColorValue; semanticColors: CoreSemanticColors }>;
+export type InspectionAppearanceContext = Readonly<{
+  colorScope: number;
+  scopeColor: CssColorValue;
+  semanticColors: CoreSemanticColors;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionCompileResult
 
@@ -58,13 +110,31 @@ Readonly<{ colorScope: number; scopeColor: CssColorValue; semanticColors: CoreSe
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                   | 类型                                  | 默认值 | 说明                                         |
+| ---------------------- | ------------------------------------- | ------ | -------------------------------------------- |
+| `readonly diagnostics` | `ReadonlyArray<InspectionDiagnostic>` | —      | 按请求顺序排列的回调警告与 fragment warnings |
+| `readonly inspection`  | `InspectionPlane \| null`             | —      | 全部 callback 无输出时为 null                |
+| `readonly primary`     | `CompileResult`                       | —      | 普通 Core compile 的 primary                 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{
-  diagnostics: ReadonlyArray<InspectionDiagnostic>;
-  inspection: InspectionPlane | null;
+export type InspectionCompileResult = Readonly<{
   primary: CompileResult;
+  inspection: InspectionPlane | null;
+  diagnostics: ReadonlyArray<InspectionDiagnostic>;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionDiagnostic
 
@@ -74,9 +144,29 @@ Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员              | 类型                                                            | 默认值 | 说明                                                     |
+| ----------------- | --------------------------------------------------------------- | ------ | -------------------------------------------------------- |
+| `readonly cause`  | `Readonly<Pick<CompileWarning, 'code' \| 'message' \| 'path'>>` | —      | 回调 code/message 与来源路径，或 Core warning 的原样投影 |
+| `readonly origin` | `InspectionDiagnosticOrigin`                                    | —      | warning 对应的 request 与 output                         |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>; origin: InspectionDiagnosticOrigin }>;
+export type InspectionDiagnostic = Readonly<{
+  origin: InspectionDiagnosticOrigin;
+  cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionDiagnosticOrigin
 
@@ -91,21 +181,28 @@ Readonly<{ cause: Readonly<Pick<CompileWarning, 'code' | 'message' | 'path'>>; o
 </p>
 
 ```ts
-Readonly<{ ruleIndex: number; stage: 'selection'; target: InspectionSelectionTarget | null }> |
-  Readonly<{
-    inspector: InspectorKey;
-    occurrence: CompileOccurrenceLocator;
-    owner: CompileObservationOwner;
-    stage: 'subject' | 'inspect';
-  }> |
-  Readonly<{
-    inspector: InspectorKey;
-    occurrence: CompileOccurrenceLocator;
-    outputIndex: number;
-    owner: CompileObservationOwner;
-    stage: 'output' | 'fragment';
-  }> |
-  Readonly<{ stage: 'complete' }>;
+export type InspectionDiagnosticOrigin =
+  | Readonly<{
+      stage: 'selection';
+      ruleIndex: number;
+      target: InspectionSelectionTarget | null;
+    }>
+  | Readonly<{
+      stage: 'subject' | 'inspect';
+      inspector: InspectorKey;
+      owner: CompileObservationOwner;
+      occurrence: CompileOccurrenceLocator;
+    }>
+  | Readonly<{
+      stage: 'output' | 'fragment';
+      inspector: InspectorKey;
+      owner: CompileObservationOwner;
+      occurrence: CompileOccurrenceLocator;
+      outputIndex: number;
+    }>
+  | Readonly<{
+      stage: 'complete';
+    }>;
 ```
 
 ### InspectionPlane
@@ -116,9 +213,27 @@ Readonly<{ ruleIndex: number; stage: 'selection'; target: InspectionSelectionTar
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员               | 类型                                  | 默认值 | 说明                                        |
+| ------------------ | ------------------------------------- | ------ | ------------------------------------------- |
+| `readonly entries` | `ReadonlyArray<InspectionPlaneEntry>` | —      | 与 callback 非空 outputs 一一对应的 entries |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ entries: ReadonlyArray<InspectionPlaneEntry> }>;
+export type InspectionPlane = Readonly<{
+  entries: ReadonlyArray<InspectionPlaneEntry>;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionPlaneEntry
 
@@ -128,16 +243,37 @@ Readonly<{ entries: ReadonlyArray<InspectionPlaneEntry> }>;
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                  | 类型                       | 默认值 | 说明                                                     |
+| --------------------- | -------------------------- | ------ | -------------------------------------------------------- |
+| `readonly colorScope` | `number`                   | —      | request 级连续颜色序号                                   |
+| `readonly inspector`  | `InspectorKey`             | —      | 生成该 entry 的 Inspector                                |
+| `readonly occurrence` | `CompileOccurrenceLocator` | —      | 最终 occurrence                                          |
+| `readonly owner`      | `CompileObservationOwner`  | —      | 被观察 owner                                             |
+| `readonly scene`      | `Scene`                    | —      | 按辅助片段 coordinateSpace 生成的只读 Scene              |
+| `readonly transform`  | `AffineMatrix`             | —      | 辅助 Scene 到 primary Scene 的矩阵；scene 模式为单位矩阵 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{
-  colorScope: number;
+export type InspectionPlaneEntry = Readonly<{
   inspector: InspectorKey;
-  occurrence: CompileOccurrenceLocator;
   owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  colorScope: number;
   scene: Scene;
   transform: AffineMatrix;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionSelection
 
@@ -147,9 +283,27 @@ Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员             | 类型                                     | 默认值 | 说明                            |
+| ---------------- | ---------------------------------------- | ------ | ------------------------------- |
+| `readonly rules` | `ReadonlyArray<InspectionSelectionRule>` | —      | 完整 admission 后参与级联的规则 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ rules: ReadonlyArray<InspectionSelectionRule> }>;
+export type InspectionSelection = Readonly<{
+  rules: ReadonlyArray<InspectionSelectionRule>;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionSelectionRule
 
@@ -160,12 +314,22 @@ Readonly<{ rules: ReadonlyArray<InspectionSelectionRule> }>;
 </p>
 
 ```ts
-Readonly<{
-  inspector: InspectorKey;
-  kind: 'request';
-  options: boolean | JsonObject;
-  target: InspectionSelectionTarget;
-}> | Readonly<{ kind: 'barrier'; target: Extract<InspectionSelectionTarget, { kind: 'scene' | 'subtree' }> }>;
+export type InspectionSelectionRule =
+  | Readonly<{
+      kind: 'request';
+      inspector: InspectorKey;
+      target: InspectionSelectionTarget;
+      options: boolean | JsonObject;
+    }>
+  | Readonly<{
+      kind: 'barrier';
+      target: Extract<
+        InspectionSelectionTarget,
+        {
+          kind: 'scene' | 'subtree';
+        }
+      >;
+    }>;
 ```
 
 ### InspectionSelectionTarget
@@ -181,39 +345,80 @@ Readonly<{
 </p>
 
 ```ts
-Readonly<{ kind: 'scene' }> |
-  Readonly<{ kind: 'subtree'; sourcePath: string }> |
-  Readonly<{ kind: 'self'; locator: Readonly<{ kind: 'authored'; occurrenceIndex?: number; sourcePath: string }> }>;
+export type InspectionSelectionTarget =
+  | Readonly<{
+      kind: 'scene';
+    }>
+  | Readonly<{
+      kind: 'subtree';
+      sourcePath: string;
+    }>
+  | Readonly<{
+      kind: 'self';
+      locator: Readonly<{
+        kind: 'authored';
+        sourcePath: string;
+        occurrenceIndex?: number;
+      }>;
+    }>;
 ```
 
 ### InspectorContext
 
 <p>
-  <ApiSourceLink label={'InspectorContext'} path={'packages/kernel/inspect/src/contract/types.ts'} startLine={48}>
+  <ApiSourceLink label={'InspectorContext'} path={'packages/kernel/inspect/src/contract/types.ts'} startLine={52}>
     Inspector callback 读取的最终 occurrence 上下文
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                    | 类型                                                                              | 默认值 | 说明                                        |
+| ----------------------- | --------------------------------------------------------------------------------- | ------ | ------------------------------------------- |
+| `readonly ancestors`    | `ReadonlyArray<CompileObservationAncestor>`                                       | —      | 从外到内排列的最终逻辑容器链条              |
+| `readonly appearance`   | `InspectionAppearanceContext`                                                     | —      | callback 前分配的外观上下文                 |
+| `readonly inspectorKey` | `InspectorKey`                                                                    | —      | 当前 Inspector key                          |
+| `readonly occurrence`   | `CompileOccurrenceLocator`                                                        | —      | 当前最终 occurrence                         |
+| `readonly options`      | `TOptions`                                                                        | —      | canonical JSON-safe options                 |
+| `readonly owner`        | `CompileObservationOwner`                                                         | —      | 当前被观察的 Core owner                     |
+| `readonly provenance`   | `Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>` | —      | probe/replay 来源                           |
+| `readonly round`        | `(value: number) => number`                                                       | —      | 按本次主图编译精度舍入数值                  |
+| `readonly transform`    | `AffineMatrix`                                                                    | —      | observation-local 到主 Scene 的最终仿射变换 |
+| `readonly warn`         | `(code: string, message: string) => void`                                         | —      | 声明当前 callback 可以省略的部分结果        |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{
-  ancestors: ReadonlyArray<CompileObservationAncestor>;
-  appearance: InspectionAppearanceContext;
-  inspectorKey: InspectorKey;
-  occurrence: CompileOccurrenceLocator;
-  options: TOptions;
-  owner: CompileObservationOwner;
-  provenance: Readonly<{ final: CompileOccurrenceLocator; origin: CompileOccurrenceLocator }>;
+export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonly<{
   round: (value: number) => number;
+  inspectorKey: InspectorKey;
+  owner: CompileObservationOwner;
+  occurrence: CompileOccurrenceLocator;
+  provenance: Readonly<{
+    origin: CompileOccurrenceLocator;
+    final: CompileOccurrenceLocator;
+  }>;
   transform: AffineMatrix;
+  ancestors: ReadonlyArray<CompileObservationAncestor>;
+  options: TOptions;
+  appearance: InspectionAppearanceContext;
   warn: (code: string, message: string) => void;
 }>;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 #### 类型参数
 
-| 类型参数   | 说明 |
-| ---------- | ---- |
-| `TOptions` | —    |
+| 类型参数   | 说明                               |
+| ---------- | ---------------------------------- |
+| `TOptions` | callback 消费的已解析 options 类型 |
 
 ### InspectorCoordinateSpace
 
@@ -228,7 +433,7 @@ Readonly<{
 </p>
 
 ```ts
-'local' | 'scene';
+export type InspectorCoordinateSpace = 'local' | 'scene';
 ```
 
 ### InspectorDefinitionInput
@@ -237,30 +442,52 @@ Readonly<{
   <ApiSourceLink
     label={'InspectorDefinitionInput'}
     path={'packages/kernel/inspect/src/contract/types.ts'}
-    startLine={97}
+    startLine={108}
   >
     作者侧 Inspector 定义；仅在对应输入输出可由默认行为满足时允许省略选项字段
   </ApiSourceLink>
 </p>
 
 ```ts
-(WithOptionalProperties<
+export type InspectorDefinitionInput<
+  TSubject extends JsonValue = JsonValue,
+  TParsedOptions extends JsonObject = Record<string, never>,
+  TResolvedOptions extends JsonObject = TParsedOptions,
+  TSourceOptions extends JsonObject = TParsedOptions,
+> = WithOptionalProperties<
   InspectorDefinition<TSubject, TParsedOptions, NoInfer<TResolvedOptions>, TSourceOptions>,
   'optionsSchema' | 'resolveOptions'
 > &
-  Readonly<{ optionsSchema: ZodType<TParsedOptions, TSourceOptions> }>) |
-  (conditional & Readonly<{ resolveOptions: (options: TParsedOptions) => TResolvedOptions }>) |
-  conditional;
+  (
+    | Readonly<{
+        optionsSchema: ZodType<TParsedOptions, TSourceOptions>;
+      }>
+    | ([TParsedOptions, TSourceOptions] extends [Record<string, never>, Record<string, never>]
+        ? Readonly<{
+            optionsSchema?: never;
+          }>
+        : never)
+  ) &
+  (
+    | Readonly<{
+        resolveOptions: (options: TParsedOptions) => TResolvedOptions;
+      }>
+    | ([TParsedOptions] extends [TResolvedOptions]
+        ? Readonly<{
+            resolveOptions?: never;
+          }>
+        : never)
+  );
 ```
 
 #### 类型参数
 
-| 类型参数           | 说明 |
-| ------------------ | ---- |
-| `TSubject`         | —    |
-| `TParsedOptions`   | —    |
-| `TResolvedOptions` | —    |
-| `TSourceOptions`   | —    |
+| 类型参数           | 说明                                          |
+| ------------------ | --------------------------------------------- |
+| `TSubject`         | 通过 subject schema 解析后的被观察对象类型    |
+| `TParsedOptions`   | options schema 解析后的 options 类型          |
+| `TResolvedOptions` | callback 消费的已解析 options 类型            |
+| `TSourceOptions`   | 传入 options schema 前的原始 options 输入类型 |
 
 ### InspectorFragment
 
@@ -270,9 +497,31 @@ Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                       | 类型                       | 默认值 | 说明                              |
+| -------------------------- | -------------------------- | ------ | --------------------------------- |
+| `readonly child`           | `IRChild`                  | —      | 交给 Core 隔离编译的普通 IR child |
+| `readonly coordinateSpace` | `InspectorCoordinateSpace` | —      | 当前片段采用的坐标空间            |
+| `readonly type`            | `'fragment'`               | —      | 辅助片段判别字段，不属于 Core IR  |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ child: IRChild; coordinateSpace: InspectorCoordinateSpace; type: 'fragment' }>;
+export type InspectorFragment = Readonly<{
+  type: 'fragment';
+  coordinateSpace: InspectorCoordinateSpace;
+  child: IRChild;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectorKey
 
@@ -282,9 +531,29 @@ Readonly<{ child: IRChild; coordinateSpace: InspectorCoordinateSpace; type: 'fra
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                 | 类型     | 默认值 | 说明                   |
+| -------------------- | -------- | ------ | ---------------------- |
+| `readonly namespace` | `string` | —      | Inspector 所属命名空间 |
+| `readonly type`      | `string` | —      | 命名空间内类型         |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ namespace: string; type: string }>;
+export type InspectorKey = Readonly<{
+  namespace: string;
+  type: string;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectorOutput
 
@@ -295,60 +564,109 @@ Readonly<{ namespace: string; type: string }>;
 </p>
 
 ```ts
-IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
+export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChild | InspectorFragment>;
 ```
 
 ### InspectorRegistry
 
 <p>
-  <ApiSourceLink label={'InspectorRegistry'} path={'packages/kernel/inspect/src/providers/registry.ts'} startLine={10}>
+  <ApiSourceLink label={'InspectorRegistry'} path={'packages/kernel/inspect/src/providers/registry.ts'} startLine={9}>
     已注册 Inspector 的不透明容器
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                               | 类型   | 默认值 | 说明 |
+| ---------------------------------- | ------ | ------ | ---- |
+| `__@inspectorRegistryBrand@675882` | `true` | —      | —    |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ [inspectorRegistryBrand]: true }>;
+export type InspectorRegistry = Readonly<{
+  readonly [inspectorRegistryBrand]: true;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### RetikzInspectErrorCodeValue
 
 <p>
-  <ApiSourceLink label={'RetikzInspectErrorCodeValue'} path={'packages/kernel/inspect/src/error.ts'} startLine={22}>
+  <ApiSourceLink label={'RetikzInspectErrorCodeValue'} path={'packages/kernel/inspect/src/error.ts'} startLine={21}>
     Inspect 包稳定错误码取值
   </ApiSourceLink>
 </p>
 
 ```ts
-ValueOf<typeof RetikzInspectErrorCode>;
+export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
+```
+
+#### 展开类型
+
+```ts
+export type RetikzInspectErrorCodeValue =
+  | 'INSPECTION_ERROR'
+  | 'INSPECTION_COMPILE_ERROR'
+  | 'INSPECTION_COMPILE_FAILED'
+  | 'INSPECTION_CONTRACT_ERROR'
+  | 'INSPECTION_REGISTRY_ERROR'
+  | 'INSPECTION_VANILLA_ERROR';
 ```
 
 ### RetikzInspectErrorOptions
 
 <p>
-  <ApiSourceLink label={'RetikzInspectErrorOptions'} path={'packages/kernel/inspect/src/error.ts'} startLine={25}>
+  <ApiSourceLink label={'RetikzInspectErrorOptions'} path={'packages/kernel/inspect/src/error.ts'} startLine={24}>
     Inspect 包错误的结构化构造参数
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                | 类型                                | 默认值 | 说明                       |
+| ------------------- | ----------------------------------- | ------ | -------------------------- |
+| `readonly cause?`   | `unknown`                           | —      | 导致当前失败的原始异常或值 |
+| `readonly code`     | `RetikzInspectErrorCodeValue`       | —      | 稳定错误码                 |
+| `readonly details?` | `Readonly<Record<string, unknown>>` | —      | 失败上下文的结构化详情     |
+| `readonly message`  | `string`                            | —      | 面向调用方的原始错误消息   |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{
-  cause?: unknown;
+export type RetikzInspectErrorOptions = Readonly<{
   code: RetikzInspectErrorCodeValue;
-  details?: Readonly<Record<string, unknown>>;
   message: string;
+  details?: Readonly<Record<string, unknown>>;
+  cause?: unknown;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### CLIP_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'CLIP_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={16}>
+  <ApiSourceLink label={'CLIP_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/clip.ts'} startLine={14}>
     内置 Core Clip Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'clip' }>;
+export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip' });
 ```
 
 ### ClipInspectOptionsSchema
@@ -367,14 +685,14 @@ Readonly<{ namespace: 'core'; type: 'clip' }>;
   <ApiSourceLink
     label={'COORDINATE_INSPECTOR_KEY'}
     path={'packages/kernel/inspect/src/providers/coordinate.ts'}
-    startLine={16}
+    startLine={14}
   >
     内置 Core Coordinate Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'coordinate' }>;
+export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'coordinate' });
 ```
 
 ### CoordinateInspectOptionsSchema
@@ -394,13 +712,13 @@ Readonly<{ namespace: 'core'; type: 'coordinate' }>;
 ### NODE_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'NODE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={25}>
+  <ApiSourceLink label={'NODE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/node.ts'} startLine={23}>
     内置 Core Node Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'node' }>;
+export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node' });
 ```
 
 ### NodeInspectOptionsSchema
@@ -416,13 +734,13 @@ Readonly<{ namespace: 'core'; type: 'node' }>;
 ### PATH_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'PATH_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={11}>
+  <ApiSourceLink label={'PATH_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/path.ts'} startLine={10}>
     内置 Core stroke Path Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'path' }>;
+export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path' });
 ```
 
 ### PathInspectOptionsSchema
@@ -438,32 +756,32 @@ Readonly<{ namespace: 'core'; type: 'path' }>;
 ### RetikzInspectErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzInspectErrorCode'} path={'packages/kernel/inspect/src/error.ts'} startLine={6}>
+  <ApiSourceLink label={'RetikzInspectErrorCode'} path={'packages/kernel/inspect/src/error.ts'} startLine={5}>
     Inspect 包稳定错误码
   </ApiSourceLink>
 </p>
 
 ```ts
-{
-  Compile: 'INSPECTION_COMPILE_ERROR';
-  CompileFailed: 'INSPECTION_COMPILE_FAILED';
-  Contract: 'INSPECTION_CONTRACT_ERROR';
-  Default: 'INSPECTION_ERROR';
-  Registry: 'INSPECTION_REGISTRY_ERROR';
-  Vanilla: 'INSPECTION_VANILLA_ERROR';
-}
+export const RetikzInspectErrorCode = {
+  Default: 'INSPECTION_ERROR',
+  Compile: 'INSPECTION_COMPILE_ERROR',
+  CompileFailed: 'INSPECTION_COMPILE_FAILED',
+  Contract: 'INSPECTION_CONTRACT_ERROR',
+  Registry: 'INSPECTION_REGISTRY_ERROR',
+  Vanilla: 'INSPECTION_VANILLA_ERROR',
+} as const;
 ```
 
 ### SCOPE_INSPECTOR_KEY
 
 <p>
-  <ApiSourceLink label={'SCOPE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={23}>
+  <ApiSourceLink label={'SCOPE_INSPECTOR_KEY'} path={'packages/kernel/inspect/src/providers/scope.ts'} startLine={21}>
     内置 Core Scope Inspector key
   </ApiSourceLink>
 </p>
 
 ```ts
-Readonly<{ namespace: 'core'; type: 'scope' }>;
+export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'scope' });
 ```
 
 ### ScopeInspectOptionsSchema
@@ -482,14 +800,16 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'compileInspectionToScene'}
     path={'packages/kernel/inspect/src/compile/driver.ts'}
-    startLine={261}
+    startLine={255}
   >
     基于 Core observed compile 执行一次原子 Inspector compile
   </ApiSourceLink>
 </p>
 
 ```ts
-<TComposites>(
+export declare const compileInspectionToScene: <
+  TComposites extends readonly Array<AnyCompositeDefinition> = readonly [],
+>(
   ir: {
     animations?: Array<{
       delay?: number;
@@ -525,7 +845,6 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
       }>;
       origin?:
         | 'center'
-        | [number, number]
         | 'top'
         | 'right'
         | 'bottom'
@@ -533,7 +852,8 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
         | 'top-right'
         | 'top-left'
         | 'bottom-right'
-        | 'bottom-left';
+        | 'bottom-left'
+        | [number, number];
       property: OpenString<
         ValueOf<{
           Fill: 'fill';
@@ -568,15 +888,15 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 
 #### 类型参数
 
-| 类型参数      | 说明 |
-| ------------- | ---- |
-| `TComposites` | —    |
+| 类型参数      | 说明                                        |
+| ------------- | ------------------------------------------- |
+| `TComposites` | 当前 Scene 可用的 Composite Definition 集合 |
 
 #### 参数
 
 | 参数      | 类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | 说明 |
 | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| [number, number] \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —    |
+| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —    |
 | `options` | `Readonly<{ compileOptions?: CompileOptions<TComposites>; registry: InspectorRegistry; selection: InspectionSelection }>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | —    |
 
 ### createDefaultInspectorRegistry
@@ -585,14 +905,16 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'createDefaultInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={71}
+    startLine={70}
   >
     创建内置优先、第三方同路的默认 Inspector registry
   </ApiSourceLink>
 </p>
 
 ```ts
-(definitions: readonly Array<AnyInspectorDefinitionInput>) => Readonly<{ [inspectorRegistryBrand]: true }>;
+export declare const createDefaultInspectorRegistry: (
+  definitions: readonly Array<AnyInspectorDefinitionInput>,
+) => Readonly<{ [inspectorRegistryBrand]: true }>;
 ```
 
 #### 参数
@@ -607,14 +929,16 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'createInspectorRegistry'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={29}
+    startLine={28}
   >
     创建无全局状态的 Inspector registry
   </ApiSourceLink>
 </p>
 
 ```ts
-(definitions: readonly Array<AnyInspectorDefinitionInput>) => InspectorRegistry;
+export declare const createInspectorRegistry: (
+  definitions: readonly Array<AnyInspectorDefinitionInput>,
+) => InspectorRegistry;
 ```
 
 #### 参数
@@ -626,25 +950,30 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
 ### defineInspector
 
 <p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={61}>
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={66}>
     以保留作者输入类型的方式定义 Inspector
   </ApiSourceLink>
 </p>
 
 ```ts
-<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>(
+export declare const defineInspector: <
+  TSubject extends JsonValue,
+  TParsedOptions extends Record<string, JsonValue> = Record<string, never>,
+  TResolvedOptions extends Record<string, JsonValue> = TParsedOptions,
+  TSourceOptions extends Record<string, JsonValue> = TParsedOptions,
+>(
   definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
 ) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
 ```
 
 #### 类型参数
 
-| 类型参数           | 说明 |
-| ------------------ | ---- |
-| `TSubject`         | —    |
-| `TParsedOptions`   | —    |
-| `TResolvedOptions` | —    |
-| `TSourceOptions`   | —    |
+| 类型参数           | 说明                                          |
+| ------------------ | --------------------------------------------- |
+| `TSubject`         | 通过 subject schema 解析后的被观察对象类型    |
+| `TParsedOptions`   | options schema 解析后的 options 类型          |
+| `TResolvedOptions` | callback 消费的已解析 options 类型            |
+| `TSourceOptions`   | 传入 options schema 前的原始 options 输入类型 |
 
 #### 参数
 
@@ -658,14 +987,16 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'mergeInspectorRegistries'}
     path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={63}
+    startLine={62}
   >
     合并多个已创建的 registry，保持各 registry 的定义顺序
   </ApiSourceLink>
 </p>
 
 ```ts
-(registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>) => InspectorRegistry;
+export declare const mergeInspectorRegistries: (
+  registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>,
+) => InspectorRegistry;
 ```
 
 #### 参数
@@ -682,129 +1013,257 @@ Readonly<{ namespace: 'core'; type: 'scope' }>;
   <ApiSourceLink
     label={'InspectCoordinateProps'}
     path={'packages/kernel/inspect/src/react/components.tsx'}
-    startLine={26}
+    startLine={24}
   >
     只选择当前 Coordinate 的可选 Inspector wrapper props
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员       | 类型                                                                                                      | 默认值 | 说明                                                                                                                                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                                                                                  | —      | 坐标点 id；路径端点和节点定位通过它引用此位置                                                                                                                                                                          |
+| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —      | 坐标点位置；不支持 Node 专属的自身锚点对齐<br />笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` |
+| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —      | 当前 Coordinate 的单项或多项检查请求                                                                                                                                                                                   |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Omit<CoordinateProps, 'authoring'> & { request: Exclude<InspectionVanillaAuthoringInput, false> };
+export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
+  request: Exclude<InspectionVanillaAuthoringInput, false>;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectLayoutProps
 
 <p>
-  <ApiSourceLink label={'InspectLayoutProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={64}>
+  <ApiSourceLink label={'InspectLayoutProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={62}>
     绑定 Inspect registry/selection/callback 的可选 Layout wrapper props
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                     | 类型                                                  | 默认值  | 说明                                                                                                |
+| ------------------------ | ----------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| `animate?`               | `boolean`                                             | —       | 是否播放动画                                                                                        |
+| `animationProperties?`   | `AnimationPropertyRegistry`                           | —       | animation property registry                                                                         |
+| `animationRef?`          | `Ref<AnimationControls \| null>`                      | —       | 动画控制器出口                                                                                      |
+| `animations?`            | `ReadonlyArray<IRAnimationTrack>`                     | —       | Scene 根动画                                                                                        |
+| `artifacts?`             | `CompileArtifactOptions`                              | —       | artifact 请求                                                                                       |
+| `children?`              | `ReactNode`                                           | —       | Kernel 或 Sugar JSX children                                                                        |
+| `className?`             | `string`                                              | —       | 宿主 className                                                                                      |
+| `easings?`               | `EasingRegistry`                                      | —       | easing registry                                                                                     |
+| `extensions?`            | `LayoutExtensions`                                    | —       | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                      |
+| `fontSize?`              | `number`                                              | `16`    | 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号 |
+| `handlers?`              | `HydrationHandlers`                                   | —       | IR 模式下的水合 handler 注册表                                                                      |
+| `height?`                | `number \| string`                                    | —       | SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版                                  |
+| `idPrefix?`              | `string`                                              | —       | SVG 资源 id 前缀                                                                                    |
+| `ir?`                    | `IRScene`                                             | —       | 直接传入持久化 Source IR，与 children 二选一                                                        |
+| `lowerTex?`              | `LowerTex`                                            | —       | 公式下沉能力                                                                                        |
+| `nodeDistance?`          | `number`                                              | `24`    | 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效           |
+| `onArtifacts?`           | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —       | artifacts 成功提交通知                                                                              |
+| `readonly onCommit?`     | `(result: InspectionCompileResult) => void`           | —       | 同 revision Inspect compile result 通知                                                             |
+| `onCompileResult?`       | `(result: CompileResult) => void`                     | —       | Core 完整编译结果通知                                                                               |
+| `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void`          | —       | committed diagnostics 逐条通知                                                                      |
+| `readonly registry`      | `InspectorRegistry`                                   | —       | 当前 Layout 使用的 Inspector registry                                                               |
+| `renderer?`              | `'svg' \| 'canvas'`                                   | `'svg'` | 渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG                              |
+| `readonly request?`      | `InspectionVanillaAuthoringInput`                     | —       | 可选 scene requests，false 表示全图 barrier                                                         |
+| `rootScope?`             | `Pick<InputScope, 'style' \| 'defaults'>`             | —       | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                  |
+| `runtime?`               | `LayoutRuntimeOptions`                                | —       | retained 或 static processing 模式                                                                  |
+| `readonly selection?`    | `InspectionSelection`                                 | —       | 与 authored wrapper rules 合并的显式 selection                                                      |
+| `snapshotAt?`            | `number`                                              | —       | 静态动画采样时刻                                                                                    |
+| `style?`                 | `CSSProperties`                                       | —       | 宿主内联样式                                                                                        |
+| `theme?`                 | `IRScene['theme']`                                    | —       | 写入 Scene 根并由后代 Composite 继承的 Theme                                                        |
+| `viewBox?`               | `IRViewBox`                                           | —       | 显式视框                                                                                            |
+| `width?`                 | `number \| string`                                    | —       | SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴                            |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Omit<LayoutProps, 'authoring' | 'compileDriver'> &
+export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'> &
   Readonly<{
-    onCommit?: (result: InspectionCompileResult) => void;
-    onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
     registry: InspectorRegistry;
-    request?: InspectionVanillaAuthoringInput;
     selection?: InspectionSelection;
+    request?: InspectionVanillaAuthoringInput;
+    onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
+    onCommit?: (result: InspectionCompileResult) => void;
   }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectNodeProps
 
 <p>
-  <ApiSourceLink label={'InspectNodeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={14}>
+  <ApiSourceLink label={'InspectNodeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={12}>
     只选择当前 Node 的可选 Inspector wrapper props
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="直接属性">
+
+其余属性继承自 `NodeProps`，并移除 `'authoring'`。完整组合关系见“类型定义”
+
+| 成员      | 类型                                              | 默认值 | 说明                           |
+| --------- | ------------------------------------------------- | ------ | ------------------------------ |
+| `request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —      | 当前 Node 的单项或多项检查请求 |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Omit<NodeProps, 'authoring'> & { request: Exclude<InspectionVanillaAuthoringInput, false> };
+export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
+  request: Exclude<InspectionVanillaAuthoringInput, false>;
+};
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectPathProps
 
 <p>
-  <ApiSourceLink label={'InspectPathProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={38}>
+  <ApiSourceLink label={'InspectPathProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={36}>
     可选 Inspect Path wrapper props
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="直接属性">
+
+其余属性继承自 `PathProps`，并移除 `'authoring'`。完整组合关系见“类型定义”
+
+| 成员               | 类型                                              | 默认值 | 说明                                    |
+| ------------------ | ------------------------------------------------- | ------ | --------------------------------------- |
+| `readonly request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —      | 当前 authored Path 的 Inspector request |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Omit<PathProps, 'authoring'> & Readonly<{ request: Exclude<InspectionVanillaAuthoringInput, false> }>;
+export type InspectPathProps = Omit<PathProps, 'authoring'> &
+  Readonly<{
+    request: Exclude<InspectionVanillaAuthoringInput, false>;
+  }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectScopeProps
 
 <p>
-  <ApiSourceLink label={'InspectScopeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={51}>
+  <ApiSourceLink label={'InspectScopeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={49}>
     可选 Inspect Scope wrapper props
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="直接属性">
+
+其余属性继承自 `ScopeProps`，并移除 `'authoring'`。完整组合关系见“类型定义”
+
+| 成员               | 类型                              | 默认值 | 说明                                                   |
+| ------------------ | --------------------------------- | ------ | ------------------------------------------------------ |
+| `readonly request` | `InspectionVanillaAuthoringInput` | —      | 当前 subtree 的 requests，false 表示不可重开的 barrier |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Omit<ScopeProps, 'authoring'> & Readonly<{ request: InspectionVanillaAuthoringInput }>;
+export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
+  Readonly<{
+    request: InspectionVanillaAuthoringInput;
+  }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectCoordinate
 
 <p>
-  <ApiSourceLink label={'InspectCoordinate'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={32}>
+  <ApiSourceLink label={'InspectCoordinate'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={30}>
     复用基础 Coordinate，仅附加运行时检查请求
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectCoordinateProps>;
+export declare const InspectCoordinate: FC<InspectCoordinateProps>;
 ```
 
 ### InspectLayout
 
 <p>
-  <ApiSourceLink label={'InspectLayout'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={79}>
+  <ApiSourceLink label={'InspectLayout'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={77}>
     复用基础 Layout/static/retained runtime 的 Inspect 可选宿主
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectLayoutProps>;
+export declare const InspectLayout: FC<InspectLayoutProps>;
 ```
 
 ### InspectNode
 
 <p>
-  <ApiSourceLink label={'InspectNode'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={20}>
+  <ApiSourceLink label={'InspectNode'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={18}>
     复用基础 Node，仅附加运行时检查请求
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectNodeProps>;
+export declare const InspectNode: FC<InspectNodeProps>;
 ```
 
 ### InspectPath
 
 <p>
-  <ApiSourceLink label={'InspectPath'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={45}>
+  <ApiSourceLink label={'InspectPath'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={43}>
     复用基础 Path lowering、只附加 runtime-only Inspector authoring 标记
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectPathProps>;
+export declare const InspectPath: FC<InspectPathProps>;
 ```
 
 ### InspectScope
 
 <p>
-  <ApiSourceLink label={'InspectScope'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={58}>
+  <ApiSourceLink label={'InspectScope'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={56}>
     复用基础 Scope lowering、只附加 runtime-only Inspector authoring 标记
   </ApiSourceLink>
 </p>
 
 ```ts
-FC<InspectScopeProps>;
+export declare const InspectScope: FC<InspectScopeProps>;
 ```
 
 ## `@retikz/inspect/vanilla`
@@ -815,20 +1274,39 @@ FC<InspectScopeProps>;
   <ApiSourceLink
     label={'CreateInspectionVanillaDriverOptions'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={68}
+    startLine={66}
   >
     Inspect Vanilla 编译驱动的固定配置
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                     | 类型                                         | 默认值 | 说明                                                       |
+| ------------------------ | -------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `readonly onCommit?`     | `(result: InspectionCompileResult) => void`  | —      | 含 revision primary、plane 与 diagnostics 成功提交后的通知 |
+| `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void` | —      | 每条 committed Inspect diagnostic 的通知                   |
+| `readonly registry`      | `InspectorRegistry`                          | —      | 本次宿主使用的 Inspector registry                          |
+| `readonly selection?`    | `InspectionSelection`                        | —      | 与 plain authoring rules 合并的显式 selection              |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{
-  onCommit?: (result: InspectionCompileResult) => void;
-  onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
+export type CreateInspectionVanillaDriverOptions = Readonly<{
   registry: InspectorRegistry;
   selection?: InspectionSelection;
+  onDiagnostic?: (diagnostic: InspectionDiagnostic) => void;
+  onCommit?: (result: InspectionCompileResult) => void;
 }>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### InspectionVanillaAuthoringInput
 
@@ -836,14 +1314,15 @@ Readonly<{
   <ApiSourceLink
     label={'InspectionVanillaAuthoringInput'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={20}
+    startLine={19}
   >
     Vanilla site 可声明一个 request、多个 request，或 barrier
   </ApiSourceLink>
 </p>
 
 ```ts
-false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
+export type InspectionVanillaAuthoringInput =
+  false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
 ```
 
 ### InspectionVanillaRequest
@@ -852,15 +1331,35 @@ false | InspectionVanillaRequest | ReadonlyArray<InspectionVanillaRequest>;
   <ApiSourceLink
     label={'InspectionVanillaRequest'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={12}
+    startLine={11}
   >
     Vanilla 可选 authoring 声明的一项 Inspector request
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+| 成员                 | 类型                          | 默认值 | 说明                                  |
+| -------------------- | ----------------------------- | ------ | ------------------------------------- |
+| `readonly inspector` | `InspectorKey`                | —      | 要请求的 Inspector key                |
+| `readonly options`   | `false \| true \| JsonObject` | —      | sparse options、true 或继承关闭 false |
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
+export type InspectionVanillaRequest = Readonly<{
+  inspector: InspectorKey;
+  options: false | true | JsonObject;
+}>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### createInspectionVanillaAuthoring
 
@@ -868,14 +1367,16 @@ Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
   <ApiSourceLink
     label={'createInspectionVanillaAuthoring'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={31}
+    startLine={30}
   >
     创建只由 Inspect Vanilla 驱动识别的 opaque authoring 标记
   </ApiSourceLink>
 </p>
 
 ```ts
-(input: InspectionVanillaAuthoringInput) => InspectionVanillaAuthoring;
+export declare const createInspectionVanillaAuthoring: (
+  input: InspectionVanillaAuthoringInput,
+) => InspectionVanillaAuthoring;
 ```
 
 #### 参数
@@ -890,14 +1391,16 @@ Readonly<{ inspector: InspectorKey; options: false | true | JsonObject }>;
   <ApiSourceLink
     label={'createInspectionVanillaDriver'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={145}
+    startLine={143}
   >
     创建绑定 Inspector registry、selection 与 committed callbacks 的 Vanilla 编译驱动
   </ApiSourceLink>
 </p>
 
 ```ts
-(options: CreateInspectionVanillaDriverOptions) => VanillaCompileDriver;
+export declare const createInspectionVanillaDriver: (
+  options: CreateInspectionVanillaDriverOptions,
+) => VanillaCompileDriver;
 ```
 
 #### 参数

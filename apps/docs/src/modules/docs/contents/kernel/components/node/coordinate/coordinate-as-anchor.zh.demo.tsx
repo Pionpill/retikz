@@ -13,7 +13,7 @@ export const previewControls = coordinateAsAnchorControls;
 
 const controlledPreview = defineControlledPreview(previewControlContract, values => {
   return (
-    <Layout viewBox={coordinateAsAnchorFrame.viewBox}>
+    <Layout>
       <Draw
         way={coordinateAsAnchorFrame.xAxis}
         zIndex={-1}

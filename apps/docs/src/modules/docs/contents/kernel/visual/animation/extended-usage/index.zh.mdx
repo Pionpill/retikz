@@ -1,0 +1,121 @@
+---
+title: 扩展用法
+description: 组合触发器、播放句柄、错峰与镜头轨道，并配置静态截帧和减少动态效果策略。
+---
+
+在[基础用法](/kernel/visual/animation/usage)声明轨道后，可以进一步控制动画何时开始、多个元素如何配合，以及静态输出采用哪一帧。本页把触发与播放、错峰与镜头、截帧与减少动态效果放在一起说明。
+
+## 触发与播放控制
+
+### 选择触发方式
+
+| trigger                | 何时开始             |
+| ---------------------- | -------------------- |
+| load 或省略            | 加载时               |
+| visible                | 进入可见区域时       |
+| manual                 | 由控制句柄启动       |
+| `{ onEvent: 'click' }` | 对应运行时事件发生时 |
+
+事件触发需要可交互宿主；导出的静态 SVG 字符串不会自行运行应用中的事件处理器。visible 的检测由各后端宿主执行：SVG 会考虑滚动容器的裁切，Canvas 按图元与浏览器视口的相交判断，内部滚动时的触发时机可能不同。
+
+<ComponentPreview
+  files="animation-trigger"
+  size="lg"
+  caption="切换触发方式后场景会重新加载。可见模式请滚动示例内部区域；手动模式使用启动按钮；事件模式点击图元。"
+/>
+
+### 控制时间
+
+React 用 Layout.animationRef 取得 AnimationControls；Vanilla 挂载结果通过 view.animation 访问。它们控制场景时钟，使用 play()、pause() 和 seek(ms)。处理某个图元事件时，使用事件上下文的 context.animation 控制对应 id。
+
+下面先将时钟归零再播放，也可以暂停后定位到 600ms。
+
+<ComponentPreview files="manual-controls" size="sm" controls={{ animation: true }} />
+
+没有启用动画时，句柄操作不会替代播放总开关。播放策略与静态输出见[静态帧与减少动态效果](#静态输出与播放策略)。
+
+## 动画编排与镜头
+
+### 错峰与循环
+
+stagger 接收轨道数组，为相邻项增加延迟，并返回可分别挂到图元上的轨道。它不会自动发现或排列子节点。loop 包装轨道以重复播放。
+
+<ComponentPreview files="stagger" size="sm" controls={{ animation: true }} />
+
+不同属性可使用多条轨道。同一属性的多条轨道不会自动求和；需要组合时应整理成同一轨道。变换通道要留意数组顺序，不把动画当作静态布局计算。
+
+### 镜头
+
+cameraTo 生成 viewBox 轨道，挂在 Layout.animations 上。关键帧值为 `[x, y, width, height]`。镜头改变取景，不移动节点坐标或连接面。
+
+<ComponentPreview files="camera" size="sm" controls={{ animation: true }} />
+
+明确给出镜头起止范围，让最终取景和关闭动画时的基础 viewBox 一致。
+
+## 静态输出与播放策略
+
+### 指定截帧时间
+
+React 使用 Layout.snapshotAt，Vanilla 输出或挂载选项使用 animation.snapshotAt，单位为毫秒。截帧优先于播放总开关，只采样 load 或省略 trigger 的轨道；manual、visible 和事件轨道保留基础状态。
+
+<ComponentPreview files="snapshot" size="sm" />
+
+截帧适合 SSR、海报与缩略图，不保留持续播放规则。
+
+### 播放策略
+
+| 意图     | React             | Vanilla                  |
+| -------- | ----------------- | ------------------------ |
+| 跟随系统 | 省略 animate      | 省略 animation.enabled   |
+| 强制开启 | `animate={true}`  | animation.enabled: true  |
+| 强制关闭 | `animate={false}` | animation.enabled: false |
+
+显式开启会覆盖系统减少动态效果偏好，应由应用的可访问性策略决定。关闭动画且未指定截帧时显示基础属性，不是求最后一帧。
+
+### 设计静止态
+
+fill 默认 forwards，播放结束时保留末帧。手写轨道、colorShift 或 cameraTo 的末帧应与预期静止态协调；schema 不会比较关键帧与基础样式是否相同。
+
+## 相关属性
+
+这里只列本页用到的入口，完整声明见[API](/kernel/visual/animation/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'animationRef',
+      kind: 'property',
+      type: 'Ref<AnimationControls | null>',
+      description: 'Layout 的场景时钟句柄；提供 play()、pause() 与 seek(ms)。',
+    },
+    {
+      name: 'animations',
+      kind: 'property',
+      type: 'Array<IRAnimationTrack>',
+      description: 'Layout 只接受 property 为 viewBox 的轨道，值是 [x, y, width, height]。',
+    },
+    {
+      name: 'snapshotAt',
+      kind: 'property',
+      type: 'number',
+      description: '静态截帧时间，单位毫秒；仅采样自动播放轨道。',
+    },
+    {
+      name: 'animate',
+      kind: 'property',
+      type: 'boolean',
+      description: '省略时跟随系统；true 强制播放，false 关闭播放。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '基础用法', url: '/kernel/visual/animation/usage' },
+    { title: '组件对接', url: '/kernel/visual/animation/integration' },
+    { title: 'API 参考', url: '/kernel/visual/animation/api-reference' },
+    { title: 'Schema 参考', url: '/kernel/visual/animation/schema-reference' },
+  ]}
+/>

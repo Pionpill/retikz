@@ -112,6 +112,7 @@ export const hitTest = (scene: Scene, point: HitPoint, options?: HitTestOptions)
 
   // 逆 z-order：后画的在上，先测最后画的；命中即返回最近 id-bearing 祖先 id。
   const walk = (prim: ScenePrimitive, nearestId: string | undefined): string | null => {
+    if (prim.hitTest === false) return null;
     const selfId = prim.id ?? nearestId;
     if (prim.type === 'group') {
       ctx.save();

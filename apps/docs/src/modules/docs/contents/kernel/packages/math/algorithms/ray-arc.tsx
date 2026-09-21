@@ -1,5 +1,6 @@
 import { intersectRayWithArc, pointAtArcAngle } from '@retikz/math';
-import { Circle, Draw, Layout, Path, Step } from '@retikz/react';
+import { Draw, Layout, Path, Step } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';
@@ -27,7 +28,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, (value
   });
 
   return (
-    <Layout viewBox={{ x: -185, y: -110, width: 370, height: 220 }}>
+    <Layout>
       <Circle center={CENTER} radius={RADIUS} style={{ stroke: 'lightgray', dashPattern: [4, 3], fill: 'none' }} />
       <Path style={{ stroke: 'darkorange', strokeWidth: 2 }}>
         <Step kind="move" to={pointAtArcAngle(CENTER, RADIUS, values.startAngle)} />

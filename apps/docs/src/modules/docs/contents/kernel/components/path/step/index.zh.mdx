@@ -1,0 +1,438 @@
+---
+title: Step · 路径组合
+description: 组合路径步骤，控制子路径、连接面、曲线、圆角、变换与沿线标记
+---
+
+用 Step 逐段控制路径，组合独立子路径、曲线与闭合轮廓。首次绘图请先阅读[基础用法](/kernel/components/path/usage)。
+
+## 接入方式
+
+下面四种写法都绘制同一条由两个显式 Step 组成的 Path；Vanilla 示例需要页面已有 `<div id="diagram"></div>`。
+
+<ComponentPreview files="path-basic" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Path, Step } from '@retikz/react';
+
+export default () => (
+  <Layout>
+    <Path>
+      <Step kind="move" to={[0, 0]} />
+      <Step kind="line" to={[120, 0]} />
+    </Path>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+    },
+  ],
+};
+export default () => <Layout ir={ir} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { path, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    path({
+      way: [
+        [0, 0],
+        [120, 0],
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      type: 'path',
+      children: [
+        { type: 'step', kind: 'move', to: [0, 0] },
+        { type: 'step', kind: 'line', to: [120, 0] },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir);
+```
+
+</DocTab>
+</DocTabs>
+
+`<Draw>` 编译后就是 `<Path>`，覆盖日常连线的 step / 折角 / 曲线 / 弧形需求；但 `<Path>` 还多出 `rotate` / `scale` / `marks` / `id` / `meta` / `animations` 等元素级能力，`<Draw>` 不暴露这些。日常连线用 `<Draw>` 一行 way 数组更省，需要显式 Step 序列、多次 `move`、逐段混用 `kind` / label / 控制点，或要用上述 Path 专属能力时用 `<Path>`：
+
+|                                                             | `<Draw>`      | `<Path>` + `<Step>`        |
+| ----------------------------------------------------------- | ------------- | -------------------------- |
+| 写法                                                        | 一行 way 数组 | 容器 + 子节点              |
+| step / 曲线 / 折角 / 弧形                                   | 支持          | 支持                       |
+| `rotate` / `scale` / `marks` / `id` / `meta` / `animations` | 不暴露        | 支持                       |
+| 适用                                                        | 常见连线场景  | 显式 Step 序列、元素级能力 |
+
+## 组合结构
+
+显式步骤通常至少两个；单个 `rectangle` 是例外。作者输入的首个步骤不是 `move` 时，Vanilla 会把它改为 `move`。建议显式写出起点：
+
+```tsx
+<Path>
+  <Step kind="move" to={...} />     {/* 第 1 个：必为 move */}
+  <Step kind="line" to={...} />     {/* 之后任意多个 line / move / step */}
+  ...
+</Path>
+```
+
+下面依次说明每种步骤的写法与约束。
+
+### 子路径与闭合
+
+在一个面板中比较折线、多子路径与闭合填充三种 Path 组合。多次 `move` 会抬笔并从新位置开始独立子路径；填充示例用 `cycle` 对应的 `Z` 闭合轮廓。折角与单独的闭合操作见 [Way](/kernel/components/path/draw)，本面板只承担 Path 容器层的结构差异。
+
+<ComponentPreview files="path-structure" size="sm" />
+
+## 路径动作
+
+在同一个面板中切换 `line`、多次 `move`、`fold`、`cycle` 与 `rectangle`。多次 `move` 可以在同一个 `<Path>` 中开始彼此独立的子路径；`fold` 可在两段与三段正交连接间切换，三段模式还能用 `fraction` 调整中间腿；`rectangle` 可调圆角，`cycle` 会闭合回最近一次 `move` 的起点。
+
+| kind        | 主要参数                 | 结果           |
+| ----------- | ------------------------ | -------------- |
+| `line`      | `to`                     | 直线到目标     |
+| `move`      | `to`                     | 抬笔开始子路径 |
+| `fold`      | `to, via, fraction`      | 正交折线       |
+| `cycle`     | `—`                      | 闭合当前子路径 |
+| `rectangle` | `from, to, cornerRadius` | 矩形轮廓       |
+
+<ComponentPreview files="step-actions" size="sm" />
+
+### 正交连接
+
+在同一组节点间切换两种单轴投影与折线连接：`horizontal` 取目标 x、保留当前 y，`vertical` 保留当前 x、取目标 y；选择 `fold` 后，“折线方向”可切换 `-\|`、`\|-`、`-\|-` 与 `\|-\|`，三段模式还可用 `fraction` 调整中间腿的位置。蓝色实线是实际路径，灰色 dotted 线只提示两个节点的直接方向。
+
+| 连接方式 | Step 写法                                                                             | 行为                                                      |
+| -------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 水平单轴 | `kind="axis-line" axis="horizontal"`                                                  | 沿当前 Scope 的局部水平轴投影，只取目标 x                 |
+| 垂直单轴 | `kind="axis-line" axis="vertical"`                                                    | 沿当前 Scope 的局部垂直轴投影，只取目标 y                 |
+| 两段折线 | `kind="fold" via="-\|"`<br />`kind="fold" via="\|-"`                                  | 经过一个转折点，完整连接目标                              |
+| 三段折线 | `kind="fold" via="-\|-" fraction={0.5}`<br />`kind="fold" via="\|-\|" fraction={0.5}` | 经过两个转折点；`fraction` 调整中间腿位置，默认值为 `0.5` |
+
+<ComponentPreview files="axis-line" size="sm" />
+
+在两种 `axis-line` 模式中，省略 target `anchor` 时固定投影到节点中心，不执行 target 端自动边界裁切；source 节点仍按投影后的方向贴边。它只接受笛卡尔坐标或 NodeTarget，不接受 polar、relative、offset 或 between。
+
+### 目标定位
+
+`to` 除了绝对坐标，还接受 `{ of, offset }`、`{ relative }` 与 `{ relativeAccumulate }`。在面板中切换定位方式并调整 x / y，可以直接观察三者的锚点差异：
+
+- `offset`：以节点、坐标或 PolarPosition 为基准再偏移
+- `relative`：基于前一终点，但不推进 `prevEnd`
+- `relativeAccumulate`：基于前一终点，并推进 `prevEnd`
+
+相对坐标也可写成 sugar 字符串 `'+dx,dy'` / `'++dx,dy'`。
+
+<ComponentPreview files="step-targeting" size="sm" />
+
+## 曲线
+
+`curve`、`cubic`、`bend`、`smooth`、`arc`、`circlePath` 与 `ellipsePath` 都在下面的面板中切换。贝塞尔控制点以 `[x, y]` 成组编辑，并在画布中显示对应的虚线手柄；其他 kind 只显示相关的弯曲角、tension、角度或半径，便于比较它们如何推进游标并生成几何。
+
+| kind          | 主要参数                       | 结果                 |
+| ------------- | ------------------------------ | -------------------- |
+| `curve`       | `control, to`                  | 二次贝塞尔           |
+| `cubic`       | `control1, control2, to`       | 三次贝塞尔           |
+| `bend`        | `bendDirection, bendAngle, to` | 按角度弯曲           |
+| `smooth`      | `points, tension`              | 经过多个点的平滑曲线 |
+| `arc`         | `startAngle, endAngle, radius` | 圆弧                 |
+| `circlePath`  | `radius`                       | 整圆                 |
+| `ellipsePath` | `radius: { x, y }`             | 椭圆                 |
+
+<ComponentPreview files="step-curves" size="sm" />
+
+<ComponentAlert
+  title="Vanilla 写法"
+  description="Vanilla 暂未提供 way 文法的 smooth token；用 Vanilla 时把 smooth 作为 IR 对象放进 path children：{ type: 'step', kind: 'smooth', points: [...], tension }。下方代码视图的 Vanilla 标签即此形态。"
+/>
+
+### 出 / 入射角与自环
+
+`<Step kind="bend">` 除对称的 `bendDirection` + `bendAngle` 外，还可用 `outAngle` / `inAngle` 指定起点出射角与终点入射角，画非对称曲线；`looseness` 调控制点距离（松紧，缺省 ≈1）。**out/in 给定时优先于 `bendDirection`**。当 `from == to`（同节点 / 同坐标）时退化为**自环**——这是 out/in 最大价值场景（状态机自跳转），对称 bend 画不出。面板可在自环与双端点连接间切换，并配合虚点线方向参考调整出入射角与松紧度。
+
+<ComponentPreview files="path-outin-loop" size="md" />
+
+<Comparison target="tikz" title="Step 曲线语法">
+
+| retikz                                     | TikZ 对照                                              |
+| ------------------------------------------ | ------------------------------------------------------ |
+| `kind="curve"`                             | `.. controls (B) ..`                                   |
+| `kind="cubic"`                             | `.. controls (B) and (C) ..`                           |
+| `kind="bend"`                              | `to[bend left=N]` / `to[bend right=N]`                 |
+| `kind="smooth"`                            | `plot[smooth, tension=…] coordinates {…}`              |
+| `outAngle` / `inAngle` / `looseness`       | `out=` / `in=` / `looseness=`                          |
+| `kind="arc"`                               | `arc[start angle=…, end angle=…, radius=…]`            |
+| `kind="circlePath"` / `kind="ellipsePath"` | `circle[radius=…]` / `ellipse[x radius=…, y radius=…]` |
+
+</Comparison>
+
+## 端点与连接
+
+### 箭头
+
+`arrow` 控制方向（`'->'` / `'<-'` / `'<->'` / `'none'`），`arrowDetail` 统管 shape / size / color 等视觉规格，`arrowPlacement` 则用 `[0,1]` 的归一化比例让箭头从现有默认位置推进到最终视觉后缘与逻辑端点对齐，并支持共享值与 `start` / `end` 单端覆盖。三者在 `<Path>` 与 `<Draw>` 上等价；完整规则、`0 / 0.5 / 1` 对比 demo、失败边界和 API 参考见 **[Arrow](/kernel/components/path/arrow)** 专页。
+
+### 端点连接面
+
+连接面只改变这条边贴到节点的位置，不改变节点的外观。端点引用节点时（`{ id }` 对象形态，或 way 里的 id），可加 `boundary` 字段，**只对这一个端点**覆盖目标节点的 [`boundary`](/kernel/components/node/mechanism#视觉形状与连接几何)（连接面）。取值与节点 `boundary` 同形：`'shape'`（视觉形状自身）/ `'circle'`（真圆）/ 任意注册 shape 名 / `{ type, params }`。
+
+```tsx
+<Path arrow="->">
+  <Step kind="move" to="a" />
+  <Step kind="line" to={{ id: 'star', boundary: { type: 'circle', params: { fit: 'tight', gap: 8 } } }} />
+</Path>
+```
+
+`circle` / `rectangle` / `ellipse` 共用 `fit: 'tight' | 'bounds'` 与有符号 `gap`；默认是贴合形状的 `tight` 与 `gap: 0`。`rectangle` 的两种 fit 结果一致；负 gap 可向内收缩，但可能穿过视觉形状。
+
+`boundary` 只在"连接面有意义"的地方生效：端点自动贴边（未显式给 `anchor`）以及该端点的标准方位 / 角度锚点。在没有方向引用的场合——`between` 端点、`offset` 的 `of`、节点中心——它不生效。节点默认连接面写在 [`<Node boundary>`](/kernel/components/node/mechanism#视觉形状与连接几何)，端点 `boundary` 是单边覆盖。
+
+下例的五角星未设置节点 `boundary`。面板默认展示圆形连接面，可直接比较 `tight` / `bounds` 并调整 `gap`；切回星形轮廓可对照真实形状连接面。浅灰虚点线是当前圆形连接面，会与真实端点一起更新。
+
+<ComponentPreview files="path-boundary" size="md" />
+
+## 路径级能力
+
+### 控制点检查
+
+安装 `@retikz/inspect` 后，用 `InspectLayout` 和 `InspectPath` 显示路径的贝塞尔控制点与控制柄；`labels` 可额外显示编号。辅助标记不改变原路径的几何与交互。接入方式见 [`@retikz/inspect`](/kernel/packages/inspect)。
+
+<ComponentPreview files="path-inspector" size="sm" />
+
+### 整体变换
+
+`rotate`（度）/ `scale`（数字等比，或 `{ x, y }` 非等比）把整条 path 绕**包围盒中心**变换，免去为单条 path 包一层 `<Scope transforms>`。箭头和标签随路径一起变换。虚点线路径保留原始几何，面板中的旋转与二维缩放只作用于实线路径，便于对照。
+
+<ComponentPreview files="path-transform" size="sm" />
+
+### 中段标记
+
+`marks` 沿路径放方向标记：每项 `{ pos, mark }`，`pos ∈ [0, 1]`（越界 schema 拒），`mark` 首批为 `{ kind: 'arrow', shape, ... }`（复用已注册箭头名 + 视觉子集，见 [自定义箭头](/kernel/components/path/custom-arrow)），**朝向由该点切线决定**（不是固定方向）。直线 / 贝塞尔 / 弧段都按切线定向。尺寸与端点箭头同口径**随 `strokeWidth` 缩放**：线越粗、标记越大。拖动面板中的两个位置值，可观察标记沿路径移动时如何持续跟随局部切线。
+
+<ComponentPreview files="path-marks" size="sm" />
+
+### 折线圆角
+
+`roundedCorners` 给整条 path 的每个 **line↔line 内拐角**倒一个半径相同的圆角弧——画流程图、布线、折线连接时把硬尖角磨圆。缺省 / 省略 = 全尖角（行为不变）。首点 / 末点保持尖；接缝一侧是曲线 / 弧 / 贝塞尔 / 折角（`fold`）时该接缝也保持尖。半径过大时按相邻段长**逐拐角夹紧**到可行最大值。`cycle` 闭合后，闭合接缝也参与倒圆。
+
+<ComponentPreview files="path-rounded-corners" size="lg" />
+
+`roundedCorners` 改的是**路径几何**——它把拐角顶点回退并插入一段相切圆弧，因此影响包围盒、弧长、路径级 `marks` 的归一化定位和连接点解析。这和 `lineJoin` 是两码事：`lineJoin` 只改**描边视觉**，路径中心线仍是尖折。面板上方展示 `lineJoin`，下方展示几何圆角，可直接拖动半径比较。标签采样与断口处理见[实现原理](/kernel/components/path/mechanism)。
+
+<Comparison target="tikz" title="Path 写法映射">
+
+| retikz                             | TikZ 对照                    |
+| ---------------------------------- | ---------------------------- |
+| `style.lineCap` / `style.lineJoin` | `line cap` / `line join`     |
+| `ultraThin` … `ultraThick`         | `ultra thin` … `ultra thick` |
+| `marks` 与端点箭头随线宽缩放       | 标记与端点箭头随线宽缩放     |
+| `roundedCorners={r}`               | `rounded corners=<r>`        |
+| `style.color`                      | `color=`                     |
+
+</Comparison>
+
+## 样式
+
+`strokeWidth` 可直接给数值；`thickness` 则提供 `ultraThin` 到 `ultraThick` 的语义档位，且显式 `strokeWidth` 优先。`dashOffset` 只移动虚线节奏的起点。`lineCap` / `lineJoin` 分别控制端点与拐点；面板保留整体与描边两个透明度通道，便于直接观察效果。
+
+<ComponentPreview files="path-style" size="lg" />
+
+### 渐变描边
+
+渐变描边可沿线改变颜色，但不能自动给箭头取色；带箭头时还需单独指定箭头颜色。`stroke` 除纯色字符串外还接 `IRPaint`（渐变、图案或图像等填色资源）。线性 / 径向 / 锥形渐变、pattern、image 会进入同一份 paint 资源表；`dashPattern`、`dashOffset`、`lineCap`、`strokeOpacity` 等描边样式照常作用在这条线本身。面板可切换三种渐变：线性渐变调方向角，径向渐变调中心和半径，锥形渐变调中心和起始角；三者共用相同的三个色标。曲线展示描边效果，下方色板帮助观察完整的渐变分布。
+
+<ComponentPreview files="path-stroke-paint" size="lg" />
+
+带箭头的路径如果用渐变描边，需要给 `arrowDetail.color` 或端点 `color` 一个显式纯色；箭头 marker 不能继承资源型描边。
+
+### 栈序
+
+默认层叠 = 声明顺序。`zIndex` 显式覆盖：大者在上、缺省 0、同值保持声明顺序；只在同层（同 scope / 顶层）子节点间生效。下面两个填充矩形声明顺序蓝先红后，拖动面板中的蓝色 `zIndex`，可比较负值、0 与正值对重叠顺序的影响。
+
+<ComponentPreview files="path-z-index" size="sm" />
+
+## 相关属性
+
+以下列出本页最相关的常用属性；完整字段与类型见 [API 参考](/kernel/components/path/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'Step.kind',
+      kind: 'property',
+      type: "'move' | 'line' | 'axis-line' | 'fold' | 'cycle' | 'rectangle' | 'curve' | 'cubic' | 'bend' | 'smooth' | 'arc' | 'circlePath' | 'ellipsePath' | 'generator'",
+      description: '选择本步动作；不同动作使用各自的必填字段',
+    },
+    {
+      name: 'Step.to',
+      kind: 'property',
+      type: 'DslTarget = IRTarget | string',
+      description:
+        '目标可使用：\n\n- 节点 id 或 `{ id, anchor?, boundary? }`\n- `[x, y]` 坐标或极坐标\n- `{ of, offset }` 偏移\n- `{ relative: [x, y] }` 或 `{ relativeAccumulate: [x, y] }` 相对坐标\n\n`axis-line` 只接受节点目标或笛卡尔坐标',
+    },
+    { name: 'Step.via', kind: 'property', type: "'-|' | '|-' | '-|-' | '|-|'", description: '折线的方向顺序' },
+    {
+      name: 'Step.fraction',
+      kind: 'property',
+      type: 'number',
+      description: '三段折线中间段的位置，范围 0..1，默认 0.5',
+    },
+    {
+      name: 'Step.control / control1 / control2',
+      kind: 'property',
+      type: '[number, number]',
+      description: '二次曲线使用 control；三次曲线使用 control1 和 control2',
+    },
+    {
+      name: 'Step.axis',
+      kind: 'property',
+      type: "'horizontal' | 'vertical'",
+      description: 'axis-line 分别只取目标 x 或 y',
+    },
+    {
+      name: 'Step.from',
+      kind: 'property',
+      type: 'DslTarget = IRTarget | string',
+      description: 'rectangle 的另一对角，写法与 to 相同',
+    },
+    { name: 'Step.cornerRadius', kind: 'property', type: 'number', description: '矩形四角半径，按边长限制到可用范围' },
+    {
+      name: 'Step.bendDirection',
+      kind: 'property',
+      type: "'left' | 'right'",
+      description: '相对于起点到终点的弯曲方向',
+    },
+    { name: 'Step.bendAngle', kind: 'property', type: 'number', description: '对称弯曲角，单位为度，默认 30' },
+    {
+      name: 'Step.outAngle / inAngle',
+      kind: 'property',
+      type: 'number',
+      description: '出射角和入射角，用于非对称曲线或自环，并优先于 bendDirection',
+    },
+    { name: 'Step.looseness', kind: 'property', type: 'number', description: '调整出入射曲线控制点距离，默认约 1' },
+    {
+      name: 'Step.startAngle / endAngle',
+      kind: 'property',
+      type: 'number',
+      description: '圆弧起止角，0° 向右、90° 向下',
+    },
+    { name: 'Step.points', kind: 'property', type: 'Array<[number, number]>', description: 'smooth 经过的后续点' },
+    { name: 'Step.tension', kind: 'property', type: 'number', description: 'smooth 的曲线张力' },
+    {
+      name: 'Step.radius',
+      kind: 'property',
+      type: 'number | { x: number; y: number }',
+      description: '圆使用数值半径；椭圆可分别指定 x、y 半径',
+    },
+    {
+      name: 'way',
+      kind: 'property',
+      type: 'WayDSL',
+      description: '在 `<Path>` 或 `<Draw>` 中用 TikZ 风格简写声明走向；`<Path>` 也可改传 `children` 和 `<Step />`。',
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'ReactNode',
+      description: '直接传入一组 `<Step />`，按顺序定义 move、line、curve 等路径动作。',
+    },
+    {
+      name: 'arrow',
+      kind: 'property',
+      type: "'none' | '->' | '<-' | '<->'",
+      description: '设置起点、终点或双端箭头方向；省略或传入 `none` 时不绘制端点箭头。',
+    },
+    {
+      name: 'roundedCorners',
+      kind: 'property',
+      type: 'number',
+      description: '为每个两段直线相接的拐角设置几何圆角半径；省略时保留尖角。',
+    },
+    {
+      name: 'rotate',
+      kind: 'property',
+      type: 'number',
+      description: '以度为单位绕路径包围盒中心旋转整条路径。',
+    },
+    {
+      name: 'scale',
+      kind: 'property',
+      type: 'number | { x: number; y: number }',
+      description: '以统一倍率或 `{ x, y }` 分轴倍率绕路径包围盒中心缩放。',
+    },
+    {
+      name: 'marks',
+      kind: 'property',
+      type: "Array<{ pos: number; mark: { kind: 'arrow'; shape?: string; scale?: number; color?: string } }>",
+      description: '在归一化位置放置沿路径切线定向的标记；当前支持的标记类型为箭头标记。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'label · 标签',
+      description: '区分整条路径与单步标签，控制位置、朝向、多行文字和描边断口',
+      url: '/kernel/components/path/label',
+    },
+    {
+      title: '实现原理',
+      description: '解释路径写法如何变成步骤，以及引用、几何、箭头和标签如何产生最终结果',
+      url: '/kernel/components/path/mechanism',
+    },
+    {
+      title: 'API 参考',
+      description: '查询绘制组件、作者侧输入和扩展契约的公开 TypeScript 声明',
+      url: '/kernel/components/path/api-reference',
+    },
+    {
+      title: 'Schema 参考',
+      description: '查询路径、步骤、标签与箭头标记的输入数据契约',
+      url: '/kernel/components/path/schema-reference',
+    },
+  ]}
+/>

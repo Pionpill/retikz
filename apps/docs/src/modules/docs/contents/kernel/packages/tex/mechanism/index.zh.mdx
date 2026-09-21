@@ -9,7 +9,7 @@ description: 沿一次公式请求理解 TeX 如何经引擎排版、SVG lowerin
 
 公式先被识别，再由引擎排版为 SVG，转换为带度量的路径，最后交回 Core 排版。TeX 包拥有中间的排版接入与 SVG 转换；Core 拥有文本入口和 Scene 输出。
 
-<ComponentPreview files="tex-overview-flow" size="xs" hideCode />
+<ComponentPreview files="tex-overview-flow" size="xs" type="flow" hideCode />
 
 下面沿同一个 `x^2` 公式展开四个阶段。末尾的详细图会把这些阶段对应到真实代码成员；内部成员仅用于读源码，不是新增公共 API。
 
@@ -101,7 +101,7 @@ Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 
 
 下图只说明一次公式请求如何命中缓存，或经 MathJax 解析后把结果回写缓存：
 
-<ComponentPreview files="tex-lower-cache" size="sm" hideCode />
+<ComponentPreview files="tex-lower-cache" size="sm" type="flow" hideCode />
 
 `createLowerTex` 为每个 lowerer 建立内存缓存，key 包含 TeX source、inline / display 模式、字号和宿主颜色。成功结果与确定性的 MathJax / SVG 失败会缓存；`engine.convert` 抛出的异常视为瞬态失败，不缓存，下一次调用仍可重试。每次公开 lowering 失败都会调用最新的 `onDiagnostic`。
 
@@ -134,7 +134,7 @@ Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 
 
 宿主负责连接准备与编译：React 在 hook 就绪后将返回的 lowerer 放入 compile 配置；Vanilla 等待创建完成后再用该 lowerer 编译。需要首次输出就包含公式时，应等待就绪再提交该次编译；如果提前在没有 lowerer 的情况下编译，则遵循上面的普通字符串／显式片段分支，并不会自动等待引擎。
 
-<ComponentPreview files="tex-react-lifecycle" size="xs" hideCode />
+<ComponentPreview files="tex-react-lifecycle" size="xs" type="flow" hideCode />
 
 切换集合时，hook 立即进入 `loading` 并清空旧 lowerer；已卸载或过期请求的异步结果不会写回。`mathjax-full` 缺失或 engine 初始化失败时，hook 返回 `error` 并删除共享失败项，使后续挂载可以重试。
 
@@ -151,7 +151,7 @@ Core 把每条字形路径发为 `PathPrim`，用带基线平移的 `GroupPrim` 
 
 下图展开前面的四个阶段，表示引擎就绪且缓存未命中的一次成功请求。缓存命中直接返回已有 `LoweredTex`，跳过引擎排版与 SVG 转换；失败分支见前文。图中的 `layoutInlineLine()` 在调用 lowerer 和接收结果两个位置出现，属于同一次文本布局调用。
 
-<ComponentPreview files="tex-conversion-flow" size="md" hideCode />
+<ComponentPreview files="tex-conversion-flow" size="sm" type="flow" hideCode />
 
 建议先读 `createLowerTex()` 看请求编排与缓存，再进入 `lowerMathJaxSvg()` 和 path parser，最后回到 Core 的 `layoutInlineLine()` 看度量如何变成图元。异步初始化单独从 `useLowerTex` 阅读。
 

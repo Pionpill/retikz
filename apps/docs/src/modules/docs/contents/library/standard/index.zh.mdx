@@ -3,7 +3,7 @@ title: Standard · 拓展
 description: 以领域无关的复合组件和按能力装配的可选绘图定义扩展 Core，同时保持唯一的 Core 编译与注册表路径。
 ---
 
-Standard 有两类公开内容：根入口中的领域无关复合组件，以及能力子入口中的可选官方绘图定义。两者都复用 Core 的 Definition、registry 与 compile；Standard 不创建第二套绘图内核。
+Standard 按能力组织公开内容：根入口中的展现复合组件、`/shape` 子入口中的形状复合组件，以及其它能力子入口中的可选官方绘图定义。两者都复用 Core 的 Definition、registry 与 compile；Standard 不创建第二套绘图内核。
 
 布局容器由独立的 [Layout](/library/layout) 包族拥有。Standard 只在 Legend 等自身能力中通过 Layout 的公开组合面复用排版能力，不再导出布局 API。
 
@@ -17,12 +17,15 @@ Standard 横向扩展 Core，而不是替代它：
 
 ## 三个包与能力子入口
 
-| 入口                            | 职责                                                           | 何时使用                                    |
-| ------------------------------- | -------------------------------------------------------------- | ------------------------------------------- |
-| `@retikz/standard`              | Standard composites 的 schema、factory、Definition 与 lowering | 使用 Grid、Axes、Frame、Surface 或 Legend   |
-| `@retikz/standard-react`        | 呈现组件的 React DSL                                           | 在 React `Layout` 中创作                    |
-| `@retikz/standard-vanilla`      | plain spec helper 与 Vanilla Tier 2 adapter                    | 无 React 的浏览器或脚本入口                 |
-| `@retikz/standard/<capability>` | 单一可选绘图能力族的 Definitions                               | 当前图需要可选 shape、arrow、clip 或 ribbon |
+| 入口                             | 职责                                                           | 何时使用                                         |
+| -------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
+| `@retikz/standard`               | Standard composites 的 schema、factory、Definition 与 lowering | 使用 Grid、Axes、Frame、Surface 或 Legend        |
+| `@retikz/standard-react`         | 呈现组件的 React DSL                                           | 在 React `Layout` 中创作                         |
+| `@retikz/standard-vanilla`       | plain spec helper 与 Vanilla Tier 2 adapter                    | 无 React 的浏览器或脚本入口                      |
+| `@retikz/standard/shape`         | 形状的 Schema、Source、Definition 与 lowering                  | 绘制圆、椭圆、矩形、正多边形、星形、圆弧与扇形   |
+| `@retikz/standard-react/shape`   | 形状 React 组件                                                | 使用 Circle、Ellipse 等 JSX                      |
+| `@retikz/standard-vanilla/shape` | 形状作者输入与 adapter                                         | 使用 shape.xxx                                   |
+| `@retikz/standard/<capability>`  | 单一可选绘图能力族的 Definitions                               | 当前图需要可选 node-shape、arrow、clip 或 ribbon |
 
 React 与 Vanilla 只把作者输入接入同一能力。需要可选绘图内容时，从精确的 `@retikz/standard/<capability>` 子入口导入单项 Definition，并传给 Core compile options；`@retikz/standard` 根入口不转发这些内容。
 

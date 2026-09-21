@@ -8,7 +8,7 @@ import {
   StraightBarbArrowProvider,
 } from '@retikz/standard/arrow';
 import { PathClipProvider } from '@retikz/standard/clip';
-import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/shape';
+import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/node-shape';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import { BlockProvider, createBlockProvider } from '../block';

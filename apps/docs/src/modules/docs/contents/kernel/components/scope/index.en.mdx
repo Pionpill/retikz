@@ -1,0 +1,72 @@
+---
+title: Scope
+description: Organize primitives in a local context with shared transforms, defaults, reference bounds, and clipping
+---
+
+`<Scope>` establishes a local context for a group of primitives. Treat two nodes and their connection as one subfigure and move them without editing every coordinate. When reusing the group, isolate its internal ids to avoid conflicts with the surrounding figure.
+
+Scope sits inside Layout and may be nested. Layout owns the complete drawing's input and presentation; Scope owns one subtree's context. Scope neither draws a primitive nor calculates automatic arrangements.
+
+## How the pieces work together
+
+The example places A, B, and their connection in one Scope, then translates the group to the right. Children still use simple local coordinates: A is at the origin and B is to its right. Scope maps those coordinates into the complete figure.
+
+<ComponentPreview files="/kernel/components/scope/usage/scope-basic" size="xs" />
+
+The same group can carry shared defaults, a clip region, or a group reference. Defaults reduce repeated configuration, clipping limits visibility, and a group reference lets external connections target the subfigure. These features are independent; configure only what the task needs.
+
+## Responsibilities at a glance
+
+| Document         | Responsibility                                 | When to read                      |
+| ---------------- | ---------------------------------------------- | --------------------------------- |
+| Basic usage      | Transforms, references, defaults, and clipping | Organize a local subfigure        |
+| Custom clipping  | Define and register clipping capabilities      | Existing clips are insufficient   |
+| Implementation   | Coordinates, namespaces, and Scene output      | Diagnose references or transforms |
+| API reference    | Public Scope props                             | Check an exact call contract      |
+| Schema reference | Persisted Scope and related structures         | Construct or save drawing data    |
+
+## Choosing the right capability
+
+Use `transforms` to move, rotate, or scale the group. Use `placement` to align a group anchor with an existing target. Enable `localNamespace` when reusing subfigures with fixed ids so each copy resolves its own internal names.
+
+For JSX organization alone, extract a React component. For automatic Flex or Grid arrangement, use the [Layout package](/library/layout). For circle, path, or compound clipping, check [Standard clipping](/library/standard/clip) before defining a new capability.
+
+## Envelope frame
+
+`frame` decorates the existing content envelope with an independent fill, stroke, and frame shadow. `style` and `defaults` continue to control child inheritance; the frame shares only the effective color context.
+
+`frame.padding` expands decoration without changing child positions, layout allocation, or Scope anchors. Frames do not participate in hit testing, and empty scopes produce no frame. `boundingShape` selects a rectangle or circle. Use Standard Surface to allocate space or constrain container dimensions.
+
+See [frame usage](/kernel/components/scope/usage#envelope-frame).
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Apply transforms, references, defaults, and clipping',
+      url: '/kernel/components/scope/usage',
+    },
+    {
+      title: 'Custom clipping',
+      description: 'Define and register a clip capability',
+      url: '/kernel/components/scope/custom',
+    },
+    {
+      title: 'Implementation',
+      description: 'Trace a subtree into a Scene group',
+      url: '/kernel/components/scope/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public Scope props',
+      url: '/kernel/components/scope/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persisted Scope structures',
+      url: '/kernel/components/scope/schema-reference',
+    },
+  ]}
+/>

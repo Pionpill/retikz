@@ -38,10 +38,6 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./shape": {
-      "types": "./src/shape/index.ts",
-      "default": "./src/shape/index.ts"
-    },
     "./arrow": {
       "types": "./src/arrow/index.ts",
       "default": "./src/arrow/index.ts"
@@ -53,6 +49,14 @@
     "./ribbon": {
       "types": "./src/ribbon/index.ts",
       "default": "./src/ribbon/index.ts"
+    },
+    "./node-shape": {
+      "types": "./src/node-shape/index.ts",
+      "default": "./src/node-shape/index.ts"
+    },
+    "./shape": {
+      "types": "./src/shape/index.ts",
+      "default": "./src/shape/index.ts"
     }
   },
   "publishConfig": {
@@ -64,11 +68,6 @@
         "types": "./dist/types/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
-      },
-      "./shape": {
-        "types": "./dist/types/shape/index.d.ts",
-        "import": "./dist/shape/index.js",
-        "default": "./dist/shape/index.js"
       },
       "./arrow": {
         "types": "./dist/types/arrow/index.d.ts",
@@ -84,6 +83,16 @@
         "types": "./dist/types/ribbon/index.d.ts",
         "import": "./dist/ribbon/index.js",
         "default": "./dist/ribbon/index.js"
+      },
+      "./node-shape": {
+        "types": "./dist/types/node-shape/index.d.ts",
+        "import": "./dist/node-shape/index.js",
+        "default": "./dist/node-shape/index.js"
+      },
+      "./shape": {
+        "types": "./dist/types/shape/index.d.ts",
+        "import": "./dist/shape/index.js",
+        "default": "./dist/shape/index.js"
       }
     }
   },

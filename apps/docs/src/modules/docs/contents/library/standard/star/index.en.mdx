@@ -1,0 +1,65 @@
+---
+title: Stars
+description: Draw stars with shared Standard semantics across React, Vanilla and JSON
+---
+
+Standard Star preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/standard/shape).
+
+## Entry points
+
+Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/standard/node-shape`.
+
+React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx(id, input)` with the same explicit identity for the embed and its final path. React does not persist an automatic occurrence id. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+
+| Entry   | Public API                                               |
+| ------- | -------------------------------------------------------- |
+| React   | `Star` — `@retikz/standard-react/shape`                  |
+| Vanilla | `shape.star` — `@retikz/standard-vanilla/shape`          |
+| JSON    | `StarSchema / StarDefinition` — `@retikz/standard/shape` |
+
+## Usage
+
+`<Star>` alternates points on an outer and inner radius, connects them into a closed path, and expands to an underlying `<Path>`. Useful for rating stars, emphasis marks, and decorative multi-point shapes.
+
+```tsx
+import { Star } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
+```
+
+`points` is the number of star points. Give `innerRadius` directly, or use `innerRatio` to derive it from the outer radius.
+
+| Form                                           | Best for                         |
+| ---------------------------------------------- | -------------------------------- |
+| `{ center, outerRadius, innerRadius, points }` | Control both radii               |
+| `{ center, outerRadius, points, innerRatio? }` | Derive inner radius from a ratio |
+
+<ComponentPreview files="star-basic" size="sm" />
+
+The two dashed circles in the playground are the inner and outer radii. Adjust the point count, `innerRatio`, and start angle to see how notch depth and orientation shape the contour together.
+
+<ComponentPreview files="star-playground" size="md" controlPanelDefaultSize={50} />
+
+## Input constraints
+
+Choose either innerRadius or innerRatio to describe the inner radius. Radii must be finite and nonnegative, the inner radius cannot exceed the outer radius, and the ratio must lie in [0, 1]. center requires a literal coordinate; rotate defaults to −90° and is applied once when generating vertices.
+
+## Compilation
+
+The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+
+### Star vertex expansion
+
+Star alternates inner and outer radii to produce `2 × points` vertices, then emits one move, `2 × points - 1` lines and one cycle. Rotation is baked into the vertices and is not forwarded as a Path transform, avoiding double rotation.
+
+## Schema reference
+
+### StarSchema
+
+<ZodSchema name="StarSchema" />
+
+## API reference
+
+{/* @include library/standard/star/generated */}

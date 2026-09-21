@@ -1,6 +1,7 @@
 import type { CenteredShape, Position } from '@retikz/math';
 import { localToWorld } from '@retikz/math';
-import { Circle, Draw, Layout, Node } from '@retikz/react';
+import { Draw, Layout, Node } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
@@ -41,7 +42,7 @@ const renderCoordinateSpaces = (values: CoordinateSpacesValues, lang: Lang) => {
   const localYAxis = [localToWorld(shape, [0, -52]), localToWorld(shape, [0, 52])];
 
   return (
-    <Layout viewBox={{ x: -170, y: -110, width: 340, height: 220 }}>
+    <Layout>
       <Draw
         way={[
           [-160, 0],

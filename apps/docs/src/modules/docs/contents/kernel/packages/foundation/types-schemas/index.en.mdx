@@ -1,24 +1,16 @@
 ---
 title: Types & Schemas
-description: Reuse Foundation compile-time type utilities and domain-neutral runtime schemas to define JSON data and scalar boundaries
+description: Reuse Foundation compile-time type utilities and open-string builders for domain-neutral cross-package contracts
 ---
 
-Foundation keeps type utilities and runtime schemas that multiple packages can reuse together. They describe only general data contracts; domain objects belong to schemas defined and validated by their own owners.
+Foundation keeps type utilities and open-string builders that multiple packages can reuse together. They describe general data contracts only; see the [Schema reference](/kernel/packages/foundation/schema-reference) for runtime JSON and number fields, defaults, and validation structure.
 
 ## Basic usage
 
 Import these capabilities from the package root:
 
 ```ts
-import {
-  type WithRequiredProperties,
-  type WithOptionalProperties,
-  PositiveNumberSchema,
-  NormalizedFractionSchema,
-  createOpenStringSchema,
-} from '@retikz/foundation';
-
-const fraction = NormalizedFractionSchema.parse(0.5); // 0.5
+import { type WithRequiredProperties, createOpenStringSchema } from '@retikz/foundation';
 ```
 
 ## Type utilities
@@ -49,46 +41,6 @@ Conversely, use `WithOptionalProperties` when an author-facing contract may omit
 type NodePatch = WithOptionalProperties<NodeInput, 'label'>;
 ```
 
-## JSON data contracts
-
-`JsonValue` and `JsonObject` are TypeScript types for recursive JSON data. `JsonValueSchema` and `JsonObjectSchema` are their runtime parse boundaries for `unknown`. Readonly arrays allow `as const` Source values to pass parsing directly; parsing does not clone, freeze, or walk typed data again.
-
-When a domain Source schema already exists, consume that owner's `parse()` result directly. Do not place Foundation JSON parsing before an additional general validation pass.
-
-<span id="jsonobject"></span>
-
-### JsonObject
-
-`JsonObjectSchema` accepts objects with string keys and recursive JSON values.
-
-<ZodSchema name="JsonObjectSchema" />
-
-<span id="jsonvalue"></span>
-
-### JsonValue
-
-`JsonValueSchema` accepts a recursive JSON value made from a string, finite number, boolean, null, array, or object.
-
-<ZodSchema name="JsonValueSchema" />
-
-## Scalar schemas
-
-Use these schemas when an owner needs a runtime parse boundary for a general scalar. They do not replace domain ranges, geometry, or object schemas.
-
-| Schema                     | Accepted value                                            |
-| -------------------------- | --------------------------------------------------------- |
-| `NonBlankStringSchema`     | A string containing at least one non-whitespace character |
-| `PositiveNumberSchema`     | A finite number greater than `0`                          |
-| `NonNegativeNumberSchema`  | A finite number greater than or equal to `0`              |
-| `PositiveIntegerSchema`    | A safe integer greater than `0`                           |
-| `NonNegativeIntegerSchema` | A safe integer greater than or equal to `0`               |
-| `NormalizedFractionSchema` | A number in the inclusive `0..1` range                    |
-
-```ts
-PositiveNumberSchema.parse(1.5);
-NormalizedFractionSchema.parse(0.5);
-```
-
 ## Open strings
 
 `createOpenStringSchema(values)` combines built-in values from a const object enum with a non-blank custom string. Use it for fields whose protocol accepts extensions but whose built-in values should still be suggested by the editor.
@@ -105,48 +57,18 @@ RoleSchema.parse('participant');
 RoleSchema.parse('custom.role');
 ```
 
-<SourceLinks
-  sources={[
-    {
-      label: 'Type utilities and JSON types',
-      path: 'packages/kernel/foundation/src/types.ts',
-      startLine: 1,
-      endLine: 21,
-    },
-    {
-      label: 'JSON and scalar schemas',
-      path: 'packages/kernel/foundation/src/schema.ts',
-      startLine: 1,
-      endLine: 40,
-    },
-    {
-      label: 'JSON schema tests',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 23,
-      endLine: 73,
-    },
-    {
-      label: 'Open-string tests',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 85,
-      endLine: 103,
-    },
-    {
-      label: 'Scalar-schema tests',
-      path: 'packages/kernel/foundation/tests/schema.test.ts',
-      startLine: 105,
-      endLine: 154,
-    },
-  ]}
-/>
-
 ## Further reading
 
 <LinkedSections
   items={[
     {
+      title: 'Schema reference',
+      description: 'Look up JSON and scalar schema fields and validation structure',
+      url: '/kernel/packages/foundation/schema-reference',
+    },
+    {
       title: 'API reference',
-      description: 'Look up public types and full contracts',
+      description: 'Look up public types and complete contracts',
       url: '/kernel/packages/foundation/api-reference',
     },
   ]}

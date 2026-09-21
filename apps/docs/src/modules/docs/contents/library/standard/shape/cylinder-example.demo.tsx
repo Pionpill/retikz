@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { CylinderShapeDefinition } from '@retikz/standard/shape';
+import { CylinderShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -8,7 +8,7 @@ import { cylinderExampleControls, previewControlContract } from './cylinder-exam
 
 export const previewControls = cylinderExampleControls;
 const controlledPreview = defineControlledPreview(previewControlContract, values => (
-  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} shapes={[CylinderShapeDefinition]}>
+  <Layout viewBox={{ x: -120, y: -90, width: 240, height: 180 }} extensions={{ shapes: [CylinderShapeDefinition] }}>
     <Node
       position={[0, 0]}
       shape={{ type: 'cylinder', params: { axis: values.axis, capDepth: values.capDepth } }}

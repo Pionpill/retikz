@@ -31,10 +31,20 @@ export const AppSidebar: FC<AppSidebarProps> = props => {
       ? sections.find(section => section.id === location.sectionId)
       : sections.find(section => !section.label)
     : undefined;
-  const sidebarSections = useMemo(
-    () => (areaId === 'about' ? sections : selectedSection ? [selectedSection] : []),
-    [areaId, sections, selectedSection],
-  );
+  const sidebarSections = useMemo(() => {
+    if (areaId === 'kernel' && (selectedSection?.id === 'components' || selectedSection?.id === 'visual')) {
+      const components = sections.find(section => section.id === 'components');
+      const visual = sections.find(section => section.id === 'visual');
+      if (components && visual) {
+        return [
+          { ...components, pages: components.pages.filter(page => page.sidebarGroup !== 'kernel.internals') },
+          visual,
+          { ...components, pages: components.pages.filter(page => page.sidebarGroup === 'kernel.internals') },
+        ];
+      }
+    }
+    return areaId === 'about' ? sections : selectedSection ? [selectedSection] : [];
+  }, [areaId, sections, selectedSection]);
 
   const categories = useMemo(
     () => (areaId ? buildSidebarCategories(t, areaId, sidebarSections) : []),

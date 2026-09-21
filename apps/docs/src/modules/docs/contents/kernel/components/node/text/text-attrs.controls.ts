@@ -14,6 +14,7 @@ export const TextAttrsControlId = {
 /** Text 行级覆盖的中文属性面板 */
 export const textAttrsControls = definePreviewControls({
   presentation: 'panel',
+  defaultSize: 50,
   title: '行级属性',
   sections: [
     {

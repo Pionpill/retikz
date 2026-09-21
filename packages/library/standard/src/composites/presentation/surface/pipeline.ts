@@ -1,17 +1,16 @@
 import type {
-  IRClip,
-  IRPath,
   LayoutAxisProposal,
   LayoutCompositeCompileContext,
   LayoutCompositeCompileResult,
   LayoutProposal,
 } from '@retikz/core';
-import { LayoutAxisProposalKind, rectOutline } from '@retikz/core';
+import { LayoutAxisProposalKind } from '@retikz/core';
 import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../../errors';
 import type { CanonicalSurface } from '../../../resolve/surface';
 import { resolveSurface } from '../../../resolve/surface';
+import { surfaceBoundaryPath, surfaceClip } from '../shared/surface-geometry';
 import { SURFACE_HANDLE_KEY, SURFACE_HANDLE_ROLE } from './constants';
 import type { IRSurface } from './types';
 
@@ -57,32 +56,6 @@ const childProposal = (surface: CanonicalSurface, proposal: LayoutProposal): Lay
 /** 解析 Surface 在当前轴的最终 border-box 尺寸 */
 const surfaceAxisSize = (proposal: LayoutAxisProposal, childSlotSize: number, padding: number): number =>
   proposal.kind === LayoutAxisProposalKind.Exact ? proposal.value : childSlotSize + padding;
-
-/** 构造 Surface background 或 border 共用的矩形 Path */
-const surfaceBoundaryPath = (
-  width: number,
-  height: number,
-  cornerRadius: number,
-  appearance: Omit<IRPath, 'type' | 'children'>,
-): IRPath => ({
-  ...appearance,
-  type: 'path',
-  children: [
-    {
-      type: 'step',
-      kind: 'rectangle',
-      from: [0, 0],
-      to: [width, height],
-      ...(cornerRadius === 0 ? {} : { cornerRadius }),
-    },
-  ],
-});
-
-/** 构造与 Surface rounded boundary 一致的 content clip */
-const surfaceClip = (width: number, height: number, cornerRadius: number): IRClip => ({
-  kind: 'path',
-  commands: rectOutline([0, 0], [width, height], cornerRadius),
-});
 
 /** 将一个 canonical Surface 编译为普通 Core Scope/Path/replay 输出 */
 export const compileSurface = (

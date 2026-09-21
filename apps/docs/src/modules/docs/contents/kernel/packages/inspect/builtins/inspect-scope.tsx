@@ -6,6 +6,7 @@ import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 
 import { createPreviewControlContract } from './inspect-scope.controls';
 import { inspectScopeI18n } from './inspect-scope.i18n';
+
 export { createPreviewControlContract, previewControlContract, previewControls } from './inspect-scope.controls';
 
 const registry = createDefaultInspectorRegistry();
@@ -14,12 +15,7 @@ const preview = defineControlledBuiltinInspectPreview(
   (values, lang) => {
     const i18n = inspectScopeI18n[lang];
     return (
-      <InspectLayout
-        registry={registry}
-        width={380}
-        height={360}
-        viewBox={{ x: -190, y: -180, width: 380, height: 360 }}
-      >
+      <InspectLayout registry={registry} viewBox={{ x: -135, y: -175, width: 300, height: 325 }}>
         <InspectScope
           transforms={[
             { kind: 'translate', x: values.position[0], y: values.position[1] },

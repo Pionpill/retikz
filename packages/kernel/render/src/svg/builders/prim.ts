@@ -265,5 +265,7 @@ const buildPrimRaw = (p: ScenePrimitive, context: BuildContext): SvgNode => {
  */
 export const buildPrim = (p: ScenePrimitive, context: BuildContext = {}): SvgNode => {
   const node = buildPrimRaw(p, context);
-  return context.decorate ? context.decorate(node, p) : node;
+  const decorated = context.decorate ? context.decorate(node, p) : node;
+  if (p.hitTest === false) decorated.attrs['pointer-events'] = 'none';
+  return decorated;
 };

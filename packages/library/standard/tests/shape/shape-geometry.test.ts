@@ -8,7 +8,7 @@ import {
   HexagonShapeDefinition,
   ParallelogramShapeDefinition,
   TrapezoidShapeDefinition,
-} from '../../src/shape';
+} from '../../src/node-shape';
 
 const identity = (value: number): number => value;
 

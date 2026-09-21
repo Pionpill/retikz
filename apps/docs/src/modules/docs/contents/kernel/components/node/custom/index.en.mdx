@@ -1,0 +1,195 @@
+---
+title: Custom boundaries
+description: Define, register, and use connection surfaces independently of node appearance
+---
+
+`boundary` decides where a connection meets a node. It normally follows the visual `shape`; register a custom boundary only when “what the node looks like” and “where lines should attach” must be independent.
+
+The rectangle below still renders with its original shape, while `horizontal-ports` restricts connections to the left and right ports. Open the source to see the full definition, injection, and consumption loop.
+
+## When to extend
+
+Check whether an existing choice already solves the problem:
+
+| Requirement                            | Choose                                |
+| -------------------------------------- | ------------------------------------- |
+| Attach along the visual outline        | Omit `boundary` or use `shape`        |
+| Use a circle, rectangle, or ellipse    | Select the matching built-in boundary |
+| Reuse a registered shape's geometry    | Put the shape name in `boundary`      |
+| Add fixed directional ports or anchors | Register a `BoundaryDefinition`       |
+
+A boundary owns only “where the connection stops” and “where standard directional anchors sit.” It does not size the node or emit primitives; `shape` still owns visual geometry, layout bounds, and drawing. If the connection rule always matches a new visual shape, write a [custom shape](/kernel/components/node/custom-shape) instead of maintaining two geometries. Shape-specific custom anchors still belong to the visual shape, not the boundary extension.
+
+## A complete example
+
+<ComponentPreview files="boundary-registry" size="sm" />
+
+## Define the capability
+
+Use `defineBoundary` to declare a stable registry key, parameter schema, and ray intersection. Even parameterless definitions provide `z.strictObject({})`, so every payload follows the same validation path.
+
+```ts
+import { defineBoundary } from '@retikz/core';
+import { z } from 'zod';
+
+export const horizontalPorts = defineBoundary({
+  name: 'horizontal-ports',
+  paramsSchema: z.strictObject({}),
+  boundaryPoint: (rect, toward) =>
+    toward[0] < rect.x ? [rect.x - rect.width / 2, rect.y] : [rect.x + rect.width / 2, rect.y],
+  anchor: (rect, name) => {
+    if (name === 'left') return [rect.x - rect.width / 2, rect.y];
+    if (name === 'right') return [rect.x + rect.width / 2, rect.y];
+    return undefined;
+  },
+});
+```
+
+`boundaryPoint` receives the boundary's final resolved `rect`. Without `resolveRect`, this is the node box already derived by the visual shape. `rect.x` / `rect.y` are center coordinates and `width` / `height` are full dimensions; for example, the left edge is `rect.x - rect.width / 2`. `toward` is the connection target measured from the node center. Parameterized boundaries use `{ type, params }`, where `params` must remain JSON-serializable. Functions stay in the definition and never enter IR (the intermediate representation).
+
+Implement optional `resolveRect(context, params)` when the surface needs to resize before intersection. `context.visualRect` is the visual AABB, while `context.connectionEnvelope(kind)` returns a regular contour enclosing the visual shape; `kind` accepts `'circle'`, `'ellipse'`, or `'rectangle'` and shares a node-local cache. The returned rect must have finite coordinates and positive width and height, or compilation fails immediately.
+
+### Parameterized boundaries
+
+The definition's schema owns the parameters and infers the callback's third argument. This `bias` moves the left and right ports along the node height from top `-1` to bottom `1`:
+
+```ts
+const biasedPorts = defineBoundary({
+  name: 'biased-ports',
+  paramsSchema: z.strictObject({ bias: z.number().min(-1).max(1) }),
+  boundaryPoint: (rect, toward, { bias }) => [
+    toward[0] < rect.x ? rect.x - rect.width / 2 : rect.x + rect.width / 2,
+    rect.y + (rect.height / 2) * bias,
+  ],
+});
+```
+
+The node selects that definition with JSON-safe `{ type, params }`:
+
+```tsx
+<Node id="io" position={[0, 0]} boundary={{ type: 'biased-ports', params: { bias: 0.5 } }} />
+```
+
+## Inject and use
+
+Both hosts use the exported `horizontalPorts` definition above. These snippets show registration and selection; the preview above demonstrates connections to the left and right ports.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import type { FC } from 'react';
+import { horizontalPorts } from './horizontal-ports';
+
+const Demo: FC = () => (
+  <Layout extensions={{ boundaries: [horizontalPorts] }}>
+    <Node id="io" position={[0, 0]} boundary="horizontal-ports">
+      IO
+    </Node>
+  </Layout>
+);
+export default Demo;
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { node, scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+import { horizontalPorts } from './horizontal-ports';
+
+const input = scene({
+  children: [node('io', { position: [0, 0], text: 'IO', boundary: 'horizontal-ports' })],
+});
+const view = mount(document.getElementById('diagram')!, input, { compile: { boundaries: [horizontalPorts] } });
+```
+
+Provide a `diagram` container and call `view.dispose()` before removing it.
+
+</DocTab>
+</DocTabs>
+
+## Errors and limitations
+
+- **Duplicate key**: custom definitions cannot replace built-ins, and one injection array cannot contain duplicate names; registry construction throws before compilation proceeds.
+- **Empty key**: `name` must be a non-empty string.
+- **Unknown name**: the error lists registered boundaries and shapes and points to the `boundaries` / `shapes` options.
+- **Invalid params**: `paramsSchema` runs before any geometry function and reports the corresponding `.boundary.params` IR path.
+- **Invalid resolved rect**: a non-finite or non-positive `resolveRect` result, or an exception inside the hook, reports the boundary name and Node IR path.
+- **Unknown anchor**: `anchor` may be omitted or return `undefined`; standard directions fall back to the node box, while shape-specific names still resolve through the visual shape.
+- **No drawing responsibility**: a boundary cannot change node size, shape, or content; use a Shape Definition or Node props for those concerns.
+
+Two common failures throw immediately during compilation:
+
+```tsx
+<Node id="io" position={[0, 0]} boundary={{ type: 'biased-ports', params: { bias: 2 } }} />
+```
+
+```ts
+compileToScene(ir, { boundaries: [biasedPorts, biasedPorts] });
+```
+
+The first violates `paramsSchema`; the second registers the same key twice.
+
+## Related props
+
+These are the members most often used to define, inject, and reference a custom boundary. See the [API reference](/kernel/components/node/api-reference) for the full contract.
+
+<ComponentProps
+  items={[
+    {
+      name: 'defineBoundary',
+      kind: 'function',
+      type: '<TParams extends JsonObject>(definition: BoundaryDefinitionInput<TParams>) => BoundaryDefinition',
+      description: 'Creates a registrable boundary definition',
+    },
+    {
+      name: 'BoundaryDefinitionInput',
+      kind: 'type',
+      type: 'BoundaryDefinitionInput<TParams>',
+      description: 'The input contract for boundary authors',
+    },
+    {
+      name: 'BoundaryDefinition',
+      kind: 'type',
+      type: 'BoundaryDefinition',
+      description: 'The boundary definition consumed by registries and compilation',
+    },
+    {
+      name: 'Layout.extensions.boundaries',
+      kind: 'property',
+      type: 'ReadonlyArray<BoundaryDefinition>',
+      description: 'The React-host entry point for injecting boundary definitions',
+    },
+    {
+      name: 'Node.boundary',
+      kind: 'property',
+      type: 'IRBoundary',
+      description: 'References a registered boundary by its `type` and parameters',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Choose positions, anchors, and connection surfaces',
+      url: '/kernel/components/node/extend',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand sizing, text, and reference timing',
+      url: '/kernel/components/node/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public entries, types, and extension contracts',
+      url: '/kernel/components/node/api-reference',
+    },
+  ]}
+/>

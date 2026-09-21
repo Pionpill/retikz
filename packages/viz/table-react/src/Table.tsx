@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import type { LayoutProps } from '@retikz/react';
+import type { LayoutExtensions, LayoutProps } from '@retikz/react';
 import type { IRTable, LowerTablesOptions, TableLayoutManifest } from '@retikz/table';
 import type { InputTable } from '@retikz/table-vanilla';
 import { TableInputEmbedAdapter } from '@retikz/table-vanilla';
@@ -12,7 +12,7 @@ import { TableRuntimeView } from './table-view';
 
 /** Table standalone 入口复用的 Kernel Layout 宿主 props */
 export type TableLayoutHostProps = Pick<
-  LayoutProps,
+  LayoutProps & LayoutExtensions,
   | 'handlers'
   | 'width'
   | 'height'

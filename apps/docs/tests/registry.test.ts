@@ -43,7 +43,6 @@ describe('SCHEMA_REGISTRY', () => {
       SceneSchema: { schema: SceneSchema },
       ContextualColorSchema: {
         schema: ContextualColorSchema,
-        url: '/kernel/reference/schema/style#contextualcolorschema',
       },
       LayoutInspectSpacingOptionsSchema: { schema: LayoutInspectSpacingOptionsSchema },
       TableSchema: { schema: TableSchema },
@@ -78,22 +77,20 @@ describe('SCHEMA_REGISTRY', () => {
     });
   });
 
-  it('each entry has non-empty schema / label / url', () => {
+  it('each entry has a schema and label, with an optional documentation URL', () => {
     for (const [name, entry] of Object.entries(SCHEMA_REGISTRY)) {
       expect(entry.schema, name).toBeDefined();
       expect(entry.label, name).toMatch(/^[A-Z]/);
-      expect(entry.url, name).toMatch(
-        /^\/.+\/(?:(?:reference|contract|standard|graph|packages)\/.+|flow\/basic(?:#.+)?)$/,
-      );
+      if (entry.url !== undefined) expect(entry.url, name).toMatch(/^\/.+/);
     }
   });
 
   it('lookupSchema resolves a registered schema by identity', () => {
-    expect(lookupSchema(SceneSchema)?.label).toBe('Scene');
-    expect(lookupSchema(CoordinateSchema)?.url).toBe('/kernel/reference/schema/entity#coordinate');
-    expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/reference/schema/path#move');
-    expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/reference/schema/path#axis-line');
-    expect(lookupSchema(RelativeTargetSchema)?.url).toBe('/kernel/reference/schema/path#relative');
+    expect(lookupSchema(SceneSchema)?.label).toBe('SceneSchema');
+    expect(lookupSchema(CoordinateSchema)?.url).toBe('/kernel/components/node/schema-reference#coordinateschema');
+    expect(lookupSchema(MoveStepSchema)?.url).toBe('/kernel/components/path/schema-reference#movestepschema');
+    expect(lookupSchema(AxisLineStepSchema)?.url).toBe('/kernel/components/path/schema-reference#axislinestepschema');
+    expect(lookupSchema(RelativeTargetSchema)?.url).toBeUndefined();
     expect(lookupSchema(LayoutInspectSpacingOptionsSchema)?.url).toBe(
       '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
     );
@@ -109,7 +106,7 @@ describe('SCHEMA_REGISTRY', () => {
     const enSource = readFileSync(resolve(referenceRoot, 'index.en.mdx'), 'utf8');
 
     expect(zhSource).toContain('### LayoutInspectSpacingOptionsSchema');
-    expect(zhSource).toContain('<ZodSchema\n  name="LayoutInspectSpacingOptionsSchema"');
+    expect(zhSource).toMatch(/<ZodSchema\s+name="LayoutInspectSpacingOptionsSchema"/);
     expect(zhSource).toContain("padding: '是否为容器已解析的 padding 绘制阴影。'");
     expect(zhSource).toContain("margin: '是否为子项已解析的 margin 绘制阴影。'");
     expect(enSource).toContain('### LayoutInspectSpacingOptionsSchema');
@@ -120,11 +117,11 @@ describe('SCHEMA_REGISTRY', () => {
     'keeps every Viz %s contract registry URL on a documented English heading',
     moduleId => {
       const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
-        entry.url.startsWith(`/viz/${moduleId}/reference/`),
+        entry.url?.startsWith(`/viz/${moduleId}/reference/`),
       );
 
       for (const [name, entry] of entries) {
-        const [route, anchor] = entry.url.split('#');
+        const [route, anchor] = entry.url!.split('#');
         expect(anchor, name).toBeTruthy();
         const source = readFileSync(
           resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),
@@ -141,11 +138,11 @@ describe('SCHEMA_REGISTRY', () => {
 
   it('keeps every Standard composite registry URL on a documented English heading', () => {
     const entries = Object.entries(SCHEMA_REGISTRY).filter(([, entry]) =>
-      /^\/library\/standard\/(grid|axes|frame|surface|legend)(#|\/|$)/.test(entry.url),
+      /^\/library\/standard\/(grid|axes|frame|surface|legend)(#|\/|$)/.test(entry.url ?? ''),
     );
 
     for (const [name, entry] of entries) {
-      const [route, anchor] = entry.url.split('#');
+      const [route, anchor] = entry.url!.split('#');
       expect(anchor, name).toBeTruthy();
       const source = readFileSync(
         resolve(process.cwd(), 'src/modules/docs/contents', route.slice(1), 'index.en.mdx'),

@@ -55,6 +55,6 @@ const ir: IRScene = {
   ],
 };
 
-const Demo: FC = () => <Layout ir={ir} composites={[pipeline]} />;
+const Demo: FC = () => <Layout ir={ir} extensions={{ composites: [pipeline] }} />;
 
 export default Demo;

@@ -82,22 +82,11 @@ const asLayerStack = (scene: InputScene): Array<InputLayer> => {
     .map(({ entry }) => entry);
 };
 
-/** 注册公开 identity，重复值会破坏更新定位 */
-const registerIdentity = (
-  id: string | undefined,
-  parentId: string,
-  path: Array<string>,
-  ctx: NormalizeContext,
-): void => {
+/** 注册公开 identity，同一命名空间的后定义覆盖此前定位 */
+const registerIdentity = (id: string | undefined, parentId: string, ctx: NormalizeContext): void => {
   if (id === undefined) return;
   const key = ctx.identityFrame.length === 0 ? id : `${ctx.identityFrame}/${id}`;
-  if (ctx.identityIndex.has(key)) {
-    throw new RetikzVanillaError(
-      RetikzVanillaErrorCode.Normalize,
-      `normalizeScene: duplicate identity "${id}" at ${path.join(' > ')}`,
-    );
-  }
-  ctx.identityIndex.set(key, path);
+  ctx.identityIndex.set(key, [...ctx.path, id]);
   ctx.parentIndex.set(key, parentId);
 };
 
@@ -173,7 +162,7 @@ const validateAdapterOutputIdentities = (
   const identity = readIdentity(child);
   const reusesEmbedIdentity = identity === ctx.embedId && !hasReusedEmbedIdentity;
   if (identity !== undefined && !reusesEmbedIdentity) {
-    registerIdentity(identity, ctx.parentId, [...ctx.path, identity], ctx);
+    registerIdentity(identity, ctx.parentId, ctx);
   }
   const nextHasReusedEmbedIdentity = hasReusedEmbedIdentity || reusesEmbedIdentity;
   if (!isCoreScope(child)) return nextHasReusedEmbedIdentity;
@@ -311,7 +300,7 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
     if (reusedEmbedIdentity !== undefined && reusedEmbedIdentity.id === input.id && !reusedEmbedIdentity.used) {
       reusedEmbedIdentity.used = true;
     } else {
-      registerIdentity(input.id, ctx.parentId, [...ctx.path, input.id], ctx);
+      registerIdentity(input.id, ctx.parentId, ctx);
     }
     return normalizeEmbed(input, ctx);
   }
@@ -326,7 +315,7 @@ const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
   ) {
     reusedEmbedIdentity.used = true;
   } else {
-    registerIdentity(identity, ctx.parentId, identity === undefined ? ctx.path : [...ctx.path, identity], ctx);
+    registerIdentity(identity, ctx.parentId, ctx);
   }
   if (isInputPath(input)) {
     const path = normalizePath(input);
