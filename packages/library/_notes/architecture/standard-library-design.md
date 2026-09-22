@@ -1,4 +1,4 @@
-# Standard 拓展库设计
+# Standard 标准库设计
 
 > **状态：长期边界已确认；Surface 为 Accepted 扩展。** Standard 三包提供 Grid、Axes、Frame、Legend 等通用绘图能力；Flex / GridLayout / OverlayLayout 已迁入独立 Layout package family，不再属于 Standard。任意 child 的 renderer-neutral Surface 由当前版本 v0.1 alpha.3 冻结。
 >
@@ -8,7 +8,7 @@
 
 ## 定位
 
-Standard 是 Retikz 在 Core 之上的官方绘图拓展包家族。它横向提供可按需安装的 definition、factory、简单 Tier 2 composite 与 Sugar，不把这些能力变成 Core 默认内置，也不建立 Standard 私有 IR、Scene、renderer 或全局 registry。
+Standard 是 Retikz 的标准绘图包家族，拥有通用 Tier 2 composite、对应持久化输入、factory、lowering 与动画效果纯工厂。官方 Core provider 实现由独立的 Extension 包拥有；现行边界见 [ADR-032](../decisions/standard/v0/v0.1/032-extension-package-boundary.md)。
 
 “Standard”表示官方维护、跨领域可复用和拥有稳定公共契约，不表示所有通用能力都必须进入同一包。形成独立纵向模型、求解、artifact 与工具链的能力应拥有自己的 package family；排版布局因此由 Layout 主责。
 
@@ -22,7 +22,7 @@ Standard 是 Retikz 在 Core 之上的官方绘图拓展包家族。它横向提
 4. 持久化输入保持 JSON-safe，React 与 Vanilla 表达同一宿主无关语义
 5. 至少具有两个独立消费场景，或属于官方维护的通用扩展实现
 
-Arrow、Shape、Boundary、Pattern、PathGenerator 等 Definition 和 Grid、Axes、Frame、Legend、Surface 等领域无关绘图 composite 可以进入 Standard。数据解析、图式角色、关系模型、排版 solver、算法布局、编辑器状态与 renderer 执行不得进入 Standard。
+Grid、Axes、Frame、Legend、Surface 等领域无关绘图 composite 可以进入 Standard。Arrow、Node Shape、Clip、Ribbon 等直接实现 Core 扩展契约的 Definition 归 Extension。数据解析、图式角色、关系模型、排版 solver、算法布局、编辑器状态与 renderer 执行不得进入 Standard。
 
 ## 横向扩展与原子能力
 
@@ -42,7 +42,7 @@ Standard 不通过自己的 barrel 转手导出 Layout API，不保留 `@retikz/
 
 ```text
 @retikz/standard
-  ├─ 官方 definition / factory / composite
+  ├─ Tier 2 definition / factory / composite 与动画效果工厂
   ├─ JSON-safe schema、Definition 与 lowering
   └─ 按需 Core capability contribution
 
@@ -60,7 +60,7 @@ Plot、Table、Graph 等领域包先把 channel、scale、表格规则、图式�
 
 新增 Standard 能力继续由对应 milestone ADR 冻结公共契约、Definition、lowering、adapter、测试与文档。Surface 的现行 Accepted 契约见 [v0.1 ADR-022](../decisions/standard/v0/v0.1/022-arbitrary-child-surface.md)。能力迁出时，旧 ADR 原地保留并标记 Superseded，由新 owner ADR 建立后继映射；不保留跨 owner alias。
 
-文档站在 Library 模块的 `Standard · 拓展` 分组维护 Standard 自己的介绍、组件、参考与更新日志，不承载 Layout 页面或 Layout release group 日志。
+文档站在 Library 模块的 `Standard · 标准包` 分组维护自身的简介、组件、参考与更新日志；Extension 与 Layout 分别拥有独立分组。
 
 ## 非目标
 
