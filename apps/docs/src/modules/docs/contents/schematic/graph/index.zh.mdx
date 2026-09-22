@@ -1,50 +1,34 @@
 ---
-title: Graph
-description: 用可选 Graph Scope、Block、Group、Entity、Relation 与任意 Core 内容建立可组合图式。
+title: Graph · 图式
+description: 用 Graph、Block、Group、Entity 与 Relation 组合可读、可引用的结构化图式。
 ---
 
-Graph 是一个可选的上下文薄壳。它复用 Core `Scope` 的完整能力，并通过 `graphDefaults` 为可见的 Entity、Relation、Group 与 Block 后代提供默认值，通过 `graphRules` 为 Entity / Relation 提供条件覆盖；自动布局、routing 算法和 renderer 不属于 Graph。
+Graph 用一组可组合组件描述领域中的对象、边界和关系。`Entity` 表达对象，`Relation` 负责可引用的连接，`Group` 划出任意内容的可见边界，`Block` 组织代码和工程对象；可选的 `Graph` 根节点把它们放进同一个局部语义和样式上下文。
 
-Block、Group、Entity 与 Relation 也是独立的 Tier 2 composite，可以直接放在 Layout、Scope 或其它接受 Core child 的位置。Block 用固定 Header、Section、Row 与 Cell 表达代码和工程对象；Graph 不维护成员列表或 identity index，Relation 的引用与重复 id 诊断统一交给 Core namespace。
-
-`Graph.style` 设置后代绘图级联样式，`Graph.defaults` 设置具名默认值通道；独立渲染与嵌入使用相同契约。`style` 不接受宿主 CSS，需要 CSS 时设置外层 DOM 或 `Layout.style`。
-
-## 两种宿主模式
-
-Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一个 Scene 宿主，不需要再包一层 Layout：
-
-```tsx
-<Graph>
-  <Entity id="service" role="activity" position={[120, 80]}>
-    服务
-  </Entity>
-</Graph>
-```
-
-如果外层已经有 Layout，Graph 只下沉为影响局部内容的一个 Scope，不创建第二个 SVG 或 Canvas：
-
-```tsx
-<Layout>
-  <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>
-    <Entity role="activity" position={[120, 80]}>
-      局部内容
-    </Entity>
-  </Graph>
-</Layout>
-```
-
-`theme`、`defaults.node`、`defaults.path`、`defaults.label`、`defaults.arrow`、`defaults.reset`、`transforms`、`placement`、`zIndex`、`clip` 等字段直接属于 `IRGraph`，并沿用 Core Scope 语义。`width`、`height`、renderer、runtime 与 DOM 属性只属于 standalone Scene 宿主；嵌入 Graph 时应把这些属性放到外层 Layout。
+Graph 不自动排布成员或规划连线。为对象给出位置后，可以按需接入专门的布局或连线能力。
 
 ## 职责一览
 
-| 成员       | 职责                                                       | 不负责                        |
-| ---------- | ---------------------------------------------------------- | ----------------------------- |
-| Graph      | Core Scope 公共面与局部 Graph 默认值与规则                 | 成员索引、排布、routing       |
-| Block      | 结构化对象、局部 Flex 排版与可寻址 Section / Row           | Port 模型、执行、自动 routing |
-| Group      | 任意内容的可见边界、caption 与 boundary labels             | 自动排布、routing、避障       |
-| Entity     | 节点语义，并独立下沉为普通 Core Node                       | 生成 id、承载任意绘图 child   |
-| Relation   | Core NodeTarget endpoint、关系语义，并独立下沉为 Core Path | Graph 成员校验、自动 routing  |
-| Core child | 与 Entity、Relation 按作者顺序自由组合                     | 消费 Graph-local 语义规则     |
+| 成员     | 职责                               | 何时阅读                       |
+| -------- | ---------------------------------- | ------------------------------ |
+| Graph    | 默认值、条件样式与 Theme 上下文    | 多个图式组件需要共享规则时     |
+| Entity   | 具有 role、文本和位置的领域对象    | 描述图中的对象                 |
+| Relation | 指向已命名对象的关系与连接语义     | 连接两个对象或可见边界         |
+| Group    | 任意内容的可见边界、caption 与标签 | 表达范围、阶段或责任边界       |
+| Block    | 代码和工程对象的结构化纵向内容     | 需要 Header、Section 与 Row 时 |
+
+## 整体认识
+
+下面的最小图式先声明两个可引用的 Entity，再用 Relation 表达调用。它展示 Graph 的基本协作：对象保留自己的语义与位置，关系只引用对象 id；后续可以用 Group 表达边界，或用 Block 替换需要结构化内容的对象。
+
+<ComponentPreview files="graph-overview" hideCode type="illustration" />
+
+## 从哪里开始
+
+- 第一次创建一张对象关系图，从[快速开始](/schematic/graph/get-start)完成一个可运行的最小闭环
+- 需要判断 Graph 是否适合当前问题时，先读[简介](/schematic/graph/introduction)
+- 已经知道要表达的对象类型时，直接进入 Entity、Relation、Group 或 Block
+- 需要自动排布、避障或 routing 时，选择对应的专门能力
 
 ## 章节内容
 
@@ -52,27 +36,27 @@ Graph 作为顶层 React 组件时，和 Layout、Plot、Table 一样建立一�
   items={[
     {
       title: 'Block',
-      description: '代码与工程对象的结构内容和局部连接点',
+      description: '用 Header、Section 和 Row 组织代码与工程对象',
       url: '/schematic/graph/block',
     },
     {
       title: 'Group',
-      description: '可嵌套外框、caption 与 Core boundary labels',
+      description: '为任意内容建立可嵌套的可见边界',
       url: '/schematic/graph/group',
     },
     {
       title: 'Entity',
-      description: '独立节点语义、文本、位置与扩展',
+      description: '定义对象的 role、文本、位置与扩展',
       url: '/schematic/graph/entity',
     },
     {
       title: 'Relation',
-      description: '通用引用端点、方向、route 与扩展',
+      description: '连接可引用对象并表达关系语义',
       url: '/schematic/graph/relation',
     },
     {
       title: 'Graph API 参考',
-      description: 'Source schema、Scope 公共面与 Graph family adapter',
+      description: '查询 Source schema 与三个 authoring 入口',
       url: '/schematic/graph/api-reference',
     },
   ]}

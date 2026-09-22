@@ -375,6 +375,39 @@ describe('@retikz/vanilla InputScene', () => {
     expect(makeDefinition).not.toHaveBeenCalled();
   });
 
+  it('为匿名 embed 分配稳定且互异的运行时 identity，而不写入 Source', () => {
+    const identities: Array<string> = [];
+    const adapter: InputEmbedAdapter<{ text: string }> = {
+      kind: 'anonymous-output',
+      lower: (props, context) => {
+        identities.push(context.id);
+        return {
+          node: { namespace: 'fixture', type: 'box', text: props.text },
+          providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
+        };
+      },
+    };
+    const createInput = () =>
+      scene([
+        { type: 'embed', kind: 'anonymous-output', props: { text: 'left' } },
+        { type: 'embed', kind: 'anonymous-output', props: { text: 'right' } },
+      ]);
+
+    const first = normalizeScene(createInput(), { adapters: [adapter] });
+    const firstIdentities = [...identities];
+    identities.length = 0;
+    const second = normalizeScene(createInput(), { adapters: [adapter] });
+
+    expect(firstIdentities).toHaveLength(2);
+    expect(new Set(firstIdentities)).toHaveLength(2);
+    expect(identities).toEqual(firstIdentities);
+    expect(first.ir).toEqual(second.ir);
+    expect(first.ir.children).toEqual([
+      { namespace: 'fixture', type: 'box', text: 'left' },
+      { namespace: 'fixture', type: 'box', text: 'right' },
+    ]);
+  });
+
   it('adapter 输出身份纳入 runtime metadata', () => {
     const adapter: InputEmbedAdapter<{ label: string }> = {
       kind: 'named-output',

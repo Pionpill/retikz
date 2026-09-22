@@ -264,7 +264,6 @@ type LibraryConversionState = {
 };
 
 type GraphConversionState = {
-  counts: Record<GraphKind, number>;
   adapters: Set<GraphKind>;
 };
 
@@ -294,10 +293,9 @@ const nextLibraryId = (kind: LibraryKind, state: LibraryConversionState, authore
   return embedId;
 };
 
-const nextGraphId = (kind: GraphKind, state: GraphConversionState): string => {
-  state.counts[kind] += 1;
+/** 登记转换 Graph Source 所需的 Vanilla adapter */
+const registerGraphAdapter = (kind: GraphKind, state: GraphConversionState): void => {
   state.adapters.add(kind);
-  return `preview-${kind}-${state.counts[kind]}`;
 };
 
 const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: LibraryConversionState): void => {
@@ -588,7 +586,8 @@ const convertGraphChild = (
         return convertPreviewChild(nested, libraryState, state);
       };
       const children = input.children?.map(convertGraphInputChild);
-      return graph(nextGraphId('graph', state), {
+      registerGraphAdapter('graph', state);
+      return graph({
         ...input,
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         ...(children === undefined ? {} : { children }),
@@ -602,7 +601,8 @@ const convertGraphChild = (
       const children: ReadonlyArray<InputGroupChild> | undefined = sourceChildren?.map(nested =>
         convertPreviewChild(nested, libraryState, state),
       );
-      return group(nextGraphId('group', state), {
+      registerGraphAdapter('group', state);
+      return group({
         ...input,
         ...(children === undefined ? {} : { children }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
@@ -615,7 +615,8 @@ const convertGraphChild = (
       const children: ReadonlyArray<InputBlockChild> | undefined = sourceChildren?.map(nested =>
         convertPreviewChild(nested, libraryState, state),
       );
-      return block(nextGraphId('block', state), {
+      registerGraphAdapter('block', state);
+      return block({
         ...input,
         ...(children === undefined ? {} : { children }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
@@ -625,7 +626,8 @@ const convertGraphChild = (
       const { namespace: _namespace, type: _type, icon, trail, ...input } = BlockHeaderSchema.parse(child);
       void _namespace;
       void _type;
-      return blockHeader(nextGraphId('blockHeader', state), {
+      registerGraphAdapter('blockHeader', state);
+      return blockHeader({
         ...input,
         ...(icon === undefined ? {} : { icon: convertPreviewChild(icon, libraryState, state) }),
         ...(trail === undefined ? {} : { trail: convertPreviewChild(trail, libraryState, state) }),
@@ -644,7 +646,8 @@ const convertGraphChild = (
       const children: ReadonlyArray<InputGraphChild> | undefined = sourceChildren?.map(nested =>
         convertPreviewChild(nested, libraryState, state),
       );
-      return blockSection(nextGraphId('blockSection', state), {
+      registerGraphAdapter('blockSection', state);
+      return blockSection({
         ...input,
         ...(children === undefined ? {} : { children }),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
@@ -656,7 +659,8 @@ const convertGraphChild = (
         const { namespace: _namespace, type: _type, ...input } = row;
         void _namespace;
         void _type;
-        return blockRow(nextGraphId('blockRow', state), {
+        registerGraphAdapter('blockRow', state);
+        return blockRow({
           ...input,
           graphThemeStyles: PreviewThemeDefinitionBundle.graph,
         });
@@ -664,7 +668,8 @@ const convertGraphChild = (
       const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
       void _namespace;
       void _type;
-      return blockRow(nextGraphId('blockRow', state), {
+      registerGraphAdapter('blockRow', state);
+      return blockRow({
         ...input,
         ...(sourceChildren === undefined
           ? {}
@@ -675,12 +680,14 @@ const convertGraphChild = (
       });
     }
     case 'entity':
-      return entity(nextGraphId('entity', state), {
+      registerGraphAdapter('entity', state);
+      return entity({
         ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     case 'relation':
-      return relation(nextGraphId('relation', state), {
+      registerGraphAdapter('relation', state);
+      return relation({
         ...relationPreviewAuthoringInput(RelationSchema.parse(child)),
         graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
@@ -805,16 +812,6 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ids,
   };
   const graphState: GraphConversionState = {
-    counts: {
-      graph: 0,
-      group: 0,
-      block: 0,
-      blockHeader: 0,
-      blockSection: 0,
-      blockRow: 0,
-      entity: 0,
-      relation: 0,
-    },
     adapters: new Set(),
   };
   registerPreviewIds(preview.ir.children, libraryState);

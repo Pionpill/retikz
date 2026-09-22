@@ -1,50 +1,34 @@
 ---
 title: Graph
-description: Compose an optional Graph Scope, Block, Group, Entity, Relation, and arbitrary Core content.
+description: Compose readable, referenceable structured diagrams with Graph, Block, Group, Entity, and Relation.
 ---
 
-Graph is an optional context shell. It reuses the complete Core `Scope` surface and adds `graphDefaults` for visible Entity, Relation, Group, and Block descendants, plus conditional `graphRules` for Entity and Relation. Automatic layout, routing algorithms, and rendering remain outside Graph.
+Graph uses composable components to describe domain objects, boundaries, and relationships. `Entity` describes an object, `Relation` connects referenceable targets, `Group` draws a visible boundary around arbitrary content, and `Block` organizes code and engineering objects. An optional `Graph` root gives them one local semantic and styling context.
 
-Block, Group, Entity, and Relation are independent Tier 2 composites that can appear directly in Layout, Scope, or any other Core-child position. Block models code and engineering objects through a fixed Header, Section, Row, and Cell structure. Graph maintains neither a member collection nor an identity index; Core namespace owns references and duplicate-id diagnostics.
-
-`Graph.style` sets cascading drawing styles, and `Graph.defaults` sets named descendant defaults. Standalone and embedded Graph use the same contract. `style` does not accept host CSS; apply CSS to an outer DOM element or `Layout.style`.
-
-## Two host modes
-
-As a top-level React component, Graph creates one Scene host like Layout, Plot, or Table. It does not need an outer Layout:
-
-```tsx
-<Graph>
-  <Entity id="service" role="activity" position={[120, 80]}>
-    Service
-  </Entity>
-</Graph>
-```
-
-When an outer Layout already exists, Graph lowers to one Scope that affects only local content and creates no second SVG or Canvas:
-
-```tsx
-<Layout>
-  <Graph transforms={[{ kind: 'translate', x: 80, y: 40 }]}>
-    <Entity role="activity" position={[120, 80]}>
-      Local content
-    </Entity>
-  </Graph>
-</Layout>
-```
-
-Fields such as `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `defaults.arrow`, `defaults.reset`, `transforms`, `placement`, `zIndex`, and `clip` belong directly to `IRGraph` and retain Core Scope semantics. `width`, `height`, renderer, runtime, and DOM props belong only to the standalone Scene host; move them to the outer Layout when Graph is embedded.
+Graph does not arrange members or plan connections automatically. After giving objects positions, add a focused layout or routing capability when needed.
 
 ## Responsibilities
 
-| Member     | Responsibility                                                        | Does not own                                 |
-| ---------- | --------------------------------------------------------------------- | -------------------------------------------- |
-| Graph      | Core Scope surface and local Graph defaults and rules                 | Member indexes, layout, or routing           |
-| Block      | Structured objects, local Flex layout, and addressable Section / Row  | Port models, execution, or automatic routing |
-| Group      | Visible arbitrary-content boundary, caption, and boundary labels      | Automatic layout, routing, or avoidance      |
-| Entity     | Node semantics and independent lowering to one Core Node              | Generated ids or arbitrary drawing children  |
-| Relation   | Core NodeTarget endpoints, relation semantics, and Core Path lowering | Graph membership checks or automatic routing |
-| Core child | Free author-ordered composition with Entity and Relation              | Graph-local semantic rules                   |
+| Member   | Responsibility                                       | When to read                                       |
+| -------- | ---------------------------------------------------- | -------------------------------------------------- |
+| Graph    | Defaults, conditional style rules, and Theme context | Several Graph components share rules               |
+| Entity   | A domain object with role, text, and position        | Describing an object in the diagram                |
+| Relation | A relationship that targets named objects            | Connecting two objects or visible boundaries       |
+| Group    | A visible boundary, caption, and labels              | Showing a scope, phase, or responsibility boundary |
+| Block    | Structured vertical content for engineering objects  | You need Header, Section, and Row                  |
+
+## The whole picture
+
+This minimal diagram first declares two referenceable Entities, then connects them with a Relation. It shows Graph's basic collaboration: objects retain their own semantics and positions while a relationship only refers to their ids. A Group can later establish a boundary, or a Block can replace an object that needs structured content.
+
+<ComponentPreview files="graph-overview" hideCode type="illustration" />
+
+## Where to start
+
+- Build your first object-relationship diagram in the [Quick start](/schematic/graph/get-start)
+- Read the [Introduction](/schematic/graph/introduction) to decide whether Graph fits the problem
+- When you know what needs describing, enter Entity, Relation, Group, or Block directly
+- For automatic layout, obstacle avoidance, or routing, choose the focused capability for that job
 
 ## Chapters
 
@@ -52,27 +36,27 @@ Fields such as `theme`, `defaults.node`, `defaults.path`, `defaults.label`, `def
   items={[
     {
       title: 'Block',
-      description: 'Structured code and engineering objects with local connection targets',
+      description: 'Organize code and engineering objects with Header, Section, and Row',
       url: '/schematic/graph/block',
     },
     {
       title: 'Group',
-      description: 'Nestable shells, captions, and Core boundary labels',
+      description: 'Create nestable visible boundaries around arbitrary content',
       url: '/schematic/graph/group',
     },
     {
       title: 'Entity',
-      description: 'Independent node semantics, text, placement, and extensions',
+      description: 'Define object roles, text, placement, and extensions',
       url: '/schematic/graph/entity',
     },
     {
       title: 'Relation',
-      description: 'General references, direction, routes, and extensions',
+      description: 'Connect referenceable objects and express relationship semantics',
       url: '/schematic/graph/relation',
     },
     {
       title: 'Graph API Reference',
-      description: 'Source schemas, Scope surface, and Graph-family adapters',
+      description: 'Look up Source schemas and all three authoring entries',
       url: '/schematic/graph/api-reference',
     },
   ]}
