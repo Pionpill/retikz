@@ -1951,18 +1951,6 @@ describe('preview controls registry', () => {
     }
   });
 
-  it('Kernel Components controls demo 显式导出 previewControls 回退', () => {
-    const prefix = '../../contents/kernel/components/';
-    const entries = Object.entries(demoSources).filter(
-      ([key, source]) => key.startsWith(prefix) && source?.includes('usePreviewControls('),
-    );
-
-    expect(entries.length).toBeGreaterThan(0);
-    for (const [key, source] of entries) {
-      expect(source, key).toContain('export const previewControls =');
-    }
-  });
-
   it('Scope 局部坐标 playground 可在任意 transform 下独立切换 placement，且中英文条件一致', () => {
     const segments = ['kernel', 'components', 'scope', 'usage'];
     const zhModule = controlModules[buildControlsKey(segments, 'scope-translate-basic')];

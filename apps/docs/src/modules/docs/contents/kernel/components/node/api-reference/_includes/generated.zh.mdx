@@ -392,43 +392,38 @@ export type InputNodeLabelPosition =
 ### coordinate
 
 <p>
-  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={27}>
+  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={12}>
     创建作者侧命名坐标输入
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const coordinate: (id: string, config: Omit<InputCoordinate, 'type' | 'id'>) => InputCoordinate;
+export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
 ```
 
 #### 参数
 
-| 参数     | 类型                                    | 说明 |
-| -------- | --------------------------------------- | ---- |
-| `id`     | `string`                                | —    |
-| `config` | `Omit<InputCoordinate, 'type' \| 'id'>` | —    |
+| 参数     | 类型                            | 说明 |
+| -------- | ------------------------------- | ---- |
+| `config` | `Omit<InputCoordinate, 'type'>` | —    |
 
 ### node
 
 <p>
-  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={10}>
-    创建作者侧节点输入，支持 id 简写与完整配置
+  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={9}>
+    创建作者侧节点输入，身份由配置中的 id 声明
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const node: (
-  idOrConfig?: string | Omit<InputNode, 'type' | 'id'>,
-  maybeConfig?: Omit<InputNode, 'type' | 'id'>,
-) => InputNode;
+export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
 ```
 
 #### 参数
 
-| 参数          | 类型                                        | 说明 |
-| ------------- | ------------------------------------------- | ---- |
-| `idOrConfig`  | `string \| Omit<InputNode, 'type' \| 'id'>` | —    |
-| `maybeConfig` | `Omit<InputNode, 'type' \| 'id'>`           | —    |
+| 参数     | 类型                      | 说明 |
+| -------- | ------------------------- | ---- |
+| `config` | `Omit<InputNode, 'type'>` | —    |
 
 ## `@retikz/core`
 

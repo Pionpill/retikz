@@ -391,43 +391,38 @@ export type InputNodeLabelPosition =
 ### coordinate
 
 <p>
-  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={27}>
+  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={12}>
     Create authoring input for a named coordinate
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const coordinate: (id: string, config: Omit<InputCoordinate, 'type' | 'id'>) => InputCoordinate;
+export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
 ```
 
 #### Parameters
 
-| Parameter | Type                                    | Description |
-| --------- | --------------------------------------- | ----------- |
-| `id`      | `string`                                | —           |
-| `config`  | `Omit<InputCoordinate, 'type' \| 'id'>` | —           |
+| Parameter | Type                            | Description |
+| --------- | ------------------------------- | ----------- |
+| `config`  | `Omit<InputCoordinate, 'type'>` | —           |
 
 ### node
 
 <p>
-  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={10}>
-    Create node authoring input with an ID shorthand or a complete configuration
+  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={9}>
+    Create node authoring input with identity declared by id in the configuration
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const node: (
-  idOrConfig?: string | Omit<InputNode, 'type' | 'id'>,
-  maybeConfig?: Omit<InputNode, 'type' | 'id'>,
-) => InputNode;
+export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
 ```
 
 #### Parameters
 
-| Parameter     | Type                                        | Description |
-| ------------- | ------------------------------------------- | ----------- |
-| `idOrConfig`  | `string \| Omit<InputNode, 'type' \| 'id'>` | —           |
-| `maybeConfig` | `Omit<InputNode, 'type' \| 'id'>`           | —           |
+| Parameter | Type                      | Description |
+| --------- | ------------------------- | ----------- |
+| `config`  | `Omit<InputNode, 'type'>` | —           |
 
 ## `@retikz/core`
 

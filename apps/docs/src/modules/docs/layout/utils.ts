@@ -14,7 +14,7 @@ const VIZ_CHANGELOG_SECTIONS = new Set(['data', 'chart', 'table', 'plot']);
 const SCHEMATIC_CHANGELOG_SECTIONS = new Set(['graph', 'diagram']);
 
 /** Library 内拥有独立更新日志的分区 */
-const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'layout']);
+const LIBRARY_CHANGELOG_SECTIONS = new Set(['standard', 'extension', 'layout']);
 
 /** 文档数据中的稳定图标 id 到 Lucide 组件的唯一映射 */
 const DOC_SIDEBAR_ICONS: Record<DocSidebarIcon, LucideIcon> = {

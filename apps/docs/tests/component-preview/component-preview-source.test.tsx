@@ -197,7 +197,7 @@ describe('ComponentPreview Vanilla source', () => {
 
   it('自动 Core Vanilla view 使用真实 SVG 并固定 renderer', async () => {
     const props = await renderPreview(
-      ['kernel', 'components', 'effects', 'custom-animation'],
+      ['kernel', 'visual', 'animation', 'custom-animation'],
       <ComponentPreview files="custom-property" />,
     );
 

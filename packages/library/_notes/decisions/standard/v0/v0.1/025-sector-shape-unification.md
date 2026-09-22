@@ -7,6 +7,7 @@ keywords: 'Sector、Node、shape、sector、ArcShapeDefinition、ArcShapeProvide
 
 - 状态：Accepted（2026-08-15，Sector 统一定义与公开面收敛完成）
 - 决策日期：2026-08-14
+- 后继决策：[ADR-032](./032-extension-package-boundary.md) 将本文节点形状扩展归属迁至 Extension；Sector 几何契约不变
 - 后继：[ADR-029](./029-shape-composites.md) 已接受将本文中 Kernel React Arc Sugar 的归属迁到 Standard Tier 2；本文节点 Sector 契约不变，设计接受不表示迁移完成
 - 关联：[Standard v0.1 roadmap](./roadmap.md) · [Standard library design](../../../../architecture/standard-library-design.md)
 
@@ -25,7 +26,6 @@ Standard Node shape 同时维护 `arc` 与 `sector` 两套几何定义。两者�
 - 零厚度 Sector 的自动边界使用开放弧的角度投影并夹到起点 / 终点
 - 零厚度 Sector 保留 Sector 的 `center`、`apex`、`centroid`、`outer-arc-mid` 等 anchor 命名；不增加 Arc 的 `start`、`end`、`arc-mid` 别名
 - `cornerRadius` 仅作用于正厚度 Sector
-- 将仅被 Sector 使用的几何 helper 合并到 `sector.ts`，删除 `sector-geometry.ts`
 - 不保留旧名导出、兼容 alias、migration 或 fallback 路径
 
 ## 长期边界

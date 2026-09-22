@@ -74,8 +74,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   作者侧节点标签边界位置: 'Node label boundary-position authoring input',
   作者侧节点标签位置: 'Node label position authoring input',
   创建作者侧命名坐标输入: 'Create authoring input for a named coordinate',
-  '创建作者侧节点输入，支持 id 简写与完整配置':
-    'Create node authoring input with an ID shorthand or a complete configuration',
+  '创建作者侧节点输入，身份由配置中的 id 声明':
+    'Create node authoring input with identity declared by id in the configuration',
   '连接面命名 anchor 的名字': 'Name of a boundary anchor',
   '类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析':
     'The type accepts strings; Node reference resolution passes only non-center standard directions to the boundary. The visual shape resolves the center and shape-specific names',

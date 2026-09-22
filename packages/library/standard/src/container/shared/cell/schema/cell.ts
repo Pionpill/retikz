@@ -11,7 +11,7 @@ export const CellStyleSchema = StandardPathStrokeStyleSchema.omit({ zIndex: true
     fillOpacity: NodeStyleSchema.shape.fillOpacity,
     font: NodeStyleSchema.shape.font,
     textColor: NodeStyleSchema.shape.textColor,
-    cornerRadius: SurfaceSchema.shape.cornerRadius.removeDefault().optional(),
+    cornerRadius: SurfaceSchema.shape.cornerRadius.unwrap().optional(),
   })
   .describe('Sparse visual overrides for a List or Map cell.');
 
@@ -22,8 +22,8 @@ export const CellLayoutSchema = strictObject({
   height: union([NonNegativeNumberSchema, literal('auto')])
     .optional()
     .describe('Fixed cell border-box height; auto uses the structure natural sizing.'),
-  padding: SurfaceSchema.shape.padding.removeDefault().optional(),
-  overflow: SurfaceSchema.shape.overflow.removeDefault().optional(),
+  padding: SurfaceSchema.shape.padding.unwrap().optional(),
+  overflow: SurfaceSchema.shape.overflow.unwrap().optional(),
 }).describe('Sparse cell dimensions, padding and overflow overrides.');
 
 export const CellSchema = strictObject({
