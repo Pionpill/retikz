@@ -9,7 +9,7 @@ describe('@retikz/layout-vanilla/inspect', () => {
   it('通过可选 helper 输出 FlexLayout 只读辅助图层', () => {
     const source = scene({
       children: [
-        inspectFlexLayout('flex', {
+        inspectFlexLayout({
           children: [
             { kind: LayoutItemKind.Flex, key: 'leaf', child: { type: 'node', position: [0, 0], text: 'leaf' } },
           ],

@@ -66,7 +66,8 @@ import { node, renderToSvgString, scene } from '@retikz/vanilla';
 const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 const input = scene({
   children: [
-    node('formula', {
+    node({
+      id: 'formula',
       text: [{ runs: [{ tex: '\\sin\\alpha = \\frac{1}{2}', fill: 'red' }, { text: ' (length)' }] }],
     }),
   ],

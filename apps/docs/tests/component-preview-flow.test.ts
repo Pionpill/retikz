@@ -53,7 +53,7 @@ describe('Flow Diagram ComponentPreview', () => {
   it('keeps the highest-level Flow Source in executable Vanilla code', () => {
     const code = irToVanillaCode(scene);
 
-    expect(code).toContain("flowDiagram('preview-flow-1'");
+    expect(code).toContain('flowDiagram({');
     expect(code).toContain('FlowDiagramInputEmbedAdapter');
     expect(code).toContain('PreviewThemeDefinitionBundle.flow');
     expect(code).toContain('entities:');
@@ -81,7 +81,7 @@ describe('Flow Diagram ComponentPreview', () => {
       measureText: text => ({ width: text.length * 8, height: 12, ascent: 9, descent: 3 }),
     });
 
-    expect(result.code).toContain("flowDiagram('preview-flow-1'");
+    expect(result.code).toContain('flowDiagram({');
     expect(result.svg).toContain('<svg');
     expect(result.svg).toContain('Source');
     expect(result.svg).toContain('Target');

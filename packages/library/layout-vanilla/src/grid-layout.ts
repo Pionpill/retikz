@@ -26,10 +26,9 @@ export const GridLayoutInputEmbedAdapter: InputEmbedAdapter<InputGridLayout> = {
 };
 
 /** 创建由 Layout 适配器下沉的 Grid 布局嵌入项 */
-export const gridLayout = (id: string, input: InputGridLayout, authoring?: unknown): InputEmbed<InputGridLayout> => ({
+export const gridLayout = (input: InputGridLayout, authoring?: unknown): InputEmbed<InputGridLayout> => ({
   type: 'embed',
   kind: GridLayoutEmbedKind,
-  id,
   props: input,
   ...(authoring === undefined ? {} : { authoring }),
 });

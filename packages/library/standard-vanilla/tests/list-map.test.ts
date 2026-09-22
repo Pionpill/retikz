@@ -9,7 +9,7 @@ describe('List / Map provider assembly', () => {
   it('compiles nested lists inside clipped map cells through the public adapter catalog', () => {
     const input = scene({
       children: [
-        map('authoring-map', {
+        map({
           id: 'map',
           layout: { overflow: 'clip', key: { width: 60 }, value: { width: 100 } },
           style: { key: { fill: 'blue' }, value: { fillOpacity: 0.2 } },
@@ -17,7 +17,7 @@ describe('List / Map provider assembly', () => {
             {
               key: 'key',
               value: {
-                content: list('nested', { items: [{ content: 'value' }] }),
+                content: list({ items: [{ content: 'value' }] }),
               },
             },
           ],
@@ -40,8 +40,8 @@ describe('List / Map provider assembly', () => {
 
 it('assembles both data definitions and clipping from either root adapter', () => {
   for (const child of [
-    map('map', { data: { values: [1, { id: 'a' }] }, layout: { width: 30 } }),
-    list('list', { data: [{ values: [1, 1] }], layout: { height: 20 } }),
+    map({ data: { values: [1, { id: 'a' }] }, layout: { width: 30 } }),
+    list({ data: [{ values: [1, 1] }], layout: { height: 20 } }),
   ]) {
     const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
     const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });

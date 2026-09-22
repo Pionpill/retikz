@@ -30,7 +30,7 @@ describe('irToVanillaCode', () => {
       ]),
     );
 
-    expect(code).toContain("graph('preview-graph-1', {");
+    expect(code).toContain('graph({');
     expect(code).toContain('entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds');
     expect(code).toContain('graphThemeStyles: PreviewThemeDefinitionBundle.graph');
     expect(code).not.toContain('children: []');
@@ -61,10 +61,10 @@ describe('irToVanillaCode', () => {
       ]),
     );
 
-    expect(code).toContain("group('preview-group-1'");
+    expect(code).toContain('group({');
     expect(code).toContain("caption: { title: { text: 'Runtime' } }");
     expect(code).toContain("boundary: 'right'");
-    expect(code).toContain("entity('preview-entity-1'");
+    expect(code).toContain('entity({');
     expect(code).toContain('GroupInputEmbedAdapter');
     expect(code).toContain('EntityInputEmbedAdapter');
     expect(code).not.toContain('GroupDefinition');
@@ -105,16 +105,16 @@ describe('irToVanillaCode', () => {
       ]),
     );
 
-    expect(code).toContain("block('preview-block-1'");
-    expect(code).toContain("blockHeader('preview-blockHeader-1'");
-    expect(code).toContain("blockSection('preview-blockSection-1'");
-    expect(code).toContain("blockRow('preview-blockRow-1'");
+    expect(code).toContain('block({');
+    expect(code).toContain('blockHeader({');
+    expect(code).toContain('blockSection({');
+    expect(code).toContain('blockRow({');
     expect(code).toContain("title: { text: 'User' }");
     expect(code).toContain("description: { text: 'Domain entity' }");
     expect(code).toContain('trail: entity(');
     expect(code).toContain("id: 'user.fields'");
     expect(code).toContain("id: 'user.name'");
-    expect(code).toContain("entity('preview-entity-");
+    expect(code).toContain('entity({');
     expect(code).toContain('BlockInputEmbedAdapter');
     expect(code).toContain('BlockHeaderInputEmbedAdapter');
     expect(code).toContain('BlockSectionInputEmbedAdapter');
@@ -132,16 +132,16 @@ describe('irToVanillaCode', () => {
 
   it('node-codegen：具名 / 匿名 / 字段映射', () => {
     const named = irToVanillaCode(ir([{ type: 'node', id: 'a', position: [0, 0], text: 'A' }]));
-    expect(named).toContain("node('a', { position: [0, 0], text: 'A' })");
+    expect(named).toContain("node({ id: 'a', position: [0, 0], text: 'A' })");
 
     const anon = irToVanillaCode(ir([{ type: 'node', position: [60, 0], text: '匿名' }]));
     expect(anon).toContain("node({ position: [60, 0], text: '匿名' })");
     expect(anon).not.toContain("node('");
   });
 
-  it('coordinate-codegen：coordinate(id, { position })', () => {
+  it('coordinate-codegen：coordinate({ id, position })', () => {
     const code = irToVanillaCode(ir([{ type: 'coordinate', id: 'm', position: [60, 40] }]));
-    expect(code).toContain("coordinate('m', { position: [60, 40] })");
+    expect(code).toContain("coordinate({ id: 'm', position: [60, 40] })");
   });
 
   it('path-way-line：move+line steps → path({ way })', () => {
@@ -280,7 +280,7 @@ describe('irToVanillaCode', () => {
       ]),
     );
     expect(code).toContain("scope({ transforms: [{ kind: 'translate', x: 40, y: 20 }] }, [");
-    expect(code).toContain("node('c'");
+    expect(code).toContain("node({ id: 'c'");
   });
 
   it('scene-viewbox：viewBox → scene config；无则 {}', () => {
@@ -487,7 +487,7 @@ describe('irToVanillaCode fallback', () => {
       ]),
     );
 
-    expect(code).toContain("legend('preview-legend-1'");
+    expect(code).toContain('legend({');
     expect(code).toContain('LegendInputEmbedAdapter');
     expect(code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
     expect(code).not.toContain('LegendDefinition');
@@ -521,7 +521,7 @@ describe('irToVanillaCode fallback', () => {
       ] as never),
     );
 
-    expect(code).toContain("graph('preview-graph-1'");
+    expect(code).toContain('graph({');
     expect(code).toContain("id: 'start'");
     expect(code).toContain("role: 'event'");
     expect(code).toContain("text: 'Start'");
@@ -562,9 +562,9 @@ describe('irToVanillaCode fallback', () => {
       ]),
     );
 
-    expect(code).toContain("entity('preview-entity-1'");
-    expect(code).toContain("relation('preview-relation-1'");
-    expect(code.match(/graph\('preview-graph-/g)).toHaveLength(2);
+    expect(code).toContain('entity({');
+    expect(code).toContain('relation({');
+    expect(code.match(/graph\(\{/g)).toHaveLength(2);
     expect(code).toContain('EntityInputEmbedAdapter');
     expect(code).toContain('RelationInputEmbedAdapter');
     expect(code).toContain('GraphInputEmbedAdapter');

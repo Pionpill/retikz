@@ -97,7 +97,7 @@ describe('Layout documentation demos', () => {
     const preview = buildPreviewIR(LegendWithNestedStandardDemo);
     const vanilla = buildVanillaPreview(preview);
 
-    expect(vanilla.code).toContain("legend('preview-legend-1'");
+    expect(vanilla.code).toContain('legend({');
     expect(vanilla.code).toContain('const compile = { composites: [GridDefinition, FlexLayoutDefinition] };');
     expect(vanilla.code).not.toContain('LegendDefinition');
     expect(vanilla.code).not.toContain('Unsupported Layout composite');
@@ -271,7 +271,7 @@ describe('Layout documentation demos', () => {
 
       expect(preview).not.toHaveProperty('inspectionRoots');
       expect(preview).not.toHaveProperty('inspect');
-      expect(vanilla.code).toContain("flexLayout('preview-flexLayout-2'");
+      expect(vanilla.code).toContain('flexLayout({');
       expect(vanilla.code).not.toMatch(/\binspect\b/);
       expect(vanilla.svg).not.toContain('data-retikz-readonly-layer');
       expect(html).toContain('data-retikz-readonly-layer');

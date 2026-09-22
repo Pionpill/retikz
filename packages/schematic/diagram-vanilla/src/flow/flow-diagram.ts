@@ -49,9 +49,9 @@ export const FlowDiagramInputEmbedAdapter: InputEmbedAdapter<FlowDiagramInputEmb
 };
 
 /** 创建 Flow Diagram Source root 的 authoring embed 节点 */
-export const flowDiagram = (id: string, input: FlowDiagramInputEmbedProps): InputEmbed<FlowDiagramInputEmbedProps> => ({
+export const flowDiagram = (input: FlowDiagramInputEmbedProps): InputEmbed<FlowDiagramInputEmbedProps> => ({
   type: 'embed',
   kind: FlowDiagramEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

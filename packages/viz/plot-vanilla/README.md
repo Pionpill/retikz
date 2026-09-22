@@ -46,7 +46,7 @@ normalizes the former and preserves the latter.
 import { PlotInputEmbedAdapter, embedPlot } from '@retikz/plot-vanilla';
 import { renderToSvgString, scene } from '@retikz/vanilla';
 
-const input = scene([embedPlot('sales-panel', { spec }, { sales })]);
+const input = scene([embedPlot({ spec }, { sales })]);
 const svg = renderToSvgString(input, {
   adapters: [PlotInputEmbedAdapter],
   output: { width: 360, height: 200 },

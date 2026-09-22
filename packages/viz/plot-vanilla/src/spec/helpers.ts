@@ -1,11 +1,9 @@
 import type { ExternalDatasets } from '@retikz/data';
-import { assertNonEmptyString } from '@retikz/foundation';
 import type { IRPlot, LowerPlotsOptions } from '@retikz/plot';
 import { PLOT_NAMESPACE } from '@retikz/plot';
 import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
 
-import { RetikzPlotVanillaError } from '../error';
 import type { InputPlot } from '../normalize/plot';
 import { normalizePlot } from '../normalize/plot';
 import type { InputPlotEmbed, PlotSource } from './types';
@@ -19,19 +17,18 @@ export const plotIROf = (source: PlotSource): IRPlot =>
 
 /** 构造可由 Plot InputEmbedAdapter 消费的标准 embed */
 export const embedPlot = (
-  id: string,
   source: PlotSource,
   datasets: ExternalDatasets,
   lowerOptions?: LowerPlotsOptions,
 ): InputEmbed<InputPlotEmbed> => {
-  assertNonEmptyString(
-    id,
-    'plot vanilla embed id',
-    new RetikzPlotVanillaError('plot vanilla embed id must be a non-empty string.'),
-  );
-  return embed(PLOT_NAMESPACE, id, {
-    ...source,
-    datasets,
-    ...(lowerOptions === undefined ? {} : { lowerOptions }),
+  const id = source.input === undefined ? source.spec.id : source.input.id;
+  return embed({
+    kind: PLOT_NAMESPACE,
+    ...(id === undefined ? {} : { id }),
+    props: {
+      ...source,
+      datasets,
+      ...(lowerOptions === undefined ? {} : { lowerOptions }),
+    },
   });
 };

@@ -6,36 +6,36 @@ import { describe, expect, it } from 'vitest';
 import { grid, GridInputEmbedAdapter } from '../src/presentation';
 
 describe('grid()', () => {
-  it('keeps an authored root id distinct from the Vanilla embed id', () => {
-    const embed = grid('host-occurrence', {
+  it('preserves the authored root id and reuses it for the embed', () => {
+    const embed = grid({
       id: 'authored-grid',
       meta: { source: 'vanilla' },
       bounds: { start: [0, 0], end: [20, 10] },
       line: { spacing: 10 },
     });
     const contribution = GridInputEmbedAdapter.lower(embed.props, {
-      id: embed.id,
+      id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
-      identityPath: ['main', embed.id],
+      identityPath: ['main', 'runtime'],
     });
 
     expect(contribution.node).toMatchObject({ id: 'authored-grid', meta: { source: 'vanilla' } });
   });
 
   it('creates an embed whose adapter lowers to the same Standard Grid IR', () => {
-    const embed = grid('paper', {
+    const embed = grid({
       bounds: { start: [0, 0], end: [20, 10] },
       line: { spacing: 10 },
     });
     const contribution = GridInputEmbedAdapter.lower(embed.props, {
-      id: embed.id,
+      id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
-      identityPath: ['main', embed.id],
+      identityPath: ['main', 'runtime'],
     });
 
-    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid', id: 'paper' });
+    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.grid' });
     expect(contribution.node).toMatchObject({ namespace: 'standard', type: 'grid' });
     expect(contribution.providerDependencies).toEqual({ roots: [GridProvider.key], providers: [GridProvider] });
     expect(GridProvider.makeDefinition({})).toBe(GridDefinition);
@@ -45,8 +45,8 @@ describe('grid()', () => {
     const result = normalizeScene(
       scene({
         children: [
-          grid('first', { bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }),
-          grid('second', { bounds: { start: [30, 0], end: [50, 10] }, line: { spacing: 10 } }),
+          grid({ bounds: { start: [0, 0], end: [20, 10] }, line: { spacing: 10 } }),
+          grid({ bounds: { start: [30, 0], end: [50, 10] }, line: { spacing: 10 } }),
         ],
       }),
       { adapters: [GridInputEmbedAdapter] },
@@ -60,12 +60,12 @@ describe('grid()', () => {
       bounds: { position: [20, 10], width: 40, height: 20 },
       line: { spacing: 10 },
     };
-    const embed = grid('center', input);
+    const embed = grid(input);
     const contribution = GridInputEmbedAdapter.lower(embed.props, {
-      id: embed.id,
+      id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
-      identityPath: ['main', embed.id],
+      identityPath: ['main', 'runtime'],
     });
 
     expect(contribution.node).toEqual(createGrid(input));
@@ -80,12 +80,12 @@ describe('grid()', () => {
       },
       line: { spacing: 10 },
     };
-    const embed = grid('polar', input);
+    const embed = grid(input);
     const contribution = GridInputEmbedAdapter.lower(embed.props, {
-      id: embed.id,
+      id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
-      identityPath: ['main', embed.id],
+      identityPath: ['main', 'runtime'],
     });
 
     expect(contribution.node).toEqual(createGrid(input));
