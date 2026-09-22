@@ -3,7 +3,7 @@ title: 自定义裁剪区
 description: 为 Scope 定义新的 JSON-safe 裁剪形状，并在 React 或 Vanilla 宿主中注册后使用
 ---
 
-当内置 `rect` 和 Standard 的 circle / ellipse / polygon / path / compound 都不满足需求时，用一个 `ClipDefinition` 定义新的裁剪形状。Definition 不进入 IR；IR 只保存 `kind` 和可序列化参数，渲染、可视边界与命中测试共享同一份 lowering 结果。
+当内置 `rect` 和 Extension 的 circle / ellipse / polygon / path / compound 都不满足需求时，用一个 `ClipDefinition` 定义新的裁剪形状。Definition 不进入 IR；IR 只保存 `kind` 和可序列化参数，渲染、可视边界与命中测试共享同一份 lowering 结果。
 
 ## 适用边界
 
@@ -12,7 +12,7 @@ description: 为 Scope 定义新的 JSON-safe 裁剪形状，并在 React 或 Va
 | 需求                             | 选择                                                   |
 | -------------------------------- | ------------------------------------------------------ |
 | 一次性矩形                       | 直接写 Core 内置 `rect` clip spec                      |
-| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/standard/clip) 注入 Definition  |
+| 圆、椭圆、多边形、路径或组合区域 | 从 [裁剪扩展](/library/extension/clip) 注入 Definition |
 | 新的静态二维裁剪                 | 定义一个完整 `ClipDefinition` 并降低为 `SceneClipPath` |
 | renderer 专属 mask / filter 行为 | 不属于 Clip；另建明确的后端能力                        |
 
@@ -250,7 +250,7 @@ provider graph 中的 `{ capability: 'clip', name: kind }` provider 同样产出
     {
       title: '裁剪扩展',
       description: '装配官方 circle、ellipse、polygon、path 与 compound',
-      url: '/library/standard/clip',
+      url: '/library/extension/clip',
     },
 
     {

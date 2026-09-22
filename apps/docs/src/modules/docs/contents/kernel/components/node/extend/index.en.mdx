@@ -177,9 +177,9 @@ See each shape page for its parameters and shape-specific anchors:
 | ----------------- | ------------------------------------------ | ----------------------------------------------------------------- |
 | rectangle         | default / `'rectangle'`                    | [Rectangle](/kernel/components/node/shape#rectangle)              |
 | circle / ellipse  | `'circle'` / `'ellipse'`                   | [Circle / Ellipse](/kernel/components/node/shape#circle--ellipse) |
-| sector            | `{ type:'sector', params }`                | [Arc / Sector](/library/standard/shape)                           |
+| sector            | `{ type:'sector', params }`                | [Arc / Sector](/library/extension/shape)                          |
 | polygon / diamond | `{ type:'polygon', params }` / `'diamond'` | [Polygon](/kernel/components/node/shape#polygon--diamond)         |
-| star              | `{ type:'star', params }`                  | [Star](/library/standard/shape)                                   |
+| star              | `{ type:'star', params }`                  | [Star](/library/extension/shape)                                  |
 
 `shape` also accepts names registered through `<Layout extensions={{ shapes }}>` / `CompileOptions.shapes`; parametric registered shapes continue to use `{ type, params }`. See [Custom Shapes](/kernel/components/node/custom-shape).
 

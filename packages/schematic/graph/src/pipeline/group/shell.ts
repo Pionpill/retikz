@@ -1,7 +1,7 @@
 import type { LayoutCompositeCompileContext } from '@retikz/core';
 import { intrinsicLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { BoundsInsets, BoundsRect } from '@retikz/math';
-import { resolveSurface } from '@retikz/standard';
+import { resolveSurface } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import type { ResolvedGraphDefinitionOptions } from '../../providers';

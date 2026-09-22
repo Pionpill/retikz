@@ -123,11 +123,11 @@ By default, the arrow tip stays at the resolved path start / end, and arrows are
 
 ## Direction, shape, and appearance
 
-One panel combines the `arrow` direction, six Core basic arrows, two optional Standard arrows, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. The panel explicitly injects the Standard Definitions it uses. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 8.
+One panel combines the `arrow` direction, six Core basic arrows, two optional Extension arrows, color, opacity, and size. Enable “Configure ends separately” to let `start` / `end` override the shared shape and color field by field; disable it to share the top-level values. The panel explicitly injects the Extension Definitions it uses. Omitting `arrowDetail` uses a `stealth` tip that inherits the path color, with length and width both set to 8.
 
 <ComponentPreview files="arrow-appearance" size="lg" />
 
-Core provides six basic arrows by default, including hollow triangle, hollow stealth, and the circle pair. The remaining solid / hollow diamond pair comes from [`@retikz/standard/arrow`](/library/standard/arrow); using a Standard name requires injecting its Definition through the current `<Layout extensions={{ arrows }}>` or `CompileOptions.arrows`:
+Core provides six basic arrows by default, including hollow triangle, hollow stealth, and the circle pair. The remaining solid / hollow diamond pair comes from [`@retikz/extension`](/library/extension/arrow); using an Extension name requires injecting its Definition through the current `<Layout extensions={{ arrows }}>` or `CompileOptions.arrows`:
 
 | Solid                               | Hollow                                  | Typical use                         |
 | ----------------------------------- | --------------------------------------- | ----------------------------------- |

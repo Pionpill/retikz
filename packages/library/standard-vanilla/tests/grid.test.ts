@@ -1,9 +1,9 @@
-import type { GridInput } from '@retikz/standard';
-import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
+import type { GridInput } from '@retikz/standard/presentation';
+import { createGrid, GridDefinition, GridProvider } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { grid, GridInputEmbedAdapter } from '../src';
+import { grid, GridInputEmbedAdapter } from '../src/presentation';
 
 describe('grid()', () => {
   it('keeps an authored root id distinct from the Vanilla embed id', () => {

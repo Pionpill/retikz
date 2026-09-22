@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { createGrid, GridSchema } from '../../../src';
-import { resolveGrid } from '../../../src/resolve/grid';
+import { createGrid, GridSchema } from '../../../src/presentation';
+import { resolveGrid } from '../../../src/presentation/grid/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const base = (overrides: Record<string, unknown> = {}) => ({

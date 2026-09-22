@@ -2,7 +2,7 @@ import type { JsonObject } from '@retikz/foundation';
 import { JsonObjectSchema, JsonValueSchema, NonBlankStringSchema } from '@retikz/foundation';
 import { LayoutContainerBoxSchema, LayoutGapSchema } from '@retikz/layout';
 import { PlotSchema } from '@retikz/plot';
-import { SurfaceBackgroundSchema } from '@retikz/standard';
+import { SurfaceBackgroundSchema } from '@retikz/standard/presentation';
 import type { infer as ZodInfer, ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 import { array, literal, number, object, strictObject } from 'zod';
 

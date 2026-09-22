@@ -1,0 +1,74 @@
+---
+title: 快速开始
+description: 安装 Extension，在 React 或 Vanilla 中绘制一个十字形节点。
+---
+
+这个例子绘制一个十字形节点。选择适合项目的入口，导入形状定义，并在当前图中显式启用它。发布包使用 ES modules，Node.js 环境要求 22.12 或更高版本。
+
+## 安装与使用
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/extension @retikz/react react react-dom" />
+
+在已有 React 应用中渲染以下组件；React 与 React DOM 要求 18 或更高版本：
+
+```tsx
+import type { FC } from 'react';
+import { CrossShapeDefinition } from '@retikz/extension';
+import { Layout, Node } from '@retikz/react';
+
+export const Example: FC = () => (
+  <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
+    <Node position={[0, 0]} shape="cross" fill="#38bdf8" layout={{ minimumSize: { width: 80, height: 80 } }} />
+  </Layout>
+);
+```
+
+将组件保存为 `Example.tsx`，在包含 `<div id="root"></div>` 的页面中挂载：
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import { Example } from './Example';
+
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<Example />);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/extension @retikz/vanilla" />
+
+以下代码返回可以保存为文件或显示在页面中的完整 SVG 字符串：
+
+```ts
+import { CrossShapeDefinition } from '@retikz/extension';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const svg = renderToSvgString(
+  scene({
+    children: [
+      {
+        type: 'node',
+        position: [0, 0],
+        shape: 'cross',
+        fill: '#38bdf8',
+        layout: { minimumSize: { width: 80, height: 80 } },
+      },
+    ],
+  }),
+  { compile: { shapes: [CrossShapeDefinition] } },
+);
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+两种入口都得到一个蓝色十字形。`shape: 'cross'` 选择形状，`CrossShapeDefinition` 提供该形状的绘制规则；两者需要配套使用。
+
+## 延伸阅读
+
+[节点形状](/library/extension/shape)展示其它轮廓；[能力装载](/library/extension/capability-loading)说明如何组合多个定义或使用完整集合。

@@ -25,12 +25,12 @@ import {
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
-} from '../../src/composites/presentation/legend/constants';
-import type { LegendCompileArtifact } from '../../src/composites/presentation/legend/definition';
-import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
-import { createLegend } from '../../src/composites/presentation/legend/factory';
-import type { LegendItemsArtifact } from '../../src/composites/presentation/legend/types';
-import type { LegendInput } from '../../src/composites/presentation/legend/types';
+} from '../../src/presentation/legend/constants';
+import type { LegendCompileArtifact } from '../../src/presentation/legend/definition';
+import { LegendDefinition } from '../../src/presentation/legend/definition';
+import { createLegend } from '../../src/presentation/legend/factory';
+import type { LegendItemsArtifact } from '../../src/presentation/legend/types';
+import type { LegendInput } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({

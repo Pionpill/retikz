@@ -1,5 +1,5 @@
 import { NodeSchema, TextBlockSchema } from '@retikz/core';
-import { LegendSchema } from '@retikz/standard';
+import { LegendSchema } from '@retikz/standard/presentation';
 import { strictObject } from 'zod';
 
 /** Diagram Presentation 文本区域的块级样式覆盖 */

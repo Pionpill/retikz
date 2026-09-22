@@ -1,10 +1,10 @@
 import type { GroupPrim, IRChild, PathPrim, ScenePrimitive } from '@retikz/core';
 import { compileToScene, CompositeBaseSchema, defineComposite, resolveCoreProviderDependencies } from '@retikz/core';
+import { PathClipDefinition, PathClipProvider } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src';
-import { PathClipDefinition, PathClipProvider } from '../../../src/clip';
+import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src/presentation';
 
 const node: IRChild = {
   type: 'node',

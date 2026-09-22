@@ -11,6 +11,7 @@ import renderPackage from '../../../packages/kernel/render/package.json';
 import runtimePackage from '../../../packages/kernel/runtime/package.json';
 import texPackage from '../../../packages/kernel/tex/package.json';
 import vanillaPackage from '../../../packages/kernel/vanilla/package.json';
+import extensionPackage from '../../../packages/library/extension/package.json';
 import tablePackage from '../../../packages/viz/table/package.json';
 
 describe('包版本注册表', () => {
@@ -34,6 +35,7 @@ describe('包版本注册表', () => {
   it('将 packages 路由映射到其实际 release group 版本', () => {
     expect(getDocPackageVersion({ moduleId: 'kernel', sectionId: 'packages' })).toBe(corePackage.version);
     expect(getDocPackageVersion({ moduleId: 'viz', sectionId: 'table' })).toBe(tablePackage.version);
+    expect(getDocPackageVersion({ moduleId: 'library', sectionId: 'extension' })).toBe(extensionPackage.version);
     expect(getDocPackageVersion({ moduleId: 'kernel', sectionId: 'components' })).toBeUndefined();
   });
 });

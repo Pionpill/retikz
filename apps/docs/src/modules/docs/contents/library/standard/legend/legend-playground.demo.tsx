@@ -1,6 +1,6 @@
 import { Layout, Node } from '@retikz/react';
-import { LegendContentKind } from '@retikz/standard';
-import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react';
+import { Legend, LegendItem, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react/presentation';
+import { LegendContentKind } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

@@ -1,6 +1,6 @@
 import type { AnyCompositeDefinition, CoreDependencyProvider } from '@retikz/core';
 import { FlexLayoutDefinition } from '@retikz/layout';
-import { SurfaceDefinition } from '@retikz/standard';
+import { SurfaceDefinition } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../contract';
 import { resolveGraphDefinitionOptions } from '../providers';

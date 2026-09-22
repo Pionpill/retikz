@@ -60,7 +60,7 @@ import {
   AxesTickSide,
   AxesTickSourceKind,
   GridBorderOrder,
-} from '@retikz/standard';
+} from '@retikz/standard/presentation';
 import {
   TableBorderKind,
   TableBorderMode,

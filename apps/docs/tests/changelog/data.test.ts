@@ -46,8 +46,8 @@ describe('changelog data', () => {
     expect(changelog.length).toBeGreaterThan(0);
   });
 
-  it('Library 按 Standard 在上、Layout 在下注册独立分区', () => {
-    expect(librarySection.map(section => section.id)).toEqual(['standard', 'layout']);
+  it('Library 注册 Standard、Extension 与 Layout 独立分区', () => {
+    expect(librarySection.map(section => section.id)).toEqual(['standard', 'extension', 'layout']);
     expect(librarySection.every(section => section.document)).toBe(true);
   });
 

@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { Grid } from '@retikz/standard-react';
+import { Grid } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 /** Grid common semantic variants shown side by side */

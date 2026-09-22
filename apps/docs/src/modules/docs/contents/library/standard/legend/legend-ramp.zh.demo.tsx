@@ -1,6 +1,6 @@
 import { Layout, Node } from '@retikz/react';
-import { LegendContentKind, LegendDirection } from '@retikz/standard';
-import { Legend, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react';
+import { Legend, LegendRamp, LegendTick, LegendTitle } from '@retikz/standard-react/presentation';
+import { LegendContentKind, LegendDirection } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 
 /** 连续样本与归一化刻度 */

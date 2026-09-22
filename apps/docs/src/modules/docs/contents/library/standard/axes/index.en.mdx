@@ -9,7 +9,7 @@ description: Keep the origin, directions, arrows, ticks, grids, and labels of st
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { Axes } from '@retikz/standard-react';
+import { Axes } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -18,13 +18,13 @@ import { Axes } from '@retikz/standard-react';
 </Layout>
 ```
 
-The React entry contributes `AxesDefinition` locally to the current `Layout`. For persistence or non-React authoring, create the IR from `@retikz/standard` and pass the definition explicitly through Core compile options.
+The React entry contributes `AxesDefinition` locally to the current `Layout`. For persistence or non-React authoring, create the IR from `@retikz/standard/presentation` and pass the definition explicitly through Core compile options.
 
-| Scenario     | Public entry points                                               |
-| ------------ | ----------------------------------------------------------------- |
-| React        | `Axes` (`@retikz/standard-react`)                                 |
-| Vanilla      | `axes`, `AxesInputEmbedAdapter` (`@retikz/standard-vanilla`)      |
-| IR / persist | `AxesSchema`, `createAxes`, `AxesDefinition` (`@retikz/standard`) |
+| Scenario     | Public entry points                                                            |
+| ------------ | ------------------------------------------------------------------------------ |
+| React        | `Axes` (`@retikz/standard-react/presentation`)                                 |
+| Vanilla      | `axes`, `AxesInputEmbedAdapter` (`@retikz/standard-vanilla/presentation`)      |
+| IR / persist | `AxesSchema`, `createAxes`, `AxesDefinition` (`@retikz/standard/presentation`) |
 
 See [Standard](/library/standard) for the package family and its three entry points. Use [Plot axis](/viz/plot/guide/axis) when you need data domains, scales, automatic ticks, formatters, or guide label layout.
 
@@ -87,11 +87,11 @@ A hand-written `IRAxes` without its definition is not interpreted silently. Core
   sources={[
     {
       label: 'Axes schema and public contract',
-      path: 'packages/library/standard/src/composites/presentation/axes/schemas/schema.ts',
+      path: 'packages/library/standard/src/presentation/axes/schema.ts',
     },
     {
       label: 'Axes direction mapping and lowering',
-      path: 'packages/library/standard/src/composites/presentation/axes/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/axes/pipeline.ts',
     },
   ]}
 />

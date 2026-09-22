@@ -1,6 +1,6 @@
 import { fadeIn } from '@retikz/core';
+import { RibbonPathKindDefinition } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
-import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
 

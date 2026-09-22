@@ -1,6 +1,6 @@
 import { DrawWay } from '@retikz/core';
 import { Draw, Layout, Node } from '@retikz/react';
-import { List, Map } from '@retikz/standard-react';
+import { List, Map } from '@retikz/standard-react/container';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

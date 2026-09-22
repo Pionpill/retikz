@@ -27,7 +27,7 @@ Draw 的 `way` 是便捷输入，不是另一种持久化图元。需要保存�
 
 先读基础用法，再按任务选择路径写法、路径组合、箭头或标签。`way` 负责简洁表达走向，Step 负责显式指定动作；它们的完整字段分别在 API 与 Schema 参考中查询。
 
-节点形状和定位由[节点](/kernel/components/node)负责；一组图元的局部变换与裁剪见[范围](/kernel/components/scope)。可变宽带状关系使用 [Standard Ribbon](/library/standard/ribbon)，图的自动排布由对应领域组件负责。
+节点形状和定位由[节点](/kernel/components/node)负责；一组图元的局部变换与裁剪见[范围](/kernel/components/scope)。可变宽带状关系使用 [Extension Ribbon](/library/extension/ribbon)，图的自动排布由对应领域组件负责。
 
 仅调整颜色、粗细或已有箭头不需要自定义。新增一种曲线段用路径生成器，改变整条路径的输出用自定义路径，新增端点轮廓用自定义箭头。三种教程分别说明定义、注入和引用，内部处理集中在实现原理。
 

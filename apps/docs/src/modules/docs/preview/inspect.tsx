@@ -56,7 +56,11 @@ export const createBuiltinInspectPreviewSource = (
     );
     const svg = renderToSvgString(restoredInput, {
       adapters: authoring.adapters,
-      compile: { clips: props.extensions?.clips, themeStyles: PreviewThemeDefinitionBundle.core, measureText: browserMeasurer },
+      compile: {
+        clips: props.extensions?.clips,
+        themeStyles: PreviewThemeDefinitionBundle.core,
+        measureText: browserMeasurer,
+      },
       compileDriver: createInspectionVanillaDriver({ registry: props.registry, selection: config.selection }),
     });
     const configFile = { filename: `${name}.config.json`, code: configCode, lang: 'json' as const };
@@ -68,7 +72,7 @@ import { browserMeasurer } from '@/modules/docs/components/component-preview/van
 import { renderToSvgString } from '@retikz/vanilla';
 import { createDefaultInspectorRegistry } from '@retikz/inspect';
 import { createInspectionVanillaAuthoring, createInspectionVanillaDriver } from '@retikz/inspect/vanilla';
-${hasClip ? "import { PathClipDefinition } from '@retikz/standard/clip';\n" : ''}import config from './${name}.config.json';
+${hasClip ? "import { PathClipDefinition } from '@retikz/extension';\n" : ''}import config from './${name}.config.json';
 
 // Restore runtime authoring markers; they are not persisted Core IR fields.
 const input: InputScene = JSON.parse(JSON.stringify(config.input), (key, value) =>

@@ -286,8 +286,8 @@ export const kernelV05: Release = {
         {
           label: { zh: '未发布 · 动画预设分层', en: 'Unreleased · Animation preset ownership' },
           content: {
-            zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/standard 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Standard 双语文档和 API 参考同步按归属拆分。',
-            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/standard root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Standard guides and API references follow their owners.',
+            zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',
+            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their owners.',
           },
         },
         {
@@ -462,15 +462,15 @@ export const kernelV05: Release = {
                 en: 'BREAKING: single Clip Definition and canonical clip paths',
               },
               content: {
-                zh: '裁剪现在由一个完整 `ClipDefinition` 同时拥有 spec schema、JSON-safe shape schema、resolve 与 `SceneClipPath` lowering；Core、React、Vanilla 与 provider graph 只开放 `clips`。Scene clip resource 使用 canonical `path`，旧 Scene / ScenePatch 不提供双读。Core 默认只保留支持零尺寸空裁剪的 `rect`，circle、ellipse、polygon、path、compound 的完整所有权由 `@retikz/standard/clip` 承担。',
-                en: 'One complete `ClipDefinition` now owns the spec schema, JSON-safe shape schema, resolve, and `SceneClipPath` lowering; Core, React, Vanilla, and the provider graph expose only `clips`. Scene clip resources use canonical `path`, with no dual read for legacy Scenes or ScenePatches. Core keeps only `rect`, including zero-sized empty clipping, while `@retikz/standard/clip` fully owns circle, ellipse, polygon, path, and compound.',
+                zh: '裁剪现在由一个完整 `ClipDefinition` 同时拥有 spec schema、JSON-safe shape schema、resolve 与 `SceneClipPath` lowering；Core、React、Vanilla 与 provider graph 只开放 `clips`。Scene clip resource 使用 canonical `path`，旧 Scene / ScenePatch 不提供双读。Core 默认只保留支持零尺寸空裁剪的 `rect`，circle、ellipse、polygon、path、compound 的完整所有权由 `@retikz/extension` 承担。',
+                en: 'One complete `ClipDefinition` now owns the spec schema, JSON-safe shape schema, resolve, and `SceneClipPath` lowering; Core, React, Vanilla, and the provider graph expose only `clips`. Scene clip resources use canonical `path`, with no dual read for legacy Scenes or ScenePatches. Core keeps only `rect`, including zero-sized empty clipping, while `@retikz/extension` fully owns circle, ellipse, polygon, path, and compound.',
               },
             },
             {
               label: { zh: 'BREAKING：最小内置 provider 集合', en: 'BREAKING: minimal built-in provider set' },
               content: {
-                zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、完整 rect Clip Definition、lines / dots / grid Pattern、三种 Boundary，以及 stroke Path Kind；Path Generator 默认为空。cross / sector / star / contour、diamond / openDiamond、circle / ellipse / polygon / path / compound 裁剪与 Ribbon 分别由 `@retikz/standard/node-shape`、`/arrow`、`/clip`、`/ribbon` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',
-                en: 'Core defaults retain rectangle, ellipse, and polygon Shapes; six baseline Arrows; the complete rect Clip Definition; lines, dots, and grid Patterns; three Boundaries; and the stroke Path Kind, while Path Generator defaults are empty. Cross, sector, star, contour, diamond, openDiamond, circle / ellipse / polygon / path / compound clipping, and Ribbon now come explicitly from `@retikz/standard/node-shape`, `/arrow`, `/clip`, and `/ribbon`. Direct compilation injects them through the matching options, while adapters use complete provider contributions; migrated capabilities keep no Core re-export or automatic fallback.',
+                zh: 'Core 默认保留 rectangle / ellipse / polygon Shape、六种基础 Arrow、完整 rect Clip Definition、lines / dots / grid Pattern、三种 Boundary，以及 stroke Path Kind；Path Generator 默认为空。cross / sector / star / contour、diamond / openDiamond、circle / ellipse / polygon / path / compound 裁剪与 Ribbon 分别由 `@retikz/extension`、`/arrow`、`/clip`、`/ribbon` 显式提供。直接 compile 使用对应 options 注入，adapter 使用完整 provider contribution；不保留已迁出能力的 Core re-export 或自动 fallback。',
+                en: 'Core defaults retain rectangle, ellipse, and polygon Shapes; six baseline Arrows; the complete rect Clip Definition; lines, dots, and grid Patterns; three Boundaries; and the stroke Path Kind, while Path Generator defaults are empty. Cross, sector, star, contour, diamond, openDiamond, circle / ellipse / polygon / path / compound clipping, and Ribbon now come explicitly from `@retikz/extension`, `/arrow`, `/clip`, and `/ribbon`. Direct compilation injects them through the matching options, while adapters use complete provider contributions; migrated capabilities keep no Core re-export or automatic fallback.',
               },
             },
             {

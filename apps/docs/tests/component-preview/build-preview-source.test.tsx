@@ -12,7 +12,7 @@ import { resolveDefaultCoreThemeColors, ThemeMode } from '@retikz/core';
 import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { createInputScene, Layout, Node } from '@retikz/react';
-import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
+import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
 import { DetailColumn, DetailTable, ManualTable } from '@retikz/table-react';
 import { normalizeScene } from '@retikz/vanilla';
 import type { FC } from 'react';
@@ -209,7 +209,7 @@ describe('buildPreviewSource', () => {
   it('为 Standard composite 自动生成 helper、Adapter 与真实 Vanilla SVG', () => {
     const result = buildPreviewSource(createInput({ Component: StandardCompositeDemo }));
 
-    expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla/presentation'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("grid('preview-grid-1'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("axes('preview-axes-1'");
     expect(result.source?.vanilla?.files[0]?.code).toContain("frame('preview-frame-1'");
@@ -232,7 +232,7 @@ describe('buildPreviewSource', () => {
     );
     const vanilla = result.source?.vanilla;
 
-    expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla/presentation'");
     expect(vanilla?.files[0]?.code).toContain("text: 'FrameTitle'");
     expect(vanilla?.files[0]?.code).toContain("text: 'FrameDescription'");
     expect(vanilla?.files[0]?.code).not.toContain('Failed to generate vanilla code');

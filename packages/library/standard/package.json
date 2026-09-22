@@ -38,25 +38,17 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./arrow": {
-      "types": "./src/arrow/index.ts",
-      "default": "./src/arrow/index.ts"
-    },
-    "./clip": {
-      "types": "./src/clip/index.ts",
-      "default": "./src/clip/index.ts"
-    },
-    "./ribbon": {
-      "types": "./src/ribbon/index.ts",
-      "default": "./src/ribbon/index.ts"
-    },
-    "./node-shape": {
-      "types": "./src/node-shape/index.ts",
-      "default": "./src/node-shape/index.ts"
-    },
     "./shape": {
       "types": "./src/shape/index.ts",
       "default": "./src/shape/index.ts"
+    },
+    "./presentation": {
+      "types": "./src/presentation/index.ts",
+      "default": "./src/presentation/index.ts"
+    },
+    "./container": {
+      "types": "./src/container/index.ts",
+      "default": "./src/container/index.ts"
     }
   },
   "publishConfig": {
@@ -69,30 +61,20 @@
         "import": "./dist/index.js",
         "default": "./dist/index.js"
       },
-      "./arrow": {
-        "types": "./dist/types/arrow/index.d.ts",
-        "import": "./dist/arrow/index.js",
-        "default": "./dist/arrow/index.js"
-      },
-      "./clip": {
-        "types": "./dist/types/clip/index.d.ts",
-        "import": "./dist/clip/index.js",
-        "default": "./dist/clip/index.js"
-      },
-      "./ribbon": {
-        "types": "./dist/types/ribbon/index.d.ts",
-        "import": "./dist/ribbon/index.js",
-        "default": "./dist/ribbon/index.js"
-      },
-      "./node-shape": {
-        "types": "./dist/types/node-shape/index.d.ts",
-        "import": "./dist/node-shape/index.js",
-        "default": "./dist/node-shape/index.js"
-      },
       "./shape": {
         "types": "./dist/types/shape/index.d.ts",
         "import": "./dist/shape/index.js",
         "default": "./dist/shape/index.js"
+      },
+      "./presentation": {
+        "types": "./dist/types/presentation/index.d.ts",
+        "import": "./dist/presentation/index.js",
+        "default": "./dist/presentation/index.js"
+      },
+      "./container": {
+        "types": "./dist/types/container/index.d.ts",
+        "import": "./dist/container/index.js",
+        "default": "./dist/container/index.js"
       }
     }
   },
@@ -113,7 +95,8 @@
     "@retikz/foundation": "workspace:^",
     "@retikz/layout": "workspace:^",
     "@retikz/math": "workspace:^",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/extension": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

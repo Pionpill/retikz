@@ -49,6 +49,7 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 ## 共性约束
 
 - 普通文档 zh/en 成对，zh 为写作真源；博客语言例外由博客入口规定。公开签名、JSDoc、schema 与默认值仍以源码为契约真源。
+- Kernel 之外可独立安装、直接使用的上层包，其正文以本包的概念、任务与入口自洽；不把 Kernel 作为读者前提，不在主线比较或展开与 Kernel 的关系。确有必要说明依赖或边界时，用简短 `<ComponentAlert type="tip">` 补充，移除该 Tip 后主线仍应能完成当前任务。
 - contents、data、i18n 协同；URL 段、目录段和 data id 对齐。共享概念与完整 API/Schema 各有唯一 owner。
 - 开篇说明问题与可观察结果；段落围绕一个观点，术语首次出现就近解释。步骤用列表，重复比较用表格，不按行数或字数强行拆段。
 - H1 来自 frontmatter；description 脱离页面也能说明职责或使用入口。小节按读者任务命名，不按 prop 数量分节。

@@ -3,7 +3,7 @@ import { LayoutChildProbeKind } from '@retikz/core';
 import type { IRFlexLayout, LayoutArtifactItemBase } from '@retikz/layout/compose';
 import { compileFlexLayout, exactLayoutProposal, requiredLayoutProbe } from '@retikz/layout/compose';
 import type { BoundsRect, Position } from '@retikz/math';
-import { compileSurface, resolveSurface } from '@retikz/standard';
+import { compileSurface, resolveSurface } from '@retikz/standard/presentation';
 
 import { RetikzDiagramError, RetikzDiagramErrorCode } from '../../../errors';
 import type { DiagramFoundationResolution } from '../../resolve';

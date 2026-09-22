@@ -1,6 +1,6 @@
 import { drawOn, fadeIn, scaleIn, slideIn } from '@retikz/core';
+import { grow, growUp } from '@retikz/extension';
 import { Layout, Node, Path, Step } from '@retikz/react';
-import { grow, growUp } from '@retikz/standard';
 import type { FC } from 'react';
 
 // 入场合集：fadeIn / scaleIn / grow / slideIn / growUp 各一个节点 + drawOn 一条路径，加载时各播一次

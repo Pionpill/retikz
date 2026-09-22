@@ -2,7 +2,7 @@ import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/c
 import { FlexLayoutProvider } from '@retikz/layout';
 import type { LowerPlotsOptions } from '@retikz/plot';
 import { PlotProviderKey } from '@retikz/plot';
-import { SurfaceProvider } from '@retikz/standard';
+import { SurfaceProvider } from '@retikz/standard/presentation';
 
 import { RetikzChartError, RetikzChartErrorCode } from '../../error';
 import type { ChartRecipeDefinition, ChartThemeDefinition } from '../contract';

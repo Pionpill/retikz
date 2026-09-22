@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { Map } from '@retikz/standard-react';
+import { Map } from '@retikz/standard-react/container';
 import type { FC } from 'react';
 
 const MapData: FC = () => (

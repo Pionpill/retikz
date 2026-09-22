@@ -1,5 +1,5 @@
 import type { IRNode, ResolvedTheme } from '@retikz/core';
-import type { SurfaceInput } from '@retikz/standard';
+import type { SurfaceInput } from '@retikz/standard/presentation';
 
 import type { IRGraphDefaults, IRGraphRule } from '../../schemas';
 

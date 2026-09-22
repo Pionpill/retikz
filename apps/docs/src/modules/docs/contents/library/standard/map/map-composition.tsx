@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { List, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react';
+import { List, Map, MapEntry, MapKey, MapValue } from '@retikz/standard-react/container';
 import type { FC } from 'react';
 
 const MapComposition: FC = () => (

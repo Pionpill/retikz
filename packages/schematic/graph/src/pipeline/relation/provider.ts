@@ -4,7 +4,7 @@ import {
   OpenDiamondArrowProvider,
   SquareArrowProvider,
   StraightBarbArrowProvider,
-} from '@retikz/standard/arrow';
+} from '@retikz/extension';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';

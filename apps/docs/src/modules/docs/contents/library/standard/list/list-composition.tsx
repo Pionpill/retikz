@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { List, ListItem, Map } from '@retikz/standard-react';
+import { List, ListItem, Map } from '@retikz/standard-react/container';
 import type { FC } from 'react';
 
 const ListComposition: FC = () => (
