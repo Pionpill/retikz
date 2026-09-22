@@ -257,40 +257,11 @@ type LibraryKind = StandardKind | LayoutKind;
 type GraphKind = 'graph' | 'group' | 'block' | 'blockHeader' | 'blockSection' | 'blockRow' | 'entity' | 'relation';
 
 type LibraryConversionState = {
-  counts: Record<LibraryKind, number>;
   adapters: Set<LibraryKind>;
-  /** 规范输入中的显式 ID 到 Vanilla 嵌入生成 ID 的映射 */
-  ids: Map<string, string>;
 };
 
 type GraphConversionState = {
   adapters: Set<GraphKind>;
-};
-
-const libraryCanonicalId = (kind: LibraryKind, embedId: string): string => {
-  switch (kind) {
-    case 'frame':
-      return `${embedId}/frame`;
-    case 'surface':
-      return `${embedId}/surface`;
-    default:
-      return embedId;
-  }
-};
-
-const nextLibraryId = (kind: LibraryKind, state: LibraryConversionState, authoredId?: string): string => {
-  state.counts[kind] += 1;
-  state.adapters.add(kind);
-  const embedId = `preview-${kind}-${state.counts[kind]}`;
-  if (authoredId !== undefined) {
-    const generatedId = libraryCanonicalId(kind, embedId);
-    state.ids.set(authoredId, generatedId);
-    state.ids.set(generatedId, generatedId);
-    if (kind === 'frame') {
-      state.ids.set(`${authoredId}/${kind}`, generatedId);
-    }
-  }
-  return embedId;
 };
 
 /** 登记转换 Graph Source 所需的 Vanilla adapter */
@@ -298,146 +269,72 @@ const registerGraphAdapter = (kind: GraphKind, state: GraphConversionState): voi
   state.adapters.add(kind);
 };
 
-const registerPreviewIds = (children: ReadonlyArray<IRChild>, libraryState: LibraryConversionState): void => {
-  const visit = (child: IRChild): void => {
-    if (isComposite(child)) {
-      const authoredId = (child as { id?: unknown }).id;
-      if (
-        child.namespace === 'standard' &&
-        child.type !== 'list' &&
-        child.type !== 'map' &&
-        typeof authoredId === 'string'
-      ) {
-        const kind = child.type as StandardKind;
-        if (
-          [
-            'grid',
-            'axes',
-            'frame',
-            'surface',
-            'legend',
-            'list',
-            'map',
-            'circle',
-            'ellipse',
-            'rectangle',
-            'regularPolygon',
-            'star',
-            'arc',
-            'sector',
-          ].includes(kind)
-        ) {
-          // 在转换子项目标前预留确定性 ID
-          nextLibraryId(kind, libraryState, authoredId);
-          libraryState.counts[kind] -= 1;
-          libraryState.adapters.delete(kind);
-        }
-      }
-      if (child.namespace === 'layout' && typeof authoredId === 'string') {
-        const kind = child.type as LayoutKind;
-        if (['flexLayout', 'gridLayout', 'overlayLayout'].includes(kind)) {
-          nextLibraryId(kind, libraryState, authoredId);
-          libraryState.counts[kind] -= 1;
-          libraryState.adapters.delete(kind);
-        }
-      }
-      if (
-        child.namespace === 'graph' &&
-        (child.type === 'graph' || child.type === 'group' || child.type === 'block' || child.type === 'blockSection')
-      ) {
-        const nestedChildren = (child as { children?: ReadonlyArray<IRChild> }).children;
-        nestedChildren?.forEach(visit);
-      }
-      if (child.namespace === 'graph' && child.type === 'blockHeader') {
-        const header = BlockHeaderSchema.parse(child);
-        if (header.icon !== undefined) visit(header.icon);
-        if (header.trail !== undefined) visit(header.trail);
-      }
-      if (child.namespace === 'graph' && child.type === 'blockRow') {
-        const row = BlockRowSchema.parse(child);
-        if ('children' in row) row.children?.forEach(visit);
-      }
-      return;
-    }
-    if (child.type === 'scope') child.children.forEach(visit);
-  };
-  children.forEach(visit);
-};
-
 const convertStandardChild = (
   child: CompositeChild,
   state: LibraryConversionState,
   graphState: GraphConversionState,
 ): InputChild => {
-  const childId = (child as { id?: string }).id;
+  state.adapters.add(child.type as StandardKind);
   switch (child.type) {
     case 'circle': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = CircleSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = CircleSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.circle(nextLibraryId('circle', state, childId), input);
+      return shape.circle(input);
     }
     case 'ellipse': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = EllipseSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = EllipseSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.ellipse(nextLibraryId('ellipse', state, childId), input);
+      return shape.ellipse(input);
     }
     case 'rectangle': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = RectangleSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = RectangleSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.rectangle(nextLibraryId('rectangle', state, childId), input);
+      return shape.rectangle(input);
     }
     case 'regularPolygon': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = RegularPolygonSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = RegularPolygonSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.regularPolygon(nextLibraryId('regularPolygon', state, childId), input);
+      return shape.regularPolygon(input);
     }
     case 'star': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = StarSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = StarSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.star(nextLibraryId('star', state, childId), input);
+      return shape.star(input);
     }
     case 'arc': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = ArcSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = ArcSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.arc(nextLibraryId('arc', state, childId), input);
+      return shape.arc(input);
     }
     case 'sector': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = SectorSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = SectorSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return shape.sector(nextLibraryId('sector', state, childId), input);
+      return shape.sector(input);
     }
     case 'grid': {
       const { namespace: _namespace, type: _type, ...input } = GridSchema.parse(child);
       void _namespace;
       void _type;
-      return grid(nextLibraryId('grid', state, childId), input);
+      return grid(input);
     }
     case 'axes': {
       const { namespace: _namespace, type: _type, ...input } = AxesSchema.parse(child);
       void _namespace;
       void _type;
-      return axes(nextLibraryId('axes', state, childId), input);
+      return axes(input);
     }
     case 'frame': {
-      const { namespace: _namespace, type: _type, id: _id, ...input } = FrameSchema.parse(child);
+      const { namespace: _namespace, type: _type, ...input } = FrameSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return frame(nextLibraryId('frame', state, childId), input);
+      return frame(input);
     }
     case 'legend': {
       const { namespace: _namespace, type: _type, title, content, ...input } = LegendSchema.parse(child);
@@ -461,7 +358,7 @@ const convertStandardChild = (
                 ...(tick.label === undefined ? {} : { label: convertPreviewChild(tick.label, state, graphState) }),
               })),
             };
-      return legend(nextLibraryId('legend', state, childId), {
+      return legend({
         ...input,
         ...(title === undefined ? {} : { title: convertPreviewChild(title, state, graphState) }),
         content: normalizedContent,
@@ -471,8 +368,8 @@ const convertStandardChild = (
       const { namespace: _namespace, type: _type, data, items, ...input } = child as IRList;
       void _namespace;
       void _type;
-      if (data !== undefined) return list(nextLibraryId('list', state), { ...input, data });
-      return list(nextLibraryId('list', state), {
+      if (data !== undefined) return list({ ...input, data });
+      return list({
         ...input,
         items: items.map(cell =>
           typeof cell === 'string'
@@ -499,18 +396,17 @@ const convertStandardChild = (
               content:
                 typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
             };
-      if (data !== undefined) return map(nextLibraryId('map', state), { ...input, data });
-      return map(nextLibraryId('map', state), {
+      if (data !== undefined) return map({ ...input, data });
+      return map({
         ...input,
         entries: entries.map(entry => ({ key: convertCell(entry.key), value: convertCell(entry.value) })),
       });
     }
     case 'surface': {
-      const { namespace: _namespace, type: _type, id: _id, child: nested, ...input } = SurfaceSchema.parse(child);
+      const { namespace: _namespace, type: _type, child: nested, ...input } = SurfaceSchema.parse(child);
       void _namespace;
       void _type;
-      void _id;
-      return surface(nextLibraryId('surface', state, childId), {
+      return surface({
         ...input,
         child: surfaceChild(convertPreviewChild(nested, state, graphState)),
       });
@@ -525,13 +421,13 @@ const convertLayoutChild = (
   state: LibraryConversionState,
   graphState: GraphConversionState,
 ): InputChild => {
-  const childId = (child as { id?: string }).id;
+  state.adapters.add(child.type as LayoutKind);
   switch (child.type) {
     case 'flexLayout': {
       const { namespace: _namespace, type: _type, children, ...input } = FlexLayoutSchema.parse(child);
       void _namespace;
       void _type;
-      return flexLayout(nextLibraryId('flexLayout', state, childId), {
+      return flexLayout({
         ...input,
         children: children.map(item => ({
           ...item,
@@ -543,7 +439,7 @@ const convertLayoutChild = (
       const { namespace: _namespace, type: _type, children, ...input } = GridLayoutSchema.parse(child);
       void _namespace;
       void _type;
-      return gridLayout(nextLibraryId('gridLayout', state, childId), {
+      return gridLayout({
         ...input,
         children: children.map(item => ({
           ...item,
@@ -555,7 +451,7 @@ const convertLayoutChild = (
       const { namespace: _namespace, type: _type, children, ...input } = OverlayLayoutSchema.parse(child);
       void _namespace;
       void _type;
-      return overlayLayout(nextLibraryId('overlayLayout', state, childId), {
+      return overlayLayout({
         ...input,
         children: children.map(item => ({
           ...item,
@@ -787,34 +683,12 @@ const graphDefinitionByName = {
 } as const;
 
 const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOptions): VanillaPreviewArtifact => {
-  const ids = new Map<string, string>();
   const libraryState: LibraryConversionState = {
-    counts: {
-      circle: 0,
-      ellipse: 0,
-      rectangle: 0,
-      regularPolygon: 0,
-      star: 0,
-      arc: 0,
-      sector: 0,
-      grid: 0,
-      axes: 0,
-      frame: 0,
-      list: 0,
-      map: 0,
-      surface: 0,
-      flexLayout: 0,
-      gridLayout: 0,
-      overlayLayout: 0,
-      legend: 0,
-    },
     adapters: new Set(),
-    ids,
   };
   const graphState: GraphConversionState = {
     adapters: new Set(),
   };
-  registerPreviewIds(preview.ir.children, libraryState);
   const input = scene({
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
@@ -1123,7 +997,7 @@ const buildTableCode = (
   const dataCode = hasDatasets && datasetImport === null ? `const datasets = ${formatVanillaValue(datasets)};\n\n` : '';
   const dataExpression = datasetImport?.expression ?? 'datasets';
   const embedOptions = hasDatasets ? `, { data: ${dataExpression} }` : '';
-  const childrenCode = `[embedTable('preview-table-1', spec${embedOptions})]`;
+  const childrenCode = `[embedTable(spec${embedOptions})]`;
   const figureCode = formatVanillaValue({
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
@@ -1158,9 +1032,7 @@ const buildTablePreview = (
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox !== undefined ? { viewBox: preview.ir.viewBox } : {}),
     ...(preview.ir.animations !== undefined ? { animations: preview.ir.animations } : {}),
-    children: [
-      embedTable('preview-table-1', spec, Object.keys(resolvedDatasets).length > 0 ? { data: resolvedDatasets } : {}),
-    ],
+    children: [embedTable(spec, Object.keys(resolvedDatasets).length > 0 ? { data: resolvedDatasets } : {})],
   });
   return {
     code: buildTableCode(spec, resolvedDatasets, preview, options),
@@ -1197,7 +1069,7 @@ const buildFlowCode = (source: IRFlowDiagram, preview: PreviewIR, options: Build
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
     children: '__FLOW_CHILDREN__',
-  }).replace("'__FLOW_CHILDREN__'", `[flowDiagram('preview-flow-1', ${authoringCode})]`);
+  }).replace("'__FLOW_CHILDREN__'", `[flowDiagram(${authoringCode})]`);
   return `import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';\nimport { renderToSvgString, scene } from '@retikz/vanilla';\nimport { PreviewThemeDefinitionBundle } from '@/modules/docs/components/component-preview/theme';\n\nconst input = scene(${figureCode});\n\nexport const svg = renderToSvgString(input, {\n  adapters: [FlowDiagramInputEmbedAdapter],\n  output: ${formatVanillaValue(outputSize(preview))},\n  compile: { themeStyles: PreviewThemeDefinitionBundle.core },\n});\n`;
 };
 
@@ -1211,7 +1083,7 @@ const buildFlowPreview = (
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(preview.ir.viewBox === undefined ? {} : { viewBox: preview.ir.viewBox }),
     children: [
-      flowDiagram('preview-flow-1', {
+      flowDiagram({
         ...flowAuthoringInput(source),
         entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
         diagramThemeStyles: PreviewThemeDefinitionBundle.diagram,

@@ -29,12 +29,12 @@ it('keeps the complete family equivalent across adapters with Path authoring con
   const vanilla = normalizeScene(
     scene({
       children: [
-        shape.ellipse('e', { center: 'origin', radius: { x: 20, y: 10 }, ...visual }),
-        shape.rectangle('r', { corner1: 'origin', corner2: [40, 20], ...visual }),
-        shape.regularPolygon('p', { center: [0, 0], sides: 5, radius: 20, ...visual }),
-        shape.star('s', { center: [0, 0], points: 5, outerRadius: 20, ...visual }),
-        shape.arc('a', { center: 'origin', radius: 20, startAngle: 0, endAngle: 90, ...visual }),
-        shape.sector('w', { center: [0, 0], radius: 20, innerRadius: 10, startAngle: 0, endAngle: 90, ...visual }),
+        shape.ellipse({ id: 'e', center: 'origin', radius: { x: 20, y: 10 }, ...visual }),
+        shape.rectangle({ id: 'r', corner1: 'origin', corner2: [40, 20], ...visual }),
+        shape.regularPolygon({ id: 'p', center: [0, 0], sides: 5, radius: 20, ...visual }),
+        shape.star({ id: 's', center: [0, 0], points: 5, outerRadius: 20, ...visual }),
+        shape.arc({ id: 'a', center: 'origin', radius: 20, startAngle: 0, endAngle: 90, ...visual }),
+        shape.sector({ id: 'w', center: [0, 0], radius: 20, innerRadius: 10, startAngle: 0, endAngle: 90, ...visual }),
       ],
     }),
     { adapters: StandardInputEmbedAdapters },
@@ -50,7 +50,7 @@ it('keeps the complete family equivalent across adapters with Path authoring con
 it('shares the Circle Source and provider contribution across React and Vanilla', () => {
   const input = createInputScene(<Circle id="c1" center="origin" radius={20} />);
   const react = normalizeScene(input.scene, { adapters: input.adapters });
-  const vanilla = normalizeScene(scene({ children: [shape.circle('c1', { center: 'origin', radius: 20 })] }), {
+  const vanilla = normalizeScene(scene({ children: [shape.circle({ id: 'c1', center: 'origin', radius: 20 })] }), {
     adapters: StandardInputEmbedAdapters,
   });
   expect(react.ir.children).toEqual(vanilla.ir.children);

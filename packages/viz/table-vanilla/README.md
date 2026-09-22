@@ -14,7 +14,7 @@ const spec = detailTable({
   columns: [{ id: 'score', field: 'score', header: 'Score' }],
 });
 
-const input = scene([embedTable('scores-panel', spec, { data: { scores: rows } })]);
+const input = scene([embedTable(spec, { data: { scores: rows } })]);
 const svg = renderToSvgString(input, { adapters: [TableInputEmbedAdapter] });
 
 const result = renderTable(spec, { data: { scores: rows }, artifacts: true });

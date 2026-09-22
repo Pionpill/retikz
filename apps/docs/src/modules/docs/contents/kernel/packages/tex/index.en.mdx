@@ -86,7 +86,7 @@ import { createLowerTex, createMathJaxEngine } from '@retikz/tex';
 
 const lowerTex = createLowerTex(await createMathJaxEngine({ profile: 'math' }));
 const input = scene({
-  children: [node('formula', { position: [0, 0], text: '$\\frac{a}{b} = c$' })],
+  children: [node({ id: 'formula', position: [0, 0], text: '$\\frac{a}{b} = c$' })],
 });
 
 const svg = renderToSvgString(input, { compile: { lowerTex } });

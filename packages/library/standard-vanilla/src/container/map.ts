@@ -46,10 +46,10 @@ export const MapInputEmbedAdapter: InputEmbedAdapter<InputMap> = {
   },
 };
 
-/** 创建 Map embed；参数 id 是 authoring 身份，持久化身份使用 input.id */
-export const map = (id: string, input: InputMap): InputEmbed<InputMap> => ({
+/** 创建 Map embed；显式 input.id 同时用作领域与 embed 身份 */
+export const map = (input: InputMap): InputEmbed<InputMap> => ({
   type: 'embed',
   kind: StandardMapEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

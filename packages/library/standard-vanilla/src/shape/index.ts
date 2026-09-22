@@ -31,52 +31,52 @@ export * from './sector';
 /** Standard 形状家族的 Vanilla 作者入口 */
 export const shape = Object.freeze({
   /** 创建 Circle，显式身份同时用于 embed 与最终路径 */
-  circle: (id: string, input: InputCircle): InputEmbed<InputCircle & { id: string }> => ({
+  circle: (input: InputCircle): InputEmbed<InputCircle> => ({
     type: 'embed',
     kind: CircleInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
   /** 创建 Ellipse，显式身份同时用于 embed 与最终路径 */
-  ellipse: (id: string, input: InputEllipse): InputEmbed<InputEllipse & { id: string }> => ({
+  ellipse: (input: InputEllipse): InputEmbed<InputEllipse> => ({
     type: 'embed',
     kind: EllipseInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
   /** 创建 Rectangle，显式身份同时用于 embed 与最终路径 */
-  rectangle: (id: string, input: InputRectangle): InputEmbed<InputRectangle & { id: string }> => ({
+  rectangle: (input: InputRectangle): InputEmbed<InputRectangle> => ({
     type: 'embed',
     kind: RectangleInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
   /** 创建 RegularPolygon，显式身份同时用于 embed 与最终路径 */
-  regularPolygon: (id: string, input: InputRegularPolygon): InputEmbed<InputRegularPolygon & { id: string }> => ({
+  regularPolygon: (input: InputRegularPolygon): InputEmbed<InputRegularPolygon> => ({
     type: 'embed',
     kind: RegularPolygonInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
   /** 创建 Star，显式身份同时用于 embed 与最终路径 */
-  star: (id: string, input: InputStar): InputEmbed<InputStar & { id: string }> => ({
+  star: (input: InputStar): InputEmbed<InputStar> => ({
     type: 'embed',
     kind: StarInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
   /** 创建 Arc，显式身份同时用于 embed 与最终路径 */
-  arc: (id: string, input: InputArc): InputEmbed<InputArc & { id: string }> => ({
+  arc: (input: InputArc): InputEmbed<InputArc> => ({
     type: 'embed',
     kind: ArcInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
   /** 创建 Sector，显式身份同时用于 embed 与最终路径 */
-  sector: (id: string, input: InputSector): InputEmbed<InputSector & { id: string }> => ({
+  sector: (input: InputSector): InputEmbed<InputSector> => ({
     type: 'embed',
     kind: SectorInputEmbedAdapter.kind,
-    id,
-    props: { ...input, id },
+    ...(input.id === undefined ? {} : { id: input.id }),
+    props: input,
   }),
 });

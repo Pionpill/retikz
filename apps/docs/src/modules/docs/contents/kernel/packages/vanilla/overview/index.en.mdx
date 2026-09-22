@@ -20,14 +20,14 @@ import { mount } from '@retikz/vanilla/dom';
 const input = scene({
   id: 'flow',
   layers: [
-    layer('main', [
-      node('a', { position: [0, 0], text: 'A' }),
-      node('b', { position: [120, 0], text: 'B' }),
-      path('edge', {
-        way: ['a', 'b'],
-        marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-      }),
-    ]),
+    layer({
+      id: 'main',
+      children: [
+        node({ id: 'a', position: [0, 0], text: 'A' }),
+        node({ id: 'b', position: [120, 0], text: 'B' }),
+        path({ id: 'edge', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+      ],
+    }),
   ],
 });
 
@@ -40,6 +40,14 @@ const view = mount(document.querySelector('#diagram')!, input);
 `scene({ theme: { style, mode } })` writes a sparse Theme to the Input root, while `scope({ theme }, children)` uses the same local-inheritance form. Normalization copies Theme objects rather than mutating caller input; both routes finally use the same Core Theme and compile contract.
 
 ## Input normalization and processing
+
+### Declare identity in the configuration
+
+Vanilla constructors do not take a separate ID string argument. `node({ id, position })`, `path({ id, way })`, `coordinate({ id, position })`, and `layer({ id, children })` read identity from their configuration. Each input contract still determines whether `id` is required.
+
+Domain builders also take their configuration directly, such as `shape.circle({ id, center, radius })` and `entity({ id, role, position })`. Inputs with a domain `id` reuse it as the embed identity; anonymous inputs do not gain a referenceable graphic ID. Layout inputs have no domain `id`, so use entries such as `flexLayout({ children })` directly.
+
+Generic embedding uses an object with `kind`, `props`, and optional `id` and `authoring` fields: `embed({ kind, props })`. Plot and Table use `embedPlot(source, datasets, lowerOptions?)` and `embedTable(spec, options?)`, without an extra embed ID argument.
 
 ### Why InputScene exists
 
@@ -119,7 +127,7 @@ With `runtime: { mode: 'static' }`, every `update()` of an `InputScene` or `IRSc
 
 `scene({ children })` creates an implicit Layer with the id `default`. Use `layers` and `layer()` when you need draw order, stable Layer ids, or cache hints. `zIndex` only orders the Layer stack, retaining declaration order for equal values. `cache` enters `InputRuntimeMeta` only; the DOM retained renderer conservatively reduces it to a Render cache policy and it never enters Core IR.
 
-Tier 2 capabilities enter through `embed(kind, id, props)`. Vanilla does not parse components or run hooks. It finds the caller-injected `InputEmbedAdapter` by `kind`, lowering typed props into a Core child and Composite dependency contribution.
+Tier 2 capabilities enter through `embed({ kind, id, props })`. Vanilla does not parse components or run hooks. It finds the caller-injected `InputEmbedAdapter` by `kind`, lowering typed props into a Core child and Composite dependency contribution.
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
@@ -130,13 +138,13 @@ type BadgeProps = { label: string };
 const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
   kind: 'badge',
   lower: (props, context) => ({
-    node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
+    node: node({ id: `${context.id}/label`, position: [0, 0], text: props.label }),
     providerDependencies: { roots: [], providers: [] },
   }),
 };
 
 const input = scene({
-  layers: [layer('content', [embed('badge', 'sales', { label: 'Sales' })])],
+  layers: [layer({ id: 'content', children: [embed({ kind: 'badge', id: 'sales', props: { label: 'Sales' } })] })],
 });
 
 const svg = renderToSvgString(input, { adapters: [BadgeInputEmbedAdapter] });

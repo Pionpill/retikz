@@ -26,14 +26,9 @@ export const OverlayLayoutInputEmbedAdapter: InputEmbedAdapter<InputOverlayLayou
 };
 
 /** 创建由 Layout 适配器下沉的 Overlay 布局嵌入项 */
-export const overlayLayout = (
-  id: string,
-  input: InputOverlayLayout,
-  authoring?: unknown,
-): InputEmbed<InputOverlayLayout> => ({
+export const overlayLayout = (input: InputOverlayLayout, authoring?: unknown): InputEmbed<InputOverlayLayout> => ({
   type: 'embed',
   kind: OverlayLayoutEmbedKind,
-  id,
   props: input,
   ...(authoring === undefined ? {} : { authoring }),
 });

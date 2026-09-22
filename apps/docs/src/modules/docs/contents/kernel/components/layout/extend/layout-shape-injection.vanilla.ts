@@ -7,14 +7,16 @@ import { fileShape, FileShapeName } from './layout-file-shape';
 const input = scene({
   viewBox: { x: -140, y: -70, width: 280, height: 140 },
   children: [
-    node('ir-file', {
+    node({
+      id: 'ir-file',
       position: [-90, 0],
       shape: FileShapeName,
       text: 'IR',
       style: { fill: 'none' },
       layout: { minimumSize: { width: 76, height: 96 } },
     }),
-    node('scene-file', {
+    node({
+      id: 'scene-file',
       position: [90, 0],
       shape: FileShapeName,
       text: 'Scene',
