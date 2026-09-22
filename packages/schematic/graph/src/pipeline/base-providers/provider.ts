@@ -9,7 +9,7 @@ import {
   HexagonShapeProvider,
 } from '@retikz/extension';
 import { FlexLayoutProvider } from '@retikz/layout';
-import { SurfaceProvider } from '@retikz/standard';
+import { SurfaceProvider } from '@retikz/standard/presentation';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import { BlockProvider, createBlockProvider } from '../block';

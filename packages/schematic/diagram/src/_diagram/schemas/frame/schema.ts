@@ -1,7 +1,7 @@
 import { Side } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { LayoutAlignment } from '@retikz/layout';
-import { SurfaceSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard/presentation';
 import { enum as zodEnum, strictObject } from 'zod';
 
 /** Diagram Frame 的字段契约，供完整 Frame 与 defaults 片段复用 */
