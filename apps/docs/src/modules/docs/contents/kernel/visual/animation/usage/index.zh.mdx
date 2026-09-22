@@ -3,7 +3,7 @@ title: 基础用法
 description: 动画用关键帧描述属性随时间的变化。内置预设返回同样的轨道数据，可与手写轨道组合。
 ---
 
-Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `colorShift`、`cameraTo`、`loop`、`stagger` 通用工具。`grow`、`growUp`、`pulse`、`spin`、`flash`、`blink`、`wiggle` 从 `@retikz/standard` 导入，详见 [Standard 动画预设](/library/standard/animation)。两层返回相同的轨道数据，不需要额外注册。
+Core 提供 `fadeIn`、`scaleIn`、`slideIn`、`drawOn` 基础预设，以及 `colorShift`、`cameraTo`、`loop`、`stagger` 通用工具。`grow`、`growUp`、`pulse`、`spin`、`flash`、`blink`、`wiggle` 从 `@retikz/extension` 导入，详见 [Extension 动画预设](/library/extension/animation)。两层返回相同的轨道数据，不需要额外注册。
 
 ## 接入方式
 
@@ -136,7 +136,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 入场与强调
 
-| 目的       | Core 基础预设 / 工具 | Standard 可选效果                 |
+| 目的       | Core 基础预设 / 工具 | Extension 可选效果                |
 | ---------- | -------------------- | --------------------------------- |
 | 透明度入场 | fadeIn               | —                                 |
 | 缩放入场   | scaleIn              | grow、growUp                      |

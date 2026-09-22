@@ -1,5 +1,5 @@
 import { Coordinate, Draw, EdgeLabel, Layout, Node, Path, Scope, Step, Text } from '@retikz/react';
-import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react';
+import { Axes, Frame, FrameDescription, FrameTitle, Grid } from '@retikz/standard-react/presentation';
 import { Arc, Circle, Ellipse, Rectangle, RegularPolygon, Sector, Star } from '@retikz/standard-react/shape';
 import { Parser } from 'acorn';
 import jsx from 'acorn-jsx';

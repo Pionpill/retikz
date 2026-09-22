@@ -7,7 +7,7 @@ description: 定义并注册箭头轮廓，供路径端点与沿线标记使用
 
 ## 适用边界
 
-Core 默认提供 `normal`、`open`、`stealth`、`openStealth`、`circle` 与 `openCircle` 六种基础箭头；实心 / 空心菱形由 [箭头扩展](/library/standard/arrow) 按需提供。只有 Core 与已装配 Standard 造型都不够用时，才注册新的 definition。
+Core 默认提供 `normal`、`open`、`stealth`、`openStealth`、`circle` 与 `openCircle` 六种基础箭头；实心 / 空心菱形由 [箭头扩展](/library/extension/arrow) 按需提供。只有 Core 与已装配 Standard 造型都不够用时，才注册新的 definition。
 
 | 需求                           | 选择                                              |
 | ------------------------------ | ------------------------------------------------- |
@@ -138,7 +138,7 @@ const view = mount(document.getElementById('diagram')!, input, {
 | 情况                                        | 结果                                            |
 | ------------------------------------------- | ----------------------------------------------- |
 | 名称为空                                    | registry 拒绝非空 key 约束                      |
-| 与已注册的 Core、Standard 或自定义箭头重名  | registry 合并时报重复注册                       |
+| 与已注册的 Core、Extension 或自定义箭头重名 | registry 合并时报重复注册                       |
 | `arrowDetail.shape` 未注册                  | 编译列出可用名称与 `options.arrows` 注入提示    |
 | `baseSize`、back / contact / tip 或尺寸非法 | 编译拒绝无效 marker 几何                        |
 | `emit` 产出未知 primitive 或无限坐标        | marker 校验拒绝，不让坏几何进入 Scene           |

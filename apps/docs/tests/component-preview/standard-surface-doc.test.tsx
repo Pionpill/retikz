@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { SurfaceSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
@@ -15,11 +15,11 @@ const surfaceRoot = resolve(process.cwd(), 'src/modules/docs/contents/library/st
 const readPage = (language: 'zh' | 'en'): string => readFileSync(resolve(surfaceRoot, `index.${language}.mdx`), 'utf8');
 
 describe('Standard Surface documentation', () => {
-  it('registers the route after Frame and keeps both locale labels available', () => {
-    const composites = librarySection
+  it('registers the route after Frame in the presentation group and keeps both locale labels available', () => {
+    const presentationPages = librarySection
       .find(section => section.id === 'standard')
-      ?.pages.filter(page => page.sidebarGroup === 'library.standardComposite');
-    const ids = composites?.map(node => node.id) ?? [];
+      ?.pages.filter(page => page.sidebarGroup === 'library.standardPresentation');
+    const ids = presentationPages?.map(node => node.id) ?? [];
 
     expect(ids.indexOf('surface')).toBe(ids.indexOf('frame') + 1);
     expect(readFileSync(resolve(process.cwd(), 'src/i18n/locales/zh.json'), 'utf8')).toContain(

@@ -1,10 +1,10 @@
 import { runInNewContext } from 'node:vm';
 
+import * as clip from '@retikz/extension';
 import * as inspect from '@retikz/inspect';
 import type { InspectLayoutProps } from '@retikz/inspect/react';
 import * as inspectVanilla from '@retikz/inspect/vanilla';
 import { createInputScene } from '@retikz/react';
-import * as clip from '@retikz/standard/clip';
 import * as vanilla from '@retikz/vanilla';
 import { isValidElement } from 'react';
 import { ModuleKind, transpileModule } from 'typescript';
@@ -139,7 +139,7 @@ describe('Inspect demo source views', () => {
           '@retikz/vanilla': vanilla,
           '@retikz/inspect': inspect,
           '@retikz/inspect/vanilla': inspectVanilla,
-          '@retikz/standard/clip': clip,
+          '@retikz/extension': clip,
           '@/modules/docs/components/component-preview/theme': theme,
           '@/modules/docs/components/component-preview/vanilla-preview': measure,
           [`./${name}.config.json`]: config,

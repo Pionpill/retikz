@@ -1,4 +1,9 @@
 export const releaseGroups = {
+  extension: {
+    domain: 'library',
+    kind: 'feature',
+    packages: ['@retikz/extension'],
+  },
   layout: {
     domain: 'library',
     kind: 'feature',

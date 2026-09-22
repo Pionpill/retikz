@@ -15,7 +15,7 @@ Frame's root is a Core `Scope`. `border` configures only the inner border Path; 
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -31,11 +31,11 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
 `FrameTitle` and `FrameDescription` are semantic parts consumed directly by `Frame`. They retain Node text, shape, style, font, label, meta, and animation behavior while leaving `position` to Frame; the body accepts at least one direct `Node` child.
 
-| Scenario         | Public entry point                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| React            | `Frame`, `FrameTitle`, and `FrameDescription` from `@retikz/standard-react`                                               |
-| Vanilla          | `frame`, `frameTitle`, `frameDescription`, and `FrameInputEmbedAdapter` from `@retikz/standard-vanilla`                   |
-| IR / persistence | `FrameSchema`, `FrameTitleSchema`, `FrameDescriptionSchema`, `createFrame`, and `FrameDefinition` from `@retikz/standard` |
+| Scenario         | Public entry point                                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| React            | `Frame`, `FrameTitle`, and `FrameDescription` from `@retikz/standard-react/presentation`                                               |
+| Vanilla          | `frame`, `frameTitle`, `frameDescription`, and `FrameInputEmbedAdapter` from `@retikz/standard-vanilla/presentation`                   |
+| IR / persistence | `FrameSchema`, `FrameTitleSchema`, `FrameDescriptionSchema`, `createFrame`, and `FrameDefinition` from `@retikz/standard/presentation` |
 
 See [Standard](/library/standard) for the package family and its three entry points. This page focuses on Frame composition, styling, and lowering semantics.
 
@@ -91,16 +91,16 @@ Omitted Frame, Title, and Description ids all remain anonymous; explicit ids pas
   sources={[
     {
       label: 'Frame input and explicit-id conflict contract',
-      path: 'packages/library/standard/src/composites/presentation/frame/schema.ts',
+      path: 'packages/library/standard/src/presentation/frame/schema.ts',
     },
     {
       label: 'Node-like header contract',
-      path: 'packages/library/standard/src/composites/presentation/frame/schema.ts',
+      path: 'packages/library/standard/src/presentation/frame/schema.ts',
     },
-    { label: 'Frame Definition', path: 'packages/library/standard/src/composites/presentation/frame/definition.ts' },
+    { label: 'Frame Definition', path: 'packages/library/standard/src/presentation/frame/definition.ts' },
     {
       label: 'Frame lowering and header placement',
-      path: 'packages/library/standard/src/composites/presentation/frame/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/frame/pipeline.ts',
     },
   ]}
 />

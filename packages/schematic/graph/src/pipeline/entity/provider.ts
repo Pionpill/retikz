@@ -1,5 +1,5 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
-import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/node-shape';
+import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/extension';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import { createGraphRuntimeDatasets, resolveGraphRuntimeOptions } from '../../providers';

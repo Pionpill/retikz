@@ -72,14 +72,14 @@
     "@retikz/foundation": "workspace:^",
     "@retikz/layout": "workspace:^",
     "@retikz/math": "workspace:^",
-    "@retikz/standard": "workspace:^",
     "@types/d3-scale": "catalog:",
     "d3-array": "catalog:",
     "d3-format": "catalog:",
     "d3-scale": "catalog:",
     "d3-scale-chromatic": "catalog:",
     "d3-time-format": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/extension": "workspace:^"
   },
   "devDependencies": {
     "@types/d3-array": "catalog:",

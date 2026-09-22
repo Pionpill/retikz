@@ -1,15 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockHeaderProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockHeaderEmbedKind } from './constants';
-import type { InputBlockHeader, InputGraphChild } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputBlockHeader, InputGraphChild, WithoutInputType } from './normalize';
 import { normalizeBlockHeader } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Block Header embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockHeaderInputEmbedProps = InputBlockHeader & GraphDefinitionOptions;
+export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader> & GraphDefinitionOptions;
 
 const inputOf = (props: BlockHeaderInputEmbedProps): InputBlockHeader => {
   const {
@@ -29,7 +30,7 @@ const inputOf = (props: BlockHeaderInputEmbedProps): InputBlockHeader => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'blockHeader', ...input };
 };
 
 /** Block Header Source 的 InputEmbed adapter */
@@ -63,9 +64,5 @@ export const BlockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeaderInputEmb
 };
 
 /** 创建 Block Header Source 的 authoring embed 节点 */
-export const blockHeader = (id: string, input: BlockHeaderInputEmbedProps): InputEmbed<BlockHeaderInputEmbedProps> => ({
-  type: 'embed',
-  kind: BlockHeaderEmbedKind,
-  id,
-  props: input,
-});
+export const blockHeader = (input: BlockHeaderInputEmbedProps) =>
+  createGraphInputEmbed(BlockHeaderEmbedKind, input, undefined);

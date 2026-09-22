@@ -1,0 +1,79 @@
+---
+title: Quick start
+description: Install Graph and complete your first structured diagram with two objects and one relationship.
+---
+
+This example creates client and service Entities, then uses one flow Relation to represent a request. Graph renders this standalone diagram directly.
+
+## Installation and usage
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/graph-react react react-dom" />
+
+Declare Graph and its children inside a React component. A top-level `<Graph>` renders the diagram directly.
+
+```tsx
+import { Entity, Graph, Relation } from '@retikz/graph-react';
+
+export const ServiceGraph = () => (
+  <Graph viewBox={{ x: 0, y: 0, width: 440, height: 160 }}>
+    <Entity id="client" role="participant" position={[96, 80]}>
+      Client
+    </Entity>
+    <Entity id="service" role="activity" position={[344, 80]}>
+      Service
+    </Entity>
+    <Relation id="request" role="flow" source="client" target="service" />
+  </Graph>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/graph-vanilla @retikz/vanilla" />
+
+Vanilla first creates an InputScene with Graph builders, then passes Graph adapters to `mount()`. The adapter lets mounting recognize and process Graph components.
+
+```ts
+import { createGraphVanillaAdapters, entity, graph, relation } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  viewBox: { x: 0, y: 0, width: 440, height: 160 },
+  children: [
+    graph({
+      children: [
+        entity({ id: 'client', role: 'participant', position: [96, 80], text: 'Client' }),
+        entity({ id: 'service', role: 'activity', position: [344, 80], text: 'Service' }),
+        relation({
+          id: 'request',
+          role: 'flow',
+          source: 'client',
+          target: 'service',
+        }),
+      ],
+    }),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+Call `view.dispose()` before removing the container to release resources for this mount.
+
+</DocTab>
+</DocTabs>
+
+## Minimal result
+
+Both approaches render two objects and one relationship from Client to Service. An `id` is the referenceable name of an object in the diagram; Relation connects those names through `source` and `target` without copying object positions. When an endpoint needs an anchor, offset, or connection boundary, write `source` or `target` as a `{ id, anchor, offset, boundary }` object instead. A Vanilla element without an `id` still renders, but cannot be a Relation endpoint.
+
+<ComponentPreview files="/schematic/graph/graph-overview" size="sm" />
+
+## Next steps
+
+After your first diagram, read [Entity](/schematic/graph/entity) for roles and styling, or [Relation](/schematic/graph/relation) for direction, labels, and routes. Use [Group](/schematic/graph/group) and [Block](/schematic/graph/block) for boundaries and engineering objects.

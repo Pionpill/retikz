@@ -1,7 +1,7 @@
 import type { IRChild, ResolvedTheme } from '@retikz/core';
 import type { JsonObject } from '@retikz/foundation';
 import type { IRPlot } from '@retikz/plot';
-import type { IRSurface } from '@retikz/standard';
+import type { IRSurface } from '@retikz/standard/presentation';
 
 import type { ChartEncodingRuntime, ChartRecipeDefinition } from '../contract/recipe';
 import type { ChartThemeDefinition, ChartThemeResolution } from '../contract/theme';

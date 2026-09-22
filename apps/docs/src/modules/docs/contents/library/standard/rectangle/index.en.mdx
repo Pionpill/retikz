@@ -3,11 +3,11 @@ title: Rectangles
 description: Draw rectangles with shared Standard semantics across React, Vanilla and JSON
 ---
 
-Standard Rectangle preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/standard/shape).
+Standard Rectangle preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
 
 ## Entry points
 
-Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/standard/node-shape`.
+Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
 
 React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx(id, input)` with the same explicit identity for the embed and its final path. React does not persist an automatic occurrence id. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
 
@@ -66,7 +66,7 @@ If either node reference cannot be resolved, the whole Path is skipped with a wa
   sources={[
     {
       label: 'Rectangle prop normalization and Path expansion',
-      path: 'packages/library/standard/src/composites/shape/rectangle/pipeline.ts',
+      path: 'packages/library/standard/src/shape/rectangle/pipeline.ts',
       startLine: 1,
     },
     {

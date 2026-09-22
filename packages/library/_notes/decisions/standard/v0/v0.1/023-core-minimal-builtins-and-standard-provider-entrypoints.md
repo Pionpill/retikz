@@ -7,6 +7,7 @@ keywords: 'Core、Standard、provider、circle、ellipse、compound、rectangle'
 
 - 状态：Accepted（2026-08-15，公开契约、Tier 2 装配与跨入口闭环完成）
 - 决策日期：2026-08-13
+- 后继决策：[ADR-032](./032-extension-package-boundary.md) 取代本文关于 Standard provider 子入口归属与导入路径的结论，Core 最小内置集合与装配机制不变
 - 关联：[Standard v0.1 roadmap](./roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../architecture/standard-library-design.md) · [Core Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md) · [Standard ADR-021](./021-direct-definition-loading.md) · [Core ADR-027](../../../../../../kernel/_notes/decisions/v0/v0.5/027-composite-dependency-provider-graph.md)
 
 ## 背景与目标

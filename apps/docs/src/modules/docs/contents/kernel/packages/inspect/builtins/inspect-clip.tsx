@@ -1,7 +1,7 @@
+import { PathClipDefinition } from '@retikz/extension';
 import { CLIP_INSPECTOR_KEY, createDefaultInspectorRegistry } from '@retikz/inspect';
 import { InspectLayout } from '@retikz/inspect/react';
 import { Node, Scope } from '@retikz/react';
-import { PathClipDefinition } from '@retikz/standard/clip';
 
 import { defineControlledBuiltinInspectPreview } from '@/modules/docs/preview';
 

@@ -41,6 +41,14 @@
     "./shape": {
       "types": "./src/shape/index.ts",
       "default": "./src/shape/index.ts"
+    },
+    "./presentation": {
+      "types": "./src/presentation/index.ts",
+      "default": "./src/presentation/index.ts"
+    },
+    "./container": {
+      "types": "./src/container/index.ts",
+      "default": "./src/container/index.ts"
     }
   },
   "publishConfig": {
@@ -57,6 +65,16 @@
         "types": "./dist/types/shape/index.d.ts",
         "import": "./dist/shape/index.js",
         "default": "./dist/shape/index.js"
+      },
+      "./presentation": {
+        "types": "./dist/types/presentation/index.d.ts",
+        "import": "./dist/presentation/index.js",
+        "default": "./dist/presentation/index.js"
+      },
+      "./container": {
+        "types": "./dist/types/container/index.d.ts",
+        "import": "./dist/container/index.js",
+        "default": "./dist/container/index.js"
       }
     }
   },
@@ -76,7 +94,8 @@
     "@retikz/core": "workspace:^",
     "@retikz/standard": "workspace:*",
     "@retikz/vanilla": "workspace:^",
-    "@retikz/layout": "workspace:^"
+    "@retikz/layout": "workspace:^",
+    "@retikz/extension": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -1,15 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockSectionProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockSectionEmbedKind } from './constants';
-import type { InputBlockSection } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputBlockSection, WithoutInputType } from './normalize';
 import { normalizeBlockSection } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Block Section embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockSectionInputEmbedProps = InputBlockSection & GraphDefinitionOptions;
+export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection> & GraphDefinitionOptions;
 
 const inputOf = (props: BlockSectionInputEmbedProps): InputBlockSection => {
   const {
@@ -29,7 +30,7 @@ const inputOf = (props: BlockSectionInputEmbedProps): InputBlockSection => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'blockSection', ...input };
 };
 
 /** Block Section Source 的 InputEmbed adapter */
@@ -58,12 +59,5 @@ export const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSectionInputE
 };
 
 /** 创建 Block Section Source 的 authoring embed 节点 */
-export const blockSection = (
-  id: string,
-  input: BlockSectionInputEmbedProps,
-): InputEmbed<BlockSectionInputEmbedProps> => ({
-  type: 'embed',
-  kind: BlockSectionEmbedKind,
-  id,
-  props: input,
-});
+export const blockSection = (input: BlockSectionInputEmbedProps) =>
+  createGraphInputEmbed(BlockSectionEmbedKind, input, input.id);

@@ -23,13 +23,13 @@ import {
   ShadowPreset,
   ShapeValueSchema,
 } from '@retikz/core';
+import { RibbonPathOptionsSchema } from '@retikz/extension';
 import {
   JsonValueSchema,
   NonBlankStringSchema,
   NonNegativeNumberSchema,
   PositiveNumberSchema,
 } from '@retikz/foundation';
-import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import type { ZodLiteral, ZodObject, ZodOptional, ZodString, ZodType } from 'zod';
 import {
   array,

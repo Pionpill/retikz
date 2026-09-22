@@ -7,6 +7,7 @@ import renderPackage from '../../../../../../packages/kernel/render/package.json
 import runtimePackage from '../../../../../../packages/kernel/runtime/package.json';
 import texPackage from '../../../../../../packages/kernel/tex/package.json';
 import vanillaPackage from '../../../../../../packages/kernel/vanilla/package.json';
+import extensionPackage from '../../../../../../packages/library/extension/package.json';
 import layoutReactPackage from '../../../../../../packages/library/layout-react/package.json';
 import layoutVanillaPackage from '../../../../../../packages/library/layout-vanilla/package.json';
 import layoutPackage from '../../../../../../packages/library/layout/package.json';
@@ -55,6 +56,7 @@ const packageManifests: Array<PackageManifest> = [
   reactPackage,
   vanillaPackage,
   texPackage,
+  extensionPackage,
   layoutPackage,
   layoutReactPackage,
   layoutVanillaPackage,
@@ -91,6 +93,7 @@ const releaseGroupVersions = packageManifests.reduce<Map<string, Set<string>>>((
 /** Docs 路由分组到 package release group 的稳定映射。 */
 const docSectionReleaseGroups: Readonly<Record<string, string>> = {
   'kernel/packages': 'kernel',
+  'library/extension': 'extension',
   'library/layout': 'layout',
   'library/standard': 'standard',
   'schematic/diagram': 'diagram',

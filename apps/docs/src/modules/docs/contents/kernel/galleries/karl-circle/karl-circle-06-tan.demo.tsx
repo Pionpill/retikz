@@ -1,5 +1,5 @@
 import { Coordinate, Draw, Layout, Node } from '@retikz/react';
-import { Grid } from '@retikz/standard-react';
+import { Grid } from '@retikz/standard-react/presentation';
 import { Circle, Sector } from '@retikz/standard-react/shape';
 import { useLowerTex } from '@retikz/tex/react';
 import type { FC } from 'react';

@@ -1,6 +1,12 @@
 import { createInputScene, Layout, Node } from '@retikz/react';
-import { createGrid, GridDefinition, GridProvider, LegendContentKind, LegendProvider } from '@retikz/standard';
-import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react';
+import { Axes, Frame, FrameTitle, Grid, Legend, LegendItem } from '@retikz/standard-react/presentation';
+import {
+  createGrid,
+  GridDefinition,
+  GridProvider,
+  LegendContentKind,
+  LegendProvider,
+} from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';

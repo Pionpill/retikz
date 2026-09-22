@@ -1,7 +1,7 @@
 import { FlexLayout, LayoutItem } from '@retikz/layout-react';
 import { Layout, Node, Text } from '@retikz/react';
-import { LegendContentKind } from '@retikz/standard';
-import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react';
+import { Legend, LegendItem, LegendTitle, Surface } from '@retikz/standard-react/presentation';
+import { LegendContentKind } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 
 /** 展示 Diagram Framework 对 Presentation、绘图核心、图例与外框的统一装配 */

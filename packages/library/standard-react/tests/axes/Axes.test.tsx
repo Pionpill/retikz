@@ -1,10 +1,10 @@
 import { createInputScene } from '@retikz/react';
-import type { AxesInput } from '@retikz/standard';
-import { AxesDefinition, AxesProvider, createAxes, GridProvider } from '@retikz/standard';
+import type { AxesInput } from '@retikz/standard/presentation';
+import { AxesDefinition, AxesProvider, createAxes, GridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { Axes, Grid } from '../../src';
+import { Axes, Grid } from '../../src/presentation';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
 const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {

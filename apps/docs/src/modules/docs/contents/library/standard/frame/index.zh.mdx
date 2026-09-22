@@ -15,7 +15,7 @@ Frame 的根元素是 Core `Scope`。`border` 只配置内部边框 Path；Frame
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -31,11 +31,11 @@ import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
 
 `FrameTitle` 与 `FrameDescription` 是 `Frame` 直接消费的语义组成部分。它们沿用 Node 的文字、shape、样式、font、label、meta 与 animation 行为，只把 `position` 交给 Frame；内容区则只接受至少一个直接 `Node` 子项。
 
-| 场景        | 公开入口                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| React       | `Frame`、`FrameTitle`、`FrameDescription`（`@retikz/standard-react`）                                               |
-| Vanilla     | `frame`、`frameTitle`、`frameDescription`、`FrameInputEmbedAdapter`（`@retikz/standard-vanilla`）                   |
-| IR / 持久化 | `FrameSchema`、`FrameTitleSchema`、`FrameDescriptionSchema`、`createFrame`、`FrameDefinition`（`@retikz/standard`） |
+| 场景        | 公开入口                                                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| React       | `Frame`、`FrameTitle`、`FrameDescription`（`@retikz/standard-react/presentation`）                                               |
+| Vanilla     | `frame`、`frameTitle`、`frameDescription`、`FrameInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`）                   |
+| IR / 持久化 | `FrameSchema`、`FrameTitleSchema`、`FrameDescriptionSchema`、`createFrame`、`FrameDefinition`（`@retikz/standard/presentation`） |
 
 包族定位和三种使用入口见 [Standard](/library/standard)。本页只展开 Frame 自身的组合、样式与 lowering 语义。
 
@@ -91,13 +91,13 @@ lowering 使用 occurrence-local 的匿名 Scope probe 测量内容区，并只 
   sources={[
     {
       label: 'Frame 输入与显式 id 冲突契约',
-      path: 'packages/library/standard/src/composites/presentation/frame/schema.ts',
+      path: 'packages/library/standard/src/presentation/frame/schema.ts',
     },
-    { label: '类 Node 标题契约', path: 'packages/library/standard/src/composites/presentation/frame/schema.ts' },
-    { label: 'Frame Definition', path: 'packages/library/standard/src/composites/presentation/frame/definition.ts' },
+    { label: '类 Node 标题契约', path: 'packages/library/standard/src/presentation/frame/schema.ts' },
+    { label: 'Frame Definition', path: 'packages/library/standard/src/presentation/frame/definition.ts' },
     {
       label: 'Frame lowering 与标题区排布',
-      path: 'packages/library/standard/src/composites/presentation/frame/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/frame/pipeline.ts',
     },
   ]}
 />

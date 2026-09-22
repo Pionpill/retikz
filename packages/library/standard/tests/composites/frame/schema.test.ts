@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { FrameDescriptionSchema, FrameHeaderDirection, FrameSchema, FrameTitleSchema } from '../../../src';
-import { resolveFrame } from '../../../src/resolve/frame';
+import { FrameDescriptionSchema, FrameHeaderDirection, FrameSchema, FrameTitleSchema } from '../../../src/presentation';
+import { resolveFrame } from '../../../src/presentation/frame/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const node = { type: 'node', position: [0, 0], text: 'A' } as const;

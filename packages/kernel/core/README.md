@@ -38,7 +38,7 @@ Most users consume core indirectly through [`@retikz/react`](https://www.npmjs.c
 - `parseWay` / `parseNodeTarget` / `parseTargetSugar` — pure parsers
 - `point` / `rect` / `circle` / `ellipse` / `diamond` / `polar` — geometry
 - Provider registries and definition helpers for `shapes`, `boundaries`, `clips`, `arrows`, `patterns`, `pathGenerators`, `pathKinds`, and `composites`
-- Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, and `BUILTIN_PATH_KINDS`; optional kinds such as Ribbon come from `@retikz/standard/ribbon` and are injected through `pathKinds` or a provider contribution
+- Built-in provider collections such as `BUILTIN_SHAPES`, `BUILTIN_BOUNDARIES`, `BUILTIN_CLIPS`, `BUILTIN_ARROWS`, `BUILTIN_PATTERNS`, `BUILTIN_PATH_GENERATORS`, and `BUILTIN_PATH_KINDS`; optional kinds such as Ribbon come from `@retikz/extension` and are injected through `pathKinds` or a provider contribution
 
 ## Docs
 

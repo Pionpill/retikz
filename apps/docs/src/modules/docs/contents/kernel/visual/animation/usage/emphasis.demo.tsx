@@ -1,6 +1,6 @@
 import { colorShift, loop, slideIn } from '@retikz/core';
+import { blink, flash, pulse, spin, wiggle } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
-import { blink, flash, pulse, spin, wiggle } from '@retikz/standard';
 import type { FC } from 'react';
 
 // 强调与循环合集：flash / blink / wiggle 强调，pulse / spin 循环，loop 包装 slideIn，colorShift 变色

@@ -136,8 +136,8 @@
     "@retikz/foundation": "workspace:^",
     "@retikz/plot": "workspace:^",
     "@retikz/plot-vanilla": "workspace:^",
-    "@retikz/standard": "workspace:^",
-    "@retikz/vanilla": "workspace:^"
+    "@retikz/vanilla": "workspace:^",
+    "@retikz/extension": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

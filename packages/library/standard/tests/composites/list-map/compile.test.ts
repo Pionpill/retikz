@@ -1,11 +1,11 @@
 import type { AnyCompositeDefinition, IRChild, LayoutChildResult, LayoutProposal } from '@retikz/core';
 import { ChildSchema, CompositeBaseSchema, compileToScene, defineComposite, LayoutChildProbeKind } from '@retikz/core';
+import { PathClipDefinition } from '@retikz/extension';
 import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal, boolean } from 'zod';
 
-import { ListDefinition, MapDefinition } from '../../../src';
-import { PathClipDefinition } from '../../../src/clip';
+import { ListDefinition, MapDefinition } from '../../../src/container';
 
 const cell = (id: string, width: number, height: number) => ({
   id,

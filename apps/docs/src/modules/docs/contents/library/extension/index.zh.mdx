@@ -1,0 +1,44 @@
+---
+title: Extension · 拓展包
+description: 按需选择节点形状、箭头、裁剪和流带，丰富图形的表现方式。
+---
+
+Extension 提供可直接使用的绘图定义。比如一张连接图可以使用圆柱节点、菱形箭头和流带；每类能力独立选择，显式加入当前图。
+
+## 职责一览
+
+| 能力     | 用途             |
+| -------- | ---------------- |
+| 节点形状 | 定义节点轮廓     |
+| 箭头     | 标记路径端点     |
+| 裁剪     | 限制内容显示范围 |
+| 流带     | 绘制带宽度的路径 |
+| 动画预设 | 生成动画轨道     |
+
+## 安装与使用
+
+<PackageManagerInstall packages="@retikz/extension" />
+
+所有能力统一从包根导入，将所选定义传给当前图的绘图入口：
+
+```ts
+import { CrossShapeDefinition, DiamondArrowDefinition } from '@retikz/extension';
+```
+
+React 的 `Layout.extensions` 与 Vanilla 渲染选项的 `compile` 均接受这些定义。[快速开始](/library/extension/get-start)包含宿主安装、完整代码和结果说明。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '简介', description: '简介', url: '/library/extension/introduction' },
+    { title: '快速开始', description: '快速开始', url: '/library/extension/get-start' },
+    { title: '更新日志', description: '更新日志', url: '/library/extension/changelog' },
+    { title: '节点形状', description: '节点形状', url: '/library/extension/shape' },
+    { title: '箭头', description: '箭头', url: '/library/extension/arrow' },
+    { title: '裁剪', description: '裁剪', url: '/library/extension/clip' },
+    { title: '流带', description: '流带', url: '/library/extension/ribbon' },
+    { title: '能力装载', description: '能力装载', url: '/library/extension/capability-loading' },
+    { title: '动画预设', description: '动画预设', url: '/library/extension/animation' },
+  ]}
+/>

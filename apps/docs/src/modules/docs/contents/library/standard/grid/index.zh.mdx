@@ -9,7 +9,7 @@ description: 用 JSON-safe Tier 2 Grid 描述规则参考线、主线和边框�
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { Grid } from '@retikz/standard-react';
+import { Grid } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -18,13 +18,13 @@ import { Grid } from '@retikz/standard-react';
 </Layout>
 ```
 
-React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或非 React 场景可从 `@retikz/standard` 使用 `createGrid`，并在 Core compile options 中显式传入 `GridDefinition`
+React 入口会在当前 `Layout` 局部贡献 `GridDefinition`。持久化或非 React 场景可从 `@retikz/standard/presentation` 使用 `createGrid`，并在 Core compile options 中显式传入 `GridDefinition`
 
-| 场景        | 公开入口                                                           |
-| ----------- | ------------------------------------------------------------------ |
-| React       | `Grid`（`@retikz/standard-react`）                                 |
-| Vanilla     | `grid`、`GridInputEmbedAdapter`（`@retikz/standard-vanilla`）      |
-| IR / 持久化 | `GridSchema`、`createGrid`、`GridDefinition`（`@retikz/standard`） |
+| 场景        | 公开入口                                                                        |
+| ----------- | ------------------------------------------------------------------------------- |
+| React       | `Grid`（`@retikz/standard-react/presentation`）                                 |
+| Vanilla     | `grid`、`GridInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`）      |
+| IR / 持久化 | `GridSchema`、`createGrid`、`GridDefinition`（`@retikz/standard/presentation`） |
 
 包族定位和三种使用入口见 [Standard](/library/standard)；本页只展开 Grid 自身的字段与语义
 
@@ -87,8 +87,8 @@ Grid 的 IR 不直接成为新的渲染图元。角点形式先按两个轴独�
 
 <SourceLinks
   sources={[
-    { label: 'Grid schema and contract', path: 'packages/library/standard/src/composites/presentation/grid/schema.ts' },
-    { label: 'Grid lowering', path: 'packages/library/standard/src/composites/presentation/grid/pipeline.ts' },
+    { label: 'Grid schema and contract', path: 'packages/library/standard/src/presentation/grid/schema.ts' },
+    { label: 'Grid lowering', path: 'packages/library/standard/src/presentation/grid/pipeline.ts' },
   ]}
 />
 

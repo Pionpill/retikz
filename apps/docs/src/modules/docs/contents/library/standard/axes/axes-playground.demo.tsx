@@ -1,6 +1,6 @@
 import { Layout } from '@retikz/react';
-import type { AxesInput } from '@retikz/standard';
-import { Axes } from '@retikz/standard-react';
+import { Axes } from '@retikz/standard-react/presentation';
+import type { AxesInput } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';

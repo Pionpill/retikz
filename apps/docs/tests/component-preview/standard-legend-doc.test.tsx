@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { compileToScene } from '@retikz/core';
-import { LegendArtifactSchema, LegendDefinition, LegendSchema } from '@retikz/standard';
+import { LegendArtifactSchema, LegendDefinition, LegendSchema } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 import { describe, expect, it } from 'vitest';
 

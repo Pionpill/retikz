@@ -81,7 +81,8 @@
     "tailwind-merge": "catalog:",
     "use-stick-to-bottom": "^1.1.4",
     "zod": "catalog:",
-    "zustand": "catalog:"
+    "zustand": "catalog:",
+    "@retikz/extension": "workspace:^"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

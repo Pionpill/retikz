@@ -7,11 +7,11 @@ import {
   LegendDirection,
   LegendSampleAlignment,
   LegendWrap,
-} from '../../src/composites/presentation/legend/constants';
-import { createLegend } from '../../src/composites/presentation/legend/factory';
-import { LegendSchema } from '../../src/composites/presentation/legend/schema';
-import type { LegendInput } from '../../src/composites/presentation/legend/types';
-import { resolveLegend } from '../../src/resolve/legend';
+} from '../../src/presentation/legend/constants';
+import { createLegend } from '../../src/presentation/legend/factory';
+import { resolveLegend } from '../../src/presentation/legend/resolve';
+import { LegendSchema } from '../../src/presentation/legend/schema';
+import type { LegendInput } from '../../src/presentation/legend/types';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const sample: IRChild = { type: 'node', position: [0, 0], text: 'Sample' };

@@ -1,15 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { GraphProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { GraphEmbedKind } from './constants';
-import type { InputGraph } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputGraph, WithoutInputType } from './normalize';
 import { normalizeGraph } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Graph embed 同时携带 Source authoring 输入与当前 definition options */
-export type GraphInputEmbedProps = InputGraph & GraphDefinitionOptions;
+export type GraphInputEmbedProps = WithoutInputType<InputGraph> & GraphDefinitionOptions;
 
 const inputOf = (props: GraphInputEmbedProps): InputGraph => {
   const {
@@ -29,7 +30,7 @@ const inputOf = (props: GraphInputEmbedProps): InputGraph => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'graph', ...input };
 };
 
 /** Graph Source root 的 InputEmbed adapter */
@@ -58,9 +59,4 @@ export const GraphInputEmbedAdapter: InputEmbedAdapter<GraphInputEmbedProps> = {
 };
 
 /** 创建 Graph Source root 的 authoring embed 节点 */
-export const graph = (id: string, input: GraphInputEmbedProps): InputEmbed<GraphInputEmbedProps> => ({
-  type: 'embed',
-  kind: GraphEmbedKind,
-  id,
-  props: input,
-});
+export const graph = (input: GraphInputEmbedProps) => createGraphInputEmbed(GraphEmbedKind, input, input.id);

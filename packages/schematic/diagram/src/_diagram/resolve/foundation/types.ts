@@ -1,5 +1,5 @@
 import type { ResolvedTheme } from '@retikz/core';
-import type { IRSurface } from '@retikz/standard';
+import type { IRSurface } from '@retikz/standard/presentation';
 
 import type { DiagramThemeStyleDefinition } from '../../contract';
 import type { IRDiagramDefaults, IRDiagramFrame, IRDiagramPresentation } from '../../schemas';

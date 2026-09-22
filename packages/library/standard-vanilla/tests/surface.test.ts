@@ -1,9 +1,9 @@
-import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
+import { PathClipProvider } from '@retikz/extension';
+import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { frame, FrameInputEmbedAdapter, surface, surfaceChild, SurfaceInputEmbedAdapter } from '../src';
+import { frame, FrameInputEmbedAdapter, surface, surfaceChild, SurfaceInputEmbedAdapter } from '../src/presentation';
 
 describe('surface()', () => {
   it('wraps a raw Core child without inventing child dependencies', () => {

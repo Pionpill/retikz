@@ -1,5 +1,5 @@
 import { JsonObjectSchema, NonBlankStringSchema } from '@retikz/foundation';
-import { SurfaceSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard/presentation';
 import type { RefinementCtx, ZodType } from 'zod';
 import { array, discriminatedUnion, literal, strictObject, union } from 'zod';
 

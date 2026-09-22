@@ -1,10 +1,10 @@
 import { createInputScene } from '@retikz/react';
-import type { GridInput } from '@retikz/standard';
-import { createGrid, GridDefinition, GridProvider } from '@retikz/standard';
+import type { GridInput } from '@retikz/standard/presentation';
+import { createGrid, GridDefinition, GridProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { Grid } from '../../src';
+import { Grid } from '../../src/presentation';
 
 /** 经 React JSX 到 Vanilla Input 的唯一 authoring 链路归一化 */
 const normalizeReactInput = (children: Parameters<typeof createInputScene>[0]) => {

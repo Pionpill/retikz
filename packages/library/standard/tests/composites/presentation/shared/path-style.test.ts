@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { StandardPathBorderStyleSchema, StandardPathStrokeStyleSchema } from '../../../../src';
+import { StandardPathBorderStyleSchema, StandardPathStrokeStyleSchema } from '../../../../src/shared/schemas';
 
 describe('Standard presentation path style fragments', () => {
   it('keeps the existing stroke style field set and constraints', () => {
