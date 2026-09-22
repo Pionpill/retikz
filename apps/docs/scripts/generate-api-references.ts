@@ -22,7 +22,7 @@ await writeStyleApiReference(
 await writeAnimationApiReference(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/visual/animation/api-reference/_includes'),
 );
-await writeStandardShapeApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/standard'));
+await writeStandardShapeApiReferences(path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/shape'));
 
 await writeDrawApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/path/api-reference/_includes'),

@@ -8,14 +8,14 @@ import { buildVanillaPreview } from '../../src/modules/docs/components/component
 import NamespaceConsumption from '../../src/modules/docs/contents/kernel/components/node/mechanism/namespace-consumption';
 import NamespaceScope from '../../src/modules/docs/contents/kernel/components/node/mechanism/namespace-scope';
 import NamespaceStorage from '../../src/modules/docs/contents/kernel/components/node/mechanism/namespace-storage';
-import ListBasic from '../../src/modules/docs/contents/library/standard/list/list-basic';
-import ListComposition from '../../src/modules/docs/contents/library/standard/list/list-composition';
-import ListData from '../../src/modules/docs/contents/library/standard/list/list-data';
-import ListStyles from '../../src/modules/docs/contents/library/standard/list/list-styles';
-import MapBasic from '../../src/modules/docs/contents/library/standard/map/map-basic';
-import MapComposition from '../../src/modules/docs/contents/library/standard/map/map-composition';
-import MapData from '../../src/modules/docs/contents/library/standard/map/map-data';
-import MapStyles from '../../src/modules/docs/contents/library/standard/map/map-styles';
+import ListBasic from '../../src/modules/docs/contents/library/standard/container/list/list-basic';
+import ListComposition from '../../src/modules/docs/contents/library/standard/container/list/list-composition';
+import ListData from '../../src/modules/docs/contents/library/standard/container/list/list-data';
+import ListStyles from '../../src/modules/docs/contents/library/standard/container/list/list-styles';
+import MapBasic from '../../src/modules/docs/contents/library/standard/container/map/map-basic';
+import MapComposition from '../../src/modules/docs/contents/library/standard/container/map/map-composition';
+import MapData from '../../src/modules/docs/contents/library/standard/container/map/map-data';
+import MapStyles from '../../src/modules/docs/contents/library/standard/container/map/map-styles';
 
 describe('List / Map documentation consumers', () => {
   it.each([

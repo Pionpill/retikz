@@ -595,9 +595,6 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   }
   if (record.type === 'surface') {
     const surface = record as typeof record & { child: IRChild };
-    if ('namespace' in surface.child) {
-      throw new Error('Cannot generate Vanilla Surface code for a nested Tier 2 child.');
-    }
     ctx.standardHelpers.add('surfaceChild');
     const input = stripKeys(record, ['namespace', 'type', 'child']);
     const surfaceChildCode = childCode(surface.child, indent + 1, ctx);

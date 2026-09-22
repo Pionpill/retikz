@@ -72,14 +72,14 @@ React 组件不一定是语法糖；Scope 也不是语法糖，因为它在 IR �
 
 Kernel 通过 `@retikz/react` 提供以下语法糖组件；这里只列用途，具体写法见对应组件页。
 
-| 组件                                                | 用途                               |
-| --------------------------------------------------- | ---------------------------------- |
-| [Draw](/kernel/components/path/usage)               | 将简写路径展开为 Path 与 Step      |
-| [EdgeLabel](/kernel/components/path/step)           | 将子元素写法转换为 Step 的标签配置 |
-| [Circle、Ellipse](/library/standard/circle-ellipse) | 圆与椭圆路径                       |
-| [Arc、Sector](/library/standard/circle-ellipse)     | 圆弧、椭圆弧与扇形路径             |
+| 组件                                                      | 用途                               |
+| --------------------------------------------------------- | ---------------------------------- |
+| [Draw](/kernel/components/path/usage)                     | 将简写路径展开为 Path 与 Step      |
+| [EdgeLabel](/kernel/components/path/step)                 | 将子元素写法转换为 Step 的标签配置 |
+| [Circle、Ellipse](/library/standard/shape/circle-ellipse) | 圆与椭圆路径                       |
+| [Arc、Sector](/library/standard/shape/circle-ellipse)     | 圆弧、椭圆弧与扇形路径             |
 
-Circle、Ellipse 等形状已属于 [Standard composite](/library/standard/circle-ellipse)，在 IR 中保留形状意图。`DrawWay.Cycle`、相对坐标字符串仍属于 Kernel 作者简写。
+Circle、Ellipse 等形状已属于 [Standard composite](/library/standard/shape/circle-ellipse)，在 IR 中保留形状意图。`DrawWay.Cycle`、相对坐标字符串仍属于 Kernel 作者简写。
 
 ## 延伸阅读
 
