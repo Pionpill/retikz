@@ -3,7 +3,7 @@ import { compileToScene } from '@retikz/core';
 import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
-import { ListDefinition, ListSchema, MapDefinition, MapSchema } from '../../../src';
+import { ListDefinition, ListSchema, MapDefinition, MapSchema } from '../../../src/container';
 
 const compile = (child: IRChild) =>
   compileToScene(

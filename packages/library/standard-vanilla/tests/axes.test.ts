@@ -1,9 +1,9 @@
-import type { AxesInput } from '@retikz/standard';
-import { AxesDefinition, AxesProvider, createAxes } from '@retikz/standard';
+import type { AxesInput } from '@retikz/standard/presentation';
+import { AxesDefinition, AxesProvider, createAxes } from '@retikz/standard/presentation';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { axes, AxesInputEmbedAdapter, grid, GridInputEmbedAdapter } from '../src';
+import { axes, AxesInputEmbedAdapter, grid, GridInputEmbedAdapter } from '../src/presentation';
 
 const input: AxesInput = {
   origin: { position: [100, 80], label: '0' },

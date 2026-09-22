@@ -1,4 +1,5 @@
-import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard';
+import { StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
+import { ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -8,13 +9,11 @@ import {
   GridInputEmbedAdapter,
   legend,
   LegendInputEmbedAdapter,
-  ListInputEmbedAdapter,
-  MapInputEmbedAdapter,
-  StandardInputEmbedAdapters,
   surface,
   surfaceChild,
   SurfaceInputEmbedAdapter,
-} from '@retikz/standard-vanilla';
+} from '@retikz/standard-vanilla/presentation';
+import { createGrid, GridDefinition, LegendContentKind } from '@retikz/standard/presentation';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 

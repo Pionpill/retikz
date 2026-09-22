@@ -4,7 +4,7 @@ import { PathClipDefinition, PathClipProvider } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, string } from 'zod';
 
-import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src';
+import { createSurface, SurfaceDefinition, SurfaceProvider } from '../../../src/presentation';
 
 const node: IRChild = {
   type: 'node',

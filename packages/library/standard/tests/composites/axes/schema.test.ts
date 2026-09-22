@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { AxesSchema, createAxes } from '../../../src';
-import { resolveAxes } from '../../../src/resolve/axes';
+import { AxesSchema, createAxes } from '../../../src/presentation';
+import { resolveAxes } from '../../../src/presentation/axes/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
 describe('AxesSchema', () => {

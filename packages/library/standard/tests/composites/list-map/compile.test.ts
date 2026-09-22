@@ -5,7 +5,7 @@ import { intrinsicLayoutProposal } from '@retikz/layout/compose';
 import { describe, expect, it } from 'vitest';
 import { literal, boolean } from 'zod';
 
-import { ListDefinition, MapDefinition } from '../../../src';
+import { ListDefinition, MapDefinition } from '../../../src/container';
 
 const cell = (id: string, width: number, height: number) => ({
   id,

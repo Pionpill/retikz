@@ -2,8 +2,8 @@ import type { CompiledNodeLayout, GroupPrim, PathPrim, ScenePrimitive } from '@r
 import { compileToScene, isNodeLayoutCompileArtifact, rect as rectOps } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import type { FrameInput } from '../../../src';
-import { createFrame, FrameDefinition, FrameHeaderDirection } from '../../../src';
+import type { FrameInput } from '../../../src/presentation';
+import { createFrame, FrameDefinition, FrameHeaderDirection } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const groupsOf = (primitives: ReadonlyArray<ScenePrimitive>): Array<GroupPrim> =>

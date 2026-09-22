@@ -1,0 +1,47 @@
+import type { IRList } from '@retikz/standard/container';
+import { createList, ListProvider } from '@retikz/standard/container';
+import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+
+import { StandardListEmbedKind } from '../shared/constants';
+import type { InputCell } from './cell';
+import { dataCellDependencies, normalizeCells } from './cell';
+
+/** List 的 Vanilla authoring 输入 */
+export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data'> &
+  ({ items: Array<string | InputCell>; data?: never } | { data: NonNullable<IRList['data']>; items?: never });
+
+/** 将 List 输入与嵌套内容交给根级 traversal */
+export const ListInputEmbedAdapter: InputEmbedAdapter<InputList> = {
+  kind: StandardListEmbedKind,
+  lower: (props, context) => {
+    if (props.data !== undefined)
+      return {
+        node: createList({ namespace: 'standard', type: 'list', ...props }),
+        providerDependencies: dataCellDependencies,
+      };
+    const { items, ...input } = props;
+    const normalized = normalizeCells(
+      items.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
+      context,
+      ListProvider,
+    );
+    return {
+      node: createList({
+        namespace: 'standard',
+        type: 'list',
+        ...input,
+        items: normalized.cells.map((cell, index) => (typeof items[index] === 'string' ? items[index] : cell)),
+      }),
+      providerDependencies: normalized.providerDependencies,
+      ...(normalized.authoringSites.length === 0 ? {} : { authoringSites: normalized.authoringSites }),
+    };
+  },
+};
+
+/** 创建 List embed；参数 id 是 authoring 身份，持久化身份使用 input.id */
+export const list = (id: string, input: InputList): InputEmbed<InputList> => ({
+  type: 'embed',
+  kind: StandardListEmbedKind,
+  id,
+  props: input,
+});

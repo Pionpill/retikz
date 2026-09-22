@@ -1,9 +1,9 @@
-import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard';
+import { createLegend, LegendContentKind, LegendDefinition, LegendProvider } from '@retikz/standard/presentation';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import type { InputLegend } from '../src';
-import { legend, LegendInputEmbedAdapter } from '../src';
+import type { InputLegend } from '../src/presentation';
+import { legend, LegendInputEmbedAdapter } from '../src/presentation';
 
 const input = {
   id: 'authored-legend',

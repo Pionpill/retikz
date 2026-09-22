@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { ListSchema } from '../../../src/composites/presentation/list/schemas';
-import { MapSchema } from '../../../src/composites/presentation/map/schemas';
+import { ListSchema } from '../../../src/container/list/schema';
+import { MapSchema } from '../../../src/container/map/schema';
 
 const content = { type: 'node', position: [0, 0], text: 'a' };
 it('preserves List string items and rejects blank or duplicate derived ids', () => {
