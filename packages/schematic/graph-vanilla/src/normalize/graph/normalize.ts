@@ -22,6 +22,7 @@ import type {
   InputGraphChild,
   InputGroup,
   InputRelation,
+  InputRelationEndpoint,
 } from './types';
 
 /** 将 Entity authoring 输入组装为单个 Source record */
@@ -31,13 +32,22 @@ export const normalizeEntity = (input: InputEntity) => {
   return createEntity(entity);
 };
 
-/** 将可选 Way sugar 归一为直接持有 route 的 Relation Source record */
+/** 将 Relation endpoint authoring 输入归一为完整 Core NodeTarget */
+const normalizeRelationEndpoint = (endpoint: InputRelationEndpoint) =>
+  typeof endpoint === 'string' ? { id: endpoint } : endpoint;
+
+/** 将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record */
 export const normalizeRelation = (input: InputRelation) => {
-  const { type, way, ...relation } = input;
+  const { type, way, source, target, ...relation } = input;
   void type;
-  if (way === undefined) return createRelation(relation);
-  return createRelation({
+  const endpointRelation = {
     ...relation,
+    source: normalizeRelationEndpoint(source),
+    target: normalizeRelationEndpoint(target),
+  };
+  if (way === undefined) return createRelation(endpointRelation);
+  return createRelation({
+    ...endpointRelation,
     route: normalizePath({ way }).children,
   });
 };

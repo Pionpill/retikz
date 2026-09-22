@@ -38,6 +38,7 @@ import {
   normalizeBlockSection,
   normalizeGraph,
   normalizeGroup,
+  normalizeRelation,
   relation,
   RelationInputEmbedAdapter,
 } from '../src';
@@ -51,21 +52,17 @@ const definitionOptionKeys = [
   'relationPredicates',
   'graphThemeStyles',
 ] as const;
-
 const contextOf = (id: string, kind: string): InputEmbedContext => ({
   id,
   kind,
   layerId: 'layer',
   identityPath: ['layer', id],
 });
-
 const lower = <TProps>(spec: InputEmbed<TProps>, adapter: InputEmbedAdapter<TProps>) =>
-  adapter.lower(spec.props, contextOf(spec.id, spec.kind));
-
+  adapter.lower(spec.props, contextOf(spec.id ?? '__test-embed', spec.kind));
 describe('@retikz/graph-vanilla package boundary', () => {
   it('exports one adapter and builder for each Graph semantic composite', async () => {
     const graphVanilla = await import('../src');
-
     expect(graphVanilla.GraphInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.BlockInputEmbedAdapter).toBeDefined();
     expect(graphVanilla.BlockHeaderInputEmbedAdapter).toBeDefined();
@@ -100,7 +97,6 @@ describe('@retikz/graph-vanilla package boundary', () => {
     ]);
   });
 });
-
 describe('normalizeBlock', () => {
   it('归一化普通 Vanilla sugar 并保留零值，不接受丢失 authoring 的独立调用', () => {
     expect(normalizeBlock({ children: [{ position: [0, 0], text: 'label', style: { opacity: 0 } }] })).toMatchObject({
@@ -110,7 +106,6 @@ describe('normalizeBlock', () => {
       /outer normalizeScene embed context/,
     );
   });
-
   it('keeps string Header and Section text as sparse Source values', () => {
     expect(normalizeBlockHeader({ title: 'User', description: 'Domain entity' })).toEqual({
       namespace: 'graph',
@@ -124,7 +119,6 @@ describe('normalizeBlock', () => {
       title: 'Fields',
     });
   });
-
   it('keeps Row text content as the minimal Source value', () => {
     expect(normalizeBlockRow({ content: 'name' })).toEqual({
       namespace: 'graph',
@@ -146,7 +140,6 @@ describe('normalizeBlock', () => {
       content: ['name', { text: 'string', textColor: '#64748b', font: { weight: 'bold' }, opacity: 0.6 }],
     });
   });
-
   it('normalizes open Block-family semantic children to the same sparse Source as Direct authoring', () => {
     const header = {
       type: 'blockHeader',
@@ -156,7 +149,10 @@ describe('normalizeBlock', () => {
       justifyContent: 'space-between',
       icon: { type: 'entity', role: 'state', position: [0, 0] },
       trail: { type: 'entity', role: 'concept', position: [20, 0] },
-    } satisfies InputBlockHeader & Readonly<{ type: 'blockHeader' }>;
+    } satisfies InputBlockHeader &
+      Readonly<{
+        type: 'blockHeader';
+      }>;
     const row = {
       type: 'blockRow',
       id: 'name',
@@ -164,12 +160,18 @@ describe('normalizeBlock', () => {
         { type: 'node', position: [0, 0], text: 'name' },
         { type: 'entity', role: 'concept', position: [0, 0] },
       ],
-    } satisfies InputBlockRow & Readonly<{ type: 'blockRow' }>;
+    } satisfies InputBlockRow &
+      Readonly<{
+        type: 'blockRow';
+      }>;
     const section = {
       type: 'blockSection',
       id: 'fields',
       children: [row],
-    } satisfies InputBlockSection & Readonly<{ type: 'blockSection' }>;
+    } satisfies InputBlockSection &
+      Readonly<{
+        type: 'blockSection';
+      }>;
     const input: InputBlock = {
       id: 'user',
       width: 240,
@@ -177,7 +179,6 @@ describe('normalizeBlock', () => {
       gap: 0,
       children: [header, section],
     };
-
     expect(normalizeBlock(input)).toEqual({
       namespace: 'graph',
       type: 'block',
@@ -199,7 +200,6 @@ describe('normalizeBlock', () => {
       { namespace: 'graph', type: 'entity', role: 'concept', position: [0, 0] },
     ]);
   });
-
   it('preserves omitted and explicit empty Block-family children', () => {
     expect(normalizeBlock({})).toEqual({ namespace: 'graph', type: 'block' });
     expect(normalizeBlock({ children: [] })).toEqual({ namespace: 'graph', type: 'block', children: [] });
@@ -212,7 +212,6 @@ describe('normalizeBlock', () => {
     });
   });
 });
-
 describe('normalizeGroup', () => {
   it('preserves Group presentation and normalizes collocated Entity / Relation Source', () => {
     const input: InputGroup = {
@@ -229,7 +228,6 @@ describe('normalizeGroup', () => {
         },
       ],
     };
-
     expect(normalizeGroup(input)).toEqual({
       namespace: 'graph',
       type: 'group',
@@ -247,7 +245,6 @@ describe('normalizeGroup', () => {
     });
   });
 });
-
 describe('normalizeGraph', () => {
   it('omits absent children while preserving an explicit empty array', () => {
     expect(normalizeGraph({})).toEqual({ namespace: 'graph', type: 'graph' });
@@ -257,7 +254,6 @@ describe('normalizeGraph', () => {
       children: [],
     });
   });
-
   it('preserves the complete authored Scope surface directly on Graph', () => {
     const input: InputGraph = {
       id: 'architecture',
@@ -290,14 +286,12 @@ describe('normalizeGraph', () => {
         reset: ['path' as const],
       },
     };
-
     expect(normalizeGraph(input)).toEqual({
       namespace: 'graph',
       type: 'graph',
       ...input,
     });
   });
-
   it('keeps graphDefaults and graphRules identical to Direct Source IR', () => {
     const input: InputGraph = {
       id: 'parity',
@@ -317,7 +311,6 @@ describe('normalizeGraph', () => {
         },
       ],
     };
-
     expect(normalizeGraph(input)).toEqual(
       GraphSchema.parse({
         namespace: 'graph',
@@ -327,7 +320,6 @@ describe('normalizeGraph', () => {
       }),
     );
   });
-
   it('normalizes only Entity, Relation and Way authoring sugar', () => {
     expect(
       normalizeGraph({
@@ -376,17 +368,42 @@ describe('normalizeGraph', () => {
     });
   });
 });
-
 describe('Graph Vanilla embed adapters', () => {
+  it('uses one explicit Graph id for the Entity embed and Source identities', () => {
+    const contribution = lower(
+      entity({ id: 'client', role: 'participant', position: [0, 0], text: 'Client' }),
+      EntityInputEmbedAdapter,
+    );
+    expect(contribution.node).toEqual({
+      namespace: 'graph',
+      type: 'entity',
+      id: 'client',
+      role: 'participant',
+      position: [0, 0],
+      text: 'Client',
+    });
+  });
+  it('keeps an anonymous Entity out of the Graph Source namespace', () => {
+    const contribution = lower(
+      entity({ role: 'event', position: [0, 0], text: 'Anonymous event' }),
+      EntityInputEmbedAdapter,
+    );
+    expect(contribution.node).toEqual({
+      namespace: 'graph',
+      type: 'entity',
+      role: 'event',
+      position: [0, 0],
+      text: 'Anonymous event',
+    });
+  });
   it('keeps embed identity separate from optional authored identity for every composite', () => {
-    const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
+    const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
     const entityContribution = lower(
-      entity('entity-embed', { type: 'entity', role: 'participant', status: 'success', position: [0, 0] }),
+      entity({ role: 'participant', status: 'success', position: [0, 0] }),
       EntityInputEmbedAdapter,
     );
     const relationContribution = lower(
-      relation('relation-embed', {
-        type: 'relation',
+      relation({
         source: { id: 'source' },
         target: { id: 'target' },
         role: 'association',
@@ -394,15 +411,11 @@ describe('Graph Vanilla embed adapters', () => {
       }),
       RelationInputEmbedAdapter,
     );
-    const groupContribution = lower(group('group-embed', {}), GroupInputEmbedAdapter);
-    const blockContribution = lower(block('block-embed', {}), BlockInputEmbedAdapter);
-    const headerContribution = lower(
-      blockHeader('header-embed', { title: { text: 'Block' } }),
-      BlockHeaderInputEmbedAdapter,
-    );
-    const sectionContribution = lower(blockSection('section-embed', {}), BlockSectionInputEmbedAdapter);
-    const rowContribution = lower(blockRow('row-embed', {}), BlockRowInputEmbedAdapter);
-
+    const groupContribution = lower(group({}), GroupInputEmbedAdapter);
+    const blockContribution = lower(block({}), BlockInputEmbedAdapter);
+    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), BlockHeaderInputEmbedAdapter);
+    const sectionContribution = lower(blockSection({}), BlockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow({}), BlockRowInputEmbedAdapter);
     expect(graphContribution.node).toEqual({ namespace: 'graph', type: 'graph' });
     expect(entityContribution.node).toEqual({
       namespace: 'graph',
@@ -437,11 +450,9 @@ describe('Graph Vanilla embed adapters', () => {
     expect(sectionContribution.node).not.toHaveProperty('id');
     expect(rowContribution.node).not.toHaveProperty('id');
   });
-
   it('normalizes Relation Way while preserving complete Core NodeTargets', () => {
     const contribution = lower(
-      relation('relation-embed', {
-        type: 'relation',
+      relation({
         source: {
           id: 'source',
           anchor: { side: 'right', fraction: 0.5 },
@@ -454,7 +465,6 @@ describe('Graph Vanilla embed adapters', () => {
       }),
       RelationInputEmbedAdapter,
     );
-
     expect(contribution.node).toEqual({
       namespace: 'graph',
       type: 'relation',
@@ -472,26 +482,40 @@ describe('Graph Vanilla embed adapters', () => {
       ],
     });
   });
-
+  it('normalizes string Relation endpoints into Core NodeTargets', () => {
+    expect(
+      normalizeRelation({
+        type: 'relation',
+        source: 'source',
+        target: 'target',
+        role: 'flow',
+      }),
+    ).toEqual({
+      namespace: 'graph',
+      type: 'relation',
+      source: { id: 'source' },
+      target: { id: 'target' },
+      role: 'flow',
+    });
+  });
   it('normalizes arbitrary nested embeds without adding a panel Scope', () => {
     const normalized = normalizeScene(
       {
         children: [
-          graph('outer-embed', {
+          graph({
             transforms: [{ kind: 'translate', x: 12, y: 8 }],
             children: [
               { type: 'node', id: 'source', position: [0, 0] },
               {
                 type: 'scope',
                 children: [
-                  entity('entity-embed', {
-                    type: 'entity',
+                  entity({
                     role: 'participant',
                     position: [80, 0],
                   }),
                 ],
               },
-              graph('inner-embed', {
+              graph({
                 children: [{ type: 'node', id: 'target', position: [160, 0] }],
               }),
             ],
@@ -500,7 +524,6 @@ describe('Graph Vanilla embed adapters', () => {
       },
       { adapters: createGraphVanillaAdapters() },
     );
-
     expect(normalized.ir.children).toEqual([
       {
         namespace: 'graph',
@@ -528,22 +551,21 @@ describe('Graph Vanilla embed adapters', () => {
       },
     ]);
   });
-
   it('normalizes nested independent structure embeds while merging provider contributions', () => {
     const normalized = normalizeScene(
       {
         children: [
-          block('block-embed', {
+          block({
             children: [
-              blockHeader('header-embed', {
-                icon: entity('icon-embed', { type: 'entity', role: 'state', position: [0, 0] }),
+              blockHeader({
+                icon: entity({ role: 'state', position: [0, 0] }),
                 title: { text: 'Block' },
               }),
-              blockSection('section-embed', {
+              blockSection({
                 children: [
-                  blockRow('row-embed', {
+                  blockRow({
                     children: [
-                      group('group-embed', {
+                      group({
                         children: [{ type: 'node', position: [0, 0], text: 'Nested' }],
                       }),
                     ],
@@ -556,7 +578,6 @@ describe('Graph Vanilla embed adapters', () => {
       },
       { adapters: createGraphVanillaAdapters() },
     );
-
     expect(normalized.ir.children[0]).toMatchObject({
       namespace: 'graph',
       type: 'block',
@@ -586,13 +607,12 @@ describe('Graph Vanilla embed adapters', () => {
       ]),
     );
   });
-
   it('compiles a collocated Block declared directly inside a standalone Group', () => {
     expect(() =>
       processToStaticInputResult(
         {
           children: [
-            group('group-embed', {
+            group({
               children: [
                 {
                   type: 'block',
@@ -606,31 +626,22 @@ describe('Graph Vanilla embed adapters', () => {
       ),
     ).not.toThrow();
   });
-
   it('contributes the provider closure rooted at the matching semantic composite', () => {
-    const graphContribution = lower(graph('graph-embed', {}), GraphInputEmbedAdapter);
-    const entityContribution = lower(
-      entity('entity-embed', { type: 'entity', role: 'participant', position: [0, 0] }),
-      EntityInputEmbedAdapter,
-    );
+    const graphContribution = lower(graph({}), GraphInputEmbedAdapter);
+    const entityContribution = lower(entity({ role: 'participant', position: [0, 0] }), EntityInputEmbedAdapter);
     const relationContribution = lower(
-      relation('relation-embed', {
-        type: 'relation',
+      relation({
         source: { id: 'source' },
         target: { id: 'target' },
         role: 'association',
       }),
       RelationInputEmbedAdapter,
     );
-    const groupContribution = lower(group('group-embed', {}), GroupInputEmbedAdapter);
-    const blockContribution = lower(block('block-embed', {}), BlockInputEmbedAdapter);
-    const headerContribution = lower(
-      blockHeader('header-embed', { title: { text: 'Block' } }),
-      BlockHeaderInputEmbedAdapter,
-    );
-    const sectionContribution = lower(blockSection('section-embed', {}), BlockSectionInputEmbedAdapter);
-    const rowContribution = lower(blockRow('row-embed', {}), BlockRowInputEmbedAdapter);
-
+    const groupContribution = lower(group({}), GroupInputEmbedAdapter);
+    const blockContribution = lower(block({}), BlockInputEmbedAdapter);
+    const headerContribution = lower(blockHeader({ title: { text: 'Block' } }), BlockHeaderInputEmbedAdapter);
+    const sectionContribution = lower(blockSection({}), BlockSectionInputEmbedAdapter);
+    const rowContribution = lower(blockRow({}), BlockRowInputEmbedAdapter);
     expect(graphContribution.providerDependencies.roots).toEqual([GraphProviderKey]);
     expect(entityContribution.providerDependencies.roots).toEqual([EntityProviderKey]);
     expect(relationContribution.providerDependencies.roots).toEqual([RelationProviderKey]);
@@ -664,7 +675,6 @@ describe('Graph Vanilla embed adapters', () => {
     expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
     expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });
-
   it('keeps all definition options out of Source IR and compiles custom definitions through every entry', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',
@@ -689,7 +699,7 @@ describe('Graph Vanilla embed adapters', () => {
       graphThemeStyles: [],
     } as const;
     const graphContribution = lower(
-      graph('graph-embed', {
+      graph({
         ...options,
         children: [
           { type: 'entity', id: 'graph-source', role: 'custom-entity', position: [0, 0] },
@@ -705,36 +715,32 @@ describe('Graph Vanilla embed adapters', () => {
       GraphInputEmbedAdapter,
     );
     const entityContribution = lower(
-      entity('entity-embed', {
+      entity({
         ...options,
-        type: 'entity',
         role: 'custom-entity',
         position: [0, 100],
       }),
       EntityInputEmbedAdapter,
     );
     const relationContribution = lower(
-      relation('relation-embed', {
+      relation({
         ...options,
-        type: 'relation',
         source: { id: 'direct-source' },
         target: { id: 'direct-target' },
         role: 'custom-relation',
       }),
       RelationInputEmbedAdapter,
     );
-
     for (const contribution of [graphContribution, entityContribution, relationContribution]) {
       for (const key of definitionOptionKeys) expect(contribution.node).not.toHaveProperty(key);
     }
-
     expect(() =>
       processToStaticInputResult(
         {
           children: [
             { type: 'node', id: 'direct-source', position: [0, 200] },
             { type: 'node', id: 'direct-target', position: [100, 200] },
-            graph('compiled-graph', {
+            graph({
               ...options,
               children: [
                 { type: 'entity', id: 'compiled-source', role: 'custom-entity', position: [0, 0] },
@@ -747,15 +753,13 @@ describe('Graph Vanilla embed adapters', () => {
                 },
               ],
             }),
-            entity('compiled-entity', {
+            entity({
               ...options,
-              type: 'entity',
               role: 'custom-entity',
               position: [0, 100],
             }),
-            relation('compiled-relation', {
+            relation({
               ...options,
-              type: 'relation',
               source: { id: 'direct-source' },
               target: { id: 'direct-target' },
               role: 'custom-relation',

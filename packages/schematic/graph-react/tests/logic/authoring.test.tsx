@@ -326,6 +326,26 @@ describe('Entity and Relation React authoring', () => {
     expect(input).not.toHaveProperty('status');
   });
 
+  it('normalizes string Relation endpoints through the shared Vanilla input', () => {
+    const result = normalizeReact(
+      createElement(Relation, {
+        role: 'flow',
+        source: 'source',
+        target: 'target',
+      }),
+    );
+
+    expect(result.ir.children).toEqual([
+      {
+        namespace: 'graph',
+        type: 'relation',
+        role: 'flow',
+        source: { id: 'source' },
+        target: { id: 'target' },
+      },
+    ]);
+  });
+
   it('normalizes direct Entity and Relation children without a Graph parent or generated ids', () => {
     const result = normalizeReact(
       createElement(

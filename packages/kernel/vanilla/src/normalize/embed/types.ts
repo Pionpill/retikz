@@ -56,8 +56,8 @@ export type InputEmbed<TProps = Record<string, unknown>> = {
   type: 'embed';
   /** 匹配 Vanilla adapter 的稳定键 */
   kind: string;
-  /** 公开更新与诊断使用的身份标识 */
-  id: string;
+  /** 可选的公开更新与诊断身份，省略时由 normalizeScene 生成运行时身份 */
+  id?: string;
   /** 交给领域 adapter 的已类型化属性 */
   props: TProps;
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */

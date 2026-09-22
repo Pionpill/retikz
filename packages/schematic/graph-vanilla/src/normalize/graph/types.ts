@@ -10,8 +10,20 @@ import type {
 } from '@retikz/graph';
 import type { InputChild, InputPath } from '@retikz/vanilla';
 
+/** 从 authoring 输入移除由 builder 确定的 Source discriminator，并保留 union 分支 */
+export type WithoutInputType<TInput> = TInput extends unknown ? Omit<TInput, 'type'> : never;
+
 /** Entity 的 Vanilla authoring 输入 */
 export type InputEntity = EntityCreateOptions & Readonly<{ type: 'entity' }>;
+
+/** Relation endpoint 的 Vanilla authoring 输入，可直接引用 id 或提供完整 NodeTarget */
+export type InputRelationEndpoint = string | RelationCreateOptions['source'];
+
+type InputRelationFields = Omit<RelationCreateOptions, 'route' | 'source' | 'target'> &
+  Readonly<{
+    source: InputRelationEndpoint;
+    target: InputRelationEndpoint;
+  }>;
 
 /** 直接使用规范 Core route steps 的 Relation authoring 输入 */
 export type InputRelationRoute = Readonly<{
@@ -28,7 +40,7 @@ export type InputRelationWay = Readonly<{
 }>;
 
 /** Relation 的 Vanilla authoring 输入 */
-export type InputRelation = Omit<RelationCreateOptions, 'route'> & (InputRelationRoute | InputRelationWay);
+export type InputRelation = InputRelationFields & (InputRelationRoute | InputRelationWay);
 
 type BlockRowContentInput = Extract<BlockRowCreateOptions, Readonly<{ content: unknown }>>['content'];
 
