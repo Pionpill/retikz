@@ -32,31 +32,6 @@ export const schematicSection: Array<Section> = [
         },
       },
       {
-        id: 'block',
-        label: 'schematic.block',
-        sidebarGroup: 'schematic.components',
-        children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
-            difficulty: DocDifficulty.Advanced,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'graph.codeBlock',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
-      },
-      {
-        id: 'group',
-        label: 'schematic.group',
-        difficulty: DocDifficulty.Beginner,
-        sidebarGroup: 'schematic.components',
-      },
-      {
         id: 'entity',
         label: 'schematic.entity',
         sidebarGroup: 'schematic.components',
@@ -93,6 +68,31 @@ export const schematicSection: Array<Section> = [
             },
           },
         ],
+      },
+      {
+        id: 'block',
+        label: 'schematic.block',
+        sidebarGroup: 'schematic.components',
+        children: [
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          {
+            id: 'extension',
+            label: 'schematic.extensionUsage',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'graph.codeBlock',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
+      {
+        id: 'group',
+        label: 'schematic.group',
+        difficulty: DocDifficulty.Beginner,
+        sidebarGroup: 'schematic.components',
       },
       { id: 'api-reference', label: 'schematic.graphApiReference', sidebarGroup: 'schematic.components' },
     ],
