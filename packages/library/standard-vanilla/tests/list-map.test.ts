@@ -2,7 +2,8 @@ import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { list, map, StandardInputEmbedAdapters } from '../src';
+import { StandardInputEmbedAdapters } from '../src';
+import { list, map } from '../src/container';
 
 describe('List / Map provider assembly', () => {
   it('compiles nested lists inside clipped map cells through the public adapter catalog', () => {

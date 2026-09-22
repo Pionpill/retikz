@@ -1,6 +1,6 @@
 import type { IRBoundary, IRNodeTarget } from '@retikz/core';
+import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
-import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

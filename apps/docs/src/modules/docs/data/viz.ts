@@ -15,11 +15,37 @@ export const vizSection: Array<Section> = [
     id: 'data',
     label: 'viz.data',
     navigationDescription: 'viz.dataNavigationDescription',
-    document: true,
     pages: [
+      {
+        id: 'introduction',
+        label: 'viz.dataIntroduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'data.introduction', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'viz.dataGetStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', capability: 'data.get-start', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'changelog',
+        label: 'viz.changelog',
+        children: [
+          { id: 'v0-2', label: 'viz.changelogV02' },
+          { id: 'v0-1', label: 'viz.changelogV01' },
+        ],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'data.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
       {
         id: 'model',
         label: 'viz.dataModel',
+        sidebarGroup: 'viz.dataContents',
         children: [
           { id: 'contract', label: 'viz.dataModelContract', difficulty: DocDifficulty.Advanced },
           { id: 'intake', label: 'viz.dataModelIntake', difficulty: DocDifficulty.Advanced },
@@ -40,6 +66,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'transform',
         label: 'viz.dataTransform',
+        sidebarGroup: 'viz.dataContents',
         children: [
           {
             id: 'overview',
@@ -70,6 +97,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'provenance',
         label: 'viz.dataProvenance',
+        sidebarGroup: 'viz.dataContents',
         children: [
           {
             id: 'data',
@@ -98,24 +126,11 @@ export const vizSection: Array<Section> = [
       {
         id: 'reference',
         label: 'viz.dataReference',
+        sidebarGroup: 'viz.dataContents',
         children: [
           { id: 'contract', label: 'viz.dataReferenceContract' },
           { id: 'runtime', label: 'viz.dataReferenceRuntime' },
         ],
-      },
-      {
-        id: 'changelog',
-        label: 'viz.changelog',
-        children: [
-          { id: 'v0-2', label: 'viz.changelogV02' },
-          { id: 'v0-1', label: 'viz.changelogV01' },
-        ],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'data.release',
-          sourceOfTruth: 'changelog',
-        },
       },
     ],
   },

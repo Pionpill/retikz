@@ -1,52 +1,46 @@
 ---
-title: Standard · 拓展
-description: 以领域无关的复合组件和按能力装配的可选绘图定义扩展 Core，同时保持唯一的 Core 编译与注册表路径。
+title: Standard · 标准包
+description: 用标准组件组合网格、坐标轴、表面、图例与几何图形。
 ---
 
-Standard 按能力组织公开内容：根入口中的展现复合组件、`/shape` 子入口中的形状复合组件，以及其它能力子入口中的可选官方绘图定义。两者都复用 Core 的 Definition、registry 与 compile；Standard 不创建第二套绘图内核。
+Standard 为常见绘图任务提供标准组件。你可以为一张图放置参考网格，用表面包裹内容，再添加说明符号的图例；每个组件以自己的参数描述一个完整任务。
 
-布局容器由独立的 [Layout](/library/layout) 包族拥有。Standard 只在 Legend 等自身能力中通过 Layout 的公开组合面复用排版能力，不再导出布局 API。
+## 职责一览
 
-## 与 Core 的边界
+| 入口                   | 用途                                 |
+| ---------------------- | ------------------------------------ |
+| 三包的 `/presentation` | 网格、坐标轴、分组框、表面与图例     |
+| 三包的 `/container`    | 列表、映射及后续结构化内容容器       |
+| 三包的 `/shape`        | 圆、矩形、正多边形、星形、圆弧与扇形 |
 
-Standard 横向扩展 Core，而不是替代它：
+## 安装与使用
 
-- 不使用 Standard 时，Kernel 的安装、编译和渲染路径不变
-- Definition 按图显式装配，不进行全局注册，也不写入持久化 JSON
-- Standard 内容仍经 Core registry 编译为既有 Scene，并由 SVG、Canvas 等 renderer 消费
+React 项目安装作者入口及宿主：
 
-## 三个包与能力子入口
+<PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
-| 入口                             | 职责                                                           | 何时使用                                         |
-| -------------------------------- | -------------------------------------------------------------- | ------------------------------------------------ |
-| `@retikz/standard`               | Standard composites 的 schema、factory、Definition 与 lowering | 使用 Grid、Axes、Frame、Surface 或 Legend        |
-| `@retikz/standard-react`         | 呈现组件的 React DSL                                           | 在 React `Layout` 中创作                         |
-| `@retikz/standard-vanilla`       | plain spec helper 与 Vanilla Tier 2 adapter                    | 无 React 的浏览器或脚本入口                      |
-| `@retikz/standard/shape`         | 形状的 Schema、Source、Definition 与 lowering                  | 绘制圆、椭圆、矩形、正多边形、星形、圆弧与扇形   |
-| `@retikz/standard-react/shape`   | 形状 React 组件                                                | 使用 Circle、Ellipse 等 JSX                      |
-| `@retikz/standard-vanilla/shape` | 形状作者输入与 adapter                                         | 使用 shape.xxx                                   |
-| `@retikz/standard/<capability>`  | 单一可选绘图能力族的 Definitions                               | 当前图需要可选 node-shape、arrow、clip 或 ribbon |
+无需 React 时安装 `@retikz/standard-vanilla` 与 `@retikz/vanilla`，并按所选组件使用对应子入口。[快速开始](/library/standard/get-start)展示两种入口绘制相同网格的完整步骤。
 
-React 与 Vanilla 只把作者输入接入同一能力。需要可选绘图内容时，从精确的 `@retikz/standard/<capability>` 子入口导入单项 Definition，并传给 Core compile options；`@retikz/standard` 根入口不转发这些内容。
+需要排列多个内容时阅读 [Layout](/library/layout)；需要可选节点形状、箭头、裁剪或流带时阅读 [Extension](/library/extension)。
 
 ## 章节内容
 
 <LinkedSections
   items={[
-    {
-      title: '介绍',
-      description: '用途、能力分组与包职责',
-      url: '/library/standard/introduction',
-    },
-    {
-      title: '快速开始',
-      description: '用 React 或 Vanilla 绘制第一个网格',
-      url: '/library/standard/get-start',
-    },
-    {
-      title: '更新日志',
-      description: 'Standard 包族的版本变化',
-      url: '/library/standard/changelog',
-    },
+    { title: '简介', description: '简介', url: '/library/standard/introduction' },
+    { title: '快速开始', description: '快速开始', url: '/library/standard/get-start' },
+    { title: '更新日志', description: '更新日志', url: '/library/standard/changelog' },
+    { title: '网格', description: '网格', url: '/library/standard/grid' },
+    { title: '坐标轴', description: '坐标轴', url: '/library/standard/axes' },
+    { title: '分组框', description: '分组框', url: '/library/standard/frame' },
+    { title: '表面', description: '表面', url: '/library/standard/surface' },
+    { title: '列表', description: '列表', url: '/library/standard/list' },
+    { title: '映射', description: '映射', url: '/library/standard/map' },
+    { title: '图例', description: '图例', url: '/library/standard/legend' },
+    { title: '圆与椭圆', description: '圆与椭圆', url: '/library/standard/circle-ellipse' },
+    { title: '矩形', description: '矩形', url: '/library/standard/rectangle' },
+    { title: '正多边形', description: '正多边形', url: '/library/standard/regular-polygon' },
+    { title: '星形', description: '星形', url: '/library/standard/star' },
+    { title: '圆弧与扇形', description: '圆弧与扇形', url: '/library/standard/arc-sector' },
   ]}
 />

@@ -2,7 +2,7 @@ import type { IRScene } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { createGrid, createLegend, GridDefinition, LegendDefinition } from '../src';
+import { createGrid, createLegend, GridDefinition, LegendDefinition } from '../src/presentation';
 
 const gridScene: IRScene = {
   type: 'scene',

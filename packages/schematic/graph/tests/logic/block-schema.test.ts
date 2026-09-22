@@ -1,5 +1,5 @@
 import type { IRNode } from '@retikz/core';
-import { createSurface } from '@retikz/standard';
+import { createSurface } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import * as Graph from '../../src';

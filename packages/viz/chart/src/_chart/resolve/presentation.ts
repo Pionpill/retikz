@@ -8,8 +8,8 @@ import {
   LayoutItemKind,
 } from '@retikz/layout';
 import type { IRPlot } from '@retikz/plot';
-import type { IRSurface } from '@retikz/standard';
-import { createSurface } from '@retikz/standard';
+import type { IRSurface } from '@retikz/standard/presentation';
+import { createSurface } from '@retikz/standard/presentation';
 
 import { ChartPresentationSlot } from '../constants';
 import type { IRChartDefaults, IRChartPresentation, IRChartSource } from '../schemas';

@@ -24,6 +24,7 @@ export const moduleSectionIcons: Record<DocModuleId, Record<string, LucideIcon>>
   },
   library: {
     standard: Layers3Icon,
+    extension: PackageIcon,
     layout: PanelTopIcon,
   },
   schematic: {

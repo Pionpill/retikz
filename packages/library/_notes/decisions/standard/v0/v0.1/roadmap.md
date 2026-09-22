@@ -2,7 +2,7 @@
 
 ## 版本目标
 
-建立官方跨领域绘图扩展与通用呈现组件。
+建立通用 Tier 2 绘图组件与动画效果工厂，官方 Core provider 由独立 Extension 包提供。
 
 ## 重点功能
 
@@ -15,6 +15,10 @@
 | 所有权收敛         | 排版布局归 Layout，关系图语义归 Graph      | —                                                                                                                                                                                   |
 
 ## 功能规划
+
+### 包边界
+
+Standard 保留 Tier 2，官方节点形状、箭头、裁剪与流带迁入单根入口 Extension；文档与消费者同步迁移。相关决策：[032](./032-extension-package-boundary.md)。
 
 ### 动画效果预设
 

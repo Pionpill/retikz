@@ -1,14 +1,15 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { RelationProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { RelationEmbedKind } from './constants';
-import type { InputRelation } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputRelation, WithoutInputType } from './normalize';
 import { normalizeRelation } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 
 /** Relation embed 同时携带 Source authoring 输入与当前 definition options */
-export type RelationInputEmbedProps = InputRelation & GraphDefinitionOptions;
+export type RelationInputEmbedProps = WithoutInputType<InputRelation> & GraphDefinitionOptions;
 
 const inputOf = (props: RelationInputEmbedProps): InputRelation => {
   const {
@@ -28,7 +29,7 @@ const inputOf = (props: RelationInputEmbedProps): InputRelation => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'relation', ...input };
 };
 
 /** Relation Source 的 InputEmbed adapter */
@@ -41,9 +42,4 @@ export const RelationInputEmbedAdapter: InputEmbedAdapter<RelationInputEmbedProp
 };
 
 /** 创建 Relation Source 的 authoring embed 节点 */
-export const relation = (id: string, input: RelationInputEmbedProps): InputEmbed<RelationInputEmbedProps> => ({
-  type: 'embed',
-  kind: RelationEmbedKind,
-  id,
-  props: input,
-});
+export const relation = (input: RelationInputEmbedProps) => createGraphInputEmbed(RelationEmbedKind, input, input.id);

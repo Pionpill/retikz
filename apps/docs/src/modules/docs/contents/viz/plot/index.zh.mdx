@@ -5,7 +5,7 @@ description: Plot 模块总览：从 React props、Vanilla InputPlot 或 Plot IR
 
 `@retikz/plot` 是 Viz 组的绘图语义层。它用可序列化的 Plot IR 描述字段绑定、比例尺、坐标系、图元、辅助元素与组合关系，再把这些高层语义下沉为 Kernel 能编译的 Core IR。
 
-Plot 不拥有数据底座或渲染器：[Data](/viz/data)负责字段模型与通用数据处理，Kernel 负责编译、布局和 Scene，SVG / Canvas renderer 只消费 Scene。这样，React、Vanilla、手写 spec 或 AI 生成的配置都能复用同一份语义契约和 lowering 路径。
+Plot 不拥有数据底座或渲染器：[Data](/viz/data/introduction)负责字段模型与通用数据处理，Kernel 负责编译、布局和 Scene，SVG / Canvas renderer 只消费 Scene。这样，React、Vanilla、手写 spec 或 AI 生成的配置都能复用同一份语义契约和 lowering 路径。
 
 ## 一张图看懂
 
@@ -78,7 +78,7 @@ Plot 的 `width` / `height` 只决定绘图区几何尺寸，standalone 显示�
 
 | Plot 负责                               | 交给其它模块                                                                       |
 | --------------------------------------- | ---------------------------------------------------------------------------------- |
-| Plot IR、领域主题 token 与图形语法契约  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data)                           |
+| Plot IR、领域主题 token 与图形语法契约  | 字段模型、解析、通用变换与来源追溯交给 [Data](/viz/data/introduction)              |
 | channel、scale、coordinate、mark、guide | Core IR、布局、引用解析与 Scene 编译交给 [Kernel](/kernel/components/introduction) |
 | composition 与 Plot → Core lowering     | SVG / Canvas 输出交给 renderer                                                     |
 | Definition、registry、resolver 与诊断   | React / Vanilla 生命周期与宿主接线交给 adapter                                     |

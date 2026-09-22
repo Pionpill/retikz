@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 /** Frame header 缺省、横向与纵向组合的中文并列对比 */

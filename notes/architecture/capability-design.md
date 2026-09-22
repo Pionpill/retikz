@@ -84,6 +84,8 @@
 
 ## 5. 完备性的三个维度
 
+官方可选 Core provider 的实现由 `@retikz/extension` 拥有，通过唯一根入口提供 Definition、provider 及其参数契约。Extension 不拥有 Tier 2 composite、Layout 或宿主 adapter；Standard 与领域包按需直接消费，不通过旧 Standard 扩展子入口转发。Core 的 define / registry / compile 机制不迁移。
+
 每个能力面都同时检查三条线：
 
 1. **内部表达**：主责包是否能用通用抽象表达和实现，不依赖 chart type、demo、adapter 或 renderer 特判。

@@ -10,8 +10,8 @@ import {
 import { describe, expect, it } from 'vitest';
 import { boolean, literal, number, string } from 'zod';
 
-import type { SurfaceInput } from '../../../src';
-import { createSurface, SurfaceDefinition } from '../../../src';
+import type { SurfaceInput } from '../../../src/presentation';
+import { createSurface, SurfaceDefinition } from '../../../src/presentation';
 
 type ProbeLog = Readonly<{ id: string; proposal: LayoutProposal }>;
 

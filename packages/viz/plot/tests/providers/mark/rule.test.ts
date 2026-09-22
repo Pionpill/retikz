@@ -1,7 +1,7 @@
 import type { IRNode, IRScope, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
-import { SectorShapeDefinition } from '@retikz/standard/node-shape';
+import { SectorShapeDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 import { literal, object } from 'zod';
 

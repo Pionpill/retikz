@@ -1,6 +1,6 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider } from '@retikz/core';
 import { FlexLayoutProvider } from '@retikz/layout';
-import { SurfaceProvider } from '@retikz/standard';
+import { SurfaceProvider } from '@retikz/standard/presentation';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';
 import { EntityProviderKey } from '../entity';

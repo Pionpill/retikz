@@ -11,9 +11,9 @@ import { LayoutAlignment } from '@retikz/layout';
 import { describe, expect, it } from 'vitest';
 import { literal, number, string } from 'zod';
 
-import { LegendContentKind, LegendDirection } from '../../src/composites/presentation/legend/constants';
-import { LegendDefinition } from '../../src/composites/presentation/legend/definition';
-import { createLegend } from '../../src/composites/presentation/legend/factory';
+import { LegendContentKind, LegendDirection } from '../../src/presentation/legend/constants';
+import { LegendDefinition } from '../../src/presentation/legend/definition';
+import { createLegend } from '../../src/presentation/legend/factory';
 import { fullScopeProps } from '../composites/presentation/scope-props';
 
 const LeafSchema = CompositeBaseSchema.extend({

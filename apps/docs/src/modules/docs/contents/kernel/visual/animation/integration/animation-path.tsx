@@ -1,6 +1,6 @@
 import { drawOn } from '@retikz/core';
+import { wiggle } from '@retikz/extension';
 import { Layout, Node, Path, Step } from '@retikz/react';
-import { wiggle } from '@retikz/standard';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

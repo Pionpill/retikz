@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { Axes } from '@retikz/standard-react';
+import { Axes } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 /** Axes 常见语义变体的中文并列对比 */

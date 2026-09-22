@@ -7,7 +7,7 @@ import {
 } from '@retikz/core';
 import { defineGraphThemeStyle, defineRelationRole } from '@retikz/graph';
 import { createFlexLayout, FlexLayoutArtifactSchema, LayoutItemKind } from '@retikz/layout';
-import { LegendSchema } from '@retikz/standard';
+import { LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import { defineDiagramThemeStyle } from '../../src/_diagram';

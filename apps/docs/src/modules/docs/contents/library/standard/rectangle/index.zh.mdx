@@ -3,11 +3,11 @@ title: 矩形
 description: 用 Standard 的形状语义绘制矩形，在 React、Vanilla 和 JSON 之间保持一致
 ---
 
-用 Standard 的 Rectangle 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/standard/shape)。
+用 Standard 的 Rectangle 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/extension/shape)。
 
 ## 接入方式
 
-形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/standard/node-shape`。
+形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
 
 React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx(id, input)`，显式 id 同时标识 embed 和最终路径；React 省略 id 时不会持久化自动 occurrence id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
 
@@ -66,7 +66,7 @@ Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时�
   sources={[
     {
       label: 'Rectangle props 归一与 Path 展开',
-      path: 'packages/library/standard/src/composites/shape/rectangle/pipeline.ts',
+      path: 'packages/library/standard/src/shape/rectangle/pipeline.ts',
       startLine: 1,
     },
     {

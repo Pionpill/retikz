@@ -101,6 +101,10 @@ const readIdentity = (child: object): string | undefined =>
 /** 判断一个 child 是否为 InputEmbed */
 const isInputEmbed = (child: InputChild): child is AnyInputEmbed => child.type === 'embed';
 
+/** 读取或为匿名 InputEmbed 确定仅运行时可见的稳定身份 */
+const inputEmbedIdentityOf = (input: AnyInputEmbed, context: NormalizeContext): string =>
+  input.id ?? `__retikz-embed:${context.layerId}:${context.sourcePath}:${input.kind}`;
+
 /** 读取仅用于作者输入类型分派的 children */
 const inputChildrenOf = (child: InputChild): ReadonlyArray<Readonly<{ type?: string }>> | undefined =>
   'children' in child
@@ -223,20 +227,20 @@ const normalizeEmbeddedChildren = (
 };
 
 /** 将一个 InputEmbed 下沉为 Core child 并收集 dependency contribution */
-const normalizeEmbed = (input: AnyInputEmbed, ctx: NormalizeContext): IRChild => {
+const normalizeEmbed = (input: AnyInputEmbed, embedId: string, ctx: NormalizeContext): IRChild => {
   const adapter = ctx.adapters?.find(entry => entry.kind === input.kind);
   if (adapter === undefined) {
     throw new RetikzVanillaError(
       RetikzVanillaErrorCode.Normalize,
-      `normalizeScene: embed "${input.id}" uses kind "${input.kind}" but no adapter was provided`,
+      `normalizeScene: embed "${embedId}" uses kind "${input.kind}" but no adapter was provided`,
     );
   }
-  const reusedEmbedIdentity: ReusedEmbedIdentity = { id: input.id, used: false };
+  const reusedEmbedIdentity: ReusedEmbedIdentity = { id: embedId, used: false };
   const context: InputEmbedContext = {
-    id: input.id,
+    id: embedId,
     kind: input.kind,
     layerId: ctx.layerId,
-    identityPath: [...ctx.path, input.id],
+    identityPath: [...ctx.path, embedId],
     ...(ctx.embedThemeContext === undefined
       ? {}
       : {
@@ -250,8 +254,8 @@ const normalizeEmbed = (input: AnyInputEmbed, ctx: NormalizeContext): IRChild =>
         children,
         {
           ...ctx,
-          parentId: input.id,
-          path: [...ctx.path, input.id],
+          parentId: embedId,
+          path: [...ctx.path, embedId],
           sourcePath: `${ctx.sourcePath}.embed`,
         },
         reusedEmbedIdentity,
@@ -261,9 +265,9 @@ const normalizeEmbed = (input: AnyInputEmbed, ctx: NormalizeContext): IRChild =>
   ctx.contributions.push(contribution.providerDependencies);
   validateAdapterOutputIdentities(contribution.node, {
     ...ctx,
-    embedId: input.id,
-    parentId: input.id,
-    path: [...ctx.path, input.id],
+    embedId,
+    parentId: embedId,
+    path: [...ctx.path, embedId],
   });
   ctx.authoringSites.push(
     Object.freeze({
@@ -296,13 +300,14 @@ const normalizeEmbed = (input: AnyInputEmbed, ctx: NormalizeContext): IRChild =>
 /** 归一化一个 authored child，并同步维护 metadata */
 const normalizeChild = (input: InputChild, ctx: NormalizeContext): IRChild => {
   if (isInputEmbed(input)) {
+    const embedId = inputEmbedIdentityOf(input, ctx);
     const reusedEmbedIdentity = ctx.reusedEmbedIdentity;
-    if (reusedEmbedIdentity !== undefined && reusedEmbedIdentity.id === input.id && !reusedEmbedIdentity.used) {
+    if (reusedEmbedIdentity !== undefined && reusedEmbedIdentity.id === embedId && !reusedEmbedIdentity.used) {
       reusedEmbedIdentity.used = true;
     } else {
-      registerIdentity(input.id, ctx.parentId, ctx);
+      registerIdentity(embedId, ctx.parentId, ctx);
     }
-    return normalizeEmbed(input, ctx);
+    return normalizeEmbed(input, embedId, ctx);
   }
 
   const identity = readIdentity(input);
@@ -440,7 +445,13 @@ export const normalizeScene = (scene: InputScene, options: InputNormalizeOptions
       cache: layer.cache ?? InputLayerCache.Auto,
       order,
       zIndex: layer.zIndex ?? 0,
-      childIds: layer.children.map(readIdentity).filter((id): id is string => id !== undefined),
+      childIds: layer.children
+        .map((child, index) =>
+          isInputEmbed(child)
+            ? inputEmbedIdentityOf(child, { ...context, sourcePath: childSourcePath(context, sceneOffset + index) })
+            : readIdentity(child),
+        )
+        .filter((id): id is string => id !== undefined),
       hasAnonymousChildren: layer.children.some(child => readIdentity(child) === undefined),
       invalidationBoundary: layer.id,
     });

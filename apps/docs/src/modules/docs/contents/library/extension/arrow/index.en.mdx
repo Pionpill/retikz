@@ -1,0 +1,101 @@
+---
+title: Arrows
+description: Import Diamond, Kite, Square, Straight Barb, bar, and crow-foot endpoints on demand from @retikz/extension, then pass their Definitions through the React or Vanilla compile entry point.
+---
+
+Arrow definitions add diamond, kite, square, straight-barb, bar, and crow-foot markers to path endpoints. Choose filled or open styles to express the connection.
+
+## Usage
+
+This page supports two import styles:
+
+- Import specific Definitions on demand, such as `DiamondArrowDefinition`, and pass only the official extensions used by the figure to `Layout` or `compile`
+- Use the complete official extension set through `ExtensionArrowDefinitions`, which includes every Extension Definition from this capability family; use `ExtensionArrowProviders` when assembling a provider graph
+
+Both styles explicitly assemble capabilities for the current figure. Importing the package does not register arrows globally.
+
+### React usage
+
+Import the Definitions a figure uses from `@retikz/extension` and pass them to the React `Layout` through `extensions.arrows`. Imports do not register arrows globally; definitions apply only to the current drawing.
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
+
+<Layout extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}>
+  <Draw
+    way={[
+      [0, 0],
+      [160, 0],
+    ]}
+    arrow="->"
+    arrowDetail={{ end: { shape: 'openDiamond' } }}
+  />
+</Layout>;
+```
+
+### Vanilla usage
+
+With `@retikz/vanilla`, put the same Definition in `compile.arrows`. `input` can be an existing Core IR or Vanilla plain spec; `mount` accepts the same `compile` configuration.
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition],
+  },
+});
+```
+
+Path IR stores only an arrow name and JSON-safe configuration. If the name has no built-in or injected Definition, Core fails explicitly at lookup and lists the available entries instead of substituting a default arrow.
+
+## Examples
+
+The overview keeps path length and style fixed while comparing the nine Extension endpoint markers in two columns.
+
+<ComponentPreview files="arrow-gallery" size="sm" />
+
+### Diamond arrows
+
+`diamond` and `openDiamond` default to integer dimensions of `11 × 6`, with a nominal area of 66, and provide filled and hollow endpoints. Their contours fill the base height; the solid form uses arrow fill, while the open form is stroke-only.
+
+<ComponentPreview files="diamond-arrows" size="sm" />
+
+### Kite arrows
+
+`kite` and `openKite` also default to `11 × 6`. Their shoulders sit at one quarter of the base length, producing an asymmetric contour stretched toward the tip. They share Diamond's solid/open paint rules but are not symmetric diamonds; inject `KiteArrowDefinition` or `OpenKiteArrowDefinition` on demand.
+
+### Square arrows
+
+`square` and `openSquare` both default to `8 × 8`, while explicit `length` and `width` can still stretch them independently. The open form moves its contour inside the marker bounds before stroking instead of reusing the solid outer edge; their Definitions are `SquareArrowDefinition` and `OpenSquareArrowDefinition`.
+
+All three families reuse Core's marker host, start/end placement, path shrink, and `arrowDetail` visual parameters. Explicit `length` and `width` only stretch the frozen default local contours.
+
+### Straight Barb arrow
+
+`straightBarb` uses Core's `8 × 8` fallback by default and draws a `>` contour as one continuous open polyline. The path body contacts the arrow tip, while the marker remains unclosed and unfilled; stroke color and width continue to inherit the Core marker context.
+
+Use `StraightBarbArrowDefinition` for direct Definition assembly and `StraightBarbArrowProvider` when building a provider graph. Extension defines reusable geometry only and does not bind it to dependency, flow, or another domain relationship.
+
+### Bar endpoint
+
+`bar` uses Core's `8 × 8` fallback by default and draws an open line perpendicular to the path tangent at the authored endpoint. It inherits the path stroke, but its name does not impose domain meanings such as “blocked” or “inhibited”; consumers assign those meanings.
+
+<ComponentPreview files="bar-arrow" size="sm" />
+
+The path body overlaps the marker contact edge by half of its own stroke width, then the marker paints over the joint. This avoids antialiasing seams without letting the line pass through the bar. `length` controls marker size along the path, `width` controls the bar span, and `lineWidth` controls the marker stroke.
+
+### Crow-foot endpoint
+
+`crowFoot` uses Core's `8 × 8` fallback by default and draws three open rays from the path contact point. Relationship diagrams may use it for multiplicity, but Extension defines only reusable geometry and does not bind it to cardinality.
+
+<ComponentPreview files="crow-foot-arrow" size="sm" />
+
+All three rays belong to the marker, and the path body shrinks to the junction. `length`, `width`, `lineWidth`, `color`, and `opacity` continue to use Core's `arrowDetail` contract; start, end, reversed routes, and double endpoints share the same placement algorithm.
+
+## Related
+
+- [Capability Loading](/library/extension/capability-loading): boundary between direct injection and the provider graph
+- [Extensions](/library/extension/introduction): browse the other optional capabilities

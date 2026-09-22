@@ -25,7 +25,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { IRCell, IRList, IRMap } from '@retikz/standard';
+import type { IRCell, IRList, IRMap } from '@retikz/standard/container';
 
 import {
   entityPreviewAuthoringInput,
@@ -838,37 +838,36 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   ctx.graphCounts.set(helperName, count);
   ctx.graphHelpers.add(helperName);
   ctx.graphAdapters.add(adapterName);
-  const embedId = `preview-${helperName}-${count}`;
   if (helperName === 'graph') {
-    return `graph(${formatString(embedId)}, ${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
+    return `graph(${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'group') {
-    return `group(${formatString(embedId)}, ${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
+    return `group(${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'block') {
-    return `block(${formatString(embedId)}, ${blockAuthoringCode(BlockSchema.parse(child), indent, ctx)})`;
+    return `block(${blockAuthoringCode(BlockSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'blockHeader') {
-    return `blockHeader(${formatString(embedId)}, ${blockHeaderAuthoringCode(BlockHeaderSchema.parse(child), indent, ctx)})`;
+    return `blockHeader(${blockHeaderAuthoringCode(BlockHeaderSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'blockSection') {
-    return `blockSection(${formatString(embedId)}, ${blockSectionAuthoringCode(BlockSectionSchema.parse(child), indent, ctx)})`;
+    return `blockSection(${blockSectionAuthoringCode(BlockSectionSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'blockRow') {
-    return `blockRow(${formatString(embedId)}, ${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
+    return `blockRow(${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'entity') {
     const input = {
       ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
       graphThemeStyles: '__GRAPH_THEME_STYLES__',
     };
-    return `entity(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+    return `entity(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
   }
   const input = {
     ...relationPreviewAuthoringInput(RelationSchema.parse(child)),
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  return `relation(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+  return `relation(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
 };
 
 const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -970,8 +969,13 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     );
     const members = [...standardHelpers, ...standardAdapters];
     const shapeMembers = members.filter(name => name === 'shape' || shapeAdapters.has(name));
-    const rootMembers = members.filter(name => !shapeMembers.includes(name));
-    if (rootMembers.length > 0) imports.push(`import { ${rootMembers.join(', ')} } from '@retikz/standard-vanilla';`);
+    const containerMemberNames = new Set<string>(['list', 'map', 'ListInputEmbedAdapter', 'MapInputEmbedAdapter']);
+    const containerMembers = members.filter(name => containerMemberNames.has(name));
+    const presentationMembers = members.filter(name => !shapeMembers.includes(name) && !containerMemberNames.has(name));
+    if (presentationMembers.length > 0)
+      imports.push(`import { ${presentationMembers.join(', ')} } from '@retikz/standard-vanilla/presentation';`);
+    if (containerMembers.length > 0)
+      imports.push(`import { ${containerMembers.join(', ')} } from '@retikz/standard-vanilla/container';`);
     if (shapeMembers.length > 0)
       imports.push(`import { ${shapeMembers.join(', ')} } from '@retikz/standard-vanilla/shape';`);
   }
@@ -989,7 +993,20 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     }
   }
   if (definitions.standard.length > 0) {
-    imports.push(`import { ${definitions.standard.join(', ')} } from '@retikz/standard';`);
+    const shapeDefinitions = definitions.standard.filter(name =>
+      STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0]!.toUpperCase()}${kind.slice(1)}`)),
+    );
+    const containerDefinitionNames = new Set<string>(['ListDefinition', 'MapDefinition']);
+    const containerDefinitions = definitions.standard.filter(name => containerDefinitionNames.has(name));
+    const presentationDefinitions = definitions.standard.filter(
+      name => !shapeDefinitions.includes(name) && !containerDefinitionNames.has(name),
+    );
+    if (shapeDefinitions.length > 0)
+      imports.push(`import { ${shapeDefinitions.join(', ')} } from '@retikz/standard/shape';`);
+    if (presentationDefinitions.length > 0)
+      imports.push(`import { ${presentationDefinitions.join(', ')} } from '@retikz/standard/presentation';`);
+    if (containerDefinitions.length > 0)
+      imports.push(`import { ${containerDefinitions.join(', ')} } from '@retikz/standard/container';`);
   }
   if (definitions.layout.length > 0) {
     imports.push(`import { ${definitions.layout.join(', ')} } from '@retikz/layout';`);

@@ -1,6 +1,6 @@
 import { fadeIn, slideIn } from '@retikz/core';
+import { pulse } from '@retikz/extension';
 import { Layout, Node } from '@retikz/react';
-import { pulse } from '@retikz/standard';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';
