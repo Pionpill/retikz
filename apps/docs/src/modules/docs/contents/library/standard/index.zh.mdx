@@ -7,12 +7,11 @@ Standard 为常见绘图任务提供标准组件。你可以为一张图放置�
 
 ## 职责一览
 
-| 入口                       | 用途                                             |
-| -------------------------- | ------------------------------------------------ |
-| `@retikz/standard`         | 展现组件的数据契约、工厂与定义                   |
-| `@retikz/standard-react`   | 在 React JSX 中组合绘图组件                      |
-| `@retikz/standard-vanilla` | 用 TypeScript 创建绘图输入并接入渲染             |
-| 三包的 `/shape`            | 绘制圆、矩形、正多边形、星形、圆弧与扇形         |
+| 入口                   | 用途                                 |
+| ---------------------- | ------------------------------------ |
+| 三包的 `/presentation` | 网格、坐标轴、分组框、表面与图例     |
+| 三包的 `/container`    | 列表、映射及后续结构化内容容器       |
+| 三包的 `/shape`        | 圆、矩形、正多边形、星形、圆弧与扇形 |
 
 ## 安装与使用
 
@@ -20,7 +19,7 @@ React 项目安装作者入口及宿主：
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
-无需 React 时使用 `@retikz/standard-vanilla` 与 `@retikz/vanilla`。[快速开始](/library/standard/get-start)展示两种入口绘制相同网格的完整步骤。
+无需 React 时安装 `@retikz/standard-vanilla` 与 `@retikz/vanilla`，并按所选组件使用对应子入口。[快速开始](/library/standard/get-start)展示两种入口绘制相同网格的完整步骤。
 
 需要排列多个内容时阅读 [Layout](/library/layout)；需要可选节点形状、箭头、裁剪或流带时阅读 [Extension](/library/extension)。
 

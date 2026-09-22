@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { Grid } from '@retikz/standard-react';
+import { Grid } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 const GetStartGrid: FC = () => (

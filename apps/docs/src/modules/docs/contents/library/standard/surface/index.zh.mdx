@@ -9,7 +9,7 @@ description: 用 JSON-safe Surface 为任意单个 child 提供内边距、背�
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { Surface } from '@retikz/standard-react';
+import { Surface } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -20,11 +20,11 @@ import { Surface } from '@retikz/standard-react';
 </Layout>
 ```
 
-| 场景        | 公开入口                                                                            |
-| ----------- | ----------------------------------------------------------------------------------- |
-| React       | `Surface`（`@retikz/standard-react`）                                               |
-| Vanilla     | `surface`、`surfaceChild`、`SurfaceInputEmbedAdapter`（`@retikz/standard-vanilla`） |
-| IR / 持久化 | `SurfaceSchema`、`createSurface`、`SurfaceDefinition`（`@retikz/standard`）         |
+| 场景        | 公开入口                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------ |
+| React       | `Surface`（`@retikz/standard-react/presentation`）                                               |
+| Vanilla     | `surface`、`surfaceChild`、`SurfaceInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`） |
+| IR / 持久化 | `SurfaceSchema`、`createSurface`、`SurfaceDefinition`（`@retikz/standard/presentation`）         |
 
 ## 示例
 
@@ -56,10 +56,10 @@ Surface 还在 authored 外层 Scope 发布 key 为 `surface` 的 qualified spat
   sources={[
     {
       label: 'Surface Source schema',
-      path: 'packages/library/standard/src/composites/presentation/surface/schema.ts',
+      path: 'packages/library/standard/src/presentation/surface/schema.ts',
     },
-    { label: 'Surface 布局与下沉', path: 'packages/library/standard/src/composites/presentation/surface/pipeline.ts' },
-    { label: 'Surface Provider', path: 'packages/library/standard/src/composites/presentation/surface/provider.ts' },
+    { label: 'Surface 布局与下沉', path: 'packages/library/standard/src/presentation/surface/pipeline.ts' },
+    { label: 'Surface Provider', path: 'packages/library/standard/src/presentation/surface/provider.ts' },
   ]}
 />
 

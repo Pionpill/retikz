@@ -19,7 +19,7 @@ description: 安装 Standard，用 React 或 Vanilla 绘制第一个参考网格
 ```tsx
 import type { FC } from 'react';
 import { Layout } from '@retikz/react';
-import { Grid } from '@retikz/standard-react';
+import { Grid } from '@retikz/standard-react/presentation';
 
 export const Example: FC = () => (
   <Layout>
@@ -48,7 +48,7 @@ if (root) createRoot(root).render(<Example />);
 <PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
 
 ```ts
-import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
 import { renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({

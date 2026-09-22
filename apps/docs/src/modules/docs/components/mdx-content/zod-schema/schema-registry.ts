@@ -23,7 +23,8 @@ import {
 import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
-import * as StandardIR from '@retikz/standard';
+import * as StandardContainerIR from '@retikz/standard/container';
+import * as StandardPresentationIR from '@retikz/standard/presentation';
 import {
   CircleSchema,
   EllipseSchema,
@@ -722,21 +723,21 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
   },
   LegendSchema: {
-    schema: StandardIR.LegendSchema,
+    schema: StandardPresentationIR.LegendSchema,
     label: 'Legend',
     url: '/library/standard/legend#legendschema',
     localizations: { zh: LegendSchemaZhLocalization },
   },
   LegendArtifactSchema: {
-    schema: StandardIR.LegendArtifactSchema,
+    schema: StandardPresentationIR.LegendArtifactSchema,
     label: 'LegendArtifact',
     url: '/library/standard/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
-  ListSchema: { schema: StandardIR.ListSchema, label: 'List', url: '/library/standard/list#listschema' },
-  MapSchema: { schema: StandardIR.MapSchema, label: 'Map', url: '/library/standard/map#mapschema' },
+  ListSchema: { schema: StandardContainerIR.ListSchema, label: 'List', url: '/library/standard/list#listschema' },
+  MapSchema: { schema: StandardContainerIR.MapSchema, label: 'Map', url: '/library/standard/map#mapschema' },
   SurfaceSchema: {
-    schema: StandardIR.SurfaceSchema,
+    schema: StandardPresentationIR.SurfaceSchema,
     label: 'Surface',
     url: '/library/standard/surface#surfaceschema',
   },

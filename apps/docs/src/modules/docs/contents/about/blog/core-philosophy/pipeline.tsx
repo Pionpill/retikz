@@ -1,5 +1,5 @@
 import { FlowEntities, FlowLayout, FlowRelations } from '@retikz/diagram-react/flow';
-import { LegendSchema } from '@retikz/standard';
+import { LegendSchema } from '@retikz/standard/presentation';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react';
+import { Frame, FrameDescription, FrameTitle } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 /** English side-by-side comparison of absent, horizontal, and vertical Frame headers */

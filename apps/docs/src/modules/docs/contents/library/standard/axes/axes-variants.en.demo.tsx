@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { Axes } from '@retikz/standard-react';
+import { Axes } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 /** Side-by-side comparison of common Axes semantics in English */

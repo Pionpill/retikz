@@ -16,7 +16,7 @@ After [installation](/library/standard/get-start), choose one of the four entry 
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { Map } from '@retikz/standard-react';
+import { Map } from '@retikz/standard-react/container';
 
 export const Example = () => (
   <Layout>
@@ -36,7 +36,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { MapDefinition } from '@retikz/standard';
+import { MapDefinition } from '@retikz/standard/container';
 
 const ir: IRScene = {
   type: 'scene',
@@ -65,7 +65,7 @@ export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -93,7 +93,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { MapDefinition } from '@retikz/standard';
+import { MapDefinition } from '@retikz/standard/container';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {

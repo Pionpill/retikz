@@ -1,5 +1,5 @@
 import { Draw, Layout } from '@retikz/react';
-import { List } from '@retikz/standard-react';
+import { List } from '@retikz/standard-react/container';
 import type { FC } from 'react';
 
 const ListStyles: FC = () => (

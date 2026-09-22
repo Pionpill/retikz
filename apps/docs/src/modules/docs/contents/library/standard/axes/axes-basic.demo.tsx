@@ -1,5 +1,5 @@
 import { Layout } from '@retikz/react';
-import { Axes } from '@retikz/standard-react';
+import { Axes } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 const Demo: FC = () => (

@@ -74,11 +74,7 @@ export declare const RectangleInputEmbedAdapter: InputEmbedAdapter<InputRectangl
 ### IRRectangle
 
 <p>
-  <ApiSourceLink
-    label={'IRRectangle'}
-    path={'packages/library/standard/src/composites/shape/rectangle/types.ts'}
-    startLine={6}
-  >
+  <ApiSourceLink label={'IRRectangle'} path={'packages/library/standard/src/shape/rectangle/types.ts'} startLine={6}>
     Persistent Rectangle shape
   </ApiSourceLink>
 </p>
@@ -92,7 +88,7 @@ export type IRRectangle = ShapeSource<ZodInput<typeof RectangleSchema>>;
 <p>
   <ApiSourceLink
     label={'RectangleDefinition'}
-    path={'packages/library/standard/src/composites/shape/rectangle/definition.ts'}
+    path={'packages/library/standard/src/shape/rectangle/definition.ts'}
     startLine={7}
   >
     Rectangle Core composite registration
@@ -113,7 +109,7 @@ export const RectangleDefinition = defineComposite({
 <p>
   <ApiSourceLink
     label={'RectangleProvider'}
-    path={'packages/library/standard/src/composites/shape/rectangle/provider.ts'}
+    path={'packages/library/standard/src/shape/rectangle/provider.ts'}
     startLine={5}
   >
     Rectangle on-demand dependency contribution
@@ -134,7 +130,7 @@ export const RectangleProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'createRectangle'}
-    path={'packages/library/standard/src/composites/shape/rectangle/factory.ts'}
+    path={'packages/library/standard/src/shape/rectangle/factory.ts'}
     startLine={4}
   >
     Create a Rectangle Source preserving geometry intent

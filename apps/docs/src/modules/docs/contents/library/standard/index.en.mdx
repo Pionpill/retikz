@@ -7,12 +7,11 @@ Standard provides components for common drawing tasks. Add a reference grid, wra
 
 ## Responsibilities at a glance
 
-| Entry                      | Purpose                                                                           |
-| -------------------------- | --------------------------------------------------------------------------------- |
-| `@retikz/standard`         | Presentation data contracts, factories, and definitions                            |
-| `@retikz/standard-react`   | Compose drawing components in React JSX                                           |
-| `@retikz/standard-vanilla` | Create drawing inputs and connect rendering in TypeScript                         |
-| Each package's `/shape`    | Draw circles, rectangles, polygons, stars, arcs, and sectors                      |
+| Entry                          | Purpose                                                 |
+| ------------------------------ | ------------------------------------------------------- |
+| Each package's `/presentation` | Grids, axes, frames, surfaces, and legends              |
+| Each package's `/container`    | Lists, maps, and future structured-content containers   |
+| Each package's `/shape`        | Circles, rectangles, polygons, stars, arcs, and sectors |
 
 ## Installation and usage
 
@@ -20,7 +19,7 @@ Install the authoring entry and host for React:
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
-Without React, use `@retikz/standard-vanilla` and `@retikz/vanilla`. The [quick start](/library/standard/get-start) shows complete steps for drawing the same grid through both entries.
+Without React, install `@retikz/standard-vanilla` and `@retikz/vanilla`, then use the subpath for the selected component family. The [quick start](/library/standard/get-start) shows complete steps for drawing the same grid through both entries.
 
 For arranging multiple items, see [Layout](/library/layout). For optional node shapes, arrows, clips, or ribbons, see [Extension](/library/extension).
 

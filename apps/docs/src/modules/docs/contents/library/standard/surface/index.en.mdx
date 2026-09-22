@@ -9,7 +9,7 @@ description: Wrap one arbitrary child with JSON-safe padding, background, border
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
-import { Surface } from '@retikz/standard-react';
+import { Surface } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -20,11 +20,11 @@ import { Surface } from '@retikz/standard-react';
 </Layout>
 ```
 
-| Path           | Public entry                                                                              |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| React          | `Surface` from `@retikz/standard-react`                                                   |
-| Vanilla        | `surface`, `surfaceChild`, and `SurfaceInputEmbedAdapter` from `@retikz/standard-vanilla` |
-| IR / persisted | `SurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard`         |
+| Path           | Public entry                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| React          | `Surface` from `@retikz/standard-react/presentation`                                                   |
+| Vanilla        | `surface`, `surfaceChild`, and `SurfaceInputEmbedAdapter` from `@retikz/standard-vanilla/presentation` |
+| IR / persisted | `SurfaceSchema`, `createSurface`, and `SurfaceDefinition` from `@retikz/standard/presentation`         |
 
 ## Examples
 
@@ -56,13 +56,13 @@ The authored outer Scope also publishes a qualified handle whose key is `surface
   sources={[
     {
       label: 'Surface Source schema',
-      path: 'packages/library/standard/src/composites/presentation/surface/schema.ts',
+      path: 'packages/library/standard/src/presentation/surface/schema.ts',
     },
     {
       label: 'Surface layout and lowering',
-      path: 'packages/library/standard/src/composites/presentation/surface/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/surface/pipeline.ts',
     },
-    { label: 'Surface provider', path: 'packages/library/standard/src/composites/presentation/surface/provider.ts' },
+    { label: 'Surface provider', path: 'packages/library/standard/src/presentation/surface/provider.ts' },
   ]}
 />
 

@@ -11,7 +11,7 @@ Legend has two content forms. `items` preserves an authored sequence of discrete
 
 ```tsx
 import { Node, Path, Step } from '@retikz/react';
-import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
+import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -35,11 +35,11 @@ import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
 
 React composes content through `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick`. The explicit `kind` selects `items` or `ramp`; it is never inferred from children. Every required slot must convert to exactly one `IRChild`. Title font, weight, and text alignment stay on the real `Node` inside `LegendTitle`. Vanilla authoring continues to accept JSON-safe `LegendInput`, while direct IR and persisted documents use full `IRLegend`. All three paths are validated by `LegendSchema` and compiled by `LegendDefinition`.
 
-| Scenario         | Public entry point                                                                                  |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| React            | `Legend`, `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick` from `@retikz/standard-react` |
-| Vanilla          | `legend()` and `LegendInputEmbedAdapter` from `@retikz/standard-vanilla`                            |
-| IR / persistence | `LegendSchema`, `createLegend()`, and `LegendDefinition` from `@retikz/standard`                    |
+| Scenario         | Public entry point                                                                                               |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| React            | `Legend`, `LegendTitle`, `LegendItem`, `LegendRamp`, and `LegendTick` from `@retikz/standard-react/presentation` |
+| Vanilla          | `legend()` and `LegendInputEmbedAdapter` from `@retikz/standard-vanilla/presentation`                            |
+| IR / persistence | `LegendSchema`, `createLegend()`, and `LegendDefinition` from `@retikz/standard/presentation`                    |
 
 See [Standard](/library/standard) for the package family and its three entry points. Domain packages produce resolved samples; Standard Legend owns only generic presentation semantics and typed Legend artifacts, while Layout provides the reusable arrangement capability.
 
@@ -110,49 +110,49 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
   sources={[
     {
       label: 'Legend input schema and validation',
-      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
+      path: 'packages/library/standard/src/presentation/legend/schema.ts',
       startLine: 5,
       endLine: 131,
     },
     {
       label: 'React items and ramp form assembly',
-      path: 'packages/library/standard-react/src/legend/Legend.tsx',
+      path: 'packages/library/standard-react/src/presentation/legend/Legend.tsx',
       startLine: 39,
       endLine: 90,
     },
     {
       label: 'Strict marker and slot conversion',
-      path: 'packages/library/standard-react/src/legend/convert-children.ts',
+      path: 'packages/library/standard-react/src/presentation/legend/convert-children.ts',
       startLine: 20,
       endLine: 126,
     },
     {
       label: 'Legend Definition output boundary',
-      path: 'packages/library/standard/src/composites/presentation/legend/definition.ts',
+      path: 'packages/library/standard/src/presentation/legend/definition.ts',
       startLine: 11,
       endLine: 18,
     },
     {
       label: 'Shared probes, alignment, and replay',
-      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 96,
       endLine: 220,
     },
     {
       label: 'Ramp slots and artifact',
-      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 242,
       endLine: 371,
     },
     {
       label: 'Items wrapping, slots, and artifact',
-      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 373,
       endLine: 559,
     },
     {
       label: 'Typed artifact schema',
-      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
+      path: 'packages/library/standard/src/presentation/legend/schema.ts',
       startLine: 41,
       endLine: 109,
     },
@@ -163,19 +163,19 @@ An unregistered Legend produces `COMPOSITE_NOT_REGISTERED`. If a nested composit
 
 ### Public entry points
 
-| API                       | Package                    | Responsibility                                                        | Default |
-| ------------------------- | -------------------------- | --------------------------------------------------------------------- | ------- |
-| `Legend`                  | `@retikz/standard-react`   | Select an explicit form and contribute its marker tree as `IRLegend`  | —       |
-| `LegendTitle`             | `@retikz/standard-react`   | Declare the optional title slot                                       | —       |
-| `LegendItem`              | `@retikz/standard-react`   | Declare a discrete sample, stable key, and optional label             | —       |
-| `LegendRamp`              | `@retikz/standard-react`   | Declare the continuous sample slot                                    | —       |
-| `LegendTick`              | `@retikz/standard-react`   | Declare a normalized tick and optional label                          | —       |
-| `legend(id, input)`       | `@retikz/standard-vanilla` | Create an embed consumed by `LegendInputEmbedAdapter`                 | —       |
-| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla` | Lower an embed through `createLegend()` and contribute its Definition | —       |
-| `createLegend(input)`     | `@retikz/standard`         | Assemble sparse Source and add fixed discriminators                   | —       |
-| `LegendDefinition`        | `@retikz/standard`         | Core Definition injected for the Legend composite on demand           | —       |
+| API                       | Package                                 | Responsibility                                                        | Default |
+| ------------------------- | --------------------------------------- | --------------------------------------------------------------------- | ------- |
+| `Legend`                  | `@retikz/standard-react/presentation`   | Select an explicit form and contribute its marker tree as `IRLegend`  | —       |
+| `LegendTitle`             | `@retikz/standard-react/presentation`   | Declare the optional title slot                                       | —       |
+| `LegendItem`              | `@retikz/standard-react/presentation`   | Declare a discrete sample, stable key, and optional label             | —       |
+| `LegendRamp`              | `@retikz/standard-react/presentation`   | Declare the continuous sample slot                                    | —       |
+| `LegendTick`              | `@retikz/standard-react/presentation`   | Declare a normalized tick and optional label                          | —       |
+| `legend(id, input)`       | `@retikz/standard-vanilla/presentation` | Create an embed consumed by `LegendInputEmbedAdapter`                 | —       |
+| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla/presentation` | Lower an embed through `createLegend()` and contribute its Definition | —       |
+| `createLegend(input)`     | `@retikz/standard/presentation`         | Assemble sparse Source and add fixed discriminators                   | —       |
+| `LegendDefinition`        | `@retikz/standard/presentation`         | Core Definition injected for the Legend composite on demand           | —       |
 
-`@retikz/standard` also exports the closed value objects `LegendContentKind`, `LegendDirection`, `LegendWrap`, and `LegendSampleAlignment`; `LegendSchema` below shows their concrete values.
+`@retikz/standard/presentation` also exports the closed value objects `LegendContentKind`, `LegendDirection`, `LegendWrap`, and `LegendSampleAlignment`; `LegendSchema` below shows their concrete values.
 
 ### Legend
 

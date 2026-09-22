@@ -30,7 +30,7 @@ import {
   ScaleSchema,
   TransformSchema,
 } from '@retikz/plot';
-import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard';
+import { LegendArtifactSchema, LegendSchema, SurfaceSchema } from '@retikz/standard/presentation';
 import { TableSchema } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';

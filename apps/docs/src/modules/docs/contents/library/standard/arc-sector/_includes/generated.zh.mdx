@@ -201,7 +201,7 @@ export declare const SectorInputEmbedAdapter: InputEmbedAdapter<InputSector & { 
 ### IRArc
 
 <p>
-  <ApiSourceLink label={'IRArc'} path={'packages/library/standard/src/composites/shape/arc/types.ts'} startLine={6}>
+  <ApiSourceLink label={'IRArc'} path={'packages/library/standard/src/shape/arc/types.ts'} startLine={6}>
     持久化的 Arc 形状
   </ApiSourceLink>
 </p>
@@ -246,11 +246,7 @@ export type IRArc = ShapeSource<ZodInput<typeof ArcSchema>>;
 ### IRSector
 
 <p>
-  <ApiSourceLink
-    label={'IRSector'}
-    path={'packages/library/standard/src/composites/shape/sector/types.ts'}
-    startLine={6}
-  >
+  <ApiSourceLink label={'IRSector'} path={'packages/library/standard/src/shape/sector/types.ts'} startLine={6}>
     持久化的 Sector 形状
   </ApiSourceLink>
 </p>
@@ -262,11 +258,7 @@ export type IRSector = ShapeSource<ZodInput<typeof SectorSchema>>;
 ### ArcDefinition
 
 <p>
-  <ApiSourceLink
-    label={'ArcDefinition'}
-    path={'packages/library/standard/src/composites/shape/arc/definition.ts'}
-    startLine={7}
-  >
+  <ApiSourceLink label={'ArcDefinition'} path={'packages/library/standard/src/shape/arc/definition.ts'} startLine={7}>
     Arc 的 Core composite 注册项
   </ApiSourceLink>
 </p>
@@ -283,11 +275,7 @@ export const ArcDefinition = defineComposite({
 ### ArcProvider
 
 <p>
-  <ApiSourceLink
-    label={'ArcProvider'}
-    path={'packages/library/standard/src/composites/shape/arc/provider.ts'}
-    startLine={5}
-  >
+  <ApiSourceLink label={'ArcProvider'} path={'packages/library/standard/src/shape/arc/provider.ts'} startLine={5}>
     Arc 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -306,7 +294,7 @@ export const ArcProvider: CoreDependencyProvider = Object.freeze({
 <p>
   <ApiSourceLink
     label={'SectorDefinition'}
-    path={'packages/library/standard/src/composites/shape/sector/definition.ts'}
+    path={'packages/library/standard/src/shape/sector/definition.ts'}
     startLine={7}
   >
     Sector 的 Core composite 注册项
@@ -325,11 +313,7 @@ export const SectorDefinition = defineComposite({
 ### SectorProvider
 
 <p>
-  <ApiSourceLink
-    label={'SectorProvider'}
-    path={'packages/library/standard/src/composites/shape/sector/provider.ts'}
-    startLine={5}
-  >
+  <ApiSourceLink label={'SectorProvider'} path={'packages/library/standard/src/shape/sector/provider.ts'} startLine={5}>
     Sector 的按需依赖贡献
   </ApiSourceLink>
 </p>
@@ -346,11 +330,7 @@ export const SectorProvider: CoreDependencyProvider = Object.freeze({
 ### createArc
 
 <p>
-  <ApiSourceLink
-    label={'createArc'}
-    path={'packages/library/standard/src/composites/shape/arc/factory.ts'}
-    startLine={4}
-  >
+  <ApiSourceLink label={'createArc'} path={'packages/library/standard/src/shape/arc/factory.ts'} startLine={4}>
     创建保留几何意图的 Arc Source
   </ApiSourceLink>
 </p>
@@ -368,11 +348,7 @@ export declare const createArc: (input: ShapeProperties<IRArc>) => { animations?
 ### createSector
 
 <p>
-  <ApiSourceLink
-    label={'createSector'}
-    path={'packages/library/standard/src/composites/shape/sector/factory.ts'}
-    startLine={4}
-  >
+  <ApiSourceLink label={'createSector'} path={'packages/library/standard/src/shape/sector/factory.ts'} startLine={4}>
     创建保留几何意图的 Sector Source
   </ApiSourceLink>
 </p>

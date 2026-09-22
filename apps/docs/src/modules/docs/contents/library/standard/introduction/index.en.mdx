@@ -15,16 +15,16 @@ Standard provides reusable components for common drawing tasks: draw reference g
 
 Presentation components express a complete drawing task in one object: a grid describes the distribution of reference lines, a legend describes how symbols correspond to labels, and a surface describes a content background and frame.
 
-| Group        | Provides                                                      | Use it for                                                             |
-| ------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Presentation | Grid, Axes, Frame, Surface, Legend, List, Map                 | Composing reference grids, axes, frames, content surfaces, and legends |
-| Shapes       | Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector | Draw standalone path contours from geometric parameters                |
+| Group        | Provides                                                      | Use it for                                                          |
+| ------------ | ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Presentation | Grid, Axes, Frame, Surface, Legend                            | Organizing a figure's references, framing, surface, and explanation |
+| Container    | List, Map                                                     | Organizing nested structured content                                |
+| Shapes       | Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector | Draw standalone path contours from geometric parameters             |
 
 Presentation components can be placed directly inside a React `Layout` or used through the Vanilla entry.
 
 ## Choose an entry
 
-- `@retikz/standard-react`: compose presentation components in JSX
-- `@retikz/standard-vanilla`: author ordinary TypeScript input and use Vanilla rendering
-- `@retikz/standard`: validate persistent graphic data or use component definitions directly
-- The three packages’ `/shape` subpaths: shape Sources, React components and Vanilla `shape.xxx`
+- The three packages’ `/presentation` subpaths: presentation Sources, React components, and Vanilla inputs
+- The three packages’ `/container` subpaths: List, Map, and other structured-content components
+- The three packages’ `/shape` subpaths: shape Sources, React components, and Vanilla `shape.xxx`

@@ -16,7 +16,7 @@ description: 使用 List 绘制可复用的数据结构槽位，设置整体及�
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { List } from '@retikz/standard-react';
+import { List } from '@retikz/standard-react/container';
 
 export const Example = () => (
   <Layout>
@@ -31,7 +31,7 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { ListDefinition } from '@retikz/standard';
+import { ListDefinition } from '@retikz/standard/container';
 
 const ir: IRScene = {
   type: 'scene',
@@ -51,7 +51,7 @@ export const Example = () => <Layout ir={ir} composites={[ListDefinition]} />;
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { list, ListInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { list, ListInputEmbedAdapter } from '@retikz/standard-vanilla/container';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
 const input = scene({
@@ -70,7 +70,7 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { ListDefinition } from '@retikz/standard';
+import { ListDefinition } from '@retikz/standard/container';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {

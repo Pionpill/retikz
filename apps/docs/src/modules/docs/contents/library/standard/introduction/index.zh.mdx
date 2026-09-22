@@ -15,16 +15,16 @@ Standard 是 Retikz 的标准包，为常见的绘图任务提供可复用组件
 
 展现组件以一个对象表达完整的绘图任务：网格描述参考线的分布，图例描述符号与说明的对应关系，表面描述内容的背景和边框。
 
-| 分组 | 提供什么                                                      | 何时使用                                   |
-| ---- | ------------------------------------------------------------- | ------------------------------------------ |
-| 展现 | Grid、Axes、Frame、Surface、Legend、List、Map                 | 直接组合网格、坐标轴、框架、内容表面与图例 |
-| 形状 | Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector | 用几何参数绘制独立路径轮廓                 |
+| 分组 | 提供什么                                                      | 何时使用                       |
+| ---- | ------------------------------------------------------------- | ------------------------------ |
+| 展示 | Grid、Axes、Frame、Surface、Legend                            | 组织图的参考、框架、表面与说明 |
+| 容器 | List、Map                                                     | 组织可嵌套的结构化内容         |
+| 形状 | Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector | 用几何参数绘制独立路径轮廓     |
 
 展现组件可以直接放在 React 的 `Layout` 中，也可以通过 Vanilla 入口使用。
 
 ## 选择入口
 
-- `@retikz/standard-react`：在 React JSX 中组合展现组件
-- `@retikz/standard-vanilla`：用普通 TypeScript 数据创建输入，并接入 Vanilla 渲染
-- `@retikz/standard`：读取和校验持久化图形数据，或直接使用组件定义
+- 三包的 `/presentation` 子入口：使用展示组件的 Source、React 组件或 Vanilla 输入
+- 三包的 `/container` 子入口：使用 List、Map 等结构化内容组件
 - 三包的 `/shape` 子入口：使用形状 Source、React 组件或 Vanilla `shape.xxx`
