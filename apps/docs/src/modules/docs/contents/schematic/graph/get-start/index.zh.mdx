@@ -74,6 +74,34 @@ const view = mount(document.getElementById('diagram')!, input, { adapters: creat
 
 <ComponentPreview files="/schematic/graph/graph-overview" size="sm" />
 
-## 下一步
+## 延伸阅读
 
-创建第一个图式后，继续阅读[实体](/schematic/graph/entity)选择 role 与样式，[关系](/schematic/graph/relation)控制方向、标签和 route；需要组织范围或工程对象时，分别使用[分组](/schematic/graph/group)和[结构块](/schematic/graph/block)。
+<LinkedSections
+  items={[
+    {
+      title: 'Entity · 实体',
+      description: '选择对象的 role、文本、位置与样式',
+      url: '/schematic/graph/entity',
+    },
+    {
+      title: 'Relation · 关系',
+      description: '控制连接的方向、标签与路径',
+      url: '/schematic/graph/relation',
+    },
+    {
+      title: 'Group · 分组',
+      description: '为相关内容建立可嵌套的可见边界',
+      url: '/schematic/graph/group',
+    },
+    {
+      title: 'Block · 结构块',
+      description: '用 Header、Section 和 Row 组织代码与工程对象',
+      url: '/schematic/graph/block',
+    },
+    {
+      title: 'Graph API 参考',
+      description: '查询 Source schema 与三个 authoring 入口',
+      url: '/schematic/graph/api-reference',
+    },
+  ]}
+/>

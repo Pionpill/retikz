@@ -7,7 +7,6 @@ export const schematicSection: Array<Section> = [
     id: 'graph',
     label: 'schematic.graph',
     navigationDescription: 'schematic.graphNavigationDescription',
-    document: true,
     pages: [
       {
         id: 'introduction',
