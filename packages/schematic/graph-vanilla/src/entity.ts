@@ -1,14 +1,15 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { EntityProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { EntityEmbedKind } from './constants';
-import type { InputEntity } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputEntity, WithoutInputType } from './normalize';
 import { normalizeEntity } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 
 /** Entity embed 同时携带 Source authoring 输入与当前 definition options */
-export type EntityInputEmbedProps = InputEntity & GraphDefinitionOptions;
+export type EntityInputEmbedProps = WithoutInputType<InputEntity> & GraphDefinitionOptions;
 
 const inputOf = (props: EntityInputEmbedProps): InputEntity => {
   const {
@@ -28,7 +29,7 @@ const inputOf = (props: EntityInputEmbedProps): InputEntity => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'entity', ...input };
 };
 
 /** Entity Source 的 InputEmbed adapter */
@@ -41,9 +42,4 @@ export const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbedProps> =
 };
 
 /** 创建 Entity Source 的 authoring embed 节点 */
-export const entity = (id: string, input: EntityInputEmbedProps): InputEmbed<EntityInputEmbedProps> => ({
-  type: 'embed',
-  kind: EntityEmbedKind,
-  id,
-  props: input,
-});
+export const entity = (input: EntityInputEmbedProps) => createGraphInputEmbed(EntityEmbedKind, input, input.id);

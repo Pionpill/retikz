@@ -838,37 +838,36 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   ctx.graphCounts.set(helperName, count);
   ctx.graphHelpers.add(helperName);
   ctx.graphAdapters.add(adapterName);
-  const embedId = `preview-${helperName}-${count}`;
   if (helperName === 'graph') {
-    return `graph(${formatString(embedId)}, ${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
+    return `graph(${graphAuthoringCode(GraphSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'group') {
-    return `group(${formatString(embedId)}, ${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
+    return `group(${groupAuthoringCode(GroupSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'block') {
-    return `block(${formatString(embedId)}, ${blockAuthoringCode(BlockSchema.parse(child), indent, ctx)})`;
+    return `block(${blockAuthoringCode(BlockSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'blockHeader') {
-    return `blockHeader(${formatString(embedId)}, ${blockHeaderAuthoringCode(BlockHeaderSchema.parse(child), indent, ctx)})`;
+    return `blockHeader(${blockHeaderAuthoringCode(BlockHeaderSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'blockSection') {
-    return `blockSection(${formatString(embedId)}, ${blockSectionAuthoringCode(BlockSectionSchema.parse(child), indent, ctx)})`;
+    return `blockSection(${blockSectionAuthoringCode(BlockSectionSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'blockRow') {
-    return `blockRow(${formatString(embedId)}, ${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
+    return `blockRow(${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'entity') {
     const input = {
       ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
       graphThemeStyles: '__GRAPH_THEME_STYLES__',
     };
-    return `entity(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+    return `entity(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
   }
   const input = {
     ...relationPreviewAuthoringInput(RelationSchema.parse(child)),
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  return `relation(${formatString(embedId)}, ${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+  return `relation(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
 };
 
 const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {

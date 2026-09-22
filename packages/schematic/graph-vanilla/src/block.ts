@@ -1,15 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockEmbedKind } from './constants';
-import type { InputBlock } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputBlock, WithoutInputType } from './normalize';
 import { normalizeBlock } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Block embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockInputEmbedProps = InputBlock & GraphDefinitionOptions;
+export type BlockInputEmbedProps = WithoutInputType<InputBlock> & GraphDefinitionOptions;
 
 const inputOf = (props: BlockInputEmbedProps): InputBlock => {
   const {
@@ -29,7 +30,7 @@ const inputOf = (props: BlockInputEmbedProps): InputBlock => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'block', ...input };
 };
 
 /** Block Source 的 InputEmbed adapter */
@@ -58,9 +59,4 @@ export const BlockInputEmbedAdapter: InputEmbedAdapter<BlockInputEmbedProps> = {
 };
 
 /** 创建 Block Source 的 authoring embed 节点 */
-export const block = (id: string, input: BlockInputEmbedProps): InputEmbed<BlockInputEmbedProps> => ({
-  type: 'embed',
-  kind: BlockEmbedKind,
-  id,
-  props: input,
-});
+export const block = (input: BlockInputEmbedProps) => createGraphInputEmbed(BlockEmbedKind, input, input.id);

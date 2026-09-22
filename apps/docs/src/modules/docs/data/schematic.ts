@@ -10,8 +10,57 @@ export const schematicSection: Array<Section> = [
     document: true,
     pages: [
       {
+        id: 'introduction',
+        label: 'schematic.introduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'schematic.getStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'changelog',
+        label: 'schematic.changelog',
+        children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
+        meta: {
+          pageType: 'release',
+          audience: 'user',
+          capability: 'graph.release',
+          sourceOfTruth: 'changelog',
+        },
+      },
+      {
+        id: 'block',
+        label: 'schematic.block',
+        sidebarGroup: 'schematic.components',
+        children: [
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          {
+            id: 'extension',
+            label: 'schematic.extensionUsage',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'graph.codeBlock',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
+      },
+      {
+        id: 'group',
+        label: 'schematic.group',
+        difficulty: DocDifficulty.Beginner,
+        sidebarGroup: 'schematic.components',
+      },
+      {
         id: 'entity',
         label: 'schematic.entity',
+        sidebarGroup: 'schematic.components',
         children: [
           { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
@@ -30,6 +79,7 @@ export const schematicSection: Array<Section> = [
       {
         id: 'relation',
         label: 'schematic.relation',
+        sidebarGroup: 'schematic.components',
         children: [
           { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
@@ -45,37 +95,7 @@ export const schematicSection: Array<Section> = [
           },
         ],
       },
-      {
-        id: 'block',
-        label: 'schematic.block',
-        children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
-            difficulty: DocDifficulty.Advanced,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'graph.codeBlock',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
-      },
-      { id: 'group', label: 'schematic.group', difficulty: DocDifficulty.Beginner },
-      { id: 'api-reference', label: 'schematic.graphApiReference' },
-      {
-        id: 'changelog',
-        label: 'schematic.changelog',
-        children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],
-        meta: {
-          pageType: 'release',
-          audience: 'user',
-          capability: 'graph.release',
-          sourceOfTruth: 'changelog',
-        },
-      },
+      { id: 'api-reference', label: 'schematic.graphApiReference', sidebarGroup: 'schematic.components' },
     ],
   },
   {

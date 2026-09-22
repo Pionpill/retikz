@@ -208,7 +208,6 @@ export const collectEntityInput = (props: EntityProps, embedIdPrefix: string): E
     });
   }
   return {
-    type: 'entity',
     ...mergeProperties([input], { shouldOverride: value => value !== undefined }),
     role: input.role,
     ...(authoredText === undefined ? (text === undefined ? {} : { text }) : { text: authoredText }),
@@ -272,7 +271,6 @@ export const collectRelationInput = (props: RelationProps, embedIdPrefix: string
     });
   }
   return {
-    type: 'relation',
     ...mergeProperties([input], { shouldOverride: value => value !== undefined }),
     role: input.role,
     source: input.source,

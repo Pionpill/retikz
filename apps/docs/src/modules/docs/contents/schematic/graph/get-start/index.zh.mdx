@@ -1,0 +1,79 @@
+---
+title: 快速开始
+description: 安装 Graph，并用两个对象和一条关系完成第一张结构化图式。
+---
+
+下面的例子创建客户端与服务两个 Entity，再用一条 flow Relation 表达调用。Graph 会直接渲染这张独立的图式。
+
+## 安装与使用
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/graph-react react react-dom" />
+
+在 React 组件中声明 Graph 与它的 children。顶层 `<Graph>` 会直接渲染这张图式。
+
+```tsx
+import { Entity, Graph, Relation } from '@retikz/graph-react';
+
+export const ServiceGraph = () => (
+  <Graph viewBox={{ x: 0, y: 0, width: 440, height: 160 }}>
+    <Entity id="client" role="participant" position={[96, 80]}>
+      客户端
+    </Entity>
+    <Entity id="service" role="activity" position={[344, 80]}>
+      服务
+    </Entity>
+    <Relation id="request" role="flow" source="client" target="service" />
+  </Graph>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/graph-vanilla @retikz/vanilla" />
+
+Vanilla 先用 Graph builders 创建 InputScene，再把 Graph adapters 交给 `mount()`。adapter 会让挂载过程识别并处理 Graph 组件。
+
+```ts
+import { createGraphVanillaAdapters, entity, graph, relation } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  viewBox: { x: 0, y: 0, width: 440, height: 160 },
+  children: [
+    graph({
+      children: [
+        entity({ id: 'client', role: 'participant', position: [96, 80], text: '客户端' }),
+        entity({ id: 'service', role: 'activity', position: [344, 80], text: '服务' }),
+        relation({
+          id: 'request',
+          role: 'flow',
+          source: 'client',
+          target: 'service',
+        }),
+      ],
+    }),
+  ],
+});
+
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+容器移除前调用 `view.dispose()`，释放本次挂载的运行时资源。
+
+</DocTab>
+</DocTabs>
+
+## 最小结果
+
+两种写法都会渲染两个对象和一条从客户端指向服务的关系。`id` 是图中对象可引用的名字；Relation 只通过 `source` 和 `target` 连接这些名字，不复制对象的位置。需要指定锚点、偏移或连接面时，再把 `source` 或 `target` 写成 `{ id, anchor, offset, boundary }` 对象。Vanilla 元素省略 `id` 时仍会绘制，但不能作为 Relation 的端点。
+
+<ComponentPreview files="/schematic/graph/graph-overview" size="sm" />
+
+## 下一步
+
+创建第一个图式后，继续阅读[实体](/schematic/graph/entity)选择 role 与样式，[关系](/schematic/graph/relation)控制方向、标签和 route；需要组织范围或工程对象时，分别使用[分组](/schematic/graph/group)和[结构块](/schematic/graph/block)。

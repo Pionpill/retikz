@@ -1,15 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { GroupProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { GroupEmbedKind } from './constants';
-import type { InputGroup } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputGroup, WithoutInputType } from './normalize';
 import { normalizeGroup } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Group embed 同时携带 Source authoring 输入与当前 definition options */
-export type GroupInputEmbedProps = InputGroup & GraphDefinitionOptions;
+export type GroupInputEmbedProps = WithoutInputType<InputGroup> & GraphDefinitionOptions;
 
 const inputOf = (props: GroupInputEmbedProps): InputGroup => {
   const {
@@ -29,7 +30,7 @@ const inputOf = (props: GroupInputEmbedProps): InputGroup => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'group', ...input };
 };
 
 /** Group Source 的 InputEmbed adapter */
@@ -58,9 +59,4 @@ export const GroupInputEmbedAdapter: InputEmbedAdapter<GroupInputEmbedProps> = {
 };
 
 /** 创建 Group Source 的 authoring embed 节点 */
-export const group = (id: string, input: GroupInputEmbedProps): InputEmbed<GroupInputEmbedProps> => ({
-  type: 'embed',
-  kind: GroupEmbedKind,
-  id,
-  props: input,
-});
+export const group = (input: GroupInputEmbedProps) => createGraphInputEmbed(GroupEmbedKind, input, input.id);

@@ -1,15 +1,16 @@
 import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockRowProviderKey } from '@retikz/graph';
-import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
+import type { InputEmbedAdapter } from '@retikz/vanilla';
 
 import { BlockRowEmbedKind } from './constants';
-import type { InputBlockRow } from './normalize';
+import { createGraphInputEmbed } from './input-embed';
+import type { InputBlockRow, WithoutInputType } from './normalize';
 import { normalizeBlockRow } from './normalize';
 import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
 /** Block Row embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockRowInputEmbedProps = InputBlockRow & GraphDefinitionOptions;
+export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow> & GraphDefinitionOptions;
 
 const inputOf = (props: BlockRowInputEmbedProps): InputBlockRow => {
   const {
@@ -29,7 +30,7 @@ const inputOf = (props: BlockRowInputEmbedProps): InputBlockRow => {
   void _relationKinds;
   void _relationPredicates;
   void _graphThemeStyles;
-  return input;
+  return { type: 'blockRow', ...input };
 };
 
 /** Block Row Source 的 InputEmbed adapter */
@@ -67,9 +68,4 @@ export const BlockRowInputEmbedAdapter: InputEmbedAdapter<BlockRowInputEmbedProp
 };
 
 /** 创建 Block Row Source 的 authoring embed 节点 */
-export const blockRow = (id: string, input: BlockRowInputEmbedProps): InputEmbed<BlockRowInputEmbedProps> => ({
-  type: 'embed',
-  kind: BlockRowEmbedKind,
-  id,
-  props: input,
-});
+export const blockRow = (input: BlockRowInputEmbedProps) => createGraphInputEmbed(BlockRowEmbedKind, input, input.id);
