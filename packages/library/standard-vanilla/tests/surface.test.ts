@@ -8,7 +8,7 @@ import { frame, FrameInputEmbedAdapter, surface, surfaceChild, SurfaceInputEmbed
 describe('surface()', () => {
   it('wraps a raw Core child without inventing child dependencies', () => {
     const child = surfaceChild({ type: 'node', position: [0, 0], text: 'A' });
-    const normalized = normalizeScene(scene({ children: [surface('panel', { padding: 4, child })] }), {
+    const normalized = normalizeScene(scene({ children: [surface({ padding: 4, child })] }), {
       adapters: [SurfaceInputEmbedAdapter],
     });
 
@@ -26,16 +26,15 @@ describe('surface()', () => {
     });
     expect(normalized.ir.children[0]).not.toHaveProperty('id');
 
-    const explicit = normalizeScene(
-      scene({ children: [surface('runtime', { id: 'surface-model', padding: 4, child })] }),
-      { adapters: [SurfaceInputEmbedAdapter] },
-    );
+    const explicit = normalizeScene(scene({ children: [surface({ id: 'surface-model', padding: 4, child })] }), {
+      adapters: [SurfaceInputEmbedAdapter],
+    });
     expect(explicit.ir.children[0]).toHaveProperty('id', 'surface-model');
   });
 
   it('preserves explicit nested Tier-2 dependencies after Surface in authored order', () => {
-    const childEmbed = frame('card', { children: [{ type: 'node', position: [0, 0], text: 'A' }] });
-    const normalized = normalizeScene(scene({ children: [surface('panel', { child: surfaceChild(childEmbed) })] }), {
+    const childEmbed = frame({ children: [{ type: 'node', position: [0, 0], text: 'A' }] });
+    const normalized = normalizeScene(scene({ children: [surface({ child: surfaceChild(childEmbed) })] }), {
       adapters: [SurfaceInputEmbedAdapter, FrameInputEmbedAdapter],
     });
 
@@ -46,7 +45,7 @@ describe('surface()', () => {
   it('normalizes through the public Vanilla embed without leaking runtime child metadata into IR', () => {
     const result = normalizeScene(
       scene({
-        children: [surface('panel', { child: surfaceChild({ type: 'node', position: [0, 0] }) })],
+        children: [surface({ child: surfaceChild({ type: 'node', position: [0, 0] }) })],
       }),
       { adapters: [SurfaceInputEmbedAdapter] },
     );

@@ -52,7 +52,7 @@ export default Demo;
 import { node, scene } from '@retikz/vanilla';
 import { mount } from '@retikz/vanilla/dom';
 
-const input = scene({ children: [node('a', { shape: 'circle', position: [0, 0], text: 'Hello' })] });
+const input = scene({ children: [node({ id: 'a', shape: 'circle', position: [0, 0], text: 'Hello' })] });
 const view = mount(document.getElementById('diagram')!, input);
 ```
 

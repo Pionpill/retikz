@@ -38,10 +38,10 @@ export const ListInputEmbedAdapter: InputEmbedAdapter<InputList> = {
   },
 };
 
-/** 创建 List embed；参数 id 是 authoring 身份，持久化身份使用 input.id */
-export const list = (id: string, input: InputList): InputEmbed<InputList> => ({
+/** 创建 List embed；显式 input.id 同时用作领域与 embed 身份 */
+export const list = (input: InputList): InputEmbed<InputList> => ({
   type: 'embed',
   kind: StandardListEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

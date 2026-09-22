@@ -2,15 +2,7 @@ import type { InputEmbedContext } from '@retikz/vanilla';
 import { layer, normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import {
-  createPlotProvider,
-  embedPlot,
-  plot,
-  PlotInputEmbedAdapter,
-  plotIROf,
-  resolvePlotContribution,
-  RetikzPlotVanillaError,
-} from '../src';
+import { createPlotProvider, embedPlot, plot, PlotInputEmbedAdapter, plotIROf, resolvePlotContribution } from '../src';
 
 const contextOf = (id: string): InputEmbedContext => ({
   id,
@@ -123,7 +115,7 @@ describe('Plot Vanilla Tier2 adapter', () => {
     const spec = salesSpec('sales');
     const input = structuredClone(spec);
     const inputScene = scene({
-      layers: [layer('chart', [embedPlot('sales-panel', { spec }, datasets, { width: 360, height: 200 })])],
+      layers: [layer({ id: 'chart', children: [embedPlot({ spec }, datasets, { width: 360, height: 200 })] })],
     });
     const svg = renderToSvgString(inputScene, {
       adapters: [PlotInputEmbedAdapter],
@@ -133,12 +125,12 @@ describe('Plot Vanilla Tier2 adapter', () => {
     expect(svg).toContain('<rect');
     expect(spec).toEqual(input);
     expect(normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
-      'sales-panel',
+      'sales',
     ]);
   });
 
   it('保持 lineage 在 IRPlot、Core IR 与 Scene meta 之外', () => {
-    const inputScene = scene([embedPlot('sales-panel', { spec: salesSpec('sales') }, datasets)]);
+    const inputScene = scene([embedPlot({ spec: salesSpec('sales') }, datasets)]);
     const normalized = normalizeScene(inputScene, { adapters: [PlotInputEmbedAdapter] });
 
     expect(JSON.stringify(normalized.ir)).not.toContain('lineage');
@@ -216,19 +208,18 @@ describe('Plot Vanilla Tier2 adapter', () => {
   });
 
   it('缺失 dataset reference 时 fail-loud', () => {
-    const inputScene = scene([embedPlot('missing', { spec: salesSpec() }, {})]);
+    const inputScene = scene([embedPlot({ spec: salesSpec() }, {})]);
 
     expect(() => renderToSvgString(inputScene, { adapters: [PlotInputEmbedAdapter] })).toThrow(/sales/i);
   });
 
-  it.each(['', '   ', '\u2003', '\ufeff'])(
-    'helper rejects blank runtime ids while the adapter does not copy them into model identity %j',
-    id => {
-      expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(RetikzPlotVanillaError);
-      expect(() => embedPlot(id, { spec: salesSpec() }, datasets)).toThrowError(
-        'plot vanilla embed id must be a non-empty string.',
-      );
-      expect(PlotInputEmbedAdapter.lower({ spec: salesSpec(), datasets }, contextOf(id)).node).not.toHaveProperty('id');
-    },
-  );
+  it('reuses the Source id and preserves anonymous Source without inventing an id', () => {
+    const named = salesSpec('sales');
+    const anonymous = salesSpec();
+    expect(embedPlot({ spec: named }, datasets)).toMatchObject({ id: 'sales', props: { spec: named } });
+    expect(embedPlot({ spec: anonymous }, datasets)).not.toHaveProperty('id');
+    expect(PlotInputEmbedAdapter.lower({ spec: anonymous, datasets }, contextOf('runtime')).node).not.toHaveProperty(
+      'id',
+    );
+  });
 });

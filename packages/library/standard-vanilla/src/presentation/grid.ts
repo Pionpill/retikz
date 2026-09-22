@@ -14,9 +14,9 @@ export const GridInputEmbedAdapter: InputEmbedAdapter<GridInput> = {
 };
 
 /** 创建由 GridInputEmbedAdapter 下沉的 Standard Grid embed */
-export const grid = (id: string, input: GridInput): InputEmbed<GridInput> => ({
+export const grid = (input: GridInput): InputEmbed<GridInput> => ({
   type: 'embed',
   kind: StandardGridEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

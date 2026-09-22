@@ -21,28 +21,28 @@ const input: AxesInput = {
 };
 
 describe('axes()', () => {
-  it('keeps an authored root id distinct from the Vanilla embed id', () => {
-    const embed = axes('host-occurrence', { ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
+  it('preserves the authored root id and reuses it for the embed', () => {
+    const embed = axes({ ...input, id: 'authored-axes', meta: { source: 'vanilla' } });
     const contribution = AxesInputEmbedAdapter.lower(embed.props, {
-      id: embed.id,
+      id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
-      identityPath: ['main', embed.id],
+      identityPath: ['main', 'runtime'],
     });
 
     expect(contribution.node).toMatchObject({ id: 'authored-axes', meta: { source: 'vanilla' } });
   });
 
   it('creates an embed that contributes canonical Axes IR', () => {
-    const embed = axes('plane', input);
+    const embed = axes(input);
     const contribution = AxesInputEmbedAdapter.lower(embed.props, {
-      id: embed.id,
+      id: 'runtime',
       kind: embed.kind,
       layerId: 'main',
-      identityPath: ['main', embed.id],
+      identityPath: ['main', 'runtime'],
     });
 
-    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes', id: 'plane' });
+    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.axes' });
     expect(contribution.node).toEqual(createAxes(input));
     expect(contribution.providerDependencies).toEqual({ roots: [AxesProvider.key], providers: [AxesProvider] });
     expect(AxesProvider.makeDefinition({})).toBe(AxesDefinition);
@@ -51,10 +51,7 @@ describe('axes()', () => {
   it('coexists with Grid and contributes both definitions once', () => {
     const result = normalizeScene(
       scene({
-        children: [
-          grid('paper', { bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }),
-          axes('plane', input),
-        ],
+        children: [grid({ bounds: { start: [-2, -1], end: [2, 1] }, line: { spacing: 1 } }), axes(input)],
       }),
       { adapters: [GridInputEmbedAdapter, AxesInputEmbedAdapter] },
     );

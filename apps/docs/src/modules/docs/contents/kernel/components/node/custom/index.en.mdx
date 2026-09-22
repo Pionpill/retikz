@@ -101,7 +101,7 @@ import { mount } from '@retikz/vanilla/dom';
 import { horizontalPorts } from './horizontal-ports';
 
 const input = scene({
-  children: [node('io', { position: [0, 0], text: 'IO', boundary: 'horizontal-ports' })],
+  children: [node({ id: 'io', position: [0, 0], text: 'IO', boundary: 'horizontal-ports' })],
 });
 const view = mount(document.getElementById('diagram')!, input, { compile: { boundaries: [horizontalPorts] } });
 ```

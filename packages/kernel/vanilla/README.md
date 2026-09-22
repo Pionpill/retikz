@@ -20,11 +20,15 @@ import { InputLayerCache, layer, node, path, renderToSvgString, scene } from '@r
 const input = scene({
   id: 'flow',
   layers: [
-    layer('main', { cache: InputLayerCache.Static }, [
-      node('a', { position: [0, 0], text: 'A' }),
-      node('b', { position: [120, 0], text: 'B' }),
-      path('edge', { way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
-    ]),
+    layer({
+      id: 'main',
+      ...{ cache: InputLayerCache.Static },
+      children: [
+        node({ id: 'a', position: [0, 0], text: 'A' }),
+        node({ id: 'b', position: [120, 0], text: 'B' }),
+        path({ id: 'edge', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+      ],
+    }),
   ],
 });
 

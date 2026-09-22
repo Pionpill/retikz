@@ -7,7 +7,7 @@ import type { InputTarget } from '@retikz/vanilla';
 /** 保留几何分支与字面坐标约束，仅为完整 Target 开放作者简写 */
 export type InputShape<TSource> = TSource extends object
   ? {
-      [TKey in keyof TSource as TKey extends 'type' | 'namespace' | 'id' ? never : TKey]: TKey extends
+      [TKey in keyof TSource as TKey extends 'type' | 'namespace' ? never : TKey]: TKey extends
         | 'center'
         | 'corner1'
         | 'corner2'

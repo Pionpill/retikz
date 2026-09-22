@@ -22,8 +22,8 @@ it('Node 与 Coordinate 的 opaque authoring 只进入来源站点，不进入�
         {
           type: 'scope',
           children: [
-            node('n', { position: [0, 0], authoring: marker }),
-            coordinate('c', { position: [1, 2], authoring: marker }),
+            node({ id: 'n', position: [0, 0], authoring: marker }),
+            coordinate({ id: 'c', position: [1, 2], authoring: marker }),
           ],
         },
       ],
@@ -103,10 +103,13 @@ describe('@retikz/vanilla InputScene', () => {
   it('scene/path helper 只构造 Input，不提前解析 path grammar', () => {
     const input = scene({
       layers: [
-        layer('main', [
-          node('source', { position: [0, 0] }),
-          path('edge', { way: ['source', [24, 0]], thickness: 'thick' }),
-        ]),
+        layer({
+          id: 'main',
+          children: [
+            node({ id: 'source', position: [0, 0] }),
+            path({ id: 'edge', way: ['source', [24, 0]], thickness: 'thick' }),
+          ],
+        }),
       ],
     });
 
@@ -216,7 +219,10 @@ describe('@retikz/vanilla InputScene', () => {
   it('localNamespace InputScope 允许遮蔽外层 identity', () => {
     expect(
       normalizeScene(
-        scene([node('A', { position: [0, 0] }), scope({ localNamespace: true }, [node('A', { position: [20, 0] })])]),
+        scene([
+          node({ id: 'A', position: [0, 0] }),
+          scope({ localNamespace: true }, [node({ id: 'A', position: [20, 0] })]),
+        ]),
       ).ir.children,
     ).toEqual([
       { type: 'node', id: 'A', position: [0, 0] },
@@ -227,9 +233,9 @@ describe('@retikz/vanilla InputScene', () => {
   it('同一 namespace 的后定义 identity 保留给 Core 以警告并覆盖解析目标', () => {
     const normalized = normalizeScene(
       scene([
-        node('A', { position: [0, 0] }),
-        scope({}, [node('A', { position: [120, 0] })]),
-        path('edge', { way: [[0, -40], 'A'] }),
+        node({ id: 'A', position: [0, 0] }),
+        scope({}, [node({ id: 'A', position: [120, 0] })]),
+        path({ id: 'edge', way: [[0, -40], 'A'] }),
       ]),
     );
     const warnings: Array<CompileWarning> = [];
@@ -258,7 +264,7 @@ describe('@retikz/vanilla InputScene', () => {
   });
 
   it('默认 Layer identity 不占用公开 child identity', () => {
-    expect(normalizeScene(scene([node('default', { position: [0, 0] })])).ir.children).toEqual([
+    expect(normalizeScene(scene([node({ id: 'default', position: [0, 0] })])).ir.children).toEqual([
       { type: 'node', id: 'default', position: [0, 0] },
     ]);
   });
@@ -267,8 +273,16 @@ describe('@retikz/vanilla InputScene', () => {
     const normalized = normalizeScene(
       scene({
         layers: [
-          layer('top', { zIndex: 10, cache: InputLayerCache.Dynamic }, [node('top-node', { position: [10, 0] })]),
-          layer('background', { cache: InputLayerCache.Static }, [node('base', { position: [0, 0] })]),
+          layer({
+            id: 'top',
+            ...{ zIndex: 10, cache: InputLayerCache.Dynamic },
+            children: [node({ id: 'top-node', position: [10, 0] })],
+          }),
+          layer({
+            id: 'background',
+            ...{ cache: InputLayerCache.Static },
+            children: [node({ id: 'base', position: [0, 0] })],
+          }),
         ],
       }),
     );
@@ -284,7 +298,8 @@ describe('@retikz/vanilla InputScene', () => {
   it('normalizeScene 解析 path shorthand，并遵守显式 strokeWidth 优先级', () => {
     const normalized = normalizeScene(
       scene([
-        path('edge', {
+        path({
+          id: 'edge',
           way: [
             [0, 0],
             [24, 0],
@@ -347,7 +362,8 @@ describe('@retikz/vanilla InputScene', () => {
         authoring,
         children: [
           scope({ authoring }, [
-            path('curve', {
+            path({
+              id: 'curve',
               authoring,
               way: [
                 [0, 0],
@@ -366,9 +382,12 @@ describe('@retikz/vanilla InputScene', () => {
   it('embed normalizer 只收集 contribution，不调用 provider maker', () => {
     const makeDefinition = vi.fn(() => boxComposite);
     const adapter = createBoxAdapter(makeDefinition);
-    const normalized = normalizeScene(scene([embed('fixture-box', 'box', { text: 'A', data: { rows: [1] } })]), {
-      adapters: [adapter],
-    });
+    const normalized = normalizeScene(
+      scene([embed({ kind: 'fixture-box', id: 'box', props: { text: 'A', data: { rows: [1] } } })]),
+      {
+        adapters: [adapter],
+      },
+    );
 
     expect(normalized.ir.children).toEqual([{ namespace: 'fixture', type: 'box', text: 'A' }]);
     expect(normalized.contributions).toHaveLength(1);
@@ -422,7 +441,11 @@ describe('@retikz/vanilla InputScene', () => {
     };
 
     const normalized = normalizeScene(
-      scene({ layers: [layer('main', [embed('named-output', 'chart', { label: 'A' })])] }),
+      scene({
+        layers: [
+          layer({ id: 'main', children: [embed({ kind: 'named-output', id: 'chart', props: { label: 'A' } })] }),
+        ],
+      }),
       { adapters: [adapter] },
     );
 
@@ -441,7 +464,9 @@ describe('@retikz/vanilla InputScene', () => {
       }),
     };
 
-    const wrapped = normalizeScene(scene([embed('wrapped-output', 'chart', {})]), { adapters: [wrappedAdapter] });
+    const wrapped = normalizeScene(scene([embed({ kind: 'wrapped-output', id: 'chart', props: {} })]), {
+      adapters: [wrappedAdapter],
+    });
 
     expect(wrapped.ir.children).toEqual([
       { type: 'scope', children: [{ type: 'node', id: 'chart', position: [0, 0] }] },
@@ -467,18 +492,30 @@ describe('@retikz/vanilla InputScene', () => {
         };
       },
     };
-    const slotChildren = [node('shared', { position: [0, 0] })];
+    const slotChildren = [node({ id: 'shared', position: [0, 0] })];
 
     const rootLater = normalizeScene(
-      scene([embed('slot-output', 'frame', { slots: [slotChildren] }), node('shared', { position: [1, 0] })]),
+      scene([
+        embed({ kind: 'slot-output', id: 'frame', props: { slots: [slotChildren] } }),
+        node({ id: 'shared', position: [1, 0] }),
+      ]),
       { adapters: [slotAdapter] },
     );
     const slotLater = normalizeScene(
-      scene([node('shared', { position: [1, 0] }), embed('slot-output', 'frame', { slots: [slotChildren] })]),
+      scene([
+        node({ id: 'shared', position: [1, 0] }),
+        embed({ kind: 'slot-output', id: 'frame', props: { slots: [slotChildren] } }),
+      ]),
       { adapters: [slotAdapter] },
     );
     const secondSlotLater = normalizeScene(
-      scene([embed('slot-output', 'frame', { slots: [slotChildren, [node('shared', { position: [2, 0] })]] })]),
+      scene([
+        embed({
+          kind: 'slot-output',
+          id: 'frame',
+          props: { slots: [slotChildren, [node({ id: 'shared', position: [2, 0] })]] },
+        }),
+      ]),
       { adapters: [slotAdapter] },
     );
 
@@ -507,8 +544,12 @@ describe('@retikz/vanilla InputScene', () => {
 
     const normalized = normalizeScene(
       scene([
-        embed('multi-slot-output', 'outer', {
-          slots: [[node('outer', { position: [0, 0] })], [node('outer', { position: [1, 0] })]],
+        embed({
+          kind: 'multi-slot-output',
+          id: 'outer',
+          props: {
+            slots: [[node({ id: 'outer', position: [0, 0] })], [node({ id: 'outer', position: [1, 0] })]],
+          },
         }),
       ]),
       { adapters: [multiSlotAdapter] },
@@ -524,7 +565,7 @@ describe('@retikz/vanilla InputScene', () => {
       lower: (_props, context) => {
         const normalizeChildren = context.normalizeChildren;
         if (normalizeChildren === undefined) throw new Error('expected embedded child normalizer');
-        normalizeChildren([scope({ theme: { mode: ThemeMode.Dark } }, [node('child', { position: [0, 0] })])]);
+        normalizeChildren([scope({ theme: { mode: ThemeMode.Dark } }, [node({ id: 'child', position: [0, 0] })])]);
         return {
           node: { type: 'scope', children: [] },
           providerDependencies: EMPTY_COMPOSITE_DEPENDENCIES,
@@ -532,7 +573,7 @@ describe('@retikz/vanilla InputScene', () => {
       },
     };
 
-    normalizeScene(scene([embed('theme-slot', 'outer', {})]), {
+    normalizeScene(scene([embed({ kind: 'theme-slot', id: 'outer', props: {} })]), {
       adapters: [themeSlotAdapter],
       embedThemeContext: {
         root: { theme: DEFAULT_RESOLVED_THEME },
@@ -547,6 +588,6 @@ describe('@retikz/vanilla InputScene', () => {
   });
 
   it('缺失 adapter 时在 Input normalizer fail-loud', () => {
-    expect(() => normalizeScene(scene([embed('missing', 'x', {})]))).toThrow(/adapter/i);
+    expect(() => normalizeScene(scene([embed({ kind: 'missing', id: 'x', props: {} })]))).toThrow(/adapter/i);
   });
 });

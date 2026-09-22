@@ -121,7 +121,8 @@ import { path, renderToSvgString, scene } from '@retikz/vanilla';
 const registry = createDefaultInspectorRegistry();
 const input = scene({
   children: [
-    path('curve', {
+    path({
+      id: 'curve',
       // Mark this authored Path for inspection; it never enters Core IR.
       authoring: createInspectionVanillaAuthoring({
         inspector: PATH_INSPECTOR_KEY,

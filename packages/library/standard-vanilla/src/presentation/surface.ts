@@ -63,9 +63,9 @@ export const SurfaceInputEmbedAdapter: InputEmbedAdapter<InputSurface> = {
 };
 
 /** 创建由 SurfaceInputEmbedAdapter 下沉的 Standard Surface embed */
-export const surface = (id: string, input: InputSurface): InputEmbed<InputSurface> => ({
+export const surface = (input: InputSurface): InputEmbed<InputSurface> => ({
   type: 'embed',
   kind: StandardSurfaceEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

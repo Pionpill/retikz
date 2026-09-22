@@ -1,10 +1,8 @@
-import { assertNonEmptyString } from '@retikz/foundation';
 import type { DetailTableInput, IRDetailTable, IRManualTable, IRTable, ManualTableInput } from '@retikz/table';
 import { createDetailTableIR, createManualTableIR, TABLE_NAMESPACE } from '@retikz/table';
 import type { InputEmbed } from '@retikz/vanilla';
 import { embed } from '@retikz/vanilla';
 
-import { RetikzTableVanillaError } from '../error';
 import type { InputTable, InputTableVariant } from '../normalize/table';
 import { inputTableFromIR } from '../normalize/table';
 
@@ -15,16 +13,11 @@ export const detailTable = (input: DetailTableInput): IRDetailTable => createDet
 export const manualTable = (input: ManualTableInput): IRManualTable => createManualTableIR(input);
 
 /** 构造可由 Table Vanilla adapter 消费的标准 embed spec */
-export const embedTable = (
-  id: string,
-  spec: IRTable,
-  options: Omit<InputTable, 'table'> = {},
-): InputEmbed<InputTable> => {
-  assertNonEmptyString(
-    id,
-    'table vanilla embed id',
-    new RetikzTableVanillaError('table vanilla embed id must be a non-empty string.'),
-  );
+export const embedTable = (spec: IRTable, options: Omit<InputTable, 'table'> = {}): InputEmbed<InputTable> => {
   const table: InputTableVariant = inputTableFromIR(spec);
-  return embed(TABLE_NAMESPACE, id, { table, ...options });
+  return embed({
+    kind: TABLE_NAMESPACE,
+    ...(spec.id === undefined ? {} : { id: spec.id }),
+    props: { table, ...options },
+  });
 };

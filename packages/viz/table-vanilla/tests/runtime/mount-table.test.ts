@@ -41,7 +41,7 @@ describe('Table Vanilla mounted runtime', () => {
     });
     const tableFigure = (name: string) =>
       scene({
-        layers: [layer('content', [embedTable('people-panel', spec, { data: { people: [{ name }] } })])],
+        layers: [layer({ id: 'content', children: [embedTable(spec, { data: { people: [{ name }] } })] })],
       });
     const svgContainer = document.createElement('div');
     const svgView = mount(svgContainer, tableFigure('Ada'), { adapters: [TableInputEmbedAdapter] });
