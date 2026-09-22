@@ -3,9 +3,14 @@ title: 快速开始
 description: 安装 Standard，用 React 或 Vanilla 绘制第一个参考网格。
 ---
 
-选择与你的项目一致的宿主入口，完成下面的最小例子。所有发布包使用 ES modules；Node.js 环境要求 24 或更高版本。
+选择与你的项目一致的宿主入口，完成下面的最小例子。所有发布包使用 ES modules；Node.js 环境要求 22.12 或更高版本。
 
-## React
+<ComponentPreview files="get-start-grid" hideCode size="sm" />
+
+## 安装与使用
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
@@ -37,7 +42,8 @@ if (root) createRoot(root).render(<Example />);
 
 根 `Layout` 默认输出 SVG，本例无需配置 renderer。尺寸和间距使用相同的图形用户单位；默认原尺寸显示时，1 单位对应 1 CSS 像素。
 
-## Vanilla
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
 
 <PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
 
@@ -57,11 +63,12 @@ const svg = renderToSvgString(input, { adapters: [GridInputEmbedAdapter] });
 console.log(svg);
 ```
 
-`svg` 是可保存为 `.svg` 文件或交给页面宿主展示的完整 SVG 字符串。helper 创建普通输入，`adapters` 让 Vanilla 识别对应的嵌入项并收集其能力依赖；省略 adapter 会使输入无法解析。
+`svg` 是可保存为 `.svg` 文件或交给页面宿主展示的完整 SVG 字符串。`GridInputEmbedAdapter` 让 `grid(...)` 能作为 `scene` 的子项使用，请保留 `adapters` 选项。
 
-这里的“能力”指把 Grid 输入转换成基础图元所需的定义。React Grid 为当前图自动提供它，不需要手工注册；Vanilla 用 GridInputEmbedAdapter 完成相同的转换和依赖收集。adapter 是必需接线。
+</DocTab>
+</DocTabs>
 
-## 接下来
+## 延伸阅读
 
 修改 `bounds` 调整网格范围，修改 `line.spacing` 调整疏密。继续阅读[网格](/library/standard/grid)，或用[表面](/library/standard/surface)为内容增加背景与边框。可选绘图定义的接入见[能力装载](/library/extension/capability-loading)。
 
