@@ -1,52 +1,47 @@
 ---
 title: Standard
-description: Extend Core with domain-neutral composites and explicitly assembled optional drawing Definitions while preserving one Core compile and registry path.
+description: Compose grids, axes, surfaces, legends, and geometric figures with standard components.
 ---
 
-Standard organizes its public API by capability: presentation composites at the root, shape composites at `/shape`, and optional official drawing Definitions at other capability subpaths. These APIs reuse Core's Definition, registry, and compile path; Standard does not create another drawing kernel.
+Standard provides components for common drawing tasks. Add a reference grid, wrap content in a surface, and explain symbols with a legend. Each component describes a complete task through its own parameters.
 
-Layout containers belong to the independent [Layout](/library/layout) package family. Standard only reuses Layout's public composition surface inside its own capabilities, such as Legend, and no longer exports layout APIs.
+## Responsibilities at a glance
 
-## Boundary with Core
+| Entry                      | Purpose                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------- |
+| `@retikz/standard`         | Presentation data contracts, factories, and definitions                            |
+| `@retikz/standard-react`   | Compose drawing components in React JSX                                           |
+| `@retikz/standard-vanilla` | Create drawing inputs and connect rendering in TypeScript                         |
+| Each package's `/shape`    | Draw circles, rectangles, polygons, stars, arcs, and sectors                      |
 
-Standard extends Core horizontally rather than replacing it:
+## Installation and usage
 
-- Kernel installation, compilation, and rendering stay unchanged when Standard is unused
-- Definitions are assembled explicitly per figure, never registered globally, and never written into persisted JSON
-- Standard content still compiles through the Core registry to the existing Scene consumed by SVG, Canvas, and other renderers
+Install the authoring entry and host for React:
 
-## Three packages and capability subpaths
+<PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
-| Entry                            | Responsibility                                                        | Use it when                                                              |
-| -------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `@retikz/standard`               | Schemas, factories, Definitions, and lowering for Standard composites | Using Grid, Axes, Frame, Surface, or Legend                              |
-| `@retikz/standard-react`         | React DSL for presentation components                                 | Authoring inside a React `Layout`                                        |
-| `@retikz/standard-vanilla`       | Plain-spec helpers and Vanilla Tier 2 adapters                        | Authoring in browsers or scripts without React                           |
-| `@retikz/standard/shape`         | Shape schemas, Sources, Definitions and lowering                      | Drawing circles, ellipses, rectangles, polygons, stars, arcs and sectors |
-| `@retikz/standard-react/shape`   | Shape React components                                                | Authoring Circle, Ellipse and related JSX                                |
-| `@retikz/standard-vanilla/shape` | Shape authoring inputs and adapters                                   | Using shape.xxx                                                          |
-| `@retikz/standard/<capability>`  | Definitions for one optional drawing capability family                | A figure needs an optional node-shape, arrow, clip, or ribbon            |
+Without React, use `@retikz/standard-vanilla` and `@retikz/vanilla`. The [quick start](/library/standard/get-start) shows complete steps for drawing the same grid through both entries.
 
-React and Vanilla only connect authoring inputs to the same capabilities. For optional drawing content, import a single Definition from the precise `@retikz/standard/<capability>` subpath and pass it to Core compile options; the `@retikz/standard` root does not forward it.
+For arranging multiple items, see [Layout](/library/layout). For optional node shapes, arrows, clips, or ribbons, see [Extension](/library/extension).
 
-## Pages
+## Contents
 
 <LinkedSections
   items={[
-    {
-      title: 'Introduction',
-      description: 'Purpose, capability groups, and package responsibilities',
-      url: '/library/standard/introduction',
-    },
-    {
-      title: 'Quick start',
-      description: 'Draw your first grid with React or Vanilla',
-      url: '/library/standard/get-start',
-    },
-    {
-      title: 'Changelog',
-      description: 'Version history for the Standard package family',
-      url: '/library/standard/changelog',
-    },
+    { title: 'Introduction', description: 'Introduction', url: '/library/standard/introduction' },
+    { title: 'Quick start', description: 'Quick start', url: '/library/standard/get-start' },
+    { title: 'Changelog', description: 'Changelog', url: '/library/standard/changelog' },
+    { title: 'Grid', description: 'Grid', url: '/library/standard/grid' },
+    { title: 'Axes', description: 'Axes', url: '/library/standard/axes' },
+    { title: 'Frame', description: 'Frame', url: '/library/standard/frame' },
+    { title: 'Surface', description: 'Surface', url: '/library/standard/surface' },
+    { title: 'List', description: 'List', url: '/library/standard/list' },
+    { title: 'Map', description: 'Map', url: '/library/standard/map' },
+    { title: 'Legend', description: 'Legend', url: '/library/standard/legend' },
+    { title: 'Circle and ellipse', description: 'Circle and ellipse', url: '/library/standard/circle-ellipse' },
+    { title: 'Rectangle', description: 'Rectangle', url: '/library/standard/rectangle' },
+    { title: 'Regular polygon', description: 'Regular polygon', url: '/library/standard/regular-polygon' },
+    { title: 'Star', description: 'Star', url: '/library/standard/star' },
+    { title: 'Arc and sector', description: 'Arc and sector', url: '/library/standard/arc-sector' },
   ]}
 />

@@ -1,6 +1,7 @@
-import type { Localized, PackageId, Release } from '../types';
+import type { Localized, PackageGroup, PackageId, Release } from '../types';
 import { PACKAGE_GROUPS } from '../types';
 import { diagramV01 } from './diagram-0-1';
+import { extensionV01 } from './extension-0-1';
 import { graphV01 } from './graph-0-1';
 import { kernelV01 } from './kernel-0-1';
 import { kernelV02 } from './kernel-0-2';
@@ -26,6 +27,7 @@ const schematicV01: Release = {
 };
 
 export const changelog: Array<Release> = [
+  extensionV01,
   vizV02,
   schematicV01,
   layoutV01,
@@ -39,7 +41,7 @@ export const changelog: Array<Release> = [
 ];
 
 /** 文档模块 id → changelog 包组 */
-const MODULE_GROUP = new Map<string, 'kernel' | 'standard' | 'layout' | 'schematic' | 'viz' | 'other'>([
+const MODULE_GROUP = new Map<string, PackageGroup['id']>([
   ['kernel', 'kernel'],
   ['schematic', 'schematic'],
   ['viz', 'viz'],
@@ -75,6 +77,7 @@ const LAYOUT_PACKAGES = new Set<PackageId>(['@retikz/layout', '@retikz/layout-re
 
 /** Library 文档分区到更新日志包集合 */
 const LIBRARY_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
+  ['extension', new Set<PackageId>(['@retikz/extension'])],
   ['standard', STANDARD_PACKAGES],
   ['layout', LAYOUT_PACKAGES],
 ]);
@@ -97,7 +100,7 @@ const SCHEMATIC_SECTION_PACKAGES = new Map<string, ReadonlySet<PackageId>>([
 export const changelogVersionSlug = (minor: string): string => minor.replaceAll('.', '-');
 
 /** 包标识 → 所属包组 */
-const groupOfPackage = (pkg: PackageId): 'kernel' | 'standard' | 'layout' | 'schematic' | 'viz' | 'other' | undefined =>
+const groupOfPackage = (pkg: PackageId): PackageGroup['id'] | undefined =>
   PACKAGE_GROUPS.find(group => group.members.includes(pkg))?.id;
 
 /**

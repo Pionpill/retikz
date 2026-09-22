@@ -205,7 +205,7 @@ const view = mount(document.getElementById('diagram')!, ir);
 
 ## 裁剪与层级
 
-`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及由 Standard 提供并注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/scope/custom)。
+`clip` 使用 Scope 局部坐标，并把裁剪结果作为渲染无关的 Scene 资源交给下游。面板展示 Core 的 `rect`，以及由 Extension 提供并注入的 `circle` / `ellipse` / `polygon` / `path` / `compound`；需要业务 operation 或几何 kind 时再注册[自定义裁剪区](/kernel/components/scope/custom)。
 
 <ComponentPreview files="scope-clip" size="sm" />
 

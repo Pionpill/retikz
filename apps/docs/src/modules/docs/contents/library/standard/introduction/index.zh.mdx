@@ -1,33 +1,26 @@
 ---
-title: 介绍
-description: Standard 为图形补充可复用的展现组件与可选绘图定义，适合绘制参考网格、坐标轴、边框、表面和图例。
+title: 简介
+description: Standard 提供可复用的标准绘图组件，适合绘制参考网格、坐标轴、边框、表面和图例。
 ---
 
-Standard 解决的是图形中反复出现的绘制需求：给一张图加参考网格、给内容加背景与边框，或把符号和说明组合成图例。你提供几何范围、样式或子图形，Standard 把它们转换为 Core 能处理的图元，最终由 SVG 或 Canvas 后端绘制。
+Standard 是 Retikz 的标准包，为常见的绘图任务提供可复用组件：画出参考网格和坐标轴，为内容增加背景、边框或表面，或将符号和说明组织成图例。
+
+<ComponentAlert
+  type="tip"
+  title="可直接使用"
+  description="按本页选择 React 或 Vanilla 入口即可开始，不需要预先阅读底层包的文档。"
+/>
 
 ## 能力分组
 
-展现是建立在 Kernel 之上的上层封装，拥有自己的语义：例如网格描述参考线的分布，图例描述符号与说明的对应关系。组件接收这些高层描述，再将其转换为 Kernel 图元，而不只是给基础图元增加一种样式。
-
-扩展则仅基于 Kernel 已有的扩展机制横向补充能力，例如增加节点形状、箭头、裁剪或流带定义。它们沿用 Kernel 对应能力的契约与消费方式，不像展现组件那样建立一层新的组合语义。
+展现组件以一个对象表达完整的绘图任务：网格描述参考线的分布，图例描述符号与说明的对应关系，表面描述内容的背景和边框。
 
 | 分组 | 提供什么                                                      | 何时使用                                   |
 | ---- | ------------------------------------------------------------- | ------------------------------------------ |
 | 展现 | Grid、Axes、Frame、Surface、Legend、List、Map                 | 直接组合网格、坐标轴、框架、内容表面与图例 |
 | 形状 | Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector | 用几何参数绘制独立路径轮廓                 |
-| 扩展 | 可选节点形状、箭头、裁剪和流带定义                            | 基础绘图能力之外还需要特定绘图规则         |
 
-展现组件可以直接放在 React 的 `Layout` 中。扩展定义则按能力从精确的子入口导入，再装配到当前图的编译选项中；具体装配方式见[能力装载](/library/standard/capability-loading)。
-
-[动画预设](/library/standard/animation)从 `@retikz/standard` 根入口导入，直接生成 Core 动画轨道，交给 Node、Path 或 Scope 的 `animations` 使用，无需注册或装载定义。
-
-## 与 Kernel、Layout 的关系
-
-Kernel 提供节点、路径、编译与渲染的基础。Standard 在这些基础上组合更完整的绘图能力；不使用 Standard 也可以正常使用 Kernel。
-
-Standard 的 `Grid` **画出网格线**；Layout 的 `GridLayout` **把子图形排进网格区域**。两者可以一起使用，但职责不同。需要排列、换行或叠放内容时，阅读 [Layout 介绍](/library/layout/introduction)。
-
-形状组件同样拥有持久化的高层语义，通过三包的 `/shape` 子入口提供 JSON、React 与 Vanilla 写法，再统一下沉为 Core Path。它们与 Node 的形状扩展不同：后者还负责内容边界与连接锚点。
+展现组件可以直接放在 React 的 `Layout` 中，也可以通过 Vanilla 入口使用。
 
 ## 选择入口
 
@@ -35,10 +28,3 @@ Standard 的 `Grid` **画出网格线**；Layout 的 `GridLayout` **把子图形
 - `@retikz/standard-vanilla`：用普通 TypeScript 数据创建输入，并接入 Vanilla 渲染
 - `@retikz/standard`：读取和校验持久化图形数据，或直接使用组件定义
 - 三包的 `/shape` 子入口：使用形状 Source、React 组件或 Vanilla `shape.xxx`
-- `@retikz/standard/node-shape`、`/arrow`、`/clip`、`/ribbon`：按需导入可选绘图定义
-
-## 接下来
-
-先按[快速开始](/library/standard/get-start)画出一个网格，再选择侧栏中的展现组件或扩展能力。版本变化见[更新日志](/library/standard/changelog)。
-
-使用 [List](/library/standard/list) 绘制一维槽位，用 [Map](/library/standard/map) 展示键值或字段记录；整体与单元格都支持样式覆盖。

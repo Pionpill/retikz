@@ -1,5 +1,5 @@
+import { StarShapeDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
-import { StarShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC, ReactElement } from 'react';
 
 /**

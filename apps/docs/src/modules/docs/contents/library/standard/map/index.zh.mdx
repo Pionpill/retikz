@@ -7,7 +7,7 @@ description: 使用 Map 绘制可复用的数据结构槽位，设置整体及�
 
 ## 接入方式
 
-[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/standard/clip` 注入 `PathClipDefinition`。
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `PathClipDefinition`。
 
 <ComponentPreview files="map-basic" hideCode size="sm" />
 
@@ -173,7 +173,7 @@ Map 的覆盖顺序是 **结构默认 → 整体 style → style.key / style.val
 
 ## 补充说明
 
-默认 gap 为 2、padding 为 8，无描边、无圆角，自适应单元格的 `overflow` 默认为 `visible`，固定任一轴时默认为 `clip`，可显式覆盖。List 与 Map value 背景为 gray / 0.14，Map key 为 gray / 0.4。使用固定尺寸或 `layout.overflow: 'clip'` 时，直接 IR 还需在 `clips` 中注入 `@retikz/standard/clip` 的 `PathClipDefinition`。
+默认 gap 为 2、padding 为 8，无描边、无圆角，自适应单元格的 `overflow` 默认为 `visible`，固定任一轴时默认为 `clip`，可显式覆盖。List 与 Map value 背景为 gray / 0.14，Map key 为 gray / 0.4。使用固定尺寸或 `layout.overflow: 'clip'` 时，直接 IR 还需在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。
 
 直接 IR 的 content 同样支持字符串或一个可绘制 child。嵌套组件需要自己的 Definition；Vanilla 使用相应 adapter，JSON 不保存函数或 JSX。整体 `style` 专用于单元格视觉，其他 Scope 属性仍由根容器消费。任意矩阵、合并格与数据处理请使用表格能力。
 

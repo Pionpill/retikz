@@ -1,6 +1,7 @@
 import * as IR from '@retikz/core';
 import * as DataIR from '@retikz/data';
 import * as DiagramIR from '@retikz/diagram/flow';
+import { CircleClipSchema, EllipseClipSchema, RibbonPathOptionsSchema } from '@retikz/extension';
 import {
   JsonObjectSchema,
   JsonValueSchema,
@@ -23,8 +24,6 @@ import * as LayoutIR from '@retikz/layout';
 import * as LayoutInspectIR from '@retikz/layout/inspect';
 import * as IRPlot from '@retikz/plot';
 import * as StandardIR from '@retikz/standard';
-import * as StandardClipIR from '@retikz/standard/clip';
-import { RibbonPathOptionsSchema } from '@retikz/standard/ribbon';
 import {
   CircleSchema,
   EllipseSchema,
@@ -257,11 +256,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     url: '/kernel/components/scope/schema-reference#rectclipschema',
   },
   CircleClipSchema: {
-    schema: StandardClipIR.CircleClipSchema,
+    schema: CircleClipSchema,
     label: 'CircleClip',
   },
   EllipseClipSchema: {
-    schema: StandardClipIR.EllipseClipSchema,
+    schema: EllipseClipSchema,
     label: 'EllipseClip',
   },
   NodeStyleSchema: {
@@ -371,7 +370,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RibbonPathOptionsSchema: {
     schema: RibbonPathOptionsSchema,
     label: 'RibbonPathOptions',
-    url: '/library/standard/ribbon',
+    url: '/library/extension/ribbon',
   },
   PathMarkPlacementSchema: {
     schema: IR.PathMarkPlacementSchema,

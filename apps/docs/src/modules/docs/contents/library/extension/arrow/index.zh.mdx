@@ -1,0 +1,101 @@
+---
+title: 箭头
+description: 从 @retikz/extension 按需引入 Diamond、Kite、Square、Straight Barb、阻断线与三叉端点，并在 React 或 Vanilla 的编译入口显式传入 Definition。
+---
+
+箭头定义为路径端点提供菱形、风筝形、方形、开放直线倒钩、阻断线与三叉标记。可按连接含义选择实心或空心样式。
+
+## 用法
+
+本页支持两种导入方式：
+
+- 按需导入特定 Definition，例如 `DiamondArrowDefinition`，只把当前图需要的官方扩展传入 `Layout` 或 `compile`
+- 整体使用官方扩展，例如 `ExtensionArrowDefinitions`，一次包含该能力族的全部 Definition；组装 provider graph 时，对应使用 `ExtensionArrowProviders`
+
+两种方式都只是当前图的显式装配，不会因为 import 自动全局注册箭头。
+
+### React 用法
+
+从 `@retikz/extension` 导入图中实际使用的 Definition，传给 React `Layout` 的 `extensions.arrows`。导入不会全局注册箭头，Definition 只对当前图生效。
+
+```tsx
+import { Draw, Layout } from '@retikz/react';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
+
+<Layout extensions={{ arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition] }}>
+  <Draw
+    way={[
+      [0, 0],
+      [160, 0],
+    ]}
+    arrow="->"
+    arrowDetail={{ end: { shape: 'openDiamond' } }}
+  />
+</Layout>;
+```
+
+### Vanilla 用法
+
+在 `@retikz/vanilla` 中，把同一个 Definition 放进 `compile.arrows`。`input` 可以是已有的 Core IR 或 Vanilla plain spec；`mount` 使用完全相同的 `compile` 配置。
+
+```ts
+import { renderToSvgString } from '@retikz/vanilla';
+import { DiamondArrowDefinition, OpenDiamondArrowDefinition } from '@retikz/extension';
+
+const svg = renderToSvgString(input, {
+  compile: {
+    arrows: [DiamondArrowDefinition, OpenDiamondArrowDefinition],
+  },
+});
+```
+
+路径 IR 只保存箭头名称和 JSON-safe 配置。若名称没有对应的内置或本次注入的 Definition，Core 会在 lookup 时明确报错并列出可用项，不会替换成默认箭头。
+
+## 例子
+
+总览保持路径长度和样式一致，分两列比较九种 Extension 端点 marker。
+
+<ComponentPreview files="arrow-gallery" size="sm" />
+
+### 菱形箭头
+
+`diamond` 与 `openDiamond` 默认使用 `11 × 6` 的整数尺寸，名义面积为 66，分别提供实心与空心端点。轮廓会占满基准高度；实心版本使用 arrow fill，空心版本只使用描边。
+
+<ComponentPreview files="diamond-arrows" size="sm" />
+
+### 风筝形箭头
+
+`kite` 与 `openKite` 同样默认使用 `11 × 6`。肩点位于基准长度的四分之一处，因此轮廓朝尖端方向明显拉长。它们与 Diamond 使用相同的 solid/open 填充规则，但不是对称菱形；按需注入 `KiteArrowDefinition` 或 `OpenKiteArrowDefinition`。
+
+### 方形箭头
+
+`square` 与 `openSquare` 默认都是 `8 × 8`；显式 `length` 与 `width` 仍可独立拉伸。空心版本把轮廓收进 marker bounds 后再描边，粗线宽不会直接复用实心外边界；对应 Definition 为 `SquareArrowDefinition` 与 `OpenSquareArrowDefinition`。
+
+三组几何均复用 Core 的 marker host、start/end 放置、Path shrink 和 `arrowDetail` 视觉参数。显式 `length` 与 `width` 只拉伸冻结的默认局部轮廓。
+
+### 直线倒钩箭头
+
+`straightBarb` 默认使用 Core 的 `8 × 8` fallback，以一条连续的开放折线绘制 `>` 形轮廓。主路径接触箭头尖端，不闭合也不填充；描边颜色与线宽继续继承 Core marker 上下文。
+
+按 Definition 直接装配时使用 `StraightBarbArrowDefinition`；组装 provider graph 时使用 `StraightBarbArrowProvider`。Extension 只定义通用几何，不把它绑定为依赖、流程或其它领域关系。
+
+### 阻断线端点
+
+`bar` 默认使用 Core 的 `8 × 8` fallback，在 authored endpoint 处绘制一条垂直于路径切线的开放线段。它继承路径描边，但名称本身不规定“禁止”“抑制”等领域含义；消费方可以按自己的语义使用。
+
+<ComponentPreview files="bar-arrow" size="sm" />
+
+路径本体会越过 marker 接触边半个自身描边宽度，再由 marker 覆盖接头，因此不会留下抗锯齿缝或穿出阻断线。`length` 控制 marker 沿路径方向的尺寸，`width` 控制竖线跨度，`lineWidth` 控制 marker 自身描边。
+
+### 三叉端点
+
+`crowFoot` 默认使用 Core 的 `8 × 8` fallback，从路径接触点显式绘制三条开放射线。它可以被关系图用于多重性，也可以承载其它分叉语义；Extension 只定义通用几何，不绑定 cardinality。
+
+<ComponentPreview files="crow-foot-arrow" size="sm" />
+
+三条射线都属于 marker，主路径会收缩到汇合处。`length`、`width`、`lineWidth`、`color` 与 `opacity` 继续使用 Core 的 `arrowDetail` 契约，start、end、反向路径和双端 marker 共享同一放置算法。
+
+## 相关
+
+- [能力装载](/library/extension/capability-loading)：直接注入与 provider graph 的边界
+- [扩展](/library/extension/introduction)：浏览其他可选能力

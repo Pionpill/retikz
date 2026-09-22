@@ -1,12 +1,12 @@
 import type { IRClip } from '@retikz/core';
-import { Layout, Node, Scope } from '@retikz/react';
 import {
   CircleClipDefinition,
   CompoundClipDefinition,
   EllipseClipDefinition,
   PathClipDefinition,
   PolygonClipDefinition,
-} from '@retikz/standard/clip';
+} from '@retikz/extension';
+import { Layout, Node, Scope } from '@retikz/react';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

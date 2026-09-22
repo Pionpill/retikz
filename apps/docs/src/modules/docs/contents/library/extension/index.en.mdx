@@ -1,0 +1,44 @@
+---
+title: Extension
+description: Add node shapes, arrows, clips, and ribbons to your drawings.
+---
+
+Extension provides ready-to-use drawing definitions. A connection diagram can combine cylinder nodes, diamond arrows, and ribbons; select each capability and explicitly enable it for the current drawing.
+
+## Responsibilities at a glance
+
+| Capability  | Purpose                  |
+| ----------- | ------------------------ |
+| Node shapes | Define node outlines     |
+| Arrows      | Mark path endpoints      |
+| Clips       | Restrict visible content |
+| Ribbons     | Draw paths with width    |
+| Animation presets | Generate animation tracks |
+
+## Installation and usage
+
+<PackageManagerInstall packages="@retikz/extension" />
+
+Import all capabilities from the root and pass selected definitions to your drawing entry:
+
+```ts
+import { CrossShapeDefinition, DiamondArrowDefinition } from '@retikz/extension';
+```
+
+Both React's `Layout.extensions` and Vanilla's `compile` rendering options accept these definitions. The [quick start](/library/extension/get-start) includes host installation, complete code, and the expected result.
+
+## Contents
+
+<LinkedSections
+  items={[
+    { title: 'Introduction', description: 'Introduction', url: '/library/extension/introduction' },
+    { title: 'Quick start', description: 'Quick start', url: '/library/extension/get-start' },
+    { title: 'Changelog', description: 'Changelog', url: '/library/extension/changelog' },
+    { title: 'Node shapes', description: 'Node shapes', url: '/library/extension/shape' },
+    { title: 'Arrows', description: 'Arrows', url: '/library/extension/arrow' },
+    { title: 'Clips', description: 'Clips', url: '/library/extension/clip' },
+    { title: 'Ribbons', description: 'Ribbons', url: '/library/extension/ribbon' },
+    { title: 'Capability loading', description: 'Capability loading', url: '/library/extension/capability-loading' },
+    { title: 'Animation presets', description: 'Animation presets', url: '/library/extension/animation' },
+  ]}
+/>

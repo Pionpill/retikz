@@ -1,0 +1,74 @@
+---
+title: Quick start
+description: Install Extension and draw a cross-shaped node in React or Vanilla.
+---
+
+This example draws a cross-shaped node. Choose your project entry, import the shape definition, and explicitly enable it for the current drawing. Packages use ES modules and require Node.js 22.12 or newer when used in Node.js.
+
+## Installation and usage
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+<PackageManagerInstall packages="@retikz/extension @retikz/react react react-dom" />
+
+Render this component in an existing React application. React and React DOM require version 18 or newer:
+
+```tsx
+import type { FC } from 'react';
+import { CrossShapeDefinition } from '@retikz/extension';
+import { Layout, Node } from '@retikz/react';
+
+export const Example: FC = () => (
+  <Layout extensions={{ shapes: [CrossShapeDefinition] }}>
+    <Node position={[0, 0]} shape="cross" fill="#38bdf8" layout={{ minimumSize: { width: 80, height: 80 } }} />
+  </Layout>
+);
+```
+
+Save the component as `Example.tsx` and mount it in a page containing `<div id="root"></div>`:
+
+```tsx
+import { createRoot } from 'react-dom/client';
+import { Example } from './Example';
+
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<Example />);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+<PackageManagerInstall packages="@retikz/extension @retikz/vanilla" />
+
+This code returns a complete SVG string that can be saved to a file or displayed in a page:
+
+```ts
+import { CrossShapeDefinition } from '@retikz/extension';
+import { renderToSvgString, scene } from '@retikz/vanilla';
+
+const svg = renderToSvgString(
+  scene({
+    children: [
+      {
+        type: 'node',
+        position: [0, 0],
+        shape: 'cross',
+        fill: '#38bdf8',
+        layout: { minimumSize: { width: 80, height: 80 } },
+      },
+    ],
+  }),
+  { compile: { shapes: [CrossShapeDefinition] } },
+);
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+Both entries produce a blue cross. `shape: 'cross'` selects the shape, while `CrossShapeDefinition` supplies its drawing rules; use them together.
+
+## Further reading
+
+[Node shapes](/library/extension/shape) shows the other outlines. [Capability loading](/library/extension/capability-loading) explains how to combine definitions or use complete collections.

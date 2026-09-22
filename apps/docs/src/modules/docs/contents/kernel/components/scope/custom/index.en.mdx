@@ -12,7 +12,7 @@ This page assumes [basic Scope clipping](/kernel/components/scope/usage#clipping
 | Need                                                | Choose                                                              |
 | --------------------------------------------------- | ------------------------------------------------------------------- |
 | One-off rectangle                                   | Write the Core built-in `rect` clip spec                            |
-| Circle, ellipse, polygon, path, or combined regions | Inject a Definition from [Clip Extensions](/library/standard/clip)  |
+| Circle, ellipse, polygon, path, or combined regions | Inject a Definition from [Clip Extensions](/library/extension/clip) |
 | New static 2D clipping geometry                     | Define one complete `ClipDefinition` that lowers to `SceneClipPath` |
 | Renderer-specific mask / filter behavior            | Outside Clip; use an explicit backend capability                    |
 
@@ -255,7 +255,7 @@ These are the members most often used to define, inject, and reference a custom 
     {
       title: 'Clip extensions',
       description: 'Assemble official circle, ellipse, polygon, path, and compound clips',
-      url: '/library/standard/clip',
+      url: '/library/extension/clip',
     },
 
     {
