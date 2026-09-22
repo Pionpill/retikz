@@ -1,0 +1,25 @@
+---
+title: Introduction
+description: Extension provides optional node shapes, arrows, clips, and ribbon definitions.
+---
+
+Extension adds node shapes, arrow styles, clipping regions, and ribbons to Retikz drawings. Import everything from `@retikz/extension` and select the definitions needed by the current drawing.
+
+## What you can draw
+
+- Node shapes: use stars, trapezoids, and cylinders to represent different objects
+- Arrows: mark connections with diamonds, squares, bars, or crow-foot endpoints
+- Clips: restrict visible content to circles, polygons, paths, or compound regions
+- Ribbons: draw bands with width along a path
+
+## How to use it
+
+Import a `Definition`, an object describing a drawing capability, and pass it to your drawing entry. React uses `Layout.extensions`; Vanilla uses the rendering options' `compile` field. Imports do not register capabilities, so each drawing can select its own definitions.
+
+For a complete capability family, use `ExtensionShapeDefinitions`, `ExtensionArrowDefinitions`, or `ExtensionClipDefinitions`. For ribbons, use `RibbonPathKindDefinition`.
+
+<ComponentAlert
+  type="tip"
+  title="Underlying integration"
+  description="Extension uses Core's public Definition and registration mechanisms and does not depend on the Standard or Layout packages. The quick start includes complete setup steps without requiring prior Kernel documentation."
+/>

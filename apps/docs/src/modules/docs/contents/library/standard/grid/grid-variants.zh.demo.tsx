@@ -1,5 +1,5 @@
 import { Layout, Node } from '@retikz/react';
-import { Grid } from '@retikz/standard-react';
+import { Grid } from '@retikz/standard-react/presentation';
 import type { FC } from 'react';
 
 /** Grid 常见语义变体的中文并列对比 */

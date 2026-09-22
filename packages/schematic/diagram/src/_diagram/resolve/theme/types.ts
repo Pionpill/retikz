@@ -1,5 +1,5 @@
 import type { IRNode } from '@retikz/core';
-import type { IRSurface } from '@retikz/standard';
+import type { IRSurface } from '@retikz/standard/presentation';
 
 /** Diagram Theme 解析后的完整 Frame baseline */
 export type EffectiveDiagramThemeFrame = Readonly<{

@@ -185,6 +185,7 @@ export const PACKAGE_IDS = [
   '@retikz/layout-react',
   '@retikz/layout-vanilla',
   '@retikz/standard',
+  '@retikz/extension',
   '@retikz/standard-react',
   '@retikz/standard-vanilla',
   '@retikz/graph',
@@ -222,6 +223,7 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
   '@retikz/layout-react': { zh: '@retikz/layout-react', en: '@retikz/layout-react' },
   '@retikz/layout-vanilla': { zh: '@retikz/layout-vanilla', en: '@retikz/layout-vanilla' },
   '@retikz/standard': { zh: '@retikz/standard', en: '@retikz/standard' },
+  '@retikz/extension': { zh: '@retikz/extension', en: '@retikz/extension' },
   '@retikz/standard-react': { zh: '@retikz/standard-react', en: '@retikz/standard-react' },
   '@retikz/standard-vanilla': { zh: '@retikz/standard-vanilla', en: '@retikz/standard-vanilla' },
   '@retikz/graph': { zh: '@retikz/graph', en: '@retikz/graph' },
@@ -235,11 +237,12 @@ export const PACKAGE_LABEL: Record<PackageId, Localized> = {
 
 /** 包的类别分组：kernel 基础设施 / library 能力包 / schematic 图式 / viz 可视化层 / other；用于映射模块 changelog 切片 */
 export type PackageGroup = {
-  id: 'kernel' | 'standard' | 'layout' | 'schematic' | 'viz' | 'other';
+  id: 'kernel' | 'standard' | 'extension' | 'layout' | 'schematic' | 'viz' | 'other';
   /** 该组按序包含的包标识 */
   members: ReadonlyArray<PackageId>;
 };
 export const PACKAGE_GROUPS: ReadonlyArray<PackageGroup> = [
+  { id: 'extension', members: ['@retikz/extension'] },
   {
     id: 'kernel',
     members: [

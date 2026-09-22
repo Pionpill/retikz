@@ -1,5 +1,5 @@
 import { Layout, Node, Path, Scope, Step } from '@retikz/react';
-import { List } from '@retikz/standard-react';
+import { List } from '@retikz/standard-react/container';
 import type { FC } from 'react';
 
 import type { Lang } from '@/i18n';

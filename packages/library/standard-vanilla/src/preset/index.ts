@@ -1,11 +1,12 @@
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 
-import { AxesInputEmbedAdapter } from '../axes';
-import { FrameInputEmbedAdapter } from '../frame';
-import { GridInputEmbedAdapter } from '../grid';
-import { LegendInputEmbedAdapter } from '../legend';
-import { ListInputEmbedAdapter } from '../list';
-import { MapInputEmbedAdapter } from '../map';
+import { ListInputEmbedAdapter } from '../container/list';
+import { MapInputEmbedAdapter } from '../container/map';
+import { AxesInputEmbedAdapter } from '../presentation/axes';
+import { FrameInputEmbedAdapter } from '../presentation/frame';
+import { GridInputEmbedAdapter } from '../presentation/grid';
+import { LegendInputEmbedAdapter } from '../presentation/legend';
+import { SurfaceInputEmbedAdapter } from '../presentation/surface';
 import {
   CircleInputEmbedAdapter,
   EllipseInputEmbedAdapter,
@@ -15,7 +16,6 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '../shape';
-import { SurfaceInputEmbedAdapter } from '../surface';
 
 /** 当前 Standard 版本全部 InputEmbed adapter 的 catalog */
 export const StandardInputEmbedAdapters: ReadonlyArray<AnyInputEmbedAdapter> = Object.freeze([

@@ -1,7 +1,7 @@
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import type { InputFrame } from '../src';
+import type { InputFrame } from '../src/presentation';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -11,7 +11,7 @@ import {
   frameTitle,
   grid,
   GridInputEmbedAdapter,
-} from '../src';
+} from '../src/presentation';
 
 const input: InputFrame = {
   padding: 12,

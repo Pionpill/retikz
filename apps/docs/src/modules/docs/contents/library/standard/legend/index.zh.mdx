@@ -11,7 +11,7 @@ Legend 有两种内容形态。`items` 保存稳定顺序的离散“样本 + �
 
 ```tsx
 import { Node, Path, Step } from '@retikz/react';
-import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
+import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -35,11 +35,11 @@ import { Legend, LegendItem, LegendTitle } from '@retikz/standard-react';
 
 React 通过 `LegendTitle`、`LegendItem`、`LegendRamp` 与 `LegendTick` 组合内容，`kind` 显式选择 `items` 或 `ramp`，不会从 children 猜测 form。每个 required slot 必须转换为恰好一个 `IRChild`；标题字体、字重与文字对齐等样式写在 `LegendTitle` 内的真实 `Node` 上。Vanilla authoring 继续接收 JSON-safe `LegendInput`，直接 IR / 持久化使用完整 `IRLegend`。三条路径最终都由 `LegendSchema` 校验，并交给 `LegendDefinition` 编译。
 
-| 场景        | 公开入口                                                                                      |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| React       | `Legend`、`LegendTitle`、`LegendItem`、`LegendRamp`、`LegendTick`（`@retikz/standard-react`） |
-| Vanilla     | `legend()`、`LegendInputEmbedAdapter`（`@retikz/standard-vanilla`）                           |
-| IR / 持久化 | `LegendSchema`、`createLegend()`、`LegendDefinition`（`@retikz/standard`）                    |
+| 场景        | 公开入口                                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------- |
+| React       | `Legend`、`LegendTitle`、`LegendItem`、`LegendRamp`、`LegendTick`（`@retikz/standard-react/presentation`） |
+| Vanilla     | `legend()`、`LegendInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`）                           |
+| IR / 持久化 | `LegendSchema`、`createLegend()`、`LegendDefinition`（`@retikz/standard/presentation`）                    |
 
 包族定位和三种使用入口见 [Standard](/library/standard)。领域包负责生成已经解析好的样本；Standard Legend 只拥有通用呈现语义与 Legend 类型化产物，具体排版复用 Layout 的公共组合能力
 
@@ -110,49 +110,49 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
   sources={[
     {
       label: 'Legend 输入 schema 与校验',
-      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
+      path: 'packages/library/standard/src/presentation/legend/schema.ts',
       startLine: 5,
       endLine: 131,
     },
     {
       label: 'React items 与 ramp form 组装',
-      path: 'packages/library/standard-react/src/legend/Legend.tsx',
+      path: 'packages/library/standard-react/src/presentation/legend/Legend.tsx',
       startLine: 39,
       endLine: 90,
     },
     {
       label: '严格 marker 与 slot 转换',
-      path: 'packages/library/standard-react/src/legend/convert-children.ts',
+      path: 'packages/library/standard-react/src/presentation/legend/convert-children.ts',
       startLine: 20,
       endLine: 126,
     },
     {
       label: 'Legend Definition 输出边界',
-      path: 'packages/library/standard/src/composites/presentation/legend/definition.ts',
+      path: 'packages/library/standard/src/presentation/legend/definition.ts',
       startLine: 11,
       endLine: 18,
     },
     {
       label: '共享 probe、对齐与 replay',
-      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 96,
       endLine: 220,
     },
     {
       label: 'ramp slot 与产物',
-      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 242,
       endLine: 371,
     },
     {
       label: 'items 换行、slot 与产物',
-      path: 'packages/library/standard/src/composites/presentation/legend/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/legend/pipeline.ts',
       startLine: 373,
       endLine: 559,
     },
     {
       label: '类型化产物 schema',
-      path: 'packages/library/standard/src/composites/presentation/legend/schema.ts',
+      path: 'packages/library/standard/src/presentation/legend/schema.ts',
       startLine: 41,
       endLine: 109,
     },
@@ -163,19 +163,19 @@ Core `Node`、`Path`、`Scope` 等图元可以直接作为 `IRChild`。内嵌 Ti
 
 ### 公开入口
 
-| API                       | 包                         | 职责                                                           | 默认值 |
-| ------------------------- | -------------------------- | -------------------------------------------------------------- | ------ |
-| `Legend`                  | `@retikz/standard-react`   | 选择显式 form 并把 marker tree 贡献为 `IRLegend` 与 Definition | —      |
-| `LegendTitle`             | `@retikz/standard-react`   | 声明可选标题 slot                                              | —      |
-| `LegendItem`              | `@retikz/standard-react`   | 声明离散样本、稳定 key 与可选标签                              | —      |
-| `LegendRamp`              | `@retikz/standard-react`   | 声明连续样本 slot                                              | —      |
-| `LegendTick`              | `@retikz/standard-react`   | 声明归一化刻度与可选标签                                       | —      |
-| `legend(id, input)`       | `@retikz/standard-vanilla` | 创建由 `LegendInputEmbedAdapter` 消费的 Vanilla embed          | —      |
-| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla` | 经 `createLegend()` 下沉 embed，并向当前 Scene 贡献 Definition | —      |
-| `createLegend(input)`     | `@retikz/standard`         | 组装稀疏 Source，并补固定 discriminator                        | —      |
-| `LegendDefinition`        | `@retikz/standard`         | 按需注入 Legend composite 的 Core Definition                   | —      |
+| API                       | 包                                      | 职责                                                           | 默认值 |
+| ------------------------- | --------------------------------------- | -------------------------------------------------------------- | ------ |
+| `Legend`                  | `@retikz/standard-react/presentation`   | 选择显式 form 并把 marker tree 贡献为 `IRLegend` 与 Definition | —      |
+| `LegendTitle`             | `@retikz/standard-react/presentation`   | 声明可选标题 slot                                              | —      |
+| `LegendItem`              | `@retikz/standard-react/presentation`   | 声明离散样本、稳定 key 与可选标签                              | —      |
+| `LegendRamp`              | `@retikz/standard-react/presentation`   | 声明连续样本 slot                                              | —      |
+| `LegendTick`              | `@retikz/standard-react/presentation`   | 声明归一化刻度与可选标签                                       | —      |
+| `legend(id, input)`       | `@retikz/standard-vanilla/presentation` | 创建由 `LegendInputEmbedAdapter` 消费的 Vanilla embed          | —      |
+| `LegendInputEmbedAdapter` | `@retikz/standard-vanilla/presentation` | 经 `createLegend()` 下沉 embed，并向当前 Scene 贡献 Definition | —      |
+| `createLegend(input)`     | `@retikz/standard/presentation`         | 组装稀疏 Source，并补固定 discriminator                        | —      |
+| `LegendDefinition`        | `@retikz/standard/presentation`         | 按需注入 Legend composite 的 Core Definition                   | —      |
 
-`@retikz/standard` 还公开导出 `LegendContentKind`、`LegendDirection`、`LegendWrap` 与 `LegendSampleAlignment` 闭合集合；具体取值由下方 `LegendSchema` 展示。
+`@retikz/standard/presentation` 还公开导出 `LegendContentKind`、`LegendDirection`、`LegendWrap` 与 `LegendSampleAlignment` 闭合集合；具体取值由下方 `LegendSchema` 展示。
 
 ### Legend
 
@@ -253,5 +253,5 @@ Core composite artifact envelope 另行保存 occurrence、namespace 与 type；
 
 - [Tier 2 Composite](/kernel/components/design/composite)：Definition 注册、probe 与 lowering 边界
 - [Layout](/kernel/components/layout/usage)：Core 的 proposal、slot、replay 与 artifact 契约
-- [直接 Definition 装载](/library/standard/capability-loading)：把 `LegendDefinition` 与其它按需 Definition 传给 Core
+- [直接 Definition 装载](/library/extension/capability-loading)：把 `LegendDefinition` 与其它按需 Definition 传给 Core
 - [Box Layout](/library/layout)：Legend 复用的尺寸、内边距、溢出和 bounds 语义

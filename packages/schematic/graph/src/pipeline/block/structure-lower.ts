@@ -7,8 +7,8 @@ import {
   LayoutDistribution,
   LayoutOverflow,
 } from '@retikz/layout';
-import type { IRSurface } from '@retikz/standard';
-import { createSurface, STANDARD_NAMESPACE, SURFACE_TYPE } from '@retikz/standard';
+import type { IRSurface } from '@retikz/standard/presentation';
+import { createSurface, STANDARD_NAMESPACE, SURFACE_TYPE } from '@retikz/standard/presentation';
 
 import type { IRBlockHeader, IRBlockRow, IRBlockSection, IRBlockText } from '../../schemas';
 

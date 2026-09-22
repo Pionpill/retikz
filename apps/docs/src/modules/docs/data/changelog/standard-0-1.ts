@@ -13,10 +13,10 @@ export const standardV01: Release = {
       },
       highlights: [
         {
-          label: { zh: '未发布 · 动画预设分层', en: 'Unreleased · Animation preset ownership' },
+          label: { zh: '未发布 · 拓展包拆分', en: 'Unreleased · Extension package split' },
           content: {
-            zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/standard 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Standard 双语文档和 API 参考同步按归属拆分。',
-            en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/standard root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Standard guides and API references follow their owners.',
+            zh: '节点形状、箭头、裁剪、流带与动画预设迁入 @retikz/extension，Standard 保留展现与形状复合组件。使用这些扩展时统一从 Extension 根入口导入；Standard 组件所需的扩展依赖继续自动随组件贡献。',
+            en: 'Node shapes, arrows, clips, ribbons, and animation presets move to @retikz/extension. Standard retains presentation and shape composites. Import extensions from the Extension root; Standard components continue contributing their required dependencies.',
           },
         },
         {
@@ -29,8 +29,8 @@ export const standardV01: Release = {
         {
           label: { zh: '未发布 · 形状迁移', en: 'Unreleased · Shape migration' },
           content: {
-            zh: '新增 Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 的持久化 composite。形状从三包 /shape 子入口导出，节点形状扩展迁至 @retikz/standard/node-shape。Vanilla 统一使用 shape.xxx，React 组件来自 @retikz/standard-react/shape；几何约束与 provider 按需装配共用同一契约。',
-            en: 'Adds persistent Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc and Sector composites. Shape APIs use dedicated /shape subpaths; node extensions move to @retikz/standard/node-shape. Vanilla uses shape.xxx and React components come from @retikz/standard-react/shape, sharing geometry validation and on-demand providers.',
+            zh: '新增 Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 的持久化 composite。形状从三包 /shape 子入口导出，节点形状扩展迁至 @retikz/extension。Vanilla 统一使用 shape.xxx，React 组件来自 @retikz/standard-react/shape；几何约束与 provider 按需装配共用同一契约。',
+            en: 'Adds persistent Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc and Sector composites. Shape APIs use dedicated /shape subpaths; node extensions move to @retikz/extension. Vanilla uses shape.xxx and React components come from @retikz/standard-react/shape, sharing geometry validation and on-demand providers.',
           },
         },
         {

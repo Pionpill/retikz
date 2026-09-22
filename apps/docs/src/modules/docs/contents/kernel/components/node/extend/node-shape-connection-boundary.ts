@@ -1,7 +1,7 @@
 import type { ConnectionEnvelopeKind, IRNode, PathPrim, Rect, ScenePrimitive, ShapeDefinition } from '@retikz/core';
 import { boundsConnectionEnvelope, defineShape, ellipseShape, polygon, rectangle } from '@retikz/core';
+import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/extension';
 import type { JsonObject } from '@retikz/foundation';
-import { SectorShapeDefinition, StarShapeDefinition } from '@retikz/standard/node-shape';
 import { z } from 'zod';
 
 const shapeChoiceSchema = z.enum(['rectangle', 'circle', 'ellipse', 'diamond', 'polygon', 'star', 'sector']);

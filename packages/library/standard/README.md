@@ -12,7 +12,7 @@ The first release includes:
 - `Legend` for discrete items and continuous ramps with shared layout artifacts
 - `Surface` for wrapping any Core child with box appearance and layout semantics
 - per-composite `Definition` exports for explicit Core compilation
-- optional `shape`, `arrow`, `clip`, and `ribbon` capability subpaths
+- a `shape` subpath for persistent shape composites
 
 ## Install
 
@@ -20,17 +20,17 @@ The first release includes:
 pnpm add @retikz/standard @retikz/core
 ```
 
-This package is ESM-only and requires Node.js 24 or newer.
-本包仅发布 ES modules，要求 Node.js 24 或更高版本。
+This package is ESM-only and requires Node.js 22.12 or newer.
+本包仅发布 ES modules，要求 Node.js 22.12 或更高版本。
 
 ```ts
 import { createGrid, GridDefinition } from '@retikz/standard';
-import { RibbonPathKindDefinition } from '@retikz/standard/ribbon';
 ```
 
 Imports do not mutate a global registry. Pass only the definitions selected for
-the current figure directly through Core compile options such as `composites`
-or `pathKinds`.
+the current figure directly through Core compile options such as `composites`.
+
+Optional node shapes, arrows, clips, ribbons, and animation effect presets are provided by `@retikz/extension`.
 
 See the [Standard documentation](https://pionpill.github.io/retikz/library/standard)
 for components, persisted IR, and direct-definition loading examples.

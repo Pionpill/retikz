@@ -9,7 +9,7 @@ description: 用 JSON-safe Axes 保留数轴与坐标参考轴的原点、方向
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { Axes } from '@retikz/standard-react';
+import { Axes } from '@retikz/standard-react/presentation';
 ```
 
 ```tsx
@@ -18,13 +18,13 @@ import { Axes } from '@retikz/standard-react';
 </Layout>
 ```
 
-React 入口会在当前 `Layout` 局部贡献 `AxesDefinition`。持久化或非 React 场景可从 `@retikz/standard` 创建完整 IR，并在 Core compile options 中显式传入 definition。
+React 入口会在当前 `Layout` 局部贡献 `AxesDefinition`。持久化或非 React 场景可从 `@retikz/standard/presentation` 创建完整 IR，并在 Core compile options 中显式传入 definition。
 
-| 场景        | 公开入口                                                           |
-| ----------- | ------------------------------------------------------------------ |
-| React       | `Axes`（`@retikz/standard-react`）                                 |
-| Vanilla     | `axes`、`AxesInputEmbedAdapter`（`@retikz/standard-vanilla`）      |
-| IR / 持久化 | `AxesSchema`、`createAxes`、`AxesDefinition`（`@retikz/standard`） |
+| 场景        | 公开入口                                                                        |
+| ----------- | ------------------------------------------------------------------------------- |
+| React       | `Axes`（`@retikz/standard-react/presentation`）                                 |
+| Vanilla     | `axes`、`AxesInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`）      |
+| IR / 持久化 | `AxesSchema`、`createAxes`、`AxesDefinition`（`@retikz/standard/presentation`） |
 
 包族定位和三种使用入口见 [Standard](/library/standard)。当需求包含数据 domain、scale、自动 tick、formatter 或标签避让时，应改用 [Plot axis](/viz/plot/guide/axis)。
 
@@ -87,11 +87,11 @@ Axes 的 `x.grid` 与 `y.grid` 只生成裁切在各自轴范围内的普通格�
   sources={[
     {
       label: 'Axes schema 与公开契约',
-      path: 'packages/library/standard/src/composites/presentation/axes/schemas/schema.ts',
+      path: 'packages/library/standard/src/presentation/axes/schema.ts',
     },
     {
       label: 'Axes 方向换算与 lowering',
-      path: 'packages/library/standard/src/composites/presentation/axes/pipeline.ts',
+      path: 'packages/library/standard/src/presentation/axes/pipeline.ts',
     },
   ]}
 />

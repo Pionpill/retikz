@@ -1,0 +1,25 @@
+---
+title: 简介
+description: Extension 提供可按需使用的节点形状、箭头、裁剪与流带定义。
+---
+
+Extension 是 Retikz 的拓展包，为图形提供更多节点形状、箭头样式、裁剪区域和流带。所有能力都从 `@retikz/extension` 导入，选择当前图需要的定义后即可使用。
+
+## 能做什么
+
+- 节点形状：用星形、梯形、圆柱等轮廓表达不同对象
+- 箭头：用菱形、方形、阻断线或三叉端点标记连接
+- 裁剪：用圆、多边形、路径或组合区域限制内容的显示范围
+- 流带：沿路径绘制有宽度的带状图形
+
+## 使用方式
+
+从包根导入对应的 `Definition`，即描述一种绘图能力的定义，然后传给当前图的绘图入口。React 使用 `Layout.extensions`，Vanilla 使用渲染选项的 `compile`。导入本身不会注册任何能力，每张图可以选择不同的定义。
+
+需要某一类的全部定义时，可使用 `ExtensionShapeDefinitions`、`ExtensionArrowDefinitions` 或 `ExtensionClipDefinitions` 集合；Ribbon 使用 `RibbonPathKindDefinition`。
+
+<ComponentAlert
+  type="tip"
+  title="与底层机制的关系"
+  description="Extension 通过 Core 的公开 Definition 与注册机制接入，不依赖 Standard 或 Layout 包。快速开始包含完整接入步骤，无需先阅读 Kernel 文档。"
+/>

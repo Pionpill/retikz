@@ -87,21 +87,7 @@ import {
 import type { IRPlot } from '@retikz/plot';
 import { PlotSchema } from '@retikz/plot';
 import { renderPlot } from '@retikz/plot-vanilla';
-import type { IRCell, IRList, IRMap } from '@retikz/standard';
-import {
-  AxesDefinition,
-  AxesSchema,
-  FrameDefinition,
-  FrameSchema,
-  GridDefinition,
-  GridSchema,
-  LegendDefinition,
-  LegendSchema,
-  ListDefinition,
-  MapDefinition,
-  SurfaceDefinition,
-  SurfaceSchema,
-} from '@retikz/standard';
+import { list, ListInputEmbedAdapter, map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
 import {
   axes,
   AxesInputEmbedAdapter,
@@ -112,13 +98,9 @@ import {
   legend,
   LegendInputEmbedAdapter,
   surface,
-  list,
-  map,
-  ListInputEmbedAdapter,
-  MapInputEmbedAdapter,
   surfaceChild,
   SurfaceInputEmbedAdapter,
-} from '@retikz/standard-vanilla';
+} from '@retikz/standard-vanilla/presentation';
 import {
   shape,
   CircleInputEmbedAdapter,
@@ -129,6 +111,20 @@ import {
   ArcInputEmbedAdapter,
   SectorInputEmbedAdapter,
 } from '@retikz/standard-vanilla/shape';
+import type { IRCell, IRList, IRMap } from '@retikz/standard/container';
+import { ListDefinition, MapDefinition } from '@retikz/standard/container';
+import {
+  AxesDefinition,
+  AxesSchema,
+  FrameDefinition,
+  FrameSchema,
+  GridDefinition,
+  GridSchema,
+  LegendDefinition,
+  LegendSchema,
+  SurfaceDefinition,
+  SurfaceSchema,
+} from '@retikz/standard/presentation';
 import {
   CircleSchema,
   CircleDefinition,

@@ -3,11 +3,11 @@ title: Arcs and sectors
 description: Draw arcs and sectors with shared Standard semantics across React, Vanilla and JSON
 ---
 
-Standard Arc / Sector preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/standard/shape).
+Standard Arc / Sector preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
 
 ## Entry points
 
-Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/standard/node-shape`.
+Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
 
 React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx(id, input)` with the same explicit identity for the embed and its final path. React does not persist an automatic occurrence id. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
 
@@ -116,7 +116,7 @@ Screen coordinates point x to the right and y downward, so `0°` points right, `
   sources={[
     {
       label: 'Resolve sugar angle inputs',
-      path: 'packages/library/standard/src/composites/shape/shared/geometry.ts',
+      path: 'packages/library/standard/src/shape/shared/geometry.ts',
       startLine: 1,
     },
   ]}
@@ -138,12 +138,12 @@ Stroke, fill, arrows, and whole-shape transforms all live on the outer `<Path>`;
   sources={[
     {
       label: 'Expand open and closed Arc forms',
-      path: 'packages/library/standard/src/composites/shape/arc/pipeline.ts',
+      path: 'packages/library/standard/src/shape/arc/pipeline.ts',
       startLine: 1,
     },
     {
       label: 'Expand solid and hollow Sector forms',
-      path: 'packages/library/standard/src/composites/shape/sector/pipeline.ts',
+      path: 'packages/library/standard/src/shape/sector/pipeline.ts',
       startLine: 1,
     },
   ]}

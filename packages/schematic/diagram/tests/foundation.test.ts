@@ -2,7 +2,7 @@ import type { IRChild, IRScope, ResolvedTheme, ScenePrimitive } from '@retikz/co
 import { DEFAULT_RESOLVED_THEME, defineThemeStyle, LayoutAxisProposalKind, ThemeMode } from '@retikz/core';
 import type { IRFlexLayout } from '@retikz/layout';
 import { FlexLayoutArtifactSchema, FlexLayoutDirection, FlexLayoutSchema, LayoutAlignment } from '@retikz/layout';
-import { LegendArtifactSchema, LegendSchema } from '@retikz/standard';
+import { LegendArtifactSchema, LegendSchema } from '@retikz/standard/presentation';
 import { describe, expect, it } from 'vitest';
 
 import {

@@ -258,7 +258,7 @@ describe('ComponentPreview Vanilla source', () => {
     const props = await renderPreview(['library', 'standard', 'grid'], <ComponentPreview files="grid-playground" />);
     const vanilla = props.source?.vanilla;
 
-    expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla'");
+    expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla/presentation'");
     expect(vanilla?.files[0]?.code).not.toContain('Failed to generate vanilla code');
     expect(vanilla?.render).toBeTypeOf('function');
   });

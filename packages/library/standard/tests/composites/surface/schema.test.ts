@@ -2,8 +2,8 @@ import type { IRNode } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 import { toJSONSchema } from 'zod';
 
-import { createSurface, SurfaceSchema } from '../../../src';
-import { resolveSurface } from '../../../src/resolve/surface';
+import { createSurface, SurfaceSchema } from '../../../src/presentation';
+import { resolveSurface } from '../../../src/presentation/surface/resolve';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const node: IRNode = {

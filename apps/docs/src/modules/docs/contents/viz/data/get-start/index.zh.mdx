@@ -1,0 +1,56 @@
+---
+title: 快速开始
+description: 安装 @retikz/data，声明字段模型，归一化外部数据，并执行第一个汇总变换。
+---
+
+下面的例子不依赖 React、绘图或 renderer。它完成 Data 管线中的“字段契约 → 归一化 → 变换与交付”：把三条外部数据行整理为规范化行，再按地区汇总收入；得到的结果可以交给任意消费模块。
+
+## 安装
+
+<PackageManagerInstall packages="@retikz/data" />
+
+`@retikz/data` 仅发布 ES modules，需要 Node.js 22.12 或更高版本。
+
+## 处理第一份数据
+
+```ts
+import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
+
+import { applyTransforms, DataFieldType, normalizeRows, resolveFieldTypes } from '@retikz/data';
+
+const rows: Array<ExternalRow> = [
+  { region: 'north', revenue: '12' },
+  { region: 'north', revenue: '8' },
+  { region: 'south', revenue: '5' },
+];
+
+const model: IRDataModel = [
+  { name: 'region', type: DataFieldType.Categorical },
+  { name: 'revenue', type: DataFieldType.Continuous },
+];
+const fieldTypes = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
+const canonicalRows = normalizeRows(rows, fieldTypes);
+
+const transforms: Array<IRDataTransform> = [
+  {
+    kind: 'summarize',
+    groupBy: ['region'],
+    metrics: [
+      { kind: 'sum', field: 'revenue', as: 'total' },
+      { kind: 'count', as: 'rows' },
+    ],
+  },
+];
+
+const summary = applyTransforms(canonicalRows, transforms);
+console.log(summary);
+// [{ region: 'north', total: 20, rows: 2 }, { region: 'south', total: 5, rows: 1 }]
+```
+
+`resolveFieldTypes()` 以字段模型和参与字段解析测量类型；`normalizeRows()` 将字符串收入转成连续数值，并保留逻辑字段名；`applyTransforms()` 按声明顺序运行内置变换。示例最后得到两条汇总行，这是可观察的数据结果，不是图形。
+
+`model` 与 `transforms` 可以保存为 JSON。`rows` 以及可能的自定义 parser、Definition 和 registry 则只在运行时参与处理。
+
+## 接下来
+
+需要字段映射、格式或校验时阅读[数据模型](/viz/data/model)；需要更多内置操作时阅读[数据变换](/viz/data/transform)。将结果交给视图时，继续阅读[绘图语法](/viz/plot)或对应的 Table 文档。

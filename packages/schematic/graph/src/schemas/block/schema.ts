@@ -1,7 +1,7 @@
 import { ChildSchema, NodeSchema, ScopePropsSchema } from '@retikz/core';
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { FlexMainDistributionSchema, LayoutGapSchema } from '@retikz/layout';
-import { SurfaceSchema } from '@retikz/standard';
+import { SurfaceSchema } from '@retikz/standard/presentation';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
 import { GRAPH_NAMESPACE, GraphType } from '../../shared';

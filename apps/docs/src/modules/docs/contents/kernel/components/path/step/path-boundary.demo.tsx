@@ -1,7 +1,7 @@
 import type { IRBoundary } from '@retikz/core';
+import { StarShapeDefinition } from '@retikz/extension';
 import { Draw, Layout, Node } from '@retikz/react';
 import { Circle } from '@retikz/standard-react/shape';
-import { StarShapeDefinition } from '@retikz/standard/node-shape';
 import type { FC } from 'react';
 
 import type { PreviewControlValuesFor } from '@/modules/docs/preview';

@@ -1,9 +1,9 @@
 import { createInputScene, Node } from '@retikz/react';
-import { list, map, ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla';
+import { list, map, ListInputEmbedAdapter, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
 import { normalizeScene, renderToSvgString, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import { List, ListItem, Map, MapEntry, MapKey, MapValue } from '../src';
+import { List, ListItem, Map, MapEntry, MapKey, MapValue } from '../src/container';
 
 const node = { type: 'node' as const, position: [0, 0] as [number, number], text: 'A' };
 it('preserves mixed List string and object items across React and Vanilla', () => {

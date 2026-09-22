@@ -1,11 +1,11 @@
+import { PathClipProvider } from '@retikz/extension';
 import { createInputScene, Node } from '@retikz/react';
-import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
+import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard/presentation';
 import { normalizeScene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 
-import type { SurfaceProps } from '../../src';
-import { Frame, Surface } from '../../src';
+import type { SurfaceProps } from '../../src/presentation';
+import { Frame, Surface } from '../../src/presentation';
 
 /** 以 React 真实 authoring 路径归一化一个 Surface */
 const contribute = ({ children, ...props }: SurfaceProps) => {

@@ -2,7 +2,7 @@ import type { IRNode, IRPath, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
 import { describe, expect, it } from 'vitest';
 
-import { AxesDefinition, createAxes, lowerAxes } from '../../../src';
+import { AxesDefinition, createAxes, lowerAxes } from '../../../src/presentation';
 import { fullScopeProps } from '../presentation/scope-props';
 
 const endpoints = (path: IRPath) => path.children.map(step => ('to' in step ? step.to : undefined));

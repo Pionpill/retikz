@@ -1,7 +1,11 @@
 import type { CompositeCoreProviderKey, CoreDependencyProvider, CoreProviderContribution } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
-import { ContourShapeProvider, SectorShapeProvider } from '@retikz/standard/node-shape';
-import { BUILTIN_RIBBON_WIDTH_PROFILES, createRibbonProviderContribution } from '@retikz/standard/ribbon';
+import {
+  ContourShapeProvider,
+  SectorShapeProvider,
+  BUILTIN_RIBBON_WIDTH_PROFILES,
+  createRibbonProviderContribution,
+} from '@retikz/extension';
 
 import { RetikzPlotError } from '../../error';
 import { PLOT_NAMESPACE } from '../../schemas';
