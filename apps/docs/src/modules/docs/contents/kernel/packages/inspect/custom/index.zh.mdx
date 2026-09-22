@@ -56,7 +56,8 @@ import { endpointInspector, endpointInspectorKey } from './endpoint-inspector';
 const registry = createInspectorRegistry([endpointInspector]);
 const input = scene({
   children: [
-    path('curve', {
+    path({
+      id: 'curve',
       authoring: createInspectionVanillaAuthoring({ inspector: endpointInspectorKey, options: true }),
       way: [
         [0, 0],

@@ -29,11 +29,11 @@ import {
 
 const input = scene({
   children: [
-    grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } }),
-    axes('plane', { x: { extent: 20 }, y: { extent: 20 } }),
-    frame('contract', { children: [{ type: 'node', position: [0, 0], text: 'Contract' }] }),
-    surface('callout', { child: surfaceChild({ type: 'node', position: [0, 0], text: 'Surface' }) }),
-    legend('status', {
+    grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } }),
+    axes({ x: { extent: 20 }, y: { extent: 20 } }),
+    frame({ children: [{ type: 'node', position: [0, 0], text: 'Contract' }] }),
+    surface({ child: surfaceChild({ type: 'node', position: [0, 0], text: 'Surface' }) }),
+    legend({
       content: {
         kind: LegendContentKind.Items,
         items: [{ key: 'node', sample: { type: 'node', position: [0, 0], text: 'N' } }],
@@ -90,7 +90,7 @@ describe('Standard Vanilla definition loading', () => {
   it('deduplicates the same explicit definition object and rejects a different object at the same key', () => {
     expect(() =>
       renderToSvgString(
-        scene({ children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
+        scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
         {
           adapters: [GridInputEmbedAdapter],
           compile: { composites: [GridDefinition] },
@@ -99,7 +99,7 @@ describe('Standard Vanilla definition loading', () => {
     ).not.toThrow();
     expect(() =>
       renderToSvgString(
-        scene({ children: [grid('paper', { bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
+        scene({ children: [grid({ bounds: { start: [0, 0], end: [20, 20] }, line: { spacing: 10 } })] }),
         {
           adapters: [GridInputEmbedAdapter],
           compile: { composites: [{ ...GridDefinition }] },

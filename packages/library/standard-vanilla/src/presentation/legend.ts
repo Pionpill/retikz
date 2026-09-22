@@ -128,9 +128,9 @@ export const LegendInputEmbedAdapter: InputEmbedAdapter<InputLegend> = {
 };
 
 /** 创建由 LegendInputEmbedAdapter 下沉的 Standard Legend embed */
-export const legend = (id: string, input: InputLegend): InputEmbed<InputLegend> => ({
+export const legend = (input: InputLegend): InputEmbed<InputLegend> => ({
   type: 'embed',
   kind: StandardLegendEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

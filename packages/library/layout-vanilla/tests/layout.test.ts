@@ -27,11 +27,7 @@ describe('Layout Vanilla family', () => {
   it('roots only the authored capability and publishes one stable exact-key provider', () => {
     const normalized = normalizeScene(
       scene({
-        children: [
-          flexLayout('flex', {}),
-          gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] }),
-          overlayLayout('overlay', {}),
-        ],
+        children: [flexLayout({}), gridLayout({ columns: [{ kind: 'fixed', value: 10 }] }), overlayLayout({})],
       }),
       { adapters: LayoutInputEmbedAdapters },
     );
@@ -49,12 +45,12 @@ describe('Layout Vanilla family', () => {
   it('builds exact embed specs and normalizes the family definitions once', () => {
     const input = scene({
       children: [
-        flexLayout('flex', {
+        flexLayout({
           gap: { column: 4, row: 8 },
           children: [{ kind: LayoutItemKind.Flex, key: 'nested', child: nestedGrid }],
         }),
-        gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] }),
-        overlayLayout('overlay', {}),
+        gridLayout({ columns: [{ kind: 'fixed', value: 10 }] }),
+        overlayLayout({}),
       ],
     });
     const normalized = normalizeScene(input, { adapters: LayoutInputEmbedAdapters });
@@ -77,7 +73,7 @@ describe('Layout Vanilla family', () => {
     const normalized = normalizeScene(
       scene({
         children: [
-          flexLayout('flex', {
+          flexLayout({
             children: [{ kind: LayoutItemKind.Flex, child: { type: 'node', position: [0, 0] } }],
           }),
         ],
@@ -100,7 +96,7 @@ describe('Layout Vanilla family', () => {
   });
 
   it('rejects an external Vanilla embed payload at the Source schema boundary', () => {
-    const embed = flexLayout('nested', {});
+    const embed = flexLayout({});
 
     expect(() =>
       GridLayoutSchema.parse({
@@ -121,7 +117,7 @@ describe('Layout Vanilla family', () => {
   it('normalizes nested canonical layouts for SVG SSR without DOM state', () => {
     const input = scene({
       children: [
-        flexLayout('outer', {
+        flexLayout({
           children: [
             {
               kind: LayoutItemKind.Flex,
@@ -157,10 +153,10 @@ describe('Layout Vanilla family', () => {
   });
 
   it('forwards nested Layout dependencies through Input items without React participation', () => {
-    const nestedGridEmbed = gridLayout('grid', { columns: [{ kind: 'fixed', value: 10 }] });
+    const nestedGridEmbed = gridLayout({ columns: [{ kind: 'fixed', value: 10 }] });
     const input = scene({
       children: [
-        flexLayout('outer', {
+        flexLayout({
           children: [
             {
               kind: LayoutItemKind.Flex,

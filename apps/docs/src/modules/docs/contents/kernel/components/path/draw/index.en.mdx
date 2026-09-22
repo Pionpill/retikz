@@ -65,8 +65,8 @@ import { mount } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
-    node('a', { position: [0, 0], text: 'A' }),
-    node('b', { position: [120, 60], text: 'B' }),
+    node({ id: 'a', position: [0, 0], text: 'A' }),
+    node({ id: 'b', position: [120, 60], text: 'B' }),
     path({ way: ['a', '-|', 'b'], arrow: '->' }),
   ],
 });

@@ -26,10 +26,9 @@ export const FlexLayoutInputEmbedAdapter: InputEmbedAdapter<InputFlexLayout> = {
 };
 
 /** 创建由 Layout 适配器下沉的 Flex 布局嵌入项 */
-export const flexLayout = (id: string, input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> => ({
+export const flexLayout = (input: InputFlexLayout, authoring?: unknown): InputEmbed<InputFlexLayout> => ({
   type: 'embed',
   kind: FlexLayoutEmbedKind,
-  id,
   props: input,
   ...(authoring === undefined ? {} : { authoring }),
 });

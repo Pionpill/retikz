@@ -20,14 +20,14 @@ import { mount } from '@retikz/vanilla/dom';
 const input = scene({
   id: 'flow',
   layers: [
-    layer('main', [
-      node('a', { position: [0, 0], text: 'A' }),
-      node('b', { position: [120, 0], text: 'B' }),
-      path('edge', {
-        way: ['a', 'b'],
-        marks: [{ pos: 1, mark: { kind: 'arrow' } }],
-      }),
-    ]),
+    layer({
+      id: 'main',
+      children: [
+        node({ id: 'a', position: [0, 0], text: 'A' }),
+        node({ id: 'b', position: [120, 0], text: 'B' }),
+        path({ id: 'edge', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+      ],
+    }),
   ],
 });
 
@@ -40,6 +40,14 @@ const view = mount(document.querySelector('#diagram')!, input);
 `scene({ theme: { style, mode } })` 会把稀疏 Theme 写入 Input 根，`scope({ theme }, children)` 复用同一局部继承写法。归一化复制 Theme 对象，不修改调用方输入；最终两条路径都交给同一份 Core Theme 与 compile 契约。
 
 ## 输入归一与 processing
+
+### 用配置对象声明身份
+
+Vanilla 构造函数不接收独立的 ID 字符串参数。`node({ id, position })`、`path({ id, way })`、`coordinate({ id, position })` 和 `layer({ id, children })` 都从配置读取身份；是否必须提供 `id` 仍由对应输入契约决定。
+
+领域 builder 同样直接接收配置，例如 `shape.circle({ id, center, radius })`、`entity({ id, role, position })`。已有领域 `id` 的输入会复用该值作为 embed 身份；匿名输入不因此获得可引用的图元 ID。Layout 输入没有领域 `id`，直接使用 `flexLayout({ children })` 等入口。
+
+通用嵌入使用 `embed({ kind, props })` 的对象结构，还可传入 `id` 与 `authoring` 字段。Plot 与 Table 使用 `embedPlot(source, datasets, lowerOptions?)`、`embedTable(spec, options?)`，无需额外传入 embed ID。
 
 ### 为什么需要 InputScene
 
@@ -119,7 +127,7 @@ const view = mount(document.querySelector('#diagram')!, input);
 
 `scene({ children })` 使用 id 为 `default` 的隐式 Layer。需要明确绘制顺序、稳定 Layer id 或缓存提示时，再用 `layers` 与 `layer()`。`zIndex` 只决定 Layer stack 排序，相同值保持声明顺序；`cache` 只进入 `InputRuntimeMeta`，由 DOM retained renderer 保守折叠为 Render cache policy，不进入 Core IR。
 
-Tier 2 能力通过 `embed(kind, id, props)` 接入。Vanilla 不解析组件，也不执行 hooks；它按 `kind` 查找调用方注入的 `InputEmbedAdapter`，将已类型化 props 下沉为 Core child 与 Composite dependency contribution。
+Tier 2 能力通过 `embed({ kind, id, props })` 接入。Vanilla 不解析组件，也不执行 hooks；它按 `kind` 查找调用方注入的 `InputEmbedAdapter`，将已类型化 props 下沉为 Core child 与 Composite dependency contribution。
 
 ```ts
 import type { InputEmbedAdapter } from '@retikz/vanilla';
@@ -130,13 +138,13 @@ type BadgeProps = { label: string };
 const BadgeInputEmbedAdapter: InputEmbedAdapter<BadgeProps> = {
   kind: 'badge',
   lower: (props, context) => ({
-    node: node(`${context.id}/label`, { position: [0, 0], text: props.label }),
+    node: node({ id: `${context.id}/label`, position: [0, 0], text: props.label }),
     providerDependencies: { roots: [], providers: [] },
   }),
 };
 
 const input = scene({
-  layers: [layer('content', [embed('badge', 'sales', { label: 'Sales' })])],
+  layers: [layer({ id: 'content', children: [embed({ kind: 'badge', id: 'sales', props: { label: 'Sales' } })] })],
 });
 
 const svg = renderToSvgString(input, { adapters: [BadgeInputEmbedAdapter] });

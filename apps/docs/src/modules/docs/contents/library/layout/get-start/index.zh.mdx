@@ -54,23 +54,16 @@ import { node, renderToSvgString, scene } from '@retikz/vanilla';
 
 const input = scene({
   children: [
-    flexLayout('row', {
+    flexLayout({
       gap: { column: 12, row: 0 },
       children: [
         {
           kind: 'flex',
-          child: node('circle', {
-            shape: 'circle',
-            position: [0, 0],
-            layout: { minimumSize: 32 },
-          }),
+          child: node({ id: 'circle', shape: 'circle', position: [0, 0], layout: { minimumSize: 32 } }),
         },
         {
           kind: 'flex',
-          child: node('box', {
-            position: [0, 0],
-            layout: { minimumSize: 32 },
-          }),
+          child: node({ id: 'box', position: [0, 0], layout: { minimumSize: 32 } }),
         },
       ],
     }),

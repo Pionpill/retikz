@@ -90,10 +90,10 @@ import { mount } from '@retikz/vanilla/dom';
 
 const input = scene({
   children: [
-    node('origin', { position: [0, 0], text: 'x = 0' }),
+    node({ id: 'origin', position: [0, 0], text: 'x = 0' }),
     scope({ transforms: [{ kind: 'translate', x: 80, y: 0 }] }, [
-      node('A', { position: [0, 0], text: 'A' }),
-      node('B', { position: [100, 0], text: 'B' }),
+      node({ id: 'A', position: [0, 0], text: 'A' }),
+      node({ id: 'B', position: [100, 0], text: 'B' }),
       path({ way: ['A', 'B'], arrow: '->' }),
     ]),
   ],

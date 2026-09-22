@@ -17,7 +17,8 @@ const content = (barrier = false) =>
   scene({
     children: [
       scope(barrier ? { authoring: createInspectionVanillaAuthoring(false) } : {}, [
-        path('curve', {
+        path({
+          id: 'curve',
           authoring: createInspectionVanillaAuthoring(request),
           way: [
             [0, 0],
@@ -44,7 +45,8 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
     const svg = renderToSvgString(
       scene({
         children: [
-          node('selected', {
+          node({
+            id: 'selected',
             position: [0, 0],
             text: 'A',
             authoring: createInspectionVanillaAuthoring({
@@ -52,8 +54,9 @@ describe('@retikz/inspect/vanilla authoring and driver', () => {
               options: true,
             }),
           }),
-          node('unselected', { position: [60, 0], text: 'B' }),
-          coordinate('point', {
+          node({ id: 'unselected', position: [60, 0], text: 'B' }),
+          coordinate({
+            id: 'point',
             position: [20, 40],
             authoring: createInspectionVanillaAuthoring({
               inspector: { namespace: 'core', type: 'coordinate' },

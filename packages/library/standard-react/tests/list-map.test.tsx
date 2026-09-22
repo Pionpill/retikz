@@ -10,7 +10,7 @@ it('preserves mixed List string and object items across React and Vanilla', () =
   const items = ['A', { content: 'B', id: 'custom', style: { fill: 'blue' } }];
   const input = createInputScene(<List items={items} />);
   const react = normalizeScene(input.scene, { adapters: input.adapters });
-  const vanilla = normalizeScene(scene({ children: [list('list', { items })] }), { adapters: [ListInputEmbedAdapter] });
+  const vanilla = normalizeScene(scene({ children: [list({ items })] }), { adapters: [ListInputEmbedAdapter] });
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ items });
 });
@@ -39,13 +39,13 @@ describe('List / Map adapter parity', () => {
     const vanilla = normalizeScene(
       scene({
         children: [
-          map('map', {
+          map({
             style: { fill: 'red', key: { fill: 'green' }, value: { fillOpacity: 0.3 } },
             layout: { padding: 0, key: { width: 60 }, value: { height: 40 } },
             entries: [
               {
                 key: { content: node },
-                value: { style: { fill: 'blue' }, content: list('list', { items: [{ content: node }] }) },
+                value: { style: { fill: 'blue' }, content: list({ items: [{ content: node }] }) },
               },
             ],
           }),
@@ -77,7 +77,7 @@ describe('List / Map adapter parity', () => {
     const vanilla = normalizeScene(
       scene({
         children: [
-          map('map', {
+          map({
             entries: [{ key: { content: '' }, value: { content: 'B', style: { fill: 'blue' } } }],
           }),
         ],
@@ -180,7 +180,7 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
   const data = { id: 'ordinary data', values: ['', '', null, { enabled: false }] };
   const input = createInputScene(<Map data={data} layout={{ value: { width: 70 } }} />);
   const react = normalizeScene(input.scene, { adapters: input.adapters });
-  const vanilla = normalizeScene(scene({ children: [map('map', { data, layout: { value: { width: 70 } } })] }), {
+  const vanilla = normalizeScene(scene({ children: [map({ data, layout: { value: { width: 70 } } })] }), {
     adapters: [MapInputEmbedAdapter],
   });
   expect(react.ir).toEqual(vanilla.ir);
@@ -189,13 +189,13 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
   expect(react.ir.children[0]).not.toHaveProperty('entries');
   const listInput = createInputScene(<List data={['', '', data]} />);
   const reactList = normalizeScene(listInput.scene, { adapters: listInput.adapters });
-  const vanillaList = normalizeScene(scene({ children: [list('list', { data: ['', '', data] })] }), {
+  const vanillaList = normalizeScene(scene({ children: [list({ data: ['', '', data] })] }), {
     adapters: [ListInputEmbedAdapter],
   });
   expect(reactList.ir).toEqual(vanillaList.ir);
   expect(reactList.contributions).toEqual(vanillaList.contributions);
   expect(renderToSvgString(input.scene, { adapters: input.adapters })).toEqual(
-    renderToSvgString(scene({ children: [map('map', { data, layout: { value: { width: 70 } } })] }), {
+    renderToSvgString(scene({ children: [map({ data, layout: { value: { width: 70 } } })] }), {
       adapters: [MapInputEmbedAdapter],
     }),
   );
@@ -213,8 +213,8 @@ it('preserves container labels in data and marker inputs with matching Vanilla o
   );
   const vanillaInput = scene({
     children: [
-      map('map', { data: { values: [1, 2] }, label }),
-      list('list', { items: [{ content: 'cell' }], label: [label, { text: 'Below', position: 'bottom' }] }),
+      map({ data: { values: [1, 2] }, label }),
+      list({ items: [{ content: 'cell' }], label: [label, { text: 'Below', position: 'bottom' }] }),
     ],
   });
   const adapters = [ListInputEmbedAdapter, MapInputEmbedAdapter];

@@ -14,9 +14,9 @@ export const AxesInputEmbedAdapter: InputEmbedAdapter<AxesInput> = {
 };
 
 /** 创建由 AxesInputEmbedAdapter 下沉的 Standard Axes embed */
-export const axes = (id: string, input: AxesInput): InputEmbed<AxesInput> => ({
+export const axes = (input: AxesInput): InputEmbed<AxesInput> => ({
   type: 'embed',
   kind: StandardAxesEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

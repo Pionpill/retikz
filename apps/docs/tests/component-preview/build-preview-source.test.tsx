@@ -210,9 +210,9 @@ describe('buildPreviewSource', () => {
     const result = buildPreviewSource(createInput({ Component: StandardCompositeDemo }));
 
     expect(result.source?.vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla/presentation'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain("grid('preview-grid-1'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain("axes('preview-axes-1'");
-    expect(result.source?.vanilla?.files[0]?.code).toContain("frame('preview-frame-1'");
+    expect(result.source?.vanilla?.files[0]?.code).toContain('grid({');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('axes({');
+    expect(result.source?.vanilla?.files[0]?.code).toContain('frame({');
     expect(result.source?.vanilla?.files[0]?.code).toContain("title: { text: 'Group' }");
     expect(result.source?.vanilla?.files[0]?.code).toContain("description: { text: 'Preview source' }");
     expect(result.source?.vanilla?.files[0]?.code).toContain('padding: { x: 8, y: 10 }');
@@ -346,7 +346,7 @@ describe('buildPreviewSource', () => {
     const vanilla = result.source?.vanilla;
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
-    expect(vanilla?.files[0]?.code).toContain("embedTable('preview-table-1'");
+    expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
     expect(vanilla?.files[0]?.code).toContain('TableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).toContain("category: 'A'");
     expect(vanilla?.render).toBeUndefined();
@@ -359,7 +359,7 @@ describe('buildPreviewSource', () => {
     const vanilla = result.source?.vanilla;
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/table-vanilla'");
-    expect(vanilla?.files[0]?.code).toContain("embedTable('preview-table-1'");
+    expect(vanilla?.files[0]?.code).toContain('embedTable(spec');
     expect(vanilla?.files[0]?.code).toContain('TableInputEmbedAdapter');
     expect(vanilla?.files[0]?.code).not.toContain('const datasets =');
     expect(vanilla?.render).toBeUndefined();

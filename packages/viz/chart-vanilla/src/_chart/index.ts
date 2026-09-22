@@ -40,7 +40,7 @@ export const renderChart = (input: ChartAuthoringResult, options: RenderChartOpt
   const result = toSceneResult(
     scene({
       ...(input.theme === undefined ? {} : { theme: input.theme }),
-      children: [embed(CHART_NAMESPACE, input.source.id ?? CHART_NAMESPACE, input.input)],
+      children: [embed({ kind: CHART_NAMESPACE, id: input.source.id ?? CHART_NAMESPACE, props: input.input })],
     }),
     {
       adapters: [ChartInputEmbedAdapter],
