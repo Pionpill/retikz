@@ -1,7 +1,7 @@
 import type { CoreDependencyProvider } from '@retikz/core';
+import { PathClipProvider } from '@retikz/extension';
 import type { IRCell } from '@retikz/standard';
 import { ListProvider, MapProvider, RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
 import type { InputChild, InputEmbedAdapter } from '@retikz/vanilla';
 
 /** 单元格接受纯文本或根 Scene 的统一 authoring 输入；字符串保留到 Standard IR */

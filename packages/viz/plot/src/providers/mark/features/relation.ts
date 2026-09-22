@@ -12,7 +12,7 @@ import type {
 import { FoldStepVia } from '@retikz/core';
 import type { ExternalRow } from '@retikz/data';
 import { resolveFieldPath } from '@retikz/data';
-import type { IRRibbonPathOptions } from '@retikz/standard/ribbon';
+import type { IRRibbonPathOptions } from '@retikz/extension';
 
 import type {
   CoordinateFrame,

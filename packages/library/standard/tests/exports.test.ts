@@ -25,5 +25,6 @@ describe('@retikz/standard root exports', () => {
       namespace: 'standard',
       type: 'grid',
     });
+    expect(standardExports).not.toHaveProperty('pulse');
   });
 });

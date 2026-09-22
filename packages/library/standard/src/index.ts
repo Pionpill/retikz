@@ -1,4 +1,3 @@
-export * from './animation';
 export * from './composites';
 export * from './errors';
 export type { CanonicalSurface } from './resolve/surface';

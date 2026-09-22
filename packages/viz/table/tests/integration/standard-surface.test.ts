@@ -1,6 +1,6 @@
 import { compileToScene, resolveCoreProviderDependencies } from '@retikz/core';
+import { PathClipProvider } from '@retikz/extension';
 import { createSurface, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
 import { describe, expect, it } from 'vitest';
 
 import type { IRTable } from '../../src';

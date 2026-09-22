@@ -69,7 +69,8 @@
     "@retikz/layout": "workspace:^",
     "@retikz/math": "workspace:^",
     "@retikz/standard": "workspace:^",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@retikz/extension": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "catalog:",

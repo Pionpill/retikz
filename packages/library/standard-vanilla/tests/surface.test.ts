@@ -1,5 +1,5 @@
+import { PathClipProvider } from '@retikz/extension';
 import { createSurface, FrameProvider, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
 import { normalizeScene, scene } from '@retikz/vanilla';
 import { describe, expect, it } from 'vitest';
 

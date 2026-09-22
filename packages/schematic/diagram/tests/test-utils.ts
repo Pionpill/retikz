@@ -14,9 +14,9 @@ import {
   LayoutChildProbeKind,
   resolveCoreProviderDependencies,
 } from '@retikz/core';
+import { PathClipProvider } from '@retikz/extension';
 import { FlexLayoutProvider } from '@retikz/layout';
 import { LegendProvider, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
 import { literal } from 'zod';
 
 import type { DiagramDefinitionOptions, ResolvedDiagramDefinitionOptions } from '../src/_diagram';

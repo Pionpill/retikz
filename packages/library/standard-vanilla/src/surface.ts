@@ -1,6 +1,6 @@
+import { PathClipProvider } from '@retikz/extension';
 import type { SurfaceInput } from '@retikz/standard';
 import { createSurface, RetikzStandardError, RetikzStandardErrorCode, SurfaceProvider } from '@retikz/standard';
-import { PathClipProvider } from '@retikz/standard/clip';
 import type { InputChild, InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
 import { StandardSurfaceEmbedKind } from './constants';

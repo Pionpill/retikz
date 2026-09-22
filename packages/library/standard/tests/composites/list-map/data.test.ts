@@ -1,9 +1,9 @@
 import type { IRChild, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
+import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import { ListDefinition, ListSchema, MapDefinition, MapSchema } from '../../../src';
-import { PathClipDefinition } from '../../../src/clip';
 
 const compile = (child: IRChild) =>
   compileToScene(

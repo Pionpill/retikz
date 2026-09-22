@@ -1,9 +1,9 @@
 import type { CompileWarning, IRChild, ScenePrimitive } from '@retikz/core';
 import { CompileWarningCode, compileToScene } from '@retikz/core';
+import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import { ListDefinition, MapDefinition } from '../../../src';
-import { PathClipDefinition } from '../../../src/clip';
 
 const content: IRChild = {
   type: 'node',

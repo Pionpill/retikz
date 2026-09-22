@@ -1,7 +1,7 @@
 import type { IRChartSource } from '@retikz/chart';
 import type { CoreProviderContribution } from '@retikz/core';
+import { PathClipProvider } from '@retikz/extension';
 import { createPlotProviderContribution } from '@retikz/plot';
-import { PathClipProvider } from '@retikz/standard/clip';
 
 import type { ChartAuthoringResult, ChartHostThemeInput, ChartInput } from './types';
 

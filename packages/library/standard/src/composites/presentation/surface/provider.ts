@@ -1,6 +1,6 @@
 import type { CoreDependencyProvider } from '@retikz/core';
+import { PathClipProvider } from '@retikz/extension';
 
-import { PathClipProvider } from '../../../clip';
 import { SurfaceDefinition } from './definition';
 
 /** Surface 的 Core Composite dependency provider */

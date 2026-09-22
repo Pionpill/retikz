@@ -1,14 +1,15 @@
 import type { CoreDependencyProvider } from '@retikz/core';
-import { FlexLayoutProvider } from '@retikz/layout';
-import { SurfaceProvider } from '@retikz/standard';
 import {
   DiamondArrowProvider,
   OpenDiamondArrowProvider,
   SquareArrowProvider,
   StraightBarbArrowProvider,
-} from '@retikz/standard/arrow';
-import { PathClipProvider } from '@retikz/standard/clip';
-import { EllipticCapsuleShapeProvider, HexagonShapeProvider } from '@retikz/standard/node-shape';
+  PathClipProvider,
+  EllipticCapsuleShapeProvider,
+  HexagonShapeProvider,
+} from '@retikz/extension';
+import { FlexLayoutProvider } from '@retikz/layout';
+import { SurfaceProvider } from '@retikz/standard';
 
 import type { GraphDefinitionOptions } from '../../contract';
 import { BlockProvider, createBlockProvider } from '../block';

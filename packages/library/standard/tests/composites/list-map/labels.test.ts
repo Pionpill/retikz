@@ -1,10 +1,10 @@
 import type { IRChild, IRNode, ScenePrimitive } from '@retikz/core';
 import { compileToScene } from '@retikz/core';
+import { PathClipDefinition } from '@retikz/extension';
 import { describe, expect, it } from 'vitest';
 
 import { ListDefinition, ListSchema, MapDefinition, MapSchema } from '../../../src';
 import type { IRList, IRMap } from '../../../src';
-import { PathClipDefinition } from '../../../src/clip';
 
 const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));

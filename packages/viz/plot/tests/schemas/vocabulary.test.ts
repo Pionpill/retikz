@@ -1,6 +1,7 @@
 ﻿import { BendDirection } from '@retikz/core';
 import { FieldOrderMode } from '@retikz/data';
 import { DataSortOrder, ReducerOperationKind, RowSelectorTie, SelectorOperationKind } from '@retikz/data';
+import { RibbonAlignment, RibbonTaperInterpolation } from '@retikz/extension';
 import {
   AxisLineExtentTarget,
   AxisTitleBaseline,
@@ -19,7 +20,6 @@ import {
   SmoothMethodKind,
   TransformSchema,
 } from '@retikz/plot';
-import { RibbonAlignment, RibbonTaperInterpolation } from '@retikz/standard/ribbon';
 import { describe, expect, it } from 'vitest';
 
 describe('schema vocabulary constants', () => {

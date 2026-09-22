@@ -8,6 +8,8 @@ import {
   GridInputEmbedAdapter,
   legend,
   LegendInputEmbedAdapter,
+  ListInputEmbedAdapter,
+  MapInputEmbedAdapter,
   StandardInputEmbedAdapters,
   surface,
   surfaceChild,
@@ -44,6 +46,8 @@ const input = scene({
 describe('Standard Vanilla definition loading', () => {
   it('provides the current adapter catalog once in stable frozen order', () => {
     expect(StandardInputEmbedAdapters).toEqual([
+      MapInputEmbedAdapter,
+      ListInputEmbedAdapter,
       GridInputEmbedAdapter,
       AxesInputEmbedAdapter,
       FrameInputEmbedAdapter,
