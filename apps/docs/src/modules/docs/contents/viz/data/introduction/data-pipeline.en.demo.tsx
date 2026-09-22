@@ -2,7 +2,7 @@ import { Draw, Layout, Node, Text } from '@retikz/react';
 import type { FC } from 'react';
 
 /**
- * 数据落地页 "数据流水线" 插图（英文）
+ * Data introduction's pipeline illustration
  * @description External datasets enter the data layer at runtime, become canonical rows, and then flow to independent consumer modules
  */
 const Demo: FC = () => (

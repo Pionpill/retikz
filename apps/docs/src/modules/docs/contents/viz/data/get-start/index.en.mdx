@@ -1,0 +1,56 @@
+---
+title: Quick start
+description: Install @retikz/data, declare a field model, normalize external rows, and run the first summary transform.
+---
+
+This example needs no React, graphics, or renderer. It follows the Data pipeline from field contract through normalization to transform and handoff: it prepares three external rows as canonical rows, then summarizes revenue by region. Any consumer module can use the resulting rows.
+
+## Install
+
+<PackageManagerInstall packages="@retikz/data" />
+
+`@retikz/data` is ESM-only and requires Node.js 22.12 or later.
+
+## Process the first data
+
+```ts
+import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
+
+import { applyTransforms, DataFieldType, normalizeRows, resolveFieldTypes } from '@retikz/data';
+
+const rows: Array<ExternalRow> = [
+  { region: 'north', revenue: '12' },
+  { region: 'north', revenue: '8' },
+  { region: 'south', revenue: '5' },
+];
+
+const model: IRDataModel = [
+  { name: 'region', type: DataFieldType.Categorical },
+  { name: 'revenue', type: DataFieldType.Continuous },
+];
+const fieldTypes = resolveFieldTypes(model, rows, new Set(['region', 'revenue']));
+const canonicalRows = normalizeRows(rows, fieldTypes);
+
+const transforms: Array<IRDataTransform> = [
+  {
+    kind: 'summarize',
+    groupBy: ['region'],
+    metrics: [
+      { kind: 'sum', field: 'revenue', as: 'total' },
+      { kind: 'count', as: 'rows' },
+    ],
+  },
+];
+
+const summary = applyTransforms(canonicalRows, transforms);
+console.log(summary);
+// [{ region: 'north', total: 20, rows: 2 }, { region: 'south', total: 5, rows: 1 }]
+```
+
+`resolveFieldTypes()` resolves measurement types from the field model and participating fields. `normalizeRows()` converts the string revenue values to continuous numbers while retaining logical field names. `applyTransforms()` runs built-in transforms in declaration order. The example produces two summary rows: an observable data result, not graphics.
+
+`model` and `transforms` can be stored as JSON. `rows`, along with any custom parsers, Definitions, and registries, participates only at runtime.
+
+## Next
+
+Read [Data Model](/viz/data/model) for field mapping, formats, or validation, and [Data Transforms](/viz/data/transform) for more built-in operations. When handing the result to a view, continue to [Plot Grammar](/viz/plot) or the relevant Table documentation.
