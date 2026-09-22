@@ -97,20 +97,22 @@ describe('Table Vanilla adapter', () => {
     const spec = detailSpec();
     const inputScene = scene({
       layers: [
-        layer('content', [
-          embedTable('first', spec, { data: { people: [{ name: 'Ada' }] } }),
-          embedTable('second', { ...spec, data: { reference: 'others' } }, { data: { others: [{ name: 'Lin' }] } }),
-        ]),
+        layer({
+          id: 'content',
+          children: [
+            embedTable(spec, { data: { people: [{ name: 'Ada' }] } }),
+            embedTable({ ...spec, data: { reference: 'others' } }, { data: { others: [{ name: 'Lin' }] } }),
+          ],
+        }),
       ],
     });
     const svg = renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] });
 
     expect(svg).toContain('Ada');
     expect(svg).toContain('Lin');
-    expect(normalizeScene(inputScene, { adapters: [TableInputEmbedAdapter] }).runtimeMeta.layers[0].childIds).toEqual([
-      'first',
-      'second',
-    ]);
+    const normalized = normalizeScene(inputScene, { adapters: [TableInputEmbedAdapter] });
+    expect(new Set(normalized.runtimeMeta.layers[0].childIds).size).toBe(2);
+    for (const child of normalized.ir.children) expect(child).not.toHaveProperty('id');
   });
 
   it('passes extra composites through the shared adapter contribution', () => {
@@ -128,14 +130,14 @@ describe('Table Vanilla adapter', () => {
     const spec = createManualTableIR({
       rows: [[{ content: { namespace: 'fixture', type: 'badge', label: 'Nested' } }]],
     });
-    const inputScene = scene([embedTable('nested', spec, { composites: [badge] })]);
+    const inputScene = scene([embedTable(spec, { composites: [badge] })]);
 
     expect(renderToSvgString(inputScene, { adapters: [TableInputEmbedAdapter] })).toContain('Nested');
   });
 
-  it('rejects handwritten empty ids and duplicate embed identities through the standard runtime', () => {
+  it('rejects handwritten empty ids and keeps repeated anonymous embeds anonymous in Source', () => {
     const spec = createManualTableIR({ rows: [[null]] });
-    const handwritten = embed('table', '', { table: inputTableFromIR(spec) });
+    const handwritten = embed({ kind: 'table', id: '', props: { table: inputTableFromIR(spec) } });
 
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrowError(
       RetikzTableError,
@@ -143,10 +145,9 @@ describe('Table Vanilla adapter', () => {
     expect(() => normalizeScene(scene([handwritten]), { adapters: [TableInputEmbedAdapter] })).toThrow(
       'table runtime contribution reference must be a non-empty string.',
     );
-    expect(() =>
-      normalizeScene(scene([embedTable('same', spec), embedTable('same', spec)]), {
-        adapters: [TableInputEmbedAdapter],
-      }),
-    ).toThrow(/duplicate identity/i);
+    const normalized = normalizeScene(scene([embedTable(spec), embedTable(spec)]), {
+      adapters: [TableInputEmbedAdapter],
+    });
+    expect(normalized.ir.children).toEqual([spec, spec]);
   });
 });

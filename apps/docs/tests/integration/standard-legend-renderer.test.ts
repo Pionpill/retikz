@@ -92,7 +92,7 @@ describe('Standard Legend renderer boundary', () => {
     const react = LegendSchema.parse(
       normalizeScene(reactInput.scene, { adapters: reactInput.adapters }).ir.children[0],
     );
-    const vanillaInput = scene({ children: [legend('legend', input)] });
+    const vanillaInput = scene({ children: [legend(input)] });
     const vanilla = LegendSchema.parse(
       normalizeScene(vanillaInput, { adapters: [LegendInputEmbedAdapter] }).ir.children[0],
     );

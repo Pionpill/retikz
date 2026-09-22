@@ -24,17 +24,17 @@ const input = {
 
 describe('legend()', () => {
   it('creates a stable embed whose adapter lowers to canonical Legend IR', () => {
-    const embed = legend('status', input);
+    const embed = legend(input);
     const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [LegendInputEmbedAdapter] });
 
-    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.legend', id: 'status' });
+    expect(embed).toMatchObject({ type: 'embed', kind: 'standard.legend', id: 'authored-legend' });
     expect(normalized.ir.children[0]).toEqual(createLegend(input));
     expect(normalized.ir.children[0]).toMatchObject({ contentAlign: 'end' });
     expect(normalized.contributions[0]).toEqual({ roots: [LegendProvider.key], providers: [LegendProvider] });
   });
 
   it('renders the same SVG as direct canonical IR in the same compile environment', () => {
-    const embed = legend('status', input);
+    const embed = legend(input);
     const normalized = normalizeScene(scene({ children: [embed] }), { adapters: [LegendInputEmbedAdapter] });
     const direct = normalized.ir.children[0];
     const directOutput = renderToSvgString(

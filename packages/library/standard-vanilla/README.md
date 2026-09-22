@@ -16,7 +16,7 @@ This package is ESM-only and requires Node.js 24 or newer.
 ```ts
 import { frame, frameTitle, StandardInputEmbedAdapters } from '@retikz/standard-vanilla';
 
-const group = frame('contract', {
+const group = frame({
   title: frameTitle({ text: 'Definition contract' }),
   children: [{ type: 'node', position: [0, 0], text: 'defineXxx()' }],
 });

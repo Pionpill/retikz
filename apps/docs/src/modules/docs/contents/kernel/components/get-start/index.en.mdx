@@ -49,13 +49,16 @@ import { mount } from '@retikz/vanilla/dom';
 const input = scene({
   id: 'first-diagram',
   layers: [
-    layer('main', [
-      node('a', { position: [0, 0], text: 'A' }),
-      node('b', { position: [100, 0], text: 'B' }),
-      node('c', { position: [200, 0], text: 'C' }),
-      path('ab', { way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
-      path('bc', { way: ['b', 'c'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
-    ]),
+    layer({
+      id: 'main',
+      children: [
+        node({ id: 'a', position: [0, 0], text: 'A' }),
+        node({ id: 'b', position: [100, 0], text: 'B' }),
+        node({ id: 'c', position: [200, 0], text: 'C' }),
+        path({ id: 'ab', way: ['a', 'b'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+        path({ id: 'bc', way: ['b', 'c'], marks: [{ pos: 1, mark: { kind: 'arrow' } }] }),
+      ],
+    }),
   ],
 });
 

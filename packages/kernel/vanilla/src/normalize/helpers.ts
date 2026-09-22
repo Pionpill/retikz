@@ -1,4 +1,3 @@
-import { RetikzVanillaError, RetikzVanillaErrorCode } from '../error';
 import type { InputCoordinate } from './coordinate';
 import type { InputEmbed } from './embed';
 import type { InputNode } from './node';
@@ -6,45 +5,17 @@ import type { InputPath } from './path';
 import type { InputChild, InputLayer, InputScene, InputSceneChildren, InputSceneLayers } from './scene';
 import type { InputScope } from './scope';
 
-/** 创建作者侧节点输入，支持 id 简写与完整配置 */
-export const node = (
-  idOrConfig?: string | Omit<InputNode, 'type' | 'id'>,
-  maybeConfig?: Omit<InputNode, 'type' | 'id'>,
-): InputNode => {
-  const named = typeof idOrConfig === 'string';
-  const config = named ? maybeConfig : idOrConfig;
-  if (config === undefined) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'node: config with position is required');
-  }
-  return {
-    type: 'node',
-    ...(named ? { id: idOrConfig } : {}),
-    ...config,
-  };
-};
+/** 创建作者侧节点输入，身份由配置中的 id 声明 */
+export const node = (config: Omit<InputNode, 'type'>): InputNode => ({ type: 'node', ...config });
 
 /** 创建作者侧命名坐标输入 */
-export const coordinate = (id: string, config: Omit<InputCoordinate, 'type' | 'id'>): InputCoordinate => ({
+export const coordinate = (config: Omit<InputCoordinate, 'type'>): InputCoordinate => ({
   type: 'coordinate',
-  id,
   ...config,
 });
 
-/** 创建作者侧路径输入，支持 id 简写与完整配置 */
-export const path = (
-  idOrConfig: string | Omit<InputPath, 'type' | 'id'>,
-  maybeConfig?: Omit<InputPath, 'type' | 'id'>,
-): InputPath => {
-  const named = typeof idOrConfig === 'string';
-  const config = named ? maybeConfig : idOrConfig;
-  if (config === undefined) {
-    throw new RetikzVanillaError(RetikzVanillaErrorCode.Normalize, 'path: config is required');
-  }
-  return {
-    ...(named ? { id: idOrConfig } : {}),
-    ...config,
-  };
-};
+/** 创建作者侧路径输入，身份由配置中的 id 声明 */
+export const path = (config: Omit<InputPath, 'type'>): InputPath => ({ ...config });
 
 /** 创建作者侧 Scope 输入 */
 export const scope = (
@@ -53,28 +24,14 @@ export const scope = (
 ): InputScope => ({ ...config, children });
 
 /** 创建作者侧 Layer 输入 */
-export const layer = (
-  id: string,
-  optionsOrChildren: Omit<InputLayer, 'type' | 'id' | 'children'> | ReadonlyArray<InputLayer['children'][number]>,
-  children?: ReadonlyArray<InputLayer['children'][number]>,
-): InputLayer => {
-  const options = Array.isArray(optionsOrChildren) ? {} : optionsOrChildren;
-  const layerChildren = Array.isArray(optionsOrChildren) ? optionsOrChildren : (children ?? []);
-  return { type: 'layer', id, ...options, children: layerChildren };
-};
+export const layer = (config: Omit<InputLayer, 'type'>): InputLayer => ({ type: 'layer', ...config });
 
 /** 创建作者侧 Tier 2 嵌入输入 */
 export const embed = <TProps = Record<string, unknown>>(
-  kind: string,
-  id: string,
-  props: TProps,
-  authoring?: unknown,
+  config: Omit<InputEmbed<TProps>, 'type'>,
 ): InputEmbed<TProps> => ({
   type: 'embed',
-  kind,
-  id,
-  props,
-  ...(authoring === undefined ? {} : { authoring }),
+  ...config,
 });
 
 /** 创建作者侧 children Scene 的完整配置 */

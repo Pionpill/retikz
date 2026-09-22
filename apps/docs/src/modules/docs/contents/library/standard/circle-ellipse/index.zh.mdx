@@ -9,7 +9,7 @@ description: 用 Standard 的形状语义绘制圆与椭圆，在 React、Vanill
 
 形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
 
-React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx(id, input)`，显式 id 同时标识 embed 和最终路径；React 省略 id 时不会持久化自动 occurrence id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx({ id, ...input })`，显式 id 同时标识 embed 和最终路径；Vanilla 与 React 省略 id 时均不生成持久化图元 id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
 
 | 入口    | 公开 API                                                                                        |
 | ------- | ----------------------------------------------------------------------------------------------- |

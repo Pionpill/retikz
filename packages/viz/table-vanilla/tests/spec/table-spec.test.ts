@@ -1,7 +1,7 @@
 import { createDetailTableIR, createManualTableIR, TableSchema } from '@retikz/table';
 import { describe, expect, it } from 'vitest';
 
-import { detailTable, embedTable, manualTable, RetikzTableVanillaError } from '../../src';
+import { detailTable, embedTable, manualTable } from '../../src';
 
 describe('Table Vanilla plain authoring', () => {
   it('delegates detail and manual helpers to the shared Table constructors without modifying inputs', () => {
@@ -41,18 +41,16 @@ describe('Table Vanilla plain authoring', () => {
     expect(JSON.parse(JSON.stringify(manualSpec))).toEqual(manualSpec);
   });
 
-  it('returns a standard plain embed spec and rejects an empty id before construction', () => {
+  it('preserves anonymous Source and reuses an explicit Source id for the embed', () => {
     const spec = manualTable({ rows: [[null]] });
 
-    expect(embedTable('panel', spec, { data: {} })).toEqual({
+    expect(embedTable(spec, { data: {} })).toEqual({
       type: 'embed',
       kind: 'table',
-      id: 'panel',
       props: { table: { kind: 'manual', input: { rows: [[null]] } }, data: {} },
     });
-    for (const id of ['', '   ', '\u2003', '\ufeff']) {
-      expect(() => embedTable(id, spec)).toThrowError(RetikzTableVanillaError);
-      expect(() => embedTable(id, spec)).toThrowError('table vanilla embed id must be a non-empty string.');
-    }
+    const named = manualTable({ id: 'panel', rows: [[null]] });
+    expect(embedTable(named)).toMatchObject({ id: 'panel', props: { table: { input: { id: 'panel' } } } });
+    expect(spec).not.toHaveProperty('id');
   });
 });

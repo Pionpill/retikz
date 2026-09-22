@@ -121,7 +121,8 @@ import { path, renderToSvgString, scene } from '@retikz/vanilla';
 const registry = createDefaultInspectorRegistry();
 const input = scene({
   children: [
-    path('curve', {
+    path({
+      id: 'curve',
       // 将当前 authored Path 标为要观测的目标；不会进入 Core IR
       authoring: createInspectionVanillaAuthoring({
         inspector: PATH_INSPECTOR_KEY,

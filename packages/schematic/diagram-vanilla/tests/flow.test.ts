@@ -26,7 +26,6 @@ it('preserves local Layout exclusion through Vanilla authoring', () => {
 
 type NormalizeFlowDiagram = (input: Readonly<Record<string, unknown>>) => DiagramFlow.IRFlowDiagram;
 type CreateFlowDiagramEmbed = (
-  id: string,
   input: Readonly<Record<string, unknown>>,
 ) => InputEmbed<Readonly<Record<string, unknown>>>;
 
@@ -95,7 +94,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     const result = processToStaticInputResult(
       {
         children: [
-          FlowVanilla.flowDiagram('elbow', {
+          FlowVanilla.flowDiagram({
             entities: [
               { id: 'a', text: 'A' },
               { id: 'b', text: 'B' },
@@ -186,7 +185,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     if (flowDiagram === undefined || adapter === undefined) return;
 
     const flowThemeStyle = DiagramFlow.defineFlowThemeStyle({ name: 'brand', resolve: () => ({}) });
-    const embed = flowDiagram('flow-embed', { ...sourceInput, flowThemeStyles: [flowThemeStyle] });
+    const embed = flowDiagram({ ...sourceInput, flowThemeStyles: [flowThemeStyle] });
     const contribution = adapter.lower(embed.props, context);
 
     expect(contribution.node).toEqual(expectedSource);
@@ -202,7 +201,7 @@ describe('@retikz/diagram-vanilla/flow', () => {
     if (flowDiagram === undefined || adapter === undefined) return;
 
     const vanillaResult = processToStaticInputResult(
-      { children: [flowDiagram('flow-embed', sourceInput)] },
+      { children: [flowDiagram(sourceInput)] },
       { adapters: [adapter], compile: { padding: 0, measureText } },
     );
 

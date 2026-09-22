@@ -116,7 +116,6 @@ type Ctx = {
   graphAdapters: Set<string>;
   graphCounts: Map<string, number>;
   flowCount: number;
-  generatedIds: Map<string, string>;
 };
 
 /** IR 到 docs Vanilla 源码的可选宿主上下文 */
@@ -209,18 +208,13 @@ const formatWay = (frags: ReadonlyArray<WayFrag>, indent: number): string => {
 
 const nodeCode = (node: IRNode, indent: number, ctx: Ctx): string => {
   ctx.used.add('node');
-  const config = stripKeys(node, ['type', 'id']);
-  const hasConfig = Object.keys(config).length > 0;
-  const cfg = formatObject(config, indent);
-  if (node.id !== undefined)
-    return hasConfig ? `node(${formatString(node.id)}, ${cfg})` : `node(${formatString(node.id)})`;
-  return hasConfig ? `node(${cfg})` : 'node({})';
+  return `node(${formatObject(stripKeys(node, ['type']), indent)})`;
 };
 
 const coordinateCode = (coord: IRCoordinate, indent: number, ctx: Ctx): string => {
   ctx.used.add('coordinate');
-  const config = stripKeys(coord, ['type', 'id']);
-  return `coordinate(${formatString(coord.id)}, ${formatObject(config, indent)})`;
+  const config = stripKeys(coord, ['type']);
+  return `coordinate(${formatObject(config, indent)})`;
 };
 
 const isWayArcStep = (step: IRArcStep): boolean => step.center === undefined;
@@ -273,14 +267,13 @@ const pathCode = (path: IRPathBase, indent: number, ctx: Ctx): string => {
     return rawIrChildCode(path, indent, 'not vanilla way sugar');
   }
   ctx.used.add('path');
-  const id = path.id;
-  const config = stripKeys(path, ['type', 'children', 'id']);
+  const config = stripKeys(path, ['type', 'children']);
   const wayStr = formatWay(stepsToWay(path.children, ctx, indent + 1), indent);
   const pathConfig = formatObject({ way: path.children.length === 0 ? [] : `__WAY__`, ...config }, indent).replace(
     "'__WAY__'",
     wayStr,
   );
-  return id !== undefined ? `path(${formatString(id)}, ${pathConfig})` : `path(${pathConfig})`;
+  return `path(${pathConfig})`;
 };
 
 const scopeCode = (scope: IRScope, indent: number, ctx: Ctx): string => {
@@ -565,56 +558,6 @@ export const collectLayoutPreviewDefinitions = (
   adapterKinds: ReadonlySet<string>,
 ): Array<LayoutPreviewDefinitionName> => collectPreviewDefinitions(children, new Set(), adapterKinds, new Set()).layout;
 
-const standardCanonicalId = (kind: string, embedId: string): string => {
-  if (kind === 'frame') return `${embedId}/frame`;
-  if (kind === 'surface') return `${embedId}/surface`;
-  return embedId;
-};
-
-const reservePreviewIds = (children: ReadonlyArray<IRChild>, ctx: Ctx): void => {
-  const visit = (child: IRChild): void => {
-    if ('namespace' in child) {
-      if (
-        child.namespace === 'standard' &&
-        child.type !== 'list' &&
-        child.type !== 'map' &&
-        typeof (child as { id?: unknown }).id === 'string'
-      ) {
-        const kind = child.type;
-        if (STANDARD_HELPER_ORDER.includes(kind) || STANDARD_SHAPE_KINDS.includes(kind)) {
-          const authoredId = (child as unknown as { id: string }).id;
-          const count = (ctx.standardCounts.get(kind) ?? 0) + 1;
-          ctx.standardCounts.set(kind, count);
-          const embedId = `preview-${kind}-${count}`;
-          const generatedId = standardCanonicalId(kind, embedId);
-          ctx.generatedIds.set(authoredId, generatedId);
-          ctx.generatedIds.set(generatedId, generatedId);
-          if (kind === 'frame') ctx.generatedIds.set(`${authoredId}/${kind}`, generatedId);
-        }
-      }
-      if (child.namespace === 'layout' && typeof (child as { id?: unknown }).id === 'string') {
-        const kind = child.type;
-        if (LAYOUT_HELPER_ORDER.includes(kind)) {
-          const authoredId = (child as unknown as { id: string }).id;
-          const count = (ctx.layoutCounts.get(kind) ?? 0) + 1;
-          ctx.layoutCounts.set(kind, count);
-          const embedId = `preview-${kind}-${count}`;
-          ctx.generatedIds.set(authoredId, embedId);
-          ctx.generatedIds.set(embedId, embedId);
-        }
-      }
-      previewOwnedChildren(child).forEach(visit);
-      return;
-    }
-    if (child.type === 'scope') child.children.forEach(visit);
-  };
-  children.forEach(visit);
-  // The counters are consumed again while emitting helpers.
-  ctx.standardCounts.clear();
-  ctx.layoutCounts.clear();
-  ctx.graphCounts.clear();
-};
-
 const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
   const record = child as IRChild & { namespace: string; type: string; id?: string };
   const adapterName = `${record.type.charAt(0).toUpperCase()}${record.type.slice(1)}InputEmbedAdapter`;
@@ -629,10 +572,9 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   ctx.standardCounts.set(record.type, count);
   ctx.standardHelpers.add(STANDARD_SHAPE_KINDS.includes(record.type) ? 'shape' : record.type);
   ctx.standardAdapters.add(adapterName);
-  const generatedId = `preview-${record.type}-${count}`;
   if (record.type === 'list' || record.type === 'map') {
     if (record.data !== undefined)
-      return `${record.type}(${formatString(generatedId)}, ${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
+      return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
     const cellCode = (cell: string | IRCell) => {
       if (typeof cell === 'string') return formatString(cell);
       const { content, ...props } = cell;
@@ -649,7 +591,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
         : ((child as IRMap).entries ?? []).map(
             entry => `{ key: ${cellCode(entry.key)}, value: ${cellCode(entry.value)} }`,
           );
-    return `${record.type}(${formatString(generatedId)}, ${formatObject({ ...input, [field]: '__CELLS__' }, indent).replace("'__CELLS__'", `[${values.join(', ')}]`)})`;
+    return `${record.type}(${formatObject({ ...input, [field]: '__CELLS__' }, indent).replace("'__CELLS__'", `[${values.join(', ')}]`)})`;
   }
   if (record.type === 'surface') {
     const surface = record as typeof record & { child: IRChild };
@@ -657,16 +599,16 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
       throw new Error('Cannot generate Vanilla Surface code for a nested Tier 2 child.');
     }
     ctx.standardHelpers.add('surfaceChild');
-    const input = stripKeys(record, ['namespace', 'type', 'id', 'child']);
+    const input = stripKeys(record, ['namespace', 'type', 'child']);
     const surfaceChildCode = childCode(surface.child, indent + 1, ctx);
-    return `surface(${formatString(generatedId)}, ${formatObject({ ...input, child: '__SURFACE_CHILD__' }, indent).replace("'__SURFACE_CHILD__'", `surfaceChild(${surfaceChildCode})`)})`;
+    return `surface(${formatObject({ ...input, child: '__SURFACE_CHILD__' }, indent).replace("'__SURFACE_CHILD__'", `surfaceChild(${surfaceChildCode})`)})`;
   }
   if (STANDARD_SHAPE_KINDS.includes(record.type)) {
-    const input = stripKeys(record, ['namespace', 'type', 'id']);
-    return `shape.${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
+    const input = stripKeys(record, ['namespace', 'type']);
+    return `shape.${record.type}(${formatObject(input, indent)})`;
   }
-  const input = stripKeys(record, record.type === 'frame' ? ['namespace', 'type', 'id'] : ['namespace', 'type']);
-  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
+  const input = stripKeys(record, ['namespace', 'type']);
+  return `${record.type}(${formatObject(input, indent)})`;
 };
 
 const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -680,9 +622,8 @@ const layoutCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =
   ctx.layoutCounts.set(record.type, count);
   ctx.layoutHelpers.add(record.type);
   ctx.layoutAdapters.add(adapterName);
-  const generatedId = `preview-${record.type}-${count}`;
   const input = stripKeys(record, ['namespace', 'type']);
-  return `${record.type}(${formatString(generatedId)}, ${formatObject(input, indent)})`;
+  return `${record.type}(${formatObject(input, indent)})`;
 };
 
 const graphAuthoringCode = (graph: IRGraph, indent: number, ctx: Ctx): string => {
@@ -858,13 +799,13 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
   }
   if (helperName === 'entity') {
     const input = {
-      ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
+      ...stripKeys(entityPreviewAuthoringInput(EntitySchema.parse(child)), ['type']),
       graphThemeStyles: '__GRAPH_THEME_STYLES__',
     };
     return `entity(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
   }
   const input = {
-    ...relationPreviewAuthoringInput(RelationSchema.parse(child)),
+    ...stripKeys(relationPreviewAuthoringInput(RelationSchema.parse(child)), ['type']),
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
   return `relation(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
@@ -883,7 +824,7 @@ const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => 
     flowThemeStyles: '__FLOW_THEME_STYLES__',
     graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  return `flowDiagram(${formatString(`preview-flow-${ctx.flowCount}`)}, ${formatObject(encoded, indent)
+  return `flowDiagram(${formatObject(encoded, indent)
     .replace("'__GRAPH_ENTITY_KINDS__'", 'PreviewThemeDefinitionBundle.graphEntityKinds')
     .replace("'__DIAGRAM_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.diagram')
     .replace("'__FLOW_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.flow')
@@ -933,9 +874,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     graphAdapters: new Set(),
     graphCounts: new Map(),
     flowCount: 0,
-    generatedIds: new Map(),
   };
-  reservePreviewIds(ir.children, ctx);
   const childrenStr = childListCode(ir.children, 0, ctx);
   const figureConfig = {
     ...(options.theme === undefined ? {} : { theme: options.theme }),
@@ -994,7 +933,7 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   }
   if (definitions.standard.length > 0) {
     const shapeDefinitions = definitions.standard.filter(name =>
-      STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0]!.toUpperCase()}${kind.slice(1)}`)),
+      STANDARD_SHAPE_KINDS.some(kind => name.startsWith(`${kind[0].toUpperCase()}${kind.slice(1)}`)),
     );
     const containerDefinitionNames = new Set<string>(['ListDefinition', 'MapDefinition']);
     const containerDefinitions = definitions.standard.filter(name => containerDefinitionNames.has(name));

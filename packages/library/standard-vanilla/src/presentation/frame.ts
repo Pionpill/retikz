@@ -120,9 +120,9 @@ export const FrameInputEmbedAdapter: InputEmbedAdapter<InputFrame> = {
 };
 
 /** 创建由 FrameInputEmbedAdapter 下沉的 Standard Frame embed */
-export const frame = (id: string, input: InputFrame): InputEmbed<InputFrame> => ({
+export const frame = (input: InputFrame): InputEmbed<InputFrame> => ({
   type: 'embed',
   kind: StandardFrameEmbedKind,
-  id,
+  ...(input.id === undefined ? {} : { id: input.id }),
   props: input,
 });

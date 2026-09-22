@@ -42,7 +42,7 @@ import { createMathJaxLowerTex } from '@retikz/tex';
 
 const lowerTex = await createMathJaxLowerTex({ profile: 'math' });
 
-const fig = figure([node('eq', { position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
+const fig = figure([node({ id: 'eq', position: [0, 0], text: '$\\frac{a}{b}=c$' })]);
 const svg = renderToSvgString(fig, { compile: { lowerTex } });
 ```
 
