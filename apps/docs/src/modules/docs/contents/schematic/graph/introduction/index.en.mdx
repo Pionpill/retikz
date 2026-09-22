@@ -1,0 +1,29 @@
+---
+title: Introduction
+description: Learn how Graph models domain structure with objects, relationships, boundaries, and blocks, and when to choose it.
+---
+
+Graph is for structured diagrams that need to retain domain semantics: an object is more than an ordinary node, and a relationship is more than a line. Entity, Relation, Group, and Block express system topology, domain models, responsibility boundaries, and engineering objects as a composable diagram.
+
+## What Graph expresses
+
+| Concern               | Graph authoring | Result                                                                           |
+| --------------------- | --------------- | -------------------------------------------------------------------------------- |
+| Domain object         | Entity          | An object with role, text, position, and extensible semantics                    |
+| Object relationship   | Relation        | A connection to a named object that retains direction and relationship semantics |
+| Visible boundary      | Group           | A shell for arbitrary content with a caption and boundary labels                 |
+| Engineering structure | Block           | Vertical content organized with Header, Section, and Row                         |
+
+A top-level Graph can directly host a diagram. Use a Graph root to establish shared context when several descendants share `graphDefaults`, `graphRules`, or a Graph Theme.
+
+<ComponentAlert
+  type="tip"
+  title="Start directly with Graph"
+  description="Graph's React and Vanilla entries provide the Graph integration needed to complete a diagram. You do not need to read Kernel before your first Graph diagram; consult lower-level drawing, coordinate, or general-layout docs only when that specific need appears."
+/>
+
+## Boundaries with adjacent capabilities
+
+Graph answers what objects and relationships mean; it does not decide how authors arrange or route them. Automatic layout, routing, and obstacle avoidance are outside Graph; add a focused capability when that is needed.
+
+A Relation connects objects through their `id`. Its `source`, `target`, and `way` all refer to that name. Clear, unique ids keep relationships and diagnostics readable.

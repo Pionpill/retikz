@@ -125,10 +125,8 @@ describe('Graph renderer integration', () => {
   it('让 direct、React 与 Vanilla 产生同一个 IRGraph root', () => {
     const direct = normalizeGraph(graphInput);
     const react = buildPreviewIR(ReactGraph).ir.children[0];
-    const vanilla = normalizeScene(
-      { children: [graph('workflow', graphInput)] },
-      { adapters: createGraphVanillaAdapters() },
-    ).ir.children[0];
+    const vanilla = normalizeScene({ children: [graph(graphInput)] }, { adapters: createGraphVanillaAdapters() }).ir
+      .children[0];
 
     expect(react).toEqual(direct);
     expect(vanilla).toEqual(direct);
@@ -158,7 +156,7 @@ describe('Graph renderer integration', () => {
       theme: { mode: ThemeMode.Light },
     });
 
-    expect(vanilla.code).toContain("graph('preview-graph-1'");
+    expect(vanilla.code).toContain('graph({');
     expect(vanilla.code).toContain('GraphInputEmbedAdapter');
     expect(vanilla.code).not.toContain('EntityInputEmbedAdapter');
     expect(vanilla.code).not.toContain('RelationInputEmbedAdapter');
@@ -169,9 +167,9 @@ describe('Graph renderer integration', () => {
   it('让 direct Entity、direct Relation 与 nested Graph 通过各自 adapter 生成可运行 Vanilla preview', () => {
     const vanilla = buildVanillaPreview(buildPreviewIR(DirectSemanticGraph));
 
-    expect(vanilla.code).toContain("entity('preview-entity-1'");
-    expect(vanilla.code).toContain("relation('preview-relation-1'");
-    expect(vanilla.code.match(/graph\('preview-graph-/g)).toHaveLength(2);
+    expect(vanilla.code).toContain('entity({');
+    expect(vanilla.code).toContain('relation({');
+    expect(vanilla.code.match(/graph\(\{/g)).toHaveLength(2);
     expect(vanilla.code).toContain('EntityInputEmbedAdapter');
     expect(vanilla.code).toContain('RelationInputEmbedAdapter');
     expect(vanilla.code).toContain('GraphInputEmbedAdapter');
@@ -197,7 +195,7 @@ describe('Graph renderer integration', () => {
     const source = normalizeGraph(graphInput);
     const compiled = sceneOf(source);
     const calls: Array<string> = [];
-    const vanillaInput = scene({ children: [graph('workflow', graphInput)] });
+    const vanillaInput = scene({ children: [graph(graphInput)] });
 
     expect(renderToSvgString(compiled, { idPrefix: 'graph' })).toContain('<svg');
     expect(() => drawScene(recordingContext(calls), compiled)).not.toThrow();

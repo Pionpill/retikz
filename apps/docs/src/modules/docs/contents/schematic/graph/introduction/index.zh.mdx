@@ -1,0 +1,29 @@
+---
+title: 简介
+description: 了解 Graph 如何用对象、关系、边界和结构块表达领域结构，并判断何时选择它。
+---
+
+Graph 面向需要保留领域语义的结构化图示：对象不仅是一个普通节点，关系也不只是线条。通过 Entity、Relation、Group 与 Block，可以把系统拓扑、领域模型、责任边界和工程对象写成可组合的图式。
+
+## 适合表达什么
+
+| 关注点   | Graph 的写法 | 结果                                       |
+| -------- | ------------ | ------------------------------------------ |
+| 领域对象 | Entity       | 具有 role、文本、位置与可扩展语义的对象    |
+| 对象关系 | Relation     | 引用已命名对象的连接，并保留方向与关系语义 |
+| 可见边界 | Group        | 容纳任意内容的外框、caption 与边界标签     |
+| 工程结构 | Block        | 由 Header、Section、Row 组织的纵向内容     |
+
+顶层 Graph 可以直接承载一张图式。多个后代需要共享 `graphDefaults`、`graphRules` 或 Graph Theme 时，用 Graph 根建立共同的上下文。
+
+<ComponentAlert
+  type="tip"
+  title="可以从 Graph 直接开始"
+  description="Graph 的 React 和 Vanilla 入口已提供完成图式所需的 Graph 集成。首次使用不需要先阅读 Kernel；只有要组合更底层图元、坐标或通用布局时，再按需查看对应文档。"
+/>
+
+## 与相邻能力的边界
+
+Graph 负责“图中对象和关系分别是什么”，不负责替作者决定它们怎么摆放或怎么绕线。自动布局、routing 与避障不属于 Graph；需要时为图式补充相应的专门能力。
+
+Relation 通过对象的 `id` 建立连接；`source`、`target` 与 `way` 都引用这个名字。为图中对象使用清晰且唯一的 id，能让关系和诊断保持易读。
