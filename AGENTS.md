@@ -68,13 +68,12 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 任务开始和 Plan Gate 前，除小 / 中 / 大流程定级外，必须按需求不确定性、调研与设计深度、能力边界变化、错误代价、修改范围和验证复杂度评估任务难度，并检查开发者当前选择的主模型：
 
 - `gpt-6-astra`（Astra）：高难度、大型、需要调研和架构设计，或涉及跨包公开契约、复杂技术决策的任务
-- `gpt-5.6-sol`（Sol）：中高难度、中大型、需要调研设计和较多判断，但不需要 Astra 级架构裁决的任务
-- `gpt-5.6-terra`（Terra）：中等难度、中小型、边界较明确但仍需要判断、诊断或有限范围协调的任务
-- `gpt-5.6-luna`（Luna）：普通难度、小型、方案明确的实现、文档、样式和机械调整任务
+- `gpt-6-sol`（Sol）：中高难度、中大型、需要调研设计、诊断或较多判断，但不需要 Astra 级架构裁决的任务
+- `gpt-6-luna`（Luna）：中低难度、中小型、边界明确且判断范围有限的实现、诊断、文档、样式和机械调整任务
 
 难度不按代码行数或文件数量单独判断；例如大量 demo 的统一样式调整仍可属于 Luna，而少量跨包公开契约修改可能属于 Astra 或 Sol。当前主模型与推荐模型相差两个等级及以上时，执行计划必须同时给出难度评估、推荐主模型和不匹配原因，并等待用户确认后执行；相邻等级可继续，但须在计划中说明取舍。主模型匹配规则只决定主控模型建议，不自动授权 subagent、review、stage、commit、push、tag 或 publish。
 
-主模型适配不替换大型任务的 agent 编排：大型任务仍由 Astra 或 Sol 主控，按已确认计划使用 Terra / Luna 执行或评审；worker、reviewer 和 cross-review 的模型角色继续遵循 `codex-develop-flow` 及所属 flow。
+主模型适配不替换大型任务的 agent 编排：大型任务仍由 Astra 或 Sol 主控，按已确认计划使用 Sol / Luna 执行或评审；worker、reviewer 和 cross-review 的模型角色继续遵循 `codex-develop-flow` 及所属 flow。
 
 ## 文件与依赖
 
