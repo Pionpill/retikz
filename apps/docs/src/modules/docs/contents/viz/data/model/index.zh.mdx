@@ -5,6 +5,8 @@ description: 数据模型把外部数据行接到稳定的字段契约上，生�
 
 数据模型负责回答四个问题：配置里引用的字段是什么、外部数据怎样接入这些字段、遇到坏值时怎样诊断、内置能力不够时怎样扩展。真实数据行始终在运行时传入，不写进可序列化配置；同一份字段契约因此可以复用到不同数据源。
 
+如果还不熟悉字段与测量类型，先读[基础概念](/viz/data/basic)。
+
 ## 整体流程
 
 <ComponentPreview files="data-model-pipeline" size="sm" hideCode type="flow" />

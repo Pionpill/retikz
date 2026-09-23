@@ -302,6 +302,10 @@
     "tableReferenceContractLayout": "Contract - Layout",
     "tableReferenceManifest": "Contract - Artifact",
     "tableReferenceRuntime": "Runtime",
+    "dataConcepts": "Concepts",
+    "dataBasicConcepts": "Basic Concepts",
+    "dataRowsAndFields": "Rows and Fields",
+    "dataFieldTypes": "Fields and Measurement Types",
     "dataModel": "Data Model",
     "dataModelContract": "Field Contract",
     "dataModelIntake": "Data Intake",
@@ -449,6 +453,7 @@
   "comparison": {
     "groupLabel": "Comparisons",
     "tikz": "TikZ",
+    "vega": "Vega",
     "close": "Hide {{target}} comparisons",
     "closeTitle": "Hide {{target}} comparisons?",
     "closeDescription": "{{target}} comparison content will be hidden across the docs. You can re-enable it from the upper-right ... menu under Comparisons.",

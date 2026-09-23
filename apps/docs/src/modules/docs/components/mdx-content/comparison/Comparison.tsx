@@ -30,7 +30,7 @@ export type ComparisonProps = {
   children: ReactNode;
 };
 
-/** 可选对照块：按用户启用的 target 显示 TikZ / Recharts / shadcn 等对照内容。 */
+/** 可选对照块：按用户启用的 target 显示对应生态的对照内容。 */
 export const Comparison: FC<ComparisonProps> = props => {
   const { icon, target, title, children } = props;
   const { t } = useTranslation();
