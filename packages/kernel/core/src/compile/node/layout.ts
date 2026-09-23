@@ -58,7 +58,7 @@ const placeAnchorPositionedLayout = (
   positionContext: PositionTargetResolveContext,
   scopeChain: ReadonlyArray<Transform>,
 ): NodeLayout => {
-  if (node.id !== undefined && node.id === position.target.id) {
+  if (node.id === position.target.id || node.aliasIds?.includes(position.target.id)) {
     throw new RetikzCoreError(
       RetikzCoreErrorCode.Compile,
       `Node anchor position cannot reference itself ('${node.id}')`,

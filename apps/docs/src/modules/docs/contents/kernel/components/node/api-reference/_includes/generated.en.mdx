@@ -54,6 +54,7 @@ export type CoordinateProps = {
 
 | Member            | Type                                                                                                                                                                       | Default       | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aliasIds?`       | `IRNode['aliasIds']`                                                                                                                                                       | —             | Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases                                                                                                                                                                                                                                                                                                                 |
 | `animations?`     | `IRNode['animations']`                                                                                                                                                     | —             | Element timeline tracks; each animates one property, with renderer playback or static fallback and no layout effect                                                                                                                                                                                                                                                                                            |
 | `authoring?`      | `InputNode['authoring']`                                                                                                                                                   | —             | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                                                                                                                                |
 | `boundary?`       | `IRBoundary`                                                                                                                                                               | `'shape'`     | Connection boundary; follows the visual shape when omitted, or selects a registered boundary or shape without changing appearance                                                                                                                                                                                                                                                                              |
@@ -90,6 +91,7 @@ export type NodeProps = HydrationEventProps & {
   style?: InputNode['style'];
   layout?: InputNode['layout'];
   id?: string;
+  aliasIds?: IRNode['aliasIds'];
   shape?: IRNode['shape'];
   boundary?: IRBoundary;
   meta?: IRNode['meta'];
@@ -178,7 +180,7 @@ export declare const Coordinate: FC<CoordinateProps>;
 ### Node
 
 <p>
-  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={97}>
+  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={99}>
     Node declares a referenceable node
   </ApiSourceLink>
 </p>
@@ -256,6 +258,7 @@ export type InputCoordinate = IRCoordinate & {
 
 | Member          | Type                                                                                             | Default | Description                                                                     |
 | --------------- | ------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —       | —                                                                               |
 | `animations?`   | `IRNode['animations']`                                                                           | —       | —                                                                               |
 | `authoring?`    | `unknown`                                                                                        | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR |
 | `boundary?`     | `IRNode['boundary']`                                                                             | —       | —                                                                               |
@@ -391,43 +394,38 @@ export type InputNodeLabelPosition =
 ### coordinate
 
 <p>
-  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={27}>
+  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={12}>
     Create authoring input for a named coordinate
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const coordinate: (id: string, config: Omit<InputCoordinate, 'type' | 'id'>) => InputCoordinate;
+export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
 ```
 
 #### Parameters
 
-| Parameter | Type                                    | Description |
-| --------- | --------------------------------------- | ----------- |
-| `id`      | `string`                                | —           |
-| `config`  | `Omit<InputCoordinate, 'type' \| 'id'>` | —           |
+| Parameter | Type                            | Description |
+| --------- | ------------------------------- | ----------- |
+| `config`  | `Omit<InputCoordinate, 'type'>` | —           |
 
 ### node
 
 <p>
-  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={10}>
-    Create node authoring input with an ID shorthand or a complete configuration
+  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={9}>
+    Create an authoring node input whose identity is declared by its id
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const node: (
-  idOrConfig?: string | Omit<InputNode, 'type' | 'id'>,
-  maybeConfig?: Omit<InputNode, 'type' | 'id'>,
-) => InputNode;
+export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
 ```
 
 #### Parameters
 
-| Parameter     | Type                                        | Description |
-| ------------- | ------------------------------------------- | ----------- |
-| `idOrConfig`  | `string \| Omit<InputNode, 'type' \| 'id'>` | —           |
-| `maybeConfig` | `Omit<InputNode, 'type' \| 'id'>`           | —           |
+| Parameter | Type                      | Description |
+| --------- | ------------------------- | ----------- |
+| `config`  | `Omit<InputNode, 'type'>` | —           |
 
 ## `@retikz/core`
 
@@ -612,6 +610,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 | Member          | Type                                                                                             | Default | Description |
 | --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —       | —           |
 | `animations?`   | `…`                                                                                              | —       | —           |
 | `boundary?`     | `…`                                                                                              | —       | —           |
 | `cornerRadius?` | `number`                                                                                         | —       | —           |

@@ -284,6 +284,13 @@ export const kernelV05: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · 图元身份与别名', en: 'Unreleased · Graphic identities and aliases' },
+          content: {
+            zh: '空间声明、查询和结果统一使用 id，移除旧 key 字段。Node 与空间句柄新增 aliasIds；多个 id 查询同一份几何或冻结空间记录，不重复创建图元，命名空间、变换、布局重放和原子更新保持一致。',
+            en: 'Spatial declarations, selectors, and results now use id, removing the old key field. Node and spatial handles add aliasIds: multiple ids query the same geometry or frozen record without duplicate primitives, preserving namespaces, transforms, layout replay, and atomic updates.',
+          },
+        },
+        {
           label: { zh: '未发布 · 动画预设分层', en: 'Unreleased · Animation preset ownership' },
           content: {
             zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',

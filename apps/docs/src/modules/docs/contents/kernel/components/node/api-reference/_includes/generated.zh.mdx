@@ -54,6 +54,7 @@ export type CoordinateProps = {
 
 | 成员              | 类型                                                                                                                                                                       | 默认值        | 说明                                                                                                                                                                                                                                                                                                                                                                         |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aliasIds?`       | `IRNode['aliasIds']`                                                                                                                                                       | —             | 指向同一节点几何的额外 id；要求主 id，别名非空白且不重复                                                                                                                                                                                                                                                                                                                     |
 | `animations?`     | `IRNode['animations']`                                                                                                                                                     | —             | 元素级时间轴动画；每条 track 描述一个可动画属性，渲染端播放或降级为静态，不参与布局                                                                                                                                                                                                                                                                                          |
 | `authoring?`      | `InputNode['authoring']`                                                                                                                                                   | —             | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                                                                                                                                                                                                                                                                                 |
 | `boundary?`       | `IRBoundary`                                                                                                                                                               | `'shape'`     | 连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观                                                                                                                                                                                                                                                                                             |
@@ -90,6 +91,7 @@ export type NodeProps = HydrationEventProps & {
   style?: InputNode['style'];
   layout?: InputNode['layout'];
   id?: string;
+  aliasIds?: IRNode['aliasIds'];
   shape?: IRNode['shape'];
   boundary?: IRBoundary;
   meta?: IRNode['meta'];
@@ -178,7 +180,7 @@ export declare const Coordinate: FC<CoordinateProps>;
 ### Node
 
 <p>
-  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={97}>
+  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={99}>
     Node 声明一个可引用的节点
   </ApiSourceLink>
 </p>
@@ -257,6 +259,7 @@ export type InputCoordinate = IRCoordinate & {
 
 | 成员            | 类型                                                                                             | 默认值 | 说明                                         |
 | --------------- | ------------------------------------------------------------------------------------------------ | ------ | -------------------------------------------- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —      | —                                            |
 | `animations?`   | `IRNode['animations']`                                                                           | —      | —                                            |
 | `authoring?`    | `unknown`                                                                                        | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR |
 | `boundary?`     | `IRNode['boundary']`                                                                             | —      | —                                            |
@@ -392,43 +395,38 @@ export type InputNodeLabelPosition =
 ### coordinate
 
 <p>
-  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={27}>
+  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={12}>
     创建作者侧命名坐标输入
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const coordinate: (id: string, config: Omit<InputCoordinate, 'type' | 'id'>) => InputCoordinate;
+export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
 ```
 
 #### 参数
 
-| 参数     | 类型                                    | 说明 |
-| -------- | --------------------------------------- | ---- |
-| `id`     | `string`                                | —    |
-| `config` | `Omit<InputCoordinate, 'type' \| 'id'>` | —    |
+| 参数     | 类型                            | 说明 |
+| -------- | ------------------------------- | ---- |
+| `config` | `Omit<InputCoordinate, 'type'>` | —    |
 
 ### node
 
 <p>
-  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={10}>
-    创建作者侧节点输入，支持 id 简写与完整配置
+  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={9}>
+    创建作者侧节点输入，身份由配置中的 id 声明
   </ApiSourceLink>
 </p>
 
 ```ts
-export declare const node: (
-  idOrConfig?: string | Omit<InputNode, 'type' | 'id'>,
-  maybeConfig?: Omit<InputNode, 'type' | 'id'>,
-) => InputNode;
+export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
 ```
 
 #### 参数
 
-| 参数          | 类型                                        | 说明 |
-| ------------- | ------------------------------------------- | ---- |
-| `idOrConfig`  | `string \| Omit<InputNode, 'type' \| 'id'>` | —    |
-| `maybeConfig` | `Omit<InputNode, 'type' \| 'id'>`           | —    |
+| 参数     | 类型                      | 说明 |
+| -------- | ------------------------- | ---- |
+| `config` | `Omit<InputNode, 'type'>` | —    |
 
 ## `@retikz/core`
 
@@ -613,6 +611,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 | 成员            | 类型                                                                                             | 默认值 | 说明 |
 | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---- |
+| `aliasIds?`     | `Array<string>`                                                                                  | —      | —    |
 | `animations?`   | `…`                                                                                              | —      | —    |
 | `boundary?`     | `…`                                                                                              | —      | —    |
 | `cornerRadius?` | `number`                                                                                         | —      | —    |

@@ -25,7 +25,7 @@ const card = defineComposite({
   }),
   expand: node => ({
     children: [{ type: 'node', position: [0, 0], minimumWidth: node.width, minimumHeight: 10 }],
-    spatialHandles: [{ key: 'body', role: 'card', bounds: { x: 0, y: 0, width: node.width, height: 10 } }],
+    spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: node.width, height: 10 } }],
   }),
 });
 
@@ -47,7 +47,12 @@ describe('<Layout onCompileResult>', () => {
   it('does not publish user callbacks during SSR render', () => {
     const onCompileResult = vi.fn();
     renderToStaticMarkup(
-      <Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} runtime={{ mode: 'static' }} />,
+      <Layout
+        ir={scene(10)}
+        extensions={{ composites: [card] }}
+        onCompileResult={onCompileResult}
+        runtime={{ mode: 'static' }}
+      />,
     );
     expect(onCompileResult).not.toHaveBeenCalled();
   });
@@ -58,7 +63,14 @@ describe('<Layout onCompileResult>', () => {
     const root = createRoot(container);
 
     await act(() =>
-      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} runtime={{ mode }} />),
+      root.render(
+        <Layout
+          ir={scene(10)}
+          extensions={{ composites: [card] }}
+          onCompileResult={onCompileResult}
+          runtime={{ mode }}
+        />,
+      ),
     );
 
     expect(onCompileResult).toHaveBeenCalledTimes(1);
@@ -74,12 +86,17 @@ describe('<Layout onCompileResult>', () => {
 
     await act(() =>
       root.render(
-        <Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} runtime={{ mode: 'static' }} />,
+        <Layout
+          ir={scene(10)}
+          extensions={{ composites: [card] }}
+          onCompileResult={onCompileResult}
+          runtime={{ mode: 'static' }}
+        />,
       ),
     );
 
     const reactResult = onCompileResult.mock.calls[0]?.[0] as CompileResult;
-    const selector = { owner: { namespace: 'third', type: 'card' }, key: 'body' } as const;
+    const selector = { owner: { namespace: 'third', type: 'card' }, id: 'body' } as const;
 
     expect(reactResult.spatialHandles.entries).toEqual(direct.spatialHandles.entries);
     expect(selectSpatialHandles(reactResult.spatialHandles, selector)).toEqual(
@@ -96,9 +113,13 @@ describe('<Layout onCompileResult>', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
 
-    await act(() => root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />));
+    await act(() =>
+      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
+    );
     const initial = onCompileResult.mock.calls[0]?.[0];
-    await act(() => root.render(<Layout ir={scene(20)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />));
+    await act(() =>
+      root.render(<Layout ir={scene(20)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
+    );
 
     expect(onCompileResult).toHaveBeenCalledTimes(2);
     expect(initial?.spatialHandles.entries[0]?.geometry.bounds.width).toBe(10);
@@ -117,7 +138,9 @@ describe('<Layout onCompileResult>', () => {
       (result.spatialHandles.entries as Array<unknown>).push(result.spatialHandles.entries[0]);
     });
 
-    await act(() => root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />));
+    await act(() =>
+      root.render(<Layout ir={scene(10)} extensions={{ composites: [card] }} onCompileResult={onCompileResult} />),
+    );
 
     expect(container.querySelector('svg')).not.toBeNull();
     expect(onCompileResult).toHaveBeenCalledTimes(1);

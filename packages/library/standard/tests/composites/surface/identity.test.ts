@@ -178,7 +178,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
             [],
             [
               {
-                key: 'body',
+                id: 'body',
                 role: 'card',
                 bounds: { x: 0, y: 0, width: 10, height: 6 },
                 tags: ['content'],
@@ -207,7 +207,7 @@ describe('Surface appearance, Scope, and spatial identity', () => {
         { namespace: 'standard', type: 'surface', instanceId: 'surface-a' },
         { namespace: 'third', type: 'card', instanceId: 'card-a' },
       ],
-      key: 'body',
+      id: 'body',
       role: 'card',
       tags: ['content'],
       payload: { domainId: 'a' },

@@ -1,5 +1,8 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '创建作者侧节点输入，身份由配置中的 id 声明': 'Create an authoring node input whose identity is declared by its id',
+  '指向同一节点几何的额外 id；要求主 id，别名非空白且不重复':
+    'Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases',
   '命名坐标点的 React 输入，不绘制可见内容': 'React input for a named coordinate with no visible content',
   '可选编译驱动解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',

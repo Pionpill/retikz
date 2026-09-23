@@ -4,16 +4,25 @@ import { ListSchema } from '../../../src/container/list/schema';
 import { MapSchema } from '../../../src/container/map/schema';
 
 const content = { type: 'node', position: [0, 0], text: 'a' };
-it('preserves List string items and rejects blank or duplicate derived ids', () => {
+it('treats List strings as content by default and validates derived ids when enabled', () => {
   const base = { namespace: 'standard', type: 'list' };
-  expect(ListSchema.parse({ ...base, items: ['A', { content: '', id: 'empty' }] }).items).toEqual([
-    'A',
-    { content: '', id: 'empty' },
-  ]);
-  for (const items of [[''], ['   '], ['A', 'A'], ['A', { content: 'B', id: 'A' }]]) {
-    expect(ListSchema.safeParse({ ...base, items }).success).toBe(false);
+  const items = ['A', 'A', '', '   ', { content: 'B', id: 'A' }];
+  expect(ListSchema.parse({ ...base, items }).items).toEqual(items);
+  expect(ListSchema.parse({ ...base, items }).cellIdMode).toBe('explicit');
+  expect(ListSchema.parse({ ...base, items: ['A'], cellIdMode: 'string' }).cellIdMode).toBe('string');
+  for (const invalidItems of [[''], ['   '], ['A', 'A'], ['A', { content: 'B', id: 'A' }]]) {
+    expect(ListSchema.safeParse({ ...base, items: invalidItems, cellIdMode: 'string' }).success).toBe(false);
   }
   expect(ListSchema.parse({ ...base, items: [{ content: 'A' }, { content: 'A' }] }).items).toHaveLength(2);
+  expect(
+    ListSchema.safeParse({
+      ...base,
+      items: [
+        { content: 'A', id: 'same' },
+        { content: 'B', id: 'same' },
+      ],
+    }).success,
+  ).toBe(false);
 });
 describe('List / Map Source contracts', () => {
   it('keeps cell styles sparse until role and overall inheritance', () => {

@@ -30,7 +30,7 @@ Standard 拥有结构、默认呈现和 lowering，直接计算简单行列位�
 
 单元格为 `{ content, id?, style?, layout? }`：Source content 是文本或一个 `IRChild`，Vanilla 接受对应 `InputChild`；React 属性配置只接受文本，drawable 通过 marker children 提供。marker 的 text 与恰好一个 drawable child 互斥，数组 / Fragment 透明，React empty node 忽略；多个图元先组合为一个 child。
 
-List.items 字符串等价于 `{ content: text, id: text }`，必须非空白且 id 唯一；对象项不推导 id。Map 字符串仅代表 content。文本原样保存在 Source，由 Standard resolve 转为零 padding / margin、无背景和描边的文本节点，继承字体和文字颜色。
+List.items 字符串默认等价于 `{ content: text }`，允许空值与重复值；`cellIdMode: 'string'` 同时以文本创建 id，此时字符串必须非空白，且与同容器显式 id 一起保持唯一。`cellIdMode: 'index'` 根据 List id 为 items / data 的直属格生成零基 id，显式单格 id 作为别名，详见 ADR-034；data 不接受 string 模式。Map 字符串仅代表 content。文本原样保存在 Source，由 Standard resolve 转为零 padding / margin、无背景和描边的文本节点，继承字体和文字颜色。
 
 React 经 Vanilla 表达同一契约；adapter 仅归一 authoring、保留嵌套 provider contributions 与 authoring sites，不复制领域解释或扫描 IR 猜定义。第三方 drawable 走相同 child 契约。直接 IR 显式注入组件及内容定义；data adapter 同时装配 List、Map、PathClip，避免 provider 双向依赖，直接 IR 的 data 入口也需注入这三项能力。
 
@@ -89,7 +89,7 @@ List 索引位于横排上方或竖排左侧，距离为 gap；使用继承字�
 
 登记顺序、localNamespace、frame 遮蔽、外部碰撞和路径延迟引用沿 Core；不生成拼接式命名路径或私有查找表，不允许引用构造循环尺寸依赖。组件内重复单元格 id 报告具体位置。
 
-Inspection 与命名引用分离：根 handle 为 `container`，有 id 的格以 `cell:<id>` 为 owner-local key，role 为 `list-cell`、`map-key`、`map-value`；无 id 不生成索引身份。后代保留 Core ownerPath，变换与 replay 发布最终空间位置，不复制坐标或以几何 carrier 替代 sidecar。
+Inspection 与命名引用分离：根 handle 为 `container`，有 id 的格以 `cell:<id>` 为 owner-local id，role 为 `list-cell`、`map-key`、`map-value`；无 id 不生成索引身份。List 单格别名沿 Core aliasIds 共享同一条记录。后代保留 Core ownerPath，变换与 replay 发布最终空间位置，不复制坐标或以几何 carrier 替代 sidecar。
 
 ## 失败语义与兼容性
 

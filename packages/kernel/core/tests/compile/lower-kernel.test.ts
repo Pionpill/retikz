@@ -71,7 +71,7 @@ describe('lowerIRToKernel', () => {
       schema: CompositeBaseSchema.extend({ namespace: literal('demo'), type: literal('spatial') }),
       expand: () => ({
         children: [],
-        spatialHandles: [{ key: 'body', role: 'demo', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
+        spatialHandles: [{ id: 'body', role: 'demo', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
       }),
     });
     const ir: IRScene = {

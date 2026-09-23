@@ -82,9 +82,14 @@ export const measureCell = (
 };
 
 /** 固定槽位引用载体只提供边界，不输出可见几何 */
-const cellReferenceNode = (id: string, bounds: { x: number; y: number; width: number; height: number }): IRNode => ({
+const cellReferenceNode = (
+  id: string,
+  bounds: { x: number; y: number; width: number; height: number },
+  aliasIds?: Array<string>,
+): IRNode => ({
   type: 'node',
   id,
+  ...(aliasIds === undefined ? {} : { aliasIds }),
   position: [bounds.x + bounds.width / 2, bounds.y + bounds.height / 2],
   shape: 'rectangle',
   style: { fill: 'none', stroke: 'none', strokeWidth: 0 },
@@ -158,7 +163,7 @@ export const compileCells = (
       message: 'List / Map allocation cannot fit its cells and gaps.',
       details: { width, height, allocation: allocationBounds },
     });
-  const handles: Array<SpatialHandleDeclaration> = [{ key: 'container', role: 'container', bounds: allocationBounds }];
+  const handles: Array<SpatialHandleDeclaration> = [{ id: 'container', role: 'container', bounds: allocationBounds }];
   const children: Array<IRChild | CompositeCompileChild> = cells.map(cell => emitCell(cell, context));
   children.push(...extra);
   if (decoration.label !== undefined || scope.id !== undefined) {
@@ -200,8 +205,17 @@ export const compileCells = (
   } of cells) {
     if (cell.id === undefined) continue;
     const bounds = { x, y, width: cellWidth, height: cellHeight };
-    handles.push({ key: `cell:${cell.id}`, role, bounds });
-    children.push({ type: 'scope', defaults: { reset: ['node'] }, children: [cellReferenceNode(cell.id, bounds)] });
+    handles.push({
+      id: `cell:${cell.id}`,
+      ...(cell.aliasIds === undefined ? {} : { aliasIds: cell.aliasIds.map(id => `cell:${id}`) }),
+      role,
+      bounds,
+    });
+    children.push({
+      type: 'scope',
+      defaults: { reset: ['node'] },
+      children: [cellReferenceNode(cell.id, bounds, cell.aliasIds)],
+    });
   }
   return { allocationBounds, children: [context.scope(scope, children, handles)] };
 };

@@ -6,6 +6,28 @@ import { describe, expect, it } from 'vitest';
 import { List, ListItem, Map, MapEntry, MapKey, MapValue } from '../src/container';
 
 const node = { type: 'node' as const, position: [0, 0] as [number, number], text: 'A' };
+it('preserves index identities with explicit JSX cell ids and data through both adapters', () => {
+  const marker = createInputScene(
+    <List id="list" cellIdMode="index">
+      <ListItem id="named" text="A" />
+    </List>,
+  );
+  const vanillaInput = scene({
+    children: [list({ id: 'list', cellIdMode: 'index', items: [{ id: 'named', content: 'A' }] })],
+  });
+  expect(normalizeScene(marker.scene, { adapters: marker.adapters }).ir).toEqual(
+    normalizeScene(vanillaInput, { adapters: [ListInputEmbedAdapter] }).ir,
+  );
+  expect(renderToSvgString(marker.scene, { adapters: marker.adapters })).toEqual(
+    renderToSvgString(vanillaInput, { adapters: [ListInputEmbedAdapter] }),
+  );
+  const data = createInputScene(<List id="data" cellIdMode="index" data={['A', 'A']} />);
+  expect(normalizeScene(data.scene, { adapters: data.adapters }).ir).toEqual(
+    normalizeScene(scene({ children: [list({ id: 'data', cellIdMode: 'index', data: ['A', 'A'] })] }), {
+      adapters: [ListInputEmbedAdapter],
+    }).ir,
+  );
+});
 it('preserves mixed List string and object items across React and Vanilla', () => {
   const items = ['A', { content: 'B', id: 'custom', style: { fill: 'blue' } }];
   const input = createInputScene(<List items={items} />);
@@ -13,6 +35,16 @@ it('preserves mixed List string and object items across React and Vanilla', () =
   const vanilla = normalizeScene(scene({ children: [list({ items })] }), { adapters: [ListInputEmbedAdapter] });
   expect(react.ir).toEqual(vanilla.ir);
   expect(react.ir.children[0]).toMatchObject({ items });
+});
+it('preserves the string identity option across React and Vanilla', () => {
+  const items = ['A', 'B'];
+  const input = createInputScene(<List items={items} cellIdMode="string" />);
+  const react = normalizeScene(input.scene, { adapters: input.adapters });
+  const vanilla = normalizeScene(scene({ children: [list({ items, cellIdMode: 'string' })] }), {
+    adapters: [ListInputEmbedAdapter],
+  });
+  expect(react.ir).toEqual(vanilla.ir);
+  expect(react.ir.children[0]).toMatchObject({ items, cellIdMode: 'string' });
 });
 describe('List / Map adapter parity', () => {
   it('retains nested providers, styles and sparse IR equally across React and Vanilla', () => {

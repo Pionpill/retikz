@@ -201,11 +201,14 @@ export const NodeLayoutSchema = strictObject({
   ),
 }).describe('Node size, spacing, and text layout overrides.');
 
-export const NodeSchema = strictObject({
+const NodeBaseSchema = strictObject({
   type: literal('node').describe('Discriminator marking this child as a node'),
   id: NonBlankStringSchema.optional().describe(
     'Optional unique id; required if any path needs to reference this node by string',
   ),
+  aliasIds: array(NonBlankStringSchema)
+    .optional()
+    .describe('Additional ids for the same node geometry; requires id and excludes duplicate or primary ids.'),
   shape: ShapeValueSchema.optional().describe(
     'Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle.',
   ),
@@ -250,4 +253,18 @@ export const NodeSchema = strictObject({
     'Node visual overrides; fields independently override inherited defaults.',
   ),
   layout: NodeLayoutSchema.optional().describe('Node size, spacing, and text layout overrides.'),
+});
+
+export const NodeSchema = NodeBaseSchema.superRefine((node, context) => {
+  if (node.aliasIds === undefined) return;
+  if (node.id === undefined) {
+    context.addIssue({ code: 'custom', path: ['aliasIds'], message: 'Node aliases require a primary id.' });
+    return;
+  }
+  const ids = new Set([node.id]);
+  node.aliasIds.forEach((id, index) => {
+    if (ids.has(id))
+      context.addIssue({ code: 'custom', path: ['aliasIds', index], message: `Duplicate Node id '${id}'.` });
+    ids.add(id);
+  });
 }).describe('Node primitive: a positioned, optionally textual shape');

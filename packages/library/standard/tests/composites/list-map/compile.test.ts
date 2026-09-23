@@ -50,6 +50,13 @@ const compile = (
 };
 
 describe('List / Map allocation', () => {
+  it('publishes string cell identities only when requested', () => {
+    const base = { namespace: 'standard', type: 'list', items: ['A', 'A'] };
+    const withoutIds = compile(base).scene.spatialHandles.entries;
+    expect(withoutIds.filter(entry => entry.role === 'list-cell')).toHaveLength(0);
+    const withIds = compile({ ...base, items: ['A', 'B'], cellIdMode: 'string' }).scene.spatialHandles.entries;
+    expect(withIds.filter(entry => entry.role === 'list-cell').map(entry => entry.id)).toEqual(['cell:A', 'cell:B']);
+  });
   it.each(['row', 'column'] as const)('applies per-cell dimensions and auto overrides in a %s List', direction => {
     const source = {
       namespace: 'standard',
@@ -171,7 +178,7 @@ const custom = defineComposite({
     const bounds = { x: -12, y: 6, width: 20, height: 10 };
     return {
       allocationBounds: bounds,
-      children: [context.scope({}, [], [{ key: 'content', role: 'foreign', bounds }])],
+      children: [context.scope({}, [], [{ id: 'content', role: 'foreign', bounds }])],
     };
   },
 });

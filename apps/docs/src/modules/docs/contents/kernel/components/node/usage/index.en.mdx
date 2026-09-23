@@ -220,6 +220,12 @@ The following are the props most relevant to this page. See the [API reference](
   ]}
 />
 
+## Multiple reference names for one node
+
+`id` registers graphic information for lookup; it is not a runtime diff key. Use `aliasIds` when several names should reference one node, for example `<Node id="a" aliasIds={['selected']} position={[0, 0]} text="A" />`. Path endpoints using `id: 'a'` or `id: 'selected'` resolve the same anchors and boundary without creating another node.
+
+Aliases must be nonblank, distinct from each other and the primary id, and require a primary id. They follow the node's namespace and duplicate-name diagnostics and do not escape `localNamespace`. Scope and Coordinate do not expose this field.
+
 ## Further reading
 
 <LinkedSections

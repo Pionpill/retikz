@@ -98,11 +98,13 @@ The declared `bounds` use the current composite allocation coordinate. After fin
 
 | Layer                   | What it stores                                          | What it never enters                  |
 | ----------------------- | ------------------------------------------------------- | ------------------------------------- |
-| callback declaration    | owner-local `key` / `role` / local rectangle            | IR schema or Scene                    |
+| callback declaration    | owner-local `id` / `role` / local rectangle             | IR schema or Scene                    |
 | qualified compile index | `ownerPath` / world AABB / origin and final occurrences | SVG attributes or Canvas draw state   |
-| query                   | exact owner, ancestor path, key, role, and all tags     | renderer DOM lookup or geometry tests |
+| query                   | exact owner, ancestor path, id, role, and all tags      | renderer DOM lookup or geometry tests |
 
 `selectSpatialHandles()` returns zero or more entries, while `resolveSpatialHandle()` requires exactly one. An underspecified cross-owner query reports a miss or ambiguity instead of guessing the “nearest” node. The index is still present and empty when no declaration exists.
+
+A declaration may provide `aliasIds` for additional query names. The selector's `id` matches either the primary id or any alias and returns the same frozen record without copying geometry or adding entries. Primary ids and aliases share the owner's identity space; collisions fail. Spatial ids do not automatically become path endpoints: Node references remain a separate registration contract.
 
 `lowerIRToKernel()` cannot settle world geometry. It still lowers absent or empty declarations, but a non-empty `spatialHandles` array fails synchronously and directs the caller to `compileToScene()`. This prevents local rectangles from being silently discarded or presented as settled spatial results.
 

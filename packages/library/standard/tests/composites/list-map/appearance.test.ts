@@ -90,6 +90,7 @@ describe('List / Map appearance and identity', () => {
         transforms: [{ kind: 'translate', x: 10, y: 20 }],
         style: { fill: 'none', stroke: 'none' },
         layout: { width: 100, height: 60 },
+        cellIdMode: 'string',
         items: ['slot'],
       },
       {
@@ -168,6 +169,7 @@ it('preserves Core namespace isolation, duplicate diagnostics, and delayed cell 
             localNamespace,
             style: { fill: 'none', stroke: 'none' },
             layout: { width: 100, height: 60 },
+            cellIdMode: 'string',
             items: ['slot'],
           },
         ],
@@ -207,7 +209,7 @@ it('compiles persistent text cells exactly like explicit undecorated nodes witho
   const before = JSON.stringify(source);
   const actual = compile(source);
   const explicit = compile([
-    { namespace: 'standard', type: 'list', style: { font: { size: 18 } }, items: [{ id: 'A', content: textNode }] },
+    { namespace: 'standard', type: 'list', style: { font: { size: 18 } }, items: [{ content: textNode }] },
     {
       namespace: 'standard',
       type: 'map',

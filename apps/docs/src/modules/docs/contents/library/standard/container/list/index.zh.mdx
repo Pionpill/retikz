@@ -95,7 +95,7 @@ console.log(svg);
 
 ## 数据配置与组件组合
 
-`items` 中的字符串同时作为单元格的 `content` 和 `id`，例如 `'A'` 等价于 `{ content: 'A', id: 'A' }`。字符串必须非空白且 id 不能重复；空白文本、重复文字或单独设置样式时使用对象形式。对象省略 id 时不自动从 content 生成。
+`items` 的字符串默认只提供文字，例如 `'A'` 等价于 `{ content: 'A' }`，可以重复或为空。需要逐格样式时使用 `{ content, id?, style?, layout? }`；对象省略 id 时不会从 content 推导身份。设置 `cellIdMode="string"` 后，字符串也会成为单元格 id，此时字符串必须非空白且在当前 List 中唯一，不能与对象项的显式 id 重复。该模式不能与 `data` 一起使用。
 
 对象形式的单元格 `content` 是字符串，`id`、`style`、`layout` 均可选。复杂内容使用 `ListItem`；`data`、`items` 与 `children` 三选一，数据数组中不嵌 JSX。
 
@@ -111,7 +111,7 @@ console.log(svg);
 
 对象键直接显示原始文本，不额外添加引号。字符串值显示为带引号、转义的 JSON 字面量，因此 `"null"` 与 `null` 不会混淆。数字、布尔值、null 原样显示；嵌套空对象和数组显示为 `{}`、`[]`，空根结构保持零自然尺寸。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 entries。
 
-数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等对象字段也只是数据。要连线或逐格设置样式，使用显式单元格，并在其中嵌套带 data 的组件。
+数据默认不生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。需要按下标连线时，设置 List 的 `id` 与 `cellIdMode="index"`；需要逐格定制时，使用显式单元格。
 
 整体 style / layout 只控制当前层单元格，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定宽高裁切整个嵌套图，不会把每个后代格改成同样尺寸。只传入 JSON 值树，不传运行时实例、循环引用或函数；需要简化展示时先投影数据。
 
@@ -135,9 +135,19 @@ React / Vanilla 自动装配嵌套依赖；直接 IR 的 data 入口需注入 `L
 
 ## 引用具体单元格
 
-给单元格设置 `id` 后，可以用 `Draw` 的 `way` 引用，例如 `'selected.right'`。引用区域是该格分配到的矩形，不包含间隙、索引或内容的视觉溢出；关闭背景也不改变它。content 自己的 id 仍指向内容几何。
+为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。默认模式下，未设 id 的格不会按数组下标自动获得身份。
 
-整体变换与 `localNamespace` 沿 [Scope](/kernel/components/scope/usage) 规则生效。组件内单元格 id 不能重复；未设置 id 的格不会按数组下标生成稳定身份。Inspection 另行提供 `container` 与 `cell:<id>` 空间 handle，不替代命名引用。
+`cellIdMode` 决定直属格子的身份来源，默认 `explicit`：
+
+| 模式       | 用途                                                                    |
+| ---------- | ----------------------------------------------------------------------- |
+| `explicit` | 只登记对象或 `ListItem` 显式设置的 id；文字不产生身份                   |
+| `string`   | 将 `items` 字符串同时作为文字和 id；不接受 `data`                       |
+| `index`    | 要求 List 设置 id，为 `items` / `data` 的直属格生成 `<list-id>-<index>` |
+
+例如 `<List id="queue" cellIdMode="index" data={['A', 'B']} />` 的第二格可用 `queue-1` 引用。也可从 `@retikz/standard/container` 导入 `getListCellId`，通过 `getListCellId('queue', 1)` 得到同一名称；参数必须是非空白 List id 和非负整数，函数不检查该格是否存在。
+
+下标始终从零开始，不受显示索引的 `indexStart` 影响；它表示当前排列位置，重排后该位置可能是另一项。嵌套数据的后代不会继承这些 id。单格同时显式指定 id 时，两种 id 均可引用同一矩形，不重复创建图元；inspection 使用主 id `cell:queue-1` 和别名 `cell:<显式id>` 查询同一条空间记录。同格名称相同会去重，不同格的名称冲突会报错。
 
 ## 补充说明
 
@@ -169,7 +179,7 @@ React / Vanilla 自动装配嵌套依赖；直接 IR 的 data 入口需注入 `L
     {
       name: 'data',
       type: 'ReadonlyArray<JsonValue>',
-      description: '递归呈现 JSON，与 items / children 互斥；不推导 id。',
+      description: '递归呈现 JSON，与 items / children 互斥；默认不推导 id。',
     },
     { name: 'children', type: 'ReactNode', description: 'ListItem 组合，与 data / items 互斥。' },
     {
