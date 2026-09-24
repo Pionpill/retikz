@@ -47,6 +47,33 @@ it('preserves the string identity option across React and Vanilla', () => {
   expect(react.ir.children[0]).toMatchObject({ items, cellIdMode: 'string' });
 });
 describe('List / Map adapter parity', () => {
+  it('preserves List content width through items, markers and Vanilla', () => {
+    const items = [{ content: 'A', layout: { width: 'content' as const } }, 'longer'];
+    const fromItems = createInputScene(<List items={items} layout={{ width: 'content' }} />);
+    const fromMarkers = createInputScene(
+      <List layout={{ width: 'content' }}>
+        <ListItem text="A" layout={{ width: 'content' }} />
+        <ListItem text="longer" />
+      </List>,
+    );
+    const fromVanilla = normalizeScene(scene({ children: [list({ items, layout: { width: 'content' } })] }), {
+      adapters: [ListInputEmbedAdapter],
+    });
+    expect(normalizeScene(fromItems.scene, { adapters: fromItems.adapters }).ir).toEqual(fromVanilla.ir);
+    const markerInput = normalizeScene(fromMarkers.scene, { adapters: fromMarkers.adapters });
+    const markerVanilla = normalizeScene(
+      scene({
+        children: [
+          list({
+            items: [{ content: 'A', layout: { width: 'content' } }, { content: 'longer' }],
+            layout: { width: 'content' },
+          }),
+        ],
+      }),
+      { adapters: [ListInputEmbedAdapter] },
+    );
+    expect(markerInput.ir).toEqual(markerVanilla.ir);
+  });
   it('retains nested providers, styles and sparse IR equally across React and Vanilla', () => {
     const input = createInputScene(
       <Map

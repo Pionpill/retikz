@@ -61,6 +61,16 @@ it('keeps text cells compact in persistent IR and copied Vanilla code', () => {
   }
 });
 
+it('retains List content width in copied Vanilla source', () => {
+  const code = irToVanillaCode({
+    type: 'scene',
+    version: 1,
+    children: [{ namespace: 'standard', type: 'list', items: [{ content: 'A', layout: { width: 'content' } }] }],
+  });
+  expect(code).toContain("width: 'content'");
+  expect(code).toContain('ListInputEmbedAdapter');
+});
+
 it('retains compact JSON data in copied code and runtime previews', () => {
   for (const Component of [ListData, MapData]) {
     const preview = buildPreviewIR(Component);

@@ -25,7 +25,7 @@ import {
   RelationSchema,
 } from '@retikz/graph';
 import type { InputGraphChild } from '@retikz/graph-vanilla';
-import type { IRCell, IRList, IRMap } from '@retikz/standard/container';
+import type { IRCell, IRList, IRListCell, IRMap } from '@retikz/standard/container';
 
 import {
   entityPreviewAuthoringInput,
@@ -575,7 +575,7 @@ const standardCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string
   if (record.type === 'list' || record.type === 'map') {
     if (record.data !== undefined)
       return `${record.type}(${formatObject(stripKeys(record, ['namespace', 'type']), indent)})`;
-    const cellCode = (cell: string | IRCell) => {
+    const cellCode = (cell: string | IRCell | IRListCell) => {
       if (typeof cell === 'string') return formatString(cell);
       const { content, ...props } = cell;
       return formatObject({ ...props, content: '__CELL_CONTENT__' }, indent + 2).replace(

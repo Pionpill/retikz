@@ -25,6 +25,27 @@ it('treats List strings as content by default and validates derived ids when ena
   ).toBe(false);
 });
 describe('List / Map Source contracts', () => {
+  it('accepts content width only for List overall and direct cells after JSON round-trip', () => {
+    const source = {
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      items: [{ content: 'A', layout: { width: 'content' } }],
+    };
+    const parsed = ListSchema.parse(JSON.parse(JSON.stringify(source)));
+    expect(parsed.layout?.width).toBe('content');
+    expect(parsed.items?.[0]).toMatchObject({ layout: { width: 'content' } });
+    for (const layout of [{ width: 'content' }, { key: { width: 'content' } }, { value: { width: 'content' } }]) {
+      expect(MapSchema.safeParse({ namespace: 'standard', type: 'map', entries: [], layout }).success).toBe(false);
+    }
+    expect(
+      MapSchema.safeParse({
+        namespace: 'standard',
+        type: 'map',
+        entries: [{ key: { content: 'A', layout: { width: 'content' } }, value: 'B' }],
+      }).success,
+    ).toBe(false);
+  });
   it('keeps cell styles sparse until role and overall inheritance', () => {
     const source = {
       namespace: 'standard',

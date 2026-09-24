@@ -2,7 +2,7 @@ import type { ReactInputEmbedContext } from '@retikz/react';
 import { withInputEmbedAdapters } from '@retikz/react';
 import type { InputList } from '@retikz/standard-vanilla/container';
 import { ListInputEmbedAdapter } from '@retikz/standard-vanilla/container';
-import type { IRList } from '@retikz/standard/container';
+import type { IRList, IRListCell } from '@retikz/standard/container';
 import type { FC, ReactNode } from 'react';
 
 import type { StandardEmbeddableComponent } from '../../shared';
@@ -11,18 +11,19 @@ import { collectCellMarkers, createCellsInput, markerCell } from '../cell';
 import { ListItem } from './ListItem';
 
 /** List 的 React authoring 属性 */
-export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data'> &
+export type ListProps = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
   (
-    | { data: NonNullable<IRList['data']>; items?: never; children?: never }
-    | { data?: never; items: Array<string | CellProps>; children?: never }
-    | { data?: never; items?: never; children?: ReactNode }
+    | { data: NonNullable<IRList['data']>; items?: never; children?: never; dataObjectDisplay?: IRList['dataObjectDisplay'] }
+    | { data?: never; items: Array<string | CellProps<IRListCell['layout']>>; children?: never; dataObjectDisplay?: never }
+    | { data?: never; items?: never; children?: ReactNode; dataObjectDisplay?: never }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */
 const createListInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  const { data, items, children, ...input } = props as ListProps;
-  if (data !== undefined) return { ...input, data } satisfies InputList;
-  const cells = items ?? collectCellMarkers(children, ListItem, 'List').map(markerCell);
+  const { data, items, children, dataObjectDisplay, ...input } = props as ListProps;
+  if (data !== undefined)
+    return { ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) } satisfies InputList;
+  const cells = items ?? collectCellMarkers(children, ListItem, 'List').map(markerCell<IRListCell['layout']>);
   const collected = createCellsInput(
     cells.map(cell => (typeof cell === 'string' ? { content: cell } : cell)),
     context,

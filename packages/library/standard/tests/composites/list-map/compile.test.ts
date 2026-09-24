@@ -50,6 +50,65 @@ const compile = (
 };
 
 describe('List / Map allocation', () => {
+  it.each(['row', 'column'] as const)('sizes %s List cells to their own content and padding', direction => {
+    const result = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { direction, width: 'content', height: 20, padding: 4, gap: 2 },
+      items: [cell('a', 20, 10), cell('b', 40, 10)],
+    });
+    const bounds = result.scene.spatialHandles.entries
+      .filter(entry => entry.role === 'list-cell')
+      .map(entry => entry.geometry.bounds);
+    expect(bounds).toEqual(
+      direction === 'row'
+        ? [
+            { x: 0, y: 0, width: 28, height: 20 },
+            { x: 30, y: 0, width: 48, height: 20 },
+          ]
+        : [
+            { x: 0, y: 0, width: 28, height: 20 },
+            { x: 0, y: 22, width: 48, height: 20 },
+          ],
+    );
+    expect(result.observed.allocationBounds).toEqual(
+      direction === 'row' ? { x: 0, y: 0, width: 78, height: 20 } : { x: 0, y: 0, width: 48, height: 42 },
+    );
+  });
+  it('lets per-cell auto and fixed widths override overall content sizing', () => {
+    const result = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content', height: 20, padding: 0, gap: 2 },
+      items: [
+        cell('a', 20, 10),
+        { ...cell('b', 40, 10), layout: { width: 'auto' } },
+        { ...cell('c', 60, 10), layout: { width: 10 } },
+      ],
+    });
+    expect(
+      result.scene.spatialHandles.entries
+        .filter(entry => entry.role === 'list-cell')
+        .map(entry => entry.geometry.bounds),
+    ).toEqual([
+      { x: 0, y: 0, width: 20, height: 20 },
+      { x: 22, y: 0, width: 40, height: 20 },
+      { x: 64, y: 0, width: 10, height: 20 },
+    ]);
+  });
+  it('lets a content cell override an auto-width List', () => {
+    const result = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'auto', height: 20, padding: 0, gap: 2 },
+      items: [{ ...cell('a', 20, 10), layout: { width: 'content' } }, cell('b', 40, 10)],
+    });
+    expect(
+      result.scene.spatialHandles.entries
+        .filter(entry => entry.role === 'list-cell')
+        .map(entry => entry.geometry.bounds.width),
+    ).toEqual([20, 40]);
+  });
   it('publishes string cell identities only when requested', () => {
     const base = { namespace: 'standard', type: 'list', items: ['A', 'A'] };
     const withoutIds = compile(base).scene.spatialHandles.entries;

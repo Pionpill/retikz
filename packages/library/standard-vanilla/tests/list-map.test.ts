@@ -6,6 +6,16 @@ import { StandardInputEmbedAdapters } from '../src';
 import { list, map } from '../src/container';
 
 describe('List / Map provider assembly', () => {
+  it('keeps List content width in typed Vanilla inputs and compiled cell allocations', () => {
+    const normalized = normalizeScene(
+      scene({ children: [list({ items: [{ content: 'A', layout: { width: 'content' } }, 'longer'] })] }),
+      { adapters: StandardInputEmbedAdapters },
+    );
+    const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
+    const result = compileToScene(normalized.ir, options);
+    expect(normalized.ir.children[0]).toMatchObject({ items: [{ layout: { width: 'content' } }, 'longer'] });
+    expect(result.scene.primitives.length).toBeGreaterThan(0);
+  });
   it('compiles nested lists inside clipped map cells through the public adapter catalog', () => {
     const input = scene({
       children: [
