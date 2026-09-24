@@ -3,7 +3,7 @@ import { ScatterChart, ScatterEncodings } from '@retikz/chart-react/point';
 import { ThemeMode } from '@retikz/core';
 import { FlowEntity, FlowRelation } from '@retikz/diagram-react/flow';
 import { Entity, Graph, Relation } from '@retikz/graph-react';
-import { useTheme } from '@retikz/react';
+import { Layout, useTheme } from '@retikz/react';
 // @vitest-environment jsdom
 import type { FC } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -22,6 +22,8 @@ import {
   PreviewThemeStyle,
   resolvePreviewTheme,
 } from '../../src/modules/docs/components/component-preview/theme';
+import { buildPreviewIR } from '../../src/modules/docs/components/component-preview/utils';
+import { buildVanillaPreview } from '../../src/modules/docs/components/component-preview/vanilla-preview';
 import ThemeInheritance from '../../src/modules/docs/contents/kernel/components/layout/extend/theme-inheritance';
 import { useComponentPreviewStore } from '../../src/modules/docs/store';
 
@@ -208,12 +210,36 @@ describe('ComponentPreview global theme', () => {
     ).not.toThrow();
   });
 
-  it('adds Graph definitions explicitly at every embedded Preview boundary', () => {
-    for (const component of [PreviewGraph, PreviewEntity, PreviewRelation]) {
+  it('adds Graph definitions only at the Graph authoring boundary', () => {
+    const graph = PreviewGraph.createInputEmbedProps?.(
+      {},
+      { id: 'preview', kind: PreviewGraph.inputEmbedAdapter.kind },
+    );
+    const graphRecord = graph as Readonly<Record<string, unknown>>;
+    const graphOptions = (graphRecord.input as Readonly<Record<string, unknown>> | undefined) ?? graphRecord;
+    expect(graphOptions).toMatchObject({ graphThemeStyles: PreviewThemeDefinitionBundle.graph });
+
+    for (const component of [PreviewEntity, PreviewRelation]) {
       const embedded = component.createInputEmbedProps?.({}, { id: 'preview', kind: component.inputEmbedAdapter.kind });
       const record = embedded as Readonly<Record<string, unknown>>;
       const options = (record.input as Readonly<Record<string, unknown>> | undefined) ?? record;
-      expect(options).toMatchObject({ graphThemeStyles: PreviewThemeDefinitionBundle.graph });
+      expect(options).not.toHaveProperty('graphThemeStyles');
     }
+  });
+
+  it('renders a standalone Entity Vanilla preview with a named Graph theme', () => {
+    const preview = buildPreviewIR(() => (
+      <Layout>
+        <PreviewEntity role="participant" position={[40, 40]} />
+      </Layout>
+    ));
+    const output = buildVanillaPreview(preview, {
+      theme: { mode: ThemeMode.Light, style: PreviewThemeDefinitionBundle.graph[0].name },
+    });
+
+    expect(output.svg).toContain('<svg');
+    expect(output.code).toContain('createGraphProviders');
+    expect(output.code).toContain('normalizeScene(source, { adapters }).ir');
+    expect(output.code).not.toMatch(/entity\([^)]*graphThemeStyles/s);
   });
 });

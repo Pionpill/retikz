@@ -671,9 +671,8 @@ const groupAuthoringCode = (group: IRGroup, indent: number, ctx: Ctx): string =>
   const encoded: Record<string, unknown> = {
     ...input,
     ...(children === undefined ? {} : { children }),
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  let code = formatObject(encoded, indent);
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
   return code;
 };
@@ -691,9 +690,8 @@ const blockAuthoringCode = (block: IRBlock, indent: number, ctx: Ctx): string =>
   const encoded: Record<string, unknown> = {
     ...input,
     ...(children === undefined ? {} : { children }),
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  let code = formatObject(encoded, indent);
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
   return code;
 };
@@ -712,9 +710,8 @@ const blockHeaderAuthoringCode = (header: IRBlockHeader, indent: number, ctx: Ct
     ...input,
     ...(icon === undefined ? {} : { icon: encodeSlot(icon, 'icon') }),
     ...(trail === undefined ? {} : { trail: encodeSlot(trail, 'trail') }),
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  let code = formatObject(encoded, indent);
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
   return code;
 };
@@ -732,9 +729,8 @@ const blockSectionAuthoringCode = (section: IRBlockSection, indent: number, ctx:
   const encoded = {
     ...input,
     ...(children === undefined ? {} : { children }),
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  let code = formatObject(encoded, indent);
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
   return code;
 };
@@ -744,10 +740,7 @@ const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): strin
     const { namespace: _namespace, type: _type, ...input } = row;
     void _namespace;
     void _type;
-    return formatObject({ ...input, graphThemeStyles: '__GRAPH_THEME_STYLES__' }, indent).replace(
-      "'__GRAPH_THEME_STYLES__'",
-      'PreviewThemeDefinitionBundle.graph',
-    );
+    return formatObject(input, indent);
   }
   const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
   void _namespace;
@@ -761,9 +754,8 @@ const blockRowAuthoringCode = (row: IRBlockRow, indent: number, ctx: Ctx): strin
   const encoded = {
     ...input,
     ...(children === undefined ? {} : { children }),
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
   };
-  let code = formatObject(encoded, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph');
+  let code = formatObject(encoded, indent);
   for (const [placeholder, child] of replacements) code = code.split(placeholder).join(child);
   return code;
 };
@@ -798,17 +790,11 @@ const graphCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string =>
     return `blockRow(${blockRowAuthoringCode(BlockRowSchema.parse(child), indent, ctx)})`;
   }
   if (helperName === 'entity') {
-    const input = {
-      ...stripKeys(entityPreviewAuthoringInput(EntitySchema.parse(child)), ['type']),
-      graphThemeStyles: '__GRAPH_THEME_STYLES__',
-    };
-    return `entity(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+    const input = stripKeys(entityPreviewAuthoringInput(EntitySchema.parse(child)), ['type']);
+    return `entity(${formatObject(input, indent)})`;
   }
-  const input = {
-    ...stripKeys(relationPreviewAuthoringInput(RelationSchema.parse(child)), ['type']),
-    graphThemeStyles: '__GRAPH_THEME_STYLES__',
-  };
-  return `relation(${formatObject(input, indent).replace("'__GRAPH_THEME_STYLES__'", 'PreviewThemeDefinitionBundle.graph')})`;
+  const input = stripKeys(relationPreviewAuthoringInput(RelationSchema.parse(child)), ['type']);
+  return `relation(${formatObject(input, indent)})`;
 };
 
 const flowCompositeCode = (child: IRChild, indent: number, ctx: Ctx): string => {
@@ -888,14 +874,21 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   );
 
   const helpers = HELPER_ORDER.filter(name => ctx.used.has(name));
-  const imports = [`import { ${helpers.join(', ')} } from '@retikz/vanilla';`];
-  if (ctx.usesDrawWay) imports.push("import { DrawWay } from '@retikz/core';");
   const standardHelpers = STANDARD_HELPER_ORDER.filter(name => ctx.standardHelpers.has(name));
   const standardAdapters = STANDARD_ADAPTER_ORDER.filter(name => ctx.standardAdapters.has(name));
   const layoutHelpers = LAYOUT_HELPER_ORDER.filter(name => ctx.layoutHelpers.has(name));
   const layoutAdapters = LAYOUT_ADAPTER_ORDER.filter(name => ctx.layoutAdapters.has(name));
   const graphHelpers = GRAPH_HELPER_ORDER.filter(name => ctx.graphHelpers.has(name));
   const graphAdapters = GRAPH_ADAPTER_ORDER.filter(name => ctx.graphAdapters.has(name));
+  const hasStandaloneGraphMembers = graphHelpers.length > 0 && !ctx.graphCounts.has('graph');
+  const imports = [
+    `import { ${[...helpers, ...(hasStandaloneGraphMembers ? ['normalizeScene'] : [])].join(', ')} } from '@retikz/vanilla';`,
+  ];
+  const coreImports = [
+    ...(ctx.usesDrawWay ? ['DrawWay'] : []),
+    ...(hasStandaloneGraphMembers ? ['resolveCoreProviderDependencies'] : []),
+  ];
+  if (coreImports.length > 0) imports.push(`import { ${coreImports.join(', ')} } from '@retikz/core';`);
   const definitions = collectPreviewDefinitions(
     ir.children,
     new Set(ctx.standardCounts.keys()),
@@ -950,9 +943,11 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
   if (definitions.layout.length > 0) {
     imports.push(`import { ${definitions.layout.join(', ')} } from '@retikz/layout';`);
   }
-  if (definitions.graph.length > 0) {
+  if (definitions.graph.length > 0 && !hasStandaloneGraphMembers) {
     imports.push(`import { ${definitions.graph.join(', ')} } from '@retikz/graph';`);
   }
+  if (hasStandaloneGraphMembers)
+    imports.push("import { createGraphProviders, GraphProviderKey } from '@retikz/graph';");
 
   const adapters = [
     ...standardAdapters,
@@ -961,13 +956,27 @@ export const irToVanillaCode = (ir: IRScene, options: IrToVanillaCodeOptions = {
     ...(ctx.flowCount > 0 ? ['FlowDiagramInputEmbedAdapter'] : []),
   ];
   const adapterCode = adapters.length > 0 ? `\nconst adapters = [${adapters.join(', ')}];\n` : '';
-  const definitionNames = [...definitions.standard, ...definitions.layout, ...definitions.graph];
+  const definitionNames = [
+    ...definitions.standard,
+    ...definitions.layout,
+    ...(hasStandaloneGraphMembers ? [] : definitions.graph),
+  ];
+  const providerCode = hasStandaloneGraphMembers
+    ? `\nconst definitions = resolveCoreProviderDependencies({ contributions: [{ roots: [GraphProviderKey], providers: createGraphProviders({ entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds, graphThemeStyles: PreviewThemeDefinitionBundle.graph }) }], definitions: { composites: [${definitionNames.join(', ')}] } });\n`
+    : '';
   const compileEntries = [
     ...(graphHelpers.length > 0 || ctx.flowCount > 0 ? ['themeStyles: PreviewThemeDefinitionBundle.core'] : []),
-    ...(definitionNames.length > 0 ? [`composites: [${definitionNames.join(', ')}]`] : []),
+    ...(hasStandaloneGraphMembers
+      ? ['...definitions']
+      : definitionNames.length > 0
+        ? [`composites: [${definitionNames.join(', ')}]`]
+        : []),
   ];
   const compile = compileEntries.length > 0 ? `\nconst compile = { ${compileEntries.join(', ')} };\n` : '';
-  return `${imports.join('\n')}\n\nconst input = scene(${figureArgs});\n${adapterCode}${compile}`;
+  const inputCode = hasStandaloneGraphMembers
+    ? `const source = scene(${figureArgs});\n${adapterCode}const input = normalizeScene(source, { adapters }).ir;\n`
+    : `const input = scene(${figureArgs});\n${adapterCode}`;
+  return `${imports.join('\n')}\n\n${inputCode}${providerCode}${compile}`;
 };
 
 /** 把 JSON-safe 值格式化为 Vanilla 示例使用的 TypeScript 字面量。 */

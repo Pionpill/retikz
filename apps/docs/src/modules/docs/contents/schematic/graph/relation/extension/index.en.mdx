@@ -27,7 +27,7 @@ A role must cover every allowed direction, while a kind may only narrow that set
 
 ## Inject into a host
 
-React can pass `relationRoles`, `relationKinds`, and `relationPredicates` directly to the `<Relation>` that consumes them. Use `<Graph>` when several descendants share definitions and local `graphRules`. Vanilla can pass the same arrays to `relation(id, input)` or `graph(id, input)`, while direct IR compilation uses `createGraphDefinitions(options)` or `createGraphProviders(options)`
+In React, declare `relationRoles`, `relationKinds`, and `relationPredicates` on `<Graph>` only. Relations inside it reference those definitions. Vanilla likewise passes definitions to `graph({ ... })`, where nested `relation({ ... })` inputs reference them. Direct IR compilation uses `createGraphDefinitions(options)` or `createGraphProviders(options)`
 
 ```tsx
 <Graph relationKinds={[feedbackKind]} relationPredicates={[priorityPredicate]}>
@@ -66,13 +66,13 @@ Relation validates the effective direction, resolves complete marker / dash stru
 
 ## API Reference
 
-| Public export                                                  | Purpose                                                              |
-| -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `defineRelationRole` / `RelationRoleDefinition`                | Defines direction constraints and a complete role recipe             |
-| `defineRelationKind` / `RelationKindDefinition`                | Defines a stable subtype and narrows directions                      |
-| `defineRelationPredicate` / `RelationPredicateDefinitionInput` | Defines a predicate with type-safe JSON params                       |
-| `RelationRole` / `RelationKind` / `RelationDirection`          | Lists built-in semantics and direction vocabulary                    |
-| `GraphDefinitionOptions`                                       | Assembles Relation Definitions in the Graph-family provider assembly |
+| Public export                                                  | Purpose                                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `defineRelationRole` / `RelationRoleDefinition`                | Defines direction constraints and a complete role recipe                             |
+| `defineRelationKind` / `RelationKindDefinition`                | Defines a stable subtype and narrows directions                                      |
+| `defineRelationPredicate` / `RelationPredicateDefinitionInput` | Defines a predicate with type-safe JSON params                                       |
+| `RelationRole` / `RelationKind` / `RelationDirection`          | Lists built-in semantics and direction vocabulary                                    |
+| `GraphDefinitionOptions`                                       | Assembles Relation Definitions at the Graph authoring or direct IR compilation entry |
 
 ## Related
 

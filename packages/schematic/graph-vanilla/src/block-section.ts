@@ -1,4 +1,3 @@
-import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockSectionProviderKey } from '@retikz/graph';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 
@@ -6,31 +5,14 @@ import { BlockSectionEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlockSection, WithoutInputType } from './normalize';
 import { normalizeBlockSection } from './normalize';
-import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
+import { createGraphProviderDependencies } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
-/** Block Section embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection> & GraphDefinitionOptions;
+/** Block Section embed 的 Source authoring 输入 */
+export type BlockSectionInputEmbedProps = WithoutInputType<InputBlockSection>;
 
 const inputOf = (props: BlockSectionInputEmbedProps): InputBlockSection => {
-  const {
-    entityRoles: _entityRoles,
-    entityKinds: _entityKinds,
-    entityPredicates: _entityPredicates,
-    relationRoles: _relationRoles,
-    relationKinds: _relationKinds,
-    relationPredicates: _relationPredicates,
-    graphThemeStyles: _graphThemeStyles,
-    ...input
-  } = props;
-  void _entityRoles;
-  void _entityKinds;
-  void _entityPredicates;
-  void _relationRoles;
-  void _relationKinds;
-  void _relationPredicates;
-  void _graphThemeStyles;
-  return { type: 'blockSection', ...input };
+  return { type: 'blockSection', ...props };
 };
 
 /** Block Section Source 的 InputEmbed adapter */
@@ -39,7 +21,7 @@ export const BlockSectionInputEmbedAdapter: InputEmbedAdapter<BlockSectionInputE
   lower: (props, context) => {
     const input = inputOf(props);
     const normalized = normalizeGraphAuthoringChildren(input.children ?? [], context, 'BlockSection.children');
-    const dependencies = createGraphProviderDependencies(BlockSectionProviderKey, graphDefinitionOptionsOf(props));
+    const dependencies = createGraphProviderDependencies(BlockSectionProviderKey);
     return {
       node: normalizeBlockSection({
         ...input,

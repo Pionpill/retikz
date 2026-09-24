@@ -51,7 +51,7 @@ Theme selector 不接受 Variant、id、颜色或其它纯视觉 key。按单个
 
 `graphDefaults` 保存稀疏正式默认片段，`graphRules` 保存独立的 JSON-safe 有序规则。Definition、registry、callback、完整 token resolution 与运行时上下文不进入 Source IR。Direct IR、React 与 Vanilla 使用同一 definitions 和 resolve / lowering 真源；adapter 不维护私有 Theme、registry 或默认值
 
-React 可以通过 `GraphThemeProvider` 组合 definitions；跨静态 InputEmbed 边界或 Vanilla authoring 必须显式传递 definitions，不依赖 ambient 或全局可变 registry
+React 可以通过 `GraphThemeProvider` 组合 definitions；React / Vanilla authoring 中只有 Graph 入口声明 Graph definitions，并由同次 provider assembly 中的 Entity / Relation / Group / Block 等元素共享。它们仍可脱离 Graph 独立使用内置 definitions，但不能各自注入自定义 definitions。跨静态 InputEmbed 边界或 Vanilla authoring 必须通过 Graph 显式传递 definitions，不依赖 ambient 或全局可变 registry；直接 IR 编译仍可通过公开 Definition / provider 工厂显式提供 definitions
 
 ## 行为、失败语义与兼容性
 

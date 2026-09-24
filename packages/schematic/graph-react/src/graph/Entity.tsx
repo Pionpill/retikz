@@ -1,4 +1,3 @@
-import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { InputEntity } from '@retikz/graph-vanilla';
 import { EntityInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
@@ -9,7 +8,6 @@ import { collectEntityInput } from './authoring';
 
 /** Entity Source 的 React 编写参数 */
 export type EntityProps = Omit<InputEntity, 'type'> &
-  GraphDefinitionOptions &
   Readonly<{
     /** 仅接受 Core Node-compatible 文本 authoring，与 text prop 互斥 */
     children?: ReactNode;

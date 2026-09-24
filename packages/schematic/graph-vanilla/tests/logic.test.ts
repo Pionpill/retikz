@@ -675,7 +675,7 @@ describe('Graph Vanilla embed adapters', () => {
     expect(entityContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(3);
     expect(relationContribution.providerDependencies.providers.map(provider => provider.key)).toHaveLength(5);
   });
-  it('keeps all definition options out of Source IR and compiles custom definitions through every entry', () => {
+  it('keeps Graph definitions out of Source IR and compiles standalone members with built-in definitions', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',
       description: 'Custom Entity role',
@@ -716,18 +716,16 @@ describe('Graph Vanilla embed adapters', () => {
     );
     const entityContribution = lower(
       entity({
-        ...options,
-        role: 'custom-entity',
+        role: 'participant',
         position: [0, 100],
       }),
       EntityInputEmbedAdapter,
     );
     const relationContribution = lower(
       relation({
-        ...options,
         source: { id: 'direct-source' },
         target: { id: 'direct-target' },
-        role: 'custom-relation',
+        role: 'association',
       }),
       RelationInputEmbedAdapter,
     );
@@ -754,15 +752,13 @@ describe('Graph Vanilla embed adapters', () => {
               ],
             }),
             entity({
-              ...options,
-              role: 'custom-entity',
+              role: 'participant',
               position: [0, 100],
             }),
             relation({
-              ...options,
               source: { id: 'direct-source' },
               target: { id: 'direct-target' },
-              role: 'custom-relation',
+              role: 'association',
             }),
           ],
         },
