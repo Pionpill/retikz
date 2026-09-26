@@ -11,8 +11,13 @@ description: 安装 Standard，用 React 或 Vanilla 绘制第一个参考网格
 
 <DocTabs defaultValue="react">
 <DocTab value="react" label="React">
+<DocSteps>
+<DocStep title="安装依赖">
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
+
+</DocStep>
+<DocStep title="绘制并挂载网格">
 
 在已有 React 应用中渲染下面的 `Example` 组件。`react` / `react-dom` 是宿主对等依赖，版本至少为 18。
 
@@ -42,10 +47,19 @@ if (root) createRoot(root).render(<Example />);
 
 根 `Layout` 默认输出 SVG，本例无需配置 renderer。尺寸和间距使用相同的图形用户单位；默认原尺寸显示时，1 单位对应 1 CSS 像素。
 
+</DocStep>
+</DocSteps>
 </DocTab>
 <DocTab value="vanilla" label="Vanilla">
+<DocSteps>
+<DocStep title="安装依赖">
 
 <PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+</DocStep>
+<DocStep title="绘制并导出 SVG">
+
+从 Standard 子入口导入 `grid` 与它的 adapter，再用 Vanilla 的场景与渲染函数生成结果。
 
 ```ts
 import { grid, GridInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
@@ -65,11 +79,29 @@ console.log(svg);
 
 `svg` 是可保存为 `.svg` 文件或交给页面宿主展示的完整 SVG 字符串。`GridInputEmbedAdapter` 让 `grid(...)` 能作为 `scene` 的子项使用，请保留 `adapters` 选项。
 
+</DocStep>
+</DocSteps>
 </DocTab>
 </DocTabs>
 
+## 确认结果
+
+两端应得到同一块宽 240、高 120、间距 20 的网格。修改 `bounds.end` 会改变范围，修改 `line.spacing` 会改变疏密。React 负责把 SVG 挂到页面；Vanilla 返回 SVG 字符串，打印到控制台不会自动显示成图。
+
 ## 延伸阅读
 
-修改 `bounds` 调整网格范围，修改 `line.spacing` 调整疏密。继续阅读[网格](/library/standard/presentation/grid)，或用[表面](/library/standard/presentation/surface)为内容增加背景与边框。可选绘图定义的接入见[能力装载](/library/extension/capability-loading)。
-
-版本变化见[更新日志](/library/standard/changelog)。
+<LinkedSections
+  items={[
+    { title: 'Grid · 网格', description: '调整方向格线、对齐、主线与外框', url: '/library/standard/presentation/grid' },
+    {
+      title: 'Surface · 表面',
+      description: '为已有内容添加留白、背景和边框',
+      url: '/library/standard/presentation/surface',
+    },
+    {
+      title: '能力装载',
+      description: '理解直接 IR 和可选定义的显式注册',
+      url: '/library/extension/capability-loading',
+    },
+  ]}
+/>
