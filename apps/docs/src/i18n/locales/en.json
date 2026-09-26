@@ -221,7 +221,7 @@
     "standardShapes": "Shapes",
     "standardCircleEllipse": "Circle / Ellipse",
     "standardRectangle": "Rectangle",
-    "standardRegularPolygon": "Regular polygons",
+    "standardRegularPolygon": "RegularPolygon",
     "standardStar": "Stars",
     "standardArcSector": "Arcs and sectors",
     "extensionShape": "Node shapes",

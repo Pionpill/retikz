@@ -12,6 +12,14 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/standard-vanilla/shape#InputRegularPolygon': [
+    { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
+    { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
+  ],
+  '@retikz/standard/shape#IRRegularPolygon': [
+    { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
+    { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
+  ],
   '@retikz/standard/container#IRMap': [
     { value: 'entries', field: 'data', type: 'never', label: { zh: '显式键值记录', en: 'Explicit entries' } },
     { value: 'data', field: 'entries', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
