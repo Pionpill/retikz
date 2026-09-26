@@ -10,13 +10,35 @@
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member        | Signature                                                                                                                                                                                                                              | Description                                                                                                                                                                                                                                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `constructor` | `(message: string)`                                                                                                                                                                                                                    | Creates an Inspect error with the default error code<br />`message`: Error message for callers; the error code is INSPECTION_ERROR                                                                                                                                  |
+|               | `(options: RetikzInspectErrorOptions)`                                                                                                                                                                                                 | Creates an Inspect error from structured options<br />`options`: Error code, message, optional details and original cause; omitted details use a readonly object containing code                                                                                    |
+|               | `(code: RetikzInspectErrorCodeValue, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCodeValue; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>)` | Creates an Inspect error with an explicit error code<br />`code`: Stable error code for caller-side branching<br />`message`: Error message for callers<br />`options?`: Optional details and original cause; omitted details use a readonly object containing code |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {}
+export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {
+  constructor(message: string);
+  constructor(options: RetikzInspectErrorOptions);
+  constructor(code: RetikzInspectErrorCodeValue, message: string, options?: RetikzInspectErrorCauseOptions);
+}
 ```
 
-| Member        | Type                                                                                                                                                                                                                                                                                                                                                              | Default | Description |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor` | `(message: string) => RetikzInspectError; (options: RetikzInspectErrorOptions) => RetikzInspectError; (code: RetikzInspectErrorCodeValue, message: string, options?: Readonly<Pick<Readonly<{ cause?: unknown; code: RetikzInspectErrorCodeValue; details?: Readonly<Record<string, unknown>>; message: string }>, 'details' \| 'cause'>>) => RetikzInspectError` | —       | —           |
+</DocTab>
+
+</DocTabs>
 
 ### AnyInspectorDefinitionInput
 
@@ -35,16 +57,20 @@ export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue,
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member                        | Type                                                                     | Default | Description                                                                                |
 | ----------------------------- | ------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------ |
 | `readonly inspect`            | `(subject: never, context: never) => InspectorOutput`                    | —       | Concrete subject and context types are restored by the schema before invocation            |
 | `readonly mergeOptionsInput?` | `(inheritedOptionsInput: never, localOptionsInput: never) => JsonObject` | —       | Merges admitted raw options, without consuming schema-transformed results                  |
 | `readonly namespace`          | `string`                                                                 | —       | registry namespace                                                                         |
-| `readonly optionsSchema?`     | `Readonly<{ parse: (value: unknown) => JsonObject }>`                    | —       | Produces JSON object options with defaults and transforms applied, even after type erasure |
+| `readonly optionsSchema?`     | `Readonly<{`<br />`parse: (value: unknown) => JsonObject;`<br />`}>`     | —       | Produces JSON object options with defaults and transforms applied, even after type erasure |
 | `readonly owner`              | `CompileObservationOwner`                                                | —       | Core owner being observed                                                                  |
 | `readonly resolveOptions?`    | `(options: never) => JsonObject`                                         | —       | Concrete options type restored by the admission schema                                     |
-| `readonly subjectSchema`      | `Readonly<{ parse: (value: unknown) => JsonValue }>`                     | —       | Restores a JSON-safe subject even after type erasure                                       |
+| `readonly subjectSchema`      | `Readonly<{`<br />`parse: (value: unknown) => JsonValue;`<br />`}>`      | —       | Restores a JSON-safe subject even after type erasure                                       |
 | `readonly type`               | `string`                                                                 | —       | registry type                                                                              |
+
+</ApiTable>
 
 </DocTab>
 
@@ -77,11 +103,15 @@ export type AnyInspectorDefinitionInput = WithOptionalProperties<
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member                    | Type                 | Default | Description                                                       |
 | ------------------------- | -------------------- | ------- | ----------------------------------------------------------------- |
 | `readonly colorScope`     | `number`             | —       | Consecutive index of the resolved request                         |
 | `readonly scopeColor`     | `CssColorValue`      | —       | Regular colors derived from the current Theme categorical palette |
 | `readonly semanticColors` | `CoreSemanticColors` | —       | Shared semantic colors of the current Core Theme                  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -105,7 +135,7 @@ export type InspectionAppearanceContext = Readonly<{
   <ApiSourceLink
     label={'InspectionCompileResult'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={119}
+    startLine={148}
   >
     Atomic compilation output containing primary and auxiliary results
   </ApiSourceLink>
@@ -115,11 +145,15 @@ export type InspectionAppearanceContext = Readonly<{
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member                 | Type                                  | Default | Description                                     |
 | ---------------------- | ------------------------------------- | ------- | ----------------------------------------------- |
 | `readonly diagnostics` | `ReadonlyArray<InspectionDiagnostic>` | —       | Callback and fragment warnings in request order |
 | `readonly inspection`  | `InspectionPlane \| null`             | —       | Null when every callback produces no output     |
 | `readonly primary`     | `CompileResult`                       | —       | Primary result of regular Core compilation      |
+
+</ApiTable>
 
 </DocTab>
 
@@ -140,7 +174,7 @@ export type InspectionCompileResult = Readonly<{
 ### InspectionDiagnostic
 
 <p>
-  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={111}>
+  <ApiSourceLink label={'InspectionDiagnostic'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={140}>
     An Inspect-owned diagnostic for a callback or fragment warning
   </ApiSourceLink>
 </p>
@@ -149,10 +183,14 @@ export type InspectionCompileResult = Readonly<{
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member            | Type                                                            | Default | Description                                                                           |
 | ----------------- | --------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------- |
 | `readonly cause`  | `Readonly<Pick<CompileWarning, 'code' \| 'message' \| 'path'>>` | —       | Callback code, message, and source path, or an unchanged projection of a Core warning |
 | `readonly origin` | `InspectionDiagnosticOrigin`                                    | —       | Request and output associated with the warning                                        |
+
+</ApiTable>
 
 </DocTab>
 
@@ -175,11 +213,72 @@ export type InspectionDiagnostic = Readonly<{
   <ApiSourceLink
     label={'InspectionDiagnosticOrigin'}
     path={'packages/kernel/inspect/src/compile/types.ts'}
-    startLine={93}
+    startLine={103}
   >
     Structured origins of Inspect failures, callback warnings, and fragment diagnostics
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="selection">
+
+<DocTab value="selection" label="Members · Selection">
+
+<ApiTable>
+
+| Member               | Type                                | Default | Description                                         |
+| -------------------- | ----------------------------------- | ------- | --------------------------------------------------- |
+| `readonly ruleIndex` | `number`                            | —       | Zero-based index of the failing rule in rules       |
+| `readonly stage`     | `'selection'`                       | —       | Selection admission or matching stage               |
+| `readonly target`    | `InspectionSelectionTarget \| null` | —       | Recognized target; null when invalid or unavailable |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="inspect" label="Members · Subject and callback">
+
+<ApiTable>
+
+| Member                | Type                       | Default | Description                                             |
+| --------------------- | -------------------------- | ------- | ------------------------------------------------------- |
+| `readonly inspector`  | `InspectorKey`             | —       | Inspector key associated with the diagnostic            |
+| `readonly occurrence` | `CompileOccurrenceLocator` | —       | Final occurrence locator associated with the diagnostic |
+| `readonly owner`      | `CompileObservationOwner`  | —       | Owner of the observed occurrence                        |
+| `readonly stage`      | `'subject' \| 'inspect'`   | —       | Observed-subject parsing or Inspector callback stage    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="output" label="Members · Output and fragment">
+
+<ApiTable>
+
+| Member                 | Type                       | Default | Description                                                       |
+| ---------------------- | -------------------------- | ------- | ----------------------------------------------------------------- |
+| `readonly inspector`   | `InspectorKey`             | —       | Inspector key associated with the diagnostic                      |
+| `readonly occurrence`  | `CompileOccurrenceLocator` | —       | Final occurrence locator associated with the diagnostic           |
+| `readonly outputIndex` | `number`                   | —       | Zero-based index in the callback output                           |
+| `readonly owner`       | `CompileObservationOwner`  | —       | Owner of the observed occurrence                                  |
+| `readonly stage`       | `'output' \| 'fragment'`   | —       | Callback-output admission or auxiliary-fragment compilation stage |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="complete" label="Members · Completion">
+
+<ApiTable>
+
+| Member           | Type         | Default | Description                        |
+| ---------------- | ------------ | ------- | ---------------------------------- |
+| `readonly stage` | `'complete'` | —       | Inspection-result completion stage |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export type InspectionDiagnosticOrigin =
@@ -206,10 +305,14 @@ export type InspectionDiagnosticOrigin =
     }>;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### InspectionPlane
 
 <p>
-  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={87}>
+  <ApiSourceLink label={'InspectionPlane'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={97}>
     An ordered, read-only Inspector auxiliary plane
   </ApiSourceLink>
 </p>
@@ -218,9 +321,13 @@ export type InspectionDiagnosticOrigin =
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member             | Type                                  | Default | Description                                                   |
 | ------------------ | ------------------------------------- | ------- | ------------------------------------------------------------- |
 | `readonly entries` | `ReadonlyArray<InspectionPlaneEntry>` | —       | Entries corresponding one-to-one to nonempty callback outputs |
+
+</ApiTable>
 
 </DocTab>
 
@@ -239,7 +346,7 @@ export type InspectionPlane = Readonly<{
 ### InspectionPlaneEntry
 
 <p>
-  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={71}>
+  <ApiSourceLink label={'InspectionPlaneEntry'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={81}>
     An auxiliary Scene plane entry
   </ApiSourceLink>
 </p>
@@ -247,6 +354,8 @@ export type InspectionPlane = Readonly<{
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member                | Type                       | Default | Description                                                                             |
 | --------------------- | -------------------------- | ------- | --------------------------------------------------------------------------------------- |
@@ -256,6 +365,8 @@ export type InspectionPlane = Readonly<{
 | `readonly owner`      | `CompileObservationOwner`  | —       | Owner being observed                                                                    |
 | `readonly scene`      | `Scene`                    | —       | A readonly Scene placed according to its fragment coordinateSpace                       |
 | `readonly transform`  | `AffineMatrix`             | —       | Matrix from the auxiliary Scene to the primary Scene; the identity matrix in scene mode |
+
+</ApiTable>
 
 </DocTab>
 
@@ -279,7 +390,7 @@ export type InspectionPlaneEntry = Readonly<{
 ### InspectionSelection
 
 <p>
-  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={49}>
+  <ApiSourceLink label={'InspectionSelection'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={59}>
     Runtime-only Inspector selection for one compilation
   </ApiSourceLink>
 </p>
@@ -288,9 +399,13 @@ export type InspectionPlaneEntry = Readonly<{
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member           | Type                                     | Default | Description                                               |
 | ---------------- | ---------------------------------------- | ------- | --------------------------------------------------------- |
 | `readonly rules` | `ReadonlyArray<InspectionSelectionRule>` | —       | Rules participating in cascading after complete admission |
+
+</ApiTable>
 
 </DocTab>
 
@@ -309,10 +424,42 @@ export type InspectionSelection = Readonly<{
 ### InspectionSelectionRule
 
 <p>
-  <ApiSourceLink label={'InspectionSelectionRule'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={30}>
+  <ApiSourceLink label={'InspectionSelectionRule'} path={'packages/kernel/inspect/src/compile/types.ts'} startLine={40}>
     One selection rule: a request controls one Inspector; a barrier blocks all Inspectors within a scope
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="request">
+
+<DocTab value="request" label="Members · Request">
+
+<ApiTable>
+
+| Member               | Type                        | Default | Description                                                                                     |
+| -------------------- | --------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `readonly inspector` | `InspectorKey`              | —       | Inspector key targeted by the rule                                                              |
+| `readonly kind`      | `'request'`                 | —       | Enables, disables, or configures the specified Inspector                                        |
+| `readonly options`   | `boolean \| JsonObject`     | —       | false disables this Inspector, true uses default options, and an object supplies sparse options |
+| `readonly target`    | `InspectionSelectionTarget` | —       | Scene, subtree, or self scope where the request applies                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="barrier" label="Members · Barrier">
+
+<ApiTable>
+
+| Member            | Type                                                                                | Default | Description                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `readonly kind`   | `'barrier'`                                                                         | —       | Blocks all Inspectors in the target scope and prevents descendant rules from re-enabling them |
+| `readonly target` | `Extract<InspectionSelectionTarget, {`<br />`kind: 'scene' \| 'subtree';`<br />`}>` | —       | Barrier scope restricted to an entire scene or subtree                                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export type InspectionSelectionRule =
@@ -333,6 +480,10 @@ export type InspectionSelectionRule =
     }>;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### InspectionSelectionTarget
 
 <p>
@@ -344,6 +495,48 @@ export type InspectionSelectionRule =
     The target locator for Inspector selection
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="scene">
+
+<DocTab value="scene" label="Members · Scene">
+
+<ApiTable>
+
+| Member          | Type      | Default | Description                     |
+| --------------- | --------- | ------- | ------------------------------- |
+| `readonly kind` | `'scene'` | —       | Selects the whole primary scene |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="subtree" label="Members · Subtree">
+
+<ApiTable>
+
+| Member                | Type        | Default | Description                             |
+| --------------------- | ----------- | ------- | --------------------------------------- |
+| `readonly kind`       | `'subtree'` | —       | Selects the subtree at the given source |
+| `readonly sourcePath` | `string`    | —       | Path of the target Scope in Source IR   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="self" label="Members · Occurrence">
+
+<ApiTable>
+
+| Member             | Type                                                                                                        | Default | Description                                                                                                    |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| `readonly kind`    | `'self'`                                                                                                    | —       | Selects only final occurrences from the source                                                                 |
+| `readonly locator` | `Readonly<{`<br />`kind: 'authored';`<br />`sourcePath: string;`<br />`occurrenceIndex?: number;`<br />`}>` | —       | Locates occurrences by source path; omitting occurrenceIndex selects all occurrences for that source and owner |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export type InspectionSelectionTarget =
@@ -364,6 +557,10 @@ export type InspectionSelectionTarget =
     }>;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### InspectorContext
 
 <p>
@@ -376,18 +573,23 @@ export type InspectionSelectionTarget =
 
 <DocTab value="members" label="Members">
 
-| Member                  | Type                                                                              | Default | Description                                                                    |
-| ----------------------- | --------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------ |
-| `readonly ancestors`    | `ReadonlyArray<CompileObservationAncestor>`                                       | —       | Final logical container chain, ordered from outermost to innermost             |
-| `readonly appearance`   | `InspectionAppearanceContext`                                                     | —       | Appearance context allocated before the callback                               |
-| `readonly inspectorKey` | `InspectorKey`                                                                    | —       | Current Inspector key                                                          |
-| `readonly occurrence`   | `CompileOccurrenceLocator`                                                        | —       | Current final occurrence                                                       |
-| `readonly options`      | `TOptions`                                                                        | —       | canonical JSON-safe options                                                    |
-| `readonly owner`        | `CompileObservationOwner`                                                         | —       | Core owner currently being observed                                            |
-| `readonly provenance`   | `Readonly<{ origin: CompileOccurrenceLocator; final: CompileOccurrenceLocator }>` | —       | Probe or replay origin                                                         |
-| `readonly round`        | `(value: number) => number`                                                       | —       | Rounds a value using the precision of the current primary compile              |
-| `readonly transform`    | `AffineMatrix`                                                                    | —       | Final affine transform from observation-local coordinates to the primary Scene |
-| `readonly warn`         | `(code: string, message: string) => void`                                         | —       | Declares which partial results the current callback may omit                   |
+<ApiTable>
+
+| Member                      | Type                                                                                                    | Default | Description                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------ |
+| `TOptions` (Type parameter) | `extends JsonObject = JsonObject`                                                                       | —       | Resolved options type consumed by the callback                                 |
+| `readonly ancestors`        | `ReadonlyArray<CompileObservationAncestor>`                                                             | —       | Final logical container chain, ordered from outermost to innermost             |
+| `readonly appearance`       | `InspectionAppearanceContext`                                                                           | —       | Appearance context allocated before the callback                               |
+| `readonly inspectorKey`     | `InspectorKey`                                                                                          | —       | Current Inspector key                                                          |
+| `readonly occurrence`       | `CompileOccurrenceLocator`                                                                              | —       | Current final occurrence                                                       |
+| `readonly options`          | `TOptions`                                                                                              | —       | canonical JSON-safe options                                                    |
+| `readonly owner`            | `CompileObservationOwner`                                                                               | —       | Core owner currently being observed                                            |
+| `readonly provenance`       | `Readonly<{`<br />`origin: CompileOccurrenceLocator;`<br />`final: CompileOccurrenceLocator;`<br />`}>` | —       | Probe or replay origin                                                         |
+| `readonly round`            | `(value: number) => number`                                                                             | —       | Rounds a value using the precision of the current primary compile              |
+| `readonly transform`        | `AffineMatrix`                                                                                          | —       | Final affine transform from observation-local coordinates to the primary Scene |
+| `readonly warn`             | `(code: string, message: string) => void`                                                               | —       | Declares which partial results the current callback may omit                   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -414,12 +616,6 @@ export type InspectorContext<TOptions extends JsonObject = JsonObject> = Readonl
 </DocTab>
 
 </DocTabs>
-
-#### Type parameters
-
-| Type parameter | Description                                    |
-| -------------- | ---------------------------------------------- |
-| `TOptions`     | Resolved options type consumed by the callback |
 
 ### InspectorCoordinateSpace
 
@@ -449,6 +645,25 @@ export type InspectorCoordinateSpace = 'local' | 'scene';
     types
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                              | Type                                         | Default | Description                                                 |
+| ----------------------------------- | -------------------------------------------- | ------- | ----------------------------------------------------------- |
+| `TSubject` (Type parameter)         | `extends JsonValue = JsonValue`              | —       | Observed subject type parsed by the subject schema          |
+| `TParsedOptions` (Type parameter)   | `extends JsonObject = Record<string, never>` | —       | Options type parsed by the options schema                   |
+| `TResolvedOptions` (Type parameter) | `extends JsonObject = TParsedOptions`        | —       | Resolved options type consumed by the callback              |
+| `TSourceOptions` (Type parameter)   | `extends JsonObject = TParsedOptions`        | —       | Raw options input type before it reaches the options schema |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export type InspectorDefinitionInput<
@@ -482,14 +697,9 @@ export type InspectorDefinitionInput<
   );
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter     | Description                                                 |
-| ------------------ | ----------------------------------------------------------- |
-| `TSubject`         | Observed subject type parsed by the subject schema          |
-| `TParsedOptions`   | Options type parsed by the options schema                   |
-| `TResolvedOptions` | Resolved options type consumed by the callback              |
-| `TSourceOptions`   | Raw options input type before it reaches the options schema |
+</DocTabs>
 
 ### InspectorFragment
 
@@ -503,11 +713,15 @@ export type InspectorDefinitionInput<
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member                     | Type                       | Default | Description                                               |
 | -------------------------- | -------------------------- | ------- | --------------------------------------------------------- |
 | `readonly child`           | `IRChild`                  | —       | An ordinary IR child compiled in isolation by Core        |
 | `readonly coordinateSpace` | `InspectorCoordinateSpace` | —       | The coordinate space used by this fragment                |
 | `readonly type`            | `'fragment'`               | —       | The auxiliary fragment discriminator; not part of Core IR |
+
+</ApiTable>
 
 </DocTab>
 
@@ -537,10 +751,14 @@ export type InspectorFragment = Readonly<{
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member               | Type     | Default | Description                        |
 | -------------------- | -------- | ------- | ---------------------------------- |
 | `readonly namespace` | `string` | —       | Namespace containing the Inspector |
 | `readonly type`      | `string` | —       | Type within the namespace          |
+
+</ApiTable>
 
 </DocTab>
 
@@ -577,27 +795,11 @@ export type InspectorOutput = IRChild | InspectorFragment | ReadonlyArray<IRChil
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-| Member                             | Type   | Default | Description |
-| ---------------------------------- | ------ | ------- | ----------- |
-| `__@inspectorRegistryBrand@689182` | `true` | —       | —           |
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
 ```ts
 export type InspectorRegistry = Readonly<{
   readonly [inspectorRegistryBrand]: true;
 }>;
 ```
-
-</DocTab>
-
-</DocTabs>
 
 ### RetikzInspectErrorCodeValue
 
@@ -607,11 +809,9 @@ export type InspectorRegistry = Readonly<{
   </ApiSourceLink>
 </p>
 
-```ts
-export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type RetikzInspectErrorCodeValue =
@@ -622,6 +822,18 @@ export type RetikzInspectErrorCodeValue =
   | 'INSPECTION_REGISTRY_ERROR'
   | 'INSPECTION_VANILLA_ERROR';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RetikzInspectErrorCodeValue = ValueOf<typeof RetikzInspectErrorCode>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### RetikzInspectErrorOptions
 
@@ -635,12 +847,16 @@ export type RetikzInspectErrorCodeValue =
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member              | Type                                | Default | Description                                          |
 | ------------------- | ----------------------------------- | ------- | ---------------------------------------------------- |
 | `readonly cause?`   | `unknown`                           | —       | Original exception or value that caused this failure |
 | `readonly code`     | `RetikzInspectErrorCodeValue`       | —       | Stable error code                                    |
 | `readonly details?` | `Readonly<Record<string, unknown>>` | —       | Structured details of the failure context            |
 | `readonly message`  | `string`                            | —       | Original error message for the caller                |
+
+</ApiTable>
 
 </DocTab>
 
@@ -679,8 +895,6 @@ export const CLIP_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'clip
   </ApiSourceLink>
 </p>
 
-[Schema reference](/kernel/packages/inspect/schema-reference#clipinspectoptionsschema)
-
 ### COORDINATE_INSPECTOR_KEY
 
 <p>
@@ -709,8 +923,6 @@ export const COORDINATE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type:
   </ApiSourceLink>
 </p>
 
-[Schema reference](/kernel/packages/inspect/schema-reference#coordinateinspectoptionsschema)
-
 ### NODE_INSPECTOR_KEY
 
 <p>
@@ -731,8 +943,6 @@ export const NODE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'node
   </ApiSourceLink>
 </p>
 
-[Schema reference](/kernel/packages/inspect/schema-reference#nodeinspectoptionsschema)
-
 ### PATH_INSPECTOR_KEY
 
 <p>
@@ -752,8 +962,6 @@ export const PATH_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'path
     Options and defaults for the built-in stroke Path Inspector
   </ApiSourceLink>
 </p>
-
-[Schema reference](/kernel/packages/inspect/schema-reference#pathinspectoptionsschema)
 
 ### RetikzInspectErrorCode
 
@@ -794,230 +1002,15 @@ export const SCOPE_INSPECTOR_KEY = Object.freeze({ namespace: 'core', type: 'sco
   </ApiSourceLink>
 </p>
 
-[Schema reference](/kernel/packages/inspect/schema-reference#scopeinspectoptionsschema)
-
 ### compileInspectionToScene
 
 <p>
   <ApiSourceLink
     label={'compileInspectionToScene'}
     path={'packages/kernel/inspect/src/compile/driver.ts'}
-    startLine={255}
+    startLine={259}
   >
     Runs an atomic Inspector compilation using Core observed compilation
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const compileInspectionToScene: <
-  TComposites extends readonly Array<AnyCompositeDefinition> = readonly [],
->(
-  ir: {
-    animations?: Array<{
-      delay?: number;
-      direction?: 'reverse' | 'normal' | 'alternate' | 'alternate-reverse';
-      duration: number;
-      easing?:
-        | OpenString<
-            ValueOf<{
-              Ease: 'ease';
-              EaseIn: 'ease-in';
-              EaseInOut: 'ease-in-out';
-              EaseOut: 'ease-out';
-              Linear: 'linear';
-            }>
-          >
-        | [number, number, number, number];
-      fill?: 'none' | 'forwards' | 'backwards' | 'both';
-      iterations?: number | 'infinite';
-      keyframes: Array<{
-        at: number;
-        easing?:
-          | OpenString<
-              ValueOf<{
-                Ease: 'ease';
-                EaseIn: 'ease-in';
-                EaseInOut: 'ease-in-out';
-                EaseOut: 'ease-out';
-                Linear: 'linear';
-              }>
-            >
-          | [number, number, number, number];
-        value: JsonValue;
-      }>;
-      origin?:
-        | 'center'
-        | 'top'
-        | 'right'
-        | 'bottom'
-        | 'left'
-        | 'top-right'
-        | 'top-left'
-        | 'bottom-right'
-        | 'bottom-left'
-        | [number, number];
-      property: OpenString<
-        ValueOf<{
-          Fill: 'fill';
-          Opacity: 'opacity';
-          PathDraw: 'pathDraw';
-          Rotate: 'rotate';
-          Scale: 'scale';
-          ScaleX: 'scaleX';
-          ScaleY: 'scaleY';
-          Stroke: 'stroke';
-          StrokeWidth: 'strokeWidth';
-          TranslateX: 'translateX';
-          TranslateY: 'translateY';
-          ViewBox: 'viewBox';
-        }>
-      >;
-      trigger?: 'load' | 'visible' | 'manual' | { onEvent: string };
-    }>;
-    children: Array<IRChild>;
-    theme?: { mode?: 'light' | 'dark'; style?: string };
-    type: 'scene';
-    version: 1;
-    viewBox?: { height: number; width: number; x: number; y: number };
-  },
-  options: Readonly<{
-    compileOptions?: CompileOptions<TComposites>;
-    registry: InspectorRegistry;
-    selection: InspectionSelection;
-  }>,
-) => InspectionCompileResult;
-```
-
-#### Type parameters
-
-| Type parameter | Description                                                    |
-| -------------- | -------------------------------------------------------------- |
-| `TComposites`  | Composite Definition collection available to the current Scene |
-
-#### Parameters
-
-| Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Description |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `ir`      | `{ animations?: Array<{ delay?: number; direction?: 'reverse' \| 'normal' \| 'alternate' \| 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; fill?: 'none' \| 'forwards' \| 'backwards' \| 'both'; iterations?: number \| 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> \| [number, number, number, number]; value: JsonValue }>; origin?: 'center' \| 'top' \| 'right' \| 'bottom' \| 'left' \| 'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left' \| [number, number]; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' \| 'visible' \| 'manual' \| { onEvent: string } }>; children: Array<IRChild>; theme?: { mode?: 'light' \| 'dark'; style?: string }; type: 'scene'; version: 1; viewBox?: { height: number; width: number; x: number; y: number } }` | —           |
-| `options` | `Readonly<{ compileOptions?: CompileOptions<TComposites>; registry: InspectorRegistry; selection: InspectionSelection }>`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | —           |
-
-### createDefaultInspectorRegistry
-
-<p>
-  <ApiSourceLink
-    label={'createDefaultInspectorRegistry'}
-    path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={70}
-  >
-    Creates the default Inspector registry with built-ins first and the same path for third-party definitions
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const createDefaultInspectorRegistry: (
-  definitions: readonly Array<AnyInspectorDefinitionInput>,
-) => Readonly<{ [inspectorRegistryBrand]: true }>;
-```
-
-#### Parameters
-
-| Parameter     | Type                                          | Description |
-| ------------- | --------------------------------------------- | ----------- |
-| `definitions` | `readonly Array<AnyInspectorDefinitionInput>` | —           |
-
-### createInspectorRegistry
-
-<p>
-  <ApiSourceLink
-    label={'createInspectorRegistry'}
-    path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={28}
-  >
-    Creates an Inspector registry without global state
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const createInspectorRegistry: (
-  definitions: readonly Array<AnyInspectorDefinitionInput>,
-) => InspectorRegistry;
-```
-
-#### Parameters
-
-| Parameter     | Type                                          | Description |
-| ------------- | --------------------------------------------- | ----------- |
-| `definitions` | `readonly Array<AnyInspectorDefinitionInput>` | —           |
-
-### defineInspector
-
-<p>
-  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={66}>
-    Defines an Inspector while preserving its author-input type
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const defineInspector: <
-  TSubject extends JsonValue,
-  TParsedOptions extends Record<string, JsonValue> = Record<string, never>,
-  TResolvedOptions extends Record<string, JsonValue> = TParsedOptions,
-  TSourceOptions extends Record<string, JsonValue> = TParsedOptions,
->(
-  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
-) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
-```
-
-#### Type parameters
-
-| Type parameter     | Description                                                 |
-| ------------------ | ----------------------------------------------------------- |
-| `TSubject`         | Observed subject type parsed by the subject schema          |
-| `TParsedOptions`   | Options type parsed by the options schema                   |
-| `TResolvedOptions` | Resolved options type consumed by the callback              |
-| `TSourceOptions`   | Raw options input type before it reaches the options schema |
-
-#### Parameters
-
-| Parameter    | Type                                                                                   | Description |
-| ------------ | -------------------------------------------------------------------------------------- | ----------- |
-| `definition` | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | —           |
-
-### mergeInspectorRegistries
-
-<p>
-  <ApiSourceLink
-    label={'mergeInspectorRegistries'}
-    path={'packages/kernel/inspect/src/providers/registry.ts'}
-    startLine={62}
-  >
-    Merges created registries while preserving the definition order of each registry
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const mergeInspectorRegistries: (
-  registries: readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>,
-) => InspectorRegistry;
-```
-
-#### Parameters
-
-| Parameter    | Type                                                           | Description |
-| ------------ | -------------------------------------------------------------- | ----------- |
-| `registries` | `readonly Array<Readonly<{ [inspectorRegistryBrand]: true }>>` | —           |
-
-## `@retikz/inspect/react`
-
-### InspectCoordinateProps
-
-<p>
-  <ApiSourceLink
-    label={'InspectCoordinateProps'}
-    path={'packages/kernel/inspect/src/react/components.tsx'}
-    startLine={24}
-  >
-    Props for an optional Inspector wrapper selecting only the current Coordinate
   </ApiSourceLink>
 </p>
 
@@ -1025,17 +1018,230 @@ export declare const mergeInspectorRegistries: (
 
 <DocTab value="members" label="Members">
 
-| Member     | Type                                                                                                      | Default | Description                                                                                                                                                                                                                                     |
-| ---------- | --------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`       | `string`                                                                                                  | —       | Coordinate ID used by path endpoints and node positioning to reference this position                                                                                                                                                            |
-| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Coordinate position; does not support Node-only self-anchor alignment<br />Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }` |
-| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —       | One or more inspection requests for the current Coordinate                                                                                                                                                                                      |
+<ApiTable variant="parameters">
+
+| Category        | Name          | Type / signature                                                                                                                                       | Description                                                                                                                                                                           |
+| --------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TComposites` | `extends ReadonlyArray<AnyCompositeDefinition> = readonly []`                                                                                          | Composite Definition collection available to the current Scene                                                                                                                        |
+| Parameters      | `ir`          | `IRScene`                                                                                                                                              | Source Scene IR to compile and observe; the input is not modified                                                                                                                     |
+|                 | `options`     | `Readonly<{`<br />`registry: InspectorRegistry;`<br />`selection: InspectionSelection;`<br />`compileOptions?: CompileOptions<TComposites>;`<br />`}>` | Inspector registry, selection rules, and optional Core compilation settings                                                                                                           |
+| Returns         | —             | `InspectionCompileResult`                                                                                                                              | The primary result, inspection plane, and diagnostics from the same compilation; inspection is null when there is no auxiliary output                                                 |
+| Throws          | —             | —                                                                                                                                                      | Compilation fails without a partial result for invalid selection, subject parsing, Inspector callbacks, or auxiliary output; Core compilation errors propagate through the call chain |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const compileInspectionToScene: <
+  const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly [],
+>(
+  ir: IRScene,
+  options: Readonly<{
+    registry: InspectorRegistry;
+    selection: InspectionSelection;
+    compileOptions?: CompileOptions<TComposites>;
+  }>,
+) => InspectionCompileResult;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### createDefaultInspectorRegistry
+
+<p>
+  <ApiSourceLink
+    label={'createDefaultInspectorRegistry'}
+    path={'packages/kernel/inspect/src/providers/registry.ts'}
+    startLine={85}
+  >
+    Creates the default Inspector registry with built-ins first and the same path for third-party definitions
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name           | Type / signature                             | Description                                                                                                                     |
+| ---------- | -------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `definitions?` | `ReadonlyArray<AnyInspectorDefinitionInput>` | Custom definitions appended after the five built-in Inspectors; omission registers only the built-ins                           |
+| Returns    | —              | `InspectorRegistry`                          | A new readonly registry containing built-in and custom definitions                                                              |
+| Throws     | —              | —                                            | Throws RetikzInspectError for invalid custom definitions or namespace/type keys duplicated among built-in or custom definitions |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const createDefaultInspectorRegistry: (
+  definitions?: ReadonlyArray<AnyInspectorDefinitionInput>,
+) => InspectorRegistry;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### createInspectorRegistry
+
+<p>
+  <ApiSourceLink
+    label={'createInspectorRegistry'}
+    path={'packages/kernel/inspect/src/providers/registry.ts'}
+    startLine={33}
+  >
+    Creates an Inspector registry without global state
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name          | Type / signature                             | Description                                                                                                            |
+| ---------- | ------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `definitions` | `ReadonlyArray<AnyInspectorDefinitionInput>` | Inspector definitions in registration order; an empty array creates an empty registry                                  |
+| Returns    | —             | `InspectorRegistry`                          | An independent readonly registry whose definitions receive missing option defaults and are frozen during registration  |
+| Throws     | —             | —                                            | Throws RetikzInspectError for blank definition namespace, type, or owner identifiers, or duplicate namespace/type keys |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const createInspectorRegistry: (
+  definitions: ReadonlyArray<AnyInspectorDefinitionInput>,
+) => InspectorRegistry;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### defineInspector
+
+<p>
+  <ApiSourceLink label={'defineInspector'} path={'packages/kernel/inspect/src/contract/define.ts'} startLine={69}>
+    Defines an Inspector while preserving its author-input type
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name               | Type / signature                                                                       | Description                                                                                                                                       |
+| --------------- | ------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TSubject`         | `extends JsonValue`                                                                    | Observed subject type parsed by the subject schema                                                                                                |
+|                 | `TParsedOptions`   | `extends JsonObject = Record<string, never>`                                           | Options type parsed by the options schema                                                                                                         |
+|                 | `TResolvedOptions` | `extends JsonObject = TParsedOptions`                                                  | Resolved options type consumed by the callback                                                                                                    |
+|                 | `TSourceOptions`   | `extends JsonObject = TParsedOptions`                                                  | Raw options input type before it reaches the options schema                                                                                       |
+| Parameters      | `definition`       | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | Inspector definition to validate; an omitted options schema accepts only an empty object, and an omitted resolver uses the parsed result directly |
+| Returns         | —                  | `InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>` | The definition with missing defaults filled and shallowly frozen; definitions already processed by this package retain their reference            |
+| Throws          | —                  | —                                                                                      | Throws RetikzInspectError when namespace, type, or required owner identifiers are blank                                                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const defineInspector: <
+  TSubject extends JsonValue,
+  TParsedOptions extends JsonObject = Record<string, never>,
+  TResolvedOptions extends JsonObject = TParsedOptions,
+  TSourceOptions extends JsonObject = TParsedOptions,
+>(
+  definition: InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>,
+) => InspectorDefinitionInput<TSubject, TParsedOptions, TResolvedOptions, TSourceOptions>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### mergeInspectorRegistries
+
+<p>
+  <ApiSourceLink
+    label={'mergeInspectorRegistries'}
+    path={'packages/kernel/inspect/src/providers/registry.ts'}
+    startLine={72}
+  >
+    Merges created registries while preserving the definition order of each registry
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name            | Type / signature                   | Description                                                                                                        |
+| ---------- | --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Parameters | `...registries` | `ReadonlyArray<InspectorRegistry>` | Registries in merge order; omitting all arguments creates an empty registry                                        |
+| Returns    | —               | `InspectorRegistry`                | A new readonly registry containing the input definitions without modifying the inputs                              |
+| Throws     | —               | —                                  | Throws RetikzInspectError when registries contain the same namespace/type; earlier definitions are not overwritten |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const mergeInspectorRegistries: (...registries: ReadonlyArray<InspectorRegistry>) => InspectorRegistry;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## `@retikz/inspect/react`
+
+### InspectCoordinate / InspectCoordinateProps
+
+- `InspectCoordinate`: <ApiSourceLink label={"InspectCoordinate"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={30}>Reuses the base Coordinate and only attaches runtime inspection requests</ApiSourceLink>
+- `InspectCoordinateProps`: <ApiSourceLink label={"InspectCoordinateProps"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={24}>Props for an optional Inspector wrapper selecting only the current Coordinate</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member     | Type                                                                                                      | Default | Description                                                                                                                                                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | `string`                                                                                                  | —       | Coordinate ID used by path endpoints and node positioning to reference this position                                                                                                                                                            |
+| `position` | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Coordinate position; does not support Node-only self-anchor alignment<br />Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }` |
+| `request`  | `Exclude<InspectionVanillaAuthoringInput, false>`                                                         | —       | One or more inspection requests for the current Coordinate                                                                                                                                                                                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const InspectCoordinate: FC<InspectCoordinateProps>;
+
 export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
   request: Exclude<InspectionVanillaAuthoringInput, false>;
 };
@@ -1045,57 +1251,60 @@ export type InspectCoordinateProps = Omit<CoordinateProps, 'authoring'> & {
 
 </DocTabs>
 
-### InspectLayoutProps
+### InspectLayout / InspectLayoutProps
 
-<p>
-  <ApiSourceLink label={'InspectLayoutProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={62}>
-    Optional Layout wrapper props binding an Inspect registry, selection, and callbacks
-  </ApiSourceLink>
-</p>
+- `InspectLayout`: <ApiSourceLink label={"InspectLayout"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={77}>An optional Inspect host reusing the base Layout and static or retained runtime</ApiSourceLink>
+- `InspectLayoutProps`: <ApiSourceLink label={"InspectLayoutProps"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={62}>Optional Layout wrapper props binding an Inspect registry, selection, and callbacks</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member                   | Type                                                  | Default | Description                                                                                                                                                      |
-| ------------------------ | ----------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `animate?`               | `boolean`                                             | —       | Whether to play animations                                                                                                                                       |
-| `animationProperties?`   | `AnimationPropertyRegistry`                           | —       | animation property registry                                                                                                                                      |
-| `animationRef?`          | `Ref<AnimationControls \| null>`                      | —       | Animation controller ref                                                                                                                                         |
-| `animations?`            | `ReadonlyArray<IRAnimationTrack>`                     | —       | Scene-root animations                                                                                                                                            |
-| `artifacts?`             | `CompileArtifactOptions`                              | —       | Requested compilation artifacts                                                                                                                                  |
-| `children?`              | `ReactNode`                                           | —       | Kernel or Sugar JSX children                                                                                                                                     |
-| `className?`             | `string`                                              | —       | Host className                                                                                                                                                   |
-| `easings?`               | `EasingRegistry`                                      | —       | easing registry                                                                                                                                                  |
-| `extensions?`            | `LayoutExtensions`                                    | —       | Runtime extensions grouped by capability, using the Core compilation contract                                                                                    |
-| `fontSize?`              | `number`                                              | `16`    | Default font size in drawing units; used when font.size is omitted and as the root size for font presets and rem, without overriding explicit numeric font sizes |
-| `handlers?`              | `HydrationHandlers`                                   | —       | Hydration handler registry for IR input                                                                                                                          |
-| `height?`                | `number \| string`                                    | —       | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                                                    |
-| `idPrefix?`              | `string`                                              | —       | SVG resource id prefix                                                                                                                                           |
-| `ir?`                    | `IRScene`                                             | —       | Persisted Source IR, used instead of children                                                                                                                    |
-| `lowerTex?`              | `LowerTex`                                            | —       | Formula lowering capability                                                                                                                                      |
-| `nodeDistance?`          | `number`                                              | `24`    | Default distance for relative node positioning in drawing units; applies when position uses direction/of and omits distance                                      |
-| `onArtifacts?`           | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —       | Notification after artifacts are committed successfully                                                                                                          |
-| `readonly onCommit?`     | `(result: InspectionCompileResult) => void`           | —       | Notification of the Inspect compilation result for the same revision                                                                                             |
-| `onCompileResult?`       | `(result: CompileResult) => void`                     | —       | Notification of the complete Core compilation result                                                                                                             |
-| `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void`          | —       | Notification for each committed diagnostic                                                                                                                       |
-| `readonly registry`      | `InspectorRegistry`                                   | —       | Inspector registry used by the current Layout                                                                                                                    |
-| `renderer?`              | `'svg' \| 'canvas'`                                   | `'svg'` | Rendering backend; an explicit value takes priority, otherwise inherits the Renderer context and uses SVG when no context is provided                            |
-| `readonly request?`      | `InspectionVanillaAuthoringInput`                     | —       | Optional scene requests; false sets a barrier for the entire drawing                                                                                             |
-| `rootScope?`             | `Pick<InputScope, 'style' \| 'defaults'>`             | —       | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                         |
-| `runtime?`               | `LayoutRuntimeOptions`                                | —       | Retained or static processing mode                                                                                                                               |
-| `readonly selection?`    | `InspectionSelection`                                 | —       | Explicit selection merged with authored wrapper rules                                                                                                            |
-| `snapshotAt?`            | `number`                                              | —       | Time at which to sample a static animation frame                                                                                                                 |
-| `style?`                 | `CSSProperties`                                       | —       | Host inline styles                                                                                                                                               |
-| `theme?`                 | `IRScene['theme']`                                    | —       | Theme written to the Scene root and inherited by descendant Composites                                                                                           |
-| `viewBox?`               | `IRViewBox`                                           | —       | Explicit viewport                                                                                                                                                |
-| `width?`                 | `number \| string`                                    | —       | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio                               |
+<ApiTable grouped>
+
+| Group      | Member                   | Type                                                  | Default                       | Description                                                                                                                                                                    |
+| ---------- | ------------------------ | ----------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Main       | `children?`              | `ReactNode`                                           | —                             | Drawing content declared through JSX                                                                                                                                           |
+|            | `ir?`                    | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                                                  |
+|            | `readonly registry`      | `InspectorRegistry`                                   | —                             | Inspector registry used by the current Layout                                                                                                                                  |
+|            | `readonly request?`      | `InspectionVanillaAuthoringInput`                     | —                             | Optional scene requests; false sets a barrier for the entire drawing                                                                                                           |
+|            | `readonly selection?`    | `InspectionSelection`                                 | —                             | Explicit selection merged with authored wrapper rules                                                                                                                          |
+| Layout     | `nodeDistance?`          | `number`                                              | `24`                          | Default distance for relative node positioning in drawing units; applies when position uses direction/of and omits distance                                                    |
+| Style      | `fontSize?`              | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for font presets and rem, without overriding explicit numeric font sizes               |
+|            | `rootScope?`             | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                       |
+|            | `theme?`                 | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                         |
+| Rendering  | `className?`             | `string`                                              | —                             | Host className                                                                                                                                                                 |
+|            | `height?`                | `number \| string`                                    | `computeDisplaySize`          | SVG or Canvas CSS height; defaults to content size, a single numeric dimension determines the other from the content aspect ratio, and CSS strings are laid out by the browser |
+|            | `idPrefix?`              | `string`                                              | `useId`                       | SVG resource ID prefix; generated by React useId when omitted                                                                                                                  |
+|            | `renderer?`              | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes priority, otherwise inherits the Renderer context and uses SVG when no context is provided                                          |
+|            | `style?`                 | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                                             |
+|            | `viewBox?`               | `IRViewBox`                                           | —                             | Explicit view box in drawing coordinates; takes precedence over ir.viewBox, otherwise inherits the scene view box or computes it from content when absent                      |
+|            | `width?`                 | `number \| string`                                    | `computeDisplaySize`          | SVG or Canvas CSS width; defaults to content size, a single numeric dimension determines the other from the content aspect ratio, and CSS strings are laid out by the browser  |
+| Callbacks  | `handlers?`              | `HydrationHandlers`                                   | —                             | Event handler map used when ir is supplied directly                                                                                                                            |
+|            | `onArtifacts?`           | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are successfully committed                                                                                                            |
+|            | `readonly onCommit?`     | `(result: InspectionCompileResult) => void`           | —                             | Notification of the Inspect compilation result for the same revision                                                                                                           |
+|            | `onCompileResult?`       | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                                           |
+|            | `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void`          | —                             | Notification for each committed diagnostic                                                                                                                                     |
+| Animation  | `animate?`               | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; animation-mode context takes priority, otherwise follows the system reduced-motion preference when unspecified                                     |
+|            | `animationProperties?`   | `AnimationPropertyRegistry`                           | —                             | Animatable property registry                                                                                                                                                   |
+|            | `animationRef?`          | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                                                       |
+|            | `animations?`            | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                                          |
+|            | `easings?`               | `EasingRegistry`                                      | —                             | Animation easing function registry                                                                                                                                             |
+|            | `snapshotAt?`            | `number`                                              | —                             | Animation sample time in milliseconds; freezes at that time without playback and takes precedence over animate                                                                 |
+| Runtime    | `runtime?`               | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Selects retained incremental updates or static full compilation; defaults to retained                                                                                          |
+| Output     | `artifacts?`             | `CompileArtifactOptions`                              | —                             | Compilation artifacts requested for generation                                                                                                                                 |
+| Extensions | `extensions?`            | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                  |
+|            | `lowerTex?`              | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                                                    |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const InspectLayout: FC<InspectLayoutProps>;
+
 export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'> &
   Readonly<{
     registry: InspectorRegistry;
@@ -1110,13 +1319,10 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
 
 </DocTabs>
 
-### InspectNodeProps
+### InspectNode / InspectNodeProps
 
-<p>
-  <ApiSourceLink label={'InspectNodeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={12}>
-    Props for an optional Inspector wrapper selecting only the current Node
-  </ApiSourceLink>
-</p>
+- `InspectNode`: <ApiSourceLink label={"InspectNode"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={18}>Reuses the base Node and only attaches runtime inspection requests</ApiSourceLink>
+- `InspectNodeProps`: <ApiSourceLink label={"InspectNodeProps"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={12}>Props for an optional Inspector wrapper selecting only the current Node</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1124,15 +1330,21 @@ export type InspectLayoutProps = Omit<LayoutProps, 'authoring' | 'compileDriver'
 
 The remaining members are inherited from `NodeProps`, with `'authoring'` removed. See “Type definition” for the complete composition.
 
+<ApiTable>
+
 | Member    | Type                                              | Default | Description                                          |
 | --------- | ------------------------------------------------- | ------- | ---------------------------------------------------- |
 | `request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —       | One or more inspection requests for the current Node |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const InspectNode: FC<InspectNodeProps>;
+
 export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
   request: Exclude<InspectionVanillaAuthoringInput, false>;
 };
@@ -1142,13 +1354,10 @@ export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
 
 </DocTabs>
 
-### InspectPathProps
+### InspectPath / InspectPathProps
 
-<p>
-  <ApiSourceLink label={'InspectPathProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={36}>
-    Props for the optional Inspect Path wrapper
-  </ApiSourceLink>
-</p>
+- `InspectPath`: <ApiSourceLink label={"InspectPath"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={43}>Reuses base Path lowering and only attaches a runtime-only Inspector authoring marker</ApiSourceLink>
+- `InspectPathProps`: <ApiSourceLink label={"InspectPathProps"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={36}>Props for the optional Inspect Path wrapper</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1156,15 +1365,21 @@ export type InspectNodeProps = Omit<NodeProps, 'authoring'> & {
 
 The remaining members are inherited from `PathProps`, with `'authoring'` removed. See “Type definition” for the complete composition.
 
+<ApiTable>
+
 | Member             | Type                                              | Default | Description                                     |
 | ------------------ | ------------------------------------------------- | ------- | ----------------------------------------------- |
 | `readonly request` | `Exclude<InspectionVanillaAuthoringInput, false>` | —       | Inspector request for the current authored Path |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const InspectPath: FC<InspectPathProps>;
+
 export type InspectPathProps = Omit<PathProps, 'authoring'> &
   Readonly<{
     request: Exclude<InspectionVanillaAuthoringInput, false>;
@@ -1175,13 +1390,10 @@ export type InspectPathProps = Omit<PathProps, 'authoring'> &
 
 </DocTabs>
 
-### InspectScopeProps
+### InspectScope / InspectScopeProps
 
-<p>
-  <ApiSourceLink label={'InspectScopeProps'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={49}>
-    Props for the optional Inspect Scope wrapper
-  </ApiSourceLink>
-</p>
+- `InspectScope`: <ApiSourceLink label={"InspectScope"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={56}>Reuses base Scope lowering and only attaches a runtime-only Inspector authoring marker</ApiSourceLink>
+- `InspectScopeProps`: <ApiSourceLink label={"InspectScopeProps"} path={"packages/kernel/inspect/src/react/components.tsx"} startLine={49}>Props for the optional Inspect Scope wrapper</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
@@ -1189,15 +1401,21 @@ export type InspectPathProps = Omit<PathProps, 'authoring'> &
 
 The remaining members are inherited from `ScopeProps`, with `'authoring'` removed. See “Type definition” for the complete composition.
 
+<ApiTable>
+
 | Member             | Type                              | Default | Description                                                                                  |
 | ------------------ | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
 | `readonly request` | `InspectionVanillaAuthoringInput` | —       | Requests for the current subtree; false establishes a barrier that descendants cannot reopen |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const InspectScope: FC<InspectScopeProps>;
+
 export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
   Readonly<{
     request: InspectionVanillaAuthoringInput;
@@ -1207,66 +1425,6 @@ export type InspectScopeProps = Omit<ScopeProps, 'authoring'> &
 </DocTab>
 
 </DocTabs>
-
-### InspectCoordinate
-
-<p>
-  <ApiSourceLink label={'InspectCoordinate'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={30}>
-    Reuses the base Coordinate and only attaches runtime inspection requests
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const InspectCoordinate: FC<InspectCoordinateProps>;
-```
-
-### InspectLayout
-
-<p>
-  <ApiSourceLink label={'InspectLayout'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={77}>
-    An optional Inspect host reusing the base Layout and static or retained runtime
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const InspectLayout: FC<InspectLayoutProps>;
-```
-
-### InspectNode
-
-<p>
-  <ApiSourceLink label={'InspectNode'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={18}>
-    Reuses the base Node and only attaches runtime inspection requests
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const InspectNode: FC<InspectNodeProps>;
-```
-
-### InspectPath
-
-<p>
-  <ApiSourceLink label={'InspectPath'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={43}>
-    Reuses base Path lowering and only attaches a runtime-only Inspector authoring marker
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const InspectPath: FC<InspectPathProps>;
-```
-
-### InspectScope
-
-<p>
-  <ApiSourceLink label={'InspectScope'} path={'packages/kernel/inspect/src/react/components.tsx'} startLine={56}>
-    Reuses base Scope lowering and only attaches a runtime-only Inspector authoring marker
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const InspectScope: FC<InspectScopeProps>;
-```
 
 ## `@retikz/inspect/vanilla`
 
@@ -1286,12 +1444,16 @@ export declare const InspectScope: FC<InspectScopeProps>;
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member                   | Type                                         | Default | Description                                                                          |
 | ------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------------------ |
 | `readonly onCommit?`     | `(result: InspectionCompileResult) => void`  | —       | Notification after successful commit of the revision primary, plane, and diagnostics |
 | `readonly onDiagnostic?` | `(diagnostic: InspectionDiagnostic) => void` | —       | Notification for each committed Inspect diagnostic                                   |
 | `readonly registry`      | `InspectorRegistry`                          | —       | Inspector registry used by this host                                                 |
 | `readonly selection?`    | `InspectionSelection`                        | —       | Explicit selection merged with plain authoring rules                                 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -1343,10 +1505,14 @@ export type InspectionVanillaAuthoringInput =
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member               | Type                          | Default | Description                                                    |
 | -------------------- | ----------------------------- | ------- | -------------------------------------------------------------- |
 | `readonly inspector` | `InspectorKey`                | —       | Inspector key to request                                       |
 | `readonly options`   | `false \| true \| JsonObject` | —       | Sparse options, true, or false to disable inherited inspection |
+
+</ApiTable>
 
 </DocTab>
 
@@ -1369,11 +1535,28 @@ export type InspectionVanillaRequest = Readonly<{
   <ApiSourceLink
     label={'createInspectionVanillaAuthoring'}
     path={'packages/kernel/inspect/src/vanilla/authoring.ts'}
-    startLine={30}
+    startLine={34}
   >
     Creates an opaque authoring marker recognized only by the Inspect Vanilla driver
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature                  | Description                                                                                                     |
+| ---------- | ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Parameters | `input` | `InspectionVanillaAuthoringInput` | One or more inspection requests; false blocks a whole Scene or Scope and cannot be used on an individual entity |
+| Returns    | —       | `InspectionVanillaAuthoring`      | A frozen marker for the Vanilla input authoring field; its requests are resolved during driver compilation      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const createInspectionVanillaAuthoring: (
@@ -1381,11 +1564,9 @@ export declare const createInspectionVanillaAuthoring: (
 ) => InspectionVanillaAuthoring;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                              | Description |
-| --------- | --------------------------------- | ----------- |
-| `input`   | `InspectionVanillaAuthoringInput` | —           |
+</DocTabs>
 
 ### createInspectionVanillaDriver
 
@@ -1393,11 +1574,28 @@ export declare const createInspectionVanillaAuthoring: (
   <ApiSourceLink
     label={'createInspectionVanillaDriver'}
     path={'packages/kernel/inspect/src/vanilla/driver.ts'}
-    startLine={143}
+    startLine={147}
   >
     Creates a Vanilla compilation driver binding an Inspector registry, selection, and committed callbacks
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name      | Type / signature                       | Description                                                                                                                                  |
+| ---------- | --------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options` | `CreateInspectionVanillaDriverOptions` | Fixed registry with optional selection and commit callbacks; omitting selection uses only authoring requests                                 |
+| Returns    | —         | `VanillaCompileDriver`                 | A compilation driver for Vanilla hosts; diagnostics are delivered before onCommit, and callback failure does not roll back committed results |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const createInspectionVanillaDriver: (
@@ -1405,8 +1603,6 @@ export declare const createInspectionVanillaDriver: (
 ) => VanillaCompileDriver;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                                   | Description |
-| --------- | -------------------------------------- | ----------- |
-| `options` | `CreateInspectionVanillaDriverOptions` | —           |
+</DocTabs>

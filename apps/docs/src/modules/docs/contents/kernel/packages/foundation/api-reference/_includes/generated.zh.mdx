@@ -14,23 +14,18 @@
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员               | 类型                                             | 默认值      | 说明                                       |
-| ------------------ | ------------------------------------------------ | ----------- | ------------------------------------------ |
-| `constructor`      | `(options: RetikzErrorOptions<TCode, TDetails>)` | —           | 使用结构化参数创建领域错误，保留原始 cause |
-| `readonly cause?`  | `unknown`                                        | `undefined` | 导致当前错误的原始异常或值                 |
-| `readonly code`    | `TCode`                                          | —           | 结构化错误的分类代码                       |
-| `readonly details` | `TDetails`                                       | —           | 与错误代码关联的结构化错误详情             |
+| 成员               | 类型                                                                            | 默认值      | 说明                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| `TCode` (泛型)     | `extends string = string`                                                       | —           | 错误分类代码的字符串类型                                                                        |
+| `TDetails` (泛型)  | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | —           | 与错误代码关联的结构化详情类型                                                                  |
+| `constructor`      | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | —           | 使用结构化参数创建领域错误，保留原始 cause<br />`options`: 错误代码、消息、详情与可选的原始原因 |
+| `readonly cause?`  | `unknown`                                                                       | `undefined` | 导致当前错误的原始异常或值                                                                      |
+| `readonly code`    | `TCode`                                                                         | —           | 结构化错误的分类代码                                                                            |
+| `readonly details` | `TDetails`                                                                      | —           | 与错误代码关联的结构化错误详情                                                                  |
 
-</div>
-
-#### 类型参数
-
-| 类型参数   | 说明                           |
-| ---------- | ------------------------------ |
-| `TCode`    | 错误分类代码的字符串类型       |
-| `TDetails` | 与错误代码关联的结构化详情类型 |
+</ApiTable>
 
 </DocTab>
 
@@ -41,6 +36,9 @@ export class RetikzError<
   TCode extends string = string,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends Error {
+  readonly code: TCode;
+  readonly details: TDetails;
+  readonly cause?: unknown;
   constructor(options: RetikzErrorOptions<TCode, TDetails>);
 }
 ```
@@ -61,21 +59,16 @@ export class RetikzError<
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[44%]">
+<ApiTable variant="methods">
 
-| 成员          | 签名                                             | 说明                               |
-| ------------- | ------------------------------------------------ | ---------------------------------- |
-| `constructor` | `(message: string)`                              | 使用默认错误码创建 Foundation 错误 |
-|               | `(options: RetikzErrorOptions<TCode, TDetails>)` | 使用结构化参数创建 Foundation 错误 |
+| 成员              | 签名                                                                            | 说明                                     |
+| ----------------- | ------------------------------------------------------------------------------- | ---------------------------------------- |
+| `TCode` (泛型)    | `extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue`       | Foundation 错误码的具体字面量类型        |
+| `TDetails` (泛型) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | 与 Foundation 错误码关联的结构化详情类型 |
+| `constructor`     | `(message: string)`                                                             | 使用默认错误码创建 Foundation 错误       |
+|                   | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | 使用结构化参数创建 Foundation 错误       |
 
-</div>
-
-#### 类型参数
-
-| 类型参数   | 说明                                     |
-| ---------- | ---------------------------------------- |
-| `TCode`    | Foundation 错误码的具体字面量类型        |
-| `TDetails` | 与 Foundation 错误码关联的结构化详情类型 |
+</ApiTable>
 
 </DocTab>
 
@@ -103,6 +96,23 @@ export class RetikzFoundationError<
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员               | 类型 | 默认值 | 说明                   |
+| ------------------ | ---- | ------ | ---------------------- |
+| `TActual` (泛型)   | `—`  | —      | 待比较的实际类型       |
+| `TExpected` (泛型) | `—`  | —      | 作为比较基准的预期类型 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
   ? [TExpected] extends [TActual]
@@ -111,12 +121,9 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
   : false;
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数    | 说明                   |
-| ----------- | ---------------------- |
-| `TActual`   | 待比较的实际类型       |
-| `TExpected` | 作为比较基准的预期类型 |
+</DocTabs>
 
 ### JsonObject
 
@@ -126,15 +133,29 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                       | 默认值 | 说明 |
+| -------- | -------------------------- | ------ | ---- |
+| 索引签名 | `[key: string]: JsonValue` | —      | —    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type JsonObject = ZodInfer<typeof JsonObjectSchema>;
 ```
 
-#### 索引签名
+</DocTab>
 
-```ts
-[key: string]: JsonValue
-```
+</DocTabs>
 
 ### JsonValue
 
@@ -168,13 +189,14 @@ export type JsonValue =
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                       | 类型                                               | 默认值      | 说明                                                            |
 | -------------------------- | -------------------------------------------------- | ----------- | --------------------------------------------------------------- |
+| `T` (泛型)                 | `extends object`                                   | —           | 被合并的对象类型                                                |
 | `readonly shouldOverride?` | `(value: T[keyof T], key: PropertyKey) => boolean` | `undefined` | 决定源属性是否参与写入；首次写入也调用，返回 false 时保留已有值 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -190,12 +212,6 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
 
 </DocTabs>
 
-#### 类型参数
-
-| 类型参数 | 说明             |
-| -------- | ---------------- |
-| `T`      | 被合并的对象类型 |
-
 ### NonEmptyReadonlyArray
 
 <p>
@@ -204,15 +220,29 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型 | 默认值 | 说明         |
+| ---------- | ---- | ------ | ------------ |
+| `T` (泛型) | `—`  | —      | 数组元素类型 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数 | 说明         |
-| -------- | ------------ |
-| `T`      | 数组元素类型 |
+</DocTabs>
 
 ### OpenString
 
@@ -222,15 +252,29 @@ export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型             | 默认值 | 说明                       |
+| ---------- | ---------------- | ------ | -------------------------- |
+| `T` (泛型) | `extends string` | —      | 已知字符串字面量的联合类型 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type OpenString<T extends string> = T | (string & {});
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数 | 说明                       |
-| -------- | -------------------------- |
-| `T`      | 已知字符串字面量的联合类型 |
+</DocTabs>
 
 ### ParsedCssColor
 
@@ -244,7 +288,7 @@ export type OpenString<T extends string> = T | (string & {});
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员 | 类型     | 默认值 | 说明               |
 | ---- | -------- | ------ | ------------------ |
@@ -253,7 +297,7 @@ export type OpenString<T extends string> = T | (string & {});
 | `g`  | `number` | —      | 绿色通道，范围 0~1 |
 | `r`  | `number` | —      | 红色通道，范围 0~1 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -284,16 +328,18 @@ export type ParsedCssColor = {
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员               | 类型       | 默认值      | 说明                           |
-| ------------------ | ---------- | ----------- | ------------------------------ |
-| `readonly cause?`  | `unknown`  | `undefined` | 导致当前错误的原始异常或值     |
-| `readonly code`    | `TCode`    | —           | 结构化错误的分类代码           |
-| `readonly details` | `TDetails` | —           | 与错误代码关联的结构化错误详情 |
-| `readonly message` | `string`   | —           | 面向调用方的错误消息           |
+| 成员               | 类型                                        | 默认值      | 说明                           |
+| ------------------ | ------------------------------------------- | ----------- | ------------------------------ |
+| `TCode` (泛型)     | `extends string`                            | —           | 错误分类代码的字符串类型       |
+| `TDetails` (泛型)  | `extends Readonly<Record<string, unknown>>` | —           | 与错误代码关联的结构化详情类型 |
+| `readonly cause?`  | `unknown`                                   | `undefined` | 导致当前错误的原始异常或值     |
+| `readonly code`    | `TCode`                                     | —           | 结构化错误的分类代码           |
+| `readonly details` | `TDetails`                                  | —           | 与错误代码关联的结构化错误详情 |
+| `readonly message` | `string`                                    | —           | 面向调用方的错误消息           |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -311,13 +357,6 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
 </DocTab>
 
 </DocTabs>
-
-#### 类型参数
-
-| 类型参数   | 说明                           |
-| ---------- | ------------------------------ |
-| `TCode`    | 错误分类代码的字符串类型       |
-| `TDetails` | 与错误代码关联的结构化详情类型 |
 
 ### RetikzFoundationErrorCodeValue
 
@@ -364,15 +403,29 @@ export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErro
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型             | 默认值 | 说明                 |
+| ---------- | ---------------- | ------ | -------------------- |
+| `T` (泛型) | `extends object` | —      | 提供属性值的对象类型 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type ValueOf<T extends object> = T[keyof T];
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数 | 说明                 |
-| -------- | -------------------- |
-| `T`      | 提供属性值的对象类型 |
+</DocTabs>
 
 ### WithOptionalProperties
 
@@ -382,16 +435,30 @@ export type ValueOf<T extends object> = T[keyof T];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型              | 默认值 | 说明                 |
+| ------------- | ----------------- | ------ | -------------------- |
+| `T` (泛型)    | `—`               | —      | 待调整属性的对象类型 |
+| `TKey` (泛型) | `extends keyof T` | —      | 需要设为可选的属性键 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Partial<Pick<T, TKey>>;
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数 | 说明                 |
-| -------- | -------------------- |
-| `T`      | 待调整属性的对象类型 |
-| `TKey`   | 需要设为可选的属性键 |
+</DocTabs>
 
 ### WithRequiredProperties
 
@@ -401,16 +468,30 @@ export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Pa
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型              | 默认值 | 说明                 |
+| ------------- | ----------------- | ------ | -------------------- |
+| `T` (泛型)    | `—`               | —      | 待调整属性的对象类型 |
+| `TKey` (泛型) | `extends keyof T` | —      | 需要设为必填的属性键 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数 | 说明                 |
-| -------- | -------------------- |
-| `T`      | 待调整属性的对象类型 |
-| `TKey`   | 需要设为必填的属性键 |
+</DocTabs>
 
 ### RetikzFoundationErrorCode
 
@@ -467,17 +548,17 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 
 <DocTab value="members" label="属性">
 
-#### 参数
+<ApiTable variant="parameters">
 
-| 参数         | 类型                                                                  | 说明                                                   |
-| ------------ | --------------------------------------------------------------------- | ------------------------------------------------------ |
-| `value`      | `string`                                                              | 待检查的字符串                                         |
-| `label`      | `string`                                                              | 错误消息中的字段名称                                   |
-| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | 校验失败时原样抛出的领域错误；默认使用 Foundation 错误 |
+| 类别   | 名称          | 类型 / 签名                | 说明                                                   |
+| ------ | ------------- | -------------------------- | ------------------------------------------------------ |
+| 参数   | `value`       | `string`                   | 待检查的字符串                                         |
+|        | `label`       | `string`                   | 错误消息中的字段名称                                   |
+|        | `ownerError?` | `RetikzError \| undefined` | 校验失败时原样抛出的领域错误；默认使用 Foundation 错误 |
+| 返回值 | —             | `void`                     | —                                                      |
+| 错误   | —             | —                          | 校验失败时抛出 ownerError 或 RetikzFoundationError     |
 
-#### 异常
-
-- 校验失败时抛出 ownerError 或 RetikzFoundationError
+</ApiTable>
 
 </DocTab>
 
@@ -503,12 +584,15 @@ export declare const assertNonEmptyString: (value: string, label: string, ownerE
 
 <DocTab value="members" label="属性">
 
-#### 参数
+<ApiTable variant="parameters">
 
-| 参数    | 类型      | 说明                                       |
-| ------- | --------- | ------------------------------------------ |
-| `value` | `unknown` | 待检查的外部数据树                         |
-| `path`  | `string`  | 错误消息中用于定位根值的路径，默认 'value' |
+| 类别   | 名称    | 类型 / 签名 | 说明                                       |
+| ------ | ------- | ----------- | ------------------------------------------ |
+| 参数   | `value` | `unknown`   | 待检查的外部数据树                         |
+|        | `path?` | `string`    | 错误消息中用于定位根值的路径，默认 'value' |
+| 返回值 | —       | `void`      | —                                          |
+
+</ApiTable>
 
 > **备注：** 叶子值域由调用方 schema 校验；本函数只在读取属性前排除原型对象、accessor、symbol、异常数组与循环引用
 
@@ -536,17 +620,17 @@ export declare const assertPlainDataContainers: (value: unknown, path?: string) 
 
 <DocTab value="members" label="属性">
 
-#### 参数
+<ApiTable variant="parameters">
 
-| 参数         | 类型                                                                  | 说明                                                   |
-| ------------ | --------------------------------------------------------------------- | ------------------------------------------------------ |
-| `value`      | `number`                                                              | 待检查的数值                                           |
-| `label`      | `string`                                                              | 错误消息中的字段名称                                   |
-| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | 校验失败时原样抛出的领域错误；默认使用 Foundation 错误 |
+| 类别   | 名称          | 类型 / 签名                | 说明                                                   |
+| ------ | ------------- | -------------------------- | ------------------------------------------------------ |
+| 参数   | `value`       | `number`                   | 待检查的数值                                           |
+|        | `label`       | `string`                   | 错误消息中的字段名称                                   |
+|        | `ownerError?` | `RetikzError \| undefined` | 校验失败时原样抛出的领域错误；默认使用 Foundation 错误 |
+| 返回值 | —             | `void`                     | —                                                      |
+| 错误   | —             | —                          | 校验失败时抛出 ownerError 或 RetikzFoundationError     |
 
-#### 异常
-
-- 校验失败时抛出 ownerError 或 RetikzFoundationError
+</ApiTable>
 
 </DocTab>
 
@@ -572,22 +656,16 @@ export declare const assertPositiveNumber: (value: number, label: string, ownerE
 
 <DocTab value="members" label="属性">
 
-#### 类型参数
+<ApiTable variant="parameters">
 
-| 类型参数 | 说明             |
-| -------- | ---------------- |
-| `T`      | 输入值的静态类型 |
+| 类别   | 名称    | 类型 / 签名 | 说明                                         |
+| ------ | ------- | ----------- | -------------------------------------------- |
+| 泛型   | `T`     | —           | 输入值的静态类型                             |
+| 参数   | `value` | `T`         | 待复制的 JSON 安全数据                       |
+|        | `path?` | `string`    | 错误消息中用于定位当前值的路径，默认 'value' |
+| 返回值 | —       | `T`         | 与输入结构相同但不共享可变对象的深冻结副本   |
 
-#### 参数
-
-| 参数    | 类型     | 说明                                         |
-| ------- | -------- | -------------------------------------------- |
-| `value` | `T`      | 待复制的 JSON 安全数据                       |
-| `path`  | `string` | 错误消息中用于定位当前值的路径，默认 'value' |
-
-#### 返回值
-
-与输入结构相同但不共享可变对象的深冻结副本
+</ApiTable>
 
 </DocTab>
 
@@ -615,21 +693,17 @@ export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
 
 <DocTab value="members" label="属性">
 
-#### 参数
+<ApiTable variant="parameters">
 
-| 参数         | 类型     | 说明                          |
-| ------------ | -------- | ----------------------------- |
-| `foreground` | `string` | 可带透明度的静态 CSS 前景色   |
-| `backdrop`   | `string` | 必须完全不透明的静态 CSS 底色 |
-| `weight`     | `number` | 闭区间 0..1 内的有限合成权重  |
+| 类别   | 名称         | 类型 / 签名  | 说明                                                           |
+| ------ | ------------ | ------------ | -------------------------------------------------------------- |
+| 参数   | `foreground` | `string`     | 可带透明度的静态 CSS 前景色                                    |
+|        | `backdrop`   | `string`     | 必须完全不透明的静态 CSS 底色                                  |
+|        | `weight`     | `number`     | 闭区间 0..1 内的有限合成权重                                   |
+| 返回值 | —            | `#${string}` | 六位小写十六进制不透明颜色                                     |
+| 错误   | —            | —            | 颜色不支持、底色含透明度或权重越界时抛出 RetikzFoundationError |
 
-#### 返回值
-
-六位小写十六进制不透明颜色
-
-#### 异常
-
-- 颜色不支持、底色含透明度或权重越界时抛出 RetikzFoundationError
+</ApiTable>
 
 </DocTab>
 
@@ -655,21 +729,15 @@ export declare const compositeOpaqueColor: (foreground: string, backdrop: string
 
 <DocTab value="members" label="属性">
 
-#### 类型参数
+<ApiTable variant="parameters">
 
-| 类型参数  | 说明                                  |
-| --------- | ------------------------------------- |
-| `TValues` | 已知字符串值的 const object enum 类型 |
+| 类别   | 名称      | 类型 / 签名                                                           | 说明                                        |
+| ------ | --------- | --------------------------------------------------------------------- | ------------------------------------------- |
+| 泛型   | `TValues` | `extends Readonly<Record<string, string>>`                            | 已知字符串值的 const object enum 类型       |
+| 参数   | `values`  | `TValues`                                                             | 提供已知字符串值的枚举对象                  |
+| 返回值 | —         | `ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>` | 接受已知枚举值或自定义非空白字符串的 schema |
 
-#### 参数
-
-| 参数     | 类型      | 说明                       |
-| -------- | --------- | -------------------------- |
-| `values` | `TValues` | 提供已知字符串值的枚举对象 |
-
-#### 返回值
-
-接受已知枚举值或自定义非空白字符串的 schema
+</ApiTable>
 
 </DocTab>
 
@@ -699,22 +767,16 @@ export declare const createOpenStringSchema: <const TValues extends Readonly<Rec
 
 <DocTab value="members" label="属性">
 
-#### 类型参数
+<ApiTable variant="parameters">
 
-| 类型参数 | 说明       |
-| -------- | ---------- |
-| `TKey`   | Map 键类型 |
-| `TValue` | Map 值类型 |
+| 类别   | 名称      | 类型 / 签名                         | 说明                                                  |
+| ------ | --------- | ----------------------------------- | ----------------------------------------------------- |
+| 泛型   | `TKey`    | —                                   | Map 键类型                                            |
+|        | `TValue`  | —                                   | Map 值类型                                            |
+| 参数   | `entries` | `Iterable<readonly [TKey, TValue]>` | 用于创建快照的键值对                                  |
+| 返回值 | —         | `ReadonlyMap<TKey, TValue>`         | 独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结 |
 
-#### 参数
-
-| 参数      | 类型                                | 说明                 |
-| --------- | ----------------------------------- | -------------------- |
-| `entries` | `Iterable<readonly [TKey, TValue]>` | 用于创建快照的键值对 |
-
-#### 返回值
-
-独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结
+</ApiTable>
 
 </DocTab>
 
@@ -742,15 +804,14 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 <DocTab value="members" label="属性">
 
-#### 参数
+<ApiTable variant="parameters">
 
-| 参数    | 类型      | 说明           |
-| ------- | --------- | -------------- |
-| `value` | `unknown` | 待判断的动态值 |
+| 类别   | 名称    | 类型 / 签名            | 说明                                          |
+| ------ | ------- | ---------------------- | --------------------------------------------- |
+| 参数   | `value` | `unknown`              | 待判断的动态值                                |
+| 返回值 | —       | `value is RetikzError` | 是否为 RetikzError 实例；返回 true 时收窄类型 |
 
-#### 返回值
-
-是否为 RetikzError 实例；返回 true 时收窄类型
+</ApiTable>
 
 </DocTab>
 
@@ -778,26 +839,17 @@ export declare const isRetikzError: (value: unknown) => value is RetikzError;
 
 <DocTab value="members" label="属性">
 
-#### 类型参数
+<ApiTable variant="parameters">
 
-| 类型参数 | 说明               |
-| -------- | ------------------ |
-| `T`      | 被浅合并的对象类型 |
+| 类别   | 名称       | 类型 / 签名                               | 说明                                                                     |
+| ------ | ---------- | ----------------------------------------- | ------------------------------------------------------------------------ |
+| 泛型   | `T`        | `extends object`                          | 被浅合并的对象类型                                                       |
+| 参数   | `sources`  | `ReadonlyArray<Readonly<T> \| undefined>` | 按优先级从低到高排列的源对象                                             |
+|        | `options?` | `MergePropertiesOptions<NoInfer<T>>`      | 属性写入策略；默认 &#123;&#125;，不筛除源属性                            |
+| 返回值 | —          | `Partial<T>`                              | 可能经过过滤的新对象，因此返回类型为 `Partial<T>`                        |
+| 错误   | —          | —                                         | 属性读取或策略回调失败时抛出 RetikzFoundationError，原始异常保留为 cause |
 
-#### 参数
-
-| 参数      | 类型                                       | 说明                         |
-| --------- | ------------------------------------------ | ---------------------------- |
-| `sources` | `readonly Array<Readonly<T> \| undefined>` | 按优先级从低到高排列的源对象 |
-| `options` | `MergePropertiesOptions<NoInfer<T>>`       | 属性写入策略                 |
-
-#### 返回值
-
-可能经过过滤的新对象，因此返回类型为 `Partial<T>`
-
-#### 异常
-
-- 属性读取或策略回调失败时抛出 RetikzFoundationError，原始异常保留为 cause
+</ApiTable>
 
 </DocTab>
 
@@ -828,15 +880,14 @@ export declare const mergeProperties: <T extends object>(
 
 <DocTab value="members" label="属性">
 
-#### 参数
+<ApiTable variant="parameters">
 
-| 参数    | 类型     | 说明                |
-| ------- | -------- | ------------------- |
-| `input` | `string` | 静态 CSS 颜色字符串 |
+| 类别   | 名称    | 类型 / 签名              | 说明                                                  |
+| ------ | ------- | ------------------------ | ----------------------------------------------------- |
+| 参数   | `input` | `string`                 | 静态 CSS 颜色字符串                                   |
+| 返回值 | —       | `ParsedCssColor \| null` | 归一化 sRGB 通道与 alpha；无效或不支持的颜色返回 null |
 
-#### 返回值
-
-归一化 sRGB 通道与 alpha；无效或不支持的颜色返回 null
+</ApiTable>
 
 </DocTab>
 
