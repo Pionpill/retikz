@@ -2,46 +2,45 @@
 
 ## `@retikz/react`
 
-### ScopeProps
+### Scope / ScopeProps
 
-<p>
-  <ApiSourceLink label={'ScopeProps'} path={'packages/kernel/react/src/kernel/components/Scope.tsx'} startLine={11}>
-    Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements
-  </ApiSourceLink>
-</p>
+- `Scope`: <ApiSourceLink label={"Scope"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={65}>Group child elements into a scope with shared styling, transforms, placement, and clipping</ApiSourceLink>
+- `ScopeProps`: <ApiSourceLink label={"ScopeProps"} path={"packages/kernel/react/src/kernel/components/Scope.tsx"} startLine={11}>Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements</ApiSourceLink>
+
+Provides local styles, namespaces, transforms, final anchor placement, clipping, and reference bounds for a group of nodes and paths
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
 
-| Group     | Member            | Type                       | Default       | Description                                                                                                                                                                                                                                                                              |
-| --------- | ----------------- | -------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Main      | `children?`       | `ReactNode`                | —             | Scope children: nested Node, Path, Coordinate, or Scope                                                                                                                                                                                                                                  |
-|           | `id?`             | `string`                   | —             | Optional Scope reference id; makes the group envelope available as a reference target<br />External paths and positions can reference these bounds using `scope.id`, `scope.id.<anchor>`, or `scope.id.<deg>`; this external handle is unaffected by `localNamespace`                    |
-|           | `localNamespace?` | `boolean`                  | `false`       | Whether to create a local namespace; when true, child ids do not propagate to the parent frame and are not externally visible<br />Child IDs can only be referenced inside this Scope; they are inaccessible outside it, while `scope.id` itself remains accessible from the outer scope |
-| Geometry  | `boundingShape?`  | `IRScope['boundingShape']` | `'rectangle'` | Synthetic reference-envelope shape for the Scope id: the closed enum 'rectangle' \| 'circle', rather than an open Node shape reference; defaults to 'rectangle' (axis-aligned bounding box)                                                                                              |
-|           | `clip?`           | `IRScope['clip']`          | —             | Clip region in Scope-local coordinates (rect, circle, ellipse, polygon, path, compound, or custom); clips all children when supplied                                                                                                                                                     |
-|           | `placement?`      | `IRScope['placement']`     | —             | Final anchor-aligned Scope placement<br />The target is an explicit point in parent coordinates or a previously completed named entity; selfAnchor defaults to the center of the intrinsic bounds                                                                                        |
-|           | `transforms?`     | `Array<InputTransform>`    | —             | Local transform list following SVG transform-list order; the last item acts on a local point first<br />Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale                                                                        |
-| Style     | `defaults?`       | `InputScope['defaults']`   | —             | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels                                                                                                                                                   |
-|           | `frame?`          | `IRScope['frame']`         | —             | Independent intrinsic-envelope frame below all content; excluded from layout, references, and hit testing                                                                                                                                                                                |
-|           | `style?`          | `InputScope['style']`      | —             | Scope-level visual overrides cascade declared fields to descendant Composites                                                                                                                                                                                                            |
-|           | `theme?`          | `IRScope['theme']`         | —             | Local Theme overriding only declared fields, inherited by descendant Composites                                                                                                                                                                                                          |
-|           | `zIndex?`         | `IRScope['zIndex']`        | `0`           | Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order                                                                                                                                                     |
-| Callbacks | `onClick?`        | `HydrationHandler`         | —             | Click on this element (DOM `click`)                                                                                                                                                                                                                                                      |
-|           | `onDoubleClick?`  | `HydrationHandler`         | —             | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                            |
-|           | `onPointerDown?`  | `HydrationHandler`         | —             | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                      |
-|           | `onPointerEnter?` | `HydrationHandler`         | —             | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                          |
-|           | `onPointerLeave?` | `HydrationHandler`         | —             | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                             |
-|           | `onPointerMove?`  | `HydrationHandler`         | —             | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                      |
-|           | `onPointerUp?`    | `HydrationHandler`         | —             | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                       |
-|           | `onRightClick?`   | `HydrationHandler`         | —             | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so the handler must call `event.preventDefault()` if needed                                                                                                                             |
-|           | `onWheel?`        | `HydrationHandler`         | —             | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                              |
-| Animation | `animations?`     | `IRScope['animations']`    | —             | Timeline animations for the whole Scope; rendered as animation or a static fallback, without participating in layout or propagating to children                                                                                                                                          |
-| Runtime   | `authoring?`      | `unknown`                  | —             | Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                           |
-|           | `meta?`           | `IRScope['meta']`          | —             | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout or propagate to children                                                                                                                                                       |
+| Group     | Member            | Type                                    | Default       | Description                                                                                                                                                                                                                                                           |
+| --------- | ----------------- | --------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `children?`       | `ReactNode`                             | —             | Scope children: nested Node, Path, Coordinate, or Scope                                                                                                                                                                                                               |
+|           | `id?`             | `string`                                | —             | Optional Scope reference id; makes the group envelope available as a reference target<br />External paths and positions can reference these bounds using `scope.id`, `scope.id.<anchor>`, or `scope.id.<deg>`; this external handle is unaffected by `localNamespace` |
+|           | `localNamespace?` | `boolean`                               | `false`       | Whether to create a local namespace; when true, child ids are hidden from outer scopes<br />Child IDs can only be referenced inside this Scope; they are inaccessible outside it, while `scope.id` itself remains accessible from the outer scope                     |
+| Geometry  | `boundingShape?`  | <ApiValues name="ScopeBoundingShape" /> | `'rectangle'` | Envelope shape used when referencing the group by id; supports rectangles or circles and defaults to an axis-aligned rectangle                                                                                                                                        |
+|           | `clip?`           | `IRScope['clip']`                       | —             | Clip region in Scope-local coordinates (rect, circle, ellipse, polygon, path, compound, or custom); clips all children when supplied                                                                                                                                  |
+|           | `placement?`      | `IRScope['placement']`                  | —             | Final anchor-aligned Scope placement<br />The target is an explicit point in parent coordinates or a previously completed named entity; selfAnchor defaults to the center of the intrinsic bounds                                                                     |
+|           | `transforms?`     | `Array<InputTransform>`                 | —             | Local transform list following SVG transform-list order; the last item acts on a local point first<br />Supports translate, polar-translate, at-translate, offset-translate, between-translate, rotate, and scale                                                     |
+| Style     | `defaults?`       | `InputScope['defaults']`                | —             | Default styles for descendant Nodes, Paths, Labels, and Arrows; explicit element values win and `reset` blocks selected outer channels                                                                                                                                |
+|           | `frame?`          | `IRScope['frame']`                      | —             | Independent intrinsic-envelope frame below all content; excluded from layout, references, and hit testing                                                                                                                                                             |
+|           | `style?`          | `InputScope['style']`                   | —             | Scope-level visual overrides cascade declared fields to descendant Composites                                                                                                                                                                                         |
+|           | `theme?`          | `IRScope['theme']`                      | —             | Local Theme overriding only declared fields, inherited by descendant Composites                                                                                                                                                                                       |
+|           | `zIndex?`         | `number`                                | `0`           | Explicit stacking order of the whole Scope among siblings, without changing child order; defaults to 0, preserving declaration order                                                                                                                                  |
+| Callbacks | `onClick?`        | `HydrationHandler`                      | —             | Click on this element (DOM `click`)                                                                                                                                                                                                                                   |
+|           | `onDoubleClick?`  | `HydrationHandler`                      | —             | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                         |
+|           | `onPointerDown?`  | `HydrationHandler`                      | —             | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                   |
+|           | `onPointerEnter?` | `HydrationHandler`                      | —             | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                       |
+|           | `onPointerLeave?` | `HydrationHandler`                      | —             | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                          |
+|           | `onPointerMove?`  | `HydrationHandler`                      | —             | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                   |
+|           | `onPointerUp?`    | `HydrationHandler`                      | —             | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                    |
+|           | `onRightClick?`   | `HydrationHandler`                      | —             | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so the handler must call `event.preventDefault()` if needed                                                                                                          |
+|           | `onWheel?`        | `HydrationHandler`                      | —             | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                           |
+| Animation | `animations?`     | `Array<IRAnimationTrack>`               | —             | Timeline animations for the whole Scope; rendered as animation or a static fallback, without participating in layout or propagating to children                                                                                                                       |
+| Runtime   | `authoring?`      | `unknown`                               | —             | Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                        |
+|           | `meta?`           | `IRScope['meta']`                       | —             | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout or propagate to children                                                                                                                                    |
 
 </div>
 
@@ -50,6 +49,8 @@
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const Scope: FC<ScopeProps>;
+
 export type ScopeProps = ScopeStyleProps &
   HydrationEventProps & {
     theme?: IRScope['theme'];
@@ -88,7 +89,7 @@ export type ScopeProps = ScopeStyleProps &
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
 | Member      | Type                     | Default | Description                                                                                                                            |
 | ----------- | ------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -111,17 +112,3 @@ export type ScopeStyleProps = {
 </DocTab>
 
 </DocTabs>
-
-### Scope
-
-<p>
-  <ApiSourceLink label={'Scope'} path={'packages/kernel/react/src/kernel/components/Scope.tsx'} startLine={65}>
-    Scope container, equivalent to TikZ `\begin{scope}[...]...\end{scope}`
-  </ApiSourceLink>
-</p>
-
-Provides local styles, namespaces, transforms, final anchor placement, clipping, and reference bounds for a group of nodes and paths
-
-```ts
-export declare const Scope: FC<ScopeProps>;
-```

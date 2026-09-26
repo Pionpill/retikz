@@ -16,6 +16,13 @@ const scopeConfig: ApiReferencePackageConfig = {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
       symbols: ['Scope', 'ScopeProps', 'ScopeStyleProps'],
+      symbolPairs: [['Scope', 'ScopeProps']],
+      memberValueSets: {
+        ScopeProps: { boundingShape: { name: 'ScopeBoundingShape' } },
+      },
+      memberTypeLabels: {
+        ScopeProps: { animations: 'Array<IRAnimationTrack>', zIndex: 'number' },
+      },
     },
   ],
   translate: translateScopeApiReference,
