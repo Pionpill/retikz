@@ -7,7 +7,6 @@ import { PreviewControlStateContext } from '@/modules/docs/components/component-
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
 
-import { defineRelationSemanticProps } from '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-role-controls';
 import StyleDemo, {
   previewSource as styleZhSource,
 } from '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-style';
@@ -43,45 +42,32 @@ const demoModules = import.meta.glob<DemoModule>(
 type RoleScenario = Readonly<{
   role: string;
   fields: ReadonlyArray<Readonly<{ kind: string; id: string; defaultValue: unknown }>>;
-  kindOptions?: ReadonlyArray<string>;
   directionOptions?: ReadonlyArray<string>;
-  directionVisibleWith?: ReadonlyArray<string>;
-  visibleKind?: string;
 }>;
 
 const scenarios: ReadonlyArray<RoleScenario> = [
   {
     role: 'association',
     fields: [
-      { kind: 'select', id: 'kind', defaultValue: '' },
       { kind: 'select', id: 'direction', defaultValue: 'forward' },
       { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
-    kindOptions: ['', 'uml.association', 'uml.aggregation', 'uml.composition'],
     directionOptions: ['none', 'forward', 'reverse', 'both'],
-    directionVisibleWith: [''],
-    visibleKind: 'uml.aggregation',
   },
   {
     role: 'dependency',
     fields: [
-      { kind: 'select', id: 'kind', defaultValue: '' },
       { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
-    kindOptions: ['', 'uml.dependency', 'uml.realization'],
-    visibleKind: 'uml.realization',
   },
   {
     role: 'generalization',
     fields: [
-      { kind: 'select', id: 'kind', defaultValue: '' },
       { kind: 'select', id: 'status', defaultValue: '' },
       { kind: 'color', id: 'color', defaultValue: 'currentColor' },
     ],
-    kindOptions: ['', 'uml.generalization'],
-    visibleKind: 'uml.generalization',
   },
   {
     role: 'flow',
@@ -142,12 +128,6 @@ const renderWithValues = (contract: PreviewControlContract, Demo: FC, values: Re
   );
 
 describe('Graph Relation role controls', () => {
-  it('不会把未选择的 kind 或被 kind 接管的 direction 写成 undefined 字段', () => {
-    expect(defineRelationSemanticProps(undefined, undefined)).toEqual({});
-    expect(defineRelationSemanticProps('uml.aggregation', undefined)).toEqual({ kind: 'uml.aggregation' });
-    expect(defineRelationSemanticProps(undefined, 'forward')).toEqual({ direction: 'forward' });
-  });
-
   it('为五个 role 提供双语一致且只包含有效语义分支的 controls', () => {
     for (const scenario of scenarios) {
       const { chineseControls, englishControls } = getScenarioModules(scenario.role);
@@ -164,13 +144,7 @@ describe('Graph Relation role controls', () => {
         chineseControls.previewControlContract.relatedApis,
       );
 
-      const kind = fields.find(field => field.id === 'kind');
-      if (scenario.kindOptions !== undefined && kind?.kind === 'select') {
-        expect(
-          kind.options.map(option => option.value),
-          `${scenario.role}: kind`,
-        ).toEqual(scenario.kindOptions);
-      }
+      expect(fields.some(field => field.id === 'kind')).toBe(false);
 
       const direction = fields.find(field => field.id === 'direction');
       if (scenario.directionOptions !== undefined && direction?.kind === 'select') {
@@ -178,13 +152,6 @@ describe('Graph Relation role controls', () => {
           direction.options.map(option => option.value),
           `${scenario.role}: direction`,
         ).toEqual(scenario.directionOptions);
-        if (scenario.kindOptions !== undefined) {
-          expect(direction.visibleWhen, `${scenario.role}: direction visibility`).toEqual(
-            scenario.directionVisibleWith === undefined
-              ? { controlId: 'kind', oneOf: [''] }
-              : { controlId: 'kind', oneOf: scenario.directionVisibleWith },
-          );
-        }
       }
     }
   });
@@ -200,14 +167,6 @@ describe('Graph Relation role controls', () => {
         renderWithValues(contract, chineseDemo.default, { ...contract.canonicalValues, color: '#2563eb' }),
         `${scenario.role}: color`,
       ).not.toBe(baseline);
-      const changedKind = scenario.visibleKind;
-      if (changedKind !== undefined) {
-        expect(
-          renderWithValues(contract, chineseDemo.default, { ...contract.canonicalValues, kind: changedKind }),
-          `${scenario.role}: kind`,
-        ).not.toBe(baseline);
-      }
-
       const changedDirection = scenario.directionOptions?.find(value => value !== contract.canonicalValues.direction);
       if (changedDirection !== undefined) {
         expect(

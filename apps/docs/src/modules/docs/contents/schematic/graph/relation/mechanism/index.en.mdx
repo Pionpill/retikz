@@ -68,7 +68,7 @@ The id and non-conflicting Core Path fields pass through; relation-specific fiel
 
 ## Registration errors surface at assembly
 
-The registry combines built-in and custom definitions, rejects replacement keys, and checks parent roles, kind ownership, allowed directions, and complete recipes. `define*` only preserves the definition object; a successful call does not prove the assembled dependency set is valid. Predicate parameters and callback results are checked when consumed.
+The role registry combines built-in and user definitions, while kind and predicate registries accept only user definitions. Each registry rejects replacement keys and checks parent roles, kind ownership, allowed directions, and complete recipes. `define*` only preserves the definition object; a successful call does not prove the assembled dependency set is valid. Predicate parameters and callback results are checked when consumed.
 
 <SourceLinks
   sources={[

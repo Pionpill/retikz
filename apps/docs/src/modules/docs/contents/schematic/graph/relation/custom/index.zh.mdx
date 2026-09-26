@@ -5,6 +5,8 @@ description: 定义并注入关系角色、子类型与带参数的领域谓词�
 
 Relation 的内置与自定义语义共用 Definition、注册与绘制流程。本页假定你已了解[基础用法](/schematic/graph/relation/usage)中的端点与方向。
 
+Relation 与 Entity 一样不提供内置 kind。每个 kind 都需要先定义，再通过 `relationKinds` 注册到实际使用它的 provider assembly；只调用 `defineRelationKind` 不会自动注册。
+
 ## 适用边界
 
 多个关系共享稳定含义、方向约束或箭头结构时，注册 Definition。只调整一条线的路径、标签或颜色时直接配置实例；只根据已有语义改变外观时使用 Graph rules。Definition 不负责自动布局、避障或业务条件执行。

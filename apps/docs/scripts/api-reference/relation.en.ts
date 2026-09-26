@@ -42,7 +42,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '按有效方向提供的稀疏结构 delta': 'Sparse structure overrides by effective direction',
   '全局唯一的开放 Relation kind key': 'Globally unique open Relation kind key',
   'kind 所属的 Relation role': 'Relation role owning this kind',
-  'Relation 内置 kind 词汇值': 'Built-in Relation kind values',
   'Relation predicate registry 保存的参数擦除定义':
     'Parameter-erased definition stored by the Relation predicate registry',
   '可选允许的 Relation kind keys；省略表示该 role 的全部 kind':
@@ -59,7 +58,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '开放的 Relation role key': 'Open Relation role key',
   'Relation 内置角色词汇值': 'Built-in Relation role values',
   'Relation 有向性词汇': 'Relation direction vocabulary',
-  'Relation 的内置稳定 kind': 'Built-in stable Relation kinds',
   'Relation 的内置语义角色': 'Built-in Relation semantic roles',
   '定义一个可注册的 Relation kind': 'Define a registrable Relation kind',
   '传给 GraphDefinitionOptions.relationKinds 的定义；此函数不执行注册或校验':

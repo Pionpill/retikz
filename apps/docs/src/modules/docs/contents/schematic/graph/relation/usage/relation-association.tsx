@@ -7,26 +7,22 @@ import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/
 
 import { createPreviewControlContract, previewControlContract } from './relation-association.controls';
 import { relationAssociationI18n } from './relation-association.i18n';
-import { defineRelationSemanticProps, relationStatusOf } from './relation-role-controls';
+import { relationStatusOf } from './relation-role-controls';
 
 export const previewControls = previewControlContract.controls;
 
 const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => {
-    const kindValue = typeof values.kind === 'string' ? values.kind : '';
     const directionValue = typeof values.direction === 'string' ? values.direction : 'none';
     const color = typeof values.color === 'string' ? values.color : 'currentColor';
-    const kind = kindValue.length === 0 ? undefined : kindValue;
     const direction =
-      kind === undefined
-        ? directionValue === 'forward'
-          ? RelationDirection.Forward
-          : directionValue === 'reverse'
-            ? RelationDirection.Reverse
-            : directionValue === 'both'
-              ? RelationDirection.Both
-              : RelationDirection.None
-        : undefined;
+      directionValue === 'forward'
+        ? RelationDirection.Forward
+        : directionValue === 'reverse'
+          ? RelationDirection.Reverse
+          : directionValue === 'both'
+            ? RelationDirection.Both
+            : RelationDirection.None;
     const relationDefaults =
       color === 'currentColor'
         ? {}
@@ -52,7 +48,7 @@ const createPreview = (lang: Lang) =>
           id="association-demo"
           role="association"
           status={relationStatusOf(values.status)}
-          {...defineRelationSemanticProps(kind, direction)}
+          direction={direction}
           source={{ id: 'source' }}
           target={{ id: 'target' }}
           way={['source', 'target']}

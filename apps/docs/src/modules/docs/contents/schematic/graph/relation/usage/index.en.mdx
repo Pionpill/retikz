@@ -91,7 +91,7 @@ const view = mount(document.getElementById('diagram')!, ir, { compile: { composi
 </DocTab>
 </DocTabs>
 
-## Connect endpoints
+### Connect endpoints
 
 React and Vanilla accept `source="sender"`, normalized to `{ id: 'sender' }`. IR and `createRelation()` require full objects. Use `source={{ id: 'sender', anchor: 'right' }}` to select an anchor. Targets may be Core Nodes, Coordinates, resolved Scopes, or targets published by higher-level components. Core reports duplicate ids and unresolved references.
 
@@ -99,31 +99,31 @@ Endpoints and direction are stored separately. `reverse` places a marker at the 
 
 ## Choose relationship semantics
 
-The five built-in roles define broad relationship semantics, the base interpretation of source / target, allowed directions, and marker families. Relation has **no built-in predicates**; a predicate name and params are valid only after their definition is registered in the current provider assembly
+The five built-in roles define broad relationship semantics, the base interpretation of source / target, allowed directions, and marker families. Relation has **no built-in kinds or predicates**; kinds must be registered by the user, and predicate names and params also require a corresponding definition
 
-Relation examples use the default style and support light and dark modes. The controls below expose only the kinds, directions, and precise Relation color supported by each role; use Graph defaults and conditional rules to customize appearance across relations
+Relation examples use the default style and support light and dark modes. The controls below expose only the directions, statuses, and precise Relation color supported by each role; use Graph defaults and conditional rules to customize appearance across relations
 
-Built-in `kind` values cover common UML class- and component-diagram relationships. They determine only the path and endpoints; they do not add stereotype, multiplicity, or other text primitives
+`kind` represents a user-defined domain classification. Omitting it uses the role defaults. Specifying it requires registration in the current provider assembly; an unregistered kind raises an error. See [Custom](/schematic/graph/relation/custom) for definition and registration
 
-| role             | Built-in kind                                           | Path and endpoints                                                                                                                                                            |
-| ---------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `association`    | `uml.association`, `uml.aggregation`, `uml.composition` | The role defaults to a filled target diamond; UML association is an unmarked solid path, aggregation has a hollow source diamond, and composition has a filled source diamond |
-| `generalization` | `uml.generalization`                                    | Solid path; the default target has a filled arrow, while the UML kind overrides it with a hollow triangle                                                                     |
-| `dependency`     | `uml.dependency`                                        | Dashed path with an open target `straightBarb` arrow                                                                                                                          |
-| `dependency`     | `uml.realization`                                       | Dashed path with a hollow target triangle                                                                                                                                     |
+| role             | Default direction | Default path and endpoints             |
+| ---------------- | ----------------- | -------------------------------------- |
+| `association`    | `forward`         | Solid path; filled target `diamond`    |
+| `dependency`     | `forward`         | Solid path; open target `straightBarb` |
+| `generalization` | `forward`         | Solid path; filled target `normal`     |
+| `flow`           | `forward`         | Solid path; target `stealth`           |
+| `influence`      | `forward`         | Solid path; target `circle`            |
 
 ### association: general relationships
 
 `association` represents a general relationship between two objects. It defaults to `forward` and uses a filled target `diamond` marker. You may explicitly select `none`, `reverse`, or `both`
 
 - **Default / allowed directions:** `forward` / `none`, `forward`, `reverse`, `both`
-- **Built-in kinds:** `uml.association` uses an unmarked solid path and fixes direction to `none`. `uml.aggregation` and `uml.composition` both interpret source as the whole and target as the part, and both fix direction to `none`
 - **Built-in predicates:** none; a domain extension can register a cardinality predicate whose params schema validates source and target multiplicities
 
 <ComponentPreview
   files="relation-association"
   size="md"
-  caption="The generic association defaults to a target diamond. Each UML association kind fixes direction and determines its own endpoint structure."
+  caption="Change direction to place diamonds at the source, target, both endpoints, or neither. Endpoint positions stay fixed."
 />
 
 ### dependency: dependency relationships
@@ -131,27 +131,25 @@ Built-in `kind` values cover common UML class- and component-diagram relationshi
 `dependency` means source depends on target: source is the dependent and target is the dependency. It is fixed to `forward` and defaults to a solid path with an open, unfilled target `straightBarb` marker
 
 - **Default / allowed directions:** `forward` / `forward` only
-- **Built-in kinds:** `uml.dependency` overrides the path with a dashed open arrow. `uml.realization` uses a dashed hollow triangle. UML dependency subtypes without a visible structural difference are not built-in kinds; use a label, meta, or a custom kind when the domain semantics matter
 - **Built-in predicates:** none; an extension can declare params such as `{ optional: boolean, reason: string }`, with the predicate definition owning the fields and value ranges
 
 <ComponentPreview
   files="relation-dependency"
   size="md"
-  caption="Switch UML dependency kinds to compare the open-arrow and hollow-triangle endpoint structures, then adjust the Relation color."
+  caption="Dependency always points to the target. Change status or color to inspect the path and open-arrow appearance."
 />
 
 ### generalization: type generalization
 
-`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward` and defaults to a solid path with a filled target `normal` arrow; `uml.generalization` overrides it with a hollow triangle
+`generalization` means source is a more specific form of target: source is the subtype and target is the supertype. It is fixed to `forward` and defaults to a solid path with a filled target `normal` arrow
 
 - **Default / allowed directions:** `forward` / `forward` only
-- **Built-in kind:** `uml.generalization` uses a hollow triangle. `uml.realization` is a dependency kind and uses a dashed hollow triangle
 - **Built-in predicates:** none; a type-system extension can use params for a discriminator or constraint, but Graph does not perform type checking
 
 <ComponentPreview
   files="relation-generalization"
   size="md"
-  caption="Switch the default and UML generalization kinds to compare the filled arrow and hollow triangle, then adjust the Relation color."
+  caption="Generalization points to the supertype with a filled arrow. Change status or color to inspect its appearance."
 />
 
 ### flow: movement between objects
@@ -159,7 +157,6 @@ Built-in `kind` values cover common UML class- and component-diagram relationshi
 `flow` represents transfer, progression, or state movement between objects, activities, or states. Source and target are stable route endpoints; the effective direction decides which endpoint receives a stealth marker
 
 - **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
-- **Built-in kinds:** none; domain classifications such as `workflow.branch` and `workflow.feedback` must be registered by their owner
 - **Built-in predicates:** none; a workflow extension can declare condition params such as `{ expression: string, priority: number }`. Graph validates and stores them but does not execute the condition
 
 <ComponentPreview
@@ -173,7 +170,6 @@ Built-in `kind` values cover common UML class- and component-diagram relationshi
 `influence` means one object affects another without requiring data transfer or an execution dependency. The effective direction places a filled circular `circle` marker at source, target, or both endpoints
 
 - **Default / allowed directions:** `forward` / `forward`, `reverse`, `both`
-- **Built-in kinds:** none; the domain that owns the influence taxonomy registers its own kinds
 - **Built-in predicates:** none; an analytical model can declare params such as `{ weight: number, confidence: number }` and select appearance through Theme rules
 
 <ComponentPreview

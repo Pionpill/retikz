@@ -9,28 +9,17 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: copy.controls[0],
     sectionLabel: copy.controls[1],
     statusLocale: lang,
-    kind: {
-      label: copy.controls[2],
-      defaultValue: '',
-      options: [
-        { value: '', label: copy.controls[3] },
-        { value: 'uml.association', label: copy.controls[4] },
-        { value: 'uml.aggregation', label: copy.controls[5] },
-        { value: 'uml.composition', label: copy.controls[6] },
-      ],
-    },
     direction: {
-      label: copy.controls[7],
+      label: copy.controls[2],
       defaultValue: 'forward',
-      visibleWithKinds: [''],
       options: [
-        { value: 'none', label: copy.controls[8] },
+        { value: 'none', label: copy.controls[3] },
         { value: 'forward', label: 'source → target' },
         { value: 'reverse', label: 'target → source' },
-        { value: 'both', label: copy.controls[9] },
+        { value: 'both', label: copy.controls[4] },
       ],
     },
-    colorLabel: copy.controls[10],
+    colorLabel: copy.controls[5],
   });
 };
 export const previewControlContract = createPreviewControlContract('zh');

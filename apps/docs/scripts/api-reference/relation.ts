@@ -10,7 +10,6 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 const relationMemberValueSets = {
   role: { name: 'RelationRole', open: true },
-  kind: { name: 'RelationKind', open: true },
   direction: { name: 'RelationDirection' },
   status: { name: 'GraphStatus' },
 } as const;
@@ -47,8 +46,6 @@ export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     symbols: [
       'RelationRole',
       'RelationRoleValue',
-      'RelationKind',
-      'RelationKindValue',
       'RelationDirection',
       'RelationDirectionValue',
       'GraphStatus',

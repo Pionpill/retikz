@@ -6,13 +6,12 @@ import { defineControlledPreview, withGraphPreviewSource } from '@/modules/docs/
 
 import { createPreviewControlContract, previewControlContract } from './relation-generalization.controls';
 import { relationGeneralizationI18n } from './relation-generalization.i18n';
-import { defineRelationSemanticProps, relationStatusOf } from './relation-role-controls';
+import { relationStatusOf } from './relation-role-controls';
 
 export const previewControls = previewControlContract.controls;
 
 const createPreview = (lang: Lang) =>
   defineControlledPreview(createPreviewControlContract(lang), values => {
-    const kindValue = typeof values.kind === 'string' ? values.kind : '';
     const color = typeof values.color === 'string' ? values.color : 'currentColor';
     const relationDefaults =
       color === 'currentColor'
@@ -39,7 +38,6 @@ const createPreview = (lang: Lang) =>
           id="generalization-demo"
           role="generalization"
           status={relationStatusOf(values.status)}
-          {...defineRelationSemanticProps(kindValue.length === 0 ? undefined : kindValue, undefined)}
           source={{ id: 'source' }}
           target={{ id: 'target' }}
           way={['source', 'target']}

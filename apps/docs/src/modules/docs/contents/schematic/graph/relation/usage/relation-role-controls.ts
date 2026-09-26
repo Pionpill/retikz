@@ -8,7 +8,6 @@ import { relationStatusOptions } from './relation-role.i18n';
 
 /** Relation role demo 共用的稳定字段 id */
 export const RelationRoleControlId = {
-  Kind: 'kind',
   Direction: 'direction',
   Status: 'status',
   Color: 'color',
@@ -27,15 +26,6 @@ export const relationStatusOf = (value: unknown): InputRelation['status'] => {
   }
 };
 
-/** 只把已选择的 Relation 语义字段交给 JSON-safe authoring */
-export const defineRelationSemanticProps = (
-  kind: string | undefined,
-  direction: InputRelation['direction'] | undefined,
-): Pick<InputRelation, 'kind' | 'direction'> => ({
-  ...(kind === undefined ? {} : { kind }),
-  ...(direction === undefined ? {} : { direction }),
-});
-
 type RelationRoleControlOption = Readonly<{
   value: string;
   label: string;
@@ -47,16 +37,10 @@ type RelationRoleSelectCopy = Readonly<{
   options: ReadonlyArray<RelationRoleControlOption>;
 }>;
 
-type RelationRoleDirectionSelectCopy = RelationRoleSelectCopy &
-  Readonly<{
-    visibleWithKinds?: ReadonlyArray<string>;
-  }>;
-
 type RelationRoleControlCopy = Readonly<{
   title: string;
   sectionLabel: string;
-  kind?: RelationRoleSelectCopy;
-  direction?: RelationRoleDirectionSelectCopy;
+  direction?: RelationRoleSelectCopy;
   statusLocale: 'zh' | 'en';
   colorLabel: string;
 }>;
@@ -65,15 +49,6 @@ type RelationRoleControlCopy = Readonly<{
 export const defineRelationRoleControlContract = <const TCopy extends RelationRoleControlCopy>(copy: TCopy) => {
   const roleControls: Array<PreviewPanelControlItem> = [];
 
-  if (copy.kind !== undefined) {
-    roleControls.push({
-      kind: 'select',
-      id: RelationRoleControlId.Kind,
-      label: copy.kind.label,
-      defaultValue: copy.kind.defaultValue,
-      options: copy.kind.options,
-    });
-  }
   if (copy.direction !== undefined) {
     roleControls.push({
       kind: 'select',
@@ -81,14 +56,6 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
       label: copy.direction.label,
       defaultValue: copy.direction.defaultValue,
       options: copy.direction.options,
-      ...(copy.kind === undefined
-        ? {}
-        : {
-            visibleWhen: {
-              controlId: RelationRoleControlId.Kind,
-              oneOf: copy.direction.visibleWithKinds ?? [copy.kind.defaultValue],
-            },
-          }),
     });
   }
   roleControls.push({
@@ -114,13 +81,11 @@ export const defineRelationRoleControlContract = <const TCopy extends RelationRo
   return {
     controls,
     canonicalValues: {
-      ...(copy.kind === undefined ? {} : { kind: copy.kind.defaultValue }),
       ...(copy.direction === undefined ? {} : { direction: copy.direction.defaultValue }),
       status: '',
       color: 'currentColor',
     },
     relatedApis: [
-      ...(copy.kind === undefined ? [] : ['Relation.kind']),
       ...(copy.direction === undefined ? [] : ['Relation.direction']),
       'Relation.status',
       'Graph.graphDefaults.relation.style.stroke',

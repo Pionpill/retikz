@@ -5,6 +5,8 @@ description: Define and inject relationship roles, kinds, and parameterized doma
 
 Built-in and custom Relation semantics use the same definition, registration, and drawing path. This page assumes the endpoints and directions covered in [Basic usage](/schematic/graph/relation/usage).
 
+Like Entity, Relation has no built-in kinds. Define each kind and register it through `relationKinds` in the provider assembly that consumes it; calling `defineRelationKind` alone does not register it.
+
 ## Scope
 
 Register a definition when several relations share stable semantics, direction constraints, or marker structure. Configure an instance for a one-off path, label, or color; use Graph rules to change appearance based on existing semantics. Definitions do not perform layout, obstacle avoidance, or business-condition evaluation.

@@ -345,7 +345,7 @@ export type GraphDefinitionOptions = Readonly<{
 ### GraphStatusValue
 
 <p>
-  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={18}>
+  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
     Graph 内置语义状态词汇值
   </ApiSourceLink>
 </p>
@@ -394,7 +394,7 @@ export type GraphStatusValue = ValueOf<typeof GraphStatus>;
 | `direction?`           | <ApiValues name="RelationDirection" />                                                                                                                                                | —      | 显式语义方向，覆盖 kind / role 默认且须在允许集合内                       |
 | `group?`               | `string`                                                                                                                                                                              | —      | Graph 根内的分类色分组 key，不创建 Group 容器                             |
 | `id?`                  | `string`                                                                                                                                                                              | —      | 可选稳定引用 id；省略不自动生成                                           |
-| `kind?`                | <ApiValues name="RelationKind" /> \| `string`                                                                                                                                         | —      | 开放子类型 key，必须属于选定 role                                         |
+| `kind?`                | `string`                                                                                                                                                                              | —      | 开放子类型 key，必须属于选定 role                                         |
 | `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —      | 关系标签的默认字体                                                        |
 | `labelOpacity?`        | `number`                                                                                                                                                                              | —      | 关系标签的默认不透明度                                                    |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                                                                              | —      | 附着到关系路径的完整 Core 几何标签数组                                    |
@@ -680,40 +680,6 @@ export type RelationKindDefinition = Readonly<{
 
 </DocTabs>
 
-### RelationKindValue
-
-<p>
-  <ApiSourceLink label={'RelationKindValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
-    Relation 内置 kind 词汇值
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="展开类型">
-
-```ts
-export type RelationKindValue =
-  | 'uml.association'
-  | 'uml.aggregation'
-  | 'uml.composition'
-  | 'uml.generalization'
-  | 'uml.dependency'
-  | 'uml.realization';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
-export type RelationKindValue = ValueOf<typeof RelationKind>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### RelationPredicateDefinition
 
 <p>
@@ -881,7 +847,7 @@ export type RelationRoleValue = ValueOf<typeof RelationRole>;
 ### GraphStatus
 
 <p>
-  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={73}>
+  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
     Graph Entity 与 Relation 共享的图式语义状态
   </ApiSourceLink>
 </p>
@@ -913,25 +879,6 @@ export const RelationDirection = {
   Forward: 'forward',
   Reverse: 'reverse',
   Both: 'both',
-} as const;
-```
-
-### RelationKind
-
-<p>
-  <ApiSourceLink label={'RelationKind'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
-    Relation 的内置稳定 kind
-  </ApiSourceLink>
-</p>
-
-```ts
-export const RelationKind = {
-  UmlAssociation: 'uml.association',
-  UmlAggregation: 'uml.aggregation',
-  UmlComposition: 'uml.composition',
-  UmlGeneralization: 'uml.generalization',
-  UmlDependency: 'uml.dependency',
-  UmlRealization: 'uml.realization',
 } as const;
 ```
 

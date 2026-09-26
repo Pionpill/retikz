@@ -4,7 +4,7 @@ import { boolean, strictObject } from 'zod';
 import * as Graph from '../../src';
 
 describe('Relation definition registry', () => {
-  it('registers UML builtin kinds with their standard path and endpoint structures', () => {
+  it('registers role defaults without any implicit kinds', () => {
     const roles = Graph.resolveRelationRoleRegistry();
     const kinds = Graph.resolveRelationKindRegistry(undefined, roles);
 
@@ -36,51 +36,7 @@ describe('Relation definition registry', () => {
     });
     expect(roles.get('influence')?.directions.forward?.targetMarker).toEqual({ shape: 'circle' });
 
-    expect([...kinds.keys()]).toEqual([
-      'uml.association',
-      'uml.aggregation',
-      'uml.composition',
-      'uml.generalization',
-      'uml.dependency',
-      'uml.realization',
-    ]);
-    expect(kinds.get('uml.association')).toMatchObject({
-      role: 'association',
-      defaultDirection: 'none',
-      allowedDirections: ['none'],
-      directions: { none: { sourceMarker: false, targetMarker: false, dashPattern: false } },
-    });
-    expect(kinds.get('uml.aggregation')).toMatchObject({
-      role: 'association',
-      defaultDirection: 'none',
-      allowedDirections: ['none'],
-      directions: { none: { sourceMarker: { shape: 'openDiamond' }, targetMarker: false, dashPattern: false } },
-    });
-    expect(kinds.get('uml.composition')?.directions?.none?.sourceMarker).toEqual({ shape: 'diamond' });
-    expect(kinds.get('uml.generalization')).toMatchObject({
-      role: 'generalization',
-      directions: { forward: { targetMarker: { shape: 'open' } } },
-    });
-    expect(kinds.get('uml.dependency')).toMatchObject({
-      role: 'dependency',
-      directions: { forward: { dashPattern: [6, 4] } },
-    });
-    expect(kinds.get('uml.realization')).toMatchObject({
-      role: 'dependency',
-      directions: { forward: { targetMarker: { shape: 'open' }, dashPattern: [6, 4] } },
-    });
-    for (const removedKind of [
-      'provenance.derivation',
-      'uml.usage',
-      'uml.abstraction',
-      'uml.binding',
-      'uml.permission',
-      'uml.manifestation',
-      'uml.deployment',
-      'uml.substitution',
-    ]) {
-      expect(kinds.has(removedKind)).toBe(false);
-    }
+    expect([...kinds.keys()]).toEqual([]);
   });
 
   it('keeps Relation role/kind/predicate structure in semantic definitions', () => {

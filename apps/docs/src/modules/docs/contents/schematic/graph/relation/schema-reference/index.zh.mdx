@@ -64,7 +64,7 @@ description: 查询关系记录、语义 key、方向与端点标记外观的持
 
 <ZodSchema name="RelationKindSchema" description="开放关系子类型 key，使用时必须匹配所属 role" />
 
-kind key 在关系 registry 内全局唯一。内置 UML kind 的具体方向与 marker 见[基础用法](/schematic/graph/relation/usage)。
+kind 是非空字符串，在关系 registry 内全局唯一，并且必须属于选定 role。没有内置 kind，所有 key 都需要用户显式注册，见[自定义](/schematic/graph/relation/custom)。
 
 ## RelationDirectionSchema
 

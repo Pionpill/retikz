@@ -9,16 +9,7 @@ export const createPreviewControlContract = (lang: Lang) => {
     title: copy.controls[0],
     sectionLabel: copy.controls[1],
     statusLocale: lang,
-    kind: {
-      label: copy.controls[2],
-      defaultValue: '',
-      options: [
-        { value: '', label: copy.controls[3] },
-        { value: 'uml.dependency', label: copy.controls[4] },
-        { value: 'uml.realization', label: copy.controls[5] },
-      ],
-    },
-    colorLabel: copy.controls[6],
+    colorLabel: copy.controls[2],
   });
 };
 export const previewControlContract = createPreviewControlContract('zh');

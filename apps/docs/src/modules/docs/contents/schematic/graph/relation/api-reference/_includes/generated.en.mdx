@@ -345,7 +345,7 @@ export type GraphDefinitionOptions = Readonly<{
 ### GraphStatusValue
 
 <p>
-  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={18}>
+  <ApiSourceLink label={'GraphStatusValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
     Built-in Graph semantic status values
   </ApiSourceLink>
 </p>
@@ -394,7 +394,7 @@ export type GraphStatusValue = ValueOf<typeof GraphStatus>;
 | `direction?`           | <ApiValues name="RelationDirection" />                                                                                                                                                | —       | Explicit semantic direction overriding role defaults.                                                                                                                        |
 | `group?`               | `string`                                                                                                                                                                              | —       | Optional Graph-root relation color grouping identifier.                                                                                                                      |
 | `id?`                  | `string`                                                                                                                                                                              | —       | Optional stable id used as a reference target for the Scene primitive emitted by this drawable element.                                                                      |
-| `kind?`                | <ApiValues name="RelationKind" /> \| `string`                                                                                                                                         | —       | Open stable subtype key within the selected Relation role.                                                                                                                   |
+| `kind?`                | `string`                                                                                                                                                                              | —       | Open stable subtype key within the selected Relation role.                                                                                                                   |
 | `labelFont?`           | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }` | —       | Relation root label font.                                                                                                                                                    |
 | `labelOpacity?`        | `number`                                                                                                                                                                              | —       | Relation root label opacity.                                                                                                                                                 |
 | `labels?`              | `Array<IRGeometryLabel>`                                                                                                                                                              | —       | Optional complete Core Geometry Labels attached to the Relation path.                                                                                                        |
@@ -680,40 +680,6 @@ export type RelationKindDefinition = Readonly<{
 
 </DocTabs>
 
-### RelationKindValue
-
-<p>
-  <ApiSourceLink label={'RelationKindValue'} path={'packages/schematic/graph/src/shared/types.ts'} startLine={15}>
-    Built-in Relation kind values
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="expanded">
-
-<DocTab value="expanded" label="Expanded type">
-
-```ts
-export type RelationKindValue =
-  | 'uml.association'
-  | 'uml.aggregation'
-  | 'uml.composition'
-  | 'uml.generalization'
-  | 'uml.dependency'
-  | 'uml.realization';
-```
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type RelationKindValue = ValueOf<typeof RelationKind>;
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### RelationPredicateDefinition
 
 <p>
@@ -881,7 +847,7 @@ export type RelationRoleValue = ValueOf<typeof RelationRole>;
 ### GraphStatus
 
 <p>
-  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={73}>
+  <ApiSourceLink label={'GraphStatus'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
     Diagram semantic statuses shared by Graph Entity and Relation
   </ApiSourceLink>
 </p>
@@ -913,25 +879,6 @@ export const RelationDirection = {
   Forward: 'forward',
   Reverse: 'reverse',
   Both: 'both',
-} as const;
-```
-
-### RelationKind
-
-<p>
-  <ApiSourceLink label={'RelationKind'} path={'packages/schematic/graph/src/shared/constants.ts'} startLine={57}>
-    Built-in stable Relation kinds
-  </ApiSourceLink>
-</p>
-
-```ts
-export const RelationKind = {
-  UmlAssociation: 'uml.association',
-  UmlAggregation: 'uml.aggregation',
-  UmlComposition: 'uml.composition',
-  UmlGeneralization: 'uml.generalization',
-  UmlDependency: 'uml.dependency',
-  UmlRealization: 'uml.realization',
 } as const;
 ```
 

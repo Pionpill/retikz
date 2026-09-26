@@ -65,7 +65,7 @@ labels 被转为 Path.label。单个 label 的文字颜色、不透明度优先�
 
 ## 注册错误在装配边界暴露
 
-registry 合并内置与自定义 Definition，拒绝覆盖已有 key，并检查父 role、kind 归属、允许方向与完整 recipe。`define*` 只是保留定义对象；不能用调用成功来证明整套依赖合法。predicate 参数与回调返回值则在实际消费时验证。
+role registry 合并内置与用户 Definition，kind 和 predicate registry 仅接收用户定义；各 registry 拒绝覆盖已有 key，并检查父 role、kind 归属、允许方向与完整 recipe。`define*` 只是保留定义对象；不能用调用成功来证明整套依赖合法。predicate 参数与回调返回值则在实际消费时验证。
 
 <SourceLinks
   sources={[

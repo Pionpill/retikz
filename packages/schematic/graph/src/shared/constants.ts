@@ -53,22 +53,6 @@ export const RelationRole = {
   Influence: 'influence',
 } as const;
 
-/** Relation 的内置稳定 kind */
-export const RelationKind = {
-  /** UML 一般关联关系 */
-  UmlAssociation: 'uml.association',
-  /** UML 聚合关系 */
-  UmlAggregation: 'uml.aggregation',
-  /** UML 组合关系 */
-  UmlComposition: 'uml.composition',
-  /** UML 泛化关系 */
-  UmlGeneralization: 'uml.generalization',
-  /** UML 依赖关系 */
-  UmlDependency: 'uml.dependency',
-  /** UML 实现关系 */
-  UmlRealization: 'uml.realization',
-} as const;
-
 /** Graph Entity 与 Relation 共享的图式语义状态 */
 export const GraphStatus = {
   /** 已失败、错误或无法继续 */

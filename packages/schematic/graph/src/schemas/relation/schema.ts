@@ -7,11 +7,11 @@ import {
   PathStyleSchema,
   StepSchema,
 } from '@retikz/core';
-import { createOpenStringSchema } from '@retikz/foundation';
+import { createOpenStringSchema, NonBlankStringSchema } from '@retikz/foundation';
 import type { RefinementCtx, ZodType } from 'zod';
 import { array, enum as zodEnum, literal, strictObject, string, union } from 'zod';
 
-import { GRAPH_NAMESPACE, GraphType, RelationKind, RelationRole } from '../../shared';
+import { GRAPH_NAMESPACE, GraphType, RelationRole } from '../../shared';
 import { GraphPredicateRefSchema } from '../predicate';
 import { GraphStatusSchema } from '../status';
 import { RelationDirection } from './constants';
@@ -28,7 +28,7 @@ export const RelationRoleSchema = createOpenStringSchema(RelationRole).describe(
   'Open Relation role key resolved by the configured registry.',
 );
 
-export const RelationKindSchema = createOpenStringSchema(RelationKind).describe(
+export const RelationKindSchema = NonBlankStringSchema.describe(
   'Open stable subtype key within the selected Relation role.',
 );
 

@@ -21,9 +21,14 @@ describe('Relation API public reference', () => {
       'IRGraphRelation',
       'IRGraphRelationRoleTokenRecipe',
       'defineRelationPredicate',
+      'defineRelationKind',
+      'RelationKindDefinition',
     ])
       expect(headings).toContain(name);
     expect(headings.some(name => name.endsWith('Schema'))).toBe(false);
+    expect(headings).not.toContain('RelationKind');
+    expect(headings).not.toContain('RelationKindValue');
+    expect(source).not.toContain('<ApiValues name="RelationKind" />');
     expect(source).toContain('(input: InputRelation) => IRGraphRelation');
     expect(source).toContain('`Array<IRGraphRelationRouteStep>`');
     expect(source).toContain('The route variant excludes way');
