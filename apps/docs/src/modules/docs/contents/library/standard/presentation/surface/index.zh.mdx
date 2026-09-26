@@ -1,32 +1,112 @@
 ---
-title: 表面
-description: 用 JSON-safe Surface 为任意单个 child 提供内边距、背景、边框、圆角与 overflow，并下沉为普通 Core Scope 和 Path。
+title: Surface · 表面
+description: 为单个子图添加留白、背景、边框与内容裁剪
 ---
 
-`Surface` 是 Standard 的单盒呈现容器。它测量一个 Core 或已注册 Tier 2 child，在外侧加入 padding、可选背景与边框，并把完整结果保持为 renderer-neutral Scene。Chart、Table 与其它领域能力可以复用它，不需要各自在 adapter 或 renderer 中重写画布外壳。
+`Surface` 为一个子图添加内边距、背景、边框和圆角，并可裁剪内容溢出。子图可以是一个 Node，也可以是包含多个图元的 Scope 或已注册的复合组件。
 
-## 用法
+## 接入方式
+
+完成[安装与首次渲染](/library/standard/get-start)后，从 `/presentation` 导入。下面四种方式绘制相同的单节点表面。
+
+<ComponentPreview files="entry" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+Surface 必须恰好包含一个可绘制子项；多个图元先包在同一个 Scope 内。
+
+```text
+Surface
+└─ Node / Scope / Composite (1)
+```
 
 ```tsx
 import { Layout, Node } from '@retikz/react';
 import { Surface } from '@retikz/standard-react/presentation';
+
+export const Example = () => (
+  <Layout>
+    <Surface padding={16} border={{ stroke: 'currentColor' }}>
+      <Node position={[0, 0]} text="A" />
+    </Surface>
+  </Layout>
+);
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Layout>
-  <Surface padding={16} background={{ fill: '#f8fafc' }} border={{ stroke: '#64748b' }}>
-    <Node position={[0, 0]} text="Content" />
-  </Surface>
-</Layout>
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { SurfaceDefinition } from '@retikz/standard/presentation';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'surface',
+      padding: 16,
+      border: { stroke: 'currentColor' },
+      child: { type: 'node', position: [0, 0], text: 'A' },
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[SurfaceDefinition]} />;
 ```
 
-| 场景        | 公开入口                                                                                         |
-| ----------- | ------------------------------------------------------------------------------------------------ |
-| React       | `Surface`（`@retikz/standard-react/presentation`）                                               |
-| Vanilla     | `surface`、`surfaceChild`、`SurfaceInputEmbedAdapter`（`@retikz/standard-vanilla/presentation`） |
-| IR / 持久化 | `SurfaceSchema`、`createSurface`、`SurfaceDefinition`（`@retikz/standard/presentation`）         |
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## 示例
+```ts
+import { surface, surfaceChild, SurfaceInputEmbedAdapter } from '@retikz/standard-vanilla/presentation';
+import { scene, node, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    surface({
+      padding: 16,
+      border: { stroke: 'currentColor' },
+      child: surfaceChild(node({ position: [0, 0], text: 'A' })),
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [SurfaceInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { SurfaceDefinition } from '@retikz/standard/presentation';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'surface',
+      padding: 16,
+      border: { stroke: 'currentColor' },
+      child: { type: 'node', position: [0, 0], text: 'A' },
+    },
+  ],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [SurfaceDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 ### 基础表面
 
@@ -34,13 +114,27 @@ import { Surface } from '@retikz/standard-react/presentation';
 
 <ComponentPreview files="surface-basic" size="sm" />
 
+`padding` 默认 `0`，`cornerRadius` 默认 `0`；背景与边框默认不生成。padding 参与空间分配，背景与边框围绕完整的 allocation box 绘制。`style` 和其它 Scope 属性作用于整个外层分组，不能替代独立的 `background` 或 `border`。
+
+## 扩展用法
+
 ### Overflow 与圆角裁剪
 
 `overflow="visible"` 保留 child 的视觉溢出；`overflow="clip"` 只裁剪内容层，不裁剪背景或边框。圆角同时作用于边界 Path 和内容 clip，半径会限制到短边的一半。
 
 <ComponentPreview files="surface-overflow" size="sm" />
 
-## 技术原理
+## 错误与限制
+
+归一化后必须恰好有一个 child。padding 和圆角半径不能为负；父容器在某轴提供的有限范围或精确尺寸小于该轴 padding 总和时，会在探测 child 前失败。直接 IR 使用 `overflow: 'clip'` 时还需注册 `PathClipDefinition`；React 与 Vanilla adapter 自动贡献该依赖。
+
+## 实现原理
+
+<ComponentAlert type="tip">
+
+本节解释内部布局与下沉，仅使用组件时可跳到 API 参考。
+
+</ComponentAlert>
 
 `SurfaceDefinition` 先根据 parent proposal 和 padding 探测唯一 child，再回放 child 并输出背景 Path、内容 Scope 和边框 Path。`overflow="clip"` 的 clip 只挂在内容 Scope；Surface 自身的 Core `clip` 仍作用于完整外层。
 
@@ -65,27 +159,33 @@ Surface 还在 authored 外层 Scope 发布 id 为 `surface` 的 qualified spati
 
 ## API 参考
 
+{/* @include library/standard/presentation/surface/generated */}
+
+## Schema 参考
+
 ### SurfaceSchema
 
-| 属性            | 类型                              | 默认值    | 描述                                                  |
-| --------------- | --------------------------------- | --------- | ----------------------------------------------------- |
-| `child`         | `IRChild`                         | —         | 唯一 Core 或已注册 Tier 2 child                       |
-| `padding?`      | `number \| IRBoxSpacing`          | `0`       | 非负内边距；规范化为 top/right/bottom/left            |
-| `overflow?`     | `'visible' \| 'clip'`             | `visible` | child 视觉溢出策略                                    |
-| `background?`   | `{ fill; fillOpacity? }`          | —         | 覆盖完整 allocation box 的背景                        |
-| `border?`       | `IRStandardPathStrokeStyle`       | —         | 沿 allocation boundary 绘制的边框                     |
-| `cornerRadius?` | `number`                          | `0`       | 非负圆角半径，最大有效值为短边一半                    |
-| Scope props     | `Omit<IRScope, 'type\|children'>` | —         | 作用于包含背景、内容和边框的 authored 外层 Core Scope |
+<ZodSchema
+  name="SurfaceSchema"
+  descriptions={{
+    namespace: 'Standard 复合组件命名空间',
+    type: '单子图表面类型',
+    child: '唯一的 Core 或 Tier 2 子图',
+    padding: '均匀或分侧的非负内边距',
+    overflow: '内容溢出保持可见或裁剪',
+    background: '覆盖分配区域的可选填充',
+    'background.fill': '背景填充',
+    'background.fillOpacity': '背景填充不透明度',
+    border: '分配边界上的可选描边',
+    cornerRadius: '背景、边框与内容裁剪共用的非负圆角半径',
+  }}
+/>
 
-`createSurface` 保留省略字段与 padding 简写；`SurfaceSchema.parse()` 会补齐静态默认值 `padding: 0`、`overflow: 'visible'` 与 `cornerRadius: 0`。布局解析复用同一默认值并展开四侧 padding，不改写原始配置。有限 range 或 exact proposal 小于对应轴 padding 时，Surface 在探测 child 前同步失败，不会回退到 intrinsic。
+## 延伸阅读
 
-### React 与 Vanilla
-
-React `SurfaceProps` 用 `children` 代替 IR 的 `child`，并要求最终恰好一个 IR child。Vanilla 使用 `surfaceChild(node)` 标记唯一的嵌套 child；嵌套 Tier 2 的 provider contribution 由同一次归一化自动收集，不进入 IR 或 Scene。
-
-## 相关
-
-- [Scope](/kernel/components/scope/usage)：Surface 下沉后的 authored 外层分组
-- [Tier 2 Composite](/kernel/components/design/composite)：Definition 与 provider graph
-- [能力装载](/library/extension/capability-loading)：React、Vanilla 与 direct IR 的装载路径
-- [Frame](/library/standard/presentation/frame)：面向 Node 分组和标题语义的专用 composite
+<LinkedSections
+  items={[
+    { title: 'Frame · 分组框', description: '为 Node 分组添加标题与说明', url: '/library/standard/presentation/frame' },
+    { title: 'Scope', description: '将多个图元组合成唯一 child', url: '/kernel/components/scope/usage' },
+  ]}
+/>

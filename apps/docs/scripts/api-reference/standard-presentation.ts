@@ -8,6 +8,11 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const pages = {
+  Surface: {
+    react: ['Surface', 'SurfaceProps'],
+    vanilla: ['surface', 'InputSurface', 'surfaceChild', 'InputSurfaceChild', 'SurfaceInputEmbedAdapter'],
+    core: ['SurfaceInput', 'IRSurface', 'createSurface', 'SurfaceDefinition', 'SurfaceProvider'],
+  },
   Frame: {
     react: ['Frame', 'FrameProps', 'FrameTitle', 'FrameTitleProps', 'FrameDescription', 'FrameDescriptionProps'],
     vanilla: ['frame', 'InputFrame', 'frameTitle', 'frameDescription', 'FrameInputEmbedAdapter'],
@@ -34,6 +39,19 @@ const pages = {
 } as const;
 
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'Standard Surface 的官方 Core layout-aware composite definition':
+    'Official layout-aware Core composite definition for Standard Surface',
+  '恰好一个可转换为 Core IR 的 Kernel、Sugar 或 Tier 2 child':
+    'Exactly one Kernel, Sugar, or Tier 2 child convertible to Core IR',
+  'Surface 唯一 child 的作者侧输入': 'Authoring input for the single Surface child',
+  'Surface 输入可显式指定持久化 Scope id': 'Surface input with an optional persistent Scope id',
+  '要持久化到 Surface IR 的显式身份': 'Explicit identity to persist in Surface IR',
+  '唯一 child 与其可选 Tier 2 依赖': 'The single child and its optional Tier 2 dependencies',
+  '创建由 Surface adapter 在根 Scene traversal 中归一化的唯一 child 输入':
+    'Create input for the single child normalized by the Surface adapter during root Scene traversal',
+  'Surface 的公开 authoring 输入': 'Public Surface authoring input',
+  '稀疏持久化 Standard Surface composite': 'Sparse persistent Standard Surface composite',
+  '创建稀疏 Standard Surface composite': 'Create a sparse Standard Surface composite',
   'FrameTitle、FrameDescription 与参与 body bounds 的 Core Node children':
     'FrameTitle, FrameDescription, and Core Node children contributing to the body bounds',
   'Frame 主标题接受的 JSON-safe Node authoring 字段': 'JSON-safe Node authoring fields for the Frame title',

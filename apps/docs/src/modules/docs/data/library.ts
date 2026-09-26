@@ -109,7 +109,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'surface',
             label: 'library.standardSurface',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
           {
             id: 'legend',
