@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { writeBlockApiReferenceMdx } from './api-reference/block';
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeExtensionAnimationApiReference } from './api-reference/extension-animation';
@@ -16,6 +17,9 @@ import { writeTexApiReferenceMdx } from './api-reference/tex';
 import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeBlockApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/block/api-reference/_includes'),
+);
 await writeStandardContainerApiReferences(
   path.resolve(docsRoot, 'src/modules/docs/contents/library/standard/container'),
 );

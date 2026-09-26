@@ -107,6 +107,7 @@ export const schematicSection: Array<Section> = [
         id: 'block',
         label: 'schematic.block',
         sidebarGroup: 'schematic.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'runtime' },
         children: [
           { id: 'usage', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
@@ -125,6 +126,11 @@ export const schematicSection: Array<Section> = [
             label: 'schematic.mechanism',
             difficulty: DocDifficulty.Internals,
             meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
           },
           {
             id: 'schema-reference',

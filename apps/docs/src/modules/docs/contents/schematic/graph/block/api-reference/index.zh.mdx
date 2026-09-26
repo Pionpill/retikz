@@ -1,0 +1,12 @@
+---
+title: API 参考
+description: 查询 Block 家族组件、编写入口、Source 工厂与代码实体扩展契约。
+---
+
+本页从公开导出和源码注释生成，覆盖 `@retikz/graph-react`、`@retikz/graph-vanilla` 与 `@retikz/graph` 的 Block 家族及 CodeBlock 扩展。首次使用见[基础用法](/schematic/graph/block/usage)，持久化字段见 [Schema 参考](/schematic/graph/block/schema-reference)。
+
+React 的 children / icon / trail 使用 ReactNode；Vanilla 接受 authoring child；直接 IR 只保存 JSON-safe child。BlockRow 的 content 与 children 是互斥形式，组合类型无法展开时保留真实声明，共有字段可在 IRBlockRow 和 Schema 参考中查询。
+
+CodeBlockDefinition 与 compose 是运行时能力，不进入 IR；领域数据通过严格 schema 校验，再由 compose 返回 Block 内容。注入方式见[自定义用法](/schematic/graph/block/custom)。
+
+{/* @include schematic/graph/block/api-reference/generated */}
