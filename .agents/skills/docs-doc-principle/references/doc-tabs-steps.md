@@ -4,7 +4,7 @@
 
 - `DocTabs` 用于同一任务的替代方案；共同安装、限制和比较放在外部；宿主专属依赖放对应 Tab 内，包管理器仍用 `PackageManagerInstall`
 - `DocSteps` 用于有顺序且每步含说明或代码的接入操作；简单短步骤用普通有序列表
-- 两者可独立使用或组合；不要多层嵌套方案 Tab
+- 两者可独立使用或组合；不要多层嵌套方案 Tab。API 参考例外：「属性」页签内可用一层 DocTabs 切换具名联合分支，规则见 [API 参考](../../docs-doc-reference/references/api.md)
 - 基础、专题与扩展用法页的首个“接入方式”按下述四栏规则；后续示例先检查 ComponentPreview 源码，已覆盖的完整用法不再重复 DocTabs，正文只补关键差异。
 - 总入口对照 React / Vanilla × API / IR 时，使用四个 DocTab：React + JSX、React + IR、Vanilla API、Vanilla + IR；value 分别为 `react-jsx`、`react-ir`、`vanilla-api`、`vanilla-ir`。四种写法展示同一结果及真实调用入口，不用 ComponentPreview 的 React 派生 Vanilla 源码代替原生 IR 接入
 - “接入方式”依次放说明文字、无 controls 且 `hideCode` 的最小 ComponentPreview、四种接入 Tab。预览只展示共同结果，源码由 Tab 承担。只有单宿主或无宿主差异的 TypeScript API 时展示真实支持的入口，不虚构 React/Vanilla 或 IR 能力
