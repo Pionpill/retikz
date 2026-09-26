@@ -37,10 +37,11 @@ Titles, descriptions, and legends are optional. A missing region collapses toget
 
 Frame separately controls the gaps between title and description, heading and main content, and drawing and legend. It also provides padding, background, border, corner radius, and overflow. As the drawing changes, these regions continue to participate in layout, clipping, and output as one figure.
 
-<ComponentAlert type="tip">
-  Assembly reuses Layout Flex, Standard Surface, and Core Scope. Text reuses TextBlock, and legends reuse Standard
-  Legend. Diagram does not maintain separate text, legend, or rendering mechanisms.
-</ComponentAlert>
+<ComponentAlert
+  type="tip"
+  title="Reuse foundational drawing capabilities"
+  description="Assembly reuses Layout Flex, Standard Surface, and Core Scope. Text reuses TextBlock, and legends reuse Standard Legend. Diagram does not maintain separate text, legend, or rendering mechanisms."
+/>
 
 ## Shared assembly and concrete components
 
@@ -48,11 +49,11 @@ Diagram Framework receives drawing content already produced by a concrete compon
 
 Flow owns measurement, layout, and routing, then delegates drawing to Graph. Its `FlowDiagramArtifact` lets callers query element, relation, and layout results. The shared framework does not introduce a separate Diagram identity, metadata model, or artifact. Layout and Legend results remain owned by their respective capabilities.
 
-<ComponentAlert type="tip">
-  Graph provides structural semantics and drawing capabilities through Entity, Relation, Group, and related components.
-  Diagram organizes a complete structural figure on that foundation. Flow currently accepts neither Graph Block nor
-  arbitrary drawing children, and automatic layout does not imply global connection obstacle avoidance.
-</ComponentAlert>
+<ComponentAlert
+  type="tip"
+  title="The boundary between Graph and Diagram"
+  description="Graph provides structural semantics and drawing capabilities through Entity, Relation, Group, and related components. Diagram organizes a complete structural figure on that foundation. Flow currently accepts neither Graph Block nor arbitrary drawing children, and automatic layout does not imply global connection obstacle avoidance."
+/>
 
 ## Appearance defaults do not create content
 

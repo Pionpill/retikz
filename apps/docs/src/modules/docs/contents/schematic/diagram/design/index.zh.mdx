@@ -37,10 +37,11 @@ Source 是可序列化的结构描述。Entity、Group、Layout 分别保存在�
 
 Frame 分别控制标题与说明、标题区与主体、绘图内容与图例之间的间距，同时提供 padding、背景、边框、圆角与 overflow。绘图内容变化时，这些区域仍作为同一张图参与布局、裁切和输出。
 
-<ComponentAlert type="tip">
-  底层装配复用 Layout Flex、Standard Surface 与 Core Scope；文本复用 TextBlock，图例复用 Standard Legend。Diagram
-  不维护另一套文本、图例或渲染机制。
-</ComponentAlert>
+<ComponentAlert
+  type="tip"
+  title="复用基础绘图能力"
+  description="底层装配复用 Layout Flex、Standard Surface 与 Core Scope；文本复用 TextBlock，图例复用 Standard Legend。Diagram 不维护另一套文本、图例或渲染机制。"
+/>
 
 ## 通用装配与具体组件分别负责什么
 
@@ -48,10 +49,11 @@ Diagram Framework 接收具体组件已经生成的绘图内容，不读取或�
 
 Flow 负责测量、布局与路由，并将结果交给 Graph 绘制。它有自己的 `FlowDiagramArtifact`，供调用方查询元素、关系与布局结果；通用框架不另造一份 Diagram identity、metadata 或 artifact。Layout 和 Legend 的结果仍由各自的能力拥有。
 
-<ComponentAlert type="tip">
-  Graph 提供 Entity、Relation、Group 等结构语义与绘制能力；Diagram 在此基础上组织整张结构图。当前 Flow 不接受 Graph
-  Block 或任意绘图 children，自动布局也不等于全局连线避障。
-</ComponentAlert>
+<ComponentAlert
+  type="tip"
+  title="Graph 与 Diagram 的边界"
+  description="Graph 提供 Entity、Relation、Group 等结构语义与绘制能力；Diagram 在此基础上组织整张结构图。当前 Flow 不接受 Graph Block 或任意绘图 children，自动布局也不等于全局连线避障。"
+/>
 
 ## 默认样式不创造内容
 
