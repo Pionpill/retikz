@@ -114,7 +114,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'legend',
             label: 'library.standardLegend',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
         ],
       },

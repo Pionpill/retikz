@@ -8,6 +8,34 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const pages = {
+  Legend: {
+    react: [
+      'Legend',
+      'LegendProps',
+      'LegendTitle',
+      'LegendTitleProps',
+      'LegendItem',
+      'LegendItemProps',
+      'LegendRamp',
+      'LegendRampProps',
+      'LegendTick',
+      'LegendTickProps',
+    ],
+    vanilla: ['legend', 'InputLegend', 'LegendInputEmbedAdapter'],
+    core: [
+      'LegendInput',
+      'IRLegend',
+      'IRLegendItem',
+      'IRLegendItemsContent',
+      'IRLegendTick',
+      'IRLegendRampContent',
+      'createLegend',
+      'LegendDefinition',
+      'LegendProvider',
+      'LegendArtifact',
+      'LegendCompileArtifact',
+    ],
+  },
   Surface: {
     react: ['Surface', 'SurfaceProps'],
     vanilla: ['surface', 'InputSurface', 'surfaceChild', 'InputSurfaceChild', 'SurfaceInputEmbedAdapter'],
@@ -39,6 +67,44 @@ const pages = {
 } as const;
 
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'Standard Legend 的 React Tier 2 无头 authoring 组件':
+    'React Tier 2 headless authoring component for Standard Legend',
+  'React Legend 的两个显式无头 authoring form': 'Two explicit headless React Legend authoring forms',
+  'Standard Legend 标题 marker 的属性': 'Props of the Standard Legend title marker',
+  'Standard Legend 离散条目 marker 的属性': 'Props of the Standard Legend item marker',
+  'Standard Legend 连续样本 marker 的属性': 'Props of the Standard Legend ramp marker',
+  'Standard Legend 连续刻度 marker 的属性': 'Props of the Standard Legend tick marker',
+  '声明 Legend 标题，只能作为 Legend 的直接 child': 'Declare a title as a direct Legend child',
+  '声明 Legend 离散条目，只能作为 items Legend 的直接 child': 'Declare a discrete entry as a direct items Legend child',
+  '声明 Legend 连续样本，只能作为 ramp Legend 的直接 child':
+    'Declare a continuous sample as a direct ramp Legend child',
+  '声明 Legend 连续刻度，只能作为 ramp Legend 的直接 child': 'Declare a continuous tick as a direct ramp Legend child',
+  '转换为唯一标题 IRChild 的 React element': 'React element converted to exactly one title IRChild',
+  'Legend 内稳定且唯一的条目标识': 'Stable item identity unique within this Legend',
+  '转换为唯一视觉样本 IRChild 的 React element': 'React element converted to exactly one visual sample IRChild',
+  '转换为可选标签 IRChild 的 React element': 'React element converted to an optional label IRChild',
+  '转换为唯一连续视觉样本 IRChild 的 React element': 'React element converted to exactly one continuous sample IRChild',
+  'Legend 内稳定且唯一的刻度标识': 'Stable tick identity unique within this Legend',
+  沿连续样本主轴的归一化位置: 'Normalized position along the continuous sample main axis',
+  '转换为可选刻度标签 IRChild 的 React element': 'React element converted to an optional tick-label IRChild',
+  'Standard Legend 的 framework-neutral authoring 输入': 'Framework-neutral Standard Legend authoring input',
+  '创建 Legend 时允许省略固定 discriminator 与 schema 默认字段的输入':
+    'Legend input allowing fixed discriminators and schema defaults to be omitted',
+  '创建稀疏持久化的 Standard Legend composite': 'Create a sparse persistent Standard Legend composite',
+  'Standard Legend 的官方 Core layout-aware composite definition':
+    'Official layout-aware Core composite definition for Standard Legend',
+  'Standard Legend 的 typed artifact': 'Typed artifact of Standard Legend',
+  'Legend definition 推导出的公开 compile artifact envelope':
+    'Public compile artifact envelope derived from the Legend definition',
+  '持久化的 Legend 离散条目': 'Persistent discrete Legend item',
+  '持久化的 Legend 离散内容': 'Persistent discrete Legend content',
+  '持久化的 Legend 连续刻度': 'Persistent continuous Legend tick',
+  '持久化的 Legend 连续样本内容': 'Persistent continuous Legend sample content',
+  '显式选择离散条目 form': 'Explicitly select the discrete-items form',
+  'LegendTitle 与按声明顺序排列的 LegendItem marker': 'LegendTitle and LegendItem markers in authored order',
+  '显式选择连续样本 form': 'Explicitly select the continuous-ramp form',
+  'LegendTitle、唯一 LegendRamp 与按声明顺序排列的 LegendTick marker':
+    'LegendTitle, exactly one LegendRamp, and LegendTick markers in authored order',
   'Standard Surface 的官方 Core layout-aware composite definition':
     'Official layout-aware Core composite definition for Standard Surface',
   '恰好一个可转换为 Core IR 的 Kernel、Sugar 或 Tier 2 child':

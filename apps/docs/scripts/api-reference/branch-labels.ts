@@ -12,6 +12,10 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/standard/presentation#LegendArtifact': [
+    { value: 'items', field: 'kind', type: '"items"', label: { zh: '离散条目', en: 'Discrete items' } },
+    { value: 'ramp', field: 'kind', type: '"ramp"', label: { zh: '连续样本', en: 'Continuous sample' } },
+  ],
   '@retikz/standard-vanilla/shape#InputStar': [
     { value: 'radius', field: 'innerRadius', type: 'number', label: { zh: '内半径', en: 'Inner radius' } },
     { value: 'ratio', field: 'innerRatio', type: 'number', label: { zh: '内半径比例', en: 'Inner radius ratio' } },
