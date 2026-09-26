@@ -11,8 +11,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { PreviewControlState } from '../../src/modules/docs/components/component-preview';
 import { PreviewPanel, usePreviewPanelState } from '../../src/modules/docs/components/component-preview/preview-panel';
 import type { PreviewTheme } from '../../src/modules/docs/components/component-preview/theme';
-import { previewControlContract } from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-event.controls';
-import EntityEventDemo from '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-event.zh.demo';
+import EntityPlayground from '../../src/modules/docs/contents/schematic/graph/entity/usage/entity-playground';
+import { previewControlContract } from '../../src/modules/docs/contents/schematic/graph/entity/usage/entity-playground.controls';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -20,7 +20,7 @@ export type EntityStatusPreviewProps = {
   theme: PreviewTheme;
 };
 
-/** 以真实 PreviewPanel 链路驱动 event 的 Entity status control。 */
+/** 以真实 PreviewPanel 链路驱动 Entity status control */
 const EntityStatusPreview: FC<EntityStatusPreviewProps> = props => {
   const { theme } = props;
   const [values, setValues] = useState({ ...previewControlContract.canonicalValues });
@@ -48,7 +48,7 @@ const EntityStatusPreview: FC<EntityStatusPreviewProps> = props => {
         Mark error
       </button>
       <output data-testid="status">{String(values.status)}</output>
-      <PreviewPanel state={state} Component={EntityEventDemo} theme={theme} />
+      <PreviewPanel state={state} Component={EntityPlayground} theme={theme} />
     </>
   );
 };

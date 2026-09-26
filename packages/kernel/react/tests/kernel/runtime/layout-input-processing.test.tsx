@@ -14,6 +14,7 @@ import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Layout, Node, Scope } from '../../../src';
+
 const testThemeStyle = defineThemeStyle({
   name: 'academic',
   resolve: () => ({
@@ -265,19 +266,21 @@ describe('<Layout> 的 Vanilla Input processing', () => {
       ),
     );
     expect(container.querySelector('[data-retikz-id="stable-node"]')).not.toBeNull();
+    const successfulFrame = container.innerHTML;
 
     await expect(
       act(() =>
         root.render(
           <Layout>
             <Node id="stable-node" position={[0, 0]} />
-            <Node id="stable-node" position={[20, 0]} />
+            <Node id="invalid-node" position={[20, 0]} shape={{ type: 'unregistered-rollback-shape' }} />
           </Layout>,
         ),
       ),
     ).resolves.toBeUndefined();
 
     expect(container.querySelectorAll('[data-retikz-id="stable-node"]')).toHaveLength(1);
+    expect(container.innerHTML).toBe(successfulFrame);
     await act(() => root.unmount());
   });
 

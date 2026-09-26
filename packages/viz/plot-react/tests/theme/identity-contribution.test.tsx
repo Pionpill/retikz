@@ -46,7 +46,7 @@ describe('Plot React InputEmbed routing', () => {
     renderToStaticMarkup(<Plot spec={spec} data={data} themeStyles={[]} plotThemeStyles={[plotThemeStyle]} />);
 
     const layout = capturedLayouts.at(-1);
-    expect(layout?.themeStyles).toEqual([]);
+    expect(layout?.extensions).toEqual({ themeStyles: [] });
     expect(layout).not.toHaveProperty('ir');
     expect(layout).not.toHaveProperty('composites');
     expect(Reflect.has(Plot, 'inputEmbedAdapter')).toBe(true);

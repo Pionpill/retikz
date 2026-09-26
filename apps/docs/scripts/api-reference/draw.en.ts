@@ -1,5 +1,61 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '箭头名称、尺寸及几何生成函数组成的定义': 'Definition containing the arrow name, dimensions, and geometry emitter',
+  '原定义对象，不复制或修改输入': 'The original definition object, without copying or modifying the input',
+  '路径生成器名称、参数 schema 及命令生成函数组成的定义':
+    'Definition containing the path generator name, parameter schema, and command generator',
+  '校验名称后的原定义对象，不复制或修改输入':
+    'The original definition object after name validation, without copying or modifying the input',
+  'RetikzCoreError 当 name 为空或仅含空白字符时': 'RetikzCoreError when name is empty or contains only whitespace',
+  定义不发布所属者产物的路径种类: 'Define a path kind that does not publish owner output',
+  '经定义 schema 解析后的路径类型，默认使用 IRPathBase':
+    'Path type parsed by the definition schema; defaults to IRPathBase',
+  '包含名称、完整路径 schema 和编译函数的定义':
+    'Definition containing the name, complete path schema, and compile function',
+  '校验后的原定义对象，保留路径类型，不复制或修改输入':
+    'The original validated definition, preserving the path type without copying or modifying the input',
+  定义发布所属者产物的路径种类: 'Define a path kind that publishes owner output',
+  '经定义 schema 解析后的路径类型': 'Path type parsed by the definition schema',
+  '由 ownerOutput.schema 校验、通过编译上下文发布的 JSON 产物类型':
+    'Type of JSON output validated by ownerOutput.schema and published through the compile context',
+  '包含路径定义及 ownerOutput.schema 的定义': 'Path kind definition including ownerOutput.schema',
+  '校验后的原定义对象，保留路径和产物类型，不复制或修改输入':
+    'The original validated definition, preserving path and output types without copying or modifying the input',
+  '定义路径种类，保留路径及所属者产物的类型关联':
+    'Define a path kind while preserving the relationship between path and owner output types',
+  'RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数，或提供的 ownerOutput.schema 不是对象时':
+    'RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object',
+  '注册路径种类的解析、编译与可选所属者产物契约':
+    'Contract for registering path kind parsing, compilation, and optional owner output',
+  '完整路径 schema 的解析结果类型，同时决定编译上下文的 path 字段；默认使用 IRPathBase':
+    'Result type of the complete path schema, also determining the compile context path field; defaults to IRPathBase',
+  '所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须提供对应的产物 schema':
+    'JSON type of owner output; the default never disallows ownerOutput, otherwise a matching output schema is required',
+  '经当前路径定义的 schema 解析后的路径类型，决定 path 字段的结构；默认使用 IRPathBase':
+    'Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase',
+  '通过 ownerOutput.publish 发布的 JSON 产物类型；默认 never 表示不发布所属者产物':
+    'Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published',
+  '折角 step 鉴别字面量': 'Discriminant for a fold step',
+  折角终点: 'Fold endpoint',
+  两段折角走向: 'Two-segment fold direction',
+  三段折角走向: 'Three-segment fold direction',
+  中间腿的归一化位置: 'Normalized position of the middle leg',
+
+  '路径配置，way 与 children 互斥': 'Path configuration; way and children are mutually exclusive',
+  保留配置字段的路径作者输入: 'Path authoring input preserving the configuration fields',
+
+  '椭圆的 x、y 轴半径': 'Ellipse radii on the x and y axes',
+  '用步骤或路径简写声明路径，并设置样式、箭头与交互':
+    'Declare a path with steps or shorthand, and configure its style, arrows, and interactions',
+  '路径种类，省略时使用内置 stroke；自定义种类通过 Layout.extensions.pathKinds 注册':
+    'Path kind; defaults to built-in stroke. Register custom kinds through Layout.extensions.pathKinds',
+  '所选路径种类的 JSON 参数；内置 stroke 不接受此字段':
+    'JSON options for the selected path kind; built-in stroke does not accept this field',
+  附着于整条路径的一个或多个几何标签: 'One or more geometry labels attached to the whole path',
+  '创建作者侧路径输入，身份由配置中的 id 声明':
+    'Create path authoring input, with identity declared by the configuration id',
+  '路径步骤序列；与 way 互斥': 'Path steps; mutually exclusive with way',
+
   'Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定（TikZ `arc[start angle=…, end angle=…, radius=…]`）':
     'Arc action: draw a circular or elliptical arc between angles; the center defaults to the cursor and can be specified explicitly (TikZ `arc[start angle=…, end angle=…, radius=…]`)',
   '显式圆心；缺省取游标（上一 step anchor）': 'Explicit center; defaults to the cursor (the previous step anchor)',

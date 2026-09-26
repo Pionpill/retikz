@@ -2,56 +2,25 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import type { PreviewControlValues } from '../../src/modules/docs/components/component-preview';
-import { PreviewControlStateContext } from '../../src/modules/docs/components/component-preview/context';
 import LayoutViewboxDemo from '../../src/modules/docs/contents/kernel/components/layout/usage/layout-viewbox.demo';
 
-const renderLayoutViewboxDemo = (values: PreviewControlValues): string =>
-  renderToStaticMarkup(
-    createElement(
-      PreviewControlStateContext.Provider,
-      {
-        value: {
-          canonicalValues: values,
-          values,
-          setValue: () => undefined,
-          applyValues: () => undefined,
-          reset: () => undefined,
-        },
-      },
-      createElement(LayoutViewboxDemo),
-    ),
-  );
+describe('Layout 自动边界示例', () => {
+  it('按内容边界输出等比例尺寸并保留两个节点', () => {
+    const markup = renderToStaticMarkup(createElement(LayoutViewboxDemo));
+    const svg = markup.match(/^<svg\b[^>]*>/)?.[0];
+    const viewBox = svg
+      ?.match(/viewBox="([^"]+)"/)?.[1]
+      .split(' ')
+      .map(Number);
 
-const extractLightgrayGuidePath = (markup: string): string => {
-  const tag = markup.match(/<path\b[^>]*stroke="lightgray"[^>]*>/)?.[0];
-  const path = tag?.match(/\sd="([^"]+)"/)?.[1];
-  if (!path) throw new Error('Missing lightgray viewBox guide path');
-  return path;
-};
-
-describe('Layout controls', () => {
-  it('changing viewBox keeps display dimensions equal to the frame', () => {
-    const canonical = renderLayoutViewboxDemo({
-      viewBoxEnabled: true,
-      viewBoxX: -120,
-      viewBoxY: -120,
-      viewBoxWidth: 240,
-      viewBoxHeight: 240,
-    });
-    const widerViewBox = renderLayoutViewboxDemo({
-      viewBoxEnabled: true,
-      viewBoxX: -120,
-      viewBoxY: -120,
-      viewBoxWidth: 400,
-      viewBoxHeight: 240,
-    });
-
-    expect(canonical).toMatch(/^<svg[^>]*style="[^"]*outline:1px dashed gray/);
-    expect(canonical).toContain('width="240"');
-    expect(canonical).toContain('height="240"');
-    expect(widerViewBox).toContain('width="400"');
-    expect(widerViewBox).toContain('height="240"');
-    expect(extractLightgrayGuidePath(widerViewBox)).not.toBe(extractLightgrayGuidePath(canonical));
+    expect(viewBox).toHaveLength(4);
+    expect(viewBox![0]).toBeLessThan(0);
+    expect(viewBox![1]).toBeLessThan(0);
+    expect(viewBox![0] + viewBox![2]).toBeGreaterThan(70);
+    expect(viewBox![1] + viewBox![3]).toBeGreaterThan(70);
+    expect(svg).toContain(`width="${viewBox![2]}"`);
+    expect(svg).toContain(`height="${viewBox![3]}"`);
+    expect(markup).toContain('data-retikz-id="o"');
+    expect(markup).toContain('data-retikz-id="c"');
   });
 });

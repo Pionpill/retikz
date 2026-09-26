@@ -7,7 +7,6 @@ export const schematicSection: Array<Section> = [
     id: 'graph',
     label: 'schematic.graph',
     navigationDescription: 'schematic.graphNavigationDescription',
-    document: true,
     pages: [
       {
         id: 'introduction',
@@ -31,6 +30,61 @@ export const schematicSection: Array<Section> = [
           capability: 'graph.release',
           sourceOfTruth: 'changelog',
         },
+      },
+      {
+        id: 'entity',
+        label: 'schematic.entity',
+        sidebarGroup: 'schematic.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'runtime' },
+        children: [
+          { id: 'usage', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          {
+            id: 'custom',
+            label: 'schematic.customUsage',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'graph.entity.registry',
+              sourceOfTruth: 'runtime',
+            },
+          },
+          {
+            id: 'mechanism',
+            label: 'schematic.mechanism',
+            difficulty: DocDifficulty.Internals,
+            meta: { pageType: 'architecture', audience: 'maintainer', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'api-reference',
+            label: 'schematic.apiReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'runtime' },
+          },
+          {
+            id: 'schema-reference',
+            label: 'schematic.schemaReference',
+            meta: { pageType: 'reference', audience: 'user', sourceOfTruth: 'schema' },
+          },
+        ],
+      },
+      {
+        id: 'relation',
+        label: 'schematic.relation',
+        sidebarGroup: 'schematic.components',
+        children: [
+          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
+          {
+            id: 'extension',
+            label: 'schematic.extensionUsage',
+            difficulty: DocDifficulty.Advanced,
+            meta: {
+              pageType: 'extension',
+              audience: 'extension-author',
+              capability: 'graph.relation.registry',
+              sourceOfTruth: 'runtime',
+            },
+          },
+        ],
       },
       {
         id: 'block',
@@ -57,45 +111,6 @@ export const schematicSection: Array<Section> = [
         difficulty: DocDifficulty.Beginner,
         sidebarGroup: 'schematic.components',
       },
-      {
-        id: 'entity',
-        label: 'schematic.entity',
-        sidebarGroup: 'schematic.components',
-        children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
-            difficulty: DocDifficulty.Advanced,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'graph.entity.registry',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
-      },
-      {
-        id: 'relation',
-        label: 'schematic.relation',
-        sidebarGroup: 'schematic.components',
-        children: [
-          { id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
-          {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
-            difficulty: DocDifficulty.Advanced,
-            meta: {
-              pageType: 'extension',
-              audience: 'extension-author',
-              capability: 'graph.relation.registry',
-              sourceOfTruth: 'runtime',
-            },
-          },
-        ],
-      },
-      { id: 'api-reference', label: 'schematic.graphApiReference', sidebarGroup: 'schematic.components' },
     ],
   },
   {

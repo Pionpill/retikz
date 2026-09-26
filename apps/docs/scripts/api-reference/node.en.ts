@@ -1,6 +1,27 @@
 /** 经审阅的节点 API 英文说明，代码标识符保持原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
-  '创建作者侧节点输入，身份由配置中的 id 声明': 'Create an authoring node input whose identity is declared by its id',
+  '结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning':
+    'The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning',
+  '适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx * sy) 深度缩放 params 中的数值叶子':
+    'Use for shapes whose params contain non-length fields such as angles; when omitted, numeric leaves in params are recursively scaled by Math.sqrt(sx * sy)',
+  未提供时使用视觉矩形: 'Uses the visual rectangle when omitted',
+  '未提供时由调用方回退或报告不支持该 anchor':
+    'When omitted, the caller falls back or reports that the anchor is unsupported',
+  'fraction 表示所选边界上的归一化位置，省略时使用 0.5':
+    'fraction is the normalized position along the selected boundary and defaults to 0.5',
+  '节点配置，包含位置及可选的 id、文字和样式': 'Node configuration with a position and optional id, text, and style',
+  '带 node 类别的作者输入': 'Authoring input with the node discriminator',
+  坐标标识与位置配置: 'Coordinate identifier and position',
+  '带 coordinate 类别的作者输入': 'Authoring input with the coordinate discriminator',
+
+  标签附着的节点边界方向: 'Side of the node boundary to which the label attaches',
+  '标签位置；省略时位于节点上方，支持方向、角度或边界比例':
+    'Label position; defaults to above the node, accepting a direction, angle, or boundary fraction',
+  '节点类别标识，可省略': 'Optional node discriminator',
+  '节点中心位置，支持坐标、相对定位和锚点对齐':
+    'Node center position, supporting coordinates, relative positioning, and anchor alignment',
+  附着于节点的一个或多个标签: 'One or more labels attached to the node',
+
   '指向同一节点几何的额外 id；要求主 id，别名非空白且不重复':
     'Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases',
   '命名坐标点的 React 输入，不绘制可见内容': 'React input for a named coordinate with no visible content',
@@ -22,7 +43,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout lowerTex>` is supplied and rendered literally otherwise',
   "圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`":
     "Corner radius in user units; affects only `rectangle`. Prefer shape parameters: `shape={{ type: 'rectangle', params: { cornerRadius } }}`",
-  '节点 id；其他 Path/Draw 通过这个 id 引用本节点': 'Node ID used by other Path/Draw elements to reference this node',
+  '节点 id；路径端点和其他节点通过它引用本节点':
+    'Node ID used by path endpoints and other nodes to reference this node',
   '节点附加标签，支持单对象或数组': 'Additional node labels, as one object or an array',
   '标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance':
     'Attach labels to named directions, center, angles, or boundary fractions. Supports inside/outside placement, rotation, tangent alignment, and outside leader lines without affecting shape size. Position defaults to top; distance inherits compile labelDistance',
@@ -77,8 +99,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   作者侧节点标签边界位置: 'Node label boundary-position authoring input',
   作者侧节点标签位置: 'Node label position authoring input',
   创建作者侧命名坐标输入: 'Create authoring input for a named coordinate',
-  '创建作者侧节点输入，支持 id 简写与完整配置':
-    'Create node authoring input with an ID shorthand or a complete configuration',
+  '创建作者侧节点输入，身份由配置中的 id 声明':
+    'Create node authoring input with identity declared by id in the configuration',
   '连接面命名 anchor 的名字': 'Name of a boundary anchor',
   '类型接受字符串；Node 引用解析仅将非中心的标准方位名交给 boundary，中心与形状专属名称由视觉 shape 解析':
     'The type accepts strings; Node reference resolution passes only non-center standard directions to the boundary. The visual shape resolves the center and shape-specific names',
@@ -108,10 +130,24 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   'Node label IR 类型': 'Node label IR type',
   '内置 boundary provider 注册项': 'Built-in boundary provider definitions',
   'Node 文字颜色的宿主专用关键字': 'Host-specific keyword for node text color',
-  '定义 boundary 注册项，并把参数泛型擦除为 registry 可存储形态':
-    'Define a boundary registry entry and erase its parameter generic for registry storage',
-  '当前只集中封装擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间':
-    'Currently centralizes type erasure; the entry point aligns registry APIs and leaves room for future validation or normalization',
+  '创建可注入编译配置的连接面定义，保留定义时的参数类型检查':
+    'Create a boundary definition for compile options with parameter type checking at the definition site',
+  '将返回值加入 CompileOptions.boundaries 后，节点或路径端点可通过 boundary 引用其 name。此函数不注册连接面，也不解析实例参数':
+    'Add the result to CompileOptions.boundaries so nodes or path endpoints can reference its name through boundary. This function does not register the boundary or parse instance parameters',
+  '由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型':
+    'JSON object type parsed by paramsSchema and shared by all boundary callbacks',
+  '连接面名称、参数 schema 与连接几何回调': 'Boundary name, parameter schema, and connection geometry callbacks',
+  '原定义对象，类型转换为可存入连接面注册表的 BoundaryDefinition；不复制或修改输入':
+    'The original definition typed as BoundaryDefinition for registry storage; the input is neither copied nor modified',
+  '创建可注入编译配置的形状定义，保留定义时的参数类型检查':
+    'Create a shape definition for compile options with parameter type checking at the definition site',
+  '将返回值加入 CompileOptions.shapes 后，节点可通过 shape 引用其 name。此函数不注册形状，也不解析实例参数':
+    'Add the result to CompileOptions.shapes so nodes can reference its name through shape. This function does not register the shape or parse instance parameters',
+  '由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型':
+    'JSON object type parsed by paramsSchema and shared by all shape callbacks',
+  '形状名称、参数 schema 与几何及绘制回调': 'Shape name, parameter schema, and geometry and drawing callbacks',
+  '原定义对象，类型转换为可存入形状注册表的 ShapeDefinition；不复制或修改输入':
+    'The original definition typed as ShapeDefinition for registry storage; the input is neither copied nor modified',
   '不支持；tight boundary 回退到 bounds 并发出 warning':
     'Unsupported; tight boundary falls back to bounds and emits a warning',
   不支持: 'Unsupported',
@@ -151,8 +187,6 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Runtime capability contract shared by third-party and built-in shapes; the definition itself is not stored in IR. Each capability function receives instance-level `params` as its last argument.',
   '内置 shape provider 注册项；circle / diamond 是 IR 内置 shape preset，不占独立 provider key':
     'Built-in shape provider definitions; circle and diamond are IR shape presets without separate provider keys',
-  '定义 shape 注册项，并把参数泛型擦除为 registry 可存储形态':
-    'Define a shape registry entry and erase the parameter generic for registry storage',
 };
 
 /** 新增中文说明缺译时阻止生成 */

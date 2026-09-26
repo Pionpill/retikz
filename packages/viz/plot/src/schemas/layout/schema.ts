@@ -1,5 +1,6 @@
 import { NonNegativeNumberSchema } from '@retikz/foundation';
 import { strictObject } from 'zod';
+
 export const BoxPaddingSchema = strictObject({
   top: NonNegativeNumberSchema.optional().describe('Top padding in user units'),
   right: NonNegativeNumberSchema.optional().describe('Right padding in user units'),

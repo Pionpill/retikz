@@ -4,7 +4,12 @@ import { vector2 } from '../primitives';
 import { triangle } from './triangle';
 
 /** 圆：圆心 + 半径 */
-export type Circle = { center: Position; radius: number };
+export type Circle = {
+  /** 圆心 */
+  center: Position;
+  /** 半径 */
+  radius: number;
+};
 
 /**
  * 以两点连线为直径构造圆
@@ -41,7 +46,7 @@ const isPointWithinCircle = (circle: Circle, point: Position, epsilon: number): 
 export const circle = {
   /**
    * 点集的最小外接圆（Welzl 迭代式）
-   * @description 覆盖输入点集的最小圆；空集返回 null
+   * @description 覆盖输入点集的最小圆；空集返回 null。epsilon 默认 DEFAULT_EPSILON，用于判断点是否落在圆内
    * @remarks 复杂度：时间最坏 O(n^3)，空间 O(1)，n 为输入点数
    */
   minimalEnclosing: (points: Array<Position>, epsilon = DEFAULT_EPSILON): Circle | null => {

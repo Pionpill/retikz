@@ -7,6 +7,7 @@ keywords: 形状、shape、Circle、Ellipse、RegularPolygon、Sector、Tier2、
 
 - 状态：Accepted（2026-09-19，人工接受并要求执行；不表示实现完成）
 - 决策日期：2026-09-19
+- 后继决策：[ADR-032](./032-extension-package-boundary.md) 将节点形状扩展迁至 Extension；[Kernel ADR-045](../../../../../../kernel/_notes/decisions/v0/v0.5/045-anonymous-input-embed-identity.md) 将 Vanilla builder 收敛为单一领域输入
 - 关联：[v0.1 roadmap](./roadmap.md) · [直接 Definition 接入](./021-direct-definition-loading.md) · [Core 与 Standard 边界](./023-core-minimal-builtins-and-standard-provider-entrypoints.md) · [节点 Sector](./025-sector-shape-unification.md) · [Standard 设计](../../../../architecture/standard-library-design.md) · [Drawing Complete](../../../../../../kernel/_notes/architecture/core-drawing-complete.md)
 
 ## 背景与目标
@@ -21,15 +22,15 @@ Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 当前是 Ke
 
 每种形状使用独立的 `namespace: 'standard'` 与 `type`，直接复用 Core 的 `defineComposite`、registry、provider dependency graph 与 compile options。`shape` 是 Vanilla 的静态函数分组，不是新的 IR 判别层、运行时 registry 或动态加载器。
 
-| 形状           | Composite type   | Vanilla 入口                      | React 入口       |
-| -------------- | ---------------- | --------------------------------- | ---------------- |
-| 圆             | `circle`         | `shape.circle(id, input)`         | `Circle`         |
-| 椭圆           | `ellipse`        | `shape.ellipse(id, input)`        | `Ellipse`        |
-| 矩形           | `rectangle`      | `shape.rectangle(id, input)`      | `Rectangle`      |
-| 正多边形       | `regularPolygon` | `shape.regularPolygon(id, input)` | `RegularPolygon` |
-| 星形           | `star`           | `shape.star(id, input)`           | `Star`           |
-| 圆弧／椭圆弧   | `arc`            | `shape.arc(id, input)`            | `Arc`            |
-| 扇形／环形扇区 | `sector`         | `shape.sector(id, input)`         | `Sector`         |
+| 形状           | Composite type   | Vanilla 入口                  | React 入口       |
+| -------------- | ---------------- | ----------------------------- | ---------------- |
+| 圆             | `circle`         | `shape.circle(input)`         | `Circle`         |
+| 椭圆           | `ellipse`        | `shape.ellipse(input)`        | `Ellipse`        |
+| 矩形           | `rectangle`      | `shape.rectangle(input)`      | `Rectangle`      |
+| 正多边形       | `regularPolygon` | `shape.regularPolygon(input)` | `RegularPolygon` |
+| 星形           | `star`           | `shape.star(input)`           | `Star`           |
+| 圆弧／椭圆弧   | `arc`            | `shape.arc(input)`            | `Arc`            |
+| 扇形／环形扇区 | `sector`         | `shape.sector(input)`         | `Sector`         |
 
 使用 `regularPolygon` 明确其正多边形约束，不提供暗示任意顶点输入的 `polygon` 别名。Vanilla 的 `@retikz/standard-vanilla/shape` 子入口只公开 `shape` 下的这些构造方法，不并行导出顶层 `circle()` 等同义入口。React 保持具名组件，由 `@retikz/standard-react/shape` 导出。
 
@@ -39,7 +40,7 @@ Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 当前是 Ke
 
 ### 持久化与 authoring
 
-每种形状沿用 Standard 的独立能力导出模式：例如 `CircleSchema`、`IRCircle`、`createCircle`、`CircleDefinition`、`CircleProvider` 从 `@retikz/standard/shape` 子入口导出，其余形状对应命名。三个包的根入口均不重复导出形状家族；节点形状扩展独立使用 `@retikz/standard/node-shape`，不保留旧入口别名。factory 接收省略 composite 判别字段的 Source 数据，保留紧凑输入，不提前生成路径步骤。
+每种形状沿用 Standard 的独立能力导出模式：例如 `CircleSchema`、`IRCircle`、`createCircle`、`CircleDefinition`、`CircleProvider` 从 `@retikz/standard/shape` 子入口导出，其余形状对应命名。三个包的根入口均不重复导出形状家族；节点形状扩展独立使用 `@retikz/extension`，不保留旧入口别名。factory 接收省略 composite 判别字段的 Source 数据，保留紧凑输入，不提前生成路径步骤。
 
 ```ts
 // 持久化 Source IR
@@ -53,17 +54,17 @@ const circle = {
 };
 
 // 无框架 authoring
-import { shape } from '@retikz/standard-vanilla';
+import { shape } from '@retikz/standard-vanilla/shape';
 
-shape.circle('c1', { center: [0, 0], radius: 40 });
-shape.ellipse('e1', { center: [100, 0], radius: { x: 50, y: 30 } });
+shape.circle({ id: 'c1', center: [0, 0], radius: 40 });
+shape.ellipse({ id: 'e1', center: [100, 0], radius: { x: 50, y: 30 } });
 ```
 
 `InputCircle` 等 authoring 类型属于 Standard Vanilla；持久化 `IRCircle` 等类型从 Standard schema 派生，不另建 Input schema。Vanilla 返回沿用既有协议的 `InputEmbed`，对应 `CircleInputEmbedAdapter` 等 adapter 构造 Source IR 并贡献所需 provider；纳入既有 `StandardInputEmbedAdapters` authoring 集合。该集合不成为全量 compile preset。
 
 React props 接入对应 Vanilla Input 和同一 InputEmbed adapter。`<Circle id="c1" center={[0, 0]} radius={40} />` 与上例具备相同的 Source 几何、最终 Path identity、Scene 和诊断；React 不直接拼 Path、不重新做几何转换。事件与 ref 等宿主对象仍由 adapter 消费，不写入 Source IR。
 
-Vanilla 第一个 `id` 同时确定 embed identity 与形状公开 `id`，第二个参数不重复声明 `id`。React 使用显式 `id`，省略时沿用现有宿主 occurrence 规则，不把隐式 occurrence id 持久化为公开几何 id。
+Vanilla 只接受一个领域输入对象，其中可选的 `id` 同时传给 embed 与形状 Source；不保留独立的字符串位置参数。React 使用显式 `id`，省略时沿用现有宿主 occurrence 规则，不把隐式 occurrence id 持久化为公开几何 id。此处不额外承诺 runtime diff 或重排稳定性。
 
 ### 几何输入
 
@@ -107,12 +108,12 @@ Path 的显式 `id`、`meta`、`zIndex` 直接承接形状实例；不额外生�
 - Standard 自身新建的语义错误使用包级 `RetikzStandardError`，携带形状与字段上下文；外部回调异常保持 cause。adapter 不重复建立语义校验及不同默认值。
 - 当前正常有效输入迁移后保持几何与样式语义；多套几何同时输入、原来被忽略的无效字段和不合法半径关系改为明确拒绝。跨端差异以本 ADR 的统一 Source 契约为准。
 - Kernel React 删除上述七个 Sugar 及专属 Props／helper 导出，消费者改从 Standard React 导入；不保留旧名转发、兼容 wrapper 或隐式安装。Core 原有 Path steps 与内置 Node shapes 保持归属不变。
-- `@retikz/standard/node-shape` 的节点 ShapeDefinition 与本 ADR 的 composite 是两种契约；例如 `SectorShapeDefinition` 继续服务 Node，`SectorDefinition` 服务独立路径绘制。节点形状的尺寸、边界和 anchor 规则不由本 ADR 修改。
+- `@retikz/extension` 的节点 ShapeDefinition 与本 ADR 的 composite 是两种契约；例如 `SectorShapeDefinition` 继续服务 Node，`SectorDefinition` 服务独立路径绘制。节点形状的尺寸、边界和 anchor 规则不由本 ADR 修改。
 - 本 ADR 在落地时替代 ADR-025 中“Arc 保留在 Kernel React”的归属结论；ADR-025 的节点 Sector 统一契约继续有效。
 - Standard 与 Kernel 分别使用既有 release group；入口移除与消费方依赖升级须作为同一次迁移闭环安排，不把当前 ADR 写入视为发布或实现完成。
 
 ## 文档组织
 
-Standard 侧栏顺序为“展现 → 形状 → 扩展”。“形状”组包含圆／椭圆、矩形、正多边形、星形、圆弧／扇形五篇用法文档；圆弧与扇形合篇。每篇说明 JSON、Vanilla `shape.xxx` 与 React 的相同契约、默认值和必要交互示例。
+Standard 拥有展现与形状文档，Extension 独立拥有官方扩展文档。“形状”组包含圆／椭圆、矩形、正多边形、星形、圆弧／扇形五篇用法文档；圆弧与扇形合篇。每篇说明 JSON、Vanilla `shape.xxx` 与 React 的相同契约、默认值和必要交互示例。
 
-现有“扩展 → 形状”改名为“节点形状”，继续负责 Node ShapeDefinition。Kernel Path 只保留底层路径能力及 Standard 链接，不再拥有独立“形状绘制”用法页；相关 Sugar API 参考和组合原理随 owner 迁移，Core steps 的参考和原理仍留在 Kernel。中英文导航、正文、示例和 LLM 文档索引保持一致。
+Extension 的“节点形状”负责 Node ShapeDefinition。Kernel Path 只保留底层路径能力及 Standard 链接，不再拥有独立“形状绘制”用法页；相关 Sugar API 参考和组合原理随 owner 迁移，Core steps 的参考和原理仍留在 Kernel。中英文导航、正文、示例和 LLM 文档索引保持一致。

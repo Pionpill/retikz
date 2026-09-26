@@ -68,13 +68,12 @@ retikz 是受 LaTeX TikZ 启发的 TypeScript 绘图库：用组件或 JSON IR �
 任务开始和 Plan Gate 前，除小 / 中 / 大流程定级外，必须按需求不确定性、调研与设计深度、能力边界变化、错误代价、修改范围和验证复杂度评估任务难度，并检查开发者当前选择的主模型：
 
 - `gpt-6-astra`（Astra）：高难度、大型、需要调研和架构设计，或涉及跨包公开契约、复杂技术决策的任务
-- `gpt-5.6-sol`（Sol）：中高难度、中大型、需要调研设计和较多判断，但不需要 Astra 级架构裁决的任务
-- `gpt-5.6-terra`（Terra）：中等难度、中小型、边界较明确但仍需要判断、诊断或有限范围协调的任务
-- `gpt-5.6-luna`（Luna）：普通难度、小型、方案明确的实现、文档、样式和机械调整任务
+- `gpt-6-sol`（Sol）：中高难度、中大型、需要调研设计、诊断或较多判断，但不需要 Astra 级架构裁决的任务
+- `gpt-6-luna`（Luna）：中低难度、中小型、边界明确且判断范围有限的实现、诊断、文档、样式和机械调整任务
 
 难度不按代码行数或文件数量单独判断；例如大量 demo 的统一样式调整仍可属于 Luna，而少量跨包公开契约修改可能属于 Astra 或 Sol。当前主模型与推荐模型相差两个等级及以上时，执行计划必须同时给出难度评估、推荐主模型和不匹配原因，并等待用户确认后执行；相邻等级可继续，但须在计划中说明取舍。主模型匹配规则只决定主控模型建议，不自动授权 subagent、review、stage、commit、push、tag 或 publish。
 
-主模型适配不替换大型任务的 agent 编排：大型任务仍由 Astra 或 Sol 主控，按已确认计划使用 Terra / Luna 执行或评审；worker、reviewer 和 cross-review 的模型角色继续遵循 `codex-develop-flow` 及所属 flow。
+主模型适配不替换大型任务的 agent 编排：大型任务仍由 Astra 或 Sol 主控，按已确认计划使用 Sol / Luna 执行或评审；worker、reviewer 和 cross-review 的模型角色继续遵循 `codex-develop-flow` 及所属 flow。
 
 ## 文件与依赖
 
@@ -105,15 +104,17 @@ pnpm dev:docs
 - import 排序和格式化统一由 Oxfmt 执行；Oxlint 负责原生 lint 与类型感知规则，正式类型检查仍使用 `tsc --noEmit`。
 - 泛型命名、export 顺序、错误类契约及 React Compiler config/gating 由 LLM 按 `standard-name`、本文件错误规范和 `develop-review` 自审；lint 通过不代表这些约束已自动验证。
 
-默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。日常校验中，范围明确且改动较小时优先运行受影响包的 `test:changed`；仅在大范围重构或功能大改时运行受影响模块的全量测试。
+默认只验证当前或受影响 workspace；跨包公共契约、发布前、CI 复现或用户明确要求时才扩大到全仓。日常修改与发布的测试默认仅限功能性检查；性能、压力、基准及 LLM 测试必须获得当前对话针对该类测试及范围的明确授权，“发布”“全量验证”“修复所有问题”不构成授权。
+
+执行前检查脚本及用例范围；`test:changed`、`test:run`、`test:full` 等聚合入口也不得夹带未授权测试。混合套件须显式筛选功能性用例；无法可靠隔离时只运行已确认的功能性子集并报告缺口，不先运行再解释。范围小优先受影响的功能性用例，大范围重构或功能大改可扩大功能性覆盖。
 
 ```bash
 pnpm exec oxfmt <changed-files-or-scope>
 pnpm --filter <pkg> exec oxlint . --fix
 pnpm --filter <pkg> exec tsc --noEmit
-pnpm --filter <pkg> test:changed
+pnpm --filter <pkg> test:changed # 先确认不包含未授权测试
 pnpm --filter <pkg> exec vitest run <test-file>
-pnpm --filter <pkg> test:run # 仅大范围重构或功能大改
+pnpm --filter <pkg> test:run # 仅在已确认全部为功能性用例且需扩大覆盖时使用
 ```
 
 - 改完内容先用 Oxfmt 格式化相关文件或目录，再按改动类型继续验证。
@@ -194,7 +195,7 @@ Control: <human-directed|llm-autonomous>
 
 - IR 必须 100% JSON 可序列化，禁止函数、ReactNode、class 实例。
 - 只有可持久化 IR 使用 Zod schema：`XxxSchema` 是运行时真源，允许省略默认字段的 Source 用 `z.input` 派生，解析结果用 `z.output` / `z.infer`；Input、Canonical、compile 消费态不设平行 schema。schema 字段 `.describe(...)` 用英文描述契约，不写 renderer 实现细节。
-- 静态默认值保留真实 `.default()`，resolve 复用同一 schema 的默认，不另写一份常量。继承先合并原始配置，再应用默认与变换；直接 parse 的结果是已物化快照，其默认字段再次参与合并时视为显式值。上下文继承字段可用 `.removeDefault().optional()` 精确复用权威字段，不复制约束或 describe；细则见 [schema](.agents/skills/standard-structure/references/schema.md) / [resolve](.agents/skills/standard-structure/references/resolve.md)。
+- 静态默认值保留真实 `.default()`，resolve 复用同一 schema 的默认，不另写一份常量。继承先合并原始配置，再应用默认与变换；直接 parse 的结果是已物化快照，其默认字段再次参与合并时视为显式值。上下文继承的 ZodDefault 字段可用 `.unwrap().optional()` 精确复用权威字段，不复制约束或 describe；细则见 [schema](.agents/skills/standard-structure/references/schema.md) / [resolve](.agents/skills/standard-structure/references/resolve.md)。
 - 闭合对象 schema 优先用 `z.strictObject({...})`；不要新增 `z.object({...}).strict()`，除非已有链式组合无法直接表达。
 - `IRXxx`、`InputXxx`、`CanonicalXxx`、`XxxResolveContext`、`XxxResolution`、Definition、enum 和阶段函数的命名及目录归属遵循 `standard-name`；纵向领域的 `CanonicalXxx` 由 `resolve/<domain>/resolve.ts` 产出并定义在同 domain `types.ts`。分层意义的 `normalize/` 与阶段级 `normalizeXxx` 只属于 Vanilla API 包。
 - 顶层实体判别字段用 `type`，内部子变体用 `kind`。

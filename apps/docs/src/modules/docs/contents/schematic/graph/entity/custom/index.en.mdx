@@ -1,0 +1,206 @@
+---
+title: Custom usage
+description: Define and register Entity roles, subtypes and parameterized semantics to drive multiple entities through shared rules.
+---
+
+Define and register a Definition when several entities share a stable business meaning. For a one-off color change, use style from [Basic usage](/schematic/graph/entity/usage). Attach incidental data with `meta` rather than creating a semantic capability for every field.
+
+## Choosing an extension point
+
+| Entry point             | Responsibility                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `defineEntityRole`      | Primary meaning and base structure                                                |
+| `defineEntityKind`      | A stable subtype within a role, identified by (role, kind)                        |
+| `defineEntityPredicate` | Precise semantics with JSON parameters, allowed role/kinds and a parameter schema |
+
+Role owns the outline and padding; kind and predicate do not duplicate shapes. Rules in `graphRules` provide appearance by matching semantics, and instance style can still override them. Definitions can contain runtime schemas, while persistent Entity records store keys and JSON parameters only.
+
+## Defining a service gateway
+
+This example defines a service role, a service.gateway subtype and a service.availability predicate. Changing availability changes the color; enabling critical service thickens the outline.
+
+<ComponentPreview files={['entity-definition', 'entity-definition.data']} size="sm" />
+
+## Registering and using definitions
+
+`defineEntityPredicate` declares a registrable, parameterized Entity meaning. `name` is the key referenced by an Entity; `role` and optional `kinds` limit where it applies, while `paramsSchema` validates the JSON parameters. It only creates a Definition: it neither registers itself nor changes appearance. After passing the Definition to Graph's `entityPredicates`, an Entity can reference it, and matching `graphRules` determine appearance from its name and parameters.
+
+First save the Definitions and rules used by this example as `entity-definition.data.ts` so the React and Vanilla examples can share them:
+
+```ts
+import { defineEntityRole, defineEntityKind, defineEntityPredicate } from '@retikz/graph';
+import type { IRGraphRule } from '@retikz/graph';
+import { z } from 'zod';
+
+export const serviceRole = defineEntityRole({
+  role: 'service',
+  description: 'Service that provides a stable interface',
+  shape: 'rectangle',
+  padding: { x: 14, y: 10 },
+  cornerRadius: 8,
+  minimumSize: { width: 110, height: 46 },
+});
+export const gatewayKind = defineEntityKind({
+  role: 'service',
+  kind: 'service.gateway',
+  description: 'Gateway for external requests',
+});
+export const availabilityPredicate = defineEntityPredicate({
+  name: 'service.availability',
+  role: 'service',
+  kinds: ['service.gateway'],
+  description: 'Service availability and criticality',
+  paramsSchema: z.strictObject({ status: z.enum(['available', 'degraded', 'offline']), critical: z.boolean() }),
+});
+export const availabilityRules: Array<IRGraphRule> = [
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { status: 'available' } } },
+    style: { color: '#16a34a' },
+  },
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { status: 'degraded' } } },
+    style: { color: '#d97706' },
+  },
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { status: 'offline' } } },
+    style: { color: '#dc2626' },
+  },
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { critical: true } } },
+    style: { strokeWidth: 3 },
+  },
+];
+```
+
+The parameter schema requires status to be available, degraded or offline, and critical to be boolean. The four rules are fixed data: three match status and the last matches critical, so color and outline weight can apply together. The controls in the preview above change only Entity predicate.params, not colors directly.
+
+In React, declare definitions on Graph only. Entities inside it share those registrations and rules. Even for one Entity, pass custom definitions to Graph; a custom key alone is not registration.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Entity, Graph } from '@retikz/graph-react';
+import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
+
+export const Gateway = () => (
+  <Graph
+    entityRoles={[serviceRole]}
+    entityKinds={[gatewayKind]}
+    entityPredicates={[availabilityPredicate]}
+    graphRules={availabilityRules}
+  >
+    <Entity
+      role="service"
+      kind="service.gateway"
+      predicate={{ name: 'service.availability', params: { status: 'available', critical: false } }}
+      position={[210, 90]}
+    >
+      API gateway
+    </Entity>
+  </Graph>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { graph, entity, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
+
+const input = scene({
+  children: [
+    graph({
+      entityRoles: [serviceRole],
+      entityKinds: [gatewayKind],
+      entityPredicates: [availabilityPredicate],
+      graphRules: availabilityRules,
+      children: [
+        entity({
+          role: 'service',
+          kind: 'service.gateway',
+          predicate: { name: 'service.availability', params: { status: 'available', critical: false } },
+          position: [210, 90],
+          text: 'API gateway',
+        }),
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: createGraphVanillaAdapters(),
+});
+```
+
+</DocTab>
+</DocTabs>
+
+When consuming IR directly, pass the same definitions to `createGraphDefinitions({ entityRoles, entityKinds, entityPredicates })`, then install them in React's `extensions.composites` or Vanilla's `compile.composites` as shown in Basic usage. Rules remain Graph Source `graphRules`, not Entity predicate parameters. The Vanilla example requires an existing container; dispose the view when unmounting.
+
+## Errors and limits
+
+- Use non-empty, stable keys. Different Definition objects claiming the same identity fail; built-in definitions cannot be overridden.
+- A kind must be registered for the selected role. The same kind key may belong to different roles; match both role and kind to scope a rule.
+- A predicate must allow the current role and kind. Parameters are parsed by paramsSchema before rule matching; missing or invalid parameters are not silently ignored.
+- If a role uses a separately defined shape, register that shape capability too; it does not fall back to rectangle.
+- Entity Source, predicate.params and meta must be JSON-serializable, without functions, component instances or renderer objects.
+
+## Related props
+
+For complete Definition fields and function signatures, see [API reference](/schematic/graph/entity/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'entityRoles',
+      kind: 'property',
+      type: 'ReadonlyArray<EntityRoleDefinition>',
+      description:
+        'Runtime role definitions. This example uses role service, shape rectangle, padding { x: 14, y: 10 } and minimumSize { width: 110, height: 46 }.',
+    },
+    {
+      name: 'entityKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<EntityKindDefinition>',
+      description: 'Entries contain role, kind and description. Here service.gateway is registered under service.',
+    },
+    {
+      name: 'predicate',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        'name selects a registered predicate. Here params contains status (available, degraded or offline) and critical (boolean); status changes color and critical thickens the outline.',
+    },
+    {
+      name: 'entityPredicates',
+      kind: 'property',
+      type: 'ReadonlyArray<EntityPredicateDefinition>',
+      description:
+        'Runtime definitions contain name, role, optional kinds and paramsSchema. The schema validates JSON parameters; definitions themselves are not stored in IR.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Implementation',
+      description: 'Trace parameter parsing and rule matching',
+      url: '/schematic/graph/entity/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Separate persistent fields from runtime definitions',
+      url: '/schematic/graph/entity/schema-reference',
+    },
+  ]}
+/>

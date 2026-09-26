@@ -6,8 +6,7 @@ import type { HydrationEventProps, ScopeStyleProps } from '../protocol';
 import { TIKZ_SCOPE } from '../protocol';
 
 /**
- * @description 级联样式子集（graphic state + 四通道 every-X）抽到共享 {@link ScopeStyleProps}，与 `<Layout>` 复用；
- *   本类型额外带容器 / 命名空间 / 局部变换 / 屏障 / 栈序 / 裁剪等 scope 专属字段
+ * 为一组图元设置局部样式、命名空间、变换、裁剪和引用包络
  */
 export type ScopeProps = ScopeStyleProps &
   HydrationEventProps & {
@@ -20,8 +19,9 @@ export type ScopeProps = ScopeStyleProps &
      */
     id?: string;
     /**
-     * 是否创建本地命名空间；true 时子节点 id 不向父 frame 传播（外部不可见）
+     * 是否创建本地命名空间；true 时子节点 id 不向外层作用域公开
      * @description 子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用
+     * @default false
      */
     localNamespace?: boolean;
     /**
@@ -34,11 +34,17 @@ export type ScopeProps = ScopeStyleProps &
      * @description target 是父坐标系显式点或此前已完成的命名实体；selfAnchor 缺省为固有包络 center
      */
     placement?: IRScope['placement'];
-    /** 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序 */
+    /**
+     * 显式栈序：作用于 scope 整体在父层的位置（不影响 scope 内部子元素相对栈序）；缺省 0 = 声明顺序
+     * @default 0
+     */
     zIndex?: IRScope['zIndex'];
     /** 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */
     clip?: IRScope['clip'];
-    /** scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB） */
+    /**
+     * 通过 id 引用整组图元时使用的包络形状；支持矩形或圆形，默认使用轴对齐矩形包络
+     * @default 'rectangle'
+     */
     boundingShape?: IRScope['boundingShape'];
     /** 固有包络的独立外框；位于内容下方，不参与布局、引用或命中 */
     frame?: IRScope['frame'];
@@ -53,7 +59,7 @@ export type ScopeProps = ScopeStyleProps &
   };
 
 /**
- * Scope 容器组件——TikZ `\begin{scope}[...]...\end{scope}` 同义
+ * 将子图元组合为作用域，统一设置样式、变换、定位与裁剪
  * @description 给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络
  */
 export const Scope: FC<ScopeProps> = () => null;

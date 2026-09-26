@@ -2,90 +2,57 @@
 
 ## `@retikz/react`
 
-### CoordinateProps
+### Node / NodeProps
 
-<p>
-  <ApiSourceLink
-    label={'CoordinateProps'}
-    path={'packages/kernel/react/src/kernel/components/Coordinate.tsx'}
-    startLine={8}
-  >
-    React input for a named coordinate with no visible content
-  </ApiSourceLink>
-</p>
+- `Node`: <ApiSourceLink label={"Node"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={99}>Node declares a referenceable node</ApiSourceLink>
+- `NodeProps`: <ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={21}>Positionable, connectable node input combining text, visual shape, and connection surface</ApiSourceLink>
+
+Declares a referenceable node with position, text, shape, and style. The component itself creates no DOM; `<Layout>` renders it to SVG or Canvas
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member       | Type                                                                                                      | Default | Description                                                                                                                                                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `authoring?` | `unknown`                                                                                                 | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                 |
-| `id`         | `string`                                                                                                  | —       | Coordinate ID used by path endpoints and node positioning to reference this position                                                                                                                                                            |
-| `position`   | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Coordinate position; does not support Node-only self-anchor alignment<br />Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }` |
+<ApiTable grouped>
+
+| Group     | Member            | Type                                                                                                                          | Default       | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `aliasIds?`       | `Array<string>`                                                                                                               | —             | Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases                                                                                                                                                                                                                                                                                                                 |
+|           | `children?`       | `ReactNode`                                                                                                                   | —             | Text supplied as children<br />Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout lowerTex>` is supplied and rendered literally otherwise                                                                                        |
+|           | `id?`             | `string`                                                                                                                      | —             | Node ID used by path endpoints and other nodes to reference this node                                                                                                                                                                                                                                                                                                                                          |
+|           | `label?`          | `InputNodeLabel \| Array<InputNodeLabel>`                                                                                     | —             | Additional node labels, as one object or an array<br />Attach labels to named directions, center, angles, or boundary fractions. Supports inside/outside placement, rotation, tangent alignment, and outside leader lines without affecting shape size. Position defaults to top; distance inherits compile labelDistance                                                                                      |
+|           | `text?`           | `string \| Array<IRLine>`                                                                                                     | —             | Explicit text, taking precedence over children<br />A `string` (optionally containing `$...$` formulas), `Array<string \| IRLine>` with per-line fill/opacity/font overrides, or mixed runs `{ runs: [{ text }, { tex }] }` with per-run colors                                                                                                                                                                |
+| Geometry  | `boundary?`       | `IRBoundary`                                                                                                                  | `'shape'`     | Connection boundary; follows the visual shape when omitted, or selects a registered boundary or shape without changing appearance                                                                                                                                                                                                                                                                              |
+|           | `cornerRadius?`   | `number`                                                                                                                      | —             | Corner radius in user units; affects only `rectangle`. Prefer shape parameters: `shape={{ type: 'rectangle', params: { cornerRadius } }}`                                                                                                                                                                                                                                                                      |
+|           | `layout?`         | `IRNodeLayout`                                                                                                                | —             | Node size, spacing, and text layout                                                                                                                                                                                                                                                                                                                                                                            |
+|           | `position`        | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition \| IRAnchorPosition` | —             | Node center position<br />Six forms: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, between `{ between: [A, B], fraction }`, or anchor alignment `{ kind: 'anchor', target, selfAnchor? }`. Anchor alignment lays out text, shape, padding, margin, scale, and rotation before translating the node; both anchors default to center |
+|           | `rotate?`         | `number`                                                                                                                      | `0`           | Rotation around the node center in degrees; positive is clockwise                                                                                                                                                                                                                                                                                                                                              |
+|           | `scale?`          | `number \| IRAxisScale`                                                                                                       | `1`           | Uniform or per-axis scaling of node size, font size, spacing, and path attachment points                                                                                                                                                                                                                                                                                                                       |
+|           | `shape?`          | `IRShapeValue`                                                                                                                | `'rectangle'` | Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.extensions.shapes                                                                                                                                                                                                                                            |
+| Style     | `style?`          | `IRNodeStyle`                                                                                                                 | —             | Instance visual overrides, applied field by field over inherited defaults                                                                                                                                                                                                                                                                                                                                      |
+|           | `zIndex?`         | `number`                                                                                                                      | `0`           | Stacking among siblings; higher values draw on top and ties preserve declaration order                                                                                                                                                                                                                                                                                                                         |
+| Callbacks | `onClick?`        | `HydrationHandler`                                                                                                            | —             | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                                                                                                            |
+|           | `onDoubleClick?`  | `HydrationHandler`                                                                                                            | —             | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                                                                                                                  |
+|           | `onPointerDown?`  | `HydrationHandler`                                                                                                            | —             | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                                                                                                                                            |
+|           | `onPointerEnter?` | `HydrationHandler`                                                                                                            | —             | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                                                                                                                                                |
+|           | `onPointerLeave?` | `HydrationHandler`                                                                                                            | —             | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                                                                                                                                                   |
+|           | `onPointerMove?`  | `HydrationHandler`                                                                                                            | —             | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                                                                                                                                            |
+|           | `onPointerUp?`    | `HydrationHandler`                                                                                                            | —             | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                                                                                                                                             |
+|           | `onRightClick?`   | `HydrationHandler`                                                                                                            | —             | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so call `event.preventDefault()` in the handler when needed                                                                                                                                                                                                                                                   |
+|           | `onWheel?`        | `HydrationHandler`                                                                                                            | —             | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                                                                                                                                                    |
+| Animation | `animations?`     | `Array<IRAnimationTrack>`                                                                                                     | —             | Element timeline tracks; each animates one property, with renderer playback or static fallback and no layout effect                                                                                                                                                                                                                                                                                            |
+| Runtime   | `authoring?`      | `unknown`                                                                                                                     | —             | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                                                                                                                                |
+|           | `meta?`           | `IRNode['meta']`                                                                                                              | —             | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                                                                                                                      |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type CoordinateProps = {
-  authoring?: unknown;
-  id: string;
-  position: IRPosition | PolarPosition | IRAtPosition | InputAtPosition | IROffsetPosition | IRBetweenPosition;
-};
-```
+export declare const Node: FC<NodeProps>;
 
-</DocTab>
-
-</DocTabs>
-
-### NodeProps
-
-<p>
-  <ApiSourceLink label={'NodeProps'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={21}>
-    Positionable, connectable node input combining text, visual shape, and connection surface
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-| Member            | Type                                                                                                                                                                       | Default       | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `aliasIds?`       | `IRNode['aliasIds']`                                                                                                                                                       | —             | Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases                                                                                                                                                                                                                                                                                                                 |
-| `animations?`     | `IRNode['animations']`                                                                                                                                                     | —             | Element timeline tracks; each animates one property, with renderer playback or static fallback and no layout effect                                                                                                                                                                                                                                                                                            |
-| `authoring?`      | `InputNode['authoring']`                                                                                                                                                   | —             | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                                                                                                                                |
-| `boundary?`       | `IRBoundary`                                                                                                                                                               | `'shape'`     | Connection boundary; follows the visual shape when omitted, or selects a registered boundary or shape without changing appearance                                                                                                                                                                                                                                                                              |
-| `children?`       | `ReactNode`                                                                                                                                                                | —             | Text supplied as children<br />Choose children or `text`; `text` takes precedence. Supports embedded `\\n`, template literals, string arrays, and styled `<Text>` lines. Strings may contain `$...$` inline or `$$...$$` display formulas, parsed when `<Layout lowerTex>` is supplied and rendered literally otherwise                                                                                        |
-| `cornerRadius?`   | `number`                                                                                                                                                                   | —             | Corner radius in user units; affects only `rectangle`. Prefer shape parameters: `shape={{ type: 'rectangle', params: { cornerRadius } }}`                                                                                                                                                                                                                                                                      |
-| `id?`             | `string`                                                                                                                                                                   | —             | Node ID used by other Path/Draw elements to reference this node                                                                                                                                                                                                                                                                                                                                                |
-| `label?`          | `InputNodeLabel \| Array<InputNodeLabel>`                                                                                                                                  | —             | Additional node labels, as one object or an array<br />Attach labels to named directions, center, angles, or boundary fractions. Supports inside/outside placement, rotation, tangent alignment, and outside leader lines without affecting shape size. Position defaults to top; distance inherits compile labelDistance                                                                                      |
-| `layout?`         | `InputNode['layout']`                                                                                                                                                      | —             | Node size, spacing, and text layout                                                                                                                                                                                                                                                                                                                                                                            |
-| `meta?`           | `IRNode['meta']`                                                                                                                                                           | —             | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                                                                                                                      |
-| `onClick?`        | `HydrationHandler`                                                                                                                                                         | —             | Click on this element (DOM `click`)                                                                                                                                                                                                                                                                                                                                                                            |
-| `onDoubleClick?`  | `HydrationHandler`                                                                                                                                                         | —             | Double-click on this element (DOM `dblclick`)                                                                                                                                                                                                                                                                                                                                                                  |
-| `onPointerDown?`  | `HydrationHandler`                                                                                                                                                         | —             | Pointer pressed on this element (DOM `pointerdown`)                                                                                                                                                                                                                                                                                                                                                            |
-| `onPointerEnter?` | `HydrationHandler`                                                                                                                                                         | —             | Pointer enters this element, synthesized from `pointermove` and hit-ID state; moving between children does not trigger it again                                                                                                                                                                                                                                                                                |
-| `onPointerLeave?` | `HydrationHandler`                                                                                                                                                         | —             | Pointer leaves this element, synthesized from `pointermove` and hit-ID state                                                                                                                                                                                                                                                                                                                                   |
-| `onPointerMove?`  | `HydrationHandler`                                                                                                                                                         | —             | Pointer moves over this element (DOM `pointermove`)                                                                                                                                                                                                                                                                                                                                                            |
-| `onPointerUp?`    | `HydrationHandler`                                                                                                                                                         | —             | Pointer released on this element (DOM `pointerup`)                                                                                                                                                                                                                                                                                                                                                             |
-| `onRightClick?`   | `HydrationHandler`                                                                                                                                                         | —             | Context menu on this element (DOM `contextmenu`); the browser menu is not suppressed by default, so call `event.preventDefault()` in the handler when needed                                                                                                                                                                                                                                                   |
-| `onWheel?`        | `HydrationHandler`                                                                                                                                                         | —             | Wheel input over this element (DOM `wheel`)                                                                                                                                                                                                                                                                                                                                                                    |
-| `position`        | `\| IRPosition`<br />`\| PolarPosition`<br />`\| IRAtPosition`<br />`\| InputAtPosition`<br />`\| IROffsetPosition`<br />`\| IRBetweenPosition`<br />`\| IRAnchorPosition` | —             | Node center position<br />Six forms: Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, between `{ between: [A, B], fraction }`, or anchor alignment `{ kind: 'anchor', target, selfAnchor? }`. Anchor alignment lays out text, shape, padding, margin, scale, and rotation before translating the node; both anchors default to center |
-| `rotate?`         | `number`                                                                                                                                                                   | `0`           | Rotation around the node center in degrees; positive is clockwise                                                                                                                                                                                                                                                                                                                                              |
-| `scale?`          | `number \| IRAxisScale`                                                                                                                                                    | `1`           | Uniform or per-axis scaling of node size, font size, spacing, and path attachment points                                                                                                                                                                                                                                                                                                                       |
-| `shape?`          | `IRNode['shape']`                                                                                                                                                          | `'rectangle'` | Visual shape: use a name when no parameters are required, or `{ type, params }` for parameterized shapes; register optional shapes through Layout.extensions.shapes                                                                                                                                                                                                                                            |
-| `style?`          | `InputNode['style']`                                                                                                                                                       | —             | Instance visual overrides, applied field by field over inherited defaults                                                                                                                                                                                                                                                                                                                                      |
-| `text?`           | `string \| Array<IRLine>`                                                                                                                                                  | —             | Explicit text, taking precedence over children<br />A `string` (optionally containing `$...$` formulas), `Array<string \| IRLine>` with per-line fill/opacity/font overrides, or mixed runs `{ runs: [{ text }, { tex }] }` with per-run colors                                                                                                                                                                |
-| `zIndex?`         | `IRNode['zIndex']`                                                                                                                                                         | `0`           | Stacking among siblings; higher values draw on top and ties preserve declaration order                                                                                                                                                                                                                                                                                                                         |
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
 export type NodeProps = HydrationEventProps & {
   authoring?: InputNode['authoring'];
   style?: InputNode['style'];
@@ -118,30 +85,35 @@ export type NodeProps = HydrationEventProps & {
 
 </DocTabs>
 
-### TextProps
+### Text / TextProps
 
-<p>
-  <ApiSourceLink label={'TextProps'} path={'packages/kernel/react/src/kernel/components/Text.tsx'} startLine={7}>
-    Content and style overrides for one text line inside Node
-  </ApiSourceLink>
-</p>
+- `Text`: <ApiSourceLink label={"Text"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={22}>Text is a line marker inside Node and does not render independently</ApiSourceLink>
+- `TextProps`: <ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={7}>Content and style overrides for one text line inside Node</ApiSourceLink>
+
+Declares one text line, combined with strings in JSX order; overrides apply only to this line
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member     | Type                                        | Default | Description                                                                |
-| ---------- | ------------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| `children` | `string \| number`                          | —       | Line content as a string or number; numbers render as text                 |
-| `fill?`    | `Extract<IRLine, { text: string }>['fill']` | —       | Per-line color override; inherits the Node block default when omitted      |
-| `font?`    | `IRFont`                                    | —       | Per-line font overrides; missing fields inherit the Node block font        |
-| `opacity?` | `number`                                    | —       | Per-line opacity from 0 to 1; inherits the Node block default when omitted |
+<ApiTable>
+
+| Member     | Type               | Default | Description                                                                |
+| ---------- | ------------------ | ------- | -------------------------------------------------------------------------- |
+| `children` | `string \| number` | —       | Line content as a string or number; numbers render as text                 |
+| `fill?`    | `string \| number` | —       | Per-line color override; inherits the Node block default when omitted      |
+| `font?`    | `IRFont`           | —       | Per-line font overrides; missing fields inherit the Node block font        |
+| `opacity?` | `number`           | —       | Per-line opacity from 0 to 1; inherits the Node block default when omitted |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const Text: FC<TextProps>;
+
 export type TextProps = {
   children: string | number;
   fill?: Extract<
@@ -159,84 +131,38 @@ export type TextProps = {
 
 </DocTabs>
 
-### Coordinate
+### Coordinate / CoordinateProps
 
-<p>
-  <ApiSourceLink
-    label={'Coordinate'}
-    path={'packages/kernel/react/src/kernel/components/Coordinate.tsx'}
-    startLine={24}
-  >
-    Coordinate placeholder, equivalent to TikZ `\coordinate (id) at (x, y);`
-  </ApiSourceLink>
-</p>
+- `Coordinate`: <ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={24}>Coordinate placeholder, equivalent to TikZ `\coordinate (id) at (x, y);`</ApiSourceLink>
+- `CoordinateProps`: <ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={8}>React input for a named coordinate with no visible content</ApiSourceLink>
 
 Names a referenceable point for paths and other node positions; emits no visible output and does not enlarge the viewBox
-
-```ts
-export declare const Coordinate: FC<CoordinateProps>;
-```
-
-### Node
-
-<p>
-  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={99}>
-    Node declares a referenceable node
-  </ApiSourceLink>
-</p>
-
-Declares a referenceable node with position, text, shape, and style. The component itself creates no DOM; `<Layout>` renders it to SVG or Canvas
-
-```ts
-export declare const Node: FC<NodeProps>;
-```
-
-### Text
-
-<p>
-  <ApiSourceLink label={'Text'} path={'packages/kernel/react/src/kernel/components/Text.tsx'} startLine={22}>
-    Text is a line marker inside Node and does not render independently
-  </ApiSourceLink>
-</p>
-
-Declares one text line, combined with strings in JSX order; overrides apply only to this line
-
-```ts
-export declare const Text: FC<TextProps>;
-```
-
-## `@retikz/vanilla`
-
-### InputCoordinate
-
-<p>
-  <ApiSourceLink
-    label={'InputCoordinate'}
-    path={'packages/kernel/vanilla/src/normalize/coordinate/types.ts'}
-    startLine={4}
-  >
-    Authoring input for a named coordinate
-  </ApiSourceLink>
-</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member       | Type                                                                                                                                                                                                                                                                                                                         | Default | Description                                                                     |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------- |
-| `authoring?` | `unknown`                                                                                                                                                                                                                                                                                                                    | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR |
-| `id`         | `string`                                                                                                                                                                                                                                                                                                                     | —       | —                                                                               |
-| `position`   | `SharedPolarPosition \| IRBetweenPosition \| [number, number] \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| SharedPolarPosition \| [number, number]; offset: [number, number]; }` | —       | —                                                                               |
-| `type`       | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —       | —                                                                               |
+<ApiTable>
+
+| Member       | Type                                                                                                      | Default | Description                                                                                                                                                                                                                                     |
+| ------------ | --------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authoring?` | `unknown`                                                                                                 | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                 |
+| `id`         | `string`                                                                                                  | —       | Coordinate ID used by path endpoints and node positioning to reference this position                                                                                                                                                            |
+| `position`   | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —       | Coordinate position; does not support Node-only self-anchor alignment<br />Cartesian `[x, y]`, polar `{ angle, radius, origin? }`, relative `{ direction, of, distance? }`, offset `{ of, offset }`, or between `{ between: [A, B], fraction }` |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type InputCoordinate = IRCoordinate & {
+export declare const Coordinate: FC<CoordinateProps>;
+
+export type CoordinateProps = {
   authoring?: unknown;
+  id: string;
+  position: IRPosition | PolarPosition | IRAtPosition | InputAtPosition | IROffsetPosition | IRBetweenPosition;
 };
 ```
 
@@ -244,43 +170,50 @@ export type InputCoordinate = IRCoordinate & {
 
 </DocTabs>
 
-### InputNode
+## `@retikz/vanilla`
 
-<p>
-  <ApiSourceLink label={'InputNode'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={47}>
-    Node authoring input
-  </ApiSourceLink>
-</p>
+### node / InputNode
+
+- `node`: <ApiSourceLink label={"node"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={13}>Create node authoring input with identity declared by id in the configuration</ApiSourceLink>
+- `InputNode`: <ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={52}>Node authoring input</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member          | Type                                                                                             | Default | Description                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------- |
-| `aliasIds?`     | `Array<string>`                                                                                  | —       | —                                                                               |
-| `animations?`   | `IRNode['animations']`                                                                           | —       | —                                                                               |
-| `authoring?`    | `unknown`                                                                                        | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR |
-| `boundary?`     | `IRNode['boundary']`                                                                             | —       | —                                                                               |
-| `cornerRadius?` | `number`                                                                                         | —       | —                                                                               |
-| `id?`           | `string`                                                                                         | —       | —                                                                               |
-| `label?`        | `InputNodeLabel \| ReadonlyArray<InputNodeLabel>`                                                | —       | —                                                                               |
-| `layout?`       | `IRNode['layout']`                                                                               | —       | —                                                                               |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | —                                                                               |
-| `position`      | `InputPosition`                                                                                  | —       | —                                                                               |
-| `rotate?`       | `number`                                                                                         | —       | —                                                                               |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —                                                                               |
-| `shape?`        | `IRNode['shape']`                                                                                | —       | —                                                                               |
-| `style?`        | `IRNode['style']`                                                                                | —       | —                                                                               |
-| `text?`         | `IRNode['text']`                                                                                 | —       | —                                                                               |
-| `type?`         | `'node'`                                                                                         | —       | —                                                                               |
-| `zIndex?`       | `number`                                                                                         | —       | —                                                                               |
+<ApiTable grouped>
+
+| Group     | Member               | Type                                              | Default | Description                                                                                                                                                                   |
+| --------- | -------------------- | ------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `aliasIds?`          | `Array<string>`                                   | —       | Additional ids for the same node geometry; requires id and excludes duplicate or primary ids.                                                                                 |
+|           | `id?`                | `string`                                          | —       | Optional unique id; required if any path needs to reference this node by string                                                                                               |
+|           | `label?`             | `InputNodeLabel \| ReadonlyArray<InputNodeLabel>` | —       | One or more labels attached to the node                                                                                                                                       |
+|           | `text?`              | `IRNode['text']`                                  | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.   |
+|           | `type?`              | `'node'`                                          | —       | Optional node discriminator                                                                                                                                                   |
+| Geometry  | `boundary?`          | `IRBoundary`                                      | —       | Default connection surface for edges meeting this node. Per-edge endpoints may override it.                                                                                   |
+|           | `cornerRadius?`      | `number`                                          | —       | Top-level corner radius in user units. Only effective on `rectangle` shape.                                                                                                   |
+|           | `layout?`            | `IRNodeLayout`                                    | —       | Node size, spacing, and text layout overrides.                                                                                                                                |
+|           | `position`           | `InputPosition`                                   | —       | Node center position, supporting coordinates, relative positioning, and anchor alignment                                                                                      |
+|           | `rotate?`            | `number`                                          | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                   |
+|           | `scale?`             | `number \| IRAxisScale`                           | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                             |
+|           | `shape?`             | `IRShapeValue`                                    | —       | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle. |
+| Style     | `style?`             | `IRNodeStyle`                                     | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                      |
+|           | `zIndex?`            | `number`                                          | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                   |
+| Animation | `animations?`        | `Array<IRAnimationTrack>`                         | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                      |
+| Runtime   | `authoring?`         | `unknown`                                         | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                               |
+|           | `meta?`              | `Record<string, JsonValue>`                       | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                               |
+|           | `config` (Parameter) | `Omit<InputNode, 'type'>`                         | —       | Node configuration with a position and optional id, text, and style                                                                                                           |
+|           | Returns              | `InputNode`                                       | —       | Authoring input with the node discriminator                                                                                                                                   |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
+
 export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
   authoring?: unknown;
   type?: 'node';
@@ -293,10 +226,48 @@ export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
 
 </DocTabs>
 
+### coordinate / InputCoordinate
+
+- `coordinate`: <ApiSourceLink label={"coordinate"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={20}>Create authoring input for a named coordinate</ApiSourceLink>
+- `InputCoordinate`: <ApiSourceLink label={"InputCoordinate"} path={"packages/kernel/vanilla/src/normalize/coordinate/types.ts"} startLine={4}>Authoring input for a named coordinate</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member               | Type                            | Default | Description                                                                                      |
+| -------------------- | ------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `authoring?`         | `unknown`                       | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                  |
+| `id`                 | `string`                        | —       | Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes  |
+| `position`           | `IRCoordinate['position']`      | —       | Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms. |
+| `type`               | `"coordinate"`                  | —       | Discriminator marking this child as a coordinate placeholder                                     |
+| `config` (Parameter) | `Omit<InputCoordinate, 'type'>` | —       | Coordinate identifier and position                                                               |
+| Returns              | `InputCoordinate`               | —       | Authoring input with the coordinate discriminator                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
+
+export type InputCoordinate = IRCoordinate & {
+  authoring?: unknown;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### InputNodeLabel
 
 <p>
-  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={42}>
+  <ApiSourceLink label={'InputNodeLabel'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={46}>
     Node label authoring input
   </ApiSourceLink>
 </p>
@@ -307,9 +278,13 @@ export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
 
 The remaining members are inherited from `IRNodeLabel`, with `'position'` removed. See “Type definition” for the complete composition.
 
-| Member      | Type                     | Default | Description |
-| ----------- | ------------------------ | ------- | ----------- |
-| `position?` | `InputNodeLabelPosition` | —       | —           |
+<ApiTable>
+
+| Member      | Type                     | Default | Description                                                                                    |
+| ----------- | ------------------------ | ------- | ---------------------------------------------------------------------------------------------- |
+| `position?` | `InputNodeLabelPosition` | —       | Label position; defaults to above the node, accepting a direction, angle, or boundary fraction |
+
+</ApiTable>
 
 </DocTab>
 
@@ -331,20 +306,26 @@ export type InputNodeLabel = Omit<IRNodeLabel, 'position'> & {
   <ApiSourceLink
     label={'InputNodeLabelBoundaryPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={29}
+    startLine={32}
   >
     Node label boundary-position authoring input
   </ApiSourceLink>
 </p>
 
+fraction is the normalized position along the selected boundary and defaults to 0.5
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member      | Type        | Default | Description |
-| ----------- | ----------- | ------- | ----------- |
-| `boundary`  | `SideValue` | —       | —           |
-| `fraction?` | `number`    | —       | —           |
+<ApiTable>
+
+| Member      | Type        | Default | Description                                                       |
+| ----------- | ----------- | ------- | ----------------------------------------------------------------- |
+| `boundary`  | `SideValue` | —       | Side of the node boundary to which the label attaches             |
+| `fraction?` | `number`    | —       | Normalized position along the selected boundary. Defaults to 0.5. |
+
+</ApiTable>
 
 </DocTab>
 
@@ -374,7 +355,7 @@ export type InputNodeLabelBoundaryPosition = Omit<
   <ApiSourceLink
     label={'InputNodeLabelPosition'}
     path={'packages/kernel/vanilla/src/normalize/node/types.ts'}
-    startLine={37}
+    startLine={41}
   >
     Node label position authoring input
   </ApiSourceLink>
@@ -390,42 +371,6 @@ export type InputNodeLabelPosition =
     >
   | InputNodeLabelBoundaryPosition;
 ```
-
-### coordinate
-
-<p>
-  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={12}>
-    Create authoring input for a named coordinate
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
-```
-
-#### Parameters
-
-| Parameter | Type                            | Description |
-| --------- | ------------------------------- | ----------- |
-| `config`  | `Omit<InputCoordinate, 'type'>` | —           |
-
-### node
-
-<p>
-  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={9}>
-    Create an authoring node input whose identity is declared by its id
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
-```
-
-#### Parameters
-
-| Parameter | Type                      | Description |
-| --------- | ------------------------- | ----------- |
-| `config`  | `Omit<InputNode, 'type'>` | —           |
 
 ## `@retikz/core`
 
@@ -453,7 +398,7 @@ export type BoundaryAnchorName = AnchorValue | (string & {});
   <ApiSourceLink
     label={'BoundaryDefinition'}
     path={'packages/kernel/core/src/contract/boundary/types.ts'}
-    startLine={46}
+    startLine={51}
   >
     Erased Boundary definition stored by the registry
   </ApiSourceLink>
@@ -463,14 +408,18 @@ export type BoundaryAnchorName = AnchorValue | (string & {});
 
 <DocTab value="members" label="Members">
 
-| Member          | Type                                                                                                 | Default                                                                        | Description                                                                                                            |
-| --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `anchor?`       | `(rect: Rect, name: BoundaryAnchorName, params: Record<string, JsonValue>) => Position \| undefined` | `Unsupported; the caller falls back or reports that the anchor is unsupported` | Optional standard directional anchors; Node references to the center or shape-specific names do not call this callback |
-| `boundaryPoint` | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                      | —                                                                              | Intersection between the boundary and a ray from the center toward the target                                          |
-| `name`          | `string`                                                                                             | —                                                                              | Registry key referenced by IR `boundary`                                                                               |
-| `outline?`      | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                      | —                                                                              | Return an exact closed boundary outline in the resolved rect coordinate system; an empty array is valid empty geometry |
-| `paramsSchema`  | `ZodType<Record<string, JsonValue>, unknown, $ZodTypeInternals<Record<string, JsonValue>, unknown>>` | —                                                                              | Runtime schema for boundary parameters                                                                                 |
-| `resolveRect?`  | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => Rect`                           | `Use the visual rect directly`                                                 | Resolve the boundary rectangle from the visual shape and instance parameters                                           |
+<ApiTable>
+
+| Member          | Type                                                                                                 | Default              | Description                                                                                                                                                                                               |
+| --------------- | ---------------------------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchor?`       | `(rect: Rect, name: BoundaryAnchorName, params: Record<string, JsonValue>) => Position \| undefined` | `undefined`          | Optional standard directional anchors; Node references to the center or shape-specific names do not call this callback<br />When omitted, the caller falls back or reports that the anchor is unsupported |
+| `boundaryPoint` | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                      | —                    | Intersection between the boundary and a ray from the center toward the target                                                                                                                             |
+| `name`          | `string`                                                                                             | —                    | Registry key referenced by IR `boundary`                                                                                                                                                                  |
+| `outline?`      | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                      | —                    | Return an exact closed boundary outline in the resolved rect coordinate system; an empty array is valid empty geometry                                                                                    |
+| `paramsSchema`  | `BoundaryDefinition["paramsSchema"]`                                                                 | —                    | Runtime schema for boundary parameters                                                                                                                                                                    |
+| `resolveRect?`  | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => Rect`                           | `context.visualRect` | Resolve the boundary rectangle from the visual shape and instance parameters<br />Uses the visual rectangle when omitted                                                                                  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -490,7 +439,7 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
   <ApiSourceLink
     label={'BoundaryDefinitionInput'}
     path={'packages/kernel/core/src/contract/boundary/types.ts'}
-    startLine={24}
+    startLine={27}
   >
     Authoring input for a boundary definition
   </ApiSourceLink>
@@ -500,14 +449,19 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 
 <DocTab value="members" label="Members">
 
-| Member          | Type                                                                               | Default                                                                        | Description                                                                                                            |
-| --------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `anchor?`       | `(rect: Rect, name: BoundaryAnchorName, params: TParams) => Position \| undefined` | `Unsupported; the caller falls back or reports that the anchor is unsupported` | Optional standard directional anchors; Node references to the center or shape-specific names do not call this callback |
-| `boundaryPoint` | `(rect: Rect, toward: Position, params: TParams) => Position`                      | —                                                                              | Intersection between the boundary and a ray from the center toward the target                                          |
-| `name`          | `string`                                                                           | —                                                                              | Registry key referenced by IR `boundary`                                                                               |
-| `outline?`      | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                      | —                                                                              | Return an exact closed boundary outline in the resolved rect coordinate system; an empty array is valid empty geometry |
-| `paramsSchema`  | `ZodType<TParams>`                                                                 | —                                                                              | Runtime schema for boundary parameters                                                                                 |
-| `resolveRect?`  | `(context: BoundaryFitContext, params: TParams) => Rect`                           | `Use the visual rect directly`                                                 | Resolve the boundary rectangle from the visual shape and instance parameters                                           |
+<ApiTable>
+
+| Member                     | Type                                                                               | Default              | Description                                                                                                                                                                                               |
+| -------------------------- | ---------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (Type parameter) | `extends JsonObject`                                                               | —                    | JSON object type parsed by paramsSchema and shared by all boundary callbacks                                                                                                                              |
+| `anchor?`                  | `(rect: Rect, name: BoundaryAnchorName, params: TParams) => Position \| undefined` | `undefined`          | Optional standard directional anchors; Node references to the center or shape-specific names do not call this callback<br />When omitted, the caller falls back or reports that the anchor is unsupported |
+| `boundaryPoint`            | `(rect: Rect, toward: Position, params: TParams) => Position`                      | —                    | Intersection between the boundary and a ray from the center toward the target                                                                                                                             |
+| `name`                     | `string`                                                                           | —                    | Registry key referenced by IR `boundary`                                                                                                                                                                  |
+| `outline?`                 | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                      | —                    | Return an exact closed boundary outline in the resolved rect coordinate system; an empty array is valid empty geometry                                                                                    |
+| `paramsSchema`             | `ZodType<TParams>`                                                                 | —                    | Runtime schema for boundary parameters                                                                                                                                                                    |
+| `resolveRect?`             | `(context: BoundaryFitContext, params: TParams) => Rect`                           | `context.visualRect` | Resolve the boundary rectangle from the visual shape and instance parameters<br />Uses the visual rectangle when omitted                                                                                  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -528,12 +482,6 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### Type parameters
-
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TParams`      | —           |
-
 ### BoundaryFitContext
 
 <p>
@@ -550,10 +498,14 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member               | Type                                     | Default | Description                                                               |
 | -------------------- | ---------------------------------------- | ------- | ------------------------------------------------------------------------- |
 | `connectionEnvelope` | `(kind: ConnectionEnvelopeKind) => Rect` | —       | Get a safe envelope of the visual shape for a standard connection surface |
 | `visualRect`         | `Rect`                                   | —       | Bounding rectangle of the node visual shape                               |
+
+</ApiTable>
 
 </DocTab>
 
@@ -578,11 +530,15 @@ export type BoundaryFitContext = {
 
 <DocTab value="members" label="Members">
 
-| Member     | Type                                                                                                                                                                                                                                                                                                                         | Default | Description |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `id`       | `string`                                                                                                                                                                                                                                                                                                                     | —       | —           |
-| `position` | `[number, number] \| SharedPolarPosition \| IRBetweenPosition \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| [number, number] \| SharedPolarPosition; offset: [number, number]; }` | —       | —           |
-| `type`     | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —       | —           |
+<ApiTable>
+
+| Member     | Type                                                                                                                                                                                                                                                                                                                         | Default | Description                                                                                      |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `id`       | `string`                                                                                                                                                                                                                                                                                                                     | —       | Required unique id; the whole point of a coordinate is to be referenced by paths or other nodes  |
+| `position` | `[number, number] \| SharedPolarPosition \| IRBetweenPosition \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| [number, number] \| SharedPolarPosition; offset: [number, number]; }` | —       | Coordinate position. Supports Cartesian, polar, at-position, offset, and between-position forms. |
+| `type`     | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —       | Discriminator marking this child as a coordinate placeholder                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -608,24 +564,28 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 <DocTab value="members" label="Members">
 
-| Member          | Type                                                                                             | Default | Description |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `aliasIds?`     | `Array<string>`                                                                                  | —       | —           |
-| `animations?`   | `…`                                                                                              | —       | —           |
-| `boundary?`     | `…`                                                                                              | —       | —           |
-| `cornerRadius?` | `number`                                                                                         | —       | —           |
-| `id?`           | `string`                                                                                         | —       | —           |
-| `label?`        | `…`                                                                                              | —       | —           |
-| `layout?`       | `…`                                                                                              | —       | —           |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `position`      | `…`                                                                                              | —       | —           |
-| `rotate?`       | `number`                                                                                         | —       | —           |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
-| `shape?`        | `…`                                                                                              | —       | —           |
-| `style?`        | `…`                                                                                              | —       | —           |
-| `text?`         | `…`                                                                                              | —       | —           |
-| `type`          | `"node"`                                                                                         | —       | —           |
-| `zIndex?`       | `number`                                                                                         | —       | —           |
+<ApiTable grouped>
+
+| Group     | Member          | Type                                                                                             | Default | Description                                                                                                                                                                   |
+| --------- | --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `aliasIds?`     | `Array<string>`                                                                                  | —       | Additional ids for the same node geometry; requires id and excludes duplicate or primary ids.                                                                                 |
+|           | `id?`           | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                               |
+|           | `label?`        | `ZodInfer<typeof NodeSchema.shape["label"]>`                                                     | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                                 |
+|           | `text?`         | `ZodInfer<typeof NodeSchema.shape["text"]>`                                                      | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex.   |
+|           | `type`          | `"node"`                                                                                         | —       | Discriminator marking this child as a node                                                                                                                                    |
+| Geometry  | `boundary?`     | `ZodInfer<typeof NodeSchema.shape["boundary"]>`                                                  | —       | Default connection surface for edges meeting this node. Per-edge endpoints may override it.                                                                                   |
+|           | `cornerRadius?` | `number`                                                                                         | —       | Top-level corner radius in user units. Only effective on `rectangle` shape.                                                                                                   |
+|           | `layout?`       | `ZodInfer<typeof NodeSchema.shape["layout"]>`                                                    | —       | Node size, spacing, and text layout overrides.                                                                                                                                |
+|           | `position`      | `ZodInfer<typeof NodeSchema.shape["position"]>`                                                  | —       | Node placement: Cartesian [x, y], polar, relative-to-node, offset, between two endpoints, or anchor-to-anchor alignment. Non-Cartesian forms resolve at compile time.         |
+|           | `rotate?`       | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                   |
+|           | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                             |
+|           | `shape?`        | `ZodInfer<typeof NodeSchema.shape["shape"]>`                                                     | —       | Node visual shape: bare shape name or `{ type, params }`. Built-ins and registered shapes are allowed; unregistered names fail at compile time. Omitted fields use rectangle. |
+| Style     | `style?`        | `ZodInfer<typeof NodeSchema.shape["style"]>`                                                     | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                      |
+|           | `zIndex?`       | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                   |
+| Animation | `animations?`   | `ZodInfer<typeof NodeSchema.shape["animations"]>`                                                | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                      |
+| Runtime   | `meta?`         | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                               |
+
+</ApiTable>
 
 </DocTab>
 
@@ -651,19 +611,23 @@ export type IRNode = ZodInfer<typeof NodeSchema>;
 
 <DocTab value="members" label="Members">
 
-| Member         | Type                                                                                                                                                                                                                    | Default | Description |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | —           |
-| `distance?`    | `number`                                                                                                                                                                                                                | —       | —           |
-| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | —           |
-| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —       | —           |
-| `opacity?`     | `number`                                                                                                                                                                                                                | —       | —           |
-| `pin?`         | `false \| true \| { stroke?: string \| number \| undefined; strokeWidth?: number \| undefined; dashPattern?: Array<number> \| undefined; dashOffset?: number \| undefined; }`                                           | —       | —           |
-| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | —           |
-| `position?`    | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | —           |
-| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | —           |
-| `text`         | `…`                                                                                                                                                                                                                     | —       | —           |
-| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —       | —           |
+<ApiTable>
+
+| Member         | Type                                                                                                                                                                                                                    | Default | Description                                                                                                                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `align?`       | `"start" \| "middle" \| "end"`                                                                                                                                                                                          | —       | Attachment tangent alignment for the label visual box: start, middle, or end. Defaults to middle.                                                                                 |
+| `distance?`    | `number`                                                                                                                                                                                                                | —       | Gap between the node border and the rotated label visual box, in user units. Omitted fields use compile labelDistance.                                                            |
+| `font?`        | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                   | —       | Label font overrides. Missing fields inherit from the parent node font.                                                                                                           |
+| `keepUpright?` | `false \| true`                                                                                                                                                                                                         | —       | When true, flips the rotated label 180 deg if it would otherwise read upside-down (more than 90 deg from upright). Default false (strict geometric angle).                        |
+| `opacity?`     | `number`                                                                                                                                                                                                                | —       | Label-only opacity, multiplied with node opacity when both are set.                                                                                                               |
+| `pin?`         | `false \| true \| { stroke?: string \| number \| undefined; strokeWidth?: number \| undefined; dashPattern?: Array<number> \| undefined; dashOffset?: number \| undefined; }`                                           | —       | Outside-label leader line. Use true for defaults or an object for style overrides.                                                                                                |
+| `placement?`   | `"outside" \| "inside"`                                                                                                                                                                                                 | —       | Whether the label is offset outside or inside the selected attachment point. Default `outside`.                                                                                   |
+| `position?`    | `number \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| { boundary: "top" \| "right" \| "bottom" \| "left"; fraction?: number \| undefined; }` | —       | Label attachment point: canonical direction, center, angle, or `{ boundary, fraction }`. Omitted fields use top.                                                                  |
+| `rotate?`      | `number \| "none" \| "radial" \| "tangent"`                                                                                                                                                                             | —       | Label self-rotation: none, radial along the position direction, tangent to it, or an explicit angle in degrees. Boundary-fraction positions use the selected side outward normal. |
+| `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —       | Label text content: a string (with `$...$` / `$$...$$` math sugar) or a `{ runs }` mixed text+math line. Single-line.                                                             |
+| `textColor?`   | `string \| number`                                                                                                                                                                                                      | —       | Label text color; falls back to currentColor.                                                                                                                                     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -679,19 +643,29 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 ### IRNodeLayout
 
+<p>
+  <ApiSourceLink label={'IRNodeLayout'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={53}>
+    View source
+  </ApiSourceLink>
+</p>
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member          | Type                                                                                                                                                                                                               | Default | Description |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `align?`        | `"start" \| "middle" \| "end"`                                                                                                                                                                                     | —       | —           |
-| `lineHeight?`   | `number`                                                                                                                                                                                                           | —       | —           |
-| `margin?`       | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | —           |
-| `maxTextWidth?` | `number`                                                                                                                                                                                                           | —       | —           |
-| `minimumSize?`  | `number \| { default?: number \| undefined; width?: number \| undefined; height?: number \| undefined; }`                                                                                                          | —       | —           |
-| `padding?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | —           |
-| `width?`        | `number`                                                                                                                                                                                                           | —       | —           |
+<ApiTable>
+
+| Member          | Type                                                                                                                                                                                                               | Default | Description                                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `align?`        | `"start" \| "middle" \| "end"`                                                                                                                                                                                     | —       | Multi-line text alignment within the text block. Omitted fields use middle.                                                  |
+| `lineHeight?`   | `number`                                                                                                                                                                                                           | —       | Line height in user units; falls back to `font.size × 1.2` when omitted.                                                     |
+| `margin?`       | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Outer offset around the connection boundary. Number applies to all sides; object fields resolve as side > axis > default.    |
+| `maxTextWidth?` | `number`                                                                                                                                                                                                           | —       | Maximum line width before wrapping, in user units. Omitted fields disable automatic wrapping.                                |
+| `minimumSize?`  | `number \| { default?: number \| undefined; width?: number \| undefined; height?: number \| undefined; }`                                                                                                          | —       | Minimum visual border size in user units. Number applies to width and height; object width / height override default.        |
+| `padding?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —       | Inner spacing from content to border. Number applies to all sides; object fields resolve as side > axis > default.           |
+| `width?`        | `number`                                                                                                                                                                                                           | —       | Exact unscaled visible border width in user units. Excludes margin and must not be smaller than the effective minimum width. |
+
+</ApiTable>
 
 </DocTab>
 
@@ -707,27 +681,37 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 ### IRNodeStyle
 
+<p>
+  <ApiSourceLink label={'IRNodeStyle'} path={'packages/kernel/core/src/schemas/node/types.ts'} startLine={52}>
+    View source
+  </ApiSourceLink>
+</p>
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-| Member           | Type                                                                                                                                                                                                                                                                                  | Default | Description |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `blendMode?`     | `"normal" \| "color" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —       | —           |
-| `color?`         | `string`                                                                                                                                                                                                                                                                              | —       | —           |
-| `dashed?`        | `false \| true`                                                                                                                                                                                                                                                                       | —       | —           |
-| `dashOffset?`    | `number`                                                                                                                                                                                                                                                                              | —       | —           |
-| `dashPattern?`   | `Array<number>`                                                                                                                                                                                                                                                                       | —       | —           |
-| `dotted?`        | `false \| true`                                                                                                                                                                                                                                                                       | —       | —           |
-| `fill?`          | `…`                                                                                                                                                                                                                                                                                   | —       | —           |
-| `fillOpacity?`   | `number`                                                                                                                                                                                                                                                                              | —       | —           |
-| `font?`          | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —       | —           |
-| `opacity?`       | `number`                                                                                                                                                                                                                                                                              | —       | —           |
-| `shadow?`        | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| { preset?: "none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —       | —           |
-| `stroke?`        | `…`                                                                                                                                                                                                                                                                                   | —       | —           |
-| `strokeOpacity?` | `number`                                                                                                                                                                                                                                                                              | —       | —           |
-| `strokeWidth?`   | `number`                                                                                                                                                                                                                                                                              | —       | —           |
-| `textColor?`     | `string \| number`                                                                                                                                                                                                                                                                    | —       | —           |
+<ApiTable>
+
+| Member           | Type                                                                                                                                                                                                                                                                                  | Default | Description                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blendMode?`     | `"normal" \| "color" \| "multiply" \| "screen" \| "overlay" \| "darken" \| "lighten" \| "color-dodge" \| "color-burn" \| "hard-light" \| "soft-light" \| "difference" \| "exclusion" \| "hue" \| "saturation" \| "luminosity"`                                                        | —       | How the emitted primary geometry blends with content already drawn beneath it. Omitted / `normal` means ordinary source-over.                                 |
+| `color?`         | `string`                                                                                                                                                                                                                                                                              | —       | Master color for primary geometry. Stroke, fill, labels, and arrows may inherit it unless individually overridden.                                            |
+| `dashed?`        | `false \| true`                                                                                                                                                                                                                                                                       | —       | Dashed border preset. `dashPattern` takes precedence.                                                                                                         |
+| `dashOffset?`    | `number`                                                                                                                                                                                                                                                                              | —       | Explicit stroke dash offset in user units. Positive and negative finite values are allowed.                                                                   |
+| `dashPattern?`   | `Array<number>`                                                                                                                                                                                                                                                                       | —       | Explicit stroke dash pattern lengths in user units; overrides `dashed` and `dotted`.                                                                          |
+| `dotted?`        | `false \| true`                                                                                                                                                                                                                                                                       | —       | Dotted border preset. `dashPattern` and `dashed` take precedence.                                                                                             |
+| `fill?`          | `ZodInfer<typeof NodeStyleSchema.shape["fill"]>`                                                                                                                                                                                                                                      | —       | Fill paint for primary geometry: contextual color or IRPaint.                                                                                                 |
+| `fillOpacity?`   | `number`                                                                                                                                                                                                                                                                              | —       | Fill-only opacity for filled regions.                                                                                                                         |
+| `font?`          | `{ family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; }`                                                                                                 | —       | Font spec for the inner text label. Missing fields use text defaults.                                                                                         |
+| `opacity?`       | `number`                                                                                                                                                                                                                                                                              | —       | Whole-element opacity applied to primary geometry.                                                                                                            |
+| `shadow?`        | `"none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| { preset?: "none" \| "sm" \| "lg" \| "xl" \| "2xl" \| "md" \| undefined; offsetX?: number \| undefined; offsetY?: number \| undefined; blur?: number \| undefined; color?: string \| undefined; opacity?: number \| undefined; }` | —       | Drop shadow on the emitted primary geometry. A preset keyword (`sm`/`md`/`lg`/`xl`/`2xl`/`none`) or an explicit drop-shadow object.                           |
+| `stroke?`        | `ZodInfer<typeof NodeStyleSchema.shape["stroke"]>`                                                                                                                                                                                                                                    | —       | Stroke paint for primary geometry: contextual color or IRPaint.                                                                                               |
+| `strokeOpacity?` | `number`                                                                                                                                                                                                                                                                              | —       | Stroke-only opacity for outlines.                                                                                                                             |
+| `strokeWidth?`   | `number`                                                                                                                                                                                                                                                                              | —       | Border width in user units; defaults to 1 when omitted                                                                                                        |
+| `textColor?`     | `string \| number`                                                                                                                                                                                                                                                                    | —       | Node text color. A number derives from the effective node color; `contrast` selects black or white from the resolved static fill. Defaults to `currentColor`. |
+
+</ApiTable>
 
 </DocTab>
 
@@ -744,7 +728,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 ### ShapeDefinition
 
 <p>
-  <ApiSourceLink label={'ShapeDefinition'} path={'packages/kernel/core/src/contract/shape/types.ts'} startLine={173}>
+  <ApiSourceLink label={'ShapeDefinition'} path={'packages/kernel/core/src/contract/shape/types.ts'} startLine={174}>
     Erased shape definition stored in the registry
   </ApiSourceLink>
 </p>
@@ -755,20 +739,24 @@ All functions receive `JsonObject`; `paramsSchema.parse` guarantees the concrete
 
 <DocTab value="members" label="Members">
 
-| Member                | Type                                                                                                                                   | Default                                                                | Description                                                                                                                                                                                        |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                                                                      | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                   |
-| `boundaryPoint`       | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                                                        | —                                                                      | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                    |
-| `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`   | —                                                                      | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                        |
-| `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                      | `[0, 0]`                                                               | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                          |
-| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `Unsupported; tight boundary falls back to bounds and emits a warning` | Return regular connection-envelope half-axes that safely contain the visual outline<br />Shares the center and rotation of `rect`; excludes visual expansion from stroke, shadow, filter and label |
-| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: Record<string, JsonValue>) => Position`                                              | `Unsupported`                                                          | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                      |
-| `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                                                                      | Emit visual primitives inside an axis-aligned rect                                                                                                                                                 |
-| `keyPoints?`          | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                                                                      | Return stable provider-named structural key points; names must be unique within an instance                                                                                                        |
-| `name`                | `string`                                                                                                                               | —                                                                      | Shape name referenced by IR `node.shape`                                                                                                                                                           |
-| `outline?`            | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                                                                      | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                            |
-| `paramsSchema`        | `ZodType<Record<string, JsonValue>, unknown, $ZodTypeInternals<Record<string, JsonValue>, unknown>>`                                   | —                                                                      | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                    |
-| `scaleParams?`        | `(params: Record<string, JsonValue>, sx: number, sy: number) => Record<string, JsonValue>`                                             | `Deep-scale numeric leaves in params by `Math.sqrt(sx \* sy)``         | Return params after applying node scale<br />Use for shapes whose params include angles or other non-length fields                                                                                 |
+<ApiTable>
+
+| Member                | Type                                                                                                                                   | Default                  | Description                                                                                                                                                                                                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: Record<string, JsonValue>) => Position \| undefined`                                      | —                        | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                                                                                                          |
+| `boundaryPoint`       | `(rect: Rect, toward: Position, params: Record<string, JsonValue>) => Position`                                                        | —                        | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                                                                                                           |
+| `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: Record<string, JsonValue>) => { halfWidth: number; halfHeight: number; }`   | —                        | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                                                                                                               |
+| `circumscribeOffset?` | `(params: Record<string, JsonValue>) => Position`                                                                                      | `[0, 0]`                 | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                                                                                                                 |
+| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: Record<string, JsonValue>) => ConnectionEnvelope \| undefined`                     | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
+| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: Record<string, JsonValue>) => Position`                                              | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
+| `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: Record<string, JsonValue>) => Iterable<ScenePrimitive>` | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
+| `keyPoints?`          | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<Readonly<{ name: string; position: Position; }>>`                    | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
+| `name`                | `string`                                                                                                                               | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
+| `outline?`            | `(rect: Rect, params: Record<string, JsonValue>) => ReadonlyArray<PathCommand>`                                                        | —                        | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                                                                                                                   |
+| `paramsSchema`        | `ShapeDefinition["paramsSchema"]`                                                                                                      | —                        | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                                                                                                           |
+| `scaleParams?`        | `(params: Record<string, JsonValue>, sx: number, sy: number) => Record<string, JsonValue>`                                             | `scaleJsonObjectNumbers` | Return params after applying node scale<br />Use for shapes whose params contain non-length fields such as angles; when omitted, numeric leaves in params are recursively scaled by Math.sqrt(sx \* sy)                                                                                   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -788,7 +776,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
   <ApiSourceLink
     label={'ShapeDefinitionInput'}
     path={'packages/kernel/core/src/contract/shape/types.ts'}
-    startLine={105}
+    startLine={106}
   >
     A registrable shape definition
   </ApiSourceLink>
@@ -800,20 +788,25 @@ Runtime capability contract shared by third-party and built-in shapes; the defin
 
 <DocTab value="members" label="Members">
 
-| Member                | Type                                                                                                                                                       | Default                                                                | Description                                                                                                                                                                                        |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                                            | —                                                                      | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                   |
-| `boundaryPoint`       | `(rect: Rect, toward: Position, params: TParams) => Position`                                                                                              | —                                                                      | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                    |
-| `circumscribe`        | `(`<br />`innerHalfWidth: number,`<br />`innerHalfHeight: number,`<br />`params: TParams,`<br />`) => { halfWidth: number; halfHeight: number }`           | —                                                                      | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                        |
-| `circumscribeOffset?` | `(params: TParams) => Position`                                                                                                                            | `[0, 0]`                                                               | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                          |
-| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                                           | `Unsupported; tight boundary falls back to bounds and emits a warning` | Return regular connection-envelope half-axes that safely contain the visual outline<br />Shares the center and rotation of `rect`; excludes visual expansion from stroke, shadow, filter and label |
-| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                                    | `Unsupported`                                                          | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                      |
-| `emit`                | `(`<br />`rect: Rect,`<br />`style: ResolvedShapeStyle,`<br />`round: (n: number) => number,`<br />`params: TParams,`<br />`) => Iterable<ScenePrimitive>` | —                                                                      | Emit visual primitives inside an axis-aligned rect                                                                                                                                                 |
-| `keyPoints?`          | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                                         | —                                                                      | Return stable provider-named structural key points; names must be unique within an instance                                                                                                        |
-| `name`                | `string`                                                                                                                                                   | —                                                                      | Shape name referenced by IR `node.shape`                                                                                                                                                           |
-| `outline?`            | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                                                                                              | —                                                                      | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                            |
-| `paramsSchema`        | `ZodType<TParams>`                                                                                                                                         | —                                                                      | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                    |
-| `scaleParams?`        | `(params: TParams, sx: number, sy: number) => TParams`                                                                                                     | `Deep-scale numeric leaves in params by `Math.sqrt(sx \* sy)``         | Return params after applying node scale<br />Use for shapes whose params include angles or other non-length fields                                                                                 |
+<ApiTable>
+
+| Member                     | Type                                                                                                                                    | Default                  | Description                                                                                                                                                                                                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (Type parameter) | `extends JsonObject`                                                                                                                    | —                        | JSON object type parsed by paramsSchema and shared by all shape callbacks                                                                                                                                                                                                                 |
+| `anchor`                   | `(rect: Rect, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                         | —                        | Resolve a named anchor in world coordinates; return `undefined` when unsupported                                                                                                                                                                                                          |
+| `boundaryPoint`            | `(rect: Rect, toward: Position, params: TParams) => Position`                                                                           | —                        | Return the intersection of the shape boundary with a ray from the rect center toward `toward`<br />`rect` may include rotation; transform coordinates as needed                                                                                                                           |
+| `circumscribe`             | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {`<br />`halfWidth: number;`<br />`halfHeight: number;`<br />`}` | —                        | Compute the complete shape AABB half-axes from content half-axes and params                                                                                                                                                                                                               |
+| `circumscribeOffset?`      | `(params: TParams) => Position`                                                                                                         | `[0, 0]`                 | Unrotated local offset of the AABB center relative to the node `position`                                                                                                                                                                                                                 |
+| `connectionEnvelope?`      | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                        | `undefined`              | Return regular connection-envelope half-axes that safely contain the visual outline<br />The result shares the center and rotation of `rect`, excluding visual expansion from strokes, shadows, filters, or labels. When omitted, tight boundaries fall back to bounds and emit a warning |
+| `edgePoint?`               | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                 | `undefined`              | Resolve a proportional point at `t ∈ [0, 1]` on a standard side<br />`rect` may include rotation; omission means side anchors are unsupported                                                                                                                                             |
+| `emit`                     | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`                    | —                        | Emit visual primitives inside an axis-aligned rect                                                                                                                                                                                                                                        |
+| `keyPoints?`               | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                      | —                        | Return stable provider-named structural key points; names must be unique within an instance                                                                                                                                                                                               |
+| `name`                     | `string`                                                                                                                                | —                        | Shape name referenced by IR `node.shape`                                                                                                                                                                                                                                                  |
+| `outline?`                 | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                                                                           | —                        | Return the exact closed visual outline in the coordinate system of rect; an empty array represents valid empty geometry                                                                                                                                                                   |
+| `paramsSchema`             | `ZodType<TParams>`                                                                                                                      | —                        | Instance parameter schema<br />The parsed result must be a JSON object; use `z.strictObject({})` for a shape without parameters                                                                                                                                                           |
+| `scaleParams?`             | `(params: TParams, sx: number, sy: number) => TParams`                                                                                  | `scaleJsonObjectNumbers` | Return params after applying node scale<br />Use for shapes whose params contain non-length fields such as angles; when omitted, numeric leaves in params are recursively scaled by Math.sqrt(sx \* sy)                                                                                   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -851,12 +844,6 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
 </DocTab>
 
 </DocTabs>
-
-#### Type parameters
-
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TParams`      | —           |
 
 ### BUILTIN_BOUNDARIES
 
@@ -915,55 +902,73 @@ export const NodeTextColor = {
 ### defineBoundary
 
 <p>
-  <ApiSourceLink label={'defineBoundary'} path={'packages/kernel/core/src/contract/boundary/define.ts'} startLine={9}>
-    Define a boundary registry entry and erase its parameter generic for registry storage
+  <ApiSourceLink label={'defineBoundary'} path={'packages/kernel/core/src/contract/boundary/define.ts'} startLine={12}>
+    Create a boundary definition for compile options with parameter type checking at the definition site
   </ApiSourceLink>
 </p>
 
+Add the result to CompileOptions.boundaries so nodes or path endpoints can reference its name through boundary. This function does not register the boundary or parse instance parameters
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name      | Type / signature                   | Description                                                                                                        |
+| --------------- | --------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Type parameters | `TParams` | `extends JsonObject`               | JSON object type parsed by paramsSchema and shared by all boundary callbacks                                       |
+| Parameters      | `def`     | `BoundaryDefinitionInput<TParams>` | Boundary name, parameter schema, and connection geometry callbacks                                                 |
+| Returns         | —         | `BoundaryDefinition`               | The original definition typed as BoundaryDefinition for registry storage; the input is neither copied nor modified |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const defineBoundary: <TParams extends Record<string, JsonValue>>(
+export declare const defineBoundary: <TParams extends JsonObject>(
   def: BoundaryDefinitionInput<TParams>,
 ) => BoundaryDefinition;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TParams`      | —           |
-
-#### Parameters
-
-| Parameter | Type                               | Description |
-| --------- | ---------------------------------- | ----------- |
-| `def`     | `BoundaryDefinitionInput<TParams>` | —           |
-
-> **Notes:** Currently centralizes type erasure; the entry point aligns registry APIs and leaves room for future validation or normalization
+</DocTabs>
 
 ### defineShape
 
 <p>
-  <ApiSourceLink label={'defineShape'} path={'packages/kernel/core/src/contract/shape/define.ts'} startLine={9}>
-    Define a shape registry entry and erase the parameter generic for registry storage
+  <ApiSourceLink label={'defineShape'} path={'packages/kernel/core/src/contract/shape/define.ts'} startLine={12}>
+    Create a shape definition for compile options with parameter type checking at the definition site
   </ApiSourceLink>
 </p>
 
+Add the result to CompileOptions.shapes so nodes can reference its name through shape. This function does not register the shape or parse instance parameters
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name      | Type / signature                | Description                                                                                                     |
+| --------------- | --------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TParams` | `extends JsonObject`            | JSON object type parsed by paramsSchema and shared by all shape callbacks                                       |
+| Parameters      | `def`     | `ShapeDefinitionInput<TParams>` | Shape name, parameter schema, and geometry and drawing callbacks                                                |
+| Returns         | —         | `ShapeDefinition`               | The original definition typed as ShapeDefinition for registry storage; the input is neither copied nor modified |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const defineShape: <TParams extends Record<string, JsonValue>>(
-  def: ShapeDefinitionInput<TParams>,
-) => ShapeDefinition;
+export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinitionInput<TParams>) => ShapeDefinition;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TParams`      | —           |
-
-#### Parameters
-
-| Parameter | Type                            | Description |
-| --------- | ------------------------------- | ----------- |
-| `def`     | `ShapeDefinitionInput<TParams>` | —           |
-
-> **Notes:** Currently centralizes type erasure; the entry point aligns registry APIs and leaves room for future validation or normalization
+</DocTabs>

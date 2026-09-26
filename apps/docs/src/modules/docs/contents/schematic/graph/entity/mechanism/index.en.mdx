@@ -1,0 +1,89 @@
+---
+title: Implementation
+description: Trace how Entity resolves semantics, merges appearance and applies role structure to the final node.
+---
+
+Entity semantics determine how an object is interpreted, not a separate renderer. Built-in and custom roles follow the same semantic resolution and appearance merging before becoming a drawable Node. This page explains unregistered-key errors and explicit style precedence.
+
+## Entity becomes a Node in stages
+
+The diagram shows only Entity's processing order. Input consists of Source semantic keys and instance fields. Each stage reads definitions and current Graph/theme context as needed, without persisting those runtime objects.
+
+<ComponentPreview files="entity-flow" type="flow" hideCode size="xs" />
+
+For example, the gateway from Custom usage retains its service role, service.gateway kind and position during resolution. Resolution adds references to registered definitions and validated parameters. Appearance resolution computes color and outline, then lowering removes domain keys and writes the role's shape.
+
+| Observation point         | Key result for the same gateway                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Source                    | `params: { status: 'degraded', critical: true }`                                                                           |
+| `resolveEntity`           | Parsed parameters with the same values and references to the service, service.gateway and service.availability definitions |
+| `resolveEntityAppearance` | `style: { …, color: '#d97706', strokeWidth: 3 }`                                                                           |
+| `lowerEntity`             | `type: 'node', shape: 'rectangle', layout: { …, padding: { x: 14, y: 10 }, minimumSize: { width: 110, height: 46 } }`      |
+
+The table shows selected changing fields, not complete intermediate objects or another authoring IR.
+
+## Semantic resolution uses registered definitions
+
+Built-in and custom roles share a registry keyed by `role`. Kinds come only from custom definitions and use a two-level `role → kind` registry. The figure compares built-in `activity` with custom `service/service.gateway`: the outer object holds separate `entityRoles` and `entityKinds` Maps, not one merged Map. Arrows point to the registry being queried; matching colors in each map mark the keys and Definition references found. `{…}` denotes selected fields of a definition object, not a string value.
+
+<ComponentPreview files="entity-definition-lookup" type="illustration" hideCode size="xl" />
+
+1. **Find definitions.** `resolveEntity` looks up the role definition, then looks up `(role, kind)` when kind is present. In the figure, A finds only the built-in `activity` definition; B finds both custom `service` and `service.gateway` definitions.
+2. **Resolve optional semantics.** When a predicate is present, resolution finds it by name, checks whether it allows the current role and kind, and parses its parameters with `paramsSchema.parse`. Missing params enter the schema as an empty object. Source and the definitions found are stored in `CanonicalEntity`.
+3. **Produce and draw the node.** Appearance rules can match role and kind. `lowerEntity` takes shape, corner radius and padding from the role definition to produce a Core `IRNode`. Core compiles the Node into a Scene, then an SVG or Canvas backend draws it.
+
+Built-in and custom Entities follow the same path: kind definitions do not determine node structure, and Definitions do not render directly. EntitySchema validates only the Source record's shape; unknown keys or incompatible predicates raise `RetikzGraphError` during resolution, while failed parameter parsing retains the original exception as cause.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Semantic resolution and parameter validation',
+      path: 'packages/schematic/graph/src/resolve/entity/resolve.ts',
+    },
+    { label: 'Built-in role definitions', path: 'packages/schematic/graph/src/providers/entity/definitions.ts' },
+    { label: 'Role and kind registries', path: 'packages/schematic/graph/src/providers/entity/registry.ts' },
+    { label: 'Definition to Core Node', path: 'packages/schematic/graph/src/pipeline/entity/definition.ts' },
+    { label: 'Node to Scene', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'SVG and Canvas backends', path: 'packages/kernel/render/src/runtime/builtin.ts' },
+  ]}
+/>
+
+## Appearance is merged field by field across layers
+
+Graph author configuration is processed layer by layer: each layer merges graphDefaults.entity, then matching entity rules in declaration order, then explicit instance style/layout is merged. The current theme likewise contributes defaults and ordered rules, finally overridden by the projected Source appearance. Merging is field-wise rather than replacing the whole block.
+
+The matching subject contains role, optional kind, top-level status and parsed predicate parameters. Several rules may match; later rules override only fields they supply. In the custom example, the critical rule sets only strokeWidth, preserving color from the earlier status-parameter rule.
+
+The figure follows the degraded, critical gateway from Custom usage. That instance has no explicit style; only `color` and `strokeWidth` are shown. The first row projects author Graph rules into Source. The second merges the theme defaults with that projected result. Unmatched rules and other appearance fields are omitted.
+
+<ComponentPreview files="entity-appearance-merge" type="illustration" hideCode size="lg" />
+
+The critical rule adds `strokeWidth: 3` without removing the earlier `color: '#d97706'`. The projected Source then overrides both theme default fields to produce the final appearance.
+
+When investigating color, check explicit Entity style first, then author Graph layers and matching rules, then theme defaults. A group categorical color is not a forced override and does not alone determine final color.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Author-layer projection and theme appearance merging',
+      path: 'packages/schematic/graph/src/resolve/entity/resolve.ts',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Custom usage',
+      description: 'Return to runnable definitions and registration',
+      url: '/schematic/graph/entity/custom',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public entries rather than internal functions',
+      url: '/schematic/graph/entity/api-reference',
+    },
+  ]}
+/>

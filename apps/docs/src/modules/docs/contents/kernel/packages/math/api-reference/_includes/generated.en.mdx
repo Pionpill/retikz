@@ -30,12 +30,16 @@ export type AffineMatrix = readonly [number, number, number, number, number, num
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member          | Type       | Default | Description            |
 | --------------- | ---------- | ------- | ---------------------- |
 | `center`        | `Position` | —       | Circle center          |
 | `endAngleDeg`   | `number`   | —       | End angle in degrees   |
 | `radius`        | `number`   | —       | Radius                 |
 | `startAngleDeg` | `number`   | —       | Start angle in degrees |
+
+</ApiTable>
 
 </DocTab>
 
@@ -66,12 +70,16 @@ export type ArcBoundingCandidatesInput = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member          | Type     | Default | Description                |
 | --------------- | -------- | ------- | -------------------------- |
 | `angleDeg`      | `number` | —       | Angle to test in degrees   |
 | `endAngleDeg`   | `number` | —       | End angle in degrees       |
 | `startAngleDeg` | `number` | —       | Start angle in degrees     |
-| `toleranceDeg?` | `number` | —       | Angle tolerance in degrees |
+| `toleranceDeg?` | `number` | `1e-7`  | Angle tolerance in degrees |
+
+</ApiTable>
 
 </DocTab>
 
@@ -102,12 +110,16 @@ export type ArcSweepAngleInput = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member | Type     | Default | Description          |
 | ------ | -------- | ------- | -------------------- |
 | `maxX` | `number` | —       | Maximum x coordinate |
 | `maxY` | `number` | —       | Maximum y coordinate |
 | `minX` | `number` | —       | Minimum x coordinate |
 | `minY` | `number` | —       | Minimum y coordinate |
+
+</ApiTable>
 
 </DocTab>
 
@@ -138,10 +150,14 @@ export type AxisAlignedBounds = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member       | Type     | Default | Description               |
 | ------------ | -------- | ------- | ------------------------- |
 | `halfHeight` | `number` | —       | Half-height on the y axis |
 | `halfWidth`  | `number` | —       | Half-width on the x axis  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -170,12 +186,16 @@ export type BoundsHalfAxes = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member   | Type     | Default | Description                  |
 | -------- | -------- | ------- | ---------------------------- |
 | `bottom` | `number` | —       | Downward expansion distance  |
 | `left`   | `number` | —       | Leftward expansion distance  |
 | `right`  | `number` | —       | Rightward expansion distance |
 | `top`    | `number` | —       | Upward expansion distance    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -206,12 +226,16 @@ export type BoundsInsets = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member   | Type     | Default | Description           |
 | -------- | -------- | ------- | --------------------- |
 | `height` | `number` | —       | Rectangle height      |
 | `width`  | `number` | —       | Rectangle width       |
 | `x`      | `number` | —       | Top-left x coordinate |
 | `y`      | `number` | —       | Top-left y coordinate |
+
+</ApiTable>
 
 </DocTab>
 
@@ -242,13 +266,17 @@ export type BoundsRect = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type     | Default | Description                                                                   |
 | --------- | -------- | ------- | ----------------------------------------------------------------------------- |
 | `height`  | `number` | —       | Height of the rectangular bounds                                              |
-| `rotate?` | `number` | —       | Optional radians of rotation about the center; 0 or omitted means no rotation |
+| `rotate?` | `number` | `0`     | Optional radians of rotation about the center; 0 or omitted means no rotation |
 | `width`   | `number` | —       | Width of the rectangular bounds                                               |
 | `x`       | `number` | —       | Center x coordinate                                                           |
 | `y`       | `number` | —       | Center y coordinate                                                           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -277,11 +305,15 @@ export type CenteredBox = CenteredShape & {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type     | Default | Description                                                                   |
 | --------- | -------- | ------- | ----------------------------------------------------------------------------- |
-| `rotate?` | `number` | —       | Optional radians of rotation about the center; 0 or omitted means no rotation |
+| `rotate?` | `number` | `0`     | Optional radians of rotation about the center; 0 or omitted means no rotation |
 | `x`       | `number` | —       | Center x coordinate                                                           |
 | `y`       | `number` | —       | Center y coordinate                                                           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -311,10 +343,14 @@ export type CenteredShape = {
 
 <DocTab value="members" label="Members">
 
-| Member   | Type       | Default | Description |
-| -------- | ---------- | ------- | ----------- |
-| `center` | `Position` | —       | —           |
-| `radius` | `number`   | —       | —           |
+<ApiTable>
+
+| Member   | Type       | Default | Description   |
+| -------- | ---------- | ------- | ------------- |
+| `center` | `Position` | —       | Circle center |
+| `radius` | `number`   | —       | Radius        |
+
+</ApiTable>
 
 </DocTab>
 
@@ -343,12 +379,16 @@ export type Circle = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type       | Default | Description          |
 | --------- | ---------- | ------- | -------------------- |
 | `centerA` | `Position` | —       | First circle center  |
 | `centerB` | `Position` | —       | Second circle center |
 | `radiusA` | `number`   | —       | First circle radius  |
 | `radiusB` | `number`   | —       | Second circle radius |
+
+</ApiTable>
 
 </DocTab>
 
@@ -370,7 +410,7 @@ export type CircleCircleInput = {
 ### CircularArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={48}>
+  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={55}>
     Circular arc curve segment
   </ApiSourceLink>
 </p>
@@ -378,6 +418,8 @@ export type CircleCircleInput = {
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member              | Type       | Default | Description                                                                                       |
 | ------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
@@ -387,6 +429,8 @@ export type CircleCircleInput = {
 | `kind`              | `'arc'`    | —       | Curve kind                                                                                        |
 | `radius`            | `number`   | —       | Radius                                                                                            |
 | `startAngleDeg`     | `number`   | —       | Start parameter angle in degrees                                                                  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -419,6 +463,8 @@ export type CircularArcCurveSegment = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member     | Type            | Default | Description          |
 | ---------- | --------------- | ------- | -------------------- |
 | `control1` | `Position`      | —       | First control point  |
@@ -426,6 +472,8 @@ export type CircularArcCurveSegment = {
 | `from`     | `Position`      | —       | Start point          |
 | `kind`     | `'cubicBezier'` | —       | Curve kind           |
 | `to`       | `Position`      | —       | End point            |
+
+</ApiTable>
 
 </DocTab>
 
@@ -458,11 +506,15 @@ export type CubicBezierCurveSegment = {
 
 <DocTab value="members" label="Members">
 
-| Member     | Type       | Default | Description |
-| ---------- | ---------- | ------- | ----------- |
-| `control1` | `Position` | —       | —           |
-| `control2` | `Position` | —       | —           |
-| `to`       | `Position` | —       | —           |
+<ApiTable>
+
+| Member     | Type       | Default | Description          |
+| ---------- | ---------- | ------- | -------------------- |
+| `control1` | `Position` | —       | First control point  |
+| `control2` | `Position` | —       | Second control point |
+| `to`       | `Position` | —       | End point            |
+
+</ApiTable>
 
 </DocTab>
 
@@ -486,7 +538,7 @@ export type CubicSegment = {
   <ApiSourceLink
     label={'CurveApproximationOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={100}
+    startLine={109}
   >
     Curve-length approximation configuration
   </ApiSourceLink>
@@ -496,9 +548,13 @@ export type CubicSegment = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member         | Type     | Default | Description                                                               |
 | -------------- | -------- | ------- | ------------------------------------------------------------------------- |
-| `sampleCount?` | `number` | —       | Number of uniform parameter samples for Bézier curves and elliptical arcs |
+| `sampleCount?` | `number` | `32`    | Number of uniform parameter samples for Bézier curves and elliptical arcs |
+
+</ApiTable>
 
 </DocTab>
 
@@ -520,7 +576,7 @@ export type CurveApproximationOptions = {
   <ApiSourceLink
     label={'CurveParameterAtDistanceOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={106}
+    startLine={117}
   >
     Configuration for inverting curve distance to a parameter
   </ApiSourceLink>
@@ -530,11 +586,15 @@ export type CurveApproximationOptions = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member            | Type     | Default | Description                                                                                 |
 | ----------------- | -------- | ------- | ------------------------------------------------------------------------------------------- |
-| `bisectionSteps?` | `number` | —       | Maximum number of bisection iterations for inverse evaluation                               |
-| `sampleCount?`    | `number` | —       | Number of uniform parameter samples for Bézier curves and elliptical arcs                   |
+| `bisectionSteps?` | `number` | `32`    | Maximum number of bisection iterations for inverse evaluation                               |
+| `sampleCount?`    | `number` | `32`    | Number of uniform parameter samples for Bézier curves and elliptical arcs                   |
 | `totalLength?`    | `number` | —       | Full curve length computed with the same sampling budget; calculated on demand when omitted |
+
+</ApiTable>
 
 </DocTab>
 
@@ -554,10 +614,95 @@ export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
 ### CurveSegment
 
 <p>
-  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={84}>
+  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={93}>
     Zero-dependency curve segment that can be parameterized and sliced
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="line">
+
+<DocTab value="line" label="Members · Line">
+
+<ApiTable>
+
+| Member | Type       | Default | Description |
+| ------ | ---------- | ------- | ----------- |
+| `from` | `Position` | —       | Start point |
+| `kind` | `'line'`   | —       | Curve kind  |
+| `to`   | `Position` | —       | End point   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="quadratic" label="Members · Quadratic Bézier">
+
+<ApiTable>
+
+| Member    | Type                | Default | Description   |
+| --------- | ------------------- | ------- | ------------- |
+| `control` | `Position`          | —       | Control point |
+| `from`    | `Position`          | —       | Start point   |
+| `kind`    | `'quadraticBezier'` | —       | Curve kind    |
+| `to`      | `Position`          | —       | End point     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic" label="Members · Cubic Bézier">
+
+<ApiTable>
+
+| Member     | Type            | Default | Description          |
+| ---------- | --------------- | ------- | -------------------- |
+| `control1` | `Position`      | —       | First control point  |
+| `control2` | `Position`      | —       | Second control point |
+| `from`     | `Position`      | —       | Start point          |
+| `kind`     | `'cubicBezier'` | —       | Curve kind           |
+| `to`       | `Position`      | —       | End point            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="arc" label="Members · Circular arc">
+
+<ApiTable>
+
+| Member              | Type       | Default | Description                                                                                       |
+| ------------------- | ---------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `center`            | `Position` | —       | Circle center                                                                                     |
+| `counterClockwise?` | `boolean`  | —       | Whether to sweep counterclockwise; when omitted, the start and end angles determine the direction |
+| `endAngleDeg`       | `number`   | —       | End parameter angle in degrees                                                                    |
+| `kind`              | `'arc'`    | —       | Curve kind                                                                                        |
+| `radius`            | `number`   | —       | Radius                                                                                            |
+| `startAngleDeg`     | `number`   | —       | Start parameter angle in degrees                                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="ellipse-arc" label="Members · Elliptical arc">
+
+<ApiTable>
+
+| Member              | Type           | Default | Description                                                                                       |
+| ------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `center`            | `Position`     | —       | Ellipse center                                                                                    |
+| `counterClockwise?` | `boolean`      | —       | Whether to sweep counterclockwise; when omitted, the start and end angles determine the direction |
+| `endAngleDeg`       | `number`       | —       | End parameter angle in degrees                                                                    |
+| `kind`              | `'ellipseArc'` | —       | Curve kind                                                                                        |
+| `radiusX`           | `number`       | —       | Local x half-axis                                                                                 |
+| `radiusY`           | `number`       | —       | Local y half-axis                                                                                 |
+| `rotationDeg?`      | `number`       | `0`     | Rotation of the local ellipse relative to world coordinates in degrees                            |
+| `startAngleDeg`     | `number`       | —       | Start parameter angle in degrees                                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export type CurveSegment =
@@ -568,10 +713,14 @@ export type CurveSegment =
   | EllipseArcCurveSegment;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### CurveSegmentSample
 
 <p>
-  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={92}>
+  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={101}>
     Curve parameter sampling result
   </ApiSourceLink>
 </p>
@@ -580,10 +729,14 @@ export type CurveSegment =
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type       | Default | Description                                                                           |
 | --------- | ---------- | ------- | ------------------------------------------------------------------------------------- |
 | `point`   | `Position` | —       | Point at the parameter position                                                       |
 | `tangent` | `Vector2`  | —       | Unit tangent in the direction of travel; falls back to `[1, 0]` for a zero derivative |
+
+</ApiTable>
 
 </DocTab>
 
@@ -612,13 +765,17 @@ export type CurveSegmentSample = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type     | Default | Description                                                                   |
 | --------- | -------- | ------- | ----------------------------------------------------------------------------- |
-| `rotate?` | `number` | —       | Optional radians of rotation about the center; 0 or omitted means no rotation |
+| `rotate?` | `number` | `0`     | Optional radians of rotation about the center; 0 or omitted means no rotation |
 | `rx`      | `number` | —       | Semi-axis length along local +x                                               |
 | `ry`      | `number` | —       | Semi-axis length along local +y                                               |
 | `x`       | `number` | —       | Center x coordinate                                                           |
 | `y`       | `number` | —       | Center y coordinate                                                           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -638,7 +795,7 @@ export type Ellipse = CenteredShape & {
 ### EllipseArcAnglePointInput
 
 <p>
-  <ApiSourceLink label={'EllipseArcAnglePointInput'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={35}>
+  <ApiSourceLink label={'EllipseArcAnglePointInput'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={37}>
     Parameters for a point on an elliptical arc
   </ApiSourceLink>
 </p>
@@ -647,12 +804,16 @@ export type Ellipse = CenteredShape & {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member     | Type       | Default | Description                |
 | ---------- | ---------- | ------- | -------------------------- |
 | `angleDeg` | `number`   | —       | Parameter angle in degrees |
 | `center`   | `Position` | —       | Ellipse center             |
 | `radiusX`  | `number`   | —       | Half-axis on the x axis    |
 | `radiusY`  | `number`   | —       | Half-axis on the y axis    |
+
+</ApiTable>
 
 </DocTab>
 
@@ -677,7 +838,7 @@ export type EllipseArcAnglePointInput = {
   <ApiSourceLink
     label={'EllipseArcBoundingCandidatesInput'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={47}
+    startLine={49}
   >
     Parameters for elliptical-arc bounds candidates
   </ApiSourceLink>
@@ -687,6 +848,8 @@ export type EllipseArcAnglePointInput = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member          | Type       | Default | Description                      |
 | --------------- | ---------- | ------- | -------------------------------- |
 | `center`        | `Position` | —       | Ellipse center                   |
@@ -694,6 +857,8 @@ export type EllipseArcAnglePointInput = {
 | `radiusX`       | `number`   | —       | Half-axis on the x axis          |
 | `radiusY`       | `number`   | —       | Half-axis on the y axis          |
 | `startAngleDeg` | `number`   | —       | Start parameter angle in degrees |
+
+</ApiTable>
 
 </DocTab>
 
@@ -713,7 +878,7 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 ### EllipseArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={64}>
+  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={71}>
     Elliptical arc curve segment
   </ApiSourceLink>
 </p>
@@ -721,6 +886,8 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<ApiTable>
 
 | Member              | Type           | Default | Description                                                                                       |
 | ------------------- | -------------- | ------- | ------------------------------------------------------------------------------------------------- |
@@ -730,8 +897,10 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 | `kind`              | `'ellipseArc'` | —       | Curve kind                                                                                        |
 | `radiusX`           | `number`       | —       | Local x half-axis                                                                                 |
 | `radiusY`           | `number`       | —       | Local y half-axis                                                                                 |
-| `rotationDeg?`      | `number`       | —       | Rotation of the local ellipse relative to world coordinates in degrees                            |
+| `rotationDeg?`      | `number`       | `0`     | Rotation of the local ellipse relative to world coordinates in degrees                            |
 | `startAngleDeg`     | `number`       | —       | Start parameter angle in degrees                                                                  |
+
+</ApiTable>
 
 </DocTab>
 
@@ -782,12 +951,16 @@ export type EllipseCircumscribeMode = 'proportional' | 'equal';
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member      | Type       | Default | Description                                   |
 | ----------- | ---------- | ------- | --------------------------------------------- |
 | `center`    | `Position` | —       | Circle center                                 |
 | `direction` | `Position` | —       | Line direction; normalization is not required |
 | `origin`    | `Position` | —       | Line origin                                   |
 | `radius`    | `number`   | —       | Circle radius                                 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -818,11 +991,15 @@ export type LineCircleInput = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member | Type       | Default | Description |
 | ------ | ---------- | ------- | ----------- |
 | `from` | `Position` | —       | Start point |
 | `kind` | `'line'`   | —       | Curve kind  |
 | `to`   | `Position` | —       | End point   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -852,12 +1029,16 @@ export type LineCurveSegment = {
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member | Type       | Default | Description                     |
 | ------ | ---------- | ------- | ------------------------------- |
 | `a1`   | `Position` | —       | First point on the first line   |
 | `a2`   | `Position` | —       | Second point on the first line  |
 | `b1`   | `Position` | —       | First point on the second line  |
 | `b2`   | `Position` | —       | Second point on the second line |
+
+</ApiTable>
 
 </DocTab>
 
@@ -904,12 +1085,16 @@ export type Position = Vector2;
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member    | Type                | Default | Description   |
 | --------- | ------------------- | ------- | ------------- |
 | `control` | `Position`          | —       | Control point |
 | `from`    | `Position`          | —       | Start point   |
 | `kind`    | `'quadraticBezier'` | —       | Curve kind    |
 | `to`      | `Position`          | —       | End point     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -944,15 +1129,19 @@ export type QuadraticBezierCurveSegment = {
 
 <DocTab value="members" label="Members">
 
-| Member          | Type       | Default | Description                                  |
-| --------------- | ---------- | ------- | -------------------------------------------- |
-| `center`        | `Position` | —       | Circle center                                |
-| `direction`     | `Position` | —       | Ray direction; normalization is not required |
-| `endAngleDeg`   | `number`   | —       | End angle in degrees                         |
-| `origin`        | `Position` | —       | Ray origin                                   |
-| `radius`        | `number`   | —       | Radius                                       |
-| `startAngleDeg` | `number`   | —       | Start angle in degrees                       |
-| `tolerance?`    | `number`   | —       | Tolerance for the forward parameter          |
+<ApiTable>
+
+| Member          | Type       | Default           | Description                                  |
+| --------------- | ---------- | ----------------- | -------------------------------------------- |
+| `center`        | `Position` | —                 | Circle center                                |
+| `direction`     | `Position` | —                 | Ray direction; normalization is not required |
+| `endAngleDeg`   | `number`   | —                 | End angle in degrees                         |
+| `origin`        | `Position` | —                 | Ray origin                                   |
+| `radius`        | `number`   | —                 | Radius                                       |
+| `startAngleDeg` | `number`   | —                 | Start angle in degrees                       |
+| `tolerance?`    | `number`   | `DEFAULT_EPSILON` | Tolerance for the forward parameter          |
+
+</ApiTable>
 
 </DocTab>
 
@@ -997,32 +1186,76 @@ export const AFFINE_IDENTITY: AffineMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 ### circle
 
 <p>
-  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={41}>
+  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={46}>
     Circle-related geometry algorithms
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member             | Signature                                                      | Description                                                                                                                                                                                                          |
+| ------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `minimalEnclosing` | `(points: Array<Vector2>, epsilon?: number) => Circle \| null` | Smallest enclosing circle of a point set (iterative Welzl algorithm)<br />Smallest circle enclosing the input points; returns null for empty input. epsilon defaults to DEFAULT_EPSILON for point containment checks |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null };
+export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilon?: number) => Circle | null };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={402}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={415}>
     Pure geometric operations for parameterized curves
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member                | Signature                                                                                        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `approximateLength`   | `(segment: CurveSegment, options?: CurveApproximationOptions) => number`                         | Approximates curve length with a deterministic, uniformly sampled polyline<br />Lines and circular arcs use analytic lengths; Bézier curves and elliptical arcs use `sampleCount` samples                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `catmullRomToCubic`   | `(knots: Array<Vector2>, tension: number) => Array<CubicSegment>`                                | Converts centripetal Catmull-Rom (α=0.5) through knots into cubic Bézier segments<br />Returns an empty array for fewer than two knots; each segment ends exactly at the next knot                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `parameterAtDistance` | `(segment: CurveSegment, distance: number, options?: CurveParameterAtDistanceOptions) => number` | Converts distance along a curve to its parameter<br />Uses the same discrete length model as `approximateLength`; supplied `totalLength` must use the same sample count. Returns early when the midpoint length is within the default geometry tolerance of the target distance<br />`segment`: Curve segment used to invert the distance<br />`distance`: Distance along the curve, clamped from zero to the full curve length<br />`options?`: Inversion options; defaults to &#123;&#125;, using each field default<br />Returns: Curve parameter in 0..1; returns 0 when the full length is non-finite or no greater than DEFAULT_EPSILON |
+| `sampleAt`            | `(segment: CurveSegment, parameter: number) => CurveSegmentSample`                               | Samples a point and forward tangent at a curve parameter<br />Clamps the parameter to `[0, 1]`; a zero derivative uses the deterministic tangent `[1, 0]`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `slice`               | `(segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment`            | Extracts a shape-preserving segment over a parameter interval<br />Clamps and sorts parameters in ascending order; uses De Casteljau for Bézier curves and preserves directed sweeps for arcs                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const curve: {
-  approximateLength: (segment: CurveSegment, options: CurveApproximationOptions) => number;
+  approximateLength: (segment: CurveSegment, options?: CurveApproximationOptions) => number;
   catmullRomToCubic: (knots: Array<Vector2>, tension: number) => Array<CubicSegment>;
-  parameterAtDistance: (segment: CurveSegment, distance: number, options: CurveParameterAtDistanceOptions) => number;
+  parameterAtDistance: (segment: CurveSegment, distance: number, options?: CurveParameterAtDistanceOptions) => number;
   sampleAt: (segment: CurveSegment, parameter: number) => CurveSegmentSample;
   slice: (segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment;
 };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### DEFAULT_EPSILON
 
@@ -1044,33 +1277,100 @@ export const DEFAULT_EPSILON = 1e-9;
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member                  | Signature                                                                           | Description                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `boundaryPoint`         | `(e: Ellipse, toward: Vector2) => Vector2`                                          | Intersects an ellipse with a ray from its center toward a target<br />Returns the center for a degenerate ellipse, avoiding division by zero half-axes                                                                                                                                                                                                          |
+| `center`                | `(e: Ellipse) => Vector2`                                                           | Returns the ellipse center as a new coordinate tuple                                                                                                                                                                                                                                                                                                            |
+| `circumscribedHalfAxes` | `(innerHalfAxes: BoundsHalfAxes, mode?: EllipseCircumscribeMode) => BoundsHalfAxes` | Computes ellipse half-axes enclosing an inner box<br />`proportional` preserves the inner box aspect ratio; `equal` encloses the box in a circle<br />`innerHalfAxes`: Half-width and half-height of the box to enclose<br />`mode?`: Semiaxis strategy; defaults to 'proportional'<br />Returns: A new object containing the semiaxes of the enclosing ellipse |
+| `contains`              | `(e: Ellipse, p: Vector2) => boolean`                                               | Tests whether a point is inside an ellipse, including its boundary                                                                                                                                                                                                                                                                                              |
+| `inscribedInBox`        | `(box: CenteredBox) => Ellipse`                                                     | Ellipse inscribed in a rectangular box                                                                                                                                                                                                                                                                                                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const ellipse: {
   boundaryPoint: (e: Ellipse, toward: Vector2) => Vector2;
   center: (e: Ellipse) => Vector2;
-  circumscribedHalfAxes: (innerHalfAxes: BoundsHalfAxes, mode: EllipseCircumscribeMode) => BoundsHalfAxes;
+  circumscribedHalfAxes: (innerHalfAxes: BoundsHalfAxes, mode?: EllipseCircumscribeMode) => BoundsHalfAxes;
   contains: (e: Ellipse, p: Vector2) => boolean;
   inscribedInBox: (box: CenteredBox) => Ellipse;
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### intersect
 
-<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={114}>Intersection primitives for lines, circles, and segments, consistently returning points (`Position | null` / `Array<Position>`)</ApiSourceLink></p>
+<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={122}>Intersection primitives for lines, circles, and segments, consistently returning points (`Position | null` / `Array<Position>`)</ApiSourceLink></p>
 
 ray∩arc returns scalar parameters along the ray as `Array<number>`, so it is exported separately from `./arc-intersection`.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member           | Signature                                      | Description                                                                                                                                                                                                 |
+| ---------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `circleCircle`   | `(input: CircleCircleInput) => Array<Vector2>` | Intersects circles; returns no points for coincident, contained, or disjoint circles, and two coincident points for tangency; callers handle duplicates<br />`input`: Center and radius of each circle      |
+| `lineCircle`     | `(input: LineCircleInput) => Array<Vector2>`   | Intersects a line with a circle without requiring a unit direction; tangency returns two coincident points for callers to deduplicate<br />`input`: Line origin and direction, and circle center and radius |
+| `lineLine`       | `(input: LineLineInput) => Vector2 \| null`    | Intersects two infinite lines defined by point pairs; returns null for parallel or collinear lines<br />`input`: Two defining points for each infinite line                                                 |
+| `segmentSegment` | `(input: LineLineInput) => Vector2 \| null`    | Intersects line segments; returns null for parallel, collinear (including overlapping), or disjoint segments<br />`input`: Endpoints of the two line segments                                               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### point
 
 <p>
-  <ApiSourceLink label={'point'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={55}>
-    Point positional operations. Every method returns a new tuple and does not mutate its input.
+  <ApiSourceLink label={'point'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={68}>
+    Point operations without input mutation; zero movement or coincident points may return the original point reference
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member        | Signature                                                                   | Description                                                                                                                                                                               |
+| ------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `against`     | `(origin: Vector2, direction: Vector2, length: number) => Vector2`          | Returns new coordinates at origin - direction × length<br />Does not normalize direction; the displacement magnitude equals the absolute value of length only for a unit direction vector |
+| `along`       | `(origin: Vector2, direction: Vector2, length: number) => Vector2`          | Returns new coordinates at origin + direction × length<br />Does not normalize direction; the displacement magnitude equals the absolute value of length only for a unit direction vector |
+| `distance`    | `(a: Vector2, b: Vector2) => number`                                        | Euclidean distance between two points                                                                                                                                                     |
+| `isEqual`     | `(a: Vector2, b: Vector2) => boolean`                                       | Exact equality comparison without tolerance                                                                                                                                               |
+| `shiftToward` | `(sourcePoint: Vector2, targetPoint: Vector2, distance: number) => Vector2` | Moves sourcePoint toward targetPoint by the given distance                                                                                                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const point: {
@@ -1082,6 +1382,10 @@ export declare const point: {
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### polygon
 
 <p>
@@ -1090,9 +1394,29 @@ export declare const point: {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member          | Signature                                           | Description                                                                                                                                                                                                         |
+| --------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `containsPoint` | `(vertices: Array<Vector2>, p: Vector2) => boolean` | Tests containment in a simple polygon using ray-casting parity; accepts ordered vertices of either winding and concavity<br />Boundary-point results are unspecified; callers must choose their own boundary policy |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const polygon: { containsPoint: (vertices: Array<Vector2>, p: Vector2) => boolean };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### triangle
 
@@ -1102,6 +1426,23 @@ export declare const polygon: { containsPoint: (vertices: Array<Vector2>, p: Vec
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member         | Signature                                                | Description                                                                                                             |
+| -------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `circumCircle` | `(a: Vector2, b: Vector2, c: Vector2) => Circle \| null` | Circumcircle through all three vertices<br />Returns null when the three points are collinear (approximately zero area) |
+| `incircle`     | `(a: Vector2, b: Vector2, c: Vector2) => Circle \| null` | Incircle tangent to all three sides<br />Returns null for collinear or degenerate points                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const triangle: {
   circumCircle: (a: Vector2, b: Vector2, c: Vector2) => Circle | null;
@@ -1109,13 +1450,42 @@ export declare const triangle: {
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### vector2
 
 <p>
-  <ApiSourceLink label={'vector2'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={20}>
-    Two-dimensional vector operations. Every method returns a new tuple and does not mutate its input.
+  <ApiSourceLink label={'vector2'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={29}>
+    Vector operations without input mutation; degenerate normalization may return the supplied fallback reference
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member             | Signature                                                       | Description                                                                                                                                                                                     |
+| ------------------ | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `add`              | `(a: Vector2, b: Vector2) => Vector2`                           | Vector addition: `a + b`                                                                                                                                                                        |
+| `cross`            | `(a: Vector2, b: Vector2) => number`                            | Scalar two-dimensional cross product                                                                                                                                                            |
+| `dot`              | `(a: Vector2, b: Vector2) => number`                            | Dot product                                                                                                                                                                                     |
+| `fromAngleDegrees` | `(angle: number) => Vector2`                                    | Converts an angle in degrees to a unit vector                                                                                                                                                   |
+| `length`           | `(a: Vector2) => number`                                        | Vector length                                                                                                                                                                                   |
+| `normal`           | `(a: Vector2) => Vector2`                                       | Left normal `[-y, x]`, preserving the input length                                                                                                                                              |
+| `normalize`        | `(a: Vector2, fallback?: Vector2, epsilon?: number) => Vector2` | Normalizes a vector; returns fallback for zero length<br />fallback defaults to [1, 0] and epsilon to DEFAULT_EPSILON; returns the original fallback reference when length is less than epsilon |
+| `normalizeOrNull`  | `(a: Vector2, epsilon?: number) => Vector2 \| null`             | Normalizes a vector; returns null for zero or non-finite length<br />epsilon defaults to 0; returns null for non-finite lengths or lengths less than or equal to epsilon                        |
+| `scale`            | `(a: Vector2, k: number) => Vector2`                            | Scalar multiplication: `a * k`                                                                                                                                                                  |
+| `sub`              | `(a: Vector2, b: Vector2) => Vector2`                           | Vector subtraction: `a - b`                                                                                                                                                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const vector2: {
@@ -1125,87 +1495,151 @@ export declare const vector2: {
   fromAngleDegrees: (angle: number) => Vector2;
   length: (a: Vector2) => number;
   normal: (a: Vector2) => Vector2;
-  normalize: (a: Vector2, fallback: Vector2, epsilon: number) => Vector2;
-  normalizeOrNull: (a: Vector2, epsilon: number) => Vector2 | null;
+  normalize: (a: Vector2, fallback?: Vector2, epsilon?: number) => Vector2;
+  normalizeOrNull: (a: Vector2, epsilon?: number) => Vector2 | null;
   scale: (a: Vector2, k: number) => Vector2;
   sub: (a: Vector2, b: Vector2) => Vector2;
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### applyAffine
 
 <p>
-  <ApiSourceLink label={'applyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={23}>
+  <ApiSourceLink label={'applyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={29}>
     Maps a two-dimensional point to new coordinates with the SVG / Canvas six-value formula
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature | Description                               |
+| ---------- | -------- | ---------------- | ----------------------------------------- |
+| Parameters | `matrix` | `AffineMatrix`   | Two-dimensional affine matrix to evaluate |
+|            | `point`  | `Position`       | Two-dimensional point to transform        |
+| Returns    | —        | `Position`       | —                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const applyAffine: (matrix: AffineMatrix, point: Vector2) => Vector2;
+export declare const applyAffine: (matrix: AffineMatrix, point: Position) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type           | Description |
-| --------- | -------------- | ----------- |
-| `matrix`  | `AffineMatrix` | —           |
-| `point`   | `Vector2`      | —           |
+</DocTabs>
 
 ### boundsOf
 
 <p>
-  <ApiSourceLink label={'boundsOf'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={51}>
+  <ApiSourceLink label={'boundsOf'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={53}>
     Axis-aligned bounds of a point set
   </ApiSourceLink>
 </p>
 
 Returns undefined for empty input; callers decide whether to fall back, report an error, or ignore it.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature                 | Description                                           |
+| ---------- | -------- | -------------------------------- | ----------------------------------------------------- |
+| Parameters | `points` | `ReadonlyArray<Position>`        | Two-dimensional point set to evaluate                 |
+| Returns    | —        | `AxisAlignedBounds \| undefined` | Bounds of the point set, or undefined for empty input |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const boundsOf: (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
+export declare const boundsOf: (points: ReadonlyArray<Position>) => AxisAlignedBounds | undefined;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                      | Description |
-| --------- | ------------------------- | ----------- |
-| `points`  | `readonly Array<Vector2>` | —           |
+</DocTabs>
 
 ### boundsToRect
 
 <p>
-  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={79}>
+  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={89}>
     Converts min/max bounds to a top-left-plus-size rectangle
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                         | Type / signature    | Description                                  |
+| ---------- | ---------------------------- | ------------------- | -------------------------------------------- |
+| Parameters | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | Axis-aligned minimum and maximum coordinates |
+| Returns    | —                            | `BoundsRect`        | —                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const boundsToRect: (__namedParameters: AxisAlignedBounds) => BoundsRect;
+export declare const boundsToRect: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => BoundsRect;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                | Description |
-| ------------------- | ------------------- | ----------- |
-| `__namedParameters` | `AxisAlignedBounds` | —           |
+</DocTabs>
 
 ### centerOfBounds
 
 <p>
-  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={103}>
+  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={125}>
     Center of axis-aligned bounds
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                         | Type / signature    | Description                                  |
+| ---------- | ---------------------------- | ------------------- | -------------------------------------------- |
+| Parameters | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | Axis-aligned minimum and maximum coordinates |
+| Returns    | —                            | `Position`          | —                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => Vector2;
+export declare const centerOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                | Description |
-| ------------------- | ------------------- | ----------- |
-| `__namedParameters` | `AxisAlignedBounds` | —           |
+</DocTabs>
 
 ### collectArcBoundingCandidates
 
@@ -1213,7 +1647,7 @@ export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => V
   <ApiSourceLink
     label={'collectArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={85}
+    startLine={93}
   >
     Arc bounds extrema candidates: the start and end points plus points at every 90°·k direction inside `[startAngle,
     endAngle]`
@@ -1222,15 +1656,35 @@ export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => V
 
 Does not deduplicate candidates; callers handle endpoint angles that fall exactly on 90°·k.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                                                                                 | Type / signature             | Description                                                               |
+| ---------- | ------------------------------------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------- |
+| Parameters | `{`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `ArcBoundingCandidatesInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Returns    | —                                                                                    | `Array<Position>`            | —                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
+export declare const collectArcBoundingCandidates: ({
+  center,
+  radius,
+  startAngleDeg,
+  endAngleDeg,
+}: ArcBoundingCandidatesInput) => Array<Position>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                         | Description |
-| ------------------- | ---------------------------- | ----------- |
-| `__namedParameters` | `ArcBoundingCandidatesInput` | —           |
+</DocTabs>
 
 ### collectEllipseArcBoundingCandidates
 
@@ -1238,7 +1692,7 @@ export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundi
   <ApiSourceLink
     label={'collectEllipseArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={140}
+    startLine={151}
   >
     Elliptical-arc bounds extrema candidates: endpoints plus ellipse points at every 90°·k parameter angle inside
     `[start, end]`
@@ -1247,79 +1701,143 @@ export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundi
 
 Handles only axis-aligned elliptical arcs and does not deduplicate candidates.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                                                                                                  | Type / signature                    | Description                                                               |
+| ---------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------- |
+| Parameters | `{`<br />`center,`<br />`radiusX,`<br />`radiusY,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `EllipseArcBoundingCandidatesInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Returns    | —                                                                                                     | `Array<Position>`                   | —                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const collectEllipseArcBoundingCandidates: (
-  __namedParameters: EllipseArcBoundingCandidatesInput,
-) => Array<Vector2>;
+export declare const collectEllipseArcBoundingCandidates: ({
+  center,
+  radiusX,
+  radiusY,
+  startAngleDeg,
+  endAngleDeg,
+}: EllipseArcBoundingCandidatesInput) => Array<Position>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                                | Description |
-| ------------------- | ----------------------------------- | ----------- |
-| `__namedParameters` | `EllipseArcBoundingCandidatesInput` | —           |
+</DocTabs>
 
 ### convexHull
 
 <p>
-  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={10}>
+  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={11}>
     Convex hull (Andrew's monotone chain)
   </ApiSourceLink>
 </p>
 
 Returns vertices in CCW order without intermediate collinear points. For fewer than three points, returns deduplicated points sorted by (x, y). All-collinear input degenerates to its two endpoints.
 
-```ts
-export declare const convexHull: (points: Array<Vector2>) => Array<Vector2>;
-```
+<DocTabs defaultValue="members">
 
-#### Parameters
+<DocTab value="members" label="Members">
 
-| Parameter | Type             | Description |
-| --------- | ---------------- | ----------- |
-| `points`  | `Array<Vector2>` | —           |
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature  | Description                           |
+| ---------- | -------- | ----------------- | ------------------------------------- |
+| Parameters | `points` | `Array<Position>` | Two-dimensional point set to evaluate |
+| Returns    | —        | `Array<Position>` | —                                     |
+
+</ApiTable>
 
 > **Notes:** Complexity: O(n log n) time and O(n) space for n input points
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const convexHull: (points: Array<Position>) => Array<Position>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### cornersOfBounds
 
 <p>
-  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={126}>
+  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={159}>
     Four corner points of axis-aligned bounds
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                         | Type / signature    | Description                                                                      |
+| ---------- | ---------------------------- | ------------------- | -------------------------------------------------------------------------------- |
+| Parameters | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | Axis-aligned minimum and maximum coordinates                                     |
+| Returns    | —                            | `Array<Position>`   | Returns top-left, top-right, bottom-left, and bottom-right corners in that order |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const cornersOfBounds: (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
+export declare const cornersOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => Array<Position>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                | Description |
-| ------------------- | ------------------- | ----------- |
-| `__namedParameters` | `AxisAlignedBounds` | —           |
+</DocTabs>
 
 ### expandBounds
 
 <p>
-  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={115}>
+  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={144}>
     Expands axis-aligned bounds on all four sides
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                           | Type / signature    | Description                                                |
+| ---------- | ------------------------------ | ------------------- | ---------------------------------------------------------- |
+| Parameters | `{ maxX, maxY, minX, minY }`   | `AxisAlignedBounds` | Axis-aligned minimum and maximum coordinates               |
+|            | `{ bottom, left, right, top }` | `BoundsInsets`      | Expansion for each side; negative values shrink the bounds |
+| Returns    | —                              | `AxisAlignedBounds` | —                                                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const expandBounds: (
-  __namedParameters: AxisAlignedBounds,
-  __namedParameters: BoundsInsets,
+  { maxX, maxY, minX, minY }: AxisAlignedBounds,
+  { bottom, left, right, top }: BoundsInsets,
 ) => AxisAlignedBounds;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                | Description |
-| ------------------- | ------------------- | ----------- |
-| `__namedParameters` | `AxisAlignedBounds` | —           |
-| `__namedParameters` | `BoundsInsets`      | —           |
+</DocTabs>
 
 ### getAffineSimilarityScale
 
@@ -1327,40 +1845,70 @@ export declare const expandBounds: (
   <ApiSourceLink
     label={'getAffineSimilarityScale'}
     path={'packages/kernel/math/src/transforms/affine.ts'}
-    startLine={35}
+    startLine={47}
   >
     Returns the uniform scale factor of an affine similarity transform, or undefined when it is not a similarity
     transform
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature      | Description                               |
+| ---------- | -------- | --------------------- | ----------------------------------------- |
+| Parameters | `matrix` | `AffineMatrix`        | Two-dimensional affine matrix to evaluate |
+| Returns    | —        | `number \| undefined` | —                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const getAffineSimilarityScale: (matrix: AffineMatrix) => number | undefined;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type           | Description |
-| --------- | -------------- | ----------- |
-| `matrix`  | `AffineMatrix` | —           |
+</DocTabs>
 
 ### halfAxesOfBounds
 
 <p>
-  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={109}>
+  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={134}>
     Half-axes of axis-aligned bounds
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                         | Type / signature    | Description                                  |
+| ---------- | ---------------------------- | ------------------- | -------------------------------------------- |
+| Parameters | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | Axis-aligned minimum and maximum coordinates |
+| Returns    | —                            | `BoundsHalfAxes`    | —                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
+export declare const halfAxesOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => BoundsHalfAxes;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                | Description |
-| ------------------- | ------------------- | ----------- |
-| `__namedParameters` | `AxisAlignedBounds` | —           |
+</DocTabs>
 
 ### intersectRayWithArc
 
@@ -1368,7 +1916,7 @@ export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) =>
   <ApiSourceLink
     label={'intersectRayWithArc'}
     path={'packages/kernel/math/src/algorithms/arc-intersection.ts'}
-    startLine={19}
+    startLine={22}
   >
     Intersection of a ray (`origin + s·direction`) and an arc (`center`, `radius`, `[startAngle, endAngle]`)
   </ApiSourceLink>
@@ -1376,20 +1924,43 @@ export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) =>
 
 Returns forward ray parameters `s` in ascending order; returns an empty array for a zero direction or no valid intersections.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                                                                                                                                                      | Type / signature          | Description                                                               |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| Parameters | `{`<br />`origin,`<br />`direction,`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`tolerance = DEFAULT_EPSILON,`<br />`}` | `RayArcIntersectionInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Returns    | —                                                                                                                                                         | `Array<number>`           | —                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const intersectRayWithArc: (__namedParameters: RayArcIntersectionInput) => Array<number>;
+export declare const intersectRayWithArc: ({
+  origin,
+  direction,
+  center,
+  radius,
+  startAngleDeg,
+  endAngleDeg,
+  tolerance = DEFAULT_EPSILON,
+}: RayArcIntersectionInput) => Array<number>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                      | Description |
-| ------------------- | ------------------------- | ----------- |
-| `__namedParameters` | `RayArcIntersectionInput` | —           |
+</DocTabs>
 
 ### isAngleWithinArcSweep
 
 <p>
-  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={112}>
+  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={121}>
     Whether angle `a` in degrees falls within the arc angle range `[startAngle, endAngle]`, including endpoints with
     tolerance
   </ApiSourceLink>
@@ -1397,33 +1968,68 @@ export declare const intersectRayWithArc: (__namedParameters: RayArcIntersection
 
 A positive start-to-end range sweeps clockwise on screen; a negative range sweeps counterclockwise.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                                                                                                | Type / signature     | Description                                                               |
+| ---------- | --------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------- |
+| Parameters | `{`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`angleDeg,`<br />`toleranceDeg = 1e-7,`<br />`}` | `ArcSweepAngleInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Returns    | —                                                                                                   | `boolean`            | —                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const isAngleWithinArcSweep: (__namedParameters: ArcSweepAngleInput) => boolean;
+export declare const isAngleWithinArcSweep: ({
+  startAngleDeg,
+  endAngleDeg,
+  angleDeg,
+  toleranceDeg = 1e-7,
+}: ArcSweepAngleInput) => boolean;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                 | Description |
-| ------------------- | -------------------- | ----------- |
-| `__namedParameters` | `ArcSweepAngleInput` | —           |
+</DocTabs>
 
 ### isFiniteBoundsRect
 
 <p>
-  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={95}>
+  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={111}>
     Checks whether all four bounds-rectangle fields are finite numbers
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                      | Type / signature | Description                       |
+| ---------- | ------------------------- | ---------------- | --------------------------------- |
+| Parameters | `{ height, width, x, y }` | `BoundsRect`     | Rectangle position and dimensions |
+| Returns    | —                         | `boolean`        | —                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const isFiniteBoundsRect: (__namedParameters: BoundsRect) => boolean;
+export declare const isFiniteBoundsRect: ({ height, width, x, y }: BoundsRect) => boolean;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type         | Description |
-| ------------------- | ------------ | ----------- |
-| `__namedParameters` | `BoundsRect` | —           |
+</DocTabs>
 
 ### isFiniteNonSingularAffine
 
@@ -1431,250 +2037,450 @@ export declare const isFiniteBoundsRect: (__namedParameters: BoundsRect) => bool
   <ApiSourceLink
     label={'isFiniteNonSingularAffine'}
     path={'packages/kernel/math/src/transforms/affine.ts'}
-    startLine={29}
+    startLine={38}
   >
     Checks whether a two-dimensional affine matrix has finite values and a non-zero determinant
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature | Description                               |
+| ---------- | -------- | ---------------- | ----------------------------------------- |
+| Parameters | `matrix` | `AffineMatrix`   | Two-dimensional affine matrix to evaluate |
+| Returns    | —        | `boolean`        | —                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const isFiniteNonSingularAffine: (matrix: AffineMatrix) => boolean;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type           | Description |
-| --------- | -------------- | ----------- |
-| `matrix`  | `AffineMatrix` | —           |
+</DocTabs>
 
 ### isFiniteNumber
 
 <p>
-  <ApiSourceLink label={'isFiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={10}>
+  <ApiSourceLink label={'isFiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={13}>
     Finite-number guard that excludes Infinity and NaN
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature  | Description           |
+| ---------- | ------- | ----------------- | --------------------- |
+| Parameters | `value` | `unknown`         | Dynamic value to test |
+| Returns    | —       | `value is number` | —                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const isFiniteNumber: (value: unknown) => predicate;
+export declare const isFiniteNumber: (value: unknown) => value is number;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `value`   | `unknown` | —           |
+</DocTabs>
 
 ### isFinitePoint
 
 <p>
-  <ApiSourceLink label={'isFinitePoint'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={13}>
+  <ApiSourceLink label={'isFinitePoint'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={19}>
     Finite two-dimensional point guard
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature    | Description           |
+| ---------- | ------- | ------------------- | --------------------- |
+| Parameters | `value` | `unknown`           | Dynamic value to test |
+| Returns    | —       | `value is Position` | —                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const isFinitePoint: (value: unknown) => predicate;
+export declare const isFinitePoint: (value: unknown) => value is Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `value`   | `unknown` | —           |
+</DocTabs>
 
 ### isInfiniteNumber
 
 <p>
-  <ApiSourceLink label={'isInfiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={17}>
+  <ApiSourceLink label={'isInfiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={26}>
     Infinite-number guard that accepts only positive or negative Infinity
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature  | Description           |
+| ---------- | ------- | ----------------- | --------------------- |
+| Parameters | `value` | `unknown`         | Dynamic value to test |
+| Returns    | —       | `value is number` | —                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const isInfiniteNumber: (value: unknown) => predicate;
+export declare const isInfiniteNumber: (value: unknown) => value is number;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `value`   | `unknown` | —           |
+</DocTabs>
 
 ### isPositiveBoundsRect
 
 <p>
-  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={99}>
+  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={118}>
     Checks whether a bounds rectangle is finite and has strictly positive width and height
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name   | Type / signature | Description                       |
+| ---------- | ------ | ---------------- | --------------------------------- |
+| Parameters | `rect` | `BoundsRect`     | Rectangle position and dimensions |
+| Returns    | —      | `boolean`        | —                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type         | Description |
-| --------- | ------------ | ----------- |
-| `rect`    | `BoundsRect` | —           |
+</DocTabs>
 
 ### lerp
 
 <p>
-  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={76}>
+  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={100}>
     Linear interpolation: `a + (b - a) * t`
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name | Type / signature | Description                                              |
+| ---------- | ---- | ---------------- | -------------------------------------------------------- |
+| Parameters | `a`  | `Position`       | Start point                                              |
+|            | `b`  | `Position`       | End point                                                |
+|            | `t`  | `number`         | Interpolation parameter; values outside 0..1 extrapolate |
+| Returns    | —    | `Position`       | —                                                        |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const lerp: (a: Vector2, b: Vector2, t: number) => Vector2;
+export declare const lerp: (a: Position, b: Position, t: number) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `a`       | `Vector2` | —           |
-| `b`       | `Vector2` | —           |
-| `t`       | `number`  | —           |
+</DocTabs>
 
 ### localToWorld
 
 <p>
-  <ApiSourceLink label={'localToWorld'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={17}>
+  <ApiSourceLink label={'localToWorld'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={21}>
     Maps local coordinates with the center as origin to world coordinates
   </ApiSourceLink>
 </p>
 
 With `rotate = 0` or omitted, reduces to translation; otherwise rotates about the center before translating.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature | Description                                    |
+| ---------- | ------- | ---------------- | ---------------------------------------------- |
+| Parameters | `shape` | `CenteredShape`  | Shape center and optional rotation in radians  |
+|            | `local` | `Position`       | Local coordinates relative to the shape center |
+| Returns    | —       | `Position`       | —                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const localToWorld: (shape: CenteredShape, local: Vector2) => Vector2;
+export declare const localToWorld: (shape: CenteredShape, local: Position) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type            | Description |
-| --------- | --------------- | ----------- |
-| `shape`   | `CenteredShape` | —           |
-| `local`   | `Vector2`       | —           |
+</DocTabs>
 
 ### mergeBounds
 
 <p>
-  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={67}>
+  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={74}>
     Merges two axis-aligned bounds
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name | Type / signature                 | Description                                                  |
+| ---------- | ---- | -------------------------------- | ------------------------------------------------------------ |
+| Parameters | `a?` | `AxisAlignedBounds`              | First bounds, which may be omitted                           |
+|            | `b?` | `AxisAlignedBounds`              | Second bounds, which may be omitted                          |
+| Returns    | —    | `AxisAlignedBounds \| undefined` | New merged bounds, or undefined when both inputs are omitted |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const mergeBounds: (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                | Description |
-| --------- | ------------------- | ----------- |
-| `a`       | `AxisAlignedBounds` | —           |
-| `b`       | `AxisAlignedBounds` | —           |
+</DocTabs>
 
 ### multiplyAffine
 
 <p>
-  <ApiSourceLink label={'multiplyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={13}>
+  <ApiSourceLink label={'multiplyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={15}>
     Composes two-dimensional affine matrices
   </ApiSourceLink>
 </p>
 
 Returns `outer × inner`: apply `inner` to a point first, then `outer`.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature | Description                 |
+| ---------- | ------- | ---------------- | --------------------------- |
+| Parameters | `outer` | `AffineMatrix`   | Outer matrix applied second |
+|            | `inner` | `AffineMatrix`   | Inner matrix applied first  |
+| Returns    | —       | `AffineMatrix`   | —                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const multiplyAffine: (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type           | Description |
-| --------- | -------------- | ----------- |
-| `outer`   | `AffineMatrix` | —           |
-| `inner`   | `AffineMatrix` | —           |
+</DocTabs>
 
 ### pointAtArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={76}>
+  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={83}>
     Maps a circle center, radius, and angle in degrees to the corresponding point on the circumference
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature | Description                |
+| ---------- | ---------- | ---------------- | -------------------------- |
+| Parameters | `center`   | `Position`       | Circle center              |
+|            | `radius`   | `number`         | Radius                     |
+|            | `angleDeg` | `number`         | Parameter angle in degrees |
+| Returns    | —          | `Position`       | —                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const pointAtArcAngle: (center: Vector2, radius: number, angleDeg: number) => Vector2;
+export declare const pointAtArcAngle: (center: Position, radius: number, angleDeg: number) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter  | Type      | Description |
-| ---------- | --------- | ----------- |
-| `center`   | `Vector2` | —           |
-| `radius`   | `number`  | —           |
-| `angleDeg` | `number`  | —           |
+</DocTabs>
 
 ### pointAtEllipseArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={131}>
+  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={141}>
     Maps an elliptical-arc center, half-axes `rx` / `ry`, and parameter angle in degrees to a point on the ellipse
   </ApiSourceLink>
 </p>
 
 Uses the same angle convention as `pointAtArcAngle`; θ is a parameter angle and not necessarily the true polar angle.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                                     | Type / signature            | Description                                                               |
+| ---------- | ---------------------------------------- | --------------------------- | ------------------------------------------------------------------------- |
+| Parameters | `{ center, radiusX, radiusY, angleDeg }` | `EllipseArcAnglePointInput` | Geometry input parameters; see the corresponding type for field semantics |
+| Returns    | —                                        | `Position`                  | —                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const pointAtEllipseArcAngle: (__namedParameters: EllipseArcAnglePointInput) => Vector2;
+export declare const pointAtEllipseArcAngle: ({
+  center,
+  radiusX,
+  radiusY,
+  angleDeg,
+}: EllipseArcAnglePointInput) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type                        | Description |
-| ------------------- | --------------------------- | ----------- |
-| `__namedParameters` | `EllipseArcAnglePointInput` | —           |
+</DocTabs>
 
 ### rectToBounds
 
 <p>
-  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={87}>
+  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={100}>
     Converts a top-left-plus-size rectangle to min/max bounds
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name                      | Type / signature    | Description                       |
+| ---------- | ------------------------- | ------------------- | --------------------------------- |
+| Parameters | `{ height, width, x, y }` | `BoundsRect`        | Rectangle position and dimensions |
+| Returns    | —                         | `AxisAlignedBounds` | —                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const rectToBounds: (__namedParameters: BoundsRect) => AxisAlignedBounds;
+export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => AxisAlignedBounds;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter           | Type         | Description |
-| ------------------- | ------------ | ----------- |
-| `__namedParameters` | `BoundsRect` | —           |
+</DocTabs>
 
 ### worldToLocal
 
 <p>
-  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={29}>
+  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={35}>
     Maps world coordinates to local coordinates, the inverse of `localToWorld`
   </ApiSourceLink>
 </p>
 
 Returns local coordinates relative to the shape center and rotation.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature | Description                                   |
+| ---------- | ------- | ---------------- | --------------------------------------------- |
+| Parameters | `shape` | `CenteredShape`  | Shape center and optional rotation in radians |
+|            | `world` | `Position`       | World coordinates to transform                |
+| Returns    | —       | `Position`       | —                                             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const worldToLocal: (shape: CenteredShape, world: Vector2) => Vector2;
+export declare const worldToLocal: (shape: CenteredShape, world: Position) => Position;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type            | Description |
-| --------- | --------------- | ----------- |
-| `shape`   | `CenteredShape` | —           |
-| `world`   | `Vector2`       | —           |
+</DocTabs>

@@ -11,7 +11,7 @@ import { MobileNav } from '../src/app/header/MobileNav';
 import { useDocModuleStore } from '../src/modules/docs/store';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: undefined } }),
 }));
 
 vi.mock('@/components/ui/button', () => ({

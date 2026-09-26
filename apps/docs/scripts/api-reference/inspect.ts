@@ -13,6 +13,14 @@ export const inspectApiReferenceConfig = {
   entries: ['', '/react', '/vanilla'].map(subpath => ({
     title: { zh: `\`@retikz/inspect${subpath}\``, en: `\`@retikz/inspect${subpath}\`` },
     source: path.resolve(packageRoot, `src${subpath}/index.ts`),
+    declarationOnlySymbols: subpath === '' ? ['InspectorRegistry'] : [],
+    symbolPairs:
+      subpath === '/react'
+        ? ['InspectCoordinate', 'InspectLayout', 'InspectNode', 'InspectPath', 'InspectScope'].map(
+            name => [name, `${name}Props`] as const,
+          )
+        : [],
+    omitPairedCallDetails: true,
   })),
   translate: translateInspectApiReference,
   schemaReferences: {

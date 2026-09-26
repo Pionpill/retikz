@@ -1,6 +1,6 @@
 ---
 name: codex-develop-flow
-description: Use when the active main model is gpt-6-astra or gpt-5.6-sol and an approved large task, or an approved medium task with separable implementation work, requires authorized agent roles.
+description: Use when the active main model is gpt-6-astra or gpt-6-sol and an approved large task, or an approved medium task with separable implementation work, requires authorized agent roles.
 ---
 
 # Codex Develop Flow
@@ -13,7 +13,7 @@ description: Use when the active main model is gpt-6-astra or gpt-5.6-sol and an
 
 同时满足以下条件才加载：
 
-- 主模型明确为 `gpt-6-astra` 或 `gpt-5.6-sol`
+- 主模型明确为 `gpt-6-astra` 或 `gpt-6-sol`
 - 大型任务的执行计划已确认，或部分中型任务包含可分离的实现工作
 - 已确认计划明确授权 subagent、角色、数量、review 时点与最大循环次数
 - 具体 owning flow 已决定某个阶段需要 implementer 或 reviewer
@@ -27,13 +27,13 @@ description: Use when the active main model is gpt-6-astra or gpt-5.6-sol and an
 只使用调度工具当轮实际暴露的名字：
 
 - 大型复杂任务主控与集成：优先 `gpt-6-astra`
-- 边界清楚的中小型任务主控：优先 `gpt-5.6-sol`；小型任务仍由主 agent 直接执行，不启用本 skill
-- 输入输出明确、可独立验收的实现：`luna_worker` / `gpt-5.6-luna`
+- 需要有限调研、诊断或较多判断的中型任务主控：优先 `gpt-6-sol`；小型任务仍由主 agent 直接执行，不启用本 skill
+- 输入输出明确、可独立验收的实现：`gpt-6-luna`；调度时显式选择该模型，不依赖自定义固定模型角色
 - 跨层疑难 bug、关键算法、难以拆分的核心链路：优先由 Astra 主控直接实现，或按计划交给 `gpt-6-astra`
-- 常规单 reviewer：优先 `gpt-5.6-terra`；计划可指定独立的 `gpt-5.6-sol` 或其他实际获批模型
-- 最终 `cross-review`：优先 fresh Luna + Terra
+- 常规单 reviewer：边界明确时优先 `gpt-6-luna`；需要跨层诊断或较多判断时使用独立的 `gpt-6-sol` 实例，或计划指定的其他实际获批模型
+- 最终 `cross-review`：Astra 主控优先 fresh Sol + Luna；Sol 主控优先 fresh Astra + Luna，确保 reviewer 均不同于主模型
 
-以上 agent 分工与主模型选择是两层规则。大型任务仍保持 Astra / Sol 主控，Terra / Luna 按已确认计划承担执行或评审；新增的主模型匹配规则不替换、不削弱这套大型任务流程。
+以上 agent 分工与主模型选择是两层规则。大型任务仍保持 Astra / Sol 主控，Sol / Luna 按已确认计划承担执行或评审；主模型匹配规则不替换、不削弱这套大型任务流程。
 
 按问题不确定性、错误代价和依赖选择模型，不按代码量分配。以完成任务的总成本评估效果，包括计费 token、交接、验证和返工；步骤减少不等于费用降低。
 
@@ -43,8 +43,8 @@ description: Use when the active main model is gpt-6-astra or gpt-5.6-sol and an
 
 - Astra / Sol 作为用户开启的主模型时，沿用用户设置，不主动覆盖
 - Astra / Sol 由 agent 被动开启或调度时，未有用户明确指定则使用 `high`
-- Terra / Luna 被动调度时统一使用 `max`，适用于实现、诊断、常规 review 与最终 `cross-review`
-- 调度时显式传入对应 reasoning effort，不依赖父 agent 的继承值；`luna_worker` 已固定为 `max` 时沿用角色设置
+- Luna 被动调度时使用 `max`，适用于实现、诊断、常规 review 与最终 `cross-review`
+- 调度时显式传入对应 reasoning effort，不依赖父 agent 的继承值
 
 ## 角色分工
 
@@ -67,7 +67,7 @@ Sol 主控遇到复杂争议或持续返工时，只在计划已授权的职责�
 本 skill 不创建 review gate，也不规定 review 轮数：
 
 - owning flow 要求常规单 subagent review 时，调度计划中已授权的一个 reviewer；修改后复用同一 reviewer 循环
-- owning flow 在大型任务最终阶段调用已授权的 `cross-review`，或用户明确要求交叉验证时，优先使用 fresh Luna + Terra
+- owning flow 在大型任务最终阶段调用已授权的 `cross-review`，或用户明确要求交叉验证时，按主模型优先使用上述 fresh 双模型组合
 - 实现 worker 不自动成为 reviewer；是否允许由已确认计划决定
 
 reviewer 不可用时按 owning flow 与执行计划的降级规则处理；不得自行追加 reviewer 或扩大轮数。

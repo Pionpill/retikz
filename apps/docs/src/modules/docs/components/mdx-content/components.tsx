@@ -9,6 +9,7 @@ import { cn } from '@/lib';
 import { ComponentPreview } from '../component-preview';
 import { CodeBlock } from '../highlight-code';
 import { ShowcaseGallery, ShowcaseTabs } from '../showcase';
+import { ApiTable } from './api-table';
 import { ApiValues } from './api-values';
 import { Comparison } from './comparison';
 import { ComponentAlert } from './component-alert';
@@ -76,6 +77,7 @@ const Code: FC<CodeProps> = ({ className, children, showLineNumbers, ...rest }) 
 };
 
 export const mdxComponents: MDXComponents = {
+  ApiTable,
   ApiValues,
   ApiSourceLink,
   h1: ({ className, ...props }) => (

@@ -4,6 +4,7 @@ import { resolveFieldPath } from '@retikz/data';
 import type { ChannelResolution } from '../../../contract';
 import { RetikzPlotError } from '../../../error';
 import type { IRPlotPointNumberStyle, MarkValueKind } from '../../../schemas';
+
 export type { ChannelResolution, ScaleDescriptor } from '../../../contract';
 
 type MarkStyleValue<T> =

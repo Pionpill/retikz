@@ -5,57 +5,88 @@
 ### RetikzError
 
 <p>
-  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={26}>
+  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={29}>
     Base structure for Retikz structured domain errors
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                      | Type                                                                            | Default     | Description                                                                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TCode` (Type parameter)    | `extends string = string`                                                       | —           | String type of the error classification code                                                                                                            |
+| `TDetails` (Type parameter) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | —           | Structured detail type associated with the error code                                                                                                   |
+| `constructor`               | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | —           | Creates a domain error from structured options, preserving the original cause<br />`options`: Error code, message, details, and optional original cause |
+| `readonly cause?`           | `unknown`                                                                       | `undefined` | Original exception or value that caused this error                                                                                                      |
+| `readonly code`             | `TCode`                                                                         | —           | Classification code of the structured error                                                                                                             |
+| `readonly details`          | `TDetails`                                                                      | —           | Structured error details associated with the error code                                                                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export class RetikzError<
   TCode extends string = string,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
-> extends Error {}
+> extends Error {
+  readonly code: TCode;
+  readonly details: TDetails;
+  readonly cause?: unknown;
+  constructor(options: RetikzErrorOptions<TCode, TDetails>);
+}
 ```
 
-| Member             | Type                                                                                                                                                                                                    | Default | Description |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor`      | `<TCode extends string = string, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
-| `readonly cause?`  | `unknown`                                                                                                                                                                                               | —       | —           |
-| `readonly code`    | `TCode`                                                                                                                                                                                                 | —       | —           |
-| `readonly details` | `TDetails`                                                                                                                                                                                              | —       | —           |
+</DocTab>
 
-#### Type parameters
-
-| Type parameter | Description                                           |
-| -------------- | ----------------------------------------------------- |
-| `TCode`        | String type of the error classification code          |
-| `TDetails`     | Structured detail type associated with the error code |
+</DocTabs>
 
 ### RetikzFoundationError
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={66}>
+  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={79}>
     Unified structured error for Foundation atomic-contract failures
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="methods">
+
+| Member                      | Signature                                                                       | Description                                                    |
+| --------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `TCode` (Type parameter)    | `extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue`       | Concrete literal type of a Foundation error code               |
+| `TDetails` (Type parameter) | `extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>` | Structured detail type associated with a Foundation error code |
+| `constructor`               | `(message: string)`                                                             | Creates a Foundation error with the default error code         |
+|                             | `(options: RetikzErrorOptions<TCode, TDetails>)`                                | Creates a Foundation error from structured options             |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export class RetikzFoundationError<
   TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
-> extends RetikzError<TCode, TDetails> {}
+> extends RetikzError<TCode, TDetails> {
+  constructor(message: string);
+  constructor(options: RetikzErrorOptions<TCode, TDetails>);
+}
 ```
 
-| Member        | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default | Description |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor` | `<TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
+</DocTab>
 
-#### Type parameters
-
-| Type parameter | Description                                                    |
-| -------------- | -------------------------------------------------------------- |
-| `TCode`        | Concrete literal type of a Foundation error code               |
-| `TDetails`     | Structured detail type associated with a Foundation error code |
+</DocTabs>
 
 ### AssertEqual
 
@@ -65,6 +96,23 @@ export class RetikzFoundationError<
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                       | Type | Default | Description                                   |
+| ---------------------------- | ---- | ------- | --------------------------------------------- |
+| `TActual` (Type parameter)   | `—`  | —       | Actual type being compared                    |
+| `TExpected` (Type parameter) | `—`  | —       | Expected type used as the comparison baseline |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
   ? [TExpected] extends [TActual]
@@ -73,12 +121,9 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
   : false;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                                   |
-| -------------- | --------------------------------------------- |
-| `TActual`      | Actual type being compared                    |
-| `TExpected`    | Expected type used as the comparison baseline |
+</DocTabs>
 
 ### JsonObject
 
@@ -88,15 +133,29 @@ export type AssertEqual<TActual, TExpected> = [TActual] extends [TExpected]
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member          | Type                       | Default | Description |
+| --------------- | -------------------------- | ------- | ----------- |
+| Index signature | `[key: string]: JsonValue` | —       | —           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type JsonObject = ZodInfer<typeof JsonObjectSchema>;
 ```
 
-#### Index signatures
+</DocTab>
 
-```ts
-[key: string]: JsonValue
-```
+</DocTabs>
 
 ### JsonValue
 
@@ -130,9 +189,14 @@ export type JsonValue =
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member                     | Type                                               | Default     | Description                                                                                                        |
 | -------------------------- | -------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `T` (Type parameter)       | `extends object`                                   | —           | Object type being merged                                                                                           |
 | `readonly shouldOverride?` | `(value: T[keyof T], key: PropertyKey) => boolean` | `undefined` | Decides whether a source property is written; also runs for initial writes, and false preserves any existing value |
+
+</ApiTable>
 
 </DocTab>
 
@@ -148,12 +212,6 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
 
 </DocTabs>
 
-#### Type parameters
-
-| Type parameter | Description              |
-| -------------- | ------------------------ |
-| `T`            | Object type being merged |
-
 ### NonEmptyReadonlyArray
 
 <p>
@@ -162,15 +220,29 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member               | Type | Default | Description        |
+| -------------------- | ---- | ------- | ------------------ |
+| `T` (Type parameter) | `—`  | —       | Array element type |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description        |
-| -------------- | ------------------ |
-| `T`            | Array element type |
+</DocTabs>
 
 ### OpenString
 
@@ -180,15 +252,29 @@ export type NonEmptyReadonlyArray<T> = readonly [T, ...Array<T>];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member               | Type             | Default | Description                    |
+| -------------------- | ---------------- | ------- | ------------------------------ |
+| `T` (Type parameter) | `extends string` | —       | Union of known string literals |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type OpenString<T extends string> = T | (string & {});
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                    |
-| -------------- | ------------------------------ |
-| `T`            | Union of known string literals |
+</DocTabs>
 
 ### ParsedCssColor
 
@@ -202,12 +288,16 @@ export type OpenString<T extends string> = T | (string & {});
 
 <DocTab value="members" label="Members">
 
+<ApiTable>
+
 | Member | Type     | Default | Description                    |
 | ------ | -------- | ------- | ------------------------------ |
 | `a`    | `number` | —       | Opacity in the range 0–1       |
 | `b`    | `number` | —       | Blue channel in the range 0–1  |
 | `g`    | `number` | —       | Green channel in the range 0–1 |
 | `r`    | `number` | —       | Red channel in the range 0–1   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -238,12 +328,18 @@ export type ParsedCssColor = {
 
 <DocTab value="members" label="Members">
 
-| Member             | Type       | Default | Description                                             |
-| ------------------ | ---------- | ------- | ------------------------------------------------------- |
-| `readonly cause?`  | `unknown`  | —       | Original exception or value that caused this error      |
-| `readonly code`    | `TCode`    | —       | Classification code of the structured error             |
-| `readonly details` | `TDetails` | —       | Structured error details associated with the error code |
-| `readonly message` | `string`   | —       | Error message for the caller                            |
+<ApiTable>
+
+| Member                      | Type                                        | Default     | Description                                             |
+| --------------------------- | ------------------------------------------- | ----------- | ------------------------------------------------------- |
+| `TCode` (Type parameter)    | `extends string`                            | —           | String type of the error classification code            |
+| `TDetails` (Type parameter) | `extends Readonly<Record<string, unknown>>` | —           | Structured detail type associated with the error code   |
+| `readonly cause?`           | `unknown`                                   | `undefined` | Original exception or value that caused this error      |
+| `readonly code`             | `TCode`                                     | —           | Classification code of the structured error             |
+| `readonly details`          | `TDetails`                                  | —           | Structured error details associated with the error code |
+| `readonly message`          | `string`                                    | —           | Error message for the caller                            |
+
+</ApiTable>
 
 </DocTab>
 
@@ -262,30 +358,21 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
 
 </DocTabs>
 
-#### Type parameters
-
-| Type parameter | Description                                           |
-| -------------- | ----------------------------------------------------- |
-| `TCode`        | String type of the error classification code          |
-| `TDetails`     | Structured detail type associated with the error code |
-
 ### RetikzFoundationErrorCodeValue
 
 <p>
   <ApiSourceLink
     label={'RetikzFoundationErrorCodeValue'}
     path={'packages/kernel/foundation/src/error.ts'}
-    startLine={58}
+    startLine={71}
   >
     Stable Foundation package error-code values
   </ApiSourceLink>
 </p>
 
-```ts
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type RetikzFoundationErrorCodeValue =
@@ -296,6 +383,18 @@ export type RetikzFoundationErrorCodeValue =
   | 'FOUNDATION_COLOR_ERROR';
 ```
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### ValueOf
 
 <p>
@@ -304,15 +403,29 @@ export type RetikzFoundationErrorCodeValue =
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member               | Type             | Default | Description                                   |
+| -------------------- | ---------------- | ------- | --------------------------------------------- |
+| `T` (Type parameter) | `extends object` | —       | Object type that provides the property values |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type ValueOf<T extends object> = T[keyof T];
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                                   |
-| -------------- | --------------------------------------------- |
-| `T`            | Object type that provides the property values |
+</DocTabs>
 
 ### WithOptionalProperties
 
@@ -322,16 +435,30 @@ export type ValueOf<T extends object> = T[keyof T];
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                  | Type              | Default | Description                               |
+| ----------------------- | ----------------- | ------- | ----------------------------------------- |
+| `T` (Type parameter)    | `—`               | —       | Object type whose properties are adjusted |
+| `TKey` (Type parameter) | `extends keyof T` | —       | Property keys made optional               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Partial<Pick<T, TKey>>;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                               |
-| -------------- | ----------------------------------------- |
-| `T`            | Object type whose properties are adjusted |
-| `TKey`         | Property keys made optional               |
+</DocTabs>
 
 ### WithRequiredProperties
 
@@ -341,21 +468,35 @@ export type WithOptionalProperties<T, TKey extends keyof T> = Omit<T, TKey> & Pa
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                  | Type              | Default | Description                               |
+| ----------------------- | ----------------- | ------- | ----------------------------------------- |
+| `T` (Type parameter)    | `—`               | —       | Object type whose properties are adjusted |
+| `TKey` (Type parameter) | `extends keyof T` | —       | Property keys made required               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<T, TKey>>;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                               |
-| -------------- | ----------------------------------------- |
-| `T`            | Object type whose properties are adjusted |
-| `TKey`         | Property keys made required               |
+</DocTabs>
 
 ### RetikzFoundationErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={44}>
+  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={57}>
     Stable Foundation package error codes
   </ApiSourceLink>
 </p>
@@ -398,26 +539,38 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 ### assertNonEmptyString
 
 <p>
-  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={6}>
+  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={12}>
     Rejects empty and all-whitespace strings
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name          | Type / signature           | Description                                                                         |
+| ---------- | ------------- | -------------------------- | ----------------------------------------------------------------------------------- |
+| Parameters | `value`       | `string`                   | String to validate                                                                  |
+|            | `label`       | `string`                   | Field name used in error messages                                                   |
+|            | `ownerError?` | `RetikzError \| undefined` | Domain error thrown unchanged on validation failure; defaults to a Foundation error |
+| Returns    | —             | `void`                     | —                                                                                   |
+| Throws     | —             | —                          | Throws ownerError or RetikzFoundationError on validation failure                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const assertNonEmptyString: (
-  value: string,
-  label: string,
-  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
-) => void;
+export declare const assertNonEmptyString: (value: string, label: string, ownerError?: RetikzError | undefined) => void;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter    | Type                                                                  | Description |
-| ------------ | --------------------------------------------------------------------- | ----------- |
-| `value`      | `string`                                                              | —           |
-| `label`      | `string`                                                              | —           |
-| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | —           |
+</DocTabs>
 
 ### assertPlainDataContainers
 
@@ -427,42 +580,69 @@ export declare const assertNonEmptyString: (
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const assertPlainDataContainers: (value: unknown, path: string) => void;
-```
+<DocTabs defaultValue="members">
 
-#### Parameters
+<DocTab value="members" label="Members">
 
-| Parameter | Type      | Description                                          |
-| --------- | --------- | ---------------------------------------------------- |
-| `value`   | `unknown` | External data tree to inspect                        |
-| `path`    | `string`  | Path used to locate the root value in error messages |
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature | Description                                                               |
+| ---------- | ------- | ---------------- | ------------------------------------------------------------------------- |
+| Parameters | `value` | `unknown`        | External data tree to inspect                                             |
+|            | `path?` | `string`         | Path used to locate the root value in error messages; defaults to 'value' |
+| Returns    | —       | `void`           | —                                                                         |
+
+</ApiTable>
 
 > **Notes:** The caller schema validates leaf values. This function only excludes prototype objects, accessors, symbols, exotic arrays, and cycles before reading properties.
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const assertPlainDataContainers: (value: unknown, path?: string) => void;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### assertPositiveNumber
 
 <p>
-  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={23}>
-    Rejects finite numbers that are not strictly greater than zero
+  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={35}>
+    Rejects non-finite numbers and numbers less than or equal to zero
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name          | Type / signature           | Description                                                                         |
+| ---------- | ------------- | -------------------------- | ----------------------------------------------------------------------------------- |
+| Parameters | `value`       | `number`                   | Number to validate                                                                  |
+|            | `label`       | `string`                   | Field name used in error messages                                                   |
+|            | `ownerError?` | `RetikzError \| undefined` | Domain error thrown unchanged on validation failure; defaults to a Foundation error |
+| Returns    | —             | `void`                     | —                                                                                   |
+| Throws     | —             | —                          | Throws ownerError or RetikzFoundationError on validation failure                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const assertPositiveNumber: (
-  value: number,
-  label: string,
-  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
-) => void;
+export declare const assertPositiveNumber: (value: number, label: string, ownerError?: RetikzError | undefined) => void;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter    | Type                                                                  | Description |
-| ------------ | --------------------------------------------------------------------- | ----------- |
-| `value`      | `number`                                                              | —           |
-| `label`      | `string`                                                              | —           |
-| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | —           |
+</DocTabs>
 
 ### cloneAndFreezeJson
 
@@ -472,84 +652,135 @@ export declare const assertPositiveNumber: (
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name    | Type / signature | Description                                                                           |
+| --------------- | ------- | ---------------- | ------------------------------------------------------------------------------------- |
+| Type parameters | `T`     | —                | Static type of the input value                                                        |
+| Parameters      | `value` | `T`              | JSON-safe data to copy                                                                |
+|                 | `path?` | `string`         | Path used to locate the current value in error messages; defaults to 'value'          |
+| Returns         | —       | `T`              | Deeply frozen copy with the same structure as the input but no shared mutable objects |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const cloneAndFreezeJson: <T>(value: T, path: string) => T;
+export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                    |
-| -------------- | ------------------------------ |
-| `T`            | Static type of the input value |
-
-#### Parameters
-
-| Parameter | Type     | Description                                             |
-| --------- | -------- | ------------------------------------------------------- |
-| `value`   | `T`      | JSON-safe data to copy                                  |
-| `path`    | `string` | Path used to locate the current value in error messages |
-
-#### Returns
-
-Deeply frozen copy with the same structure as the input but no shared mutable objects
+</DocTabs>
 
 ### compositeOpaqueColor
 
 <p>
-  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={357}>
+  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={367}>
     Pre-composites a static CSS foreground color onto an opaque static backdrop by weight
   </ApiSourceLink>
 </p>
 
 Multiplies the foreground alpha by weight, then uses source-over sRGB compositing to produce a deterministic opaque color.
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name         | Type / signature | Description                                                                                            |
+| ---------- | ------------ | ---------------- | ------------------------------------------------------------------------------------------------------ |
+| Parameters | `foreground` | `string`         | Static CSS foreground color, optionally with alpha                                                     |
+|            | `backdrop`   | `string`         | Static CSS backdrop that must be fully opaque                                                          |
+|            | `weight`     | `number`         | Finite compositing weight in the inclusive range 0..1                                                  |
+| Returns    | —            | `#${string}`     | Opaque color in six-digit lowercase hexadecimal notation                                               |
+| Throws     | —            | —                | Throws RetikzFoundationError for unsupported colors, a translucent backdrop, or an out-of-range weight |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => templateLiteral;
+export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => `#${string}`;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter    | Type     | Description |
-| ------------ | -------- | ----------- |
-| `foreground` | `string` | —           |
-| `backdrop`   | `string` | —           |
-| `weight`     | `number` | —           |
+</DocTabs>
 
 ### createOpenStringSchema
 
 <p>
-  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={28}>
+  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={30}>
     Creates an open non-blank string schema with suggestions from a known const-object enum
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name      | Type / signature                                                      | Description                                                    |
+| --------------- | --------- | --------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Type parameters | `TValues` | `extends Readonly<Record<string, string>>`                            | Const-object enum type of known string values                  |
+| Parameters      | `values`  | `TValues`                                                             | Enum object providing known string values                      |
+| Returns         | —         | `ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>` | Schema accepting known enum values or custom non-blank strings |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const createOpenStringSchema: <TValues extends Readonly<Record<string, string>>>(
+export declare const createOpenStringSchema: <const TValues extends Readonly<Record<string, string>>>(
   values: TValues,
 ) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                                   |
-| -------------- | --------------------------------------------- |
-| `TValues`      | Const-object enum type of known string values |
-
-#### Parameters
-
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `values`  | `TValues` | —           |
+</DocTabs>
 
 ### createReadonlyMap
 
 <p>
-  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={7}>
+  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={9}>
     Creates a shallow Map snapshot that exposes no mutating methods
   </ApiSourceLink>
 </p>
 
 Copies input entries into independent storage while preserving native Map iteration and lookup semantics; the `forEach` owner argument is the readonly snapshot itself.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name      | Type / signature                    | Description                                                                                                  |
+| --------------- | --------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Type parameters | `TKey`    | —                                   | Map key type                                                                                                 |
+|                 | `TValue`  | —                                   | Map value type                                                                                               |
+| Parameters      | `entries` | `Iterable<readonly [TKey, TValue]>` | Key-value entries used to create the snapshot                                                                |
+| Returns         | —         | `ReadonlyMap<TKey, TValue>`         | Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const createReadonlyMap: <TKey, TValue>(
@@ -557,36 +788,42 @@ export declare const createReadonlyMap: <TKey, TValue>(
 ) => ReadonlyMap<TKey, TValue>;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description    |
-| -------------- | -------------- |
-| `TKey`         | Map key type   |
-| `TValue`       | Map value type |
-
-#### Parameters
-
-| Parameter | Type                                | Description |
-| --------- | ----------------------------------- | ----------- |
-| `entries` | `Iterable<readonly [TKey, TValue]>` | —           |
+</DocTabs>
 
 ### isRetikzError
 
 <p>
-  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={88}>
+  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={105}>
     Determines whether a dynamic value inherits from a Retikz structured domain error
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature       | Description                                                             |
+| ---------- | ------- | ---------------------- | ----------------------------------------------------------------------- |
+| Parameters | `value` | `unknown`              | Dynamic value to inspect                                                |
+| Returns    | —       | `value is RetikzError` | Whether the value is a RetikzError instance; narrows the type when true |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
-export declare const isRetikzError: (value: unknown) => predicate;
+export declare const isRetikzError: (value: unknown) => value is RetikzError;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `value`   | `unknown` | —           |
+</DocTabs>
 
 ### mergeProperties
 
@@ -598,48 +835,68 @@ export declare const isRetikzError: (value: unknown) => predicate;
 
 Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name       | Type / signature                          | Description                                                                                                                   |
+| --------------- | ---------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `T`        | `extends object`                          | Object type being shallowly merged                                                                                            |
+| Parameters      | `sources`  | `ReadonlyArray<Readonly<T> \| undefined>` | Source objects ordered from lowest to highest priority                                                                        |
+|                 | `options?` | `MergePropertiesOptions<NoInfer<T>>`      | Property write strategy; defaults to &#123;&#125;, retaining all source properties                                            |
+| Returns         | —          | `Partial<T>`                              | A new, potentially filtered object, hence the `Partial<T>` return type                                                        |
+| Throws          | —          | —                                         | Throws RetikzFoundationError when reading a property or invoking the policy fails, preserving the original exception as cause |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const mergeProperties: <T extends object>(
-  sources: readonly Array<Readonly<T> | undefined>,
-  options: MergePropertiesOptions<NoInfer<T>>,
+  sources: ReadonlyArray<Readonly<T> | undefined>,
+  options?: MergePropertiesOptions<NoInfer<T>>,
 ) => Partial<T>;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                        |
-| -------------- | ---------------------------------- |
-| `T`            | Object type being shallowly merged |
-
-#### Parameters
-
-| Parameter | Type                                       | Description                                            |
-| --------- | ------------------------------------------ | ------------------------------------------------------ |
-| `sources` | `readonly Array<Readonly<T> \| undefined>` | Source objects ordered from lowest to highest priority |
-| `options` | `MergePropertiesOptions<NoInfer<T>>`       | Property write policy                                  |
-
-#### Returns
-
-A new, potentially filtered object, hence the `Partial<T>` return type
-
-#### Throws
-
-- Throws RetikzFoundationError when reading a property or invoking the policy fails, preserving the original exception as cause
+</DocTabs>
 
 ### parseStaticCssColor
 
 <p>
-  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={313}>
+  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={318}>
     Parses the static CSS color subset that can be resolved without a host environment
   </ApiSourceLink>
 </p>
+
+Supports named colors, transparent, hexadecimal notation, comma-separated rgb/rgba/hsl/hsla, and space-separated rgb/hsl; does not resolve environment-dependent expressions such as currentColor or var
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name    | Type / signature         | Description                                                                        |
+| ---------- | ------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| Parameters | `input` | `string`                 | Static CSS color string                                                            |
+| Returns    | —       | `ParsedCssColor \| null` | Normalized sRGB channels and alpha; returns null for invalid or unsupported colors |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const parseStaticCssColor: (input: string) => ParsedCssColor | null;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type     | Description |
-| --------- | -------- | ----------- |
-| `input`   | `string` | —           |
+</DocTabs>

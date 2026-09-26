@@ -4,6 +4,30 @@
  * 代码标识符、签名、枚举值与示例保持源码原样；仅翻译读者可见的说明文本
  */
 const translations: Readonly<Record<string, string>> = {
+  引擎初始化或执行失败: 'Engine initialization or execution failed',
+  '失败的 TeX 源文本；引擎初始化失败时为空字符串':
+    'Failing TeX source text; an empty string for engine initialization failures',
+  可供记录或展示的失败原因: 'Failure reason suitable for logging or display',
+  'MathJax 返回公式解析错误': 'MathJax reported a formula parsing error',
+  '引擎输出包含不支持的 SVG 结构': 'Engine output contains unsupported SVG structures',
+  '引擎输出的 SVG 结构无效': 'The engine emitted malformed SVG',
+  当前配置的引擎尚未完成初始化: 'The engine for the current configuration is still initializing',
+  '当前配置的 lowerer 已可用': 'The lowerer for the current configuration is ready',
+  '可传给 Layout 的同步公式转换函数；后续公式转换失败通过 onDiagnostic 报告':
+    'Synchronous formula converter for Layout; subsequent formula conversion failures are reported through onDiagnostic',
+  当前配置的引擎初始化失败: 'Engine initialization for the current configuration failed',
+  '初始化失败的诊断，source 为空字符串': 'Initialization failure diagnostic with an empty source string',
+  'Promise 在引擎初始化完成后兑现为同步 TeX → SVG 引擎':
+    'The Promise resolves to a synchronous TeX-to-SVG engine after initialization',
+  'Promise 在引擎初始化完成后兑现为可注入 Core 的同步 LowerTex':
+    'The Promise resolves to a synchronous LowerTex for Core after engine initialization',
+  '同步 LowerTex；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知':
+    'A synchronous LowerTex; conversion failures return null and notify onDiagnostic, including cached failures',
+  '引擎加载或初始化失败时 Promise 拒绝；模块加载失败保留原始 cause':
+    'The Promise rejects if engine loading or initialization fails; module-loading failures retain the original cause',
+  '引擎初始化失败时先通知 onDiagnostic，再拒绝 Promise；此时诊断 source 为空字符串':
+    'Engine initialization failure notifies onDiagnostic before rejecting the Promise; the diagnostic source is empty',
+
   'TeX lowerer 配置': 'TeX lowerer configuration',
   '控制由 `createLowerTex` 创建的 lowerer 如何向外报告失败。它不改变 TeX 解析或缓存语义，成功结果仍直接返回给 Core 的文本编译流程':
     'Controls how a lowerer created by `createLowerTex` reports failures. It does not alter TeX parsing or cache semantics; successful results still flow directly into Core text compilation.',

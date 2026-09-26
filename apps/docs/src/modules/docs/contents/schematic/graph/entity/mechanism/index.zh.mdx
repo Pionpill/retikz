@@ -1,0 +1,73 @@
+---
+title: 实现原理
+description: 追踪 Entity 如何解析语义、合并外观，并把角色结构应用到最终节点。
+---
+
+Entity 的语义决定“如何解释对象”，而不是增加一套独立渲染器。相同的内置或自定义 role 都经过语义解析、外观合并，再转换成可绘制的 Node。本页解释为什么未注册 key 会报错，以及为什么显式样式会覆盖默认值。
+
+## Entity 分阶段转换为 Node
+
+下面只画 Entity 自身的处理顺序。输入是 Source 中的语义 key 与实例字段；Definition 和当前 Graph/主题上下文由每个阶段按需读取，不写回持久化数据。
+
+<ComponentPreview files="entity-flow" type="flow" hideCode size="xs" />
+
+例如自定义页的网关始终保留 `role: 'service'`、`kind: 'service.gateway'` 和同一位置。解析阶段增加对已注册 Definition 的引用与已校验参数；外观阶段算出颜色与描边；lowering 最后移除领域 key，写入 role 的形状。
+
+| 观察位置                  | 同一网关的关键结果                                                                                                    |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Source                    | `params: { status: 'degraded', critical: true }`                                                                      |
+| `resolveEntity`           | 解析后的同值参数，以及 service / service.gateway / service.availability 定义引用                                      |
+| `resolveEntityAppearance` | `style: { …, color: '#d97706', strokeWidth: 3 }`                                                                      |
+| `lowerEntity`             | `type: 'node', shape: 'rectangle', layout: { …, padding: { x: 14, y: 10 }, minimumSize: { width: 110, height: 46 } }` |
+
+表格只摘录发生变化的字段，不是完整中间对象，也不是供用户编写的另一种 IR。
+
+## 语义解析依赖已注册定义
+
+内置 role 和自定义 role 一起按 `role` 存入注册表；kind 只来自自定义定义，按 `role → kind` 两级存放。下面以内置 `activity` 和自定义 `service/service.gateway` 为例：外层对象分别持有 `entityRoles` 与 `entityKinds` 两张 Map，而不是把它们合成一张。箭头指向所查的注册表，表中同色条目是命中的 key 与 Definition 引用；`{…}` 是定义对象的字段摘录，不是字符串值。
+
+<ComponentPreview files="entity-definition-lookup" type="illustration" hideCode size="xl" />
+
+1. **查找定义。** `resolveEntity` 按 role 查找角色定义；提供 kind 时，再按 `(role, kind)` 查找子类型。图中 A 只得到内置 `activity` 定义，B 同时得到自定义 `service` 和 `service.gateway` 定义。
+2. **解析可选语义。** 提供 predicate 时，按 name 查找并检查它是否允许当前 role、kind，再用 `paramsSchema.parse` 解析参数；未传 params 时以空对象进入 schema。Source 和查到的定义一起保存在 `CanonicalEntity` 中。
+3. **生成并绘制。** 外观规则可按 role、kind 匹配；`lowerEntity` 从 role 定义取形状、圆角和 padding，生成 Core `IRNode`。Core 将 Node 编译成 Scene，再由 SVG 或 Canvas 后端绘制。
+
+内置与自定义 Entity 走同一条路径：kind 定义不决定节点结构，Definition 也不直接渲染。EntitySchema 只校验 Source 的记录形状；未注册 key 或不适用的 predicate 在解析阶段抛出 `RetikzGraphError`，参数解析失败时保留原异常为 cause。
+
+<SourceLinks
+  sources={[
+    { label: '语义解析与参数校验', path: 'packages/schematic/graph/src/resolve/entity/resolve.ts' },
+    { label: '内置角色定义', path: 'packages/schematic/graph/src/providers/entity/definitions.ts' },
+    { label: '角色与子类型注册表', path: 'packages/schematic/graph/src/providers/entity/registry.ts' },
+    { label: 'Definition 到 Core Node', path: 'packages/schematic/graph/src/pipeline/entity/definition.ts' },
+    { label: 'Node 到 Scene', path: 'packages/kernel/core/src/compile/compile.ts' },
+    { label: 'SVG 与 Canvas 后端', path: 'packages/kernel/render/src/runtime/builtin.ts' },
+  ]}
+/>
+
+## 外观按层逐字段合并
+
+Graph 作者配置按层处理：每层先合并 `graphDefaults.entity`，再按声明顺序应用匹配的 entity 规则；随后合并实例显式 style/layout。当前主题也先提供默认值、再按顺序应用规则，最终由已经投影的 Source 外观覆盖。覆盖是逐字段合并，不是整块替换。
+
+匹配主体包含 role、可选 kind、顶层 status 和已解析 predicate 参数。多个规则可以同时匹配；后面的规则仅覆盖自己提供的字段。自定义示例中，critical 规则只设置 strokeWidth，所以不会抹掉先前 status 参数规则算出的 color。
+
+下图沿用自定义页的 degraded 且 critical 的网关。该实例没有显式 style；图中只摘录 `color` 和 `strokeWidth`。第一行是作者 Graph 规则投影到 Source，第二行是主题默认值与这个投影结果合并；未命中的规则和其他外观字段没有画出。
+
+<ComponentPreview files="entity-appearance-merge" type="illustration" hideCode size="lg" />
+
+因此，critical 规则补上 `strokeWidth: 3` 时仍保留此前的 `color: '#d97706'`；投影 Source 再以这两个字段覆盖主题默认值，得到最终外观。
+
+排查颜色时，先检查 Entity 显式 style，再检查作者 Graph 层和匹配规则，最后检查主题默认。`group` 分类色也不是强制覆盖色，不能用它判断最终颜色。
+
+<SourceLinks
+  sources={[{ label: '作者层投影与主题外观合并', path: 'packages/schematic/graph/src/resolve/entity/resolve.ts' }]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义用法', description: '回到可运行的定义与注册示例', url: '/schematic/graph/entity/custom' },
+    { title: 'API 参考', description: '查询公开入口而非内部函数', url: '/schematic/graph/entity/api-reference' },
+  ]}
+/>

@@ -2,7 +2,13 @@ import type { RetikzError } from './error';
 import { RetikzFoundationError, RetikzFoundationErrorCode } from './error';
 import { NonBlankStringSchema, PositiveNumberSchema } from './schema';
 
-/** 拒绝空串和全空白字符串 */
+/**
+ * 拒绝空串和全空白字符串
+ * @param value 待检查的字符串
+ * @param label 错误消息中的字段名称
+ * @param ownerError 校验失败时原样抛出的领域错误；默认使用 Foundation 错误
+ * @throws 校验失败时抛出 ownerError 或 RetikzFoundationError
+ */
 export const assertNonEmptyString = (
   value: string,
   label: string,
@@ -19,7 +25,13 @@ export const assertNonEmptyString = (
   }
 };
 
-/** 拒绝不是严格大于零的有限数值 */
+/**
+ * 拒绝非有限数值以及小于等于零的数值
+ * @param value 待检查的数值
+ * @param label 错误消息中的字段名称
+ * @param ownerError 校验失败时原样抛出的领域错误；默认使用 Foundation 错误
+ * @throws 校验失败时抛出 ownerError 或 RetikzFoundationError
+ */
 export const assertPositiveNumber = (
   value: number,
   label: string,

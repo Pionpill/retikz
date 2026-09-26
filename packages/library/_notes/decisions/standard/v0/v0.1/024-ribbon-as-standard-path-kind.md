@@ -7,6 +7,7 @@ keywords: 'Ribbon、Standard、Path、Kind、ribbon、kindOptions、bulge、Ribb
 
 - 状态：Accepted
 - 决策日期：2026-08-13
+- 后继决策：[ADR-032](./032-extension-package-boundary.md) 将本文 Ribbon 的 Standard 归属与子入口替代为 `@retikz/extension` 根入口；[Kernel ADR-043](../../../../../../kernel/_notes/decisions/v0/v0.5/043-layout-extensions.md) 将 React 的 `pathKinds` 接入迁至 `Layout.extensions.pathKinds`。其余 Ribbon 契约不变
 - 依赖：[ADR-023](./023-core-minimal-builtins-and-standard-provider-entrypoints.md)
 - 关联：[Standard v0.1 roadmap](./roadmap.md) · [alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../architecture/standard-library-design.md) · [Core Path Kind ADR](../../../../../../kernel/_notes/decisions/v0/v0.4/021-path-kind-registry.md) · [Core Path Generator / Ribbon Profile ADR](../../../../../../kernel/_notes/decisions/v0/v0.4/033-builtin-path-generator-ribbon-profile.md)
 

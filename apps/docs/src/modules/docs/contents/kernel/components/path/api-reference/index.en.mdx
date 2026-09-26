@@ -5,6 +5,8 @@ description: Component props, authoring input, and extension contracts for drawi
 
 This focused view is generated from the public entries of `@retikz/react`, `@retikz/vanilla`, and `@retikz/core`. Start with [Basic usage](/kernel/components/path/usage); persistent fields are in the [Schema reference](/kernel/components/path/schema-reference).
 
-[Custom paths](/kernel/components/path/custom-path#related-props) summarizes the `definePathKind` extension entry point. The generator retains the source name of this callable type; that does not imply a single call form.
+[Custom paths](/kernel/components/path/custom-path#related-props) explains how to use `definePathKind`; this page lists its two call overloads.
+
+The default column reads field JSDoc or Schema `.default()`. Fields inherited from Schema only show explicitly declared defaults; see their descriptions for compilation fallbacks and inheritance.
 
 {/* @include kernel/components/path/api-reference/generated */}

@@ -13,7 +13,10 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
   message: string;
   /** 与错误代码关联的结构化错误详情 */
   details: TDetails;
-  /** 导致当前错误的原始异常或值 */
+  /**
+   * 导致当前错误的原始异常或值
+   * @default undefined
+   */
   cause?: unknown;
 }>;
 
@@ -27,10 +30,20 @@ export class RetikzError<
   TCode extends string = string,
   TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
 > extends Error {
+  /** 结构化错误的分类代码 */
   readonly code: TCode;
+  /** 与错误代码关联的结构化错误详情 */
   readonly details: TDetails;
+  /**
+   * 导致当前错误的原始异常或值
+   * @default undefined
+   */
   readonly cause?: unknown;
 
+  /**
+   * 使用结构化参数创建领域错误，保留原始 cause
+   * @param options 错误代码、消息、详情与可选的原始原因
+   */
   constructor(options: RetikzErrorOptions<TCode, TDetails>) {
     super(options.message, { cause: options.cause });
     this.name = new.target.name;
@@ -84,5 +97,9 @@ export class RetikzFoundationError<
   }
 }
 
-/** 判断动态值是否继承自 Retikz 结构化领域错误 */
+/**
+ * 判断动态值是否继承自 Retikz 结构化领域错误
+ * @param value 待判断的动态值
+ * @returns 是否为 RetikzError 实例；返回 true 时收窄类型
+ */
 export const isRetikzError = (value: unknown): value is RetikzError => value instanceof RetikzError;

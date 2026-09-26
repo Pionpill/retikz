@@ -68,7 +68,7 @@ describe('Performance Lab execution lifecycle', () => {
       container.querySelector<HTMLButtonElement>('button')?.click();
       await Promise.resolve();
       await Promise.resolve();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await vi.dynamicImportSettled();
     });
     expect(runKernelLabMock).toHaveBeenCalledTimes(1);
     expect(container.querySelector('output')?.textContent).toBe('running');
@@ -142,7 +142,7 @@ describe('Performance Lab execution lifecycle', () => {
       continueFrame?.(0);
       await Promise.resolve();
       await Promise.resolve();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await vi.dynamicImportSettled();
     });
 
     expect(runKernelLabMock).not.toHaveBeenCalled();
@@ -189,7 +189,7 @@ describe('Performance Lab execution lifecycle', () => {
       container.querySelector<HTMLButtonElement>('button')?.click();
       await Promise.resolve();
       await Promise.resolve();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await vi.dynamicImportSettled();
     });
 
     expect(runKernelLabMock).toHaveBeenCalledWith(

@@ -199,7 +199,7 @@ const PlotComponent: FC<PlotProps> = props => {
   }, [lineage, lineageKey, onLineage]);
 
   return (
-    <Layout className={className} style={style} renderer={renderer} extensions={{ themeStyles: themeStyles }}>
+    <Layout className={className} style={style} renderer={renderer} extensions={{ themeStyles }}>
       <PlotComponent {...contentProps} />
     </Layout>
   );

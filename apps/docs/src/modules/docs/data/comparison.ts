@@ -4,20 +4,26 @@ import type { ValueOf } from '@retikz/foundation';
 export const ComparisonTarget = {
   /** TikZ / PGF 绘图语法。 */
   TikZ: 'tikz',
+  /** Vega 可视化语法。 */
+  Vega: 'vega',
 } as const;
 
 /** 可选对照对象。 */
 export type ComparisonTargetValue = ValueOf<typeof ComparisonTarget>;
 
 /** 对照对象展示顺序。 */
-export const ComparisonTargetList = [ComparisonTarget.TikZ] as const satisfies ReadonlyArray<ComparisonTargetValue>;
+export const ComparisonTargetList = [
+  ComparisonTarget.TikZ,
+  ComparisonTarget.Vega,
+] as const satisfies ReadonlyArray<ComparisonTargetValue>;
 
 /** 对照对象 i18n key。 */
-export type ComparisonTargetLabelKey = 'comparison.tikz';
+export type ComparisonTargetLabelKey = 'comparison.tikz' | 'comparison.vega';
 
 /** 对照对象到 i18n key 的映射。 */
 export const ComparisonTargetLabelKeys: Record<ComparisonTargetValue, ComparisonTargetLabelKey> = {
   tikz: 'comparison.tikz',
+  vega: 'comparison.vega',
 };
 
 /** 判断未知值是否是受支持的对照对象。 */

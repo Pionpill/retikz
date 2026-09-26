@@ -4,10 +4,12 @@ import { createRoot } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as HighlightCodeModule from '../../src/modules/docs/components/highlight-code';
 import { SourcePanel } from '../../src/modules/docs/source-viewer';
 import { useRightPanelStore } from '../../src/modules/docs/store';
 
-vi.mock('../../src/modules/docs/components/highlight-code', () => ({
+vi.mock('../../src/modules/docs/components/highlight-code', async importOriginal => ({
+  ...(await importOriginal<typeof HighlightCodeModule>()),
   HighlightCode: ({
     code,
     lineNumberStart,

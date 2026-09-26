@@ -39,6 +39,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '随 Kernel 发布组同步版本；通用基础契约保持不变。',
+            en: 'Version alignment with the Kernel release group; shared foundation contracts are unchanged.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.4',
           date: '2026-09-14',
           summary: {
@@ -132,6 +141,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '随 Kernel 发布组同步版本；计算 API 不变。',
+            en: 'Version alignment with the Kernel release group; computation APIs are unchanged.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.4',
           date: '2026-09-14',
@@ -239,6 +257,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '随 Kernel 发布组同步版本；本次不调整 runtime identity 或 diff 契约。',
+            en: 'Version alignment with the Kernel release group; runtime identity and diff contracts are unchanged in this release.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.4',
           date: '2026-09-14',
           summary: {
@@ -291,7 +318,7 @@ export const kernelV05: Release = {
           },
         },
         {
-          label: { zh: '未发布 · 动画预设分层', en: 'Unreleased · Animation preset ownership' },
+          label: { zh: '动画预设分层', en: 'Animation preset ownership' },
           content: {
             zh: 'grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项迁至 @retikz/extension 根入口。Core 保留基础预设与通用轨道工具；效果默认值、已保存轨道 JSON 和播放机制不变，旧 Core 导入不再保留。Kernel 与 Extension 双语文档和 API 参考同步按归属拆分。',
             en: 'grow, growUp, pulse, spin, flash, blink, wiggle and their options move to the @retikz/extension root. Core retains basic presets and track utilities. Defaults, saved track JSON and playback are unchanged; old Core imports are removed. Bilingual Kernel and Extension guides and API references follow their owners.',
@@ -348,6 +375,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '新增 Scope.frame 外框与 Scene hitTest: false；spec 已是完整 ClipShape 时，defineClip 可只传 kind、schema、lower。BREAKING：grow、growUp、pulse、spin、flash、blink、wiggle 及专属选项改从 @retikz/extension 导入；基础预设、轨道 JSON 与播放机制不变。',
+            en: 'Adds Scope.frame and Scene hitTest: false. When a spec is already a complete ClipShape, defineClip accepts only kind, schema, and lower. BREAKING: import grow, growUp, pulse, spin, flash, blink, wiggle and their options from @retikz/extension. Basic presets, saved track JSON, and playback are unchanged.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.4',
           date: '2026-09-14',
@@ -564,6 +600,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '同步 Kernel 与 Vanilla 对象式作者 API；检查能力保持不变。',
+            en: 'Aligns with Kernel and object-based Vanilla authoring; inspection capabilities are unchanged.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.4',
           date: '2026-09-14',
           summary: {
@@ -661,6 +706,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: 'SVG 与 Canvas 支持 Scene 的 hitTest: false，排除装饰图元或整个子树的指针命中，保留绘制和 retained 更新。',
+            en: 'SVG and Canvas honor Scene hitTest: false, excluding decorative primitives or entire subtrees from pointer hits while preserving rendering and retained updates.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.4',
           date: '2026-09-14',
           summary: {
@@ -746,6 +800,15 @@ export const kernelV05: Release = {
       ],
       subVersions: [
         {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '支持 Scope.frame。BREAKING：九类 Layout 扩展配置移入 extensions；Circle、Ellipse、Rectangle、RegularPolygon、Star、Arc、Sector 不再从 Kernel React 导出，需改用提供这些组件的兼容版本 @retikz/standard-react/shape。',
+            en: 'Supports Scope.frame. BREAKING: move the nine Layout extension options into extensions. Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, and Sector are no longer exported by Kernel React; migrate to a compatible version providing @retikz/standard-react/shape.',
+          },
+          items: [],
+        },
+        {
           version: 'alpha.4',
           date: '2026-09-14',
           summary: {
@@ -830,6 +893,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: 'BREAKING：node、path、coordinate、layer、embed 移除独立字符串首参，使用包含 id 的配置对象；layer 的 children 也进入配置。InputEmbed 可匿名，匿名身份不生成公开 Source id；此次不重新定义 runtime diff 或重排稳定性。',
+            en: 'BREAKING: node, path, coordinate, layer, and embed replace separate leading string IDs with configuration objects containing id; layer children also move into the configuration. InputEmbed can be anonymous without generating public Source IDs. This release does not redefine runtime diff or reorder stability.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.4',
           date: '2026-09-14',
@@ -922,6 +994,15 @@ export const kernelV05: Release = {
         },
       ],
       subVersions: [
+        {
+          version: 'alpha.5',
+          date: '2026-09-22',
+          summary: {
+            zh: '随 Kernel 发布组同步版本；公式能力保持不变。',
+            en: 'Version alignment with the Kernel release group; formula capabilities are unchanged.',
+          },
+          items: [],
+        },
         {
           version: 'alpha.4',
           date: '2026-09-14',

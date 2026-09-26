@@ -363,8 +363,8 @@ describe('Flow Diagram ComponentPreview', () => {
       const flow = FlowDiagramSchema.parse(preview.sourceIr.children[0]);
 
       expect(flow.flowDefaults).toEqual({
-        entity: { style: { color: '#334155', fillOpacity: 1, strokeWidth: 1 } },
-        relation: { style: { stroke: '#64748b', strokeWidth: 1, strokeOpacity: 0.9 } },
+        entity: { style: { color: '#334155', fillOpacity: 1, strokeWidth: 1, font: { size: 14 } } },
+        relation: { style: { stroke: '#64748b', strokeWidth: 1, strokeOpacity: 0.9 }, labelFont: { size: 12 } },
       });
       expect(flow.entities).toHaveLength(3);
       expect(flow.relations).toEqual([
