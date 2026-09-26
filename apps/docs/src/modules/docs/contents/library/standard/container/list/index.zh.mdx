@@ -126,6 +126,15 @@ console.log(svg);
 
 在 React 中可用 `ListItem` 子组件作为声明式简写，适合与页面 JSX 一起编写的内容。用 `text` 表达文字，也可以嵌入一个图形组件；无需把子组件组织成 `items` 数组。
 
+```text
+List
+├── ListItem
+└── ListItem
+    └── Map
+```
+
+`ListItem` 必须直属于 `List`；文字由 `text` 提供，嵌套图形作为它的子组件。下例先使用两个文字单元格，图形组合见扩展用法。
+
 ```tsx
 import { List, ListItem } from '@retikz/standard-react/container';
 
