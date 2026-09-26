@@ -1,41 +1,73 @@
 ---
 title: Standard
-description: Compose grids, axes, surfaces, legends, and geometric figures with standard components.
+description: Compose geometric outlines, structured content, reference lines, and visual explanations
 ---
 
-Standard provides components for common drawing tasks. Add a reference grid, wrap content in a surface, and explain symbols with a legend. Each component describes a complete task through its own parameters.
+Standard provides generic drawing components. Shapes turn geometric parameters into outlines, containers organize sequential and keyed content, and presentation components add references, group boundaries, and legends. Combine them with Kernel Nodes, Paths, and Scopes in the same drawing.
 
 ## Responsibilities at a glance
 
-| Entry                          | Purpose                                                 |
-| ------------------------------ | ------------------------------------------------------- |
-| Each package's `/presentation` | Grids, axes, frames, surfaces, and legends              |
-| Each package's `/container`    | Lists, maps, and future structured-content containers   |
-| Each package's `/shape`        | Circles, rectangles, polygons, stars, arcs, and sectors |
+| Family       | Responsibility                                                    | When to read                                                 |
+| ------------ | ----------------------------------------------------------------- | ------------------------------------------------------------ |
+| Shapes       | Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, and Sector | Draw an independent outline from its center, size, or angles |
+| Containers   | List and Map cells, indices, and nested content                   | Express sequential or keyed relationships                    |
+| Presentation | Grid, Axes, Frame, Surface, and Legend                            | Add references, appearance, and meaning to existing drawings |
+
+## Combine components in one drawing
+
+This example places Grid and Axes in the same Layout. The grid supplies equally spaced references, while the axes indicate direction. Each keeps its own parameters, so changing grid spacing does not require rewriting the axes.
+
+<ComponentPreview files="/library/standard/presentation/presentation-composition" />
+
+Both use ordinary drawing coordinates for placement and do not change the coordinate system of other primitives. Add Surface when content needs a background or Legend when symbols need an explanation. Each component owns its own drawing task.
 
 ## Installation and usage
 
-Install the authoring entry and host for React:
+For React, install the component entry and its host:
 
 <PackageManagerInstall packages="@retikz/standard-react @retikz/react react react-dom" />
 
-Without React, install `@retikz/standard-vanilla` and `@retikz/vanilla`, then use the subpath for the selected component family. The [quick start](/library/standard/get-start) shows complete steps for drawing the same grid through both entries.
+Without React, install the Vanilla entry and its host:
 
-For arranging multiple items, see [Layout](/library/layout). For optional node shapes, arrows, clips, or ribbons, see [Extension](/library/extension).
+<PackageManagerInstall packages="@retikz/standard-vanilla @retikz/vanilla" />
+
+Import components from the corresponding package's `/shape`, `/container`, or `/presentation` subpath. To work directly with JSON contracts or Definitions, explicitly install `@retikz/standard` and use the same family subpaths. The [quick start](/library/standard/get-start) covers installation, mounting, and SVG output. Each component page also compares React + JSX, React + IR, Vanilla API, and Vanilla + IR.
+
+## Choosing the right capability
+
+Start with the quick start for initial setup. If you already know the desired drawing, choose a component family below. Component pages begin with runnable integration, then cover usage, limitations, implementation, and references. Looking up a parameter does not require reading internals first.
+
+Standard does not own data domains or business meaning. Use [Plot](/viz/plot) for data visualization, [Layout](/library/layout) for general arrangement, or [Extension](/library/extension) for optional node shapes, arrows, and clip definitions.
 
 ## Contents
 
 <LinkedSections
   items={[
-    { title: 'Introduction', description: 'Introduction', url: '/library/standard/introduction' },
-    { title: 'Quick start', description: 'Quick start', url: '/library/standard/get-start' },
-    { title: 'Changelog', description: 'Changelog', url: '/library/standard/changelog' },
     {
-      title: 'Presentation',
-      description: 'References, axes, group appearance, and legends',
-      url: '/library/standard/presentation',
+      title: 'Introduction',
+      description: 'Decide whether Standard fits your drawing task',
+      url: '/library/standard/introduction',
+    },
+    {
+      title: 'Quick start',
+      description: 'Install and draw the first visible grid',
+      url: '/library/standard/get-start',
+    },
+    {
+      title: 'Changelog',
+      description: 'Check version changes and delivered capabilities',
+      url: '/library/standard/changelog',
+    },
+    {
+      title: 'Shapes',
+      description: 'Draw independent outlines from geometric parameters',
+      url: '/library/standard/shape',
     },
     { title: 'Containers', description: 'Organize sequential or keyed content', url: '/library/standard/container' },
-    { title: 'Shapes', description: 'Compose outlines from geometric parameters', url: '/library/standard/shape' },
+    {
+      title: 'Presentation',
+      description: 'Add axes, group appearance, and legends',
+      url: '/library/standard/presentation',
+    },
   ]}
 />
