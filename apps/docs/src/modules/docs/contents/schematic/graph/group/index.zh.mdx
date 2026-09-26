@@ -1,33 +1,174 @@
 ---
 title: Group · 分组
-description: 用可嵌套的可见边界组织任意内容，并组合上下标题说明与核心边界标签。
+description: 保留内容布局，以外框、内部说明和外围标签表达包含关系。
 ---
 
-`Group` 表达“这些内容属于同一个可见分组”。它接受任意 Core 或 Tier 2 child，外框复用 Standard Surface，caption 使用 Layout 排列，外围文本直接使用 Core Node label。Group 不计算 child 位置；流程图或逻辑图中的节点仍由作者、显式 Layout 或未来 Diagram 决定位置
+Group 用可见边界表达“这些内容属于同一组”。它保留 children 的相对布局；需要主动纵向排列内容时使用 [Block](/schematic/graph/block)。本文保持单页，可从用法直接回查 API 与 Schema。安装与宿主初始化见[快速开始](/schematic/graph/get-start)。
 
-## 基础用法
+## 接入方式
+
+四种写法绘制同一个分组。Vanilla 需要已有 `<div id="diagram"></div>`，卸载时调用 `view.dispose()`。
+
+<ComponentPreview files="group-minimal" size="xs" hideCode />
+
+```text
+Graph
+└── Group
+    ├── Entity
+    ├── Entity
+    └── Relation
+```
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
 ```tsx
 import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
+import type { FC } from 'react';
+const Example: FC = () => (
+  <Graph>
+    <Group id="runtime">
+      <Entity id="compiler" role="activity" position={[80, 60]}>
+        编译
+      </Entity>
+      <Entity id="renderer" role="participant" position={[240, 60]}>
+        渲染器
+      </Entity>
+      <Relation role="flow" source="compiler" target="renderer" />
+    </Group>
+  </Graph>
+);
+export default Example;
 ```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
 
 ```tsx
-<Graph>
-  <Group id="runtime">
-    <Entity id="compiler" role="activity" position={[110, 100]}>
-      编译
-    </Entity>
-    <Entity id="renderer" role="participant" position={[250, 100]}>
-      渲染器
-    </Entity>
-    <Relation role="flow" source={{ id: 'compiler' }} target={{ id: 'renderer' }} />
-  </Group>
-</Graph>
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'group',
+      id: 'runtime',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'compiler',
+          role: 'activity',
+          position: [80, 60],
+          text: '编译',
+        },
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'renderer',
+          role: 'participant',
+          position: [240, 60],
+          text: '渲染器',
+        },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          role: 'flow',
+          source: {
+            id: 'compiler',
+          },
+          target: {
+            id: 'renderer',
+          },
+        },
+      ],
+    },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
 ```
 
-`Group` 可以直接放在 Graph、Layout、Scope 或其它接受 Core child 的位置。它只提供可见外框和可选的 caption、labels；child 的位置、排版与连接关系仍由作者或上层布局能力负责
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
 
-## 例子
+```tsx
+import { entity, group, relation, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+const input = scene({
+  children: [
+    group({
+      id: 'runtime',
+      children: [
+        entity({ id: 'compiler', role: 'activity', position: [80, 60], text: '编译' }),
+        entity({ id: 'renderer', role: 'participant', position: [240, 60], text: '渲染器' }),
+        relation({ role: 'flow', source: 'compiler', target: 'renderer' }),
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, { adapters: createGraphVanillaAdapters() });
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'group',
+      id: 'runtime',
+      children: [
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'compiler',
+          role: 'activity',
+          position: [80, 60],
+          text: '编译',
+        },
+        {
+          namespace: 'graph',
+          type: 'entity',
+          id: 'renderer',
+          role: 'participant',
+          position: [240, 60],
+          text: '渲染器',
+        },
+        {
+          namespace: 'graph',
+          type: 'relation',
+          role: 'flow',
+          source: {
+            id: 'compiler',
+          },
+          target: {
+            id: 'renderer',
+          },
+        },
+      ],
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, { compile: { composites: createGraphDefinitions() } });
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
 
 ### 标题与说明
 
@@ -35,7 +176,7 @@ import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 
 <ComponentPreview
   files="group-basic"
-  size="sm"
+  size="lg"
   caption="通过控制面板切换 caption 位置、排列方向和间距，观察 title、description 与任意 Graph children 如何共同形成外框。"
 />
 
@@ -45,7 +186,7 @@ import { Entity, Graph, Group, Relation } from '@retikz/graph-react';
 
 <ComponentPreview
   files="group-label"
-  size="sm"
+  size="md"
   caption="通过控制面板调整三个 Group label 的位置，比较 Core label 的方向定位。"
 />
 
@@ -55,11 +196,26 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 
 <ComponentPreview
   files="group-style"
-  size="sm"
+  size="md"
   caption="分别调整背景、边框颜色与宽度、边框线型、透明度、圆角和内边距。"
 />
 
-## 技术原理
+## 扩展用法
+
+嵌套 Group 可表达子系统边界。为外层和内层分别设置 id 后，Relation 可以连接整体外框；内部 Entity 的 id 不会自动加分组前缀。重复实例需要隔离内部名称时，在各实例开启 localNamespace，并在各自内部编写连接。
+
+<ComponentPreview files="group-nested" size="sm" />
+
+需要排列一组对象时，把 FlexLayout / GridLayout 放入 Group children；布局容器决定相对位置，Group 再围住结果。图的整体排布可使用 [Flow](/schematic/diagram/flow/basic)。`Entity.group` 分类色 key 与 Group 容器没有自动关联。
+
+## 错误与限制
+
+- caption 至少提供 title / description 之一；文本使用 `{ text: ... }` 对象。labels 一旦提供必须非空。
+- Group 不负责避障、标签碰撞或自动连接。id 必须满足当前命名空间唯一性。
+- graphDefaults / graphRules 影响可见后代，不改变当前外框、caption 或边界标签。当前外框用 background / border 设置。
+- overflow 只约束 Surface 内容；外围标签仍参与最终视觉边界，不能据此假定标签已被裁剪。
+
+## 实现原理
 
 <ComponentAlert
   type="tip"
@@ -77,9 +233,21 @@ Group 的样式调整集中在外框的背景、边框、线型、圆角和内�
 - Group 不自动堆栈 children，不做 routing、避障或 label collision；需要普通排版时，在 children 中显式放入 FlexLayout、GridLayout 或 OverlayLayout
 - Group 的显式 `id` 对应外框包络，可以继续通过 Core `IRNodeTarget` 被 Relation 引用
 
+<SourceLinks
+  sources={[{ label: '后代上下文与外框主题', path: 'packages/schematic/graph/src/resolve/group/resolve.ts' }]}
+/>
+
 ### 外框与标签下沉
 
 Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一内容，把外框下沉为 Standard Surface，并用透明 Core Node 承载 boundary labels。caption 参与外框内部的 allocation；labels 只扩展最终 visual bounds，不改变 Relation 连接 Group 时使用的外框边界。Graph 与 Group 都不保存自动布局结果，也不会为 labels 建立第二套位置或边界类型
+
+<ComponentPreview
+  files="group-boundary"
+  size="xs"
+  type="illustration"
+  hideCode
+  caption="左侧 caption 撑开外框；右侧 label 在外框之外，内部内容相同。"
+/>
 
 <SourceLinks
   sources={[
@@ -91,29 +259,93 @@ Group lowering 会把 caption 与 authored children 组合为 Surface 的唯一�
 
 ## API 参考
 
-`Group` 的 React、IR 与 Vanilla 入口共享同一组 JSON-safe 字段。下面只列 Group 自身新增或重定义的字段；Core Scope 的其余公开属性继续沿用 Core 契约
+以下参考从公开导出和注释生成。组合输入保留原声明；完整持久化字段可在下方 Schema 中查询。
 
-表中的外框默认值是 Neutral Graph Theme 基线。选择同名 Graph Theme Definition 后，省略的 `background`、`border` 与 `cornerRadius` 会改用该 Definition 的 Group defaults；显式 Source 值仍优先
+{/* @include schematic/graph/group/generated */}
 
-| 属性                 | 类型                                   | 默认值                   | 描述                                                                                                                                                                               |
-| -------------------- | -------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id?`                | `string`                               | —                        | 可选 Scope target id                                                                                                                                                               |
-| `caption?`           | `IRGroupCaption`                       | —                        | 外框内的 title / description 区域                                                                                                                                                  |
-| `caption.side?`      | `'top' \| 'bottom'`                    | `'top'`                  | Caption 位于 body 上方或下方                                                                                                                                                       |
-| `caption.direction?` | `'horizontal' \| 'vertical'`           | `'horizontal'`           | Title 与 description 的排列方向                                                                                                                                                    |
-| `caption.itemGap?`   | `number`                               | `4`                      | Title 与 description 间距                                                                                                                                                          |
-| `caption.bodyGap?`   | `number`                               | `4`                      | 非空 body 与 caption 间距                                                                                                                                                          |
-| `labels?`            | `ReadonlyArray<IRNodeLabel>`           | —                        | 附着到外框且只扩展 visual bounds 的 labels；默认字号 `xs`、颜色 `gray`，省略 `align` 时默认 `start`，省略 position 时默认使用 `{ boundary: 'bottom', fraction: 0 }` 并置于外框下方 |
-| `padding?`           | `SurfaceInput['padding']`              | `10`                     | 外框到 caption/body 的内边距                                                                                                                                                       |
-| `background?`        | `SurfaceInput['background']`           | `lightgray / 0.04`       | Surface 背景填充与不透明度                                                                                                                                                         |
-| `border?`            | `SurfaceInput['border']`               | `lightgray / 1 + [4, 3]` | Surface 灰色虚线边框                                                                                                                                                               |
-| `cornerRadius?`      | `number`                               | `4`                      | 外框圆角                                                                                                                                                                           |
-| `overflow?`          | `'visible' \| 'clip'`                  | `'visible'`              | Surface content 溢出策略；外围 labels 不受此项裁剪                                                                                                                                 |
-| `graphDefaults?`     | `IRGraphDefaults`                      | —                        | 可见后代的稀疏默认值                                                                                                                                                               |
-| `graphRules?`        | `Array<IRGraphRule>`                   | —                        | 可见 Entity / Relation 的有序规则                                                                                                                                                  |
-| `children?`          | `ReadonlyArray<IRChild>` / `ReactNode` | —                        | 任意可嵌入内容                                                                                                                                                                     |
+## Schema 参考
 
-## 相关
+以下 schema 来自 `@retikz/graph` 公开入口。有效布局与主题默认在编译时应用，不写回稀疏 Source。共享 Scope / Surface 字段不在此重复展开。
 
-- [FlexLayout](/library/layout/flex-layout)：在 Group 内显式排列 authored children
-- [Surface](/library/standard/presentation/surface)：Group 外框复用的呈现能力
+### GroupSchema
+
+<ZodSchema
+  name="GroupSchema"
+  shallow
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '记录判别字段，固定为 group',
+    frame: '固有包络装饰，不参与布局',
+    style: '后代的级联视觉覆盖',
+    theme: '子树的稀疏主题覆盖',
+    id: '可选引用 id，注册到父命名空间',
+    localNamespace: '使子节点 id 在当前命名空间内可见，自身 id 仍注册到父级',
+    transforms: '局部变换，数组最后一项先作用于局部点',
+    placement: '布局与局部变换后的最终对齐放置',
+    zIndex: '容器整体在同级中的绘制顺序',
+    clip: '局部坐标系中的裁剪区域',
+    boundingShape: '引用 id 的合成包络形状',
+    meta: '透传的 JSON 元信息',
+    animations: '作用于整体的动画轨道，不参与布局或向后代继承',
+    defaults: '后代默认样式及继承屏障',
+    graphDefaults: '可见后代的稀疏默认值',
+    graphRules: '可见 Entity / Relation 后代的有序规则',
+    caption: '外框内部的标题说明区',
+    labels: '非空外围标签数组，只扩展视觉边界',
+    padding: '内容与外框内边距，编译时默认 10',
+    background: '外框背景覆盖',
+    border: '外框描边覆盖，整体替换主题值',
+    cornerRadius: '外框圆角',
+    overflow: '内容溢出行为，外围标签不受此项裁剪',
+    children: '保留作者布局的任意有序子元素',
+  }}
+/>
+
+### GroupCaptionSchema
+
+<ZodSchema
+  name="GroupCaptionSchema"
+  shallow
+  descriptions={{
+    side: '相对 body 位于 top 或 bottom，默认 top',
+    direction: '标题与说明的排列方向，默认 horizontal',
+    itemGap: '标题与说明之间的间距，默认 4',
+    bodyGap: '非空 body 与 caption 间距，默认 4',
+    title: '可选标题，至少提供 title / description 之一',
+    description: '可选说明，至少提供 title / description 之一',
+  }}
+/>
+
+### GroupCaptionTextSchema
+
+<ZodSchema
+  name="GroupCaptionTextSchema"
+  shallow
+  descriptions={{
+    text: '必填文字内容',
+    align: '文字对齐方式',
+    lineHeight: '行高',
+    maxTextWidth: '换行的最大文字宽度',
+    textColor: '文字颜色覆盖',
+    font: '字体配置',
+    opacity: '不透明度',
+  }}
+/>
+
+### GroupCaptionSideSchema
+
+<ZodSchema name="GroupCaptionSideSchema" shallow />
+
+### GroupCaptionDirectionSchema
+
+<ZodSchema name="GroupCaptionDirectionSchema" shallow />
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: 'Block', description: '主动排列开放内容', url: '/schematic/graph/block' },
+    { title: 'FlexLayout', description: '在分组内排列内容', url: '/library/layout/flex-layout' },
+    { title: 'Surface', description: '可见外框与内边距', url: '/library/standard/presentation/surface' },
+  ]}
+/>

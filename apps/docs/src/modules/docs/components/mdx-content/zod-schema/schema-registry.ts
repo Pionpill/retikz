@@ -774,6 +774,22 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
   },
+  GroupCaptionSchema: { schema: GraphIR.GroupCaptionSchema, label: 'GroupCaption', url: '/schematic/graph/group' },
+  GroupCaptionTextSchema: {
+    schema: GraphIR.GroupCaptionTextSchema,
+    label: 'GroupCaptionText',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionSideSchema: {
+    schema: GraphIR.GroupCaptionSideSchema,
+    label: 'GroupCaptionSide',
+    url: '/schematic/graph/group',
+  },
+  GroupCaptionDirectionSchema: {
+    schema: GraphIR.GroupCaptionDirectionSchema,
+    label: 'GroupCaptionDirection',
+    url: '/schematic/graph/group',
+  },
   GroupSchema: {
     schema: GraphIR.GroupSchema,
     label: 'Group',

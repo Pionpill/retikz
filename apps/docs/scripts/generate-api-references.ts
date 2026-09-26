@@ -5,6 +5,7 @@ import { writeDrawApiReferenceMdx } from './api-reference/draw';
 import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeExtensionAnimationApiReference } from './api-reference/extension-animation';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
+import { writeGroupApiReferenceMdx } from './api-reference/group';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
 import { writeLayoutApiReferenceMdx } from './api-reference/layout';
 import { writeMathApiReferenceMdx } from './api-reference/math';
@@ -17,6 +18,7 @@ import { writeTexApiReferenceMdx } from './api-reference/tex';
 import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeGroupApiReferenceMdx(path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/group/_includes'));
 await writeBlockApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/block/api-reference/_includes'),
 );
