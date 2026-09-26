@@ -20,13 +20,13 @@ import { svg as scopeInspectionVanillaSvg } from '../../src/modules/docs/content
 import ScopeInspectionZhDemo, {
   previewSource as scopeInspectionZhSource,
 } from '../../src/modules/docs/contents/kernel/components/scope/usage/scope-layout-inspection.zh.demo';
-import FlexEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-basic.en.demo';
-import FlexZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-basic.zh.demo';
-import OverflowEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-overflow.en.demo';
-import OverflowZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-overflow.zh.demo';
-import { previewControlContract as flexZhContract } from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-playground.controls';
-import { previewSource as flexPlaygroundSource } from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-playground.demo';
-import { previewControlContract as flexEnContract } from '../../src/modules/docs/contents/library/layout/flex-layout/flex-layout-playground.en.controls';
+import OverflowEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-overflow.en.demo';
+import OverflowZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-overflow.zh.demo';
+import { previewControlContract as flexZhContract } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.controls';
+import { previewSource as flexPlaygroundSource } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.demo';
+import { previewControlContract as flexEnContract } from '../../src/modules/docs/contents/library/layout/flex-layout/extended/flex-layout-playground.en.controls';
+import FlexEnDemo from '../../src/modules/docs/contents/library/layout/flex-layout/usage/flex-layout-basic.en.demo';
+import FlexZhDemo from '../../src/modules/docs/contents/library/layout/flex-layout/usage/flex-layout-basic.zh.demo';
 import GridEnDemo from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-basic.en.demo';
 import GridZhDemo from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-basic.zh.demo';
 import { previewControlContract as gridZhContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.controls';

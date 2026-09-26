@@ -1,0 +1,119 @@
+---
+title: Extended usage
+description: Combine constraints and inspect solved bounds and artifacts
+---
+
+Build on [basic usage](/library/layout/flex-layout/usage) to combine constraints and inspect results. Change one variable and compare allocated slots with actual geometry.
+
+## Growth, shrinkage, and hard limits
+
+A 200-unit container has a 12-unit gap and two items with basis 40. Their grow factors are 1 and 3. The remaining 108 units contribute 27 and 81, producing slots of 67 and 121. These are allocated sizes, not a promise that fixed geometry scales to match.
+
+An item freezes when it reaches max; remaining space goes to eligible items. Negative free space is apportioned by shrink times the unconstrained basis. shrink=0 preserves that contribution. Growth does not change paint order.
+
+## Wrapping and baseline limits
+
+Wrapping groups items before each line distributes space. justifyContent distributes main-axis free space inside a line; alignContent distributes cross-axis space across lines. They are not interchangeable. First and last baselines apply to a horizontal main axis; a vertical main axis has an x cross axis and rejects baseline alignment.
+
+## Interactive comparison
+
+Switch the main axis, wrapping, and cross-axis alignment, then adjust item basis, grow, and shrink. The preview uses a fixed viewBox. Raising the basis or disabling wrapping makes negative free space and shrink directly observable.
+
+<ComponentPreview
+  files="flex-layout-playground"
+  size="lg"
+  caption="Recommended shows the content outline, Flex line regions, and fixed gaps; use Inspection overlay to reveal padding, margin, distributed-space boundaries, and other details."
+/>
+
+### Overflow and clipping
+
+A slot and the real allocation are distinct quantities. When fixed geometry refuses a smaller slot, `visible` keeps the complete visual output; `clip` changes only visibility, while the typed artifact preserves real bounds and the `clipped` state.
+
+<ComponentPreview files="flex-layout-overflow" size="sm" />
+
+## Inspecting the layout
+
+<ComponentProps
+  items={[
+    {
+      name: 'inspect',
+      kind: 'property',
+      type: 'false | true | FlexLayoutInspectOptions',
+      description: '`InspectFlexLayout` requests this occurrence; `false` only cancels the current instance',
+      defaultValue: 'true',
+    },
+  ]}
+/>
+
+Base `FlexLayout` has no `inspect` prop. After installing the optional package, import `InspectFlexLayout` from `@retikz/layout-react/inspect`. Its object form controls `lines`, fixed `gaps`, and `distributedSpace` in addition to shared bounds, box spacing, overflow, and alignment guides. See [Runtime Reference](/library/layout/reference/runtime#layout-inspector) for every field and host or Scope rules.
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { LayoutItem } from '@retikz/layout-react';
+import { LayoutInspectLayout, InspectFlexLayout } from '@retikz/layout-react/inspect';
+export const Inspected = () => (
+  <Layout>
+    <LayoutInspectLayout>
+      <InspectFlexLayout gap={12} inspect={{ bounds: { content: true, slot: true } }}>
+        <LayoutItem kind="flex">
+          <Node position={[0, 0]} text="A" />
+        </LayoutItem>
+      </InspectFlexLayout>
+    </LayoutInspectLayout>
+  </Layout>
+);
+```
+
+<ZodSchema name="FlexLayoutInspectOptionsSchema" description="Shared and FlexLayout-specific inspection options." />
+
+## Reading layout results
+
+An occurrence identifies a concrete container instance; a public id alone cannot distinguish nested instances. Locate the artifact envelope and parse its value. Inspection reads that compilation result without solving again.
+
+```ts
+import { compileToScene } from '@retikz/core';
+import { FlexLayoutDefinition, FlexLayoutArtifactSchema, createFlexLayout } from '@retikz/layout';
+const output = compileToScene(
+  { type: 'scene', version: 1, children: [createFlexLayout({ children: [] })] },
+  { composites: [FlexLayoutDefinition] },
+);
+const envelope = output.artifacts.find(
+  item => item.kind === 'composite' && item.namespace === 'layout' && item.type === 'flexLayout',
+);
+if (envelope) {
+  const result = FlexLayoutArtifactSchema.parse(envelope.value);
+  console.log(result.container, result.items);
+}
+```
+
+<ZodSchema
+  name="FlexLayoutArtifactSchema"
+  description="FlexLayout container, source-order items, and physical cross-order lines."
+/>
+
+`items[].line` identifies the item's line. Each `lines[]` entry records a contiguous `index`, `itemKeys`, physical main axis, main range, and cross range. The two collections must form a complete bidirectional partition.
+
+Required `spacing[]` records each line's main-axis gap/distribution and, for multiple lines, cross-axis gaps and `alignContent` distribution. Space absorbed by `stretch` into line sizes is not recorded again.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/flex-layout/usage',
+    },
+
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/flex-layout/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+  ]}
+/>

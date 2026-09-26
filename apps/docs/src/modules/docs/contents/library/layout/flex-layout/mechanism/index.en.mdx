@@ -1,0 +1,61 @@
+---
+title: Implementation
+description: Understand measurement, allocation, and final placement
+---
+
+Read [basic usage](/library/layout/flex-layout/usage) first. This page explains the result; callers do not invoke the internal stages themselves.
+
+## Why remeasurement does not restart allocation
+
+Minimum and natural probes establish constraints. The main-axis slots are frozen before exact probes determine cross-axis sizes after text wrapping. Fixed geometry can reject a smaller slot; actual bounds and overflow expose that difference without restarting main-axis allocation. Both rows use the same scale.
+
+<ComponentPreview files="allocation-figure" hideCode type="illustration" size="md" />
+
+The content width is 200, gap is 12, and both bases are 40. Distributing the remaining 108 by grow=1:3 produces 67 and 121. The dotted outline keeps the same container reference. Child geometry receives these slots afterward; allocation and painted size are distinct.
+
+## From constraints to placement
+
+FlexLayout first probes each child with `intrinsic.minimum` and `intrinsic.natural`, then probes again with an exact main slot after distribution freezes. Text can become taller at a narrower width; fixed geometry can keep allocation larger than its slot without triggering another main-axis pass.
+
+Each line runs bounded grow/shrink independently. An item freezes when it reaches `min` or `max`, and remaining space is redistributed among unfrozen items. Only the selected result is replayed; discarded probes publish no primitives, resources, namespaces, or artifacts.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'FlexLayout input contract',
+      path: 'packages/library/layout/src/composites/flex-layout/schema.ts',
+    },
+    {
+      label: 'FlexLayout proposals and placement',
+      path: 'packages/library/layout/src/composites/flex-layout/pipeline.ts',
+    },
+    {
+      label: 'Shared flex layout engine',
+      path: 'packages/library/layout/src/composites/internal/flex-engine.ts',
+    },
+    { label: 'FlexLayout React adapter', path: 'packages/library/layout-react/src/flex-layout/FlexLayout.tsx' },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Declare containers, items, and alignment',
+      url: '/library/layout/flex-layout/usage',
+    },
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and inspect results',
+      url: '/library/layout/flex-layout/extended',
+    },
+
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+  ]}
+/>

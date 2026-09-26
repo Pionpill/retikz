@@ -1,0 +1,302 @@
+---
+title: 基础用法
+description: 声明容器和子项，理解尺寸、间距与对齐
+---
+
+`FlexLayout` 沿一个主轴排布任意子图形。它可以把剩余空间分给可伸展项、在空间不足时收缩或换行，同时让固定几何保持真实尺寸、让文本按分配宽度重新排版。
+
+## 接入方式
+
+安装见[快速开始](/library/layout/get-start)。容器直属元素必须使用匹配 kind 的 LayoutItem；一个子项负责一个可绘制 child。
+
+```text
+FlexLayout
+└── LayoutItem (kind="flex")
+    └── Node / FlexLayout
+```
+
+<ComponentPreview files="/library/layout/flex-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+export const Example = () => (
+  <Layout>
+    <FlexLayout gap={12}>
+      <LayoutItem kind="flex">
+        <Node position={[0, 0]} text="A" />
+      </LayoutItem>
+      <LayoutItem kind="flex">
+        <Node position={[0, 0]} text="B" />
+      </LayoutItem>
+    </FlexLayout>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { FlexLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[FlexLayoutDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+const input = scene({
+  children: [
+    flexLayout({
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    }),
+  ],
+});
+console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { FlexLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+`itemKey` 可以省略；Layout 会在内部生成容器局部有效 key，且不会把它写回 Source IR。只有需要跨重排保持稳定身份时才显式传入 `itemKey`；它不读取 React 保留的 `key`。每个 `LayoutItem` 恰好接受一个可绘制子元素，或用 `ir` 显式传入一个 `IRChild`。
+
+`gap` 可以写成数字，也可以写成 `{ column, row }` 对象。数字同时设置两个物理轴；对象允许分别设置列间距与行间距，且不随 `direction` 改变字段含义。
+
+| 场景        | 公开入口                                                                                           |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| React       | `FlexLayout`、`LayoutItem`（`@retikz/layout-react`）                                               |
+| Vanilla     | `flexLayout`、`FlexLayoutInputEmbedAdapter`（`@retikz/layout-vanilla`）                            |
+| 可选检查    | `InspectFlexLayout`（`@retikz/layout-react/inspect`）、`inspectFlexLayout`（Vanilla）              |
+| IR / 持久化 | `FlexLayoutSchema`、`createFlexLayout`、`IRFlexLayout`、`FlexLayoutDefinition`（`@retikz/layout`） |
+
+## 分配一行空间
+
+下面三个子项保持作者声明的绘制顺序。中间标签接收剩余主轴空间；两侧子项不参与收缩，`gap.column` 与 `gap.row` 始终分别表示物理水平方向和垂直方向的间距。
+
+<ComponentPreview files="flex-layout-basic" size="sm" />
+
+`direction` 决定主轴与遍历方向，`wrap` 决定是否形成多条布局行。反向模式只改变布局遍历和放置位置，不改变 `children`、子项 `key` 或绘制顺序。
+
+`FlexLayoutInput` 是工厂函数接受的作者输入；`IRFlexLayout` 允许省略字段与简写。工厂保留原始写法，`FlexLayoutSchema.parse()` 则会补齐 schema 声明的静态默认值；编译期 resolver 复用这些默认值并展开简写。
+
+React 的 `FlexLayoutProps` 对应下表容器字段，但把 `children` 改为直属 `LayoutItem`；`FlexLayoutItemProps` 把可选 JSON `key` 命名为 `itemKey`，并要求在 `children` 与 `ir` 中二选一。
+
+## 容器的分配与对齐
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: 'LayoutSizeInput',
+      description: '双轴分配策略；`fixed` 保留作者尺寸，`fill` 需要有限父级空间',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | IRBoxSpacing',
+      description: '从分配区域到内容区域的内边距',
+      defaultValue: '0',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: 'LayoutOverflow',
+      description: '`clip` 在容器分配区域上创建一个 Scope 裁切',
+      defaultValue: "'visible'",
+    },
+    {
+      name: 'direction',
+      kind: 'property',
+      type: 'FlexLayoutDirection',
+      description: '主轴及正反向遍历',
+      defaultValue: "'row'",
+    },
+    {
+      name: 'wrap',
+      kind: 'property',
+      type: 'FlexLayoutWrap',
+      description: '单行、换行或反向交叉轴放置',
+      defaultValue: "'nowrap'",
+    },
+    {
+      name: 'gap',
+      kind: 'property',
+      type: 'number 或 { column: number; row: number }',
+      description: '数字同时设置两个物理轴；对象分别设置列、行间距',
+      defaultValue: '0 → { column: 0, row: 0 }',
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: 'FlexMainDistributionValue',
+      description: '每条布局行的主轴剩余空间分布',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: 'LayoutAlignment',
+      description: '默认交叉轴对齐；纵向主轴不接受基线对齐',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: 'LayoutDistribution',
+      description: '多条布局行的交叉轴剩余空间分布',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<FlexLayoutItemInput>',
+      description: '作者声明的子项；显式 `key` 在同一容器内必须唯一',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+## 子项约束
+
+<ComponentProps
+  items={[
+    {
+      name: 'kind',
+      kind: 'property',
+      type: "'flex'",
+      description: '子项判别字段；可使用 `LayoutItemKind.Flex`',
+      required: true,
+    },
+    {
+      name: 'key',
+      kind: 'property',
+      type: 'string',
+      description: '可选的容器局部稳定身份；省略时按 source index 生成',
+      defaultValue: '内部生成',
+    },
+    {
+      name: 'child',
+      kind: 'property',
+      type: 'IRChild',
+      description: '参与布局的任意可 JSON 序列化 Core 子图形',
+      required: true,
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | IRBoxSpacing',
+      description: '分配区域外边距；不进入子图形的空间提案',
+      defaultValue: '0',
+    },
+    {
+      name: 'basis',
+      kind: 'property',
+      type: "'content' | number",
+      description: '自然主轴贡献，或作者给出的有限非负基础分配尺寸',
+      defaultValue: "'content'",
+    },
+    {
+      name: 'grow',
+      kind: 'property',
+      type: 'number',
+      description: '接收正剩余空间的有限非负系数',
+      defaultValue: '0',
+    },
+    {
+      name: 'shrink',
+      kind: 'property',
+      type: 'number',
+      description: '与未约束基础尺寸相乘，用于回收负剩余空间',
+      defaultValue: '1',
+    },
+    {
+      name: 'min',
+      kind: 'property',
+      type: 'number',
+      description: '显式值替代自动最小值；子图形拒绝时以真实占用溢出表达',
+      defaultValue: '子图形最小值',
+    },
+    {
+      name: 'max',
+      kind: 'property',
+      type: 'number',
+      description: '作者给出的主轴分配尺寸硬上限',
+      defaultValue: '无上限',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: 'LayoutAlignment',
+      description: '覆盖当前子项的交叉轴对齐',
+      defaultValue: 'alignItems',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '扩展用法', description: '组合约束并观察求解结果', url: '/library/layout/flex-layout/extended' },
+    { title: '实现原理', description: '理解测量、分配与放置的依据', url: '/library/layout/flex-layout/mechanism' },
+    {
+      title: 'Schema 参考',
+      description: '查询持久化输入的字段约束',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+  ]}
+/>

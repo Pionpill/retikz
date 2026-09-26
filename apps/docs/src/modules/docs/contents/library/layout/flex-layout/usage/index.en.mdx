@@ -1,0 +1,310 @@
+---
+title: Basic usage
+description: Declare the container and items, then control size, spacing, and alignment
+---
+
+`FlexLayout` arranges arbitrary graphical children along one main axis. It distributes free space, shrinks or wraps when space is tight, keeps fixed geometry at its real size, and lets text reflow against its allocated width.
+
+## Using this topic
+
+See [Quick start](/library/layout/get-start) for installation. Direct children must use LayoutItem with a matching kind; each item owns one drawable child.
+
+```text
+FlexLayout
+└── LayoutItem (kind="flex")
+    └── Node / FlexLayout
+```
+
+<ComponentPreview files="/library/layout/flex-layout/entry" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout, Node } from '@retikz/react';
+import { FlexLayout, LayoutItem } from '@retikz/layout-react';
+export const Example = () => (
+  <Layout>
+    <FlexLayout gap={12}>
+      <LayoutItem kind="flex">
+        <Node position={[0, 0]} text="A" />
+      </LayoutItem>
+      <LayoutItem kind="flex">
+        <Node position={[0, 0]} text="B" />
+      </LayoutItem>
+    </FlexLayout>
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { FlexLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[FlexLayoutDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { scene, renderToSvgString } from '@retikz/vanilla';
+import { flexLayout, FlexLayoutInputEmbedAdapter } from '@retikz/layout-vanilla';
+const input = scene({
+  children: [
+    flexLayout({
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    }),
+  ],
+});
+console.log(renderToSvgString(input, { adapters: [FlexLayoutInputEmbedAdapter] }));
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { renderToSvgString } from '@retikz/vanilla';
+import { FlexLayoutDefinition } from '@retikz/layout';
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'layout',
+      type: 'flexLayout',
+      gap: 12,
+      children: [
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'A' } },
+        { kind: 'flex', child: { type: 'node', position: [0, 0], text: 'B' } },
+      ],
+    },
+  ],
+};
+console.log(renderToSvgString(ir, { compile: { composites: [FlexLayoutDefinition] } }));
+```
+
+</DocTab>
+</DocTabs>
+
+`itemKey` may be omitted. Layout creates a container-local effective key internally without writing it back to Source IR. Pass `itemKey` only when identity must remain stable across reordering; it never reads React's reserved `key`. Each `LayoutItem` accepts exactly one drawable child or one explicit `IRChild` through `ir`.
+
+`gap` accepts either a number or a `{ column, row }` object. A number applies to both physical axes; the object sets column and row spacing independently, without changing field meaning when `direction` changes.
+
+| Scenario         | Public entry                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| React            | `FlexLayout`, `LayoutItem` (`@retikz/layout-react`)                                               |
+| Vanilla          | `flexLayout`, `FlexLayoutInputEmbedAdapter` (`@retikz/layout-vanilla`)                            |
+| Optional inspect | `InspectFlexLayout` (`@retikz/layout-react/inspect`), `inspectFlexLayout` (Vanilla)               |
+| IR / persistence | `FlexLayoutSchema`, `createFlexLayout`, `IRFlexLayout`, `FlexLayoutDefinition` (`@retikz/layout`) |
+
+## Allocating a row
+
+The three items keep authored paint order. The middle label receives remaining main-axis space, the side items do not shrink, and `gap.column` and `gap.row` always mean physical horizontal and vertical spacing respectively.
+
+<ComponentPreview files="flex-layout-basic" size="sm" />
+
+`direction` selects the main axis and traversal direction, while `wrap` decides whether lines form. Reverse modes change traversal and placement without changing `children`, item keys, or paint order.
+
+`FlexLayoutInput` is the factory authoring input; `IRFlexLayout` permits omissions and shorthand. Factories preserve authored values, while `FlexLayoutSchema.parse()` materializes schema-declared static defaults. Compilation resolution reuses those defaults and expands shorthand.
+
+React `FlexLayoutProps` mirrors the container fields below but changes `children` to direct `LayoutItem` elements. `FlexLayoutItemProps` renames optional JSON `key` to `itemKey` and requires exactly one of `children` or `ir`.
+
+## Container allocation and alignment
+
+<ComponentProps
+  items={[
+    {
+      name: 'size',
+      kind: 'property',
+      type: 'LayoutSizeInput',
+      description: 'Per-axis allocation policy; `fill` requires finite parent space',
+      defaultValue: 'content / content',
+    },
+    {
+      name: 'padding',
+      kind: 'property',
+      type: 'number | IRBoxSpacing',
+      description: 'Insets from the allocation box to the content box',
+      defaultValue: '0',
+    },
+    {
+      name: 'overflow',
+      kind: 'property',
+      type: 'LayoutOverflow',
+      description: '`clip` creates one Scope clip at the container allocation',
+      defaultValue: "'visible'",
+    },
+    {
+      name: 'direction',
+      kind: 'property',
+      type: 'FlexLayoutDirection',
+      description: 'Main axis and forward or reverse traversal',
+      defaultValue: "'row'",
+    },
+    {
+      name: 'wrap',
+      kind: 'property',
+      type: 'FlexLayoutWrap',
+      description: 'One line, wrapping, or reversed cross placement',
+      defaultValue: "'nowrap'",
+    },
+    {
+      name: 'gap',
+      kind: 'property',
+      type: 'number or { column: number; row: number }',
+      description: 'A number applies to both physical axes; the object sets column and row gaps independently',
+      defaultValue: '0 → { column: 0, row: 0 }',
+    },
+    {
+      name: 'justifyContent',
+      kind: 'property',
+      type: 'FlexMainDistributionValue',
+      description: 'Main-axis free-space distribution within each line',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'alignItems',
+      kind: 'property',
+      type: 'LayoutAlignment',
+      description: 'Default cross alignment; column directions reject baseline',
+      defaultValue: "'stretch'",
+    },
+    {
+      name: 'alignContent',
+      kind: 'property',
+      type: 'LayoutDistribution',
+      description: 'Cross-axis free-space distribution between multiple lines',
+      defaultValue: "'start'",
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'Array<FlexLayoutItemInput>',
+      description: 'Authored items; explicit keys must be unique within this container',
+      defaultValue: '[]',
+    },
+  ]}
+/>
+
+## Item constraints
+
+<ComponentProps
+  items={[
+    {
+      name: 'kind',
+      kind: 'property',
+      type: "'flex'",
+      description: 'Item discriminator; use `LayoutItemKind.Flex`',
+      required: true,
+    },
+    {
+      name: 'key',
+      kind: 'property',
+      type: 'string',
+      description: 'Optional stable local identity; generated from source index when omitted',
+      defaultValue: 'generated',
+    },
+    {
+      name: 'child',
+      kind: 'property',
+      type: 'IRChild',
+      description: 'Any JSON-safe Core child participating in layout',
+      required: true,
+    },
+    {
+      name: 'margin',
+      kind: 'property',
+      type: 'number | IRBoxSpacing',
+      description: 'Spacing outside the slot and excluded from the child proposal',
+      defaultValue: '0',
+    },
+    {
+      name: 'basis',
+      kind: 'property',
+      type: "'content' | number",
+      description: 'Natural main contribution or finite non-negative authored base slot',
+      defaultValue: "'content'",
+    },
+    {
+      name: 'grow',
+      kind: 'property',
+      type: 'number',
+      description: 'Finite non-negative factor for receiving positive free space',
+      defaultValue: '0',
+    },
+    {
+      name: 'shrink',
+      kind: 'property',
+      type: 'number',
+      description: 'Factor multiplied by unclamped basis when reclaiming negative free space',
+      defaultValue: '1',
+    },
+    {
+      name: 'min',
+      kind: 'property',
+      type: 'number',
+      description: 'Explicit values replace automatic child minimum; refusal becomes allocation overflow',
+      defaultValue: 'child minimum',
+    },
+    {
+      name: 'max',
+      kind: 'property',
+      type: 'number',
+      description: 'Authored hard maximum for the main slot',
+      defaultValue: 'unbounded',
+    },
+    {
+      name: 'alignSelf',
+      kind: 'property',
+      type: 'LayoutAlignment',
+      description: 'Overrides cross alignment for this item',
+      defaultValue: 'alignItems',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Extended usage',
+      description: 'Combine constraints and inspect results',
+      url: '/library/layout/flex-layout/extended',
+    },
+    {
+      title: 'Implementation',
+      description: 'Understand measurement and placement',
+      url: '/library/layout/flex-layout/mechanism',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent input constraints',
+      url: '/library/layout/flex-layout/schema-reference',
+    },
+  ]}
+/>

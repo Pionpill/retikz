@@ -5,7 +5,7 @@ import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
 
-import { resolveLayoutInspectionValues } from '../layout-inspection-controls';
+import { resolveLayoutInspectionValues } from '../../layout-inspection-controls';
 import {
   flexLayoutInspectionFamilyControls,
   flexLayoutPlaygroundControls,

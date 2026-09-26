@@ -674,7 +674,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   FlexLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.FlexLayoutInspectOptionsSchema,
     label: 'FlexLayoutInspectOptions',
-    url: '/library/layout/reference/runtime#flexlayoutinspectoptionsschema',
+    url: '/library/layout/flex-layout/extended',
   },
   GridLayoutInspectOptionsSchema: {
     schema: LayoutInspectIR.GridLayoutInspectOptionsSchema,
@@ -690,7 +690,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   FlexLayoutSchema: {
     schema: LayoutIR.FlexLayoutSchema,
     label: 'FlexLayout',
-    url: '/library/layout/reference/contract-input#flexlayoutschema',
+    url: '/library/layout/flex-layout/schema-reference',
   },
   GridLayoutSchema: {
     schema: LayoutIR.GridLayoutSchema,
@@ -720,7 +720,7 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   FlexLayoutArtifactSchema: {
     schema: LayoutIR.FlexLayoutArtifactSchema,
     label: 'FlexLayoutArtifact',
-    url: '/library/layout/reference/contract-artifact#flexlayoutartifactschema',
+    url: '/library/layout/flex-layout/extended',
   },
   GridLayoutArtifactSchema: {
     schema: LayoutIR.GridLayoutArtifactSchema,

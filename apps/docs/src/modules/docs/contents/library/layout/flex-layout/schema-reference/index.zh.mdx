@@ -1,0 +1,27 @@
+---
+title: Schema 参考
+description: 查询持久化容器输入的字段与约束
+---
+
+下面是持久化输入契约。工厂保留省略字段，parse() 才物化静态默认值。子项写法见[基础用法](/library/layout/flex-layout/usage)，求解结果见[扩展用法](/library/layout/flex-layout/extended)。
+
+## FlexLayoutSchema
+
+<ZodSchema
+  name="FlexLayoutSchema"
+  description="一维伸展、收缩、换行与基线布局的规范输入。"
+  descriptions={{
+    namespace: 'Layout 排版能力的复合组件命名空间。',
+    type: '确定性一维盒布局的复合组件类型。',
+    size: '包含内边距的容器双轴分配尺寸策略。',
+    padding: '从容器分配区域到内容区域的内边距。',
+    overflow: '视觉溢出保持可见或裁切到容器分配区域的策略。',
+    direction: '主轴的物理方向。',
+    wrap: '换行与交叉轴遍历策略。',
+    gap: '数字同时设置两个物理轴的间距；对象分别设置 column 与 row。',
+    justifyContent: '每条布局行内主轴剩余空间的分布方式。',
+    alignItems: '弹性子项默认的交叉轴对齐方式。',
+    alignContent: '多条布局行之间交叉轴剩余空间的分布方式。',
+    children: '按稳定绘制顺序排列、由作者声明的弹性子项。',
+  }}
+/>
