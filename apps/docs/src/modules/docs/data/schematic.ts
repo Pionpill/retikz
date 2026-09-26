@@ -21,6 +21,12 @@ export const schematicSection: Array<Section> = [
         meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
+        id: 'design',
+        label: 'schematic.design',
+        difficulty: DocDifficulty.Advanced,
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
         id: 'changelog',
         label: 'schematic.changelog',
         children: [{ id: 'v0-1', label: 'schematic.changelogV01' }],

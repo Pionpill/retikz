@@ -243,6 +243,7 @@
     "graphNavigationDescription": "Model entities, relations, and structured information",
     "introduction": "Introduction",
     "getStart": "Quick start",
+    "design": "Design Philosophy",
     "components": "Components",
     "diagram": "Diagram",
     "diagramNavigationDescription": "Build flowcharts and other explanatory diagrams",
