@@ -17,11 +17,13 @@ Presentation components add references, boundaries, and explanations to a figure
 
 ## Add references to a coordinate sketch
 
-Axes establishes a centered coordinate system, while Grid supplies equally spaced reference lines. Both share the same origin, and the grid covers all four quadrants. The axes extend slightly beyond the grid to make their directions clear.
+Axes draws centered reference axes, while Grid supplies equally spaced reference lines. Both share the same origin, and the grid covers all four quadrants. The axes extend slightly beyond the grid to make their directions clear.
 
 <ComponentPreview files="presentation-composition" />
 
 The axes are the main feature; the thinner gray grid only helps read positions. Grid spacing and axis extents are independent. Add Surface for a background and border, Frame for a group title, or Legend to explain colors and line styles.
+
+Axes maps positive y upward only for its own output; ordinary Nodes and Paths retain screen-space y-down coordinates. Grid does not transform other primitives. Frame encloses direct Nodes, while Surface decorates any single child; use this content boundary to choose between them.
 
 ## Choosing the right family
 
