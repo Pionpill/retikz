@@ -104,7 +104,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'frame',
             label: 'library.standardFrame',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
           {
             id: 'surface',

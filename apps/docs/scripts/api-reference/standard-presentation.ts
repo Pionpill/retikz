@@ -2,11 +2,25 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { translateDrawApiReference } from './draw.en';
+import { translateNodeApiReference } from './node.en';
 import { createApiReferenceMdx } from './tex';
 import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const pages = {
+  Frame: {
+    react: ['Frame', 'FrameProps', 'FrameTitle', 'FrameTitleProps', 'FrameDescription', 'FrameDescriptionProps'],
+    vanilla: ['frame', 'InputFrame', 'frameTitle', 'frameDescription', 'FrameInputEmbedAdapter'],
+    core: [
+      'FrameInput',
+      'FrameTitleInput',
+      'FrameDescriptionInput',
+      'IRFrame',
+      'createFrame',
+      'FrameDefinition',
+      'FrameProvider',
+    ],
+  },
   Axes: {
     react: ['Axes', 'AxesProps'],
     vanilla: ['axes', 'AxesInputEmbedAdapter'],
@@ -19,9 +33,43 @@ const pages = {
   },
 } as const;
 
+const translations: Readonly<Partial<Record<string, string>>> = {
+  'FrameTitle、FrameDescription 与参与 body bounds 的 Core Node children':
+    'FrameTitle, FrameDescription, and Core Node children contributing to the body bounds',
+  'Frame 主标题接受的 JSON-safe Node authoring 字段': 'JSON-safe Node authoring fields for the Frame title',
+  'Frame 辅助说明接受的 JSON-safe Node authoring 字段': 'JSON-safe Node authoring fields for the Frame description',
+  '声明 Frame 的 Node-like 主标题，只能作为 Frame 的直接 child':
+    'Declare a Node-like Frame title as a direct Frame child',
+  '声明 Frame 的 Node-like 辅助说明，只能作为 Frame 的直接 child':
+    'Declare a Node-like Frame description as a direct Frame child',
+  'Vanilla Frame 输入可显式指定持久化 Scope id': 'Vanilla Frame input with an optional persistent Scope id',
+  '要持久化到 Frame IR 的显式身份': 'Explicit identity to persist in Frame IR',
+  '在根 Scene traversal 中归一化的 Frame body children': 'Frame body children normalized during root Scene traversal',
+  'React marker 提供、等待同次 traversal 归一化的 header 输入':
+    'Header input supplied by React markers and normalized in the same traversal',
+  '创建 JSON-safe 的 Frame 主标题输入': 'Create JSON-safe Frame title input',
+  '创建 JSON-safe 的 Frame 辅助说明输入': 'Create JSON-safe Frame description input',
+  '创建 Frame 时允许省略固定 discriminator 与 schema 默认字段的输入':
+    'Frame input allowing fixed discriminators and schema defaults to be omitted',
+  '创建 Frame 主标题时接受的输入': 'Input for creating a Frame title',
+  '创建 Frame 辅助说明时接受的输入': 'Input for creating a Frame description',
+  '创建稀疏持久化的 Standard Frame composite': 'Create a sparse persistent Standard Frame composite',
+};
+
+/** Node 与 Path 的继承字段复用各自的人工译文 */
+const translateSharedApiReference = (source: string): string => {
+  if (translations[source] !== undefined) return translations[source];
+  try {
+    return translateDrawApiReference(source);
+  } catch {
+    return translateNodeApiReference(source);
+  }
+};
+
 /** 公开声明的英文文案；通用字段沿用已有翻译，缺译由生成器拒绝 */
 const translatePresentationApiReference = (source: string): string =>
-  translateDrawApiReference(
+  translations[source] ??
+  translateSharedApiReference(
     source
       .replace('可省略默认值的包络装饰', 'Envelope decoration with optional defaults')
       .replace(/React (\w+) 组件接受的 Standard authoring 输入/g, 'Standard authoring input accepted by React $1')
@@ -72,7 +120,13 @@ export const writeStandardPresentationApiReferences = async (
               title: { zh: `\`${packageName}\``, en: `\`${packageName}\`` },
               symbols: owner.symbols,
               declarationOnlySymbols: [`${name}Definition`, `${name}Provider`, `${name}InputEmbedAdapter`],
-              ...(owner.suffix === '-react' ? { symbolPairs: [[name, `${name}Props`] as const] } : {}),
+              ...(owner.suffix === '-react'
+                ? {
+                    symbolPairs: owner.symbols
+                      .filter(symbol => !symbol.endsWith('Props'))
+                      .map(symbol => [symbol, `${symbol}Props`] as const),
+                  }
+                : {}),
             },
           ],
         };

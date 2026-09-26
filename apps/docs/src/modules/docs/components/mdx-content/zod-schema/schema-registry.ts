@@ -731,6 +731,26 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'OverlayLayoutArtifact',
     url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
   },
+  FrameSchema: {
+    schema: StandardPresentationIR.FrameSchema,
+    label: 'Frame',
+    url: '/library/standard/presentation/frame#frameschema',
+  },
+  FrameTitleSchema: {
+    schema: StandardPresentationIR.FrameTitleSchema,
+    label: 'FrameTitle',
+    url: '/library/standard/presentation/frame#frametitleschema',
+  },
+  FrameDescriptionSchema: {
+    schema: StandardPresentationIR.FrameDescriptionSchema,
+    label: 'FrameDescription',
+    url: '/library/standard/presentation/frame#framedescriptionschema',
+  },
+  FrameBorderSchema: {
+    schema: StandardPresentationIR.FrameBorderSchema,
+    label: 'FrameBorder',
+    url: '/library/standard/presentation/frame#frameborderschema',
+  },
   AxesSchema: {
     schema: StandardPresentationIR.AxesSchema,
     label: 'Axes',
