@@ -812,6 +812,27 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
+    url: '/schematic/graph/relation/schema-reference',
+  },
+  RelationRoleSchema: {
+    schema: GraphIR.RelationRoleSchema,
+    label: 'RelationRole',
+    url: '/schematic/graph/relation/schema-reference#relationroleschema',
+  },
+  RelationKindSchema: {
+    schema: GraphIR.RelationKindSchema,
+    label: 'RelationKind',
+    url: '/schematic/graph/relation/schema-reference#relationkindschema',
+  },
+  RelationDirectionSchema: {
+    schema: GraphIR.RelationDirectionSchema,
+    label: 'RelationDirection',
+    url: '/schematic/graph/relation/schema-reference#relationdirectionschema',
+  },
+  GraphRelationMarkerAppearanceSchema: {
+    schema: GraphIR.GraphRelationMarkerAppearanceSchema,
+    label: 'GraphRelationMarkerAppearance',
+    url: '/schematic/graph/relation/schema-reference#graphrelationmarkerappearanceschema',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,

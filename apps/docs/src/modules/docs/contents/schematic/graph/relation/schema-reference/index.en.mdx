@@ -1,0 +1,42 @@
+---
+title: Schema reference
+description: Look up persisted relation records, semantic keys, directions, and endpoint marker appearance.
+---
+
+This page uses public schemas from `@retikz/graph`. Core NodeTarget, GeometryLabel, Step, and shared Graph predicate / status schemas retain their owning names rather than being duplicated here. Definition functions and parameter schemas belong to runtime assembly; see [Custom usage](/schematic/graph/relation/custom).
+
+Parsing does not guarantee drawing: runtime still validates registration, role / kind / predicate ownership, effective directions, and endpoint existence. Omitting optional fields does not materialize theme values in Source.
+
+## RelationSchema
+
+<ZodSchema name="RelationSchema" />
+
+Without route, source connects directly to target. With route, supply the complete path. IR endpoints use objects; React / Vanilla string shorthand, way, and JSX children are not persisted.
+
+## RelationRoleSchema
+
+<ZodSchema name="RelationRoleSchema" />
+
+Built-in roles are association, dependency, generalization, flow, and influence. A role is not a free-form display string; custom keys must be registered.
+
+## RelationKindSchema
+
+<ZodSchema name="RelationKindSchema" />
+
+Kind keys are globally unique within the relation registry and must match their owning role. See [Basic usage](/schematic/graph/relation/usage) for built-in UML kinds and their markers / directions.
+
+## RelationDirectionSchema
+
+<ZodSchema name="RelationDirectionSchema" />
+
+The schema exposes none, forward, reverse, and both. Roles and kinds may narrow this set. none does not mean missing endpoints or a missing path.
+
+## GraphRelationMarkerAppearanceSchema
+
+<ZodSchema name="GraphRelationMarkerAppearanceSchema" />
+
+This only styles an existing marker. It does not create a marker, choose its shape, or change its dimensions. Roles, kinds, and predicates determine structure.
+
+## GraphRelationRouteStepSchema
+
+Reuses Core StepSchema positions and geometry while rejecting any step.label. Put relationship labels in Relation.labels. RelationSchema additionally requires at least two route steps. See [Path Schema reference](/kernel/components/path/schema-reference) for shared Step variants.
