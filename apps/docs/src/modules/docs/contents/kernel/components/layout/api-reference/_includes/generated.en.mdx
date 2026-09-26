@@ -2,6 +2,95 @@
 
 ## `@retikz/react`
 
+### Layout / LayoutProps
+
+- `Layout`: <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={362}>Render JSX drawings or scene IR as SVG or Canvas, with updates and animation</ApiSourceLink>
+- `LayoutProps`: <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={192}>Public props for React Layout</ApiSourceLink>
+
+Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+
+| Group      | Member                 | Type                                                  | Default                       | Description                                                                                                                                                                              |
+| ---------- | ---------------------- | ----------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main       | `children?`            | `ReactNode`                                           | —                             | Drawing content declared with JSX                                                                                                                                                        |
+|            | `ir?`                  | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                                                            |
+| Layout     | `nodeDistance?`        | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
+| Style      | `fontSize?`            | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
+|            | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
+|            | `theme?`               | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
+| Rendering  | `className?`           | `string`                                              | —                             | Host className                                                                                                                                                                           |
+|            | `height?`              | `number \| string`                                    | `computeDisplaySize`          | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
+|            | `idPrefix?`            | `string`                                              | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
+|            | `renderer?`            | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
+|            | `style?`               | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                                                       |
+|            | `viewBox?`             | `IRViewBox`                                           | —                             | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
+|            | `width?`               | `number \| string`                                    | `computeDisplaySize`          | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
+| Callbacks  | `handlers?`            | `HydrationHandlers`                                   | —                             | Event handlers used when ir is supplied directly                                                                                                                                         |
+| Animation  | `animate?`             | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
+|            | `animationProperties?` | `AnimationPropertyRegistry`                           | —                             | Animatable property registry                                                                                                                                                             |
+|            | `animationRef?`        | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                                                                 |
+|            | `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                                                    |
+|            | `easings?`             | `EasingRegistry`                                      | —                             | Animation easing registry                                                                                                                                                                |
+|            | `snapshotAt?`          | `number`                                              | —                             | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
+| Runtime    | `authoring?`           | `unknown`                                             | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                                                          |
+|            | `runtime?`             | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                                                     |
+| Output     | `artifacts?`           | `CompileArtifactOptions`                              | —                             | Requested compilation artifacts                                                                                                                                                          |
+|            | `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                                                      |
+|            | `onCompileResult?`     | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                                                     |
+| Extensions | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | Compile driver that processes authoring input                                                                                                                                            |
+|            | `extensions?`          | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
+|            | `lowerTex?`            | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                                                              |
+
+</div>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const Layout: FC<LayoutProps>;
+
+export type LayoutProps = {
+  rootScope?: Pick<InputScope, 'style' | 'defaults'>;
+  ir?: IRScene;
+  theme?: IRScene['theme'];
+  children?: ReactNode;
+  authoring?: unknown;
+  compileDriver?: VanillaCompileDriver;
+  handlers?: HydrationHandlers;
+  runtime?: LayoutRuntimeOptions;
+  width?: number | string;
+  height?: number | string;
+  viewBox?: IRViewBox;
+  className?: string;
+  style?: CSSProperties;
+  renderer?: 'svg' | 'canvas';
+  animate?: boolean;
+  snapshotAt?: number;
+  animationRef?: Ref<AnimationControls | null>;
+  animations?: ReadonlyArray<IRAnimationTrack>;
+  easings?: EasingRegistry;
+  animationProperties?: AnimationPropertyRegistry;
+  idPrefix?: string;
+  nodeDistance?: number;
+  fontSize?: number;
+  extensions?: LayoutExtensions;
+  lowerTex?: LowerTex;
+  artifacts?: CompileArtifactOptions;
+  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
+  onCompileResult?: (result: CompileResult) => void;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### LayoutExtensions
 
 <p>
@@ -20,7 +109,7 @@ Pass these options through the extensions prop of Layout. Each field accepts an 
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
 | Member                     | Type                                     | Default                   | Description                      |
 | -------------------------- | ---------------------------------------- | ------------------------- | -------------------------------- |
@@ -58,94 +147,6 @@ export type LayoutExtensions = Readonly<{
 
 </DocTabs>
 
-### LayoutProps
-
-<p>
-  <ApiSourceLink label={'LayoutProps'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={192}>
-    Public props for React Layout
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
-
-| Group      | Member                 | Type                                                  | Default                       | Description                                                                                                                                            |
-| ---------- | ---------------------- | ----------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Main       | `children?`            | `ReactNode`                                           | —                             | Drawing content declared with JSX                                                                                                                      |
-|            | `ir?`                  | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                          |
-| Layout     | `nodeDistance?`        | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                              |
-| Style      | `fontSize?`            | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes |
-|            | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                               |
-|            | `theme?`               | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                 |
-| Rendering  | `className?`           | `string`                                              | —                             | Host className                                                                                                                                         |
-|            | `height?`              | `number \| string`                                    | —                             | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                                          |
-|            | `idPrefix?`            | `string`                                              | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                        |
-|            | `renderer?`            | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided       |
-|            | `style?`               | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                     |
-|            | `viewBox?`             | `IRViewBox`                                           | —                             | Explicit viewport                                                                                                                                      |
-|            | `width?`               | `number \| string`                                    | —                             | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio                     |
-| Callbacks  | `handlers?`            | `HydrationHandlers`                                   | —                             | Event handlers used when ir is supplied directly                                                                                                       |
-|            | `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                    |
-|            | `onCompileResult?`     | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                   |
-| Animation  | `animate?`             | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference   |
-|            | `animationProperties?` | `AnimationPropertyRegistry`                           | —                             | Animatable property registry                                                                                                                           |
-|            | `animationRef?`        | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                               |
-|            | `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                  |
-|            | `easings?`             | `EasingRegistry`                                      | —                             | Animation easing registry                                                                                                                              |
-|            | `snapshotAt?`          | `number`                                              | —                             | Time at which to sample a static animation frame                                                                                                       |
-| Runtime    | `authoring?`           | `unknown`                                             | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                        |
-|            | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | Compile driver that processes authoring input                                                                                                          |
-|            | `runtime?`             | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                   |
-| Output     | `artifacts?`           | `CompileArtifactOptions`                              | —                             | Requested compilation artifacts                                                                                                                        |
-| Extensions | `extensions?`          | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                          |
-|            | `lowerTex?`            | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                            |
-
-</div>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
-export type LayoutProps = {
-  rootScope?: Pick<InputScope, 'style' | 'defaults'>;
-  ir?: IRScene;
-  theme?: IRScene['theme'];
-  children?: ReactNode;
-  authoring?: unknown;
-  compileDriver?: VanillaCompileDriver;
-  handlers?: HydrationHandlers;
-  runtime?: LayoutRuntimeOptions;
-  width?: number | string;
-  height?: number | string;
-  viewBox?: IRViewBox;
-  className?: string;
-  style?: CSSProperties;
-  renderer?: 'svg' | 'canvas';
-  animate?: boolean;
-  snapshotAt?: number;
-  animationRef?: Ref<AnimationControls | null>;
-  animations?: ReadonlyArray<IRAnimationTrack>;
-  easings?: EasingRegistry;
-  animationProperties?: AnimationPropertyRegistry;
-  idPrefix?: string;
-  nodeDistance?: number;
-  fontSize?: number;
-  extensions?: LayoutExtensions;
-  lowerTex?: LowerTex;
-  artifacts?: CompileArtifactOptions;
-  onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
-  onCompileResult?: (result: CompileResult) => void;
-};
-```
-
-</DocTab>
-
-</DocTabs>
-
 ### LayoutRetainedRuntimeOptions
 
 <p>
@@ -154,7 +155,7 @@ export type LayoutProps = {
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
     startLine={14}
   >
-    Retained Runtime configuration for React Layout
+    Keep execution state for subsequent drawing updates; used when runtime or mode is omitted
   </ApiSourceLink>
 </p>
 
@@ -162,13 +163,13 @@ export type LayoutProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
-| Member                     | Type                                      | Default                      | Description                                                                                     |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                              |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program update strategy                                                                         |
+| Member                     | Type                                      | Default                      | Description                                                                                                                              |
+| -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
+| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </div>
 
@@ -200,15 +201,25 @@ export type LayoutRetainedRuntimeOptions = Readonly<{
   </ApiSourceLink>
 </p>
 
-```ts
-export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type LayoutRuntimeModeValue = 'retained' | 'static';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### LayoutRuntimeOptions
 
@@ -218,33 +229,30 @@ export type LayoutRuntimeModeValue = 'retained' | 'static';
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
     startLine={40}
   >
-    Discriminated Runtime configuration for React Layout
+    Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static
+    accepts neither option
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
 <DocTabs defaultValue="retained">
 
-<DocTab value="retained" label="Retained">
+<DocTab value="retained" label="Members · Retained">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
-| Member                     | Type                                      | Default                      | Description                                                                                     |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                              |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program update strategy                                                                         |
+| Member                     | Type                                      | Default                      | Description                                                                                                                              |
+| -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
+| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
 </div>
 
 </DocTab>
 
-<DocTab value="static" label="Static">
+<DocTab value="static" label="Members · Static">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
 | Member                     | Type                              | Default | Description                                                                                  |
 | -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
@@ -253,10 +261,6 @@ export type LayoutRuntimeModeValue = 'retained' | 'static';
 | `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
 
 </div>
-
-</DocTab>
-
-</DocTabs>
 
 </DocTab>
 
@@ -278,7 +282,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
     startLine={30}
   >
-    Static Runtime configuration for React Layout
+    Compile the complete drawing whenever input changes, without retaining incremental execution state
   </ApiSourceLink>
 </p>
 
@@ -286,7 +290,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
 | Member                     | Type                              | Default | Description                                                                                  |
 | -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
@@ -311,20 +315,6 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 </DocTab>
 
 </DocTabs>
-
-### Layout
-
-<p>
-  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={356}>
-    React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result
-  </ApiSourceLink>
-</p>
-
-React does not create Core Programs, Runtime sessions, or retained renderers; Vanilla owns all processing state
-
-```ts
-export declare const Layout: FC<LayoutProps>;
-```
 
 ### LayoutRuntimeMode
 

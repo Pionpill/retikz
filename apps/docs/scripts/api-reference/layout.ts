@@ -15,6 +15,7 @@ const layoutConfig: ApiReferencePackageConfig = {
     {
       source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
       title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+      symbolPairs: [['Layout', 'LayoutProps']],
       symbols: [
         'Layout',
         'LayoutProps',

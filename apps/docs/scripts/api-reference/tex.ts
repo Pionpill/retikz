@@ -1033,7 +1033,7 @@ const renderMembers = (
     ? '[&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]'
     : '[&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]';
   return [
-    `<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal ${columns}">`,
+    `<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal ${columns}">`,
     table,
     '</div>',
   ].join('\n\n');
@@ -1166,15 +1166,11 @@ const renderSymbol = (
     ...subjects.map(subject => localizeText(subject.details, lang, translate)),
     symbol.branches
       ? [
-          '<DocTabs defaultValue="members">',
-          `<DocTab value="members" label="${lang === 'zh' ? '属性' : 'Members'}">`,
           `<DocTabs defaultValue=${JSON.stringify(symbol.branches[0].value)}>`,
           ...symbol.branches.map(
             branch =>
-              `<DocTab value=${JSON.stringify(branch.value)} label=${JSON.stringify(branch.label[lang])}>\n\n${renderMembers(branch.members, lang, translate)}\n\n</DocTab>`,
+              `<DocTab value=${JSON.stringify(branch.value)} label=${JSON.stringify(`${lang === 'zh' ? '属性' : 'Members'} · ${branch.label[lang]}`)}>\n\n${renderMembers(branch.members, lang, translate)}\n\n</DocTab>`,
           ),
-          '</DocTabs>',
-          '</DocTab>',
           `<DocTab value="definition" label="${lang === 'zh' ? '类型定义' : 'Type definition'}">`,
           `\`\`\`ts\n${combined.signature}\n\`\`\``,
           '</DocTab>',
@@ -1182,13 +1178,14 @@ const renderSymbol = (
         ].join('\n\n')
       : hasMemberViews
         ? renderObjectMemberViews(combined, memberGroups, lang, translate, composition, memberGroupDisplay)
-        : expandedObject ||
-            symbol.members.length === 0 ||
-            symbol.signature.includes(' & ') ||
-            symbol.signature.startsWith('export ')
-          ? renderSignatureBlock(combined.signature, lang)
-          : '',
-    renderExpandedSignature(symbol, lang),
+        : symbol.expandedSignature
+          ? renderExpandedSignature(combined, lang)
+          : expandedObject ||
+              symbol.members.length === 0 ||
+              symbol.signature.includes(' & ') ||
+              symbol.signature.startsWith('export ')
+            ? renderSignatureBlock(combined.signature, lang)
+            : '',
     hasMemberViews ? '' : renderGroupedMembers(symbol, memberGroups, lang, translate),
     indexSignatures.length > 0
       ? `#### ${lang === 'zh' ? '索引签名' : 'Index signatures'}\n\n\`\`\`ts\n${indexSignatures.join(';\n')}\n\`\`\``
@@ -1340,7 +1337,16 @@ const renderObjectMemberViews = (
 /** 为无法列出字段的联合别名补充 TypeScript checker 展开的分支 */
 const renderExpandedSignature = (symbol: ApiReferenceSymbol, lang: ApiReferenceLanguage): string =>
   symbol.expandedSignature
-    ? `#### ${lang === 'zh' ? '展开类型' : 'Expanded type'}\n\n\`\`\`ts\n${symbol.expandedSignature}\n\`\`\``
+    ? [
+        '<DocTabs defaultValue="expanded">',
+        `<DocTab value="expanded" label="${lang === 'zh' ? '展开类型' : 'Expanded type'}">`,
+        `\`\`\`ts\n${symbol.expandedSignature}\n\`\`\``,
+        '</DocTab>',
+        `<DocTab value="definition" label="${lang === 'zh' ? '类型定义' : 'Type definition'}">`,
+        renderSignatureBlock(symbol.signature, lang),
+        '</DocTab>',
+        '</DocTabs>',
+      ].join('\n\n')
     : '';
 
 /** 从公开入口、签名与 JSDoc 生成可由 MDX include 直接展开的 API 内容 */

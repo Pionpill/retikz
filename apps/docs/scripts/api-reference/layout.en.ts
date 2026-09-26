@@ -1,5 +1,27 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  'SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版':
+    'CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout',
+  'SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版':
+    'CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout',
+  '显式视框，使用绘图坐标；优先于 ir.viewBox，省略时沿用场景视框，场景未指定时按内容计算':
+    'Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none',
+  '动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate':
+    'Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate',
+  '将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画':
+    'Render JSX drawings or scene IR as SVG or Canvas, with updates and animation',
+  '通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式':
+    'Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.',
+  '保留执行状态以处理后续图形更新；省略 runtime 或 mode 时使用此模式':
+    'Keep execution state for subsequent drawing updates; used when runtime or mode is omitted',
+  '更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行':
+    'Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution',
+  '接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面':
+    'Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing',
+  '每次输入变化时完整编译图形，不保留增量执行状态':
+    'Compile the complete drawing whenever input changes, without retaining incremental execution state',
+  '通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项':
+    'Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static accepts neither option',
   主题样式定义: 'Theme style definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
   处理作者输入的编译驱动: 'Compile driver that processes authoring input',
