@@ -1,0 +1,82 @@
+---
+title: Design philosophy
+description: Separate structure, domain layout, and complete figure assembly so one description produces a renderable, queryable diagram.
+---
+
+A structural diagram needs to explain relationships, position its objects, and accommodate a title, description, and legend. Diagram separates these responsibilities: authors describe structure, concrete components compute the drawing, and a shared framework assembles the complete figure.
+
+## Describe structure and derive geometry
+
+In Flow, authors declare objects, relations, and containment, adding direction, spacing, or arrangement constraints when needed. Flow measures actual text and shapes before computing positions and connection paths. Editing text or adding a step can therefore trigger a new layout without maintaining handwritten coordinates.
+
+Source is a serializable structural description. Entity, Group, and Layout occupy flat catalogs; root and container `children` lists define direct containment and order. Relations are declared only at the root and reference Entity or Group ids. React component nesting is converted to this same structure, without a second stored hierarchy.
+
+Positions, paths, and geometry caches belong to computed results and are not written back to Source. Programs or LLMs can edit a diagram by changing objects and references without generating coordinates. Layout remains constrained by the selected Definition; unsupported requests produce explicit errors.
+
+## Three parts form a complete figure
+
+In the figure below, the title, description, and legend explain the content. The dashed region represents the drawing produced by a concrete component, while the outer frame contains every region.
+
+<ComponentPreview files="diagram-framework-overview" hideCode type="illustration" size="lg" />
+
+| Part                         | Responsibility                                                        | Configuration                     |
+| ---------------------------- | --------------------------------------------------------------------- | --------------------------------- |
+| Supporting regions           | Title, description, and explicit legend                               | `presentation`                    |
+| Frame and region arrangement | Padding, gaps, legend docking, background, border, and clipping       | `frame`                           |
+| Drawing content              | Object measurement, positions, connection paths, and domain semantics | A concrete component such as Flow |
+
+The shared Diagram Framework assembles supporting regions and the frame. Frame spacing does not become node spacing inside the drawing, and a title does not participate in flow relations. All regions enter the same Scene and complete output boundary as parts of one figure.
+
+### Supporting regions follow their content
+
+Titles and descriptions use `{ text, style?, layout? }`, supporting multiline text, line and run styling, and mixed text and TeX. The legend is an explicit Standard Legend with author-supplied entries; the framework does not infer a legend from domain data.
+
+Titles, descriptions, and legends are optional. A missing region collapses together with its container and spacing, leaving no empty allocation. The legend can sit above, to the right, below, or to the left of the drawing and align along that side.
+
+### The frame covers the complete result
+
+Frame separately controls the gaps between title and description, heading and main content, and drawing and legend. It also provides padding, background, border, corner radius, and overflow. As the drawing changes, these regions continue to participate in layout, clipping, and output as one figure.
+
+<ComponentAlert type="tip">
+  Assembly reuses Layout Flex, Standard Surface, and Core Scope. Text reuses TextBlock, and legends reuse Standard
+  Legend. Diagram does not maintain separate text, legend, or rendering mechanisms.
+</ComponentAlert>
+
+## Shared assembly and concrete components
+
+Diagram Framework receives drawing content already produced by a concrete component without inspecting or rewriting its domain semantics. There is no instantiable generic Diagram root or public `body` field for injecting arbitrary content; users start with a concrete component such as `FlowDiagram`.
+
+Flow owns measurement, layout, and routing, then delegates drawing to Graph. Its `FlowDiagramArtifact` lets callers query element, relation, and layout results. The shared framework does not introduce a separate Diagram identity, metadata model, or artifact. Layout and Legend results remain owned by their respective capabilities.
+
+<ComponentAlert type="tip">
+  Graph provides structural semantics and drawing capabilities through Entity, Relation, Group, and related components.
+  Diagram organizes a complete structural figure on that foundation. Flow currently accepts neither Graph Block nor
+  arbitrary drawing children, and automatic layout does not imply global connection obstacle avoidance.
+</ComponentAlert>
+
+## Appearance defaults do not create content
+
+Themes provide an appearance baseline, `diagramDefaults` supplies explicit author defaults, and instance fields take final precedence. `theme.style` selects same-name Definitions, while `theme.mode` selects light or dark mode. These settings do not replace content and relation declarations.
+
+`diagramDefaults.presentation.title/description` follows the formal supporting-region paths and contains only `style.textColor/font/opacity` and `layout.align/lineHeight/maxTextWidth`, without `text`. Setting a default title font does not create a title; font configurations replace as a whole.
+
+`diagramDefaults.frame` supplies padding, the three gaps, background, border, and corner radius. Legend docking and overflow are specified in the formal `frame`. Theme Definitions return the same sparse structure; omitted fields retain the baseline.
+
+Concrete components manage their defaults separately. For example, Flow uses `flowDefaults` for object and relation appearance defaults. Layout direction and routing remain formal fields rather than theme settings. See Flow basic usage for the detailed precedence rules.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Flow basic usage',
+      description: 'Apply groups, layout, routing, and defaults to real diagrams',
+      url: '/schematic/diagram/flow/basic',
+    },
+    {
+      title: 'Graph design philosophy',
+      description: 'Understand structural semantics and foundational components',
+      url: '/schematic/graph/design',
+    },
+  ]}
+/>

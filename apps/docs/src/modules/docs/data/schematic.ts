@@ -157,13 +157,24 @@ export const schematicSection: Array<Section> = [
     id: 'diagram',
     label: 'schematic.diagram',
     navigationDescription: 'schematic.diagramNavigationDescription',
-    document: true,
     pages: [
-      { id: 'framework', label: 'schematic.diagramFramework' },
       {
-        id: 'flow',
-        label: 'schematic.flowDiagram',
-        children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
+        id: 'introduction',
+        label: 'schematic.introduction',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'get-start',
+        label: 'schematic.getStart',
+        difficulty: DocDifficulty.Beginner,
+        meta: { pageType: 'entry', audience: 'user', sourceOfTruth: 'runtime' },
+      },
+      {
+        id: 'design',
+        label: 'schematic.design',
+        difficulty: DocDifficulty.Advanced,
+        meta: { pageType: 'concept', audience: 'user', sourceOfTruth: 'runtime' },
       },
       {
         id: 'changelog',
@@ -175,6 +186,13 @@ export const schematicSection: Array<Section> = [
           capability: 'diagram.release',
           sourceOfTruth: 'changelog',
         },
+      },
+      {
+        id: 'flow',
+        label: 'schematic.flowDiagram',
+        sidebarGroup: 'schematic.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'runtime' },
+        children: [{ id: 'basic', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner }],
       },
     ],
   },
