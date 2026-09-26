@@ -17,7 +17,12 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     entries: [
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
-        title: { zh: 'React 组件', en: 'React components' },
+        title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+        symbolPairs: [
+          ['Path', 'PathProps'],
+          ['Draw', 'DrawProps'],
+          ['Step', 'StepProps'],
+        ],
         symbols: [
           'Draw',
           'DrawProps',
@@ -53,7 +58,9 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     entries: [
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
-        title: { zh: 'Vanilla 作者输入', en: 'Vanilla authoring input' },
+        title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
+        symbolPairs: [['path', 'InputPath']],
+        omitPairedCallDetails: true,
         symbols: ['path', 'InputPath', 'InputStep'],
       },
     ],
@@ -68,7 +75,13 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     entries: [
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/core/src/index.ts'),
-        title: { zh: '路径写法与扩展契约', en: 'Path syntax and extension contracts' },
+        title: { zh: '`@retikz/core`', en: '`@retikz/core`' },
+        overloadTabs: {
+          definePathKind: [
+            { value: 'without-owner-output', label: { zh: '无所属者产物', en: 'Without owner output' } },
+            { value: 'with-owner-output', label: { zh: '发布所属者产物', en: 'With owner output' } },
+          ],
+        },
         symbols: [
           'DrawWay',
           'WayDSL',

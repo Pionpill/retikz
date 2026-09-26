@@ -16,7 +16,7 @@ export type MergePropertiesOptions<T extends object> = Readonly<{
  * 从左到右浅合并对象的自身可枚举属性，返回新对象
  * @description 包含字符串与 symbol 键，跳过 undefined 源；默认保留所有属性值，不递归合并或修改输入
  * @param sources 按优先级从低到高排列的源对象
- * @param options 属性写入策略
+ * @param options 属性写入策略；默认 {}，不筛除源属性
  * @returns 可能经过过滤的新对象，因此返回类型为 `Partial<T>`
  * @throws 属性读取或策略回调失败时抛出 RetikzFoundationError，原始异常保留为 cause
  * @template T 被浅合并的对象类型

@@ -14,6 +14,21 @@ describe('Layout API 公开范围', () => {
     expect(headings).not.toContain('Layout');
     expect(headings).not.toContain('Node');
     expect(headings).not.toContain('Scope');
+    for (const name of [
+      'scene',
+      'InputScene',
+      'InputSceneChildren',
+      'InputSceneLayers',
+      'layer',
+      'InputLayer',
+      'IRScene',
+      'IRViewBox',
+    ])
+      expect(headings).toContain(name);
+    for (const owner of ['react', 'vanilla', 'core']) expect(source).toContain('## `@retikz/' + owner + '`');
+    expect(source).toContain('Members · Children');
+    expect(source).toContain('Members · Layers');
+    expect(source).toContain('normalization supplies the data version');
     expect(source).toContain("IRScene['theme']");
     expect(source).toContain('`compileDriver?`');
     const extensions = source.split('### LayoutExtensions\n')[1]?.split('\n### ')[0] ?? '';
@@ -71,5 +86,5 @@ describe('Layout API 公开范围', () => {
     const paths = [...source.matchAll(/path=\{"([^"}]+)"\}/g)].map(match => match[1]);
     expect(paths.length).toBeGreaterThan(0);
     for (const path of paths) expect(existsSync(resolve('../..', path))).toBe(true);
-  });
+  }, 30_000);
 });

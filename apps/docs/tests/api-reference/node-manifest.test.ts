@@ -35,7 +35,7 @@ describe('Node API 公开范围', () => {
     expect(inputNode).toContain('`InputPosition`');
     expect(inputNode).not.toContain("`IRNode['position']`");
     expect(inputNode).toContain('`Array<IRAnimationTrack>`');
-    expect(inputNode).toContain('#### Returns');
+    expect(inputNode).toContain('| Returns |');
     expect(inputNode).toContain("Omit<InputNode, 'type'>");
     expect(headings).not.toContain('NodeProps');
     const label = source.split('### InputNodeLabel\n')[1]?.split('\n### ')[0] ?? '';
@@ -47,10 +47,32 @@ describe('Node API 公开范围', () => {
       const members = section.split('<DocTab value="members" label="Members">')[1]?.split('</DocTab>')[0] ?? '';
       const definition =
         section.split('<DocTab value="definition" label="Type definition">')[1]?.split('</DocTab>')[0] ?? '';
-      expect(members).toContain('#### Parameters');
-      expect(members).toContain('#### Returns');
+      const definitionName = name === 'defineShape' ? 'ShapeDefinition' : 'BoundaryDefinition';
+      expect(members).toContain('| Category | Name | Type / signature | Description |');
+      expect(members).toContain('| Type parameters | `TParams` | `extends JsonObject` |');
+      expect(members).toContain('| Parameters | `def` | `' + definitionName + 'Input<TParams>` |');
+      expect(members).toContain('| Returns | — | `' + definitionName + '` |');
+      expect(members).not.toContain('| Throws |');
+      expect(members).not.toMatch(/#### (Parameters|Returns|Type parameters)/);
+      expect(members.match(/\| Category \|/g)).toHaveLength(1);
       expect(members).not.toContain('export declare');
       expect(definition).toContain(`export declare const ${name}`);
+    }
+    for (const name of [
+      'ShapeDefinitionInput',
+      'BoundaryDefinitionInput',
+      'node / InputNode',
+      'coordinate / InputCoordinate',
+    ]) {
+      const section = source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+      const members = section.split('<DocTab value="members" label="Members">')[1]?.split('</DocTab>')[0] ?? '';
+      expect(members.match(/\| (?:Group \| )?Member \|/g)).toHaveLength(1);
+      expect(section).not.toMatch(/^#### /m);
+      if (name.endsWith('DefinitionInput')) expect(members).toContain('`TParams` (Type parameter)');
+      else {
+        expect(members).toContain('`config` (Parameter)');
+        expect(members).toContain('| Returns |');
+      }
     }
     expect(source).not.toMatch(/[\u3400-\u9fff]/u);
     await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();

@@ -101,6 +101,8 @@ export type PathKindLabelInput = Readonly<{
 /**
  * path kind 编译上下文
  * @description 自定义 kind 可以完全接管输出，也可以调用回调复用标准描边逻辑
+ * @template TPath 经当前路径定义的 schema 解析后的路径类型，决定 path 字段的结构；默认使用 IRPathBase
+ * @template TOwnerOutput 通过 ownerOutput.publish 发布的 JSON 产物类型；默认 never 表示不发布所属者产物
  */
 export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   /** 经该 definition 完整 schema 解析后的 path subject */
@@ -129,6 +131,11 @@ export type PathKindOwnerOutputBranch<TOwnerOutput extends JsonValue> = [TOwnerO
   ? Readonly<{ ownerOutput?: never }>
   : Readonly<{ ownerOutput: CompileOwnerOutputDefinition<TOwnerOutput> }>;
 
+/**
+ * 注册路径种类的解析、编译与可选所属者产物契约
+ * @template TPath 完整路径 schema 的解析结果类型，同时决定编译上下文的 path 字段；默认使用 IRPathBase
+ * @template TOwnerOutput 所属者产物的 JSON 类型；默认 never 时不能声明 ownerOutput，否则必须提供对应的产物 schema
+ */
 export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   /** 非空 path kind registry key */
   name: string;

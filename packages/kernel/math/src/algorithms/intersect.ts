@@ -38,7 +38,9 @@ export type CircleCircleInput = {
   radiusB: number;
 };
 
-/** 两条无限直线（各由两点定）的交点；平行 / 共线返回 null */
+/** 两条无限直线（各由两点定）的交点；平行 / 共线返回 null
+ * @param input 两条直线各自的两个定义点
+ */
 const lineLine = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];
@@ -50,7 +52,9 @@ const lineLine = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   return [a1[0] + da[0] * t, a1[1] + da[1] * t];
 };
 
-/** 直线（origin + direction，direction 不必单位化）∩ 圆，返回 0/1/2 交点；切线返回 2 个重合点，调用方自判 */
+/** 直线（origin + direction，direction 不必单位化）∩ 圆，返回 0/1/2 交点；切线返回 2 个重合点，调用方自判
+ * @param input 直线原点、方向与圆心、半径
+ */
 const lineCircle = ({ origin, direction, center, radius }: LineCircleInput): Array<Position> => {
   const ox = origin[0] - center[0];
   const oy = origin[1] - center[1];
@@ -68,7 +72,9 @@ const lineCircle = ({ origin, direction, center, radius }: LineCircleInput): Arr
   return intersections;
 };
 
-/** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（discriminant≈0）返回 2 个重合点，调用方自判 */
+/** 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（discriminant≈0）返回 2 个重合点，调用方自判
+ * @param input 两个圆各自的圆心和半径
+ */
 const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput): Array<Position> => {
   const dx = centerB[0] - centerA[0];
   const dy = centerB[1] - centerA[1];
@@ -93,7 +99,9 @@ const circleCircle = ({ centerA, radiusA, centerB, radiusB }: CircleCircleInput)
   ];
 };
 
-/** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null */
+/** 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null
+ * @param input 两条线段各自的端点
+ */
 const segmentSegment = ({ a1, a2, b1, b2 }: LineLineInput): Position | null => {
   const da: Position = [a2[0] - a1[0], a2[1] - a1[1]];
   const db: Position = [b2[0] - b1[0], b2[1] - b1[1]];

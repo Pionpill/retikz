@@ -36,11 +36,22 @@ type RetikzInspectErrorCauseOptions = Readonly<Pick<RetikzInspectErrorOptions, '
 
 /** Inspect 包统一的结构化错误 */
 export class RetikzInspectError extends RetikzError<RetikzInspectErrorCodeValue, Readonly<Record<string, unknown>>> {
-  /** 使用默认错误码创建 Inspect 错误 */
+  /** 使用默认错误码创建 Inspect 错误
+   *
+   * @param message 面向调用方的错误消息，错误码为 INSPECTION_ERROR
+   */
   constructor(message: string);
-  /** 使用结构化参数创建 Inspect 错误 */
+  /** 使用结构化参数创建 Inspect 错误
+   *
+   * @param options 错误码、消息与可选详情、原始原因；省略 details 时使用包含 code 的只读对象
+   */
   constructor(options: RetikzInspectErrorOptions);
-  /** 使用显式错误码创建 Inspect 错误 */
+  /** 使用显式错误码创建 Inspect 错误
+   *
+   * @param code 用于调用方分支处理的稳定错误码
+   * @param message 面向调用方的错误消息
+   * @param options 可选详情与原始原因；省略 details 时使用包含 code 的只读对象
+   */
   constructor(code: RetikzInspectErrorCodeValue, message: string, options?: RetikzInspectErrorCauseOptions);
   constructor(
     optionsOrMessageOrCode: RetikzInspectErrorOptions | string,

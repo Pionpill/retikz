@@ -4,10 +4,38 @@
  * @description 描述引擎执行、MathJax 解析或 SVG 降解阶段不能产出公式路径的原因。它只承载可展示或记录的失败事实，不负责错误恢复；调用方可通过 `LowerTexOptions.onDiagnostic` 决定如何提示用户
  */
 export type TexLoweringDiagnostic =
-  | { kind: 'engine-error'; source: string; message: string }
-  | { kind: 'mathjax-error'; source: string; message: string }
-  | { kind: 'unsupported-svg'; source: string; message: string }
-  | { kind: 'malformed-svg'; source: string; message: string };
+  | {
+      /** 引擎初始化或执行失败 */
+      kind: 'engine-error';
+      /** 失败的 TeX 源文本；引擎初始化失败时为空字符串 */
+      source: string;
+      /** 可供记录或展示的失败原因 */
+      message: string;
+    }
+  | {
+      /** MathJax 返回公式解析错误 */
+      kind: 'mathjax-error';
+      /** 失败的 TeX 源文本；引擎初始化失败时为空字符串 */
+      source: string;
+      /** 可供记录或展示的失败原因 */
+      message: string;
+    }
+  | {
+      /** 引擎输出包含不支持的 SVG 结构 */
+      kind: 'unsupported-svg';
+      /** 失败的 TeX 源文本；引擎初始化失败时为空字符串 */
+      source: string;
+      /** 可供记录或展示的失败原因 */
+      message: string;
+    }
+  | {
+      /** 引擎输出的 SVG 结构无效 */
+      kind: 'malformed-svg';
+      /** 失败的 TeX 源文本；引擎初始化失败时为空字符串 */
+      source: string;
+      /** 可供记录或展示的失败原因 */
+      message: string;
+    };
 
 /**
  * TeX lowerer 配置

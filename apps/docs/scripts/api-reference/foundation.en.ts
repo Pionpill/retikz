@@ -1,5 +1,6 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '属性写入策略；默认 {}，不筛除源属性': 'Property write strategy; defaults to {}, retaining all source properties',
   '使用默认错误码创建 Foundation 错误': 'Creates a Foundation error with the default error code',
   '使用结构化参数创建 Foundation 错误': 'Creates a Foundation error from structured options',
   '使用结构化参数创建领域错误，保留原始 cause':

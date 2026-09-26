@@ -42,8 +42,63 @@ const nodeMemberGroups = {
   zIndex: 'Style',
 } as const satisfies Readonly<Record<string, ApiReferenceGroupName>>;
 
+/** Vanilla 与 Core 作用域共享的字段用途 */
+const scopeMemberGroups = {
+  animations: 'Animation',
+  boundingShape: 'Geometry',
+  children: 'Main',
+  clip: 'Geometry',
+  defaults: 'Style',
+  frame: 'Style',
+  id: 'Main',
+  localNamespace: 'Main',
+  meta: 'Runtime',
+  placement: 'Geometry',
+  style: 'Style',
+  theme: 'Style',
+  transforms: 'Geometry',
+  type: 'Main',
+  zIndex: 'Style',
+} as const satisfies Readonly<Record<string, ApiReferenceGroupName>>;
+
 /** 以公开包名和符号名定位分组，不在各 API 页面脚本中设置条件 */
 export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiReferenceGroupPlan>>> = {
+  '@retikz/inspect#InspectLayoutProps': {
+    order: ['Main', 'Layout', 'Style', 'Rendering', 'Callbacks', 'Animation', 'Runtime', 'Output', 'Extensions'],
+    members: {
+      children: 'Main',
+      ir: 'Main',
+      registry: 'Main',
+      selection: 'Main',
+      request: 'Main',
+      nodeDistance: 'Layout',
+      fontSize: 'Style',
+      rootScope: 'Style',
+      theme: 'Style',
+      width: 'Rendering',
+      height: 'Rendering',
+      viewBox: 'Rendering',
+      className: 'Rendering',
+      style: 'Rendering',
+      renderer: 'Rendering',
+      idPrefix: 'Rendering',
+      handlers: 'Callbacks',
+      onArtifacts: 'Callbacks',
+      onCompileResult: 'Callbacks',
+      onCommit: 'Callbacks',
+      onDiagnostic: 'Callbacks',
+      animations: 'Animation',
+      animate: 'Animation',
+      snapshotAt: 'Animation',
+      animationRef: 'Animation',
+      easings: 'Animation',
+      animationProperties: 'Animation',
+      runtime: 'Runtime',
+      artifacts: 'Output',
+      extensions: 'Extensions',
+      lowerTex: 'Extensions',
+    },
+  },
   '@retikz/react#LayoutProps': {
     order: ['Main', 'Layout', 'Style', 'Rendering', 'Callbacks', 'Animation', 'Runtime', 'Output', 'Extensions'],
     members: {
@@ -105,6 +160,14 @@ export const apiReferenceMemberGroups: Readonly<Partial<Record<string, ApiRefere
       authoring: 'Runtime',
       meta: 'Runtime',
     },
+  },
+  '@retikz/vanilla#InputScope': {
+    order: ['Main', 'Geometry', 'Style', 'Animation', 'Runtime'],
+    members: { ...scopeMemberGroups, authoring: 'Runtime' },
+  },
+  '@retikz/core#IRScope': {
+    order: ['Main', 'Geometry', 'Style', 'Animation', 'Runtime'],
+    members: scopeMemberGroups,
   },
   '@retikz/react#PathProps': {
     order: ['Main', 'Geometry', 'Style', 'Callbacks', 'Animation', 'Runtime'],

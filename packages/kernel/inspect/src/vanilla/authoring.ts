@@ -26,7 +26,11 @@ type InspectionVanillaAuthoring = Readonly<{
   input: InspectionVanillaAuthoringInput;
 }>;
 
-/** 创建只由 Inspect Vanilla 驱动识别的 opaque authoring 标记 */
+/** 创建只由 Inspect Vanilla 驱动识别的 opaque authoring 标记
+ *
+ * @param input 单项或多项检查请求；false 封锁整个 Scene 或 Scope，不能用于单个实体
+ * @returns 写入 Vanilla 输入 authoring 字段的冻结标记；其请求在驱动编译时解析
+ */
 export const createInspectionVanillaAuthoring = (input: InspectionVanillaAuthoringInput): InspectionVanillaAuthoring =>
   Object.freeze({ token: INSPECTION_VANILLA_AUTHORING_TOKEN, input });
 

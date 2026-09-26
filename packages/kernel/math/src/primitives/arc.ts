@@ -27,7 +27,9 @@ export type ArcSweepAngleInput = {
   endAngleDeg: number;
   /** 待判定角度，单位为度 */
   angleDeg: number;
-  /** 角度容差，单位为度 */
+  /** 角度容差，单位为度
+   * @default 1e-7
+   */
   toleranceDeg?: number;
 };
 
@@ -72,7 +74,12 @@ const collectAxisAngles = (lowerAngle: number, upperAngle: number): Array<number
   return angles;
 };
 
-/** 圆心、半径、角度（度，与 polar.toPosition 同约定）→ 圆周上对应点 */
+/**
+ * 圆心、半径、角度（度，与 polar.toPosition 同约定）→ 圆周上对应点
+ * @param center 圆心
+ * @param radius 半径
+ * @param angleDeg 参数角，单位为度
+ */
 export const pointAtArcAngle = (center: Position, radius: number, angleDeg: number): Position => {
   const angleRadians = angleDeg * DEG_TO_RAD;
   return [center[0] + Math.cos(angleRadians) * radius, center[1] + Math.sin(angleRadians) * radius];
@@ -81,6 +88,7 @@ export const pointAtArcAngle = (center: Position, radius: number, angleDeg: numb
 /**
  * 弧的 bbox 极值候选：起点、终点，加 [startAngle,endAngle] 内所有 90°·k 方向的圆周点
  * @description 不去重；端角恰在 90°·k 上时由调用方处理
+ * @param input 几何输入参数，字段含义见对应类型
  */
 export const collectArcBoundingCandidates = ({
   center,
@@ -108,6 +116,7 @@ export const collectArcBoundingCandidates = ({
 /**
  * 角度 a（度）是否落在弧的角度区间 [startAngle, endAngle] 内（含端点，带容差）
  * @description start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
+ * @param input 几何输入参数，字段含义见对应类型
  */
 export const isAngleWithinArcSweep = ({
   startAngleDeg,
@@ -127,6 +136,7 @@ export const isAngleWithinArcSweep = ({
 /**
  * 椭圆弧参数点：中心 + 半轴 rx/ry + 参数角（度）→ 椭圆周上点
  * @description 与 pointAtArcAngle 同角度约定；θ 是参数角，不一定等于真实极角
+ * @param input 几何输入参数，字段含义见对应类型
  */
 export const pointAtEllipseArcAngle = ({ center, radiusX, radiusY, angleDeg }: EllipseArcAnglePointInput): Position => {
   const angleRadians = angleDeg * DEG_TO_RAD;
@@ -136,6 +146,7 @@ export const pointAtEllipseArcAngle = ({ center, radiusX, radiusY, angleDeg }: E
 /**
  * 椭圆弧 bbox 极值候选：起点、终点，加 [start,end] 区间内所有 90°·k 参数角处的椭圆周点
  * @description 只处理轴对齐椭圆弧，候选点不去重
+ * @param input 几何输入参数，字段含义见对应类型
  */
 export const collectEllipseArcBoundingCandidates = ({
   center,
