@@ -12,6 +12,14 @@ export const apiReferenceBranchLabels: Readonly<
     >
   >
 > = {
+  '@retikz/standard-vanilla/container#InputList': [
+    { value: 'items', field: 'data', type: 'never', label: { zh: '显式单元格', en: 'Explicit cells' } },
+    { value: 'data', field: 'items', type: 'never', label: { zh: 'JSON 数据', en: 'JSON data' } },
+  ],
+  '@retikz/standard-react/container#ListItemProps': [
+    { value: 'text', field: 'text', type: 'string', label: { zh: '文本', en: 'Text' } },
+    { value: 'drawable', field: 'text', type: 'never', label: { zh: '图形内容', en: 'Drawable content' } },
+  ],
   '@retikz/tex#MathJaxLowerTexState': [
     { value: 'loading', field: 'status', type: "'loading'", label: { zh: '初始化中', en: 'Loading' } },
     { value: 'ready', field: 'status', type: "'ready'", label: { zh: '就绪', en: 'Ready' } },

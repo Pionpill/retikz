@@ -25,7 +25,7 @@ export const ListIndexOptionsSchema = strictObject({
     .default(ListIndexPosition.Before)
     .describe('Before means above a row or left of a column; after means below or right.'),
   start: NonNegativeIntegerSchema.default(0).describe('First displayed index; not cell identity.'),
-  style: ListIndexStyleSchema.optional(),
+  style: ListIndexStyleSchema.optional().describe('Index text appearance; cell-level styles do not affect indices.'),
 }).describe('Index strip placement, numbering, and text appearance.');
 
 /** List 的逐格内容宽度模式，不改变 Map 共享单元格契约 */
@@ -36,7 +36,10 @@ export const ListCellLayoutSchema = CellLayoutSchema.extend({
 });
 
 /** List 单格允许独立内容宽度 */
-export const ListCellSchema = CellSchema.extend({ layout: ListCellLayoutSchema.optional() });
+export const ListCellSchema = CellSchema.extend({
+  layout: ListCellLayoutSchema.optional().describe('Sparse cell dimensions, padding and overflow overrides.'),
+  style: CellStyleSchema.optional().describe('Sparse visual overrides for a List or Map cell.'),
+});
 
 export const ListLayoutSchema = ListCellLayoutSchema.extend({
   direction: zodEnum(ListDirection).default(ListDirection.Row).describe('Single-axis cell order without wrapping.'),
