@@ -14,36 +14,40 @@ const blockCenterY = 57.6;
 /** 固定 240 宽度时让 straightBarb 箭头尖端落在 Section 背景右边界 */
 const sectionBoundaryPoint: IRPosition = [232.5, 80.4];
 
-/** Relation 分别连接 Block 整体与具体 Section host */
+/** 连接示例语言 */
 export type BlockConnectionProps = { lang?: Lang };
-const Demo: FC<BlockConnectionProps> = ({ lang = 'zh' }) => (
-  <Graph>
-    <Block id="user" width={240}>
-      <BlockHeader title="User" description={blockConnectionI18n[lang].description} />
-      <BlockSection id="user.fields" title={blockConnectionI18n[lang].fields}>
-        <BlockRow content={['email', 'string']} />
-      </BlockSection>
-    </Block>
-    <Entity id="caller" role="activity" position={[-150, blockCenterY]}>
-      {blockConnectionI18n[lang].caller}
-    </Entity>
-    <Entity id="validator" role="activity" position={[430, blockCenterY]}>
-      {blockConnectionI18n[lang].validator}
-    </Entity>
-    <Relation
-      role="dependency"
-      source={{ id: 'caller', anchor: 'right' }}
-      target={{ id: 'user', anchor: 'left', boundary: surfaceBoundary }}
-      way={[{ id: 'caller', anchor: 'right' }, '-|-', { id: 'user', anchor: 'left', boundary: surfaceBoundary }]}
-    />
-    <Relation
-      role="dependency"
-      source={{ id: 'validator', anchor: 'left' }}
-      target={{ id: 'user.fields', anchor: 'right', boundary: surfaceBoundary }}
-      way={[{ id: 'validator', anchor: 'left' }, '-|-', sectionBoundaryPoint]}
-    />
-  </Graph>
-);
+/** Relation 分别连接 Block 整体与具体 Section host */
+const Demo: FC<BlockConnectionProps> = props => {
+  const { lang = 'zh' } = props;
+  return (
+    <Graph>
+      <Block id="user" width={240}>
+        <BlockHeader title="User" description={blockConnectionI18n[lang].description} />
+        <BlockSection id="user.fields" title={blockConnectionI18n[lang].fields}>
+          <BlockRow content={['email', 'string']} />
+        </BlockSection>
+      </Block>
+      <Entity id="caller" role="activity" position={[-150, blockCenterY]}>
+        {blockConnectionI18n[lang].caller}
+      </Entity>
+      <Entity id="validator" role="activity" position={[430, blockCenterY]}>
+        {blockConnectionI18n[lang].validator}
+      </Entity>
+      <Relation
+        role="dependency"
+        source={{ id: 'caller', anchor: 'right' }}
+        target={{ id: 'user', anchor: 'left', boundary: surfaceBoundary }}
+        way={[{ id: 'caller', anchor: 'right' }, '-|-', { id: 'user', anchor: 'left', boundary: surfaceBoundary }]}
+      />
+      <Relation
+        role="dependency"
+        source={{ id: 'validator', anchor: 'left' }}
+        target={{ id: 'user.fields', anchor: 'right', boundary: surfaceBoundary }}
+        way={[{ id: 'validator', anchor: 'left' }, '-|-', sectionBoundaryPoint]}
+      />
+    </Graph>
+  );
+};
 
 export const previewSource = createGraphPreviewSource(() => Demo({}));
 
