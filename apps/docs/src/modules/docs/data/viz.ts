@@ -194,6 +194,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'points',
         label: 'viz.chartScatterPoints',
+        sidebarGroup: 'viz.chartComponents',
         icon: 'chart-scatter',
         children: [
           {
@@ -315,6 +316,7 @@ export const vizSection: Array<Section> = [
       {
         id: 'model',
         label: 'viz.chartModel',
+        sidebarGroup: 'viz.chartInternals',
         children: [
           { id: 'structure', label: 'viz.chartModelStructure', difficulty: DocDifficulty.Advanced },
           { id: 'authoring', label: 'viz.chartModelAuthoring', difficulty: DocDifficulty.Advanced },

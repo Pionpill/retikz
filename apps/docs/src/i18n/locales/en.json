@@ -277,6 +277,8 @@
     "dataGetStart": "Quick start",
     "dataContents": "Data capabilities",
     "chart": "Chart",
+    "chartComponents": "Components",
+    "chartInternals": "Internals",
     "chartIntroduction": "Introduction",
     "chartGetStart": "Quick start",
     "chartNavigationDescription": "Present data relationships with familiar chart types",
