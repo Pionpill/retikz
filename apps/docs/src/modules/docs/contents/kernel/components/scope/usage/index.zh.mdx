@@ -14,6 +14,17 @@ description: 使用 Scope 组织局部坐标、整体引用、样式默认值与
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
 
+下面的组件树对应首个示例；缩进表示 JSX 包含关系。
+
+```text
+Layout
+├── Node
+└── Scope
+    ├── Node
+    ├── Node
+    └── Draw
+```
+
 从 `@retikz/react` 导入组件，直接声明 Scope 及其子树。
 
 ```tsx

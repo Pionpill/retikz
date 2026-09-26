@@ -13,7 +13,7 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+<ApiTable grouped>
 
 | Group     | Member            | Type                          | Default    | Description                                                                                                                                                                                                                                                                                                         |
 | --------- | ----------------- | ----------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,7 +46,7 @@ This component does not render DOM itself; `<Layout>` produces the final path fr
 | Runtime   | `authoring?`      | `unknown`                     | —          | Optional runtime-only authoring payload interpreted by a compile driver; excluded from Core IR                                                                                                                                                                                                                      |
 |           | `meta?`           | `IRPath['meta']`              | —          | JSON-serializable user metadata available in event and hydration contexts; does not participate in layout                                                                                                                                                                                                           |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -93,7 +93,7 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                     | Type                          | Default | Description                                                            |
 | -------------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------- |
@@ -106,7 +106,7 @@ React only provides JSX sugar; `normalizePath` is the sole parser dispatch point
 | `readonly way`             | `WayDSL`                      | —       | TikZ-style route shorthand                                             |
 | `readonly zIndex?`         | `IRPath['zIndex']`            | —       | Stack order among siblings                                             |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -173,7 +173,7 @@ export type StepProps =
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member       | Type             | Default | Description                                                                                    |
 | ------------ | ---------------- | ------- | ---------------------------------------------------------------------------------------------- |
@@ -185,7 +185,7 @@ export type StepProps =
 | `radius`     | `IRStepRadius`   | —       | Arc radius: a number for a circle, or &#123; x, y &#125; for an ellipse                        |
 | `startAngle` | `number`         | —       | Start angle in degrees: 0° is +x and 90° is screen-down +y, matching ArcStep and Node labels   |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -223,7 +223,7 @@ export type ArcStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type                         | Default | Description                                                                                   |
 | ----------- | ---------------------------- | ------- | --------------------------------------------------------------------------------------------- |
@@ -233,7 +233,7 @@ export type ArcStepProps = {
 | `label?`    | `InputStepLabel`             | —       | Edge label                                                                                    |
 | `to`        | `IRAxisLineTarget \| string` | —       | Projection target: Cartesian coordinates, a NodeTarget, or the corresponding string shorthand |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -267,7 +267,7 @@ Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles t
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member           | Type                | Default  | Description                                                                                                                                            |
 | ---------------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -281,7 +281,7 @@ Supports symmetric bends and asymmetric bends or loops. Explicit out/in angles t
 | `outAngle?`      | `number`            | —        | Outgoing angle in degrees for asymmetric bends or loops (TikZ `out=`); combined with inAngle into a cubic and takes precedence over bendDirection      |
 | `to`             | `DslTarget`         | —        | Endpoint                                                                                                                                               |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -322,7 +322,7 @@ export type BendStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member        | Type                                        | Default | Description                                                                                                |
 | ------------- | ------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------- |
@@ -334,7 +334,7 @@ export type BendStepProps = {
 | `radius`      | `number`                                    | —       | Circle radius in user units                                                                                |
 | `startAngle?` | `number`                                    | —       | Partial-circle start angle in degrees; applies only together with endAngle                                 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -368,7 +368,7 @@ export type CirclePathStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type             | Default | Description                                      |
 | ----------- | ---------------- | ------- | ------------------------------------------------ |
@@ -379,7 +379,7 @@ export type CirclePathStepProps = {
 | `label?`    | `InputStepLabel` | —       | Edge label                                       |
 | `to`        | `DslTarget`      | —       | Curve endpoint                                   |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -412,7 +412,7 @@ export type CubicStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type             | Default | Description                                         |
 | ----------- | ---------------- | ------- | --------------------------------------------------- |
@@ -422,7 +422,7 @@ export type CubicStepProps = {
 | `label?`    | `InputStepLabel` | —       | Edge label                                          |
 | `to`        | `DslTarget`      | —       | Curve endpoint                                      |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -454,13 +454,13 @@ export type CurveStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member | Type      | Default | Description                                                                                                   |
 | ------ | --------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | `kind` | `'cycle'` | —       | Closure discriminant; accepts no `to`, `label`, or `children`, attaches no edge label, and consumes no target |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -493,7 +493,7 @@ export type CycleStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member        | Type                                        | Default | Description                                                                                     |
 | ------------- | ------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
@@ -505,7 +505,7 @@ export type CycleStepProps = {
 | `radius`      | `IRStepAnisotropicRadius`                   | —       | Ellipse radii on the x and y axes                                                               |
 | `startAngle?` | `number`                                    | —       | Partial-ellipse start angle in degrees; applies only together with endAngle                     |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -541,7 +541,7 @@ export type EllipsePathStepProps = {
 
 <DocTab value="two-segments" label="Members · Two segments">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type             | Default | Description                  |
 | ----------- | ---------------- | ------- | ---------------------------- |
@@ -551,13 +551,13 @@ export type EllipsePathStepProps = {
 | `to`        | `DslTarget`      | —       | Fold endpoint                |
 | `via`       | `'-\|' \| '\|-'` | —       | Two-segment fold direction   |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="three-segments" label="Members · Three segments">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type                | Default | Description                           |
 | ----------- | ------------------- | ------- | ------------------------------------- |
@@ -568,7 +568,7 @@ export type EllipsePathStepProps = {
 | `to`        | `DslTarget`         | —       | Fold endpoint                         |
 | `via`       | `'-\|-' \| '\|-\|'` | —       | Three-segment fold direction          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -607,7 +607,7 @@ export type FoldStepProps = FoldStepBaseProps &
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type                      | Default | Description                                                                                                       |
 | ----------- | ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -618,7 +618,7 @@ export type FoldStepProps = FoldStepBaseProps &
 | `params`    | `JsonObject`              | —       | JSON-safe parameter object; target references must occupy top-level keys listed in the generator's `targetParams` |
 | `to?`       | `DslTarget`               | —       | Optional endpoint passed as `to` in the generator context                                                         |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -651,7 +651,7 @@ export type GeneratorStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type             | Default | Description                                                                                |
 | ----------- | ---------------- | ------- | ------------------------------------------------------------------------------------------ |
@@ -660,7 +660,7 @@ export type GeneratorStepProps = {
 | `label?`    | `InputStepLabel` | —       | Edge label, equivalent to a sugar `<EdgeLabel>` child                                      |
 | `to`        | `DslTarget`      | —       | Line endpoint                                                                              |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -691,14 +691,14 @@ export type LineStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member | Type        | Default | Description                  |
 | ------ | ----------- | ------- | ---------------------------- |
 | `kind` | `'move'`    | —       | Discriminant for a move step |
 | `to`   | `DslTarget` | —       | Move target                  |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -732,7 +732,7 @@ export type MoveStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member          | Type          | Default | Description                                                                                          |
 | --------------- | ------------- | ------- | ---------------------------------------------------------------------------------------------------- |
@@ -741,7 +741,7 @@ export type MoveStepProps = {
 | `kind`          | `'rectangle'` | —       | Discriminant for a rectangle step                                                                    |
 | `to`            | `DslTarget`   | —       | Opposite corner; order is irrelevant                                                                 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -778,7 +778,7 @@ The cursor is the implicit first knot; the curve passes through each entry in `p
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type               | Default | Description                                                                                                         |
 | ----------- | ------------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -788,7 +788,7 @@ The cursor is the implicit first knot; the curve passes through each entry in `p
 | `points`    | `Array<DslTarget>` | —       | Ordered points after the cursor; one point creates one segment, and the cursor ends at the last point               |
 | `tension?`  | `number`           | `1`     | Tangent-length multiplier (TikZ `tension`); defaults to 1, with lower values tighter and higher values more rounded |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -819,7 +819,7 @@ export type SmoothStepProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+<ApiTable grouped>
 
 | Group     | Member            | Type                                  | Default | Description                                                                                                                                                                  |
 | --------- | ----------------- | ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -844,7 +844,7 @@ export type SmoothStepProps = {
 | Runtime   | `authoring?`      | `unknown`                             | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR                                                                                              |
 |           | `meta?`           | `Record<string, JsonValue>`           | —       | Opaque JSON metadata carried by this drawable element. Preserved into emitted Scene primitives and ignored by the compiler.                                                  |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -909,7 +909,7 @@ Describes marker dimensions, contact points, and geometry generation; the defini
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member           | Type                                                   | Default                      | Description                                                                                                              |
 | ---------------- | ------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
@@ -924,7 +924,7 @@ Describes marker dimensions, contact points, and geometry generation; the defini
 | `outerInset?`    | `number`                                               | `hollow ? lineWidth / 2 : 0` | Outer-outline compensation in marker-local coordinates; defaults to lineWidth/2 for hollow arrows and 0 for solid arrows |
 | `tipX?`          | `number`                                               | `baseSize`                   | Tip x coordinate used for shortening; defaults to baseSize                                                               |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -963,7 +963,7 @@ Resolved colors, stroke width, and rounding function used to generate marker geo
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member      | Type                    | Default | Description                                                                                    |
 | ----------- | ----------------------- | ------- | ---------------------------------------------------------------------------------------------- |
@@ -972,7 +972,7 @@ Resolved colors, stroke width, and rounding function used to generate marker geo
 | `round`     | `(n: number) => number` | —       | Precision rounding shared with compile and render to keep geometry consistent                  |
 | `stroke`    | `MarkerFill`            | —       | Stroke color; without an override, `{ kind: 'contextStroke' }` inherits the path stroke        |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -1009,7 +1009,7 @@ Describes JSON parameters, resolvable target parameters, and command generation;
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member          | Type                                                        | Default | Description                                                                                                                                             |
 | --------------- | ----------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1018,7 +1018,7 @@ Describes JSON parameters, resolvable target parameters, and command generation;
 | `paramsSchema`  | `ZodType<JsonObject>`                                       | —       | Instance parameter schema<br />Parsed output must be a JSON object                                                                                      |
 | `targetParams?` | `Array<string>`                                             | `[]`    | Top-level parameter keys to resolve into the current Path's local coordinates                                                                           |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -1055,7 +1055,7 @@ All coordinates are local to the current Path; the owning GroupPrim applies the 
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member            | Type                       | Default | Description                                                                         |
 | ----------------- | -------------------------- | ------- | ----------------------------------------------------------------------------------- |
@@ -1065,7 +1065,7 @@ All coordinates are local to the current Path; the owning GroupPrim applies the 
 | `round`           | `(n: number) => number`    | —       | Precision rounding shared with compile and render                                   |
 | `to?`             | `Position`                 | —       | Local coordinates after resolving step.to; absent when the step omits `to`          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -1103,19 +1103,21 @@ A custom kind can take over output completely or reuse standard stroke logic thr
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| Member            | Type                                                                           | Default | Description                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------- |
-| `appearance`      | `ResolvedPathKindAppearance`                                                   | —       | Resolved renderer-neutral host appearance                                                    |
-| `emitHostLabels`  | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                 | —       | Compile shared host labels with optional boundary offsets supplied by the kind               |
-| `emitStroke`      | `EmitStroke`                                                                   | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                      |
-| `materializePath` | `(input?: Readonly<{ children?: ReadonlyArray<IRStep> }>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry |
-| `ownerOutput`     | `CompileOwnerOutputPublisher<TOwnerOutput>`                                    | —       | Publisher for the final output owned by the current Path kind                                |
-| `path`            | `TPath`                                                                        | —       | Path subject parsed through this definition's complete schema                                |
-| `round`           | `(value: number) => number`                                                    | —       | Rounding function shared with the current compilation                                        |
+| Member                          | Type                                                                                          | Default | Description                                                                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase`                                                             | —       | Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase  |
+| `TOwnerOutput` (Type parameter) | `extends JsonValue = never`                                                                   | —       | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published |
+| `appearance`                    | `ResolvedPathKindAppearance`                                                                  | —       | Resolved renderer-neutral host appearance                                                                                      |
+| `emitHostLabels`                | `(input: PathKindLabelInput) => ReadonlyArray<ScenePrimitive>`                                | —       | Compile shared host labels with optional boundary offsets supplied by the kind                                                 |
+| `emitStroke`                    | `EmitStroke`                                                                                  | —       | Reuse Core's standard stroke compiler; omission uses the current `path`                                                        |
+| `materializePath`               | `(input?: Readonly<{`<br />`children?: ReadonlyArray<IRStep>;`<br />`}>) => MaterializedPath` | —       | Materialize selected steps without applying markers, dashes, fill, or kind-specific geometry                                   |
+| `ownerOutput`                   | `CompileOwnerOutputPublisher<TOwnerOutput>`                                                   | —       | Publisher for the final output owned by the current Path kind                                                                  |
+| `path`                          | `TPath`                                                                                       | —       | Path subject parsed through this definition's complete schema                                                                  |
+| `round`                         | `(value: number) => number`                                                                   | —       | Rounding function shared with the current compilation                                                                          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -1141,13 +1143,6 @@ export type PathKindCompileContext<TPath extends IRPathBase = IRPathBase, TOwner
 
 </DocTabs>
 
-#### Type parameters
-
-| Type parameter | Description                                                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `TPath`        | Path type parsed by the current path definition schema; determines the structure of the path field and defaults to IRPathBase  |
-| `TOwnerOutput` | Type of the JSON output published through ownerOutput.publish; defaults to never, indicating that no owner output is published |
-
 ### PathKindCompileResult
 
 <p>
@@ -1166,14 +1161,14 @@ A path-kind definition compiles a high-level path into Scene primitives in the c
 
 <DocTab value="members" label="Members">
 
-<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member         | Type                    | Default | Description                                                                                  |
 | -------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------- |
 | `boundsPoints` | `Array<IRPosition>`     | —       | Geometry used for layout and path-level rotate/scale in the current Path's local coordinates |
 | `primitives`   | `Array<ScenePrimitive>` | —       | Actual rendering output in the current Path's local coordinates                              |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -1202,6 +1197,23 @@ export type PathKindCompileResult = {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                          | Type                              | Default | Description                                                                                                        |
+| ------------------------------- | --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `TPath` (Type parameter)        | `extends IRPathBase = IRPathBase` | —       | Result type of the complete path schema, also determining the compile context path field; defaults to IRPathBase   |
+| `TOwnerOutput` (Type parameter) | `extends JsonValue = never`       | —       | JSON type of owner output; the default never disallows ownerOutput, otherwise a matching output schema is required |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutput extends JsonValue = never> = {
   name: string;
@@ -1210,12 +1222,9 @@ export type PathKindDefinition<TPath extends IRPathBase = IRPathBase, TOwnerOutp
 } & PathKindOwnerOutputBranch<TOwnerOutput>;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description                                                                                                        |
-| -------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `TPath`        | Result type of the complete path schema, also determining the compile context path field; defaults to IRPathBase   |
-| `TOwnerOutput` | JSON type of owner output; the default never disallows ownerOutput, otherwise a matching output schema is required |
+</DocTabs>
 
 ### WayDSL
 
@@ -1267,25 +1276,16 @@ export type WayItem =
 
 Define a path kind that does not publish owner output
 
-#### Type parameters
+<ApiTable variant="parameters">
 
-| Type parameter | Description                                                       |
-| -------------- | ----------------------------------------------------------------- |
-| `TPath`        | Path type parsed by the definition schema; defaults to IRPathBase |
+| Category        | Name         | Type / signature                   | Description                                                                                                                              |
+| --------------- | ------------ | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`      | `extends IRPathBase = IRPathBase`  | Path type parsed by the definition schema; defaults to IRPathBase                                                                        |
+| Parameters      | `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function                                                               |
+| Returns         | —            | `PathKindDefinition<TPath, never>` | The original validated definition, preserving the path type without copying or modifying the input                                       |
+| Throws          | —            | —                                  | RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object |
 
-#### Parameters
-
-| Parameter    | Type                               | Description                                                                |
-| ------------ | ---------------------------------- | -------------------------------------------------------------------------- |
-| `definition` | `PathKindDefinition<TPath, never>` | Definition containing the name, complete path schema, and compile function |
-
-#### Returns
-
-The original validated definition, preserving the path type without copying or modifying the input
-
-#### Throws
-
-RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object
+</ApiTable>
 
 </DocTab>
 
@@ -1293,40 +1293,24 @@ RetikzCoreError when name is empty or whitespace-only, schema has no parse funct
 
 Define a path kind that publishes owner output
 
-#### Type parameters
+<ApiTable variant="parameters">
 
-| Type parameter | Description                                                                                   |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| `TPath`        | Path type parsed by the definition schema                                                     |
-| `TOwnerOutput` | Type of JSON output validated by ownerOutput.schema and published through the compile context |
+| Category        | Name           | Type / signature                          | Description                                                                                                                              |
+| --------------- | -------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TPath`        | `extends IRPathBase`                      | Path type parsed by the definition schema                                                                                                |
+|                 | `TOwnerOutput` | `extends JsonValue`                       | Type of JSON output validated by ownerOutput.schema and published through the compile context                                            |
+| Parameters      | `definition`   | `PathKindDefinition<TPath, TOwnerOutput>` | Path kind definition including ownerOutput.schema                                                                                        |
+| Returns         | —              | `PathKindDefinition<TPath, TOwnerOutput>` | The original validated definition, preserving path and output types without copying or modifying the input                               |
+| Throws          | —              | —                                         | RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object |
 
-#### Parameters
-
-| Parameter    | Type                                      | Description                                       |
-| ------------ | ----------------------------------------- | ------------------------------------------------- |
-| `definition` | `PathKindDefinition<TPath, TOwnerOutput>` | Path kind definition including ownerOutput.schema |
-
-#### Returns
-
-The original validated definition, preserving path and output types without copying or modifying the input
-
-#### Throws
-
-RetikzCoreError when name is empty or whitespace-only, schema has no parse function, or the supplied ownerOutput.schema is not an object
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
-#### Without owner output
-
 ```ts
 <TPath extends IRPathBase = IRPathBase>(definition: PathKindDefinition<TPath, never>): PathKindDefinition<TPath, never>;
-```
-
-#### With owner output
-
-```ts
 <TPath extends IRPathBase, TOwnerOutput extends JsonValue>(definition: PathKindDefinition<TPath, TOwnerOutput>): PathKindDefinition<TPath, TOwnerOutput>;
 ```
 
@@ -1368,15 +1352,14 @@ export const DrawWay = {
 
 <DocTab value="members" label="Members">
 
-#### Parameters
+<ApiTable variant="parameters">
 
-| Parameter | Type              | Description                                                            |
-| --------- | ----------------- | ---------------------------------------------------------------------- |
-| `def`     | `ArrowDefinition` | Definition containing the arrow name, dimensions, and geometry emitter |
+| Category   | Name  | Type / signature  | Description                                                            |
+| ---------- | ----- | ----------------- | ---------------------------------------------------------------------- |
+| Parameters | `def` | `ArrowDefinition` | Definition containing the arrow name, dimensions, and geometry emitter |
+| Returns    | —     | `ArrowDefinition` | The original definition object, without copying or modifying the input |
 
-#### Returns
-
-The original definition object, without copying or modifying the input
+</ApiTable>
 
 > **Notes:** Currently a typed identity, retained to align registry APIs and allow future validation or normalization
 
@@ -1408,19 +1391,15 @@ export declare const defineArrow: (def: ArrowDefinition) => ArrowDefinition;
 
 <DocTab value="members" label="Members">
 
-#### Parameters
+<ApiTable variant="parameters">
 
-| Parameter | Type                      | Description                                                                            |
-| --------- | ------------------------- | -------------------------------------------------------------------------------------- |
-| `def`     | `PathGeneratorDefinition` | Definition containing the path generator name, parameter schema, and command generator |
+| Category   | Name  | Type / signature          | Description                                                                                  |
+| ---------- | ----- | ------------------------- | -------------------------------------------------------------------------------------------- |
+| Parameters | `def` | `PathGeneratorDefinition` | Definition containing the path generator name, parameter schema, and command generator       |
+| Returns    | —     | `PathGeneratorDefinition` | The original definition object after name validation, without copying or modifying the input |
+| Throws     | —     | —                         | RetikzCoreError when name is empty or contains only whitespace                               |
 
-#### Returns
-
-The original definition object after name validation, without copying or modifying the input
-
-#### Throws
-
-- RetikzCoreError when name is empty or contains only whitespace
+</ApiTable>
 
 > **Notes:** JSON-safe validation of generator output remains the responsibility of compilation
 

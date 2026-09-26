@@ -1,8 +1,10 @@
 ---
 title: API reference
-description: Look up public TypeScript contracts for Layout props and runtime modes
+description: Look up Layout React props, Vanilla scene inputs, and Core scene contracts
 ---
 
-This page selects Layout and its runtime configuration from the public `@retikz/react` entry. Start with [Basic usage](/kernel/components/layout/usage); see [Schema reference](/kernel/components/layout/schema-reference) for scene data fields.
+This page covers React Layout and execution options, Vanilla `scene` / `layer` builders and scene input, and Core `IRScene` / `IRViewBox`. Vanilla builds input with `scene` and passes it to a host entry such as `mount`; there is no `layout` builder.
+
+See [Basic usage](/kernel/components/layout/usage) for integration, [Schema reference](/kernel/components/layout/schema-reference) for persisted fields, and [Vanilla](/kernel/packages/vanilla) for mounting, updating, and disposal.
 
 {/* @include kernel/components/layout/api-reference/generated */}

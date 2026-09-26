@@ -13,7 +13,7 @@
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+<ApiTable grouped>
 
 | 分组   | 成员              | 类型                                    | 默认值        | 说明                                                                                                                                                                                                    |
 | ------ | ----------------- | --------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@
 | 运行时 | `authoring?`      | `unknown`                               | —             | 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR                                                                                                                              |
 |        | `meta?`           | `IRScope['meta']`                       | —             | 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局，也不下传给子元素。须为 JSON 可序列化对象                                                                                                     |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -89,14 +89,14 @@ export type ScopeProps = ScopeStyleProps &
 
 <DocTab value="members" label="属性">
 
-<div className="[&>div:first-child]:mt-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员        | 类型                     | 默认值 | 说明                                                                                     |
 | ----------- | ------------------------ | ------ | ---------------------------------------------------------------------------------------- |
 | `defaults?` | `InputScope['defaults']` | —      | 为后代 Node、Path、Label 与 Arrow 提供默认样式；元素显式值优先，reset 可阻断指定外层通道 |
 | `style?`    | `InputScope['style']`    | —      | 作用域级视觉覆盖；已声明字段按层级向后代 Composite 逐字段继承                            |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -106,6 +106,255 @@ export type ScopeProps = ScopeStyleProps &
 export type ScopeStyleProps = {
   style?: InputScope['style'];
   defaults?: InputScope['defaults'];
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## `@retikz/vanilla`
+
+### scope / InputScope
+
+- `scope`：<ApiSourceLink label={"scope"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={38}>创建一组图元的作者侧作用域输入</ApiSourceLink>
+- `InputScope`：<ApiSourceLink label={"InputScope"} path={"packages/kernel/vanilla/src/normalize/scope/types.ts"} startLine={21}>作者侧 Scope 输入</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable grouped>
+
+| 分组   | 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
+| ------ | ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| 主要   | `children`        | `ReadonlyArray<InputChild>`                                                              | —      | 当前作用域内按声明顺序处理的子图元                                                             |
+|        | `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
+|        | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+|        | `type?`           | `'scope'`                                                                                | —      | 无法由 authoring 字段唯一识别时显式指定 Scope 类别                                             |
+| 几何   | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+|        | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
+|        | `placement?`      | `InputScope["placement"]`                                                                | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+|        | `transforms?`     | `ReadonlyArray<InputTransform>`                                                          | —      | 局部变换列表，最后一项先作用于局部点；省略时不施加局部变换                                     |
+| 样式   | `defaults?`       | `InputScope["defaults"]`                                                                 | —      | 后代默认值通道及继承屏障                                                                       |
+|        | `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
+|        | `style?`          | `InputScope["style"]`                                                                    | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                           |
+|        | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+|        | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+| 动画   | `animations?`     | `InputScope["animations"]`                                                               | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| 运行时 | `authoring?`      | `unknown`                                                                                | —      | 可选编译驱动自行解释的运行时载荷，不进入 Core IR                                               |
+|        | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+|        | `config` (参数)   | `Omit<InputScope, 'type' \| 'children'>`                                                 | —      | 局部变换、样式、裁剪与引用配置                                                                 |
+|        | `children` (参数) | `ReadonlyArray<InputScope['children'][number]>`                                          | —      | 按声明顺序保留的子图元，不复制子数组                                                           |
+|        | 返回值            | `InputScope`                                                                             | —      | 保留配置与子图元引用的 Scope 输入，尚未归一化或编译                                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const scope: (
+  config: Omit<InputScope, 'type' | 'children'>,
+  children: ReadonlyArray<InputScope['children'][number]>,
+) => InputScope;
+
+export type InputScope = InputScopeBase & {
+  type?: 'scope';
+  transforms?: ReadonlyArray<InputTransform>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+## `@retikz/core`
+
+### IRScope
+
+<p>
+  <ApiSourceLink label={'IRScope'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={53}>
+    Scope IR 类型——手写而非 z.infer 派生
+  </ApiSourceLink>
+</p>
+
+ChildSchema 通过 z.lazy 延迟回灌，z.infer 推断 children 元素时拿不到精确的 IRNode | IRPath | IRCoordinate | IRScope union；手写让 children 类型显式表达递归 union。
+Scope 通过 style 提供级联视觉值，通过 defaults 提供四个默认通道与 reset 继承屏障
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable grouped>
+
+| 分组   | 成员              | 类型                                                                                     | 默认值 | 说明                                                                                           |
+| ------ | ----------------- | ---------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| 主要   | `children`        | `Array<IRNode \| IRPathBase \| IRCoordinate \| IRScope \| IRComposite>`                  | —      | 按声明顺序处理的节点、路径、坐标点、作用域或复合组件                                           |
+|        | `id?`             | `string`                                                                                 | —      | 可选引用 id；始终注册到父级命名空间                                                            |
+|        | `localNamespace?` | `false \| true`                                                                          | —      | 为 true 时，子节点及嵌套 scope 的 id 只在本作用域内可见；scope 自身 id 仍属于父级              |
+|        | `type`            | `'scope'`                                                                                | —      | 固定为 scope 的容器判别字段                                                                    |
+| 几何   | `boundingShape?`  | `"rectangle" \| "circle"`                                                                | —      | 给 scope id 生成的合成引用边界：rectangle 或 circle                                            |
+|        | `clip?`           | `{ kind: "rect"; x: number; y: number; width: number; height: number; } \| IRCustomClip` | —      | 以 scope 局部坐标描述的裁剪区域                                                                |
+|        | `placement?`      | `IRScopeProps['placement']`                                                              | —      | 在固有包络与 transforms 完成后，把 Scope 自身点对齐父坐标系 target                             |
+|        | `transforms?`     | `IRScopeProps['transforms']`                                                             | —      | 依次作用于所有 children 的局部变换；数组最后一项先作用于局部点，相对位移在编译期解析           |
+| 样式   | `defaults?`       | `IRScopeProps['defaults']`                                                               | —      | 后代默认值通道及继承屏障                                                                       |
+|        | `frame?`          | `IRScopeFrame`                                                                           | —      | 可省略默认值的包络装饰                                                                         |
+|        | `style?`          | `IRScopeProps['style']`                                                                  | —      | 当前实例的视觉覆盖，按字段继承与覆盖                                                           |
+|        | `theme?`          | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }`                | —      | 当前子树的稀疏 Theme 覆盖；style 与 mode 分别继承，只传给后代 Composite；Core 图元不会自动着色 |
+|        | `zIndex?`         | `number`                                                                                 | —      | scope 作为一个整体在同级 children 中的栈序；不改变 scope 内部子项的相对顺序                    |
+| 动画   | `animations?`     | `IRScopeProps['animations']`                                                             | —      | 作用于 scope 组整体的声明式动画 track；不参与布局，也不向 children 继承                        |
+| 运行时 | `meta?`           | `Record<string, JsonValue>`                                                              | —      | JSON provenance 元数据；透传到 Scene，编译器与 renderer 不解释                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRScope = IRScopeProps & {
+  type: 'scope';
+  children: Array<IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### IRScopeDefaults
+
+<p>
+  <ApiSourceLink label={'IRScopeDefaults'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={63}>
+    查看源码
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员     | 类型                                                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                          |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| `arrow?` | `ZodInfer<typeof ScopeDefaultsSchema.shape["arrow"]>`                                                                                                                                                                                                                                                                 | —      | 箭头默认样式                                                                  |
+| `label?` | `{ color?: string \| undefined; textColor?: string \| number \| undefined; opacity?: number \| undefined; font?: { family?: string \| undefined; size?: string \| number \| undefined; weight?: number \| "normal" \| "bold" \| undefined; style?: "normal" \| "italic" \| "oblique" \| undefined; } \| undefined; }` | —      | 节点标签与步骤标签的默认文字样式                                              |
+| `node?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["node"]>`                                                                                                                                                                                                                                                                  | —      | 节点默认样式，与其他通道独立                                                  |
+| `path?`  | `ZodInfer<typeof ScopeDefaultsSchema.shape["path"]>`                                                                                                                                                                                                                                                                  | —      | 路径类图元默认样式；箭头使用独立 arrow 通道                                   |
+| `reset?` | `false \| true \| Array<"path" \| "node" \| "label" \| "arrow">`                                                                                                                                                                                                                                                      | —      | 继承屏障：true 重置全部通道，或列出 node、path、label、arrow 中需要重置的通道 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRScopeDefaults = ZodInfer<typeof ScopeDefaultsSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### IRScopeFrame
+
+<p>
+  <ApiSourceLink label={'IRScopeFrame'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={46}>
+    Scope 外框的可省略默认值输入
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员       | 类型                                               | 默认值 | 说明                               |
+| ---------- | -------------------------------------------------- | ------ | ---------------------------------- |
+| `padding?` | `number`                                           | `0`    | 均匀装饰间距，默认 0；不参与布局   |
+| `style?`   | `ZodInput<typeof ScopeFrameSchema.shape["style"]>` | —      | 独立外框样式，仅共享有效颜色上下文 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### IRScopePlacement
+
+<p>
+  <ApiSourceLink label={'IRScopePlacement'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={34}>
+    Scope 最终锚点对齐放置
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员          | 类型                                                                                                                                                                                                                                                 | 默认值 | 说明                                           |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------- |
+| `selfAnchor?` | `number \| "origin" \| string & {} \| "center" \| "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left" \| [number, number] \| { side: "top" \| "right" \| "bottom" \| "left"; fraction: number; }` | —      | 变换后 Scope 包络上的对齐点；省略时使用 center |
+| `target`      | `ZodInfer<typeof ScopePlacementSchema.shape["target"]>`                                                                                                                                                                                              | —      | 父坐标系中的定位目标                           |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRScopePlacement = ZodInfer<typeof ScopePlacementSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### IRScopeProps
+
+<p>
+  <ApiSourceLink label={'IRScopeProps'} path={'packages/kernel/core/src/schemas/scope/types.ts'} startLine={40}>
+    Scope 除 `type` 与递归 `children` 外的完整 authored 属性集合
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="直接属性">
+
+其余属性继承自 `ZodInfer<typeof ScopePropsSchema>`，并移除 `'frame'`。完整组合关系见“类型定义”
+
+<ApiTable>
+
+| 成员     | 类型           | 默认值 | 说明                   |
+| -------- | -------------- | ------ | ---------------------- |
+| `frame?` | `IRScopeFrame` | —      | 可省略默认值的包络装饰 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export type IRScopeProps = Omit<ZodInfer<typeof ScopePropsSchema>, 'frame'> & {
+  frame?: IRScopeFrame;
 };
 ```
 
