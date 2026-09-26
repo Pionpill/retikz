@@ -20,7 +20,10 @@ export type BoundaryFitContext = {
   connectionEnvelope: (kind: ConnectionEnvelopeKind) => Rect;
 };
 
-/** boundary definition 的作者侧输入形态 */
+/**
+ * boundary definition 的作者侧输入形态
+ * @template TParams 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型
+ */
 export type BoundaryDefinitionInput<TParams extends JsonObject> = {
   /** 注册表 key，由 IR `boundary` 引用 */
   name: string;

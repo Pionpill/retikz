@@ -3,16 +3,51 @@ import path from 'node:path';
 
 import { nodeSchemas } from '../schema-reference/node';
 import { translateNodeApiReference } from './node.en';
-import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
+import type { ApiReferenceEntry, ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 
 /** 节点家族的公开入口切片；类型和说明仍从源码提取 */
-export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
-  { owner: 'react', symbols: ['Node', 'NodeProps', 'Text', 'TextProps', 'Coordinate', 'CoordinateProps'] },
+const nodeEntries: ReadonlyArray<{ owner: string } & Omit<ApiReferenceEntry, 'source' | 'title'>> = [
+  {
+    owner: 'react',
+    symbols: ['Node', 'NodeProps', 'Text', 'TextProps', 'Coordinate', 'CoordinateProps'],
+    symbolPairs: [
+      ['Node', 'NodeProps'],
+      ['Text', 'TextProps'],
+      ['Coordinate', 'CoordinateProps'],
+    ],
+    memberTypeLabels: {
+      NodeProps: {
+        aliasIds: 'Array<string>',
+        animations: 'Array<IRAnimationTrack>',
+        authoring: 'unknown',
+        layout: 'IRNodeLayout',
+        style: 'IRNodeStyle',
+        shape: 'IRShapeValue',
+        zIndex: 'number',
+      },
+      TextProps: { fill: 'string | number' },
+    },
+  },
   {
     owner: 'vanilla',
+    symbolPairs: [
+      ['node', 'InputNode'],
+      ['coordinate', 'InputCoordinate'],
+    ],
+    memberTypeLabels: {
+      InputNode: {
+        animations: 'Array<IRAnimationTrack>',
+        boundary: 'IRBoundary',
+        layout: 'IRNodeLayout',
+        style: 'IRNodeStyle',
+        shape: 'IRShapeValue',
+        scale: 'number | IRAxisScale',
+      },
+      InputCoordinate: { position: "IRCoordinate['position']" },
+    },
     symbols: [
       'node',
       'coordinate',
@@ -44,7 +79,10 @@ export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
       'BUILTIN_BOUNDARIES',
     ],
   },
-].map(({ owner, symbols }) => ({
+];
+
+/** 从各包公开入口生成节点参考，展示配置不改变源码声明 */
+export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = nodeEntries.map(({ owner, ...entry }) => ({
   packageName: `@retikz/${owner}`,
   packageDirectory: `packages/kernel/${owner}`,
   tsconfigPath: path.resolve(repositoryRoot, `packages/kernel/${owner}/tsconfig.json`),
@@ -52,7 +90,7 @@ export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     {
       source: path.resolve(repositoryRoot, `packages/kernel/${owner}/src/index.ts`),
       title: { zh: `\`@retikz/${owner}\``, en: `\`@retikz/${owner}\`` },
-      symbols,
+      ...entry,
     },
   ],
   translate: translateNodeApiReference,
