@@ -11,17 +11,18 @@ import { createCellsInput } from '../cell';
 import { collectMapEntries } from './convert-children';
 
 /** Map 的 React authoring 属性；键值角色覆盖统一位于 style.key/value 与 layout.key/value */
-export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data'> &
+export type MapProps = Omit<IRMap, 'namespace' | 'type' | 'entries' | 'data' | 'dataObjectDisplay'> &
   (
-    | { data: NonNullable<IRMap['data']>; entries?: never; children?: never }
-    | { data?: never; entries: Array<{ key: string | CellProps; value: string | CellProps }>; children?: never }
-    | { data?: never; entries?: never; children?: ReactNode }
+    | { data: NonNullable<IRMap['data']>; entries?: never; children?: never; dataObjectDisplay?: IRMap['dataObjectDisplay'] }
+    | { data?: never; entries: Array<{ key: string | CellProps; value: string | CellProps }>; children?: never; dataObjectDisplay?: never }
+    | { data?: never; entries?: never; children?: ReactNode; dataObjectDisplay?: never }
   );
 
 /** 保留单元格样式并收集每格的唯一 drawable */
 const createMapInput = (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) => {
-  const { data, entries: dataEntries, children, ...input } = props as MapProps;
-  if (data !== undefined) return { ...input, data } satisfies InputMap;
+  const { data, entries: dataEntries, children, dataObjectDisplay, ...input } = props as MapProps;
+  if (data !== undefined)
+    return { ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) } satisfies InputMap;
   const entries = dataEntries ?? collectMapEntries(children);
   const collected = createCellsInput(
     entries.flatMap(entry =>

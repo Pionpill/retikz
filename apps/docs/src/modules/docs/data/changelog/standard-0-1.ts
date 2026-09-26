@@ -13,6 +13,20 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · List 内容宽度', en: 'Unreleased · List content width' },
+          content: {
+            zh: 'List 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 List。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',
+            en: 'List layout.width accepts content on the whole List or an individual cell, sizing each cell to its own natural content width plus padding; in data mode it also passes through the generated data tree to descendant Lists. auto still uses the shared maximum, and cell settings take precedence. Map width modes are unchanged.',
+          },
+        },
+        {
+          label: { zh: '未发布 · BREAKING：List 索引配置', en: 'Unreleased · BREAKING: List index configuration' },
+          content: {
+            zh: 'List 统一使用 index 配置索引，支持横排上下、竖排左右位置与独立文本样式。showIndex 迁移为 index 布尔值；同时设置起点时改为 index: { start }，隐藏时使用 false。position 默认为 before，可设 after；索引 font 按字段继承整体字体，不影响单格尺寸。旧 showIndex / indexStart 字段不再接受。',
+            en: 'List uses index for visibility, positions above/below rows or left/right of columns, and independent text styles. Replace showIndex with a boolean index; use index: { start } to enable numbering with a starting value, or false to hide it. Position defaults to before and also accepts after. Index font fields inherit the shared font without changing cell dimensions. The old showIndex / indexStart fields are no longer accepted.',
+          },
+        },
+        {
           label: { zh: '未发布 · 拓展包拆分', en: 'Unreleased · Extension package split' },
           content: {
             zh: '节点形状、箭头、裁剪、流带与动画预设迁入 @retikz/extension，Standard 保留展现与形状复合组件。使用这些扩展时统一从 Extension 根入口导入；Standard 组件所需的扩展依赖继续自动随组件贡献。',
@@ -22,8 +36,8 @@ export const standardV01: Release = {
         {
           label: { zh: '未发布 · List / Map', en: 'Unreleased · List / Map' },
           content: {
-            zh: 'List / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。List / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 List 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ListItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
-            en: 'List / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. List / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional List and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ListItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
+            zh: 'List / Map 新增与 Node 默认样式一致的容器 label，支持单个与多个附属标签，不扩大 allocation。List / Map 新增 data 属性，递归呈现 JSON 数组与对象，保留紧凑 Source 且不推导单元格 id。新增一维 List 与两列键值 Map，支持整体、角色与单元格样式覆盖、间距和尺寸设置，以及可引用的单元格。List 的 items 字符串默认只作为 content，可用 cellIdMode 选择 explicit / string / index；index 模式配合 List id 与 getListCellId 为直属格按零基下标寻址，显式 id 作为同一图元和空间记录的别名。Map 的键值角色样式归入 style.key / value，布局归入 layout.key / value；layout.width / height 支持整体、键值角色和单格覆盖，固定尺寸默认裁切溢出。React 支持纯文本数据与 ListItem / MapEntry 组合入口，文本简写保留在持久化 IR 中，由 Standard 编译时展开；三种入口共用内容自然测量、直接排布与 replay 编译路径，复用 Surface 几何，避免嵌套布局重复探测。文档新增双语用法并复用于 Node 命名引用原理图。',
+            en: 'List / Map add container labels with Node defaults, supporting one or multiple annotations without enlarging allocation. List / Map now accept data for recursive JSON arrays and objects, preserving compact Source without inferred cell ids. Adds one-dimensional List and two-column key/value Map with shared, role and cell style overrides, spacing, dimensions and referenceable cells. List item strings supply content only by default; cellIdMode selects explicit, string, or index identities. Index mode uses the List id and getListCellId for zero-based direct-cell references, retaining explicit ids as aliases of the same geometry and spatial record. Map groups role styles under style.key / value and role layout under layout.key / value; layout.width / height support shared, role and cell overrides, with clipping by default for fixed cells. React supports text data and ListItem / MapEntry composition; text shorthand stays compact in persisted IR and expands during Standard compilation. All entry points share natural content measurement, direct placement and replay with reused Surface geometry, avoiding repeated probes through nested layouts, with bilingual guides and Node namespace diagrams.',
           },
         },
         {

@@ -9,6 +9,13 @@ import { convertIRToReactNode } from '../../../src/kernel/adapter/unbuilder';
 import { Draw, EdgeLabel } from '../../../src/sugar';
 
 describe('React JSX Input 场景', () => {
+  it('preserves Node aliases through JSX, Vanilla normalization and IR round-trip', () => {
+    const input = createInputScene(<Node id="primary" aliasIds={['alternate']} position={[0, 0]} text="A" />);
+    const ir = normalizeScene(input.scene).ir;
+    expect(ir.children[0]).toMatchObject({ id: 'primary', aliasIds: ['alternate'] });
+    const rebuilt = createInputScene(convertIRToReactNode(ir));
+    expect(normalizeScene(rebuilt.scene).ir).toEqual(ir);
+  });
   it('将 Kernel JSX 收集为 Vanilla Input，并由 Vanilla 解析字符串 target', () => {
     const input = createInputScene(
       <>

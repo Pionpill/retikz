@@ -23,7 +23,7 @@ const card = defineComposite({
   }),
   expand: node => ({
     children: [{ type: 'node', position: [0, 0], minimumWidth: node.width, minimumHeight: 10 }],
-    spatialHandles: [{ key: 'body', role: 'card', bounds: { x: 0, y: 0, width: node.width, height: 10 } }],
+    spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: node.width, height: 10 } }],
   }),
 });
 
@@ -45,7 +45,7 @@ describe('Vanilla compile result spatial sidecar', () => {
   it('preserves direct compile spatial entries and query results', () => {
     const direct = compileToScene(scene(10), { composites: [card] });
     const vanilla = toSceneResult(scene(10), { compile: { composites: [card] } });
-    const selector = { owner: { namespace: 'third', type: 'card' }, key: 'body' } as const;
+    const selector = { owner: { namespace: 'third', type: 'card' }, id: 'body' } as const;
 
     expect(vanilla.compileResult?.spatialHandles.entries).toEqual(direct.spatialHandles.entries);
     expect(selectSpatialHandles(vanilla.compileResult!.spatialHandles, selector)).toEqual(

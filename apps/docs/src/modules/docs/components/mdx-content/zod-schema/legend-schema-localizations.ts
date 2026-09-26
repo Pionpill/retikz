@@ -95,6 +95,7 @@ const createLegendSchemaDescriptions = (): Readonly<DescriptionMap> => {
   setDescription(descriptions, [field('defaults'), field('reset')], '重置继承样式通道的边界');
   setDescription(descriptions, [field('zIndex')], '图例 Scope 在兄弟 IR 子级中的堆叠顺序');
   setDescription(descriptions, [field('clip')], '当前 Scope 局部坐标中的裁切区域');
+  setDescription(descriptions, [field('frame')], '绘制在所有子级下方、围绕固有包络的可选装饰框');
   setDescription(descriptions, [field('boundingShape')], '为图例 Scope 标识生成的矩形或圆形包络');
   setDescription(descriptions, [field('meta')], '随图例携带并保持不透明的 JSON 元数据');
   setDescription(descriptions, [field('animations')], '声明式动画轨道；不参与布局');
@@ -122,15 +123,6 @@ const createLegendSchemaDescriptions = (): Readonly<DescriptionMap> => {
     setDescription(descriptions, childPath(fill, 'min'), '可选的最小填充尺寸');
     setDescription(descriptions, childPath(fill, 'max'), '可选的最大填充尺寸');
   });
-
-  const paddingObject = [field('padding'), union(1)];
-  setDescription(descriptions, childPath(paddingObject, 'default'), '所有边的回退内边距');
-  setDescription(descriptions, childPath(paddingObject, 'x'), '左右两侧的水平内边距');
-  setDescription(descriptions, childPath(paddingObject, 'y'), '上下两侧的垂直内边距');
-  setDescription(descriptions, childPath(paddingObject, 'left'), '左侧内边距');
-  setDescription(descriptions, childPath(paddingObject, 'right'), '右侧内边距');
-  setDescription(descriptions, childPath(paddingObject, 'top'), '顶部内边距');
-  setDescription(descriptions, childPath(paddingObject, 'bottom'), '底部内边距');
 
   const items = [field('content'), caseOf('items')];
   setDescription(descriptions, childPath(items, 'kind'), '离散样本与标签列表的判别字段');

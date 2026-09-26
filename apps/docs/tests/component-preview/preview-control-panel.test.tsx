@@ -567,6 +567,20 @@ describe('PreviewControlPanel', () => {
     expect(container.querySelector<HTMLInputElement>('[data-control-id="bValue"] input')?.value).toBe('9');
   });
 
+  it('切换条件控件时在下一帧前保持双列布局', async () => {
+    const container = await mount(<ConditionalPanelHarness />);
+    const columnCount = () =>
+      container.querySelector('[data-slot="preview-control-columns"]')?.getAttribute('data-column-count');
+
+    await act(() => ResizeObserverMock.instances.forEach(observer => observer.emitSize(300, 100)));
+    await flushAnimationFrames();
+    expect(columnCount()).toBe('2');
+
+    await act(() => container.querySelector<HTMLButtonElement>('button[aria-label="Show B controls"]')?.click());
+    expect(columnCount()).toBe('2');
+    expect(container.querySelector('[data-control-id="bValue"]')).not.toBeNull();
+  });
+
   it('渲染标题、section 与六种 shadcn 字段', () => {
     const controlState: PreviewControlState = emptyControlState;
     const markup = renderToStaticMarkup(

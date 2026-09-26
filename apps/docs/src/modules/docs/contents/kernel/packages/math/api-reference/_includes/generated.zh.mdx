@@ -30,12 +30,16 @@ export type AffineMatrix = readonly [number, number, number, number, number, num
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员            | 类型       | 默认值 | 说明               |
 | --------------- | ---------- | ------ | ------------------ |
 | `center`        | `Position` | —      | 圆心               |
 | `endAngleDeg`   | `number`   | —      | 结束角度，单位为度 |
 | `radius`        | `number`   | —      | 半径               |
 | `startAngleDeg` | `number`   | —      | 起始角度，单位为度 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -66,12 +70,16 @@ export type ArcBoundingCandidatesInput = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员            | 类型     | 默认值 | 说明                 |
 | --------------- | -------- | ------ | -------------------- |
 | `angleDeg`      | `number` | —      | 待判定角度，单位为度 |
 | `endAngleDeg`   | `number` | —      | 结束角度，单位为度   |
 | `startAngleDeg` | `number` | —      | 起始角度，单位为度   |
-| `toleranceDeg?` | `number` | —      | 角度容差，单位为度   |
+| `toleranceDeg?` | `number` | `1e-7` | 角度容差，单位为度   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -102,12 +110,16 @@ export type ArcSweepAngleInput = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员   | 类型     | 默认值 | 说明        |
 | ------ | -------- | ------ | ----------- |
 | `maxX` | `number` | —      | 最大 x 坐标 |
 | `maxY` | `number` | —      | 最大 y 坐标 |
 | `minX` | `number` | —      | 最小 x 坐标 |
 | `minY` | `number` | —      | 最小 y 坐标 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -138,10 +150,14 @@ export type AxisAlignedBounds = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员         | 类型     | 默认值 | 说明       |
 | ------------ | -------- | ------ | ---------- |
 | `halfHeight` | `number` | —      | y 方向半高 |
 | `halfWidth`  | `number` | —      | x 方向半宽 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -170,12 +186,16 @@ export type BoundsHalfAxes = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员     | 类型     | 默认值 | 说明         |
 | -------- | -------- | ------ | ------------ |
 | `bottom` | `number` | —      | 向下外扩距离 |
 | `left`   | `number` | —      | 向左外扩距离 |
 | `right`  | `number` | —      | 向右外扩距离 |
 | `top`    | `number` | —      | 向上外扩距离 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -206,12 +226,16 @@ export type BoundsInsets = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员     | 类型     | 默认值 | 说明          |
 | -------- | -------- | ------ | ------------- |
 | `height` | `number` | —      | 矩形高度      |
 | `width`  | `number` | —      | 矩形宽度      |
 | `x`      | `number` | —      | 左上角 x 坐标 |
 | `y`      | `number` | —      | 左上角 y 坐标 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -242,13 +266,17 @@ export type BoundsRect = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型     | 默认值 | 说明                                      |
 | --------- | -------- | ------ | ----------------------------------------- |
 | `height`  | `number` | —      | 矩形盒高度                                |
-| `rotate?` | `number` | —      | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
+| `rotate?` | `number` | `0`    | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
 | `width`   | `number` | —      | 矩形盒宽度                                |
 | `x`       | `number` | —      | 中心横坐标                                |
 | `y`       | `number` | —      | 中心纵坐标                                |
+
+</ApiTable>
 
 </DocTab>
 
@@ -277,11 +305,15 @@ export type CenteredBox = CenteredShape & {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型     | 默认值 | 说明                                      |
 | --------- | -------- | ------ | ----------------------------------------- |
-| `rotate?` | `number` | —      | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
+| `rotate?` | `number` | `0`    | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
 | `x`       | `number` | —      | 中心横坐标                                |
 | `y`       | `number` | —      | 中心纵坐标                                |
+
+</ApiTable>
 
 </DocTab>
 
@@ -311,10 +343,14 @@ export type CenteredShape = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员     | 类型       | 默认值 | 说明 |
 | -------- | ---------- | ------ | ---- |
-| `center` | `Position` | —      | —    |
-| `radius` | `number`   | —      | —    |
+| `center` | `Position` | —      | 圆心 |
+| `radius` | `number`   | —      | 半径 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -343,12 +379,16 @@ export type Circle = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型       | 默认值 | 说明         |
 | --------- | ---------- | ------ | ------------ |
 | `centerA` | `Position` | —      | 第一个圆心   |
 | `centerB` | `Position` | —      | 第二个圆心   |
 | `radiusA` | `number`   | —      | 第一个圆半径 |
 | `radiusB` | `number`   | —      | 第二个圆半径 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -370,7 +410,7 @@ export type CircleCircleInput = {
 ### CircularArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={48}>
+  <ApiSourceLink label={'CircularArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={55}>
     圆弧曲线段
   </ApiSourceLink>
 </p>
@@ -378,6 +418,8 @@ export type CircleCircleInput = {
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
+
+<ApiTable>
 
 | 成员                | 类型       | 默认值 | 说明                                   |
 | ------------------- | ---------- | ------ | -------------------------------------- |
@@ -387,6 +429,8 @@ export type CircleCircleInput = {
 | `kind`              | `'arc'`    | —      | 曲线种类                               |
 | `radius`            | `number`   | —      | 半径                                   |
 | `startAngleDeg`     | `number`   | —      | 起始参数角，单位为度                   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -419,6 +463,8 @@ export type CircularArcCurveSegment = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员       | 类型            | 默认值 | 说明         |
 | ---------- | --------------- | ------ | ------------ |
 | `control1` | `Position`      | —      | 第一个控制点 |
@@ -426,6 +472,8 @@ export type CircularArcCurveSegment = {
 | `from`     | `Position`      | —      | 起点         |
 | `kind`     | `'cubicBezier'` | —      | 曲线种类     |
 | `to`       | `Position`      | —      | 终点         |
+
+</ApiTable>
 
 </DocTab>
 
@@ -457,11 +505,15 @@ export type CubicBezierCurveSegment = {
 
 <DocTab value="members" label="属性">
 
-| 成员       | 类型       | 默认值 | 说明 |
-| ---------- | ---------- | ------ | ---- |
-| `control1` | `Position` | —      | —    |
-| `control2` | `Position` | —      | —    |
-| `to`       | `Position` | —      | —    |
+<ApiTable>
+
+| 成员       | 类型       | 默认值 | 说明         |
+| ---------- | ---------- | ------ | ------------ |
+| `control1` | `Position` | —      | 第一个控制点 |
+| `control2` | `Position` | —      | 第二个控制点 |
+| `to`       | `Position` | —      | 终点         |
+
+</ApiTable>
 
 </DocTab>
 
@@ -485,7 +537,7 @@ export type CubicSegment = {
   <ApiSourceLink
     label={'CurveApproximationOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={100}
+    startLine={109}
   >
     曲线长度近似配置
   </ApiSourceLink>
@@ -495,9 +547,13 @@ export type CubicSegment = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员           | 类型     | 默认值 | 说明                                |
 | -------------- | -------- | ------ | ----------------------------------- |
-| `sampleCount?` | `number` | —      | Bezier 与椭圆弧使用的等参数采样数量 |
+| `sampleCount?` | `number` | `32`   | Bezier 与椭圆弧使用的等参数采样数量 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -519,7 +575,7 @@ export type CurveApproximationOptions = {
   <ApiSourceLink
     label={'CurveParameterAtDistanceOptions'}
     path={'packages/kernel/math/src/algorithms/curve.ts'}
-    startLine={106}
+    startLine={117}
   >
     曲线距离到参数反解配置
   </ApiSourceLink>
@@ -529,11 +585,15 @@ export type CurveApproximationOptions = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员              | 类型     | 默认值 | 说明                                               |
 | ----------------- | -------- | ------ | -------------------------------------------------- |
-| `bisectionSteps?` | `number` | —      | 二分反解最多执行次数                               |
-| `sampleCount?`    | `number` | —      | Bezier 与椭圆弧使用的等参数采样数量                |
+| `bisectionSteps?` | `number` | `32`   | 二分反解最多执行次数                               |
+| `sampleCount?`    | `number` | `32`   | Bezier 与椭圆弧使用的等参数采样数量                |
 | `totalLength?`    | `number` | —      | 已按同一采样预算计算的完整曲线长度，省略时即时计算 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -553,10 +613,95 @@ export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
 ### CurveSegment
 
 <p>
-  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={84}>
+  <ApiSourceLink label={'CurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={93}>
     可参数化、可切片的零依赖曲线段
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="line">
+
+<DocTab value="line" label="属性 · 直线">
+
+<ApiTable>
+
+| 成员   | 类型       | 默认值 | 说明     |
+| ------ | ---------- | ------ | -------- |
+| `from` | `Position` | —      | 起点     |
+| `kind` | `'line'`   | —      | 曲线种类 |
+| `to`   | `Position` | —      | 终点     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="quadratic" label="属性 · 二次贝塞尔">
+
+<ApiTable>
+
+| 成员      | 类型                | 默认值 | 说明     |
+| --------- | ------------------- | ------ | -------- |
+| `control` | `Position`          | —      | 控制点   |
+| `from`    | `Position`          | —      | 起点     |
+| `kind`    | `'quadraticBezier'` | —      | 曲线种类 |
+| `to`      | `Position`          | —      | 终点     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="cubic" label="属性 · 三次贝塞尔">
+
+<ApiTable>
+
+| 成员       | 类型            | 默认值 | 说明         |
+| ---------- | --------------- | ------ | ------------ |
+| `control1` | `Position`      | —      | 第一个控制点 |
+| `control2` | `Position`      | —      | 第二个控制点 |
+| `from`     | `Position`      | —      | 起点         |
+| `kind`     | `'cubicBezier'` | —      | 曲线种类     |
+| `to`       | `Position`      | —      | 终点         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="arc" label="属性 · 圆弧">
+
+<ApiTable>
+
+| 成员                | 类型       | 默认值 | 说明                                   |
+| ------------------- | ---------- | ------ | -------------------------------------- |
+| `center`            | `Position` | —      | 圆心                                   |
+| `counterClockwise?` | `boolean`  | —      | 是否逆时针扫描；省略时由起止角方向决定 |
+| `endAngleDeg`       | `number`   | —      | 结束参数角，单位为度                   |
+| `kind`              | `'arc'`    | —      | 曲线种类                               |
+| `radius`            | `number`   | —      | 半径                                   |
+| `startAngleDeg`     | `number`   | —      | 起始参数角，单位为度                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="ellipse-arc" label="属性 · 椭圆弧">
+
+<ApiTable>
+
+| 成员                | 类型           | 默认值 | 说明                                   |
+| ------------------- | -------------- | ------ | -------------------------------------- |
+| `center`            | `Position`     | —      | 椭圆中心                               |
+| `counterClockwise?` | `boolean`      | —      | 是否逆时针扫描；省略时由起止角方向决定 |
+| `endAngleDeg`       | `number`       | —      | 结束参数角，单位为度                   |
+| `kind`              | `'ellipseArc'` | —      | 曲线种类                               |
+| `radiusX`           | `number`       | —      | 本地 x 半轴                            |
+| `radiusY`           | `number`       | —      | 本地 y 半轴                            |
+| `rotationDeg?`      | `number`       | `0`    | 本地椭圆相对世界坐标的旋转角，单位为度 |
+| `startAngleDeg`     | `number`       | —      | 起始参数角，单位为度                   |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export type CurveSegment =
@@ -567,10 +712,14 @@ export type CurveSegment =
   | EllipseArcCurveSegment;
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### CurveSegmentSample
 
 <p>
-  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={92}>
+  <ApiSourceLink label={'CurveSegmentSample'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={101}>
     曲线参数采样结果
   </ApiSourceLink>
 </p>
@@ -579,10 +728,14 @@ export type CurveSegment =
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型       | 默认值 | 说明                                            |
 | --------- | ---------- | ------ | ----------------------------------------------- |
 | `point`   | `Position` | —      | 参数位置对应的点                                |
 | `tangent` | `Vector2`  | —      | 沿曲线前进方向的单位切线；零导数回退为 `[1, 0]` |
+
+</ApiTable>
 
 </DocTab>
 
@@ -611,13 +764,17 @@ export type CurveSegmentSample = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型     | 默认值 | 说明                                      |
 | --------- | -------- | ------ | ----------------------------------------- |
-| `rotate?` | `number` | —      | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
+| `rotate?` | `number` | `0`    | 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） |
 | `rx`      | `number` | —      | 沿本地 +x 的半轴长度                      |
 | `ry`      | `number` | —      | 沿本地 +y 的半轴长度                      |
 | `x`       | `number` | —      | 中心横坐标                                |
 | `y`       | `number` | —      | 中心纵坐标                                |
+
+</ApiTable>
 
 </DocTab>
 
@@ -637,7 +794,7 @@ export type Ellipse = CenteredShape & {
 ### EllipseArcAnglePointInput
 
 <p>
-  <ApiSourceLink label={'EllipseArcAnglePointInput'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={35}>
+  <ApiSourceLink label={'EllipseArcAnglePointInput'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={37}>
     椭圆弧参数点参数
   </ApiSourceLink>
 </p>
@@ -646,12 +803,16 @@ export type Ellipse = CenteredShape & {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员       | 类型       | 默认值 | 说明             |
 | ---------- | ---------- | ------ | ---------------- |
 | `angleDeg` | `number`   | —      | 参数角，单位为度 |
 | `center`   | `Position` | —      | 椭圆中心         |
 | `radiusX`  | `number`   | —      | x 方向半轴       |
 | `radiusY`  | `number`   | —      | y 方向半轴       |
+
+</ApiTable>
 
 </DocTab>
 
@@ -676,7 +837,7 @@ export type EllipseArcAnglePointInput = {
   <ApiSourceLink
     label={'EllipseArcBoundingCandidatesInput'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={47}
+    startLine={49}
   >
     椭圆弧外接候选点参数
   </ApiSourceLink>
@@ -686,6 +847,8 @@ export type EllipseArcAnglePointInput = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员            | 类型       | 默认值 | 说明                 |
 | --------------- | ---------- | ------ | -------------------- |
 | `center`        | `Position` | —      | 椭圆中心             |
@@ -693,6 +856,8 @@ export type EllipseArcAnglePointInput = {
 | `radiusX`       | `number`   | —      | x 方向半轴           |
 | `radiusY`       | `number`   | —      | y 方向半轴           |
 | `startAngleDeg` | `number`   | —      | 起始参数角，单位为度 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -712,7 +877,7 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 ### EllipseArcCurveSegment
 
 <p>
-  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={64}>
+  <ApiSourceLink label={'EllipseArcCurveSegment'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={71}>
     椭圆弧曲线段
   </ApiSourceLink>
 </p>
@@ -720,6 +885,8 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
+
+<ApiTable>
 
 | 成员                | 类型           | 默认值 | 说明                                   |
 | ------------------- | -------------- | ------ | -------------------------------------- |
@@ -729,8 +896,10 @@ export type EllipseArcBoundingCandidatesInput = Omit<EllipseArcAnglePointInput, 
 | `kind`              | `'ellipseArc'` | —      | 曲线种类                               |
 | `radiusX`           | `number`       | —      | 本地 x 半轴                            |
 | `radiusY`           | `number`       | —      | 本地 y 半轴                            |
-| `rotationDeg?`      | `number`       | —      | 本地椭圆相对世界坐标的旋转角，单位为度 |
+| `rotationDeg?`      | `number`       | `0`    | 本地椭圆相对世界坐标的旋转角，单位为度 |
 | `startAngleDeg`     | `number`       | —      | 起始参数角，单位为度                   |
+
+</ApiTable>
 
 </DocTab>
 
@@ -781,12 +950,16 @@ export type EllipseCircumscribeMode = 'proportional' | 'equal';
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员        | 类型       | 默认值 | 说明                   |
 | ----------- | ---------- | ------ | ---------------------- |
 | `center`    | `Position` | —      | 圆心                   |
 | `direction` | `Position` | —      | 直线方向，不要求单位化 |
 | `origin`    | `Position` | —      | 直线起点               |
 | `radius`    | `number`   | —      | 圆半径                 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -817,11 +990,15 @@ export type LineCircleInput = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员   | 类型       | 默认值 | 说明     |
 | ------ | ---------- | ------ | -------- |
 | `from` | `Position` | —      | 起点     |
 | `kind` | `'line'`   | —      | 曲线种类 |
 | `to`   | `Position` | —      | 终点     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -851,12 +1028,16 @@ export type LineCurveSegment = {
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员 | 类型       | 默认值 | 说明                   |
 | ---- | ---------- | ------ | ---------------------- |
 | `a1` | `Position` | —      | 第一条直线上的第一个点 |
 | `a2` | `Position` | —      | 第一条直线上的第二个点 |
 | `b1` | `Position` | —      | 第二条直线上的第一个点 |
 | `b2` | `Position` | —      | 第二条直线上的第二个点 |
+
+</ApiTable>
 
 </DocTab>
 
@@ -903,12 +1084,16 @@ export type Position = Vector2;
 
 <DocTab value="members" label="属性">
 
+<ApiTable>
+
 | 成员      | 类型                | 默认值 | 说明     |
 | --------- | ------------------- | ------ | -------- |
 | `control` | `Position`          | —      | 控制点   |
 | `from`    | `Position`          | —      | 起点     |
 | `kind`    | `'quadraticBezier'` | —      | 曲线种类 |
 | `to`      | `Position`          | —      | 终点     |
+
+</ApiTable>
 
 </DocTab>
 
@@ -943,15 +1128,19 @@ export type QuadraticBezierCurveSegment = {
 
 <DocTab value="members" label="属性">
 
-| 成员            | 类型       | 默认值 | 说明                   |
-| --------------- | ---------- | ------ | ---------------------- |
-| `center`        | `Position` | —      | 圆心                   |
-| `direction`     | `Position` | —      | 射线方向，不要求单位化 |
-| `endAngleDeg`   | `number`   | —      | 结束角度，单位为度     |
-| `origin`        | `Position` | —      | 射线起点               |
-| `radius`        | `number`   | —      | 半径                   |
-| `startAngleDeg` | `number`   | —      | 起始角度，单位为度     |
-| `tolerance?`    | `number`   | —      | 正向参数容差           |
+<ApiTable>
+
+| 成员            | 类型       | 默认值            | 说明                   |
+| --------------- | ---------- | ----------------- | ---------------------- |
+| `center`        | `Position` | —                 | 圆心                   |
+| `direction`     | `Position` | —                 | 射线方向，不要求单位化 |
+| `endAngleDeg`   | `number`   | —                 | 结束角度，单位为度     |
+| `origin`        | `Position` | —                 | 射线起点               |
+| `radius`        | `number`   | —                 | 半径                   |
+| `startAngleDeg` | `number`   | —                 | 起始角度，单位为度     |
+| `tolerance?`    | `number`   | `DEFAULT_EPSILON` | 正向参数容差           |
+
+</ApiTable>
 
 </DocTab>
 
@@ -996,32 +1185,76 @@ export const AFFINE_IDENTITY: AffineMatrix = Object.freeze([1, 0, 0, 1, 0, 0]);
 ### circle
 
 <p>
-  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={41}>
+  <ApiSourceLink label={'circle'} path={'packages/kernel/math/src/algorithms/circle.ts'} startLine={46}>
     圆相关几何算法
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员               | 签名                                                           | 说明                                                                                                                            |
+| ------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `minimalEnclosing` | `(points: Array<Vector2>, epsilon?: number) => Circle \| null` | 点集的最小外接圆（Welzl 迭代式）<br />覆盖输入点集的最小圆；空集返回 null。epsilon 默认 DEFAULT_EPSILON，用于判断点是否落在圆内 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilon: number) => Circle | null };
+export declare const circle: { minimalEnclosing: (points: Array<Vector2>, epsilon?: number) => Circle | null };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### curve
 
 <p>
-  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={402}>
+  <ApiSourceLink label={'curve'} path={'packages/kernel/math/src/algorithms/curve.ts'} startLine={415}>
     可参数化曲线的纯几何运算
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员                  | 签名                                                                                             | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `approximateLength`   | `(segment: CurveSegment, options?: CurveApproximationOptions) => number`                         | 用确定的等参数 polyline 近似曲线长度<br />line 与圆弧使用解析长度；Bezier 与椭圆弧按 `sampleCount` 采样                                                                                                                                                                                                                                                                                                                                             |
+| `catmullRomToCubic`   | `(knots: Array<Vector2>, tension: number) => Array<CubicSegment>`                                | centripetal Catmull-Rom（α=0.5）穿过 knots → 三次贝塞尔段链<br />输入不足 2 个 knot 时返回空数组；每段终点严格命中下一个 knot                                                                                                                                                                                                                                                                                                                       |
+| `parameterAtDistance` | `(segment: CurveSegment, distance: number, options?: CurveParameterAtDistanceOptions) => number` | 将沿曲线的距离反解为参数位置<br />使用与 `approximateLength` 相同的离散长度模型；传入 `totalLength` 时必须与相同 sample count 对应。当中点的近似长度与目标距离相差不超过默认几何容差时提前返回<br />`segment`: 用于距离反解的曲线段<br />`distance`: 沿曲线的距离，会限制到 0 至完整曲线长度<br />`options?`: 反解配置；默认 &#123;&#125;，采用字段各自的默认值<br />返回值: 0..1 范围内的曲线参数；完整长度非有限或不大于 DEFAULT_EPSILON 时返回 0 |
+| `sampleAt`            | `(segment: CurveSegment, parameter: number) => CurveSegmentSample`                               | 在曲线参数位置采样点和行进方向切线<br />参数会 clamp 到 `[0, 1]`；零导数回退为确定的 `[1, 0]` 切线                                                                                                                                                                                                                                                                                                                                                  |
+| `slice`               | `(segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment`            | 取曲线参数区间的保形子段<br />参数先 clamp 并升序排列；Bezier 使用 De Casteljau，圆弧和椭圆弧保留有向角扫描                                                                                                                                                                                                                                                                                                                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const curve: {
-  approximateLength: (segment: CurveSegment, options: CurveApproximationOptions) => number;
+  approximateLength: (segment: CurveSegment, options?: CurveApproximationOptions) => number;
   catmullRomToCubic: (knots: Array<Vector2>, tension: number) => Array<CubicSegment>;
-  parameterAtDistance: (segment: CurveSegment, distance: number, options: CurveParameterAtDistanceOptions) => number;
+  parameterAtDistance: (segment: CurveSegment, distance: number, options?: CurveParameterAtDistanceOptions) => number;
   sampleAt: (segment: CurveSegment, parameter: number) => CurveSegmentSample;
   slice: (segment: CurveSegment, fromParameter: number, toParameter: number) => CurveSegment;
 };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### DEFAULT_EPSILON
 
@@ -1043,33 +1276,100 @@ export const DEFAULT_EPSILON = 1e-9;
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员                    | 签名                                                                                | 说明                                                                                                                                                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `boundaryPoint`         | `(e: Ellipse, toward: Vector2) => Vector2`                                          | 从中心向目标方向的射线与椭圆的交点<br />退化椭圆返回中心，避免零半轴除法                                                                                                                                                             |
+| `center`                | `(e: Ellipse) => Vector2`                                                           | 返回椭圆中心的新坐标元组                                                                                                                                                                                                             |
+| `circumscribedHalfAxes` | `(innerHalfAxes: BoundsHalfAxes, mode?: EllipseCircumscribeMode) => BoundsHalfAxes` | 包住内部盒的椭圆外接半轴<br />`proportional` 保持内部盒宽高比例，`equal` 使用等轴圆包住内部盒<br />`innerHalfAxes`: 待包围矩形盒的半宽与半高<br />`mode?`: 半轴策略；默认 'proportional'<br />返回值: 包住矩形盒的椭圆半轴，新建对象 |
+| `contains`              | `(e: Ellipse, p: Vector2) => boolean`                                               | 判断点是否在椭圆内，含边界                                                                                                                                                                                                           |
+| `inscribedInBox`        | `(box: CenteredBox) => Ellipse`                                                     | 矩形盒的内接椭圆                                                                                                                                                                                                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const ellipse: {
   boundaryPoint: (e: Ellipse, toward: Vector2) => Vector2;
   center: (e: Ellipse) => Vector2;
-  circumscribedHalfAxes: (innerHalfAxes: BoundsHalfAxes, mode: EllipseCircumscribeMode) => BoundsHalfAxes;
+  circumscribedHalfAxes: (innerHalfAxes: BoundsHalfAxes, mode?: EllipseCircumscribeMode) => BoundsHalfAxes;
   contains: (e: Ellipse, p: Vector2) => boolean;
   inscribedInBox: (box: CenteredBox) => Ellipse;
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### intersect
 
-<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={114}>求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）</ApiSourceLink></p>
+<p><ApiSourceLink label={"intersect"} path={"packages/kernel/math/src/algorithms/intersect.ts"} startLine={122}>求交原语集（line / circle / segment），统一返回点（`Position | null` / `Array<Position>`）</ApiSourceLink></p>
 
 ray∩arc 的返回值是沿射线的标量参数 `Array<number>`，因此由 `./arc-intersection` 单独导出
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员             | 签名                                           | 说明                                                                                                                                              |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `circleCircle`   | `(input: CircleCircleInput) => Array<Vector2>` | 圆 ∩ 圆，返回 0/1/2 交点（重合 / 内含 / 相离返回空）；外 / 内切（discriminant≈0）返回 2 个重合点，调用方自判<br />`input`: 两个圆各自的圆心和半径 |
+| `lineCircle`     | `(input: LineCircleInput) => Array<Vector2>`   | 直线（origin + direction，direction 不必单位化）∩ 圆，返回 0/1/2 交点；切线返回 2 个重合点，调用方自判<br />`input`: 直线原点、方向与圆心、半径   |
+| `lineLine`       | `(input: LineLineInput) => Vector2 \| null`    | 两条无限直线（各由两点定）的交点；平行 / 共线返回 null<br />`input`: 两条直线各自的两个定义点                                                     |
+| `segmentSegment` | `(input: LineLineInput) => Vector2 \| null`    | 线段 ∩ 线段：真交叉返回交点；平行 / 共线（含重叠）/ 不相交返回 null<br />`input`: 两条线段各自的端点                                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export const intersect = { lineLine, lineCircle, circleCircle, segmentSegment };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### point
 
 <p>
-  <ApiSourceLink label={'point'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={55}>
-    点的位置关系运算；所有方法都返回新 tuple，不修改输入
+  <ApiSourceLink label={'point'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={68}>
+    点的位置关系运算；不修改输入，移动距离为零或两点重合时可返回原点引用
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员          | 签名                                                                        | 说明                                                                                                                                       |
+| ------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `against`     | `(origin: Vector2, direction: Vector2, length: number) => Vector2`          | 返回 origin - direction × length 对应的新坐标<br />不自动单位化 direction；只有 direction 为单位向量时，实际位移长度才等于 length 的绝对值 |
+| `along`       | `(origin: Vector2, direction: Vector2, length: number) => Vector2`          | 返回 origin + direction × length 对应的新坐标<br />不自动单位化 direction；只有 direction 为单位向量时，实际位移长度才等于 length 的绝对值 |
+| `distance`    | `(a: Vector2, b: Vector2) => number`                                        | 两点欧氏距离                                                                                                                               |
+| `isEqual`     | `(a: Vector2, b: Vector2) => boolean`                                       | 精确相等比较，不使用容差                                                                                                                   |
+| `shiftToward` | `(sourcePoint: Vector2, targetPoint: Vector2, distance: number) => Vector2` | 将 sourcePoint 朝 targetPoint 移动指定距离                                                                                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const point: {
@@ -1081,6 +1381,10 @@ export declare const point: {
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### polygon
 
 <p>
@@ -1089,9 +1393,29 @@ export declare const point: {
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员            | 签名                                                | 说明                                                                                                                    |
+| --------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `containsPoint` | `(vertices: Array<Vector2>, p: Vector2) => boolean` | 点是否在简单多边形内（ray-casting 奇偶规则；顶点按序，不要求凹凸 / 绕向）<br />边界点结果未定义，调用方需按自身语义处理 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const polygon: { containsPoint: (vertices: Array<Vector2>, p: Vector2) => boolean };
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### triangle
 
@@ -1101,6 +1425,23 @@ export declare const polygon: { containsPoint: (vertices: Array<Vector2>, p: Vec
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员           | 签名                                                     | 说明                                                    |
+| -------------- | -------------------------------------------------------- | ------------------------------------------------------- |
+| `circumCircle` | `(a: Vector2, b: Vector2, c: Vector2) => Circle \| null` | 外接圆（过三顶点的圆）<br />三点共线（面积≈0）返回 null |
+| `incircle`     | `(a: Vector2, b: Vector2, c: Vector2) => Circle \| null` | 内切圆（与三边相切的圆）<br />三点共线或退化时返回 null |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const triangle: {
   circumCircle: (a: Vector2, b: Vector2, c: Vector2) => Circle | null;
@@ -1108,13 +1449,42 @@ export declare const triangle: {
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### vector2
 
 <p>
-  <ApiSourceLink label={'vector2'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={20}>
-    二维向量运算；所有方法都返回新 tuple，不修改输入
+  <ApiSourceLink label={'vector2'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={29}>
+    二维向量运算；不修改输入，单位化退化时可返回传入的 fallback 引用
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="methods">
+
+| 成员               | 签名                                                            | 说明                                                                                                                               |
+| ------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `add`              | `(a: Vector2, b: Vector2) => Vector2`                           | 向量加法：`a + b`                                                                                                                  |
+| `cross`            | `(a: Vector2, b: Vector2) => number`                            | 二维叉积标量                                                                                                                       |
+| `dot`              | `(a: Vector2, b: Vector2) => number`                            | 点积                                                                                                                               |
+| `fromAngleDegrees` | `(angle: number) => Vector2`                                    | 角度（度）转单位向量                                                                                                               |
+| `length`           | `(a: Vector2) => number`                                        | 向量长度                                                                                                                           |
+| `normal`           | `(a: Vector2) => Vector2`                                       | 左手法向量 `[-y, x]`；不改变输入长度                                                                                               |
+| `normalize`        | `(a: Vector2, fallback?: Vector2, epsilon?: number) => Vector2` | 单位化向量；零长度时返回 fallback<br />fallback 默认 [1, 0]，epsilon 默认 DEFAULT_EPSILON；长度小于 epsilon 时返回 fallback 原引用 |
+| `normalizeOrNull`  | `(a: Vector2, epsilon?: number) => Vector2 \| null`             | 单位化向量；零长度或非有限长度时返回 null<br />epsilon 默认 0；长度非有限或小于等于 epsilon 时返回 null                            |
+| `scale`            | `(a: Vector2, k: number) => Vector2`                            | 标量乘法：`a * k`                                                                                                                  |
+| `sub`              | `(a: Vector2, b: Vector2) => Vector2`                           | 向量减法：`a - b`                                                                                                                  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const vector2: {
@@ -1124,87 +1494,151 @@ export declare const vector2: {
   fromAngleDegrees: (angle: number) => Vector2;
   length: (a: Vector2) => number;
   normal: (a: Vector2) => Vector2;
-  normalize: (a: Vector2, fallback: Vector2, epsilon: number) => Vector2;
-  normalizeOrNull: (a: Vector2, epsilon: number) => Vector2 | null;
+  normalize: (a: Vector2, fallback?: Vector2, epsilon?: number) => Vector2;
+  normalizeOrNull: (a: Vector2, epsilon?: number) => Vector2 | null;
   scale: (a: Vector2, k: number) => Vector2;
   sub: (a: Vector2, b: Vector2) => Vector2;
 };
 ```
 
+</DocTab>
+
+</DocTabs>
+
 ### applyAffine
 
 <p>
-  <ApiSourceLink label={'applyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={23}>
+  <ApiSourceLink label={'applyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={29}>
     按 SVG / Canvas 六元组公式把二维点映射到新坐标
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名    | 说明                 |
+| ------ | -------- | -------------- | -------------------- |
+| 参数   | `matrix` | `AffineMatrix` | 待计算的二维仿射矩阵 |
+|        | `point`  | `Position`     | 待映射的二维点       |
+| 返回值 | —        | `Position`     | —                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const applyAffine: (matrix: AffineMatrix, point: Vector2) => Vector2;
+export declare const applyAffine: (matrix: AffineMatrix, point: Position) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数     | 类型           | 说明 |
-| -------- | -------------- | ---- |
-| `matrix` | `AffineMatrix` | —    |
-| `point`  | `Vector2`      | —    |
+</DocTabs>
 
 ### boundsOf
 
 <p>
-  <ApiSourceLink label={'boundsOf'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={51}>
+  <ApiSourceLink label={'boundsOf'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={53}>
     点集的轴对齐外接范围
   </ApiSourceLink>
 </p>
 
 输入为空时返回 undefined；调用方按自身语义决定兜底、报错或忽略
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名                      | 说明                             |
+| ------ | -------- | -------------------------------- | -------------------------------- |
+| 参数   | `points` | `ReadonlyArray<Position>`        | 待计算的二维点集                 |
+| 返回值 | —        | `AxisAlignedBounds \| undefined` | 点集外接范围；空集返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const boundsOf: (points: readonly Array<Vector2>) => AxisAlignedBounds | undefined;
+export declare const boundsOf: (points: ReadonlyArray<Position>) => AxisAlignedBounds | undefined;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数     | 类型                      | 说明 |
-| -------- | ------------------------- | ---- |
-| `points` | `readonly Array<Vector2>` | —    |
+</DocTabs>
 
 ### boundsToRect
 
 <p>
-  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={79}>
+  <ApiSourceLink label={'boundsToRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={89}>
     将 min/max bounds 转成左上角 + 尺寸矩形
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                         | 类型 / 签名         | 说明                   |
+| ------ | ---------------------------- | ------------------- | ---------------------- |
+| 参数   | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | 轴对齐的最小与最大坐标 |
+| 返回值 | —                            | `BoundsRect`        | —                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const boundsToRect: (__namedParameters: AxisAlignedBounds) => BoundsRect;
+export declare const boundsToRect: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => BoundsRect;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                | 说明 |
-| ------------------- | ------------------- | ---- |
-| `__namedParameters` | `AxisAlignedBounds` | —    |
+</DocTabs>
 
 ### centerOfBounds
 
 <p>
-  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={103}>
+  <ApiSourceLink label={'centerOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={125}>
     轴对齐外接范围中心
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                         | 类型 / 签名         | 说明                   |
+| ------ | ---------------------------- | ------------------- | ---------------------- |
+| 参数   | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | 轴对齐的最小与最大坐标 |
+| 返回值 | —                            | `Position`          | —                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => Vector2;
+export declare const centerOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                | 说明 |
-| ------------------- | ------------------- | ---- |
-| `__namedParameters` | `AxisAlignedBounds` | —    |
+</DocTabs>
 
 ### collectArcBoundingCandidates
 
@@ -1212,7 +1646,7 @@ export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => V
   <ApiSourceLink
     label={'collectArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={85}
+    startLine={93}
   >
     弧的 bbox 极值候选：起点、终点，加 [startAngle,endAngle] 内所有 90°·k 方向的圆周点
   </ApiSourceLink>
@@ -1220,15 +1654,35 @@ export declare const centerOfBounds: (__namedParameters: AxisAlignedBounds) => V
 
 不去重；端角恰在 90°·k 上时由调用方处理
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                                                                                 | 类型 / 签名                  | 说明                             |
+| ------ | ------------------------------------------------------------------------------------ | ---------------------------- | -------------------------------- |
+| 参数   | `{`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `ArcBoundingCandidatesInput` | 几何输入参数，字段含义见对应类型 |
+| 返回值 | —                                                                                    | `Array<Position>`            | —                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundingCandidatesInput) => Array<Vector2>;
+export declare const collectArcBoundingCandidates: ({
+  center,
+  radius,
+  startAngleDeg,
+  endAngleDeg,
+}: ArcBoundingCandidatesInput) => Array<Position>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                         | 说明 |
-| ------------------- | ---------------------------- | ---- |
-| `__namedParameters` | `ArcBoundingCandidatesInput` | —    |
+</DocTabs>
 
 ### collectEllipseArcBoundingCandidates
 
@@ -1236,7 +1690,7 @@ export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundi
   <ApiSourceLink
     label={'collectEllipseArcBoundingCandidates'}
     path={'packages/kernel/math/src/primitives/arc.ts'}
-    startLine={140}
+    startLine={151}
   >
     椭圆弧 bbox 极值候选：起点、终点，加 [start,end] 区间内所有 90°·k 参数角处的椭圆周点
   </ApiSourceLink>
@@ -1244,22 +1698,41 @@ export declare const collectArcBoundingCandidates: (__namedParameters: ArcBoundi
 
 只处理轴对齐椭圆弧，候选点不去重
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                                                                                                  | 类型 / 签名                         | 说明                             |
+| ------ | ----------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------- |
+| 参数   | `{`<br />`center,`<br />`radiusX,`<br />`radiusY,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`}` | `EllipseArcBoundingCandidatesInput` | 几何输入参数，字段含义见对应类型 |
+| 返回值 | —                                                                                                     | `Array<Position>`                   | —                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const collectEllipseArcBoundingCandidates: (
-  __namedParameters: EllipseArcBoundingCandidatesInput,
-) => Array<Vector2>;
+export declare const collectEllipseArcBoundingCandidates: ({
+  center,
+  radiusX,
+  radiusY,
+  startAngleDeg,
+  endAngleDeg,
+}: EllipseArcBoundingCandidatesInput) => Array<Position>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                                | 说明 |
-| ------------------- | ----------------------------------- | ---- |
-| `__namedParameters` | `EllipseArcBoundingCandidatesInput` | —    |
+</DocTabs>
 
 ### convexHull
 
 <p>
-  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={10}>
+  <ApiSourceLink label={'convexHull'} path={'packages/kernel/math/src/algorithms/hull.ts'} startLine={11}>
     凸包（Andrew's monotone chain）
   </ApiSourceLink>
 </p>
@@ -1267,57 +1740,102 @@ export declare const collectEllipseArcBoundingCandidates: (
 返回 CCW 顺序顶点、不含共线中间点；点数 &lt; 3 时返回按 (x,y) 排序去重后的点。
 全部点共线时退化为两端点
 
-```ts
-export declare const convexHull: (points: Array<Vector2>) => Array<Vector2>;
-```
+<DocTabs defaultValue="members">
 
-#### 参数
+<DocTab value="members" label="属性">
 
-| 参数     | 类型             | 说明 |
-| -------- | ---------------- | ---- |
-| `points` | `Array<Vector2>` | —    |
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名       | 说明             |
+| ------ | -------- | ----------------- | ---------------- |
+| 参数   | `points` | `Array<Position>` | 待计算的二维点集 |
+| 返回值 | —        | `Array<Position>` | —                |
+
+</ApiTable>
 
 > **备注：** 复杂度：时间 O(n log n)，空间 O(n)，n 为输入点数
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const convexHull: (points: Array<Position>) => Array<Position>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### cornersOfBounds
 
 <p>
-  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={126}>
+  <ApiSourceLink label={'cornersOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={159}>
     轴对齐外接范围的四个角点
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                         | 类型 / 签名         | 说明                               |
+| ------ | ---------------------------- | ------------------- | ---------------------------------- |
+| 参数   | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | 轴对齐的最小与最大坐标             |
+| 返回值 | —                            | `Array<Position>`   | 依次返回左上、右上、左下、右下角点 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const cornersOfBounds: (__namedParameters: AxisAlignedBounds) => Array<Vector2>;
+export declare const cornersOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => Array<Position>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                | 说明 |
-| ------------------- | ------------------- | ---- |
-| `__namedParameters` | `AxisAlignedBounds` | —    |
+</DocTabs>
 
 ### expandBounds
 
 <p>
-  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={115}>
+  <ApiSourceLink label={'expandBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={144}>
     按四边外扩轴对齐外接范围
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                           | 类型 / 签名         | 说明                       |
+| ------ | ------------------------------ | ------------------- | -------------------------- |
+| 参数   | `{ maxX, maxY, minX, minY }`   | `AxisAlignedBounds` | 轴对齐的最小与最大坐标     |
+|        | `{ bottom, left, right, top }` | `BoundsInsets`      | 各边外扩距离；负值表示内缩 |
+| 返回值 | —                              | `AxisAlignedBounds` | —                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const expandBounds: (
-  __namedParameters: AxisAlignedBounds,
-  __namedParameters: BoundsInsets,
+  { maxX, maxY, minX, minY }: AxisAlignedBounds,
+  { bottom, left, right, top }: BoundsInsets,
 ) => AxisAlignedBounds;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                | 说明 |
-| ------------------- | ------------------- | ---- |
-| `__namedParameters` | `AxisAlignedBounds` | —    |
-| `__namedParameters` | `BoundsInsets`      | —    |
+</DocTabs>
 
 ### getAffineSimilarityScale
 
@@ -1325,39 +1843,69 @@ export declare const expandBounds: (
   <ApiSourceLink
     label={'getAffineSimilarityScale'}
     path={'packages/kernel/math/src/transforms/affine.ts'}
-    startLine={35}
+    startLine={47}
   >
     返回仿射相似变换的统一缩放因子，不符合相似变换时返回 undefined
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名           | 说明                 |
+| ------ | -------- | --------------------- | -------------------- |
+| 参数   | `matrix` | `AffineMatrix`        | 待计算的二维仿射矩阵 |
+| 返回值 | —        | `number \| undefined` | —                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const getAffineSimilarityScale: (matrix: AffineMatrix) => number | undefined;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数     | 类型           | 说明 |
-| -------- | -------------- | ---- |
-| `matrix` | `AffineMatrix` | —    |
+</DocTabs>
 
 ### halfAxesOfBounds
 
 <p>
-  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={109}>
+  <ApiSourceLink label={'halfAxesOfBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={134}>
     轴对齐外接范围半轴
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                         | 类型 / 签名         | 说明                   |
+| ------ | ---------------------------- | ------------------- | ---------------------- |
+| 参数   | `{ maxX, maxY, minX, minY }` | `AxisAlignedBounds` | 轴对齐的最小与最大坐标 |
+| 返回值 | —                            | `BoundsHalfAxes`    | —                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) => BoundsHalfAxes;
+export declare const halfAxesOfBounds: ({ maxX, maxY, minX, minY }: AxisAlignedBounds) => BoundsHalfAxes;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                | 说明 |
-| ------------------- | ------------------- | ---- |
-| `__namedParameters` | `AxisAlignedBounds` | —    |
+</DocTabs>
 
 ### intersectRayWithArc
 
@@ -1365,7 +1913,7 @@ export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) =>
   <ApiSourceLink
     label={'intersectRayWithArc'}
     path={'packages/kernel/math/src/algorithms/arc-intersection.ts'}
-    startLine={19}
+    startLine={22}
   >
     射线（origin + s·direction）∩ 圆弧（center, radius, [startAngle, endAngle]）
   </ApiSourceLink>
@@ -1373,53 +1921,111 @@ export declare const halfAxesOfBounds: (__namedParameters: AxisAlignedBounds) =>
 
 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                                                                                                                                                      | 类型 / 签名               | 说明                             |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------- |
+| 参数   | `{`<br />`origin,`<br />`direction,`<br />`center,`<br />`radius,`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`tolerance = DEFAULT_EPSILON,`<br />`}` | `RayArcIntersectionInput` | 几何输入参数，字段含义见对应类型 |
+| 返回值 | —                                                                                                                                                         | `Array<number>`           | —                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const intersectRayWithArc: (__namedParameters: RayArcIntersectionInput) => Array<number>;
+export declare const intersectRayWithArc: ({
+  origin,
+  direction,
+  center,
+  radius,
+  startAngleDeg,
+  endAngleDeg,
+  tolerance = DEFAULT_EPSILON,
+}: RayArcIntersectionInput) => Array<number>;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                      | 说明 |
-| ------------------- | ------------------------- | ---- |
-| `__namedParameters` | `RayArcIntersectionInput` | —    |
+</DocTabs>
 
 ### isAngleWithinArcSweep
 
 <p>
-  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={112}>
+  <ApiSourceLink label={'isAngleWithinArcSweep'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={121}>
     角度 a（度）是否落在弧的角度区间 [startAngle, endAngle] 内（含端点，带容差）
   </ApiSourceLink>
 </p>
 
 start 到 end 为正时按屏幕顺时针扫描，为负时按逆时针扫描
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                                                                                                | 类型 / 签名          | 说明                             |
+| ------ | --------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------- |
+| 参数   | `{`<br />`startAngleDeg,`<br />`endAngleDeg,`<br />`angleDeg,`<br />`toleranceDeg = 1e-7,`<br />`}` | `ArcSweepAngleInput` | 几何输入参数，字段含义见对应类型 |
+| 返回值 | —                                                                                                   | `boolean`            | —                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const isAngleWithinArcSweep: (__namedParameters: ArcSweepAngleInput) => boolean;
+export declare const isAngleWithinArcSweep: ({
+  startAngleDeg,
+  endAngleDeg,
+  angleDeg,
+  toleranceDeg = 1e-7,
+}: ArcSweepAngleInput) => boolean;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                 | 说明 |
-| ------------------- | -------------------- | ---- |
-| `__namedParameters` | `ArcSweepAngleInput` | —    |
+</DocTabs>
 
 ### isFiniteBoundsRect
 
 <p>
-  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={95}>
+  <ApiSourceLink label={'isFiniteBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={111}>
     判断 bounds rect 四个字段是否都是 finite number
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                      | 类型 / 签名  | 说明           |
+| ------ | ------------------------- | ------------ | -------------- |
+| 参数   | `{ height, width, x, y }` | `BoundsRect` | 矩形位置及宽高 |
+| 返回值 | —                         | `boolean`    | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const isFiniteBoundsRect: (__namedParameters: BoundsRect) => boolean;
+export declare const isFiniteBoundsRect: ({ height, width, x, y }: BoundsRect) => boolean;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型         | 说明 |
-| ------------------- | ------------ | ---- |
-| `__namedParameters` | `BoundsRect` | —    |
+</DocTabs>
 
 ### isFiniteNonSingularAffine
 
@@ -1427,250 +2033,450 @@ export declare const isFiniteBoundsRect: (__namedParameters: BoundsRect) => bool
   <ApiSourceLink
     label={'isFiniteNonSingularAffine'}
     path={'packages/kernel/math/src/transforms/affine.ts'}
-    startLine={29}
+    startLine={38}
   >
     判断二维仿射矩阵是否由有限数值组成且具有非零行列式
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称     | 类型 / 签名    | 说明                 |
+| ------ | -------- | -------------- | -------------------- |
+| 参数   | `matrix` | `AffineMatrix` | 待计算的二维仿射矩阵 |
+| 返回值 | —        | `boolean`      | —                    |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const isFiniteNonSingularAffine: (matrix: AffineMatrix) => boolean;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数     | 类型           | 说明 |
-| -------- | -------------- | ---- |
-| `matrix` | `AffineMatrix` | —    |
+</DocTabs>
 
 ### isFiniteNumber
 
 <p>
-  <ApiSourceLink label={'isFiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={10}>
+  <ApiSourceLink label={'isFiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={13}>
     有限数值守卫，会排除 Infinity 和 NaN
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名       | 说明           |
+| ------ | ------- | ----------------- | -------------- |
+| 参数   | `value` | `unknown`         | 待判定的动态值 |
+| 返回值 | —       | `value is number` | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const isFiniteNumber: (value: unknown) => predicate;
+export declare const isFiniteNumber: (value: unknown) => value is number;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型      | 说明 |
-| ------- | --------- | ---- |
-| `value` | `unknown` | —    |
+</DocTabs>
 
 ### isFinitePoint
 
 <p>
-  <ApiSourceLink label={'isFinitePoint'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={13}>
+  <ApiSourceLink label={'isFinitePoint'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={19}>
     有限二维点守卫
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名         | 说明           |
+| ------ | ------- | ------------------- | -------------- |
+| 参数   | `value` | `unknown`           | 待判定的动态值 |
+| 返回值 | —       | `value is Position` | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const isFinitePoint: (value: unknown) => predicate;
+export declare const isFinitePoint: (value: unknown) => value is Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型      | 说明 |
-| ------- | --------- | ---- |
-| `value` | `unknown` | —    |
+</DocTabs>
 
 ### isInfiniteNumber
 
 <p>
-  <ApiSourceLink label={'isInfiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={17}>
+  <ApiSourceLink label={'isInfiniteNumber'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={26}>
     无限数值守卫，仅接受正负 Infinity
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名       | 说明           |
+| ------ | ------- | ----------------- | -------------- |
+| 参数   | `value` | `unknown`         | 待判定的动态值 |
+| 返回值 | —       | `value is number` | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const isInfiniteNumber: (value: unknown) => predicate;
+export declare const isInfiniteNumber: (value: unknown) => value is number;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型      | 说明 |
-| ------- | --------- | ---- |
-| `value` | `unknown` | —    |
+</DocTabs>
 
 ### isPositiveBoundsRect
 
 <p>
-  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={99}>
+  <ApiSourceLink label={'isPositiveBoundsRect'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={118}>
     判断 bounds rect 是否 finite 且宽高严格大于 0
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称   | 类型 / 签名  | 说明           |
+| ------ | ------ | ------------ | -------------- |
+| 参数   | `rect` | `BoundsRect` | 矩形位置及宽高 |
+| 返回值 | —      | `boolean`    | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const isPositiveBoundsRect: (rect: BoundsRect) => boolean;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数   | 类型         | 说明 |
-| ------ | ------------ | ---- |
-| `rect` | `BoundsRect` | —    |
+</DocTabs>
 
 ### lerp
 
 <p>
-  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={76}>
+  <ApiSourceLink label={'lerp'} path={'packages/kernel/math/src/primitives/point.ts'} startLine={100}>
     线性插值：a + (b - a) * t
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称 | 类型 / 签名 | 说明                                    |
+| ------ | ---- | ----------- | --------------------------------------- |
+| 参数   | `a`  | `Position`  | 起点                                    |
+|        | `b`  | `Position`  | 终点                                    |
+|        | `t`  | `number`    | 插值参数；不限制在 0..1，区间外执行外插 |
+| 返回值 | —    | `Position`  | —                                       |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const lerp: (a: Vector2, b: Vector2, t: number) => Vector2;
+export declare const lerp: (a: Position, b: Position, t: number) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数 | 类型      | 说明 |
-| ---- | --------- | ---- |
-| `a`  | `Vector2` | —    |
-| `b`  | `Vector2` | —    |
-| `t`  | `number`  | —    |
+</DocTabs>
 
 ### localToWorld
 
 <p>
-  <ApiSourceLink label={'localToWorld'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={17}>
+  <ApiSourceLink label={'localToWorld'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={21}>
     本地坐标（以中心为原点）→ 世界坐标
   </ApiSourceLink>
 </p>
 
 rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名     | 说明                       |
+| ------ | ------- | --------------- | -------------------------- |
+| 参数   | `shape` | `CenteredShape` | 形状中心与可选旋转弧度     |
+|        | `local` | `Position`      | 以形状中心为原点的本地坐标 |
+| 返回值 | —       | `Position`      | —                          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const localToWorld: (shape: CenteredShape, local: Vector2) => Vector2;
+export declare const localToWorld: (shape: CenteredShape, local: Position) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型            | 说明 |
-| ------- | --------------- | ---- |
-| `shape` | `CenteredShape` | —    |
-| `local` | `Vector2`       | —    |
+</DocTabs>
 
 ### mergeBounds
 
 <p>
-  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={67}>
+  <ApiSourceLink label={'mergeBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={74}>
     合并两个轴对齐外接范围
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称 | 类型 / 签名                      | 说明                                       |
+| ------ | ---- | -------------------------------- | ------------------------------------------ |
+| 参数   | `a?` | `AxisAlignedBounds`              | 第一个范围，可省略                         |
+|        | `b?` | `AxisAlignedBounds`              | 第二个范围，可省略                         |
+| 返回值 | —    | `AxisAlignedBounds \| undefined` | 新建的合并范围；两者均缺省时返回 undefined |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
 
 ```ts
 export declare const mergeBounds: (a?: AxisAlignedBounds, b?: AxisAlignedBounds) => AxisAlignedBounds | undefined;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数 | 类型                | 说明 |
-| ---- | ------------------- | ---- |
-| `a`  | `AxisAlignedBounds` | —    |
-| `b`  | `AxisAlignedBounds` | —    |
+</DocTabs>
 
 ### multiplyAffine
 
 <p>
-  <ApiSourceLink label={'multiplyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={13}>
+  <ApiSourceLink label={'multiplyAffine'} path={'packages/kernel/math/src/transforms/affine.ts'} startLine={15}>
     复合二维仿射矩阵
   </ApiSourceLink>
 </p>
 
 返回 `outer × inner`，即对点先应用 `inner`，再应用 `outer`
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名    | 说明             |
+| ------ | ------- | -------------- | ---------------- |
+| 参数   | `outer` | `AffineMatrix` | 后应用的外层矩阵 |
+|        | `inner` | `AffineMatrix` | 先应用的内层矩阵 |
+| 返回值 | —       | `AffineMatrix` | —                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export declare const multiplyAffine: (outer: AffineMatrix, inner: AffineMatrix) => AffineMatrix;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型           | 说明 |
-| ------- | -------------- | ---- |
-| `outer` | `AffineMatrix` | —    |
-| `inner` | `AffineMatrix` | —    |
+</DocTabs>
 
 ### pointAtArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={76}>
+  <ApiSourceLink label={'pointAtArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={83}>
     圆心、半径、角度（度，与 polar.toPosition 同约定）→ 圆周上对应点
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称       | 类型 / 签名 | 说明             |
+| ------ | ---------- | ----------- | ---------------- |
+| 参数   | `center`   | `Position`  | 圆心             |
+|        | `radius`   | `number`    | 半径             |
+|        | `angleDeg` | `number`    | 参数角，单位为度 |
+| 返回值 | —          | `Position`  | —                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const pointAtArcAngle: (center: Vector2, radius: number, angleDeg: number) => Vector2;
+export declare const pointAtArcAngle: (center: Position, radius: number, angleDeg: number) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数       | 类型      | 说明 |
-| ---------- | --------- | ---- |
-| `center`   | `Vector2` | —    |
-| `radius`   | `number`  | —    |
-| `angleDeg` | `number`  | —    |
+</DocTabs>
 
 ### pointAtEllipseArcAngle
 
 <p>
-  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={131}>
+  <ApiSourceLink label={'pointAtEllipseArcAngle'} path={'packages/kernel/math/src/primitives/arc.ts'} startLine={141}>
     椭圆弧参数点：中心 + 半轴 rx/ry + 参数角（度）→ 椭圆周上点
   </ApiSourceLink>
 </p>
 
 与 pointAtArcAngle 同角度约定；θ 是参数角，不一定等于真实极角
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                                     | 类型 / 签名                 | 说明                             |
+| ------ | ---------------------------------------- | --------------------------- | -------------------------------- |
+| 参数   | `{ center, radiusX, radiusY, angleDeg }` | `EllipseArcAnglePointInput` | 几何输入参数，字段含义见对应类型 |
+| 返回值 | —                                        | `Position`                  | —                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const pointAtEllipseArcAngle: (__namedParameters: EllipseArcAnglePointInput) => Vector2;
+export declare const pointAtEllipseArcAngle: ({
+  center,
+  radiusX,
+  radiusY,
+  angleDeg,
+}: EllipseArcAnglePointInput) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型                        | 说明 |
-| ------------------- | --------------------------- | ---- |
-| `__namedParameters` | `EllipseArcAnglePointInput` | —    |
+</DocTabs>
 
 ### rectToBounds
 
 <p>
-  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={87}>
+  <ApiSourceLink label={'rectToBounds'} path={'packages/kernel/math/src/primitives/bounds.ts'} startLine={100}>
     将左上角 + 尺寸矩形转成 min/max bounds
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称                      | 类型 / 签名         | 说明           |
+| ------ | ------------------------- | ------------------- | -------------- |
+| 参数   | `{ height, width, x, y }` | `BoundsRect`        | 矩形位置及宽高 |
+| 返回值 | —                         | `AxisAlignedBounds` | —              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const rectToBounds: (__namedParameters: BoundsRect) => AxisAlignedBounds;
+export declare const rectToBounds: ({ height, width, x, y }: BoundsRect) => AxisAlignedBounds;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数                | 类型         | 说明 |
-| ------------------- | ------------ | ---- |
-| `__namedParameters` | `BoundsRect` | —    |
+</DocTabs>
 
 ### worldToLocal
 
 <p>
-  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={29}>
+  <ApiSourceLink label={'worldToLocal'} path={'packages/kernel/math/src/transforms/coordinate.ts'} startLine={35}>
     世界坐标 → 本地坐标（`localToWorld` 逆变换）
   </ApiSourceLink>
 </p>
 
 返回以形状中心和旋转为基准的本地坐标
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称    | 类型 / 签名     | 说明                   |
+| ------ | ------- | --------------- | ---------------------- |
+| 参数   | `shape` | `CenteredShape` | 形状中心与可选旋转弧度 |
+|        | `world` | `Position`      | 待转换的世界坐标       |
+| 返回值 | —       | `Position`      | —                      |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const worldToLocal: (shape: CenteredShape, world: Vector2) => Vector2;
+export declare const worldToLocal: (shape: CenteredShape, world: Position) => Position;
 ```
 
-#### 参数
+</DocTab>
 
-| 参数    | 类型            | 说明 |
-| ------- | --------------- | ---- |
-| `shape` | `CenteredShape` | —    |
-| `world` | `Vector2`       | —    |
+</DocTabs>

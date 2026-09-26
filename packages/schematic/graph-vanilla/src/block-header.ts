@@ -1,4 +1,3 @@
-import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockHeaderProviderKey } from '@retikz/graph';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 
@@ -6,31 +5,14 @@ import { BlockHeaderEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlockHeader, InputGraphChild, WithoutInputType } from './normalize';
 import { normalizeBlockHeader } from './normalize';
-import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
+import { createGraphProviderDependencies } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
-/** Block Header embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader> & GraphDefinitionOptions;
+/** Block Header embed 的 Source authoring 输入 */
+export type BlockHeaderInputEmbedProps = WithoutInputType<InputBlockHeader>;
 
 const inputOf = (props: BlockHeaderInputEmbedProps): InputBlockHeader => {
-  const {
-    entityRoles: _entityRoles,
-    entityKinds: _entityKinds,
-    entityPredicates: _entityPredicates,
-    relationRoles: _relationRoles,
-    relationKinds: _relationKinds,
-    relationPredicates: _relationPredicates,
-    graphThemeStyles: _graphThemeStyles,
-    ...input
-  } = props;
-  void _entityRoles;
-  void _entityKinds;
-  void _entityPredicates;
-  void _relationRoles;
-  void _relationKinds;
-  void _relationPredicates;
-  void _graphThemeStyles;
-  return { type: 'blockHeader', ...input };
+  return { type: 'blockHeader', ...props };
 };
 
 /** Block Header Source 的 InputEmbed adapter */
@@ -43,7 +25,7 @@ export const BlockHeaderInputEmbedAdapter: InputEmbedAdapter<BlockHeaderInputEmb
     if (input.trail !== undefined) slots.push(input.trail);
     const normalized = normalizeGraphAuthoringChildren(slots, context, 'BlockHeader slots');
     const trailIndex = input.icon === undefined ? 0 : 1;
-    const dependencies = createGraphProviderDependencies(BlockHeaderProviderKey, graphDefinitionOptionsOf(props));
+    const dependencies = createGraphProviderDependencies(BlockHeaderProviderKey);
     return {
       node: normalizeBlockHeader({
         ...input,

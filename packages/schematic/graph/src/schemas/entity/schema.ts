@@ -10,7 +10,8 @@ export const EntityRoleSchema = createOpenStringSchema(EntityRole).describe(
   'Open Entity role key resolved by the configured Graph role registry.',
 );
 
-const EntityNodeShape = NodeSchema.omit({
+const EntityNodeShape = strictObject(NodeSchema.shape).omit({
+  aliasIds: true,
   type: true,
   shape: true,
   boundary: true,
@@ -25,7 +26,9 @@ export const EntitySchema = strictObject({
   kind: NonBlankStringSchema.optional().describe(
     'Open stable subtype key whose registration identity is the selected Entity role and kind.',
   ),
-  group: string().optional().describe('Optional Graph-root visual color grouping identifier.'),
+  group: string()
+    .optional()
+    .describe('Optional semantic group key for Entities within a Graph; members share a categorical color by default.'),
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   ...EntityNodeShape,

@@ -97,7 +97,7 @@ export const ModuleNav: FC<ModuleNavProps> = props => {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-medium text-foreground">
-                        {resolveHeaderSectionLabel(String(t(section.label as I18nKey)), i18n?.resolvedLanguage)}
+                        {resolveHeaderSectionLabel(String(t(section.label as I18nKey)), i18n.resolvedLanguage)}
                       </span>
                       {section.navigationDescription && (
                         <span

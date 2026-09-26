@@ -1,5 +1,69 @@
 /** 经核对的 Layout API 英文说明，签名与标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '固定为 layer 的作者分层标识': 'Authoring layer discriminator, fixed to layer',
+  '可省略的场景类别；归一化后固定为 scene': 'Optional scene discriminator; fixed to scene after normalization',
+  '作者输入不接受版本号；归一化时写入当前 IR 版本':
+    'Authoring input excludes a version; normalization supplies the current IR version',
+  '作者侧场景标识，不写入持久化 Scene IR': 'Authoring scene identity, excluded from persisted Scene IR',
+  '场景根主题，只填写需要覆盖的 style 与 mode': 'Root theme; specify only style and mode overrides',
+  '显式取景矩形；省略时由编译结果按内容计算': 'Explicit viewport; compilation derives it from content when omitted',
+  '场景根动画轨道，省略时不添加根动画': 'Scene-root animation tracks; omitted means no root animation',
+  'children 模式不接受显式 layers': 'The children variant excludes explicit layers',
+  '显式分层列表，按 zIndex 稳定排序后归一化': 'Explicit layers, normalized after a stable sort by zIndex',
+  'layers 模式不接受顶层 children': 'The layers variant excludes top-level children',
+  '有序子图元，归一化时置于隐式默认层': 'Ordered children placed in the implicit default layer during normalization',
+
+  '作者侧 Layer 输入': 'Authoring input for a layer',
+  运行时缓存提示: 'Runtime cache hint',
+  按声明顺序归一的子节点: 'Children normalized in declaration order',
+  分层身份标识: 'Layer identity',
+  同值保持声明顺序的分层排序值: 'Layer stacking order; equal values preserve declaration order',
+  '作者侧 Scene 输入': 'Scene authoring input',
+  '可选编译驱动自行解释的运行时载荷，不进入 Core IR':
+    'Optional runtime payload interpreted by a compile driver; excluded from Core IR',
+  '使用 children 简写的作者侧 Scene 输入': 'Scene authoring input using a children list',
+  '使用 Layer 列表的作者侧 Scene 输入': 'Scene authoring input using explicit layers',
+  '创建作者侧 Scene 输入': 'Create scene authoring input',
+  用子图元列表创建场景: 'Create a scene from a list of children',
+  用子图元和全图配置创建场景: 'Create a scene from children and drawing-wide options',
+  用显式分层创建场景: 'Create a scene from explicit layers',
+  '有序子图元列表，允许空数组': 'Ordered children; an empty array is allowed',
+  '保留子数组引用的场景输入，数据版本在归一化时补齐':
+    'Scene input retaining the children array reference; normalization supplies the data version',
+  'children 与主题、视框等全图配置，不接受 layers':
+    'Children and drawing-wide options such as theme and viewBox; excludes layers',
+  '保留配置与子图元引用的场景输入，尚未编译': 'Uncompiled scene input retaining the options and child references',
+  'layers 与全图配置，不接受 children': 'Layers and drawing-wide options; excludes children',
+  '保留分层列表引用的场景输入，分层运行时信息由归一化提取':
+    'Scene input retaining the layers array reference; normalization extracts runtime layer metadata',
+  创建作者侧分层输入: 'Create layer authoring input',
+  '分层标识、排序、缓存提示与子图元': 'Layer identity, stacking order, cache hint, and children',
+  '带 layer 类别的输入，不编译或复制子图元': 'Input tagged as a layer; does not compile or copy its children',
+  'retikz 顶层绘制 IR，可序列化 JSON 形式的绘制描述': 'Root drawing IR, a JSON-serializable description of a drawing',
+  '显式视框 IR 类型 `{ x, y, width, height }`': 'Explicit viewport IR: `{ x, y, width, height }`',
+
+  'SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版':
+    'CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout',
+  'SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版':
+    'CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout',
+  '显式视框，使用绘图坐标；优先于 ir.viewBox，省略时沿用场景视框，场景未指定时按内容计算':
+    'Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none',
+  '动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate':
+    'Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate',
+  '将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画':
+    'Render JSX drawings or scene IR as SVG or Canvas, with updates and animation',
+  '通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式':
+    'Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.',
+  '保留执行状态以处理后续图形更新；省略 runtime 或 mode 时使用此模式':
+    'Keep execution state for subsequent drawing updates; used when runtime or mode is omitted',
+  '更新策略；auto 按变更和执行器能力选择增量或完整执行，full 强制完整执行':
+    'Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution',
+  '接收图形更新的结构化诊断，按产生顺序通知；更新失败时保留最后一次成功画面':
+    'Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing',
+  '每次输入变化时完整编译图形，不保留增量执行状态':
+    'Compile the complete drawing whenever input changes, without retaining incremental execution state',
+  '通过 mode 选择图形更新方式；retained 支持更新策略和诊断回调，static 不接受这两个选项':
+    'Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static accepts neither option',
   主题样式定义: 'Theme style definitions',
   '通过 JSX 声明的图形内容': 'Drawing content declared with JSX',
   处理作者输入的编译驱动: 'Compile driver that processes authoring input',

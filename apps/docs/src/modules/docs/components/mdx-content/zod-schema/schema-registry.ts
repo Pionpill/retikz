@@ -584,17 +584,25 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'ArcStep',
     url: '/kernel/components/path/schema-reference#arcstepschema',
   },
-  CircleSchema: { schema: CircleSchema, label: 'Circle', url: '/library/standard/circle-ellipse#circleschema' },
-  EllipseSchema: { schema: EllipseSchema, label: 'Ellipse', url: '/library/standard/circle-ellipse#ellipseschema' },
-  RectangleSchema: { schema: RectangleSchema, label: 'Rectangle', url: '/library/standard/rectangle#rectangleschema' },
+  CircleSchema: { schema: CircleSchema, label: 'Circle', url: '/library/standard/shape/circle-ellipse#circleschema' },
+  EllipseSchema: {
+    schema: EllipseSchema,
+    label: 'Ellipse',
+    url: '/library/standard/shape/circle-ellipse#ellipseschema',
+  },
+  RectangleSchema: {
+    schema: RectangleSchema,
+    label: 'Rectangle',
+    url: '/library/standard/shape/rectangle#rectangleschema',
+  },
   RegularPolygonSchema: {
     schema: RegularPolygonSchema,
     label: 'RegularPolygon',
-    url: '/library/standard/regular-polygon#regularpolygonschema',
+    url: '/library/standard/shape/regular-polygon#regularpolygonschema',
   },
-  StarSchema: { schema: StarSchema, label: 'Star', url: '/library/standard/star#starschema' },
-  ArcSchema: { schema: ArcSchema, label: 'Arc', url: '/library/standard/arc-sector#arcschema' },
-  SectorSchema: { schema: SectorSchema, label: 'Sector', url: '/library/standard/arc-sector#sectorschema' },
+  StarSchema: { schema: StarSchema, label: 'Star', url: '/library/standard/shape/star#starschema' },
+  ArcSchema: { schema: ArcSchema, label: 'Arc', url: '/library/standard/shape/arc-sector#arcschema' },
+  SectorSchema: { schema: SectorSchema, label: 'Sector', url: '/library/standard/shape/arc-sector#sectorschema' },
   CirclePathStepSchema: {
     schema: IR.CirclePathStepSchema,
     label: 'CirclePathStep',
@@ -725,21 +733,25 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   LegendSchema: {
     schema: StandardPresentationIR.LegendSchema,
     label: 'Legend',
-    url: '/library/standard/legend#legendschema',
+    url: '/library/standard/presentation/legend#legendschema',
     localizations: { zh: LegendSchemaZhLocalization },
   },
   LegendArtifactSchema: {
     schema: StandardPresentationIR.LegendArtifactSchema,
     label: 'LegendArtifact',
-    url: '/library/standard/legend#legendartifactschema',
+    url: '/library/standard/presentation/legend#legendartifactschema',
     localizations: { zh: LegendArtifactSchemaZhLocalization },
   },
-  ListSchema: { schema: StandardContainerIR.ListSchema, label: 'List', url: '/library/standard/list#listschema' },
-  MapSchema: { schema: StandardContainerIR.MapSchema, label: 'Map', url: '/library/standard/map#mapschema' },
+  ListSchema: {
+    schema: StandardContainerIR.ListSchema,
+    label: 'List',
+    url: '/library/standard/container/list#listschema',
+  },
+  MapSchema: { schema: StandardContainerIR.MapSchema, label: 'Map', url: '/library/standard/container/map#mapschema' },
   SurfaceSchema: {
     schema: StandardPresentationIR.SurfaceSchema,
     label: 'Surface',
-    url: '/library/standard/surface#surfaceschema',
+    url: '/library/standard/presentation/surface#surfaceschema',
   },
 
   FlowDiagramSchema: {
@@ -761,7 +773,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GraphSchema: {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
-    url: '/schematic/graph/api-reference',
   },
   GroupSchema: {
     schema: GraphIR.GroupSchema,
@@ -791,37 +802,36 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
-    url: '/schematic/graph/api-reference',
+    url: '/schematic/graph/entity/schema-reference',
+  },
+  EntityRoleSchema: {
+    schema: GraphIR.EntityRoleSchema,
+    label: 'EntityRole',
+    url: '/schematic/graph/entity/schema-reference#entityroleschema',
   },
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
-    url: '/schematic/graph/api-reference',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,
     label: 'GraphPredicateRef',
-    url: '/schematic/graph/api-reference',
   },
   GraphDefaultsSchema: {
     schema: GraphIR.GraphDefaultsSchema,
     label: 'GraphDefaults',
-    url: '/schematic/graph/api-reference',
   },
   GraphRuleSchema: {
     schema: GraphIR.GraphRuleSchema,
     label: 'GraphRule',
-    url: '/schematic/graph/api-reference',
   },
   GraphEntityThemeSelectorSchema: {
     schema: GraphIR.GraphEntityThemeSelectorSchema,
     label: 'GraphEntityThemeSelector',
-    url: '/schematic/graph/api-reference',
   },
   GraphRelationThemeSelectorSchema: {
     schema: GraphIR.GraphRelationThemeSelectorSchema,
     label: 'GraphRelationThemeSelector',
-    url: '/schematic/graph/api-reference',
   },
   TableSchema: {
     schema: IRTable.TableSchema,

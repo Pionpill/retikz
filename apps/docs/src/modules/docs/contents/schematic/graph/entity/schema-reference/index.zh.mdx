@@ -1,0 +1,63 @@
+---
+title: Schema 参考
+description: 查询 EntitySchema 与 EntityRoleSchema 的公开持久化契约。
+---
+
+本页直接展示 `@retikz/graph` 公开 Zod schema。Entity 拥有 EntitySchema 和 EntityRoleSchema；共享的文字、颜色、位置、predicate 与 status schema 保留名称引用，不在此复制完整定义。React props 和运行时 Definition 见 [API 参考](/schematic/graph/entity/api-reference)。
+
+Source 允许省略 id 和 position，但两者语义不同：id 只在被引用时需要，position 必须在实际绘制前补齐。可选字段省略不代表 schema 已写入主题默认；角色注册、参数适用范围和布局闭环仍由运行时验证。
+
+## EntitySchema
+
+<ZodSchema
+  name="EntitySchema"
+  description="带语义 key、文字与非结构实例字段的实体记录"
+  descriptions={{
+    namespace: '命名空间，固定为 graph',
+    type: '记录判别字段，固定为 entity',
+    role: '开放角色 key；绘制时必须在当前宿主中注册',
+    kind: '可选稳定子类型；注册身份为当前 role 与 kind 的组合',
+    group: 'Graph 内 Entity 的语义分组 key；同组默认使用相同分类色，Relation 也可共享该颜色；不创建容器',
+    predicate: '已注册精确语义的名称与 JSON 参数',
+    status: '可选闭合状态：error、success、warning、disabled',
+    id: '可选引用标识；省略不自动生成',
+    position: '可选位置；实际绘制前必须由作者或布局补齐',
+    text: '字符串或文字行数组',
+    rotate: '绕中心旋转的角度',
+    scale: '统一或分轴缩放',
+    style: '逐字段合并的实例外观',
+    layout: '尺寸和文字布局，不包含 role 拥有的 padding',
+    meta: '透传的 JSON 元信息',
+    animations: '动画轨道，不参与布局',
+    label: '附着的单个或多个标签',
+    zIndex: '同层绘制顺序，数值越大越靠上',
+    'style.color': '字符串主色',
+    'style.fill': '填充颜色、主色权重或画笔',
+    'style.stroke': '描边颜色、主色权重或画笔',
+    'style.fillOpacity': '填充不透明度',
+    'style.strokeWidth': '描边宽度',
+    'style.strokeOpacity': '描边不透明度',
+    'style.opacity': '整体不透明度',
+    'style.shadow': '投影预设或配置',
+    'style.blendMode': '混合模式',
+    'style.dashed': '虚线预设，显式 dashPattern 优先',
+    'style.dotted': '点线预设，dashPattern 与 dashed 优先',
+    'style.dashPattern': '显式虚线段与间隔长度',
+    'style.dashOffset': '虚线起点偏移',
+    'style.textColor': '文字颜色、主色权重或对比色',
+    'style.font': '字体配置',
+    'layout.align': '文字对齐',
+    'layout.lineHeight': '文字行高',
+    'layout.maxTextWidth': '文字最大宽度',
+    'layout.minimumSize': '最小尺寸，与 role 按轴取较大值',
+    'layout.margin': '外边距',
+  }}
+/>
+
+role 拥有 shape、boundary、cornerRadius 和 layout.padding，这些字段不属于 Entity 实例输入。实例 minimumSize 与 role 的最小值按轴取较大者。
+
+## EntityRoleSchema
+
+<ZodSchema name="EntityRoleSchema" description="开放角色 key；内置值提供提示，自定义 key 仍须注册" />
+
+内置角色为 participant、activity、event、state、gateway、resource、concept。开放 schema 接受自定义 key，但不会自动注册它；定义与接入见[自定义用法](/schematic/graph/entity/custom)。

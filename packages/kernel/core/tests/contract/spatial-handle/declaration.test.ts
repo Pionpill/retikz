@@ -26,7 +26,7 @@ const defineCard = (spatialHandles: unknown) =>
   });
 
 const valid = {
-  key: 'body',
+  id: 'body',
   role: 'card',
   bounds: { x: -10, y: 4, width: 20, height: 12 },
   tags: ['content', 'primary'],
@@ -39,7 +39,10 @@ describe('spatial handle declaration contract', () => {
   });
 
   it.each([
-    ['empty key', { ...valid, key: '' }],
+    ['empty id', { ...valid, id: '' }],
+    ['empty alias', { ...valid, aliasIds: [''] }],
+    ['repeated alias', { ...valid, aliasIds: ['a', 'a'] }],
+    ['primary alias', { ...valid, aliasIds: ['body'] }],
     ['empty role', { ...valid, role: '' }],
     ['non-finite x', { ...valid, bounds: { ...valid.bounds, x: Number.NaN } }],
     ['non-finite y', { ...valid, bounds: { ...valid.bounds, y: Number.POSITIVE_INFINITY } }],
@@ -61,6 +64,24 @@ describe('spatial handle declaration contract', () => {
         composites: [defineCard([valid, { ...valid, role: 'duplicate-role' }])],
       }),
     ).toThrow(/spatial handle.*duplicate.*body/i);
+  });
+
+  it('rejects aliases colliding with another declaration and keeps aliases detached', () => {
+    expect(() =>
+      compileToScene(scene, {
+        composites: [
+          defineCard([
+            { ...valid, aliasIds: ['other'] },
+            { ...valid, id: 'other' },
+          ]),
+        ],
+      }),
+    ).toThrow(/duplicate/i);
+    const aliasIds = ['alternate'];
+    const result = compileToScene(scene, { composites: [defineCard([{ ...valid, aliasIds }])] });
+    aliasIds.push('later');
+    expect(result.spatialHandles.entries[0]?.aliasIds).toEqual(['alternate']);
+    expect(Object.isFrozen(result.spatialHandles.entries[0]?.aliasIds)).toBe(true);
   });
 
   it('rejects unsupported result fields at the callback boundary', () => {

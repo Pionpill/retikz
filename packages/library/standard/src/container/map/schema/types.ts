@@ -5,12 +5,23 @@ import type { IRCell } from '../../shared/cell/schema';
 import type { MapSchema } from './schema';
 
 /** 稀疏 Map Source，展示键允许重复 */
-export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries' | 'data'> &
+export type IRMap = Omit<input<typeof MapSchema>, keyof IRScopeProps | 'entries' | 'data' | 'dataObjectDisplay'> &
   Omit<IRScopeProps, 'style'> & {
     style?: input<typeof MapSchema>['style'];
   } & (
-    | { /** 显式键值单元格 */ entries: Array<{ key: string | IRCell; value: string | IRCell }>; data?: never }
-    | { /** 递归展示 JSON 对象，不推导单元格 id */ data: NonNullable<input<typeof MapSchema>['data']>; entries?: never }
+    | {
+        /** 显式键值单元格 */ entries: Array<{ key: string | IRCell; value: string | IRCell }>;
+        data?: never;
+        dataObjectDisplay?: never;
+      }
+    | {
+        /** 递归展示 JSON 对象，不推导单元格 id */ data: NonNullable<input<typeof MapSchema>['data']>;
+        entries?: never;
+        /** 非空对象值的展示方式，递归作用于嵌套 data
+         * @default 'map'
+         */
+        dataObjectDisplay?: input<typeof MapSchema>['dataObjectDisplay'];
+      }
   );
 /** Map 类型化工厂输入 */
 export type MapInput = IRMap;

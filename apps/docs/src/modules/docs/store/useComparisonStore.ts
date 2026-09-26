@@ -10,6 +10,7 @@ export type ComparisonTargetVisibility = Record<ComparisonTargetValue, boolean>;
 /** 默认展示全部对照内容，用户按需关闭。 */
 export const DEFAULT_COMPARISON_TARGET_VISIBILITY: ComparisonTargetVisibility = {
   [ComparisonTarget.TikZ]: true,
+  [ComparisonTarget.Vega]: true,
 };
 
 /** Comparison store：托管文档站中所有可选对照内容的显示开关。 */

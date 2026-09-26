@@ -28,8 +28,8 @@ const getMathJaxPackages = (extensions: Array<MathJaxExtensionValue>): Array<str
  * 创建基于可选 `mathjax-full` peer 的同步 TeX → SVG 引擎
  * @description 异步加载并配置 `mathjax-full`，返回可被 `createLowerTex` 反复同步调用的引擎。输入配置只影响启用的 TeX 扩展；返回值只负责 TeX → SVG，不承担 SVG 路径降解、缓存或 Core 注入
  * @param options 控制内置 profile 与附加 TeX 扩展的可选配置
- * @returns 可同步执行 TeX → SVG 转换的 `MathJaxSvgEngine`
- * @throws `mathjax-full` 无法加载或初始化时
+ * @returns Promise 在引擎初始化完成后兑现为同步 TeX → SVG 引擎
+ * @throws 引擎加载或初始化失败时 Promise 拒绝；模块加载失败保留原始 cause
  * @remarks 使用字面量 dynamic import 支持打包器分包；`fontCache: 'none'` 让字形以内联路径输出
  * @example
  * import { createMathJaxEngine, MathJaxExtension } from '@retikz/tex';

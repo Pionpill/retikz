@@ -12,10 +12,20 @@ import type { InspectorKey } from '../contract';
 
 /** Inspector selection 的目标 locator */
 export type InspectionSelectionTarget =
-  | Readonly<{ kind: 'scene' }>
-  | Readonly<{ kind: 'subtree'; sourcePath: string }>
   | Readonly<{
+      /** 选择整张主图 */
+      kind: 'scene';
+    }>
+  | Readonly<{
+      /** 选择指定来源的子树 */
+      kind: 'subtree';
+      /** 目标 Scope 在 Source IR 中的路径 */
+      sourcePath: string;
+    }>
+  | Readonly<{
+      /** 仅选择来源对应的最终实例 */
       kind: 'self';
+      /** 按来源路径定位实例；occurrenceIndex 省略时选择该来源与所属者下的全部实例 */
       locator: Readonly<{
         /** 按 authored source path 选择其产生的最终 occurrence */
         kind: 'authored';
@@ -91,21 +101,40 @@ export type InspectionPlane = Readonly<{
 
 /** Inspect 失败、回调警告及 fragment diagnostic 的结构化来源 */
 export type InspectionDiagnosticOrigin =
-  | Readonly<{ stage: 'selection'; ruleIndex: number; target: InspectionSelectionTarget | null }>
   | Readonly<{
+      /** 选择规则准入或匹配阶段 */
+      stage: 'selection';
+      /** 失败规则在 rules 中的零基索引 */
+      ruleIndex: number;
+      /** 已识别的目标；目标无效或不可恢复时为 null */
+      target: InspectionSelectionTarget | null;
+    }>
+  | Readonly<{
+      /** 被观察对象解析或 Inspector 回调阶段 */
       stage: 'subject' | 'inspect';
+      /** 产生当前诊断的 Inspector 键 */
       inspector: InspectorKey;
+      /** 被观察实例的所属者 */
       owner: CompileObservationOwner;
+      /** 产生诊断的最终实例定位信息 */
       occurrence: CompileOccurrenceLocator;
     }>
   | Readonly<{
+      /** 回调输出准入或辅助片段编译阶段 */
       stage: 'output' | 'fragment';
+      /** 产生当前诊断的 Inspector 键 */
       inspector: InspectorKey;
+      /** 被观察实例的所属者 */
       owner: CompileObservationOwner;
+      /** 产生诊断的最终实例定位信息 */
       occurrence: CompileOccurrenceLocator;
+      /** 回调输出中的零基序号 */
       outputIndex: number;
     }>
-  | Readonly<{ stage: 'complete' }>;
+  | Readonly<{
+      /** 辅助观测结果汇总阶段 */
+      stage: 'complete';
+    }>;
 
 /** 一条回调或 fragment warning 的 Inspect-owned diagnostic */
 export type InspectionDiagnostic = Readonly<{

@@ -42,7 +42,7 @@ export const SectionNav: FC<SectionNavProps> = props => {
   const { areaId, sectionId, onNavigate, mobile = false, withinNavigationMenu = false } = props;
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
-  const displayLabel = (label: I18nKey): string => resolveHeaderSectionLabel(String(t(label)), i18n?.resolvedLanguage);
+  const displayLabel = (label: I18nKey): string => resolveHeaderSectionLabel(String(t(label)), i18n.resolvedLanguage);
   const currentPath = normalizePath(pathname);
   const navigationSections = getNavigationSectionsByArea(areaId);
   const links: Array<SectionNavLink> = navigationSections.flatMap(section => {

@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import type { PreviewPanelControlsDefinition } from '../../types';
 import type { PreviewControlColumnSection, PreviewControlLayoutMetrics } from '../utils';
@@ -68,7 +68,7 @@ export const usePreviewControlLayout = (options: UsePreviewControlLayoutOptions)
     .sort((left, right) => left - right)
     .join(',');
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const panel = panelRef.current;
     const columnsElement = columnsRef.current;
     if (!panel || !columnsElement) return undefined;
@@ -137,7 +137,7 @@ export const usePreviewControlLayout = (options: UsePreviewControlLayoutOptions)
     columnsElement
       .querySelectorAll<HTMLElement>('[data-section-index], [data-control-id]')
       .forEach(element => observer.observe(element));
-    scheduleMeasure();
+    measure();
 
     return () => {
       cancelAnimationFrame(animationFrame);

@@ -15,16 +15,6 @@ type DemoModule = Readonly<{
   previewSource: Readonly<{ canonicalRender?: () => ReactNode }>;
 }>;
 
-const entityRoleControlPaths = [
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-participant.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-activity.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-event.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-state.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-gateway.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-resource.controls.ts',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-concept.controls.ts',
-] as const;
-
 const relationRoleControlPaths = [
   '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-association.controls.ts',
   '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-dependency.controls.ts',
@@ -34,18 +24,7 @@ const relationRoleControlPaths = [
 ] as const;
 
 const styleControlPaths = [
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-style.controls.ts',
   '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-style.controls.ts',
-] as const;
-
-const entityRoleDemoPaths = [
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-participant.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-activity.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-event.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-state.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-gateway.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-resource.zh.demo.tsx',
-  '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-concept.zh.demo.tsx',
 ] as const;
 
 const relationRoleDemoPaths = [
@@ -58,10 +37,6 @@ const relationRoleDemoPaths = [
 
 const roleControls: Partial<Record<string, ControlModule>> = {
   ...import.meta.glob<ControlModule>(
-    '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-*.controls.ts',
-    { eager: true },
-  ),
-  ...import.meta.glob<ControlModule>(
     '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.controls.ts',
     { eager: true },
   ),
@@ -69,28 +44,16 @@ const roleControls: Partial<Record<string, ControlModule>> = {
 
 const englishRoleControls: Partial<Record<string, ControlModule>> = {
   ...import.meta.glob<ControlModule>(
-    '../../src/modules/docs/contents/schematic/graph/entity/basic/entity-*.en.controls.ts',
-    { eager: true },
-  ),
-  ...import.meta.glob<ControlModule>(
     '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.en.controls.ts',
     { eager: true },
   ),
 };
 
 const roleDemos: Partial<Record<string, DemoModule>> = {
-  ...import.meta.glob<DemoModule>('../../src/modules/docs/contents/schematic/graph/entity/basic/entity-*.zh.demo.tsx', {
-    eager: true,
-  }),
   ...import.meta.glob<DemoModule>(
     '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.zh.demo.tsx',
     { eager: true },
   ),
-};
-
-const statusDemoFiles = {
-  ...import.meta.glob('../../src/modules/docs/contents/schematic/graph/entity/basic/entity-status.*'),
-  ...import.meta.glob('../../src/modules/docs/contents/schematic/graph/relation/basic/relation-status.*'),
 };
 
 const expectedStatusValues = ['', 'error', 'success', 'warning', 'disabled'];
@@ -98,12 +61,8 @@ const expectedStatusValues = ['', 'error', 'success', 'warning', 'disabled'];
 const englishPathOf = (path: string): string => path.replace('.controls.ts', '.en.controls.ts');
 
 describe('Graph semantic status controls', () => {
-  it('does not keep separate Entity or Relation semantic-status demos', () => {
-    expect(Object.keys(statusDemoFiles)).toEqual([]);
-  });
-
-  it('adds an unstyled option and every closed status to every bilingual Entity and Relation playground', () => {
-    for (const path of [...entityRoleControlPaths, ...relationRoleControlPaths, ...styleControlPaths]) {
+  it('adds an unstyled option and every closed status to every bilingual Relation playground', () => {
+    for (const path of [...relationRoleControlPaths, ...styleControlPaths]) {
       const controls = roleControls[path];
       const englishControls = englishRoleControls[englishPathOf(path)];
 
@@ -128,8 +87,8 @@ describe('Graph semantic status controls', () => {
     expect(relationStatusOf('')).toBeUndefined();
   });
 
-  it('omits the canonical status from every Entity and Relation role Source preview', () => {
-    for (const path of [...entityRoleDemoPaths, ...relationRoleDemoPaths]) {
+  it('omits the canonical status from every Relation role Source preview', () => {
+    for (const path of [...relationRoleDemoPaths]) {
       const demo = roleDemos[path];
 
       expect(demo).toBeDefined();

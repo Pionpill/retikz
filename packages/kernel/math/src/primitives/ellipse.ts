@@ -24,6 +24,7 @@ export type EllipseCircumscribeMode = 'proportional' | 'equal';
 
 /** 基于中心、本地半轴和可选旋转的椭圆运算 */
 export const ellipse = {
+  /** 返回椭圆中心的新坐标元组 */
   center: (e: Ellipse): Position => [e.x, e.y],
   /** 矩形盒的内接椭圆 */
   inscribedInBox: (box: CenteredBox): Ellipse => ({
@@ -36,6 +37,9 @@ export const ellipse = {
   /**
    * 包住内部盒的椭圆外接半轴
    * @description `proportional` 保持内部盒宽高比例，`equal` 使用等轴圆包住内部盒
+   * @param innerHalfAxes 待包围矩形盒的半宽与半高
+   * @param mode 半轴策略；默认 'proportional'
+   * @returns 包住矩形盒的椭圆半轴，新建对象
    */
   circumscribedHalfAxes: (
     innerHalfAxes: BoundsHalfAxes,

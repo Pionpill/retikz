@@ -1,0 +1,67 @@
+---
+title: Fields and Measurement Types
+description: Understand the three built-in field measurement types in @retikz/data, how they differ from raw value types, and when to declare one.
+---
+
+The number `10` might be an amount whose differences matter, or it might only be a stage code. In `@retikz/data`, a field type describes **how to interpret and use a field**, not whether its raw values happen to be stored as JavaScript `number`, `string`, or `Date` values. If you first need to see how a field moves from an external row into the result, read [Rows and Fields](/viz/data/basic/rows-and-fields).
+
+## Why measurement types matter
+
+Data sources can change, and so can the values in a field. If transforms and visualizations each guess a field's meaning from its current values, the same logical field might be treated as a calculable quantity in one case and a category in another. A raw value changing from `12` to `'12'` could also change how it is handled.
+
+A measurement type lets the data model define the field's meaning first. `@retikz/data` uses it to parse and normalize values at intake, so later processing can rely on the same field semantics instead of guessing from raw data again. This gives calculations, grouping, and mappings a stable basis when a data source or its samples change.
+
+## Three built-in types
+
+| Measurement type | Meaning                                      | Example                         |
+| ---------------- | -------------------------------------------- | ------------------------------- |
+| `continuous`     | Numeric magnitudes and differences matter    | Revenue `12`, temperature `20`  |
+| `categorical`    | Values identify categories; code gaps do not | Region `north`, stage code `10` |
+| `temporal`       | Values represent dates or points in time     | `2026-09-23`, zoned timestamps  |
+
+These three types capture the basic distinctions shared by current data processing and visualization: numeric distance, category identity, and time order. `@retikz/data` uses them to normalize valid values in participating fields: continuous values become finite numbers, temporal values become millisecond timestamps, and categorical values retain string or finite-number category values. Consumers can transform or map fields using the same semantics instead of guessing from raw values again. [Plot scales](/viz/plot/scale) are one consumer example; the field type itself does not prescribe a visual representation.
+
+<Comparison target="vega" title="Vega-Lite Field Semantic Types">
+This compares the `type` of an encoded field in Vega-Lite, within the Vega ecosystem. It describes a field's measurement meaning or geographic shape role, not its input parsing type.
+
+| Vega-Lite type | Field meaning                        | Relationship to `@retikz/data`                             |
+| -------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `quantitative` | Magnitudes and differences matter    | Corresponds to `continuous`                                |
+| `nominal`      | Unordered discrete categories        | Corresponds to `categorical`                               |
+| `ordinal`      | Ordered discrete categories          | Falls under `categorical`; `order` can specify the order   |
+| `temporal`     | Dates or times                       | Corresponds to `temporal`                                  |
+| `geojson`      | Geographic shapes for geoshape marks | `@retikz/data` has no corresponding field measurement type |
+
+`@retikz/data` groups ordered and unordered categories under `categorical`; it has no separate `ordinal` type. Vega-Lite's `geojson` is specific to geographic shapes. Numeric latitude and longitude channels still use `quantitative`, so not every geographic field is `geojson`. We are not considering `geojson` support for now; we will revisit it when designing map capabilities for Plot.
+
+</Comparison>
+
+## Raw values do not determine field meaning
+
+Consider these two fields:
+
+```json
+{ "stage": 10, "revenue": "12" }
+```
+
+Declare `stage` as `categorical`: `10` and `20` are different stages, not stages separated by ten units. Declare `revenue` as `continuous`: although the raw value is a string, normalization can produce the number `12` for operations such as summation. Numbers can identify categories, and strings can represent quantities. Choose a type by meaning.
+
+Like continuous values, `temporal` values can be ordered and compared by interval, but their time semantics let consumers use time ticks and date formatting. An ordinary number is not inferred as a timestamp simply because it looks like one; non-default date formats also need explicit parsing.
+
+## Type and parsing format
+
+`type` answers “what does this field mean?”; `format` answers “how is the raw value parsed?”. For example, `'50%'` represents a continuous quantity, but the `percent` format is needed to parse it as `0.5`. You can declare both; a named format can also imply a type. See [Field Contract](/viz/data/model/contract) for the full declaration and precedence rules, and [Data Intake](/viz/data/model/intake) for built-in formats and field mapping.
+
+If you omit a declaration, `@retikz/data` infers the type from valid samples. Numeric category codes may be inferred as continuous, while numeric strings are not inferred as continuous merely from their contents. Declare a type in `model` when the distinction affects the result or the input format is ambiguous; inference is convenient for simple, unambiguous input.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Data Model',
+      description: 'See how field semantics enter normalization and choose the next topic.',
+      url: '/viz/data/model',
+    },
+  ]}
+/>

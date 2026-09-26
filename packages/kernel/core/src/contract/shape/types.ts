@@ -101,6 +101,7 @@ export type ResolvedShapeStyle = {
  * 可注册的 shape 定义
  * @description 描述第三方作者和内置 shape 共同实现的运行时能力契约；定义本身不进入 IR。
  *   每个能力函数都以实例级 `params` 作为末位参数
+ * @template TParams 由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型
  */
 export type ShapeDefinitionInput<TParams extends JsonObject> = {
   /** shape 名称，由 IR `node.shape` 引用 */

@@ -1,0 +1,278 @@
+---
+title: 基础用法
+description: 创建实体并设置文字、位置、角色、状态、子类型与样式。
+---
+
+Entity 把一个对象的语义、文字和位置放在同一个声明中。尚未安装 Graph 时，先完成[快速开始](/schematic/graph/get-start)。本页从创建任务实体开始，再介绍角色、状态、子类型、样式与实体分组；注册新的语义能力见[自定义用法](/schematic/graph/entity/custom)。
+
+## 接入方式
+
+四种写法绘制同一个实体。React 示例可直接挂载；Vanilla 示例需要页面已有 `<div id="diagram"></div>`，卸载时调用 `view.dispose()`。
+
+<ComponentPreview files="entity-minimal" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Entity, Graph } from '@retikz/graph-react';
+import type { FC } from 'react';
+
+const Example: FC = () => (
+  <Graph>
+    <Entity id="task" role="activity" position={[180, 90]}>
+      处理订单
+    </Entity>
+  </Graph>
+);
+export default Example;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'entity',
+      id: 'task',
+      role: 'activity',
+      position: [180, 90],
+      text: '处理订单',
+    },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { entity, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    entity({
+      id: 'task',
+      role: 'activity',
+      position: [180, 90],
+      text: '处理订单',
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: createGraphVanillaAdapters(),
+});
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'entity',
+      id: 'task',
+      role: 'activity',
+      position: [180, 90],
+      text: '处理订单',
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, {
+  compile: { composites: createGraphDefinitions() },
+});
+```
+
+</DocTab>
+</DocTabs>
+
+### 命名与放置
+
+`id` 不是绘制所必需的字段。只展示文字节点时可以省略；被 Relation 或其它定位引用使用时，再提供稳定且不冲突的标识。`position={[180, 90]}` 明确把实体放在画布中的该点，文字随实体一起移动。
+
+Source Schema 允许省略 `position`，以便布局阶段补齐位置；但实际绘制前必须已有位置。没有布局提供位置时直接省略会报错，并不会默认落在原点。
+
+### 添加文字
+
+JSX 使用 Entity 的 children；Vanilla 和 IR 使用 `text`。两种形式表达相同的文字内容，不要在一个 Entity 上同时设置 children 与 `text`。JSX children 支持字符串、数字、Fragment 和 `Text`，不支持塞入任意形状、路径或布局组件。
+
+文字变长时，实体尺寸会结合文字测量和 role 的内边距增长。需要独立的结构化内容区时，改用 [Block](/schematic/graph/block)，不要把 Entity 当作容器。
+
+## 实体语义
+
+Entity 用 `role`、`status`、可选的 `kind` 和 `group` 表达不同层次的含义：`role` 确定结构，`status` 提供主题状态外观，`kind` 可供作者规则细分外观，`group` 标记多个实体属于同一语义组。
+
+### 选择角色：`role`
+
+`role` 表达对象的主要语义，决定形状、边界、圆角、内边距和基础最小尺寸。先按对象的含义选角色，不要只按喜欢的轮廓选。文字变长或设置更大的 `layout.minimumSize` 仍可使实体变大，但不能改写 role 的结构。
+
+| role          | 适用对象               |
+| ------------- | ---------------------- |
+| `participant` | 参与交互的主体         |
+| `activity`    | 要执行的工作或任务     |
+| `event`       | 发生的一次事件         |
+| `state`       | 持续存在的条件或阶段   |
+| `gateway`     | 分支、汇合等语义控制点 |
+| `resource`    | 被使用或保存的被动对象 |
+| `concept`     | 知识、概念或抽象对象   |
+
+下图把七种内置 role 放在相同样式下，直接比较轮廓与尺寸。
+
+<ComponentPreview files="entity-roles" size="md" />
+
+### 设置状态：`status`
+
+`status` 回答“当前处于什么状态”，不改变 role 选出的形状、边界、圆角和内边距。例如一次支付任务始终是 `activity`，成功后设置 `status="success"`。`role="state"` 是状态节点这一对象类别，不等于设置 status。
+
+| status     | 默认视觉含义             |
+| ---------- | ------------------------ |
+| 省略       | 正常外观，不附加状态规则 |
+| `error`    | 错误语义色               |
+| `success`  | 成功语义色               |
+| `warning`  | 警告语义色               |
+| `disabled` | 主题辅助色与虚线         |
+
+下图固定 `role="activity"`，从左到右依次展示未设置 status、`error`、`success`、`warning` 和 `disabled`。
+
+<ComponentPreview files="entity-statuses" size="sm" />
+
+内置主题的 `error`、`success`、`warning` 规则改变主色；`disabled` 改变主色并使用虚线轮廓。具体颜色跟随主题。状态规则提供默认外观，实例显式样式仍可覆盖相同字段。自定义 predicate 中名为 `status` 的参数不会自动变成这里的顶层 status，它只参与该 predicate 的规则匹配。
+
+### 细分类型：`kind`
+
+Entity 提供 `kind` 字段，但不提供内置 kind 值；这个字段预留给业务定义当前 role 内的稳定子类型，用于区分同一结构下的业务对象。例如同为 `activity` 的任务可以有不同的 kind。它本身不改变形状、边界、圆角、内边距或颜色；只有匹配该 kind 的作者 `graphRules` 设置了 `style`，才会改变主色、填充、描边等对应字段。kind 必须注册在当前 role 下。定义和注册方法见[自定义用法](/schematic/graph/entity/custom)。
+
+下图的三个 `docs.task.*` 是文档注册的 kind，都使用 `activity` 轮廓。常规任务没有匹配规则；重点任务由规则改为蓝色并加粗描边；受阻任务由规则改为红色虚线。
+
+<ComponentPreview files="entity-kinds" size="sm" />
+
+### 实体分组: `group`
+
+在同一 Graph 中，给属于同一组的 Entity 设置相同的 `group` 值。`group` 表达的是实体之间的分组关系；视觉表现上，同一 `group` 的 Entity 颜色相同。
+
+下图将规划、交付和支持分为三个组，分别包含 2、3、4 个 Entity。
+
+<ComponentPreview files="entity-groups" size="md" />
+
+### 视觉优先级
+
+内置 `role` 主要决定形状和基础尺寸，与内置 `status` 的外观分工明确。自定义 role 可以另配外观规则，与 status 或 kind 规则作用于同一字段；建议沿用内置能力的分工，但不强制。
+
+主色冲突时，优先级是：Entity 实例显式的 `style.color` ＞ 作者 `graphDefaults` / `graphRules` 指定的主色 ＞ `group` 分类色 ＞ 内置 `status` 状态色。`group` 只直接补主色；其它外观字段仍由实例样式优先于作者规则和内置状态外观。多条业务规则命中时，后声明的规则覆盖先声明的规则；role 与 kind 本身没有固定的外观优先级。更完整的规则说明见[实现原理](/schematic/graph/entity/mechanism)。
+
+下方试验场可以切换角色与状态，也可以为实体应用分组。开启“应用分组”后，分组对应的颜色会覆盖状态色；再开启“覆盖主题主色”，实例颜色会优先于两者。
+
+<ComponentPreview files="entity-playground" size="md" />
+
+## 样式与尺寸
+
+`style` 负责外观，例如 `color`、`fill` 和 `strokeWidth`；`layout` 负责文字排布和尺寸，例如 `maxTextWidth`、`lineHeight` 和 `minimumSize`。调整下方控件，可以观察填充、描边、文字换行和最小宽度的变化，而不改变 role 的结构。
+
+<ComponentPreview files="entity-style-size" size="lg" />
+
+`shape`、`boundary`、`cornerRadius` 与 `padding` 由 role 独占，不是 Entity 实例覆盖字段。`minimumSize` 按宽高分别与 role 的最小值取较大者；写更小的值不能强行缩小 role。
+
+`style.color` 是字符串主色。数值 `fill`、`stroke` 或文字派生色需要从主色计算颜色；使用这些写法时提供可计算的静态主色，不要依赖尚未解析的 `currentColor`。
+
+## 相关属性
+
+下面只列本页使用的成员；完整签名见 [API 参考](/schematic/graph/entity/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'role',
+      kind: 'property',
+      type: 'EntityRoleValue (string)',
+      required: true,
+      description:
+        '内置值为 participant、activity、event、state、gateway、resource、concept，语义和差异见上表；自定义 key 必须注册。',
+    },
+    {
+      name: 'kind',
+      kind: 'property',
+      type: 'string',
+      description: '可选的业务子类型 key，无内置值；必须在当前 role 下注册，通过匹配的 graphRules 改变外观。',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description: '可选引用标识；只有其它元素需要引用本实体时才提供，并在同一引用命名空间内保持唯一。',
+    },
+    {
+      name: 'position',
+      kind: 'property',
+      type: "InputEntity['position']; [number, number] | …",
+      description: '本页使用笛卡尔坐标 `[x, y]`，作为实体中心位置。其它定位形式见完整 API；省略不表示自动放到原点。',
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'ReactNode',
+      description:
+        'React 入口只采集字符串、数字、Fragment 与 Text 文字声明；不能与 `text` 同时提供，不接受任意绘图组件。',
+    },
+    {
+      name: 'text',
+      kind: 'property',
+      type: "InputEntity['text']; string | Array<IRLine>",
+      description: 'API/IR 的文字入口。本页使用字符串；行数组支持行级排版，字段详见 API 参考。',
+    },
+    {
+      name: 'status',
+      kind: 'property',
+      type: "'error' | 'success' | 'warning' | 'disabled'",
+      description: 'error / success / warning 选择语义色；disabled 使用辅助色和虚线；省略不附加状态规则。',
+    },
+    {
+      name: 'style',
+      kind: 'property',
+      type: "InputEntity['style']; { color?: string; fill?: string | number | IRPaint; strokeWidth?: number; dashed?: boolean; … }",
+      description: '本页用字符串 color 决定主色，数值 fill 派生填充，strokeWidth 决定描边宽度；字段独立覆盖默认外观。',
+    },
+    {
+      name: 'layout',
+      kind: 'property',
+      type: "InputEntity['layout']; { maxTextWidth?: number; lineHeight?: number; minimumSize?: { width?: number; height?: number }; … }",
+      description: 'maxTextWidth 限制文字宽度，lineHeight 设置行高，minimumSize 提高最小尺寸；不包含 role 的 padding。',
+    },
+    {
+      name: 'group',
+      kind: 'property',
+      type: 'string',
+      description: 'Graph 内多个 Entity 共享的语义分组 key；当前以分类色表现，Relation 也可共享该颜色；不创建容器。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '自定义用法', description: '定义新的语义能力', url: '/schematic/graph/entity/custom' },
+    { title: '实现原理', description: '追踪角色结构与样式优先级', url: '/schematic/graph/entity/mechanism' },
+  ]}
+/>

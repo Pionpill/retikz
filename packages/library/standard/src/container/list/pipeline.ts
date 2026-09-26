@@ -7,7 +7,7 @@ import type {
 
 import { compileCells, measureCell, measureCellChild } from '../shared/cell-layout';
 import type { CellPlacement } from '../shared/cell-layout';
-import { ListDirection } from './constants';
+import { ListDirection, ListIndexPosition } from './constants';
 import { resolveList } from './resolve';
 import type { IRList } from './schema';
 
@@ -19,8 +19,7 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
     items,
     style,
     layout,
-    showIndex,
-    indexStart,
+    index: indexOptions,
     label,
     ...scope
   } = resolveList(node);
@@ -32,17 +31,16 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
   const measured = items.map((cell, index) => measureCell(cell, context, index, scope));
   const width = Math.max(...measured.map(cell => cell.width));
   const height = Math.max(...measured.map(cell => cell.height));
-  const indices = showIndex
+  const indices = indexOptions
     ? items.map((_, index) => {
         const child: IRNode = {
           type: 'node',
           position: [0, 0],
-          text: String(indexStart + index),
+          text: String(indexOptions.start + index),
           style: {
             fill: 'none',
             stroke: 'none',
-            ...(style?.font === undefined ? {} : { font: style.font }),
-            ...(style?.textColor === undefined ? {} : { textColor: style.textColor }),
+            ...indexOptions.style,
           },
           layout: { padding: 0, margin: 0 },
         };
@@ -51,33 +49,37 @@ export const compileList = (node: IRList, context: LayoutCompositeCompileContext
     : [];
   const indexWidth = Math.max(0, ...indices.map(index => index.slotSize.width));
   const indexHeight = Math.max(0, ...indices.map(index => index.slotSize.height));
-  const offset = showIndex ? (horizontal ? indexHeight : indexWidth) + gap : 0;
+  const offset = indexOptions ? (horizontal ? indexHeight : indexWidth) + gap : 0;
+  const isBefore = indexOptions && indexOptions.position === ListIndexPosition.Before;
+  const cellOffset = isBefore ? offset : 0;
+  const indexOffset = isBefore ? 0 : (horizontal ? height : width) + gap;
   const extra: Array<CompositeCompileChild> = [];
   let cursor = 0;
   const cells: Array<CellPlacement> = measured.map((value, index) => {
-    const cellWidth = typeof value.cell.layout.width === 'number' ? value.width : width;
+    const cellWidth =
+      typeof value.cell.layout.width === 'number' || value.cell.layout.width === 'content' ? value.width : width;
     const cellHeight = typeof value.cell.layout.height === 'number' ? value.height : height;
     const placed: CellPlacement = {
       measured: value,
-      x: horizontal ? cursor : offset,
-      y: horizontal ? offset : cursor,
+      x: horizontal ? cursor : cellOffset,
+      y: horizontal ? cellOffset : cursor,
       width: cellWidth,
       height: cellHeight,
       role: 'list-cell',
     };
     const indexResult = indices[index];
-    if (showIndex)
+    if (indexOptions)
       extra.push(
         context.replay(indexResult, {
           transforms: [
             {
               kind: 'translate',
               x:
-                (horizontal ? cursor + cellWidth / 2 : indexWidth / 2) -
+                (horizontal ? cursor + cellWidth / 2 : indexOffset + indexWidth / 2) -
                 indexResult.slotSize.width / 2 -
                 indexResult.allocationBounds.x,
               y:
-                (horizontal ? indexHeight / 2 : cursor + cellHeight / 2) -
+                (horizontal ? indexOffset + indexHeight / 2 : cursor + cellHeight / 2) -
                 indexResult.slotSize.height / 2 -
                 indexResult.allocationBounds.y,
             },

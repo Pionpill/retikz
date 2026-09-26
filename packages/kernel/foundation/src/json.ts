@@ -77,7 +77,7 @@ const inspectPlainData = (value: unknown, path: string, shouldCloneJson: boolean
  *
  * @remarks 叶子值域由调用方 schema 校验；本函数只在读取属性前排除原型对象、accessor、symbol、异常数组与循环引用
  * @param value 待检查的外部数据树
- * @param path 错误消息中用于定位根值的路径
+ * @param path 错误消息中用于定位根值的路径，默认 'value'
  */
 export const assertPlainDataContainers = (value: unknown, path = 'value'): void => {
   inspectPlainData(value, path, false);
@@ -87,7 +87,7 @@ export const assertPlainDataContainers = (value: unknown, path = 'value'): void 
  * 校验 JSON 安全的普通数据，创建脱离原输入的深冻结副本
  *
  * @param value 待复制的 JSON 安全数据
- * @param path 错误消息中用于定位当前值的路径
+ * @param path 错误消息中用于定位当前值的路径，默认 'value'
  * @returns 与输入结构相同但不共享可变对象的深冻结副本
  * @template T 输入值的静态类型
  */

@@ -90,7 +90,7 @@ const publishablePackageExpectations = {
       '@retikz/foundation': 'workspace:^',
       '@retikz/layout': 'workspace:^',
       '@retikz/plot': 'workspace:^',
-      '@retikz/standard/presentation': 'workspace:^',
+      '@retikz/standard': 'workspace:^',
       zod: 'catalog:',
     },
   },
@@ -119,10 +119,10 @@ const publishablePackageExpectations = {
       '@retikz/chart': 'workspace:*',
       '@retikz/core': 'workspace:^',
       '@retikz/data': 'workspace:^',
+      '@retikz/extension': 'workspace:^',
       '@retikz/foundation': 'workspace:^',
       '@retikz/plot': 'workspace:^',
       '@retikz/plot-vanilla': 'workspace:^',
-      '@retikz/standard/presentation': 'workspace:^',
       '@retikz/vanilla': 'workspace:^',
     },
   },
@@ -137,7 +137,7 @@ describe('published Chart release-group boundaries', () => {
     expect(manifest.dependencies).toEqual(publishablePackageExpectations.chart.dependencies);
     expect(manifest.files).toEqual(['LICENSE', 'README.md', 'dist/**/*']);
     expect(manifest.peerDependencies).toBeUndefined();
-    expect(manifest.devDependencies).toEqual(commonDevDependencies);
+    expect(manifest.devDependencies).toEqual({ ...commonDevDependencies, '@retikz/extension': 'workspace:^' });
     expect(manifest.exports).toEqual({
       '.': { types: './src/index.ts', default: './src/index.ts' },
       './point': { types: './src/point/index.ts', default: './src/point/index.ts' },

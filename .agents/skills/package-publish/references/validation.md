@@ -2,17 +2,20 @@
 
 ## 验证
 
-发版验证比日常局部改动更宽；任一步失败就停。
+发版可扩大功能性检查范围，但不自动授权性能、压力、基准或 LLM 测试；这些测试须在当前对话明确授权类别与范围。任一步失败就停。
 
 给用户申请授权前至少跑：
 
 ```bash
 pnpm run check:full
 pnpm run check:release-groups
-pnpm run test:full
-pnpm run build
+pnpm --workspace-concurrency=1 -r --if-present run build
 pnpm run test:publish-artifacts
 ```
+
+测试另行选择已确认的功能性套件。执行上述命令及任何聚合脚本前，检查其实际调用范围；不得直接运行混有未授权测试的 `test:full`、`test:run` 或 `test:changed`。混合套件须显式筛选功能性用例；无法可靠隔离时运行已确认的功能性子集并报告缺口，不以发布为由运行其余测试。
+
+跨 workspace 验证默认在实际执行递归任务的 pnpm 命令上显式传 `--workspace-concurrency=1`，逐包串行执行；不要仅依赖环境变量或给外层脚本传参。该参数不限制包内 Vitest / 构建工具的并发，也不筛选测试类型；仍须先排除未授权测试。
 
 然后按发布顺序 dry-run 发布组内每个包：
 

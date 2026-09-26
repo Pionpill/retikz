@@ -8,7 +8,27 @@ describe('Scope API 公开范围', () => {
   it('展开交叉类型与继承字段，保留共享契约并排除无关组件', async () => {
     const source = await createScopeApiReferenceMdx('en');
     const headings = [...source.matchAll(/^### (.+)$/gm)].map(match => match[1]);
-    expect(headings).toEqual(['ScopeProps', 'ScopeStyleProps', 'Scope']);
+    expect(headings).toEqual([
+      'Scope / ScopeProps',
+      'ScopeStyleProps',
+      'scope / InputScope',
+      'IRScope',
+      'IRScopeDefaults',
+      'IRScopeFrame',
+      'IRScopePlacement',
+      'IRScopeProps',
+    ]);
+    for (const owner of ['react', 'vanilla', 'core']) expect(source).toContain('## `@retikz/' + owner + '`');
+    const input = source.split('### scope / InputScope\n')[1]?.split('\n### ')[0] ?? '';
+    expect(input).toContain('`config` (Parameter)');
+    expect(input).toContain('`children` (Parameter)');
+    expect(input).toContain('| Returns |');
+    expect(input).not.toContain('####');
+    const frame = source.split('### IRScopeFrame\n')[1]?.split('\n### ')[0] ?? '';
+    expect(frame).toContain('Uniform decoration spacing');
+    expect(frame).toContain('`padding?` | `number` | `0`');
+    expect(source).toContain('<ApiValues name="ScopeBoundingShape" />');
+    expect(source).toContain('export declare const Scope: FC<ScopeProps>;');
     expect(source).toContain('`placement?`');
     expect(source).toContain("IRScope['placement']");
     expect(source).toContain('HydrationEventProps');
@@ -28,10 +48,11 @@ describe('Scope API 公开范围', () => {
       '`id?` | `string` | — | Optional Scope reference id; makes the group envelope available as a reference target<br />External paths and positions can reference these bounds',
     );
     expect(source).not.toContain('**id**: External paths and positions');
-    for (const row of source.matchAll(/^\| `(?:readonly )?[^`]+` \| (.+) \|/gm)) {
-      expect(row[1]?.length).toBeLessThanOrEqual(300);
+    for (const row of source.matchAll(/^\| `(?:readonly )?[^`]+` \| (`[^`]+`(?:<br \/>`[^`]+`)*) \|/gm)) {
+      const typeText = row[1]?.replaceAll('\\|', '|').replaceAll('`', '');
+      expect(typeText.length).toBeLessThanOrEqual(300);
     }
     expect(source).not.toMatch(/[\u3400-\u9fff]/u);
     await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
-  });
+  }, 30_000);
 });

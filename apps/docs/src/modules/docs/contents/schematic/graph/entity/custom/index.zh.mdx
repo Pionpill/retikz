@@ -1,0 +1,203 @@
+---
+title: 自定义用法
+description: 定义并注册 Entity 的角色、子类型和带参数语义，让同一规则驱动多个实体。
+---
+
+当多个实体需要稳定复用一种业务含义时，用 Definition 定义它，再向宿主注册。一次性修改颜色只需[基础用法](/schematic/graph/entity/usage)中的 style；附带业务数据可用 `meta`，不必为每个字段建立新语义。
+
+## 选择扩展点
+
+| 入口                    | 拥有的职责                                                |
+| ----------------------- | --------------------------------------------------------- |
+| `defineEntityRole`      | 对象的主要语义与完整基础结构                              |
+| `defineEntityKind`      | 一个 role 内的稳定子类型，身份为 (role, kind)             |
+| `defineEntityPredicate` | 带 JSON 参数的精确语义，包含适用 role/kinds 与参数 schema |
+
+role 决定轮廓与内边距；kind 和 predicate 不复制形状。外观由 `graphRules` 匹配语义后提供，实例 style 仍可覆盖。Definition 可以包含运行时 schema，但持久化 Entity 只保存 key 与 JSON 参数，不保存 Definition。
+
+## 定义服务网关
+
+示例定义一个 service 角色、service.gateway 子类型和 service.availability predicate。切换可用性会改变颜色，打开“关键服务”会加粗边框。
+
+<ComponentPreview files={['entity-definition', 'entity-definition.data']} size="sm" />
+
+## 注册并使用
+
+`defineEntityPredicate` 用来声明可注册的、带参数的实体语义。`name` 是 Entity 引用的 key，`role` 和可选的 `kinds` 限定适用范围，`paramsSchema` 校验传入的 JSON 参数。它只创建 Definition，不会自动注册或改变样式；将 Definition 传给 Graph 的 `entityPredicates` 后，Entity 才能引用它，外观由匹配该语义和参数的 `graphRules` 决定。
+
+先把示例用到的 Definition 和规则保存为 `entity-definition.data.ts`，供后面的 React 和 Vanilla 写法共用：
+
+```ts
+import { defineEntityRole, defineEntityKind, defineEntityPredicate } from '@retikz/graph';
+import type { IRGraphRule } from '@retikz/graph';
+import { z } from 'zod';
+
+export const serviceRole = defineEntityRole({
+  role: 'service',
+  description: '提供稳定接口的服务主体',
+  shape: 'rectangle',
+  padding: { x: 14, y: 10 },
+  cornerRadius: 8,
+  minimumSize: { width: 110, height: 46 },
+});
+export const gatewayKind = defineEntityKind({
+  role: 'service',
+  kind: 'service.gateway',
+  description: '面向外部请求的服务网关',
+});
+export const availabilityPredicate = defineEntityPredicate({
+  name: 'service.availability',
+  role: 'service',
+  kinds: ['service.gateway'],
+  description: '服务可用性与关键程度',
+  paramsSchema: z.strictObject({ status: z.enum(['available', 'degraded', 'offline']), critical: z.boolean() }),
+});
+export const availabilityRules: Array<IRGraphRule> = [
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { status: 'available' } } },
+    style: { color: '#16a34a' },
+  },
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { status: 'degraded' } } },
+    style: { color: '#d97706' },
+  },
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { status: 'offline' } } },
+    style: { color: '#dc2626' },
+  },
+  {
+    type: 'entity',
+    selector: { predicate: { name: 'service.availability', params: { critical: true } } },
+    style: { strokeWidth: 3 },
+  },
+];
+```
+
+`paramsSchema` 声明 status 只能是 available、degraded、offline，critical 必须是 boolean。示例的四条规则是固定数据：前三条匹配 status，最后一条只匹配 critical，因此加粗与颜色可以同时生效。上方预览的控件仅改变 Entity 的 predicate.params，没有绕开规则直接改颜色。
+
+React 只能在 Graph 上声明 definitions；Graph 内的 Entity 共用这些注册项和规则。即使只有一个 Entity，也要把自定义 definitions 传给 Graph，不能只填写自定义 key 而遗漏注册。
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Entity, Graph } from '@retikz/graph-react';
+import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
+
+export const Gateway = () => (
+  <Graph
+    entityRoles={[serviceRole]}
+    entityKinds={[gatewayKind]}
+    entityPredicates={[availabilityPredicate]}
+    graphRules={availabilityRules}
+  >
+    <Entity
+      role="service"
+      kind="service.gateway"
+      predicate={{ name: 'service.availability', params: { status: 'available', critical: false } }}
+      position={[210, 90]}
+    >
+      API gateway
+    </Entity>
+  </Graph>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla API">
+
+```ts
+import { graph, entity, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+import { serviceRole, gatewayKind, availabilityPredicate, availabilityRules } from './entity-definition.data';
+
+const input = scene({
+  children: [
+    graph({
+      entityRoles: [serviceRole],
+      entityKinds: [gatewayKind],
+      entityPredicates: [availabilityPredicate],
+      graphRules: availabilityRules,
+      children: [
+        entity({
+          role: 'service',
+          kind: 'service.gateway',
+          predicate: { name: 'service.availability', params: { status: 'available', critical: false } },
+          position: [210, 90],
+          text: 'API gateway',
+        }),
+      ],
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: createGraphVanillaAdapters(),
+});
+```
+
+</DocTab>
+</DocTabs>
+
+直接消费 IR 时，把相同 definitions 传给 `createGraphDefinitions({ entityRoles, entityKinds, entityPredicates })`，再按基础用法装入 React 的 `extensions.composites` 或 Vanilla 的 `compile.composites`。规则仍属于 Graph Source 的 `graphRules`，不塞进 Entity predicate 参数。Vanilla 示例需要已有容器，卸载时调用 `view.dispose()`。
+
+## 错误与限制
+
+- 自定义 role、kind、predicate 使用非空且稳定的 key；不同 Definition 对象争用同一身份会报错，不能覆盖内置定义。
+- kind 必须注册在当前 role 下。相同词面 kind 可以分别属于不同 role；需要限定规则时同时匹配 role 与 kind。
+- predicate 必须允许当前 role 与 kind。参数先经过 paramsSchema 解析，再参与规则匹配；缺失或非法参数不会静默忽略。
+- 若 role 使用另行定义的 shape，还必须注册该形状能力；不会回退到 rectangle。
+- Entity Source、predicate.params 与 meta 必须可 JSON 序列化，不放函数、组件实例或 renderer 对象。
+
+## 相关属性
+
+这里精选注册链路中的成员，完整 Definition 字段与函数签名见 [API 参考](/schematic/graph/entity/api-reference)。
+
+<ComponentProps
+  items={[
+    {
+      name: 'entityRoles',
+      kind: 'property',
+      type: 'ReadonlyArray<EntityRoleDefinition>',
+      description:
+        'Graph 的运行时角色定义数组；本例 role 为 service，shape 为 rectangle，padding 为 { x: 14, y: 10 }，minimumSize 为 { width: 110, height: 46 }。',
+    },
+    {
+      name: 'entityKinds',
+      kind: 'property',
+      type: 'ReadonlyArray<EntityKindDefinition>',
+      description:
+        'Graph 的子类型定义数组；元素包含 role、kind 与 description，本例将 service.gateway 注册到 service 下。',
+    },
+    {
+      name: 'predicate',
+      kind: 'property',
+      type: '{ name: string; params?: JsonObject }',
+      description:
+        'name 选择已注册 predicate；本例 params 为 { status: available | degraded | offline, critical: boolean }，状态切换颜色，critical 加粗。',
+    },
+    {
+      name: 'entityPredicates',
+      kind: 'property',
+      type: 'ReadonlyArray<EntityPredicateDefinition>',
+      description:
+        'Graph 的运行时定义数组；每项包含 name、role、可选 kinds 和 paramsSchema。paramsSchema 校验 JSON 参数；定义本身不写入 IR。',
+    },
+  ]}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    { title: '实现原理', description: '查看参数解析与规则匹配顺序', url: '/schematic/graph/entity/mechanism' },
+    {
+      title: 'Schema 参考',
+      description: '区分持久化字段与运行时定义',
+      url: '/schematic/graph/entity/schema-reference',
+    },
+  ]}
+/>

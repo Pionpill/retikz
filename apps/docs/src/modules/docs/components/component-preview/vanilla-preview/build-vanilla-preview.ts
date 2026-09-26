@@ -25,7 +25,7 @@ import { ScatterChartSchema } from '@retikz/chart/point/scatter';
 import type { IRStripChart } from '@retikz/chart/point/strip';
 import { StripChartSchema } from '@retikz/chart/point/strip';
 import type { IRChild, TextFont, TextMeasurer } from '@retikz/core';
-import { fallbackMeasurer } from '@retikz/core';
+import { fallbackMeasurer, resolveCoreProviderDependencies } from '@retikz/core';
 import type { ExternalDatasets } from '@retikz/data';
 import type { InputFlowDiagram } from '@retikz/diagram-vanilla/flow';
 import { flowDiagram, FlowDiagramInputEmbedAdapter } from '@retikz/diagram-vanilla/flow';
@@ -40,9 +40,11 @@ import {
   BlockSchema,
   BlockSectionDefinition,
   BlockSectionSchema,
+  createGraphProviders,
   EntityDefinition,
   EntitySchema,
   GraphDefinition,
+  GraphProviderKey,
   GraphSchema,
   GroupDefinition,
   GroupSchema,
@@ -365,10 +367,11 @@ const convertStandardChild = (
       });
     }
     case 'list': {
-      const { namespace: _namespace, type: _type, data, items, ...input } = child as IRList;
+      const { namespace: _namespace, type: _type, data, items, dataObjectDisplay, ...input } = child as IRList;
       void _namespace;
       void _type;
-      if (data !== undefined) return list({ ...input, data });
+      if (data !== undefined)
+        return list({ ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) });
       return list({
         ...input,
         items: items.map(cell =>
@@ -385,7 +388,7 @@ const convertStandardChild = (
       });
     }
     case 'map': {
-      const { namespace: _namespace, type: _type, data, entries, ...input } = child as IRMap;
+      const { namespace: _namespace, type: _type, data, entries, dataObjectDisplay, ...input } = child as IRMap;
       void _namespace;
       void _type;
       const convertCell = (cell: string | IRCell) =>
@@ -396,7 +399,8 @@ const convertStandardChild = (
               content:
                 typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
             };
-      if (data !== undefined) return map({ ...input, data });
+      if (data !== undefined)
+        return map({ ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) });
       return map({
         ...input,
         entries: entries.map(entry => ({ key: convertCell(entry.key), value: convertCell(entry.value) })),
@@ -501,7 +505,6 @@ const convertGraphChild = (
       return group({
         ...input,
         ...(children === undefined ? {} : { children }),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
     case 'block': {
@@ -515,7 +518,6 @@ const convertGraphChild = (
       return block({
         ...input,
         ...(children === undefined ? {} : { children }),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
     case 'blockHeader': {
@@ -527,7 +529,6 @@ const convertGraphChild = (
         ...input,
         ...(icon === undefined ? {} : { icon: convertPreviewChild(icon, libraryState, state) }),
         ...(trail === undefined ? {} : { trail: convertPreviewChild(trail, libraryState, state) }),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
     case 'blockSection': {
@@ -546,7 +547,6 @@ const convertGraphChild = (
       return blockSection({
         ...input,
         ...(children === undefined ? {} : { children }),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
     case 'blockRow': {
@@ -558,7 +558,6 @@ const convertGraphChild = (
         registerGraphAdapter('blockRow', state);
         return blockRow({
           ...input,
-          graphThemeStyles: PreviewThemeDefinitionBundle.graph,
         });
       }
       const { namespace: _namespace, type: _type, children: sourceChildren, ...input } = row;
@@ -572,21 +571,14 @@ const convertGraphChild = (
           : {
               children: sourceChildren.map(item => convertPreviewChild(item, libraryState, state)),
             }),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
       });
     }
     case 'entity':
       registerGraphAdapter('entity', state);
-      return entity({
-        ...entityPreviewAuthoringInput(EntitySchema.parse(child)),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
-      });
+      return entity(entityPreviewAuthoringInput(EntitySchema.parse(child)));
     case 'relation':
       registerGraphAdapter('relation', state);
-      return relation({
-        ...relationPreviewAuthoringInput(RelationSchema.parse(child)),
-        graphThemeStyles: PreviewThemeDefinitionBundle.graph,
-      });
+      return relation(relationPreviewAuthoringInput(RelationSchema.parse(child)));
     default:
       throw new Error(`Unsupported Graph composite "${child.namespace}.${child.type}".`);
   }
@@ -724,19 +716,37 @@ const buildLibraryPreview = (preview: PreviewIR, options: BuildVanillaPreviewOpt
     ),
     new Set(graphState.adapters),
   );
+  const hasStandaloneGraphMembers = graphState.adapters.size > 0 && !graphState.adapters.has('graph');
   const definitions = [
     ...definitionNames.standard.map(name => standardDefinitionByName[name]),
     ...definitionNames.layout.map(name => layoutDefinitionByName[name]),
-    ...definitionNames.graph.map(name => graphDefinitionByName[name]),
+    ...(!hasStandaloneGraphMembers ? definitionNames.graph.map(name => graphDefinitionByName[name]) : []),
   ];
+  const resolvedDefinitions = hasStandaloneGraphMembers
+    ? resolveCoreProviderDependencies({
+        contributions: [
+          {
+            roots: [GraphProviderKey],
+            providers: createGraphProviders({
+              entityKinds: PreviewThemeDefinitionBundle.graphEntityKinds,
+              graphThemeStyles: PreviewThemeDefinitionBundle.graph,
+            }),
+          },
+        ],
+        definitions: { composites: definitions },
+      })
+    : { composites: definitions };
   const compile = {
-    ...(definitions.length === 0 ? {} : { composites: definitions }),
+    ...resolvedDefinitions,
     themeStyles: PreviewThemeDefinitionBundle.core,
     measureText: options.measureText ?? browserPreviewMeasurer,
   };
+  const renderInput = hasStandaloneGraphMembers
+    ? { ...preview.ir, ...(options.theme === undefined ? {} : { theme: options.theme }) }
+    : input;
   return {
     code: irToVanillaCode(preview.sourceIr, { theme: options.theme }),
-    svg: renderToSvgString(input, {
+    svg: renderToSvgString(renderInput, {
       adapters: [...standardAdapters(libraryState), ...layoutAdapters(libraryState), ...graphAdapters(graphState)],
       output: outputSize(preview),
       compile,

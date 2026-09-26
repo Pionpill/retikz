@@ -36,7 +36,7 @@ export const graphDefinitionOptionsOf = (props: GraphDefinitionOptions): GraphDe
 });
 
 /** 创建以指定 Graph semantic provider 为根的完整依赖贡献 */
-export const createGraphProviderDependencies = (rootKey: GraphProviderKey, options: GraphDefinitionOptions) => {
+export const createGraphProviderDependencies = (rootKey: GraphProviderKey, options: GraphDefinitionOptions = {}) => {
   const providers = hasDefinitionOptions(options) ? createGraphProviders(options) : createGraphProviders();
   const root = providers.find(provider => sameProviderKey(provider.key, rootKey));
   if (root === undefined) {

@@ -11,6 +11,8 @@ description: Use when writing or reviewing Retikz component implementation mecha
 
 本页解释行为为什么成立；用法与调用约束归用法页，签名与字段结构归 API / Schema 参考，概念心智模型归 `docs-doc-concept`，设计取舍真源归 ADR。不重复安装教程或完整参考字典。
 
+小体量组件可在合页中设置“实现原理”小节：位置与可跳过 Tip 遵循页型词典，讲解沿用组件级规则；不套独立页的难度、开篇和收尾。
+
 ## 按需读取
 
 按页面所属对象和读者问题选择，只读取对应 reference；同批任务包含两类页面时分别应用，不混用骨架。

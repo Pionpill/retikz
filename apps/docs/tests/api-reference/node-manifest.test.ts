@@ -15,13 +15,11 @@ describe('Node API 公开范围', () => {
     const source = await createNodeApiReferenceMdx('en');
     const headings = [...source.matchAll(/^### (.+)$/gm)].map(match => match[1]);
     for (const name of [
-      'Node',
-      'NodeProps',
-      'Text',
-      'Coordinate',
-      'node',
-      'coordinate',
-      'InputNode',
+      'Node / NodeProps',
+      'Text / TextProps',
+      'Coordinate / CoordinateProps',
+      'node / InputNode',
+      'coordinate / InputCoordinate',
       'defineBoundary',
       'BoundaryDefinitionInput',
     ]) {
@@ -33,11 +31,49 @@ describe('Node API 公开范围', () => {
     expect(source).toContain('IRNodeLayout');
     expect(source).toContain('export declare const Node: FC<NodeProps>');
     expect(source).toContain('<TParams extends JsonObject>');
-    const inputNode = source.split('### InputNode\n')[1]?.split('\n### ')[0] ?? '';
+    const inputNode = source.split('### node / InputNode\n')[1]?.split('\n### ')[0] ?? '';
     expect(inputNode).toContain('`InputPosition`');
     expect(inputNode).not.toContain("`IRNode['position']`");
+    expect(inputNode).toContain('`Array<IRAnimationTrack>`');
+    expect(inputNode).toContain('| Returns |');
+    expect(inputNode).toContain("Omit<InputNode, 'type'>");
+    expect(headings).not.toContain('NodeProps');
+    const label = source.split('### InputNodeLabel\n')[1]?.split('\n### ')[0] ?? '';
+    expect(label).toContain('label="Direct members"');
     expect(source).toContain('`resolveRect?`');
     expect(source).toContain('`outline?`');
+    for (const name of ['defineShape', 'defineBoundary']) {
+      const section = source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+      const members = section.split('<DocTab value="members" label="Members">')[1]?.split('</DocTab>')[0] ?? '';
+      const definition =
+        section.split('<DocTab value="definition" label="Type definition">')[1]?.split('</DocTab>')[0] ?? '';
+      const definitionName = name === 'defineShape' ? 'ShapeDefinition' : 'BoundaryDefinition';
+      expect(members).toContain('| Category | Name | Type / signature | Description |');
+      expect(members).toContain('| Type parameters | `TParams` | `extends JsonObject` |');
+      expect(members).toContain('| Parameters | `def` | `' + definitionName + 'Input<TParams>` |');
+      expect(members).toContain('| Returns | — | `' + definitionName + '` |');
+      expect(members).not.toContain('| Throws |');
+      expect(members).not.toMatch(/#### (Parameters|Returns|Type parameters)/);
+      expect(members.match(/\| Category \|/g)).toHaveLength(1);
+      expect(members).not.toContain('export declare');
+      expect(definition).toContain(`export declare const ${name}`);
+    }
+    for (const name of [
+      'ShapeDefinitionInput',
+      'BoundaryDefinitionInput',
+      'node / InputNode',
+      'coordinate / InputCoordinate',
+    ]) {
+      const section = source.split(`### ${name}\n`)[1]?.split('\n### ')[0] ?? '';
+      const members = section.split('<DocTab value="members" label="Members">')[1]?.split('</DocTab>')[0] ?? '';
+      expect(members.match(/\| (?:Group \| )?Member \|/g)).toHaveLength(1);
+      expect(section).not.toMatch(/^#### /m);
+      if (name.endsWith('DefinitionInput')) expect(members).toContain('`TParams` (Type parameter)');
+      else {
+        expect(members).toContain('`config` (Parameter)');
+        expect(members).toContain('| Returns |');
+      }
+    }
     expect(source).not.toMatch(/[\u3400-\u9fff]/u);
     await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
     expect(() => translateNodeApiReference('未翻译的新字段说明')).toThrow('Missing Node API translation');

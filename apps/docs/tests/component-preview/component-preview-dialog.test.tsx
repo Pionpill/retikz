@@ -207,7 +207,7 @@ describe('ComponentPreviewDialog', () => {
       <ComponentPreviewCard name="conditionally-mounted" Component={Demo} size="xl" />,
     );
 
-    expect(markup).not.toContain('conditionally-mounted');
+    expect(markup).not.toContain('role="dialog"');
     expect(markup).not.toContain('aria-label="Close"');
   });
 

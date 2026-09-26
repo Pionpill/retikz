@@ -19,7 +19,7 @@ export type ScopeProps = ScopeStyleProps &
      */
     id?: string;
     /**
-     * 是否创建本地命名空间；true 时子节点 id 不向父 frame 传播（外部不可见）
+     * 是否创建本地命名空间；true 时子节点 id 不向外层作用域公开
      * @description 子节点 id 只在本 scope 内可引用；外部无法引用这些子节点 id，但 `scope.id` 自己仍可从外层引用
      * @default false
      */
@@ -42,7 +42,7 @@ export type ScopeProps = ScopeStyleProps &
     /** 裁剪区（rect / circle / ellipse / polygon / path / compound / custom，scope 局部坐标）；设值则裁剪 scope 内全部子元素 */
     clip?: IRScope['clip'];
     /**
-     * scope id 注册的 synthetic 包络形状（受控枚举 'rectangle' | 'circle'，非 Node shape 那种开放 shape 引用）；缺省为 'rectangle'（AABB）
+     * 通过 id 引用整组图元时使用的包络形状；支持矩形或圆形，默认使用轴对齐矩形包络
      * @default 'rectangle'
      */
     boundingShape?: IRScope['boundingShape'];
@@ -59,7 +59,7 @@ export type ScopeProps = ScopeStyleProps &
   };
 
 /**
- * Scope 容器组件——TikZ `\begin{scope}[...]...\end{scope}` 同义
+ * 将子图元组合为作用域，统一设置样式、变换、定位与裁剪
  * @description 给一组节点 / 路径提供局部样式、命名空间、变换、最终锚点定位、裁剪和引用包络
  */
 export const Scope: FC<ScopeProps> = () => null;

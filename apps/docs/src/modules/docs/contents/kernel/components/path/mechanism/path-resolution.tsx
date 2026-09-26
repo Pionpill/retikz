@@ -30,7 +30,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
           { kind: 'move', to: [0, 0] },
           { kind: 'curve', control: [90, -100], to: [180, 0] },
         ]}
-        showIndex
+        index
       />
       <List
         id="commands"
@@ -49,7 +49,7 @@ const PathResolution: FC<PathResolutionProps> = props => {
           { kind: 'move', to: [0, 0] },
           { kind: 'quad', control: [90, -100], to: [180, 0] },
         ]}
-        showIndex
+        index
       />
       <Draw
         way={[

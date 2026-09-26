@@ -209,11 +209,17 @@ export type LayoutProps = {
    * @default captureLayoutRuntimeOptions
    */
   runtime?: LayoutRuntimeOptions;
-  /** SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 */
+  /**
+   * SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版
+   * @default computeDisplaySize
+   */
   width?: number | string;
-  /** SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版 */
+  /**
+   * SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版
+   * @default computeDisplaySize
+   */
   height?: number | string;
-  /** 显式视框 */
+  /** 显式视框，使用绘图坐标；优先于 ir.viewBox，省略时沿用场景视框，场景未指定时按内容计算 */
   viewBox?: IRViewBox;
   /** 宿主 className */
   className?: string;
@@ -229,7 +235,7 @@ export type LayoutProps = {
    * @default resolveAnimationEnabled
    */
   animate?: boolean;
-  /** 静态动画采样时刻 */
+  /** 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate */
   snapshotAt?: number;
   /** 动画控制器出口 */
   animationRef?: Ref<AnimationControls | null>;
@@ -350,8 +356,8 @@ const RetainedLayoutContent: FC<{
 };
 
 /**
- * React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result
- * @description React 不创建 Core Program、Runtime session 或 retained renderer；所有处理状态归 Vanilla
+ * 将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画
+ * @description 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
  */
 export const Layout: FC<LayoutProps> = props => {
   const {

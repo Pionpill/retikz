@@ -139,7 +139,11 @@ const resolveVanillaSelection = (
   return { rules: [...selection.rules, ...authoredRules] };
 };
 
-/** 创建绑定 Inspector registry、selection 与 committed callbacks 的 Vanilla 编译驱动 */
+/** 创建绑定 Inspector registry、selection 与 committed callbacks 的 Vanilla 编译驱动
+ *
+ * @param options 固定注册表与可选选择规则、提交通知；selection 省略时仅使用 authoring 请求
+ * @returns 供 Vanilla 宿主接入的编译驱动；诊断通知先于 onCommit，通知失败不回滚已提交结果
+ */
 export const createInspectionVanillaDriver = (options: CreateInspectionVanillaDriverOptions): VanillaCompileDriver => {
   const sessions = new WeakMap<
     object,

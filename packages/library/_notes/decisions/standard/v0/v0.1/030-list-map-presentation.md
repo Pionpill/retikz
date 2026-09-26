@@ -8,6 +8,7 @@ keywords: List、Map、JSON、data、数据结构、presentation、cell、anchor
 - 状态：Accepted
 - 决策日期：2026-09-19
 - data 扩展状态：Accepted（2026-09-20）
+- 索引字段与位置决策由 [ADR-033](./033-list-index.md) 替代，其余契约继续生效
 - 关联：[roadmap](./roadmap.md) · [Standard 设计](../../../../architecture/standard-library-design.md) · [ADR-015](./015-presentation-composite-reuse.md) · [ADR-022](./022-arbitrary-child-surface.md) · [Layout ADR-001](../../../layout/v0/v0.1/001-layout-package-family.md) · [Core ADR-028](../../../../../../kernel/_notes/decisions/v0/v0.5/028-qualified-spatial-handles.md)
 
 ## 背景与决策
@@ -30,7 +31,7 @@ Standard 拥有结构、默认呈现和 lowering，直接计算简单行列位�
 
 单元格为 `{ content, id?, style?, layout? }`：Source content 是文本或一个 `IRChild`，Vanilla 接受对应 `InputChild`；React 属性配置只接受文本，drawable 通过 marker children 提供。marker 的 text 与恰好一个 drawable child 互斥，数组 / Fragment 透明，React empty node 忽略；多个图元先组合为一个 child。
 
-List.items 字符串等价于 `{ content: text, id: text }`，必须非空白且 id 唯一；对象项不推导 id。Map 字符串仅代表 content。文本原样保存在 Source，由 Standard resolve 转为零 padding / margin、无背景和描边的文本节点，继承字体和文字颜色。
+List.items 字符串默认等价于 `{ content: text }`，允许空值与重复值；`cellIdMode: 'string'` 同时以文本创建 id，此时字符串必须非空白，且与同容器显式 id 一起保持唯一。`cellIdMode: 'index'` 根据 List id 为 items / data 的直属格生成零基 id，显式单格 id 作为别名，详见 ADR-034；data 不接受 string 模式。Map 字符串仅代表 content。文本原样保存在 Source，由 Standard resolve 转为零 padding / margin、无背景和描边的文本节点，继承字体和文字颜色。
 
 React 经 Vanilla 表达同一契约；adapter 仅归一 authoring、保留嵌套 provider contributions 与 authoring sites，不复制领域解释或扫描 IR 猜定义。第三方 drawable 走相同 child 契约。直接 IR 显式注入组件及内容定义；data adapter 同时装配 List、Map、PathClip，避免 provider 双向依赖，直接 IR 的 data 入口也需注入这三项能力。
 
@@ -47,25 +48,27 @@ React 经 Vanilla 表达同一契约；adapter 仅归一 authoring、保留嵌�
 
 对象键直接显示原始文本，不额外添加引号；不推导 id。对象遵循 ECMAScript 自有可枚举字符串键顺序，整数索引键优先，不排序；数组保持顺序和重复值。所有字段均为普通数据，包括 id、style、content、type、namespace；生成的格和嵌套容器不推导 id，根显式 id 仍有效。
 
+List 与 Map 的 `data` 入口可设置 `dataObjectDisplay: 'map' | 'text'`，默认 `map`，只控制非空对象值：`map` 递归展示为 Map，`text` 在当前单元格中显示紧凑的 JSON 对象文本。嵌套数组仍递归展示为 List，并沿数据树传递该选择；空对象继续显示为 `{}`。Map 自身的根 `data` 仍由 Map 展示，对象键仍为原始文字。显式 `items` / `entries` 和 React 组合不接受该字段，也不改变其中显式放入的 Map。该模式由 Source IR 持久化，React、Vanilla 与直接 IR 语义一致，不接受函数式 formatter。
+
 data 只接受 JSON 值树，不接收函数、undefined、Symbol、BigInt、非有限数、稀疏数组、循环引用、Date、Map / Set 或自定义实例；不调用 toJSON、序列化清洗或生成循环占位。沿既有类型化输入与外部 parse 边界校验，不重复反射验证。
 
-style / layout 仅控制当前层生成的格，嵌套结构使用自身默认；字体、textColor、currentColor、theme / defaults 沿 Core 继承，外层 opacity、变换和 clip 作用于子树而不重复施加。父格固定宽高裁切整个嵌套图，不将尺寸、gap、填充或角色覆盖递归复制到后代。
+style / layout 默认仅控制当前层生成的格，嵌套结构使用自身默认。唯一例外是 List 的 `data` 入口在整体 `layout.width: 'content'` 时：该内容宽度策略沿自动生成的 List / Map 数据树传递，让其中自动生成的 List 各格按自身内容定宽；Map 仍按自身列宽规则排布。显式 `items` / `entries` 或 React 组合中嵌入的组件不继承该策略。数字固定宽度、height、padding、gap、direction、overflow、style 与 label 均不递归传递。字体、textColor、currentColor、theme / defaults 沿 Core 继承，外层 opacity、变换和 clip 作用于子树而不重复施加。父格固定宽高裁切整个嵌套图，不将尺寸或外观递归复制到后代。
 
-默认完整展开，不提供深度限制、折叠、路径样式、formatter 或编辑功能。局部展示先投影数据；逐格样式、id、drawable 使用显式结构，也可在其中嵌套带 data 的组件。
+默认完整展开，不提供深度限制、折叠、路径样式、自定义 formatter 或编辑功能。局部展示先投影数据；逐格样式、id、drawable 使用显式结构，也可在其中嵌套带 data 的组件。
 
 ## 样式、尺寸与默认值
 
-| 配置            | 契约                                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------------------- |
-| `style`         | 复用 Core color、fill / stroke、opacity、font、textColor 原子及 Surface cornerRadius；不提供单格 zIndex |
-| `layout`        | width / height 为非负有限数或 auto；padding / overflow 复用 Surface；gap 仅属于整体                     |
-| Map 角色覆盖    | `style.key/value`、`layout.key/value`，不保留顶层角色别名                                               |
-| 默认外观        | gray 填充、无描边、cornerRadius 0；List / Map value 的 fillOpacity 为 0.14，Map key 为 0.4              |
-| 默认布局        | gap 2、padding 8、宽高自适应；最终任一轴固定时 overflow 默认 clip，否则 visible                         |
-| List 排列与索引 | direction 默认 row，可为 column，不折行；showIndex 默认 false，indexStart 默认 0 且为非负整数           |
-| Map 间距        | gap 接受数字或 `{ row, column }`                                                                        |
+| 配置            | 契约                                                                                                              |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `style`         | 复用 Core color、fill / stroke、opacity、font、textColor 原子及 Surface cornerRadius；不提供单格 zIndex           |
+| `layout`        | width / height 为非负有限数或 auto；List 的 width 另可为 content；padding / overflow 复用 Surface；gap 仅属于整体 |
+| Map 角色覆盖    | `style.key/value`、`layout.key/value`，不保留顶层角色别名                                                         |
+| 默认外观        | gray 填充、无描边、cornerRadius 0；List / Map value 的 fillOpacity 为 0.14，Map key 为 0.4                        |
+| 默认布局        | gap 2、padding 8、宽高自适应；最终任一轴固定时 overflow 默认 clip，否则 visible                                   |
+| List 排列与索引 | direction 默认 row，可为 column，不折行；index 默认 false，对象配置位置、起点与文本样式，见 ADR-033               |
+| Map 间距        | gap 接受数字或 `{ row, column }`                                                                                  |
 
-覆盖顺序为 **结构默认 → 整体 → Map 角色 → 单格**。只合并显式字段再补默认；font 按字段合并，padding 对象整体替换，width / height 独立继承，auto 解除该轴固定尺寸。0、none 保留，覆盖不改写 content Source。
+覆盖顺序为 **结构默认 → 整体 → Map 角色 → 单格**。只合并显式字段再补默认；font 按字段合并，padding 对象整体替换，width / height 独立继承，auto 解除该轴固定尺寸。List 的 `width: 'content'` 让当前格按自身内容自然宽度加 padding 定宽，可在整体或单格设置；单格优先。只有整体设置与 `data` 输入组合时才向自动生成的嵌套 List 传递，单格设置不改变显式嵌套组件。Map 不接受该值。0、none 保留，覆盖不改写 content Source。
 
 fill / stroke 只作用于背景和边框，不泄漏到 content；cornerRadius 同时约束背景、边框和裁切。font / textColor 是内容默认，content 显式值优先；color、resetStyle 沿 Core。opacity 对格及其内容只应用一次，fillOpacity 只影响背景。
 
@@ -75,9 +78,9 @@ List / Map 承接除 style 外的 Scope props；根 id、frame、transforms、pl
 
 自然需求由 child 测量和 padding 得到，不回读 DOM / SVG / Canvas；单元格 allocation 与内容 allocation / visual bounds 分离，保留非零及负内容原点。
 
-List 自适应轴取各格有效需求最大值；Map 自适应列宽取列最大需求，行高取本行最大需求。固定轴以指定尺寸参与计算，较小格从轨道起点放置而不拉伸。内容在 padding 后区域居中，padding 超出尺寸时居中点限制在格内；固定格保留自然内容并裁切，不缩放或自动折行。
+List 的 `auto` 轴取各格有效需求最大值；`width: 'content'` 的格只取自身自然宽度加 padding，不拉伸到该最大值。Map 自适应列宽取列最大需求，行高取本行最大需求。固定轴以指定尺寸参与计算，较小格从轨道起点放置而不拉伸。内容在 padding 后区域居中，padding 超出尺寸时居中点限制在格内；固定格保留自然内容并裁切，不缩放或自动折行。
 
-List 索引位于横排上方或竖排左侧，距离为 gap；使用继承字体，参与整体需求，不扩大单格 allocation，不登记身份，隐藏后不保留空间。
+List 索引按 index.position 放在横排上下侧或竖排左右侧，距离为 gap；文字样式与继承规则见 ADR-033。索引参与整体需求，不扩大单格 allocation，不登记身份，隐藏后不保留空间。
 
 整体遵循父 Layout exact / range proposal，从 allocation 起点排布，多余空间留在末端，不拉伸槽位或间隙；无法容纳整组内容时失败。零尺寸合法，空结构无虚构槽位、索引和 gap，强制尺寸、prune 与空对象命名沿 Core。
 
@@ -89,11 +92,11 @@ List 索引位于横排上方或竖排左侧，距离为 gap；使用继承字�
 
 登记顺序、localNamespace、frame 遮蔽、外部碰撞和路径延迟引用沿 Core；不生成拼接式命名路径或私有查找表，不允许引用构造循环尺寸依赖。组件内重复单元格 id 报告具体位置。
 
-Inspection 与命名引用分离：根 handle 为 `container`，有 id 的格以 `cell:<id>` 为 owner-local key，role 为 `list-cell`、`map-key`、`map-value`；无 id 不生成索引身份。后代保留 Core ownerPath，变换与 replay 发布最终空间位置，不复制坐标或以几何 carrier 替代 sidecar。
+Inspection 与命名引用分离：根 handle 为 `container`，有 id 的格以 `cell:<id>` 为 owner-local id，role 为 `list-cell`、`map-key`、`map-value`；无 id 不生成索引身份。List 单格别名沿 Core aliasIds 共享同一条记录。后代保留 Core ownerPath，变换与 replay 发布最终空间位置，不复制坐标或以几何 carrier 替代 sidecar。
 
 ## 失败语义与兼容性
 
-未知配置、非 JSON Source、错误 data 根类型、入口混用、非法 content、负或非有限尺寸 / gap / padding、非法 indexStart、重复格 id 在 Source 边界失败。缺失 / 冲突定义、测量、proposal 与引用失败保留下层原因和位置，不返回部分结构。
+未知配置、非 JSON Source、错误 data 根类型、入口混用、非法 content、负或非有限尺寸 / gap / padding、非法 index 配置、重复格 id 在 Source 边界失败。缺失 / 冲突定义、测量、proposal 与引用失败保留下层原因和位置，不返回部分结构。
 
 相同 Source、definitions、测量和主题在 React / Vanilla 下得到等价 IR、布局、Scene、空间结果与诊断，SVG / Canvas 无专用分支。本能力不改变 Surface、Legend、Layout、Table 契约，不保留旧 helper 兼容别名；具体文档图配色与业务含义不进入组件模型。
 
@@ -104,3 +107,7 @@ List / Map 提供与 Node 同形的可选 `label`，接受单个标签或标签�
 标签附着于容器 allocation 矩形；List 开启索引时该矩形包含索引条。标签不参与单元格尺寸、容器 allocation 或命名连接边界计算，但参与最终可见范围。空容器也可附着标签，标签不生成额外 id。标签宿主不继承后代 Node 的几何与外观默认，容器尺寸与标签外观分别由容器布局、容器共用文字样式及 label 通道控制。整体变换、裁切与命名隔离继续沿根 Scope 语义；单格裁切不裁切容器标签。
 
 React、Vanilla、直接 IR 和 data / 显式单元格入口表达同一契约；data 不把根 label 隐式传播给嵌套容器。复杂标题内容仍使用外部布局组合。
+
+## 实现摘要
+
+List 已在整体与单格宽度配置中支持 `content`，直接 IR、React、Vanilla 与 data 入口共用同一排布语义；data 自动生成的嵌套 List 沿用整体内容宽度策略，手写嵌套组件保持独立。原有 `auto` 及 Map 宽度契约保持不变。当前无已知契约缺口。

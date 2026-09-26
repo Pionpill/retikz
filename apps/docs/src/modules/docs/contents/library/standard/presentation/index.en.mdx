@@ -1,0 +1,56 @@
+---
+title: Presentation
+description: Add reference lines, coordinates, group boundaries, and symbol explanations.
+---
+
+Presentation components add references, boundaries, and explanations to a figure. Grid and Axes establish position; Frame and Surface organize its appearance; Legend explains symbols. Choose the information your figure needs rather than adding every component.
+
+## Responsibilities at a glance
+
+| Component | Responsibility                                         | When to read                  |
+| --------- | ------------------------------------------------------ | ----------------------------- |
+| Grid      | Draw regular reference lines, major lines, and borders | Compare spacing or alignment  |
+| Axes      | Draw axes, ticks, and labels                           | Read positions or values      |
+| Frame     | Enclose content with a title and description           | Identify a named group        |
+| Surface   | Add a background, border, and padding around content   | Style existing content        |
+| Legend    | Pair visual samples with descriptions                  | Explain colors or line styles |
+
+## Add references to a coordinate sketch
+
+Axes establishes a centered coordinate system, while Grid supplies equally spaced reference lines. Both share the same origin, and the grid covers all four quadrants. The axes extend slightly beyond the grid to make their directions clear.
+
+<ComponentPreview files="presentation-composition" />
+
+The axes are the main feature; the thinner gray grid only helps read positions. Grid spacing and axis extents are independent. Add Surface for a background and border, Frame for a group title, or Legend to explain colors and line styles.
+
+## Choosing the right family
+
+These components do not choose how to arrange application data. See [Containers](/library/standard/container) for positional or keyed content and [Shapes](/library/standard/shape) for independent geometric outlines.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Grid',
+      description: 'Draw regular reference lines, major lines, and borders',
+      url: '/library/standard/presentation/grid',
+    },
+    { title: 'Axes', description: 'Draw axes, ticks, and labels', url: '/library/standard/presentation/axes' },
+    {
+      title: 'Frame',
+      description: 'Enclose content with a title and description',
+      url: '/library/standard/presentation/frame',
+    },
+    {
+      title: 'Surface',
+      description: 'Add a background, border, and padding around content',
+      url: '/library/standard/presentation/surface',
+    },
+    {
+      title: 'Legend',
+      description: 'Pair visual samples with descriptions',
+      url: '/library/standard/presentation/legend',
+    },
+  ]}
+/>

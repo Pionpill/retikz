@@ -2,102 +2,64 @@
 
 ## `@retikz/react`
 
-### CoordinateProps
+### Node / NodeProps
 
-<p>
-  <ApiSourceLink
-    label={'CoordinateProps'}
-    path={'packages/kernel/react/src/kernel/components/Coordinate.tsx'}
-    startLine={8}
-  >
-    命名坐标点的 React 输入，不绘制可见内容
-  </ApiSourceLink>
-</p>
+- `Node`：<ApiSourceLink label={"Node"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={99}>Node 声明一个可引用的节点</ApiSourceLink>
+- `NodeProps`：<ApiSourceLink label={"NodeProps"} path={"packages/kernel/react/src/kernel/components/Node.tsx"} startLine={21}>可定位、可连接的节点输入，组合文字、视觉形状和连接面</ApiSourceLink>
+
+声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到
+SVG 或 Canvas
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| 成员         | 类型                                                                                                      | 默认值 | 说明                                                                                                                                                                                                                   |
-| ------------ | --------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `authoring?` | `unknown`                                                                                                 | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                                                                                                                           |
-| `id`         | `string`                                                                                                  | —      | 坐标点 id；路径端点和节点定位通过它引用此位置                                                                                                                                                                          |
-| `position`   | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —      | 坐标点位置；不支持 Node 专属的自身锚点对齐<br />笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` |
+| 分组   | 成员              | 类型                                                                                                                          | 默认值        | 说明                                                                                                                                                                                                                                                                                                                                                                         |
+| ------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 主要   | `aliasIds?`       | `Array<string>`                                                                                                               | —             | 指向同一节点几何的额外 id；要求主 id，别名非空白且不重复                                                                                                                                                                                                                                                                                                                     |
+|        | `children?`       | `ReactNode`                                                                                                                   | —             | children 内容：文本<br />与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。<br />字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染                                                                                                                 |
+|        | `id?`             | `string`                                                                                                                      | —             | 节点 id；路径端点和其他节点通过它引用本节点                                                                                                                                                                                                                                                                                                                                  |
+|        | `label?`          | `InputNodeLabel \| Array<InputNodeLabel>`                                                                                     | —             | 节点附加标签，支持单对象或数组<br />标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance                                                                                                                                                                         |
+|        | `text?`           | `string \| Array<IRLine>`                                                                                                     | —             | 显式 text，优先级高于 children<br />`string` 单行（可含 `$...$` 公式）/ `Array<string \| IRLine>` 多行可对单行覆盖 fill / opacity / font，<br />或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）                                                                                                                                                              |
+| 几何   | `boundary?`       | `IRBoundary`                                                                                                                  | `'shape'`     | 连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观                                                                                                                                                                                                                                                                                             |
+|        | `cornerRadius?`   | `number`                                                                                                                      | —             | 圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`                                                                                                                                                                                                                                          |
+|        | `layout?`         | `IRNodeLayout`                                                                                                                | —             | 节点尺寸、间距与文本布局                                                                                                                                                                                                                                                                                                                                                     |
+|        | `position`        | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition \| IRAnchorPosition` | —             | 节点中心位置<br />六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center |
+|        | `rotate?`         | `number`                                                                                                                      | `0`           | 绕节点中心旋转的角度，单位为度；正值顺时针                                                                                                                                                                                                                                                                                                                                   |
+|        | `scale?`          | `number \| IRAxisScale`                                                                                                       | `1`           | 均匀或分轴缩放；影响节点尺寸、字号、间距和路径附着点                                                                                                                                                                                                                                                                                                                         |
+|        | `shape?`          | `IRShapeValue`                                                                                                                | `'rectangle'` | 视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.extensions.shapes 注册                                                                                                                                                                                                                                                                  |
+| 样式   | `style?`          | `IRNodeStyle`                                                                                                                 | —             | 实例视觉覆盖，逐字段覆盖继承默认值                                                                                                                                                                                                                                                                                                                                           |
+|        | `zIndex?`         | `number`                                                                                                                      | `0`           | 同层元素的栈序；大者在上，同值保持声明顺序                                                                                                                                                                                                                                                                                                                                   |
+| 回调   | `onClick?`        | `HydrationHandler`                                                                                                            | —             | 单击该图元（DOM `click`）                                                                                                                                                                                                                                                                                                                                                    |
+|        | `onDoubleClick?`  | `HydrationHandler`                                                                                                            | —             | 双击该图元（DOM `dblclick`）                                                                                                                                                                                                                                                                                                                                                 |
+|        | `onPointerDown?`  | `HydrationHandler`                                                                                                            | —             | 指针在该图元上按下（DOM `pointerdown`）                                                                                                                                                                                                                                                                                                                                      |
+|        | `onPointerEnter?` | `HydrationHandler`                                                                                                            | —             | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                                                                                                                                                                                                                                                                                                  |
+|        | `onPointerLeave?` | `HydrationHandler`                                                                                                            | —             | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                                                                                                                                                                                                                                                                                                      |
+|        | `onPointerMove?`  | `HydrationHandler`                                                                                                            | —             | 指针在该图元上移动（DOM `pointermove`）                                                                                                                                                                                                                                                                                                                                      |
+|        | `onPointerUp?`    | `HydrationHandler`                                                                                                            | —             | 指针在该图元上抬起（DOM `pointerup`）                                                                                                                                                                                                                                                                                                                                        |
+|        | `onRightClick?`   | `HydrationHandler`                                                                                                            | —             | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`                                                                                                                                                                                                                                                                                 |
+|        | `onWheel?`        | `HydrationHandler`                                                                                                            | —             | 在该图元上滚轮（DOM `wheel`）                                                                                                                                                                                                                                                                                                                                                |
+| 动画   | `animations?`     | `Array<IRAnimationTrack>`                                                                                                     | —             | 元素级时间轴动画；每条 track 描述一个可动画属性，渲染端播放或降级为静态，不参与布局                                                                                                                                                                                                                                                                                          |
+| 运行时 | `authoring?`      | `unknown`                                                                                                                     | —             | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                                                                                                                                                                                                                                                                                 |
+|        | `meta?`           | `IRNode['meta']`                                                                                                              | —             | 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象                                                                                                                                                                                                                                                                                            |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type CoordinateProps = {
-  authoring?: unknown;
-  id: string;
-  position: IRPosition | PolarPosition | IRAtPosition | InputAtPosition | IROffsetPosition | IRBetweenPosition;
-};
-```
+export declare const Node: FC<NodeProps>;
 
-</DocTab>
-
-</DocTabs>
-
-### NodeProps
-
-<p>
-  <ApiSourceLink label={'NodeProps'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={21}>
-    可定位、可连接的节点输入，组合文字、视觉形状和连接面
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="属性">
-
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
-
-| 分组   | 成员              | 类型                                                                                                                                                                       | 默认值        | 说明                                                                                                                                                                                                                                                                                                                                                                         |
-| ------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 主要   | `children?`       | `ReactNode`                                                                                                                                                                | —             | children 内容：文本<br />与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。<br />字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染                                                                                                                 |
-|        | `id?`             | `string`                                                                                                                                                                   | —             | 节点 id；其他 Path/Draw 通过这个 id 引用本节点                                                                                                                                                                                                                                                                                                                               |
-|        | `label?`          | `InputNodeLabel \| Array<InputNodeLabel>`                                                                                                                                  | —             | 节点附加标签，支持单对象或数组<br />标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance                                                                                                                                                                         |
-|        | `text?`           | `string \| Array<IRLine>`                                                                                                                                                  | —             | 显式 text，优先级高于 children<br />`string` 单行（可含 `$...$` 公式）/ `Array<string \| IRLine>` 多行可对单行覆盖 fill / opacity / font，<br />或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）                                                                                                                                                              |
-| 几何   | `boundary?`       | `IRBoundary`                                                                                                                                                               | `'shape'`     | 连线接触的边界；省略时沿用视觉形状，也可选择已注册的连接面或形状，不改变节点外观                                                                                                                                                                                                                                                                                             |
-|        | `cornerRadius?`   | `number`                                                                                                                                                                   | —             | 圆角半径（用户单位）；只对 `rectangle` shape 生效。建议用形状 params 形式 `shape={{ type: 'rectangle', params: { cornerRadius } }}`                                                                                                                                                                                                                                          |
-|        | `layout?`         | `InputNode['layout']`                                                                                                                                                      | —             | 节点尺寸、间距与文本布局                                                                                                                                                                                                                                                                                                                                                     |
-|        | `position`        | `\| IRPosition`<br />`\| PolarPosition`<br />`\| IRAtPosition`<br />`\| InputAtPosition`<br />`\| IROffsetPosition`<br />`\| IRBetweenPosition`<br />`\| IRAnchorPosition` | —             | 节点中心位置<br />六种形态：笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` / 锚点对齐 `{ kind: 'anchor', target, selfAnchor? }`。锚点对齐会先完成当前 Node 的文本、shape、padding、margin、scale、rotate 布局，再整体平移；双方 anchor 缺省为 center |
-|        | `rotate?`         | `number`                                                                                                                                                                   | `0`           | 绕节点中心旋转的角度，单位为度；正值顺时针                                                                                                                                                                                                                                                                                                                                   |
-|        | `scale?`          | `number \| IRAxisScale`                                                                                                                                                    | `1`           | 均匀或分轴缩放；影响节点尺寸、字号、间距和路径附着点                                                                                                                                                                                                                                                                                                                         |
-|        | `shape?`          | `IRNode['shape']`                                                                                                                                                          | `'rectangle'` | 视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.extensions.shapes 注册                                                                                                                                                                                                                                                                  |
-| 样式   | `style?`          | `InputNode['style']`                                                                                                                                                       | —             | 实例视觉覆盖，逐字段覆盖继承默认值                                                                                                                                                                                                                                                                                                                                           |
-|        | `zIndex?`         | `IRNode['zIndex']`                                                                                                                                                         | `0`           | 同层元素的栈序；大者在上，同值保持声明顺序                                                                                                                                                                                                                                                                                                                                   |
-| 回调   | `onClick?`        | `HydrationHandler`                                                                                                                                                         | —             | 单击该图元（DOM `click`）                                                                                                                                                                                                                                                                                                                                                    |
-|        | `onDoubleClick?`  | `HydrationHandler`                                                                                                                                                         | —             | 双击该图元（DOM `dblclick`）                                                                                                                                                                                                                                                                                                                                                 |
-|        | `onPointerDown?`  | `HydrationHandler`                                                                                                                                                         | —             | 指针在该图元上按下（DOM `pointerdown`）                                                                                                                                                                                                                                                                                                                                      |
-|        | `onPointerEnter?` | `HydrationHandler`                                                                                                                                                         | —             | 指针进入该图元（由 `pointermove` + 命中 id 状态机合成，跨子元素不重复触发）                                                                                                                                                                                                                                                                                                  |
-|        | `onPointerLeave?` | `HydrationHandler`                                                                                                                                                         | —             | 指针离开该图元（由 `pointermove` + 命中 id 状态机合成）                                                                                                                                                                                                                                                                                                                      |
-|        | `onPointerMove?`  | `HydrationHandler`                                                                                                                                                         | —             | 指针在该图元上移动（DOM `pointermove`）                                                                                                                                                                                                                                                                                                                                      |
-|        | `onPointerUp?`    | `HydrationHandler`                                                                                                                                                         | —             | 指针在该图元上抬起（DOM `pointerup`）                                                                                                                                                                                                                                                                                                                                        |
-|        | `onRightClick?`   | `HydrationHandler`                                                                                                                                                         | —             | 右键该图元（DOM `contextmenu`）；默认不抑制浏览器菜单，handler 自行 `event.preventDefault()`                                                                                                                                                                                                                                                                                 |
-|        | `onWheel?`        | `HydrationHandler`                                                                                                                                                         | —             | 在该图元上滚轮（DOM `wheel`）                                                                                                                                                                                                                                                                                                                                                |
-| 动画   | `animations?`     | `IRNode['animations']`                                                                                                                                                     | —             | 元素级时间轴动画；每条 track 描述一个可动画属性，渲染端播放或降级为静态，不参与布局                                                                                                                                                                                                                                                                                          |
-| 运行时 | `authoring?`      | `InputNode['authoring']`                                                                                                                                                   | —             | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                                                                                                                                                                                                                                                                                 |
-|        | `meta?`           | `IRNode['meta']`                                                                                                                                                           | —             | 用户自定义元数据；可在事件 / 水合上下文中读取，不参与布局。须为 JSON 可序列化对象                                                                                                                                                                                                                                                                                            |
-
-</div>
-
-</DocTab>
-
-<DocTab value="definition" label="类型定义">
-
-```ts
 export type NodeProps = HydrationEventProps & {
   authoring?: InputNode['authoring'];
   style?: InputNode['style'];
   layout?: InputNode['layout'];
   id?: string;
+  aliasIds?: IRNode['aliasIds'];
   shape?: IRNode['shape'];
   boundary?: IRBoundary;
   meta?: IRNode['meta'];
@@ -124,34 +86,35 @@ export type NodeProps = HydrationEventProps & {
 
 </DocTabs>
 
-### TextProps
+### Text / TextProps
 
-<p>
-  <ApiSourceLink label={'TextProps'} path={'packages/kernel/react/src/kernel/components/Text.tsx'} startLine={7}>
-    Node 内单行文字的内容与样式覆盖
-  </ApiSourceLink>
-</p>
+- `Text`：<ApiSourceLink label={"Text"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={22}>Text 是 Node 内的"行级"标记组件——本身不渲染</ApiSourceLink>
+- `TextProps`：<ApiSourceLink label={"TextProps"} path={"packages/kernel/react/src/kernel/components/Text.tsx"} startLine={7}>Node 内单行文字的内容与样式覆盖</ApiSourceLink>
+
+声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员       | 类型                                        | 默认值 | 说明                                             |
-| ---------- | ------------------------------------------- | ------ | ------------------------------------------------ |
-| `children` | `string \| number`                          | —      | 行内容（字符串或数字；数字按文本渲染）           |
-| `fill?`    | `Extract<IRLine, { text: string }>['fill']` | —      | 行级覆盖颜色；不填走 Node 块级默认               |
-| `font?`    | `IRFont`                                    | —      | 行级字体覆盖；缺省字段继承 Node 的 `font` 块级值 |
-| `opacity?` | `number`                                    | —      | 行级透明度 0~1；不填走 Node 块级默认             |
+| 成员       | 类型               | 默认值 | 说明                                             |
+| ---------- | ------------------ | ------ | ------------------------------------------------ |
+| `children` | `string \| number` | —      | 行内容（字符串或数字；数字按文本渲染）           |
+| `fill?`    | `string \| number` | —      | 行级覆盖颜色；不填走 Node 块级默认               |
+| `font?`    | `IRFont`           | —      | 行级字体覆盖；缺省字段继承 Node 的 `font` 块级值 |
+| `opacity?` | `number`           | —      | 行级透明度 0~1；不填走 Node 块级默认             |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
+export declare const Text: FC<TextProps>;
+
 export type TextProps = {
   children: string | number;
   fill?: Extract<
@@ -169,89 +132,38 @@ export type TextProps = {
 
 </DocTabs>
 
-### Coordinate
+### Coordinate / CoordinateProps
 
-<p>
-  <ApiSourceLink
-    label={'Coordinate'}
-    path={'packages/kernel/react/src/kernel/components/Coordinate.tsx'}
-    startLine={24}
-  >
-    命名坐标点——TikZ `\coordinate (id) at (x, y);` 同义
-  </ApiSourceLink>
-</p>
+- `Coordinate`：<ApiSourceLink label={"Coordinate"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={24}>命名坐标点——TikZ `\coordinate (id) at (x, y);` 同义</ApiSourceLink>
+- `CoordinateProps`：<ApiSourceLink label={"CoordinateProps"} path={"packages/kernel/react/src/kernel/components/Coordinate.tsx"} startLine={8}>命名坐标点的 React 输入，不绘制可见内容</ApiSourceLink>
 
 命名一个可引用的点，供后续 path 与其它 node 的 `at.of` 使用；自身不渲染、不参与 viewBox 扩展
-
-```ts
-export declare const Coordinate: FC<CoordinateProps>;
-```
-
-### Node
-
-<p>
-  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={97}>
-    Node 声明一个可引用的节点
-  </ApiSourceLink>
-</p>
-
-声明一个带位置、文本、形状和样式的可引用节点；组件自身不渲染 DOM，最终由 `<Layout>` 输出到
-SVG 或 Canvas
-
-```ts
-export declare const Node: FC<NodeProps>;
-```
-
-### Text
-
-<p>
-  <ApiSourceLink label={'Text'} path={'packages/kernel/react/src/kernel/components/Text.tsx'} startLine={22}>
-    Text 是 Node 内的"行级"标记组件——本身不渲染
-  </ApiSourceLink>
-</p>
-
-声明一行节点文本；与字符串内容按 JSX 顺序合并，字段只覆盖当前这一行
-
-```ts
-export declare const Text: FC<TextProps>;
-```
-
-## `@retikz/vanilla`
-
-### InputCoordinate
-
-<p>
-  <ApiSourceLink
-    label={'InputCoordinate'}
-    path={'packages/kernel/vanilla/src/normalize/coordinate/types.ts'}
-    startLine={4}
-  >
-    作者侧命名坐标输入
-  </ApiSourceLink>
-</p>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员         | 类型                                                                                                                                                                                                                                                                                                                         | 默认值 | 说明                                                         |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------ |
-| `authoring?` | `unknown`                                                                                                                                                                                                                                                                                                                    | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR                 |
-| `id`         | `string`                                                                                                                                                                                                                                                                                                                     | —      | 必填引用标识，供路径或节点定位使用                           |
-| `position`   | `SharedPolarPosition \| IRBetweenPosition \| [number, number] \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| SharedPolarPosition \| [number, number]; offset: [number, number]; }` | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
-| `type`       | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —      | 判别字段，固定为 coordinate                                  |
+| 成员         | 类型                                                                                                      | 默认值 | 说明                                                                                                                                                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `authoring?` | `unknown`                                                                                                 | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                                                                                                                           |
+| `id`         | `string`                                                                                                  | —      | 坐标点 id；路径端点和节点定位通过它引用此位置                                                                                                                                                                          |
+| `position`   | `IRPosition \| PolarPosition \| IRAtPosition \| InputAtPosition \| IROffsetPosition \| IRBetweenPosition` | —      | 坐标点位置；不支持 Node 专属的自身锚点对齐<br />笛卡尔 `[x, y]` / 极坐标 `{ angle, radius, origin? }` / 相对定位 `{ direction, of, distance? }` / 偏移定位 `{ of, offset }` / 比例位置 `{ between: [A, B], fraction }` |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
-export type InputCoordinate = IRCoordinate & {
+export declare const Coordinate: FC<CoordinateProps>;
+
+export type CoordinateProps = {
   authoring?: unknown;
+  id: string;
+  position: IRPosition | PolarPosition | IRAtPosition | InputAtPosition | IROffsetPosition | IRBetweenPosition;
 };
 ```
 
@@ -259,51 +171,93 @@ export type InputCoordinate = IRCoordinate & {
 
 </DocTabs>
 
-### InputNode
+## `@retikz/vanilla`
 
-<p>
-  <ApiSourceLink label={'InputNode'} path={'packages/kernel/vanilla/src/normalize/node/types.ts'} startLine={52}>
-    作者侧节点输入
-  </ApiSourceLink>
-</p>
+### node / InputNode
+
+- `node`：<ApiSourceLink label={"node"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={13}>创建作者侧节点输入，身份由配置中的 id 声明</ApiSourceLink>
+- `InputNode`：<ApiSourceLink label={"InputNode"} path={"packages/kernel/vanilla/src/normalize/node/types.ts"} startLine={52}>作者侧节点输入</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+<ApiTable grouped>
 
-| 分组   | 成员            | 类型                                                                                             | 默认值 | 说明                                                                                                             |
-| ------ | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
-| 主要   | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
-|        | `label?`        | `InputNodeLabel \| ReadonlyArray<InputNodeLabel>`                                                | —      | 附着于节点的一个或多个标签                                                                                       |
-|        | `text?`         | `IRNode['text']`                                                                                 | —      | 正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex                                              |
-|        | `type?`         | `'node'`                                                                                         | —      | 节点类别标识，可省略                                                                                             |
-| 几何   | `boundary?`     | `IRNode['boundary']`                                                                             | —      | 连线使用的连接面；可由单个路径端点覆盖，不改变节点外观                                                           |
-|        | `cornerRadius?` | `number`                                                                                         | —      | 仅 rectangle 使用的顶层圆角半径，单位为用户单位                                                                  |
-|        | `layout?`       | `IRNode['layout']`                                                                               | —      | 节点尺寸、间距与文字排布配置                                                                                     |
-|        | `position`      | `InputPosition`                                                                                  | —      | 节点中心位置，支持坐标、相对定位和锚点对齐                                                                       |
-|        | `rotate?`       | `number`                                                                                         | —      | 绕节点中心的旋转角度，正值顺时针                                                                                 |
-|        | `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —      | 均匀或分轴缩放；对象的 x、y 优先于 default，影响路径附着位置                                                     |
-|        | `shape?`        | `IRNode['shape']`                                                                                | —      | 视觉形状名称或带参数引用；省略时继承 Scope.defaults.node.shape，无继承值时使用 rectangle，未注册名称在编译时失败 |
-| 样式   | `style?`        | `IRNode['style']`                                                                                | —      | 逐字段覆盖继承默认值的节点视觉配置                                                                               |
-|        | `zIndex?`       | `number`                                                                                         | —      | 同层元素栈序，大者在上，同值保持声明顺序                                                                         |
-| 动画   | `animations?`   | `IRNode['animations']`                                                                           | —      | 元素动画轨道，透传至输出图元，不参与布局且不跨 Scope 继承                                                        |
-| 运行时 | `authoring?`    | `unknown`                                                                                        | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                     |
-|        | `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至输出图元的 JSON 元数据，不参与编译计算                                                                     |
+| 分组   | 成员            | 类型                                              | 默认值 | 说明                                                                                                             |
+| ------ | --------------- | ------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| 主要   | `aliasIds?`     | `Array<string>`                                   | —      | 同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元                              |
+|        | `id?`           | `string`                                          | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
+|        | `label?`        | `InputNodeLabel \| ReadonlyArray<InputNodeLabel>` | —      | 附着于节点的一个或多个标签                                                                                       |
+|        | `text?`         | `IRNode['text']`                                  | —      | 正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex                                              |
+|        | `type?`         | `'node'`                                          | —      | 节点类别标识，可省略                                                                                             |
+| 几何   | `boundary?`     | `IRBoundary`                                      | —      | 连线使用的连接面；可由单个路径端点覆盖，不改变节点外观                                                           |
+|        | `cornerRadius?` | `number`                                          | —      | 仅 rectangle 使用的顶层圆角半径，单位为用户单位                                                                  |
+|        | `layout?`       | `IRNodeLayout`                                    | —      | 节点尺寸、间距与文字排布配置                                                                                     |
+|        | `position`      | `InputPosition`                                   | —      | 节点中心位置，支持坐标、相对定位和锚点对齐                                                                       |
+|        | `rotate?`       | `number`                                          | —      | 绕节点中心的旋转角度，正值顺时针                                                                                 |
+|        | `scale?`        | `number \| IRAxisScale`                           | —      | 均匀或分轴缩放；对象的 x、y 优先于 default，影响路径附着位置                                                     |
+|        | `shape?`        | `IRShapeValue`                                    | —      | 视觉形状名称或带参数引用；省略时继承 Scope.defaults.node.shape，无继承值时使用 rectangle，未注册名称在编译时失败 |
+| 样式   | `style?`        | `IRNodeStyle`                                     | —      | 逐字段覆盖继承默认值的节点视觉配置                                                                               |
+|        | `zIndex?`       | `number`                                          | —      | 同层元素栈序，大者在上，同值保持声明顺序                                                                         |
+| 动画   | `animations?`   | `Array<IRAnimationTrack>`                         | —      | 元素动画轨道，透传至输出图元，不参与布局且不跨 Scope 继承                                                        |
+| 运行时 | `authoring?`    | `unknown`                                         | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR                                                                     |
+|        | `meta?`         | `Record<string, JsonValue>`                       | —      | 透传至输出图元的 JSON 元数据，不参与编译计算                                                                     |
+|        | `config` (参数) | `Omit<InputNode, 'type'>`                         | —      | 节点配置，包含位置及可选的 id、文字和样式                                                                        |
+|        | 返回值          | `InputNode`                                       | —      | 带 node 类别的作者输入                                                                                           |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="类型定义">
 
 ```ts
+export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
+
 export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
   authoring?: unknown;
   type?: 'node';
   position: InputPosition;
   label?: InputNodeLabel | ReadonlyArray<InputNodeLabel>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### coordinate / InputCoordinate
+
+- `coordinate`：<ApiSourceLink label={"coordinate"} path={"packages/kernel/vanilla/src/normalize/helpers.ts"} startLine={20}>创建作者侧命名坐标输入</ApiSourceLink>
+- `InputCoordinate`：<ApiSourceLink label={"InputCoordinate"} path={"packages/kernel/vanilla/src/normalize/coordinate/types.ts"} startLine={4}>作者侧命名坐标输入</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable>
+
+| 成员            | 类型                            | 默认值 | 说明                                                         |
+| --------------- | ------------------------------- | ------ | ------------------------------------------------------------ |
+| `authoring?`    | `unknown`                       | —      | 可选编译驱动解释的运行时载荷，不进入 Core IR                 |
+| `id`            | `string`                        | —      | 必填引用标识，供路径或节点定位使用                           |
+| `position`      | `IRCoordinate['position']`      | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
+| `type`          | `"coordinate"`                  | —      | 判别字段，固定为 coordinate                                  |
+| `config` (参数) | `Omit<InputCoordinate, 'type'>` | —      | 坐标标识与位置配置                                           |
+| 返回值          | `InputCoordinate`               | —      | 带 coordinate 类别的作者输入                                 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
+```ts
+export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
+
+export type InputCoordinate = IRCoordinate & {
+  authoring?: unknown;
 };
 ```
 
@@ -325,13 +279,13 @@ export type InputNode = Omit<IRNode, 'type' | 'position' | 'label'> & {
 
 其余属性继承自 `IRNodeLabel`，并移除 `'position'`。完整组合关系见“类型定义”
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员        | 类型                     | 默认值 | 说明                                                   |
 | ----------- | ------------------------ | ------ | ------------------------------------------------------ |
 | `position?` | `InputNodeLabelPosition` | —      | 标签位置；省略时位于节点上方，支持方向、角度或边界比例 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -365,14 +319,14 @@ fraction 表示所选边界上的归一化位置，省略时使用 0.5
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员        | 类型        | 默认值 | 说明                              |
 | ----------- | ----------- | ------ | --------------------------------- |
 | `boundary`  | `SideValue` | —      | 标签附着的节点边界方向            |
 | `fraction?` | `number`    | —      | 沿所选边的 0–1 比例位置，缺省 0.5 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -419,50 +373,6 @@ export type InputNodeLabelPosition =
   | InputNodeLabelBoundaryPosition;
 ```
 
-### coordinate
-
-<p>
-  <ApiSourceLink label={'coordinate'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={20}>
-    创建作者侧命名坐标输入
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const coordinate: (config: Omit<InputCoordinate, 'type'>) => InputCoordinate;
-```
-
-#### 参数
-
-| 参数     | 类型                            | 说明               |
-| -------- | ------------------------------- | ------------------ |
-| `config` | `Omit<InputCoordinate, 'type'>` | 坐标标识与位置配置 |
-
-#### 返回值
-
-带 coordinate 类别的作者输入
-
-### node
-
-<p>
-  <ApiSourceLink label={'node'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={13}>
-    创建作者侧节点输入，身份由配置中的 id 声明
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const node: (config: Omit<InputNode, 'type'>) => InputNode;
-```
-
-#### 参数
-
-| 参数     | 类型                      | 说明                                      |
-| -------- | ------------------------- | ----------------------------------------- |
-| `config` | `Omit<InputNode, 'type'>` | 节点配置，包含位置及可选的 id、文字和样式 |
-
-#### 返回值
-
-带 node 类别的作者输入
-
 ## `@retikz/core`
 
 ### BoundaryAnchorName
@@ -489,7 +399,7 @@ export type BoundaryAnchorName = AnchorValue | (string & {});
   <ApiSourceLink
     label={'BoundaryDefinition'}
     path={'packages/kernel/core/src/contract/boundary/types.ts'}
-    startLine={48}
+    startLine={51}
   >
     Boundary 定义的擦除形态：registry 存这个
   </ApiSourceLink>
@@ -499,7 +409,7 @@ export type BoundaryAnchorName = AnchorValue | (string & {});
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员            | 类型                                                                                                 | 默认值               | 说明                                                                                                                   |
 | --------------- | ---------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -510,7 +420,7 @@ export type BoundaryAnchorName = AnchorValue | (string & {});
 | `paramsSchema`  | `BoundaryDefinition["paramsSchema"]`                                                                 | —                    | 运行时连接面参数的 schema                                                                                              |
 | `resolveRect?`  | `(context: BoundaryFitContext, params: Record<string, JsonValue>) => Rect`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -530,7 +440,7 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
   <ApiSourceLink
     label={'BoundaryDefinitionInput'}
     path={'packages/kernel/core/src/contract/boundary/types.ts'}
-    startLine={24}
+    startLine={27}
   >
     boundary definition 的作者侧输入形态
   </ApiSourceLink>
@@ -540,18 +450,19 @@ export type BoundaryDefinition = BoundaryDefinitionInput<JsonObject>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员            | 类型                                                                               | 默认值               | 说明                                                                                                                   |
-| --------------- | ---------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `anchor?`       | `(rect: Rect, name: BoundaryAnchorName, params: TParams) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
-| `boundaryPoint` | `(rect: Rect, toward: Position, params: TParams) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
-| `name`          | `string`                                                                           | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
-| `outline?`      | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                      | —                    | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何                                                   |
-| `paramsSchema`  | `ZodType<TParams>`                                                                 | —                    | 运行时连接面参数的 schema                                                                                              |
-| `resolveRect?`  | `(context: BoundaryFitContext, params: TParams) => Rect`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
+| 成员             | 类型                                                                               | 默认值               | 说明                                                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (泛型) | `extends JsonObject`                                                               | —                    | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型                                                 |
+| `anchor?`        | `(rect: Rect, name: BoundaryAnchorName, params: TParams) => Position \| undefined` | `undefined`          | 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调<br />未提供时由调用方回退或报告不支持该 anchor |
+| `boundaryPoint`  | `(rect: Rect, toward: Position, params: TParams) => Position`                      | —                    | 从中心指向 toward 的射线与连接面的交点                                                                                 |
+| `name`           | `string`                                                                           | —                    | 注册表 key，由 IR `boundary` 引用                                                                                      |
+| `outline?`       | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                      | —                    | 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何                                                   |
+| `paramsSchema`   | `ZodType<TParams>`                                                                 | —                    | 运行时连接面参数的 schema                                                                                              |
+| `resolveRect?`   | `(context: BoundaryFitContext, params: TParams) => Rect`                           | `context.visualRect` | 根据视觉 shape 和实例 params 解析本连接面使用的矩形<br />未提供时使用视觉矩形                                          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -572,12 +483,6 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 </DocTabs>
 
-#### 类型参数
-
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TParams` | —    |
-
 ### BoundaryFitContext
 
 <p>
@@ -594,14 +499,14 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                 | 类型                                     | 默认值 | 说明                                      |
 | -------------------- | ---------------------------------------- | ------ | ----------------------------------------- |
 | `connectionEnvelope` | `(kind: ConnectionEnvelopeKind) => Rect` | —      | 获取视觉 shape 对指定规则连接面的安全包络 |
 | `visualRect`         | `Rect`                                   | —      | 节点视觉 shape 的外接矩形                 |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -626,7 +531,7 @@ export type BoundaryFitContext = {
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员       | 类型                                                                                                                                                                                                                                                                                                                         | 默认值 | 说明                                                         |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------ |
@@ -634,7 +539,7 @@ export type BoundaryFitContext = {
 | `position` | `[number, number] \| SharedPolarPosition \| IRBetweenPosition \| { direction: "top" \| "right" \| "bottom" \| "left" \| "top-right" \| "top-left" \| "bottom-right" \| "bottom-left"; of: string; distance?: number \| undefined; } \| { of: string \| [number, number] \| SharedPolarPosition; offset: [number, number]; }` | —      | 笛卡尔、极坐标、相对、偏移或两点比例位置；不支持自身锚点对齐 |
 | `type`     | `"coordinate"`                                                                                                                                                                                                                                                                                                               | —      | 判别字段，固定为 coordinate                                  |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -660,11 +565,12 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
+<ApiTable grouped>
 
 | 分组   | 成员            | 类型                                                                                             | 默认值 | 说明                                                                                                             |
 | ------ | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
-| 主要   | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
+| 主要   | `aliasIds?`     | `Array<string>`                                                                                  | —      | 同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元                              |
+|        | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
 |        | `label?`        | `ZodInfer<typeof NodeSchema.shape["label"]>`                                                     | —      | 附着于节点的一个或多个标签                                                                                       |
 |        | `text?`         | `ZodInfer<typeof NodeSchema.shape["text"]>`                                                      | —      | 正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex                                              |
 |        | `type`          | `"node"`                                                                                         | —      | 判别字段，固定为 node                                                                                            |
@@ -680,7 +586,7 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 | 动画   | `animations?`   | `ZodInfer<typeof NodeSchema.shape["animations"]>`                                                | —      | 元素动画轨道，透传至输出图元，不参与布局且不跨 Scope 继承                                                        |
 | 运行时 | `meta?`         | `Record<string, JsonValue>`                                                                      | —      | 透传至输出图元的 JSON 元数据，不参与编译计算                                                                     |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -706,7 +612,7 @@ export type IRNode = ZodInfer<typeof NodeSchema>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员           | 类型                                                                                                                                                                                                                    | 默认值 | 说明                                                                         |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
@@ -722,7 +628,7 @@ export type IRNode = ZodInfer<typeof NodeSchema>;
 | `text`         | `ZodInfer<typeof NodeLabelSchema.shape["text"]>`                                                                                                                                                                        | —      | 标签文字或混排行                                                             |
 | `textColor?`   | `string \| number`                                                                                                                                                                                                      | —      | 标签文字颜色，缺省沿继承链求值                                               |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -748,7 +654,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员            | 类型                                                                                                                                                                                                               | 默认值 | 说明                                                                    |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------- |
@@ -760,7 +666,7 @@ export type IRNodeLabel = ZodInfer<typeof NodeLabelSchema>;
 | `padding?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; left?: number \| undefined; right?: number \| undefined; top?: number \| undefined; bottom?: number \| undefined; }` | —      | 正文到边框的内间距；数字应用于各边，对象按单边、轴、default 的顺序取值  |
 | `width?`        | `number`                                                                                                                                                                                                           | —      | 缩放前可见边框的精确宽度，不含 margin，不能小于有效最小宽度             |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -786,7 +692,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员             | 类型                                                                                                                                                                                                                                                                                  | 默认值 | 说明                                                                   |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------- |
@@ -806,7 +712,7 @@ export type IRNodeLayout = ZodInfer<typeof NodeLayoutSchema>;
 | `strokeWidth?`   | `number`                                                                                                                                                                                                                                                                              | —      | 边框宽度，单位为用户单位；省略时默认 1                                 |
 | `textColor?`     | `string \| number`                                                                                                                                                                                                                                                                    | —      | 文字颜色或主色权重；contrast 根据静态填充选择黑白，缺省为 currentColor |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -823,7 +729,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 ### ShapeDefinition
 
 <p>
-  <ApiSourceLink label={'ShapeDefinition'} path={'packages/kernel/core/src/contract/shape/types.ts'} startLine={173}>
+  <ApiSourceLink label={'ShapeDefinition'} path={'packages/kernel/core/src/contract/shape/types.ts'} startLine={174}>
     shape 定义的擦除形态：registry 存这个
   </ApiSourceLink>
 </p>
@@ -835,7 +741,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | 成员                  | 类型                                                                                                                                   | 默认值                   | 说明                                                                                                                                                                            |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -852,7 +758,7 @@ export type IRNodeStyle = ZodInfer<typeof NodeStyleSchema>;
 | `paramsSchema`        | `ShapeDefinition["paramsSchema"]`                                                                                                      | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
 | `scaleParams?`        | `(params: Record<string, JsonValue>, sx: number, sy: number) => Record<string, JsonValue>`                                             | `scaleJsonObjectNumbers` | 返回 node scale 后的 params<br />适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx \* sy) 深度缩放 params 中的数值叶子                                            |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -872,7 +778,7 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
   <ApiSourceLink
     label={'ShapeDefinitionInput'}
     path={'packages/kernel/core/src/contract/shape/types.ts'}
-    startLine={105}
+    startLine={106}
   >
     可注册的 shape 定义
   </ApiSourceLink>
@@ -885,24 +791,25 @@ export type ShapeDefinition = ShapeDefinitionInput<JsonObject>;
 
 <DocTab value="members" label="属性">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| 成员                  | 类型                                                                                                                                                       | 默认值                   | 说明                                                                                                                                                                            |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                                            | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
-| `boundaryPoint`       | `(rect: Rect, toward: Position, params: TParams) => Position`                                                                                              | —                        | 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点<br />`rect` 可包含旋转；实现需要按需转换坐标                                                                            |
-| `circumscribe`        | `(`<br />`innerHalfWidth: number,`<br />`innerHalfHeight: number,`<br />`params: TParams,`<br />`) => { halfWidth: number; halfHeight: number }`           | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
-| `circumscribeOffset?` | `(params: TParams) => Position`                                                                                                                            | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
-| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                                           | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
-| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                                    | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
-| `emit`                | `(`<br />`rect: Rect,`<br />`style: ResolvedShapeStyle,`<br />`round: (n: number) => number,`<br />`params: TParams,`<br />`) => Iterable<ScenePrimitive>` | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
-| `keyPoints?`          | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                                         | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
-| `name`                | `string`                                                                                                                                                   | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
-| `outline?`            | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                                                                                              | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
-| `paramsSchema`        | `ZodType<TParams>`                                                                                                                                         | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
-| `scaleParams?`        | `(params: TParams, sx: number, sy: number) => TParams`                                                                                                     | `scaleJsonObjectNumbers` | 返回 node scale 后的 params<br />适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx \* sy) 深度缩放 params 中的数值叶子                                            |
+| 成员                  | 类型                                                                                                                                    | 默认值                   | 说明                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TParams` (泛型)      | `extends JsonObject`                                                                                                                    | —                        | 由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型                                                                                                            |
+| `anchor`              | `(rect: Rect, name: ShapeAnchorName, params: TParams) => Position \| undefined`                                                         | —                        | 解析命名 anchor 的世界坐标；不支持时返回 `undefined`                                                                                                                            |
+| `boundaryPoint`       | `(rect: Rect, toward: Position, params: TParams) => Position`                                                                           | —                        | 返回从 rect 中心指向 `toward` 的射线与 shape 边界的交点<br />`rect` 可包含旋转；实现需要按需转换坐标                                                                            |
+| `circumscribe`        | `(innerHalfWidth: number, innerHalfHeight: number, params: TParams) => {`<br />`halfWidth: number;`<br />`halfHeight: number;`<br />`}` | —                        | 根据内容半轴和 params 计算完整 shape 的外接 AABB 半轴                                                                                                                           |
+| `circumscribeOffset?` | `(params: TParams) => Position`                                                                                                         | `[0, 0]`                 | 外接 AABB 中心相对 node `position` 的未旋转局部偏移                                                                                                                             |
+| `connectionEnvelope?` | `(rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope \| undefined`                                        | `undefined`              | 返回安全包含视觉几何轮廓的规则连接面半轴<br />结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning |
+| `edgePoint?`          | `(rect: Rect, side: SideValue, t: number, params: TParams) => Position`                                                                 | `undefined`              | 解析标准 side 上 `t ∈ [0, 1]` 的比例点<br />`rect` 可包含旋转；未实现表示该 shape 不支持 side anchor                                                                            |
+| `emit`                | `(rect: Rect, style: ResolvedShapeStyle, round: (n: number) => number, params: TParams) => Iterable<ScenePrimitive>`                    | —                        | 生成轴对齐 rect 内的视觉 primitive                                                                                                                                              |
+| `keyPoints?`          | `(rect: Rect, params: TParams) => ReadonlyArray<GeometryKeyPoint>`                                                                      | —                        | 返回 provider 命名的稳定结构关键点；名称在同一实例内必须唯一                                                                                                                    |
+| `name`                | `string`                                                                                                                                | —                        | shape 名称，由 IR `node.shape` 引用                                                                                                                                             |
+| `outline?`            | `(rect: Rect, params: TParams) => ReadonlyArray<PathCommand>`                                                                           | —                        | 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何                                                                                                                    |
+| `paramsSchema`        | `ZodType<TParams>`                                                                                                                      | —                        | 实例参数 schema<br />解析结果必须是 JSON object；无参 shape 使用 `z.strictObject({})`                                                                                           |
+| `scaleParams?`        | `(params: TParams, sx: number, sy: number) => TParams`                                                                                  | `scaleJsonObjectNumbers` | 返回 node scale 后的 params<br />适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx \* sy) 深度缩放 params 中的数值叶子                                            |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -940,12 +847,6 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
 </DocTab>
 
 </DocTabs>
-
-#### 类型参数
-
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TParams` | —    |
 
 ### BUILTIN_BOUNDARIES
 
@@ -1004,55 +905,73 @@ export const NodeTextColor = {
 ### defineBoundary
 
 <p>
-  <ApiSourceLink label={'defineBoundary'} path={'packages/kernel/core/src/contract/boundary/define.ts'} startLine={9}>
-    定义 boundary 注册项，并把参数泛型擦除为 registry 可存储形态
+  <ApiSourceLink label={'defineBoundary'} path={'packages/kernel/core/src/contract/boundary/define.ts'} startLine={12}>
+    创建可注入编译配置的连接面定义，保留定义时的参数类型检查
   </ApiSourceLink>
 </p>
 
+将返回值加入 CompileOptions.boundaries 后，节点或路径端点可通过 boundary 引用其 name。此函数不注册连接面，也不解析实例参数
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                        | 说明                                                                            |
+| ------ | --------- | ---------------------------------- | ------------------------------------------------------------------------------- |
+| 泛型   | `TParams` | `extends JsonObject`               | 由 paramsSchema 解析得到的 JSON 对象类型，各连接面回调接收同一参数类型          |
+| 参数   | `def`     | `BoundaryDefinitionInput<TParams>` | 连接面名称、参数 schema 与连接几何回调                                          |
+| 返回值 | —         | `BoundaryDefinition`               | 原定义对象，类型转换为可存入连接面注册表的 BoundaryDefinition；不复制或修改输入 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const defineBoundary: <TParams extends Record<string, JsonValue>>(
+export declare const defineBoundary: <TParams extends JsonObject>(
   def: BoundaryDefinitionInput<TParams>,
 ) => BoundaryDefinition;
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TParams` | —    |
-
-#### 参数
-
-| 参数  | 类型                               | 说明 |
-| ----- | ---------------------------------- | ---- |
-| `def` | `BoundaryDefinitionInput<TParams>` | —    |
-
-> **备注：** 当前只集中封装擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+</DocTabs>
 
 ### defineShape
 
 <p>
-  <ApiSourceLink label={'defineShape'} path={'packages/kernel/core/src/contract/shape/define.ts'} startLine={9}>
-    定义 shape 注册项，并把参数泛型擦除为 registry 可存储形态
+  <ApiSourceLink label={'defineShape'} path={'packages/kernel/core/src/contract/shape/define.ts'} startLine={12}>
+    创建可注入编译配置的形状定义，保留定义时的参数类型检查
   </ApiSourceLink>
 </p>
 
+将返回值加入 CompileOptions.shapes 后，节点可通过 shape 引用其 name。此函数不注册形状，也不解析实例参数
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<ApiTable variant="parameters">
+
+| 类别   | 名称      | 类型 / 签名                     | 说明                                                                       |
+| ------ | --------- | ------------------------------- | -------------------------------------------------------------------------- |
+| 泛型   | `TParams` | `extends JsonObject`            | 由 paramsSchema 解析得到的 JSON 对象类型，各形状回调接收同一参数类型       |
+| 参数   | `def`     | `ShapeDefinitionInput<TParams>` | 形状名称、参数 schema 与几何及绘制回调                                     |
+| 返回值 | —         | `ShapeDefinition`               | 原定义对象，类型转换为可存入形状注册表的 ShapeDefinition；不复制或修改输入 |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
-export declare const defineShape: <TParams extends Record<string, JsonValue>>(
-  def: ShapeDefinitionInput<TParams>,
-) => ShapeDefinition;
+export declare const defineShape: <TParams extends JsonObject>(def: ShapeDefinitionInput<TParams>) => ShapeDefinition;
 ```
 
-#### 类型参数
+</DocTab>
 
-| 类型参数  | 说明 |
-| --------- | ---- |
-| `TParams` | —    |
-
-#### 参数
-
-| 参数  | 类型                            | 说明 |
-| ----- | ------------------------------- | ---- |
-| `def` | `ShapeDefinitionInput<TParams>` | —    |
-
-> **备注：** 当前只集中封装擦除边界；保留入口用于对齐 registry API，并为未来校验或归一化预留空间
+</DocTabs>

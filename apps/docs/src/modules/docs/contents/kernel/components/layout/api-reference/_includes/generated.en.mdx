@@ -2,114 +2,59 @@
 
 ## `@retikz/react`
 
-### LayoutExtensions
+### Layout / LayoutProps
 
-<p>
-  <ApiSourceLink
-    label={'LayoutExtensions'}
-    path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
-    startLine={143}
-  >
-    Register custom shapes, arrows, clips, and other drawing extensions for Layout
-  </ApiSourceLink>
-</p>
+- `Layout`: <ApiSourceLink label={"Layout"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={362}>Render JSX drawings or scene IR as SVG or Canvas, with updates and animation</ApiSourceLink>
+- `LayoutProps`: <ApiSourceLink label={"LayoutProps"} path={"packages/kernel/react/src/kernel/runtime/Layout.tsx"} startLine={192}>Public props for React Layout</ApiSourceLink>
 
-Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
+Declare drawings through children or pass a complete scene through ir; ir takes precedence when both are supplied. Subsequent updates use retained mode by default; runtime can select static mode for full compilation.
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| Member                     | Type                                     | Default                   | Description                      |
-| -------------------------- | ---------------------------------------- | ------------------------- | -------------------------------- |
-| `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | Arrow definitions                |
-| `readonly boundaries?`     | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | Connection boundary definitions  |
-| `readonly clips?`          | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | Clip definitions                 |
-| `readonly composites?`     | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite expansion logic |
-| `readonly pathGenerators?` | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | Path generator definitions       |
-| `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | Path kind definitions            |
-| `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | Pattern definitions              |
-| `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | Shape definitions                |
-| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | Theme style definitions          |
+| Group      | Member                 | Type                                                  | Default                       | Description                                                                                                                                                                              |
+| ---------- | ---------------------- | ----------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main       | `children?`            | `ReactNode`                                           | —                             | Drawing content declared with JSX                                                                                                                                                        |
+|            | `ir?`                  | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                                                            |
+| Layout     | `nodeDistance?`        | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                                                                |
+| Style      | `fontSize?`            | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes                                   |
+|            | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                                                                 |
+|            | `theme?`               | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                                                   |
+| Rendering  | `className?`           | `string`                                              | —                             | Host className                                                                                                                                                                           |
+|            | `height?`              | `number \| string`                                    | `computeDisplaySize`          | CSS height of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout |
+|            | `idPrefix?`            | `string`                                              | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                                                          |
+|            | `renderer?`            | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided                                         |
+|            | `style?`               | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                                                       |
+|            | `viewBox?`             | `IRViewBox`                                           | —                             | Explicit viewport in drawing coordinates; overrides ir.viewBox. When omitted, uses the scene viewport or derives it from content if the scene has none                                   |
+|            | `width?`               | `number \| string`                                    | `computeDisplaySize`          | CSS width of SVG or Canvas; derived from content dimensions when omitted. A single numeric dimension determines the other from the content aspect ratio; CSS strings use browser layout  |
+| Callbacks  | `handlers?`            | `HydrationHandlers`                                   | —                             | Event handlers used when ir is supplied directly                                                                                                                                         |
+| Animation  | `animate?`             | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference                                     |
+|            | `animationProperties?` | `AnimationPropertyRegistry`                           | —                             | Animatable property registry                                                                                                                                                             |
+|            | `animationRef?`        | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                                                                 |
+|            | `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                                                    |
+|            | `easings?`             | `EasingRegistry`                                      | —                             | Animation easing registry                                                                                                                                                                |
+|            | `snapshotAt?`          | `number`                                              | —                             | Animation sampling time in milliseconds; freezes the drawing at that time without playback and takes precedence over animate                                                             |
+| Runtime    | `authoring?`           | `unknown`                                             | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                                                          |
+|            | `runtime?`             | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                                                     |
+| Output     | `artifacts?`           | `CompileArtifactOptions`                              | —                             | Requested compilation artifacts                                                                                                                                                          |
+|            | `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                                                      |
+|            | `onCompileResult?`     | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                                                     |
+| Extensions | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | Compile driver that processes authoring input                                                                                                                                            |
+|            | `extensions?`          | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                                                            |
+|            | `lowerTex?`            | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                                                              |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
-export type LayoutExtensions = Readonly<{
-  shapes?: ReadonlyArray<ShapeDefinition>;
-  boundaries?: ReadonlyArray<BoundaryDefinition>;
-  clips?: ReadonlyArray<ClipDefinition>;
-  arrows?: ReadonlyArray<ArrowDefinition>;
-  patterns?: ReadonlyArray<PatternDefinition>;
-  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
-  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
-  composites?: ReadonlyArray<AnyCompositeDefinition>;
-  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
-}>;
-```
+export declare const Layout: FC<LayoutProps>;
 
-</DocTab>
-
-</DocTabs>
-
-### LayoutProps
-
-<p>
-  <ApiSourceLink label={'LayoutProps'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={192}>
-    Public props for React Layout
-  </ApiSourceLink>
-</p>
-
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
-
-| Group      | Member                 | Type                                                  | Default                       | Description                                                                                                                                            |
-| ---------- | ---------------------- | ----------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Main       | `children?`            | `ReactNode`                                           | —                             | Drawing content declared with JSX                                                                                                                      |
-|            | `ir?`                  | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                          |
-| Layout     | `nodeDistance?`        | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                              |
-| Style      | `fontSize?`            | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes |
-|            | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                               |
-|            | `theme?`               | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                 |
-| Rendering  | `className?`           | `string`                                              | —                             | Host className                                                                                                                                         |
-|            | `height?`              | `number \| string`                                    | —                             | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                                          |
-|            | `idPrefix?`            | `string`                                              | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                        |
-|            | `renderer?`            | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided       |
-|            | `style?`               | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                     |
-|            | `viewBox?`             | `IRViewBox`                                           | —                             | Explicit viewport                                                                                                                                      |
-|            | `width?`               | `number \| string`                                    | —                             | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio                     |
-| Callbacks  | `handlers?`            | `HydrationHandlers`                                   | —                             | Event handlers used when ir is supplied directly                                                                                                       |
-|            | `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                    |
-|            | `onCompileResult?`     | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                   |
-| Animation  | `animate?`             | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference   |
-|            | `animationProperties?` | `AnimationPropertyRegistry`                           | —                             | Animatable property registry                                                                                                                           |
-|            | `animationRef?`        | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                               |
-|            | `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                  |
-|            | `easings?`             | `EasingRegistry`                                      | —                             | Animation easing registry                                                                                                                              |
-|            | `snapshotAt?`          | `number`                                              | —                             | Time at which to sample a static animation frame                                                                                                       |
-| Runtime    | `authoring?`           | `unknown`                                             | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                        |
-|            | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | Compile driver that processes authoring input                                                                                                          |
-|            | `runtime?`             | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                   |
-| Output     | `artifacts?`           | `CompileArtifactOptions`                              | —                             | Requested compilation artifacts                                                                                                                        |
-| Extensions | `extensions?`          | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                          |
-|            | `lowerTex?`            | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                            |
-
-</div>
-
-</DocTab>
-
-<DocTab value="definition" label="Type definition">
-
-```ts
 export type LayoutProps = {
   rootScope?: Pick<InputScope, 'style' | 'defaults'>;
   ir?: IRScene;
@@ -146,6 +91,62 @@ export type LayoutProps = {
 
 </DocTabs>
 
+### LayoutExtensions
+
+<p>
+  <ApiSourceLink
+    label={'LayoutExtensions'}
+    path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'}
+    startLine={143}
+  >
+    Register custom shapes, arrows, clips, and other drawing extensions for Layout
+  </ApiSourceLink>
+</p>
+
+Pass these options through the extensions prop of Layout. Each field accepts an array of definitions; these runtime definitions are excluded from persisted scene data.
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member                     | Type                                     | Default                   | Description                      |
+| -------------------------- | ---------------------------------------- | ------------------------- | -------------------------------- |
+| `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | Arrow definitions                |
+| `readonly boundaries?`     | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | Connection boundary definitions  |
+| `readonly clips?`          | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | Clip definitions                 |
+| `readonly composites?`     | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite expansion logic |
+| `readonly pathGenerators?` | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | Path generator definitions       |
+| `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | Path kind definitions            |
+| `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | Pattern definitions              |
+| `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | Shape definitions                |
+| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | Theme style definitions          |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LayoutExtensions = Readonly<{
+  shapes?: ReadonlyArray<ShapeDefinition>;
+  boundaries?: ReadonlyArray<BoundaryDefinition>;
+  clips?: ReadonlyArray<ClipDefinition>;
+  arrows?: ReadonlyArray<ArrowDefinition>;
+  patterns?: ReadonlyArray<PatternDefinition>;
+  pathGenerators?: ReadonlyArray<PathGeneratorDefinition>;
+  pathKinds?: ReadonlyArray<AnyPathKindDefinition>;
+  composites?: ReadonlyArray<AnyCompositeDefinition>;
+  themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
+}>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### LayoutRetainedRuntimeOptions
 
 <p>
@@ -154,7 +155,7 @@ export type LayoutProps = {
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
     startLine={14}
   >
-    Retained Runtime configuration for React Layout
+    Keep execution state for subsequent drawing updates; used when runtime or mode is omitted
   </ApiSourceLink>
 </p>
 
@@ -162,15 +163,15 @@ export type LayoutProps = {
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| Member                     | Type                                      | Default                      | Description                                                                                     |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                              |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program update strategy                                                                         |
+| Member                     | Type                                      | Default                      | Description                                                                                                                              |
+| -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
+| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -200,15 +201,25 @@ export type LayoutRetainedRuntimeOptions = Readonly<{
   </ApiSourceLink>
 </p>
 
-```ts
-export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type LayoutRuntimeModeValue = 'retained' | 'static';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type LayoutRuntimeModeValue = ValueOf<typeof LayoutRuntimeMode>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### LayoutRuntimeOptions
 
@@ -218,33 +229,30 @@ export type LayoutRuntimeModeValue = 'retained' | 'static';
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
     startLine={40}
   >
-    Discriminated Runtime configuration for React Layout
+    Select how drawings update through mode; retained supports an update strategy and diagnostics callback, while static
+    accepts neither option
   </ApiSourceLink>
 </p>
 
-<DocTabs defaultValue="members">
-
-<DocTab value="members" label="Members">
-
 <DocTabs defaultValue="retained">
 
-<DocTab value="retained" label="Retained">
+<DocTab value="retained" label="Members · Retained">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| Member                     | Type                                      | Default                      | Description                                                                                     |
-| -------------------------- | ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
-| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                              |
-| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller |
-| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program update strategy                                                                         |
+| Member                     | Type                                      | Default                      | Description                                                                                                                              |
+| -------------------------- | ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                                                                       |
+| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receive structured diagnostics from drawing updates in the order they occur; failed updates preserve the last successful drawing         |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Update strategy; auto selects incremental or full execution based on changes and executor capabilities, while full forces full execution |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
-<DocTab value="static" label="Static">
+<DocTab value="static" label="Members · Static">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                     | Type                              | Default | Description                                                                                  |
 | -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
@@ -252,11 +260,7 @@ export type LayoutRuntimeModeValue = 'retained' | 'static';
 | `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
 | `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
 
-</div>
-
-</DocTab>
-
-</DocTabs>
+</ApiTable>
 
 </DocTab>
 
@@ -278,7 +282,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
     path={'packages/kernel/react/src/kernel/runtime/runtime-options.ts'}
     startLine={30}
   >
-    Static Runtime configuration for React Layout
+    Compile the complete drawing whenever input changes, without retaining incremental execution state
   </ApiSourceLink>
 </p>
 
@@ -286,7 +290,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                     | Type                              | Default | Description                                                                                  |
 | -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
@@ -294,7 +298,7 @@ export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRu
 | `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
 | `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -311,20 +315,6 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 </DocTab>
 
 </DocTabs>
-
-### Layout
-
-<p>
-  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={356}>
-    React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result
-  </ApiSourceLink>
-</p>
-
-React does not create Core Programs, Runtime sessions, or retained renderers; Vanilla owns all processing state
-
-```ts
-export declare const Layout: FC<LayoutProps>;
-```
 
 ### LayoutRuntimeMode
 
@@ -344,3 +334,343 @@ export const LayoutRuntimeMode = Object.freeze({
   Static: 'static',
 } as const);
 ```
+
+## `@retikz/vanilla`
+
+### InputLayer
+
+<p>
+  <ApiSourceLink label={'InputLayer'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={28}>
+    Authoring input for a layer
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member     | Type                        | Default                | Description                                                   |
+| ---------- | --------------------------- | ---------------------- | ------------------------------------------------------------- |
+| `cache?`   | `InputLayerCacheValue`      | `InputLayerCache.Auto` | Runtime cache hint                                            |
+| `children` | `ReadonlyArray<InputChild>` | —                      | Children normalized in declaration order                      |
+| `id`       | `string`                    | —                      | Layer identity                                                |
+| `type`     | `'layer'`                   | —                      | Authoring layer discriminator, fixed to layer                 |
+| `zIndex?`  | `number`                    | `0`                    | Layer stacking order; equal values preserve declaration order |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type InputLayer = {
+  type: 'layer';
+  id: string;
+  cache?: InputLayerCacheValue;
+  zIndex?: number;
+  children: ReadonlyArray<InputChild>;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### InputScene
+
+<p>
+  <ApiSourceLink label={'InputScene'} path={'packages/kernel/vanilla/src/normalize/scene/types.ts'} startLine={89}>
+    Scene authoring input
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="children">
+
+<DocTab value="children" label="Members · Children">
+
+<ApiTable>
+
+| Member        | Type                        | Default | Description                                                                       |
+| ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
+| `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `children`    | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization        |
+| `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
+| `layers?`     | `never`                     | —       | The children variant excludes explicit layers                                     |
+| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
+| `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
+| `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="layers" label="Members · Layers">
+
+<ApiTable>
+
+| Member        | Type                        | Default | Description                                                                       |
+| ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
+| `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `children?`   | `never`                     | —       | The layers variant excludes top-level children                                    |
+| `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
+| `layers`      | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                         |
+| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
+| `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
+| `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type InputScene = InputSceneChildren | InputSceneLayers;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### InputSceneChildren
+
+<p>
+  <ApiSourceLink
+    label={'InputSceneChildren'}
+    path={'packages/kernel/vanilla/src/normalize/scene/types.ts'}
+    startLine={73}
+  >
+    Scene authoring input using a children list
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                        | Default | Description                                                                       |
+| ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
+| `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `children`    | `ReadonlyArray<InputChild>` | —       | Ordered children placed in the implicit default layer during normalization        |
+| `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
+| `layers?`     | `never`                     | —       | The children variant excludes explicit layers                                     |
+| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
+| `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
+| `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type InputSceneChildren = InputSceneBase & {
+  children: ReadonlyArray<InputChild>;
+  layers?: never;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### InputSceneLayers
+
+<p>
+  <ApiSourceLink
+    label={'InputSceneLayers'}
+    path={'packages/kernel/vanilla/src/normalize/scene/types.ts'}
+    startLine={81}
+  >
+    Scene authoring input using explicit layers
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                        | Default | Description                                                                       |
+| ------------- | --------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `animations?` | `IRScene['animations']`     | —       | Scene-root animation tracks; omitted means no root animation                      |
+| `authoring?`  | `unknown`                   | —       | Optional runtime payload interpreted by a compile driver; excluded from Core IR   |
+| `children?`   | `never`                     | —       | The layers variant excludes top-level children                                    |
+| `id?`         | `string`                    | —       | Authoring scene identity, excluded from persisted Scene IR                        |
+| `layers`      | `ReadonlyArray<InputLayer>` | —       | Explicit layers, normalized after a stable sort by zIndex                         |
+| `theme?`      | `IRScene['theme']`          | —       | Root theme; specify only style and mode overrides                                 |
+| `type?`       | `'scene'`                   | —       | Optional scene discriminator; fixed to scene after normalization                  |
+| `version?`    | `never`                     | —       | Authoring input excludes a version; normalization supplies the current IR version |
+| `viewBox?`    | `IRViewBox`                 | —       | Explicit viewport; compilation derives it from content when omitted               |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type InputSceneLayers = InputSceneBase & {
+  layers: ReadonlyArray<InputLayer>;
+  children?: never;
+};
+```
+
+</DocTab>
+
+</DocTabs>
+
+### scene
+
+<p>
+  <ApiSourceLink label={'scene'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={103}>
+    Create scene authoring input
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Overload | Category   | Name       | Type / signature            | Description                                                                                                                             |
+| -------- | ---------- | ---------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Parameters | `children` | `ReadonlyArray<InputChild>` | Create a scene from a list of children<br />Ordered children; an empty array is allowed                                                 |
+|          | Returns    | —          | `InputSceneChildren`        | Scene input retaining the children array reference; normalization supplies the data version                                             |
+| 2        | Parameters | `input`    | `InputSceneChildrenOptions` | Create a scene from children and drawing-wide options<br />Children and drawing-wide options such as theme and viewBox; excludes layers |
+|          | Returns    | —          | `InputSceneChildren`        | Uncompiled scene input retaining the options and child references                                                                       |
+| 3        | Parameters | `input`    | `InputSceneLayersOptions`   | Create a scene from explicit layers<br />Layers and drawing-wide options; excludes children                                             |
+|          | Returns    | —          | `InputSceneLayers`          | Scene input retaining the layers array reference; normalization extracts runtime layer metadata                                         |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+(children: ReadonlyArray<InputChild>): InputSceneChildren;
+(input: InputSceneChildrenOptions): InputSceneChildren;
+(input: InputSceneLayersOptions): InputSceneLayers;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### layer
+
+<p>
+  <ApiSourceLink label={'layer'} path={'packages/kernel/vanilla/src/normalize/helpers.ts'} startLine={48}>
+    Create layer authoring input
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name     | Type / signature           | Description                                                    |
+| ---------- | -------- | -------------------------- | -------------------------------------------------------------- |
+| Parameters | `config` | `Omit<InputLayer, 'type'>` | Layer identity, stacking order, cache hint, and children       |
+| Returns    | —        | `InputLayer`               | Input tagged as a layer; does not compile or copy its children |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const layer: (config: Omit<InputLayer, 'type'>) => InputLayer;
+```
+
+</DocTab>
+
+</DocTabs>
+
+## `@retikz/core`
+
+### IRScene
+
+<p>
+  <ApiSourceLink label={'IRScene'} path={'packages/kernel/core/src/schemas/scene/types.ts'} startLine={20}>
+    Root drawing IR, a JSON-serializable description of a drawing
+  </ApiSourceLink>
+</p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member        | Type                                                                      | Default | Description                                                                                                 |
+| ------------- | ------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `animations?` | `ZodInfer<typeof SceneSchema.shape["animations"]>`                        | —       | Scene-root animation tracks, including viewBox framing animations; omitting this field adds no root tracks. |
+| `children`    | `Array<IRChild>`                                                          | —       | Ordered top-level scene children; an empty array is allowed.                                                |
+| `theme?`      | `{ style?: string \| undefined; mode?: "light" \| "dark" \| undefined; }` | —       | Root theme selection; sets only the style and mode fields to override.                                      |
+| `type`        | `"scene"`                                                                 | —       | Discriminator marking this object as the root scene                                                         |
+| `version`     | `1`                                                                       | —       | Scene data format version; currently must be 1, independent of the package version.                         |
+| `viewBox?`    | `{ x: number; y: number; width: number; height: number; }`                | —       | Explicit framing; when omitted, bounds are computed from content plus padding.                              |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRScene = ZodInfer<typeof SceneSchema>;
+```
+
+</DocTab>
+
+</DocTabs>
+
+### IRViewBox
+
+<p><ApiSourceLink label={"IRViewBox"} path={"packages/kernel/core/src/schemas/scene/types.ts"} startLine={17}>Explicit viewport IR: `{ x, y, width, height }`</ApiSourceLink></p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member   | Type     | Default | Description                                                              |
+| -------- | -------- | ------- | ------------------------------------------------------------------------ |
+| `height` | `number` | —       | Height in scene coordinate units; must be finite and greater than zero.  |
+| `width`  | `number` | —       | Width in scene coordinate units; must be finite and greater than zero.   |
+| `x`      | `number` | —       | Left edge in scene coordinate units; must be finite and may be negative. |
+| `y`      | `number` | —       | Top edge in scene coordinate units; must be finite and may be negative.  |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type IRViewBox = ZodInfer<typeof ViewBoxSchema>;
+```
+
+</DocTab>
+
+</DocTabs>

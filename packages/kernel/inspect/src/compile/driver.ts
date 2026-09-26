@@ -250,6 +250,10 @@ export const resolveInspectionObserverOutput = (
 /**
  * 基于 Core observed compile 执行一次原子 Inspector compile
  *
+ * @param ir 要编译并观测的 Source Scene IR，不修改输入
+ * @param options Inspector 注册表、选择规则与可选 Core 编译配置
+ * @returns 同次编译的主图、辅助平面与诊断；无辅助输出时 inspection 为 null
+ * @throws 选择、对象解析、Inspector 回调或辅助输出无效时编译失败，不返回部分结果；Core 编译错误沿调用链传播
  * @template TComposites 当前 Scene 可用的 Composite Definition 集合
  */
 export const compileInspectionToScene = <const TComposites extends ReadonlyArray<AnyCompositeDefinition> = readonly []>(

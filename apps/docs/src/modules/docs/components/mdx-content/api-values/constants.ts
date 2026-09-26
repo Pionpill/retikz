@@ -26,6 +26,7 @@ import {
   WebFontSizePreset,
 } from '@retikz/core';
 import { DataFieldFormat, DataFieldType, DataSortOrder, FieldOrderMode } from '@retikz/data';
+import { EntityRole, GraphStatus } from '@retikz/graph';
 import {
   FlexLayoutDirection,
   FlexLayoutWrap,
@@ -139,6 +140,9 @@ export const API_VALUE_REGISTRY = {
   DensityBandwidthKind: {
     values: Object.values(DensityBandwidthKind),
   },
+  EntityRole: {
+    values: Object.values(EntityRole),
+  },
   FieldOrderMode: {
     values: Object.values(FieldOrderMode),
   },
@@ -162,6 +166,9 @@ export const API_VALUE_REGISTRY = {
   },
   GridBorderOrder: {
     values: Object.values(GridBorderOrder),
+  },
+  GraphStatus: {
+    values: Object.values(GraphStatus),
   },
   GridAutoFlow: {
     values: Object.values(GridAutoFlow),

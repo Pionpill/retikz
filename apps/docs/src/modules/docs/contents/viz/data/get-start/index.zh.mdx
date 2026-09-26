@@ -13,6 +13,8 @@ description: 安装 @retikz/data，声明字段模型，归一化外部数据，
 
 ## 处理第一份数据
 
+这个例子把地区视为类别、收入视为可求和的连续量。`DataFieldType` 描述的是[字段的测量含义](/viz/data/basic/field-types)，不取决于收入在外部数据里是否存成字符串。
+
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
 
