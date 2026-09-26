@@ -1,29 +1,41 @@
 ---
 title: Block
-description: Use an open-content vertical layout container for code and engineering objects, with optional independent structure composites.
+description: Organize headings, sections, text rows, and arbitrary drawing content in a connectable vertical container.
 ---
 
-`Block` is a vertical content container with Graph identity. It accepts arbitrary children; Header, Section, and Row are optional independent composites, and higher-level semantics such as class diagrams can lower through Block
+Block organizes content into an object that relations can connect to. It lays out children vertically in declaration order and provides a visible frame. Header, Section, and Row are optional building blocks that also work independently.
 
 ## Responsibilities
 
-| Topic          | Responsibility                                              | Reach for it when            |
-| -------------- | ----------------------------------------------------------- | ---------------------------- |
-| Basic usage    | Open content, common structures, connections, and styles    | Creating your first Block    |
-| Extended usage | Independent code entities, shared content, and theme tokens | Building reusable code nodes |
+| Component    | Responsibility                                                              | When to use it                                                |
+| ------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Block        | Arrange arbitrary content vertically with a frame and optional reference id | Data structures, engineering objects, or custom content nodes |
+| BlockHeader  | Icon, title / description, and trailing regions                             | Object identity and summary                                   |
+| BlockSection | Vertical region with optional title and background                          | Group fields, methods, or steps                               |
+| BlockRow     | Equal-width horizontal text items or arbitrary children                     | Display a name, type, or multiple values in one row           |
+
+<ComponentPreview files="block-minimal" size="sm" hideCode />
+
+The Header describes User, the Section groups its fields, and the Row places a field name beside its type. The outer Block controls vertical layout and the connection boundary.
+
+## Boundaries
+
+Use [Entity](/schematic/graph/entity) for a single semantic text object. Use [Group](/schematic/graph/group) to surround already positioned content without rearranging it. Block actively lays out content but does not interpret class, interface, or function semantics.
+
+For persisted domain data with reusable structure, a CodeBlock definition composes data into Block content. Connections still use Core target references without a separate Port model.
 
 ## Chapters
 
 <LinkedSections
   items={[
     {
-      title: 'Basic Usage',
-      description: 'Open content, independent structures, local targets, and styles',
+      title: 'Basic usage',
+      description: 'Compose content, spacing, connections, and local text styles',
       url: '/schematic/graph/block/basic',
     },
     {
-      title: 'Extended Usage',
-      description: 'Define code entities and use the same compilation path',
+      title: 'Custom usage',
+      description: 'Define and inject reusable code entities',
       url: '/schematic/graph/block/extension',
     },
   ]}
