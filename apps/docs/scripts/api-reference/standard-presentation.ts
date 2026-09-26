@@ -1,8 +1,13 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import {
+  GridSchemaZhLocalization,
+  GridLineSchemaZhLocalization,
+} from '../../src/modules/docs/components/mdx-content/zod-schema/standard-presentation-localizations';
 import { translateDrawApiReference } from './draw.en';
 import { translateNodeApiReference } from './node.en';
+import { scopeSchemaLocalizations } from './scope';
 import { createApiReferenceMdx } from './tex';
 import type { ApiReferencePackageConfig } from './tex';
 
@@ -198,6 +203,21 @@ export const writeStandardPresentationApiReferences = async (
           packageDirectory,
           tsconfigPath: path.resolve(repositoryRoot, packageDirectory, 'tsconfig.json'),
           translate: translatePresentationApiReference,
+          ...(name === 'Grid'
+            ? {
+                schemaLocalizations: {
+                  GridSchema: GridSchemaZhLocalization,
+                  GridLineInputSchema: GridLineSchemaZhLocalization,
+                  ScopePropsSchema: {
+                    descriptions: Object.fromEntries(
+                      Object.entries(scopeSchemaLocalizations.ScopeSchema.descriptions).filter(
+                        ([key]) => key !== 'type' && key !== 'children',
+                      ),
+                    ),
+                  },
+                },
+              }
+            : {}),
           entries: [
             {
               source: path.resolve(repositoryRoot, packageDirectory, 'src/presentation/index.ts'),

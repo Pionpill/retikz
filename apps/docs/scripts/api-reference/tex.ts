@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { JSONOutput } from 'typedoc';
@@ -64,8 +64,6 @@ export type ApiReferencePackageConfig = {
   schemaReferences?: Readonly<Record<string, string>>;
   /** Schema 推导字段的中文翻译；英文说明直接读取 .describe() */
   schemaLocalizations?: Readonly<Partial<Record<string, { descriptions: Readonly<Partial<Record<string, string>>> }>>>;
-  /** 跨包继承的 Schema 从其公开入口读取 */
-  schemaPackageName?: string;
 };
 
 type ApiReferenceMember = {
@@ -78,6 +76,8 @@ type ApiReferenceMember = {
   description: string;
   schemaDescription?: Record<ApiReferenceLanguage, string>;
   schemaName?: string;
+  /** Schema 声明的真实符号，用于从所属包的公开入口定位运行时契约 */
+  schemaSymbol?: ts.Symbol;
   /** 字段的较长约束，放在表格后避免撑宽单元格 */
   details?: string;
   defaultValue: string;
@@ -167,8 +167,13 @@ const MAX_EXPANDED_UNION_BRANCHES = 8;
 const MAX_EXPANDED_UNION_LINES = 40;
 const MAX_EXPANDED_UNION_CHARACTERS = 500;
 const MAX_MEMBER_TYPE_CHARACTERS = 300;
+const MAX_MEMBER_TYPE_LINES = 8;
 const MAX_WRAPPED_OBJECT_MEMBERS = 12;
 const MAX_WRAPPED_OBJECT_CHARACTERS = 500;
+
+/** 字段类型超过阅读预算时保留引用，不把推断结构铺入表格 */
+const isExpandedMemberTypeTooLarge = (type: string): boolean =>
+  type.length > MAX_MEMBER_TYPE_CHARACTERS || type.split(/\r?\n/).length > MAX_MEMBER_TYPE_LINES;
 
 /** TypeScript 没有公开的 isKeywordTypeNode 时，识别可独立阅读的基础关键字类型 */
 const isKeywordTypeNode = (node: ts.TypeNode): boolean =>
@@ -412,6 +417,7 @@ const resolveObjectMembers = (
       ? declaration.type.typeArguments[0].exprName.text
       : undefined;
   const type = checker.getDeclaredTypeOfSymbol(symbol);
+  const schemaSymbols = new Map<string, ts.Symbol>();
   /** 沿原始类型组合追踪继承字段；直接重声明的字段不借用 Schema 语义 */
   const inheritedSchemaName = (
     node: ts.TypeNode,
@@ -420,10 +426,14 @@ const resolveObjectMembers = (
   ): string | undefined => {
     if (seen.has(node)) return undefined;
     seen.add(node);
-    if (!ts.isIndexedAccessTypeNode(node) && !checker.getPropertyOfType(checker.getTypeFromTypeNode(node), memberName))
+    const nodeType = checker.getTypeFromTypeNode(node);
+    if (
+      !ts.isIndexedAccessTypeNode(node) &&
+      !(nodeType.isUnion() ? nodeType.types : [nodeType]).some(part => checker.getPropertyOfType(part, memberName))
+    )
       return undefined;
     if (ts.isParenthesizedTypeNode(node)) return inheritedSchemaName(node.type, memberName, seen);
-    if (ts.isIntersectionTypeNode(node)) {
+    if (ts.isIntersectionTypeNode(node) || ts.isUnionTypeNode(node)) {
       if (
         node.types.some(
           part => ts.isTypeLiteralNode(part) && part.members.some(member => member.name?.getText() === memberName),
@@ -451,8 +461,17 @@ const resolveObjectMembers = (
       /^(?:ZodInfer|ZodInput|infer|input|output|z\.(?:infer|input|output))$/.test(referenceName) &&
       argument &&
       ts.isTypeQueryNode(argument)
-    )
-      return argument.exprName.getText();
+    ) {
+      let schemaSymbol = checker.getSymbolAtLocation(argument.exprName);
+      if (schemaSymbol && schemaSymbol.flags & ts.SymbolFlags.Alias)
+        schemaSymbol = checker.getAliasedSymbol(schemaSymbol);
+      if (!schemaSymbol) throw new Error(`Missing Schema symbol ${argument.exprName.getText()}`);
+      const schemaIdentifier = schemaSymbol.name;
+      const previous = schemaSymbols.get(schemaIdentifier);
+      if (previous && previous !== schemaSymbol) throw new Error(`Ambiguous Schema symbol ${schemaIdentifier}`);
+      schemaSymbols.set(schemaIdentifier, schemaSymbol);
+      return schemaIdentifier;
+    }
     if (
       ['Omit', 'Pick', 'Readonly', 'Partial', 'Required', 'Extract', 'NonNullable'].includes(referenceName) &&
       argument
@@ -752,15 +771,17 @@ const resolveObjectMembers = (
           )
           .join(' | ')) ||
       'never';
+    const memberSchemaName = ts.isTypeAliasDeclaration(declaration)
+      ? inheritedSchemaName(declaration.type, member.name)
+      : undefined;
     return {
       name: member.name,
-      schemaName: ts.isTypeAliasDeclaration(declaration)
-        ? inheritedSchemaName(declaration.type, member.name)
-        : undefined,
+      schemaName: memberSchemaName,
+      schemaSymbol: memberSchemaName ? schemaSymbols.get(memberSchemaName.split('.')[0]) : undefined,
       optional,
       readonly: isReadonly(owner, member),
       type:
-        fullType.length > MAX_MEMBER_TYPE_CHARACTERS || /\$Zod|import\(/.test(fullType)
+        isExpandedMemberTypeTooLarge(fullType) || /\$Zod|import\(/.test(fullType)
           ? memberTypeReference(member.name) ||
             (schemaName
               ? `${ts.isTypeAliasDeclaration(declaration) && /(?:ZodInput|z\.input|input)</.test(declaration.type.getText()) ? 'ZodInput' : 'ZodInfer'}<typeof ${schemaName}.shape[${JSON.stringify(member.name)}]>`
@@ -1009,6 +1030,71 @@ const resolveSourceSignature = (
   return undefined;
 };
 
+/** 压缩各类公开声明的过长字段类型，优先引用真实导出的初始化值 */
+const compactMemberTypes = (
+  program: ts.Program,
+  sourceFile: ts.SourceFile,
+  symbol: ApiReferenceSymbol,
+  members: Array<ApiReferenceMember>,
+): Array<ApiReferenceMember> => {
+  const checker = program.getTypeChecker();
+  const module = checker.getSymbolAtLocation(sourceFile);
+  if (!module) throw new Error(`Missing public module ${sourceFile.fileName}`);
+  const exports = checker.getExportsOfModule(module);
+  const original = (candidate: ts.Symbol): ts.Symbol =>
+    candidate.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(candidate) : candidate;
+  const exported = exports.find(candidate => candidate.name === symbol.name);
+  const declaration = exported && original(exported).declarations?.[0];
+  const ownerType =
+    exported && declaration ? checker.getTypeOfSymbolAtLocation(original(exported), declaration) : undefined;
+  const unwrap = (expression: ts.Expression): ts.Expression =>
+    ts.isParenthesizedExpression(expression) || ts.isAsExpression(expression) || ts.isSatisfiesExpression(expression)
+      ? unwrap(expression.expression)
+      : expression;
+  const initializer =
+    declaration && ts.isVariableDeclaration(declaration) && declaration.initializer
+      ? unwrap(declaration.initializer)
+      : undefined;
+  const object =
+    initializer &&
+    (ts.isCallExpression(initializer)
+      ? initializer.arguments.map(unwrap).find(ts.isObjectLiteralExpression)
+      : ts.isObjectLiteralExpression(initializer)
+        ? initializer
+        : undefined);
+  return members.map(member => {
+    if (!isExpandedMemberTypeTooLarge(member.type)) return member;
+    const property = object?.properties.find(item => item.name?.getText() === member.name);
+    const value = property && ts.isPropertyAssignment(property) ? unwrap(property.initializer) : undefined;
+    const reference = value && ts.isIdentifier(value) ? checker.getSymbolAtLocation(value) : undefined;
+    const propertySymbol = ownerType && checker.getPropertyOfType(ownerType, member.name);
+    const propertyType =
+      propertySymbol && declaration ? checker.getTypeOfSymbolAtLocation(propertySymbol, declaration) : undefined;
+    const valueType = value && checker.getTypeAtLocation(value);
+    const publicValue =
+      reference &&
+      valueType &&
+      propertyType &&
+      checker.isTypeAssignableTo(valueType, propertyType) &&
+      checker.isTypeAssignableTo(propertyType, valueType)
+        ? exports.find(candidate => original(candidate) === original(reference))
+        : undefined;
+    const owner =
+      symbol.kind === ReflectionKind.Variable || symbol.kind === ReflectionKind.Function
+        ? `typeof ${symbol.name}`
+        : `${symbol.name}${symbol.typeParameters.length ? `<${symbol.typeParameters.map(parameter => parameter.name).join(', ')}>` : ''}`;
+    const referenceType = publicValue ? `typeof ${publicValue.name}` : `${owner}[${JSON.stringify(member.name)}]`;
+    return {
+      ...member,
+      type: referenceType,
+      callSignatures: member.callSignatures?.map(signature => ({
+        ...signature,
+        type: isExpandedMemberTypeTooLarge(signature.type) ? referenceType : signature.type,
+      })),
+    };
+  });
+};
+
 /** 将 TypeDoc declaration 转为页面需要的公开 API 投影 */
 const toSymbol = (reflection: JSONOutput.DeclarationReflection, packageDirectory: string): ApiReferenceSymbol => {
   const signatures =
@@ -1091,29 +1177,70 @@ const schemaDefaultValue = (schema: z.ZodType): string => {
   return parsed.success && parsed.data !== undefined ? JSON.stringify(parsed.data) : '—';
 };
 
-/** 沿字段路径定位嵌套对象，只有唯一匹配分支时才借用其 Schema 元数据 */
-const nestedObjectSchema = (
-  schema: z.core.$ZodType,
-  fields: Array<string>,
-  members: Array<string>,
-): z.ZodObject | undefined => {
+/** 沿字段路径收集对象分支，保留各分支独立的元数据 */
+const objectSchemaBranches = (schema: z.core.$ZodType, fields: Array<string>): Array<z.ZodObject> => {
   if (
     schema instanceof z.ZodOptional ||
     schema instanceof z.ZodNullable ||
     schema instanceof z.ZodReadonly ||
     schema instanceof z.ZodDefault
   )
-    return nestedObjectSchema(schema.unwrap(), fields, members);
-  if (schema instanceof z.ZodUnion) {
-    const matches = schema.options
-      .map(option => nestedObjectSchema(option, fields, members))
-      .filter(item => item !== undefined);
-    return matches.length === 1 ? matches[0] : undefined;
-  }
-  if (!(schema instanceof z.ZodObject)) return undefined;
-  if (fields.length === 0) return members.every(name => name in schema.shape) ? schema : undefined;
+    return objectSchemaBranches(schema.unwrap(), fields);
+  if (schema instanceof z.ZodUnion) return schema.options.flatMap(option => objectSchemaBranches(option, fields));
+  if (!(schema instanceof z.ZodObject)) return [];
+  if (fields.length === 0) return [schema];
   const child = schema.shape[fields[0]] as z.core.$ZodType | undefined;
-  return child ? nestedObjectSchema(child, fields.slice(1), members) : undefined;
+  return child ? objectSchemaBranches(child, fields.slice(1)) : [];
+};
+
+/** 唯一匹配分支时才投影元数据，不猜测多个分支的默认值 */
+const nestedObjectSchema = (
+  branches: Array<z.ZodObject>,
+  members: Array<ApiReferenceMember>,
+): z.ZodObject | undefined => {
+  const matches = branches.filter(schema =>
+    members.every(member => {
+      const field = schema.shape[member.name];
+      if (member.type === 'never') return field === undefined || field instanceof z.ZodOptional;
+      if (!field) return false;
+      if (field instanceof z.ZodLiteral)
+        return [...field.values].some(value => JSON.stringify(value) === member.type.replace(/^'([^']*)'$/, '"$1"'));
+      return true;
+    }),
+  );
+  return matches.length === 1 ? matches[0] : undefined;
+};
+/** 从真实声明所属包的 exports 查找同一符号，不依赖同名或私有源码动态导入 */
+const loadPublicSchema = async (program: ts.Program, symbol: ts.Symbol): Promise<Record<string, unknown>> => {
+  const declaration = symbol.declarations?.[0];
+  if (!declaration) throw new Error(`Missing Schema declaration ${symbol.name}`);
+  let directory = path.dirname(declaration.getSourceFile().fileName);
+  while (!existsSync(path.join(directory, 'package.json'))) {
+    const parent = path.dirname(directory);
+    if (parent === directory) throw new Error(`Missing Schema package ${symbol.name}`);
+    directory = parent;
+  }
+  const metadata = JSON.parse(readFileSync(path.join(directory, 'package.json'), 'utf8')) as {
+    name: string;
+    exports?: Record<string, string | { types?: string; default?: string }>;
+  };
+  const checker = program.getTypeChecker();
+  for (const [subpath, target] of Object.entries(metadata.exports ?? {})) {
+    const filename = typeof target === 'string' ? target : (target.types ?? target.default);
+    if (!filename) continue;
+    const entry = program.getSourceFile(path.resolve(directory, filename));
+    const module = entry && checker.getSymbolAtLocation(entry);
+    if (!module) continue;
+    const exported = checker.getExportsOfModule(module).find(candidate => {
+      const original = candidate.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(candidate) : candidate;
+      return original === symbol;
+    });
+    if (!exported) continue;
+    const packageName = metadata.name + (subpath === '.' ? '' : subpath.slice(1));
+    const values = (await import(packageName)) as Record<string, unknown>;
+    return { ...values, [symbol.name]: values[exported.name] };
+  }
+  throw new Error(`Schema ${symbol.name} is not reachable from public exports of ${metadata.name}`);
 };
 
 /** 将 Schema 的字段描述和真实默认值投影到已由 TypeScript 解析的类型字段 */
@@ -1122,13 +1249,14 @@ const projectSchemaMembers = (
   schema: z.ZodObject,
   schemaName: string,
   localizations: { descriptions: Readonly<Partial<Record<string, string>>> },
+  knownFields: ReadonlySet<string>,
 ): Array<ApiReferenceMember> => {
   const fields = schema.shape as Partial<Record<string, z.ZodType>>;
   const expected = new Set(members.map(member => member.name));
   const missing = [...expected].filter(
     name => fields[name] === undefined || localizations.descriptions[name] === undefined,
   );
-  const unknown = Object.keys(localizations.descriptions).filter(name => fields[name.split('.')[0]] === undefined);
+  const unknown = Object.keys(localizations.descriptions).filter(name => !knownFields.has(name.split('.')[0]));
   if (missing.length > 0 || unknown.length > 0)
     throw new Error(
       `${schemaName} Schema descriptions differ: missing ${missing.join(', ') || '—'}; unknown ${unknown.join(', ') || '—'}`,
@@ -1719,51 +1847,51 @@ export const createApiReferenceMdx = async (
                   : undefined;
               const sourceSignature = resolveSourceSignature(program, sourceFile, symbol.name, symbol.signature);
               if (resolved) {
-                let members =
+                const unresolvedMembers =
                   (showFullMembers ? resolved.members : (resolved.directMembers ?? resolved.members)) ??
                   (symbol.callable ? symbol.members : []);
-                const schemaNames = new Set(
-                  members.map(member => member.schemaName).filter(name => name !== undefined),
-                );
-                for (const schemaName of config.schemaLocalizations ? schemaNames : []) {
-                  const exports = (await import(config.schemaPackageName ?? config.packageName)) as Record<
-                    string,
-                    unknown
-                  >;
-                  const [rootName, ...fieldPath] = schemaName.split('.');
-                  const rootSchema = exports[rootName];
-                  const schemaMembers = members.filter(member => member.schemaName === schemaName);
-                  const schema =
-                    rootSchema instanceof z.ZodType
-                      ? nestedObjectSchema(
-                          rootSchema,
-                          fieldPath,
-                          schemaMembers.map(member => member.name),
-                        )
-                      : undefined;
-                  if (!schema) throw new Error(`Missing unambiguous object Schema ${schemaName}`);
-                  const publicName =
-                    fieldPath.length === 0
-                      ? rootName
-                      : Object.keys(exports).find(
-                          name => exports[name] === schema && config.schemaLocalizations?.[name],
-                        );
-                  const localization = publicName ? config.schemaLocalizations?.[publicName] : undefined;
-                  if (!localization)
-                    throw new Error(
-                      `Missing ${schemaName} Schema localization for ${config.packageName}#${symbol.name}`,
-                    );
-                  const projected = new Map(
-                    projectSchemaMembers(
-                      members.filter(member => member.schemaName === schemaName),
-                      schema,
-                      schemaName,
-                      localization,
-                    ).map(member => [member.name, member]),
+                const projectMembers = async (input: Array<ApiReferenceMember>): Promise<Array<ApiReferenceMember>> => {
+                  let members = input;
+                  const schemaNames = new Set(
+                    members.map(member => member.schemaName).filter(name => name !== undefined),
                   );
-                  members = members.map(member => projected.get(member.name) ?? member);
-                }
-                symbol.members = (declarationOnly ? [] : members).map(member => ({
+                  for (const schemaName of config.schemaLocalizations ? schemaNames : []) {
+                    const sourceSymbol = members.find(member => member.schemaName === schemaName)?.schemaSymbol;
+                    if (!sourceSymbol) throw new Error(`Missing Schema origin ${schemaName}`);
+                    const exports = await loadPublicSchema(program, sourceSymbol);
+                    const [rootName, ...fieldPath] = schemaName.split('.');
+                    const rootSchema = exports[rootName];
+                    const schemaMembers = members.filter(member => member.schemaName === schemaName);
+                    const branches = rootSchema instanceof z.ZodType ? objectSchemaBranches(rootSchema, fieldPath) : [];
+                    const schema =
+                      rootSchema instanceof z.ZodType ? nestedObjectSchema(branches, schemaMembers) : undefined;
+                    if (!schema) throw new Error(`Missing unambiguous object Schema ${schemaName}`);
+                    const publicName =
+                      fieldPath.length === 0
+                        ? rootName
+                        : Object.keys(exports).find(
+                            name => exports[name] === schema && config.schemaLocalizations?.[name],
+                          );
+                    const localization = publicName ? config.schemaLocalizations?.[publicName] : undefined;
+                    if (!localization)
+                      throw new Error(
+                        `Missing ${schemaName} Schema localization for ${config.packageName}#${symbol.name}`,
+                      );
+                    const projected = new Map(
+                      projectSchemaMembers(
+                        members.filter(member => member.schemaName === schemaName),
+                        schema,
+                        schemaName,
+                        localization,
+                        new Set(branches.flatMap(branch => Object.keys(branch.shape))),
+                      ).map(member => [member.name, member]),
+                    );
+                    members = members.map(member => projected.get(member.name) ?? member);
+                  }
+                  return members;
+                };
+                const projectedMembers = await projectMembers(unresolvedMembers);
+                symbol.members = (declarationOnly ? [] : projectedMembers).map(member => ({
                   ...member,
                   defaultValue: localizeText(member.defaultValue, lang, config.translate),
                 }));
@@ -1775,16 +1903,20 @@ export const createApiReferenceMdx = async (
                   if (!labels || labels.length !== resolved.branches.length)
                     throw new Error(`Missing or stale API branch labels for ${key}`);
                   const used = new Set<string>();
-                  symbol.branches = resolved.branches.map(branchMembers => {
-                    const matches = labels.filter(label =>
-                      branchMembers.some(member => member.name === label.field && member.type === label.type),
-                    );
-                    const label = matches[0];
-                    if (matches.length !== 1 || used.has(label.value))
-                      throw new Error(`Ambiguous or duplicate API branch label for ${key}`);
-                    used.add(label.value);
-                    return { value: label.value, label: label.label, members: branchMembers };
-                  });
+                  symbol.branches = await Promise.all(
+                    resolved.branches.map(async branchMembers => {
+                      const matches = labels.filter(label =>
+                        branchMembers.some(member => member.name === label.field && member.type === label.type),
+                      );
+                      const label = matches[0];
+                      if (matches.length !== 1 || used.has(label.value))
+                        throw new Error(
+                          `Ambiguous or duplicate API branch label for ${key}: ${branchMembers.map(member => `${member.name}: ${member.type}`).join(', ')}`,
+                        );
+                      used.add(label.value);
+                      return { value: label.value, label: label.label, members: await projectMembers(branchMembers) };
+                    }),
+                  );
                 }
               }
               const valueSets = entry.memberValueSets?.[symbol.name];
@@ -1972,6 +2104,16 @@ export const createApiReferenceMdx = async (
                   });
               }
               if (sourceSignature) symbol.signature = sourceSignature;
+              symbol.members = declarationOnly ? [] : compactMemberTypes(program, sourceFile, symbol, symbol.members);
+              if (declarationOnly) {
+                symbol.branches = undefined;
+                symbol.expandedSignature = undefined;
+              } else if (symbol.branches) {
+                symbol.branches = symbol.branches.map(branch => ({
+                  ...branch,
+                  members: compactMemberTypes(program, sourceFile, symbol, branch.members),
+                }));
+              }
               const groupKey = `${config.packageName}#${symbol.name}`;
               const groupPlan = apiReferenceMemberGroups[groupKey];
               if (groupPlan && entry.memberGroups?.[symbol.name])
