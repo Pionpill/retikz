@@ -4,6 +4,8 @@ import type { InputRelation } from '@retikz/graph-vanilla';
 import type { PreviewControlContract, PreviewPanelControlItem } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
+import { relationStatusOptions } from './relation-role.i18n';
+
 /** Relation role demo 共用的稳定字段 id */
 export const RelationRoleControlId = {
   Kind: 'kind',
@@ -58,23 +60,6 @@ type RelationRoleControlCopy = Readonly<{
   statusLocale: 'zh' | 'en';
   colorLabel: string;
 }>;
-
-const relationStatusOptions = {
-  zh: [
-    { value: '', label: '无状态' },
-    { value: GraphStatus.Error, label: '错误 - error' },
-    { value: GraphStatus.Success, label: '成功 - success' },
-    { value: GraphStatus.Warning, label: '警告 - warning' },
-    { value: GraphStatus.Disabled, label: '禁用 - disabled' },
-  ],
-  en: [
-    { value: '', label: 'No status' },
-    { value: GraphStatus.Error, label: 'Error' },
-    { value: GraphStatus.Success, label: 'Success' },
-    { value: GraphStatus.Warning, label: 'Warning' },
-    { value: GraphStatus.Disabled, label: 'Disabled' },
-  ],
-} as const;
 
 /** 建立一个本地化 Relation role controls 契约 */
 export const defineRelationRoleControlContract = <const TCopy extends RelationRoleControlCopy>(copy: TCopy) => {

@@ -7,13 +7,14 @@ import { PreviewControlStateContext } from '@/modules/docs/components/component-
 import { getPreviewControlFields } from '@/modules/docs/components/component-preview/controls';
 import { buildPreviewIR } from '@/modules/docs/components/component-preview/utils';
 
-import { defineRelationSemanticProps } from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-role-controls';
-import { previewControlContract as styleZh } from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-style.controls';
-import { previewControlContract as styleEn } from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-style.en.controls';
-import { previewSource as styleEnSource } from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-style.en.demo';
+import { defineRelationSemanticProps } from '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-role-controls';
 import StyleDemo, {
   previewSource as styleZhSource,
-} from '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-style.zh.demo';
+} from '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-style';
+import { previewControlContract as styleZh } from '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-style.controls';
+import { createPreviewControlContract } from '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-style.controls';
+
+const styleEn = createPreviewControlContract('en');
 
 type PreviewSource = Readonly<{
   canonicalRender?: () => ReactNode;
@@ -21,20 +22,21 @@ type PreviewSource = Readonly<{
 
 type ControlsModule = Readonly<{
   previewControlContract: PreviewControlContract;
+  createPreviewControlContract: (lang: 'zh' | 'en') => PreviewControlContract;
 }>;
 
 type DemoModule = Readonly<{
-  default: FC;
+  default: FC<{ lang?: 'zh' | 'en' }>;
   previewSource: PreviewSource;
 }>;
 
 const controlsModules = import.meta.glob<ControlsModule>(
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.controls.ts',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-*.controls.ts',
   { eager: true },
 );
 
 const demoModules = import.meta.glob<DemoModule>(
-  '../../src/modules/docs/contents/schematic/graph/relation/basic/relation-*.demo.tsx',
+  '../../src/modules/docs/contents/schematic/graph/relation/usage/relation-*.tsx',
   { eager: true },
 );
 
@@ -102,13 +104,14 @@ const scenarios: ReadonlyArray<RoleScenario> = [
 ];
 
 const modulePath = (role: string, suffix: string): string =>
-  `../../src/modules/docs/contents/schematic/graph/relation/basic/relation-${role}.${suffix}`;
+  `../../src/modules/docs/contents/schematic/graph/relation/usage/relation-${role}.${suffix}`;
 
 const getScenarioModules = (role: string) => {
   const chineseControls = controlsModules[modulePath(role, 'controls.ts')];
-  const englishControls = controlsModules[modulePath(role, 'en.controls.ts')];
-  const chineseDemo = demoModules[modulePath(role, 'zh.demo.tsx')];
-  const englishDemo = demoModules[modulePath(role, 'en.demo.tsx')];
+  const englishControls = { previewControlContract: chineseControls.createPreviewControlContract('en') };
+  const chineseDemo = demoModules[modulePath(role, 'tsx')];
+  const EnglishDemo: FC = () => <chineseDemo.default lang="en" />;
+  const englishDemo = { default: EnglishDemo, previewSource: chineseDemo.previewSource };
 
   expect(chineseControls, `${role}: zh controls`).toBeDefined();
   expect(englishControls, `${role}: en controls`).toBeDefined();
@@ -323,7 +326,7 @@ describe('Graph Relation style playground', () => {
     const getViewBox = (source: PreviewSource) => buildPreviewIR(() => source.canonicalRender?.() ?? null).ir.viewBox;
 
     expect(getViewBox(styleZhSource)).toEqual({ x: 0, y: 0, width: 460, height: 220 });
-    expect(getViewBox(styleEnSource)).toEqual({ x: 0, y: 0, width: 460, height: 220 });
+    expect(getViewBox(styleZhSource)).toEqual({ x: 0, y: 0, width: 460, height: 220 });
 
     const graph = buildPreviewIR(() => styleZhSource.canonicalRender?.() ?? null).ir.children[0] as {
       children?: ReadonlyArray<unknown>;
