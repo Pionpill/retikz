@@ -1,0 +1,84 @@
+---
+title: Regular polygons
+description: Draw regular polygons with shared Standard semantics across React, Vanilla and JSON
+---
+
+Standard RegularPolygon preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
+
+## Entry points
+
+Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
+
+React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx({ id, ...input })` with the same explicit identity for the embed and its final path. Neither Vanilla nor React generates a persistent graphic id when id is omitted. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+
+| Entry   | Public API                                                                   |
+| ------- | ---------------------------------------------------------------------------- |
+| React   | `RegularPolygon` — `@retikz/standard-react/shape`                            |
+| Vanilla | `shape.regularPolygon` — `@retikz/standard-vanilla/shape`                    |
+| JSON    | `RegularPolygonSchema / RegularPolygonDefinition` — `@retikz/standard/shape` |
+
+## Usage
+
+`<RegularPolygon>` draws an equal-sided polygon at a position, expanding to an underlying `<Path>`.
+
+```tsx
+import { RegularPolygon } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+```
+
+`<RegularPolygon>` uses either a circumradius or a side length. `sides` must be at least `3`, and `rotate` changes the overall orientation.
+
+| Form                            | Best for           |
+| ------------------------------- | ------------------ |
+| `{ center, radius, sides }`     | Known circumradius |
+| `{ center, sideLength, sides }` | Known side length  |
+
+The playground shows both the circumcircle and the first-vertex direction. Adjust `sides`, radius, and `rotate` to see every vertex remain evenly distributed on the reference circle.
+
+<ComponentPreview files="polygon-playground" size="md" controlPanelDefaultSize={50} />
+
+## Input constraints
+
+Choose either radius or sideLength, with a finite nonnegative value. sides must be an integer of at least 3, and center must be a literal coordinate. rotate defaults to −90° and is applied once when generating vertices.
+
+## Compilation
+
+The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+
+### Regular polygon vertex expansion
+
+The radius and side-length inputs converge on one vertex ring before the single main path expands it into a Path:
+
+<ComponentPreview files="polygon-lowering-flow" size="md" hideCode type="illustration" />
+
+`radius` is already the circumradius. `sideLength` first converges on the same value through `R = sideLength / (2·sin(π/sides))`. Vertex `k` then uses the direction `rotate + k·360/sides`; `rotate` is baked into the vertex coordinates instead of being forwarded as a transform on the underlying Path.
+
+The output topology is therefore always one `move`, `sides - 1` `line` steps, and one `cycle`. A non-literal `[x, y]` center, or a `sides` value that is not an integer of at least 3, fails before the vertex ring is produced.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'RegularPolygon input normalization and Path expansion',
+      path: 'packages/library/standard/src/shape/regular-polygon/pipeline.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Regular polygon vertex calculation',
+      path: 'packages/library/standard/src/shape/shared/geometry.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## Schema reference
+
+### RegularPolygonSchema
+
+<ZodSchema name="RegularPolygonSchema" />
+
+## API reference
+
+{/* @include library/standard/shape/regular-polygon/generated */}

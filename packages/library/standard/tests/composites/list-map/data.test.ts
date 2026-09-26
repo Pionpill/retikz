@@ -14,6 +14,36 @@ const flat = (nodes: ReadonlyArray<ScenePrimitive>): Array<ScenePrimitive> =>
   nodes.flatMap(node => (node.type === 'group' ? [node, ...flat(node.children)] : [node]));
 
 describe('JSON data presentation', () => {
+  it('shows nonempty objects as compact JSON text without expanding them into Maps', () => {
+    const source = {
+      namespace: 'standard',
+      type: 'list',
+      data: [{ a: 1, nested: { b: true } }, [{ c: 'x' }], {}],
+      dataObjectDisplay: 'text',
+    };
+    const before = JSON.stringify(source);
+    const result = compile(source);
+    expect(
+      flat(result.scene.primitives)
+        .filter(node => node.type === 'text')
+        .flatMap(node => node.lines.map(line => line.text)),
+    ).toEqual(['{"a":1,"nested":{"b":true}}', '{"c":"x"}', '{}']);
+    expect(JSON.stringify(source)).toBe(before);
+  });
+
+  it('keeps a Map data root and its keys while showing nested objects as text', () => {
+    const result = compile({
+      namespace: 'standard',
+      type: 'map',
+      data: { record: { a: 1 }, values: [{ b: 2 }] },
+      dataObjectDisplay: 'text',
+    });
+    expect(
+      flat(result.scene.primitives)
+        .filter(node => node.type === 'text')
+        .flatMap(node => node.lines.map(line => line.text)),
+    ).toEqual(['record', '{"a":1}', 'values', '{"b":2}']);
+  });
   it('preserves compact JSON Source through parsing and rejects mixed or missing inputs', () => {
     const data = {
       id: 'a',
@@ -96,6 +126,120 @@ describe('JSON data presentation', () => {
     expect(actual.scene.primitives).toEqual(expected.scene.primitives);
     expect(actual.scene.resources).toEqual(expected.scene.resources);
     expect(actual.scene.resources?.some(resource => resource.kind === 'clip')).toBe(true);
+  });
+
+  it('passes content width through data-generated nested Lists', () => {
+    const actual = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      data: [['A', 'longer']],
+    });
+    const expected = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      items: [
+        { content: { namespace: 'standard', type: 'list', layout: { width: 'content' }, data: ['A', 'longer'] } },
+      ],
+    });
+    expect(actual.scene.primitives).toEqual(expected.scene.primitives);
+  });
+
+  it('passes content width through data-generated Maps to deeper Lists', () => {
+    const actual = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      data: [{ values: ['A', 'longer'] }],
+    });
+    const expected = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      items: [
+        {
+          content: {
+            namespace: 'standard',
+            type: 'map',
+            entries: [
+              {
+                key: 'values',
+                value: {
+                  content: {
+                    namespace: 'standard',
+                    type: 'list',
+                    layout: { width: 'content' },
+                    data: ['A', 'longer'],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    expect(actual.scene.primitives).toEqual(expected.scene.primitives);
+  });
+
+  it('passes content width through multiple data-generated List levels', () => {
+    const actual = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      data: [[['A', 'longer']]],
+    });
+    const expected = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      items: [
+        {
+          content: {
+            namespace: 'standard',
+            type: 'list',
+            layout: { width: 'content' },
+            items: [
+              {
+                content: {
+                  namespace: 'standard',
+                  type: 'list',
+                  layout: { width: 'content' },
+                  data: ['A', 'longer'],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    expect(actual.scene.primitives).toEqual(expected.scene.primitives);
+  });
+
+  it('does not pass content width to hand-authored children or from fixed-width data Lists', () => {
+    const nested = { namespace: 'standard', type: 'list', data: ['A', 'longer'] };
+    const authored = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      items: [{ content: nested }],
+    });
+    const authoredWithAuto = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 'content' },
+      items: [{ content: { ...nested, layout: { width: 'auto' } } }],
+    });
+    expect(authored.scene.primitives).toEqual(authoredWithAuto.scene.primitives);
+
+    const fixed = compile({ namespace: 'standard', type: 'list', layout: { width: 180 }, data: [['A', 'longer']] });
+    const fixedWithAuto = compile({
+      namespace: 'standard',
+      type: 'list',
+      layout: { width: 180 },
+      items: [{ content: { ...nested, layout: { width: 'auto' } } }],
+    });
+    expect(fixed.scene.primitives).toEqual(fixedWithAuto.scene.primitives);
   });
 
   it('keeps root empty containers equivalent to empty explicit structures', () => {

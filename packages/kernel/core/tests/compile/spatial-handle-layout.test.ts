@@ -20,7 +20,7 @@ const child = defineComposite({
   }),
   expand: () => ({
     children: [{ type: 'node', position: [5, 5], minimumWidth: 10, minimumHeight: 10 }],
-    spatialHandles: [{ key: 'body', role: 'child', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
+    spatialHandles: [{ id: 'body', role: 'child', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
   }),
 });
 
@@ -46,7 +46,7 @@ const parent = defineComposite({
         context.scope(
           { transforms: [{ kind: 'translate', x: 7, y: 8 }] },
           [context.replay(probe.result, { transforms: [{ kind: 'translate', x: 30, y: 40 }] })],
-          [{ key: 'frame', role: 'parent', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
+          [{ id: 'frame', role: 'parent', bounds: { x: 0, y: 0, width: 10, height: 10 } }],
         ),
       ],
     };

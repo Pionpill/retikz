@@ -1,0 +1,40 @@
+---
+title: 展示
+description: 为图补充参考线、坐标、分组边界和符号说明。
+---
+
+展示组件为图补充参考、边界和说明：Grid 与 Axes 帮助读者判断位置，Frame 与 Surface 组织内容的外观，Legend 解释符号。根据图中缺少的信息选择组件，不必一次用齐。
+
+## 职责一览
+
+| 组件   | 职责                             | 何时阅读               |
+| ------ | -------------------------------- | ---------------------- |
+| 网格   | 绘制规则参考线、主线与边框       | 需要观察间距或对齐     |
+| 坐标轴 | 绘制坐标轴、刻度与标签           | 需要读取位置或数值     |
+| 分组框 | 围合内容并附加标题、说明         | 需要表达一组内容的归属 |
+| 表面   | 根据内容范围添加背景、边框与留白 | 需要为已有内容添加外观 |
+| 图例   | 组合符号样本与说明               | 颜色或线型需要解释     |
+
+## 为一张坐标示意图补齐参考
+
+以 Axes 建立居中的坐标系，再用 Grid 提供等距网格。两者共用原点，网格覆盖四个象限；坐标轴稍长于网格范围，便于辨认方向。
+
+<ComponentPreview files="presentation-composition" />
+
+坐标轴是主体，较细的灰色网格只辅助读取位置。网格间距与轴范围可以独立设置；需要背景与边框时再加入 Surface，需要分组标题时选择 Frame，需要解释颜色或线型时添加 Legend。
+
+## 选择与边界
+
+这些组件不会替你决定业务数据的排列。需要呈现按位置或键组织的内容时，阅读[容器](/library/standard/container)；需要绘制独立几何轮廓时，阅读[形状](/library/standard/shape)。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '网格', description: '绘制规则参考线、主线与边框', url: '/library/standard/presentation/grid' },
+    { title: '坐标轴', description: '绘制坐标轴、刻度与标签', url: '/library/standard/presentation/axes' },
+    { title: '分组框', description: '围合内容并附加标题、说明', url: '/library/standard/presentation/frame' },
+    { title: '表面', description: '根据内容范围添加背景、边框与留白', url: '/library/standard/presentation/surface' },
+    { title: '图例', description: '组合符号样本与说明', url: '/library/standard/presentation/legend' },
+  ]}
+/>

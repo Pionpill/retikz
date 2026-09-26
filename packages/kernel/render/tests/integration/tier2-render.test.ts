@@ -31,7 +31,7 @@ const labeledBox = defineComposite({
         },
       },
     ],
-    spatialHandles: [{ key: 'body', role: 'labeled-box', bounds: { x: -5, y: -5, width: 10, height: 10 } }],
+    spatialHandles: [{ id: 'body', role: 'labeled-box', bounds: { x: -5, y: -5, width: 10, height: 10 } }],
   }),
 });
 

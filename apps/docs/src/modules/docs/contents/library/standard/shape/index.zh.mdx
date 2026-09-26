@@ -1,0 +1,44 @@
+---
+title: 形状
+description: 用中心、尺寸和角度组合独立的几何轮廓。
+---
+
+形状组件用中心、尺寸、半径或角度描述几何轮廓。选择与你手中参数相符的组件，可以组合图标、示意图与装饰图形，而不必逐段描述轮廓。
+
+## 职责一览
+
+| 组件       | 职责                             | 何时阅读                 |
+| ---------- | -------------------------------- | ------------------------ |
+| 圆与椭圆   | 用中心、半径或包围盒描述圆形轮廓 | 绘制圆或不同轴半径的椭圆 |
+| 矩形       | 描述直角或圆角矩形               | 已知角点或中心与宽高     |
+| 正多边形   | 用边数与尺寸定义规则多边形       | 需要规则多边形轮廓       |
+| 星形       | 用尖角数量与内外半径定义星形     | 需要星形标记             |
+| 圆弧与扇形 | 按角度描述弧线或扇形区域         | 表达部分圆周或角度范围   |
+
+## 用基础轮廓组成面板
+
+下面用一个圆角矩形作为外轮廓，再在其中放置圆与较小的矩形。观察位置和尺寸如何决定组合关系；这些形状共享同一坐标空间。
+
+<ComponentPreview files="shape-composition" />
+
+外轮廓不会自动包裹或排列内部形状，所有尺寸与位置由示例明确给出。需要边框随内容变化时，改用 Surface 或 Frame。
+
+## 选择与边界
+
+本组用于独立绘制几何轮廓。为带文字、可连接的节点选择轮廓时，阅读[节点形状拓展](/library/extension/shape)；按内容自动生成外围边界时，阅读[展示](/library/standard/presentation)。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    {
+      title: '圆与椭圆',
+      description: '用中心、半径或包围盒描述圆形轮廓',
+      url: '/library/standard/shape/circle-ellipse',
+    },
+    { title: '矩形', description: '描述直角或圆角矩形', url: '/library/standard/shape/rectangle' },
+    { title: '正多边形', description: '用边数与尺寸定义规则多边形', url: '/library/standard/shape/regular-polygon' },
+    { title: '星形', description: '用尖角数量与内外半径定义星形', url: '/library/standard/shape/star' },
+    { title: '圆弧与扇形', description: '按角度描述弧线或扇形区域', url: '/library/standard/shape/arc-sector' },
+  ]}
+/>

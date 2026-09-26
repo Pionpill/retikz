@@ -1,0 +1,34 @@
+---
+title: 容器
+description: 用列表与映射呈现顺序、键值和嵌套结构。
+---
+
+容器组件把结构化内容画成可识别的单元格。List 按顺序组织项目，Map 按键和值组织条目；单元格也可以承载另一个组件，用来表达嵌套结构。
+
+## 职责一览
+
+| 组件 | 职责                                 | 何时阅读                   |
+| ---- | ------------------------------------ | -------------------------- |
+| 列表 | 按顺序排列内容，支持横排、竖排与索引 | 表达数组、队列等顺序结构   |
+| 映射 | 将键与值组织为条目                   | 表达记录、属性表或键值集合 |
+
+## 在序列中展示一条记录
+
+下面复用列表页的组合示例：外层 List 表达先后顺序，其中一个 ListItem 放入 Map 展示记录字段。外层负责项目排列，内层负责键值关系。
+
+<ComponentPreview files="/library/standard/container/list/list-composition" size="sm" />
+
+嵌套改变的是单元格内容，列表的顺序仍然清楚。单元格样式、索引和引用方式分别在 List、Map 子页展开。
+
+## 选择与边界
+
+这里的容器负责可视表达，不是运行时的数据结构实现。为任意图形添加背景或分组边框，应选择[展示组件](/library/standard/presentation)中的 Surface 或 Frame；只需通用排列时，阅读[布局包](/library/layout)。
+
+## 章节内容
+
+<LinkedSections
+  items={[
+    { title: '列表', description: '按顺序排列内容，支持横排、竖排与索引', url: '/library/standard/container/list' },
+    { title: '映射', description: '将键与值组织为条目', url: '/library/standard/container/map' },
+  ]}
+/>

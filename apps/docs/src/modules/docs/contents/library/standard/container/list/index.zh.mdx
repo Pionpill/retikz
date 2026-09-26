@@ -1,0 +1,498 @@
+---
+title: List · 列表
+description: 使用 List 展示一维内容，配置单元格、组合图形并查询 API 与 Schema。
+---
+
+`List` 将一维内容画成一排或一列单元格，可展示数组、队列和索引。每格可以放文字或一个图形组件。
+
+## 接入方式
+
+[安装与首次渲染](/library/standard/get-start)后，可从以下四种入口接入。JSX 与 Vanilla adapter 自动收集所需定义；直接 IR 显式注入组件定义；启用单元格裁切时还需从 `@retikz/extension` 注入 `PathClipDefinition`。
+
+<ComponentPreview files="list-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { List } from '@retikz/standard-react/container';
+
+export const Example = () => (
+  <Layout>
+    <List items={['A', 'B']} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { ListDefinition } from '@retikz/standard/container';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'list',
+      items: ['A', 'B'],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[ListDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { list, ListInputEmbedAdapter } from '@retikz/standard-vanilla/container';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    list({
+      items: ['A', 'B'],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [ListInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { ListDefinition } from '@retikz/standard/container';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'list',
+      items: ['A', 'B'],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [ListDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## 基础用法
+
+### 选择输入方式
+
+三种输入方式互斥，按内容的来源和编写方式选择：常规手写内容用 `items`，已有的持久化 JSON 数据用 `data`，在 React 中希望直接写子组件时用 JSX 简写。
+
+<DocTabs defaultValue="items">
+<DocTab value="items" label="items · 手写内容">
+
+常规手写内容使用 `items`：逐项编写文字，按需配置单格样式、尺寸与 id，适合数组示意图、队列等需要控制每格表现的内容。
+
+```tsx
+<List items={['A', { content: 'B', id: 'selected', style: { fill: 'dodgerblue' } }]} />
+```
+
+`items` 的字符串默认只提供文字，例如 `'A'` 等价于 `{ content: 'A' }`，可以重复或为空。需要逐格样式时使用 `{ content, id?, style?, layout? }`；对象省略 id 时不会从 content 推导身份。设置 `cellIdMode="string"` 后，字符串也会成为单元格 id，此时字符串必须非空白且在当前 List 中唯一，不能与对象项的显式 id 重复。该模式不能与 `data` 一起使用。
+
+</DocTab>
+<DocTab value="data" label="data · 持久化数据">
+
+直接传入从 JSON 文件、存储或接口读取的 JSON 数组，自动递归展示嵌套数组和对象，无需逐格转换为配置。以下以 JSON 数组表示已读取的数据。
+
+```tsx
+<List data={['A', 42, { enabled: true }]} />
+```
+
+`data` 将输入当作要展示的数据，而不是单元格配置；数据中的 `style`、`id` 等字段也只是普通内容。需要控制某一格的样式或身份时，改用 `items` 或 JSX。这里的“持久化数据”指已保存的数据来源，`data` 本身不负责读写存储。
+
+</DocTab>
+<DocTab value="jsx" label="JSX · 声明式简写">
+
+在 React 中可用 `ListItem` 子组件作为声明式简写，适合与页面 JSX 一起编写的内容。用 `text` 表达文字，也可以嵌入一个图形组件；无需把子组件组织成 `items` 数组。
+
+```tsx
+import { List, ListItem } from '@retikz/standard-react/container';
+
+<List>
+  <ListItem text="A" />
+  <ListItem text="B" id="selected" style={{ fill: 'dodgerblue' }} />
+</List>;
+```
+
+</DocTab>
+</DocTabs>
+
+### 样式与尺寸
+
+整体 `style` 设置共同外观，单格 `style` 覆盖同名字段。
+
+字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
+
+<ComponentPreview
+  files="list-styles"
+  size="lg"
+  caption="切换固定、统一最大宽度与各格内容宽度，比较 A、B1、C 的单格尺寸；调整内边距可观察内容宽度模式如何留白。B1 格只覆盖颜色，不覆盖尺寸。示例初始使用固定宽高、边框和背景。"
+/>
+
+`layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零。宽度省略或设为 `'auto'` 时，所有自适应单格采用全组最大有效宽度；设为 `'content'` 时，每格按自身内容的自然宽度加内边距定宽。高度省略或设为 `'auto'` 时仍按全组最大高度。单格同名字段优先，因此可以在整体使用 `'content'`，再为某格指定固定宽度或 `'auto'`。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
+
+`layout.direction` 默认为 `row`，设为 `column` 即竖排，不自动换行。`auto` 轴取各格需求的最大值；固定轴保持指定尺寸。`style.cornerRadius` 统一设置各个单元格的圆角，单格样式可以覆盖它。
+
+`index` 省略或为 `false` 时隐藏索引，设为 `true` 或 `{}` 时显示默认索引。对象形式可设置：
+
+- `position`：`before`（默认）在横排上方、竖排左侧；`after` 在横排下方、竖排右侧。
+- `start`：起始值，默认为 `0`，必须是非负整数；索引仅用于展示，不是单元格 id。
+- `style`：通过 `font`、`textColor`、`color`、`opacity` 设置索引文本。`font` 按字段继承 List 的整体字体，`textColor` 默认继承整体文本颜色；单格样式不影响索引。
+
+索引带按实际文字尺寸测量，与单元格之间使用 `layout.gap`。修改索引字号会改变索引带尺寸，但不会改变单元格尺寸。在上面的面板中切换横排 / 竖排和索引位置，比较四个方向的效果。
+
+### 容器标签
+
+`label` 为整个容器添加文字，支持单个对象或数组，可设置位置、距离、旋转和引线。标签不撑大布局尺寸，但计入最终绘制范围；空容器也能显示标签。
+
+<ComponentPreview
+  files="list-labels"
+  size="md"
+  caption="保持列表不变，观察标签的位置、旋转和引线。示例默认开启引线。"
+/>
+
+整体字体、文字颜色及 `defaults.label` 可作为标签默认，标签自身设置优先；单格样式不影响容器标签，`data` 中的嵌套容器也不继承根标签。
+
+<ComponentAlert
+  type="tip"
+  title="标签配置"
+  description={
+    <>
+      标签配置复用 Node label；完整位置、样式及引线选项见<a href="/kernel/components/node/labels">节点标签文档</a>。
+    </>
+  }
+/>
+
+## 扩展用法
+
+### 组合图形内容
+
+用 `ListItem` 为每格设置 `text` 或唯一的 drawable child，二者互斥。
+
+多个图元先用 `Scope` 包成一个 child，再放入单元格。React 的数据数组只放文字配置，不嵌 JSX；Vanilla 的单格 `content` 接受文字或一个 authoring child，直接 IR 的 `content` 接受文字或一个可序列化图元。
+
+下面的 React 示例采用这组组件层级：
+
+```text
+List
+├── ListItem
+└── ListItem
+    └── Map
+```
+
+<ComponentPreview files="list-composition" size="xs" />
+
+### 直接展示 JSON 数据
+
+`data` 接受 JSON 数组。数组递归画成 List；非空对象默认递归画成 Map。若只想显示对象原文，设置 `dataObjectDisplay="text"`，对象值会显示为紧凑的 JSON 文本，例如 `{ "ready": false }` 显示为 `{"ready":false}`。该选项传递到嵌套数组，仅用于 `data`，不适用于 `items` 或 JSX 组合。下例使用文本模式，并用 `layout.width: 'content'` 让外层与自动生成的内层 List 都按各格内容定宽。
+
+<ComponentPreview files="list-data" size="xs" />
+
+| 数据类型 | 输入示例        | 展示方式                                                    |
+| -------- | --------------- | ----------------------------------------------------------- |
+| 字符串值 | `"null"`        | 带引号和转义的 JSON 字面量，显示为 `"null"`，与 `null` 区分 |
+| 数字     | `42`            | 显示为 `42`                                                 |
+| 布尔值   | `true`、`false` | 显示为 `true`、`false`                                      |
+| 空值     | `null`          | 显示为 `null`                                               |
+| 非空数组 | `["A", 2]`      | 递归展示为 List，各元素成为单元格                           |
+| 空数组   | `[]`            | 显示为文本 `[]`                                             |
+| 非空对象 | `{"a": 1}`      | 默认递归展示为 Map；`text` 模式显示为 `{"a":1}`             |
+| 空对象   | `{}`            | 显示为文本 `{}`                                             |
+
+空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
+
+数据默认不生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。需要逐格定制时，使用显式单元格。整体 style / layout 只控制当前层，但 `data` 模式下的 `layout.width: 'content'` 会沿自动生成的 List / Map 数据树传给后代 List，让每层的单元格按自身内容定宽；手写嵌套组件不继承。字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
+
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ListDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+
+### 引用单元格与控制溢出
+
+为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。默认模式下，未设 id 的格不会按数组下标自动获得身份。
+
+`cellIdMode` 决定直属格子的身份来源，默认 `explicit`：
+
+| 模式       | 用途                                                                    |
+| ---------- | ----------------------------------------------------------------------- |
+| `explicit` | 只登记对象或 `ListItem` 显式设置的 id；文字不产生身份                   |
+| `string`   | 将 `items` 字符串同时作为文字和 id；不接受 `data`                       |
+| `index`    | 要求 List 设置 id，为 `items` / `data` 的直属格生成 `<list-id>-<index>` |
+
+例如 `<List id="queue" cellIdMode="index" data={['A', 'B']} />` 的第二格可用 `queue-1` 引用。也可从 `@retikz/standard/container` 导入 `getListCellId`，通过 `getListCellId('queue', 1)` 得到同一名称；参数必须是非空白 List id 和非负整数，函数不检查该格是否存在。
+
+<ComponentPreview
+  files="list-cell-reference"
+  size="xs"
+  caption="箭头指向由 List id 与下标生成的 queue-1；显示索引 1 对应第二格。"
+/>
+
+下标始终从零开始，不受显示索引的 `index.start` 影响；它表示当前排列位置，重排后该位置可能是另一项。嵌套数据的后代不会继承这些 id。单格同时显式指定 id 时，两种 id 均可引用同一矩形，不重复创建图元。同格名称相同会去重，不同格的名称冲突会报错。
+
+<ComponentAlert
+  type="tip"
+  title="Inspection 查询"
+  description={
+    <>
+      主 id <code>cell:queue-1</code> 与别名 <code>{'cell:<显式id>'}</code> 查询同一条空间记录。
+    </>
+  }
+/>
+
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+
+<ComponentPreview
+  files="list-overflow"
+  size="sm"
+  caption="相同固定宽度的单元格：左侧保留超出的文字，右侧将文字裁切在边框内。"
+/>
+
+## 错误与限制
+
+- 不混用输入方式；同一容器内显式单元格 id 必须唯一。重复文字应与身份分开配置。
+- 组合标记必须放在规定的直属父组件中，单格图形必须恰好一个；非法 JSX 组合会报错。
+- `data` 只接受 JSON 值树，不传函数、运行时实例、循环引用或稀疏数组；展示前自行投影数据。
+- 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
+- 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。" />
+
+### 尺寸如何确定
+
+`resolveList` 先合并整体与单格设置，再补默认值；文字转为无背景、无边框、零内边距的文本节点。`compileList` 对每格内容按自然尺寸测量一次，将内容需求与 padding 合成单格需求；`auto` 采用各格最大需求，`content` 宽度保留当前格自身需求，固定尺寸保持原值，最后沿选定方向累加单格尺寸和 gap。索引按合并后的字体单独测量，根据 `index.position` 在横排上下侧或竖排左右侧预留索引带。
+
+观察相同内容在两种宽度模式下的边框，以及边框外单独排列的索引：
+
+<ComponentPreview files="list-measurement-figure" size="sm" hideCode type="illustration" />
+
+左侧的 `auto` 让两格采用最大内容需求；右侧的 `content` 保留各格的内容宽度与内边距。索引条占用额外空间，不回写单格宽度。
+
+<SourceLinks
+  sources={[
+    {
+      label: '设置合并与默认值',
+      path: 'packages/library/standard/src/container/list/resolve/resolve.ts',
+      startLine: 1,
+    },
+    { label: '测量与排布', path: 'packages/library/standard/src/container/list/pipeline.ts', startLine: 1 },
+  ]}
+/>
+
+### 为什么引用和标签不改变单元格尺寸
+
+排布完成后，`compileCells` 复用测量结果，将内容居中，并分别输出背景、内容裁切层和边框。单元格 id 由不可见的矩形节点承载，使用分配给该格的尺寸，因此不受内容视觉溢出影响。另行发布的 `container` 和 `cell:<id>` 空间 handle 供 inspection 使用，不替代命名引用。
+
+容器标签由另一个不可见矩形承载，矩形大小取容器的布局分配范围，包含已启用的索引条。标签在单元格排布完成后附着，不反向参与单格测量；它只扩展最终可见范围。标签宿主不继承单元格角色样式，也不使用 `defaults.node`。
+
+图中蓝色边框是固定的单格分配与引用边界；观察箭头落点、边框外的文字和上方的容器标签：
+
+<ComponentPreview files="list-reference-figure" size="md" hideCode type="illustration" />
+
+文字溢出和标签扩大可见范围，但不会改变图中单格的 82 × 42 分配尺寸；引用箭头仍指向该矩形的下边界。
+
+<SourceLinks
+  sources={[
+    {
+      label: '内容复用、引用矩形与标签宿主',
+      path: 'packages/library/standard/src/container/shared/cell-layout.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## API 参考
+
+以下为当前组件的 React、Vanilla 和 IR 公开入口局部参考，签名与说明由源码生成。共享样式和持久化字段见后面的 Schema；不在这里复制整包公共契约。
+
+{/* @include library/standard/container/list/generated */}
+
+## Schema 参考
+
+`ListSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'list'`；items 与 data 二选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
+
+### ListSchema
+
+<ZodSchema
+  name="ListSchema"
+  description="一维内容的单元格展示，支持显式单元格或 JSON 数组"
+  expandNested
+  descriptions={{
+    '/union/0/field/"namespace"': '命名空间，固定为 standard',
+    '/union/0/field/"type"': '组件类型判别字段',
+    '/union/0/field/"frame"': '绘制在容器内容下方的可选外框',
+    '/union/0/field/"theme"': '由后代继承的稀疏主题覆盖',
+    '/union/0/field/"id"': '可选命名引用 id，注册在父命名空间',
+    '/union/0/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
+    '/union/0/field/"transforms"': '作用于全部内容的局部变换，数组末项先作用；平移在编译时展开',
+    '/union/0/field/"placement"': '内在布局与局部变换后的最终放置方式',
+    '/union/0/field/"zIndex"': '容器整体在同级图元中的堆叠顺序，不控制内部子图元',
+    '/union/0/field/"clip"': '容器局部坐标中的整体裁切区域',
+    '/union/0/field/"boundingShape"': '命名引用使用的包围轮廓：矩形或圆形',
+    '/union/0/field/"meta"': '保留到 Scene 的 JSON 元数据，编译器不解释其内容',
+    '/union/0/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
+    '/union/0/field/"defaults"': '后代默认样式及其继承屏障',
+    '/union/0/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
+    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
+    '/union/0/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/0/field/"items"': '按顺序排列的单元格；字符串默认只提供文字',
+    '/union/0/field/"cellIdMode"':
+      '身份来源：explicit 仅显式 id，string 使用 items 字符串，index 由 List id 与零基下标生成',
+    '/union/0/field/"items"/array/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
+    '/union/0/field/"items"/array/union/1/field/"content"': '文字或唯一可绘制 child，支持已注册的第三方复合组件',
+    '/union/0/field/"items"/array/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"items"/array/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"items"/array/union/1/field/"layout"': '稀疏单格尺寸、内边距和溢出覆盖',
+    '/union/0/field/"items"/array/union/1/field/"layout"/field/"width"':
+      '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用当前格内容宽度加内边距',
+    '/union/0/field/"items"/array/union/1/field/"layout"/field/"height"':
+      '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"items"/array/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"items"/array/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"data"': '此分支禁止 data',
+    '/union/0/field/"dataObjectDisplay"': '此分支禁止 dataObjectDisplay',
+    '/union/0/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+    '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"label"': '容器附属标签，通过 position 与 distance 定位',
+    '/union/0/field/"layout"': 'List 单元格分配与排列',
+    '/union/0/field/"layout"/field/"width"':
+      '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
+    '/union/0/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"layout"/field/"direction"': '单轴排列方向，不自动换行',
+    '/union/0/field/"layout"/field/"gap"': '相邻单元格及索引条之间的距离',
+    '/union/0/field/"index"': 'false 隐藏索引；true 或对象启用索引带',
+    '/union/0/field/"index"/union/1/field/"position"': 'before 为横排上方或竖排左侧，after 为横排下方或竖排右侧',
+    '/union/0/field/"index"/union/1/field/"start"': '显示索引的非负整数起点，不作为单元格身份',
+    '/union/0/field/"index"/union/1/field/"style"': '索引文本样式，字体按字段继承整体字体，不受单格样式影响',
+    '/union/0/field/"index"/union/1/field/"style"/field/"font"': '索引字体，按字段继承整体字体',
+    '/union/0/field/"index"/union/1/field/"style"/field/"textColor"':
+      '索引文字颜色，默认继承整体文本颜色；支持主色派生与对比色',
+    '/union/0/field/"index"/union/1/field/"style"/field/"color"': '索引主色，沿用 Core 的 currentColor 继承规则',
+    '/union/0/field/"index"/union/1/field/"style"/field/"opacity"': '索引文字透明度，范围为 0 到 1',
+    '/union/1/field/"namespace"': '命名空间，固定为 standard',
+    '/union/1/field/"type"': '组件类型判别字段',
+    '/union/1/field/"frame"': '绘制在容器内容下方的可选外框',
+    '/union/1/field/"theme"': '由后代继承的稀疏主题覆盖',
+    '/union/1/field/"id"': '可选命名引用 id，注册在父命名空间',
+    '/union/1/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
+    '/union/1/field/"transforms"': '作用于全部内容的局部变换，数组末项先作用；平移在编译时展开',
+    '/union/1/field/"placement"': '内在布局与局部变换后的最终放置方式',
+    '/union/1/field/"zIndex"': '容器整体在同级图元中的堆叠顺序，不控制内部子图元',
+    '/union/1/field/"clip"': '容器局部坐标中的整体裁切区域',
+    '/union/1/field/"boundingShape"': '命名引用使用的包围轮廓：矩形或圆形',
+    '/union/1/field/"meta"': '保留到 Scene 的 JSON 元数据，编译器不解释其内容',
+    '/union/1/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
+    '/union/1/field/"defaults"': '后代默认样式及其继承屏障',
+    '/union/1/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
+    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
+    '/union/1/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/1/field/"items"': '此分支禁止显式单元格',
+    '/union/1/field/"data"': '递归展示 JSON 数组，默认不推导单元格 id',
+    '/union/1/field/"dataObjectDisplay"':
+      '非空对象值的展示方式：map 递归绘制，text 显示紧凑 JSON 文本；默认 map，嵌套数组继承此设置',
+    '/union/1/field/"cellIdMode"': '身份来源：explicit 默认不生成 id，index 由 List id 与零基下标生成；禁止 string',
+    '/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+    '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/1/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/1/field/"label"': '容器附属标签，通过 position 与 distance 定位',
+    '/union/1/field/"layout"': 'List 单元格分配与排列',
+    '/union/1/field/"layout"/field/"width"':
+      '含内边距的固定边框宽度；auto 使用全组最大宽度，content 使用各格内容宽度加内边距',
+    '/union/1/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/1/field/"layout"/field/"direction"': '单轴排列方向，不自动换行',
+    '/union/1/field/"layout"/field/"gap"': '相邻单元格及索引条之间的距离',
+    '/union/1/field/"index"': 'false 隐藏索引；true 或对象启用索引带',
+    '/union/1/field/"index"/union/1/field/"position"': 'before 为横排上方或竖排左侧，after 为横排下方或竖排右侧',
+    '/union/1/field/"index"/union/1/field/"start"': '显示索引的非负整数起点，不作为单元格身份',
+    '/union/1/field/"index"/union/1/field/"style"': '索引文本样式，字体按字段继承整体字体，不受单格样式影响',
+    '/union/1/field/"index"/union/1/field/"style"/field/"font"': '索引字体，按字段继承整体字体',
+    '/union/1/field/"index"/union/1/field/"style"/field/"textColor"':
+      '索引文字颜色，默认继承整体文本颜色；支持主色派生与对比色',
+    '/union/1/field/"index"/union/1/field/"style"/field/"color"': '索引主色，沿用 Core 的 currentColor 继承规则',
+    '/union/1/field/"index"/union/1/field/"style"/field/"opacity"': '索引文字透明度，范围为 0 到 1',
+  }}
+/>
+
+## 延伸阅读
+
+<LinkedSections
+  items={[
+    {
+      title: 'Surface · 表面',
+      description: '为单个图形添加背景、内边距和裁切',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

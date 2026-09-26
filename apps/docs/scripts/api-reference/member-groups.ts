@@ -25,6 +25,7 @@ export type ApiReferenceGroupPlan = {
 
 /** React、Vanilla 与 Core 节点输入共享的字段用途 */
 const nodeMemberGroups = {
+  aliasIds: 'Main',
   animations: 'Animation',
   boundary: 'Geometry',
   cornerRadius: 'Geometry',

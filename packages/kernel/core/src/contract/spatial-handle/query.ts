@@ -31,7 +31,7 @@ const entryMatches = (entry: QualifiedSpatialHandle, selector: SpatialHandleSele
   if (owner === undefined) return false;
   if (selector.owner !== undefined && !ownerMatches(owner, selector.owner)) return false;
   if (selector.within !== undefined && !withinMatches(entry.ownerPath.slice(0, -1), selector.within)) return false;
-  if (selector.key !== undefined && entry.key !== selector.key) return false;
+  if (selector.id !== undefined && entry.id !== selector.id && !entry.aliasIds?.includes(selector.id)) return false;
   if (selector.role !== undefined && entry.role !== selector.role) return false;
   if (selector.tags !== undefined && !selector.tags.every(tag => entry.tags.includes(tag))) return false;
   return true;

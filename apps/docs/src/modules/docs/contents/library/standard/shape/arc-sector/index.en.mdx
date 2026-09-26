@@ -1,0 +1,164 @@
+---
+title: Arcs and sectors
+description: Draw arcs and sectors with shared Standard semantics across React, Vanilla and JSON
+---
+
+Standard Arc / Sector preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
+
+## Entry points
+
+Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
+
+React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx({ id, ...input })` with the same explicit identity for the embed and its final path. Neither Vanilla nor React generates a persistent graphic id when id is omitted. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+
+| Entry   | Public API                                                                              |
+| ------- | --------------------------------------------------------------------------------------- |
+| React   | `Arc, Sector` — `@retikz/standard-react/shape`                                          |
+| Vanilla | `shape.arc, shape.sector` — `@retikz/standard-vanilla/shape`                            |
+| JSON    | `ArcSchema / ArcDefinition, SectorSchema / SectorDefinition` — `@retikz/standard/shape` |
+
+## Usage
+
+`<Arc>` (open arc) / `<Sector>` (closed wedge) draw an angle span at a position, expanding to an underlying `<Path>`. Useful for angle markers, ring fragments, and highlighted sectors.
+
+```tsx
+import { Arc, Sector } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Arc center={[0, 0]} radius={40} startAngle={0} endAngle={90} />
+<Sector center={[0, 0]} radius={40} startAngle={0} endAngle={90} style={{ fill: "darkorange" }} />
+```
+
+### Arc
+
+`<Arc>` draws an open arc by default. It is useful for curved arrows, ring markers, and decorative strokes.
+
+| Form                                   | Best for       |
+| -------------------------------------- | -------------- |
+| `{ center, radius: number, angles }`   | Circular arc   |
+| `{ center, radius: { x, y }, angles }` | Elliptical arc |
+
+Angles start from +x; `90` points downward on screen. Angles take any two of `startAngle` / `endAngle` / `sweepAngle`, e.g. `{ startAngle: 30, sweepAngle: 90 }`. `center` accepts any target (node id / polar / Cartesian).
+
+<ComponentPreview files="arc-basic" size="sm" />
+
+**Visual props**
+
+`<Arc>` forwards the full `<Path>` visual prop set: `stroke` / `strokeWidth` / `dashPattern` / `dashOffset` / `arrow` / `marks` / `opacity` / `rotate` / `scale`, and more. Common ones are arrowed arcs (`arrow="->"`), dashed arcs (`dashPattern` / `dashOffset`), and mid-path direction marks (`marks`, oriented along the tangent).
+
+<ComponentPreview files="arc-visual" size="sm" />
+
+**Closing modes**
+
+Arcs are open by default; pass `close` to turn the arc into a fillable region:
+
+| `close`            | Meaning                                      |
+| ------------------ | -------------------------------------------- |
+| omitted / `'open'` | Open arc, not closed, not filled             |
+| `'chord'`          | Connect both ends with a chord (segment)     |
+| `'sector'`         | Connect both ends back to the center (wedge) |
+
+<ComponentPreview files="arc-close" size="sm" />
+
+**Labels on the arc**
+
+`label` forwards to the underlying arc step; the text is positioned along the arc (`position` defaults to `midway`, mapped linearly across `startAngle..endAngle`), just like an edge label. Sector supports it too — see the pie example below.
+
+### Sector
+
+`<Sector>` starts from the center, draws an arc, then closes back to the center. Add `innerRadius` for a hollow sector; circles use a `number`, while ellipses use `{ x, y }`.
+
+| Form                                   | Best for                 |
+| -------------------------------------- | ------------------------ |
+| `{ center, radius: number, angles }`   | Circular sector          |
+| `{ center, radius: { x, y }, angles }` | Elliptical sector        |
+| add `innerRadius: number`              | Hollow circular sector   |
+| add `innerRadius: { x, y }`            | Hollow elliptical sector |
+
+<ComponentPreview files="sector-basic" size="sm" />
+
+**Center on a node, labeled slices**
+
+A filled sector's center is the cursor, so `center` can take a node id (or polar coordinate) to pin the sector onto a node; combined with `sweepAngle` and `label`, a few slices make a labeled pie chart.
+
+> A hollow sector (with an inner radius) needs to compute the inner/outer arc endpoints, so its `center` must still be a literal Cartesian `[x, y]`.
+
+<ComponentPreview files="sector-label" size="sm" />
+
+**Whole-shape transform**
+
+`rotate` / `scale` forward to `<Path>`, transforming the whole sector around its bounding-box center (no `<Scope>` wrapper needed). `rotate` tilts an axis-aligned elliptical sector — currently the way to draw a "tilted elliptical sector".
+
+<ComponentPreview files="sector-transform" size="sm" />
+
+Arc and Sector share the same elliptical radii and angle model. Once the basic forms above are clear, adjust both in the playground: the left side shows Arc closure, while the right side shows how Sector's inner arc changes ring width.
+
+<ComponentPreview files="arc-sector-playground" size="sm" controlPanelDefaultSize={50} />
+
+## Input constraints
+
+Radii must be finite and nonnegative. Supply exactly two of startAngle, endAngle and sweepAngle, preserving signed sweeps and revolutions. Ring sectors require a literal Cartesian center and inner radii no larger than the outer radii. Zero inner radii produce a solid sector; both inner ellipse axes must be zero or both positive. Only the outer arc owns the label.
+
+## Compilation
+
+The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+
+### How an angle span is determined
+
+Start with the axes and orange arrow: the span begins at `startAngle`, follows increasing screen-space angles to `endAngle`, and the difference is `sweepAngle`.
+
+<ComponentPreview files="arc-sector-angle-model" size="md" hideCode type="illustration" />
+
+Screen coordinates point x to the right and y downward, so `0°` points right, `90°` points down, and increasing angles look clockwise. Standard accepts exactly two of `startAngle` / `endAngle` / `sweepAngle` and derives the third.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Resolve sugar angle inputs',
+      path: 'packages/library/standard/src/shape/shared/geometry.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+### Arc and sector path topology
+
+The three outputs on the right are not rendering effects; they are three equivalent `<Path>` / `<Step>` topologies. `<Arc>` and `<Sector>` resolve angles and radii first, then choose a branch based on open, closed, or hollow geometry.
+
+<ComponentPreview files="arc-sector-lowering-flow" size="sm" hideCode type="illustration" />
+
+- An open `<Arc>` starts at the center, draws one `arc` Step, and leaves the cursor at the arc endpoint.
+- A closed `<Arc>` and solid `<Sector>` use `circlePath` / `ellipsePath`; `closed` decides whether the endpoints form a chord or return to the center.
+- A hollow `<Sector>` draws the outer arc, a radial edge, the inner arc in reverse, then the radial edge back to the start. It must calculate both arc endpoints up front, so `center` must be a literal `[x, y]`.
+
+Stroke, fill, arrows, and whole-shape transforms all live on the outer `<Path>`; `label` belongs to the Step that draws the visible arc. Standard stops at this boundary and introduces no parallel path or rendering semantics.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Expand open and closed Arc forms',
+      path: 'packages/library/standard/src/shape/arc/pipeline.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Expand solid and hollow Sector forms',
+      path: 'packages/library/standard/src/shape/sector/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## Schema reference
+
+### ArcSchema
+
+<ZodSchema name="ArcSchema" />
+
+### SectorSchema
+
+<ZodSchema name="SectorSchema" />
+
+## API reference
+
+{/* @include library/standard/shape/arc-sector/generated */}

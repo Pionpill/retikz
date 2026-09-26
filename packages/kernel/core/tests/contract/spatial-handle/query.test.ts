@@ -9,12 +9,12 @@ const occurrence = (sourcePath: string, index = 0) => ({
 });
 
 const entry = (
-  key: string,
+  id: string,
   ownerId: string | undefined,
   ancestors: ReadonlyArray<{ namespace: string; type: string; instanceId?: string }>,
   tags: ReadonlyArray<string>,
 ): QualifiedSpatialHandle => {
-  const ownerOccurrence = occurrence(`children[${key}]`);
+  const ownerOccurrence = occurrence(`children[${id}]`);
   return {
     ownerPath: [
       ...ancestors.map((owner, index) => ({ ...owner, occurrence: occurrence(`ancestor[${index}]`) })),
@@ -25,7 +25,7 @@ const entry = (
         occurrence: ownerOccurrence,
       },
     ],
-    key,
+    id,
     role: 'card',
     geometry: { kind: 'rect', bounds: { x: 0, y: 0, width: 10, height: 10 } },
     tags,
@@ -50,7 +50,17 @@ const entries = [
 const index: SpatialHandleIndex = { entries };
 
 describe('spatial handle query', () => {
-  it('matches owner fields together, key, role, and all requested tags in index order', () => {
+  it('returns one identical entry for its primary id and aliases', () => {
+    const aliased = Object.freeze({ ...entries[0], aliasIds: Object.freeze(['other', 'third']) });
+    const aliasedIndex = { entries: [aliased] };
+    expect(resolveSpatialHandle(aliasedIndex, { id: 'other' })).toBe(aliased);
+    expect(resolveSpatialHandle(aliasedIndex, { id: 'a' })).toBe(aliased);
+    expect(selectSpatialHandles(aliasedIndex, {})).toEqual([aliased]);
+    expect(() =>
+      resolveSpatialHandle({ entries: [aliased, { ...entries[1], aliasIds: ['other'] }] }, { id: 'other' }),
+    ).toThrow(/ambiguity/);
+  });
+  it('matches owner fields together, id, role, and all requested tags in index order', () => {
     expect(
       selectSpatialHandles(index, {
         owner: {
@@ -59,7 +69,7 @@ describe('spatial handle query', () => {
           instanceId: 'card-a',
           occurrence: entries[0].ownerPath[1].occurrence,
         },
-        key: 'a',
+        id: 'a',
         role: 'card',
         tags: ['primary', 'content'],
       }),
@@ -95,8 +105,8 @@ describe('spatial handle query', () => {
   });
 
   it('resolves exactly one entry and fails loudly for miss or ambiguity', () => {
-    expect(resolveSpatialHandle(index, { key: 'a' })).toBe(entries[0]);
-    expect(() => resolveSpatialHandle(index, { key: 'missing' })).toThrow(/miss.*missing/i);
+    expect(resolveSpatialHandle(index, { id: 'a' })).toBe(entries[0]);
+    expect(() => resolveSpatialHandle(index, { id: 'missing' })).toThrow(/miss.*missing/i);
     expect(() => resolveSpatialHandle(index, { role: 'card' })).toThrow(/ambig.*card/i);
   });
 });

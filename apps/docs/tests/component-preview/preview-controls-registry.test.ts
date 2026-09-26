@@ -1212,8 +1212,8 @@ describe('preview controls registry', () => {
   });
 
   it('Grid playground 覆盖完整语义并按状态隐藏无效字段', () => {
-    const segments = ['library', 'standard', 'grid'];
-    expect(Object.keys(controlModules).filter(key => key.includes('/library/standard/grid/'))).toEqual([
+    const segments = ['library', 'standard', 'presentation', 'grid'];
+    expect(Object.keys(controlModules).filter(key => key.includes('/library/standard/presentation/grid/'))).toEqual([
       buildControlsKey(segments, 'grid-playground'),
       buildLangControlsKey(segments, 'grid-playground', 'en'),
     ]);
@@ -1296,8 +1296,10 @@ describe('preview controls registry', () => {
   });
 
   it('Frame 文档按组合语义递进，并以双语 controls 和自绘图闭合三条入口', () => {
-    const segments = ['library', 'standard', 'frame'];
-    const controlsKeys = Object.keys(controlModules).filter(key => key.includes('/library/standard/frame/'));
+    const segments = ['library', 'standard', 'presentation', 'frame'];
+    const controlsKeys = Object.keys(controlModules).filter(key =>
+      key.includes('/library/standard/presentation/frame/'),
+    );
 
     expect(controlsKeys).toEqual([
       buildControlsKey(segments, 'frame-playground'),
@@ -1348,7 +1350,7 @@ describe('preview controls registry', () => {
     expect(playgroundSource).toContain('values.connected ? <Draw');
     expect(playgroundSource).toContain("way={['A', 'B']}");
 
-    const contentRoot = resolve('src/modules/docs/contents/library/standard/frame');
+    const contentRoot = resolve('src/modules/docs/contents/library/standard/presentation/frame');
     for (const locale of ['zh', 'en']) {
       const pageSource = readFileSync(resolve(contentRoot, `index.${locale}.mdx`), 'utf8');
       const previewNames = Array.from(

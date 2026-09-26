@@ -8,7 +8,7 @@ import { StandardPathBorderStyleSchema } from '../../shared/schemas';
 import { FrameHeaderDirection } from './constants';
 
 const FrameHeaderShape = {
-  ...NodeSchema.omit({ type: true, position: true, text: true }).shape,
+  ...strictObject(NodeSchema.shape).omit({ type: true, position: true, text: true, aliasIds: true }).shape,
   text: NodeSchema.shape.text.unwrap().describe('Required Core Node text rendered as Frame header content.'),
 };
 

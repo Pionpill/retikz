@@ -22,6 +22,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Node center position, supporting coordinates, relative positioning, and anchor alignment',
   附着于节点的一个或多个标签: 'One or more labels attached to the node',
 
+  '指向同一节点几何的额外 id；要求主 id，别名非空白且不重复':
+    'Additional ids for the same node geometry; requires a primary id and distinct nonblank aliases',
   '命名坐标点的 React 输入，不绘制可见内容': 'React input for a named coordinate with no visible content',
   '可选编译驱动解释的运行时载荷，不进入 Core IR':
     'Optional runtime payload interpreted by a compile driver; excluded from Core IR',

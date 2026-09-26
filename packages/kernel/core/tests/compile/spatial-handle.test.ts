@@ -16,7 +16,7 @@ const card = defineComposite({
     children: [],
     spatialHandles: [
       {
-        key: 'body',
+        id: 'body',
         role: 'card',
         bounds: { x: 0, y: 0, width: 10, height: 20 },
         tags: ['content', 'primary'],
@@ -61,7 +61,7 @@ describe('qualified spatial handle compile', () => {
         { namespace: 'third', type: 'panel', instanceId: 'outer-panel' },
         { namespace: 'third', type: 'card', instanceId: 'inner-card' },
       ],
-      key: 'body',
+      id: 'body',
       role: 'card',
       geometry: { kind: 'rect', bounds: { x: 0, y: 0, width: 10, height: 20 } },
       tags: ['content', 'primary'],
@@ -82,8 +82,8 @@ describe('qualified spatial handle compile', () => {
       expand: () => ({
         children: [],
         spatialHandles: [
-          { key: 'z', role: 'ordered', bounds: { x: 0, y: 0, width: 1, height: 1 } },
-          { key: 'a', role: 'ordered', bounds: { x: 1, y: 0, width: 1, height: 1 } },
+          { id: 'z', role: 'ordered', bounds: { x: 0, y: 0, width: 1, height: 1 } },
+          { id: 'a', role: 'ordered', bounds: { x: 1, y: 0, width: 1, height: 1 } },
         ],
       }),
     });
@@ -95,7 +95,7 @@ describe('qualified spatial handle compile', () => {
       { composites: [orderedCard] },
     );
 
-    expect(result.spatialHandles.entries.map(entry => entry.key)).toEqual(['z', 'a', 'z', 'a']);
+    expect(result.spatialHandles.entries.map(entry => entry.id)).toEqual(['z', 'a', 'z', 'a']);
     expect(result.spatialHandles.entries.map(entry => entry.ownerPath.at(-1)?.instanceId)).toEqual([
       undefined,
       undefined,
@@ -162,7 +162,7 @@ describe('qualified spatial handle compile', () => {
       }),
       compile: (_node, context) => ({
         children: [
-          context.scope({}, [], [{ key: 'layout', role: 'layout-card', bounds: { x: 2, y: 3, width: 4, height: 5 } }]),
+          context.scope({}, [], [{ id: 'layout', role: 'layout-card', bounds: { x: 2, y: 3, width: 4, height: 5 } }]),
         ],
       }),
     });
@@ -191,7 +191,7 @@ describe('qualified spatial handle compile', () => {
       compile: () =>
         ({
           children: [],
-          spatialHandles: [{ key: 'legacy', role: 'legacy', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
+          spatialHandles: [{ id: 'legacy', role: 'legacy', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
         }) as never,
     });
 
@@ -216,7 +216,7 @@ describe('qualified spatial handle compile', () => {
             children: [],
           },
         ],
-        spatialHandles: [{ key: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
+        spatialHandles: [{ id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }],
       }),
     });
 
@@ -226,7 +226,7 @@ describe('qualified spatial handle compile', () => {
   });
 
   it('checks duplicate keys only across reachable runtime Scopes', () => {
-    const declaration = { key: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } } as const;
+    const declaration = { id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } } as const;
     const layoutCard = defineComposite({
       namespace: 'third',
       type: 'reachableCard',
@@ -244,11 +244,11 @@ describe('qualified spatial handle compile', () => {
       composites: [layoutCard],
     });
 
-    expect(result.spatialHandles.entries.map(entry => entry.key)).toEqual(['body']);
+    expect(result.spatialHandles.entries.map(entry => entry.id)).toEqual(['body']);
   });
 
-  it('rejects duplicate keys across two reachable runtime Scopes', () => {
-    const declaration = { key: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } } as const;
+  it('rejects duplicate alias ids across two reachable runtime Scopes', () => {
+    const declaration = { id: 'body', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } } as const;
     const layoutCard = defineComposite({
       namespace: 'third',
       type: 'duplicateCard',
@@ -257,7 +257,10 @@ describe('qualified spatial handle compile', () => {
         type: literal('duplicateCard'),
       }),
       compile: (_node, context) => ({
-        children: [context.scope({}, [], [declaration]), context.scope({}, [], [declaration])],
+        children: [
+          context.scope({}, [], [declaration]),
+          context.scope({}, [], [{ ...declaration, id: 'other', aliasIds: ['body'] }]),
+        ],
       }),
     });
 
@@ -275,7 +278,7 @@ describe('qualified spatial handle compile', () => {
         type: literal('invalidDiscardedCard'),
       }),
       compile: (_node, context) => {
-        void context.scope({}, [], [{ key: '', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }]);
+        void context.scope({}, [], [{ id: '', role: 'card', bounds: { x: 0, y: 0, width: 1, height: 1 } }]);
         return { children: [] };
       },
     });
@@ -284,6 +287,6 @@ describe('qualified spatial handle compile', () => {
       compileToScene(sceneOf([{ namespace: 'third', type: 'invalidDiscardedCard' }]), {
         composites: [layoutCard],
       }),
-    ).toThrow(/key.*non-empty/i);
+    ).toThrow(/id.*non-empty/i);
   });
 });

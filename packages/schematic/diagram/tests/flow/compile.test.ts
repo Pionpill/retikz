@@ -564,7 +564,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(artifact.relations).toHaveLength(1);
     expect(artifact.relations[0]).not.toHaveProperty('id');
     expect(artifact.regions.drawing.allocationBounds.width).toBeGreaterThan(0);
-    expect(elementHandles.map(entry => entry.key)).toEqual(['element:source', 'element:target']);
+    expect(elementHandles.map(entry => entry.id)).toEqual(['element:source', 'element:target']);
     expect(relationPath).toBeDefined();
     expect(relationPath?.id).toBeUndefined();
     expect(serializedScene).toContain('Source');
@@ -931,7 +931,7 @@ describe('Flow Diagram compile transaction', () => {
         ['region:drawing', flowArtifact.regions.drawing.allocationBounds],
         ['region:legend', flowArtifact.regions.legend?.allocationBounds],
       ] as const) {
-        const handleBounds = result.spatialHandles.entries.find(entry => entry.key === key)?.geometry.bounds;
+        const handleBounds = result.spatialHandles.entries.find(entry => entry.id === key)?.geometry.bounds;
         expect(handleBounds).toBeDefined();
         expect(expectedBounds).toBeDefined();
         if (handleBounds === undefined || expectedBounds === undefined) continue;
@@ -1262,7 +1262,7 @@ describe('Flow Diagram compile transaction', () => {
       labelReservation: { width: 56 },
     });
     expect(artifact.relations[0]?.labelReservation?.height).toBeGreaterThan(0);
-    expect(result.spatialHandles.entries.map(entry => entry.key)).toEqual(
+    expect(result.spatialHandles.entries.map(entry => entry.id)).toEqual(
       expect.arrayContaining(['element:group', 'element:nested', 'element:outside']),
     );
     expect(JSON.stringify(result.scene)).toContain('crosses');
@@ -1327,7 +1327,7 @@ describe('Flow Diagram compile transaction', () => {
     );
     const artifact = Flow.FlowDiagramArtifactSchema.parse(artifactEnvelope?.value);
     const layoutArtifact = artifact.elements[0];
-    const layoutHandle = result.spatialHandles.entries.find(entry => entry.key === 'element:layout-only');
+    const layoutHandle = result.spatialHandles.entries.find(entry => entry.id === 'element:layout-only');
 
     expect(layoutArtifact).toMatchObject({
       id: 'layout-only',
@@ -1385,7 +1385,7 @@ describe('Flow Diagram compile transaction', () => {
     expect(Math.sign(mainDelta)).toBe(sign);
     expect(shortCrossEnd).toBe(longCrossEnd);
     expect(result.spatialHandles.entries).toEqual(
-      expect.arrayContaining([expect.objectContaining({ key: 'element:lane', role: 'layout' })]),
+      expect.arrayContaining([expect.objectContaining({ id: 'element:lane', role: 'layout' })]),
     );
   });
 });

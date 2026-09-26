@@ -60,7 +60,8 @@ export type CoordinateProps = {
 
 | 分组   | 成员              | 类型                                                                                                                                                                       | 默认值        | 说明                                                                                                                                                                                                                                                                                                                                                                         |
 | ------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 主要   | `children?`       | `ReactNode`                                                                                                                                                                | —             | children 内容：文本<br />与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。<br />字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染                                                                                                                 |
+| 主要   | `aliasIds?`       | `IRNode['aliasIds']`                                                                                                                                                       | —             | 指向同一节点几何的额外 id；要求主 id，别名非空白且不重复                                                                                                                                                                                                                                                                                                                     |
+|        | `children?`       | `ReactNode`                                                                                                                                                                | —             | children 内容：文本<br />与 `text` 二选一、`text` 优先；支持字符串内嵌 `\\n` / 模板字面量 / 字符串数组 / 混 `<Text>` 带样式行。<br />字符串里可写行内公式 `$...$`（inline）/ `$$...$$`（display），编译期在注入 `<Layout lowerTex>` 时解析；未注入则字面渲染                                                                                                                 |
 |        | `id?`             | `string`                                                                                                                                                                   | —             | 节点 id；其他 Path/Draw 通过这个 id 引用本节点                                                                                                                                                                                                                                                                                                                               |
 |        | `label?`          | `InputNodeLabel \| Array<InputNodeLabel>`                                                                                                                                  | —             | 节点附加标签，支持单对象或数组<br />标签可附着到命名方向、中心、角度或边界比例位置；支持内外侧摆放、旋转、切向对齐和外侧引线，不参与节点形状尺寸计算。缺省位置为 top，间距继承编译配置 labelDistance                                                                                                                                                                         |
 |        | `text?`           | `string \| Array<IRLine>`                                                                                                                                                  | —             | 显式 text，优先级高于 children<br />`string` 单行（可含 `$...$` 公式）/ `Array<string \| IRLine>` 多行可对单行覆盖 fill / opacity / font，<br />或行内混排 `{ runs: [{ text }, { tex }] }`（每 run 可单独着色）                                                                                                                                                              |
@@ -98,6 +99,7 @@ export type NodeProps = HydrationEventProps & {
   style?: InputNode['style'];
   layout?: InputNode['layout'];
   id?: string;
+  aliasIds?: IRNode['aliasIds'];
   shape?: IRNode['shape'];
   boundary?: IRBoundary;
   meta?: IRNode['meta'];
@@ -190,7 +192,7 @@ export declare const Coordinate: FC<CoordinateProps>;
 ### Node
 
 <p>
-  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={97}>
+  <ApiSourceLink label={'Node'} path={'packages/kernel/react/src/kernel/components/Node.tsx'} startLine={99}>
     Node 声明一个可引用的节点
   </ApiSourceLink>
 </p>
@@ -275,7 +277,8 @@ export type InputCoordinate = IRCoordinate & {
 
 | 分组   | 成员            | 类型                                                                                             | 默认值 | 说明                                                                                                             |
 | ------ | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
-| 主要   | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
+| 主要   | `aliasIds?`     | `Array<string>`                                                                                  | —      | 同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元                              |
+|        | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
 |        | `label?`        | `InputNodeLabel \| ReadonlyArray<InputNodeLabel>`                                                | —      | 附着于节点的一个或多个标签                                                                                       |
 |        | `text?`         | `IRNode['text']`                                                                                 | —      | 正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex                                              |
 |        | `type?`         | `'node'`                                                                                         | —      | 节点类别标识，可省略                                                                                             |
@@ -664,7 +667,8 @@ export type IRCoordinate = ZodInfer<typeof CoordinateSchema>;
 
 | 分组   | 成员            | 类型                                                                                             | 默认值 | 说明                                                                                                             |
 | ------ | --------------- | ------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------- |
-| 主要   | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
+| 主要   | `aliasIds?`     | `Array<string>`                                                                                  | —      | 同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元                              |
+|        | `id?`           | `string`                                                                                         | —      | 可选引用标识，路径或其它节点通过它引用本节点                                                                     |
 |        | `label?`        | `ZodInfer<typeof NodeSchema.shape["label"]>`                                                     | —      | 附着于节点的一个或多个标签                                                                                       |
 |        | `text?`         | `ZodInfer<typeof NodeSchema.shape["text"]>`                                                      | —      | 正文字符串或行数组，支持行级样式及文字与公式混排；公式需要 lowerTex                                              |
 |        | `type`          | `"node"`                                                                                         | —      | 判别字段，固定为 node                                                                                            |

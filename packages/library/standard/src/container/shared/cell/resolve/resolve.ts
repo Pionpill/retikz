@@ -1,6 +1,6 @@
-import type { IRCell, IRCellStyle, IRCellLayout } from '../schema';
+import type { IRCellStyle, IRCellLayout } from '../schema';
 import { CellDefaultsSchema, CellLayoutDefaultsSchema, KeyCellDefaultsSchema } from '../schema';
-import type { CanonicalCell } from './types';
+import type { CanonicalCell, CellResolveSource } from './types';
 
 /** 只合并显式字段；字体子字段保留先前继承值 */
 const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
@@ -25,10 +25,10 @@ const mergeStyle = (styles: Array<IRCellStyle | undefined>): IRCellStyle => {
 
 /** 在整体、角色、单元格合并后才应用权威字段默认 */
 export const resolveCell = (
-  source: string | IRCell,
+  source: string | CellResolveSource,
   overallStyle?: IRCellStyle,
   roleStyle?: IRCellStyle,
-  layout?: IRCellLayout,
+  layout?: CellResolveSource['layout'],
   isKey = false,
   roleLayout?: IRCellLayout,
 ): CanonicalCell => {
