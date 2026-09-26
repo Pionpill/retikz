@@ -35,7 +35,7 @@ const GraphLayers: FC<GraphLayersProps> = props => {
       {rows.map(row => (
         <Node
           key={row.id}
-          position={[160, row.y + 28]}
+          position={[160, row.y + 40]}
           text={row.detail}
           style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
         />
@@ -53,12 +53,12 @@ const GraphLayers: FC<GraphLayersProps> = props => {
         way={['graph.right', [400, 130], [400, 230], 'drawing.right']}
       />
       <Node
-        position={[310, 80]}
+        position={[310, 90]}
         text={t.supplies}
         style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
       />
       <Node
-        position={[310, 180]}
+        position={[310, 190]}
         text={t.reuses}
         style={{ stroke: 'none', fill: 'none', textColor: 'gray', font: { size: 12 } }}
       />
