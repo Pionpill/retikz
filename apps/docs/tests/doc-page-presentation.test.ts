@@ -3,19 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { resolveDocPagePresentation } from '@/modules/docs/layout';
 
 describe('resolveDocPagePresentation', () => {
-  it('保留 Article 的 800px 正文与标题目录', () => {
+  it('保留 Article 的 936px 正文与标题目录', () => {
     expect(
       resolveDocPagePresentation({
         layout: 'article',
         source: '## Details\n\nBody',
         isChangelog: false,
       }),
-    ).toEqual({ contentClassName: 'max-w-200', hasToc: true });
+    ).toEqual({ contentClassName: 'max-w-[936px]', hasToc: true });
   });
 
   it('Article 没有标题时不占用目录栏', () => {
     expect(resolveDocPagePresentation({ layout: 'article', source: 'Body only', isChangelog: false })).toEqual({
-      contentClassName: 'max-w-200',
+      contentClassName: 'max-w-[936px]',
       hasToc: false,
     });
   });
@@ -32,7 +32,7 @@ describe('resolveDocPagePresentation', () => {
 
   it('更新日志继续使用 Article 宽度且没有目录', () => {
     expect(resolveDocPagePresentation({ layout: 'article', source: '## Release', isChangelog: true })).toEqual({
-      contentClassName: 'max-w-200',
+      contentClassName: 'max-w-[936px]',
       hasToc: false,
     });
   });
