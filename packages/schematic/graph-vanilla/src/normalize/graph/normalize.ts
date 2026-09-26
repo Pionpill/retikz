@@ -1,4 +1,12 @@
-import type { IRBlock, IRBlockHeader, IRBlockRow, IRBlockSection, IRGraph, IRGroup } from '@retikz/graph';
+import type {
+  IRBlock,
+  IRBlockHeader,
+  IRBlockRow,
+  IRBlockSection,
+  IRGraph,
+  IRGraphEntity,
+  IRGroup,
+} from '@retikz/graph';
 import {
   createBlock,
   createBlockHeader,
@@ -25,8 +33,12 @@ import type {
   InputRelationEndpoint,
 } from './types';
 
-/** 将 Entity authoring 输入组装为单个 Source record */
-export const normalizeEntity = (input: InputEntity) => {
+/**
+ * 将 Entity authoring 输入组装为单个 Source record
+ * @param input 带 type 判别字段的实体编写输入
+ * @returns 新建的 Entity Source 记录；保留输入字段，不生成 id 或布局位置
+ */
+export const normalizeEntity = (input: InputEntity): IRGraphEntity => {
   const { type, ...entity } = input;
   void type;
   return createEntity(entity);

@@ -2,47 +2,34 @@
 
 ## `@retikz/graph-react`
 
-### EntityProps
+### Entity / EntityProps
 
-<p>
-  <ApiSourceLink label={'EntityProps'} path={'packages/schematic/graph-react/src/graph/Entity.tsx'} startLine={10}>
-    React authoring props for an Entity Source
-  </ApiSourceLink>
-</p>
+- `Entity`: <ApiSourceLink label={"Entity"} path={"packages/schematic/graph-react/src/graph/Entity.tsx"} startLine={22}>Integrate an Entity Source into React authoring</ApiSourceLink>
+- `EntityProps`: <ApiSourceLink label={"EntityProps"} path={"packages/schematic/graph-react/src/graph/Entity.tsx"} startLine={10}>React authoring props for an Entity Source</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
-<DocTab value="members" label="Members">
+<DocTab value="members" label="Direct members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+The remaining members are inherited from `InputEntity`, with `'type'` removed. See “Type definition” for the complete composition.
 
-| Member               | Type                                                                                             | Default | Description                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------- |
-| `animations?`        | `Array<IRAnimationTrack>`                                                                        | —       | —                                                                                  |
-| `readonly children?` | `ReactNode`                                                                                      | —       | Accepts only Node-compatible text authoring; mutually exclusive with the text prop |
-| `group?`             | `string`                                                                                         | —       | —                                                                                  |
-| `id?`                | `string`                                                                                         | —       | —                                                                                  |
-| `kind?`              | `string`                                                                                         | —       | —                                                                                  |
-| `label?`             | `InputEntity['label']`                                                                           | —       | —                                                                                  |
-| `layout?`            | `InputEntity['layout']`                                                                          | —       | —                                                                                  |
-| `meta?`              | `Record<string, JsonValue>`                                                                      | —       | —                                                                                  |
-| `position?`          | `InputEntity['position']`                                                                        | —       | —                                                                                  |
-| `predicate?`         | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —                                                                                  |
-| `role`               | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —                                                                                  |
-| `rotate?`            | `number`                                                                                         | —       | —                                                                                  |
-| `scale?`             | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —                                                                                  |
-| `status?`            | <ApiValues name="GraphStatus" />                                                                 | —       | —                                                                                  |
-| `style?`             | `InputEntity['style']`                                                                           | —       | —                                                                                  |
-| `text?`              | `InputEntity['text']`                                                                            | —       | —                                                                                  |
-| `zIndex?`            | `number`                                                                                         | —       | —                                                                                  |
+<ApiTable>
 
-</div>
+| Member               | Type        | Default | Description                                                                        |
+| -------------------- | ----------- | ------- | ---------------------------------------------------------------------------------- |
+| `readonly children?` | `ReactNode` | —       | Accepts only Node-compatible text authoring; mutually exclusive with the text prop |
+
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const Entity: {
+  (props: EntityProps, context?: any): ReactNode;
+};
+
 export type EntityProps = Omit<InputEntity, 'type'> &
   Readonly<{
     children?: ReactNode;
@@ -53,62 +40,49 @@ export type EntityProps = Omit<InputEntity, 'type'> &
 
 </DocTabs>
 
-### Entity
-
-<p>
-  <ApiSourceLink label={'Entity'} path={'packages/schematic/graph-react/src/graph/Entity.tsx'} startLine={22}>
-    Integrate an Entity Source into React authoring
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const Entity: {
-  (props: EntityProps, context?: any): ReactNode;
-};
-```
-
 ## `@retikz/graph-vanilla`
 
-### EntityInputEmbedProps
+### entity / EntityInputEmbedProps
 
-<p>
-  <ApiSourceLink label={'EntityInputEmbedProps'} path={'packages/schematic/graph-vanilla/src/entity.ts'} startLine={11}>
-    Source authoring input for an Entity embed
-  </ApiSourceLink>
-</p>
+- `entity`: <ApiSourceLink label={"entity"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={31}>Create an authoring embed node for an Entity Source</ApiSourceLink>
+- `EntityInputEmbedProps`: <ApiSourceLink label={"EntityInputEmbedProps"} path={"packages/schematic/graph-vanilla/src/entity.ts"} startLine={11}>Source authoring input for an Entity embed</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| Member        | Type                                                                                             | Default | Description |
-| ------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `animations?` | `Array<IRAnimationTrack>`                                                                        | —       | —           |
-| `group?`      | `string`                                                                                         | —       | —           |
-| `id?`         | `string`                                                                                         | —       | —           |
-| `kind?`       | `string`                                                                                         | —       | —           |
-| `label?`      | `EntityInputEmbedProps["label"]`                                                                 | —       | —           |
-| `layout?`     | `EntityInputEmbedProps["layout"]`                                                                | —       | —           |
-| `meta?`       | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `position?`   | `EntityInputEmbedProps["position"]`                                                              | —       | —           |
-| `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —           |
-| `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —           |
-| `rotate?`     | `number`                                                                                         | —       | —           |
-| `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
-| `status?`     | <ApiValues name="GraphStatus" />                                                                 | —       | —           |
-| `style?`      | `EntityInputEmbedProps["style"]`                                                                 | —       | —           |
-| `text?`       | `EntityInputEmbedProps["text"]`                                                                  | —       | —           |
-| `zIndex?`     | `number`                                                                                         | —       | —           |
+| Group     | Member              | Type                                                                                             | Default | Description                                                                                     |
+| --------- | ------------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
+| Main      | `group?`            | `string`                                                                                         | —       | —                                                                                               |
+|           | `id?`               | `string`                                                                                         | —       | —                                                                                               |
+|           | `kind?`             | `string`                                                                                         | —       | —                                                                                               |
+|           | `label?`            | `EntityInputEmbedProps["label"]`                                                                 | —       | —                                                                                               |
+|           | `predicate?`        | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —                                                                                               |
+|           | `role`              | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —                                                                                               |
+|           | `text?`             | `EntityInputEmbedProps["text"]`                                                                  | —       | —                                                                                               |
+| Geometry  | `position?`         | `EntityInputEmbedProps["position"]`                                                              | —       | —                                                                                               |
+|           | `rotate?`           | `number`                                                                                         | —       | —                                                                                               |
+|           | `scale?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —                                                                                               |
+| Layout    | `layout?`           | `EntityInputEmbedProps["layout"]`                                                                | —       | —                                                                                               |
+| Style     | `status?`           | <ApiValues name="GraphStatus" />                                                                 | —       | —                                                                                               |
+|           | `style?`            | `EntityInputEmbedProps["style"]`                                                                 | —       | —                                                                                               |
+|           | `zIndex?`           | `number`                                                                                         | —       | —                                                                                               |
+| Animation | `animations?`       | `Array<IRAnimationTrack>`                                                                        | —       | —                                                                                               |
+| Data      | `meta?`             | `Record<string, JsonValue>`                                                                      | —       | —                                                                                               |
+|           | `input` (Parameter) | `EntityInputEmbedProps`                                                                          | —       | Entity authoring fields; custom semantics reference only keys registered through Graph          |
+|           | Returns             | `InputEmbed<Omit<InputEntity, 'type'>>`                                                          | —       | An embed node for a Vanilla content tree, converted to Entity Source by EntityInputEmbedAdapter |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const entity: (input: EntityInputEmbedProps) => InputEmbed<Omit<InputEntity, 'type'>>;
+
 export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 ```
 
@@ -116,51 +90,48 @@ export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 
 </DocTabs>
 
-### InputEntity
+### normalizeEntity / InputEntity
 
-<p>
-  <ApiSourceLink
-    label={'InputEntity'}
-    path={'packages/schematic/graph-vanilla/src/normalize/graph/types.ts'}
-    startLine={17}
-  >
-    Vanilla authoring input for Entity
-  </ApiSourceLink>
-</p>
+- `normalizeEntity`: <ApiSourceLink label={"normalizeEntity"} path={"packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts"} startLine={41}>Normalize Entity authoring input into a single Source record</ApiSourceLink>
+- `InputEntity`: <ApiSourceLink label={"InputEntity"} path={"packages/schematic/graph-vanilla/src/normalize/graph/types.ts"} startLine={17}>Vanilla authoring input for Entity</ApiSourceLink>
 
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| Member          | Type                                                                                             | Default | Description |
-| --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `animations?`   | `Array<IRAnimationTrack>`                                                                        | —       | —           |
-| `group?`        | `string`                                                                                         | —       | —           |
-| `id?`           | `string`                                                                                         | —       | —           |
-| `kind?`         | `string`                                                                                         | —       | —           |
-| `label?`        | `EntityCreateOptions['label']`                                                                   | —       | —           |
-| `layout?`       | `EntityCreateOptions['layout']`                                                                  | —       | —           |
-| `meta?`         | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `position?`     | `EntityCreateOptions['position']`                                                                | —       | —           |
-| `predicate?`    | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —           |
-| `role`          | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —           |
-| `rotate?`       | `number`                                                                                         | —       | —           |
-| `scale?`        | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
-| `status?`       | <ApiValues name="GraphStatus" />                                                                 | —       | —           |
-| `style?`        | `EntityCreateOptions['style']`                                                                   | —       | —           |
-| `text?`         | `EntityCreateOptions['text']`                                                                    | —       | —           |
-| `readonly type` | `'entity'`                                                                                       | —       | —           |
-| `zIndex?`       | `number`                                                                                         | —       | —           |
+| Group     | Member              | Type                                                                                             | Default | Description                                                                                                                                                                 |
+| --------- | ------------------- | ------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `group?`            | `string`                                                                                         | —       | Optional semantic group key for Entities within a Graph; members share a categorical color by default.                                                                      |
+|           | `id?`               | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                             |
+|           | `kind?`             | `string`                                                                                         | —       | Open stable subtype key whose registration identity is the selected Entity role and kind.                                                                                   |
+|           | `label?`            | `EntityCreateOptions['label']`                                                                   | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                               |
+|           | `predicate?`        | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | Optional precise semantic predicate reference.                                                                                                                              |
+|           | `role`              | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
+|           | `text?`             | `EntityCreateOptions['text']`                                                                    | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex. |
+|           | `readonly type`     | `'entity'`                                                                                       | —       | Entity authoring input discriminator, fixed to entity                                                                                                                       |
+| Geometry  | `position?`         | `EntityCreateOptions['position']`                                                                | —       | Optional Core Node placement.                                                                                                                                               |
+|           | `rotate?`           | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                 |
+|           | `scale?`            | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                           |
+| Layout    | `layout?`           | `EntityCreateOptions['layout']`                                                                  | —       | Node layout overrides without role-owned padding.                                                                                                                           |
+| Style     | `status?`           | <ApiValues name="GraphStatus" />                                                                 | —       | Optional closed Graph semantic status.                                                                                                                                      |
+|           | `style?`            | `EntityCreateOptions['style']`                                                                   | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                    |
+|           | `zIndex?`           | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                 |
+| Animation | `animations?`       | `Array<IRAnimationTrack>`                                                                        | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                    |
+| Data      | `meta?`             | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                             |
+|           | `input` (Parameter) | `InputEntity`                                                                                    | —       | Entity authoring input with its type discriminator                                                                                                                          |
+|           | Returns             | `IRGraphEntity`                                                                                  | —       | A new Entity Source record preserving input fields without generating an id or layout position                                                                              |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
 <DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const normalizeEntity: (input: InputEntity) => IRGraphEntity;
+
 export type InputEntity = EntityCreateOptions &
   Readonly<{
     type: 'entity';
@@ -193,78 +164,69 @@ export declare const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbed
   <ApiSourceLink
     label={'createGraphVanillaAdapters'}
     path={'packages/schematic/graph-vanilla/src/adapters.ts'}
-    startLine={19}
+    startLine={22}
   >
     Create the Graph adapters passed together to Vanilla normalization
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category | Name | Type / signature                    | Description                                                                         |
+| -------- | ---- | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| Returns  | —    | `Array<InputEmbedAdapter<unknown>>` | A new adapter array containing Graph, Group, the Block family, Entity, and Relation |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const createGraphVanillaAdapters: () => Array<InputEmbedAdapter<unknown>>;
 ```
 
-### entity
+</DocTab>
 
-<p>
-  <ApiSourceLink label={'entity'} path={'packages/schematic/graph-vanilla/src/entity.ts'} startLine={27}>
-    Create an authoring embed node for an Entity Source
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const entity: (input: EntityInputEmbedProps) => InputEmbed<Omit<InputEntity, 'type'>>;
-```
-
-#### Parameters
-
-| Parameter | Type                    | Description |
-| --------- | ----------------------- | ----------- |
-| `input`   | `EntityInputEmbedProps` | —           |
-
-### normalizeEntity
-
-<p>
-  <ApiSourceLink
-    label={'normalizeEntity'}
-    path={'packages/schematic/graph-vanilla/src/normalize/graph/normalize.ts'}
-    startLine={29}
-  >
-    Normalize Entity authoring input into a single Source record
-  </ApiSourceLink>
-</p>
-
-<details>
-<summary>View full inferred signature</summary>
-
-```ts
-export declare const normalizeEntity: (input: InputEntity) => { animations?: Array<{ delay?: number; direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse'; duration: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> | [number, number, number, number]; fill?: 'none' | 'forwards' | 'backwards' | 'both'; iterations?: number | 'infinite'; keyframes: Array<{ at: number; easing?: OpenString<ValueOf<{ Ease: 'ease'; EaseIn: 'ease-in'; EaseInOut: 'ease-in-out'; EaseOut: 'ease-out'; Linear: 'linear' }>> | [number, number, number, number]; value: JsonValue }>; origin?: 'center' | [number, number] | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'; property: OpenString<ValueOf<{ Fill: 'fill'; Opacity: 'opacity'; PathDraw: 'pathDraw'; Rotate: 'rotate'; Scale: 'scale'; ScaleX: 'scaleX'; ScaleY: 'scaleY'; Stroke: 'stroke'; StrokeWidth: 'strokeWidth'; TranslateX: 'translateX'; TranslateY: 'translateY'; ViewBox: 'viewBox' }>>; trigger?: 'load' | 'visible' | 'manual' | { onEvent: string } }>; group?: string; id?: string; kind?: string; label?: { align?: 'start' | 'middle' | 'end'; distance?: number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; keepUpright?: boolean; opacity?: number; pin?: boolean | { dashOffset?: number; dashPattern?: Array<number>; stroke?: string | number; strokeWidth?: number }; placement?: 'outside' | 'inside'; position?: number | 'center' | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | { boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }; rotate?: number | 'none' | 'radial' | 'tangent'; text: string | { runs: Array<{ fill?: string | number; font?: { family?: ... | ...; size?: ... | ... | ...; style?: ... | ... | ... | ...; weight?: ... | ... | ... | ... }; opacity?: number; text: string } | { displayMode?: boolean; fill?: string | number; opacity?: number; tex: string }> }; textColor?: string | number } | Array<{ align?: 'start' | 'middle' | 'end'; distance?: number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; keepUpright?: boolean; opacity?: number; pin?: boolean | { dashOffset?: number; dashPattern?: Array<number>; stroke?: string | number; strokeWidth?: number }; placement?: 'outside' | 'inside'; position?: number | 'center' | 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | { boundary: 'top' | 'right' | 'bottom' | 'left'; fraction?: number }; rotate?: number | 'none' | 'radial' | 'tangent'; text: string | { runs: Array<{ fill?: string | number; font?: { family?: ...; size?: ...; style?: ...; weight?: ... }; opacity?: number; text: string } | { displayMode?: boolean; fill?: string | number; opacity?: number; tex: string }> }; textColor?: string | number }>; layout?: { align?: 'start' | 'middle' | 'end'; lineHeight?: number; margin?: number | { bottom?: number; default?: number; left?: number; right?: number; top?: number; x?: number; y?: number }; maxTextWidth?: number; minimumSize?: number | { default?: number; height?: number; width?: number }; width?: number }; meta?: Record<string, JsonValue>; namespace: 'graph'; position?: [number, number] | SharedPolarPosition | { of: string | [number, number] | SharedPolarPosition; offset: [number, number] } | IRBetweenPosition | { kind: 'anchor'; selfAnchor?: number | OpenString<ValueOf<{ Bottom: 'bottom'; BottomLeft: 'bottom-left'; BottomRight: 'bottom-right'; Center: 'center'; Left: 'left'; Right: 'right'; Top: 'top'; TopLeft: 'top-left'; TopRight: 'top-right' }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' }; target: { anchor?: number | OpenString<ValueOf<{ Bottom: 'bottom'; BottomLeft: 'bottom-left'; BottomRight: 'bottom-right'; Center: 'center'; Left: 'left'; Right: 'right'; Top: 'top'; TopLeft: 'top-left'; TopRight: 'top-right' }>> | { fraction: number; side: 'top' | 'right' | 'bottom' | 'left' }; boundary?: OpenString<ValueOf<{ Circle: 'circle'; Diamond: 'diamond'; Ellipse: 'ellipse'; Polygon: 'polygon'; Rectangle: 'rectangle'; Self: 'shape' }>> | { params?: Record<string, JsonValue>; type: OpenString<ValueOf<{ Circle: 'circle'; Diamond: 'diamond'; Ellipse: 'ellipse'; Polygon: 'polygon'; Rectangle: 'rectangle' }>> }; id: string; offset?: [number, number] } } | { direction: 'top' | 'right' | 'bottom' | 'left' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'; distance?: number; of: string }; predicate?: { name: string; params?: Record<string, JsonValue> }; role: OpenString<ValueOf<{ Activity: 'activity'; Concept: 'concept'; Event: 'event'; Gateway: 'gateway'; Participant: 'participant'; Resource: 'resource'; State: 'state' }>>; rotate?: number; scale?: number | { default?: number; x?: number; y?: number }; status?: 'error' | 'success' | 'warning' | 'disabled'; style?: { blendMode?: 'color' | 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'luminosity'; color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; fill?: string | number | { angle?: number; kind: 'linearGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { center?: [number, number]; kind: 'radialGradient'; radius?: number; stops: Array<{ color: string; offset: number; opacity?: number }> } | { angle?: number; center?: [number, number]; kind: 'conicGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { background?: string; color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; horizontalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number }; kind: 'pattern'; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineStyleCycle?: { overrides: Array<{ index: number; style: { color?: ... | ...; dashed?: ... | ... | ...; dashOffset?: ... | ...; dashPattern?: ... | ...; dotted?: ... | ... | ...; lineCap?: ... | ... | ... | ...; lineJoin?: ... | ... | ... | ...; lineWidth?: ... | ... } }>; period: number }; lineWidth?: number; rotation?: number; shape: OpenString<ValueOf<{ Dots: 'dots'; Grid: 'grid'; Lines: 'lines' }>>; size?: number; verticalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number } } | { fit?: 'fill' | 'contain' | 'cover'; href: string; kind: 'image' }; fillOpacity?: number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; opacity?: number; shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | { blur?: number; color?: string; offsetX?: number; offsetY?: number; opacity?: number; preset?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' }; stroke?: string | number | { angle?: number; kind: 'linearGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { center?: [number, number]; kind: 'radialGradient'; radius?: number; stops: Array<{ color: string; offset: number; opacity?: number }> } | { angle?: number; center?: [number, number]; kind: 'conicGradient'; stops: Array<{ color: string; offset: number; opacity?: number }> } | { background?: string; color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; horizontalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number }; kind: 'pattern'; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineStyleCycle?: { overrides: Array<{ index: number; style: { color?: ... | ...; dashed?: ... | ... | ...; dashOffset?: ... | ...; dashPattern?: ... | ...; dotted?: ... | ... | ...; lineCap?: ... | ... | ... | ...; lineJoin?: ... | ... | ... | ...; lineWidth?: ... | ... } }>; period: number }; lineWidth?: number; rotation?: number; shape: OpenString<ValueOf<{ Dots: 'dots'; Grid: 'grid'; Lines: 'lines' }>>; size?: number; verticalStyle?: { color?: string; dashed?: boolean; dashOffset?: number; dashPattern?: Array<number>; dotted?: boolean; lineCap?: 'butt' | 'round' | 'square'; lineJoin?: 'round' | 'miter' | 'bevel'; lineWidth?: number } } | { fit?: 'fill' | 'contain' | 'cover'; href: string; kind: 'image' }; strokeOpacity?: number; strokeWidth?: number; textColor?: string | number }; text?: string | Array<string | { fill?: string | number; font?: { family?: string; size?: string | number; style?: 'normal' | 'italic' | 'oblique'; weight?: number | 'normal' | 'bold' }; opacity?: number; text: string } | { runs: Array<{ fill?: string | number; font?: { family?: ... | ...; size?: ... | ... | ...; style?: ... | ... | ... | ...; weight?: ... | ... | ... | ... }; opacity?: number; text: string } | { displayMode?: boolean; fill?: string | number; opacity?: number; tex: string }> }>; type: 'entity'; zIndex?: number };
-```
-
-</details>
-
-#### Parameters
-
-| Parameter | Type          | Description |
-| --------- | ------------- | ----------- |
-| `input`   | `InputEntity` | —           |
+</DocTabs>
 
 ## `@retikz/graph`
 
-### EntityCreateOptions
+### createEntity / EntityCreateOptions
 
-<p>
-  <ApiSourceLink
-    label={'EntityCreateOptions'}
-    path={'packages/schematic/graph/src/contract/authoring/entity.ts'}
-    startLine={7}
-  >
-    Authoring input for the single-record Entity factory
-  </ApiSourceLink>
-</p>
+- `createEntity`: <ApiSourceLink label={"createEntity"} path={"packages/schematic/graph/src/contract/authoring/entity.ts"} startLine={14}>Create an Entity Source record for a Graph root</ApiSourceLink>
+- `EntityCreateOptions`: <ApiSourceLink label={"EntityCreateOptions"} path={"packages/schematic/graph/src/contract/authoring/entity.ts"} startLine={7}>Authoring input for the single-record Entity factory</ApiSourceLink>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable>
+
+| Member              | Type                  | Default | Description                                                                                                  |
+| ------------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| `input` (Parameter) | `EntityCreateOptions` | —       | Entity fields excluding namespace and type, which are supplied by the factory                                |
+| Returns             | `IRGraphEntity`       | —       | A new Entity Source record; does not parse the schema, generate an id, or fill in position or theme defaults |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
+export declare const createEntity: (input: EntityCreateOptions) => IRGraphEntity;
+
 export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace' | 'type'>;
 ```
+
+</DocTab>
+
+</DocTabs>
 
 ### EntityKindDefinition
 
@@ -282,7 +244,7 @@ export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                 | Type     | Default | Description                                       |
 | ---------------------- | -------- | ------- | ------------------------------------------------- |
@@ -290,7 +252,7 @@ export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace
 | `readonly kind`        | `string` | —       | Open Entity kind key unique within its role       |
 | `readonly role`        | `string` | —       | Entity role to which this kind belongs            |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -314,7 +276,7 @@ export type EntityKindDefinition = Readonly<{
   <ApiSourceLink
     label={'EntityPredicateDefinition'}
     path={'packages/schematic/graph/src/contract/entity/types.ts'}
-    startLine={48}
+    startLine={51}
   >
     Parameter-erased definition stored in the Entity predicate registry
   </ApiSourceLink>
@@ -324,7 +286,7 @@ export type EntityKindDefinition = Readonly<{
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                  | Type                                        | Default | Description                                                               |
 | ----------------------- | ------------------------------------------- | ------- | ------------------------------------------------------------------------- |
@@ -334,7 +296,7 @@ export type EntityKindDefinition = Readonly<{
 | `readonly paramsSchema` | `EntityPredicateDefinition["paramsSchema"]` | —       | JSON object schema for Source params                                      |
 | `readonly role`         | `string`                                    | —       | Entity role to which this predicate belongs                               |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -354,7 +316,7 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
   <ApiSourceLink
     label={'EntityPredicateDefinitionInput'}
     path={'packages/schematic/graph/src/contract/entity/types.ts'}
-    startLine={34}
+    startLine={37}
   >
     Type-safe authoring definition of an Entity predicate
   </ApiSourceLink>
@@ -364,17 +326,18 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
-| Member                  | Type                    | Default | Description                                                               |
-| ----------------------- | ----------------------- | ------- | ------------------------------------------------------------------------- |
-| `readonly description`  | `string`                | —       | Stable semantic description for authors and tools                         |
-| `readonly kinds?`       | `ReadonlyArray<string>` | —       | Optional allowed Entity kind keys; omission allows every kind of the role |
-| `readonly name`         | `string`                | —       | Globally unique predicate definition name                                 |
-| `readonly paramsSchema` | `TSchema`               | —       | JSON object schema for Source params                                      |
-| `readonly role`         | `string`                | —       | Entity role to which this predicate belongs                               |
+| Member                     | Type                          | Default | Description                                                                                        |
+| -------------------------- | ----------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| `TSchema` (Type parameter) | `extends ZodType<JsonObject>` | —       | JSON object schema type constraining paramsSchema and defining how predicate parameters are parsed |
+| `readonly description`     | `string`                      | —       | Stable semantic description for authors and tools                                                  |
+| `readonly kinds?`          | `ReadonlyArray<string>`       | —       | Optional allowed Entity kind keys; omission allows every kind of the role                          |
+| `readonly name`            | `string`                      | —       | Globally unique predicate definition name                                                          |
+| `readonly paramsSchema`    | `TSchema`                     | —       | JSON object schema for Source params                                                               |
+| `readonly role`            | `string`                      | —       | Entity role to which this predicate belongs                                                        |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -394,12 +357,6 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 
 </DocTabs>
 
-#### Type parameters
-
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TSchema`      | —           |
-
 ### EntityRoleDefinition
 
 <p>
@@ -416,7 +373,7 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                   | Type                                                    | Default | Description                                       |
 | ------------------------ | ------------------------------------------------------- | ------- | ------------------------------------------------- |
@@ -428,7 +385,7 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 | `readonly role`          | `string`                                                | —       | Open Entity role key                              |
 | `readonly shape`         | `NonNullable<IRNode['shape']>`                          | —       | Core Node shape owned exclusively by the role     |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -458,15 +415,25 @@ export type EntityRoleDefinition = Readonly<{
   </ApiSourceLink>
 </p>
 
-```ts
-export type EntityRoleValue = ValueOf<typeof EntityRole>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | 'gateway' | 'resource' | 'concept';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type EntityRoleValue = ValueOf<typeof EntityRole>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### GraphDefinitionOptions
 
@@ -484,7 +451,7 @@ export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | '
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable>
 
 | Member                         | Type                                         | Default | Description                                                               |
 | ------------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------- |
@@ -496,7 +463,7 @@ export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | '
 | `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —       | Custom Relation predicate definitions                                     |
 | `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —       | Custom Relation role definitions                                          |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -526,15 +493,25 @@ export type GraphDefinitionOptions = Readonly<{
   </ApiSourceLink>
 </p>
 
-```ts
-export type GraphStatusValue = ValueOf<typeof GraphStatus>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type GraphStatusValue = ValueOf<typeof GraphStatus>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### IRGraphEntity
 
@@ -548,30 +525,30 @@ export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
 
 <DocTab value="members" label="Members">
 
-<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+<ApiTable grouped>
 
-| Member        | Type                                                                                             | Default | Description |
-| ------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| `animations?` | `Array<IRAnimationTrack>`                                                                        | —       | —           |
-| `group?`      | `string`                                                                                         | —       | —           |
-| `id?`         | `string`                                                                                         | —       | —           |
-| `kind?`       | `string`                                                                                         | —       | —           |
-| `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —       | —           |
-| `layout?`     | `ZodInfer<typeof EntitySchema.shape["layout"]>`                                                  | —       | —           |
-| `meta?`       | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `namespace`   | `"graph"`                                                                                        | —       | —           |
-| `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —       | —           |
-| `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —           |
-| `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —           |
-| `rotate?`     | `number`                                                                                         | —       | —           |
-| `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
-| `status?`     | <ApiValues name="GraphStatus" />                                                                 | —       | —           |
-| `style?`      | `ZodInfer<typeof EntitySchema.shape["style"]>`                                                   | —       | —           |
-| `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —       | —           |
-| `type`        | `"entity"`                                                                                       | —       | —           |
-| `zIndex?`     | `number`                                                                                         | —       | —           |
+| Group     | Member        | Type                                                                                             | Default | Description                                                                                                                                                                 |
+| --------- | ------------- | ------------------------------------------------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Main      | `group?`      | `string`                                                                                         | —       | Optional semantic group key for Entities within a Graph; members share a categorical color by default.                                                                      |
+|           | `id?`         | `string`                                                                                         | —       | Optional unique id; required if any path needs to reference this node by string                                                                                             |
+|           | `kind?`       | `string`                                                                                         | —       | Open stable subtype key whose registration identity is the selected Entity role and kind.                                                                                   |
+|           | `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —       | Extra label or labels attached around the node border. Each label is positioned by `position` and `distance`.                                                               |
+|           | `namespace`   | `"graph"`                                                                                        | —       | Graph semantic element namespace.                                                                                                                                           |
+|           | `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | Optional precise semantic predicate reference.                                                                                                                              |
+|           | `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | Open Entity role key resolved by the configured Graph role registry.                                                                                                        |
+|           | `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —       | Optional node text content. Accepts a string, an array of lines, styled line objects, or mixed text/math runs. Newlines are hard line breaks; math sugar requires lowerTex. |
+|           | `type`        | `"entity"`                                                                                       | —       | Entity Source record discriminator.                                                                                                                                         |
+| Geometry  | `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —       | Optional Core Node placement.                                                                                                                                               |
+|           | `rotate?`     | `number`                                                                                         | —       | Rotation in degrees around the node center; positive is visually clockwise.                                                                                                 |
+|           | `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | Node scale factor. Number applies to both axes; object x / y override default. Affects path attachment positions.                                                           |
+| Layout    | `layout?`     | `ZodInfer<typeof EntitySchema.shape["layout"]>`                                                  | —       | Node layout overrides without role-owned padding.                                                                                                                           |
+| Style     | `status?`     | <ApiValues name="GraphStatus" />                                                                 | —       | Optional closed Graph semantic status.                                                                                                                                      |
+|           | `style?`      | `ZodInfer<typeof EntitySchema.shape["style"]>`                                                   | —       | Node visual overrides; fields independently override inherited defaults.                                                                                                    |
+|           | `zIndex?`     | `number`                                                                                         | —       | Stacking order among sibling IR children. Higher draws on top; equal values keep source order within the same parent group.                                                 |
+| Animation | `animations?` | `Array<IRAnimationTrack>`                                                                        | —       | Declarative animation tracks for this node. Tracks are carried into emitted Scene primitives, do not affect layout, and are not inherited across scopes.                    |
+| Data      | `meta?`       | `Record<string, JsonValue>`                                                                      | —       | Opaque JSON metadata carried by this node. Preserved into emitted Scene primitives and ignored by the compiler.                                                             |
 
-</div>
+</ApiTable>
 
 </DocTab>
 
@@ -605,30 +582,6 @@ export const EntityRole = {
 } as const;
 ```
 
-### EntityRoleSchema
-
-<p>
-  <ApiSourceLink
-    label={'EntityRoleSchema'}
-    path={'packages/schematic/graph/src/schemas/entity/schema.ts'}
-    startLine={9}
-  >
-    View source
-  </ApiSourceLink>
-</p>
-
-[Schema reference](/schematic/graph/entity/schema-reference#entityroleschema)
-
-### EntitySchema
-
-<p>
-  <ApiSourceLink label={'EntitySchema'} path={'packages/schematic/graph/src/schemas/entity/schema.ts'} startLine={22}>
-    View source
-  </ApiSourceLink>
-</p>
-
-[Schema reference](/schematic/graph/entity/schema-reference)
-
 ### GraphStatus
 
 <p>
@@ -646,49 +599,43 @@ export const GraphStatus = {
 } as const;
 ```
 
-### createEntity
-
-<p>
-  <ApiSourceLink
-    label={'createEntity'}
-    path={'packages/schematic/graph/src/contract/authoring/entity.ts'}
-    startLine={10}
-  >
-    Create an Entity Source record for a Graph root
-  </ApiSourceLink>
-</p>
-
-```ts
-export declare const createEntity: (input: EntityCreateOptions) => IRGraphEntity;
-```
-
-#### Parameters
-
-| Parameter | Type                  | Description |
-| --------- | --------------------- | ----------- |
-| `input`   | `EntityCreateOptions` | —           |
-
 ### createGraphDefinitions
 
 <p>
   <ApiSourceLink
     label={'createGraphDefinitions'}
     path={'packages/schematic/graph/src/pipeline/definitions.ts'}
-    startLine={17}
+    startLine={22}
   >
     Create the complete composite definition set for the Graph package family
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature                | Description                                                                                                                |
+| ---------- | ---------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `GraphDefinitionOptions`        | Custom semantic and theme definitions; omission uses only built-ins, with registration validated during this call          |
+| Returns    | —          | `Array<AnyCompositeDefinition>` | A new composite definition array containing Graph elements and their layout and surface dependencies                       |
+| Throws     | —          | —                               | RetikzGraphError when definitions are duplicated, semantic references are unregistered, or definition constraints conflict |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) => Array<AnyCompositeDefinition>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                     | Description |
-| --------- | ------------------------ | ----------- |
-| `options` | `GraphDefinitionOptions` | —           |
+</DocTabs>
 
 ### createGraphProviders
 
@@ -696,21 +643,36 @@ export declare const createGraphDefinitions: (options?: GraphDefinitionOptions) 
   <ApiSourceLink
     label={'createGraphProviders'}
     path={'packages/schematic/graph/src/pipeline/definitions.ts'}
-    startLine={35}
+    startLine={44}
   >
     Create the complete composite dependency provider set for the Graph package family
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name       | Type / signature                        | Description                                                                                                                                  |
+| ---------- | ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parameters | `options?` | `GraphDefinitionOptions`                | Custom semantic and theme definitions; omission reuses built-in providers, and registration validation is deferred until dependency assembly |
+| Returns    | —          | `ReadonlyArray<CoreDependencyProvider>` | A readonly provider collection containing Graph elements and their required layout, shape, and arrow dependencies                            |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const createGraphProviders: (options?: GraphDefinitionOptions) => ReadonlyArray<CoreDependencyProvider>;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Description |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `options` | `Readonly<{ entityKinds?: readonly Array<Readonly<{ description: string; kind: string; role: string }>>; entityPredicates?: readonly Array<Readonly<{ description: string; kinds?: readonly Array<string>; name: string; paramsSchema: ZodType; role: string }>>; entityRoles?: readonly Array<Readonly<{ boundary?: OpenString<ValueOf<{ Circle: ...; Diamond: ...; Ellipse: ...; Polygon: ...; Rectangle: ...; Self: ... }>> \| { params?: Record<..., ...>; type: OpenString<ValueOf<...>> }; cornerRadius?: number; description: string; minimumSize?: number \| { default?: number; height?: number; width?: number }; padding: NonNullable<number \| { bottom?: ... \| ...; default?: ... \| ...; left?: ... \| ...; right?: ... \| ...; top?: ... \| ...; x?: ... \| ...; y?: ... \| ... } \| undefined>; role: string; shape: NonNullable<OpenString<ValueOf<...>> \| { params?: ... \| ...; type: OpenString<...> } \| undefined> }>>; graphThemeStyles?: readonly Array<Readonly<{ name: string; resolve: (theme: ResolvedTheme) => GraphThemeStyleSource }>>; relationKinds?: readonly Array<Readonly<{ allowedDirections?: readonly Array<RelationDirectionValue>; defaultDirection?: RelationDirectionValue; description: string; directions?: Readonly<Partial<Record<..., ...>>>; kind: string; role: string }>>; relationPredicates?: readonly Array<Readonly<{ description: string; kinds?: readonly Array<string>; name: string; paramsSchema: ZodType; resolveStructure?: (params: ZodOutput<TSchema>) => { dashPattern?: ... \| ... \| ...; sourceMarker?: ... \| ... \| ...; targetMarker?: ... \| ... \| ... }; role: string }>>; relationRoles?: readonly Array<Readonly<{ allowedDirections: readonly Array<RelationDirectionValue>; defaultDirection: RelationDirectionValue; description: string; directions: Readonly<Partial<Record<RelationDirectionValue, IRGraphRelationRoleTokenRecipe>>>; role: string }>> }>` | —           |
+</DocTabs>
 
 ### defineEntityKind
 
@@ -718,21 +680,36 @@ export declare const createGraphProviders: (options?: GraphDefinitionOptions) =>
   <ApiSourceLink
     label={'defineEntityKind'}
     path={'packages/schematic/graph/src/contract/entity/define.ts'}
-    startLine={15}
+    startLine={23}
   >
     Define a registrable Entity kind
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name         | Type / signature       | Description                                                                                                    |
+| ---------- | ------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Parameters | `definition` | `EntityKindDefinition` | Definition supplied through GraphDefinitionOptions.entityKinds; this function does not register or validate it |
+| Returns    | —            | `EntityKindDefinition` | The original definition object, without copying or modifying it                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const defineEntityKind: (definition: EntityKindDefinition) => EntityKindDefinition;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter    | Type                   | Description |
-| ------------ | ---------------------- | ----------- |
-| `definition` | `EntityKindDefinition` | —           |
+</DocTabs>
 
 ### defineEntityPredicate
 
@@ -740,11 +717,29 @@ export declare const defineEntityKind: (definition: EntityKindDefinition) => Ent
   <ApiSourceLink
     label={'defineEntityPredicate'}
     path={'packages/schematic/graph/src/contract/entity/define.ts'}
-    startLine={18}
+    startLine={31}
   >
     Define a type-safe, registrable Entity predicate
   </ApiSourceLink>
 </p>
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category        | Name         | Type / signature                          | Description                                                                                                         |
+| --------------- | ------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Type parameters | `TSchema`    | `extends ZodType<JsonObject>`             | JSON object schema type constraining paramsSchema and defining how predicate parameters are parsed                  |
+| Parameters      | `definition` | `EntityPredicateDefinitionInput<TSchema>` | Definition supplied through GraphDefinitionOptions.entityPredicates; this function does not register or validate it |
+| Returns         | —            | `EntityPredicateDefinition`               | The original definition object, without copying or modifying it                                                     |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>>(
@@ -752,17 +747,9 @@ export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>
 ) => EntityPredicateDefinition;
 ```
 
-#### Type parameters
+</DocTab>
 
-| Type parameter | Description |
-| -------------- | ----------- |
-| `TSchema`      | —           |
-
-#### Parameters
-
-| Parameter    | Type                                      | Description |
-| ------------ | ----------------------------------------- | ----------- |
-| `definition` | `EntityPredicateDefinitionInput<TSchema>` | —           |
+</DocTabs>
 
 ### defineEntityRole
 
@@ -770,18 +757,33 @@ export declare const defineEntityPredicate: <TSchema extends ZodType<JsonObject>
   <ApiSourceLink
     label={'defineEntityRole'}
     path={'packages/schematic/graph/src/contract/entity/define.ts'}
-    startLine={12}
+    startLine={16}
   >
     Define a registrable Entity role
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<ApiTable variant="parameters">
+
+| Category   | Name         | Type / signature       | Description                                                                                                    |
+| ---------- | ------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Parameters | `definition` | `EntityRoleDefinition` | Definition supplied through GraphDefinitionOptions.entityRoles; this function does not register or validate it |
+| Returns    | —            | `EntityRoleDefinition` | The original definition object, without copying or modifying it                                                |
+
+</ApiTable>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export declare const defineEntityRole: (definition: EntityRoleDefinition) => EntityRoleDefinition;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter    | Type                   | Description |
-| ------------ | ---------------------- | ----------- |
-| `definition` | `EntityRoleDefinition` | —           |
+</DocTabs>

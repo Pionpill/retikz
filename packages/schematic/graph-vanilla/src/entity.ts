@@ -23,5 +23,9 @@ export const EntityInputEmbedAdapter: InputEmbedAdapter<EntityInputEmbedProps> =
   }),
 };
 
-/** 创建 Entity Source 的 authoring embed 节点 */
+/**
+ * 创建 Entity Source 的 authoring embed 节点
+ * @param input 实体编写字段；自定义语义仅引用已由 Graph 注册的 key
+ * @returns 供 Vanilla 内容树使用的 embed 节点，由 EntityInputEmbedAdapter 转换为 Entity Source
+ */
 export const entity = (input: EntityInputEmbedProps) => createGraphInputEmbed(EntityEmbedKind, input, input.id);

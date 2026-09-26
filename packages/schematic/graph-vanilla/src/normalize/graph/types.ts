@@ -14,7 +14,11 @@ import type { InputChild, InputPath } from '@retikz/vanilla';
 export type WithoutInputType<TInput> = TInput extends unknown ? Omit<TInput, 'type'> : never;
 
 /** Entity 的 Vanilla authoring 输入 */
-export type InputEntity = EntityCreateOptions & Readonly<{ type: 'entity' }>;
+export type InputEntity = EntityCreateOptions &
+  Readonly<{
+    /** 实体编写输入的判别字段，固定为 entity */
+    type: 'entity';
+  }>;
 
 /** Relation endpoint 的 Vanilla authoring 输入，可直接引用 id 或提供完整 NodeTarget */
 export type InputRelationEndpoint = string | RelationCreateOptions['source'];

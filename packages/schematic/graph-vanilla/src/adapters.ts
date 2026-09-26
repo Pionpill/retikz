@@ -15,7 +15,10 @@ const eraseAdapter = <TProps>(adapter: InputEmbedAdapter<TProps>): InputEmbedAda
   lower: (props, context) => adapter.lower(props as TProps, context),
 });
 
-/** 创建可一次性传给 Vanilla normalize 的 Graph adapter 集合 */
+/**
+ * 创建可一次性传给 Vanilla normalize 的 Graph adapter 集合
+ * @returns 包含 Graph、Group、Block 家族、Entity 和 Relation 的新 adapter 数组
+ */
 export const createGraphVanillaAdapters = (): Array<InputEmbedAdapter<unknown>> => [
   eraseAdapter(GraphInputEmbedAdapter),
   eraseAdapter(GroupInputEmbedAdapter),
