@@ -4,7 +4,7 @@
 
 ## 职责
 
-Schema Reference 提供字段完整、可扫描的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 仅展示 Schema 名称与摘要，不添加 Schema 超链接或复制字段表。
+Schema Reference 提供字段完整、可扫描的 schema 查询入口。教程、JSON walkthrough、行为 demo 和设计解释放到组件页、概念页或示例页。API Reference 中的 Schema 符号仅展示名称与摘要；Schema 推导出的公开类型可由生成器展示一级属性，复用这里维护的中文字段翻译。
 
 页面位于对应 owner 的 schema-reference，不要求 reference 目录前缀；路径示意：
 

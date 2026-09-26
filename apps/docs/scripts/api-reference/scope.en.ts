@@ -1,5 +1,8 @@
 /** 经核对的 Scope API 英文说明，标识符保持源码原样 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '为一组图元设置局部样式、命名空间、变换、裁剪和引用包络':
+    'Configure local styles, namespaces, transforms, clipping, and reference bounds for a group of elements',
+
   '固有包络的独立外框；位于内容下方，不参与布局、引用或命中':
     'Independent intrinsic-envelope frame below all content; excluded from layout, references, and hit testing',
   '单击该图元（DOM `click`）': 'Click on this element (DOM `click`)',

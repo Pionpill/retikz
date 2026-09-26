@@ -4,7 +4,11 @@ import path from 'node:path';
 import type { JSONOutput } from 'typedoc';
 import { Application, Converter, normalizePath, OptionDefaults, ReflectionKind } from 'typedoc';
 import ts from 'typescript';
+import { z } from 'zod';
 
+import { apiReferenceBranchLabels } from './branch-labels';
+import { apiReferenceGroupLabels, apiReferenceMemberGroups } from './member-groups';
+import type { ApiReferenceGroupPlan } from './member-groups';
 import { translateTexApiReference } from './tex.en';
 
 const docsRoot = path.resolve(import.meta.dirname, '../..');
@@ -22,9 +26,11 @@ export type ApiReferenceEntry = {
 
 /** API 字段的阅读分组，不复制字段类型或描述 */
 export type ApiReferenceMemberGroup = {
-  title: Record<ApiReferenceLanguage, string>;
   members: ReadonlyArray<string>;
-};
+} & (
+  | { name: keyof typeof apiReferenceGroupLabels; title?: never }
+  | { title: Record<ApiReferenceLanguage, string>; name?: never }
+);
 
 export type ApiReferencePackageConfig = {
   packageName: string;
@@ -34,6 +40,10 @@ export type ApiReferencePackageConfig = {
   translate: (source: string) => string;
   /** schema 符号只保留摘要并链接到字段真源 */
   schemaReferences?: Readonly<Record<string, string>>;
+  /** Schema 推导字段的中文翻译；英文说明直接读取 .describe() */
+  schemaLocalizations?: Readonly<Partial<Record<string, { descriptions: Readonly<Partial<Record<string, string>>> }>>>;
+  /** 跨包继承的 Schema 从其公开入口读取 */
+  schemaPackageName?: string;
 };
 
 type ApiReferenceMember = {
@@ -42,6 +52,8 @@ type ApiReferenceMember = {
   readonly?: boolean;
   type: string;
   description: string;
+  schemaDescription?: Record<ApiReferenceLanguage, string>;
+  schemaName?: string;
   /** 字段的较长约束，放在表格后避免撑宽单元格 */
   details?: string;
   defaultValue: string;
@@ -77,6 +89,8 @@ type ApiReferenceSymbol = {
   since: string;
   signature: string;
   expandedSignature?: string;
+  branches?: Array<{ value: string; label: Record<ApiReferenceLanguage, string>; members: Array<ApiReferenceMember> }>;
+  overloads?: Array<ApiReferenceSymbol>;
   members: Array<ApiReferenceMember>;
   source?: ApiReferenceSource;
 };
@@ -286,11 +300,13 @@ const resolveObjectMembers = (
 ):
   | {
       members?: Array<ApiReferenceMember>;
+      branches?: Array<Array<ApiReferenceMember>>;
       directMembers?: Array<ApiReferenceMember>;
       composition?: ApiReferenceComposition;
       signature: string;
       expandedSignature?: string;
       indexSignatures?: Array<string>;
+      schemaName?: string;
     }
   | undefined => {
   const checker = program.getTypeChecker();
@@ -301,7 +317,67 @@ const resolveObjectMembers = (
   const declaration = symbol.declarations?.[0];
   if (!declaration) throw new Error(`Missing declaration for ${name}`);
   if (!ts.isTypeAliasDeclaration(declaration) && !ts.isInterfaceDeclaration(declaration)) return undefined;
+  const schemaName =
+    ts.isTypeAliasDeclaration(declaration) &&
+    ts.isTypeReferenceNode(declaration.type) &&
+    /^(?:ZodInfer|infer|output|z\.(?:infer|output))$/.test(declaration.type.typeName.getText()) &&
+    declaration.type.typeArguments?.length === 1 &&
+    ts.isTypeQueryNode(declaration.type.typeArguments[0]) &&
+    ts.isIdentifier(declaration.type.typeArguments[0].exprName)
+      ? declaration.type.typeArguments[0].exprName.text
+      : undefined;
   const type = checker.getDeclaredTypeOfSymbol(symbol);
+  /** 沿原始类型组合追踪继承字段；直接重声明的字段不借用 Schema 语义 */
+  const inheritedSchemaName = (
+    node: ts.TypeNode,
+    memberName: string,
+    seen = new Set<ts.Node>(),
+  ): string | undefined => {
+    if (seen.has(node)) return undefined;
+    seen.add(node);
+    if (!ts.isIndexedAccessTypeNode(node) && !checker.getPropertyOfType(checker.getTypeFromTypeNode(node), memberName))
+      return undefined;
+    if (ts.isParenthesizedTypeNode(node)) return inheritedSchemaName(node.type, memberName, seen);
+    if (ts.isIntersectionTypeNode(node)) {
+      if (
+        node.types.some(
+          part => ts.isTypeLiteralNode(part) && part.members.some(member => member.name?.getText() === memberName),
+        )
+      )
+        return undefined;
+      for (const part of node.types) {
+        const result = inheritedSchemaName(part, memberName, seen);
+        if (result) return result;
+      }
+    }
+    if (
+      ts.isIndexedAccessTypeNode(node) &&
+      ts.isLiteralTypeNode(node.indexType) &&
+      ts.isStringLiteral(node.indexType.literal)
+    ) {
+      const field = node.indexType.literal.text;
+      const owner = inheritedSchemaName(node.objectType, field, seen);
+      return owner ? `${owner}.${field}` : undefined;
+    }
+    if (!ts.isTypeReferenceNode(node)) return undefined;
+    const referenceName = node.typeName.getText();
+    const argument = node.typeArguments?.[0];
+    if (
+      /^(?:ZodInfer|infer|output|z\.(?:infer|output))$/.test(referenceName) &&
+      argument &&
+      ts.isTypeQueryNode(argument)
+    )
+      return argument.exprName.getText();
+    if (
+      ['Omit', 'Pick', 'Readonly', 'Partial', 'Required', 'Extract', 'NonNullable'].includes(referenceName) &&
+      argument
+    )
+      return inheritedSchemaName(argument, memberName, seen);
+    let referenced = checker.getSymbolAtLocation(node.typeName);
+    if (referenced && referenced.flags & ts.SymbolFlags.Alias) referenced = checker.getAliasedSymbol(referenced);
+    const alias = referenced?.declarations?.find(ts.isTypeAliasDeclaration);
+    return alias ? inheritedSchemaName(alias.type, memberName, seen) : undefined;
+  };
   const isObject = (candidate: ts.Type): boolean =>
     candidate.isIntersection()
       ? candidate.types.every(isObject)
@@ -378,6 +454,16 @@ const resolveObjectMembers = (
         return visit(baseType);
       }
       if (node.typeArguments?.length) return undefined;
+      let referenced = checker.getSymbolAtLocation(node.typeName);
+      if (referenced && referenced.flags & ts.SymbolFlags.Alias) referenced = checker.getAliasedSymbol(referenced);
+      if (
+        !referenced?.declarations?.some(
+          item =>
+            ts.canHaveModifiers(item) &&
+            ts.getModifiers(item)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword),
+        )
+      )
+        return undefined;
       return hasMember(node) ? `${print(node)}['${memberName}']` : undefined;
     };
     return visit(declaration.type);
@@ -420,7 +506,15 @@ const resolveObjectMembers = (
       return undefined;
     return output;
   })();
-  if (!isObject(type)) return { signature, expandedSignature };
+  const branchTypes =
+    type.isUnion() &&
+    type.types.length <= MAX_EXPANDED_UNION_BRANCHES &&
+    type.types.every(isObject) &&
+    type.types.reduce((count, branch) => count + checker.getPropertiesOfType(branch).length, 0) <=
+      MAX_EXPANDED_UNION_LINES
+      ? type.types
+      : undefined;
+  if (!isObject(type) && !branchTypes) return { signature, expandedSignature };
   const expandedNodes = new Map<ts.Type, ts.TypeNode | undefined>();
   const expandedNode = (candidate: ts.Type): ts.TypeNode | undefined => {
     if (!expandedNodes.has(candidate)) {
@@ -466,58 +560,71 @@ const resolveObjectMembers = (
       (ts.getModifiers(target)?.some(modifier => modifier.kind === ts.SyntaxKind.ReadonlyKeyword) ?? false)
     );
   };
-  const members = checker.getPropertiesOfType(type).sort((a, b) => a.name.localeCompare(b.name, 'en'));
-  const resolvedMembers = members.map(member => {
-    const tags = member.getJsDocTags(checker);
-    const tagText = (tagName: string): string =>
-      tags
-        .filter(tag => tag.name === tagName)
-        .map(tag => ts.displayPartsToString(tag.text))
-        .join('\n\n');
-    const description = ts.displayPartsToString(member.getDocumentationComment(checker));
-    const memberDeclaration = member.valueDeclaration ?? member.declarations?.[0] ?? declaration;
-    const memberType = checker.getTypeOfSymbolAtLocation(member, declaration);
-    const optional = (member.flags & ts.SymbolFlags.Optional) !== 0;
-    const parts = memberType.isUnion() ? memberType.types : [memberType];
-    const types = optional ? parts.filter(item => !(item.flags & ts.TypeFlags.Undefined)) : parts;
-    const displayTypes = types.length === parts.length ? [memberType] : types;
-    const declaredType = ts.isPropertySignature(memberDeclaration) ? memberDeclaration.type : undefined;
-    const originalType = declaredType && checker.getTypeFromTypeNode(declaredType);
-    const originalParts = originalType?.isUnion() ? originalType.types : originalType ? [originalType] : [];
-    const comparableParts = optional
-      ? originalParts.filter(item => !(item.flags & ts.TypeFlags.Undefined))
-      : originalParts;
-    const preservedType =
-      declaredType && comparableParts.length === types.length && comparableParts.every(item => types.includes(item))
-        ? declaredType.getText()
-        : undefined;
-    const fullType =
-      (preservedType ??
-        displayTypes
-          .map(item =>
-            checker.typeToString(
-              item,
-              memberDeclaration,
-              ts.TypeFormatFlags.NoTruncation |
-                ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
-                ts.TypeFormatFlags.WriteArrayAsGenericType,
-            ),
-          )
-          .join(' | ')) ||
-      'never';
-    return {
-      name: member.name,
-      optional,
-      readonly: isReadonly(type, member),
-      type: fullType.length > MAX_MEMBER_TYPE_CHARACTERS ? memberTypeReference(member.name) || '…' : fullType,
-      description,
-      details: tagText('description'),
-      defaultValue: tagText('default') || tagText('defaultValue') || '—',
-    };
-  });
+  const resolveMembers = (objectType: ts.Type): Array<ApiReferenceMember> => {
+    const members = checker.getPropertiesOfType(objectType).sort((a, b) => a.name.localeCompare(b.name, 'en'));
+    return members.map(member => {
+      const tags = member.getJsDocTags(checker);
+      const tagText = (tagName: string): string =>
+        tags
+          .filter(tag => tag.name === tagName)
+          .map(tag => ts.displayPartsToString(tag.text))
+          .join('\n\n');
+      const description = ts.displayPartsToString(member.getDocumentationComment(checker));
+      const memberDeclaration = member.valueDeclaration ?? member.declarations?.[0] ?? declaration;
+      const memberType = checker.getTypeOfSymbolAtLocation(member, declaration);
+      const optional = (member.flags & ts.SymbolFlags.Optional) !== 0;
+      const parts = memberType.isUnion() ? memberType.types : [memberType];
+      const types = optional ? parts.filter(item => !(item.flags & ts.TypeFlags.Undefined)) : parts;
+      const displayTypes = types.length === parts.length ? [memberType] : types;
+      const declaredType = ts.isPropertySignature(memberDeclaration) ? memberDeclaration.type : undefined;
+      const originalType = declaredType && checker.getTypeFromTypeNode(declaredType);
+      const originalParts = originalType?.isUnion() ? originalType.types : originalType ? [originalType] : [];
+      const comparableParts = optional
+        ? originalParts.filter(item => !(item.flags & ts.TypeFlags.Undefined))
+        : originalParts;
+      const preservedType =
+        declaredType && comparableParts.length === types.length && comparableParts.every(item => types.includes(item))
+          ? declaredType.getText()
+          : undefined;
+      const fullType =
+        (preservedType ??
+          displayTypes
+            .map(item =>
+              checker.typeToString(
+                item,
+                memberDeclaration,
+                ts.TypeFormatFlags.NoTruncation |
+                  ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope |
+                  ts.TypeFormatFlags.WriteArrayAsGenericType,
+              ),
+            )
+            .join(' | ')) ||
+        'never';
+      return {
+        name: member.name,
+        schemaName: ts.isTypeAliasDeclaration(declaration)
+          ? inheritedSchemaName(declaration.type, member.name)
+          : undefined,
+        optional,
+        readonly: isReadonly(objectType, member),
+        type:
+          fullType.length > MAX_MEMBER_TYPE_CHARACTERS || /\$Zod|import\(/.test(fullType)
+            ? memberTypeReference(member.name) ||
+              (schemaName
+                ? `ZodInfer<typeof ${schemaName}.shape[${JSON.stringify(member.name)}]>`
+                : `${name}[${JSON.stringify(member.name)}]`)
+            : fullType,
+        description,
+        details: tagText('description'),
+        defaultValue: tagText('default') || tagText('defaultValue') || '—',
+      };
+    });
+  };
+  if (branchTypes) return { signature, branches: branchTypes.map(resolveMembers) };
+  const resolvedMembers = resolveMembers(type);
   const membersTextLength = resolvedMembers.reduce(
     (length, member) =>
-      length + member.name.length + member.type.length + member.description.length + member.details.length,
+      length + member.name.length + member.type.length + member.description.length + (member.details?.length ?? 0),
     0,
   );
   const directMembers = (() => {
@@ -548,6 +655,7 @@ const resolveObjectMembers = (
     signature,
     expandedSignature,
     indexSignatures,
+    schemaName,
   };
 };
 
@@ -644,13 +752,20 @@ const resolveSourceSignature = (
 
 /** 将 TypeDoc declaration 转为页面需要的公开 API 投影 */
 const toSymbol = (reflection: JSONOutput.DeclarationReflection, packageDirectory: string): ApiReferenceSymbol => {
-  const signature = reflection.signatures?.[0];
+  const signatures =
+    reflection.signatures ??
+    (reflection.type?.type === 'reflection' ? reflection.type.declaration.signatures : undefined);
+  const signature = signatures?.[0];
   const comments = [signature?.comment, reflection.comment];
   const primaryComment = signature?.comment ?? reflection.comment;
   const sourceFileName = reflection.sources?.[0] ? toPosixPath(reflection.sources[0].fileName) : undefined;
   const sourceBasePath = `${packageDirectory}/src/`;
   return {
     name: reflection.name,
+    overloads:
+      signatures && signatures.length > 1
+        ? signatures.map(item => toSymbol({ ...reflection, signatures: [item] }, packageDirectory))
+        : undefined,
     description: renderComment(primaryComment),
     details: renderTagContent(comments, ['@description']),
     remarks: renderTagContent(comments, ['@remarks']),
@@ -698,7 +813,79 @@ const escapeMdxText = (value: string): string =>
 
 /** 中文是 JSDoc 真源；英文只采用受审查的翻译产物 */
 const localizeText = (value: string, lang: ApiReferenceLanguage, translate: (source: string) => string): string =>
-  escapeMdxText(lang === 'en' ? translate(value) : value);
+  escapeMdxText(lang === 'en' ? translate(value.replaceAll('\r', '')) : value.replaceAll('\r', ''));
+
+/** 只展示字段 Schema 在解析 undefined 时实际物化的默认值 */
+const schemaDefaultValue = (schema: z.ZodType): string => {
+  const hasDefault = (value: z.core.$ZodType): boolean => {
+    if (value instanceof z.ZodDefault) return true;
+    if (value instanceof z.ZodOptional || value instanceof z.ZodNullable || value instanceof z.ZodReadonly)
+      return hasDefault(value.unwrap());
+    if (value instanceof z.ZodPipe) return hasDefault(value.in) || hasDefault(value.out);
+    return false;
+  };
+  if (!hasDefault(schema)) return '—';
+  const parsed = schema.safeParse(undefined);
+  return parsed.success && parsed.data !== undefined ? JSON.stringify(parsed.data) : '—';
+};
+
+/** 沿字段路径定位嵌套对象，只有唯一匹配分支时才借用其 Schema 元数据 */
+const nestedObjectSchema = (
+  schema: z.core.$ZodType,
+  fields: Array<string>,
+  members: Array<string>,
+): z.ZodObject | undefined => {
+  if (
+    schema instanceof z.ZodOptional ||
+    schema instanceof z.ZodNullable ||
+    schema instanceof z.ZodReadonly ||
+    schema instanceof z.ZodDefault
+  )
+    return nestedObjectSchema(schema.unwrap(), fields, members);
+  if (schema instanceof z.ZodUnion) {
+    const matches = schema.options
+      .map(option => nestedObjectSchema(option, fields, members))
+      .filter(item => item !== undefined);
+    return matches.length === 1 ? matches[0] : undefined;
+  }
+  if (!(schema instanceof z.ZodObject)) return undefined;
+  if (fields.length === 0) return members.every(name => name in schema.shape) ? schema : undefined;
+  const child = schema.shape[fields[0]] as z.core.$ZodType | undefined;
+  return child ? nestedObjectSchema(child, fields.slice(1), members) : undefined;
+};
+
+/** 将 Schema 的字段描述和真实默认值投影到已由 TypeScript 解析的类型字段 */
+const projectSchemaMembers = (
+  members: Array<ApiReferenceMember>,
+  schema: z.ZodObject,
+  schemaName: string,
+  localizations: { descriptions: Readonly<Partial<Record<string, string>>> },
+): Array<ApiReferenceMember> => {
+  const fields = schema.shape as Partial<Record<string, z.ZodType>>;
+  const expected = new Set(members.map(member => member.name));
+  const missing = [...expected].filter(
+    name => fields[name] === undefined || localizations.descriptions[name] === undefined,
+  );
+  const unknown = Object.keys(localizations.descriptions).filter(name => fields[name.split('.')[0]] === undefined);
+  if (missing.length > 0 || unknown.length > 0)
+    throw new Error(
+      `${schemaName} Schema descriptions differ: missing ${missing.join(', ') || '—'}; unknown ${unknown.join(', ') || '—'}`,
+    );
+  return members.map(member => {
+    const field = fields[member.name];
+    const chinese = localizations.descriptions[member.name];
+    if (!field || !chinese) throw new Error(`Missing ${schemaName}.${member.name} Schema field or translation`);
+    const english = z.globalRegistry.get(field)?.description;
+    if (!english) throw new Error(`Missing ${schemaName}.${member.name} .describe()`);
+    return {
+      ...member,
+      description: '',
+      details: '',
+      schemaDescription: { zh: chinese, en: english },
+      defaultValue: schemaDefaultValue(field),
+    };
+  });
+};
 
 /** 在默认值列保留字面量的代码语义；无默认值时保持占位符 */
 const renderDefaultValue = (value: string): string => (value === '—' ? value : renderTableCode(value));
@@ -708,18 +895,29 @@ const renderMembers = (
   members: Array<ApiReferenceMember>,
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
+  groupLabels?: Array<string>,
 ): string => {
   if (members.length === 0) return '';
   const labels = lang === 'zh' ? ['成员', '类型', '默认值', '说明'] : ['Member', 'Type', 'Default', 'Description'];
-  const rows = members.map(member => {
-    const description = [member.description, member.details]
-      .filter((value): value is string => Boolean(value))
-      .map(value => localizeText(value, lang, translate))
-      .join('\n');
-    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | ${renderTableCode(member.type)} | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
+  if (groupLabels) labels.unshift(lang === 'zh' ? '分组' : 'Group');
+  const rows = members.map((member, index) => {
+    const description = member.schemaDescription
+      ? escapeMdxText(member.schemaDescription[lang])
+      : [member.description, member.details]
+          .filter((value): value is string => Boolean(value))
+          .map(value => localizeText(value, lang, translate))
+          .join('\n');
+    return `| ${groupLabels ? `${groupLabels[index]} | ` : ''}\`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | ${renderTableCode(member.type)} | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
   });
-  const table = [`| ${labels.join(' | ')} |`, '| --- | --- | --- | --- |', ...rows].join('\n');
-  return table;
+  const table = [`| ${labels.join(' | ')} |`, `| ${labels.map(() => '---').join(' | ')} |`, ...rows].join('\n');
+  const columns = groupLabels
+    ? '[&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]'
+    : '[&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]';
+  return [
+    `<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal ${columns}">`,
+    table,
+    '</div>',
+  ].join('\n\n');
 };
 
 /** 渲染由公共 JSDoc 提供的实际调用片段 */
@@ -799,15 +997,16 @@ const renderMetadata = (
   return parts.filter(Boolean).join('\n\n');
 };
 
-/** 以 API 摘要作为源码面板的唯一入口，不额外占用独立的“查看源码”行 */
+/** 摘要缺失时仍保留公开声明的源码入口 */
 const renderSummary = (
   symbol: ApiReferenceSymbol,
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
 ): string => {
   const summary = localizeText(symbol.description, lang, translate);
-  if (!symbol.source || !summary) return summary;
-  return `<p><ApiSourceLink label={${JSON.stringify(symbol.name)}} path={${JSON.stringify(symbol.source.path)}} startLine={${symbol.source.startLine}}>${summary}</ApiSourceLink></p>`;
+  if (!symbol.source) return summary;
+  const label = summary || (lang === 'zh' ? '查看源码' : 'View source');
+  return `<p><ApiSourceLink label={${JSON.stringify(symbol.name)}} path={${JSON.stringify(symbol.source.path)}} startLine={${symbol.source.startLine}}>${label}</ApiSourceLink></p>`;
 };
 
 /** 渲染一个公开 API 的常规 MDX 片段 */
@@ -819,27 +1018,61 @@ const renderSymbol = (
   expandedObject = false,
   indexSignatures: Array<string> = [],
   composition?: ApiReferenceComposition,
+  memberGroupDisplay: 'steps' | 'column' = 'steps',
 ): string => {
   const hasMemberViews = expandedObject && symbol.members.length > 0;
   return [
     `### ${symbol.name}`,
     renderSummary(symbol, lang, translate),
     localizeText(symbol.details, lang, translate),
-    hasMemberViews
-      ? renderObjectMemberViews(symbol, memberGroups, lang, translate, composition)
-      : expandedObject ||
-          symbol.members.length === 0 ||
-          symbol.signature.includes(' & ') ||
-          symbol.signature.startsWith('export ')
-        ? `\`\`\`ts\n${symbol.signature}\n\`\`\``
-        : '',
+    symbol.branches
+      ? [
+          '<DocTabs defaultValue="members">',
+          `<DocTab value="members" label="${lang === 'zh' ? '属性' : 'Members'}">`,
+          `<DocTabs defaultValue=${JSON.stringify(symbol.branches[0].value)}>`,
+          ...symbol.branches.map(
+            branch =>
+              `<DocTab value=${JSON.stringify(branch.value)} label=${JSON.stringify(branch.label[lang])}>\n\n${renderMembers(branch.members, lang, translate)}\n\n</DocTab>`,
+          ),
+          '</DocTabs>',
+          '</DocTab>',
+          `<DocTab value="definition" label="${lang === 'zh' ? '类型定义' : 'Type definition'}">`,
+          `\`\`\`ts\n${symbol.signature}\n\`\`\``,
+          '</DocTab>',
+          '</DocTabs>',
+        ].join('\n\n')
+      : hasMemberViews
+        ? renderObjectMemberViews(symbol, memberGroups, lang, translate, composition, memberGroupDisplay)
+        : expandedObject ||
+            symbol.members.length === 0 ||
+            symbol.signature.includes(' & ') ||
+            symbol.signature.startsWith('export ')
+          ? `\`\`\`ts\n${symbol.signature}\n\`\`\``
+          : '',
     renderExpandedSignature(symbol, lang),
     hasMemberViews ? '' : renderGroupedMembers(symbol, memberGroups, lang, translate),
     indexSignatures.length > 0
       ? `#### ${lang === 'zh' ? '索引签名' : 'Index signatures'}\n\n\`\`\`ts\n${indexSignatures.join(';\n')}\n\`\`\``
       : '',
-    renderTypeParameters(symbol.typeParameters, lang, translate),
-    renderParameters(symbol.parameters, lang, translate),
+    ...(symbol.overloads ?? []).map((overload, index) =>
+      [
+        `#### ${lang === 'zh' ? '重载' : 'Overload'} ${index + 1}`,
+        `\`\`\`ts\n${overload.signature}\n\`\`\``,
+        localizeText(overload.description, lang, translate),
+        localizeText(overload.details, lang, translate),
+        renderTypeParameters(overload.typeParameters, lang, translate),
+        renderParameters(overload.parameters, lang, translate),
+        renderTagSection(lang === 'zh' ? '返回值' : 'Returns', overload.returns, lang, translate),
+        ...overload.throws.map(item => `- ${localizeText(item, lang, translate)}`),
+        renderRemarks(overload.remarks, lang, translate),
+        renderMetadata(overload, lang, translate),
+        renderExamples(overload.examples, lang),
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
+    ),
+    symbol.overloads ? '' : renderTypeParameters(symbol.typeParameters, lang, translate),
+    symbol.overloads ? '' : renderParameters(symbol.parameters, lang, translate),
     renderTagSection(lang === 'zh' ? '返回值' : 'Returns', symbol.returns, lang, translate),
     symbol.throws.length > 0
       ? [
@@ -855,13 +1088,40 @@ const renderSymbol = (
     .join('\n\n');
 };
 
+/** 将人工审阅的归属映射到源码字段，并拒绝过期或不完整的分类 */
+const resolveMemberGroupPlan = (
+  symbol: ApiReferenceSymbol,
+  key: string,
+  plan: ApiReferenceGroupPlan,
+): ReadonlyArray<ApiReferenceMemberGroup> => {
+  if (new Set(plan.order).size !== plan.order.length) throw new Error(`Repeated API group in ${key}`);
+  const fields = new Set(symbol.members.map(member => member.name));
+  const assigned = new Set(Object.keys(plan.members));
+  const missing = [...fields].filter(name => !assigned.has(name));
+  const unknown = [...assigned].filter(name => !fields.has(name));
+  if (missing.length > 0 || unknown.length > 0)
+    throw new Error(
+      `API group fields changed in ${key}: missing ${missing.join(', ') || '—'}; unknown ${unknown.join(', ') || '—'}`,
+    );
+  const groups = plan.order.map(name => ({
+    name,
+    members: symbol.members.filter(member => plan.members[member.name] === name).map(member => member.name),
+  }));
+  if (groups.some(group => group.members.length === 0)) throw new Error(`Empty API group in ${key}`);
+  const unordered = symbol.members
+    .filter(member => !plan.order.includes(plan.members[member.name]))
+    .map(member => member.name);
+  if (unordered.length > 0) throw new Error(`API group order omits ${key}: ${unordered.join(', ')}`);
+  return groups;
+};
+
 /** 按职责展示字段，并拒绝遗漏、重复或失效的分组配置 */
 const renderGroupedMembers = (
   symbol: ApiReferenceSymbol,
   groups: ReadonlyArray<ApiReferenceMemberGroup> | undefined,
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
-  asSteps = false,
+  display: 'headings' | 'steps' | 'column' = 'headings',
 ): string => {
   if (groups === undefined) return renderMembers(symbol.members, lang, translate);
   const remaining = new Map(symbol.members.map(member => [member.name, member]));
@@ -872,17 +1132,27 @@ const renderGroupedMembers = (
       remaining.delete(name);
       return member;
     });
-    const content = renderMembers(members, lang, translate);
-    return asSteps && groups.length > 1
-      ? [`<DocStep title=${JSON.stringify(group.title[lang])}>`, content, '</DocStep>'].join('\n\n')
-      : asSteps
-        ? content
-        : [`#### ${group.title[lang]}`, content].join('\n\n');
+    const title = group.name === undefined ? group.title[lang] : apiReferenceGroupLabels[group.name][lang];
+    return { title, members };
   });
   if (remaining.size > 0)
     throw new Error(`Ungrouped API members of ${symbol.name}: ${[...remaining.keys()].join(', ')}`);
-  if (asSteps && groups.length > 1) return ['<DocSteps>', ...sections, '</DocSteps>'].join('\n\n');
-  return sections.join('\n\n');
+  if (display === 'column') {
+    if (symbol.members.length <= 12) return renderMembers(symbol.members, lang, translate);
+    const members = sections.flatMap(section => section.members);
+    const labels = sections.flatMap(section => section.members.map((_, index) => (index === 0 ? section.title : '')));
+    return renderMembers(members, lang, translate, labels);
+  }
+  const content = sections.map(section => {
+    const table = renderMembers(section.members, lang, translate);
+    return display === 'steps' && groups.length > 1
+      ? [`<DocStep title=${JSON.stringify(section.title)}>`, table, '</DocStep>'].join('\n\n')
+      : display === 'steps'
+        ? table
+        : [`#### ${section.title}`, table].join('\n\n');
+  });
+  if (display === 'steps' && groups.length > 1) return ['<DocSteps>', ...content, '</DocSteps>'].join('\n\n');
+  return content.join('\n\n');
 };
 
 /** 对象参考默认展示字段列表，类型定义按需切换 */
@@ -892,6 +1162,7 @@ const renderObjectMemberViews = (
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
   composition?: ApiReferenceComposition,
+  memberGroupDisplay: 'steps' | 'column' = 'steps',
 ): string => {
   const labels =
     lang === 'zh'
@@ -906,7 +1177,7 @@ const renderObjectMemberViews = (
     '<DocTabs defaultValue="members">',
     `<DocTab value="members" label=${JSON.stringify(labels.members)}>`,
     compositionNote,
-    renderGroupedMembers(symbol, composition ? undefined : groups, lang, translate, true),
+    renderGroupedMembers(symbol, composition ? undefined : groups, lang, translate, memberGroupDisplay),
     '</DocTab>',
     `<DocTab value="definition" label=${JSON.stringify(labels.definition)}>`,
     `\`\`\`ts\n${symbol.signature}\n\`\`\``,
@@ -956,8 +1227,8 @@ export const createApiReferenceMdx = async (
   const entrySymbols =
     config.entries.length === 1 ? [children] : config.entries.map((_, index) => children[index]?.children ?? []);
 
-  return config.entries
-    .map((entry, index) => {
+  const sections = await Promise.all(
+    config.entries.map(async (entry, index) => {
       const exported = entrySymbols[index] ?? [];
       const program = programs.find(item => item.getSourceFile(entry.source) !== undefined);
       const sourceFile = program?.getSourceFile(entry.source);
@@ -967,60 +1238,185 @@ export const createApiReferenceMdx = async (
           throw new Error(`Missing public API ${name} in ${entry.source}`);
         }
       }
-      const symbols = exported
-        .filter(symbol => entry.symbols === undefined || entry.symbols.includes(symbol.name))
-        .filter(
-          symbol =>
-            !(
-              symbol.kind === ReflectionKind.Namespace &&
-              exported.some(other => other.name === symbol.name && other.kind === ReflectionKind.Variable)
-            ),
-        )
-        .map(reflection => {
-          const symbol = toSymbol(reflection, config.packageDirectory);
-          const schemaUrl = config.schemaReferences?.[symbol.name];
-          if (!schemaUrl) {
-            const resolved =
-              reflection.kind === ReflectionKind.TypeAlias || reflection.kind === ReflectionKind.Interface
-                ? resolveObjectMembers(program, sourceFile, symbol.name)
-                : undefined;
-            const sourceSignature = resolveSourceSignature(program, sourceFile, symbol.name, symbol.signature);
-            if (resolved) {
-              symbol.members = (resolved.members ?? []).map(member => ({
-                ...member,
-                defaultValue: localizeText(member.defaultValue, lang, config.translate),
-              }));
-              if (resolved.directMembers) {
-                symbol.members = resolved.directMembers.map(member => ({
+      const symbols = await Promise.all(
+        exported
+          .filter(symbol => entry.symbols === undefined || entry.symbols.includes(symbol.name))
+          .filter(
+            symbol =>
+              !(
+                symbol.kind === ReflectionKind.Namespace &&
+                exported.some(other => other.name === symbol.name && other.kind === ReflectionKind.Variable)
+              ),
+          )
+          .map(async reflection => {
+            const symbol = toSymbol(reflection, config.packageDirectory);
+            const schemaUrl = config.schemaReferences?.[symbol.name];
+            if (!schemaUrl) {
+              const resolved =
+                reflection.kind === ReflectionKind.TypeAlias || reflection.kind === ReflectionKind.Interface
+                  ? resolveObjectMembers(program, sourceFile, symbol.name)
+                  : undefined;
+              const sourceSignature = resolveSourceSignature(program, sourceFile, symbol.name, symbol.signature);
+              if (resolved) {
+                let members = resolved.directMembers ?? resolved.members ?? [];
+                const schemaNames = new Set(
+                  members.map(member => member.schemaName).filter(name => name !== undefined),
+                );
+                for (const schemaName of config.schemaLocalizations ? schemaNames : []) {
+                  const exports = (await import(config.schemaPackageName ?? config.packageName)) as Record<
+                    string,
+                    unknown
+                  >;
+                  const [rootName, ...fieldPath] = schemaName.split('.');
+                  const rootSchema = exports[rootName];
+                  const schemaMembers = members.filter(member => member.schemaName === schemaName);
+                  const schema =
+                    rootSchema instanceof z.ZodType
+                      ? nestedObjectSchema(
+                          rootSchema,
+                          fieldPath,
+                          schemaMembers.map(member => member.name),
+                        )
+                      : undefined;
+                  if (!schema) throw new Error(`Missing unambiguous object Schema ${schemaName}`);
+                  const publicName =
+                    fieldPath.length === 0
+                      ? rootName
+                      : Object.keys(exports).find(
+                          name => exports[name] === schema && config.schemaLocalizations?.[name],
+                        );
+                  const localization = publicName ? config.schemaLocalizations?.[publicName] : undefined;
+                  if (!localization)
+                    throw new Error(
+                      `Missing ${schemaName} Schema localization for ${config.packageName}#${symbol.name}`,
+                    );
+                  const projected = new Map(
+                    projectSchemaMembers(
+                      members.filter(member => member.schemaName === schemaName),
+                      schema,
+                      schemaName,
+                      localization,
+                    ).map(member => [member.name, member]),
+                  );
+                  members = members.map(member => projected.get(member.name) ?? member);
+                }
+                symbol.members = members.map(member => ({
                   ...member,
                   defaultValue: localizeText(member.defaultValue, lang, config.translate),
                 }));
+                symbol.signature = resolved.signature;
+                symbol.expandedSignature = resolved.expandedSignature;
+                if (resolved.branches) {
+                  const key = `${config.packageName}#${symbol.name}`;
+                  const labels = apiReferenceBranchLabels[key];
+                  if (!labels || labels.length !== resolved.branches.length)
+                    throw new Error(`Missing or stale API branch labels for ${key}`);
+                  const used = new Set<string>();
+                  symbol.branches = resolved.branches.map(branchMembers => {
+                    const matches = labels.filter(label =>
+                      branchMembers.some(member => member.name === label.field && member.type === label.type),
+                    );
+                    const label = matches[0];
+                    if (matches.length !== 1 || used.has(label.value))
+                      throw new Error(`Ambiguous or duplicate API branch label for ${key}`);
+                    used.add(label.value);
+                    return { value: label.value, label: label.label, members: branchMembers };
+                  });
+                }
               }
-              symbol.signature = resolved.signature;
-              symbol.expandedSignature = resolved.expandedSignature;
+              if (!symbol.overloads) {
+                const checker = program.getTypeChecker();
+                const moduleSymbol = checker.getSymbolAtLocation(sourceFile);
+                let exportedSymbol =
+                  moduleSymbol && checker.getExportsOfModule(moduleSymbol).find(item => item.name === symbol.name);
+                if (exportedSymbol && exportedSymbol.flags & ts.SymbolFlags.Alias)
+                  exportedSymbol = checker.getAliasedSymbol(exportedSymbol);
+                const declaration = exportedSymbol?.declarations?.[0];
+                const signatures =
+                  exportedSymbol && declaration
+                    ? checker.getSignaturesOfType(
+                        checker.getTypeOfSymbolAtLocation(exportedSymbol, declaration),
+                        ts.SignatureKind.Call,
+                      )
+                    : [];
+                if (signatures.length > 1 && declaration)
+                  symbol.overloads = signatures.map(signature => {
+                    const tags = signature.getJsDocTags();
+                    const tag = (name: string): string =>
+                      tags
+                        .filter(item => item.name === name)
+                        .map(item => ts.displayPartsToString(item.text))
+                        .join('\n\n');
+                    return {
+                      ...symbol,
+                      overloads: undefined,
+                      signature: ts
+                        .createPrinter({ removeComments: true })
+                        .printNode(
+                          ts.EmitHint.Unspecified,
+                          signature.getDeclaration(),
+                          signature.getDeclaration().getSourceFile(),
+                        ),
+                      description: ts.displayPartsToString(signature.getDocumentationComment(checker)),
+                      details: tag('description'),
+                      remarks: tag('remarks'),
+                      returns: tag('returns') || tag('return'),
+                      throws: tags
+                        .filter(item => item.name === 'throws' || item.name === 'exception')
+                        .map(item => ts.displayPartsToString(item.text)),
+                      deprecated: tag('deprecated'),
+                      since: tag('since'),
+                      examples: tags
+                        .filter(item => item.name === 'example')
+                        .map(item => unwrapCodeFence(ts.displayPartsToString(item.text))),
+                      parameters: signature.parameters.map(parameter => ({
+                        name: parameter.name,
+                        type: checker.typeToString(
+                          checker.getTypeOfSymbolAtLocation(parameter, declaration),
+                          declaration,
+                          ts.TypeFormatFlags.NoTruncation,
+                        ),
+                        description: ts.displayPartsToString(parameter.getDocumentationComment(checker)),
+                      })),
+                      typeParameters: (signature.typeParameters ?? []).map(parameter => ({
+                        name: parameter.symbol.name,
+                        description: ts.displayPartsToString(parameter.symbol.getDocumentationComment(checker)),
+                      })),
+                    };
+                  });
+              }
+              if (sourceSignature) symbol.signature = sourceSignature;
+              const groupKey = `${config.packageName}#${symbol.name}`;
+              const groupPlan = apiReferenceMemberGroups[groupKey];
+              if (groupPlan && entry.memberGroups?.[symbol.name])
+                throw new Error(`Conflicting API member groups for ${groupKey}`);
+              const memberGroups = groupPlan
+                ? resolveMemberGroupPlan(symbol, groupKey, groupPlan)
+                : entry.memberGroups?.[symbol.name];
+              return renderSymbol(
+                symbol,
+                lang,
+                config.translate,
+                memberGroups,
+                resolved?.members !== undefined,
+                resolved?.indexSignatures,
+                resolved?.composition,
+                groupPlan ? 'column' : 'steps',
+              );
             }
-            if (sourceSignature) symbol.signature = sourceSignature;
-            return renderSymbol(
-              symbol,
-              lang,
-              config.translate,
-              entry.memberGroups?.[symbol.name],
-              resolved?.members !== undefined,
-              resolved?.indexSignatures,
-              resolved?.composition,
-            );
-          }
-          return [
-            `### ${symbol.name}`,
-            renderSummary(symbol, lang, config.translate),
-            `[${lang === 'zh' ? 'Schema 参考' : 'Schema reference'}](${schemaUrl})`,
-          ]
-            .filter(Boolean)
-            .join('\n\n');
-        });
+            return [
+              `### ${symbol.name}`,
+              renderSummary(symbol, lang, config.translate),
+              `[${lang === 'zh' ? 'Schema 参考' : 'Schema reference'}](${schemaUrl})`,
+            ]
+              .filter(Boolean)
+              .join('\n\n');
+          }),
+      );
       return [`## ${entry.title[lang]}`, ...symbols].join('\n\n');
-    })
-    .join('\n\n');
+    }),
+  );
+  return sections.join('\n\n');
 };
 
 /** 写出受版本控制的双语 API Reference MDX include */

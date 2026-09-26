@@ -1,5 +1,26 @@
 /** 经核对的绘制 API 英文说明，源码标识符保持不变 */
 const translations: Readonly<Partial<Record<string, string>>> = {
+  '折角 step 鉴别字面量': 'Discriminant for a fold step',
+  折角终点: 'Fold endpoint',
+  两段折角走向: 'Two-segment fold direction',
+  三段折角走向: 'Three-segment fold direction',
+  中间腿的归一化位置: 'Normalized position of the middle leg',
+
+  '路径配置，way 与 children 互斥': 'Path configuration; way and children are mutually exclusive',
+  保留配置字段的路径作者输入: 'Path authoring input preserving the configuration fields',
+
+  '椭圆的 x、y 轴半径': 'Ellipse radii on the x and y axes',
+  '用步骤或路径简写声明路径，并设置样式、箭头与交互':
+    'Declare a path with steps or shorthand, and configure its style, arrows, and interactions',
+  '路径种类，省略时使用内置 stroke；自定义种类通过 Layout.extensions.pathKinds 注册':
+    'Path kind; defaults to built-in stroke. Register custom kinds through Layout.extensions.pathKinds',
+  '所选路径种类的 JSON 参数；内置 stroke 不接受此字段':
+    'JSON options for the selected path kind; built-in stroke does not accept this field',
+  附着于整条路径的一个或多个几何标签: 'One or more geometry labels attached to the whole path',
+  '创建作者侧路径输入，身份由配置中的 id 声明':
+    'Create path authoring input, with identity declared by the configuration id',
+  '路径步骤序列；与 way 互斥': 'Path steps; mutually exclusive with way',
+
   'Arc action：按起末角度绘制圆弧 / 椭圆弧段；圆心缺省取游标，可显式指定（TikZ `arc[start angle=…, end angle=…, radius=…]`）':
     'Arc action: draw a circular or elliptical arc between angles; the center defaults to the cursor and can be specified explicitly (TikZ `arc[start angle=…, end angle=…, radius=…]`)',
   '显式圆心；缺省取游标（上一 step anchor）': 'Explicit center; defaults to the cursor (the previous step anchor)',

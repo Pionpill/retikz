@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { nodeSchemas } from '../schema-reference/node';
 import { translateNodeApiReference } from './node.en';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
@@ -55,6 +56,8 @@ export const nodeApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
     },
   ],
   translate: translateNodeApiReference,
+  schemaLocalizations: nodeSchemas,
+  schemaPackageName: '@retikz/core',
 }));
 
 /** 按真实 package 入口分别解析，再合并为组件参考 */

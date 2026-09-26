@@ -5,13 +5,20 @@ import type { FC, ReactNode } from 'react';
 import type { HydrationEventProps } from '../protocol';
 import { TIKZ_PATH } from '../protocol';
 
+/** 用步骤或路径简写声明路径，并设置样式、箭头与交互 */
 export type PathProps = HydrationEventProps & {
   /** 实例视觉覆盖，逐字段覆盖继承默认值 */
   style?: InputPath['style'];
   /** 可选 compile driver 自行解释的 runtime-only authoring 载荷，不进入 Core IR */
   authoring?: unknown;
+  /**
+   * 路径种类，省略时使用内置 stroke；自定义种类通过 Layout.extensions.pathKinds 注册
+   * @default 'stroke'
+   */
   kind?: IRPath['kind'];
+  /** 所选路径种类的 JSON 参数；内置 stroke 不接受此字段 */
   kindOptions?: IRPath['kindOptions'];
+  /** 附着于整条路径的一个或多个几何标签 */
   label?: IRPath['label'];
   /** 路径 id；其他 path / position 通过这个 id 引用本路径，也作为水合挂点供事件 handler 绑定 */
   id?: IRPath['id'];
@@ -29,6 +36,7 @@ export type PathProps = HydrationEventProps & {
   /**
    * 路径级箭头方向
    * @description `'->'` 终点 / `'<-'` 起点 / `'<->'` 两端；省略或 `'none'` 无箭头
+   * @default 'none'
    */
   arrow?: InputPath['arrow'];
   /**
@@ -42,7 +50,10 @@ export type PathProps = HydrationEventProps & {
    * @description `overlap` 为实际端点共享值，`start` / `end` 可逐端覆盖；比例从默认位置插值到最终视觉后缘与逻辑端点对齐的位置
    */
   arrowPlacement?: InputPath['arrowPlacement'];
-  /** 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效 */
+  /**
+   * 显式栈序：大者在上；缺省 0 = 声明顺序；同值稳定保序；只在同层子节点间生效
+   * @default 0
+   */
   zIndex?: IRPath['zIndex'];
   /**
    * 整条 path 旋转（度，绕包围盒中心，正向 = 屏幕 y-down 视觉顺时针）

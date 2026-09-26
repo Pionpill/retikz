@@ -28,7 +28,8 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
   paramsSchema: ZodType<TParams>;
   /**
    * 根据视觉 shape 和实例 params 解析本连接面使用的矩形
-   * @default 直接使用视觉 rect
+   * @description 未提供时使用视觉矩形
+   * @default context.visualRect
    */
   resolveRect?: (context: BoundaryFitContext, params: TParams) => Rect;
   /** 返回与解析后 rect 同坐标系的精确闭合连接面轮廓；空数组表示合法空几何 */
@@ -37,7 +38,8 @@ export type BoundaryDefinitionInput<TParams extends JsonObject> = {
   boundaryPoint: (rect: Rect, toward: Position, params: TParams) => Position;
   /**
    * 可选的标准方位 anchor 支持；Node 引用中的中心与形状专属名称不调用此回调
-   * @default 不支持；调用方回退或报告不支持该 anchor
+   * @description 未提供时由调用方回退或报告不支持该 anchor
+   * @default undefined
    */
   anchor?: (rect: Rect, name: BoundaryAnchorName, params: TParams) => Position | undefined;
 };

@@ -134,8 +134,8 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   anchor: (rect: Rect, name: ShapeAnchorName, params: TParams) => Position | undefined;
   /**
    * 返回安全包含视觉几何轮廓的规则连接面半轴
-   * @description 结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩
-   * @default 不支持；tight boundary 回退到 bounds 并发出 warning
+   * @description 结果与 `rect` 同心、同旋转；不含 stroke、shadow、filter 或 label 的视觉外扩。未提供时 tight boundary 回退到 bounds 并发出 warning
+   * @default undefined
    */
   connectionEnvelope?: (rect: Rect, kind: ConnectionEnvelopeKind, params: TParams) => ConnectionEnvelope | undefined;
   /** 返回与 rect 同坐标系的精确闭合视觉轮廓；空数组表示合法空几何 */
@@ -145,7 +145,7 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   /**
    * 解析标准 side 上 `t ∈ [0, 1]` 的比例点
    * @description `rect` 可包含旋转；未实现表示该 shape 不支持 side anchor
-   * @default 不支持
+   * @default undefined
    */
   edgePoint?: (rect: Rect, side: SideValue, t: number, params: TParams) => Position;
   /**
@@ -159,8 +159,8 @@ export type ShapeDefinitionInput<TParams extends JsonObject> = {
   ) => Iterable<ScenePrimitive>;
   /**
    * 返回 node scale 后的 params
-   * @description 适用于 params 含角度等非长度字段的 shape
-   * @default 按 `Math.sqrt(sx * sy)` 深度缩放 params 中的数值叶子
+   * @description 适用于 params 含角度等非长度字段的 shape；省略时按 Math.sqrt(sx * sy) 深度缩放 params 中的数值叶子
+   * @default scaleJsonObjectNumbers
    */
   scaleParams?: (params: TParams, sx: number, sy: number) => TParams;
 };

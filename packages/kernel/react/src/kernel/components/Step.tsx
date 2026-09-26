@@ -129,9 +129,15 @@ export type CubicStepProps = {
 export type BendStepProps = {
   /** 弧形简记 step 鉴别字面量 */
   kind: 'bend';
-  /** 对称弯模式的弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补 */
+  /**
+   * 对称弯模式的弯向：'left' / 'right'（视觉左右，相对 from→to）；可选，与 out/in 互补
+   * @default 'left'
+   */
   bendDirection?: 'left' | 'right';
-  /** 对称弯模式的弯角度（度），缺省 30 */
+  /**
+   * 对称弯模式的弯角度（度），缺省 30
+   * @default 30
+   */
   bendAngle?: number;
   /** 非对称弯 / 自环模式的出射角（度，TikZ `out=`）；与 inAngle 一起编译成 cubic，给定时优先于 bendDirection */
   outAngle?: number;
@@ -187,9 +193,8 @@ export type CirclePathStepProps = {
 export type EllipsePathStepProps = {
   /** 整椭圆 step 鉴别字面量 */
   kind: 'ellipsePath';
-  /** 椭圆 x 轴半径 */
+  /** 椭圆的 x、y 轴半径 */
   radius: IRStepAnisotropicRadius;
-  /** 椭圆 y 轴半径 */
   /** 部分椭圆起始角（度）；与 endAngle 同给才生效 */
   startAngle?: number;
   /** 部分椭圆终止角（度） */
@@ -224,7 +229,10 @@ export type SmoothStepProps = {
   kind: 'smooth';
   /** 游标之后依次穿过的点（顺序敏感）；单点 = 一段曲线，游标终于末点 */
   points: Array<DslTarget>;
-  /** 切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓 */
+  /**
+   * 切线长度乘子（TikZ `tension`）；缺省 1，<1 更紧、>1 更鼓
+   * @default 1
+   */
   tension?: number;
   /** 边标注，沿生成 cubic 按贝塞尔参数定位 */
   label?: InputStepLabel;

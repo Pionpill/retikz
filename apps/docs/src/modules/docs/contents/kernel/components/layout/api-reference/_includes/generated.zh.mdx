@@ -20,17 +20,21 @@
 
 <DocTab value="members" label="属性">
 
-| 成员                       | 类型                                     | 默认值                    | 说明                         |
-| -------------------------- | ---------------------------------------- | ------------------------- | ---------------------------- |
-| `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | 箭头定义                     |
-| `readonly boundaries?`     | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | 连接表面定义                 |
-| `readonly clips?`          | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | 裁剪定义                     |
-| `readonly composites?`     | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite 展开逻辑    |
-| `readonly pathGenerators?` | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | 路径生成器定义               |
-| `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | 路径种类定义                 |
-| `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | 图案定义                     |
-| `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | 形状定义                     |
-| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | Core Theme style definitions |
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| 成员                       | 类型                                     | 默认值                    | 说明                      |
+| -------------------------- | ---------------------------------------- | ------------------------- | ------------------------- |
+| `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | 箭头定义                  |
+| `readonly boundaries?`     | `ReadonlyArray<BoundaryDefinition>`      | `BUILTIN_BOUNDARIES`      | 连接表面定义              |
+| `readonly clips?`          | `ReadonlyArray<ClipDefinition>`          | `BUILTIN_CLIPS`           | 裁剪定义                  |
+| `readonly composites?`     | `ReadonlyArray<AnyCompositeDefinition>`  | `BUILTIN_COMPOSITES`      | Tier 2 composite 展开逻辑 |
+| `readonly pathGenerators?` | `ReadonlyArray<PathGeneratorDefinition>` | `BUILTIN_PATH_GENERATORS` | 路径生成器定义            |
+| `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | 路径种类定义              |
+| `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | 图案定义                  |
+| `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | 形状定义                  |
+| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | 主题样式定义              |
+
+</div>
 
 </DocTab>
 
@@ -66,72 +70,40 @@ export type LayoutExtensions = Readonly<{
 
 <DocTab value="members" label="属性">
 
-<DocSteps>
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
 
-<DocStep title="图形输入与默认值">
+| 分组   | 成员                   | 类型                                                  | 默认值                        | 说明                                                                                                |
+| ------ | ---------------------- | ----------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------- |
+| 主要   | `children?`            | `ReactNode`                                           | —                             | 通过 JSX 声明的图形内容                                                                             |
+|        | `ir?`                  | `IRScene`                                             | —                             | 直接传入持久化 Source IR，与 children 二选一                                                        |
+| 布局   | `nodeDistance?`        | `number`                                              | `24`                          | 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效           |
+| 样式   | `fontSize?`            | `number`                                              | `16`                          | 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号 |
+|        | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                  |
+|        | `theme?`               | `IRScene['theme']`                                    | —                             | 写入 Scene 根并由后代 Composite 继承的 Theme                                                        |
+| 渲染   | `className?`           | `string`                                              | —                             | 宿主 className                                                                                      |
+|        | `height?`              | `number \| string`                                    | —                             | SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版                                  |
+|        | `idPrefix?`            | `string`                                              | `useId`                       | SVG 资源 id 前缀；省略时由 React useId 生成                                                         |
+|        | `renderer?`            | `'svg' \| 'canvas'`                                   | `'svg'`                       | 渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG                              |
+|        | `style?`               | `CSSProperties`                                       | —                             | 宿主内联样式                                                                                        |
+|        | `viewBox?`             | `IRViewBox`                                           | —                             | 显式视框                                                                                            |
+|        | `width?`               | `number \| string`                                    | —                             | SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴                            |
+| 回调   | `handlers?`            | `HydrationHandlers`                                   | —                             | 直接传入 ir 时使用的事件处理函数表                                                                  |
+|        | `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | 编译附加产物成功提交后的通知                                                                        |
+|        | `onCompileResult?`     | `(result: CompileResult) => void`                     | —                             | Core 完整编译结果通知                                                                               |
+| 动画   | `animate?`             | `boolean`                                             | `resolveAnimationEnabled`     | 是否播放动画；由动画模式上下文优先决定，未指定时遵循系统减少动态效果偏好                            |
+|        | `animationProperties?` | `AnimationPropertyRegistry`                           | —                             | 可动画属性注册表                                                                                    |
+|        | `animationRef?`        | `Ref<AnimationControls \| null>`                      | —                             | 动画控制器出口                                                                                      |
+|        | `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene 根动画                                                                                        |
+|        | `easings?`             | `EasingRegistry`                                      | —                             | 动画缓动函数注册表                                                                                  |
+|        | `snapshotAt?`          | `number`                                              | —                             | 静态动画采样时刻                                                                                    |
+| 运行时 | `authoring?`           | `unknown`                                             | —                             | 供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR                 |
+|        | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | 处理作者输入的编译驱动                                                                              |
+|        | `runtime?`             | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained                                   |
+| 输出   | `artifacts?`           | `CompileArtifactOptions`                              | —                             | 请求生成的编译附加产物                                                                              |
+| 扩展   | `extensions?`          | `LayoutExtensions`                                    | —                             | 按能力分类的运行时扩展注册，复用 Core 编译契约                                                      |
+|        | `lowerTex?`            | `LowerTex`                                            | —                             | 公式下沉能力                                                                                        |
 
-| 成员            | 类型                                      | 默认值 | 说明                                                                                                |
-| --------------- | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------- |
-| `children?`     | `ReactNode`                               | —      | Kernel 或 Sugar JSX children                                                                        |
-| `ir?`           | `IRScene`                                 | —      | 直接传入持久化 Source IR，与 children 二选一                                                        |
-| `theme?`        | `IRScene['theme']`                        | —      | 写入 Scene 根并由后代 Composite 继承的 Theme                                                        |
-| `rootScope?`    | `Pick<InputScope, 'style' \| 'defaults'>` | —      | JSX 子图的隐式根 Scope 覆盖；完整 ir 优先，style 宿主 CSS 独立生效                                  |
-| `nodeDistance?` | `number`                                  | `24`   | 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效           |
-| `fontSize?`     | `number`                                  | `16`   | 默认字号，单位为绘图单位；font.size 缺省时使用，同时作为字号预设与 rem 的根字号，不覆盖显式数字字号 |
-
-</DocStep>
-
-<DocStep title="宿主与渲染">
-
-| 成员         | 类型                | 默认值  | 说明                                                                     |
-| ------------ | ------------------- | ------- | ------------------------------------------------------------------------ |
-| `width?`     | `number \| string`  | —       | SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 |
-| `height?`    | `number \| string`  | —       | SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版       |
-| `viewBox?`   | `IRViewBox`         | —       | 显式视框                                                                 |
-| `className?` | `string`            | —       | 宿主 className                                                           |
-| `style?`     | `CSSProperties`     | —       | 宿主内联样式                                                             |
-| `renderer?`  | `'svg' \| 'canvas'` | `'svg'` | 渲染后端；显式值优先，否则继承 Renderer 上下文，未提供上下文时使用 SVG   |
-| `idPrefix?`  | `string`            | —       | SVG 资源 id 前缀                                                         |
-| `handlers?`  | `HydrationHandlers` | —       | IR 模式下的水合 handler 注册表                                           |
-
-</DocStep>
-
-<DocStep title="扩展注册">
-
-| 成员          | 类型               | 默认值 | 说明                                           |
-| ------------- | ------------------ | ------ | ---------------------------------------------- |
-| `extensions?` | `LayoutExtensions` | —      | 按能力分类的运行时扩展注册，复用 Core 编译契约 |
-| `lowerTex?`   | `LowerTex`         | —      | 公式下沉能力                                   |
-
-</DocStep>
-
-<DocStep title="动画">
-
-| 成员                   | 类型                              | 默认值 | 说明                        |
-| ---------------------- | --------------------------------- | ------ | --------------------------- |
-| `animations?`          | `ReadonlyArray<IRAnimationTrack>` | —      | Scene 根动画                |
-| `animate?`             | `boolean`                         | —      | 是否播放动画                |
-| `snapshotAt?`          | `number`                          | —      | 静态动画采样时刻            |
-| `animationRef?`        | `Ref<AnimationControls \| null>`  | —      | 动画控制器出口              |
-| `easings?`             | `EasingRegistry`                  | —      | easing registry             |
-| `animationProperties?` | `AnimationPropertyRegistry`       | —      | animation property registry |
-
-</DocStep>
-
-<DocStep title="执行与结果">
-
-| 成员               | 类型                                                  | 默认值 | 说明                                                                                |
-| ------------------ | ----------------------------------------------------- | ------ | ----------------------------------------------------------------------------------- |
-| `runtime?`         | `LayoutRuntimeOptions`                                | —      | retained 或 static processing 模式                                                  |
-| `authoring?`       | `unknown`                                             | —      | 供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR |
-| `compileDriver?`   | `VanillaCompileDriver`                                | —      | Vanilla 领域中立 compile driver                                                     |
-| `artifacts?`       | `CompileArtifactOptions`                              | —      | artifact 请求                                                                       |
-| `onArtifacts?`     | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —      | artifacts 成功提交通知                                                              |
-| `onCompileResult?` | `(result: CompileResult) => void`                     | —      | Core 完整编译结果通知                                                               |
-
-</DocStep>
-
-</DocSteps>
+</div>
 
 </DocTab>
 
@@ -190,11 +162,15 @@ export type LayoutProps = {
 
 <DocTab value="members" label="属性">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | 成员                       | 类型                                      | 默认值                       | 说明                                                               |
 | -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------ |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime Session                                         |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断 |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program 更新策略                                                   |
+
+</div>
 
 </DocTab>
 
@@ -246,25 +222,53 @@ export type LayoutRuntimeModeValue = 'retained' | 'static';
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="属性">
+
+<DocTabs defaultValue="retained">
+
+<DocTab value="retained" label="保留模式">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| 成员                       | 类型                                      | 默认值                       | 说明                                                               |
+| -------------------------- | ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------ |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | 创建保留式 Runtime Session                                         |
+| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | 按 Vanilla processing controller 的队列顺序接收 Runtime 结构化诊断 |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program 更新策略                                                   |
+
+</div>
+
+</DocTab>
+
+<DocTab value="static" label="静态模式">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| 成员                       | 类型                              | 默认值 | 说明                                                         |
+| -------------------------- | --------------------------------- | ------ | ------------------------------------------------------------ |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —      | 不创建 Runtime Session，直接完整编译与物化                   |
+| `readonly onDiagnostic?`   | `never`                           | —      | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
+| `readonly updateStrategy?` | `never`                           | —      | static 不支持 Program 更新策略                               |
+
+</div>
+
+</DocTab>
+
+</DocTabs>
+
+</DocTab>
+
+<DocTab value="definition" label="类型定义">
+
 ```ts
 export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;
 ```
 
-#### 展开类型
+</DocTab>
 
-```ts
-export type LayoutRuntimeOptions =
-  | {
-      readonly mode?: typeof LayoutRuntimeMode.Retained | undefined;
-      readonly onDiagnostic?: ((diagnostic: RuntimeDiagnostic) => void) | undefined;
-      readonly updateStrategy?: RuntimeUpdateStrategyValue | undefined;
-    }
-  | {
-      readonly mode: typeof LayoutRuntimeMode.Static;
-      readonly updateStrategy?: never | undefined;
-      readonly onDiagnostic?: never | undefined;
-    };
-```
+</DocTabs>
 
 ### LayoutStaticRuntimeOptions
 
@@ -282,11 +286,15 @@ export type LayoutRuntimeOptions =
 
 <DocTab value="members" label="属性">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | 成员                       | 类型                              | 默认值 | 说明                                                         |
 | -------------------------- | --------------------------------- | ------ | ------------------------------------------------------------ |
 | `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —      | 不创建 Runtime Session，直接完整编译与物化                   |
 | `readonly onDiagnostic?`   | `never`                           | —      | static 不创建 Runtime session，因此不产生 Runtime 结构化诊断 |
 | `readonly updateStrategy?` | `never`                           | —      | static 不支持 Program 更新策略                               |
+
+</div>
 
 </DocTab>
 
@@ -307,7 +315,7 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 ### Layout
 
 <p>
-  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={347}>
+  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={356}>
     React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result
   </ApiSourceLink>
 </p>

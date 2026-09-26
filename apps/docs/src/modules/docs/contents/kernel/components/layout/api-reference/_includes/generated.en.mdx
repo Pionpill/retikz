@@ -20,6 +20,8 @@ Pass these options through the extensions prop of Layout. Each field accepts an 
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                     | Type                                     | Default                   | Description                      |
 | -------------------------- | ---------------------------------------- | ------------------------- | -------------------------------- |
 | `readonly arrows?`         | `ReadonlyArray<ArrowDefinition>`         | `BUILTIN_ARROWS`          | Arrow definitions                |
@@ -30,7 +32,9 @@ Pass these options through the extensions prop of Layout. Each field accepts an 
 | `readonly pathKinds?`      | `ReadonlyArray<AnyPathKindDefinition>`   | `BUILTIN_PATH_KINDS`      | Path kind definitions            |
 | `readonly patterns?`       | `ReadonlyArray<PatternDefinition>`       | `BUILTIN_PATTERNS`        | Pattern definitions              |
 | `readonly shapes?`         | `ReadonlyArray<ShapeDefinition>`         | `BUILTIN_SHAPES`          | Shape definitions                |
-| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | Core Theme style definitions     |
+| `readonly themeStyles?`    | `ReadonlyArray<ThemeStyleDefinition>`    | `ThemeStylesContext`      | Theme style definitions          |
+
+</div>
 
 </DocTab>
 
@@ -66,72 +70,40 @@ export type LayoutExtensions = Readonly<{
 
 <DocTab value="members" label="Members">
 
-<DocSteps>
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[10%] [&_th:nth-child(2)]:w-[20%] [&_th:nth-child(3)]:w-[24%] [&_th:nth-child(4)]:w-[14%]">
 
-<DocStep title="Drawing input and defaults">
+| Group      | Member                 | Type                                                  | Default                       | Description                                                                                                                                            |
+| ---------- | ---------------------- | ----------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Main       | `children?`            | `ReactNode`                                           | —                             | Drawing content declared with JSX                                                                                                                      |
+|            | `ir?`                  | `IRScene`                                             | —                             | Persisted Source IR, used instead of children                                                                                                          |
+| Layout     | `nodeDistance?`        | `number`                                              | `24`                          | Default relative node distance in drawing units; applies when position uses direction/of without distance                                              |
+| Style      | `fontSize?`            | `number`                                              | `16`                          | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes |
+|            | `rootScope?`           | `Pick<InputScope, 'style' \| 'defaults'>`             | —                             | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                               |
+|            | `theme?`               | `IRScene['theme']`                                    | —                             | Theme written to the Scene root and inherited by descendant Composites                                                                                 |
+| Rendering  | `className?`           | `string`                                              | —                             | Host className                                                                                                                                         |
+|            | `height?`              | `number \| string`                                    | —                             | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                                          |
+|            | `idPrefix?`            | `string`                                              | `useId`                       | SVG resource ID prefix; generated from React useId when omitted                                                                                        |
+|            | `renderer?`            | `'svg' \| 'canvas'`                                   | `'svg'`                       | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided       |
+|            | `style?`               | `CSSProperties`                                       | —                             | Host inline styles                                                                                                                                     |
+|            | `viewBox?`             | `IRViewBox`                                           | —                             | Explicit viewport                                                                                                                                      |
+|            | `width?`               | `number \| string`                                    | —                             | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio                     |
+| Callbacks  | `handlers?`            | `HydrationHandlers`                                   | —                             | Event handlers used when ir is supplied directly                                                                                                       |
+|            | `onArtifacts?`         | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —                             | Notification after compilation artifacts are committed successfully                                                                                    |
+|            | `onCompileResult?`     | `(result: CompileResult) => void`                     | —                             | Notification of the complete Core compilation result                                                                                                   |
+| Animation  | `animate?`             | `boolean`                                             | `resolveAnimationEnabled`     | Whether to play animations; the animation-mode context takes precedence, otherwise an unspecified value follows the system reduced-motion preference   |
+|            | `animationProperties?` | `AnimationPropertyRegistry`                           | —                             | Animatable property registry                                                                                                                           |
+|            | `animationRef?`        | `Ref<AnimationControls \| null>`                      | —                             | Animation controller ref                                                                                                                               |
+|            | `animations?`          | `ReadonlyArray<IRAnimationTrack>`                     | —                             | Scene-root animations                                                                                                                                  |
+|            | `easings?`             | `EasingRegistry`                                      | —                             | Animation easing registry                                                                                                                              |
+|            | `snapshotAt?`          | `number`                                              | —                             | Time at which to sample a static animation frame                                                                                                       |
+| Runtime    | `authoring?`           | `unknown`                                             | —                             | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR                                        |
+|            | `compileDriver?`       | `VanillaCompileDriver`                                | —                             | Compile driver that processes authoring input                                                                                                          |
+|            | `runtime?`             | `LayoutRuntimeOptions`                                | `captureLayoutRuntimeOptions` | Select retained incremental updates or static full compilation; defaults to retained                                                                   |
+| Output     | `artifacts?`           | `CompileArtifactOptions`                              | —                             | Requested compilation artifacts                                                                                                                        |
+| Extensions | `extensions?`          | `LayoutExtensions`                                    | —                             | Runtime extensions grouped by capability, using the Core compilation contract                                                                          |
+|            | `lowerTex?`            | `LowerTex`                                            | —                             | Formula lowering capability                                                                                                                            |
 
-| Member          | Type                                      | Default | Description                                                                                                                                            |
-| --------------- | ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `children?`     | `ReactNode`                               | —       | Kernel or Sugar JSX children                                                                                                                           |
-| `ir?`           | `IRScene`                                 | —       | Persisted Source IR, used instead of children                                                                                                          |
-| `theme?`        | `IRScene['theme']`                        | —       | Theme written to the Scene root and inherited by descendant Composites                                                                                 |
-| `rootScope?`    | `Pick<InputScope, 'style' \| 'defaults'>` | —       | Implicit root Scope overrides for JSX children; complete IR takes precedence, while host CSS style applies independently                               |
-| `nodeDistance?` | `number`                                  | `24`    | Default relative node distance in drawing units; applies when position uses direction/of without distance                                              |
-| `fontSize?`     | `number`                                  | `16`    | Default font size in drawing units; used when font.size is omitted and as the root size for presets and rem, without overriding explicit numeric sizes |
-
-</DocStep>
-
-<DocStep title="Host and rendering">
-
-| Member       | Type                | Default | Description                                                                                                                                      |
-| ------------ | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `width?`     | `number \| string`  | —       | CSS width of SVG or Canvas; defaults to content width, with a single numeric axis deriving the other from the content aspect ratio               |
-| `height?`    | `number \| string`  | —       | CSS height of SVG or Canvas; defaults to content height, while CSS strings use browser layout                                                    |
-| `viewBox?`   | `IRViewBox`         | —       | Explicit viewport                                                                                                                                |
-| `className?` | `string`            | —       | Host className                                                                                                                                   |
-| `style?`     | `CSSProperties`     | —       | Host inline styles                                                                                                                               |
-| `renderer?`  | `'svg' \| 'canvas'` | `'svg'` | Rendering backend; an explicit value takes precedence, otherwise inherits the Renderer context and falls back to SVG when no context is provided |
-| `idPrefix?`  | `string`            | —       | SVG resource id prefix                                                                                                                           |
-| `handlers?`  | `HydrationHandlers` | —       | Hydration handler registry for IR input                                                                                                          |
-
-</DocStep>
-
-<DocStep title="Extension registration">
-
-| Member        | Type               | Default | Description                                                                   |
-| ------------- | ------------------ | ------- | ----------------------------------------------------------------------------- |
-| `extensions?` | `LayoutExtensions` | —       | Runtime extensions grouped by capability, using the Core compilation contract |
-| `lowerTex?`   | `LowerTex`         | —       | Formula lowering capability                                                   |
-
-</DocStep>
-
-<DocStep title="Animation">
-
-| Member                 | Type                              | Default | Description                                      |
-| ---------------------- | --------------------------------- | ------- | ------------------------------------------------ |
-| `animations?`          | `ReadonlyArray<IRAnimationTrack>` | —       | Scene-root animations                            |
-| `animate?`             | `boolean`                         | —       | Whether to play animations                       |
-| `snapshotAt?`          | `number`                          | —       | Time at which to sample a static animation frame |
-| `animationRef?`        | `Ref<AnimationControls \| null>`  | —       | Animation controller ref                         |
-| `easings?`             | `EasingRegistry`                  | —       | Easing registry                                  |
-| `animationProperties?` | `AnimationPropertyRegistry`       | —       | Animation property registry                      |
-
-</DocStep>
-
-<DocStep title="Execution and results">
-
-| Member             | Type                                                  | Default | Description                                                                                                     |
-| ------------------ | ----------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| `runtime?`         | `LayoutRuntimeOptions`                                | —       | Retained or static processing mode                                                                              |
-| `authoring?`       | `unknown`                                             | —       | JSX input metadata for a custom compileDriver; ignored when ir is supplied and excluded from persisted Scene IR |
-| `compileDriver?`   | `VanillaCompileDriver`                                | —       | Domain-neutral Vanilla compile driver                                                                           |
-| `artifacts?`       | `CompileArtifactOptions`                              | —       | Requested compilation artifacts                                                                                 |
-| `onArtifacts?`     | `(artifacts: ReadonlyArray<CompileArtifact>) => void` | —       | Notification after artifacts are committed successfully                                                         |
-| `onCompileResult?` | `(result: CompileResult) => void`                     | —       | Notification of the complete Core compilation result                                                            |
-
-</DocStep>
-
-</DocSteps>
+</div>
 
 </DocTab>
 
@@ -190,11 +162,15 @@ export type LayoutProps = {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                     | Type                                      | Default                      | Description                                                                                     |
 | -------------------------- | ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
 | `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                              |
 | `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller |
 | `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program update strategy                                                                         |
+
+</div>
 
 </DocTab>
 
@@ -246,25 +222,53 @@ export type LayoutRuntimeModeValue = 'retained' | 'static';
   </ApiSourceLink>
 </p>
 
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+<DocTabs defaultValue="retained">
+
+<DocTab value="retained" label="Retained">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member                     | Type                                      | Default                      | Description                                                                                     |
+| -------------------------- | ----------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| `readonly mode?`           | `typeof LayoutRuntimeMode.Retained`       | `LayoutRuntimeMode.Retained` | Creates a retained Runtime Session                                                              |
+| `readonly onDiagnostic?`   | `(diagnostic: RuntimeDiagnostic) => void` | —                            | Receives structured Runtime diagnostics in the queue order of the Vanilla processing controller |
+| `readonly updateStrategy?` | `RuntimeUpdateStrategyValue`              | `RuntimeUpdateStrategy.Auto` | Program update strategy                                                                         |
+
+</div>
+
+</DocTab>
+
+<DocTab value="static" label="Static">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member                     | Type                              | Default | Description                                                                                  |
+| -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime Session   |
+| `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
+| `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
+
+</div>
+
+</DocTab>
+
+</DocTabs>
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
 ```ts
 export type LayoutRuntimeOptions = LayoutRetainedRuntimeOptions | LayoutStaticRuntimeOptions;
 ```
 
-#### Expanded type
+</DocTab>
 
-```ts
-export type LayoutRuntimeOptions =
-  | {
-      readonly mode?: typeof LayoutRuntimeMode.Retained | undefined;
-      readonly onDiagnostic?: ((diagnostic: RuntimeDiagnostic) => void) | undefined;
-      readonly updateStrategy?: RuntimeUpdateStrategyValue | undefined;
-    }
-  | {
-      readonly mode: typeof LayoutRuntimeMode.Static;
-      readonly updateStrategy?: never | undefined;
-      readonly onDiagnostic?: never | undefined;
-    };
-```
+</DocTabs>
 
 ### LayoutStaticRuntimeOptions
 
@@ -282,11 +286,15 @@ export type LayoutRuntimeOptions =
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                     | Type                              | Default | Description                                                                                  |
 | -------------------------- | --------------------------------- | ------- | -------------------------------------------------------------------------------------------- |
 | `readonly mode`            | `typeof LayoutRuntimeMode.Static` | —       | Compiles and materializes the complete result directly, without creating a Runtime Session   |
 | `readonly onDiagnostic?`   | `never`                           | —       | Static mode creates no Runtime session and therefore emits no structured Runtime diagnostics |
 | `readonly updateStrategy?` | `never`                           | —       | Static mode does not support a Program update strategy                                       |
+
+</div>
 
 </DocTab>
 
@@ -307,7 +315,7 @@ export type LayoutStaticRuntimeOptions = Readonly<{
 ### Layout
 
 <p>
-  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={347}>
+  <ApiSourceLink label={'Layout'} path={'packages/kernel/react/src/kernel/runtime/Layout.tsx'} startLine={356}>
     React Layout converts JSX to Vanilla Input, then hosts the Vanilla processing result
   </ApiSourceLink>
 </p>
