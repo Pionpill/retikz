@@ -47,6 +47,8 @@ export type BoundsInsets = {
 /**
  * 点集的轴对齐外接范围
  * @description 输入为空时返回 undefined；调用方按自身语义决定兜底、报错或忽略
+ * @param points 待计算的二维点集
+ * @returns 点集外接范围；空集返回 undefined
  */
 export const boundsOf = (points: ReadonlyArray<Position>): AxisAlignedBounds | undefined => {
   if (points.length === 0) return undefined;
@@ -63,7 +65,12 @@ export const boundsOf = (points: ReadonlyArray<Position>): AxisAlignedBounds | u
   return { maxX, maxY, minX, minY };
 };
 
-/** 合并两个轴对齐外接范围 */
+/**
+ * 合并两个轴对齐外接范围
+ * @param a 第一个范围，可省略
+ * @param b 第二个范围，可省略
+ * @returns 新建的合并范围；两者均缺省时返回 undefined
+ */
 export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisAlignedBounds | undefined => {
   if (a === undefined) return b === undefined ? undefined : { ...b };
   if (b === undefined) return { ...a };
@@ -75,7 +82,10 @@ export const mergeBounds = (a?: AxisAlignedBounds, b?: AxisAlignedBounds): AxisA
   };
 };
 
-/** 将 min/max bounds 转成左上角 + 尺寸矩形 */
+/**
+ * 将 min/max bounds 转成左上角 + 尺寸矩形
+ * @param bounds 轴对齐的最小与最大坐标
+ */
 export const boundsToRect = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): BoundsRect => ({
   x: minX,
   y: minY,
@@ -83,7 +93,10 @@ export const boundsToRect = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Bou
   height: maxY - minY,
 });
 
-/** 将左上角 + 尺寸矩形转成 min/max bounds */
+/**
+ * 将左上角 + 尺寸矩形转成 min/max bounds
+ * @param rect 矩形位置及宽高
+ */
 export const rectToBounds = ({ height, width, x, y }: BoundsRect): AxisAlignedBounds => ({
   minX: x,
   minY: y,
@@ -91,27 +104,43 @@ export const rectToBounds = ({ height, width, x, y }: BoundsRect): AxisAlignedBo
   maxY: y + height,
 });
 
-/** 判断 bounds rect 四个字段是否都是 finite number */
+/**
+ * 判断 bounds rect 四个字段是否都是 finite number
+ * @param rect 矩形位置及宽高
+ */
 export const isFiniteBoundsRect = ({ height, width, x, y }: BoundsRect): boolean =>
   Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(width) && Number.isFinite(height);
 
-/** 判断 bounds rect 是否 finite 且宽高严格大于 0 */
+/**
+ * 判断 bounds rect 是否 finite 且宽高严格大于 0
+ * @param rect 矩形位置及宽高
+ */
 export const isPositiveBoundsRect = (rect: BoundsRect): boolean =>
   isFiniteBoundsRect(rect) && rect.width > 0 && rect.height > 0;
 
-/** 轴对齐外接范围中心 */
+/**
+ * 轴对齐外接范围中心
+ * @param bounds 轴对齐的最小与最大坐标
+ */
 export const centerOfBounds = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Position => [
   (minX + maxX) / 2,
   (minY + maxY) / 2,
 ];
 
-/** 轴对齐外接范围半轴 */
+/**
+ * 轴对齐外接范围半轴
+ * @param bounds 轴对齐的最小与最大坐标
+ */
 export const halfAxesOfBounds = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): BoundsHalfAxes => ({
   halfWidth: (maxX - minX) / 2,
   halfHeight: (maxY - minY) / 2,
 });
 
-/** 按四边外扩轴对齐外接范围 */
+/**
+ * 按四边外扩轴对齐外接范围
+ * @param bounds 轴对齐的最小与最大坐标
+ * @param insets 各边外扩距离；负值表示内缩
+ */
 export const expandBounds = (
   { maxX, maxY, minX, minY }: AxisAlignedBounds,
   { bottom, left, right, top }: BoundsInsets,
@@ -122,7 +151,11 @@ export const expandBounds = (
   maxY: maxY + bottom,
 });
 
-/** 轴对齐外接范围的四个角点 */
+/**
+ * 轴对齐外接范围的四个角点
+ * @param bounds 轴对齐的最小与最大坐标
+ * @returns 依次返回左上、右上、左下、右下角点
+ */
 export const cornersOfBounds = ({ maxX, maxY, minX, minY }: AxisAlignedBounds): Array<Position> => [
   [minX, minY],
   [maxX, minY],

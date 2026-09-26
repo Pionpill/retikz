@@ -47,7 +47,7 @@ const createLeafDefinition = (logs: Array<ProbeLog>) =>
             [],
             [
               {
-                key: 'leaf',
+                id: 'leaf',
                 role: 'leaf',
                 bounds: {
                   x: node.originX,

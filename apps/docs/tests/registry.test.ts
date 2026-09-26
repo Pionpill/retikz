@@ -58,22 +58,22 @@ describe('SCHEMA_REGISTRY', () => {
       PlotThemeResolutionSchema: { schema: PlotThemeResolutionSchema },
       LegendSchema: {
         schema: LegendSchema,
-        url: '/library/standard/legend#legendschema',
+        url: '/library/standard/presentation/legend#legendschema',
       },
       LegendArtifactSchema: {
         schema: LegendArtifactSchema,
-        url: '/library/standard/legend#legendartifactschema',
+        url: '/library/standard/presentation/legend#legendartifactschema',
       },
       SurfaceSchema: {
         schema: SurfaceSchema,
-        url: '/library/standard/surface#surfaceschema',
+        url: '/library/standard/presentation/surface#surfaceschema',
       },
       BlockSchema: { schema: BlockSchema, url: '/schematic/graph/block/basic' },
       BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/basic' },
       BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/basic' },
       BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/basic' },
-      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/api-reference' },
-      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/api-reference' },
+      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/schema-reference' },
+      RelationSchema: { schema: RelationSchema },
     });
   });
 
@@ -95,9 +95,9 @@ describe('SCHEMA_REGISTRY', () => {
       '/library/layout/reference/runtime#layoutinspectspacingoptionsschema',
     );
     expect(lookupSchema(TableSchema)?.url).toBe('/viz/table/reference/contract-table#tableschema');
-    expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/legend#legendschema');
-    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/legend#legendartifactschema');
-    expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/surface#surfaceschema');
+    expect(lookupSchema(LegendSchema)?.url).toBe('/library/standard/presentation/legend#legendschema');
+    expect(lookupSchema(LegendArtifactSchema)?.url).toBe('/library/standard/presentation/legend#legendartifactschema');
+    expect(lookupSchema(SurfaceSchema)?.url).toBe('/library/standard/presentation/surface#surfaceschema');
   });
 
   it('documents the Layout Inspector spacing schema on the Layout runtime reference page', () => {

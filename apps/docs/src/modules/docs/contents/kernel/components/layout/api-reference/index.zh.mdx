@@ -1,8 +1,10 @@
 ---
 title: API 参考
-description: 查询 Layout 组件属性与执行模式的公开 TypeScript 契约
+description: 查询 Layout 的 React 属性、Vanilla 场景输入与 Core 场景契约
 ---
 
-本页从 `@retikz/react` 公开入口筛选 Layout 与其执行配置，不收录整个包。首次调用见[基础用法](/kernel/components/layout/usage)，场景数据字段见 [Schema 参考](/kernel/components/layout/schema-reference)。
+本页收录 React 的 `Layout` 与执行配置、Vanilla 的 `scene` / `layer` 与场景输入，以及 Core 的 `IRScene` / `IRViewBox`。Vanilla 使用 `scene` 构造输入，再交给 `mount` 等宿主入口；没有同名 `layout` 构造函数。
+
+首次调用见[基础用法](/kernel/components/layout/usage)，持久化字段见 [Schema 参考](/kernel/components/layout/schema-reference)，挂载、更新与释放见 [Vanilla](/kernel/packages/vanilla)。
 
 {/* @include kernel/components/layout/api-reference/generated */}

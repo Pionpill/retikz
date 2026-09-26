@@ -21,7 +21,7 @@ import { TransformSchema } from '../transform';
 import { ScopeBoundingShape, ScopeStyleChannel } from './constants';
 
 /** 节点默认值仅继承明确允许的几何与命名分组 */
-export const NodeDefaultSchema = NodeSchema.pick({
+export const NodeDefaultSchema = strictObject(NodeSchema.shape).pick({
   shape: true,
   boundary: true,
   cornerRadius: true,

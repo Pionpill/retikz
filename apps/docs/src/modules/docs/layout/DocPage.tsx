@@ -115,7 +115,7 @@ export const DocPage: FC<DocPageProps> = props => {
 
   return (
     <main className={cn('@container flex min-w-0 flex-1 w-full', className)} {...resProps}>
-      <div className="flex min-w-0 flex-1 justify-center p-6">
+      <div className="flex min-w-0 flex-1 justify-center px-8 py-6">
         <div className={cn('flex min-w-0 flex-1 flex-col gap-6', contentClassName)}>
           <header className="flex flex-col items-start w-full justify-between gap-2">
             <div className="flex w-full flex-wrap items-start gap-x-3 gap-y-2">

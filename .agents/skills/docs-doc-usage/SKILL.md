@@ -1,13 +1,15 @@
 ---
 name: docs-doc-usage
-description: Use when writing Retikz basic usage, named usage topics, or extended usage of existing public capabilities.
+description: Use when writing Retikz basic usage, named usage topics, extended usage, or compact single-page component documentation.
 ---
 
 # 基础、专题与扩展用法
 
 先读 [文档总则](../docs-doc-principle/SKILL.md)，按其中条件加载公共规则；本入口只选择当前页型需要的细节。
 
-共同阅读 [章节结构](references/structure.md)，然后只选当前模式：
+小体量组件合页直接遵循 [页型词典的合页结构](../docs-doc-principle/references/page-contract.md#小体量组件合页)，不叠加普通用法页骨架；按实际内容读取 reference / mechanism skill 的对应规则。
+
+独立用法页共同阅读 [章节结构](references/structure.md)，然后只选当前模式：
 
 | 页面     | 细节                                                         |
 | -------- | ------------------------------------------------------------ |

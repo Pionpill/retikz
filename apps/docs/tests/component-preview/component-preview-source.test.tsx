@@ -197,7 +197,7 @@ describe('ComponentPreview Vanilla source', () => {
 
   it('自动 Core Vanilla view 使用真实 SVG 并固定 renderer', async () => {
     const props = await renderPreview(
-      ['kernel', 'components', 'effects', 'custom-animation'],
+      ['kernel', 'visual', 'animation', 'custom-animation'],
       <ComponentPreview files="custom-property" />,
     );
 
@@ -255,7 +255,10 @@ describe('ComponentPreview Vanilla source', () => {
   });
 
   it('Standard Grid controls 的 canonical 状态生成可运行的 Vanilla 视图', async () => {
-    const props = await renderPreview(['library', 'standard', 'grid'], <ComponentPreview files="grid-playground" />);
+    const props = await renderPreview(
+      ['library', 'standard', 'presentation', 'grid'],
+      <ComponentPreview files="grid-playground" />,
+    );
     const vanilla = props.source?.vanilla;
 
     expect(vanilla?.files[0]?.code).toContain("from '@retikz/standard-vanilla/presentation'");

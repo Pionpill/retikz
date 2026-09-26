@@ -5,8 +5,10 @@ import type { CompileOccurrenceLocator } from '../occurrence';
 
 /** Composite 在自身 allocation coordinate 中声明的局部空间区域 */
 export type SpatialHandleDeclaration = Readonly<{
-  /** 当前 owner occurrence 内唯一的稳定 key */
-  key: string;
+  /** 当前 owner occurrence 内唯一的稳定 id */
+  id: string;
+  /** 同一 owner 内指向本条空间记录的额外 id，不创建独立记录 */
+  aliasIds?: ReadonlyArray<string>;
   /** owner 自行定义的稳定领域角色 */
   role: string;
   /** 当前 composite allocation coordinate 中的有限非负尺寸 AABB */
@@ -33,8 +35,10 @@ export type SpatialHandleOwner = Readonly<{
 export type QualifiedSpatialHandle = Readonly<{
   /** 从外到内的 composite owner path，声明者位于最后 */
   ownerPath: ReadonlyArray<SpatialHandleOwner>;
-  /** owner-local key */
-  key: string;
+  /** owner-local id */
+  id: string;
+  /** 与主 id 查询同一条记录的 owner-local 别名 */
+  aliasIds?: ReadonlyArray<string>;
   /** owner-defined role */
   role: string;
   /** renderer-neutral world-space geometry */
@@ -70,8 +74,8 @@ export type SpatialHandleSelector = Readonly<{
   within?: ReadonlyArray<SpatialOwnerSelector>;
   /** declaration owner 的精确条件 */
   owner?: SpatialOwnerSelector;
-  /** owner-local key */
-  key?: string;
+  /** owner-local id */
+  id?: string;
   /** owner-defined role */
   role?: string;
   /** 结果必须全部包含的 tags */

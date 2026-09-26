@@ -5,12 +5,13 @@ import * as IR from '@retikz/core';
 import { z } from 'zod';
 
 /** 节点家族拥有的 schema 与中文说明；共享引用不递归收录 */
-const nodeSchemas = {
+export const nodeSchemas = {
   NodeSchema: {
     description: '带位置、可选文字和视觉形状的节点',
     descriptions: {
       type: '判别字段，固定为 node',
       id: '可选引用标识，路径或其它节点通过它引用本节点',
+      aliasIds: '同一节点的额外引用 id；要求主 id，别名非空白、互不重复且不同于主 id，不生成额外图元',
       shape:
         '视觉形状名称或带参数引用；省略时继承 Scope.defaults.node.shape，无继承值时使用 rectangle，未注册名称在编译时失败',
       boundary: '连线使用的连接面；可由单个路径端点覆盖，不改变节点外观',

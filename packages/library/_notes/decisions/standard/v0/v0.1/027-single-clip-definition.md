@@ -7,6 +7,7 @@ keywords: 'Standard、Clip、Definition、StandardClipShapeDefinitions、rect、
 
 - 状态：Accepted
 - 决策日期：2026-08-16
+- 后继决策：[ADR-032](./032-extension-package-boundary.md) 将本文官方 Clip 的 Standard 归属与子入口替代为 `@retikz/extension` 根入口，集合名称使用 Extension 前缀；单一 Clip Definition 契约不变
 - 关联：[alpha.3 roadmap](./roadmap.md) · [Standard 拓展库设计](../../../../architecture/standard-library-design.md) · [ADR-026](./026-standard-clip-shapes.md) · [Core ADR-031](../../../../../../kernel/_notes/decisions/v0/v0.5/031-single-clip-definition.md)
 
 ## 背景与目标

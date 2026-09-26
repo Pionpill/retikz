@@ -33,9 +33,7 @@ export const PreviewPlot = Object.assign(((props: PlotProps) => <RuntimePlot {..
     RuntimePlot.createInputEmbedProps(withPlotThemeStyles(props as PlotProps)),
 });
 
-const withGraphThemeStyles = <TProps extends { graphThemeStyles?: GraphProps['graphThemeStyles'] }>(
-  props: TProps,
-): TProps => ({
+const withGraphThemeStyles = (props: GraphProps): GraphProps => ({
   ...props,
   graphThemeStyles:
     props.graphThemeStyles === undefined
@@ -55,7 +53,7 @@ export const PreviewGraph: typeof RuntimeGraph = Object.assign(
   },
 );
 
-/** docs preview 的 Entity 边界，显式覆盖 Layout-embedded runtime definitions */
+/** docs preview 的 Entity 边界，沿用 Graph 装配的 definitions */
 export const PreviewEntity: typeof RuntimeEntity = Object.assign(
   ((props: EntityProps) => <RuntimeEntity {...props} />) as FC<EntityProps>,
   {
@@ -63,11 +61,11 @@ export const PreviewEntity: typeof RuntimeEntity = Object.assign(
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeEntity.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
-      RuntimeEntity.createInputEmbedProps?.(withGraphThemeStyles(props as EntityProps), context),
+      RuntimeEntity.createInputEmbedProps?.(props, context),
   },
 );
 
-/** docs preview 的 Relation 边界，显式覆盖 Layout-embedded runtime definitions */
+/** docs preview 的 Relation 边界，沿用 Graph 装配的 definitions */
 export const PreviewRelation: typeof RuntimeRelation = Object.assign(
   ((props: RelationProps) => <RuntimeRelation {...props} />) as FC<RelationProps>,
   {
@@ -75,7 +73,7 @@ export const PreviewRelation: typeof RuntimeRelation = Object.assign(
     isTier2Embeddable: true as const,
     inputEmbedAdapter: RuntimeRelation.inputEmbedAdapter,
     createInputEmbedProps: (props: Readonly<Record<string, unknown>>, context: ReactInputEmbedContext) =>
-      RuntimeRelation.createInputEmbedProps?.(withGraphThemeStyles(props as RelationProps), context),
+      RuntimeRelation.createInputEmbedProps?.(props, context),
   },
 );
 

@@ -18,7 +18,7 @@ const properties = {
   namespace: literal('standard'),
   type: literal('ellipse'),
   ...ShapeAnglesSchema.shape,
-  closed: ShapeClosedSchema.removeDefault().optional(),
+  closed: ShapeClosedSchema.unwrap().optional(),
 };
 /** Ellipse 的持久化几何契约 */
 export const EllipseSchema = union([

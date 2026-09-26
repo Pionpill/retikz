@@ -51,7 +51,9 @@ export type IRScopeFrame = ZodInput<typeof ScopeFrameSchema>;
  *   Scope 通过 style 提供级联视觉值，通过 defaults 提供四个默认通道与 reset 继承屏障
  */
 export type IRScope = IRScopeProps & {
+  /** 固定为 scope 的容器判别字段 */
   type: 'scope';
+  /** 按声明顺序处理的节点、路径、坐标点、作用域或复合组件 */
   children: Array<IRNode | IRPathBase | IRCoordinate | IRScope | IRComposite>;
 };
 

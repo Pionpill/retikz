@@ -1,6 +1,7 @@
 import { globSync, readFileSync } from 'node:fs';
 
 import { WebFontSizePreset } from '@retikz/core';
+import { EntityRole, GraphStatus } from '@retikz/graph';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -23,6 +24,11 @@ const collectSourceMdxApiValueNames = (): Array<string> => {
 describe('<ApiValues>', () => {
   it('reads WebFontSizePreset values from the public core constant', () => {
     expect(API_VALUE_REGISTRY.WebFontSizePreset.values).toEqual(Object.values(WebFontSizePreset));
+  });
+
+  it('reads Graph role and status values from public constants', () => {
+    expect(API_VALUE_REGISTRY.EntityRole.values).toEqual(Object.values(EntityRole));
+    expect(API_VALUE_REGISTRY.GraphStatus.values).toEqual(Object.values(GraphStatus));
   });
 
   it('registers non-empty values for every ApiValues name used in source MDX', () => {

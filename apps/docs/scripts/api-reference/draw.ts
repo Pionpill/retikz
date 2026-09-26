@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { pathSchemaDescriptions } from '../schema-reference/path';
 import { translateDrawApiReference } from './draw.en';
 import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
 import { createApiReferenceMdx } from './tex';
@@ -16,7 +17,12 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     entries: [
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/react/src/index.ts'),
-        title: { zh: 'React 组件', en: 'React components' },
+        title: { zh: '`@retikz/react`', en: '`@retikz/react`' },
+        symbolPairs: [
+          ['Path', 'PathProps'],
+          ['Draw', 'DrawProps'],
+          ['Step', 'StepProps'],
+        ],
         symbols: [
           'Draw',
           'DrawProps',
@@ -42,6 +48,8 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
+    schemaPackageName: '@retikz/core',
+    schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
   },
   {
     packageName: '@retikz/vanilla',
@@ -50,11 +58,15 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     entries: [
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/vanilla/src/index.ts'),
-        title: { zh: 'Vanilla 作者输入', en: 'Vanilla authoring input' },
+        title: { zh: '`@retikz/vanilla`', en: '`@retikz/vanilla`' },
+        symbolPairs: [['path', 'InputPath']],
+        omitPairedCallDetails: true,
         symbols: ['path', 'InputPath', 'InputStep'],
       },
     ],
     translate: translateDrawApiReference,
+    schemaPackageName: '@retikz/core',
+    schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
   },
   {
     packageName: '@retikz/core',
@@ -63,7 +75,13 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
     entries: [
       {
         source: path.resolve(repositoryRoot, 'packages/kernel/core/src/index.ts'),
-        title: { zh: '路径写法与扩展契约', en: 'Path syntax and extension contracts' },
+        title: { zh: '`@retikz/core`', en: '`@retikz/core`' },
+        overloadTabs: {
+          definePathKind: [
+            { value: 'without-owner-output', label: { zh: '无所属者产物', en: 'Without owner output' } },
+            { value: 'with-owner-output', label: { zh: '发布所属者产物', en: 'With owner output' } },
+          ],
+        },
         symbols: [
           'DrawWay',
           'WayDSL',
@@ -82,6 +100,8 @@ export const drawApiReferenceConfigs: ReadonlyArray<ApiReferencePackageConfig> =
       },
     ],
     translate: translateDrawApiReference,
+    schemaPackageName: '@retikz/core',
+    schemaLocalizations: { PathBaseSchema: { descriptions: pathSchemaDescriptions } },
   },
 ];
 

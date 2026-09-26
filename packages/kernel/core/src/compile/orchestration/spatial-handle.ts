@@ -122,7 +122,8 @@ export const materializeSpatialHandleIndex = (
           }),
         ),
       ),
-      key: declaration.key,
+      id: declaration.id,
+      ...(declaration.aliasIds === undefined ? {} : { aliasIds: Object.freeze([...declaration.aliasIds]) }),
       role: declaration.role,
       geometry: Object.freeze({
         kind: 'rect' as const,

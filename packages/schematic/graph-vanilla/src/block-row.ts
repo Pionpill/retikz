@@ -1,4 +1,3 @@
-import type { GraphDefinitionOptions } from '@retikz/graph';
 import { BlockRowProviderKey } from '@retikz/graph';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 
@@ -6,31 +5,14 @@ import { BlockRowEmbedKind } from './constants';
 import { createGraphInputEmbed } from './input-embed';
 import type { InputBlockRow, WithoutInputType } from './normalize';
 import { normalizeBlockRow } from './normalize';
-import { createGraphProviderDependencies, graphDefinitionOptionsOf } from './providers';
+import { createGraphProviderDependencies } from './providers';
 import { normalizeGraphAuthoringChildren } from './semantic-children';
 
-/** Block Row embed 同时携带 Source authoring 输入与当前 definition options */
-export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow> & GraphDefinitionOptions;
+/** Block Row embed 的 Source authoring 输入 */
+export type BlockRowInputEmbedProps = WithoutInputType<InputBlockRow>;
 
 const inputOf = (props: BlockRowInputEmbedProps): InputBlockRow => {
-  const {
-    entityRoles: _entityRoles,
-    entityKinds: _entityKinds,
-    entityPredicates: _entityPredicates,
-    relationRoles: _relationRoles,
-    relationKinds: _relationKinds,
-    relationPredicates: _relationPredicates,
-    graphThemeStyles: _graphThemeStyles,
-    ...input
-  } = props;
-  void _entityRoles;
-  void _entityKinds;
-  void _entityPredicates;
-  void _relationRoles;
-  void _relationKinds;
-  void _relationPredicates;
-  void _graphThemeStyles;
-  return { type: 'blockRow', ...input };
+  return { type: 'blockRow', ...props };
 };
 
 /** Block Row Source 的 InputEmbed adapter */
@@ -40,7 +22,7 @@ export const BlockRowInputEmbedAdapter: InputEmbedAdapter<BlockRowInputEmbedProp
     const input = inputOf(props);
     const inputChildren = 'content' in input ? undefined : input.children;
     const normalized = normalizeGraphAuthoringChildren(inputChildren ?? [], context, 'BlockRow.children');
-    const dependencies = createGraphProviderDependencies(BlockRowProviderKey, graphDefinitionOptionsOf(props));
+    const dependencies = createGraphProviderDependencies(BlockRowProviderKey);
     let node: ReturnType<typeof normalizeBlockRow>;
     if (input.content !== undefined || inputChildren === undefined) {
       node = normalizeBlockRow(input);

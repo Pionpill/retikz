@@ -2,7 +2,7 @@
 
 > **状态：架构总则，运行时基础已部分实现，Headless Interaction 尚未实现。** `@retikz/runtime` 已承接 identity、ownership、program 与 transaction 基础；事件、behavior、presentation、intent 和交互 program 仍由后续 ADR 冻结。本文只维护统一方向、跨包契约和职责边界，不替代当前公开类型。
 >
-> 关联：[`性能与增量运行时设计`](./performance-design.md) · [`Editor 编辑运行时架构设计`](./editor-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
+> 关联：[`性能与增量运行时设计`](./performance-design.md) · [`Editor 编辑运行时架构设计`](./editor-design.md) · [`画板交互控件与状态持久化讨论记录`](./interactive-controls-design.md) · [`能力完备性与模块边界`](./capability-design.md) · [`包拓扑`](./package-topology.md) · [`Core 绘图完备设计`](../../packages/kernel/_notes/architecture/core-drawing-complete.md) · [`Kernel v0.5 路线`](../../packages/kernel/_notes/decisions/v0/v0.5/roadmap.md)
 >
 > 本文主责事件、ownership routing、behavior、presentation、intent 与动画；Snapshot / ChangeSet、逐 Tier 增量、调度、retained patch、渐进物化、LLM generation 以及共享运行时基础以性能设计为准。本文只补充这些基础契约在交互侧的消费约束，不建立第二份真源。
 

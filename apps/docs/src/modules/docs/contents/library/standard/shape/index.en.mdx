@@ -1,0 +1,60 @@
+---
+title: Shapes
+description: Compose independent geometric outlines using centers, sizes, and angles.
+---
+
+Shape components describe geometric outlines using centers, sizes, radii, or angles. Choose the component that matches your parameters to compose icons, sketches, and decorative figures without describing each outline segment.
+
+## Responsibilities at a glance
+
+| Component          | Responsibility                                                 | When to read                                     |
+| ------------------ | -------------------------------------------------------------- | ------------------------------------------------ |
+| Circle and ellipse | Describe round outlines with centers, radii, or bounding boxes | Draw circles or ellipses                         |
+| Rectangle          | Describe square-cornered or rounded rectangles                 | Work from corners or a center and dimensions     |
+| Regular polygon    | Define regular polygons by side count and size                 | Draw a regular polygon outline                   |
+| Star               | Define stars by point count and inner and outer radii          | Draw star markers                                |
+| Arc and sector     | Describe arcs or sector regions using angles                   | Show part of a circumference or an angular range |
+
+## Compose a panel from basic outlines
+
+A rounded rectangle forms the outer outline, with a circle and a smaller rectangle placed inside. Their positions and sizes define the composition in a shared coordinate space.
+
+<ComponentPreview files="shape-composition" />
+
+The outer outline does not automatically wrap or arrange the inner shapes: the example sets every position and size explicitly. Use Surface or Frame when the border should follow its content.
+
+## Choosing the right family
+
+Use this family for independent geometric outlines. For the outline of a labeled, connectable node, see [node shape extensions](/library/extension/shape). For content-driven boundaries, see [Presentation](/library/standard/presentation).
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Circle and ellipse',
+      description: 'Describe round outlines with centers, radii, or bounding boxes',
+      url: '/library/standard/shape/circle-ellipse',
+    },
+    {
+      title: 'Rectangle',
+      description: 'Describe square-cornered or rounded rectangles',
+      url: '/library/standard/shape/rectangle',
+    },
+    {
+      title: 'Regular polygon',
+      description: 'Define regular polygons by side count and size',
+      url: '/library/standard/shape/regular-polygon',
+    },
+    {
+      title: 'Star',
+      description: 'Define stars by point count and inner and outer radii',
+      url: '/library/standard/shape/star',
+    },
+    {
+      title: 'Arc and sector',
+      description: 'Describe arcs or sector regions using angles',
+      url: '/library/standard/shape/arc-sector',
+    },
+  ]}
+/>

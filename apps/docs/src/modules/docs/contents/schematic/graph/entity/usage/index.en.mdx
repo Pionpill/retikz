@@ -1,0 +1,290 @@
+---
+title: Basic usage
+description: Create entities and configure text, position, roles, statuses, kinds and styles.
+---
+
+Entity combines one object's meaning, text and position in one declaration. Start with [Quick start](/schematic/graph/get-start) if Graph is not installed yet. Start with a task entity, then choose roles, statuses, kinds, styles and entity groups. See [Custom usage](/schematic/graph/entity/custom) to register new semantic capabilities.
+
+## Integration
+
+All four entry points draw the same entity. Mount the React example directly. Vanilla requires an existing `<div id="diagram"></div>`; call `view.dispose()` when unmounting.
+
+<ComponentPreview files="entity-minimal" size="xs" hideCode />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Entity, Graph } from '@retikz/graph-react';
+import type { FC } from 'react';
+
+const Example: FC = () => (
+  <Graph>
+    <Entity id="task" role="activity" position={[180, 90]}>
+      Process order
+    </Entity>
+  </Graph>
+);
+export default Example;
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'entity',
+      id: 'task',
+      role: 'activity',
+      position: [180, 90],
+      text: 'Process order',
+    },
+  ],
+};
+const Example: FC = () => <Layout ir={ir} extensions={{ composites: createGraphDefinitions() }} />;
+export default Example;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { entity, createGraphVanillaAdapters } from '@retikz/graph-vanilla';
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+
+const input = scene({
+  children: [
+    entity({
+      id: 'task',
+      role: 'activity',
+      position: [180, 90],
+      text: 'Process order',
+    }),
+  ],
+});
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: createGraphVanillaAdapters(),
+});
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { createGraphDefinitions } from '@retikz/graph';
+import { mount } from '@retikz/vanilla/dom';
+
+const ir: IRScene = {
+  version: 1,
+  type: 'scene',
+  children: [
+    {
+      namespace: 'graph',
+      type: 'entity',
+      id: 'task',
+      role: 'activity',
+      position: [180, 90],
+      text: 'Process order',
+    },
+  ],
+};
+const view = mount(document.getElementById('diagram')!, ir, {
+  compile: { composites: createGraphDefinitions() },
+});
+```
+
+</DocTab>
+</DocTabs>
+
+### Naming and placement
+
+An `id` is not required for drawing. Omit it for a standalone text node, and provide a stable, unique identity when a Relation or a placement reference needs it. `position={[180, 90]}` places the entity at that point, with its text moving together with it.
+
+The Source schema allows `position` to be omitted so that a layout can supply it. Drawing still requires a position. Omitting it without a layout supplying one produces an error rather than an implicit origin.
+
+### Adding text
+
+Use children in JSX and `text` in Vanilla or IR. They describe the same text content; do not provide both on one Entity. JSX children support strings, numbers, fragments and `Text`, not arbitrary shapes, paths or layout components.
+
+As text grows, the entity size accounts for text measurement and the role's padding. Use [Block](/schematic/graph/block) for structured content rather than treating Entity as a container.
+
+## Entity semantics
+
+Entity uses `role`, `status`, optional `kind` and `group` for different layers of meaning: `role` determines structure, `status` supplies theme status appearance, `kind` can refine appearance through author rules, and `group` marks entities that belong to the same semantic group.
+
+### Choosing a role: `role`
+
+A `role` expresses the object's primary meaning and determines its shape, boundary, corner radius, padding and base minimum size. Choose by meaning, not just by the outline you prefer. Longer text or a larger `layout.minimumSize` can still increase the entity size, but cannot replace role-owned structure.
+
+| role          | Use for                                             |
+| ------------- | --------------------------------------------------- |
+| `participant` | An actor participating in an interaction            |
+| `activity`    | Work or a task to perform                           |
+| `event`       | An occurrence                                       |
+| `state`       | A persistent condition or stage                     |
+| `gateway`     | A semantic control point, such as a branch or merge |
+| `resource`    | A passive object that is used or stored             |
+| `concept`     | Knowledge, a concept or an abstract object          |
+
+The seven built-in roles below share the same style so you can compare their outlines and sizes directly.
+
+<ComponentPreview files="entity-roles" size="md" />
+
+### Setting a status: `status`
+
+`status` answers “what state is it in now?” without changing the shape, boundary, corner radius or padding selected by the role. A payment task remains an `activity` after setting `status="success"`. The `state` role is an object category, not a status setting.
+
+| status     | Default visual meaning                  |
+| ---------- | --------------------------------------- |
+| Omitted    | Normal appearance without a status rule |
+| `error`    | Error semantic color                    |
+| `success`  | Success semantic color                  |
+| `warning`  | Warning semantic color                  |
+| `disabled` | Theme guide color and a dashed outline  |
+
+The gallery below keeps `role="activity"` fixed. From left to right it shows no status, `error`, `success`, `warning` and `disabled`.
+
+<ComponentPreview files="entity-statuses" size="sm" />
+
+The built-in theme rules for `error`, `success` and `warning` change the main color; `disabled` changes the main color and uses a dashed outline. Exact colors follow the theme. Status rules provide defaults that explicit instance styles can override field by field. A custom predicate parameter named `status` does not become this top-level status; it only participates in predicate matching.
+
+### Refining a type: `kind`
+
+Entity provides a `kind` field but no built-in kind values. The field is reserved for business-defined, stable subtypes within the current role, distinguishing objects that share the same structure. For example, tasks with the `activity` role can have different kinds. A kind does not change shape, boundary, corner radius, padding or color by itself. It affects main color, fill, stroke or other fields only when matching author `graphRules` set those `style` fields. Register the kind under its role before use. See [Custom usage](/schematic/graph/entity/custom) for definition and registration.
+
+The three `docs.task.*` kinds below are registered by this documentation page. All retain the `activity` outline. Routine has no matching rule; Priority gains a blue, thicker outline; Blocked gains a red, dashed outline through author rules.
+
+<ComponentPreview files="entity-kinds" size="sm" />
+
+### Entity grouping: `group`
+
+Within one Graph, give entities that belong together the same `group` value. `group` expresses their shared membership; visually, entities with the same `group` have the same color.
+
+The planning, delivery and support groups below contain two, three and four entities, respectively.
+
+<ComponentPreview files="entity-groups" size="md" />
+
+### Visual precedence
+
+Built-in `role` values primarily determine shape and base size, with a clear separation from the built-in `status` appearance. A custom role can also have appearance rules that affect the same fields as status or kind rules. Following the built-in separation is recommended, but not required.
+
+For the main color, precedence is: explicit Entity `style.color` > author `graphDefaults` / `graphRules` color > `group` categorical color > built-in `status` color. `group` directly supplies only the main color; for other appearance fields, explicit instance styles still take precedence over author rules and built-in status appearance. If multiple business rules match, later rules override earlier ones; role and kind have no fixed appearance precedence of their own. See [Implementation](/schematic/graph/entity/mechanism) for the full rule behavior.
+
+Use the playground below to switch role and status or apply a group to the entity. Turn on "Apply group" to let its color override the status color, then "Override theme color" to make the instance color take precedence over both.
+
+<ComponentPreview files="entity-playground" size="md" />
+
+## Style and size
+
+Use `style` for appearance, such as `color`, `fill` and `strokeWidth`. Use `layout` for text layout and sizing, such as `maxTextWidth`, `lineHeight` and `minimumSize`. Adjust the controls below to see changes in fill, stroke, text wrapping and minimum width without changing the role structure.
+
+<ComponentPreview files="entity-style-size" size="lg" />
+
+The role owns `shape`, `boundary`, `cornerRadius` and `padding`; these are not instance override fields. Each `minimumSize` axis takes the larger of the role and instance values. A smaller instance value cannot shrink the role's minimum.
+
+`style.color` is a string main color. Numeric `fill`, `stroke` or derived text colors require a resolvable main color. Supply a static main color for those forms rather than relying on unresolved `currentColor`.
+
+## Related props
+
+These are the members used on this page; see the full [API reference](/schematic/graph/entity/api-reference).
+
+<ComponentProps
+  items={[
+    {
+      name: 'role',
+      kind: 'property',
+      type: 'EntityRoleValue (string)',
+      required: true,
+      description:
+        'Built-ins are participant, activity, event, state, gateway, resource and concept, with meanings listed above. Custom keys must be registered.',
+    },
+    {
+      name: 'kind',
+      kind: 'property',
+      type: 'string',
+      description:
+        'Optional business subtype key with no built-in values. Register it under its role; matching graphRules can change its appearance.',
+    },
+    {
+      name: 'id',
+      kind: 'property',
+      type: 'string',
+      description:
+        'Optional reference identity. Supply it when another element needs to refer to this entity; keep it unique within the reference namespace.',
+    },
+    {
+      name: 'position',
+      kind: 'property',
+      type: "InputEntity['position']; [number, number] | …",
+      description:
+        'This page uses Cartesian coordinates `[x, y]` for the entity center. See the full API for other forms. Omitting it does not place the entity at the origin.',
+    },
+    {
+      name: 'children',
+      kind: 'property',
+      type: 'ReactNode',
+      description:
+        'The React entry collects strings, numbers, fragments and Text declarations only. Do not combine it with `text` or insert arbitrary drawing components.',
+    },
+    {
+      name: 'text',
+      kind: 'property',
+      type: "InputEntity['text']; string | Array<IRLine>",
+      description:
+        'Text input for API/IR. This page uses a string; line arrays support line-level formatting, detailed in the API reference.',
+    },
+    {
+      name: 'status',
+      kind: 'property',
+      type: "'error' | 'success' | 'warning' | 'disabled'",
+      description:
+        'error / success / warning select semantic colors; disabled uses guide color and dashes. Omission adds no status rule.',
+    },
+    {
+      name: 'style',
+      kind: 'property',
+      type: "InputEntity['style']; { color?: string; fill?: string | number | IRPaint; strokeWidth?: number; dashed?: boolean; … }",
+      description:
+        'Here string color sets the main color, numeric fill derives a fill, and strokeWidth sets outline width. Fields independently override appearance defaults.',
+    },
+    {
+      name: 'layout',
+      kind: 'property',
+      type: "InputEntity['layout']; { maxTextWidth?: number; lineHeight?: number; minimumSize?: { width?: number; height?: number }; … }",
+      description:
+        'maxTextWidth limits text width, lineHeight sets line height, and minimumSize raises size minima. Role-owned padding is excluded.',
+    },
+    {
+      name: 'group',
+      kind: 'property',
+      type: 'string',
+      description:
+        'A semantic group key shared by multiple entities within Graph. Currently expressed with a categorical color that Relation can share; creates no container.',
+    },
+  ]}
+/>
+
+## Further reading
+
+<LinkedSections
+  items={[
+    { title: 'Custom usage', description: 'Define new semantic capabilities', url: '/schematic/graph/entity/custom' },
+    {
+      title: 'Implementation',
+      description: 'Trace role structure and style precedence',
+      url: '/schematic/graph/entity/mechanism',
+    },
+  ]}
+/>

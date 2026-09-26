@@ -1,0 +1,278 @@
+---
+title: Map
+description: Use Map to display key/value records, configure cells, compose drawings, and look up API and Schema contracts.
+---
+
+`Map` draws ordered key/value pairs in two aligned columns, suitable for object fields and records. It handles presentation, not dictionary lookup or deduplication.
+
+## Using this topic
+
+After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
+
+<ComponentPreview files="map-basic" hideCode size="sm" />
+
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
+
+```tsx
+import { Layout } from '@retikz/react';
+import { Map } from '@retikz/standard-react/container';
+
+export const Example = () => (
+  <Layout>
+    <Map
+      entries={[
+        { key: 'a', value: '1' },
+        { key: 'b', value: '2' },
+      ]}
+    />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { MapDefinition } from '@retikz/standard/container';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+export const Example = () => <Layout ir={ir} composites={[MapDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { map, MapInputEmbedAdapter } from '@retikz/standard-vanilla/container';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({
+  children: [
+    map({
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    }),
+  ],
+});
+const svg = renderToSvgString(input, { adapters: [MapInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { MapDefinition } from '@retikz/standard/container';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [
+    {
+      namespace: 'standard',
+      type: 'map',
+      entries: [
+        {
+          key: 'a',
+          value: '1',
+        },
+        {
+          key: 'b',
+          value: '2',
+        },
+      ],
+    },
+  ],
+};
+const svg = renderToSvgString(ir, {
+  compile: { composites: [MapDefinition] },
+});
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Choose an input form
+
+The three input forms are mutually exclusive. Choose based on whether you need cell-specific styling, identities, or drawable content.
+
+| Input          | Use it for                                           |
+| -------------- | ---------------------------------------------------- |
+| `entries`      | Explicit text, cell styles, and ids                  |
+| `data`         | Recursively displaying a JSON object                 |
+| JSX `children` | Composing drawings with MapEntry / MapKey / MapValue |
+
+`entries` preserves array order. Each entry has a `key` and a `value`, both accepting a string or `{ content, id?, style?, layout? }`. Displayed keys may repeat; strings do not automatically become cell ids.
+
+### Style and dimensions
+
+Style precedence is **structural defaults → overall style → style.key / style.value → cell style**. Keys and values can have distinct appearances.
+
+Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
+
+<ComponentPreview files="map-styles" size="sm" />
+
+`layout.width` / `height` set the cell border-box dimensions, including padding; zero is valid. Omit them or use `'auto'` for natural sizing. Cell-level values take precedence, and explicit `'auto'` clears an inherited fixed dimension. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
+
+Layout precedence is **overall layout → layout.key / layout.value → cell layout**. Each column uses its largest width requirement and each row its tallest cell. Fixed dimensions are not stretched; smaller cells align to the track start, so borders in one column or row may differ in size. `layout.gap` accepts a number or `{ row, column }`.
+
+### Container labels
+
+`label` adds text to the whole container. It accepts one object or an array, with position, distance, rotation, and pin options. Labels do not enlarge the layout allocation but do contribute to the final drawing bounds, including on empty containers.
+
+```tsx
+<Map entries={[{ key: 'a', value: '1' }]} label={{ text: 'record', position: 'top' }} />
+```
+
+Overall font, text color, and `defaults.label` supply label defaults, overridden by the label itself. Key/value roles and cell styles do not affect container labels, and nested containers created by `data` do not inherit the root label.
+
+<ComponentAlert
+  type="tip"
+  title="Label configuration"
+  description={
+    <>
+      Label configuration reuses Node label. See the{' '}
+      <a href="/kernel/components/node/labels">node label documentation</a> for all position, style, and pin options.
+    </>
+  }
+/>
+
+## Extended usage
+
+### Compose drawable content
+
+Each `MapEntry` must contain exactly one `MapKey` and one `MapValue`. Each cell accepts either `text` or exactly one drawable child, never both.
+
+Wrap multiple drawings in one `Scope` before putting them in a cell. React data arrays contain text configurations, not JSX. Vanilla cell `content` accepts text or one authoring child; direct IR `content` accepts text or one serializable drawable.
+
+<ComponentPreview files="map-composition" size="sm" />
+
+### Display JSON data directly
+
+`data` accepts a JSON object, and the root object always remains a Map. Nonempty object values become nested Maps by default; set `dataObjectDisplay="text"` to render those values as compact JSON text. Nested arrays still become Lists and inherit this option. It applies only to `data`, not `entries` or JSX composition. The example uses text mode.
+
+<ComponentPreview files="map-data" />
+
+Object keys are displayed as plain text; string values use quoted, escaped JSON literals, distinguishing `"null"` from `null`. Numbers, booleans, and null retain their literal forms. Nested empty objects and arrays appear as `{}` and `[]`; an empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
+
+Data never generates cell ids, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. For connections or per-cell customization, use explicit cells containing a nested component with `data`. Overall style / layout affects the current level only; nested structures use their own defaults, with font and text color inherited through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
+
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ListDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+
+### Reference cells and control overflow
+
+Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'selected', anchor: 'right' }}`. The reference uses the cell border rectangle, excluding gaps, indices, and visual overflow. Hiding the background does not change it. An id on the content references its own geometry. Cells without ids do not acquire identities from array indices.
+
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
+
+## Errors and limitations
+
+- Do not mix input forms. Explicit cell ids must be unique within the container; configure repeated text separately from identity.
+- Composition markers must be direct children of their required parents, with exactly one drawable per cell. Invalid JSX composition raises an error.
+- `data` accepts JSON value trees only, not functions, runtime instances, cycles, or sparse arrays. Project data before rendering when needed.
+- A fixed cell may be smaller than its content, but compilation fails if the parent allocation cannot fit all cells and gaps. Extra parent space remains at the end rather than stretching cells.
+- These components draw data structures; they do not process data or implement arbitrary matrices or merged cells.
+
+## Implementation
+
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains internal implementation. If you only need to use the component, skip ahead to the API reference."
+/>
+
+### How dimensions are determined
+
+`resolveMap` merges overall, role, and cell settings before applying defaults. Text becomes a node with no background, border, or padding. `compileMap` measures each content once at its natural size, computes separate key/value column maxima, and advances by the larger height in each row. Fixed cells keep their own dimensions, so aligned tracks do not imply stretched borders.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Settings and defaults',
+      path: 'packages/library/standard/src/container/map/resolve/resolve.ts',
+      startLine: 1,
+    },
+    {
+      label: 'Measurement and placement',
+      path: 'packages/library/standard/src/container/map/pipeline.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+### Why references and labels do not resize cells
+
+After placement, `compileCells` reuses the measured results to center content and emit the background, clipped content layer, and border separately. An invisible rectangular node carries each cell id using its allocated size, so content overflow does not affect the reference. Separate `container` and `cell:<id>` spatial handles support inspection rather than replacing named references.
+
+Another invisible rectangle hosts container labels using the container allocation. Labels attach after cell placement and do not feed back into cell measurement; they only extend visible bounds. The label host does not inherit cell role styling or use `defaults.node`.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Content replay, reference rectangles, and label host',
+      path: 'packages/library/standard/src/container/shared/cell-layout.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## API reference
+
+This local reference covers the component’s public React, Vanilla, and IR entries, generated from source signatures and comments. See the Schema section for persistent fields; shared package contracts are not duplicated here.
+
+{/* @include library/standard/container/map/generated */}
+
+## Schema reference
+
+`MapSchema` describes persistent input with `namespace: 'standard'` and `type: 'map'`. Choose either entries or data. Factories preserve sparse input; explicit `schema.parse` materializes declared static defaults. Cell inheritance and the dynamic clipping default are resolved after settings merge.
+
+### MapSchema
+
+<ZodSchema name="MapSchema" expandNested />
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Surface',
+      description: 'Add a background, padding, and clipping to a single drawing',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

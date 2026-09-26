@@ -21,6 +21,13 @@
 
 package-public / owner-visible 名称必须独立表达领域与角色；文件内 helper 可省略文件 owner 已唯一表达的领域词。极窄 callback、循环或公式中，类型与相邻表达式已唯一限定时可使用 `key`、`entry`、`x`、`t`、`i`、`p0` 等短名；一旦跨分支、跨阶段或同时出现多个同类值，必须补充领域与角色。SVG / CSS / TeX / IR 等标准术语及其标准字段按仓库既有 canonical spelling 保留，不自行创造缩写。
 
+## id、key 与 name
+
+- 图形领域 `id` 标识可对外查询的图元或语义区域；用于引用、图元信息登记与 inspection。唯一性由所属命名空间或 owner 定义，不默认全局唯一；别名统一叫 `aliasIds`，多个 id 指向同一实例时不重复生成图元或空间记录
+- `key` 用于 runtime 区分、集合匹配、索引、缓存或 diff；不因设置 key 自动登记图元，也不把公开图元查询字段命名为 key。React 保留的 key 与传给绘图 runtime 的 key 分属各自作用域，adapter 必须显式接线
+- `name` 表达定义、具名配置或领域词汇的符号名称，如 provider、scale、anchor；展示文本按职责使用 label/title，图中实例身份使用 id
+- 按消费行为判定，不机械替换 Map 的 key/value、数据字段/代码成员 name、非图形领域的实例 id 或内部映射键。同一文本可被显式用于 id 与 key，但两者的作用域、生命周期和查询职责分别定义
+
 ## 语义角色后缀
 
 | 角色                  | 必须使用的名称                               | 规则                                                                                            |

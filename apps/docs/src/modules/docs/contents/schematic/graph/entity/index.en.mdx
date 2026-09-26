@@ -1,30 +1,44 @@
 ---
 title: Entity
-description: Store an optional identity, open semantics, and Core Node instance fields in one record.
+description: Represent an actor, task, resource or concept as a semantic node with text.
 ---
 
-Entity expresses what a node means and independently lowers to one ordinary Core Node. One Source record stores an optional `id`, `role`, optional `kind`, `predicate`, and non-structural Core Node fields such as `text`, `position`, `style.fill`, and `style.dashed`; it is not an arbitrary child host. The role selects structure, Theme supplies appearance defaults, and explicit instance fields take final precedence. Graph is only an optional local context host. Entity `style.color` remains the string master; numeric `style.fill`, `style.stroke`, and text-derived colors resolve in Core only after the final instance master is known
+An Entity represents one object in a graph: an actor, a task, a resource or a concept. Choose a `role` for its structure, then supply text and a position. Add an `id` when a relation needs to refer to it.
 
-## Responsibilities
+<ComponentPreview files="/schematic/graph/entity/usage/entity-minimal" size="xs" hideCode />
 
-| Topic       | Responsibility                                       | Reach for it when                 |
-| ----------- | ---------------------------------------------------- | --------------------------------- |
-| Basic usage | Built-in roles, text, position, and size             | Creating your first Entity        |
-| Extensions  | Custom roles, kinds, predicates, and Theme selectors | Building a domain visual language |
+## Responsibilities and boundaries
 
-## Chapters
+Entity contains text, not arbitrary drawing children. Use [Block](/schematic/graph/block) for structured content, or [Group](/schematic/graph/group) to place several elements inside a visible boundary. Graph provides local context when entities share definitions or appearance rules.
+
+## In this section
 
 <LinkedSections
   items={[
     {
       title: 'Basic usage',
-      description: 'Seven built-in roles and direct Node fields',
-      url: '/schematic/graph/entity/basic',
+      description: 'Create entities and configure text, roles, statuses, kinds and styles',
+      url: '/schematic/graph/entity/usage',
     },
     {
-      title: 'Extensions',
-      description: 'Definitions, registries, injection, and failures',
-      url: '/schematic/graph/entity/extension',
+      title: 'Custom usage',
+      description: 'Define and register roles, kinds and predicates',
+      url: '/schematic/graph/entity/custom',
+    },
+    {
+      title: 'Implementation',
+      description: 'Trace semantic resolution, appearance and drawing',
+      url: '/schematic/graph/entity/mechanism',
+    },
+    {
+      title: 'API reference',
+      description: 'Look up public functions, components and types',
+      url: '/schematic/graph/entity/api-reference',
+    },
+    {
+      title: 'Schema reference',
+      description: 'Look up persistent entity field constraints',
+      url: '/schematic/graph/entity/schema-reference',
     },
   ]}
 />

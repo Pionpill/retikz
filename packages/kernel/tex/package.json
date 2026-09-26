@@ -1,6 +1,6 @@
 {
   "name": "@retikz/tex",
-  "version": "0.5.0-alpha.5",
+  "version": "0.5.0-alpha.6",
   "retikz": {
     "domain": "kernel",
     "releaseGroup": "kernel",

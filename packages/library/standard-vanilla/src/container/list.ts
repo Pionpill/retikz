@@ -1,4 +1,4 @@
-import type { IRList } from '@retikz/standard/container';
+import type { IRList, IRListCell } from '@retikz/standard/container';
 import { createList, ListProvider } from '@retikz/standard/container';
 import type { InputEmbed, InputEmbedAdapter } from '@retikz/vanilla';
 
@@ -7,8 +7,11 @@ import type { InputCell } from './cell';
 import { dataCellDependencies, normalizeCells } from './cell';
 
 /** List 的 Vanilla authoring 输入 */
-export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data'> &
-  ({ items: Array<string | InputCell>; data?: never } | { data: NonNullable<IRList['data']>; items?: never });
+export type InputList = Omit<IRList, 'namespace' | 'type' | 'items' | 'data' | 'dataObjectDisplay'> &
+  (
+    | { items: Array<string | InputCell<IRListCell>>; data?: never; dataObjectDisplay?: never }
+    | { data: NonNullable<IRList['data']>; items?: never; dataObjectDisplay?: IRList['dataObjectDisplay'] }
+  );
 
 /** 将 List 输入与嵌套内容交给根级 traversal */
 export const ListInputEmbedAdapter: InputEmbedAdapter<InputList> = {

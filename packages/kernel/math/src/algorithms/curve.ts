@@ -42,7 +42,14 @@ export type CubicBezierCurveSegment = {
 };
 
 /** 一段三次贝塞尔：两控制点 + 终点（起点为上一段终点 / 首段为第一个 knot） */
-export type CubicSegment = { control1: Position; control2: Position; to: Position };
+export type CubicSegment = {
+  /** 第一个控制点 */
+  control1: Position;
+  /** 第二个控制点 */
+  control2: Position;
+  /** 终点 */
+  to: Position;
+};
 
 /** 圆弧曲线段 */
 export type CircularArcCurveSegment = {
@@ -70,7 +77,9 @@ export type EllipseArcCurveSegment = {
   radiusX: number;
   /** 本地 y 半轴 */
   radiusY: number;
-  /** 本地椭圆相对世界坐标的旋转角，单位为度 */
+  /** 本地椭圆相对世界坐标的旋转角，单位为度
+   * @default 0
+   */
   rotationDeg?: number;
   /** 起始参数角，单位为度 */
   startAngleDeg: number;
@@ -98,7 +107,9 @@ export type CurveSegmentSample = {
 
 /** 曲线长度近似配置 */
 export type CurveApproximationOptions = {
-  /** Bezier 与椭圆弧使用的等参数采样数量 */
+  /** Bezier 与椭圆弧使用的等参数采样数量
+   * @default 32
+   */
   sampleCount?: number;
 };
 
@@ -106,7 +117,9 @@ export type CurveApproximationOptions = {
 export type CurveParameterAtDistanceOptions = CurveApproximationOptions & {
   /** 已按同一采样预算计算的完整曲线长度，省略时即时计算 */
   totalLength?: number;
-  /** 二分反解最多执行次数 */
+  /** 二分反解最多执行次数
+   * @default 32
+   */
   bisectionSteps?: number;
 };
 
@@ -418,6 +431,10 @@ export const curve = {
   /**
    * 将沿曲线的距离反解为参数位置
    * @description 使用与 `approximateLength` 相同的离散长度模型；传入 `totalLength` 时必须与相同 sample count 对应。当中点的近似长度与目标距离相差不超过默认几何容差时提前返回
+   * @param segment 用于距离反解的曲线段
+   * @param distance 沿曲线的距离，会限制到 0 至完整曲线长度
+   * @param options 反解配置；默认 {}，采用字段各自的默认值
+   * @returns 0..1 范围内的曲线参数；完整长度非有限或不大于 DEFAULT_EPSILON 时返回 0
    * @remarks 复杂度：最坏时间 O(b·n)，空间 O(1)，b 为最大二分次数，n 为有效采样数量
    */
   parameterAtDistance: (

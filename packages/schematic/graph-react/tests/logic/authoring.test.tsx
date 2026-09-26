@@ -728,7 +728,7 @@ describe('Graph standalone and embedded host classification', () => {
 });
 
 describe('Graph Definition options parity', () => {
-  it('keeps all options out of Source and compiles custom definitions through Graph, Entity and Relation', () => {
+  it('keeps Graph definitions out of Source and compiles standalone members with built-in definitions', () => {
     const entityRole = defineEntityRole({
       role: 'custom-entity',
       description: 'Custom Entity role',
@@ -768,14 +768,9 @@ describe('Graph Definition options parity', () => {
             target: { id: 'graph-target' },
           }),
         ),
-        createElement(Entity, {
-          ...options,
-          role: 'custom-entity',
-          position: [0, 100],
-        }),
+        createElement(Entity, { role: 'participant', position: [0, 100] }),
         createElement(Relation, {
-          ...options,
-          role: 'custom-relation',
+          role: 'association',
           source: { id: 'direct-source' },
           target: { id: 'direct-target' },
         }),

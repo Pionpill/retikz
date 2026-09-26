@@ -182,7 +182,7 @@ export type LayoutExtensions = Readonly<{
    */
   composites?: ReadonlyArray<AnyCompositeDefinition>;
   /**
-   * Core Theme style definitions
+   * 主题样式定义
    * @default ThemeStylesContext
    */
   themeStyles?: ReadonlyArray<ThemeStyleDefinition>;
@@ -196,21 +196,30 @@ export type LayoutProps = {
   ir?: IRScene;
   /** 写入 Scene 根并由后代 Composite 继承的 Theme */
   theme?: IRScene['theme'];
-  /** Kernel 或 Sugar JSX children */
+  /** 通过 JSX 声明的图形内容 */
   children?: ReactNode;
   /** 供自定义 compileDriver 消费的 JSX 输入元数据；传入 ir 时忽略，不写入持久化 Scene IR */
   authoring?: unknown;
-  /** Vanilla 领域中立 compile driver */
+  /** 处理作者输入的编译驱动 */
   compileDriver?: VanillaCompileDriver;
-  /** IR 模式下的水合 handler 注册表 */
+  /** 直接传入 ir 时使用的事件处理函数表 */
   handlers?: HydrationHandlers;
-  /** retained 或 static processing 模式 */
+  /**
+   * 选择 retained 增量更新或 static 完整编译模式；省略时使用 retained
+   * @default captureLayoutRuntimeOptions
+   */
   runtime?: LayoutRuntimeOptions;
-  /** SVG 或 Canvas CSS 宽度；缺省取内容宽度，单轴数值尺寸按内容比例补齐另一轴 */
+  /**
+   * SVG 或 Canvas CSS 宽度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版
+   * @default computeDisplaySize
+   */
   width?: number | string;
-  /** SVG 或 Canvas CSS 高度；缺省取内容高度，CSS 字符串尺寸由浏览器排版 */
+  /**
+   * SVG 或 Canvas CSS 高度；缺省按内容尺寸计算，单轴数值尺寸按内容比例补齐另一轴，CSS 字符串尺寸由浏览器排版
+   * @default computeDisplaySize
+   */
   height?: number | string;
-  /** 显式视框 */
+  /** 显式视框，使用绘图坐标；优先于 ir.viewBox，省略时沿用场景视框，场景未指定时按内容计算 */
   viewBox?: IRViewBox;
   /** 宿主 className */
   className?: string;
@@ -221,19 +230,25 @@ export type LayoutProps = {
    * @default 'svg'
    */
   renderer?: 'svg' | 'canvas';
-  /** 是否播放动画 */
+  /**
+   * 是否播放动画；由动画模式上下文优先决定，未指定时遵循系统减少动态效果偏好
+   * @default resolveAnimationEnabled
+   */
   animate?: boolean;
-  /** 静态动画采样时刻 */
+  /** 动画采样时刻，单位为毫秒；指定后定格在该时刻，不播放动画，优先于 animate */
   snapshotAt?: number;
   /** 动画控制器出口 */
   animationRef?: Ref<AnimationControls | null>;
   /** Scene 根动画 */
   animations?: ReadonlyArray<IRAnimationTrack>;
-  /** easing registry */
+  /** 动画缓动函数注册表 */
   easings?: EasingRegistry;
-  /** animation property registry */
+  /** 可动画属性注册表 */
   animationProperties?: AnimationPropertyRegistry;
-  /** SVG 资源 id 前缀 */
+  /**
+   * SVG 资源 id 前缀；省略时由 React useId 生成
+   * @default useId
+   */
   idPrefix?: string;
   /**
    * 节点相对定位的默认距离，单位为绘图单位；position 使用 direction/of 且省略 distance 时生效
@@ -249,9 +264,9 @@ export type LayoutProps = {
   extensions?: LayoutExtensions;
   /** 公式下沉能力 */
   lowerTex?: LowerTex;
-  /** artifact 请求 */
+  /** 请求生成的编译附加产物 */
   artifacts?: CompileArtifactOptions;
-  /** artifacts 成功提交通知 */
+  /** 编译附加产物成功提交后的通知 */
   onArtifacts?: (artifacts: ReadonlyArray<CompileArtifact>) => void;
   /** Core 完整编译结果通知 */
   onCompileResult?: (result: CompileResult) => void;
@@ -341,8 +356,8 @@ const RetainedLayoutContent: FC<{
 };
 
 /**
- * React Layout：JSX 转 Vanilla Input，随后只宿主化 Vanilla processing result
- * @description React 不创建 Core Program、Runtime session 或 retained renderer；所有处理状态归 Vanilla
+ * 将 JSX 图形或场景 IR 渲染为 SVG 或 Canvas，并接入更新与动画
+ * @description 通过 children 声明图形，或通过 ir 传入完整场景；同时提供时使用 ir。默认使用 retained 模式处理后续更新，可通过 runtime 切换为 static 完整编译模式
  */
 export const Layout: FC<LayoutProps> = props => {
   const {

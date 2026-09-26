@@ -23,7 +23,8 @@ Core 增加 JSON-safe spatial declaration、qualified output、index 与纯查�
 
 ```ts
 type SpatialHandleDeclaration = Readonly<{
-  key: string;
+  id: string;
+  aliasIds?: ReadonlyArray<string>;
   role: string;
   bounds: Readonly<BoundsRect>;
   tags?: ReadonlyArray<string>;
@@ -39,7 +40,8 @@ type SpatialHandleOwner = Readonly<{
 
 type QualifiedSpatialHandle = Readonly<{
   ownerPath: ReadonlyArray<SpatialHandleOwner>;
-  key: string;
+  id: string;
+  aliasIds?: ReadonlyArray<string>;
   role: string;
   geometry: Readonly<{
     kind: 'rect';
@@ -61,7 +63,7 @@ type SpatialOwnerSelector = Readonly<{
 type SpatialHandleSelector = Readonly<{
   within?: ReadonlyArray<SpatialOwnerSelector>;
   owner?: SpatialOwnerSelector;
-  key?: string;
+  id?: string;
   role?: string;
   tags?: ReadonlyArray<string>;
 }>;
@@ -77,7 +79,7 @@ type SpatialHandleIndex = Readonly<{
 
 1. 空间 identity 与语义查询跨越 Composite、Scope、layout replay 和 renderer，只有 Core 掌握最终 owner topology 与 transform chain
 2. sidecar 可以服务 inspection、composition 与交互准备，同时不污染 renderer execution 的最小 Scene
-3. qualified owner path 保留每层 composite 各自的 namespace / identity；若未来 Plot 通过自己的 ADR 发布 handles，外层 Chart 不需要复制其 registry 或重命名内部 key
+3. qualified owner path 保留每层 composite 各自的 namespace / identity；若未来 Plot 通过自己的 ADR 发布 handles，外层 Chart 不需要复制其 registry 或重命名内部 id
 
 ## Composite 输出契约
 
@@ -102,7 +104,7 @@ expand composite 没有 runtime Scope authoring context，继续在 `CompositeEx
 
 这是对 expand callback 的直接 breaking 替换。所有现有 definitions 在实现阶段迁移为结构化返回，不保留旧返回值 shorthand、运行时形态探测或新旧双轨。没有 handle 的 definition 返回 `{ children }`。
 
-每个 declaration 的 `key` 在当前 composite occurrence 内唯一；layout-aware composite 即使在多个可达 runtime Scope 上附着声明，也共享同一个 owner-local key 空间，重复 key 必须 fail-loud。`context.scope` 调用时立即校验并冻结 declaration 结构，与 Scope props / children 的 callback boundary 行为一致；只有最终 `LayoutCompositeCompileResult.children` 可达 runtime output tree 中的 Scope 才发布声明并参与 duplicate-key 检查。创建后未返回或不再可达的 Scope 不发布 index entry、不占用 key，也不改变可达声明的顺序，但其调用时结构错误仍同步失败。`role` 是 owner 定义的稳定语义词汇；`tags` 是非空、数组内唯一且无顺序语义的精确匹配标签，序列化时保留 authored order；`payload` 保存 owner 定义的 JSON domain 数据。Core 校验结构和局部唯一性，但不解释 role、tag 或 payload 的领域含义。
+每个 declaration 的 `id` 在当前 composite occurrence 内唯一；layout-aware composite 即使在多个可达 runtime Scope 上附着声明，也共享同一个 owner-local id 空间，重复 id 必须 fail-loud。`context.scope` 调用时立即校验并冻结 declaration 结构，与 Scope props / children 的 callback boundary 行为一致；只有最终 `LayoutCompositeCompileResult.children` 可达 runtime output tree 中的 Scope 才发布声明并参与 duplicate-id 检查。创建后未返回或不再可达的 Scope 不发布 index entry、不占用 id，也不改变可达声明的顺序，但其调用时结构错误仍同步失败。`role` 是 owner 定义的稳定语义词汇；`tags` 是非空、数组内唯一且无顺序语义的精确匹配标签，序列化时保留 authored order；`payload` 保存 owner 定义的 JSON domain 数据。Core 校验结构和局部唯一性，但不解释 role、tag 或 payload 的领域含义。
 
 Core 根据嵌套 composite occurrence 自动形成从外到内的 `ownerPath`。layout-aware 声明虽然附着到 runtime Scope，declaration owner 仍是创建该 Scope 的当前 composite occurrence；Scope 不形成 synthetic owner。声明者是 path 最后一段；外层 composite 只形成前缀，不复制 descendant handle。layout replay 可以改变最终 geometry 与 `finalOccurrence`，但 `originOccurrence` 保留声明来源。该通用不变量由 synthetic third-party nested owners 与 Standard Surface 的正式 `surface` handle 证明；Plot、Table、Chart 的具体 handle vocabulary 仍需各 owner 的独立 ADR。
 
@@ -116,7 +118,7 @@ Core 根据嵌套 composite occurrence 自动形成从外到内的 `ownerPath`�
 
 spatial handle contract 明确区分以下 identity，不允许相互代替：
 
-- `key`：声明 owner occurrence 内的稳定 local key
+- `id`：声明 owner occurrence 内的稳定 local id
 - `ownerPath`：嵌套 composite owner instance 的 qualified 路径
 - `instanceId`：对应 authored composite IR 的显式 `id`；存在时可用于跨工具查询
 - `occurrence`：当前 canonical compile 内的精确 occurrence，始终存在但不承诺 authored reorder 后持久稳定
@@ -139,12 +141,12 @@ selector 字段均为精确过滤：
 - `owner` 匹配 declaration owner，也就是 `ownerPath` 最后一段
 - `within` 按顺序匹配 `ownerPath` 中 declaration owner 之前的连续祖先子路径，表达 qualified containment，不做几何包含判断；单段可以定位任意深度的一个祖先，多段用于冻结嵌套 namespace 顺序
 - owner selector 中的 `instanceId` 用于 authored 稳定查询，`occurrence` 精确匹配对应 `SpatialHandleOwner.occurrence`，也就是 replay / remap 后的最终 settled owner occurrence，用于区分当前 compile 内的匿名或重复实例；它不匹配 `originOccurrence`。`instanceId` 与 `occurrence` 同时给出时必须都匹配
-- `key` 与 `role` 匹配 declaration 的 owner-local 值
+- `id` 匹配 declaration 的主 id 或 aliasIds，`role` 匹配 owner-local 角色；别名共享同一记录，详见 [ADR-046](./046-reference-and-spatial-handle-aliases.md)
 - `tags` 要求结果包含 selector 给出的全部标签；结果自身可以有额外标签
 
 返回顺序采用最终 compile tree 的深度优先 pre-order，并在每个发布点保留 declaration authored order：expand result declarations 先于该 result 的 outputs；runtime Scope declarations 在进入 Scope 后、其普通 children、nested Scope 与 replay entries 之前发布；兄弟 output / Scope 按 authored order；replay 在 authored replay 位置进入，其内部 entries 保留 transaction 自身的 pre-order。因而外层 Scope-attached handle 先于 descendant handle，同一 owner 的多个可达 Scope 也按 runtime output tree 的 authored pre-order 排列。`selectSpatialHandles` 可以返回零到多项；`resolveSpatialHandle` 要求恰好一项，零项与多项分别以包含 selector 摘要的 miss / ambiguity 诊断 fail-loud。
 
-`key` 不具有全局唯一性。跨 owner 或跨 namespace 查询若不足以唯一定位，必须由调用方增加 `within`、`owner`、显式 instance id 或当前 compile occurrence；Core 不猜测“最近的 Plot”或静默选择第一项。Chart facade 若接受“Chart 内某 Plot handle”输入，必须转换为带 Chart `within` 与 Plot `owner` 的公开 selector，再委托 Core query，不能读取私有 index 或越过 qualified owner path。
+`id` 不具有全局唯一性。跨 owner 或跨 namespace 查询若不足以唯一定位，必须由调用方增加 `within`、`owner`、显式 instance id 或当前 compile occurrence；Core 不猜测“最近的 Plot”或静默选择第一项。Chart facade 若接受“Chart 内某 Plot handle”输入，必须转换为带 Chart `within` 与 Plot `owner` 的公开 selector，再委托 Core query，不能读取私有 index 或越过 qualified owner path。
 
 ## Geometry、Scene 与 renderer 边界
 
@@ -157,7 +159,7 @@ Core 负责将 local bounds 通过最终 transform chain 映射到 world-space�
 ## 行为、失败语义与兼容性
 
 - 默认行为：无 declaration 的图与当前 Scene 行为相同，并返回空 index
-- declaration 校验：空 key / role、同 owner occurrence 跨所有可达 attached Scope 的重复 key、非有限 bounds、负 width / height、非 JSON payload 均 fail-loud；discarded Scope 只保留调用时结构校验，不参与发布或 key 唯一性
+- declaration 校验：空 id / role、同 owner occurrence 跨所有可达 attached Scope 的重复 id、非有限 bounds、负 width / height、非 JSON payload 均 fail-loud；discarded Scope 只保留调用时结构校验，不参与发布或 id 唯一性
 - expand output 空间边界：非空 result-level declaration 与 owner 直接生成的 spatial Scope 同时出现时 fail-loud；需要 generated Scope 空间时只能切换到 layout-aware Scope attachment
 - transform：所有最终 Scope / placement / replay transform 只应用一次；结果发布 world-space 保守 AABB
 - 查询：`selectSpatialHandles` 返回精确匹配的零到多项；`resolveSpatialHandle` 的 miss / ambiguity 与未支持 geometry operation fail-loud，二者都不回读 Scene 或 renderer

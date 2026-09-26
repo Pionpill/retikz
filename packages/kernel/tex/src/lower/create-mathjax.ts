@@ -17,8 +17,8 @@ export type MathJaxLowerTexOptions = MathJaxEngineOptions & LowerTexOptions;
  *
  * @description 异步加载可选的 `mathjax-full`、建立同步 SVG 引擎，并返回可交给 Core 的 `LowerTex`。适合不需要替换引擎实现的场景；如果应用已有兼容引擎，使用 `createLowerTex` 保留引擎所有权
  * @param options 同时控制 MathJax 扩展和 lowering 诊断的可选配置
- * @returns 建立完成后可注入 Core 文本编译流程的 `LowerTex`
- * @throws `mathjax-full` 无法加载或初始化时
+ * @returns Promise 在引擎初始化完成后兑现为可注入 Core 的同步 LowerTex
+ * @throws 引擎初始化失败时先通知 onDiagnostic，再拒绝 Promise；此时诊断 source 为空字符串
  *
  * @example
  * import { createMathJaxLowerTex, MathJaxProfile } from '@retikz/tex';

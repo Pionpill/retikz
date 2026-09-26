@@ -26,6 +26,8 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 
 站点 React/UI 开发使用 [develop-docs](../develop-docs/SKILL.md)，实现后的文档同步使用 [develop-document](../develop-document/SKILL.md)，外站转换使用 [docs-blog-converter](../docs-blog-converter/SKILL.md)。
 
+小体量组件的用法、原理与参考可按页型词典的“组件合页”模式组织，由 docs-doc-usage 承接，不强制拆成独立页面。
+
 ## 按条件加载
 
 命中条件即在修改对应内容前读取；同一任务已读且未变化的文件不重复读。reference 中的相对链接以其所在目录解析，命令默认从仓库根运行。
@@ -54,8 +56,17 @@ description: Use when writing or reviewing Retikz documentation, demos, figures,
 - 开篇说明问题与可观察结果；段落围绕一个观点，术语首次出现就近解释。步骤用列表，重复比较用表格，不按行数或字数强行拆段。
 - H1 来自 frontmatter；description 脱离页面也能说明职责或使用入口。小节按读者任务命名，不按 prop 数量分节。
 - 可复制例子使用真实公开导入和最上层 Source IR；不把内部 Canonical 或 lower 结果展示为用户写法。
+- React API 依靠父子组件组合时，在首次解释组合关系处用简短的 `text` 树展示真实可用的组件层级，再给可复制 JSX 或 ComponentPreview；树只列组件，不把 props 当子节点，也不替代运行示例。例如：
+
+  ```text
+  List
+  ├── ListItem
+  └── ListItem
+      └── Map
+  ```
+
 - 公开判别字段有多种写法时，demo 前用紧凑表格解释可选形式、代码与可观察差异；demo 后的总结表不重复该表。
-- 算法关系用 MDX MathJax 公式；代码块用于真实代码。普通文档的生态对照放 Comparison，隐藏后正文仍自洽。
+- 算法关系用 MDX MathJax 公式；代码块用于真实代码或上述组件组合树。普通文档的生态对照放 Comparison，隐藏后正文仍自洽。
 - 图形与功能展示使用 retikz + ComponentPreview。叙述图隐藏源码并设置图型；普通用法 demo 不设置叙述图 type。具体文件与图型规则见对应 reference。
 - 正文默认不主动加第三方外链；项目文件使用可点击 GitHub URL，站内导航使用真实路由。博客引用规则单独定义。
 - 正文约 800px，表格优先保持少列；长说明拆到正文，MDX 表格中的 union 竖线须转义。

@@ -6,13 +6,17 @@ export type CenteredShape = {
   x: number;
   /** 中心纵坐标 */
   y: number;
-  /** 绕中心旋转弧度（可选，0 / 缺省 = 不旋转） */
+  /** 绕中心旋转弧度（可选，0 / 缺省 = 不旋转）
+   * @default 0
+   */
   rotate?: number;
 };
 
 /**
  * 本地坐标（以中心为原点）→ 世界坐标
  * @description rotate=0 / 缺省时退化为平移，否则绕中心旋转后再平移
+ * @param shape 形状中心与可选旋转弧度
+ * @param local 以形状中心为原点的本地坐标
  */
 export const localToWorld = (shape: CenteredShape, local: Position): Position => {
   const angle = shape.rotate ?? 0;
@@ -25,6 +29,8 @@ export const localToWorld = (shape: CenteredShape, local: Position): Position =>
 /**
  * 世界坐标 → 本地坐标（`localToWorld` 逆变换）
  * @description 返回以形状中心和旋转为基准的本地坐标
+ * @param shape 形状中心与可选旋转弧度
+ * @param world 待转换的世界坐标
  */
 export const worldToLocal = (shape: CenteredShape, world: Position): Position => {
   const tx = world[0] - shape.x;

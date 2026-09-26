@@ -19,7 +19,7 @@ const properties = {
   namespace: literal(STANDARD_NAMESPACE),
   type: literal('circle'),
   ...ShapeAnglesSchema.shape,
-  closed: ShapeClosedSchema.removeDefault().optional(),
+  closed: ShapeClosedSchema.unwrap().optional(),
 };
 const fitProperties = { ...ShapeBoxAdjustmentSchema.shape, fit: ShapeFitSchema };
 /** 持久化圆形 composite 的互斥几何输入 */

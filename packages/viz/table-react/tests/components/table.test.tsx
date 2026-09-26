@@ -302,7 +302,7 @@ describe('Table React components', () => {
           <ManualTable id="same" rows={[[null]]} />
         </Layout>,
       ),
-    ).toThrow('normalizeScene: duplicate identity "same" at default > same');
+    ).toThrow(/dataset .*same.* conflicts by identity/);
     expect(() =>
       renderToStaticMarkup(
         <Layout>

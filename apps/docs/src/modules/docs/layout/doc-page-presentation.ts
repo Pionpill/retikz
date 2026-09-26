@@ -23,7 +23,7 @@ export const resolveDocPagePresentation = (input: ResolveDocPagePresentationInpu
   const showcase = layout === 'showcase';
 
   return {
-    contentClassName: showcase ? 'max-w-[1200px]' : 'max-w-200',
+    contentClassName: showcase ? 'max-w-[1200px]' : 'max-w-[936px]',
     hasToc: !showcase && !isChangelog && source !== null && mdxHasToc(source),
   };
 };

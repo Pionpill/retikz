@@ -1,0 +1,65 @@
+---
+title: 星形
+description: 用 Standard 的形状语义绘制星形，在 React、Vanilla 和 JSON 之间保持一致
+---
+
+用 Standard 的 Star 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/extension/shape)。
+
+## 接入方式
+
+形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
+
+React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx({ id, ...input })`，显式 id 同时标识 embed 和最终路径；Vanilla 与 React 省略 id 时均不生成持久化图元 id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+
+| 入口    | 公开 API                                                 |
+| ------- | -------------------------------------------------------- |
+| React   | `Star` — `@retikz/standard-react/shape`                  |
+| Vanilla | `shape.star` — `@retikz/standard-vanilla/shape`          |
+| JSON    | `StarSchema / StarDefinition` — `@retikz/standard/shape` |
+
+## 用法
+
+`<Star>` 在外半径和内半径之间交替取点，连成闭合路径、展开成底层 `<Path>`。适合评级星、强调标记、装饰性多角形。
+
+```tsx
+import { Star } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Star center={[0, 0]} outerRadius={36} innerRadius={16} points={5} />
+```
+
+`points` 是星角数量。你可以显式给 `innerRadius`，也可以用 `innerRatio` 按比例自动算内半径。
+
+| 写法                                           | 适合                 |
+| ---------------------------------------------- | -------------------- |
+| `{ center, outerRadius, innerRadius, points }` | 自己控制内外半径     |
+| `{ center, outerRadius, points, innerRatio? }` | 用比例自动计算内半径 |
+
+<ComponentPreview files="star-basic" size="sm" />
+
+playground 中两条虚线圆分别是内、外半径。调整星角数量、`innerRatio` 与起始角，可以直接看到凹角深度和整体朝向如何共同塑造轮廓。
+
+<ComponentPreview files="star-playground" size="md" controlPanelDefaultSize={50} />
+
+## 输入约束
+
+在 innerRadius 与 innerRatio 中选择一种内半径描述。内外半径必须有限且非负，内半径不超过外半径，比例位于 [0, 1]。center 使用字面坐标；rotate 默认 −90°，只在生成顶点时应用一次。
+
+## 编译过程
+
+Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时把形状意图展开为 Path steps，Core 再解析 Target、生成几何并渲染。不会添加 Node 或额外 Scope。除正多边形和星形将 rotate 烘焙进顶点外，其余旋转与缩放使用 Path 规则。
+
+### 星形顶点展开
+
+Star 在内外半径之间交替生成 `2 × points` 个顶点，再输出一次 move、`2 × points - 1` 次 line 和一次 cycle。rotate 已计入顶点坐标，不再作为 Path 变换透传，以免二次旋转。
+
+## Schema 参考
+
+### StarSchema
+
+<ZodSchema name="StarSchema" />
+
+## API 参考
+
+{/* @include library/standard/shape/star/generated */}

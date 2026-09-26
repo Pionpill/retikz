@@ -14,13 +14,21 @@ Graph 面向需要保留领域语义的结构化图示：对象不仅是一个�
 | 可见边界 | Group        | 容纳任意内容的外框、caption 与边界标签     |
 | 工程结构 | Block        | 由 Header、Section、Row 组织的纵向内容     |
 
-顶层 Graph 可以直接承载一张图式。多个后代需要共享 `graphDefaults`、`graphRules` 或 Graph Theme 时，用 Graph 根建立共同的上下文。
+顶层 Graph 可以直接承载一张图式。多个后代需要共享默认值（`graphDefaults`）、条件样式（`graphRules`）或 Graph Theme 时，用 Graph 根建立共同的上下文。
 
 <ComponentAlert
   type="tip"
   title="可以从 Graph 直接开始"
   description="Graph 的 React 和 Vanilla 入口已提供完成图式所需的 Graph 集成。首次使用不需要先阅读 Kernel；只有要组合更底层图元、坐标或通用布局时，再按需查看对应文档。"
 />
+
+## 整体认识
+
+下面的图式用两个 Entity 表达客户端与服务，再用 Relation 表达调用。对象保留自己的语义与位置，关系通过对象的 id 建立连接。
+
+<ComponentPreview files="/schematic/graph/graph-overview" hideCode type="illustration" />
+
+需要表达范围、阶段或责任边界时，可以用 Group 围住相关内容；对象需要展示代码或工程结构时，可以用 Block 组织 Header、Section 与 Row。创建这张图式的安装步骤和完整写法见[快速开始](/schematic/graph/get-start)。
 
 ## 与相邻能力的边界
 

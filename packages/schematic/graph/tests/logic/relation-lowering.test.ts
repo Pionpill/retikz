@@ -272,7 +272,12 @@ describe('Relation lowering', () => {
         children: [
           { type: 'node', id: 'source', position: [0, 0] },
           { type: 'node', id: 'target', position: [100, 0] },
-          relation({ role: 'association', direction: 'none', labels: [{ text: 'default label' }] }),
+          relation({
+            role: 'association',
+            direction: 'none',
+            style: { color: '#123456' },
+            labels: [{ text: 'default label' }],
+          }),
         ],
       },
       { ...definitions, padding: 0 },
@@ -281,7 +286,7 @@ describe('Relation lowering', () => {
       primitive => primitive.type === 'text' && primitive.lines.some(line => line.text === 'default label'),
     );
 
-    expect(label).toMatchObject({ type: 'text', fill: '#666666', fontSize: 14 });
+    expect(label).toMatchObject({ type: 'text', fill: '#123456', fontSize: 14 });
   });
 
   it.each([

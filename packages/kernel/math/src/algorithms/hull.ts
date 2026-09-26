@@ -6,6 +6,7 @@ import { vector2 } from '../primitives';
  * @description 返回 CCW 顺序顶点、不含共线中间点；点数 < 3 时返回按 (x,y) 排序去重后的点。
  *   全部点共线时退化为两端点
  * @remarks 复杂度：时间 O(n log n)，空间 O(n)，n 为输入点数
+ * @param points 待计算的二维点集
  */
 export const convexHull = (points: Array<Position>): Array<Position> => {
   const sortedPoints = [...points].sort((left, right) =>
