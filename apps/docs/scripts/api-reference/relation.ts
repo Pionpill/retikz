@@ -1,0 +1,155 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
+import { readSchemaDescriptions } from '../schema-reference/descriptions';
+import { translateRelationApiReference } from './relation.en';
+import type { ApiReferenceLanguage, ApiReferencePackageConfig } from './tex';
+import { createApiReferenceMdx } from './tex';
+
+const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
+
+const relationMemberValueSets = {
+  role: { name: 'RelationRole', open: true },
+  kind: { name: 'RelationKind', open: true },
+  direction: { name: 'RelationDirection' },
+  status: { name: 'GraphStatus' },
+} as const;
+
+const relationMemberTypeLabels = {
+  animations: 'Array<IRAnimationTrack>',
+  route: 'Array<IRGraphRelationRouteStep>',
+  source: 'IRNodeTarget',
+  target: 'IRNodeTarget',
+  labels: 'Array<IRGeometryLabel>',
+  sourceMarker: 'IRGraphRelationMarkerAppearance',
+  targetMarker: 'IRGraphRelationMarkerAppearance',
+} as const;
+
+/** Relation 组件参考的公开入口切片，不收录编译内部类型 */
+export const relationApiConfigs: ReadonlyArray<ApiReferencePackageConfig> = [
+  { owner: 'graph-react', symbols: ['Relation', 'RelationProps'] },
+  {
+    owner: 'graph-vanilla',
+    symbols: [
+      'relation',
+      'InputRelation',
+      'InputRelationEndpoint',
+      'InputRelationRoute',
+      'InputRelationWay',
+      'RelationInputEmbedProps',
+      'RelationInputEmbedAdapter',
+      'normalizeRelation',
+      'createGraphVanillaAdapters',
+    ],
+  },
+  {
+    owner: 'graph',
+    symbols: [
+      'RelationRole',
+      'RelationRoleValue',
+      'RelationKind',
+      'RelationKindValue',
+      'RelationDirection',
+      'RelationDirectionValue',
+      'GraphStatus',
+      'GraphStatusValue',
+      'IRGraphRelation',
+      'IRGraphRelationRouteStep',
+      'IRGraphRelationMarkerAppearance',
+      'IRGraphRelationMarkerRecipe',
+      'IRGraphRelationRoleTokenRecipe',
+      'IRGraphRelationStructureTokenOverrides',
+      'createRelation',
+      'RelationCreateOptions',
+      'defineRelationRole',
+      'RelationRoleDefinition',
+      'defineRelationKind',
+      'RelationKindDefinition',
+      'defineRelationPredicate',
+      'RelationPredicateDefinitionInput',
+      'RelationPredicateDefinition',
+      'GraphDefinitionOptions',
+      'createGraphDefinitions',
+      'createGraphProviders',
+    ],
+  },
+].map(({ owner, symbols }): ApiReferencePackageConfig => ({
+  packageName: `@retikz/${owner}`,
+  packageDirectory: `packages/schematic/${owner}`,
+  tsconfigPath: path.resolve(repositoryRoot, `packages/schematic/${owner}/tsconfig.json`),
+  entries: [
+    {
+      source: path.resolve(repositoryRoot, `packages/schematic/${owner}/src/index.ts`),
+      title: { zh: `\`@retikz/${owner}\``, en: `\`@retikz/${owner}\`` },
+      symbols,
+      symbolPairs:
+        owner === 'graph-react'
+          ? [['Relation', 'RelationProps']]
+          : owner === 'graph-vanilla'
+            ? [
+                ['relation', 'RelationInputEmbedProps'],
+                ['normalizeRelation', 'InputRelation'],
+              ]
+            : [['createRelation', 'RelationCreateOptions']],
+      memberValueSets: owner === 'graph' ? { IRGraphRelation: relationMemberValueSets } : undefined,
+      memberTypeLabels: owner === 'graph' ? { IRGraphRelation: relationMemberTypeLabels } : undefined,
+    },
+  ],
+  schemaPackageName: '@retikz/graph',
+  schemaLocalizations: {
+    GraphRelationMarkerAppearanceSchema: {
+      descriptions: {
+        color: '端点标记主色',
+        fill: '端点标记填充',
+        opacity: '端点标记不透明度',
+        lineWidth: '端点标记描边宽度',
+      },
+    },
+    GraphRelationMarkerRecipeSchema: {
+      descriptions: {
+        shape: '已注册的 Core Arrow provider 名称',
+        scale: '标记缩放比例',
+        length: '标记长度',
+        width: '标记宽度',
+      },
+    },
+    GraphRelationRoleTokenRecipeSchema: {
+      descriptions: {
+        sourceMarker: '完整起点标记 recipe，false 表示无标记',
+        targetMarker: '完整终点标记 recipe，false 表示无标记',
+        dashPattern: '完整虚线 recipe，false 表示实线',
+      },
+    },
+    GraphRelationStructureTokenOverridesSchema: {
+      descriptions: {
+        sourceMarker: '稀疏起点标记结构覆盖',
+        targetMarker: '稀疏终点标记结构覆盖',
+        dashPattern: '稀疏虚线结构覆盖',
+      },
+    },
+    RelationSchema: {
+      descriptions: readSchemaDescriptions(
+        path.resolve(
+          repositoryRoot,
+          'apps/docs/src/modules/docs/contents/schematic/graph/relation/schema-reference/index.zh.mdx',
+        ),
+        'RelationSchema',
+      ),
+    },
+  },
+  translate: translateRelationApiReference,
+}));
+
+/** 按真实公开声明生成 Relation 双语参考 */
+export const writeRelationApiReferenceMdx = async (outputDirectory: string): Promise<void> => {
+  mkdirSync(outputDirectory, { recursive: true });
+  for (const lang of ['zh', 'en'] as const satisfies ReadonlyArray<ApiReferenceLanguage>) {
+    const sections: Array<string> = [];
+    for (const config of relationApiConfigs) sections.push(await createApiReferenceMdx(config, lang));
+    writeFileSync(
+      path.resolve(outputDirectory, `generated.${lang}.mdx`),
+      `{/* Generated by pnpm generate:api-reference. Do not edit manually. */}\n\n${sections.join('\n\n')}\n`,
+      'utf8',
+    );
+  }
+};

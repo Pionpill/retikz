@@ -8,6 +8,7 @@ import { writeInspectApiReferenceMdx } from './api-reference/inspect';
 import { writeLayoutApiReferenceMdx } from './api-reference/layout';
 import { writeMathApiReferenceMdx } from './api-reference/math';
 import { writeNodeApiReferenceMdx } from './api-reference/node';
+import { writeRelationApiReferenceMdx } from './api-reference/relation';
 import { writeScopeApiReferenceMdx } from './api-reference/scope';
 import { writeStandardContainerApiReferences } from './api-reference/standard-containers';
 import { writeStandardShapeApiReferences } from './api-reference/standard-shapes';
@@ -60,4 +61,8 @@ await writeLayoutApiReferenceMdx(
 
 await writeScopeApiReferenceMdx(
   path.resolve(docsRoot, 'src/modules/docs/contents/kernel/components/scope/api-reference/_includes'),
+);
+
+await writeRelationApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/relation/api-reference/_includes'),
 );

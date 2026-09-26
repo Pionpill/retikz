@@ -31,15 +31,21 @@ type InputRelationFields = Omit<RelationCreateOptions, 'route' | 'source' | 'tar
 
 /** 直接使用规范 Core route steps 的 Relation authoring 输入 */
 export type InputRelationRoute = Readonly<{
+  /** 关系编写输入的判别字段 */
   type: 'relation';
+  /** 完整 Core Step 序列；省略时直连端点 */
   route?: RelationCreateOptions['route'];
+  /** route 形式不接受 way */
   way?: never;
 }>;
 
 /** 使用 Core Way DSL、并在 Vanilla normalize 阶段转为 route 的 Relation authoring 输入 */
 export type InputRelationWay = Readonly<{
+  /** 关系编写输入的判别字段 */
   type: 'relation';
+  /** way 形式不接受 route */
   route?: never;
+  /** 入口归一为 route 的 Core Way 路径 */
   way: NonNullable<InputPath['way']>;
 }>;
 

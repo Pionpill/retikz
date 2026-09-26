@@ -5,6 +5,7 @@ import type {
   IRBlockSection,
   IRGraph,
   IRGraphEntity,
+  IRGraphRelation,
   IRGroup,
 } from '@retikz/graph';
 import {
@@ -48,8 +49,12 @@ export const normalizeEntity = (input: InputEntity): IRGraphEntity => {
 const normalizeRelationEndpoint = (endpoint: InputRelationEndpoint) =>
   typeof endpoint === 'string' ? { id: endpoint } : endpoint;
 
-/** 将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record */
-export const normalizeRelation = (input: InputRelation) => {
+/**
+ * 将 endpoint 与可选 Way sugar 归一为直接持有 route 的 Relation Source record
+ * @param input 带 type 判别字段的关系编写输入
+ * @returns 端点为完整 NodeTarget、way 转为 route 的 Relation Source 记录
+ */
+export const normalizeRelation = (input: InputRelation): IRGraphRelation => {
   const { type, way, source, target, ...relation } = input;
   void type;
   const endpointRelation = {
