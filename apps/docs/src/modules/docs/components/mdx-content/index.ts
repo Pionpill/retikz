@@ -1,3 +1,4 @@
+export * from './api-table';
 export * from './api-values';
 export * from './comparison';
 export * from './component-alert';

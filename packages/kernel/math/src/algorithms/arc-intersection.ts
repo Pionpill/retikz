@@ -8,13 +8,16 @@ export type RayArcIntersectionInput = ArcBoundingCandidatesInput & {
   origin: Position;
   /** 射线方向，不要求单位化 */
   direction: Position;
-  /** 正向参数容差 */
+  /** 正向参数容差
+   * @default DEFAULT_EPSILON
+   */
   tolerance?: number;
 };
 
 /**
  * 射线（origin + s·direction）∩ 圆弧（center, radius, [startAngle, endAngle]）
  * @description 返回沿射线的正向参数 s，按升序排列；零方向或无有效交点时返回空数组
+ * @param input 几何输入参数，字段含义见对应类型
  */
 export const intersectRayWithArc = ({
   origin,

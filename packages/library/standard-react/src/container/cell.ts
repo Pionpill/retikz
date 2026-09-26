@@ -1,21 +1,35 @@
 import type { ReactInputEmbedContext } from '@retikz/react';
 import { createInputScene } from '@retikz/react';
 import type { InputCell } from '@retikz/standard-vanilla/container';
-import type { IRCell } from '@retikz/standard/container';
+import type { IRCell, IRListCell } from '@retikz/standard/container';
 import { RetikzStandardError, RetikzStandardErrorCode } from '@retikz/standard/container';
 import type { AnyInputEmbedAdapter } from '@retikz/vanilla';
 import type { FC, ReactElement, ReactNode } from 'react';
 import { Children, Fragment, isValidElement } from 'react';
 
+type CellLayoutSource = IRListCell['layout'];
+type CellWithLayout<TLayout extends CellLayoutSource> = Omit<IRCell, 'layout'> & { layout?: TLayout };
+
 /** React 数据入口的文本单元格；复杂内容使用组合组件 */
-export type CellProps = Omit<IRCell, 'content'> & { content: string };
+export type CellProps<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
+  CellWithLayout<TLayout>,
+  'content'
+> & { content: string };
 
 /** 组合单元格的文本与 drawable 内容互斥 */
-export type CellMarkerProps = Omit<IRCell, 'content'> &
+export type CellMarkerProps<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
+  CellWithLayout<TLayout>,
+  'content'
+> &
   ({ text: string; children?: never } | { text?: never; children: ReactNode });
 
 /** 收集后的内部单元格，字符串由 Vanilla 统一归一 */
-export type DrawableCell = Omit<IRCell, 'content'> & { content: ReactNode };
+export type DrawableCell<TLayout extends CellLayoutSource = IRCell['layout']> = Omit<
+  CellWithLayout<TLayout>,
+  'content'
+> & {
+  content: ReactNode;
+};
 
 /** 拒绝脱离直属容器的 marker 与非法 JSX 组合 */
 export const invalidCellAuthoring = (message: string): never => {
@@ -43,15 +57,20 @@ export const collectCellMarkers = <T extends object>(children: ReactNode, marker
 };
 
 /** 将组合单元格的外观及内容交给统一收集入口 */
-export const markerCell = (props: CellMarkerProps): DrawableCell => {
+export const markerCell = <TLayout extends CellLayoutSource>(
+  props: CellMarkerProps<TLayout>,
+): DrawableCell<TLayout> => {
   const { text, children, ...cell } = props;
   return { ...cell, content: text ?? children };
 };
 
 /** 每格收集恰好一个 drawable；文本直接透传给 Vanilla */
-export const createCellsInput = (cells: Array<DrawableCell>, context: ReactInputEmbedContext) => {
+export const createCellsInput = <TLayout extends CellLayoutSource>(
+  cells: Array<DrawableCell<TLayout>>,
+  context: ReactInputEmbedContext,
+) => {
   const adapters: Array<AnyInputEmbedAdapter> = [];
-  const inputs: Array<InputCell> = cells.map((cell, index) => {
+  const inputs: Array<InputCell<CellWithLayout<TLayout>>> = cells.map((cell, index) => {
     if (typeof cell.content === 'string') return { ...cell, content: cell.content };
     const collected = createInputScene(cell.content, { embedIdPrefix: `${context.id}:cell:${index}` });
     const children = collected.scene.children;

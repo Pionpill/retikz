@@ -10,7 +10,8 @@ export const EntityRoleSchema = createOpenStringSchema(EntityRole).describe(
   'Open Entity role key resolved by the configured Graph role registry.',
 );
 
-const EntityNodeShape = NodeSchema.omit({
+const EntityNodeShape = strictObject(NodeSchema.shape).omit({
+  aliasIds: true,
   type: true,
   shape: true,
   boundary: true,

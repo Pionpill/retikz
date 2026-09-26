@@ -10,7 +10,7 @@ import type { LowerTexOptions, TexLoweringResult } from './types';
  * @description 接收能输出受支持 SVG 子集的引擎与可选诊断回调，返回可直接注入 Core 文本编译流程的同步 lowerer。该函数负责 TeX → SVG → 路径的降解和结果缓存，不负责初始化引擎或渲染公式
  * @param engine 提供同步 TeX → SVG 转换能力的引擎
  * @param options 控制 lowering 失败诊断的可选配置
- * @returns 可注入 Core 文本编译流程的同步 `LowerTex`
+ * @returns 同步 LowerTex；转换失败时返回 null 并通知 onDiagnostic，缓存命中的失败也会再次通知
  *
  * @example
  * import { createLowerTex, createMathJaxEngine, MathJaxProfile } from '@retikz/tex';

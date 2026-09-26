@@ -33,7 +33,7 @@ import PathInspectorDemo, {
 } from '../../src/modules/docs/contents/kernel/components/path/step/path-inspector.demo';
 import FramePlaygroundDemo, {
   previewSource as framePlaygroundPreviewSource,
-} from '../../src/modules/docs/contents/library/standard/frame/frame-playground.demo';
+} from '../../src/modules/docs/contents/library/standard/presentation/frame/frame-playground.demo';
 import TableDetailDemo, {
   previewSource as tableDetailPreviewSource,
 } from '../../src/modules/docs/contents/viz/table/detail/table-detail.zh.demo';

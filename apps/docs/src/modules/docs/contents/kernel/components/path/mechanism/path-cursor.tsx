@@ -26,7 +26,7 @@ const PathCursor: FC<PathCursorProps> = props => {
         ]}
         style={{ font: { size: 13 } }}
         layout={{ width: 126 }}
-        showIndex
+        index
       />
       {t.states.map((title, index) => (
         <Scope key={title} localNamespace transforms={[{ kind: 'translate', x: index * 225, y: 180 }]}>

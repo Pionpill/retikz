@@ -13,6 +13,8 @@ This example needs no React, graphics, or renderer. It follows the Data pipeline
 
 ## Process the first data
 
+This example treats region as a category and revenue as a continuous quantity that can be summed. `DataFieldType` describes a [field's measurement meaning](/viz/data/basic/field-types), regardless of whether the external revenue values are stored as strings.
+
 ```ts
 import type { ExternalRow, IRDataModel, IRDataTransform } from '@retikz/data';
 

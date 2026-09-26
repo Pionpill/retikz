@@ -4,7 +4,7 @@ import { RetikzCoreError, RetikzCoreErrorCode } from '../../error';
 import { cloneAndFreezeJson } from '../../shared/json';
 import type { SpatialHandleDeclaration } from './types';
 
-const declarationFields = new Set(['key', 'role', 'bounds', 'tags', 'payload']);
+const declarationFields = new Set(['id', 'aliasIds', 'role', 'bounds', 'tags', 'payload']);
 const boundsFields = new Set(['x', 'y', 'width', 'height']);
 
 const fail = (owner: string, detail: string): never => {
@@ -30,16 +30,30 @@ export const validateSpatialHandleDeclarations = (
   value: unknown,
 ): ReadonlyArray<SpatialHandleDeclaration> => {
   const inputs = Array.isArray(value) ? value : fail(owner, 'spatialHandles must be an array');
-  const keys = new Set<string>();
+  const ids = new Set<string>();
   const declarations = inputs.map((input: unknown, index: number): SpatialHandleDeclaration => {
     const location = `spatialHandles[${index}]`;
     const declaration = requireRecord(owner, input, `${location} must be an object`);
     const unsupported = Object.keys(declaration).filter(field => !declarationFields.has(field));
     if (unsupported.length > 0) fail(owner, `${location} contains unsupported field '${unsupported[0]}'`);
 
-    const key = requireNonEmptyString(owner, declaration.key, `${location}.key`);
-    if (keys.has(key)) fail(owner, `duplicate spatial handle key '${key}'`);
-    keys.add(key);
+    const id = requireNonEmptyString(owner, declaration.id, `${location}.id`);
+    if (ids.has(id)) fail(owner, `duplicate spatial handle id '${id}'`);
+    ids.add(id);
+    let aliasIds: ReadonlyArray<string> | undefined;
+    if (declaration.aliasIds !== undefined) {
+      const aliases = Array.isArray(declaration.aliasIds)
+        ? declaration.aliasIds
+        : fail(owner, `${location}.aliasIds must be an array`);
+      aliasIds = Object.freeze(
+        aliases.map((alias: unknown, aliasIndex: number) => {
+          const aliasId = requireNonEmptyString(owner, alias, `${location}.aliasIds[${aliasIndex}]`);
+          if (ids.has(aliasId)) fail(owner, `duplicate spatial handle id '${aliasId}'`);
+          ids.add(aliasId);
+          return aliasId;
+        }),
+      );
+    }
     const role = requireNonEmptyString(owner, declaration.role, `${location}.role`);
 
     const rawBounds = requireRecord(owner, declaration.bounds, `${location}.bounds must be an object`);
@@ -89,7 +103,8 @@ export const validateSpatialHandleDeclarations = (
     }
 
     return Object.freeze({
-      key,
+      id,
+      ...(aliasIds === undefined ? {} : { aliasIds }),
       role,
       bounds: Object.freeze({ x, y, width, height }),
       ...(tags === undefined ? {} : { tags }),

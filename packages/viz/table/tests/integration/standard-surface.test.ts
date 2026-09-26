@@ -47,7 +47,7 @@ describe('Table inside Standard Surface', () => {
     expect(result.spatialHandles.entries).toEqual([
       expect.objectContaining({
         ownerPath: [expect.objectContaining({ namespace: 'standard', type: 'surface', instanceId: 'table-panel' })],
-        key: 'surface',
+        id: 'surface',
         role: 'surface',
         geometry: { kind: 'rect', bounds: { x: 0, y: 0, width: 128, height: 40 } },
       }),

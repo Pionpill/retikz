@@ -725,6 +725,9 @@ export const compileChildrenToPrimitives = (
     );
     if (child.id) {
       runtime.state.namespaceStack.register(child.id, globalLayout, `${nodeIrPath}.id`);
+      child.aliasIds?.forEach((id, aliasIndex) =>
+        runtime.state.namespaceStack.register(id, globalLayout, `${nodeIrPath}.aliasIds[${aliasIndex}]`),
+      );
     }
     frame.publicationSink.push(globalLayout);
     frame.observationSink.push({
@@ -1581,8 +1584,9 @@ export const compileChildrenToPrimitives = (
         ? frame.scopeChain
         : frame.scopeChain.slice(0, frame.scopeChain.length - authoredPreliminary.length);
     const namespaceTransforms = [...(authoredPreliminary ?? []), ...(transforms ?? [])];
+    const publishedLayouts = new Set<NodeLayout>();
     for (const [changeIndex, change] of transaction.namespaceChanges.entries()) {
-      if (namespaceTransforms.length > 0) {
+      if (namespaceTransforms.length > 0 && !publishedLayouts.has(change.entry.layout)) {
         applyOwnTransformsToPublishedLayout(change.entry.layout, namespaceParentChain, namespaceTransforms);
       }
       const changeOccurrence = transaction.namespaceChangeOccurrences[changeIndex] ?? occurrence;
@@ -1594,7 +1598,8 @@ export const compileChildrenToPrimitives = (
         const baselineWarning = transaction.namespaceBaselineWarnings.find(candidate => candidate.id === change.id);
         if (baselineWarning !== undefined) suppressedNamespaceWarnings.add(baselineWarning.warning);
       }
-      frame.publicationSink.push(change.entry.layout);
+      if (!publishedLayouts.has(change.entry.layout)) frame.publicationSink.push(change.entry.layout);
+      publishedLayouts.add(change.entry.layout);
     }
     for (const layout of transaction.layouts) {
       frame.layoutSink.push(
@@ -1734,7 +1739,7 @@ export const compileChildrenToPrimitives = (
   ): PreparedCompositeOutputs => {
     const preparedOutputs = new Map<object, PreparedRuntimeOutput>();
     const preparedReplays = new Map<CompositeReplay, PreparedReplay>();
-    const reachableSpatialHandleKeys = new Set<string>();
+    const reachableSpatialHandleIds = new Set<string>();
     const entriesToConsume: Array<{ used: boolean }> = [];
     const transactionsToConsume: Array<CompositeReplayTransaction> = [];
     const visitHandle = (handle: unknown): void => {
@@ -1761,12 +1766,14 @@ export const compileChildrenToPrimitives = (
       entriesToConsume.push(entry);
       if (entry.child.kind === 'scope') {
         for (const declaration of entry.child.spatialHandles ?? []) {
-          if (reachableSpatialHandleKeys.has(declaration.key)) {
-            throw createCompositeContractError(
-              `${owner.label} declared duplicate spatial handle key '${declaration.key}' across reachable runtime Scopes.`,
-            );
+          for (const id of [declaration.id, ...(declaration.aliasIds ?? [])]) {
+            if (reachableSpatialHandleIds.has(id)) {
+              throw createCompositeContractError(
+                `${owner.label} declared duplicate spatial handle id '${id}' across reachable runtime Scopes.`,
+              );
+            }
+            reachableSpatialHandleIds.add(id);
           }
-          reachableSpatialHandleKeys.add(declaration.key);
         }
         const scopeClipShape =
           entry.child.props.clip === undefined

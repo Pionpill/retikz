@@ -3,6 +3,8 @@
  * @description 输入 entries 会复制到独立存储；迭代与查询保持原生 Map 语义，`forEach` 的 owner 参数返回只读快照自身
  * @template TKey Map 键类型
  * @template TValue Map 值类型
+ * @param entries 用于创建快照的键值对
+ * @returns 独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结
  */
 export const createReadonlyMap = <TKey, TValue>(
   entries: Iterable<readonly [TKey, TValue]>,

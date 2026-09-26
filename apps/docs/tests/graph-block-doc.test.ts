@@ -101,12 +101,12 @@ describe('Graph Block documentation', () => {
       const preview = buildPreviewIR(() => blockBuiltinPreviewSource.canonicalRender?.() ?? null);
       const vanilla = buildVanillaPreview(preview);
 
-      expect(vanilla.code).toContain("block('preview-block-1'");
+      expect(vanilla.code).toContain('block({');
       expect(vanilla.code).toContain('BlockInputEmbedAdapter');
-      expect(vanilla.code).toContain("blockHeader('preview-blockHeader-1'");
+      expect(vanilla.code).toContain('blockHeader({');
       expect(vanilla.code).toContain('BlockHeaderInputEmbedAdapter');
-      expect(vanilla.code).toContain("blockSection('preview-blockSection-1'");
-      expect(vanilla.code).toContain("blockRow('preview-blockRow-1'");
+      expect(vanilla.code).toContain('blockSection({');
+      expect(vanilla.code).toContain('blockRow({');
       expect(vanilla.code).toContain("title: 'User'");
       expect(vanilla.code).toContain("description: '领域实体'");
       expect(vanilla.code).not.toContain("direction: 'vertical'");

@@ -1,0 +1,38 @@
+---
+title: Containers
+description: Visualize sequences, key-value entries, and nested structures with List and Map.
+---
+
+Container components draw structured content as identifiable cells. List organizes items in sequence; Map organizes entries as keys and values. A cell can also contain another component to represent nested structures.
+
+## Responsibilities at a glance
+
+| Component | Responsibility                                            | When to read                                        |
+| --------- | --------------------------------------------------------- | --------------------------------------------------- |
+| List      | Arrange sequential items with direction and index options | Show arrays, queues, or other ordered structures    |
+| Map       | Organize entries into keys and values                     | Show records, property tables, or keyed collections |
+
+## Show a record inside a sequence
+
+This example from the List page places a Map inside one ListItem. The outer List establishes item order, while the inner Map represents the fields of a record.
+
+<ComponentPreview files="/library/standard/container/list/list-composition" size="sm" />
+
+Nesting changes the content of a cell without obscuring the sequence. The List and Map pages cover cell styling, indices, and references in detail.
+
+## Choosing the right family
+
+These containers visualize structures; they are not runtime data structure implementations. Use Surface or Frame from [Presentation](/library/standard/presentation) to decorate arbitrary graphics. For general arrangement, see [Layout](/library/layout).
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'List',
+      description: 'Arrange sequential items with direction and index options',
+      url: '/library/standard/container/list',
+    },
+    { title: 'Map', description: 'Organize entries into keys and values', url: '/library/standard/container/map' },
+  ]}
+/>

@@ -17,9 +17,22 @@ type EngineEntry = {
  * @description 表示当前 React 组件对应配置的引擎与 lowerer 是否可用：loading 时尚未完成初始化，ready 提供可传给 `@retikz/react` 的 `lowerTex`，error 提供可展示的诊断。它是 Hook 的输出快照，不保存跨组件的 UI 状态
  */
 export type MathJaxLowerTexState =
-  | { status: 'loading' }
-  | { status: 'ready'; lowerTex: LowerTex }
-  | { status: 'error'; diagnostic: TexLoweringDiagnostic };
+  | {
+      /** 当前配置的引擎尚未完成初始化 */
+      status: 'loading';
+    }
+  | {
+      /** 当前配置的 lowerer 已可用 */
+      status: 'ready';
+      /** 可传给 Layout 的同步公式转换函数；后续公式转换失败通过 onDiagnostic 报告 */
+      lowerTex: LowerTex;
+    }
+  | {
+      /** 当前配置的引擎初始化失败 */
+      status: 'error';
+      /** 初始化失败的诊断，source 为空字符串 */
+      diagnostic: TexLoweringDiagnostic;
+    };
 
 type LowerTexStateEntry = {
   key: string;
@@ -57,6 +70,7 @@ const getOrCreateEngineEntry = (extensions: Array<MathJaxExtensionValue>, engine
  * @returns 当前组件对应配置的 MathJax lowerer 初始化状态
  *
  * @example
+ * ```tsx
  * import type { FC } from 'react';
  *
  * import { Layout } from '@retikz/react';
@@ -67,8 +81,9 @@ const getOrCreateEngineEntry = (extensions: Array<MathJaxExtensionValue>, engine
  *   const lowerTexState = useLowerTex({ profile: MathJaxProfile.Math });
  *   if (lowerTexState.status !== 'ready') return <Layout />;
  *
- *   return <Layout lowerTex={lowerTexState.lowerTex}>{'公式：$x^2$'}</Layout>;
+ *   return <Layout lowerTex={lowerTexState.lowerTex}>{'$x^2$'}</Layout>;
  * };
+ * ```
  */
 export const useLowerTex = (options?: MathJaxLowerTexOptions): MathJaxLowerTexState => {
   const extensions = resolveMathJaxExtensions(options);

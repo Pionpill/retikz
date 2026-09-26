@@ -309,7 +309,12 @@ const parseHexColor = (value: string): ParsedCssColor | null => {
   };
 };
 
-/** 解析无需宿主环境即可确定的静态 CSS color 子集 */
+/**
+ * 解析无需宿主环境即可确定的静态 CSS color 子集
+ * @description 支持命名颜色、transparent、十六进制、逗号分隔的 rgb/rgba/hsl/hsla 和空格分隔的 rgb/hsl；不解析 currentColor 或 var 等环境相关表达式
+ * @param input 静态 CSS 颜色字符串
+ * @returns 归一化 sRGB 通道与 alpha；无效或不支持的颜色返回 null
+ */
 export const parseStaticCssColor = (input: string): ParsedCssColor | null => {
   const value = trimAsciiWhitespace(input).toLowerCase();
   if (value.length === 0) return null;
@@ -353,6 +358,11 @@ const createColorError = (
 /**
  * 把静态 CSS 前景色按权重预合成到不透明静态底色
  * @description 前景自身 alpha 与 weight 相乘，再按 source-over sRGB 得到不含透明度的确定性颜色
+ * @param foreground 可带透明度的静态 CSS 前景色
+ * @param backdrop 必须完全不透明的静态 CSS 底色
+ * @param weight 闭区间 0..1 内的有限合成权重
+ * @returns 六位小写十六进制不透明颜色
+ * @throws 颜色不支持、底色含透明度或权重越界时抛出 RetikzFoundationError
  */
 export const compositeOpaqueColor = (foreground: string, backdrop: string, weight: number): `#${string}` => {
   if (!Number.isFinite(weight) || weight < 0 || weight > 1) {

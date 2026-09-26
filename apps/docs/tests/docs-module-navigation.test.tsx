@@ -117,7 +117,7 @@ describe('Docs module navigation domain', () => {
     expect(container.querySelector('[data-slot="module-landing-navigation"]')?.textContent).not.toContain(
       'kernel.navigationDescription',
     );
-    expect(container.querySelectorAll('[data-slot="module-landing-demo"]')).toHaveLength(6);
+    expect(container.querySelectorAll('[data-slot="module-landing-demo"]')).toHaveLength(7);
     expect(container.querySelector('[data-slot="module-landing-demo"] h3')).toBeNull();
     expect(container.querySelector('[data-slot="module-landing-demo"] > p')).toBeNull();
     expect(container.querySelector('footer')?.textContent).toContain('docs.homeFooterBuiltBy');

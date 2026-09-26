@@ -9,7 +9,7 @@ import { LayoutOverflow, requiredLayoutProbe } from '@retikz/layout/compose';
 
 import { RetikzStandardError, RetikzStandardErrorCode } from '../../shared/errors';
 import { surfaceBoundaryPath, surfaceClip } from '../../shared/surface-geometry';
-import { SURFACE_HANDLE_KEY, SURFACE_HANDLE_ROLE } from './constants';
+import { SURFACE_HANDLE_ID, SURFACE_HANDLE_ROLE } from './constants';
 import type { CanonicalSurface } from './resolve';
 import { resolveSurface } from './resolve';
 import type { IRSurface } from './types';
@@ -138,7 +138,7 @@ export const compileSurface = (
         [...background, content, ...border],
         [
           {
-            key: SURFACE_HANDLE_KEY,
+            id: SURFACE_HANDLE_ID,
             role: SURFACE_HANDLE_ROLE,
             bounds: allocationBounds,
           },

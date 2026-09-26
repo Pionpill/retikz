@@ -32,7 +32,8 @@ it('JSDoc 正文中的比较符和对象字面量可编译为 MDX，代码片段
       );
       expect(source).toContain('Tension &lt;1 uses &#123; x, y &#125;; preserve `Map<T>`');
       expect(source).toContain('Offset &#123; x, y &#125; &lt;1; `Array<T>`');
-      expect(source).toContain('`(`<br />`x: number,`<br />`y: number,`<br />`) => number`');
+      expect(source).toContain('`(x: number, y: number) => number`');
+      expect(source).toContain('transform: (x: number, y: number) => number;');
       expect(source).not.toContain('`(<br />');
       await expect(compile(source, { remarkPlugins: [remarkGfm] })).resolves.toBeDefined();
     }

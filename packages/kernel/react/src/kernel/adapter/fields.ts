@@ -9,6 +9,7 @@ import type { ScopeStyleProps } from '../protocol';
  */
 export const NODE_FIELDS = [
   'id',
+  'aliasIds',
   'shape',
   'boundary',
   'meta',

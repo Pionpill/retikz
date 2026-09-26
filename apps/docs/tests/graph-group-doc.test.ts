@@ -13,7 +13,7 @@ describe('Graph Group documentation', () => {
       const preview = buildPreviewIR(() => groupPreviewSource.canonicalRender?.() ?? null);
       const vanilla = buildVanillaPreview(preview);
 
-      expect(vanilla.code).toContain("group('preview-group-1'");
+      expect(vanilla.code).toContain('group({');
       expect(vanilla.code).toContain('GroupInputEmbedAdapter');
       expect(vanilla.code).toContain('caption: {');
       expect(vanilla.code).toContain("title: { text: '运行时' }");

@@ -2,6 +2,7 @@ import { CompositeBaseSchema, NodeSchema, ScopePropsSchema } from '@retikz/core'
 import { JsonObjectSchema, NonNegativeNumberSchema } from '@retikz/foundation';
 import { array, literal, never, strictObject, string, union } from 'zod';
 
+import { DataObjectDisplaySchema } from '../../shared/cell/data';
 import { CellSchema, CellStyleSchema, CellLayoutSchema } from '../../shared/cell/schema';
 
 export const MapGapSchema = strictObject({ row: NonNegativeNumberSchema, column: NonNegativeNumberSchema }).describe(
@@ -38,7 +39,7 @@ const MapBaseSchema = CompositeBaseSchema.extend({
 
 export const MapSchema = union([
   MapBaseSchema.required({ entries: true })
-    .extend({ data: never().optional() })
+    .extend({ data: never().optional(), dataObjectDisplay: never().optional() })
     .superRefine((node, context) => {
       const seen = new Set<string>();
       node.entries.forEach((entry, index) => {
@@ -56,5 +57,8 @@ export const MapSchema = union([
         }
       });
     }),
-  MapBaseSchema.required({ data: true }).extend({ entries: never().optional() }),
+  MapBaseSchema.required({ data: true }).extend({
+    entries: never().optional(),
+    dataObjectDisplay: DataObjectDisplaySchema,
+  }),
 ]).describe('Two-column ordered key/value presentation.');

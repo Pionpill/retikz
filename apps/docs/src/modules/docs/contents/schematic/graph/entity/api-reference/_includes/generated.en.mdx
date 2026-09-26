@@ -14,6 +14,8 @@
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member               | Type                                                                                             | Default | Description                                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------ | ------- | ---------------------------------------------------------------------------------- |
 | `animations?`        | `Array<IRAnimationTrack>`                                                                        | —       | —                                                                                  |
@@ -33,6 +35,8 @@
 | `style?`             | `InputEntity['style']`                                                                           | —       | —                                                                                  |
 | `text?`              | `InputEntity['text']`                                                                            | —       | —                                                                                  |
 | `zIndex?`            | `number`                                                                                         | —       | —                                                                                  |
+
+</div>
 
 </DocTab>
 
@@ -77,24 +81,28 @@ export declare const Entity: {
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member        | Type                                                                                             | Default | Description |
 | ------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
 | `animations?` | `Array<IRAnimationTrack>`                                                                        | —       | —           |
 | `group?`      | `string`                                                                                         | —       | —           |
 | `id?`         | `string`                                                                                         | —       | —           |
 | `kind?`       | `string`                                                                                         | —       | —           |
-| `label?`      | `…`                                                                                              | —       | —           |
-| `layout?`     | `…`                                                                                              | —       | —           |
+| `label?`      | `EntityInputEmbedProps["label"]`                                                                 | —       | —           |
+| `layout?`     | `EntityInputEmbedProps["layout"]`                                                                | —       | —           |
 | `meta?`       | `Record<string, JsonValue>`                                                                      | —       | —           |
-| `position?`   | `…`                                                                                              | —       | —           |
+| `position?`   | `EntityInputEmbedProps["position"]`                                                              | —       | —           |
 | `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —           |
 | `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —           |
 | `rotate?`     | `number`                                                                                         | —       | —           |
 | `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
 | `status?`     | <ApiValues name="GraphStatus" />                                                                 | —       | —           |
-| `style?`      | `…`                                                                                              | —       | —           |
-| `text?`       | `…`                                                                                              | —       | —           |
+| `style?`      | `EntityInputEmbedProps["style"]`                                                                 | —       | —           |
+| `text?`       | `EntityInputEmbedProps["text"]`                                                                  | —       | —           |
 | `zIndex?`     | `number`                                                                                         | —       | —           |
+
+</div>
 
 </DocTab>
 
@@ -124,6 +132,8 @@ export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member          | Type                                                                                             | Default | Description |
 | --------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
 | `animations?`   | `Array<IRAnimationTrack>`                                                                        | —       | —           |
@@ -143,6 +153,8 @@ export type EntityInputEmbedProps = WithoutInputType<InputEntity>;
 | `text?`         | `EntityCreateOptions['text']`                                                                    | —       | —           |
 | `readonly type` | `'entity'`                                                                                       | —       | —           |
 | `zIndex?`       | `number`                                                                                         | —       | —           |
+
+</div>
 
 </DocTab>
 
@@ -270,11 +282,15 @@ export type EntityCreateOptions = Omit<ZodInfer<typeof EntitySchema>, 'namespace
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                 | Type     | Default | Description                                       |
 | ---------------------- | -------- | ------- | ------------------------------------------------- |
 | `readonly description` | `string` | —       | Stable semantic description for authors and tools |
 | `readonly kind`        | `string` | —       | Open Entity kind key unique within its role       |
 | `readonly role`        | `string` | —       | Entity role to which this kind belongs            |
+
+</div>
 
 </DocTab>
 
@@ -308,13 +324,17 @@ export type EntityKindDefinition = Readonly<{
 
 <DocTab value="members" label="Members">
 
-| Member                  | Type                                                                                                 | Default | Description                                                               |
-| ----------------------- | ---------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `readonly description`  | `string`                                                                                             | —       | Stable semantic description for authors and tools                         |
-| `readonly kinds?`       | `ReadonlyArray<string>`                                                                              | —       | Optional allowed Entity kind keys; omission allows every kind of the role |
-| `readonly name`         | `string`                                                                                             | —       | Globally unique predicate definition name                                 |
-| `readonly paramsSchema` | `ZodType<Record<string, JsonValue>, unknown, $ZodTypeInternals<Record<string, JsonValue>, unknown>>` | —       | JSON object schema for Source params                                      |
-| `readonly role`         | `string`                                                                                             | —       | Entity role to which this predicate belongs                               |
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member                  | Type                                        | Default | Description                                                               |
+| ----------------------- | ------------------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `readonly description`  | `string`                                    | —       | Stable semantic description for authors and tools                         |
+| `readonly kinds?`       | `ReadonlyArray<string>`                     | —       | Optional allowed Entity kind keys; omission allows every kind of the role |
+| `readonly name`         | `string`                                    | —       | Globally unique predicate definition name                                 |
+| `readonly paramsSchema` | `EntityPredicateDefinition["paramsSchema"]` | —       | JSON object schema for Source params                                      |
+| `readonly role`         | `string`                                    | —       | Entity role to which this predicate belongs                               |
+
+</div>
 
 </DocTab>
 
@@ -344,6 +364,8 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                  | Type                    | Default | Description                                                               |
 | ----------------------- | ----------------------- | ------- | ------------------------------------------------------------------------- |
 | `readonly description`  | `string`                | —       | Stable semantic description for authors and tools                         |
@@ -351,6 +373,8 @@ export type EntityPredicateDefinition = EntityPredicateDefinitionInput<ZodType<J
 | `readonly name`         | `string`                | —       | Globally unique predicate definition name                                 |
 | `readonly paramsSchema` | `TSchema`               | —       | JSON object schema for Source params                                      |
 | `readonly role`         | `string`                | —       | Entity role to which this predicate belongs                               |
+
+</div>
 
 </DocTab>
 
@@ -392,6 +416,8 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                   | Type                                                    | Default | Description                                       |
 | ------------------------ | ------------------------------------------------------- | ------- | ------------------------------------------------- |
 | `readonly boundary?`     | `IRNode['boundary']`                                    | —       | Optional boundary definition                      |
@@ -401,6 +427,8 @@ export type EntityPredicateDefinitionInput<TSchema extends ZodType<JsonObject>> 
 | `readonly padding`       | `NonNullable<NonNullable<IRNode['layout']>['padding']>` | —       | Base padding owned exclusively by the role        |
 | `readonly role`          | `string`                                                | —       | Open Entity role key                              |
 | `readonly shape`         | `NonNullable<IRNode['shape']>`                          | —       | Core Node shape owned exclusively by the role     |
+
+</div>
 
 </DocTab>
 
@@ -456,6 +484,8 @@ export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | '
 
 <DocTab value="members" label="Members">
 
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                         | Type                                         | Default | Description                                                               |
 | ------------------------------ | -------------------------------------------- | ------- | ------------------------------------------------------------------------- |
 | `readonly entityKinds?`        | `ReadonlyArray<EntityKindDefinition>`        | —       | Custom Entity kind definitions                                            |
@@ -465,6 +495,8 @@ export type EntityRoleValue = 'participant' | 'activity' | 'event' | 'state' | '
 | `readonly relationKinds?`      | `ReadonlyArray<RelationKindDefinition>`      | —       | Custom Relation kind definitions                                          |
 | `readonly relationPredicates?` | `ReadonlyArray<RelationPredicateDefinition>` | —       | Custom Relation predicate definitions                                     |
 | `readonly relationRoles?`      | `ReadonlyArray<RelationRoleDefinition>`      | —       | Custom Relation role definitions                                          |
+
+</div>
 
 </DocTab>
 
@@ -506,9 +538,17 @@ export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
 
 ### IRGraphEntity
 
+<p>
+  <ApiSourceLink label={'IRGraphEntity'} path={'packages/schematic/graph/src/schemas/entity/types.ts'} startLine={5}>
+    View source
+  </ApiSourceLink>
+</p>
+
 <DocTabs defaultValue="members">
 
 <DocTab value="members" label="Members">
+
+<div className="[&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
 
 | Member        | Type                                                                                             | Default | Description |
 | ------------- | ------------------------------------------------------------------------------------------------ | ------- | ----------- |
@@ -516,20 +556,22 @@ export type GraphStatusValue = 'error' | 'success' | 'warning' | 'disabled';
 | `group?`      | `string`                                                                                         | —       | —           |
 | `id?`         | `string`                                                                                         | —       | —           |
 | `kind?`       | `string`                                                                                         | —       | —           |
-| `label?`      | `…`                                                                                              | —       | —           |
-| `layout?`     | `…`                                                                                              | —       | —           |
+| `label?`      | `ZodInfer<typeof EntitySchema.shape["label"]>`                                                   | —       | —           |
+| `layout?`     | `ZodInfer<typeof EntitySchema.shape["layout"]>`                                                  | —       | —           |
 | `meta?`       | `Record<string, JsonValue>`                                                                      | —       | —           |
 | `namespace`   | `"graph"`                                                                                        | —       | —           |
-| `position?`   | `…`                                                                                              | —       | —           |
+| `position?`   | `ZodInfer<typeof EntitySchema.shape["position"]>`                                                | —       | —           |
 | `predicate?`  | `{ name: string; params?: Record<string, JsonValue> \| undefined; }`                             | —       | —           |
 | `role`        | <ApiValues name="EntityRole" /> \| `string`                                                      | —       | —           |
 | `rotate?`     | `number`                                                                                         | —       | —           |
 | `scale?`      | `number \| { default?: number \| undefined; x?: number \| undefined; y?: number \| undefined; }` | —       | —           |
 | `status?`     | <ApiValues name="GraphStatus" />                                                                 | —       | —           |
-| `style?`      | `…`                                                                                              | —       | —           |
-| `text?`       | `…`                                                                                              | —       | —           |
+| `style?`      | `ZodInfer<typeof EntitySchema.shape["style"]>`                                                   | —       | —           |
+| `text?`       | `ZodInfer<typeof EntitySchema.shape["text"]>`                                                    | —       | —           |
 | `type`        | `"entity"`                                                                                       | —       | —           |
 | `zIndex?`     | `number`                                                                                         | —       | —           |
+
+</div>
 
 </DocTab>
 
@@ -565,9 +607,25 @@ export const EntityRole = {
 
 ### EntityRoleSchema
 
+<p>
+  <ApiSourceLink
+    label={'EntityRoleSchema'}
+    path={'packages/schematic/graph/src/schemas/entity/schema.ts'}
+    startLine={9}
+  >
+    View source
+  </ApiSourceLink>
+</p>
+
 [Schema reference](/schematic/graph/entity/schema-reference#entityroleschema)
 
 ### EntitySchema
+
+<p>
+  <ApiSourceLink label={'EntitySchema'} path={'packages/schematic/graph/src/schemas/entity/schema.ts'} startLine={22}>
+    View source
+  </ApiSourceLink>
+</p>
 
 [Schema reference](/schematic/graph/entity/schema-reference)
 

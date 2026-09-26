@@ -1,0 +1,88 @@
+---
+title: 矩形
+description: 用 Standard 的形状语义绘制矩形，在 React、Vanilla 和 JSON 之间保持一致
+---
+
+用 Standard 的 Rectangle 保留形状与尺寸意图，编译时生成一条 Core Path。适合已知几何参数的独立轮廓；需要节点文字占位与连接边界时，使用[节点形状](/library/extension/shape)。
+
+## 接入方式
+
+形状家族统一从三个包的 `/shape` 子入口导入，根入口不重复导出。节点形状扩展使用 `@retikz/extension`。
+
+React 组件通过同名 Vanilla adapter 局部贡献所需 Definition。Vanilla 使用 `shape.xxx({ id, ...input })`，显式 id 同时标识 embed 和最终路径；Vanilla 与 React 省略 id 时均不生成持久化图元 id。直接编译 JSON 时，在 `composites` 中显式传入对应 Definition。三种入口共享下列几何契约。
+
+| 入口    | 公开 API                                                           |
+| ------- | ------------------------------------------------------------------ |
+| React   | `Rectangle` — `@retikz/standard-react/shape`                       |
+| Vanilla | `shape.rectangle` — `@retikz/standard-vanilla/shape`               |
+| JSON    | `RectangleSchema / RectangleDefinition` — `@retikz/standard/shape` |
+
+## 用法
+
+`<Rectangle>` 在指定位置画一个矩形，展开成底层 `<Path>`。适合已知两个角、中心尺寸或从一个角向外展开的场景。
+
+```tsx
+import { Rectangle } from '@retikz/standard-react/shape';
+```
+
+```tsx
+<Rectangle corner1={[-40, -20]} corner2={[40, 20]} cornerRadius={6} />
+```
+
+`<Rectangle>` 可以直接给两个角，也可以从中心和尺寸算出四个角。`cornerRadius` 用来画圆角。
+
+| 写法                         | 适合               |
+| ---------------------------- | ------------------ |
+| `{ corner1, corner2 }`       | 已知两个对角       |
+| `{ center, width, height }`  | 已知中心和尺寸     |
+| `{ center, side }`           | 正方形             |
+| `{ corner1, width, height }` | 从一个角向右下展开 |
+
+<ComponentPreview files="rectangle-basic" size="sm" />
+
+用 playground 连续调整宽高与圆角半径；灰色尺寸线保持贴着当前边界，便于判断圆角何时开始主导短边。
+
+<ComponentPreview files="rectangle-playground" size="md" controlPanelDefaultSize={50} />
+
+## 输入约束
+
+只选择一套几何描述；宽高和边长必须为有限非负数。双角点形式接受 Core Target，其余需要计算坐标的形式使用字面坐标。
+
+## 编译过程
+
+Standard 的 schema 负责互斥输入和尺寸关系；Definition 在编译时把形状意图展开为 Path steps，Core 再解析 Target、生成几何并渲染。不会添加 Node 或额外 Scope。除正多边形和星形将 rotate 烘焙进顶点外，其余旋转与缩放使用 Path 规则。
+
+### 矩形的路径展开
+
+`<Rectangle>` 先把四种 props 写法收敛成 `from` / `to` 两个对角。图中上路直接透传 Target（可解析点位，包括坐标与节点 id），下路先在 Standard lowering根据尺寸计算对角：
+
+<ComponentPreview files="rectangle-lowering-flow" size="lg" hideCode type="illustration" />
+
+只有 `corner1 + corner2` 会原样透传两个 Target，因此可以引用节点 id；`center + width + height` 等写法需要先做算术，只接受 `[x, y]` 字面量坐标。随后 `rectangle` step 解析两个对角并生成独立的闭合子路径；`cornerRadius` 会把四角替换为圆弧，并限制在短边一半以内。
+
+任一节点引用无法解析时，整条 Path 会被跳过并产生 warning，而不是留下半个矩形。
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Rectangle props 归一与 Path 展开',
+      path: 'packages/library/standard/src/shape/rectangle/pipeline.ts',
+      startLine: 1,
+    },
+    {
+      label: '矩形 step 的点位解析与闭合轮廓生成',
+      path: 'packages/kernel/core/src/compile/path/stroke/shapes.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## Schema 参考
+
+### RectangleSchema
+
+<ZodSchema name="RectangleSchema" />
+
+## API 参考
+
+{/* @include library/standard/shape/rectangle/generated */}

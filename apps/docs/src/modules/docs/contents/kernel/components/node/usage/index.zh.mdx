@@ -14,6 +14,13 @@ Node 把位置、文字和形状放在同一个声明中。设置 `id` 后，其
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
 
+下面的组件树对应首个示例；缩进表示 JSX 包含关系。
+
+```text
+Layout
+└── Node
+```
+
 ```tsx
 import { Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
@@ -158,6 +165,12 @@ Node 需要提供 `id` 才会登记为可引用的节点；Coordinate 也会登�
 - **图案填充**：`style.fill` 也可接收 `{ kind: 'pattern', shape: 'lines' }` 等图案对象，用线条、圆点或网格填充节点，详见[图案](/kernel/visual/style/pattern)。
 - **纯文字与坐标点**：隐藏边框的 Node 仍有文字尺寸；只需要不可见引用点时使用 Coordinate。
 - **效果**：参见[阴影](/kernel/visual/style/shadow)与[动画](/kernel/visual/animation/usage)。
+
+## 同一节点的多个引用名称
+
+`id` 用于登记和查询图元信息，不是 runtime 的 diff key。需要让多个名称指向同一个节点时，设置 `aliasIds`，例如 `<Node id="a" aliasIds={['selected']} position={[0, 0]} text="A" />`。路径端点使用 `id: 'a'` 或 `id: 'selected'` 会得到相同锚点与边界，不会生成第二个节点。
+
+别名必须非空白、互不重复且不同于主 id；设置别名时必须提供主 id。别名沿用节点的命名空间和重名诊断规则，不会穿透 `localNamespace`。Scope 与 Coordinate 不提供此字段。
 
 ## 相关属性
 

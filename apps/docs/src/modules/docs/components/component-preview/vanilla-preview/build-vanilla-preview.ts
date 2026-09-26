@@ -367,10 +367,11 @@ const convertStandardChild = (
       });
     }
     case 'list': {
-      const { namespace: _namespace, type: _type, data, items, ...input } = child as IRList;
+      const { namespace: _namespace, type: _type, data, items, dataObjectDisplay, ...input } = child as IRList;
       void _namespace;
       void _type;
-      if (data !== undefined) return list({ ...input, data });
+      if (data !== undefined)
+        return list({ ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) });
       return list({
         ...input,
         items: items.map(cell =>
@@ -387,7 +388,7 @@ const convertStandardChild = (
       });
     }
     case 'map': {
-      const { namespace: _namespace, type: _type, data, entries, ...input } = child as IRMap;
+      const { namespace: _namespace, type: _type, data, entries, dataObjectDisplay, ...input } = child as IRMap;
       void _namespace;
       void _type;
       const convertCell = (cell: string | IRCell) =>
@@ -398,7 +399,8 @@ const convertStandardChild = (
               content:
                 typeof cell.content === 'string' ? cell.content : convertPreviewChild(cell.content, state, graphState),
             };
-      if (data !== undefined) return map({ ...input, data });
+      if (data !== undefined)
+        return map({ ...input, data, ...(dataObjectDisplay === undefined ? {} : { dataObjectDisplay }) });
       return map({
         ...input,
         entries: entries.map(entry => ({ key: convertCell(entry.key), value: convertCell(entry.value) })),

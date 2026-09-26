@@ -14,6 +14,15 @@ description: 连接两个节点，选择输入方式，并设置连线与外观
 <DocTabs defaultValue="react-jsx">
 <DocTab value="react-jsx" label="React + JSX">
 
+下面的组件树对应首个示例；缩进表示 JSX 包含关系。
+
+```text
+Layout
+├── Node
+├── Node
+└── Draw
+```
+
 ```tsx
 import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';

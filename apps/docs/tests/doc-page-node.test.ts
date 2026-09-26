@@ -16,18 +16,18 @@ describe('resolveDocPageNode', () => {
       moduleId: 'kernel',
       sectionId: 'components',
       pageId: 'layout',
-      subPageId: 'overview',
+      subPageId: 'usage',
     });
     expect(node.section?.id).toBe('components');
     expect(node.page?.id).toBe('layout');
-    expect(node.target?.id).toBe('overview');
+    expect(node.target?.id).toBe('usage');
   });
 
   it('解析分组文档页面', () => {
-    const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'data', pageId: null });
-    expect(node.section?.id).toBe('data');
-    expect(node.target?.id).toBe('data');
-    expect(node.target?.label).toBe('viz.data');
+    const node = resolveDocPageNode({ moduleId: 'viz', sectionId: 'chart', pageId: null });
+    expect(node.section?.id).toBe('chart');
+    expect(node.target?.id).toBe('chart');
+    expect(node.target?.label).toBe('viz.chart');
   });
 
   it('缺失页面时返回空 target', () => {

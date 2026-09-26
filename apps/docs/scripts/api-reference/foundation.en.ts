@@ -1,5 +1,44 @@
 /** @retikz/foundation 中文 JSDoc 的审阅后英文投影 */
 const translations: Readonly<Record<string, string>> = {
+  '属性写入策略；默认 {}，不筛除源属性': 'Property write strategy; defaults to {}, retaining all source properties',
+  '使用默认错误码创建 Foundation 错误': 'Creates a Foundation error with the default error code',
+  '使用结构化参数创建 Foundation 错误': 'Creates a Foundation error from structured options',
+  '使用结构化参数创建领域错误，保留原始 cause':
+    'Creates a domain error from structured options, preserving the original cause',
+  '错误代码、消息、详情与可选的原始原因': 'Error code, message, details, and optional original cause',
+  '使用默认错误码创建 Foundation 错误\n\n使用结构化参数创建 Foundation 错误':
+    'Creates a Foundation error with the default error code\n\nCreates a Foundation error from structured options',
+  待检查的字符串: 'String to validate',
+  待检查的数值: 'Number to validate',
+  错误消息中的字段名称: 'Field name used in error messages',
+  '校验失败时原样抛出的领域错误；默认使用 Foundation 错误':
+    'Domain error thrown unchanged on validation failure; defaults to a Foundation error',
+  '校验失败时抛出 ownerError 或 RetikzFoundationError':
+    'Throws ownerError or RetikzFoundationError on validation failure',
+  拒绝非有限数值以及小于等于零的数值: 'Rejects non-finite numbers and numbers less than or equal to zero',
+  用于创建快照的键值对: 'Key-value entries used to create the snapshot',
+  '独立的只读 Map 包装；键和值仍共享原引用，不进行深冻结':
+    'Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen',
+  提供已知字符串值的枚举对象: 'Enum object providing known string values',
+  '接受已知枚举值或自定义非空白字符串的 schema': 'Schema accepting known enum values or custom non-blank strings',
+  '支持命名颜色、transparent、十六进制、逗号分隔的 rgb/rgba/hsl/hsla 和空格分隔的 rgb/hsl；不解析 currentColor 或 var 等环境相关表达式':
+    'Supports named colors, transparent, hexadecimal notation, comma-separated rgb/rgba/hsl/hsla, and space-separated rgb/hsl; does not resolve environment-dependent expressions such as currentColor or var',
+  '静态 CSS 颜色字符串': 'Static CSS color string',
+  '归一化 sRGB 通道与 alpha；无效或不支持的颜色返回 null':
+    'Normalized sRGB channels and alpha; returns null for invalid or unsupported colors',
+  '可带透明度的静态 CSS 前景色': 'Static CSS foreground color, optionally with alpha',
+  '必须完全不透明的静态 CSS 底色': 'Static CSS backdrop that must be fully opaque',
+  '闭区间 0..1 内的有限合成权重': 'Finite compositing weight in the inclusive range 0..1',
+  六位小写十六进制不透明颜色: 'Opaque color in six-digit lowercase hexadecimal notation',
+  '颜色不支持、底色含透明度或权重越界时抛出 RetikzFoundationError':
+    'Throws RetikzFoundationError for unsupported colors, a translucent backdrop, or an out-of-range weight',
+  待判断的动态值: 'Dynamic value to inspect',
+  '是否为 RetikzError 实例；返回 true 时收窄类型':
+    'Whether the value is a RetikzError instance; narrows the type when true',
+  "错误消息中用于定位根值的路径，默认 'value'":
+    "Path used to locate the root value in error messages; defaults to 'value'",
+  "错误消息中用于定位当前值的路径，默认 'value'":
+    "Path used to locate the current value in error messages; defaults to 'value'",
   提供属性值的对象类型: 'Object type that provides the property values',
   待比较的实际类型: 'Actual type being compared',
   作为比较基准的预期类型: 'Expected type used as the comparison baseline',

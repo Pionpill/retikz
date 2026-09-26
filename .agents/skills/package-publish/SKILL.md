@@ -10,6 +10,7 @@ description: 'Use when 发布或准备发布 retikz npm 包、核对发布版本
 ## 硬门槛
 
 - 先读根 `AGENTS.md`。commit、tag、push、npm publish 都必须拿到当前对话明确授权。
+- 发布默认只运行功能性检查；性能、压力、基准与 LLM 测试须单独明确授权，不因发布门槛或聚合脚本隐式执行。
 - 不替用户猜目标版本。版本号、发布组或 changelog 范围不清楚时先问。
 - 目标版本必须先写入仓库、验证并提交，再 tag / publish。
 - 必须按 npm registry 校验版本连续性；不要把仓库里的预 bump 开发版本当成已发布版本。

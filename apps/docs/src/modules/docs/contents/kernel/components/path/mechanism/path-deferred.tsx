@@ -21,7 +21,7 @@ const PathDeferred: FC<PathDeferredProps> = props => {
         layout={{ width: 150, height: 36 }}
         items={[{ id: 'task', content: t.task, style: { fill: 'dodgerblue' } }]}
         style={{ font: { size: 13 } }}
-        showIndex
+        index
       />
       <Map
         id="record"

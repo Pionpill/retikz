@@ -7,9 +7,22 @@ import type { AnyPathKindDefinition, PathKindDefinition } from './types';
 
 /** 保留普通与带 owner output Path kind 两个互斥分支的定义入口 */
 type DefinePathKind = {
+  /**
+   * 定义不发布所属者产物的路径种类
+   * @template TPath 经定义 schema 解析后的路径类型，默认使用 IRPathBase
+   * @param definition 包含名称、完整路径 schema 和编译函数的定义
+   * @returns 校验后的原定义对象，保留路径类型，不复制或修改输入
+   */
   <TPath extends IRPathBase = IRPathBase>(
     definition: PathKindDefinition<TPath, never>,
   ): PathKindDefinition<TPath, never>;
+  /**
+   * 定义发布所属者产物的路径种类
+   * @template TPath 经定义 schema 解析后的路径类型
+   * @template TOwnerOutput 由 ownerOutput.schema 校验、通过编译上下文发布的 JSON 产物类型
+   * @param definition 包含路径定义及 ownerOutput.schema 的定义
+   * @returns 校验后的原定义对象，保留路径和产物类型，不复制或修改输入
+   */
   <TPath extends IRPathBase, TOwnerOutput extends JsonValue>(
     definition: PathKindDefinition<TPath, TOwnerOutput>,
   ): PathKindDefinition<TPath, TOwnerOutput>;
@@ -48,4 +61,8 @@ const definePathKindImplementation = (input: unknown): unknown => {
   return definition;
 };
 
+/**
+ * 定义路径种类，保留路径及所属者产物的类型关联
+ * @throws RetikzCoreError 当 name 为空或仅含空白字符、schema 没有 parse 函数，或提供的 ownerOutput.schema 不是对象时
+ */
 export const definePathKind = definePathKindImplementation as DefinePathKind;

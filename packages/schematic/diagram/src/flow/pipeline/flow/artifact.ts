@@ -81,13 +81,13 @@ export const createFlowSpatialHandles = (
   elements: ReadonlyArray<FlowElementArtifact>,
 ): ReadonlyArray<SpatialHandleDeclaration> => {
   const handles: Array<SpatialHandleDeclaration> = [
-    { key: 'frame', role: 'frame', bounds: frameBounds, payload: { kind: 'frame' } },
+    { id: 'frame', role: 'frame', bounds: frameBounds, payload: { kind: 'frame' } },
   ];
   for (const regionKind of ['title', 'description', 'drawing', 'legend'] as const) {
     const region = regions[regionKind];
     if (region !== undefined) {
       handles.push({
-        key: `region:${regionKind}`,
+        id: `region:${regionKind}`,
         role: 'region',
         bounds: region.allocationBounds,
         payload: { kind: regionKind },
@@ -98,7 +98,7 @@ export const createFlowSpatialHandles = (
     for (const element of values) {
       const isScope = element.kind !== 'entity';
       handles.push({
-        key: `element:${element.id}`,
+        id: `element:${element.id}`,
         role: element.kind,
         bounds: element.bounds,
         payload: {

@@ -25,8 +25,10 @@ export type NodeProps = HydrationEventProps & {
   style?: InputNode['style'];
   /** 节点尺寸、间距与文本布局 */
   layout?: InputNode['layout'];
-  /** 节点 id；其他 Path/Draw 通过这个 id 引用本节点 */
+  /** 节点 id；路径端点和其他节点通过它引用本节点 */
   id?: string;
+  /** 指向同一节点几何的额外 id；要求主 id，别名非空白且不重复 */
+  aliasIds?: IRNode['aliasIds'];
   /**
    * 视觉形状：无必填参数时可写名称，带参形状使用 `{ type, params }`；可选形状通过 Layout.extensions.shapes 注册
    * @default 'rectangle'

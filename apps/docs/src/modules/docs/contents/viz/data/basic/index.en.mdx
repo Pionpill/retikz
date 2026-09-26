@@ -1,0 +1,40 @@
+---
+title: Basic Concepts
+description: Start with external rows, fields, measurement types, and normalized results before configuring a data model.
+---
+
+Data receives rows supplied by a source at runtime. Values change, and the source itself may change. To keep later configuration useful across those changes, you first need to know where a value comes from and what the field means. Basic concepts explain these two questions.
+
+## Responsibilities at a glance
+
+| Page                         | Question it answers                              | Read it when                               |
+| ---------------------------- | ------------------------------------------------ | ------------------------------------------ |
+| Rows and Fields              | How does a source feed stable fields?            | The source or its values change            |
+| Fields and Measurement Types | Does the field mean quantity, category, or time? | Raw value types do not explain its meaning |
+
+## One row, two agreements
+
+Consider `{ stage: 10, pricing: { amount: '12' } }`. First, a physical path `pricing.amount` is aligned with the logical field `revenue`. Second, `revenue` is declared as a continuous quantity that can be summed, while the numeric `stage` code is categorical. After normalization, later processing can read the logical field `revenue: 12` and the category value `stage: 10` without guessing from the raw path or value again.
+
+Field declarations can live in the serializable `model`; actual rows arrive at runtime. These concept pages explain how names and meanings work together. The [Data Model](/viz/data/model) covers the configuration for mapping, parsing formats, and validation.
+
+## Where to start
+
+Start with “Rows and Fields” to distinguish physical paths from logical names. Then read “Fields and Measurement Types” to choose the field's measurement meaning. Use [Data Transforms](/viz/data/transform) when you need sorting or aggregation.
+
+## Contents
+
+<LinkedSections
+  items={[
+    {
+      title: 'Rows and Fields',
+      description: 'Start with changing sources to understand field models and normalization.',
+      url: '/viz/data/basic/rows-and-fields',
+    },
+    {
+      title: 'Fields and Measurement Types',
+      description: 'Distinguish continuous, categorical, and temporal fields, and learn when to declare a type.',
+      url: '/viz/data/basic/field-types',
+    },
+  ]}
+/>

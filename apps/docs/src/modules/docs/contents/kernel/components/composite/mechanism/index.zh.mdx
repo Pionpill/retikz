@@ -96,13 +96,15 @@ Replay wrapper 先用 `transforms` 把 child 放进 parent allocation coordinate
 
 声明中的 `bounds` 位于当前 composite allocation coordinate。Core 在最终 traversal、Scope transform 与 replay settle 后，把它投影成 整图坐标中的轴对齐包围矩形（AABB），并在 `CompileResult.spatialHandles` 发布；`ownerPath` 按外到内保留每层 composite 的 `namespace`、`type`、显式 `id` 与 occurrence。
 
-| 层次                    | 保存什么                                            | 不进入什么                       |
-| ----------------------- | --------------------------------------------------- | -------------------------------- |
-| callback declaration    | 所有者局部（owner-local） `key` / `role` / 局部矩形 | IR schema、Scene                 |
-| qualified compile index | `ownerPath` / world AABB / origin 与 final          | SVG 属性、Canvas draw state      |
-| query                   | 精确 owner、祖先路径、key、role、全部 tags          | renderer DOM 查询、几何 contains |
+| 层次                    | 保存什么                                           | 不进入什么                       |
+| ----------------------- | -------------------------------------------------- | -------------------------------- |
+| callback declaration    | 所有者局部（owner-local） `id` / `role` / 局部矩形 | IR schema、Scene                 |
+| qualified compile index | `ownerPath` / world AABB / origin 与 final         | SVG 属性、Canvas draw state      |
+| query                   | 精确 owner、祖先路径、id、role、全部 tags          | renderer DOM 查询、几何 contains |
 
 `selectSpatialHandles()` 返回零到多项，`resolveSpatialHandle()` 要求恰好一项；跨 owner 查询不充分时会明确报告 miss 或 ambiguity，不猜“最近”的节点。没有声明时 index 仍存在且为空。
+
+声明可用 `aliasIds` 为同一区域补充查询名称。selector 的 `id` 匹配主 id 或任一别名，返回同一条冻结记录，不复制几何或增加 entries；主 id 与别名共同占用 owner 内的身份空间，冲突会报错。空间 id 不自动成为路径端点，Node 引用仍是独立的命名登记。
 
 `lowerIRToKernel()` 无法结算 world geometry：无声明或空声明仍可下沉，遇到非空 `spatialHandles` 会同步失败并要求改用 `compileToScene()`。这避免把局部矩形静默丢弃，或冒充已经结算的空间结果。
 

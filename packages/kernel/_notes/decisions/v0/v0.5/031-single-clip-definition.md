@@ -71,6 +71,8 @@ type CoreProviderCapability = 'clip' /* | ... */;
 
 `defineClip` 是唯一 author-facing helper。spec 经 `schema` 解析后才进入 `resolve`；其返回值由同一 definition 的 `shapeSchema` 直接解析并确认 `shape.kind === definition.kind`，之后才能进入 `lower`；精确 schema 的输出不再经过通用 JSON 二次解析，遵循 [ADR-035](./035-json-undefined-field-contracts.md)。递归 `context.resolve` 与 `context.lower` 都使用当前 Clip registry，并共享现有 cycle / depth 保护。lowering 产出的 `SceneClipPath` 继续经过 Core 的 canonical path 校验与规范化。
 
+上面的完整形态用于需要转换 spec 的定义。若 schema 解析后的 spec 已是完整的同 kind ClipShape，`defineClip` 也接受仅包含 `kind`、`schema`、`lower` 的作者输入，派生 identity `resolve` 并复用 `schema` 作为 `shapeSchema`。提供自定义 `resolve` 时仍须显式提供 `shapeSchema`；两种写法最终进入同一完整 Definition 与 registry，不形成第二套裁剪契约。
+
 ## 行为、失败语义与兼容性
 
 - 默认行为：Core-only compile 默认只注册完整的 `rect` ClipDefinition；显式提供相同 definitions 时，相同 IR、precision 与 provider 顺序继续产生确定且跨 renderer 等价的 canonical `SceneClipPath`

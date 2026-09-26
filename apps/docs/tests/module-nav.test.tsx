@@ -20,7 +20,7 @@ import { useDocModuleStore } from '../src/modules/docs/store';
 
 vi.mock('react-i18next', async importOriginal => ({
   ...(await importOriginal<typeof ReactI18nextModule>()),
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: undefined } }),
 }));
 
 vi.mock('@/modules/docs/ai-chat', () => ({

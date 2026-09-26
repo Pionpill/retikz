@@ -26,12 +26,17 @@ export type InputLayerCacheValue = ValueOf<typeof InputLayerCache>;
 
 /** 作者侧 Layer 输入 */
 export type InputLayer = {
+  /** 固定为 layer 的作者分层标识 */
   type: 'layer';
   /** 分层身份标识 */
   id: string;
-  /** 运行时缓存提示 */
+  /** 运行时缓存提示
+   * @default InputLayerCache.Auto
+   */
   cache?: InputLayerCacheValue;
-  /** 同值保持声明顺序的分层排序值 */
+  /** 同值保持声明顺序的分层排序值
+   * @default 0
+   */
   zIndex?: number;
   /** 按声明顺序归一的子节点 */
   children: ReadonlyArray<InputChild>;
@@ -48,11 +53,17 @@ export type InputChild =
 
 /** 作者侧 Scene 输入的公共字段 */
 type InputSceneBase = Omit<IRScene, 'type' | 'version' | 'children'> & {
+  /** 可省略的场景类别；归一化后固定为 scene */
   type?: 'scene';
+  /** 作者输入不接受版本号；归一化时写入当前 IR 版本 */
   version?: never;
+  /** 作者侧场景标识，不写入持久化 Scene IR */
   id?: string;
+  /** 场景根主题，只填写需要覆盖的 style 与 mode */
   theme?: IRScene['theme'];
+  /** 显式取景矩形；省略时由编译结果按内容计算 */
   viewBox?: IRViewBox;
+  /** 场景根动画轨道，省略时不添加根动画 */
   animations?: IRScene['animations'];
   /** 可选编译驱动自行解释的运行时载荷，不进入 Core IR */
   authoring?: unknown;
@@ -60,13 +71,17 @@ type InputSceneBase = Omit<IRScene, 'type' | 'version' | 'children'> & {
 
 /** 使用 children 简写的作者侧 Scene 输入 */
 export type InputSceneChildren = InputSceneBase & {
+  /** 有序子图元，归一化时置于隐式默认层 */
   children: ReadonlyArray<InputChild>;
+  /** children 模式不接受显式 layers */
   layers?: never;
 };
 
 /** 使用 Layer 列表的作者侧 Scene 输入 */
 export type InputSceneLayers = InputSceneBase & {
+  /** 显式分层列表，按 zIndex 稳定排序后归一化 */
   layers: ReadonlyArray<InputLayer>;
+  /** layers 模式不接受顶层 children */
   children?: never;
 };
 

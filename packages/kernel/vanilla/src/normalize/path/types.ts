@@ -143,6 +143,7 @@ export type InputStep =
 
 /** 作者侧路径输入的公共字段 */
 type InputPathBase = Omit<IRPath, 'type' | 'children'> & {
+  /** 路径步骤序列；与 way 互斥 */
   children?: ReadonlyArray<InputStep>;
   /** TikZ 风格的路径走向简写 */
   way?: WayDSL;
