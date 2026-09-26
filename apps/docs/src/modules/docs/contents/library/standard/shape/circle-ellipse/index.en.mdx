@@ -1,23 +1,81 @@
 ---
-title: Circles and ellipses
+title: Circle / Ellipse
 description: Draw circles and ellipses with shared Standard semantics across React, Vanilla and JSON
 ---
 
-Standard Circle / Ellipse preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
+`Circle` and `Ellipse` draw circular outlines from a center, radii, or a bounding box. Use them for circular markers, elliptical borders, and partially closed regions.
 
-## Entry points
+## Using this topic
 
-Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
+After [installation and first rendering](/library/standard/get-start), choose a host from the three `/shape` subpaths. All four forms draw the same minimal shape. React and Vanilla adapters supply the required definitions; direct IR requires explicit Definition injection.
 
-React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx({ id, ...input })` with the same explicit identity for the embed and its final path. Neither Vanilla nor React generates a persistent graphic id when id is omitted. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+<ComponentPreview files="entry" hideCode />
 
-| Entry   | Public API                                                                                      |
-| ------- | ----------------------------------------------------------------------------------------------- |
-| React   | `Circle, Ellipse` — `@retikz/standard-react/shape`                                              |
-| Vanilla | `shape.circle, shape.ellipse` — `@retikz/standard-vanilla/shape`                                |
-| JSON    | `CircleSchema / CircleDefinition, EllipseSchema / EllipseDefinition` — `@retikz/standard/shape` |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-## Usage
+```tsx
+import { Layout } from '@retikz/react';
+import { Circle } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Circle center={[0, 0]} radius={32} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { CircleDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
+};
+export const Example = () => <Layout ir={ir} composites={[CircleDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, CircleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.circle({ center: [0, 0], radius: 32 })] });
+const svg = renderToSvgString(input, { adapters: [CircleInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { CircleDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'circle', center: [0, 0], radius: 32 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [CircleDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
+
+### Choose circle geometry
 
 `<Circle>` / `<Ellipse>` draw a circle / ellipse outline at a position, expanding to an underlying `<Path>`. They fit cases where you know the center and radius, or only have a box.
 
@@ -45,6 +103,8 @@ The common form is `center + radius`. If you already have a rectangular area, yo
 
 <ComponentPreview files="circle-basic" size="sm" />
 
+### Choose ellipse geometry
+
 Ellipse works like Circle, but the radius is split into `radius: { x, y }`. It also supports `corner1 + corner2` and `box`.
 
 | Form                               | Best for                                                    |
@@ -58,17 +118,23 @@ Ellipse works like Circle, but the radius is split into `radius: { x, y }`. It a
 
 <ComponentPreview files="ellipse-basic" size="sm" />
 
+### Compare bounds and partial closure
+
 The playground places all four input forms against one reference box. Switch construction, inset / outset the box, then enable a partial segment to compare the input bounds, final ellipse, and closure.
 
 <ComponentPreview files="ellipse-playground" size="sm" controlPanelDefaultSize={50} />
 
-## Input constraints
+## Errors and limitations
 
 Choose exactly one geometry description. Radii, diameters, side lengths and dimensions must be finite and nonnegative. Adjusted boxes must retain positive dimensions. Partial arcs require exactly two of startAngle, endAngle and sweepAngle, preserving signed sweeps and revolutions.
 
-## Compilation
+## Implementation
 
-The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+<ComponentAlert type="tip">
+
+This section explains internal implementation. If you only need to use the component, skip to the API reference below.
+
+</ComponentAlert>
 
 ### Circle and ellipse path expansion
 
@@ -93,6 +159,10 @@ The upper route preserves a `Circle center` target, so a node id, polar point, o
   ]}
 />
 
+## API reference
+
+{/* @include library/standard/shape/circle-ellipse/generated */}
+
 ## Schema reference
 
 ### CircleSchema
@@ -103,6 +173,14 @@ The upper route preserves a `Circle center` target, so a node id, polar point, o
 
 <ZodSchema name="EllipseSchema" />
 
-## API reference
+## Further reading
 
-{/* @include library/standard/shape/circle-ellipse/generated */}
+<LinkedSections
+  items={[
+    {
+      title: 'Shapes',
+      description: 'Compare geometry inputs and choose a suitable outline',
+      url: '/library/standard/shape',
+    },
+  ]}
+/>

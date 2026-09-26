@@ -219,7 +219,7 @@
     "changelog": "更新日志",
     "changelogV01": "v0.1",
     "standardShapes": "shape · 形状",
-    "standardCircleEllipse": "圆与椭圆",
+    "standardCircleEllipse": "Circle / Ellipse · 圆与椭圆",
     "standardRectangle": "Rectangle · 矩形",
     "standardRegularPolygon": "正多边形",
     "standardStar": "星形",
