@@ -110,8 +110,8 @@ export const schematicSection: Array<Section> = [
         children: [
           { id: 'usage', label: 'schematic.basicUsage', difficulty: DocDifficulty.Beginner },
           {
-            id: 'extension',
-            label: 'schematic.extensionUsage',
+            id: 'custom',
+            label: 'schematic.customUsage',
             difficulty: DocDifficulty.Advanced,
             meta: {
               pageType: 'extension',

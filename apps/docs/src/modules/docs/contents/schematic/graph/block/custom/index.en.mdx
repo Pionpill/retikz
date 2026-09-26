@@ -1,21 +1,21 @@
 ---
-title: Block Extension Usage
+title: Custom usage
 description: Encapsulate Block content with an independent code entity Source and Definition while reusing themes, layout, and three host entries.
 ---
 
 When nodes share a fixed data structure, define a code entity and let `compose` generate its Header, Sections, and Rows. The custom `ServiceBlock` below presents the same content under local light and dark themes. Its source includes the complete definition, injection, and usage path.
-
-<ComponentPreview
-  files={['code-block-extension', 'code-block-extension.i18n.ts']}
-  size="md"
-  caption="Both entities contain the same data and sections; local themes change only their internal appearance."
-/>
 
 ## Scope
 
 Use an entity when names, properties, signatures, or logic need independent storage and validation. For one-off mixed content, use [Block basic usage](/schematic/graph/block/usage). These facts neither parse TypeScript nor execute functions.
 
 Code entities belong to Graph. Tier 3 describes the entity composition layer, which lowers to an existing Tier 2 Block. Each entity has one addressable Block root and retains its sizing, transforms, local namespace, and connection capabilities.
+
+<ComponentPreview
+  files={['code-block-extension', 'code-block-extension.i18n.ts']}
+  size="md"
+  caption="Both entities contain the same data and sections; local themes change only their internal appearance."
+/>
 
 ## Define the capability
 
@@ -25,7 +25,7 @@ Use `CodeBlockPropsSchema.safeExtend(...)` to add your own `namespace`, `type`, 
 
 `name` and `description` provide Header text. For `icon` / `trail`, omission, `null`, and an explicit child mean the entity default, hidden, and replacement respectively. The entity implements these content branches; themes never create or remove sections.
 
-## Inject into a host
+## Inject and use
 
 `createCodeBlockContribution(definition, options)` supplies the entity and its complete lower-level dependencies. All three entries reuse the same contribution:
 
@@ -37,11 +37,55 @@ Use `CodeBlockPropsSchema.safeExtend(...)` to add your own `namespace`, `type`, 
 
 The adapter constructs a plain Source object; host properties such as React `key` are not persistent data. Custom entities need neither a separate entity allowlist nor manual registration of internal providers.
 
-## Execution
-
 The host assembles providers and validates the entity Source before invoking `compose` under the effective local theme. Generated content enters a single Block. Layout, connections, and SVG / Canvas rendering continue through the existing path.
 
 The same Definition object can contribute repeatedly. Core reports a conflict when different Definitions use the same key. Only explicit member `id` values enable member-level addressing; names and step numbers never generate public ids.
+
+These snippets reuse `ServiceBlock`, `adapter`, and `coreStyle` from the complete source above. Both hosts use the same Source and Definition; keep the theme registration as needed.
+
+<DocTabs defaultValue="react">
+<DocTab value="react" label="React">
+
+```tsx
+import { Layout } from '@retikz/react';
+import type { FC } from 'react';
+const source: ServiceSource = {
+  namespace: 'example',
+  type: 'serviceBlock',
+  id: 'service',
+  name: 'UserService',
+  logic: { body: { kind: 'text', text: 'loadUser(id)' } },
+};
+const Example: FC = () => (
+  <Layout extensions={{ themeStyles: [coreStyle] }}>
+    <ServiceBlock {...source} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="vanilla" label="Vanilla">
+
+```ts
+import { scene } from '@retikz/vanilla';
+import { mount } from '@retikz/vanilla/dom';
+const source: ServiceSource = {
+  namespace: 'example',
+  type: 'serviceBlock',
+  id: 'service',
+  name: 'UserService',
+  logic: { body: { kind: 'text', text: 'loadUser(id)' } },
+};
+const input = scene({ children: [{ type: 'embed', kind: adapter.kind, props: source }] });
+const view = mount(document.getElementById('diagram')!, input, {
+  adapters: [adapter],
+  compile: { themeStyles: [coreStyle] },
+});
+// view.dispose() on teardown
+```
+
+</DocTab>
+</DocTabs>
 
 ### Theme configuration
 
@@ -69,22 +113,48 @@ Omitted fields retain Neutral tokens, explicit fields replace their values, and 
 
 The shared foundation does not predefine every code entity. Concrete components such as InterfaceBlock and FunctionBlock need their own entity definitions. This `ServiceBlock` is an application-defined extension.
 
-## API overview
+## Related props
 
-Import these capabilities from the public `@retikz/graph` entry. The source above provides a complete usage example.
+<ComponentProps
+  items={[
+    {
+      name: 'CodeBlockDefinition<TSource>',
+      kind: 'type',
+      description: 'namespace / type form the stable key; schema validates Source and compose returns content',
+    },
+    {
+      name: 'defineCodeBlock',
+      kind: 'function',
+      description: 'Associate an entity schema and compose callback; defining does not register it',
+    },
+    {
+      name: 'CodeBlockComposeContext',
+      kind: 'type',
+      description: 'theme is the effective theme; codeBlockTokens style code content',
+    },
+    {
+      name: 'createCodeBlockContribution',
+      kind: 'function',
+      description: 'Return the entity and its Block dependencies; options can inject Graph themes',
+    },
+    {
+      name: 'IRCodeBlockProps',
+      kind: 'type',
+      description: 'Root fields include name, description, nullable icon / trail, and Block shell fields',
+    },
+  ]}
+/>
 
-| Capability                                    | Role on this page                                                  |
-| --------------------------------------------- | ------------------------------------------------------------------ |
-| `CodeBlockPropsSchema` / `IRCodeBlockProps`   | Reuse the Block root and add name, description, and nullable slots |
-| `CodeParameterSchema` / `CodeSignatureSchema` | Ordered parameters and return type descriptions                    |
-| `CodePropertySchema` / `CodeMethodSchema`     | Shared property and callable-member facts                          |
-| `CodeLogicSchema`                             | Text or step-based logic sections                                  |
-| `CodeBlockDefinition` / `defineCodeBlock`     | Associate the entity schema with content composition               |
-| `CodeBlockComposeContext`                     | Effective Core theme and codeBlockTokens                           |
-| `createCodeBlockContribution`                 | Inject complete provider dependencies                              |
+An omitted parameter list means unspecified; an empty array means no parameters. Omitted optional / readonly flags mean false. Shared content stores facts, not generated Rows / Sections or runtime callbacks.
 
-An omitted parameter list means unspecified; an empty array means no parameters. Omitted `optional` / `readonly` flags mean false. Shared content stores facts rather than generated Rows / Sections or runtime callbacks.
+## Further reading
 
-## Related
-
-- [Block basic usage](/schematic/graph/block/usage): open content and local connections
+<LinkedSections
+  items={[
+    {
+      title: 'Basic usage',
+      description: 'Compose open content and local connections',
+      url: '/schematic/graph/block/usage',
+    },
+  ]}
+/>
