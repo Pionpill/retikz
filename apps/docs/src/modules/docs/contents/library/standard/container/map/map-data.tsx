@@ -4,10 +4,7 @@ import type { FC } from 'react';
 
 const MapData: FC = () => (
   <Layout>
-    <Map
-      label={{ text: 'record' }}
-      data={{ state: 'resolved', layout: { width: 60, height: 32 }, values: [0, false] }}
-    />
+    <Map data={{ state: 'resolved', layout: { width: 60, height: 32 }, values: [0, false] }} dataObjectDisplay="text" />
   </Layout>
 );
 export default MapData;

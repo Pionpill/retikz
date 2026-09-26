@@ -25,6 +25,33 @@ const compile = (children: Array<IRChild>) =>
   );
 
 describe('List / Map appearance and identity', () => {
+  it('overrides index text style without changing cell text and merges font fields', () => {
+    const result = compile([
+      {
+        namespace: 'standard',
+        type: 'list',
+        items: ['A'],
+        style: { font: { family: 'monospace', size: 14 }, textColor: 'blue' },
+        index: {
+          start: 7,
+          position: 'after',
+          style: { font: { size: 28, weight: 'bold' }, textColor: 'red', opacity: 0.5 },
+        },
+      },
+    ]);
+    const texts = flat(result.scene.primitives).filter(node => node.type === 'text');
+    expect(texts.find(node => node.lines[0]?.text === '7')).toMatchObject({
+      fontFamily: 'monospace',
+      fontSize: 28,
+      fill: 'red',
+      opacity: 0.5,
+    });
+    expect(texts.find(node => node.lines[0]?.text === 'A')).toMatchObject({
+      fontFamily: 'monospace',
+      fontSize: 14,
+      fill: 'blue',
+    });
+  });
   it('clips oversized content by default in fixed cells without scaling text', () => {
     const result = compile([
       {
@@ -114,9 +141,7 @@ describe('List / Map appearance and identity', () => {
     ).toMatchObject({ kind: 'move', to: [110, 50] });
   });
   it('does not create cell handles without authored ids, including indexed lists', () => {
-    const result = compile([
-      { namespace: 'standard', type: 'list', showIndex: true, indexStart: 4, items: [{ content }] },
-    ]);
+    const result = compile([{ namespace: 'standard', type: 'list', index: { start: 4 }, items: [{ content }] }]);
     expect(result.spatialHandles.entries.filter(entry => entry.role === 'list-cell')).toHaveLength(0);
     expect(flat(result.scene.primitives).filter(node => node.type === 'text')).toEqual(
       expect.arrayContaining([expect.objectContaining({ lines: [{ text: '4' }] })]),

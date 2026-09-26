@@ -96,6 +96,23 @@ describe('List / Map allocation', () => {
       { x: 64, y: 0, width: 10, height: 20 },
     ]);
   });
+  it('uses content width for indexed data cells without widening the shorter cell', () => {
+    const result = compile({
+      namespace: 'standard',
+      type: 'list',
+      id: 'values',
+      cellIdMode: 'index',
+      data: ['A', 'longer'],
+      layout: { width: 'content', padding: 4, gap: 2 },
+      index: { position: 'after' },
+    });
+    const cells = result.scene.spatialHandles.entries
+      .filter(entry => entry.role === 'list-cell')
+      .map(entry => entry.geometry.bounds);
+    expect(cells[0].width).toBeLessThan(cells[1].width);
+    expect(cells[1].x).toBe(cells[0].width + 2);
+    expect(result.observed.allocationBounds.width).toBe(cells[0].width + cells[1].width + 2);
+  });
   it('lets a content cell override an auto-width List', () => {
     const result = compile({
       namespace: 'standard',
@@ -115,6 +132,37 @@ describe('List / Map allocation', () => {
     expect(withoutIds.filter(entry => entry.role === 'list-cell')).toHaveLength(0);
     const withIds = compile({ ...base, items: ['A', 'B'], cellIdMode: 'string' }).scene.spatialHandles.entries;
     expect(withIds.filter(entry => entry.role === 'list-cell').map(entry => entry.id)).toEqual(['cell:A', 'cell:B']);
+  });
+  it.each(['row', 'column'] as const)('places index strips on both sides of a %s without resizing cells', direction => {
+    const base = {
+      namespace: 'standard',
+      type: 'list',
+      layout: { direction, width: 40, height: 20, padding: 0, gap: 6 },
+      items: [cell('a', 40, 20), cell('b', 40, 20)],
+    };
+    const before = compile({ ...base, index: { position: 'before', style: { font: { size: 24 } } } });
+    const after = compile({ ...base, index: { position: 'after', style: { font: { size: 24 } } } });
+    const hidden = compile({ ...base, index: false });
+    const bounds = (result: ReturnType<typeof compile>) =>
+      result.scene.spatialHandles.entries
+        .filter(entry => entry.role === 'list-cell')
+        .map(entry => entry.geometry.bounds);
+    expect(before.observed.slotSize).toEqual(after.observed.slotSize);
+    const axis = direction === 'row' ? 'y' : 'x';
+    expect(bounds(before)[0][axis]).toBeGreaterThan(6);
+    expect(bounds(after)[0][axis]).toBe(0);
+    expect(bounds(after)).toEqual(bounds(hidden));
+    expect(bounds(before).every(rect => rect.width === 40 && rect.height === 20)).toBe(true);
+    const dimension = direction === 'row' ? 'height' : 'width';
+    expect(after.observed.slotSize[dimension]).toBeGreaterThan(hidden.observed.slotSize[dimension]);
+    const large = compile({ ...base, index: { style: { font: { size: 48 } } } });
+    expect(large.observed.slotSize[dimension]).toBeGreaterThan(before.observed.slotSize[dimension]);
+  });
+  it('keeps empty indexed lists empty', () => {
+    expect(
+      compile({ namespace: 'standard', type: 'list', items: [], index: { position: 'after', start: 100 } }).observed
+        .slotSize,
+    ).toEqual({ width: 0, height: 0 });
   });
   it.each(['row', 'column'] as const)('applies per-cell dimensions and auto overrides in a %s List', direction => {
     const source = {
@@ -317,7 +365,7 @@ it('measures fixed-cell content naturally without repeated layout compilation', 
 });
 
 it('keeps label visual overflow outside the parent allocation including indexed lists', () => {
-  const source = { namespace: 'standard', type: 'list', showIndex: true, items: [cell('a', 40, 20)] };
+  const source = { namespace: 'standard', type: 'list', index: true, items: [cell('a', 40, 20)] };
   const before = compile(source).observed;
   const after = compile({ ...source, label: { text: 'a very long title outside allocation', distance: 30 } }).observed;
   expect(after.allocationBounds).toEqual(before.allocationBounds);

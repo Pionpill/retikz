@@ -74,6 +74,22 @@ describe('List / Map adapter parity', () => {
     );
     expect(markerInput.ir).toEqual(markerVanilla.ir);
   });
+  it.each([
+    true,
+    false,
+    {},
+    { position: 'after' as const, start: 7, style: { font: { size: 24 }, textColor: 'red', opacity: 0.5 } },
+  ])('preserves index configuration across adapters: %j', index => {
+    const items = ['A', 'B1'];
+    const input = createInputScene(<List items={items} index={index} />);
+    const react = normalizeScene(input.scene, { adapters: input.adapters });
+    const vanilla = normalizeScene(scene({ children: [list({ items, index })] }), {
+      adapters: [ListInputEmbedAdapter],
+    });
+    expect(react.ir).toEqual(vanilla.ir);
+    expect(react.ir.children[0]).toMatchObject({ index });
+    expect(react.contributions).toEqual(vanilla.contributions);
+  });
   it('retains nested providers, styles and sparse IR equally across React and Vanilla', () => {
     const input = createInputScene(
       <Map
@@ -257,6 +273,19 @@ it('passes mixed JSON data through React and Vanilla with identical contribution
     renderToSvgString(scene({ children: [map({ data, layout: { value: { width: 70 } } })] }), {
       adapters: [MapInputEmbedAdapter],
     }),
+  );
+});
+
+it('passes the data object text display mode through React and Vanilla without changing Source data', () => {
+  const data = [{ a: 1 }, [{ b: true }]];
+  const reactInput = createInputScene(<List data={data} dataObjectDisplay="text" />);
+  const vanillaInput = scene({ children: [list({ data, dataObjectDisplay: 'text' })] });
+  const react = normalizeScene(reactInput.scene, { adapters: reactInput.adapters });
+  const vanilla = normalizeScene(vanillaInput, { adapters: [ListInputEmbedAdapter] });
+  expect(react.ir).toEqual(vanilla.ir);
+  expect(react.ir.children[0]).toMatchObject({ data, dataObjectDisplay: 'text' });
+  expect(renderToSvgString(reactInput.scene, { adapters: reactInput.adapters })).toEqual(
+    renderToSvgString(vanillaInput, { adapters: [ListInputEmbedAdapter] }),
   );
 });
 

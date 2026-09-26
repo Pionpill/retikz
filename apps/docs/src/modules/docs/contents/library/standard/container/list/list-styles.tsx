@@ -1,21 +1,49 @@
-import { Draw, Layout } from '@retikz/react';
+import { Layout } from '@retikz/react';
 import { List } from '@retikz/standard-react/container';
-import type { FC } from 'react';
 
-const ListStyles: FC = () => (
-  <Layout>
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { previewControlContract } from './list-styles.controls';
+
+/** Fallback controls for preview registration. */
+export const previewControls = previewControlContract.controls;
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
+  <Layout viewBox={{ x: -78, y: -115, width: 360, height: 290 }}>
     <List
-      showIndex
-      layout={{ gap: 6, width: 64, height: 40, padding: 4 }}
-      style={{ fill: 'gray', font: { size: 14 } }}
-      items={['A', 'B', 'C'].map(text => ({
-        ...(text === 'B'
-          ? { id: 'selected', style: { fill: 'dodgerblue', fillOpacity: 0.3 }, layout: { width: 96, height: 52 } }
-          : {}),
-        content: text === 'C' ? 'Clipped long text' : text,
+      index={
+        values.indexEnabled
+          ? {
+              position: values.indexPosition,
+              start: values.indexStart,
+              style: {
+                font: { size: values.indexFontSize, weight: values.indexFontWeight },
+                textColor: values.indexTextColor,
+              },
+            }
+          : false
+      }
+      layout={{
+        direction: values.direction,
+        width: values.widthMode === 'fixed' ? values.width : values.widthMode,
+        height: values.autoHeight ? 'auto' : values.height,
+        padding: values.padding,
+        gap: values.gap,
+      }}
+      style={{
+        fill: values.fill,
+        fillOpacity: 0.25,
+        stroke: values.stroke,
+        strokeWidth: values.strokeWidth,
+        cornerRadius: values.cornerRadius,
+        font: { size: values.fontSize },
+      }}
+      items={['A', 'B1', 'C'].map(content => ({
+        content,
+        ...(content === 'B1' && values.override ? { style: { fill: '#2563eb', fillOpacity: 0.4 } } : {}),
       }))}
     />
-    <Draw way={['selected.bottom', [100, 95]]} arrow="->" />
   </Layout>
-);
-export default ListStyles;
+));
+export const previewSource = controlledPreview.source;
+const Demo = controlledPreview.Component;
+export default Demo;

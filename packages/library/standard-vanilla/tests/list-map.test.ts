@@ -6,6 +6,18 @@ import { StandardInputEmbedAdapters } from '../src';
 import { list, map } from '../src/container';
 
 describe('List / Map provider assembly', () => {
+  it('keeps object text display in List and Map data inputs', () => {
+    for (const child of [
+      list({ data: [{ value: 1 }], dataObjectDisplay: 'text' }),
+      map({ data: { item: { value: 1 } }, dataObjectDisplay: 'text' }),
+    ]) {
+      const normalized = normalizeScene(scene({ children: [child] }), { adapters: StandardInputEmbedAdapters });
+      const options = resolveCoreProviderDependencies({ contributions: normalized.contributions });
+      const result = compileToScene(normalized.ir, options);
+      expect(normalized.ir.children[0]).toMatchObject({ dataObjectDisplay: 'text' });
+      expect(JSON.stringify(result.scene.primitives)).toContain('value');
+    }
+  });
   it('keeps List content width in typed Vanilla inputs and compiled cell allocations', () => {
     const normalized = normalizeScene(
       scene({ children: [list({ items: [{ content: 'A', layout: { width: 'content' } }, 'longer'] })] }),

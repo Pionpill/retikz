@@ -35,57 +35,6 @@ export const librarySection: Array<Section> = [
         },
       },
       {
-        id: 'presentation',
-        label: 'library.standardPresentation',
-        sidebarGroup: 'library.components',
-        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
-        children: [
-          {
-            id: 'grid',
-            label: 'library.standardGrid',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'axes',
-            label: 'library.standardAxes',
-            difficulty: 'advanced',
-          },
-          {
-            id: 'frame',
-            label: 'library.standardFrame',
-            difficulty: 'advanced',
-          },
-          {
-            id: 'surface',
-            label: 'library.standardSurface',
-            difficulty: 'advanced',
-          },
-          {
-            id: 'legend',
-            label: 'library.standardLegend',
-            difficulty: 'advanced',
-          },
-        ],
-      },
-      {
-        id: 'container',
-        label: 'library.standardContainers',
-        sidebarGroup: 'library.components',
-        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
-        children: [
-          {
-            id: 'list',
-            label: 'library.standardList',
-            difficulty: 'beginner',
-          },
-          {
-            id: 'map',
-            label: 'library.standardMap',
-            difficulty: 'beginner',
-          },
-        ],
-      },
-      {
         id: 'shape',
         label: 'library.standardShapes',
         sidebarGroup: 'library.components',
@@ -115,6 +64,57 @@ export const librarySection: Array<Section> = [
             id: 'arc-sector',
             label: 'library.standardArcSector',
             difficulty: 'beginner',
+          },
+        ],
+      },
+      {
+        id: 'container',
+        label: 'library.standardContainers',
+        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          {
+            id: 'list',
+            label: 'library.standardList',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'map',
+            label: 'library.standardMap',
+            difficulty: 'beginner',
+          },
+        ],
+      },
+      {
+        id: 'presentation',
+        label: 'library.standardPresentation',
+        sidebarGroup: 'library.components',
+        meta: { pageType: 'group', audience: 'user', sourceOfTruth: 'docs' },
+        children: [
+          {
+            id: 'grid',
+            label: 'library.standardGrid',
+            difficulty: 'beginner',
+          },
+          {
+            id: 'axes',
+            label: 'library.standardAxes',
+            difficulty: 'advanced',
+          },
+          {
+            id: 'frame',
+            label: 'library.standardFrame',
+            difficulty: 'advanced',
+          },
+          {
+            id: 'surface',
+            label: 'library.standardSurface',
+            difficulty: 'advanced',
+          },
+          {
+            id: 'legend',
+            label: 'library.standardLegend',
+            difficulty: 'advanced',
           },
         ],
       },

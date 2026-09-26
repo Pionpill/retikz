@@ -8,7 +8,10 @@ import type { CanonicalList } from './types';
 export const resolveList = (source: IRList): CanonicalList => {
   const { data, items, cellIdMode, dataObjectDisplay, ...input } = source;
   const objectDisplay = dataObjectDisplay ?? DataObjectDisplaySchema.parse(undefined);
-  const cells = data === undefined ? items : data.map(value => createDataCell(value, objectDisplay));
+  const cells =
+    data === undefined
+      ? items
+      : data.map(value => createDataCell(value, objectDisplay, source.layout?.width === 'content'));
   const index = source.index === true ? {} : source.index;
   const indexStyle = index ? index.style : undefined;
   return {

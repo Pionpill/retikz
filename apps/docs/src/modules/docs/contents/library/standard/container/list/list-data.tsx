@@ -1,10 +1,21 @@
 import { Layout } from '@retikz/react';
 import { List } from '@retikz/standard-react/container';
-import type { FC } from 'react';
 
-const ListData: FC = () => (
+import { defineControlledPreview } from '@/modules/docs/preview';
+
+import { previewControlContract } from './list-data.controls';
+
+/** Fallback controls for preview registration. */
+export const previewControls = previewControlContract.controls;
+const controlledPreview = defineControlledPreview(previewControlContract, values => (
   <Layout>
-    <List label={{ text: 'values' }} data={['a', 'a', null, { ready: false }, [1, 2]]} />
+    <List
+      data={['a', 'a', null, { ready: false }, [1, { active: true }]]}
+      dataObjectDisplay={values.dataObjectDisplay}
+      layout={{ width: 'content' }}
+    />
   </Layout>
-);
-export default ListData;
+));
+export const previewSource = controlledPreview.source;
+const Demo = controlledPreview.Component;
+export default Demo;

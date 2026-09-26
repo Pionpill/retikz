@@ -60,11 +60,11 @@ describe('List direct cell identities', () => {
   });
 
   it('assigns ids only to direct data cells independently of displayed numbering', () => {
-    const result = compile([{ ...base, data: ['a', ['b', 'c'], { nested: [1, 2] }], showIndex: true, indexStart: 100 }]);
+    const result = compile([{ ...base, data: ['a', ['b', 'c'], { nested: [1, 2] }], index: { start: 100 } }]);
     const handles = selectSpatialHandles(result.spatialHandles, { role: 'list-cell' });
     expect(handles.map(handle => handle.id)).toEqual(['cell:list-0', 'cell:list-1', 'cell:list-2']);
     expect(
-      selectSpatialHandles(compile([{ ...base, data: [], showIndex: true }]).spatialHandles, { role: 'list-cell' }),
+      selectSpatialHandles(compile([{ ...base, data: [], index: true }]).spatialHandles, { role: 'list-cell' }),
     ).toEqual([]);
   });
 

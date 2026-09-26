@@ -1,11 +1,11 @@
 ---
 title: List
-description: Draw reusable data-structure cells with List, style the structure and individual cells, and reference cell boundaries.
+description: Use List to display one-dimensional content, configure cells, compose drawings, and look up API and Schema contracts.
 ---
 
-`List` draws one-dimensional content as equal-sized cells by default, with horizontal or vertical ordering and optional indices. Each cell accepts one Node, Scope, or registered composite.
+`List` draws one-dimensional content as a row or column of cells, suitable for arrays, queues, and indexed values. Each cell contains text or one drawable component.
 
-## Using this component
+## Using this topic
 
 After [installation](/library/standard/get-start), choose one of the four entry points. JSX and Vanilla adapters collect required definitions; direct IR supplies the component definition explicitly. Cell clipping additionally requires `PathClipDefinition` from `@retikz/extension`.
 
@@ -93,47 +93,141 @@ console.log(svg);
 </DocTab>
 </DocTabs>
 
-## Data and composition
+## Basic usage
+
+### Choose an input form
+
+The three input forms are mutually exclusive. Choose by the source of your content and how you author it: use `items` for ordinary hand-authored content, `data` for existing persisted JSON data, and JSX shorthand to write child components directly in React.
+
+<DocTabs defaultValue="items">
+<DocTab value="items" label="items · Hand-authored">
+
+Use `items` for ordinary hand-authored content: write text item by item and configure cell styles, dimensions, and ids as needed. Useful for array diagrams, queues, and other content requiring per-cell control.
+
+```tsx
+<List items={['A', { content: 'B', id: 'selected', style: { fill: 'dodgerblue' } }]} />
+```
 
 A string in `items` supplies text only by default: `'A'` is equivalent to `{ content: 'A' }`, so strings may repeat or be empty. Use `{ content, id?, style?, layout? }` for individual styling. Set `cellIdMode="string"` to also use each string as its cell id; strings must then be nonblank and unique within the List, including explicit ids on object items. This mode cannot be combined with `data`. An object without id does not derive identity from content.
 
-An object item has a string `content` and optional `id`, `style`, and `layout`. Use ListItem for complex content. Choose one of `data`, `items` or `children`; data arrays do not contain JSX.
+</DocTab>
+<DocTab value="data" label="data · Persisted data">
 
-Each cell accepts either `text` or exactly one drawable child. IR preserves strings; Standard expands them during compilation into text nodes with zero padding and margin, no background, and no stroke; cell font and text color still apply. Wrap multiple drawables in a Scope.
+Pass a JSON array read from a JSON file, storage, or an API. Nested arrays and objects are displayed recursively without converting each cell into configuration. The JSON array below represents data that has already been loaded.
 
-<ComponentPreview files="list-composition" size="sm" />
+```tsx
+<List data={['A', 42, { enabled: true }]} />
+```
 
-## Display JSON data directly
+`data` treats its input as content to display, not as cell configuration: fields such as `style` and `id` remain ordinary data. Use `items` or JSX when you need to control an individual cell's appearance or identity. “Persisted data” describes the source of the values; `data` itself does not read or write storage.
 
-`data` accepts a JSON array, mutually exclusive with `items` and React `children`. Objects render recursively as Map and arrays as List, without handwritten nested components.
+</DocTab>
+<DocTab value="jsx" label="JSX · Declarative shorthand">
 
-<ComponentPreview files="list-data" />
+In React, use `ListItem` children as declarative shorthand for content authored alongside your page JSX. Supply text through `text`, or nest one drawable component, without assembling the children into an `items` array.
 
-Object keys display their original text without added quotes. String values use quoted, escaped JSON literals, distinguishing `"null"` from `null`. Numbers, booleans and null remain visible. Nested empty containers display `{}` or `[]`; empty root structures retain zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use entries for custom order or repeated display keys.
+```tsx
+import { List, ListItem } from '@retikz/standard-react/container';
 
-Data does not generate cell ids by default, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. To connect by index, set the List `id` and `cellIdMode="index"`; use explicit cells for per-cell customization.
+<List>
+  <ListItem text="A" />
+  <ListItem text="B" id="selected" style={{ fill: 'dodgerblue' }} />
+</List>;
+```
 
-Style and layout affect only the current cells; nested structures use their own defaults while fonts and text colors inherit through content. Fixed dimensions clip the whole nested drawing without resizing each descendant cell. Pass JSON value trees, excluding instances, cycles and functions; project data before rendering when only selected fields matter.
+</DocTab>
+</DocTabs>
 
-React and Vanilla assemble nested dependencies automatically. Direct IR with data requires `ListDefinition`, `MapDefinition` and `PathClipDefinition`. Vanilla and persisted Source IR retain the same data property.
+### Style and dimensions
 
-## Style the structure and individual cells
+The overall `style` supplies shared appearance; each cell can override individual fields.
 
-Root `style` supplies common cell styling. A cell's own `style` overrides only that cell. Use `layout.gap` for spacing and `layout.padding` for common padding; each cell may override width, height, padding and overflow.
+Font fields merge individually. `fillOpacity` affects only the background; `opacity` affects the whole cell. Use `fill: 'none'` to hide the background or `stroke: 'none'` to hide the border. Defaults are no border or rounding, gray / 0.14 backgrounds, and gray / 0.4 for Map keys.
 
-Precedence is **structural defaults → overall style → cell style**. Font fields merge independently. `fillOpacity` affects only backgrounds; text remains opaque. Use `fill: 'none'` or `stroke: 'none'` to disable painting. Explicit zero values remain effective.
+<ComponentPreview
+  files="list-styles"
+  size="lg"
+  caption="Switch between fixed, shared maximum, and per-cell content widths to compare A, B1, and C. Adjust padding to see how content sizing adds space. Cell B1 overrides color only, not dimensions. The demo starts with fixed dimensions, borders, and backgrounds."
+/>
 
-<ComponentPreview files="list-styles" size="sm" />
+`layout.width` / `height` set cell border-box dimensions, including padding; zero is valid. Omit width or use `'auto'` to give auto-sized cells the largest effective width in the List. Use `'content'` to size each cell to its own natural content width plus padding. Omitted or `'auto'` height still uses the largest cell height. Cell-level values take precedence, so a List using `'content'` can give one cell a fixed width or `'auto'`. `layout.padding` defaults to 8 and `layout.gap` to 2. Content is centered inside the padded area.
 
-## Ordering and dimensions
+`layout.direction` defaults to `row`; use `column` for vertical ordering. Cells do not wrap. `auto` axes use the largest cell requirement, while fixed axes retain their specified dimensions. `style.cornerRadius` sets the corner radius of all cells; individual cell styles can override it.
 
-`layout.direction` defaults to `row`; use `column` for vertical ordering, without wrapping. `layout.width` / `height` set default fixed border-box dimensions including padding; zero is valid. Omitted axes or `'auto'` use automatic sizing. Cell dimensions override the shared defaults independently; explicit `'auto'` clears an inherited fixed dimension. Automatic axes use the maximum effective cell requirement; fixed axes keep their specified dimensions and align to the track start.
+Omit `index` or set it to `false` to hide indices. Use `true` or `{}` to enable the defaults. The object form accepts:
 
-`showIndex` puts indices above rows or left of columns; `indexStart` sets the first label, not identity.
+- `position`: `before` (default) places indices above a row or to the left of a column; `after` places them below a row or to the right of a column.
+- `start`: the starting value, a nonnegative integer defaulting to `0`. Indices are display labels, not cell ids.
+- `style`: configure index text with `font`, `textColor`, `color`, and `opacity`. Font fields inherit individually from the List font; text color inherits the overall text color unless overridden. Cell styles do not affect indices.
 
-Content is centered inside the padding. Extra parent space remains at the end, without stretching cells. Empty arrays have zero natural size. Fixed cells retain their dimensions and clip oversized content by default, including when padding exceeds the available size. Text is not scaled or automatically wrapped to fit. An insufficient parent allocation for the whole structure still fails.
+The index strip is measured from its actual text and separated from cells by `layout.gap`. Changing its font size changes the strip size, not the cell dimensions. Switch direction and index position in the panel above to compare all four sides.
 
-## Reference individual cells
+### Container labels
+
+`label` adds text to the whole container. It accepts one object or an array, with position, distance, rotation, and pin options. Labels do not enlarge the layout allocation but do contribute to the final drawing bounds, including on empty containers.
+
+<ComponentPreview
+  files="list-labels"
+  size="md"
+  caption="Keep the list fixed while changing label placement, rotation, and its pin. The pin is enabled for demonstration."
+/>
+
+Overall font, text color, and `defaults.label` supply label defaults, overridden by the label itself. Cell styles do not affect container labels, and nested containers created by `data` do not inherit the root label.
+
+<ComponentAlert
+  type="tip"
+  title="Label configuration"
+  description={
+    <>
+      Label configuration reuses Node label. See the{' '}
+      <a href="/kernel/components/node/labels">node label documentation</a> for all position, style, and pin options.
+    </>
+  }
+/>
+
+## Extended usage
+
+### Compose drawable content
+
+Use `ListItem` to provide either `text` or exactly one drawable child per cell, never both.
+
+Wrap multiple drawings in one `Scope` before putting them in a cell. React data arrays contain text configurations, not JSX. Vanilla cell `content` accepts text or one authoring child; direct IR `content` accepts text or one serializable drawable.
+
+The React example below uses this component hierarchy:
+
+```text
+List
+├── ListItem
+└── ListItem
+    └── Map
+```
+
+<ComponentPreview files="list-composition" size="xs" />
+
+### Display JSON data directly
+
+`data` accepts a JSON array. Arrays become nested Lists, and nonempty objects become nested Maps by default. Set `dataObjectDisplay="text"` to display object values as compact JSON text instead: `{ "ready": false }` appears as `{"ready":false}`. This option propagates into nested arrays and applies only to `data`, not `items` or JSX composition. The example uses text mode and `layout.width: 'content'` to size both outer and automatically generated nested Lists by each cell's content.
+
+<ComponentPreview files="list-data" size="xs" />
+
+| Data type       | Input example   | Display                                                        |
+| --------------- | --------------- | -------------------------------------------------------------- |
+| String value    | `"null"`        | A quoted, escaped JSON literal: `"null"`, distinct from `null` |
+| Number          | `42`            | Displayed as `42`                                              |
+| Boolean         | `true`, `false` | Displayed as `true`, `false`                                   |
+| Null            | `null`          | Displayed as `null`                                            |
+| Nonempty array  | `["A", 2]`      | Recursively displayed as a List, with one cell per element     |
+| Empty array     | `[]`            | Displayed as the text `[]`                                     |
+| Nonempty object | `{"a": 1}`      | A nested Map by default; `text` mode displays `{"a":1}`        |
+| Empty object    | `{}`            | Displayed as the text `{}`                                     |
+
+An empty root has zero natural size. Objects follow own enumerable string-key order, with integer-index keys first. Use Map `entries` for custom ordering or repeated keys.
+
+Data does not generate cell ids by default, so repeated values and empty strings are valid. Fields named `id`, `style`, or `type` remain ordinary data. Use explicit cells for per-cell customization. Overall style / layout affects the current level only, except that `layout.width: 'content'` in `data` mode passes through the automatically generated List / Map data tree to descendant Lists, sizing cells at each level to their own content. Hand-authored nested components do not inherit it. Font and text color inherit through content. Fixed sizes clip the nested drawing as a whole instead of resizing every descendant cell.
+
+React / Vanilla assemble nested dependencies automatically. For direct IR with `data`, register `ListDefinition` and `MapDefinition` in `composites` and `PathClipDefinition` from `@retikz/extension` in `clips`. Source IR preserves the original data, not JSX or functions.
+
+### Reference cells and control overflow
 
 Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'selected', anchor: 'right' }}`. The reference uses the cell border rectangle, excluding gaps, indices, and visual overflow. Hiding the background does not change it. An id on the content references its own geometry. In the default mode, cells without ids do not acquire identities from array indices.
 
@@ -147,74 +241,118 @@ Set a cell `id` to reference it from a path endpoint, for example `to={{ id: 'se
 
 For example, the second cell of `<List id="queue" cellIdMode="index" data={['A', 'B']} />` is referenced as `queue-1`. Import `getListCellId` from `@retikz/standard/container` and call `getListCellId('queue', 1)` to obtain the same name. Arguments must be a nonblank List id and a nonnegative integer; the helper does not check whether the cell exists.
 
-Identity indices always start at zero, independently of the displayed `indexStart`. They identify current positions, which may contain different items after reordering. Nested descendants do not inherit these ids. An explicit cell id remains usable alongside its generated id, referencing the same rectangle without duplicating geometry. Inspection queries the same spatial record using primary id `cell:queue-1` or alias `cell:<explicit-id>`. Equal names on one cell are deduplicated; collisions between different cells fail.
+<ComponentPreview
+  files="list-cell-reference"
+  size="xs"
+  caption="The arrow points to queue-1, generated from the List id and index; displayed index 1 is the second cell."
+/>
 
-## Additional notes
+Identity indices always start at zero, independently of the displayed `index.start`. They identify current positions, which may contain different items after reordering. Nested descendants do not inherit these ids. An explicit cell id remains usable alongside its generated id, referencing the same rectangle without duplicating geometry. Equal names on one cell are deduplicated; collisions between different cells fail.
 
-Defaults are gap 2, padding 8, and no stroke or corner radius. Automatic cells default to visible overflow; fixing either axis defaults to clip unless explicitly overridden. List cells and Map values use gray / 0.14; Map keys use gray / 0.4. When fixing dimensions or setting `layout.overflow: 'clip'`, direct IR must also supply `PathClipDefinition` from `@retikz/extension` through `clips`.
+<ComponentAlert
+  type="tip"
+  title="Inspection lookup"
+  description={
+    <>
+      The primary id <code>cell:queue-1</code> and alias <code>{'cell:<explicit-id>'}</code> query the same spatial
+      record.
+    </>
+  }
+/>
 
-Direct IR content also accepts a string or one drawable child. Nested composites need their definitions, or their Vanilla adapters. JSON contains neither callbacks nor JSX. Root `style` is specific to cell visuals; other Scope props apply to the root container. General matrices, merged cells, and data processing belong to table capabilities.
+Automatic cells default to `overflow: 'visible'`; fixing either axis changes the default to `'clip'`. Set `layout.overflow` explicitly to override it; cell-level settings win. Clipping neither scales content nor automatically wraps it to fit a slot. Direct IR using clipping must register `PathClipDefinition` in `clips`. Container transforms and clipping also affect labels, but cell clipping does not clip container labels.
 
-## Container labels
+<ComponentPreview
+  files="list-overflow"
+  size="sm"
+  caption="Same fixed cell width: text overflows on the left and is clipped to the cell border on the right."
+/>
 
-`label` attaches text to the whole container. It accepts one object or an array and shares the defaults, positioning, distance, rotation, and leader-line rules of [Node labels](/kernel/components/node/labels). The data example above omits label styling and uses the Core defaults.
+## Errors and limitations
 
-```tsx
-<List data={['a', 'b']} label={{ text: 'values', position: 'top' }} />
-```
+- Do not mix input forms. Explicit cell ids must be unique within the container; configure repeated text separately from identity.
+- Composition markers must be direct children of their required parents, with exactly one drawable per cell. Invalid JSX composition raises an error.
+- `data` accepts JSON value trees only, not functions, runtime instances, cycles, or sparse arrays. Project data before rendering when needed.
+- A fixed cell may be smaller than its content, but compilation fails if the parent allocation cannot fit all cells and gaps. Extra parent space remains at the end rather than stretching cells.
+- These components draw data structures; they do not process data or implement arbitrary matrices or merged cells.
 
-Labels attach to the container allocation rectangle without enlarging cells or allocation, but contribute to the final drawing bounds. Empty containers can also display labels. List includes its index strip in the attachment rectangle. Container transforms and root clipping apply to labels; cell clipping does not.
+## Implementation
 
-Shared `style.font`, `style.textColor`, `style.color`, and `style.opacity` supply the label host appearance. `defaults.label` and explicit label styles follow Node rules. Role and cell styles do not affect container labels, and `defaults.node` does not apply to the label host. Nested containers generated from `data` do not inherit the root label.
+<ComponentAlert
+  type="tip"
+  title="Optional reading"
+  description="This section explains internal implementation. If you only need to use the component, skip ahead to the API reference."
+/>
 
-## Related props
+### How dimensions are determined
 
-<ComponentProps
-  items={[
+`resolveList` merges overall and per-cell settings before applying defaults. Text becomes a node with no background, border, or padding. `compileList` measures each content once at its natural size and adds padding. `auto` uses the largest cell requirement, `content` width keeps each cell's own requirement, and fixed dimensions retain their values. Placement advances by cell size plus gap along the chosen direction. Indices are measured separately using the merged font and reserve a strip above/below rows or left/right of columns according to `index.position`.
+
+Compare the cell borders for the same content under two width modes, and note the separate index strip outside them:
+
+<ComponentPreview files="list-measurement-figure" size="sm" hideCode type="illustration" />
+
+On the left, `auto` gives both cells the largest content requirement. On the right, `content` keeps each cell's own content width plus padding. The index strip takes additional space without changing cell widths.
+
+<SourceLinks
+  sources={[
     {
-      name: 'label',
-      type: 'IRNodeLabel | Array<IRNodeLabel>',
-      description: 'Container labels with Node defaults; one object or an array, excluded from allocation.',
+      label: 'Settings and defaults',
+      path: 'packages/library/standard/src/container/list/resolve/resolve.ts',
+      startLine: 1,
     },
     {
-      name: 'data',
-      type: 'ReadonlyArray<JsonValue>',
-      description: 'Recursive JSON presentation, mutually exclusive with items / children; no inferred ids by default.',
-    },
-    { name: 'children', type: 'ReactNode', description: 'ListItem composition, mutually exclusive with data / items.' },
-    {
-      name: 'ListItem',
-      type: '{ id?; style?; layout?; text?; children? }',
-      description: 'Choose text or exactly one drawable child.',
-    },
-    {
-      name: 'items',
-      type: 'Array<string | { content: string; id?; style?; layout? }>',
-      description: 'Cells in display order.',
-    },
-    {
-      name: 'style',
-      type: '{ fill?; fillOpacity?; stroke?; font?; textColor?; opacity?; cornerRadius? }',
-      description: 'Sparse visual defaults for cells; per-cell fields take precedence.',
-    },
-    {
-      name: 'layout',
-      type: "{ width?: number | 'auto'; height?: number | 'auto'; gap?; padding?; overflow? }",
-      description: 'Shared cell dimensions and spacing; cells override width / height / padding / overflow.',
+      label: 'Measurement and placement',
+      path: 'packages/library/standard/src/container/list/pipeline.ts',
+      startLine: 1,
     },
   ]}
 />
 
+### Why references and labels do not resize cells
+
+After placement, `compileCells` reuses the measured results to center content and emit the background, clipped content layer, and border separately. An invisible rectangular node carries each cell id using its allocated size, so content overflow does not affect the reference. Separate `container` and `cell:<id>` spatial handles support inspection rather than replacing named references.
+
+Another invisible rectangle hosts container labels using the container allocation, including the index strip when enabled. Labels attach after cell placement and do not feed back into cell measurement; they only extend visible bounds. The label host does not inherit cell role styling or use `defaults.node`.
+
+The blue border shows the fixed cell allocation and reference bounds. Compare the arrow endpoint with the overflowing text and container label outside the border:
+
+<ComponentPreview files="list-reference-figure" size="md" hideCode type="illustration" />
+
+Text overflow and the label extend visible bounds without changing the cell's 82 × 42 allocation. The reference arrow still points to the rectangle's bottom edge.
+
+<SourceLinks
+  sources={[
+    {
+      label: 'Content replay, reference rectangles, and label host',
+      path: 'packages/library/standard/src/container/shared/cell-layout.ts',
+      startLine: 1,
+    },
+  ]}
+/>
+
+## API reference
+
+This local reference covers the component’s public React, Vanilla, and IR entries, generated from source signatures and comments. See the Schema section for persistent fields; shared package contracts are not duplicated here.
+
+{/* @include library/standard/container/list/generated */}
+
 ## Schema reference
+
+`ListSchema` describes persistent input with `namespace: 'standard'` and `type: 'list'`. Choose either items or data. Factories preserve sparse input; explicit `schema.parse` materializes declared static defaults. Cell inheritance and the dynamic clipping default are resolved after settings merge.
 
 ### ListSchema
 
-<ZodSchema name="ListSchema" />
-
-Fields come from the actual schema. Factories preserve sparse input; schema.parse materializes declared static defaults and does not restore omission intent.
+<ZodSchema name="ListSchema" expandNested />
 
 ## Further reading
 
-- [Surface](/library/standard/presentation/surface)
-- [映射](/library/standard/container/map)
-- [Node naming and references](/kernel/components/node/mechanism)
+<LinkedSections
+  items={[
+    {
+      title: 'Surface',
+      description: 'Add a background, padding, and clipping to a single drawing',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

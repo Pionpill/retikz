@@ -7,7 +7,7 @@ keywords: List、cellIdMode、data、items、getListCellId、下标、单元格�
 
 - 状态：Accepted
 - 决策日期：2026-09-23
-- 关联：[roadmap](./roadmap.md) · [ADR-030](./030-list-map-presentation.md) · [Core ADR-046](../../../../../../kernel/_notes/decisions/v0/v0.5/046-reference-and-spatial-handle-aliases.md)
+- 关联：[roadmap](./roadmap.md) · [ADR-030](./030-list-map-presentation.md) · [ADR-033](./033-list-index.md) · [Core ADR-046](../../../../../../kernel/_notes/decisions/v0/v0.5/046-reference-and-spatial-handle-aliases.md)
 
 ## 背景与目标
 
@@ -43,7 +43,7 @@ type IRList = {
 getListCellId(listId: string, index: number): string;
 ```
 
-`getListCellId` 由 Standard 的 container 公共入口提供，是无状态的纯函数；`listId` 必须是合法非空白 id，`index` 必须是从零开始的非负整数，非法参数以 Standard 错误失败。结果固定为 `<list-id>-<index>`，例如 `getListCellId('items', 1) === 'items-1'`。函数只格式化名称，不检查该位置是否存在；不存在的目标仍按 Core 引用缺失规则诊断。显示用 `indexStart` 与下标身份无关。
+`getListCellId` 由 Standard 的 container 公共入口提供，是无状态的纯函数；`listId` 必须是合法非空白 id，`index` 必须是从零开始的非负整数，非法参数以 Standard 错误失败。结果固定为 `<list-id>-<index>`，例如 `getListCellId('items', 1) === 'items-1'`。函数只格式化名称，不检查该位置是否存在；不存在的目标仍按 Core 引用缺失规则诊断。显示用 `index.start` 与下标身份无关。
 
 ## 行为、失败语义与兼容性
 

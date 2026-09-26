@@ -1,9 +1,9 @@
 ---
-title: 映射
-description: 使用 Map 绘制可复用的数据结构槽位，设置整体及单元格样式并引用具体单元格。
+title: Map · 映射
+description: 使用 Map 展示键值记录，配置单元格、组合图形并查询 API 与 Schema。
 ---
 
-`Map` 把有序键值对画成对齐的两列，也适合展示对象字段。键默认深色、值默认浅色；输入只决定展示顺序，不执行字典查询或去重。
+`Map` 将有序键值对画成对齐的两列，适合展示对象字段和键值记录。它只负责绘制，不执行字典查询或去重。
 
 ## 接入方式
 
@@ -125,128 +125,393 @@ console.log(svg);
 </DocTab>
 </DocTabs>
 
-## 数据配置与组件组合
+## 基础用法
 
-简单文字使用 `entries`：`key` / `value` 可以直接是字符串；需要定制时才写 `{ content: string, id?, style?, layout? }`。复杂内容使用 `MapEntry、MapKey、MapValue`；`data`、`entries` 与 `children` 三选一，数据数组中不嵌 JSX。
+### 选择输入方式
 
-单格用 `text` 写文字，或用 `children` 放恰好一个 drawable，二者互斥。字符串保留在 IR 中，由 Standard 在编译时转为零内边距、无背景、无描边的文本节点，仍继承单格字体与文字颜色。多个图元先用 Scope 组合。
+三种输入方式互斥；根据是否需要单格样式、命名或图形内容选择。
 
-每个 MapEntry 必须有一个 MapKey 和一个 MapValue；它们分别承接键和值的单格属性。
+| 输入           | 适用场景                                     |
+| -------------- | -------------------------------------------- |
+| `entries`      | 明确配置文字、单格样式与 id                  |
+| `data`         | 直接递归展示 JSON 对象                       |
+| JSX `children` | 用 MapEntry / MapKey / MapValue 组合图形内容 |
 
-<ComponentPreview files="map-composition" size="sm" />
+`entries` 按数组顺序展示；每项包含 `key` 和 `value`，二者均可为字符串或 `{ content, id?, style?, layout? }`。文字 key 可以重复，字符串不会自动成为单元格 id。
 
-## 直接展示 JSON 数据
+### 样式与尺寸
 
-`data` 接受 JSON 对象，与 `entries`、React `children` 三选一。对象递归画成 Map，数组递归画成 List；无需手写嵌套组件。
+样式优先级为 **结构默认 → 整体 style → style.key / style.value → 单格 style**；可以分别设置键和值的外观。
 
-<ComponentPreview files="map-data" />
-
-对象键直接显示原始文本，不额外添加引号。字符串值显示为带引号、转义的 JSON 字面量，因此 `"null"` 与 `null` 不会混淆。数字、布尔值、null 原样显示；嵌套空对象和数组显示为 `{}`、`[]`，空根结构保持零自然尺寸。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 entries。
-
-数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等对象字段也只是数据。要连线或逐格设置样式，使用显式单元格，并在其中嵌套带 data 的组件。
-
-整体 style / layout 只控制当前层单元格，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定宽高裁切整个嵌套图，不会把每个后代格改成同样尺寸。只传入 JSON 值树，不传运行时实例、循环引用或函数；需要简化展示时先投影数据。
-
-React / Vanilla 自动装配嵌套依赖；直接 IR 的 data 入口需注入 `ListDefinition`、`MapDefinition` 以及 `PathClipDefinition`。Vanilla 保留同名 data 属性，Source IR 也保留原数据。
-
-## 整体与单元格样式
-
-`style` 设置所有格的共同样式；单元格自己的 `style` 只覆盖当前格。`layout.gap` 设置间隙，`layout.padding` 设置每格内边距；单格可通过自己的 `layout.width`、`height`、`padding` 和 `overflow` 覆盖整体值。
-
-Map 的覆盖顺序是 **结构默认 → 整体 style → style.key / style.value → 单格 style**。因此显式设置整体 `fillOpacity` 会覆盖键深值浅的默认，而单格仍能进一步强调。`font` 按字段合并，不会因只改字号而丢失字体族。
+字体按字段合并；`fillOpacity` 只影响背景，`opacity` 影响整个单元格。`fill: 'none'` 关闭背景，`stroke: 'none'` 关闭边框。默认无边框和圆角，背景为 gray / 0.14，Map 键背景为 gray / 0.4。
 
 <ComponentPreview files="map-styles" size="sm" />
 
-## 排列与尺寸
+`layout.width` / `height` 指定包含内边距的单格边框尺寸，可以为零；省略或 `'auto'` 时自适应。单格同名字段优先，显式 `'auto'` 可以解除继承的固定尺寸。`layout.padding` 默认 8，`layout.gap` 默认 2。内容在内边距区域居中。
 
-每条 entry 固定占一行。`layout.width` / `height` 设置所有格的固定边框尺寸（含 padding），省略或 `'auto'` 时自适应。覆盖顺序为 **整体 layout → layout.key / layout.value → 单格 layout**，宽高分别继承；单格显式 `'auto'` 可解除继承的固定尺寸。
+布局优先级为 **整体 layout → layout.key / layout.value → 单格 layout**。两列分别按本列最大需求确定宽度，每行按较高单元格确定高度。固定尺寸不会被拉伸，较小单元格从轨道起点对齐，因此同列边框宽度或同行边框高度可以不同。`layout.gap` 支持数字或 `{ row, column }`。
 
-默认两列分别取本列最大需求，同一行取较高单元格的高度。固定尺寸覆盖按原值绘制，较小单元格从行列起点对齐，不会被拉伸填满轨道；因此单格覆盖后，同列边框宽度或同行边框高度可能不同。`layout.gap` 接受数字或 `{ row, column }`。相同展示 key 可以重复；顺序完全来自 entries。
+### 容器标签
 
-内容在内边距区域居中。父容器提供额外空间时，槽位仍从起点排列，剩余空间留在末端。空数组自然尺寸为零。固定单格尺寸小于内容或内边距时仍保留尺寸，默认裁切超出内容，不缩放文字；父容器无法容纳整组槽位与间隙时仍会报错。
-
-## 引用具体单元格
-
-给单元格设置 `id` 后，可以用 `Draw` 的 `way` 引用，例如 `'selected.right'`。引用区域是该格分配到的矩形，不包含间隙、索引或内容的视觉溢出；关闭背景也不改变它。content 自己的 id 仍指向内容几何。
-
-整体变换与 `localNamespace` 沿 [Scope](/kernel/components/scope/usage) 规则生效。组件内单元格 id 不能重复；未设置 id 的格不会按数组下标生成稳定身份。Inspection 另行提供 `container` 与 `cell:<id>` 空间 handle，不替代命名引用。
-
-## 补充说明
-
-默认 gap 为 2、padding 为 8，无描边、无圆角，自适应单元格的 `overflow` 默认为 `visible`，固定任一轴时默认为 `clip`，可显式覆盖。List 与 Map value 背景为 gray / 0.14，Map key 为 gray / 0.4。使用固定尺寸或 `layout.overflow: 'clip'` 时，直接 IR 还需在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。
-
-直接 IR 的 content 同样支持字符串或一个可绘制 child。嵌套组件需要自己的 Definition；Vanilla 使用相应 adapter，JSON 不保存函数或 JSX。整体 `style` 专用于单元格视觉，其他 Scope 属性仍由根容器消费。任意矩阵、合并格与数据处理请使用表格能力。
-
-## 容器标签
-
-`label` 为整个容器添加附属文字，接受单个对象或数组，与 [Node label](/kernel/components/node/labels) 共用默认样式及位置、间距、旋转、引线规则。上面的 data 示例省略标签样式，直接使用 Core 默认值。
+`label` 为整个容器添加文字，支持单个对象或数组，可设置位置、距离、旋转和引线。标签不撑大布局尺寸，但计入最终绘制范围；空容器也能显示标签。
 
 ```tsx
-<Map data={{ a: 1 }} label={{ text: 'record', position: 'bottom' }} />
+<Map entries={[{ key: 'a', value: '1' }]} label={{ text: 'record', position: 'top' }} />
 ```
 
-标签以容器 allocation 矩形为边界，不撑大单元格或容器布局尺寸，但计入最终绘制范围；空容器也能显示标签。List 开启索引时，附着边界包含索引条。容器的变换和整体 clip 同样作用于标签，单元格裁切不影响它。
+整体字体、文字颜色及 `defaults.label` 可作为标签默认，标签自身设置优先；键值角色和单格样式不影响容器标签，`data` 中的嵌套容器也不继承根标签。
 
-共用 `style.font`、`style.textColor`、`style.color`、`style.opacity` 作为标签宿主外观；`defaults.label` 和标签自身样式沿 Node 规则解析。键值角色与单元格样式不影响标签，`defaults.node` 不作用于标签宿主。`data` 中的嵌套容器不会继承根 label。
+<ComponentAlert
+  type="tip"
+  title="标签配置"
+  description={
+    <>
+      标签配置复用 Node label；完整位置、样式及引线选项见<a href="/kernel/components/node/labels">节点标签文档</a>。
+    </>
+  }
+/>
 
-## 相关属性
+## 扩展用法
 
-<ComponentProps
-  items={[
+### 组合图形内容
+
+每个 `MapEntry` 必须恰好包含一个 `MapKey` 和一个 `MapValue`；每格设置 `text` 或唯一的 drawable child，二者互斥。
+
+多个图元先用 `Scope` 包成一个 child，再放入单元格。React 的数据数组只放文字配置，不嵌 JSX；Vanilla 的单格 `content` 接受文字或一个 authoring child，直接 IR 的 `content` 接受文字或一个可序列化图元。
+
+<ComponentPreview files="map-composition" size="sm" />
+
+### 直接展示 JSON 数据
+
+`data` 接受 JSON 对象，根对象始终由 Map 展示。其非空对象值默认递归画成 Map；设置 `dataObjectDisplay="text"` 后，对象值改为紧凑的 JSON 文本。嵌套数组仍递归画成 List，并沿用这一设置。该选项仅用于 `data`，不适用于 `entries` 或 JSX 组合。下例使用文本模式。
+
+<ComponentPreview files="map-data" />
+
+对象键按原始文字显示，字符串值按带引号和转义的 JSON 字面量显示，因此 `"null"` 与 `null` 不会混淆。数字、布尔值和 null 原样显示；嵌套空对象、空数组显示为 `{}`、`[]`，空根结构的自然尺寸为零。对象按自有可枚举字符串键的顺序展示，整数索引键优先；需要自定顺序或重复键时使用 Map 的 `entries`。
+
+数据不会生成单元格 id，重复值和空字符串均可使用；`id`、`style`、`type` 等字段也只是数据。要连线或逐格定制，改用显式单元格，在其中嵌套带 `data` 的组件。整体 style / layout 只控制当前层，嵌套结构使用自身默认；字体与文字颜色沿内容继承。固定尺寸裁切整个嵌套图，不把后代单元格改成同样大小。
+
+React / Vanilla 自动装配嵌套依赖。直接 IR 使用 `data` 时，在 `composites` 中注入 `ListDefinition` 和 `MapDefinition`，并在 `clips` 中注入 `@retikz/extension` 的 `PathClipDefinition`。Source IR 保留原始 data，不保存 JSX 或函数。
+
+### 引用单元格与控制溢出
+
+为单元格设置 `id` 后，可以在路径端点引用它，如 `to={{ id: 'selected', anchor: 'right' }}`。引用区域是该格的边框矩形，不包含间隙、索引或视觉溢出；关闭背景不会改变引用区域。内容自身的 id 则指向内容几何。未设 id 的格不会按数组下标自动获得身份。
+
+自适应单元格默认 `overflow: 'visible'`；固定任一轴时默认 `'clip'`。可显式设置 `layout.overflow`，单格设置优先。裁切不缩放内容，也不为了适配槽位自动折行。使用裁切的直接 IR 必须在 `clips` 中注入 `PathClipDefinition`。容器整体变换和裁切同时作用于标签，但单元格裁切不影响容器标签。
+
+## 错误与限制
+
+- 不混用输入方式；同一容器内显式单元格 id 必须唯一。重复文字应与身份分开配置。
+- 组合标记必须放在规定的直属父组件中，单格图形必须恰好一个；非法 JSX 组合会报错。
+- `data` 只接受 JSON 值树，不传函数、运行时实例、循环引用或稀疏数组；展示前自行投影数据。
+- 固定单格尺寸可以小于内容，但父级分配若容纳不下整组单元格与间隙，会编译失败。父级给出多余空间时，单元格仍从起点排布，不拉伸填满。
+- 这是数据结构的绘制组件，不负责数据处理、任意矩阵或合并单元格。
+
+## 实现原理
+
+<ComponentAlert type="tip" title="选读" description="本节解释内部实现，仅使用组件时可跳过，直接查阅后面的 API 参考。" />
+
+### 尺寸如何确定
+
+`resolveMap` 先合并整体、键值角色与单格设置，再补默认值；文字转为无背景、无边框、零内边距的文本节点。`compileMap` 对每格内容按自然尺寸测量一次，分别求键列和值列的最大宽度，并按每行两格的较大高度推进。固定格保留自己的宽高，所以轨道对齐不意味着每个边框都被拉伸。
+
+<SourceLinks
+  sources={[
+    { label: '设置合并与默认值', path: 'packages/library/standard/src/container/map/resolve/resolve.ts', startLine: 1 },
+    { label: '测量与排布', path: 'packages/library/standard/src/container/map/pipeline.ts', startLine: 1 },
+  ]}
+/>
+
+### 为什么引用和标签不改变单元格尺寸
+
+排布完成后，`compileCells` 复用测量结果，将内容居中，并分别输出背景、内容裁切层和边框。单元格 id 由不可见的矩形节点承载，使用分配给该格的尺寸，因此不受内容视觉溢出影响。另行发布的 `container` 和 `cell:<id>` 空间 handle 供 inspection 使用，不替代命名引用。
+
+容器标签由另一个不可见矩形承载，矩形大小取容器的布局分配范围。标签在单元格排布完成后附着，不反向参与单格测量；它只扩展最终可见范围。标签宿主不继承单元格角色样式，也不使用 `defaults.node`。
+
+<SourceLinks
+  sources={[
     {
-      name: 'label',
-      type: 'IRNodeLabel | Array<IRNodeLabel>',
-      description: '容器附属标签；默认样式与 Node 一致，不参与 allocation，支持单个或数组。',
-    },
-    { name: 'data', type: 'JsonObject', description: '递归呈现 JSON，与 entries / children 互斥；不推导 id。' },
-    {
-      name: 'children',
-      type: 'ReactNode',
-      description: 'MapEntry 组合，与 data / entries 互斥；每条记录各有一个 MapKey 和 MapValue。',
-    },
-    {
-      name: 'MapKey / MapValue',
-      type: '{ id?; style?; layout?; text?; children? }',
-      description: '每格 text 与唯一 drawable child 二选一。',
-    },
-    {
-      name: 'entries',
-      type: 'Array<{ key: string | CellProps; value: string | CellProps }>',
-      description: '每行恰好一对键值，允许重复展示键。',
-    },
-    {
-      name: 'style',
-      type: '{ fill?; fillOpacity?; stroke?; font?; textColor?; opacity?; cornerRadius?; key?: CellStyle; value?: CellStyle }',
-      description: '所有格的稀疏视觉默认，单格同名字段优先。',
-    },
-    {
-      name: 'style.key / style.value',
-      type: 'CellStyle',
-      description: '键和值的视觉覆盖，优先于 style 直接字段，低于单格 style。',
-    },
-    {
-      name: 'layout.key / layout.value',
-      type: "{ width?: number | 'auto'; height?: number | 'auto'; padding?; overflow? }",
-      description: '键和值的尺寸及格内布局默认，覆盖整体 layout。',
-    },
-    {
-      name: 'layout',
-      type: "{ width?: number | 'auto'; height?: number | 'auto'; gap?; padding?; overflow?; key?: CellLayout; value?: CellLayout }",
-      description: '所有格的尺寸、间距与内边距默认；单格可覆盖 width / height / padding / overflow。',
+      label: '内容复用、引用矩形与标签宿主',
+      path: 'packages/library/standard/src/container/shared/cell-layout.ts',
+      startLine: 1,
     },
   ]}
 />
 
+## API 参考
+
+以下为当前组件的 React、Vanilla 和 IR 公开入口局部参考，签名与说明由源码生成。共享样式和持久化字段见后面的 Schema；不在这里复制整包公共契约。
+
+{/* @include library/standard/container/map/generated */}
+
 ## Schema 参考
+
+`MapSchema` 描述持久化输入，固定 `namespace: 'standard'` 与 `type: 'map'`；entries 与 data 二选一。工厂保留稀疏输入，显式 `schema.parse` 会物化声明的静态默认；单格的继承和动态裁切默认在设置合并后确定。
 
 ### MapSchema
 
-<ZodSchema name="MapSchema" />
-
-字段来自实际 schema。工厂保留稀疏输入；schema.parse 会物化声明的静态默认，不恢复省略意图。
+<ZodSchema
+  name="MapSchema"
+  description="有序键值对的双列展示，支持显式记录或 JSON 对象"
+  expandNested
+  descriptions={{
+    '/union/0/field/"namespace"': '命名空间，固定为 standard',
+    '/union/0/field/"type"': '组件类型判别字段',
+    '/union/0/field/"frame"': '绘制在容器内容下方的可选外框',
+    '/union/0/field/"theme"': '由后代继承的稀疏主题覆盖',
+    '/union/0/field/"id"': '可选命名引用 id，注册在父命名空间',
+    '/union/0/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
+    '/union/0/field/"transforms"': '作用于全部内容的局部变换，数组末项先作用；平移在编译时展开',
+    '/union/0/field/"placement"': '内在布局与局部变换后的最终放置方式',
+    '/union/0/field/"zIndex"': '容器整体在同级图元中的堆叠顺序，不控制内部子图元',
+    '/union/0/field/"clip"': '容器局部坐标中的整体裁切区域',
+    '/union/0/field/"boundingShape"': '命名引用使用的包围轮廓：矩形或圆形',
+    '/union/0/field/"meta"': '保留到 Scene 的 JSON 元数据，编译器不解释其内容',
+    '/union/0/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
+    '/union/0/field/"defaults"': '后代默认样式及其继承屏障',
+    '/union/0/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
+    '/union/0/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/0/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/0/field/"defaults"/field/"arrow"': '箭头默认样式',
+    '/union/0/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/0/field/"entries"': '按顺序展示的键值对，不是 JavaScript Map',
+    '/union/0/field/"entries"/array/field/"key"': '键单元格',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"content"':
+      '文字或唯一可绘制 child，支持已注册的第三方复合组件',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"font"':
+      '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"layout"': '稀疏单格尺寸、内边距和溢出覆盖',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"layout"/field/"width"':
+      '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"layout"/field/"height"':
+      '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"entries"/array/field/"key"/union/1/field/"layout"/field/"overflow"':
+      '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"entries"/array/field/"value"': '值单元格',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"id"': '当前容器内唯一的可选单元格 id',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"content"':
+      '文字或唯一可绘制 child，支持已注册的第三方复合组件',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"': 'List / Map 单元格的稀疏外观覆盖',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"color"':
+      '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"dashPattern"':
+      '虚线各段长度，省略为实线',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"dashOffset"':
+      '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"lineCap"':
+      '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"lineJoin"':
+      '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"font"':
+      '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"layout"': '稀疏单格尺寸、内边距和溢出覆盖',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"layout"/field/"width"':
+      '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"layout"/field/"height"':
+      '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"entries"/array/field/"value"/union/1/field/"layout"/field/"overflow"':
+      '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"data"': '此分支禁止 data',
+    '/union/0/field/"dataObjectDisplay"': '此分支禁止 dataObjectDisplay',
+    '/union/0/field/"style"': '共同单元格样式及键值角色覆盖',
+    '/union/0/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"style"/field/"key"': '键的样式覆盖，优先于共同字段',
+    '/union/0/field/"style"/field/"key"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"style"/field/"key"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"style"/field/"key"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"style"/field/"key"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"style"/field/"key"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"style"/field/"key"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"style"/field/"key"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"style"/field/"key"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"style"/field/"key"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"style"/field/"key"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"style"/field/"key"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"style"/field/"key"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"style"/field/"key"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"style"/field/"key"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"style"/field/"value"': '值的样式覆盖，优先于共同字段',
+    '/union/0/field/"style"/field/"value"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/0/field/"style"/field/"value"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/0/field/"style"/field/"value"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/0/field/"style"/field/"value"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/0/field/"style"/field/"value"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/0/field/"style"/field/"value"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/0/field/"style"/field/"value"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/0/field/"style"/field/"value"/field/"opacity"': '单元格整体透明度',
+    '/union/0/field/"style"/field/"value"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/0/field/"style"/field/"value"/field/"fill"': '填充颜色或绘制对象',
+    '/union/0/field/"style"/field/"value"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/0/field/"style"/field/"value"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/0/field/"style"/field/"value"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/0/field/"style"/field/"value"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/0/field/"label"': '容器附属标签，通过 position 与 distance 定位',
+    '/union/0/field/"layout"': 'Map 双列布局与间距',
+    '/union/0/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"layout"/field/"gap"': '行列共用间距或分别设置 row / column',
+    '/union/0/field/"layout"/field/"gap"/union/1/field/"row"': '大于或等于零的有限数值',
+    '/union/0/field/"layout"/field/"gap"/union/1/field/"column"': '大于或等于零的有限数值',
+    '/union/0/field/"layout"/field/"key"': '键的布局覆盖，优先于共同字段',
+    '/union/0/field/"layout"/field/"key"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"key"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"key"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"layout"/field/"key"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/0/field/"layout"/field/"value"': '值的布局覆盖，优先于共同字段',
+    '/union/0/field/"layout"/field/"value"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"value"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/0/field/"layout"/field/"value"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/0/field/"layout"/field/"value"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/1/field/"namespace"': '命名空间，固定为 standard',
+    '/union/1/field/"type"': '组件类型判别字段',
+    '/union/1/field/"frame"': '绘制在容器内容下方的可选外框',
+    '/union/1/field/"theme"': '由后代继承的稀疏主题覆盖',
+    '/union/1/field/"id"': '可选命名引用 id，注册在父命名空间',
+    '/union/1/field/"localNamespace"': '将后代节点、坐标及嵌套作用域的 id 限定在本地；容器自身 id 仍注册在父命名空间',
+    '/union/1/field/"transforms"': '作用于全部内容的局部变换，数组末项先作用；平移在编译时展开',
+    '/union/1/field/"placement"': '内在布局与局部变换后的最终放置方式',
+    '/union/1/field/"zIndex"': '容器整体在同级图元中的堆叠顺序，不控制内部子图元',
+    '/union/1/field/"clip"': '容器局部坐标中的整体裁切区域',
+    '/union/1/field/"boundingShape"': '命名引用使用的包围轮廓：矩形或圆形',
+    '/union/1/field/"meta"': '保留到 Scene 的 JSON 元数据，编译器不解释其内容',
+    '/union/1/field/"animations"': '作用于容器整体的动画轨道，不影响布局，也不向子图元传播',
+    '/union/1/field/"defaults"': '后代默认样式及其继承屏障',
+    '/union/1/field/"defaults"/field/"node"': '节点默认样式，与其他通道独立',
+    '/union/1/field/"defaults"/field/"path"': '路径类图元的默认样式；箭头使用 defaults.arrow',
+    '/union/1/field/"defaults"/field/"label"': '节点标签与路径步骤标签的默认样式',
+    '/union/1/field/"defaults"/field/"arrow"': '箭头默认样式',
+    '/union/1/field/"defaults"/field/"reset"': '默认样式继承屏障：true 重置全部，或指定 node、path、label、arrow 通道',
+    '/union/1/field/"entries"': '此分支禁止显式单元格',
+    '/union/1/field/"data"': '递归展示 JSON 对象，不推导单元格 id',
+    '/union/1/field/"dataObjectDisplay"':
+      '非空对象值的展示方式：map 递归绘制，text 显示紧凑 JSON 文本；默认 map，根对象仍是 Map',
+    '/union/1/field/"style"': '共同单元格样式及键值角色覆盖',
+    '/union/1/field/"style"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"style"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"style"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"style"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/1/field/"style"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"style"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"style"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"style"/field/"opacity"': '单元格整体透明度',
+    '/union/1/field/"style"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"style"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"style"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"style"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/1/field/"style"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/1/field/"style"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/1/field/"style"/field/"key"': '键的样式覆盖，优先于共同字段',
+    '/union/1/field/"style"/field/"key"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"style"/field/"key"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"style"/field/"key"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"style"/field/"key"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/1/field/"style"/field/"key"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"style"/field/"key"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"style"/field/"key"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"style"/field/"key"/field/"opacity"': '单元格整体透明度',
+    '/union/1/field/"style"/field/"key"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"style"/field/"key"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"style"/field/"key"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"style"/field/"key"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/1/field/"style"/field/"key"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/1/field/"style"/field/"key"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/1/field/"style"/field/"value"': '值的样式覆盖，优先于共同字段',
+    '/union/1/field/"style"/field/"value"/field/"color"': '主色，描边、填充、标签与箭头可继承，独立设置优先',
+    '/union/1/field/"style"/field/"value"/field/"stroke"': '描边颜色或绘制对象',
+    '/union/1/field/"style"/field/"value"/field/"strokeWidth"': '描边宽度，使用绘图单位',
+    '/union/1/field/"style"/field/"value"/field/"dashPattern"': '虚线各段长度，省略为实线',
+    '/union/1/field/"style"/field/"value"/field/"dashOffset"': '虚线偏移，可为正或负的有限值',
+    '/union/1/field/"style"/field/"value"/field/"lineCap"': '线端样式，省略为 butt；round 为半圆，square 向端外延伸',
+    '/union/1/field/"style"/field/"value"/field/"lineJoin"': '折角样式，省略为 miter；round 圆角，bevel 切角',
+    '/union/1/field/"style"/field/"value"/field/"opacity"': '单元格整体透明度',
+    '/union/1/field/"style"/field/"value"/field/"strokeOpacity"': '仅描边透明度',
+    '/union/1/field/"style"/field/"value"/field/"fill"': '填充颜色或绘制对象',
+    '/union/1/field/"style"/field/"value"/field/"fillOpacity"': '仅背景填充透明度',
+    '/union/1/field/"style"/field/"value"/field/"font"': '内容文字的字体设置，省略字段沿用文字默认',
+    '/union/1/field/"style"/field/"value"/field/"textColor"':
+      '文字颜色；数字由有效主色派生，contrast 根据静态填充选黑或白，默认 currentColor',
+    '/union/1/field/"style"/field/"value"/field/"cornerRadius"': '大于或等于零的有限数值',
+    '/union/1/field/"label"': '容器附属标签，通过 position 与 distance 定位',
+    '/union/1/field/"layout"': 'Map 双列布局与间距',
+    '/union/1/field/"layout"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/1/field/"layout"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/1/field/"layout"/field/"gap"': '行列共用间距或分别设置 row / column',
+    '/union/1/field/"layout"/field/"gap"/union/1/field/"row"': '大于或等于零的有限数值',
+    '/union/1/field/"layout"/field/"gap"/union/1/field/"column"': '大于或等于零的有限数值',
+    '/union/1/field/"layout"/field/"key"': '键的布局覆盖，优先于共同字段',
+    '/union/1/field/"layout"/field/"key"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"key"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"key"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/1/field/"layout"/field/"key"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+    '/union/1/field/"layout"/field/"value"': '值的布局覆盖，优先于共同字段',
+    '/union/1/field/"layout"/field/"value"/field/"width"': '含内边距的固定边框宽度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"value"/field/"height"': '含内边距的固定边框高度，auto 使用结构的自然尺寸',
+    '/union/1/field/"layout"/field/"value"/field/"padding"': '统一或按边设置的非负内边距',
+    '/union/1/field/"layout"/field/"value"/field/"overflow"': '保留视觉溢出或裁切到单元格分配区域',
+  }}
+/>
 
 ## 延伸阅读
 
-- [表面](/library/standard/presentation/surface)
-- [列表](/library/standard/container/list)
-- [节点命名引用原理](/kernel/components/node/mechanism)
+<LinkedSections
+  items={[
+    {
+      title: 'Surface · 表面',
+      description: '为单个图形添加背景、内边距和裁切',
+      url: '/library/standard/presentation/surface',
+    },
+  ]}
+/>

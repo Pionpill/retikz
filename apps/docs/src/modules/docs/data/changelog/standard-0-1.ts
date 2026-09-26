@@ -13,6 +13,20 @@ export const standardV01: Release = {
       },
       highlights: [
         {
+          label: { zh: '未发布 · List 内容宽度', en: 'Unreleased · List content width' },
+          content: {
+            zh: 'List 的整体或单格 layout.width 可设为 content，使每格按自身内容自然宽度加内边距定宽；data 模式下还会沿自动生成的数据树传给后代 List。auto 仍使用全组最大宽度，单格设置优先。Map 的宽度模式不变。',
+            en: 'List layout.width accepts content on the whole List or an individual cell, sizing each cell to its own natural content width plus padding; in data mode it also passes through the generated data tree to descendant Lists. auto still uses the shared maximum, and cell settings take precedence. Map width modes are unchanged.',
+          },
+        },
+        {
+          label: { zh: '未发布 · BREAKING：List 索引配置', en: 'Unreleased · BREAKING: List index configuration' },
+          content: {
+            zh: 'List 统一使用 index 配置索引，支持横排上下、竖排左右位置与独立文本样式。showIndex 迁移为 index 布尔值；同时设置起点时改为 index: { start }，隐藏时使用 false。position 默认为 before，可设 after；索引 font 按字段继承整体字体，不影响单格尺寸。旧 showIndex / indexStart 字段不再接受。',
+            en: 'List uses index for visibility, positions above/below rows or left/right of columns, and independent text styles. Replace showIndex with a boolean index; use index: { start } to enable numbering with a starting value, or false to hide it. Position defaults to before and also accepts after. Index font fields inherit the shared font without changing cell dimensions. The old showIndex / indexStart fields are no longer accepted.',
+          },
+        },
+        {
           label: { zh: '未发布 · 拓展包拆分', en: 'Unreleased · Extension package split' },
           content: {
             zh: '节点形状、箭头、裁剪、流带与动画预设迁入 @retikz/extension，Standard 保留展现与形状复合组件。使用这些扩展时统一从 Extension 根入口导入；Standard 组件所需的扩展依赖继续自动随组件贡献。',
