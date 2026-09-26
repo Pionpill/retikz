@@ -15,6 +15,12 @@ export type ApiReferenceEntry = {
   source: string;
   /** 组件参考按公开标识符筛选；省略时收录入口全部导出 */
   symbols?: ReadonlyArray<string>;
+  /** 指定组合类型展示解析后的全部字段，而非仅展示直接声明的字段 */
+  fullMemberSymbols?: ReadonlyArray<string>;
+  /** 为成员类型展示对应的公开值集合，开放字符串同时保留 string 提示 */
+  memberValueSets?: Readonly<Record<string, Readonly<Record<string, ApiReferenceMemberValueSet>>>>;
+  /** 以已核对等价的简短公开类型替代冗长的推断类型或索引引用 */
+  memberTypeLabels?: Readonly<Record<string, Readonly<Record<string, string>>>>;
   /** 为指定公开类型按职责分组，字段说明仍从 TypeDoc 读取 */
   memberGroups?: Readonly<Record<string, ReadonlyArray<ApiReferenceMemberGroup>>>;
   title: Record<ApiReferenceLanguage, string>;
@@ -24,6 +30,12 @@ export type ApiReferenceEntry = {
 export type ApiReferenceMemberGroup = {
   title: Record<ApiReferenceLanguage, string>;
   members: ReadonlyArray<string>;
+};
+
+/** 字段表中的公开枚举值集合展示 */
+export type ApiReferenceMemberValueSet = {
+  name: string;
+  open?: boolean;
 };
 
 export type ApiReferencePackageConfig = {
@@ -41,6 +53,7 @@ type ApiReferenceMember = {
   optional: boolean;
   readonly?: boolean;
   type: string;
+  valueSet?: ApiReferenceMemberValueSet;
   description: string;
   /** 字段的较长约束，放在表格后避免撑宽单元格 */
   details?: string;
@@ -579,8 +592,29 @@ const resolveSourceSignature = (
     if (!ts.isVariableStatement(statement)) return undefined;
     if (!declaration.initializer) return print(statement);
     const declarationKind = (declaration.parent.flags & ts.NodeFlags.Const) !== 0 ? 'const' : 'let';
-    if (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
-      return `export declare ${declarationKind} ${declaration.name.getText()}: ${declaration.type ? print(declaration.type) : fallbackSignature};`;
+    if (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer)) {
+      const initializer = declaration.initializer;
+      const annotatedType =
+        declaration.type ??
+        (initializer.type === undefined
+          ? undefined
+          : ts.factory.createFunctionTypeNode(
+              initializer.typeParameters,
+              initializer.parameters.map(parameter =>
+                ts.factory.updateParameterDeclaration(
+                  parameter,
+                  parameter.modifiers,
+                  parameter.dotDotDotToken,
+                  parameter.name,
+                  parameter.initializer ? ts.factory.createToken(ts.SyntaxKind.QuestionToken) : parameter.questionToken,
+                  parameter.type,
+                  undefined,
+                ),
+              ),
+              initializer.type,
+            ));
+      return `export declare ${declarationKind} ${declaration.name.getText()}: ${annotatedType ? print(annotatedType) : fallbackSignature};`;
+    }
     if (
       ts.isObjectLiteralExpression(declaration.initializer) &&
       containsFunctionImplementation(declaration.initializer)
@@ -592,11 +626,7 @@ const resolveSourceSignature = (
     );
     if (callSignatures.length > 0) {
       const overloads = callSignatures.map(signature => {
-        const signatureDeclaration = signature.getDeclaration();
-        if (ts.isCallSignatureDeclaration(signatureDeclaration))
-          return printer
-            .printNode(ts.EmitHint.Unspecified, signatureDeclaration, signatureDeclaration.getSourceFile())
-            .replace(/;$/, '');
+        // 读取实例化后的签名，避免泛型调用接口泄漏未绑定的类型参数
         return checker.signatureToString(
           signature,
           declaration,
@@ -716,7 +746,10 @@ const renderMembers = (
       .filter((value): value is string => Boolean(value))
       .map(value => localizeText(value, lang, translate))
       .join('\n');
-    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | ${renderTableCode(member.type)} | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
+    const type = member.valueSet
+      ? `<ApiValues name=${JSON.stringify(member.valueSet.name)} />${member.valueSet.open ? ' \\| `string`' : ''}`
+      : renderTableCode(member.type);
+    return `| \`${member.readonly ? 'readonly ' : ''}${member.name}${member.optional ? '?' : ''}\` | ${type} | ${renderDefaultValue(member.defaultValue)} | ${escapeTableCell(description || '—')} |`;
   });
   const table = [`| ${labels.join(' | ')} |`, '| --- | --- | --- | --- |', ...rows].join('\n');
   return table;
@@ -810,6 +843,13 @@ const renderSummary = (
   return `<p><ApiSourceLink label={${JSON.stringify(symbol.name)}} path={${JSON.stringify(symbol.source.path)}} startLine={${symbol.source.startLine}}>${summary}</ApiSourceLink></p>`;
 };
 
+/** 超长推断签名按需展开，参数说明仍保留在主阅读流中 */
+const renderSignatureBlock = (signature: string, lang: ApiReferenceLanguage): string => {
+  const code = `\`\`\`ts\n${signature}\n\`\`\``;
+  if (signature.length <= 2000) return code;
+  return `<details>\n<summary>${lang === 'zh' ? '查看完整推断签名' : 'View full inferred signature'}</summary>\n\n${code}\n\n</details>`;
+};
+
 /** 渲染一个公开 API 的常规 MDX 片段 */
 const renderSymbol = (
   symbol: ApiReferenceSymbol,
@@ -831,7 +871,7 @@ const renderSymbol = (
           symbol.members.length === 0 ||
           symbol.signature.includes(' & ') ||
           symbol.signature.startsWith('export ')
-        ? `\`\`\`ts\n${symbol.signature}\n\`\`\``
+        ? renderSignatureBlock(symbol.signature, lang)
         : '',
     renderExpandedSignature(symbol, lang),
     hasMemberViews ? '' : renderGroupedMembers(symbol, memberGroups, lang, translate),
@@ -978,6 +1018,7 @@ export const createApiReferenceMdx = async (
         )
         .map(reflection => {
           const symbol = toSymbol(reflection, config.packageDirectory);
+          const showFullMembers = entry.fullMemberSymbols?.includes(symbol.name) === true;
           const schemaUrl = config.schemaReferences?.[symbol.name];
           if (!schemaUrl) {
             const resolved =
@@ -990,10 +1031,29 @@ export const createApiReferenceMdx = async (
                 ...member,
                 defaultValue: localizeText(member.defaultValue, lang, config.translate),
               }));
-              if (resolved.directMembers) {
+              if (resolved.directMembers && !showFullMembers) {
                 symbol.members = resolved.directMembers.map(member => ({
                   ...member,
                   defaultValue: localizeText(member.defaultValue, lang, config.translate),
+                }));
+              }
+              const valueSets = entry.memberValueSets?.[symbol.name];
+              if (valueSets) {
+                for (const name of Object.keys(valueSets)) {
+                  if (!symbol.members.some(member => member.name === name))
+                    throw new Error(`Unknown API value set member ${symbol.name}.${name}`);
+                }
+                symbol.members = symbol.members.map(member => ({ ...member, valueSet: valueSets[member.name] }));
+              }
+              const typeLabels = entry.memberTypeLabels?.[symbol.name];
+              if (typeLabels) {
+                for (const name of Object.keys(typeLabels)) {
+                  if (!symbol.members.some(member => member.name === name))
+                    throw new Error(`Unknown API type label member ${symbol.name}.${name}`);
+                }
+                symbol.members = symbol.members.map(member => ({
+                  ...member,
+                  type: typeLabels[member.name] ?? member.type,
                 }));
               }
               symbol.signature = resolved.signature;
@@ -1007,7 +1067,7 @@ export const createApiReferenceMdx = async (
               entry.memberGroups?.[symbol.name],
               resolved?.members !== undefined,
               resolved?.indexSignatures,
-              resolved?.composition,
+              showFullMembers ? undefined : resolved?.composition,
             );
           }
           return [
