@@ -1,0 +1,69 @@
+---
+title: Rows and Fields
+description: Start with changing data sources and values, then see how a data model gives later processing a stable field contract.
+---
+
+The data shown in a chart or table keeps changing and may come from different APIs. Data works with **rows supplied by a data source at runtime**, not a fixed batch of values embedded in the visual configuration. The application reads a file, API, or database and passes those rows to Data. Data prepares fields that later configuration can use consistently.
+
+## When the source changes, are the fields still there?
+
+Suppose you use a sales API today and a forecast API tomorrow. Both describe region and revenue, but their rows differ:
+
+Sales API:
+
+```json
+{ "region": "north", "revenue": 12 }
+```
+
+Forecast API:
+
+```json
+{ "area": "north", "pricing": { "amount": "12" } }
+```
+
+If later configuration names `revenue` directly, it cannot find revenue in the second source. Changing every chart or transform whenever the source changes would scatter several names for the same business meaning. Even if you keep using the forecast API, `pricing.amount` might be missing later or change to another storage format. Aligning names answers “where should I read?”; it cannot guarantee that a valid value will always be there.
+
+## Separate raw data from visualization with a data model
+
+The solution is a **data model** between raw data and later processing. It provides a stable model layer: define the names and meanings that later processing needs, map and normalize each source's records to those fields at intake, then pass the result to data transforms and visualization. Visualization depends on the logical field contract established by the model, without needing to know the paths in the raw records.
+
+First, look at the overall relationship: the field contract guides intake, and normalized rows then move to later processing.
+
+<ComponentPreview files="/viz/data/model/data-model-pipeline" size="sm" hideCode type="flow" />
+
+The field contract in the figure describes logical fields; it does not store raw rows. Solid lines show the data path from external rows to later processing.
+
+In this example, the model establishes `region` and `revenue` as the fields used later, and says that `revenue` is a continuous quantity. `area` and `pricing.amount` in the source record are **physical paths**; `region` and `revenue` in the model are **logical fields**. Revenue already lives at `revenue` in the sales API. For the forecast API, intake maps `pricing.amount` to `revenue` and `area` to `region`. Matching physical and logical names need no mapping.
+
+Now look at the values. The two raw records below are **alternative sources**, not two rows to merge. With their respective intake rules, both produce the same logical fields and values.
+
+<ComponentPreview files="source-to-logical-fields" size="md" hideCode type="illustration" />
+
+The forecast source stores `pricing.amount` as the numeric string `"12"`; parsing turns it into the number `12`. Later configuration reads only `revenue`.
+
+Switching sources changes the intake mapping and any necessary parsing rules; charts, tables, and transforms still refer to the same logical fields. “Establishing a model” means giving fields stable names and meanings, not storing these two actual rows. The `model` configuration can declare fields explicitly; simple input also allows omitted declarations and type inference. Explicit declarations are more reliable when sources change or field types must be unambiguous.
+
+## Normalize before consumers read the data
+
+The model layer establishes field names and prepares values that fit the contract. Data reads values from the current source's paths, processes them according to field types and parsing formats, and writes them under logical names. After normalization, both valid revenue values above can be read as `revenue: 12`; the second row's numeric string becomes a number. Later processing reads these normalized rows and field types, not just the `model` declaration. Normalization keeps the input row count. Use [Data Transforms](/viz/data/transform) when you need to summarize or select rows or generate new fields.
+
+The forecast API might later return `{ area: 'north' }`, leaving revenue missing, or change the stored amount to `'1,200'`, which needs a matching parsing format. Normalization does not invent a replacement `12` for a missing value. If the source stops returning a whole record, the model does not recreate that record either. By default, a consumer can skip invalid values. Sample diagnostics or strict validation can reveal which participating fields are missing or cannot be parsed. The data model separates changes in raw data structure from visualization configuration, but a change in the source's fields or formats may still require updating intake rules; **it does not guarantee that the source stays complete**.
+
+Next, read [Fields and Measurement Types](/viz/data/basic/field-types) to decide how values should be interpreted. See [Data Intake](/viz/data/model/intake) for mapping and format syntax, and [Validation & Diagnostics](/viz/data/model/validation) for missing-value behavior.
+
+## Further reading
+
+<LinkedSections
+  items={[
+    {
+      title: 'Fields and Measurement Types',
+      description: 'Decide whether a logical field represents a quantity, a category, or time.',
+      url: '/viz/data/basic/field-types',
+    },
+    {
+      title: 'Data Model',
+      description: 'See how field contracts, intake, and validation work together.',
+      url: '/viz/data/model',
+    },
+  ]}
+/>

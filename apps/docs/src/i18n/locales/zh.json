@@ -305,6 +305,10 @@
     "tableReferenceContractLayout": "契约 - 布局",
     "tableReferenceManifest": "契约 - 产物",
     "tableReferenceRuntime": "运行时",
+    "dataConcepts": "概念",
+    "dataBasicConcepts": "基础概念",
+    "dataRowsAndFields": "数据行与字段",
+    "dataFieldTypes": "字段与测量类型",
     "dataModel": "数据模型",
     "dataModelContract": "字段契约",
     "dataModelIntake": "数据接入",
@@ -452,6 +456,7 @@
   "comparison": {
     "groupLabel": "对照",
     "tikz": "TikZ",
+    "vega": "Vega",
     "close": "隐藏 {{target}} 对照",
     "closeTitle": "隐藏 {{target}} 对照？",
     "closeDescription": "隐藏后，文档中的 {{target}} 相关对照内容将不再展示。需要时，可在页面右上角 ... 按钮中的「对照」二级菜单里重新开启。",
