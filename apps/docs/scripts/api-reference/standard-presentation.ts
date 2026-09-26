@@ -7,6 +7,11 @@ import type { ApiReferencePackageConfig } from './tex';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const pages = {
+  Axes: {
+    react: ['Axes', 'AxesProps'],
+    vanilla: ['axes', 'AxesInputEmbedAdapter'],
+    core: ['AxesInput', 'IRAxes', 'createAxes', 'AxesDefinition', 'AxesProvider'],
+  },
   Grid: {
     react: ['Grid', 'GridProps'],
     vanilla: ['grid', 'GridInputEmbedAdapter'],

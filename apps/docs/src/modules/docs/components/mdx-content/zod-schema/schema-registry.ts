@@ -731,6 +731,11 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'OverlayLayoutArtifact',
     url: '/library/layout/reference/contract-artifact#overlaylayoutartifactschema',
   },
+  AxesSchema: {
+    schema: StandardPresentationIR.AxesSchema,
+    label: 'Axes',
+    url: '/library/standard/presentation/axes#axesschema',
+  },
   GridSchema: {
     schema: StandardPresentationIR.GridSchema,
     label: 'Grid',

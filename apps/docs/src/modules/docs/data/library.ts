@@ -99,7 +99,7 @@ export const librarySection: Array<Section> = [
           {
             id: 'axes',
             label: 'library.standardAxes',
-            difficulty: 'advanced',
+            difficulty: 'beginner',
           },
           {
             id: 'frame',
