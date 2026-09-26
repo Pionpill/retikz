@@ -254,8 +254,11 @@
     "builtinImplementation": "内置实现",
     "extensionUsage": "扩展用法",
     "entity": "Entity · 实体",
+    "customUsage": "自定义用法",
+    "mechanism": "实现原理",
+    "apiReference": "API 参考",
+    "schemaReference": "Schema 参考",
     "relation": "Relation · 关系",
-    "graphApiReference": "Graph API 参考",
     "changelog": "更新日志",
     "changelogV01": "v0.1"
   },

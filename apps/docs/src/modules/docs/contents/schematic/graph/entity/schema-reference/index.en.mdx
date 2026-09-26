@@ -1,0 +1,20 @@
+---
+title: Schema reference
+description: Look up the public persistent contracts of EntitySchema and EntityRoleSchema.
+---
+
+This page renders public Zod schemas from @retikz/graph. Entity owns EntitySchema and EntityRoleSchema. Shared text, color, position, predicate and status schemas remain named references rather than duplicated definitions. See [API reference](/schematic/graph/entity/api-reference) for React props and runtime Definitions.
+
+Source permits both id and position to be omitted, with different meanings: id is needed only for references, while position must exist before drawing. Optional fields do not imply materialized theme defaults. Runtime validation still checks registration, parameter applicability and placement.
+
+## EntitySchema
+
+<ZodSchema name="EntitySchema" />
+
+The role owns shape, boundary, cornerRadius and layout.padding; these are not Entity instance inputs. Instance minimumSize is combined with the role minimum by taking the larger value on each axis.
+
+## EntityRoleSchema
+
+<ZodSchema name="EntityRoleSchema" />
+
+Built-in roles are participant, activity, event, state, gateway, resource and concept. The open schema accepts custom keys without registering them; see [Custom usage](/schematic/graph/entity/custom) for definitions and integration.

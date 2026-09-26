@@ -72,8 +72,8 @@ describe('SCHEMA_REGISTRY', () => {
       BlockHeaderSchema: { schema: BlockHeaderSchema, url: '/schematic/graph/block/basic' },
       BlockSectionSchema: { schema: BlockSectionSchema, url: '/schematic/graph/block/basic' },
       BlockRowSchema: { schema: BlockRowSchema, url: '/schematic/graph/block/basic' },
-      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/api-reference' },
-      RelationSchema: { schema: RelationSchema, url: '/schematic/graph/api-reference' },
+      EntitySchema: { schema: EntitySchema, url: '/schematic/graph/entity/schema-reference' },
+      RelationSchema: { schema: RelationSchema },
     });
   });
 

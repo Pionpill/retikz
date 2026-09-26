@@ -25,7 +25,9 @@ export const EntitySchema = strictObject({
   kind: NonBlankStringSchema.optional().describe(
     'Open stable subtype key whose registration identity is the selected Entity role and kind.',
   ),
-  group: string().optional().describe('Optional Graph-root visual color grouping identifier.'),
+  group: string()
+    .optional()
+    .describe('Optional semantic group key for Entities within a Graph; members share a categorical color by default.'),
   predicate: GraphPredicateRefSchema.optional().describe('Optional precise semantic predicate reference.'),
   status: GraphStatusSchema.optional().describe('Optional closed Graph semantic status.'),
   ...EntityNodeShape,

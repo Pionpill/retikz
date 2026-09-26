@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { writeDrawApiReferenceMdx } from './api-reference/draw';
+import { writeEntityApiReferenceMdx } from './api-reference/entity';
 import { writeExtensionAnimationApiReference } from './api-reference/extension-animation';
 import { writeFoundationApiReferenceMdx } from './api-reference/foundation';
 import { writeInspectApiReferenceMdx } from './api-reference/inspect';
@@ -13,6 +14,9 @@ import { writeTexApiReferenceMdx } from './api-reference/tex';
 import { writeAnimationApiReference, writeStyleApiReference } from './api-reference/visual';
 
 const docsRoot = path.resolve(import.meta.dirname, '..');
+await writeEntityApiReferenceMdx(
+  path.resolve(docsRoot, 'src/modules/docs/contents/schematic/graph/entity/api-reference/_includes'),
+);
 await writeExtensionAnimationApiReference(
   path.resolve(docsRoot, 'src/modules/docs/contents/library/extension/animation/api-reference/_includes'),
 );

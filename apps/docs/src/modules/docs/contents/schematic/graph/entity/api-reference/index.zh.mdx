@@ -1,0 +1,10 @@
+---
+title: API 参考
+description: 查询 Entity 的 React、Vanilla、Source 工厂与自定义 Definition 公开 API。
+---
+
+本页从公开包入口生成，覆盖 Entity 组件与 Props、Vanilla entity 与输入类型、Source 工厂、role / kind / predicate 定义，以及直接消费 Entity IR 所需的装配入口。用法见[基础用法](/schematic/graph/entity/usage)；持久化字段和约束见 [Schema 参考](/schematic/graph/entity/schema-reference)。
+
+Definition 是运行时注册项，不是 Entity IR 的字段。React / Vanilla 编写时，`GraphDefinitionOptions` 只传给 Graph；Entity Props 和 embed 输入只引用已注册的 key。`EntityRoleSchema` 是开放 key schema；可解析字符串不等于已注册 role。完整 Graph 宿主能力仍由 Graph 文档负责，本页不依赖 Graph 参考才能查全 Entity 接口。
+
+{/* @include schematic/graph/entity/api-reference/generated */}

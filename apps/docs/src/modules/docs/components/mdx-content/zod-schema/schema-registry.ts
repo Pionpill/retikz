@@ -761,7 +761,6 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   GraphSchema: {
     schema: GraphIR.GraphSchema,
     label: 'Graph',
-    url: '/schematic/graph/api-reference',
   },
   GroupSchema: {
     schema: GraphIR.GroupSchema,
@@ -791,37 +790,36 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
   EntitySchema: {
     schema: GraphIR.EntitySchema,
     label: 'Entity',
-    url: '/schematic/graph/api-reference',
+    url: '/schematic/graph/entity/schema-reference',
+  },
+  EntityRoleSchema: {
+    schema: GraphIR.EntityRoleSchema,
+    label: 'EntityRole',
+    url: '/schematic/graph/entity/schema-reference#entityroleschema',
   },
   RelationSchema: {
     schema: GraphIR.RelationSchema,
     label: 'Relation',
-    url: '/schematic/graph/api-reference',
   },
   GraphPredicateRefSchema: {
     schema: GraphIR.GraphPredicateRefSchema,
     label: 'GraphPredicateRef',
-    url: '/schematic/graph/api-reference',
   },
   GraphDefaultsSchema: {
     schema: GraphIR.GraphDefaultsSchema,
     label: 'GraphDefaults',
-    url: '/schematic/graph/api-reference',
   },
   GraphRuleSchema: {
     schema: GraphIR.GraphRuleSchema,
     label: 'GraphRule',
-    url: '/schematic/graph/api-reference',
   },
   GraphEntityThemeSelectorSchema: {
     schema: GraphIR.GraphEntityThemeSelectorSchema,
     label: 'GraphEntityThemeSelector',
-    url: '/schematic/graph/api-reference',
   },
   GraphRelationThemeSelectorSchema: {
     schema: GraphIR.GraphRelationThemeSelectorSchema,
     label: 'GraphRelationThemeSelector',
-    url: '/schematic/graph/api-reference',
   },
   TableSchema: {
     schema: IRTable.TableSchema,

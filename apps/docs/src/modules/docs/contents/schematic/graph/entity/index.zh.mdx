@@ -1,16 +1,15 @@
 ---
 title: Entity · 实体
-description: 用一个 record 保存可选 identity、开放语义与 Core Node 实例字段。
+description: 用带文字的语义节点表达参与者、任务、资源或概念。
 ---
 
-Entity 负责表达“是什么节点”，并独立 lower 为一个普通 Core Node。一个 Source record 同时保存可选 `id`、`role`、可选 `kind`、`predicate`，以及 `text`、`position`、`style.fill`、`style.dashed` 等非结构 Core Node 实例字段；它不承载任意 child。role 决定 shape 等结构，Theme 提供外观默认，实例显式字段最终覆盖 Theme。Graph 只是可选的局部上下文宿主。Entity 的 `style.color` 保持字符串主色；数值 `style.fill`、`style.stroke` 或文字派生色会在最终实例主色确定后交给 Core 解析
+Entity 表达图中的一个对象：它可以是参与者、正在执行的任务，也可以是资源或概念。选择 `role` 决定基础结构，添加文字和位置即可绘制；需要让关系连接它时再提供 `id`。
 
-## 职责一览
+<ComponentPreview files="/schematic/graph/entity/usage/entity-minimal" size="xs" hideCode />
 
-| 主题     | 职责                                           | 何时查阅          |
-| -------- | ---------------------------------------------- | ----------------- |
-| 基础用法 | 内置 role、文本、position 与 size              | 第一次创建 Entity |
-| 扩展用法 | 自定义 role、kind、predicate 与 Theme selector | 建立领域视觉语言  |
+## 职责与边界
+
+Entity 的内容是文字，不是任意绘图容器。包含多行结构化内容时使用 [Block · 结构块](/schematic/graph/block)；需要把多个元素圈在一个可见边界中时使用 [Group · 分组](/schematic/graph/group)。多个实体共享定义或外观规则时，由 Graph 提供局部上下文。
 
 ## 章节内容
 
@@ -18,13 +17,28 @@ Entity 负责表达“是什么节点”，并独立 lower 为一个普通 Core 
   items={[
     {
       title: '基础用法',
-      description: '七个内置 role 与直接 Node 字段',
-      url: '/schematic/graph/entity/basic',
+      description: '创建实体，设置文字、角色、状态、子类型与样式',
+      url: '/schematic/graph/entity/usage',
     },
     {
-      title: '扩展用法',
-      description: 'Definition、registry、注入与失败语义',
-      url: '/schematic/graph/entity/extension',
+      title: '自定义用法',
+      description: '定义并注册 role、kind 与 predicate',
+      url: '/schematic/graph/entity/custom',
+    },
+    {
+      title: '实现原理',
+      description: '追踪语义解析、外观合并与绘制',
+      url: '/schematic/graph/entity/mechanism',
+    },
+    {
+      title: 'API 参考',
+      description: '查询公开函数、组件与类型',
+      url: '/schematic/graph/entity/api-reference',
+    },
+    {
+      title: 'Schema 参考',
+      description: '查询可持久化实体的字段约束',
+      url: '/schematic/graph/entity/schema-reference',
     },
   ]}
 />
