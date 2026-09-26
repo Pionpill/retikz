@@ -3,10 +3,10 @@ import { definePreviewControls } from '@/modules/docs/preview';
 
 import { PolygonPlaygroundControlId } from './polygon-playground.controls';
 
-/** RegularPolygon 几何与外观的英文属性面板 */
+/** Polygon 几何与外观的英文属性面板 */
 export const polygonPlaygroundControls = definePreviewControls({
   presentation: 'panel',
-  title: 'RegularPolygon Geometry',
+  title: 'Polygon Geometry',
   sections: [
     {
       label: 'Vertices',
@@ -69,7 +69,7 @@ export const polygonPlaygroundControls = definePreviewControls({
   ],
 });
 
-/** RegularPolygon playground 的英文稳定状态与 API 覆盖 */
+/** Polygon playground 的英文稳定状态与 API 覆盖 */
 export const previewControlContract = {
   controls: polygonPlaygroundControls,
   canonicalValues: {
@@ -85,9 +85,9 @@ export const previewControlContract = {
     { id: 'octagon', label: 'Octagon', values: { sides: 8, rotate: -67.5 } },
   ],
   relatedApis: [
-    'RegularPolygon.sides',
-    'RegularPolygon.radius',
-    'RegularPolygon.rotate',
+    'Polygon.sides',
+    'Polygon.radius',
+    'Polygon.rotate',
     'Path.style.fill',
     'Path.style.stroke',
     'Path.style.strokeWidth',

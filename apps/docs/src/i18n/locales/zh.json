@@ -221,7 +221,7 @@
     "standardShapes": "shape · 形状",
     "standardCircleEllipse": "Circle / Ellipse · 圆与椭圆",
     "standardRectangle": "Rectangle · 矩形",
-    "standardRegularPolygon": "RegularPolygon · 正多边形",
+    "standardPolygon": "Polygon · 正多边形",
     "standardStar": "Star · 星形",
     "standardArcSector": "Arc / Sector · 圆弧与扇形",
     "extensionShape": "节点形状",

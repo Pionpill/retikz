@@ -3,7 +3,7 @@ import { processToStaticInputResult } from '@retikz/vanilla';
 import type { ReactNode } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector } from '../src/shape';
+import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '../src/shape';
 
 const ir = (jsx: ReactNode) => {
   const input = createInputScene(jsx);
@@ -13,7 +13,7 @@ const polarXY = (center: [number, number], rx: number, ry: number, angle: number
   center[0] + rx * Math.cos((angle * Math.PI) / 180),
   center[1] + ry * Math.sin((angle * Math.PI) / 180),
 ];
-const regularPolygonVertices = (center: [number, number], rx: number, ry: number, sides: number, rotate: number) =>
+const polygonVertices = (center: [number, number], rx: number, ry: number, sides: number, rotate: number) =>
   Array.from({ length: sides }, (_, i) => polarXY(center, rx, ry, rotate + (i * 360) / sides));
 const starVertices = (center: [number, number], outer: number, inner: number, points: number, rotate: number) =>
   Array.from({ length: points * 2 }, (_, i) =>
@@ -273,10 +273,10 @@ describe('Rectangle equivalence', () => {
   });
 });
 
-describe('RegularPolygon equivalence', () => {
+describe('Polygon equivalence', () => {
   it('sides=4', () => {
-    const verts = regularPolygonVertices([0, 0], 30, 30, 4, -90);
-    expect(ir(<RegularPolygon center={[0, 0]} radius={30} sides={4} />).children).toEqual(
+    const verts = polygonVertices([0, 0], 30, 30, 4, -90);
+    expect(ir(<Polygon center={[0, 0]} radius={30} sides={4} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={verts[0]} />
@@ -290,9 +290,9 @@ describe('RegularPolygon equivalence', () => {
   });
 
   it('sides=6（顶点数随 sides 变）', () => {
-    const verts = regularPolygonVertices([0, 0], 30, 30, 6, -90);
+    const verts = polygonVertices([0, 0], 30, 30, 6, -90);
     expect(verts).toHaveLength(6);
-    expect(ir(<RegularPolygon center={[0, 0]} radius={30} sides={6} />).children).toEqual(
+    expect(ir(<Polygon center={[0, 0]} radius={30} sides={6} />).children).toEqual(
       ir(
         <Path>
           <Step kind="move" to={verts[0]} />
@@ -306,8 +306,8 @@ describe('RegularPolygon equivalence', () => {
   });
 
   it('显式 rotate 只烘焙进顶点、不再透传给 Path（不二次旋转）', () => {
-    const verts = regularPolygonVertices([0, 0], 30, 30, 4, 30);
-    const out = ir(<RegularPolygon center={[0, 0]} radius={30} sides={4} rotate={30} />);
+    const verts = polygonVertices([0, 0], 30, 30, 4, 30);
+    const out = ir(<Polygon center={[0, 0]} radius={30} sides={4} rotate={30} />);
     expect(out.children).toEqual(
       ir(
         <Path>

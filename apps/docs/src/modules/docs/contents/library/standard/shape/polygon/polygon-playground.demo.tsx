@@ -1,5 +1,5 @@
 import { Draw, Layout } from '@retikz/react';
-import { Circle, RegularPolygon } from '@retikz/standard-react/shape';
+import { Circle, Polygon } from '@retikz/standard-react/shape';
 import type { FC } from 'react';
 
 import { defineControlledPreview } from '@/modules/docs/preview';
@@ -20,7 +20,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
         style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }}
       />
       <Draw way={[[0, 0], firstVertex]} style={{ stroke: 'lightgray', dashPattern: [1, 4], lineCap: 'round' }} />
-      <RegularPolygon
+      <Polygon
         center={[0, 0]}
         radius={values.radius}
         sides={values.sides}
@@ -33,7 +33,7 @@ const controlledPreview = defineControlledPreview(previewControlContract, values
 
 export const previewSource = controlledPreview.source;
 
-/** RegularPolygon 边数、外接圆与起始角 playground */
+/** Polygon 边数、外接圆与起始角 playground */
 const Demo: FC = controlledPreview.Component;
 
 export default Demo;

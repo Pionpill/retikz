@@ -2,9 +2,9 @@ import type { IRPath } from '@retikz/core';
 import { pointAtEllipseArcAngle } from '@retikz/math';
 
 import { ShapeVertexAngleSchema, shapeVertexPath } from '../shared';
-import type { IRRegularPolygon } from './types';
-/** 将 RegularPolygon 意图下沉为单一 Core Path */
-export const lowerRegularPolygon = (source: IRRegularPolygon): IRPath => {
+import type { IRPolygon } from './types';
+/** 将 Polygon 意图下沉为单一 Core Path */
+export const lowerPolygon = (source: IRPolygon): IRPath => {
   const radius = 'radius' in source ? source.radius : source.sideLength / (2 * Math.sin(Math.PI / source.sides));
   const rotate = ShapeVertexAngleSchema.parse(source.rotate);
   const vertices = Array.from({ length: source.sides }, (_, index) =>

@@ -1,7 +1,7 @@
 import { Draw, Layout, Node } from '@retikz/react';
 import type { FC } from 'react';
 
-/** RegularPolygon 从尺寸输入展开为闭合 Path 的局部流程图 */
+/** Polygon 从尺寸输入展开为闭合 Path 的局部流程图 */
 const Demo: FC = () => (
   <Layout>
     <Node

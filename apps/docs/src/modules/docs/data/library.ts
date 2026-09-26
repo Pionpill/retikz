@@ -51,8 +51,8 @@ export const librarySection: Array<Section> = [
             difficulty: 'beginner',
           },
           {
-            id: 'regular-polygon',
-            label: 'library.standardRegularPolygon',
+            id: 'polygon',
+            label: 'library.standardPolygon',
             difficulty: 'beginner',
           },
           {

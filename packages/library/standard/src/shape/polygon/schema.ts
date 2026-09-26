@@ -7,13 +7,13 @@ import { ShapePathSchema, ShapeVertexAngleSchema } from '../shared';
 const properties = {
   ...ShapePathSchema.shape,
   namespace: literal('standard'),
-  type: literal('regularPolygon'),
+  type: literal('polygon'),
   center: PositionSchema.describe('Shape center; coordinate forms depend on the chosen geometry branch.'),
   sides: number().int().min(3).describe('Number of polygon sides; at least three.'),
   rotate: ShapeVertexAngleSchema,
 };
-/** RegularPolygon 的持久化几何契约 */
-export const RegularPolygonSchema = union([
+/** Polygon 的持久化几何契约 */
+export const PolygonSchema = union([
   strictObject({
     ...properties,
     radius: NonNegativeNumberSchema.describe('Radius in user units; an object specifies the two ellipse axes.'),

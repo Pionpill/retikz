@@ -1,7 +1,7 @@
 import type { PreviewControlContract } from '@/modules/docs/preview';
 import { definePreviewControls } from '@/modules/docs/preview';
 
-/** RegularPolygon playground 使用的稳定字段 id */
+/** Polygon playground 使用的稳定字段 id */
 export const PolygonPlaygroundControlId = {
   Sides: 'sides',
   Radius: 'radius',
@@ -11,10 +11,10 @@ export const PolygonPlaygroundControlId = {
   StrokeWidth: 'strokeWidth',
 } as const;
 
-/** RegularPolygon 几何与外观的中文属性面板 */
+/** Polygon 几何与外观的中文属性面板 */
 export const polygonPlaygroundControls = definePreviewControls({
   presentation: 'panel',
-  title: 'RegularPolygon 几何',
+  title: 'Polygon 几何',
   sections: [
     {
       label: '顶点',
@@ -77,7 +77,7 @@ export const polygonPlaygroundControls = definePreviewControls({
   ],
 });
 
-/** RegularPolygon playground 的稳定状态与 API 覆盖 */
+/** Polygon playground 的稳定状态与 API 覆盖 */
 export const previewControlContract = {
   controls: polygonPlaygroundControls,
   canonicalValues: {
@@ -93,9 +93,9 @@ export const previewControlContract = {
     { id: 'octagon', label: '八边形', values: { sides: 8, rotate: -67.5 } },
   ],
   relatedApis: [
-    'RegularPolygon.sides',
-    'RegularPolygon.radius',
-    'RegularPolygon.rotate',
+    'Polygon.sides',
+    'Polygon.radius',
+    'Polygon.rotate',
     'Path.style.fill',
     'Path.style.stroke',
     'Path.style.strokeWidth',

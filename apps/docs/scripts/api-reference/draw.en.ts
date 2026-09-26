@@ -330,8 +330,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
   '弧上边标注（透传到底层 step；`position` 缺省 midway，沿弧 startAngle..endAngle 线性映射）':
     'Arc label forwarded to the underlying step; `position` defaults to midway and maps linearly across startAngle..endAngle',
   '`<Rectangle>` 形态：四选一定两对角': '`<Rectangle>` inputs: one of four forms determines two opposite corners',
-  '`<RegularPolygon>` 形态：中心 + 外接圆半径（或边长）+ 边数':
-    '`<RegularPolygon>` inputs: center, circumradius (or side length), and side count',
+  '`<Polygon>` 形态：中心 + 外接圆半径（或边长）+ 边数':
+    '`<Polygon>` inputs: center, circumradius (or side length), and side count',
   '`<Sector>` 形态：扇形（wedge 经圆心闭合）；圆 / 椭圆；必给角度（三选二）':
     '`<Sector>` inputs: a circular or elliptical wedge closed through its center; exactly two angle inputs are required',
   '实心扇形走 circlePath / ellipsePath 的 `closed="sector"`，圆心 = 游标，故 `center` 可为\n  节点 id / 极坐标等任意 Target。给 innerRadius（圆）或 innerRadiusX + innerRadiusY（椭圆）画**空心扇形**\n  （环形扇区 / donut 切片）；空心需算内 / 外弧端点，`center` 须 literal 笛卡尔。\n  `label` 透传到弧 step，沿弧定位（`position` 缺省 midway）':
@@ -348,8 +348,8 @@ const translations: Readonly<Partial<Record<string, string>>> = {
     'Rectangle sugar: expands to `<Path><Step move(from)><Step rectangle(from,to)></Path>`',
   '`{ corner1, corner2 }` 透传（任意 Target，直接作 rectangle 的 from/to）；其余形态需算坐标 → 限 literal 笛卡尔':
     '`{ corner1, corner2 }` forwards any Target directly as rectangle from/to; other forms compute coordinates and require literal Cartesian inputs',
-  'RegularPolygon sugar——正多边形，展开为 `<Path>` 的 `move + (sides-1) line + cycle`':
-    'RegularPolygon sugar: a regular polygon expanded to `<Path>` with `move + (sides-1) line + cycle`',
+  'Polygon sugar——正多边形，展开为 `<Path>` 的 `move + (sides-1) line + cycle`':
+    'Polygon sugar: a regular polygon expanded to `<Path>` with `move + (sides-1) line + cycle`',
   '纯几何 sugar，无 IR 改动。center 须 literal 笛卡尔（组件内算顶点）。`sides >= 3`。\n  边长形态由 `R = sideLength / (2·sin(π/sides))` 反算外接半径':
     'Pure geometric sugar with no IR changes. Center must be literal Cartesian coordinates because vertices are computed in the component. `sides >= 3`. The side-length form derives circumradius as `R = sideLength / (2·sin(π/sides))`.',
   'Sector sugar——扇形': 'Sector sugar: a sector',

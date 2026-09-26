@@ -9,7 +9,7 @@ const repositoryRoot = path.resolve(import.meta.dirname, '../../../..');
 const groups = {
   'circle-ellipse': ['Circle', 'Ellipse'],
   rectangle: ['Rectangle'],
-  'regular-polygon': ['RegularPolygon'],
+  polygon: ['Polygon'],
   star: ['Star'],
   'arc-sector': ['Arc', 'Sector'],
 } as const;

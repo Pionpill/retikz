@@ -24,11 +24,11 @@ export const apiReferenceBranchLabels: Readonly<
     { value: 'radius', field: 'innerRadius', type: 'number', label: { zh: '内半径', en: 'Inner radius' } },
     { value: 'ratio', field: 'innerRatio', type: 'number', label: { zh: '内半径比例', en: 'Inner radius ratio' } },
   ],
-  '@retikz/standard-vanilla/shape#InputRegularPolygon': [
+  '@retikz/standard-vanilla/shape#InputPolygon': [
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],
-  '@retikz/standard/shape#IRRegularPolygon': [
+  '@retikz/standard/shape#IRPolygon': [
     { value: 'radius', field: 'radius', type: 'number', label: { zh: '外接半径', en: 'Circumradius' } },
     { value: 'side-length', field: 'sideLength', type: 'number', label: { zh: '边长', en: 'Side length' } },
   ],

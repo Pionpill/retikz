@@ -1,9 +1,9 @@
 ---
-title: RegularPolygon · 正多边形
+title: Polygon · 正多边形
 description: 用 Standard 的形状语义绘制正多边形，在 React、Vanilla 和 JSON 之间保持一致
 ---
 
-`RegularPolygon` 按边数和外接半径或边长绘制正多边形，适合规则徽标、六边形单元和几何示意。
+`Polygon` 按边数和外接半径或边长绘制正多边形，适合规则徽标、六边形单元和几何示意。
 
 ## 接入方式
 
@@ -16,11 +16,11 @@ description: 用 Standard 的形状语义绘制正多边形，在 React、Vanill
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { RegularPolygon } from '@retikz/standard-react/shape';
+import { Polygon } from '@retikz/standard-react/shape';
 
 export const Example = () => (
   <Layout>
-    <RegularPolygon center={[0, 0]} radius={36} sides={6} />
+    <Polygon center={[0, 0]} radius={36} sides={6} />
   </Layout>
 );
 ```
@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { RegularPolygonDefinition } from '@retikz/standard/shape';
+import { PolygonDefinition } from '@retikz/standard/shape';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
-  children: [{ namespace: 'standard', type: 'regularPolygon', center: [0, 0], radius: 36, sides: 6 }],
+  children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
 };
-export const Example = () => <Layout ir={ir} composites={[RegularPolygonDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[PolygonDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, RegularPolygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { shape, PolygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
-const input = scene({ children: [shape.regularPolygon({ center: [0, 0], radius: 36, sides: 6 })] });
-const svg = renderToSvgString(input, { adapters: [RegularPolygonInputEmbedAdapter] });
+const input = scene({ children: [shape.polygon({ center: [0, 0], radius: 36, sides: 6 })] });
+const svg = renderToSvgString(input, { adapters: [PolygonInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,15 +58,15 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { RegularPolygonDefinition } from '@retikz/standard/shape';
+import { PolygonDefinition } from '@retikz/standard/shape';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
-  children: [{ namespace: 'standard', type: 'regularPolygon', center: [0, 0], radius: 36, sides: 6 }],
+  children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [RegularPolygonDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [PolygonDefinition] } });
 console.log(svg);
 ```
 
@@ -75,17 +75,17 @@ console.log(svg);
 
 ## 基础用法
 
-`<RegularPolygon>` 在指定位置画一个等边多边形，展开成底层 `<Path>`。
+`<Polygon>` 在指定位置画一个等边多边形，展开成底层 `<Path>`。
 
 ```tsx
-import { RegularPolygon } from '@retikz/standard-react/shape';
+import { Polygon } from '@retikz/standard-react/shape';
 ```
 
 ```tsx
-<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+<Polygon center={[0, 0]} radius={36} sides={6} />
 ```
 
-`<RegularPolygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
+`<Polygon>` 用外接半径或边长确定大小。`sides` 至少为 `3`，`rotate` 可以调整整体朝向。
 
 | 写法                            | 适合         |
 | ------------------------------- | ------------ |
@@ -121,8 +121,8 @@ import { RegularPolygon } from '@retikz/standard-react/shape';
 <SourceLinks
   sources={[
     {
-      label: 'RegularPolygon 输入归一与 Path 展开',
-      path: 'packages/library/standard/src/shape/regular-polygon/pipeline.ts',
+      label: 'Polygon 输入归一与 Path 展开',
+      path: 'packages/library/standard/src/shape/polygon/pipeline.ts',
       startLine: 1,
     },
     {
@@ -135,13 +135,13 @@ import { RegularPolygon } from '@retikz/standard-react/shape';
 
 ## API 参考
 
-{/* @include library/standard/shape/regular-polygon/generated */}
+{/* @include library/standard/shape/polygon/generated */}
 
 ## Schema 参考
 
-### RegularPolygonSchema
+### PolygonSchema
 
-<ZodSchema name="RegularPolygonSchema" />
+<ZodSchema name="PolygonSchema" />
 
 ## 延伸阅读
 

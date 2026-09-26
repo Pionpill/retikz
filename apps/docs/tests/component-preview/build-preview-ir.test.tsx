@@ -5,7 +5,7 @@ import { Entity, Graph } from '@retikz/graph-react';
 import { Plot, PointMark } from '@retikz/plot-react';
 import { Draw, Layout, Node } from '@retikz/react';
 import type { LayoutProps } from '@retikz/react';
-import { Circle, Ellipse, Rectangle, RegularPolygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
+import { Circle, Ellipse, Rectangle, Polygon, Star, Arc, Sector } from '@retikz/standard-react/shape';
 import type { InputEmbedAdapter } from '@retikz/vanilla';
 import type { FC } from 'react';
 import { useMemo } from 'react';
@@ -101,7 +101,7 @@ describe('buildPreviewIR', () => {
         <Circle center={[0, 0]} radius={10} />
         <Ellipse center={[40, 0]} radius={{ x: 20, y: 10 }} />
         <Rectangle center={[80, 0]} side={20} />
-        <RegularPolygon center={[120, 0]} sides={5} radius={10} />
+        <Polygon center={[120, 0]} sides={5} radius={10} />
         <Star center={[160, 0]} outerRadius={10} points={5} />
         <Arc center={[200, 0]} radius={10} startAngle={0} endAngle={90} />
         <Sector center={[240, 0]} radius={10} innerRadius={5} startAngle={0} endAngle={90} />
@@ -110,7 +110,7 @@ describe('buildPreviewIR', () => {
     expect(preview.sourceIr.children).toHaveLength(7);
     expect(preview.sourceIr.children[0]).toMatchObject({ namespace: 'standard', type: 'circle' });
     const vanilla = buildVanillaPreview(preview);
-    for (const kind of ['circle', 'ellipse', 'rectangle', 'regularPolygon', 'star', 'arc', 'sector'])
+    for (const kind of ['circle', 'ellipse', 'rectangle', 'polygon', 'star', 'arc', 'sector'])
       expect(vanilla.code).toContain(`shape.${kind}(`);
     expect(vanilla.code).toContain("from '@retikz/standard-vanilla/shape'");
     expect(vanilla.svg).toContain('<svg');

@@ -29,7 +29,7 @@ import {
   CircleSchema,
   EllipseSchema,
   RectangleSchema,
-  RegularPolygonSchema,
+  PolygonSchema,
   StarSchema,
   ArcSchema,
   SectorSchema,
@@ -596,10 +596,10 @@ export const SCHEMA_REGISTRY: Record<string, SchemaRegistryEntry> = {
     label: 'Rectangle',
     url: '/library/standard/shape/rectangle#rectangleschema',
   },
-  RegularPolygonSchema: {
-    schema: RegularPolygonSchema,
-    label: 'RegularPolygon',
-    url: '/library/standard/shape/regular-polygon#regularpolygonschema',
+  PolygonSchema: {
+    schema: PolygonSchema,
+    label: 'Polygon',
+    url: '/library/standard/shape/polygon#polygonschema',
   },
   StarSchema: { schema: StarSchema, label: 'Star', url: '/library/standard/shape/star#starschema' },
   ArcSchema: { schema: ArcSchema, label: 'Arc', url: '/library/standard/shape/arc-sector#arcschema' },

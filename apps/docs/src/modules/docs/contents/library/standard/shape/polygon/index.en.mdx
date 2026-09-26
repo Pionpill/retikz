@@ -1,9 +1,9 @@
 ---
-title: RegularPolygon
+title: Polygon
 description: Draw regular polygons with shared Standard semantics across React, Vanilla and JSON
 ---
 
-`RegularPolygon` draws a regular polygon from a side count and either its circumradius or side length. Use it for regular badges, hexagonal cells, and geometry illustrations.
+`Polygon` draws a regular polygon from a side count and either its circumradius or side length. Use it for regular badges, hexagonal cells, and geometry illustrations.
 
 ## Using this topic
 
@@ -16,11 +16,11 @@ After [installation and first rendering](/library/standard/get-start), choose a 
 
 ```tsx
 import { Layout } from '@retikz/react';
-import { RegularPolygon } from '@retikz/standard-react/shape';
+import { Polygon } from '@retikz/standard-react/shape';
 
 export const Example = () => (
   <Layout>
-    <RegularPolygon center={[0, 0]} radius={36} sides={6} />
+    <Polygon center={[0, 0]} radius={36} sides={6} />
   </Layout>
 );
 ```
@@ -31,25 +31,25 @@ export const Example = () => (
 ```tsx
 import type { IRScene } from '@retikz/core';
 import { Layout } from '@retikz/react';
-import { RegularPolygonDefinition } from '@retikz/standard/shape';
+import { PolygonDefinition } from '@retikz/standard/shape';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
-  children: [{ namespace: 'standard', type: 'regularPolygon', center: [0, 0], radius: 36, sides: 6 }],
+  children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
 };
-export const Example = () => <Layout ir={ir} composites={[RegularPolygonDefinition]} />;
+export const Example = () => <Layout ir={ir} composites={[PolygonDefinition]} />;
 ```
 
 </DocTab>
 <DocTab value="vanilla-api" label="Vanilla API">
 
 ```ts
-import { shape, RegularPolygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { shape, PolygonInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
 import { scene, renderToSvgString } from '@retikz/vanilla';
 
-const input = scene({ children: [shape.regularPolygon({ center: [0, 0], radius: 36, sides: 6 })] });
-const svg = renderToSvgString(input, { adapters: [RegularPolygonInputEmbedAdapter] });
+const input = scene({ children: [shape.polygon({ center: [0, 0], radius: 36, sides: 6 })] });
+const svg = renderToSvgString(input, { adapters: [PolygonInputEmbedAdapter] });
 console.log(svg);
 ```
 
@@ -58,15 +58,15 @@ console.log(svg);
 
 ```ts
 import type { IRScene } from '@retikz/core';
-import { RegularPolygonDefinition } from '@retikz/standard/shape';
+import { PolygonDefinition } from '@retikz/standard/shape';
 import { renderToSvgString } from '@retikz/vanilla';
 
 const ir: IRScene = {
   type: 'scene',
   version: 1,
-  children: [{ namespace: 'standard', type: 'regularPolygon', center: [0, 0], radius: 36, sides: 6 }],
+  children: [{ namespace: 'standard', type: 'polygon', center: [0, 0], radius: 36, sides: 6 }],
 };
-const svg = renderToSvgString(ir, { compile: { composites: [RegularPolygonDefinition] } });
+const svg = renderToSvgString(ir, { compile: { composites: [PolygonDefinition] } });
 console.log(svg);
 ```
 
@@ -75,17 +75,17 @@ console.log(svg);
 
 ## Basic usage
 
-`<RegularPolygon>` draws an equal-sided polygon at a position, expanding to an underlying `<Path>`.
+`<Polygon>` draws an equal-sided polygon at a position, expanding to an underlying `<Path>`.
 
 ```tsx
-import { RegularPolygon } from '@retikz/standard-react/shape';
+import { Polygon } from '@retikz/standard-react/shape';
 ```
 
 ```tsx
-<RegularPolygon center={[0, 0]} radius={36} sides={6} />
+<Polygon center={[0, 0]} radius={36} sides={6} />
 ```
 
-`<RegularPolygon>` uses either a circumradius or a side length. `sides` must be at least `3`, and `rotate` changes the overall orientation.
+`<Polygon>` uses either a circumradius or a side length. `sides` must be at least `3`, and `rotate` changes the overall orientation.
 
 | Form                            | Best for           |
 | ------------------------------- | ------------------ |
@@ -121,8 +121,8 @@ The output topology is therefore always one `move`, `sides - 1` `line` steps, an
 <SourceLinks
   sources={[
     {
-      label: 'RegularPolygon input normalization and Path expansion',
-      path: 'packages/library/standard/src/shape/regular-polygon/pipeline.ts',
+      label: 'Polygon input normalization and Path expansion',
+      path: 'packages/library/standard/src/shape/polygon/pipeline.ts',
       startLine: 1,
     },
     {
@@ -135,13 +135,13 @@ The output topology is therefore always one `move`, `sides - 1` `line` steps, an
 
 ## API reference
 
-{/* @include library/standard/shape/regular-polygon/generated */}
+{/* @include library/standard/shape/polygon/generated */}
 
 ## Schema reference
 
-### RegularPolygonSchema
+### PolygonSchema
 
-<ZodSchema name="RegularPolygonSchema" />
+<ZodSchema name="PolygonSchema" />
 
 ## Further reading
 
