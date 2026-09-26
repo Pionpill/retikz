@@ -41,6 +41,8 @@ type FactoryInput = { value: string };
 interface Factory { (value: string): string; (value: number): number; <T = FactoryInput>(value: T): T }
 const implementation = (value: string | number) => value;
 export const factory = implementation as Factory;
+interface GenericCallable<T> { (input: T): string }
+export const instantiatedFactory = implementation as GenericCallable<string>;
 export type Mutable = { -readonly [K in keyof Base]: Base[K] };
 export interface Inherited extends Base { extra: boolean }
 export type Combined = Base & { extra: boolean };
@@ -57,6 +59,21 @@ export type Empty = Record<never, string>;
 export type Instantiated = Box<boolean>;
 interface Box<T> { value: T }
 export type SchemaOwned = Base;
+export interface Cell { readonly id?: string; layout?: { width: number }; content: string }
+type CellWithLayout<T> = Omit<Cell, 'layout'> & { layout?: T };
+type Marker<T> = Omit<CellWithLayout<T>, 'content'> &
+  ({ text: string; children?: never } | { text?: never; children: Nested });
+export type MarkerProps = Marker<Cell['layout']>;
+/** Render a marker
+ * @param input Marker configuration
+ * @remarks Requires a parent container
+ */
+export declare function marker(input: MarkerProps): void;
+export type PlainMarkerProps = Marker<Cell['layout']>;
+export declare function plainMarker(input: PlainMarkerProps): void;
+export type GenericMarker<T> = Marker<T>;
+type IndexedMarker = { [key: string]: unknown } & ({ text: string } | { children: Nested });
+export type IndexedProps = IndexedMarker;
 `,
       'utf8',
     );
@@ -65,7 +82,16 @@ export type SchemaOwned = Base;
         packageName: 'object-reference-fixture',
         packageDirectory: directory,
         tsconfigPath,
-        entries: [{ source: entry, title: { zh: 'Objects', en: 'Objects' } }],
+        entries: [
+          {
+            source: entry,
+            title: { zh: 'Objects', en: 'Objects' },
+            symbolPairs: [
+              ['marker', 'MarkerProps'],
+              ['plainMarker', 'PlainMarkerProps'],
+            ],
+          },
+        ],
         translate: text => text,
         schemaReferences: { SchemaOwned: '/schema-owned' },
       },
@@ -84,10 +110,33 @@ export type SchemaOwned = Base;
     expect(section('factory')).toContain('(value: string): string');
     expect(section('factory')).toContain('(value: number): number');
     expect(section('factory')).not.toContain('implementation');
+    expect(section('instantiatedFactory')).toContain(
+      'export declare const instantiatedFactory: GenericCallable<string>;',
+    );
     expect(section('factory')).toContain('<T = FactoryInput>(value: T): T');
     expect(section('Frozen')).toContain('| `readonly retries?`');
     expect(section('Mutable')).toContain('| `id`');
     expect(section('Mutable')).not.toContain('| `readonly id`');
+    const marker = section('marker / MarkerProps');
+    expect(source).not.toMatch(/^### (marker|MarkerProps)$/m);
+    const definition = marker.match(/```ts\n([\s\S]*?)\n```/)?.[1];
+    expect(definition).toContain('export declare function marker(input: MarkerProps): void;');
+    expect(definition).toContain("export type MarkerProps = Marker<Cell['layout']>;");
+    expect(marker).toContain('Render a marker');
+    expect(marker).toContain('Marker configuration');
+    expect(marker).toContain('#### Parameters');
+    expect(section('plainMarker / PlainMarkerProps')).not.toContain('#### Parameters');
+    expect(section('plainMarker / PlainMarkerProps')).toContain('plainMarker(input: PlainMarkerProps)');
+    expect(marker).toContain('Requires a parent container');
+    expect(marker).toContain("export type MarkerProps = Marker<Cell['layout']>;");
+    const expandedMarker = marker.split('#### Expanded type')[1];
+    expect(expandedMarker).toContain('readonly id?: string;');
+    expect(expandedMarker).toContain("layout?: Cell['layout'];");
+    expect(expandedMarker).toMatch(/text: string;\s+children\?: never;/);
+    expect(expandedMarker).toMatch(/text\?: never;\s+children: Nested;/);
+    expect(expandedMarker).not.toContain('Omit<');
+    expect(section('GenericMarker')).not.toContain('#### Expanded type');
+    expect(section('IndexedProps')).not.toContain('#### Expanded type');
     for (const name of ['Omitted', 'Inherited', 'Combined']) {
       expect(section(name)).toContain('| `nested` | `Nested`');
       expect(section(name)).not.toContain('| `inside`');

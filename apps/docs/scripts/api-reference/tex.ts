@@ -15,6 +15,8 @@ export type ApiReferenceEntry = {
   source: string;
   /** 组件参考按公开标识符筛选；省略时收录入口全部导出 */
   symbols?: ReadonlyArray<string>;
+  /** 按阅读顺序合并入口与其专属 Props / Input，二者仍从源码解析 */
+  symbolPairs?: ReadonlyArray<readonly [entry: string, input: string]>;
   /** 为指定公开类型按职责分组，字段说明仍从 TypeDoc 读取 */
   memberGroups?: Readonly<Record<string, ReadonlyArray<ApiReferenceMemberGroup>>>;
   title: Record<ApiReferenceLanguage, string>;
@@ -382,8 +384,59 @@ const resolveObjectMembers = (
     };
     return visit(declaration.type);
   };
-  const expandedSignature = (() => {
-    if (!ts.isTypeAliasDeclaration(declaration) || !type.isUnion()) return undefined;
+  /** 从别名依赖中保留已实例化的字段入口，避免展开嵌套 Schema */
+  const unionMemberReference = (memberName: string, memberType: ts.Type, optional: boolean): string | undefined => {
+    const visited = new Set<ts.Declaration>();
+    const comparable = (candidate: ts.Type): Array<ts.Type> =>
+      (candidate.isUnion() ? candidate.types : [candidate]).filter(
+        item => !optional || !(item.flags & ts.TypeFlags.Undefined),
+      );
+    const matches = (candidate: ts.Type): boolean => {
+      const left = comparable(candidate);
+      const right = comparable(memberType);
+      return left.length === right.length && left.every(item => right.includes(item));
+    };
+    const visit = (node: ts.TypeNode): string | undefined => {
+      if (ts.isParenthesizedTypeNode(node)) return visit(node.type);
+      if (ts.isUnionTypeNode(node) || ts.isIntersectionTypeNode(node)) {
+        for (const part of node.types) {
+          const result = visit(part);
+          if (result) return result;
+        }
+      }
+      if (ts.isIndexedAccessTypeNode(node)) {
+        if (matches(checker.getTypeFromTypeNode(node))) return node.getText();
+        return visit(node.objectType);
+      }
+      if (!ts.isTypeReferenceNode(node)) return undefined;
+      for (const argument of node.typeArguments ?? []) {
+        const result = visit(argument);
+        if (result) return result;
+      }
+      let referenced = checker.getSymbolAtLocation(node.typeName);
+      if (referenced && referenced.flags & ts.SymbolFlags.Alias) referenced = checker.getAliasedSymbol(referenced);
+      const target = referenced?.declarations?.[0];
+      if (!target || visited.has(target)) return undefined;
+      visited.add(target);
+      if (!ts.isTypeAliasDeclaration(target) && !ts.isInterfaceDeclaration(target)) return undefined;
+      const candidate = checker.getTypeFromTypeNode(node);
+      if (
+        !target.typeParameters?.length &&
+        target.modifiers?.some(item => item.kind === ts.SyntaxKind.ExportKeyword) &&
+        isObject(candidate)
+      ) {
+        const member = checker.getPropertyOfType(candidate, memberName);
+        if (member && matches(checker.getTypeOfSymbolAtLocation(member, target)))
+          return `${node.getText()}[${JSON.stringify(member.name)}]`;
+        return undefined;
+      }
+      return ts.isTypeAliasDeclaration(target) ? visit(target.type) : undefined;
+    };
+    return ts.isTypeAliasDeclaration(declaration) ? visit(declaration.type) : undefined;
+  };
+  const expandUnion = (): string | undefined => {
+    if (!ts.isTypeAliasDeclaration(declaration) || declaration.typeParameters?.length || !type.isUnion())
+      return undefined;
     if (ts.isUnionTypeNode(declaration.type)) {
       if (declaration.type.types.some(isDirectlyReadableUnionBranch)) return undefined;
       const hasHiddenBranch = declaration.type.types.some(
@@ -399,6 +452,24 @@ const resolveObjectMembers = (
         ts.NodeBuilderFlags.NoTruncation | ts.NodeBuilderFlags.UseStructuralFallback | ts.NodeBuilderFlags.InTypeAlias,
       );
       if (node === undefined) return undefined;
+      if (isObject(part) && !ts.isTypeLiteralNode(node)) {
+        if (hasUnresolvedMapping(part) || checker.getIndexInfosOfType(part).length > 0) return undefined;
+        const members = checker.getPropertiesOfType(part).map(member => {
+          const resolved = resolveMember(part, member);
+          const memberType = checker.getTypeOfSymbolAtLocation(member, declaration);
+          const reference = (memberType.isUnion() ? memberType.types : [memberType]).some(
+            candidate => (candidate.flags & ts.TypeFlags.Object) !== 0,
+          )
+            ? unionMemberReference(member.name, memberType, resolved.optional)
+            : undefined;
+          const fieldType = reference ?? resolved.type;
+          if (fieldType === '…') return undefined;
+          const fieldName = /^[A-Za-z_$][\w$]*$/.test(member.name) ? member.name : JSON.stringify(member.name);
+          return `  ${resolved.readonly ? 'readonly ' : ''}${fieldName}${resolved.optional ? '?' : ''}: ${fieldType};`;
+        });
+        if (members.some(member => member === undefined)) return undefined;
+        return ['{', ...members, '}'].join('\n');
+      }
       if (!ts.isTypeLiteralNode(node) && !ts.isLiteralTypeNode(node) && !isKeywordTypeNode(node)) return undefined;
       if (!ts.isTypeLiteralNode(node)) return print(node);
       return ['{', ...node.members.map(member => `  ${print(member)}`), '}'].join('\n');
@@ -419,8 +490,7 @@ const resolveObjectMembers = (
     )
       return undefined;
     return output;
-  })();
-  if (!isObject(type)) return { signature, expandedSignature };
+  };
   const expandedNodes = new Map<ts.Type, ts.TypeNode | undefined>();
   const expandedNode = (candidate: ts.Type): ts.TypeNode | undefined => {
     if (!expandedNodes.has(candidate)) {
@@ -441,7 +511,6 @@ const resolveObjectMembers = (
     const node = expandedNode(candidate);
     return node !== undefined && ts.isMappedTypeNode(node);
   };
-  if (hasUnresolvedMapping(type)) return { signature };
   const isReadonly = (candidate: ts.Type, member: ts.Symbol): boolean => {
     if (candidate.isIntersection()) {
       return candidate.types
@@ -466,8 +535,7 @@ const resolveObjectMembers = (
       (ts.getModifiers(target)?.some(modifier => modifier.kind === ts.SyntaxKind.ReadonlyKeyword) ?? false)
     );
   };
-  const members = checker.getPropertiesOfType(type).sort((a, b) => a.name.localeCompare(b.name, 'en'));
-  const resolvedMembers = members.map(member => {
+  const resolveMember = (owner: ts.Type, member: ts.Symbol): ApiReferenceMember & { details: string } => {
     const tags = member.getJsDocTags(checker);
     const tagText = (tagName: string): string =>
       tags
@@ -508,13 +576,18 @@ const resolveObjectMembers = (
     return {
       name: member.name,
       optional,
-      readonly: isReadonly(type, member),
+      readonly: isReadonly(owner, member),
       type: fullType.length > MAX_MEMBER_TYPE_CHARACTERS ? memberTypeReference(member.name) || '…' : fullType,
       description,
       details: tagText('description'),
       defaultValue: tagText('default') || tagText('defaultValue') || '—',
     };
-  });
+  };
+  const expandedSignature = expandUnion();
+  if (!isObject(type)) return { signature, expandedSignature };
+  if (hasUnresolvedMapping(type)) return { signature };
+  const members = checker.getPropertiesOfType(type).sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  const resolvedMembers = members.map(member => resolveMember(type, member));
   const membersTextLength = resolvedMembers.reduce(
     (length, member) =>
       length + member.name.length + member.type.length + member.description.length + member.details.length,
@@ -591,6 +664,13 @@ const resolveSourceSignature = (
       ts.SignatureKind.Call,
     );
     if (callSignatures.length > 0) {
+      const explicitType =
+        declaration.type ??
+        (ts.isAsExpression(declaration.initializer) || ts.isTypeAssertionExpression(declaration.initializer)
+          ? declaration.initializer.type
+          : undefined);
+      if (explicitType && ts.isTypeReferenceNode(explicitType) && explicitType.typeArguments?.length)
+        return `export declare ${declarationKind} ${declaration.name.getText()}: ${print(explicitType)};`;
       const overloads = callSignatures.map(signature => {
         const signatureDeclaration = signature.getDeclaration();
         if (ts.isCallSignatureDeclaration(signatureDeclaration))
@@ -804,10 +884,15 @@ const renderSummary = (
   symbol: ApiReferenceSymbol,
   lang: ApiReferenceLanguage,
   translate: (source: string) => string,
+  asListItem = false,
 ): string => {
   const summary = localizeText(symbol.description, lang, translate);
-  if (!symbol.source || !summary) return summary;
-  return `<p><ApiSourceLink label={${JSON.stringify(symbol.name)}} path={${JSON.stringify(symbol.source.path)}} startLine={${symbol.source.startLine}}>${summary}</ApiSourceLink></p>`;
+  if (!summary) return '';
+  const content = symbol.source
+    ? `<ApiSourceLink label={${JSON.stringify(symbol.name)}} path={${JSON.stringify(symbol.source.path)}} startLine={${symbol.source.startLine}}>${summary}</ApiSourceLink>`
+    : summary;
+  if (asListItem) return `- \`${symbol.name}\`${lang === 'zh' ? '：' : ': '}${content}`;
+  return symbol.source ? `<p>${content}</p>` : content;
 };
 
 /** 渲染一个公开 API 的常规 MDX 片段 */
@@ -819,37 +904,54 @@ const renderSymbol = (
   expandedObject = false,
   indexSignatures: Array<string> = [],
   composition?: ApiReferenceComposition,
+  companion?: ApiReferenceSymbol,
 ): string => {
   const hasMemberViews = expandedObject && symbol.members.length > 0;
+  const subjects = companion ? [companion, symbol] : [symbol];
+  const combined = { ...symbol, signature: subjects.map(subject => subject.signature).join('\n\n') };
   return [
-    `### ${symbol.name}`,
-    renderSummary(symbol, lang, translate),
-    localizeText(symbol.details, lang, translate),
+    `### ${subjects.map(subject => subject.name).join(' / ')}`,
+    companion
+      ? subjects
+          .map(subject => renderSummary(subject, lang, translate, true))
+          .filter(Boolean)
+          .join('\n')
+      : renderSummary(symbol, lang, translate),
+    ...subjects.map(subject => localizeText(subject.details, lang, translate)),
     hasMemberViews
-      ? renderObjectMemberViews(symbol, memberGroups, lang, translate, composition)
+      ? renderObjectMemberViews(combined, memberGroups, lang, translate, composition)
       : expandedObject ||
           symbol.members.length === 0 ||
           symbol.signature.includes(' & ') ||
           symbol.signature.startsWith('export ')
-        ? `\`\`\`ts\n${symbol.signature}\n\`\`\``
+        ? `\`\`\`ts\n${combined.signature}\n\`\`\``
         : '',
     renderExpandedSignature(symbol, lang),
     hasMemberViews ? '' : renderGroupedMembers(symbol, memberGroups, lang, translate),
     indexSignatures.length > 0
       ? `#### ${lang === 'zh' ? '索引签名' : 'Index signatures'}\n\n\`\`\`ts\n${indexSignatures.join(';\n')}\n\`\`\``
       : '',
-    renderTypeParameters(symbol.typeParameters, lang, translate),
-    renderParameters(symbol.parameters, lang, translate),
-    renderTagSection(lang === 'zh' ? '返回值' : 'Returns', symbol.returns, lang, translate),
-    symbol.throws.length > 0
+    ...subjects.map(subject => renderTypeParameters(subject.typeParameters, lang, translate)),
+    ...subjects.map(subject =>
+      subject === companion &&
+      subject.parameters.length === 1 &&
+      subject.parameters[0].type === symbol.name &&
+      !subject.parameters[0].description.trim()
+        ? ''
+        : renderParameters(subject.parameters, lang, translate),
+    ),
+    ...subjects.map(subject =>
+      renderTagSection(lang === 'zh' ? '返回值' : 'Returns', subject.returns, lang, translate),
+    ),
+    subjects.some(subject => subject.throws.length > 0)
       ? [
           `#### ${lang === 'zh' ? '异常' : 'Throws'}`,
-          ...symbol.throws.map(item => `- ${localizeText(item, lang, translate)}`),
+          ...subjects.flatMap(subject => subject.throws.map(item => `- ${localizeText(item, lang, translate)}`)),
         ].join('\n\n')
       : '',
-    renderRemarks(symbol.remarks, lang, translate),
-    renderMetadata(symbol, lang, translate),
-    renderExamples(symbol.examples, lang),
+    ...subjects.map(subject => renderRemarks(subject.remarks, lang, translate)),
+    ...subjects.map(subject => renderMetadata(subject, lang, translate)),
+    ...subjects.map(subject => renderExamples(subject.examples, lang)),
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -1000,25 +1102,44 @@ export const createApiReferenceMdx = async (
               symbol.expandedSignature = resolved.expandedSignature;
             }
             if (sourceSignature) symbol.signature = sourceSignature;
-            return renderSymbol(
+            return {
               symbol,
-              lang,
-              config.translate,
-              entry.memberGroups?.[symbol.name],
-              resolved?.members !== undefined,
-              resolved?.indexSignatures,
-              resolved?.composition,
-            );
+              render: (companion?: ApiReferenceSymbol) =>
+                renderSymbol(
+                  symbol,
+                  lang,
+                  config.translate,
+                  entry.memberGroups?.[symbol.name],
+                  resolved?.members !== undefined,
+                  resolved?.indexSignatures,
+                  resolved?.composition,
+                  companion,
+                ),
+            };
           }
-          return [
-            `### ${symbol.name}`,
-            renderSummary(symbol, lang, config.translate),
-            `[${lang === 'zh' ? 'Schema 参考' : 'Schema reference'}](${schemaUrl})`,
-          ]
-            .filter(Boolean)
-            .join('\n\n');
+          return {
+            symbol,
+            render: () =>
+              [
+                `### ${symbol.name}`,
+                renderSummary(symbol, lang, config.translate),
+                `[${lang === 'zh' ? 'Schema 参考' : 'Schema reference'}](${schemaUrl})`,
+              ]
+                .filter(Boolean)
+                .join('\n\n'),
+          };
         });
-      return [`## ${entry.title[lang]}`, ...symbols].join('\n\n');
+      const remaining = new Map(symbols.map(item => [item.symbol.name, item]));
+      const paired = (entry.symbolPairs ?? []).map(([entryName, inputName]) => {
+        const entrySymbol = remaining.get(entryName);
+        const inputSymbol = remaining.get(inputName);
+        if (!entrySymbol || !inputSymbol || entryName === inputName || config.schemaReferences?.[inputName])
+          throw new Error(`Unknown, repeated or unsupported API pair ${entryName} / ${inputName}`);
+        remaining.delete(entryName);
+        remaining.delete(inputName);
+        return inputSymbol.render(entrySymbol.symbol);
+      });
+      return [`## ${entry.title[lang]}`, ...paired, ...[...remaining.values()].map(item => item.render())].join('\n\n');
     })
     .join('\n\n');
 };
