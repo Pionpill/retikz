@@ -5,24 +5,25 @@
 ### RetikzError
 
 <p>
-  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={26}>
+  <ApiSourceLink label={'RetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={29}>
     Base structure for Retikz structured domain errors
   </ApiSourceLink>
 </p>
 
-```ts
-export class RetikzError<
-  TCode extends string = string,
-  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
-> extends Error {}
-```
+<DocTabs defaultValue="members">
 
-| Member             | Type                                                                                                                                                                                                    | Default | Description |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor`      | `<TCode extends string = string, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzError<TCode, TDetails>` | —       | —           |
-| `readonly cause?`  | `unknown`                                                                                                                                                                                               | —       | —           |
-| `readonly code`    | `TCode`                                                                                                                                                                                                 | —       | —           |
-| `readonly details` | `TDetails`                                                                                                                                                                                              | —       | —           |
+<DocTab value="members" label="Members">
+
+<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member             | Type                                             | Default     | Description                                                                   |
+| ------------------ | ------------------------------------------------ | ----------- | ----------------------------------------------------------------------------- |
+| `constructor`      | `(options: RetikzErrorOptions<TCode, TDetails>)` | —           | Creates a domain error from structured options, preserving the original cause |
+| `readonly cause?`  | `unknown`                                        | `undefined` | Original exception or value that caused this error                            |
+| `readonly code`    | `TCode`                                          | —           | Classification code of the structured error                                   |
+| `readonly details` | `TDetails`                                       | —           | Structured error details associated with the error code                       |
+
+</div>
 
 #### Type parameters
 
@@ -31,24 +32,43 @@ export class RetikzError<
 | `TCode`        | String type of the error classification code          |
 | `TDetails`     | Structured detail type associated with the error code |
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export class RetikzError<
+  TCode extends string = string,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends Error {
+  constructor(options: RetikzErrorOptions<TCode, TDetails>);
+}
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### RetikzFoundationError
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={66}>
+  <ApiSourceLink label={'RetikzFoundationError'} path={'packages/kernel/foundation/src/error.ts'} startLine={79}>
     Unified structured error for Foundation atomic-contract failures
   </ApiSourceLink>
 </p>
 
-```ts
-export class RetikzFoundationError<
-  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
-  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
-> extends RetikzError<TCode, TDetails> {}
-```
+<DocTabs defaultValue="members">
 
-| Member        | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Default | Description |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| `constructor` | `<TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(message: string) => RetikzFoundationError<TCode, TDetails>; <TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue, TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>>(options: RetikzErrorOptions<TCode, TDetails>) => RetikzFoundationError<TCode, TDetails>` | —       | —           |
+<DocTab value="members" label="Members">
+
+<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[44%]">
+
+| Member        | Signature                                        | Description                                            |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------ |
+| `constructor` | `(message: string)`                              | Creates a Foundation error with the default error code |
+|               | `(options: RetikzErrorOptions<TCode, TDetails>)` | Creates a Foundation error from structured options     |
+
+</div>
 
 #### Type parameters
 
@@ -56,6 +76,24 @@ export class RetikzFoundationError<
 | -------------- | -------------------------------------------------------------- |
 | `TCode`        | Concrete literal type of a Foundation error code               |
 | `TDetails`     | Structured detail type associated with a Foundation error code |
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export class RetikzFoundationError<
+  TCode extends RetikzFoundationErrorCodeValue = RetikzFoundationErrorCodeValue,
+  TDetails extends Readonly<Record<string, unknown>> = Readonly<Record<string, unknown>>,
+> extends RetikzError<TCode, TDetails> {
+  constructor(message: string);
+  constructor(options: RetikzErrorOptions<TCode, TDetails>);
+}
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### AssertEqual
 
@@ -130,9 +168,13 @@ export type JsonValue =
 
 <DocTab value="members" label="Members">
 
+<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member                     | Type                                               | Default     | Description                                                                                                        |
 | -------------------------- | -------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
 | `readonly shouldOverride?` | `(value: T[keyof T], key: PropertyKey) => boolean` | `undefined` | Decides whether a source property is written; also runs for initial writes, and false preserves any existing value |
+
+</div>
 
 </DocTab>
 
@@ -202,12 +244,16 @@ export type OpenString<T extends string> = T | (string & {});
 
 <DocTab value="members" label="Members">
 
+<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
 | Member | Type     | Default | Description                    |
 | ------ | -------- | ------- | ------------------------------ |
 | `a`    | `number` | —       | Opacity in the range 0–1       |
 | `b`    | `number` | —       | Blue channel in the range 0–1  |
 | `g`    | `number` | —       | Green channel in the range 0–1 |
 | `r`    | `number` | —       | Red channel in the range 0–1   |
+
+</div>
 
 </DocTab>
 
@@ -238,12 +284,16 @@ export type ParsedCssColor = {
 
 <DocTab value="members" label="Members">
 
-| Member             | Type       | Default | Description                                             |
-| ------------------ | ---------- | ------- | ------------------------------------------------------- |
-| `readonly cause?`  | `unknown`  | —       | Original exception or value that caused this error      |
-| `readonly code`    | `TCode`    | —       | Classification code of the structured error             |
-| `readonly details` | `TDetails` | —       | Structured error details associated with the error code |
-| `readonly message` | `string`   | —       | Error message for the caller                            |
+<div className="[&>div:first-child]:mt-0 [&>div:last-child]:mb-0 [&_table]:table-fixed [&_th]:whitespace-normal [&_th]:px-2 [&_td]:px-2 [&_td]:align-top [&_td]:[overflow-wrap:anywhere] [&_code]:whitespace-normal [&_th:nth-child(1)]:w-[22%] [&_th:nth-child(2)]:w-[28%] [&_th:nth-child(3)]:w-[14%]">
+
+| Member             | Type       | Default     | Description                                             |
+| ------------------ | ---------- | ----------- | ------------------------------------------------------- |
+| `readonly cause?`  | `unknown`  | `undefined` | Original exception or value that caused this error      |
+| `readonly code`    | `TCode`    | —           | Classification code of the structured error             |
+| `readonly details` | `TDetails` | —           | Structured error details associated with the error code |
+| `readonly message` | `string`   | —           | Error message for the caller                            |
+
+</div>
 
 </DocTab>
 
@@ -275,17 +325,15 @@ export type RetikzErrorOptions<TCode extends string, TDetails extends Readonly<R
   <ApiSourceLink
     label={'RetikzFoundationErrorCodeValue'}
     path={'packages/kernel/foundation/src/error.ts'}
-    startLine={58}
+    startLine={71}
   >
     Stable Foundation package error-code values
   </ApiSourceLink>
 </p>
 
-```ts
-export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
-```
+<DocTabs defaultValue="expanded">
 
-#### Expanded type
+<DocTab value="expanded" label="Expanded type">
 
 ```ts
 export type RetikzFoundationErrorCodeValue =
@@ -295,6 +343,18 @@ export type RetikzFoundationErrorCodeValue =
   | 'FOUNDATION_JSON_ERROR'
   | 'FOUNDATION_COLOR_ERROR';
 ```
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export type RetikzFoundationErrorCodeValue = ValueOf<typeof RetikzFoundationErrorCode>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### ValueOf
 
@@ -355,7 +415,7 @@ export type WithRequiredProperties<T, TKey extends keyof T> = T & Required<Pick<
 ### RetikzFoundationErrorCode
 
 <p>
-  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={44}>
+  <ApiSourceLink label={'RetikzFoundationErrorCode'} path={'packages/kernel/foundation/src/error.ts'} startLine={57}>
     Stable Foundation package error codes
   </ApiSourceLink>
 </p>
@@ -398,26 +458,38 @@ export const StaticCssNamedColorHexByName: Readonly<Record<string, `#${string}`>
 ### assertNonEmptyString
 
 <p>
-  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={6}>
+  <ApiSourceLink label={'assertNonEmptyString'} path={'packages/kernel/foundation/src/assert.ts'} startLine={12}>
     Rejects empty and all-whitespace strings
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const assertNonEmptyString: (
-  value: string,
-  label: string,
-  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
-) => void;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Parameters
 
-| Parameter    | Type                                                                  | Description |
-| ------------ | --------------------------------------------------------------------- | ----------- |
-| `value`      | `string`                                                              | —           |
-| `label`      | `string`                                                              | —           |
-| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | —           |
+| Parameter    | Type                                                                  | Description                                                                         |
+| ------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `value`      | `string`                                                              | String to validate                                                                  |
+| `label`      | `string`                                                              | Field name used in error messages                                                   |
+| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | Domain error thrown unchanged on validation failure; defaults to a Foundation error |
+
+#### Throws
+
+- Throws ownerError or RetikzFoundationError on validation failure
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const assertNonEmptyString: (value: string, label: string, ownerError?: RetikzError | undefined) => void;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### assertPlainDataContainers
 
@@ -427,42 +499,66 @@ export declare const assertNonEmptyString: (
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const assertPlainDataContainers: (value: unknown, path: string) => void;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Parameters
 
-| Parameter | Type      | Description                                          |
-| --------- | --------- | ---------------------------------------------------- |
-| `value`   | `unknown` | External data tree to inspect                        |
-| `path`    | `string`  | Path used to locate the root value in error messages |
+| Parameter | Type      | Description                                                               |
+| --------- | --------- | ------------------------------------------------------------------------- |
+| `value`   | `unknown` | External data tree to inspect                                             |
+| `path`    | `string`  | Path used to locate the root value in error messages; defaults to 'value' |
 
 > **Notes:** The caller schema validates leaf values. This function only excludes prototype objects, accessors, symbols, exotic arrays, and cycles before reading properties.
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const assertPlainDataContainers: (value: unknown, path?: string) => void;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### assertPositiveNumber
 
 <p>
-  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={23}>
-    Rejects finite numbers that are not strictly greater than zero
+  <ApiSourceLink label={'assertPositiveNumber'} path={'packages/kernel/foundation/src/assert.ts'} startLine={35}>
+    Rejects non-finite numbers and numbers less than or equal to zero
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const assertPositiveNumber: (
-  value: number,
-  label: string,
-  ownerError: RetikzError<string, Readonly<Record<string, unknown>>> | undefined,
-) => void;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Parameters
 
-| Parameter    | Type                                                                  | Description |
-| ------------ | --------------------------------------------------------------------- | ----------- |
-| `value`      | `number`                                                              | —           |
-| `label`      | `string`                                                              | —           |
-| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | —           |
+| Parameter    | Type                                                                  | Description                                                                         |
+| ------------ | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `value`      | `number`                                                              | Number to validate                                                                  |
+| `label`      | `string`                                                              | Field name used in error messages                                                   |
+| `ownerError` | `RetikzError<string, Readonly<Record<string, unknown>>> \| undefined` | Domain error thrown unchanged on validation failure; defaults to a Foundation error |
+
+#### Throws
+
+- Throws ownerError or RetikzFoundationError on validation failure
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const assertPositiveNumber: (value: number, label: string, ownerError?: RetikzError | undefined) => void;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### cloneAndFreezeJson
 
@@ -472,9 +568,9 @@ export declare const assertPositiveNumber: (
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const cloneAndFreezeJson: <T>(value: T, path: string) => T;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Type parameters
 
@@ -484,50 +580,80 @@ export declare const cloneAndFreezeJson: <T>(value: T, path: string) => T;
 
 #### Parameters
 
-| Parameter | Type     | Description                                             |
-| --------- | -------- | ------------------------------------------------------- |
-| `value`   | `T`      | JSON-safe data to copy                                  |
-| `path`    | `string` | Path used to locate the current value in error messages |
+| Parameter | Type     | Description                                                                  |
+| --------- | -------- | ---------------------------------------------------------------------------- |
+| `value`   | `T`      | JSON-safe data to copy                                                       |
+| `path`    | `string` | Path used to locate the current value in error messages; defaults to 'value' |
 
 #### Returns
 
 Deeply frozen copy with the same structure as the input but no shared mutable objects
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const cloneAndFreezeJson: <T>(value: T, path?: string) => T;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### compositeOpaqueColor
 
 <p>
-  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={357}>
+  <ApiSourceLink label={'compositeOpaqueColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={367}>
     Pre-composites a static CSS foreground color onto an opaque static backdrop by weight
   </ApiSourceLink>
 </p>
 
 Multiplies the foreground alpha by weight, then uses source-over sRGB compositing to produce a deterministic opaque color.
 
-```ts
-export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => templateLiteral;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Parameters
 
-| Parameter    | Type     | Description |
-| ------------ | -------- | ----------- |
-| `foreground` | `string` | —           |
-| `backdrop`   | `string` | —           |
-| `weight`     | `number` | —           |
+| Parameter    | Type     | Description                                           |
+| ------------ | -------- | ----------------------------------------------------- |
+| `foreground` | `string` | Static CSS foreground color, optionally with alpha    |
+| `backdrop`   | `string` | Static CSS backdrop that must be fully opaque         |
+| `weight`     | `number` | Finite compositing weight in the inclusive range 0..1 |
+
+#### Returns
+
+Opaque color in six-digit lowercase hexadecimal notation
+
+#### Throws
+
+- Throws RetikzFoundationError for unsupported colors, a translucent backdrop, or an out-of-range weight
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const compositeOpaqueColor: (foreground: string, backdrop: string, weight: number) => `#${string}`;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### createOpenStringSchema
 
 <p>
-  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={28}>
+  <ApiSourceLink label={'createOpenStringSchema'} path={'packages/kernel/foundation/src/schema.ts'} startLine={30}>
     Creates an open non-blank string schema with suggestions from a known const-object enum
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const createOpenStringSchema: <TValues extends Readonly<Record<string, string>>>(
-  values: TValues,
-) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Type parameters
 
@@ -537,25 +663,41 @@ export declare const createOpenStringSchema: <TValues extends Readonly<Record<st
 
 #### Parameters
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `values`  | `TValues` | —           |
+| Parameter | Type      | Description                               |
+| --------- | --------- | ----------------------------------------- |
+| `values`  | `TValues` | Enum object providing known string values |
+
+#### Returns
+
+Schema accepting known enum values or custom non-blank strings
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const createOpenStringSchema: <const TValues extends Readonly<Record<string, string>>>(
+  values: TValues,
+) => ZodType<OpenString<ValueOf<TValues>>, OpenString<ValueOf<TValues>>>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### createReadonlyMap
 
 <p>
-  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={7}>
+  <ApiSourceLink label={'createReadonlyMap'} path={'packages/kernel/foundation/src/collections.ts'} startLine={9}>
     Creates a shallow Map snapshot that exposes no mutating methods
   </ApiSourceLink>
 </p>
 
 Copies input entries into independent storage while preserving native Map iteration and lookup semantics; the `forEach` owner argument is the readonly snapshot itself.
 
-```ts
-export declare const createReadonlyMap: <TKey, TValue>(
-  entries: Iterable<readonly [TKey, TValue]>,
-) => ReadonlyMap<TKey, TValue>;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Type parameters
 
@@ -566,27 +708,61 @@ export declare const createReadonlyMap: <TKey, TValue>(
 
 #### Parameters
 
-| Parameter | Type                                | Description |
-| --------- | ----------------------------------- | ----------- |
-| `entries` | `Iterable<readonly [TKey, TValue]>` | —           |
+| Parameter | Type                                | Description                                   |
+| --------- | ----------------------------------- | --------------------------------------------- |
+| `entries` | `Iterable<readonly [TKey, TValue]>` | Key-value entries used to create the snapshot |
+
+#### Returns
+
+Independent readonly Map wrapper; keys and values retain their original references and are not deeply frozen
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const createReadonlyMap: <TKey, TValue>(
+  entries: Iterable<readonly [TKey, TValue]>,
+) => ReadonlyMap<TKey, TValue>;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### isRetikzError
 
 <p>
-  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={88}>
+  <ApiSourceLink label={'isRetikzError'} path={'packages/kernel/foundation/src/error.ts'} startLine={105}>
     Determines whether a dynamic value inherits from a Retikz structured domain error
   </ApiSourceLink>
 </p>
 
-```ts
-export declare const isRetikzError: (value: unknown) => predicate;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Parameters
 
-| Parameter | Type      | Description |
-| --------- | --------- | ----------- |
-| `value`   | `unknown` | —           |
+| Parameter | Type      | Description              |
+| --------- | --------- | ------------------------ |
+| `value`   | `unknown` | Dynamic value to inspect |
+
+#### Returns
+
+Whether the value is a RetikzError instance; narrows the type when true
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const isRetikzError: (value: unknown) => value is RetikzError;
+```
+
+</DocTab>
+
+</DocTabs>
 
 ### mergeProperties
 
@@ -598,12 +774,9 @@ export declare const isRetikzError: (value: unknown) => predicate;
 
 Includes string and symbol keys and skips undefined sources; preserves all property values by default without recursively merging or mutating inputs
 
-```ts
-export declare const mergeProperties: <T extends object>(
-  sources: readonly Array<Readonly<T> | undefined>,
-  options: MergePropertiesOptions<NoInfer<T>>,
-) => Partial<T>;
-```
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
 
 #### Type parameters
 
@@ -626,20 +799,53 @@ A new, potentially filtered object, hence the `Partial<T>` return type
 
 - Throws RetikzFoundationError when reading a property or invoking the policy fails, preserving the original exception as cause
 
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
+
+```ts
+export declare const mergeProperties: <T extends object>(
+  sources: ReadonlyArray<Readonly<T> | undefined>,
+  options?: MergePropertiesOptions<NoInfer<T>>,
+) => Partial<T>;
+```
+
+</DocTab>
+
+</DocTabs>
+
 ### parseStaticCssColor
 
 <p>
-  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={313}>
+  <ApiSourceLink label={'parseStaticCssColor'} path={'packages/kernel/foundation/src/color.ts'} startLine={318}>
     Parses the static CSS color subset that can be resolved without a host environment
   </ApiSourceLink>
 </p>
+
+Supports named colors, transparent, hexadecimal notation, comma-separated rgb/rgba/hsl/hsla, and space-separated rgb/hsl; does not resolve environment-dependent expressions such as currentColor or var
+
+<DocTabs defaultValue="members">
+
+<DocTab value="members" label="Members">
+
+#### Parameters
+
+| Parameter | Type     | Description             |
+| --------- | -------- | ----------------------- |
+| `input`   | `string` | Static CSS color string |
+
+#### Returns
+
+Normalized sRGB channels and alpha; returns null for invalid or unsupported colors
+
+</DocTab>
+
+<DocTab value="definition" label="Type definition">
 
 ```ts
 export declare const parseStaticCssColor: (input: string) => ParsedCssColor | null;
 ```
 
-#### Parameters
+</DocTab>
 
-| Parameter | Type     | Description |
-| --------- | -------- | ----------- |
-| `input`   | `string` | —           |
+</DocTabs>
