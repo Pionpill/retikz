@@ -1,4 +1,3 @@
-import type { GraphDefinitionOptions } from '@retikz/graph';
 import type { InputRelation } from '@retikz/graph-vanilla';
 import { RelationInputEmbedAdapter } from '@retikz/graph-vanilla';
 import type { ReactInputEmbedContext } from '@retikz/react';
@@ -9,7 +8,6 @@ import { collectRelationInput } from './authoring';
 
 /** Relation Source 的 React 编写参数 */
 export type RelationProps = Omit<InputRelation, 'type'> &
-  GraphDefinitionOptions &
   Readonly<{
     /** 可选 Core Step authoring，与 route / way prop 互斥 */
     children?: ReactNode;

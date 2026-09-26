@@ -254,8 +254,11 @@
     "builtinImplementation": "Built-in Implementation",
     "extensionUsage": "Extended Usage",
     "entity": "Entity",
+    "customUsage": "Custom usage",
+    "mechanism": "Implementation",
+    "apiReference": "API reference",
+    "schemaReference": "Schema reference",
     "relation": "Relation",
-    "graphApiReference": "Graph API Reference",
     "changelog": "Changelog",
     "changelogV01": "v0.1"
   },

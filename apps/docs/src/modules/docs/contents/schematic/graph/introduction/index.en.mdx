@@ -14,13 +14,21 @@ Graph is for structured diagrams that need to retain domain semantics: an object
 | Visible boundary      | Group           | A shell for arbitrary content with a caption and boundary labels                 |
 | Engineering structure | Block           | Vertical content organized with Header, Section, and Row                         |
 
-A top-level Graph can directly host a diagram. Use a Graph root to establish shared context when several descendants share `graphDefaults`, `graphRules`, or a Graph Theme.
+A top-level Graph can directly host a diagram. Use a Graph root to establish shared context when several descendants share defaults (`graphDefaults`), conditional styles (`graphRules`), or a Graph Theme.
 
 <ComponentAlert
   type="tip"
   title="Start directly with Graph"
   description="Graph's React and Vanilla entries provide the Graph integration needed to complete a diagram. You do not need to read Kernel before your first Graph diagram; consult lower-level drawing, coordinate, or general-layout docs only when that specific need appears."
 />
+
+## The whole picture
+
+This diagram uses two Entities for a client and a service, then a Relation to represent a request. Objects retain their own semantics and positions while the relationship connects them by id.
+
+<ComponentPreview files="/schematic/graph/graph-overview" hideCode type="illustration" />
+
+Use a Group around related content to express a scope, phase, or responsibility boundary. When an object needs code or engineering structure, use a Block to organize Header, Section, and Row content. The [Quick start](/schematic/graph/get-start) provides installation steps and complete code for this diagram.
 
 ## Boundaries with adjacent capabilities
 
