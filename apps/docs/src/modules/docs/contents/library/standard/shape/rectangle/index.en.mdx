@@ -1,23 +1,79 @@
 ---
-title: Rectangles
+title: Rectangle
 description: Draw rectangles with shared Standard semantics across React, Vanilla and JSON
 ---
 
-Standard Rectangle preserves shape and sizing intent and compiles to one Core Path. For content sizing and connection boundaries, use [node shapes](/library/extension/shape).
+`Rectangle` draws a rectangle from opposite corners, a center and size, or one corner and size. Use it for panel outlines, borders, and rounded backgrounds.
 
-## Entry points
+## Using this topic
 
-Import this family from the `/shape` subpaths of the three packages; the root entries do not re-export it. Node shape extensions use `@retikz/extension`.
+After [installation and first rendering](/library/standard/get-start), choose a host from the three `/shape` subpaths. All four forms draw the same minimal shape. React and Vanilla adapters supply the required definitions; direct IR requires explicit Definition injection.
 
-React components contribute the required Definition through the matching Vanilla adapter. Vanilla uses `shape.xxx({ id, ...input })` with the same explicit identity for the embed and its final path. Neither Vanilla nor React generates a persistent graphic id when id is omitted. Direct JSON compilation requires the corresponding Definition in `composites`. All three entry points share the geometry contract below.
+<ComponentPreview files="entry" hideCode />
 
-| Entry   | Public API                                                         |
-| ------- | ------------------------------------------------------------------ |
-| React   | `Rectangle` — `@retikz/standard-react/shape`                       |
-| Vanilla | `shape.rectangle` — `@retikz/standard-vanilla/shape`               |
-| JSON    | `RectangleSchema / RectangleDefinition` — `@retikz/standard/shape` |
+<DocTabs defaultValue="react-jsx">
+<DocTab value="react-jsx" label="React + JSX">
 
-## Usage
+```tsx
+import { Layout } from '@retikz/react';
+import { Rectangle } from '@retikz/standard-react/shape';
+
+export const Example = () => (
+  <Layout>
+    <Rectangle center={[0, 0]} width={80} height={48} cornerRadius={6} />
+  </Layout>
+);
+```
+
+</DocTab>
+<DocTab value="react-ir" label="React + IR">
+
+```tsx
+import type { IRScene } from '@retikz/core';
+import { Layout } from '@retikz/react';
+import { RectangleDefinition } from '@retikz/standard/shape';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
+};
+export const Example = () => <Layout ir={ir} composites={[RectangleDefinition]} />;
+```
+
+</DocTab>
+<DocTab value="vanilla-api" label="Vanilla API">
+
+```ts
+import { shape, RectangleInputEmbedAdapter } from '@retikz/standard-vanilla/shape';
+import { scene, renderToSvgString } from '@retikz/vanilla';
+
+const input = scene({ children: [shape.rectangle({ center: [0, 0], width: 80, height: 48, cornerRadius: 6 })] });
+const svg = renderToSvgString(input, { adapters: [RectangleInputEmbedAdapter] });
+console.log(svg);
+```
+
+</DocTab>
+<DocTab value="vanilla-ir" label="Vanilla + IR">
+
+```ts
+import type { IRScene } from '@retikz/core';
+import { RectangleDefinition } from '@retikz/standard/shape';
+import { renderToSvgString } from '@retikz/vanilla';
+
+const ir: IRScene = {
+  type: 'scene',
+  version: 1,
+  children: [{ namespace: 'standard', type: 'rectangle', center: [0, 0], width: 80, height: 48, cornerRadius: 6 }],
+};
+const svg = renderToSvgString(ir, { compile: { composites: [RectangleDefinition] } });
+console.log(svg);
+```
+
+</DocTab>
+</DocTabs>
+
+## Basic usage
 
 `<Rectangle>` draws a rectangle at a position, expanding to an underlying `<Path>`. It fits cases where you know two corners, a center plus size, or one corner plus size.
 
@@ -44,17 +100,21 @@ Use the playground to vary width, height, and corner radius continuously. The gr
 
 <ComponentPreview files="rectangle-playground" size="md" controlPanelDefaultSize={50} />
 
-## Input constraints
+## Errors and limitations
 
 Choose exactly one geometry description. Width, height and side length must be finite and nonnegative. Opposite corners accept Core Targets; forms that calculate coordinates require literal coordinates.
 
-## Compilation
+## Implementation
 
-The Standard schema validates exclusive geometry inputs and dimensional relations. Its Definition expands the shape into Path steps during compilation; Core then resolves Targets and generates geometry. No Node or extra Scope is added. RegularPolygon and Star bake rotate into vertices once; other rotations and all scaling use Path semantics.
+<ComponentAlert type="tip">
+
+This section explains internal implementation. If you only need to use the component, skip to the API reference below.
+
+</ComponentAlert>
 
 ### Rectangle path expansion
 
-`<Rectangle>` first converges its four prop forms on two opposite corners, `from` and `to`. The upper route in the figure passes through Targets (resolvable points, including coordinates and node ids); the lower route computes the corners from dimensions in the React layer:
+`<Rectangle>` first converges its four prop forms on two opposite corners, `from` and `to`. The upper route in the figure passes through Targets (resolvable points, including coordinates and node ids); the lower route computes the corners from dimensions during Standard lowering:
 
 <ComponentPreview files="rectangle-lowering-flow" size="lg" hideCode type="illustration" />
 
@@ -77,12 +137,24 @@ If either node reference cannot be resolved, the whole Path is skipped with a wa
   ]}
 />
 
+## API reference
+
+{/* @include library/standard/shape/rectangle/generated */}
+
 ## Schema reference
 
 ### RectangleSchema
 
 <ZodSchema name="RectangleSchema" />
 
-## API reference
+## Further reading
 
-{/* @include library/standard/shape/rectangle/generated */}
+<LinkedSections
+  items={[
+    {
+      title: 'Shapes',
+      description: 'Compare geometry inputs and choose a suitable outline',
+      url: '/library/standard/shape',
+    },
+  ]}
+/>

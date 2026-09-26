@@ -220,7 +220,7 @@
     "changelogV01": "v0.1",
     "standardShapes": "Shapes",
     "standardCircleEllipse": "Circles and ellipses",
-    "standardRectangle": "Rectangles",
+    "standardRectangle": "Rectangle",
     "standardRegularPolygon": "Regular polygons",
     "standardStar": "Stars",
     "standardArcSector": "Arcs and sectors",
