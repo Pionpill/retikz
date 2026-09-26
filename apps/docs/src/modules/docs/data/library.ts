@@ -213,7 +213,6 @@ export const librarySection: Array<Section> = [
     id: 'layout',
     label: 'library.layout',
     navigationDescription: 'library.layoutNavigationDescription',
-    document: true,
     pages: [
       {
         id: 'introduction',

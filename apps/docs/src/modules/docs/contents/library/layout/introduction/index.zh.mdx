@@ -1,5 +1,5 @@
 ---
-title: 介绍
+title: 简介
 description: Layout 用容器安排子图形的位置和尺寸，提供一维弹性、二维网格与同区域叠加三种排版方式。
 ---
 
@@ -15,6 +15,19 @@ description: Layout 用容器安排子图形的位置和尺寸，提供一维弹
 
 容器可以递归组合，例如先用 Flex 排列面板，再在面板内用 Grid 分区。布局负责排版，不决定图表数据含义，也不提供图关系的自动算法布局。
 
+## 组合排版
+
+下面先用弹性布局分行、网格布局分列，再在右侧单元内用叠加布局放置徽标，展示三种容器如何作为普通子图形递归组合。
+
+<ComponentPreview
+  files="layout-nested"
+  hideCode
+  size="md"
+  caption="辅助层由布局检查器单独绘制，不属于实际图形，不扩大布局边界，也不参与命中测试。"
+/>
+
+这个示例使用 `@retikz/layout-react/inspect` 的 `LayoutInspectLayout` 装配布局检查器，再用 `InspectFlexLayout`、`InspectGridLayout` 与 `InspectOverlayLayout` 选择具体实例。需要阻止某段 authored 子树继承检查请求时，用 `LayoutInspectScope request={false}` 建立硬屏障。Layout 根入口不静态加载可选检查能力。
+
 ## 两种 Layout
 
 `@retikz/react` 的 `Layout` 是承载和渲染整张图的根容器；`@retikz/layout-react` 的 `FlexLayout` 等组件是放在其中的排版容器。通常两者配合使用。
@@ -29,6 +42,6 @@ description: Layout 用容器安排子图形的位置和尺寸，提供一维弹
 
 需要观察布局边界时可使用可选的检查能力；日常排版不需要先接入检查器。
 
-## 接下来
+## 延伸阅读
 
 从[快速开始](/library/layout/get-start)排列两个图形，再阅读[弹性布局](/library/layout/flex-layout)、[网格布局](/library/layout/grid-layout)或[叠加布局](/library/layout/overlay-layout)。版本变化见[更新日志](/library/layout/changelog)。

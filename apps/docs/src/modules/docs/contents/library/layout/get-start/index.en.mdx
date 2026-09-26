@@ -5,6 +5,16 @@ description: Install Layout and arrange two graphics in a row with React or Vani
 
 Choose the host used by your project and run its example below. Packages use ES modules and require Node.js 24 or later in Node environments.
 
+## Three packages
+
+| Package                  | Responsibility                             | Use it when                                        |
+| ------------------------ | ------------------------------------------ | -------------------------------------------------- |
+| `@retikz/layout`         | Schemas, factories, Definitions, and solve | Validating or persisting IR and compiling directly |
+| `@retikz/layout-react`   | React DSL for layout containers            | Authoring inside a React `Layout`                  |
+| `@retikz/layout-vanilla` | Plain-spec helpers and adapters            | Authoring in browsers or scripts without React     |
+
+For React authoring, compose `FlexLayout`, `GridLayout`, or `OverlayLayout` inside the `Layout` from `@retikz/react`. For Vanilla, combine the helpers and adapters from `@retikz/layout-vanilla`. When loading persisted JSON, validate complete layout IR with `@retikz/layout` and pass the required Definitions to the Core compiler.
+
 ## React
 
 <PackageManagerInstall packages="@retikz/layout-react @retikz/react react react-dom" />
@@ -75,9 +85,9 @@ console.log(svg);
 
 `svg` is a complete SVG string that can be saved as a `.svg` file or displayed by a page host. The helper creates ordinary input; `adapters` lets Vanilla recognize the embed and collect its capability dependencies. Omitting the adapter leaves the embed unresolved.
 
-The first argument `'row'` to `flexLayout` is a container identifier, not a direction option. Both hosts default to horizontal rows (`direction: 'row'`). `LayoutItem kind="flex"` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
+Both hosts default to horizontal rows (`direction: 'row'`). `LayoutItem kind="flex"` selects Flex item constraints and holds one drawable child. `minimumSize: 32` sets both minimum width and minimum height. A Node without `shape` defaults to a rectangle.
 
-## Next steps
+## Further reading
 
 Change `gap.column` to adjust spacing. To distribute remaining space, assign a size to the container and set `grow` on an item. Continue with [Flex layout](/library/layout/flex-layout). Use [Grid layout](/library/layout/grid-layout) for two-dimensional regions or [Overlay layout](/library/layout/overlay-layout) for stacking.
 

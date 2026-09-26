@@ -32,8 +32,8 @@ import GridZhDemo from '../../src/modules/docs/contents/library/layout/grid-layo
 import { previewControlContract as gridZhContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.controls';
 import { previewSource as gridPlaygroundSource } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.demo';
 import { previewControlContract as gridEnContract } from '../../src/modules/docs/contents/library/layout/grid-layout/grid-layout-playground.en.controls';
-import { previewSource as nestedEnSource } from '../../src/modules/docs/contents/library/layout/layout-nested.en.demo';
-import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/layout-nested.zh.demo';
+import { previewSource as nestedEnSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.en.demo';
+import { previewSource as nestedZhSource } from '../../src/modules/docs/contents/library/layout/introduction/layout-nested.zh.demo';
 import OverlayEnDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.en.demo';
 import OverlayZhDemo from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-basic.zh.demo';
 import { previewControlContract as overlayZhContract } from '../../src/modules/docs/contents/library/layout/overlay-layout/overlay-layout-playground.controls';
